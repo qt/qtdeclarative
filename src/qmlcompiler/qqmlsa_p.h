@@ -43,12 +43,15 @@
 
 #include <private/qqmljsscope_p.h>
 
+#include <map>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlJSTypeResolver;
+struct QQmlJSTypePropagator;
 class QQmlJSImportVisitor;
 
 namespace QQmlSA {
@@ -85,29 +88,16 @@ public:
 class Q_QMLCOMPILER_EXPORT PropertyPass : public GenericPass
 {
 public:
-    PropertyPass(PassManager *manager) : GenericPass(manager) { }
+    PropertyPass(PassManager *manager);
 
-    virtual bool shouldRun(const Element &element, const QQmlJSMetaProperty &property,
-                           const QList<QQmlJSMetaPropertyBinding> &bindings);
-    virtual void run(const QQmlJSMetaProperty &property,
-                     const QList<QQmlJSMetaPropertyBinding> &bindings) = 0;
-};
-
-class SimplePropertyPass : public PropertyPass
-{
-protected:
-    SimplePropertyPass(PassManager *manager) : PropertyPass(manager) { }
-
-    virtual void run(const QQmlJSMetaProperty &property,
-                     const QQmlJSMetaPropertyBinding &binding) = 0;
-    virtual bool shouldRun(const Element &element, const QQmlJSMetaProperty &property,
-                           const QQmlJSMetaPropertyBinding &binding) = 0;
-
-private:
-    void run(const QQmlJSMetaProperty &property,
-             const QList<QQmlJSMetaPropertyBinding> &bindings) override;
-    bool shouldRun(const Element &element, const QQmlJSMetaProperty &property,
-                   const QList<QQmlJSMetaPropertyBinding> &bindings) override;
+    virtual void onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                           const QQmlJSMetaPropertyBinding &binding,
+                           const QQmlSA::Element &bindingScope, const QQmlSA::Element &value);
+    virtual void onRead(const QQmlSA::Element &element, const QString &propertyName,
+                        const QQmlSA::Element &readScope, QQmlJS::SourceLocation location);
+    virtual void onWrite(const QQmlSA::Element &element, const QString &propertyName,
+                         const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+                         QQmlJS::SourceLocation location);
 };
 
 class Q_QMLCOMPILER_EXPORT LintPlugin
@@ -134,14 +124,42 @@ public:
         Q_UNUSED(m_typeResolver);
     }
     void registerElementPass(std::unique_ptr<ElementPass> pass);
-    void registerPropertyPass(std::unique_ptr<PropertyPass> pass);
+    bool registerPropertyPass(std::shared_ptr<PropertyPass> pass, QAnyStringView moduleName,
+                              QAnyStringView typeName,
+                              QAnyStringView propertyName = QAnyStringView());
     void analyze(const Element &root);
 
     bool hasImportedModule(QAnyStringView name) const;
 
 private:
+    friend struct ::QQmlJSTypePropagator;
+
+    std::vector<PropertyPass *> findPropertyUsePasses(const QQmlSA::Element &element,
+                                                      const QString &propertyName);
+
+    void analyzeWrite(const QQmlSA::Element &element, QString propertyName,
+                      const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+                      QQmlJS::SourceLocation location);
+    void analyzeRead(const QQmlSA::Element &element, QString propertyName,
+                     const QQmlSA::Element &readScope, QQmlJS::SourceLocation location);
+    void analyzeBinding(const QQmlSA::Element &element, const QQmlSA::Element &value,
+                        QQmlJS::SourceLocation location);
+
+    struct BindingInfo
+    {
+        QString fullPropertyName;
+        QQmlJSMetaPropertyBinding binding;
+        QQmlSA::Element bindingScope;
+        bool isAttached;
+    };
+
+    void addBindingSourceLocations(const QQmlSA::Element &element,
+                                   const QQmlSA::Element &scope = QQmlSA::Element(),
+                                   const QString prefix = QString(), bool isAttached = false);
+
     std::vector<std::unique_ptr<ElementPass>> m_elementPasses;
-    std::vector<std::unique_ptr<PropertyPass>> m_propertyPasses;
+    std::multimap<std::pair<QString, QString>, std::shared_ptr<PropertyPass>> m_propertyPasses;
+    std::unordered_map<quint32, BindingInfo> m_bindingsByLocation;
     QQmlJSImportVisitor *m_visitor;
     QQmlJSTypeResolver *m_typeResolver;
 };
@@ -151,10 +169,19 @@ class Q_QMLCOMPILER_EXPORT DebugElementPass : public ElementPass
     void run(const Element &element) override;
 };
 
-class Q_QMLCOMPILER_EXPORT DebugPropertyPass : public PropertyPass
+class Q_QMLCOMPILER_EXPORT DebugPropertyPass : public QQmlSA::PropertyPass
 {
-    virtual void run(const QQmlJSMetaProperty &property,
-                     const QList<QQmlJSMetaPropertyBinding> &bindings) override;
+public:
+    DebugPropertyPass(QQmlSA::PassManager *manager);
+
+    void onRead(const QQmlSA::Element &element, const QString &propertyName,
+                const QQmlSA::Element &readScope, QQmlJS::SourceLocation location) override;
+    void onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                   const QQmlJSMetaPropertyBinding &binding, const QQmlSA::Element &bindingScope,
+                   const QQmlSA::Element &value) override;
+    void onWrite(const QQmlSA::Element &element, const QString &propertyName,
+                 const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+                 QQmlJS::SourceLocation location) override;
 };
 }
 

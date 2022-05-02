@@ -1652,7 +1652,25 @@ void TestQmllint::testPlugin()
     QVERIFY(pluginFound);
 
     runTest("elementpass_pluginTest.qml", Result { { Message { u"ElementTest OK"_s, 4, 5 } } });
-    runTest("propertypass_pluginTest.qml", Result { { Message { u"OK"_s } } });
+    runTest("propertypass_pluginTest.qml",
+            Result {
+                    { // Specific binding for specific property
+                      Message {
+                              u"Saw binding on Text property text with value NULL (and type 3) in scope Text"_s },
+
+                      // Property on any type
+                      Message { u"Saw read on Text property x in scope Text"_s },
+                      Message {
+                              u"Saw binding on Text property x with value NULL (and type 2) in scope Text"_s },
+                      Message { u"Saw read on Text property x in scope Item"_s },
+                      Message { u"Saw write on Text property x with value int in scope Item"_s },
+                      Message {
+                              u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s },
+                      // ListModel
+                      Message {
+                              u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s },
+                      Message {
+                              u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s } } });
     runTest("controlsWithQuick_pluginTest.qml",
             Result { { Message { u"QtQuick.Controls, QtQuick and QtQuick.Window present"_s } } });
     runTest("controlsWithoutQuick_pluginTest.qml",
@@ -1719,26 +1737,36 @@ void TestQmllint::quickPlugin()
                       Message {
                               u"LayoutDirection attached property only works with Items and Windows"_s },
                       Message { u"Layout must be attached to Item elements"_s },
-                      Message { u"StackView attached property only works with Items"_s } } });
+                      Message { u"StackView attached property only works with Items"_s },
+                      Message { u"TextArea must be attached to a Flickable"_s },
+                      Message { u"StackLayout must be attached to an Item"_s },
+                      Message {
+                              u"Tumbler: attached properties of Tumbler must be accessed through a delegate item"_s },
+                      Message {
+                              u"Attached properties of SwipeDelegate must be accessed through an Item"_s },
+                      Message { u"SwipeView must be attached to an Item"_s } } });
+
     runTest("pluginQuick_swipeDelegate.qml",
             Result { {
-                    Message {
-                            u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
-                            6, 43 },
-                    Message {
-                            u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
-                            7, 43 },
-                    Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
-                              9, 9 },
-                    Message {
-                            u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
-                            13, 47 },
-                    Message {
-                            u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
-                            14, 42 },
-                    Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
-                              16, 9 },
-            } });
+                         Message {
+                             u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
+                             6, 43 },
+                         Message {
+                             u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
+                             7, 43 },
+                         Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
+                                   9, 9 },
+                         Message {
+                             u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
+                             13, 47 },
+                         Message {
+                             u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
+                             14, 42 },
+                         Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
+                                   16, 9 },
+                     } });
+
+    runTest("pluginQuick_attachedClean.qml", Result::clean());
 }
 #endif
 

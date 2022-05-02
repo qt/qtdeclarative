@@ -67,55 +67,42 @@ private:
 class PropertyTest : public QQmlSA::PropertyPass
 {
 public:
-    PropertyTest(QQmlSA::PassManager *manager) : QQmlSA::PropertyPass(manager)
+    PropertyTest(QQmlSA::PassManager *manager) : QQmlSA::PropertyPass(manager) { }
+
+    void onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                   const QQmlJSMetaPropertyBinding &binding, const QQmlSA::Element &bindingScope,
+                   const QQmlSA::Element &value) override
     {
-        m_image = resolveType(u"QtQuick", u"Image");
+        emitWarning(u"Saw binding on %1 property %2 with value %3 (and type %4) in scope %5"_s
+                            .arg(element->baseTypeName(), propertyName,
+                                 value.isNull()
+                                         ? u"NULL"_s
+                                         : (value->internalName().isNull() ? value->baseTypeName()
+                                                                           : value->baseTypeName()))
+                            .arg(binding.bindingType())
+                            .arg(bindingScope->baseTypeName()),
+                    bindingScope->sourceLocation());
     }
 
-    bool shouldRun(const QQmlSA::Element &element, const QQmlJSMetaProperty &property,
-                   const QList<QQmlJSMetaPropertyBinding> &bindings) override
+    void onRead(const QQmlSA::Element &element, const QString &propertyName,
+                const QQmlSA::Element &readScope, QQmlJS::SourceLocation location) override
     {
-        return !bindings.isEmpty() && element->baseType() == m_image
-                && property.propertyName() == u"x";
+        emitWarning(u"Saw read on %1 property %2 in scope %3"_s.arg(
+                            element->baseTypeName(), propertyName, readScope->baseTypeName()),
+                    location);
     }
 
-    void run(const QQmlJSMetaProperty &property,
-             const QList<QQmlJSMetaPropertyBinding> &bindings) override
+    void onWrite(const QQmlSA::Element &element, const QString &propertyName,
+                 const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+                 QQmlJS::SourceLocation location) override
     {
-        if (property.typeName() != u"double") {
-            emitWarning(u"Failed to verify x property");
-            return;
-        }
-
-        bool foundInterceptor = false, foundValue = false;
-        for (const QQmlJSMetaPropertyBinding &binding : bindings) {
-            switch (binding.bindingType()) {
-            case QQmlJSMetaPropertyBinding::Interceptor:
-                foundInterceptor = true;
-                break;
-            case QQmlJSMetaPropertyBinding::NumberLiteral:
-                foundValue = true;
-                if (binding.numberValue() != 5) {
-                    emitWarning(u"Binding has wrong value");
-                    return;
-                }
-                break;
-            default:
-                emitWarning(u"Found unexpected binding on x property");
-                return;
-            }
-        }
-
-        if (!foundInterceptor || !foundValue) {
-            emitWarning(u"Didn't see all expected bindings");
-            return;
-        }
-
-        emitWarning(u"PropertyTest OK");
+        emitWarning(u"Saw write on %1 property %2 with value %3 in scope %4"_s.arg(
+                            element->baseTypeName(), propertyName,
+                            (value->internalName().isNull() ? value->baseTypeName()
+                                                            : value->internalName()),
+                            writeScope->baseTypeName()),
+                    location);
     }
-
-private:
-    QQmlSA::Element m_image;
 };
 
 class HasImportedModuleTest : public QQmlSA::ElementPass
@@ -148,7 +135,10 @@ void LintPlugin::registerPasses(QQmlSA::PassManager *manager, const QQmlSA::Elem
         return;
 
     manager->registerElementPass(std::make_unique<ElementTest>(manager));
-    manager->registerPropertyPass(std::make_unique<PropertyTest>(manager));
+    manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "QtQuick", "Text",
+                                  "text");
+    manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "", "", "x");
+    manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "QtQuick", "ListView");
     if (manager->hasImportedModule("QtQuick.Controls")) {
         if (manager->hasImportedModule("QtQuick")) {
             if (manager->hasImportedModule("QtQuick.Window")) {

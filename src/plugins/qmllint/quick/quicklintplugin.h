@@ -68,7 +68,7 @@ private:
     QHash<QQmlSA::Element, QVarLengthArray<Warning, 8>> m_types;
 };
 
-class AttachedPropertyTypeValidatorPass : public QQmlSA::ElementPass
+class AttachedPropertyTypeValidatorPass : public QQmlSA::PropertyPass
 {
 public:
     struct TypeDescription
@@ -79,16 +79,26 @@ public:
 
     AttachedPropertyTypeValidatorPass(QQmlSA::PassManager *manager);
 
-    void addWarning(QAnyStringView attachedTypeName, QList<TypeDescription> allowedTypes,
-                    QAnyStringView warning);
+    QString addWarning(TypeDescription attachType, QList<TypeDescription> allowedTypes,
+                       bool allowInDelegate, QAnyStringView warning);
 
-    bool shouldRun(const QQmlSA::Element &element) override;
-    void run(const QQmlSA::Element &element) override;
+    void onBinding(const QQmlSA::Element &element, const QString &propertyName,
+                   const QQmlJSMetaPropertyBinding &binding, const QQmlSA::Element &bindingScope,
+                   const QQmlSA::Element &value) override;
+    void onRead(const QQmlSA::Element &element, const QString &propertyName,
+                const QQmlSA::Element &readScope, QQmlJS::SourceLocation location) override;
+    void onWrite(const QQmlSA::Element &element, const QString &propertyName,
+                 const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+                 QQmlJS::SourceLocation location) override;
 
 private:
+    void checkWarnings(const QQmlSA::Element &element, const QQmlSA::Element &scopeUsedIn,
+                       const QQmlJS::SourceLocation &location);
+
     struct Warning
     {
         QVarLengthArray<QQmlSA::Element, 4> allowedTypes;
+        bool allowInDelegate = false;
         QString message;
     };
     QHash<QString, Warning> m_attachedTypes;

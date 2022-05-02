@@ -108,7 +108,8 @@ bool QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
                                           QQmlJSCompilePass::Function *function,
                                           QQmlJS::DiagnosticMessage *error)
 {
-    QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger, m_typeInfo);
+    QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger, m_typeInfo,
+                                    m_passManager);
     QQmlJSCompilePass::InstructionAnnotations annotations = propagator.run(function, error);
     if (!error->isValid()) {
         QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger);

@@ -43,14 +43,18 @@
 #include <private/qqmljsscope_p.h>
 #include <private/qqmljscompilepass_p.h>
 
-
 QT_BEGIN_NAMESPACE
+
+namespace QQmlSA {
+class PassManager;
+};
 
 struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompilePass
 {
     QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                          const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                         QQmlJSTypeInfo *typeInfo = nullptr);
+                         QQmlJSTypeInfo *typeInfo = nullptr,
+                         QQmlSA::PassManager *passManager = nullptr);
 
     InstructionAnnotations run(const Function *m_function, QQmlJS::DiagnosticMessage *error);
 
@@ -246,6 +250,7 @@ private:
 
     QQmlJSRegisterContent m_returnType;
     QQmlJSTypeInfo *m_typeInfo = nullptr;
+    QQmlSA::PassManager *m_passManager = nullptr;
 
     // Not part of the state, as the back jumps are the reason for running multiple passes
     QMultiHash<int, ExpectedRegisterState> m_jumpOriginRegisterStateByTargetInstructionOffset;

@@ -29,6 +29,7 @@
 #include "qqmljstypepropagator_p.h"
 
 #include "qqmljsutils_p.h"
+#include "qqmlsa_p.h"
 
 #include <private/qv4compilerscanfunctions_p.h>
 
@@ -48,9 +49,12 @@ using namespace Qt::StringLiterals;
  */
 
 QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
-                                           const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                                           QQmlJSTypeInfo *typeInfo)
-    : QQmlJSCompilePass(unitGenerator, typeResolver, logger), m_typeInfo(typeInfo)
+                                           const QQmlJSTypeResolver *typeResolver,
+                                           QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo,
+                                           QQmlSA::PassManager *passManager)
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger),
+      m_typeInfo(typeInfo),
+      m_passManager(passManager)
 {
 }
 
@@ -119,6 +123,12 @@ void QQmlJSTypePropagator::generate_Ret()
             addReadAccumulator(m_state.accumulatorIn());
         else
             addReadAccumulator(m_returnType);
+    }
+
+    if (m_passManager != nullptr && m_function->isProperty) {
+        m_passManager->analyzeBinding(m_function->qmlScope,
+                                      m_typeResolver->containedType(m_state.accumulatorIn()),
+                                      getCurrentBindingSourceLocation());
     }
 
     m_state.setHasSideEffects(true);
@@ -557,6 +567,9 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         // It should really be valid.
         // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
         setError(u"Cannot determine generic type for "_s + name);
+    } else if (m_passManager != nullptr) {
+        m_passManager->analyzeRead(m_function->qmlScope, name, m_function->qmlScope,
+                                   getCurrentSourceLocation());
     }
 }
 
@@ -587,6 +600,12 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
     if (!canConvertFromTo(m_state.accumulatorIn(), type)) {
         setError(u"cannot convert from %1 to %2"_s
                          .arg(m_state.accumulatorIn().descriptiveName(), type.descriptiveName()));
+    }
+
+    if (m_passManager != nullptr) {
+        m_passManager->analyzeWrite(m_function->qmlScope, name,
+                                    m_typeResolver->containedType(m_state.accumulatorIn()),
+                                    m_function->qmlScope, getCurrentSourceLocation());
     }
 
     m_state.setHasSideEffects(true);
@@ -797,6 +816,11 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         }
     }
 
+    if (m_passManager != nullptr) {
+        m_passManager->analyzeRead(m_typeResolver->containedType(m_state.accumulatorIn()),
+                                   propertyName, m_function->qmlScope, getCurrentSourceLocation());
+    }
+
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::ObjectEnum:
     case QQmlJSRegisterContent::ExtensionObjectEnum:
@@ -861,6 +885,12 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
         setError(u"cannot convert from %1 to %2"_s
                          .arg(m_state.accumulatorIn().descriptiveName(), property.descriptiveName()));
         return;
+    }
+
+    if (m_passManager != nullptr) {
+        m_passManager->analyzeWrite(m_typeResolver->containedType(callBase), propertyName,
+                                    m_typeResolver->containedType(m_state.accumulatorIn()),
+                                    m_function->qmlScope, getCurrentSourceLocation());
     }
 
     m_state.setHasSideEffects(true);
@@ -981,6 +1011,12 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     }
 
     checkDeprecated(m_typeResolver->containedType(callBase), propertyName, true);
+
+    if (m_passManager != nullptr) {
+        // TODO: Should there be an analyzeCall() in the future? (w. corresponding onCall in Pass)
+        m_passManager->analyzeRead(m_typeResolver->containedType(m_state.accumulatorIn()),
+                                   propertyName, m_function->qmlScope, getCurrentSourceLocation());
+    }
 
     addReadRegister(base, callBase);
     propagateCall(member.method(), argc, argv);

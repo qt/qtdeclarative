@@ -156,8 +156,8 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
                  QtDebugMsg, bindingLocation, error);
     }
 
-    const bool isProperty = m_objectType->hasProperty(propertyName);
-    if (!isProperty && QmlIR::IRBuilder::isSignalPropertyName(propertyName)) {
+    function.isProperty = m_objectType->hasProperty(propertyName);
+    if (!function.isProperty && QmlIR::IRBuilder::isSignalPropertyName(propertyName)) {
         const QString signalName = QmlIR::IRBuilder::signalNameFromSignalPropertyName(propertyName);
 
         if (signalName.endsWith(u"Changed"_s)
@@ -180,9 +180,8 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         }
     }
 
-
     if (!function.isSignalHandler) {
-        if (!isProperty) {
+        if (!function.isProperty) {
             diagnose(u"Could not compile binding for %1: The property does not exist"_s.arg(
                          propertyName),
                      QtWarningMsg, bindingLocation, error);

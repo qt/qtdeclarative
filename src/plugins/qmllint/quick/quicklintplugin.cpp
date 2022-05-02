@@ -81,57 +81,98 @@ void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
 }
 
 AttachedPropertyTypeValidatorPass::AttachedPropertyTypeValidatorPass(QQmlSA::PassManager *manager)
-    : QQmlSA::ElementPass(manager)
+    : QQmlSA::PropertyPass(manager)
 {
 }
 
-void AttachedPropertyTypeValidatorPass::addWarning(
-        QAnyStringView attachedTypeName,
-        QList<AttachedPropertyTypeValidatorPass::TypeDescription> allowedTypes,
-        QAnyStringView warning)
+QString AttachedPropertyTypeValidatorPass::addWarning(TypeDescription attachType,
+                                                      QList<TypeDescription> allowedTypes,
+                                                      bool allowInDelegate, QAnyStringView warning)
 {
-    AttachedPropertyTypeValidatorPass::Warning warningInfo;
-    warningInfo.message = warning.toString();
+    QVarLengthArray<QQmlSA::Element, 4> elements;
 
-    for (const TypeDescription &description : allowedTypes) {
-        auto type = resolveType(description.module, description.name);
+    const QQmlSA::Element baseType = resolveType(attachType.module, attachType.name);
 
+    QString typeName = baseType->attachedTypeName();
+
+    for (const TypeDescription &desc : allowedTypes) {
+        const QQmlSA::Element type = resolveType(desc.module, desc.name);
         if (type.isNull())
             continue;
-
-        warningInfo.allowedTypes.push_back(type);
+        elements.push_back(type);
     }
 
-    m_attachedTypes[attachedTypeName.toString()] = warningInfo;
+    m_attachedTypes.insert({ std::make_pair<>(
+            typeName, Warning { elements, allowInDelegate, warning.toString() }) });
+
+    return typeName;
 }
 
-bool AttachedPropertyTypeValidatorPass::shouldRun(const QQmlSA::Element &element)
+void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &element,
+                                                      const QQmlSA::Element &scopeUsedIn,
+                                                      const QQmlJS::SourceLocation &location)
 {
-    for (const auto pair : m_attachedTypes.asKeyValueRange()) {
-        if (element->hasOwnPropertyBindings(pair.first))
-            return true;
+    auto warning = m_attachedTypes.constFind(element->internalName());
+    if (warning == m_attachedTypes.cend())
+        return;
+    for (const QQmlSA::Element &type : warning->allowedTypes) {
+        if (scopeUsedIn->inherits(type))
+            return;
     }
 
-    return false;
-}
-
-void AttachedPropertyTypeValidatorPass::run(const QQmlSA::Element &element)
-{
-    for (const auto pair : m_attachedTypes.asKeyValueRange()) {
-        if (element->hasOwnPropertyBindings(pair.first)) {
-            bool hasAllowedType = false;
-            for (const QQmlSA::Element &type : pair.second.allowedTypes) {
-                if (element->inherits(type)) {
-                    hasAllowedType = true;
-                    break;
-                }
-            }
-            if (!hasAllowedType) {
-                auto binding = *element->ownPropertyBindings(pair.first).first;
-                emitWarning(pair.second.message, binding.sourceLocation());
+    if (warning->allowInDelegate) {
+        if (scopeUsedIn->isPropertyRequired(u"index"_s)
+            || scopeUsedIn->isPropertyRequired(u"model"_s))
+            return;
+        if (scopeUsedIn->parentScope()) {
+            for (const QQmlJSMetaPropertyBinding &binding :
+                 scopeUsedIn->parentScope()->propertyBindings(u"delegate"_s)) {
+                if (!binding.hasObject())
+                    continue;
+                if (binding.objectType() == scopeUsedIn)
+                    return;
             }
         }
     }
+
+    emitWarning(warning->message, location);
+}
+
+void AttachedPropertyTypeValidatorPass::onBinding(const QQmlSA::Element &element,
+                                                  const QString &propertyName,
+                                                  const QQmlJSMetaPropertyBinding &binding,
+                                                  const QQmlSA::Element &bindingScope,
+                                                  const QQmlSA::Element &value)
+{
+    Q_UNUSED(element)
+    Q_UNUSED(propertyName)
+    Q_UNUSED(bindingScope)
+    Q_UNUSED(value)
+
+    checkWarnings(bindingScope->baseType(), element, binding.sourceLocation());
+}
+
+void AttachedPropertyTypeValidatorPass::onRead(const QQmlSA::Element &element,
+                                               const QString &propertyName,
+                                               const QQmlSA::Element &readScope,
+                                               QQmlJS::SourceLocation location)
+{
+    Q_UNUSED(readScope)
+    Q_UNUSED(propertyName)
+
+    checkWarnings(element, readScope, location);
+}
+
+void AttachedPropertyTypeValidatorPass::onWrite(const QQmlSA::Element &element,
+                                                const QString &propertyName,
+                                                const QQmlSA::Element &value,
+                                                const QQmlSA::Element &writeScope,
+                                                QQmlJS::SourceLocation location)
+{
+    Q_UNUSED(propertyName)
+    Q_UNUSED(value)
+
+    checkWarnings(element, writeScope, location);
 }
 
 ControlsNativeValidatorPass::ControlsNativeValidatorPass(QQmlSA::PassManager *manager)
@@ -441,40 +482,59 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
         manager->registerElementPass(std::move(forbiddenChildProperty));
     }
 
-    auto attachedPropertyType = std::make_unique<AttachedPropertyTypeValidatorPass>(manager);
+    auto attachedPropertyType = std::make_shared<AttachedPropertyTypeValidatorPass>(manager);
+
+    auto addAttachedWarning =
+            [&](AttachedPropertyTypeValidatorPass::TypeDescription attachedType,
+                QList<AttachedPropertyTypeValidatorPass::TypeDescription> allowedTypes,
+                QAnyStringView warning, bool allowInDelegate = false) {
+                QString attachedTypeName = attachedPropertyType->addWarning(
+                        attachedType, allowedTypes, allowInDelegate, warning);
+                manager->registerPropertyPass(attachedPropertyType, attachedType.module,
+                                              u"$internal$."_s + attachedTypeName);
+            };
 
     if (hasQuick) {
-        attachedPropertyType->addWarning("Accessible", { { "QtQuick", "Item" } },
-                                         "Accessible must be attached to an Item");
-        attachedPropertyType->addWarning(
-                "LayoutMirroring", { { "QtQuick", "Item" }, { "QtQuick", "Window" } },
-                "LayoutDirection attached property only works with Items and Windows");
-        attachedPropertyType->addWarning("EnterKey", { { "QtQuick", "Item" } },
-                                         "EnterKey attached property only works with Items");
+        addAttachedWarning({ "QtQuick", "Accessible" }, { { "QtQuick", "Item" } },
+                           "Accessible must be attached to an Item");
+        addAttachedWarning({ "QtQuick", "LayoutMirroring" },
+                           { { "QtQuick", "Item" }, { "QtQuick", "Window" } },
+                           "LayoutDirection attached property only works with Items and Windows");
+        addAttachedWarning({ "QtQuick", "EnterKey" }, { { "QtQuick", "Item" } },
+                           "EnterKey attached property only works with Items");
     }
-
     if (hasQuickLayouts) {
-        attachedPropertyType->addWarning("Layout", { { "QtQuick", "Item" } },
-                                         "Layout must be attached to Item elements");
+        addAttachedWarning({ "QtQuick.Layouts", "Layout" }, { { "QtQuick", "Item" } },
+                           "Layout must be attached to Item elements");
+        addAttachedWarning({ "QtQuick.Layouts", "StackLayout" }, { { "QtQuick", "Item" } },
+                           "StackLayout must be attached to an Item");
     }
-
     if (hasQuickControls) {
-        attachedPropertyType->addWarning(
-                "ScrollBar", { { "QtQuick", "Flickable" }, { "QtQuick.Templates", "ScrollView" } },
-                "ScrollBar must be attached to a Flickable or ScrollView");
-        attachedPropertyType->addWarning("ScrollIndicator", { { "QtQuick", "Flickable" } },
-                                         "ScrollIndicator must be attached to a Flickable");
-        attachedPropertyType->addWarning("SplitView", { { "QtQuick", "Item" } },
-                                         "SplitView attached property only works with Items");
-        attachedPropertyType->addWarning("StackView", { { "QtQuick", "Item" } },
-                                         "StackView attached property only works with Items");
-        attachedPropertyType->addWarning("ToolTip", { { "QtQuick", "Item" } },
-                                         "ToolTip must be attached to an Item");
-
         manager->registerElementPass(std::make_unique<ControlsSwipeDelegateValidatorPass>(manager));
-    }
 
-    manager->registerElementPass(std::move(attachedPropertyType));
+        addAttachedWarning({ "QtQuick.Templates", "ScrollBar" },
+                           { { "QtQuick", "Flickable" }, { "QtQuick.Templates", "ScrollView" } },
+                           "ScrollBar must be attached to a Flickable or ScrollView");
+        addAttachedWarning({ "QtQuick.Templates", "ScrollIndicator" },
+                           { { "QtQuick", "Flickable" } },
+                           "ScrollIndicator must be attached to a Flickable");
+        addAttachedWarning({ "QtQuick.Templates", "TextArea" }, { { "QtQuick", "Flickable" } },
+                           "TextArea must be attached to a Flickable");
+        addAttachedWarning({ "QtQuick.Templates", "SplitView" }, { { "QtQuick", "Item" } },
+                           "SplitView attached property only works with Items");
+        addAttachedWarning({ "QtQuick.Templates", "StackView" }, { { "QtQuick", "Item" } },
+                           "StackView attached property only works with Items");
+        addAttachedWarning({ "QtQuick.Templates", "ToolTip" }, { { "QtQuick", "Item" } },
+                           "ToolTip must be attached to an Item");
+        addAttachedWarning({ "QtQuick.Templates", "SwipeDelegate" }, { { "QtQuick", "Item" } },
+                           "Attached properties of SwipeDelegate must be accessed through an Item");
+        addAttachedWarning({ "QtQuick.Templates", "SwipeView" }, { { "QtQuick", "Item" } },
+                           "SwipeView must be attached to an Item");
+        addAttachedWarning(
+                { "QtQuick.Templates", "Tumbler" }, { { "QtQuick", "Tumbler" } },
+                "Tumbler: attached properties of Tumbler must be accessed through a delegate item",
+                true);
+    }
 
     if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_s)
         || manager->hasImportedModule(u"QtQuick.Controls.Windows"_s))

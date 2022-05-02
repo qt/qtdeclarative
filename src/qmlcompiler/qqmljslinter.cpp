@@ -41,6 +41,7 @@
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qdir.h>
 #include <QtCore/private/qduplicatetracker_p.h>
+#include <QtCore/qscopedpointer.h>
 
 #include <QtQmlCompiler/private/qqmlsa_p.h>
 
@@ -504,8 +505,10 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             QQmlJSLiteralBindingCheck literalCheck;
             literalCheck.run(&v, &typeResolver);
 
+            QScopedPointer<QQmlSA::PassManager> passMan;
+
             if (m_enablePlugins) {
-                QQmlSA::PassManager passMan(&v, &typeResolver);
+                passMan.reset(new QQmlSA::PassManager(&v, &typeResolver));
 
                 for (const Plugin &plugin : m_plugins) {
                     if (!plugin.isValid() || !plugin.isEnabled())
@@ -513,10 +516,10 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
 
                     QQmlSA::LintPlugin *instance = plugin.m_instance;
                     Q_ASSERT(instance);
-                    instance->registerPasses(&passMan, v.result());
+                    instance->registerPasses(passMan.get(), v.result());
                 }
 
-                passMan.analyze(v.result());
+                passMan->analyze(v.result());
             }
 
             success = !m_logger->hasWarnings() && !m_logger->hasErrors();
@@ -537,6 +540,8 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get(),
                                           &typeInfo };
             codegen.setTypeResolver(std::move(typeResolver));
+            if (passMan)
+                codegen.setPassManager(passMan.get());
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,
                                                  QString *) { return true; };

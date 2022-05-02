@@ -91,6 +91,7 @@ public:
         const SourceLocationTable *sourceLocations = nullptr;
         bool isSignalHandler = false;
         bool isQPropertyBinding = false;
+        bool isProperty = false;
     };
 
     struct State

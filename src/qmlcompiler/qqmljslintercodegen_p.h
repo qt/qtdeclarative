@@ -56,6 +56,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QQmlSA {
+class PassManager;
+};
+
 class QQmlJSLinterCodegen : public QQmlJSAotCompiler
 {
 public:
@@ -77,8 +81,13 @@ public:
 
     QQmlJSTypeResolver *typeResolver() { return &m_typeResolver; }
 
+    void setPassManager(QQmlSA::PassManager *passManager) { m_passManager = passManager; }
+
+    QQmlSA::PassManager *passManager() { return m_passManager; }
+
 private:
     QQmlJSTypeInfo *m_typeInfo;
+    QQmlSA::PassManager *m_passManager = nullptr;
 
     bool analyzeFunction(const QV4::Compiler::Context *context,
                          QQmlJSCompilePass::Function *function, QQmlJS::DiagnosticMessage *error);
