@@ -2163,6 +2163,10 @@ void tst_qquickwindow::testExpose()
 
 void tst_qquickwindow::requestActivate()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("tst_qquickwindow::requestActivate crashes on Android, see QTBUG-103078.");
+#endif
+
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("active.qml"));
@@ -2214,6 +2218,10 @@ void tst_qquickwindow::requestActivate()
 
 void tst_qquickwindow::testWindowVisibilityOrder()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("tst_qquickwindow::testWindowVisibilityOrder crashes on Android, see QTBUG-103078.");
+#endif
+
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("windoworder.qml"));
@@ -2331,6 +2339,10 @@ void tst_qquickwindow::unloadSubWindow()
 // QTBUG-52573
 void tst_qquickwindow::changeVisibilityInCompleted()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("tst_qquickwindow::changeVisibilityInCompleted crashes on Android, see QTBUG-103078.");
+#endif
+
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("changeVisibilityInCompleted.qml"));
