@@ -54,6 +54,7 @@ private slots:
     void select();
 
     void platformSelectors();
+    void customStyleSelector();
 
     void fallbackStyleShouldNotOverwriteTheme_data();
     void fallbackStyleShouldNotOverwriteTheme();
@@ -172,6 +173,7 @@ void tst_StyleImports::select()
     }
 }
 
+// Tests that the various platforms are available as selectors.
 void tst_StyleImports::platformSelectors()
 {
     QQuickStyle::setStyle(QLatin1String("PlatformStyle"));
@@ -195,6 +197,27 @@ void tst_StyleImports::platformSelectors()
 #else
     QCOMPARE(button->objectName(), "PlatformStyle/Button.qml");
 #endif
+}
+
+// Tests that a file selector is added for custom styles.
+// Note that this is different to the regular QML import mechanism
+// that results in e.g. FileSystemStyle/Button.qml being found;
+// it allows non-template (Controls), custom user types to be
+// picked up via selectors.
+void tst_StyleImports::customStyleSelector()
+{
+    QQuickStyle::setStyle(QLatin1String("FileSystemStyle"));
+
+    QQmlApplicationEngine engine;
+    engine.addImportPath(dataDirectory() + QLatin1String("/styles"));
+    engine.load(testFileUrl("customStyleSelector.qml"));
+    QVERIFY(!engine.rootObjects().isEmpty());
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+    QVERIFY(window);
+
+    QObject *customComponent = window->property("customComponent").value<QObject*>();
+    QVERIFY(customComponent);
+    QCOMPARE(customComponent->objectName(), "+FileSystemStyle/CustomComponent.qml");
 }
 
 void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme_data()
