@@ -69,7 +69,10 @@ static void codeActionHandler(
         if (!diagnostic.data.has_value())
             continue;
 
-        QJsonArray suggestions = diagnostic.data.value().toArray();
+        const auto &data = diagnostic.data.value();
+
+        int version = data[u"version"].toInt();
+        QJsonArray suggestions = data[u"suggestions"].toArray();
 
         QList<TextDocumentEdit> edits;
         QString message;
@@ -85,7 +88,7 @@ static void codeActionHandler(
             textEdit.newText = replacement.toUtf8();
 
             TextDocumentEdit textDocEdit;
-            textDocEdit.textDocument = { params.textDocument };
+            textDocEdit.textDocument = { params.textDocument, version };
             textDocEdit.edits.append(textEdit);
 
             edits.append(textDocEdit);
@@ -199,7 +202,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
             }
         };
 
-        auto messageToDiagnostic = [&addLength](const Message &message) {
+        auto messageToDiagnostic = [&addLength, &version](const Message &message) {
             Diagnostic diagnostic;
             diagnostic.severity = severityFromMsgType(message.type);
             Range &range = diagnostic.range;
@@ -241,7 +244,13 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
 
                     fixedSuggestions << object;
                 }
-                diagnostic.data = fixedSuggestions;
+                QJsonObject data;
+                data[u"suggestions"] = fixedSuggestions;
+
+                Q_ASSERT(version.has_value());
+                data[u"version"] = version.value();
+
+                diagnostic.data = data;
             }
             return diagnostic;
         };

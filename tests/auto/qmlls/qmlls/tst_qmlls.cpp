@@ -230,6 +230,7 @@ void tst_Qmlls::didOpenTextDocument()
 
                     TextDocumentEdit textDocEdit = documentChanges.first();
                     QCOMPARE(textDocEdit.textDocument.uri, textDocument.uri);
+                    QVERIFY(std::holds_alternative<int>(textDocEdit.textDocument.version));
 
                     QCOMPARE(textDocEdit.edits.size(), 1);
                     auto editVariant = textDocEdit.edits.first();
