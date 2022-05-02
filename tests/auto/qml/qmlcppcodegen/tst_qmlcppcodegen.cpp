@@ -1367,6 +1367,10 @@ void tst_QmlCppCodegen::noQQmlData()
 
 void tst_QmlCppCodegen::scopeObjectDestruction()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("crashes on Android, see QTBUG-103044.");
+#endif
+
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl(u"qrc:/TestTypes/fileDialog.qml"_s));
 
