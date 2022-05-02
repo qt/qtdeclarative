@@ -727,6 +727,8 @@ bool QQuickPinchArea::event(QEvent *event)
             clearPinch(nullptr);
             break;
         case Qt::ZoomNativeGesture: {
+            if (d->pinchRejected)
+                break;
             qreal scale = d->pinchLastScale * (1.0 + gesture->value());
             QQuickPinchEvent pe(d->pinchStartCenter, scale, d->pinchLastAngle, 0.0);
             pe.setStartCenter(d->pinchStartCenter);
@@ -744,7 +746,10 @@ bool QQuickPinchArea::event(QEvent *event)
             else
                 emit pinchStarted(&pe);
             d->inPinch = true;
-            updatePinchTarget();
+            if (pe.accepted())
+                updatePinchTarget();
+            else
+                d->pinchRejected = true;
         } break;
         case Qt::SmartZoomNativeGesture: {
             if (gesture->value() > 0.0 && d->pinch && d->pinch->target()) {
@@ -768,6 +773,8 @@ bool QQuickPinchArea::event(QEvent *event)
             emit smartZoom(&pe);
         } break;
         case Qt::RotateNativeGesture: {
+            if (d->pinchRejected)
+                break;
             qreal angle = d->pinchLastAngle + gesture->value();
             QQuickPinchEvent pe(d->pinchStartCenter, d->pinchLastScale, angle, 0.0);
             pe.setStartCenter(d->pinchStartCenter);
@@ -786,7 +793,10 @@ bool QQuickPinchArea::event(QEvent *event)
                 emit pinchStarted(&pe);
             d->inPinch = true;
             d->pinchRotation = angle;
-            updatePinchTarget();
+            if (pe.accepted())
+                updatePinchTarget();
+            else
+                d->pinchRejected = true;
         } break;
         default:
             return QQuickItem::event(event);
