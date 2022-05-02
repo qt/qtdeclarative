@@ -1,3 +1,4 @@
 [tabletStylus]
 macos ci
 qnx
+android # QTBUG-103068
