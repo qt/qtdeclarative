@@ -1,2 +1,5 @@
 [Tests_GridLayout::test_spacings]
 qnx
+# QTBUG-103060
+[Tests_GridLayout::test_spacings]
+android
