@@ -39,8 +39,8 @@ core QML features, including properties, signals and bindings. It also shows how
 extensions can be deployed through plugins.
 
 Many of the topics covered in this tutorial are documented in further detail in
-\l {qtqml-cppintegration-topic.html}{Integrating QML and C++} and its documentation
-sub-topics. In particular, you may be interested in the sub-topics
+\l{Overview - QML and C++ Integration} and its documentation sub-topics. In
+particular, you may be interested in the sub-topics
 \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Classes to QML}
 and \l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 
@@ -51,6 +51,11 @@ associated with each tutorial chapter. In \l{Qt Creator Manual}{Qt Creator}, ope
 the \uicontrol Welcome mode and select the tutorial from \uicontrol Examples. In
 \uicontrol Edit mode, expand the \e extending-qml project, right-click on the
 subproject (chapter) you want to run and select \uicontrol Run.
+
+\section1 Creating Tutorial Project
+
+We create a new project using the \e {Qt Quick Application} template in Qt Creator,
+as instructed in \l {Qt Creator: Creating Qt Quick Projects}.
 
 \section1 Chapter 1: Creating a New Type
 \c extending-qml/chapter1-basics
@@ -526,5 +531,4 @@ Or randomly add and remove slices from time to time using \l{Property Value Sour
     }
 \endcode
 
-\sa {Simple QML and C++ Integration Example}
 */

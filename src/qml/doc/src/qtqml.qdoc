@@ -143,7 +143,6 @@ the QML code to interact with C++ code.
 
 \list
     \li \l {Writing QML Extensions with C++}
-    \li \l {Simple QML and C++ Integration Example}
 \endlist
 
 \omit

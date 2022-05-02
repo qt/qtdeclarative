@@ -119,7 +119,7 @@ These pages describe how to create QML applications which interact with the
 C++ classes:
 
 \list
-\li \l{qtqml-cppintegration-topic.html}{Integrating QML and C++}
+\li \l{Overview - QML and C++ Integration}
     \list
     \li \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Classes to QML}
     \li \l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}
