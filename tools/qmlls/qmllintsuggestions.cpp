@@ -172,7 +172,6 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
         QStringList imports = m_codeModel->buildPathsForFileUrl(url);
         imports.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
         // add m_server->clientInfo().rootUri & co?
-        bool useAbsolutePath = false;
         bool silent = true;
         QString filename = doc.canonicalFilePath();
         fileContents = doc.field(Fields::code).value().toString();
@@ -180,7 +179,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
         QStringList resourceFiles;
         QMap<QString, QQmlJSLogger::Option> options;
 
-        QQmlJSLinter linter(imports, {}, useAbsolutePath);
+        QQmlJSLinter linter(imports);
 
         linter.lintFile(filename, &fileContents, silent, nullptr, imports, qmltypesFiles,
                         resourceFiles, options);
