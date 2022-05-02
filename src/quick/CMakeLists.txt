@@ -203,6 +203,7 @@ qt_internal_add_qml_module(Quick
         util/qquicktransitionmanager_p_p.h
         util/qquickvalidator.cpp util/qquickvalidator_p.h
         util/qquickvaluetypes.cpp util/qquickvaluetypes_p.h
+        util/qquickframeanimation.cpp util/qquickframeanimation_p.h
     DEFINES
         QT_NO_FOREACH
         QT_NO_INTEGER_EVENT_COORDINATES

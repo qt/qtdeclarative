@@ -41,6 +41,7 @@
 #include <QtQuick/private/qquickpathinterpolator_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuick/private/qquickframeanimation_p.h>
 #include <QEasingCurve>
 
 #include <limits.h>
@@ -120,6 +121,8 @@ private slots:
     void changePropertiesDuringAnimation_data();
     void changePropertiesDuringAnimation();
     void infiniteLoopsWithoutFrom();
+    void frameAnimation1();
+    void frameAnimation2();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2167,6 +2170,72 @@ void tst_qquickanimations::infiniteLoopsWithoutFrom()
     QCOMPARE(numsCrossedZero, 2);
 
     animation->stop();
+}
+
+void tst_qquickanimations::frameAnimation1()
+{
+    QQuickFrameAnimation frameAnimation;
+    QVERIFY(!frameAnimation.isRunning());
+    QVERIFY(!frameAnimation.isPaused());
+    QCOMPARE(frameAnimation.currentFrame(), 0);
+    QCOMPARE(frameAnimation.frameTime(), 0);
+    QCOMPARE(frameAnimation.smoothFrameTime(), 0);
+    QCOMPARE(frameAnimation.elapsedTime(), 0);
+
+    frameAnimation.start();
+    QVERIFY(frameAnimation.isRunning());
+    QVERIFY(!frameAnimation.isPaused());
+    frameAnimation.pause();
+    QVERIFY(frameAnimation.isRunning());
+    QVERIFY(frameAnimation.isPaused());
+    frameAnimation.resume();
+    QVERIFY(frameAnimation.isRunning());
+    QVERIFY(!frameAnimation.isPaused());
+    frameAnimation.stop();
+    QVERIFY(!frameAnimation.isRunning());
+    QVERIFY(!frameAnimation.isPaused());
+    frameAnimation.restart();
+    QVERIFY(frameAnimation.isRunning());
+    QVERIFY(!frameAnimation.isPaused());
+}
+
+void tst_qquickanimations::frameAnimation2()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("frameAnimation.qml"));
+    QScopedPointer<QObject> obj(c.create());
+    auto *root = qobject_cast<QQuickRectangle*>(obj.data());
+    QVERIFY(root);
+
+    QQuickFrameAnimation *frameAnimation = root->findChild<QQuickFrameAnimation*>();
+    QVERIFY(frameAnimation);
+    QSignalSpy spy(frameAnimation, SIGNAL(triggered()));
+
+    // Start the animation and wait at least 1 frame
+    frameAnimation->start();
+    QVERIFY(frameAnimation->isRunning());
+    QVERIFY(spy.wait(500));
+    QVERIFY(frameAnimation->currentFrame() > 0);
+    QVERIFY(frameAnimation->frameTime() > 0);
+    QVERIFY(frameAnimation->smoothFrameTime() > 0);
+    QVERIFY(frameAnimation->elapsedTime() > 0);
+
+    // Stopping and reseting should return currentFrame back to 0
+    frameAnimation->stop();
+    frameAnimation->reset();
+    QCOMPARE(frameAnimation->currentFrame(), 0);
+
+    // Start and wait so the animatation runs into frame 10 and pauses
+    frameAnimation->start();
+    QTest::qWait(500);
+    QVERIFY(frameAnimation->isPaused());
+    QCOMPARE(frameAnimation->currentFrame(), 10);
+
+    // Then resume the animation
+    frameAnimation->resume();
+    QVERIFY(!frameAnimation->isPaused());
+    QVERIFY(spy.wait(500));
+    QVERIFY(frameAnimation->currentFrame() > 10);
 }
 
 QTEST_MAIN(tst_qquickanimations)
