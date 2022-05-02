@@ -1,0 +1,15 @@
+# QTBUG-103088
+[layerSmooth]
+android
+[layerVisibility]
+android
+[layerZOrder]
+android
+[changeZOrder]
+android
+[itemEffect]
+android
+[rectangleEffect]
+android
+[textureMirroring]
+android
