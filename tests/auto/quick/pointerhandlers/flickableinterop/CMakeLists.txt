@@ -13,8 +13,6 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_flickableinterop
     SOURCES
         tst_flickableinterop.cpp
-    DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui

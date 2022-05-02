@@ -5,8 +5,6 @@
 qt_internal_add_test(tst_softwarerenderer
     SOURCES
         tst_softwarerenderer.cpp
-    DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
