@@ -359,15 +359,16 @@ private:
 
 int main(int argc, char *argv[])
 {
-    char **argv2 = new char *[argc + 2];
+    QVector<char *> argv2(argc + 2);
     for (int i = 0; i < argc; ++i)
         argv2[i] = argv[i];
-    argv2[argc] = qstrdup(qPrintable(QString("-qmljsdebugger=native,services:%1")
-                                             .arg(QQmlDebugTranslationServiceImpl::s_key)));
-    ++argc;
-    argv2[argc] = nullptr;
 
-    QGuiApplication app(argc, argv2);
+    QByteArray debuggerArg = QStringLiteral("-qmljsdebugger=native,services:%1")
+                                  .arg(QQmlDebugTranslationServiceImpl::s_key).toUtf8();
+    argv2[argc] = debuggerArg.data();
+    argv2[++argc] = nullptr;
+
+    QGuiApplication app(argc, argv2.data());
     app.setAttribute(Qt::AA_Use96Dpi, true); \
     tst_QQmlDebugTranslationService tc; \
     QTEST_SET_MAIN_SOURCE_PATH \
