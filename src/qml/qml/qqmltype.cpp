@@ -216,16 +216,15 @@ void QQmlTypePrivate::init() const
         return;
     }
 
-    auto setupExtendedMetaObject = [&](
-            const QMetaObject *extMetaObject,
-            QObject *(*extFunc)(QObject *)) {
-
+    auto setupExtendedMetaObject = [&](const QMetaObject *extMetaObject,
+                                       QObject *(*extFunc)(QObject *)) {
         if (!extMetaObject)
             return;
 
         // XXX - very inefficient
         QMetaObjectBuilder builder;
-        QQmlMetaType::clone(builder, extMetaObject, extMetaObject, extMetaObject);
+        QQmlMetaType::clone(builder, extMetaObject, extMetaObject, extMetaObject,
+                            extFunc ? QQmlMetaType::CloneAll : QQmlMetaType::CloneEnumsOnly);
         builder.setFlags(MetaObjectFlag::DynamicMetaObject);
         QMetaObject *mmo = builder.toMetaObject();
         mmo->d.superdata = mo;
