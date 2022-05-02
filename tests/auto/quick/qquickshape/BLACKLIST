@@ -1,0 +1,19 @@
+# QTBUG-103094
+[render]
+android
+[renderWithMultipleSp]
+android
+[radialGrad]
+android
+[conicalGrad]
+android
+[renderPolyline]
+android
+[renderMultiline]
+android
+[polylineDataTypes]
+android
+[multilineDataTypes]
+android
+[multilineStronglyTyped]
+android
