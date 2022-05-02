@@ -1,0 +1,5 @@
+# QTBUG-103076
+[mirror_running]
+android
+[mirror_notRunning]
+android
