@@ -11,3 +11,13 @@ macos ci
 
 [hAlignVisual]
 sles
+
+# QTBUG-103098
+[hAlignVisual]
+android
+[linkHover]
+android
+[cursorVisible]
+android
+[transparentSelectionColor]
+android
