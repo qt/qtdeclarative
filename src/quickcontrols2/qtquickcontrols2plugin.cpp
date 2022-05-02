@@ -34,6 +34,7 @@
 **
 ******************************************************************************/
 
+#include <QtCore/private/qfileselector_p.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlextensionplugin.h>
@@ -145,6 +146,9 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
         << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor
         << " import " << registeredStyleUri << " importMajor " << importMajor;
     qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredStyleUri.toUtf8().constData(), importMajor);
+
+    if (customStyle)
+        QFileSelectorPrivate::addStatics(QStringList() << styleName);
 }
 
 void QtQuickControls2Plugin::unregisterTypes()
