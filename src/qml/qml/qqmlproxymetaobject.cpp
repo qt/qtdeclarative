@@ -68,11 +68,8 @@ QQmlProxyMetaObject::~QQmlProxyMetaObject()
 QObject *QQmlProxyMetaObject::getProxy(int index)
 {
     if (!proxies) {
-        if (!proxies) {
-            proxies = new QObject*[metaObjects->count()];
-            ::memset(proxies, 0,
-                     sizeof(QObject *) * metaObjects->count());
-        }
+        proxies = new QObject *[metaObjects->count()];
+        ::memset(proxies, 0, sizeof(QObject *) * metaObjects->count());
     }
 
     if (!proxies[index]) {
@@ -112,6 +109,7 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
             const int globalPropertyOffset = metaObjects->at(ii).propertyOffset;
             if (id >= globalPropertyOffset) {
                 QObject *proxy = getProxy(ii);
+                Q_ASSERT(proxy);
                 const int localProxyOffset = proxy->metaObject()->propertyOffset();
                 const int localProxyId = id - globalPropertyOffset + localProxyOffset;
 
@@ -129,7 +127,7 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
                 const int globalMethodOffset = metaObjects->at(ii).methodOffset;
                 if (id >= globalMethodOffset) {
                     QObject *proxy = getProxy(ii);
-
+                    Q_ASSERT(proxy);
                     const int localMethodOffset = proxy->metaObject()->methodOffset();
                     const int localMethodId = id - globalMethodOffset + localMethodOffset;
 

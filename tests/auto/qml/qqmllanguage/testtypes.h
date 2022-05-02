@@ -1582,6 +1582,33 @@ public:
     int own() const { return 93; }
 };
 
+class ExtendedNamespaceByObject : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED_NAMESPACE(Extension)
+
+    Q_PROPERTY(QString dummy READ dummy CONSTANT)
+    Q_PROPERTY(int extension READ extension WRITE setExtension NOTIFY extensionChanged)
+
+    int m_ext = 0;
+
+public:
+    ExtendedNamespaceByObject(QObject *parent = nullptr) : QObject(parent) {}
+    QString dummy() const { return QStringLiteral("dummy"); }
+    int extension() const { return m_ext; }
+    void setExtension(int e)
+    {
+        if (e != m_ext) {
+            m_ext = e;
+            Q_EMIT extensionChanged();
+        }
+    }
+
+Q_SIGNALS:
+    void extensionChanged();
+};
+
 class FactorySingleton : public QObject
 {
     Q_OBJECT
