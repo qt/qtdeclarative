@@ -129,13 +129,13 @@ public:
 
 private:
     QString m_text;
-    quint32 m_nativeScanCode;
-    QEvent::Type m_type;
-    int m_key;
-    int m_modifiers;
-    int m_count;
-    bool m_accepted;
-    bool m_autoRepeat;
+    quint32 m_nativeScanCode = 0;
+    QEvent::Type m_type = QEvent::None;
+    int m_key = 0;
+    int m_modifiers = 0;
+    int m_count = 0;
+    bool m_accepted = false;
+    bool m_autoRepeat = false;
 };
 
 // used in Qt Location
@@ -157,8 +157,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
 
 public:
     QQuickMouseEvent()
-      : _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
-      , _wasHeld(false), _isClick(false), _accepted(false)
+      : _wasHeld(false), _isClick(false), _accepted(false)
     {}
 
     void reset(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons,
@@ -199,13 +198,13 @@ private:
     qreal _x = 0;
     qreal _y = 0;
     Qt::MouseButton _button = Qt::NoButton;
-    Qt::MouseButtons _buttons;
-    Qt::KeyboardModifiers _modifiers;
+    Qt::MouseButtons _buttons = Qt::NoButton;
+    Qt::KeyboardModifiers _modifiers = Qt::NoModifier;
     Qt::MouseEventSource _source = Qt::MouseEventNotSynthesized;
     bool _wasHeld : 1;
     bool _isClick : 1;
     bool _accepted : 1;
-    Qt::MouseEventFlags _flags;
+    Qt::MouseEventFlags _flags = Qt::NoMouseEventFlag;
 };
 
 #if QT_CONFIG(wheelevent)
