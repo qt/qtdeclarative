@@ -7,3 +7,12 @@ windows gcc
 windows gcc
 [touchDragSliderAndFlickable]
 * # QTBUG-86729
+
+# QTBUG-103061
+[touchDragFlickableBehindItemWithHandlers]
+android
+[mouseDragFlickableBehindItemWithHandlers]
+android
+[touchAndDragHandlerOnFlickable]
+android
+
