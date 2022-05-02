@@ -221,6 +221,8 @@ private slots:
     void moveCurrentIndexUsingArrowKeys();
     void moveCurrentIndexUsingHomeAndEndKeys();
     void moveCurrentIndexUsingPageUpDownKeys();
+    void setCurrentIndexOnFirstKeyPress_data();
+    void setCurrentIndexOnFirstKeyPress();
     void setCurrentIndexFromMouse();
     void disableKeyNavigation();
     void disablePointerNavigation();
@@ -4436,6 +4438,57 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
     QCOMPARE(tableView->currentColumn(), cellAtEnd.x());
     QCOMPARE(tableView->currentRow(), cellAtEnd.y());
+}
+
+void tst_QQuickTableView::setCurrentIndexOnFirstKeyPress_data()
+{
+    QTest::addColumn<Qt::Key>("arrowKey");
+
+    QTest::newRow("left") << Qt::Key_Left;
+    QTest::newRow("right") << Qt::Key_Right;
+    QTest::newRow("up") << Qt::Key_Up;
+    QTest::newRow("down") << Qt::Key_Down;
+}
+
+void tst_QQuickTableView::setCurrentIndexOnFirstKeyPress()
+{
+    // Check that TableView has focus, but no cell is current, the
+    // first key press on any of the arrow keys will assign the
+    // top left cell to be current.
+    QFETCH(Qt::Key, arrowKey);
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(2, 2);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have current set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kCurrent).toBool());
+
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+
+    // Pressing a random key, e.g 'a', should not change current index
+    QTest::keyPress(window, Qt::Key_A);
+    QVERIFY(!selectionModel.currentIndex().isValid());
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+
+    // Press the given arrow key
+    const QPoint topLeftCell(0, 0);
+    QTest::keyPress(window, arrowKey);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(topLeftCell));
+    QVERIFY(tableView->itemAtCell(topLeftCell)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), topLeftCell.x());
+    QCOMPARE(tableView->currentRow(), topLeftCell.y());
 }
 
 void tst_QQuickTableView::setCurrentIndexFromMouse()

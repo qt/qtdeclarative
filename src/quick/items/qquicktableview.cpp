@@ -4768,6 +4768,20 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
     const QModelIndex currentIndex = d->selectionModel->currentIndex();
     const QPoint currentCell = cellAtIndex(currentIndex);
 
+    if (!d->cellIsValid(currentCell)) {
+        switch (e->key()) {
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+            // Special case: the current index doesn't map to a cell in the view (perhaps
+            // because it isn't set yet). In that case, we set it to be the top-left cell.
+            const QModelIndex topLeftIndex = modelIndex(leftColumn(), topRow());
+            d->selectionModel->setCurrentIndex(topLeftIndex, QItemSelectionModel::NoUpdate);
+        }
+        return;
+    }
+
     auto beginMoveCurrentIndex = [=](){
         if (!select) {
             d->clearSelection();
