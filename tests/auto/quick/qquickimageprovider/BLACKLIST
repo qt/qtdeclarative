@@ -1,0 +1,21 @@
+# QTBUG-103047
+[requestImage_sync]
+android
+[requestImage_async]
+android
+[requestImage_async_forced]
+android
+[requestPixmap_sync]
+android
+[requestPixmap_async]
+android
+[removeProvider]
+android
+[threadTest]
+android
+[asyncTextureTest]
+android
+[instantAsyncTextureTest]
+android
+[asyncImageThreadSafety]
+android
