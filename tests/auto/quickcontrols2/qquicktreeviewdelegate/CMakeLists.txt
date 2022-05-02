@@ -12,8 +12,6 @@ qt_internal_add_test(tst_qquicktreeviewdelegate
     SOURCES
         testmodel.h testmodel.cpp
         tst_qquicktreeviewdelegate.cpp
-    DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui

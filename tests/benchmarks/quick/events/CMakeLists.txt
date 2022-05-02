@@ -7,8 +7,6 @@
 qt_internal_add_benchmark(tst_qevents
     SOURCES
         tst_events.cpp
-    DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui

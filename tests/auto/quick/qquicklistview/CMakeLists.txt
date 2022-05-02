@@ -17,8 +17,6 @@ qt_internal_add_test(tst_qquicklistview
         randomsortmodel.cpp randomsortmodel.h
         reusemodel.h
         tst_qquicklistview.cpp
-    DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
