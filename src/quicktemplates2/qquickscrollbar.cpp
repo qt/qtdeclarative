@@ -169,10 +169,12 @@ QQuickScrollBarPrivate::VisualArea QQuickScrollBarPrivate::visualArea() const
     if (minimumSize > size && size != 1.0)
         visualPos = position / (1.0 - size) * (1.0 - minimumSize);
 
-    qreal visualSize = qBound<qreal>(0, qMax(size, minimumSize) + qMin<qreal>(0, visualPos),
-                                     qMax(0.0, 1.0 - visualPos));
+    qreal maximumSize = qMax<qreal>(0.0, 1.0 - visualPos);
+    qreal visualSize =  qMax<qreal>(minimumSize,
+                                    qMin<qreal>(qMax(size, minimumSize) + qMin<qreal>(0, visualPos),
+                                                maximumSize));
 
-    visualPos = qBound<qreal>(0, visualPos, qMax<qreal>(0, 1.0 - visualSize));
+    visualPos = qMax<qreal>(0,qMin<qreal>(visualPos,qMax<qreal>(0, 1.0 - visualSize)));
 
     return VisualArea(visualPos, visualSize);
 }
@@ -333,7 +335,7 @@ bool QQuickScrollBarPrivate::handleMove(const QPointF &point, ulong timestamp)
     if (!pressed)
         return true;
 
-    qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
+    qreal pos = qMax<qreal>(0.0, qMin<qreal>(positionAt(point) - offset, 1.0 - size));
     if (snapMode == QQuickScrollBar::SnapAlways)
         pos = snapPosition(pos);
     q->setPosition(pos);
@@ -353,7 +355,7 @@ bool QQuickScrollBarPrivate::handleRelease(const QPointF &point, ulong timestamp
             return true;
     }
 
-    qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
+    qreal pos = qMax<qreal>(0.0, qMin<qreal>(positionAt(point) - offset, 1.0 - size));
     if (snapMode != QQuickScrollBar::NoSnap)
         pos = snapPosition(pos);
     q->setPosition(pos);
@@ -446,6 +448,12 @@ void QQuickScrollBar::setSize(qreal size)
     d->size = size;
 
     auto oldVisualArea = d->visualArea();
+    d->size = qBound(0.0, size, 1.0);
+    if (d->size + d->position > 1.0) {
+        setPosition(1.0 - d->size);
+        oldVisualArea = d->visualArea();
+    }
+
     if (isComponentComplete())
         d->resizeContent();
     emit sizeChanged();

@@ -163,9 +163,12 @@ QQuickScrollIndicatorPrivate::VisualArea QQuickScrollIndicatorPrivate::visualAre
     if (minimumSize > size)
         visualPos = position / (1.0 - size) * (1.0 - minimumSize);
 
-    qreal visualSize = qBound<qreal>(0, qMax(size, minimumSize) + qMin<qreal>(0, visualPos), 1.0 - visualPos);
+    qreal maximumSize = qMax<qreal>(0.0, 1.0 - visualPos);
+    qreal visualSize =  qMax<qreal>(minimumSize,
+                                    qMin<qreal>(qMax(size, minimumSize) + qMin<qreal>(0, visualPos),
+                                                maximumSize));
 
-    visualPos = qBound<qreal>(0, visualPos, 1.0 - visualSize);
+    visualPos = qMax<qreal>(0,qMin<qreal>(visualPos,qMax<qreal>(0, 1.0 - visualSize)));
 
     return VisualArea(visualPos, visualSize);
 }
@@ -234,6 +237,10 @@ void QQuickScrollIndicator::setSize(qreal size)
 
     auto oldVisualArea = d->visualArea();
     d->size = size;
+    if (d->size + d->position > 1.0) {
+        setPosition(1.0 - d->size);
+        oldVisualArea = d->visualArea();
+    }
     if (isComponentComplete())
         d->resizeContent();
     emit sizeChanged();

@@ -965,6 +965,29 @@ TestCase {
         compare(vertical.contentItem.y, vertical.topPadding + 0.2 * vertical.availableHeight)
     }
 
+    function test_resize() {
+        var vertical = createTemporaryObject(scrollBar, testCase, { height:200, orientation: Qt.Vertical, size: 0.5, position: 0.5 })
+        verify(vertical)
+
+        vertical.size = 0.8
+        compare(vertical.position, 0.2)
+        compare(vertical.visualPosition, 0.2)
+        vertical.size = 0.5
+        compare(vertical.position, 0.2)
+        compare(vertical.visualPosition, 0.2)
+
+
+        var horizontal = createTemporaryObject(scrollBar, testCase, { width:200, orientation: Qt.Horizontal, size: 0.5, position: 0.5 })
+        verify(horizontal)
+
+        horizontal.size = 0.8
+        compare(horizontal.position, 0.2)
+        compare(horizontal.visualPosition, 0.2)
+        horizontal.size = 0.5
+        compare(horizontal.position, 0.2)
+        compare(horizontal.visualPosition, 0.2)
+    }
+
     function test_setting_invalid_property_values() {
         var control = createTemporaryObject(scrollBar, testCase, {size: 2.0, minimumSize: -1.0})
         verify(control)
