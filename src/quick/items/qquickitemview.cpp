@@ -290,8 +290,6 @@ void QQuickItemView::setDelegate(QQmlComponent *delegate)
     if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model)) {
         int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
-        if (isComponentComplete())
-            d->applyDelegateChange();
         if (oldCount != dataModel->count())
             emit countChanged();
     }
