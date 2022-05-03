@@ -435,11 +435,14 @@ qreal QQuickScrollBar::size() const
 void QQuickScrollBar::setSize(qreal size)
 {
     Q_D(QQuickScrollBar);
-    if (!qt_is_finite(size) || qFuzzyCompare(d->size, size))
+    if (!qt_is_finite(size))
         return;
+    size = qBound(0.0, size, 1.0);
+    if (qFuzzyCompare(d->size, size))
+        return;
+    d->size = size;
 
     auto oldVisualArea = d->visualArea();
-    d->size = qBound(0.0, size, 1.0);
     if (isComponentComplete())
         d->resizeContent();
     emit sizeChanged();
@@ -450,6 +453,11 @@ void QQuickScrollBar::setSize(qreal size)
     \qmlproperty real QtQuick.Controls::ScrollBar::position
 
     This property holds the position of the scroll bar, scaled to \c {0.0 - 1.0}.
+
+    The largest valid scrollbar position is \c {(1.0 - size)}. This gives
+    correct behavior for the most used case where moving the scrollbar
+    to the end will put the end of the document at the lower end of the
+    visible area of the connected Flickable.
 
     \sa {Flickable::visibleArea.yPosition}{Flickable::visibleArea}
 
