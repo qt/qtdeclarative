@@ -161,10 +161,10 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
            data->regexpTableSize * sizeof(QV4::Value));
     for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
-        uint f = re->flags;
+        uint f = re->flags();
         const CompiledData::RegExp::Flags flags = static_cast<CompiledData::RegExp::Flags>(f);
         runtimeRegularExpressions[i] = QV4::RegExp::create(
-                engine, stringAt(re->stringIndex), flags);
+                engine, stringAt(re->stringIndex()), flags);
     }
 
     if (data->lookupTableSize) {
