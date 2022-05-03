@@ -406,7 +406,9 @@ public:
 
     QQmlSourceLocation sourceLocation() const override final
     {
-        return QQmlSourceLocation(m_compilationUnit->fileName(), m_binding->valueLocation.line, m_binding->valueLocation.column);
+        return QQmlSourceLocation(
+                m_compilationUnit->fileName(), m_binding->valueLocation.line(),
+                m_binding->valueLocation.column());
     }
 
     static void onLanguageChange(QPropertyObserver *observer, QUntypedPropertyData *)

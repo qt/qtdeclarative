@@ -136,8 +136,8 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         QQmlJS::DiagnosticMessage *error)
 {
     QQmlJS::SourceLocation bindingLocation;
-    bindingLocation.startColumn = irBinding.location.column;
-    bindingLocation.startLine = irBinding.location.line;
+    bindingLocation.startLine = irBinding.location.line();
+    bindingLocation.startColumn = irBinding.location.column();
 
     QQmlJSCompilePass::Function function;
     function.qmlScope = m_scopeType;

@@ -784,8 +784,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         QQmlScriptString ss(compilationUnit->bindingValueAsScriptString(binding),
                             context->asQQmlContext(), _scopeObject);
         ss.d.data()->bindingId = bindingType == QV4::CompiledData::Binding::Type_Script ? binding->value.compiledScriptIndex : (quint32)QQmlBinding::Invalid;
-        ss.d.data()->lineNumber = binding->location.line;
-        ss.d.data()->columnNumber = binding->location.column;
+        ss.d.data()->lineNumber = binding->location.line();
+        ss.d.data()->columnNumber = binding->location.column();
         ss.d.data()->isStringLiteral = bindingType == QV4::CompiledData::Binding::Type_String;
         ss.d.data()->isNumberLiteral = bindingType == QV4::CompiledData::Binding::Type_Number;
         ss.d.data()->numberValue = compilationUnit->bindingValueAsNumber(binding);
@@ -1162,8 +1162,8 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
 {
     QQmlError error;
     error.setUrl(compilationUnit->url());
-    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
-    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line()));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column()));
     error.setDescription(description);
     errors << error;
 }
@@ -1285,8 +1285,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         compilationUnit.data(), obj, typeName, context->url()));
     Q_UNUSED(typeName); // only relevant for tracing
 
-    ddata->lineNumber = obj->location.line;
-    ddata->columnNumber = obj->location.column;
+    ddata->lineNumber = obj->location.line();
+    ddata->columnNumber = obj->location.column();
 
     ddata->setImplicitDestructible();
     // inline components are root objects, but their index is != 0, so we need

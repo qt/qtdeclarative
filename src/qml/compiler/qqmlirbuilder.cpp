@@ -170,7 +170,7 @@ QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typ
 void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex,
                   const QV4::CompiledData::Location &loc)
 {
-    Q_ASSERT(loc.line > 0 && loc.column > 0);
+    Q_ASSERT(loc.line() > 0 && loc.column() > 0);
     inheritedTypeNameIndex = typeNameIndex;
     location = loc;
     idNameIndex = idIndex;
@@ -195,8 +195,8 @@ QString IRBuilder::sanityCheckFunctionNames(Object *obj, const QSet<QString> &il
     QSet<int> functionNames;
     for (auto functionit = obj->functionsBegin(); functionit != obj->functionsEnd(); ++functionit) {
         Function *f = functionit.ptr;
-        errorLocation->startLine = f->location.line;
-        errorLocation->startColumn = f->location.column;
+        errorLocation->startLine = f->location.line();
+        errorLocation->startColumn = f->location.column();
         if (functionNames.contains(f->nameIndex))
             return tr("Duplicate method name");
         functionNames.insert(f->nameIndex);
@@ -409,8 +409,7 @@ void ScriptDirectivesCollector::importFile(const QString &jsfile, const QString 
     import->type = QV4::CompiledData::Import::ImportScript;
     import->uriIndex = jsGenerator->registerString(jsfile);
     import->qualifierIndex = jsGenerator->registerString(module);
-    import->location.line = lineNumber;
-    import->location.column = column;
+    import->location.set(lineNumber, column);
     document->imports << import;
 }
 
@@ -421,8 +420,7 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     import->uriIndex = jsGenerator->registerString(uri);
     import->version = IRBuilder::extractVersion(QStringView(version));
     import->qualifierIndex = jsGenerator->registerString(module);
-    import->location.line = lineNumber;
-    import->location.column = column;
+    import->location.set(lineNumber, column);
     document->imports << import;
 }
 
@@ -606,8 +604,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
     inlineComponent->nameIndex = registerString(ast->name.toString());
     inlineComponent->objectIndex = idx;
     auto location = ast->firstSourceLocation();
-    inlineComponent->location.line = location.startLine;
-    inlineComponent->location.column = location.startColumn;
+    inlineComponent->location.set(location.startLine, location.startColumn);
     _object->appendInlineComponent(inlineComponent);
     return false;
 }
@@ -803,8 +800,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
         import->version = QTypeRevision();
     }
 
-    import->location.line = node->importToken.startLine;
-    import->location.column = node->importToken.startColumn;
+    import->location.set(node->importToken.startLine, node->importToken.startColumn);
 
     import->uriIndex = registerString(uri);
 
@@ -857,8 +853,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
         return false;
     }
 
-    pragma->location.line = node->pragmaToken.startLine;
-    pragma->location.column = node->pragmaToken.startColumn;
+    pragma->location.set(node->pragmaToken.startLine, node->pragmaToken.startColumn);
     _pragmas.append(pragma);
 
     return false;
@@ -891,8 +886,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
     if (enumName.at(0).isLower())
         COMPILE_EXCEPTION(node->enumToken, tr("Scoped enum names must begin with an upper case letter"));
 
-    enumeration->location.line = node->enumToken.startLine;
-    enumeration->location.column = node->enumToken.startColumn;
+    enumeration->location.set(node->enumToken.startLine, node->enumToken.startColumn);
 
     enumeration->enumValues = New<PoolList<EnumValue>>();
 
@@ -911,8 +905,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
             COMPILE_EXCEPTION(e->valueToken, tr("Enum value out of range"));
         enumValue->value = e->value;
 
-        enumValue->location.line = e->memberToken.startLine;
-        enumValue->location.column = e->memberToken.startColumn;
+        enumValue->location.set(e->memberToken.startLine, e->memberToken.startColumn);
         enumeration->enumValues->append(enumValue);
 
         e = e->next;
@@ -936,8 +929,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         signal->nameIndex = registerString(signalName);
 
         QQmlJS::SourceLocation loc = node->typeToken;
-        signal->location.line = loc.startLine;
-        signal->location.column = loc.startColumn;
+        signal->location.set(loc.startLine, loc.startColumn);
 
         signal->parameters = New<PoolList<Parameter> >();
 
@@ -1019,8 +1011,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             property->nameIndex = registerString(propName);
 
             QQmlJS::SourceLocation loc = node->firstSourceLocation();
-            property->location.line = loc.startLine;
-            property->location.column = loc.startColumn;
+            property->location.set(loc.startLine, loc.startColumn);
 
             QQmlJS::SourceLocation errorLocation;
             QString error;
@@ -1064,8 +1055,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
 
         Function *f = New<Function>();
         QQmlJS::SourceLocation loc = funDecl->identifierToken;
-        f->location.line = loc.startLine;
-        f->location.column = loc.startColumn;
+        f->location.set(loc.startLine, loc.startColumn);
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
 
@@ -1138,8 +1128,7 @@ QStringView IRBuilder::textRefAt(const QQmlJS::SourceLocation &first, const QQml
 void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement, QQmlJS::AST::Node *parentNode)
 {
     QQmlJS::SourceLocation loc = statement->firstSourceLocation();
-    binding->valueLocation.line = loc.startLine;
-    binding->valueLocation.column = loc.startColumn;
+    binding->valueLocation.set(loc.startLine, loc.startColumn);
     binding->setType(QV4::CompiledData::Binding::Type_Invalid);
     if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
         binding->setFlag(QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration);
@@ -1256,8 +1245,7 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     binding->offset = nameLocation.offset;
-    binding->location.line = nameLocation.startLine;
-    binding->location.column = nameLocation.startColumn;
+    binding->location.set(nameLocation.startLine, nameLocation.startColumn);
     binding->clearFlags();
     setBindingValue(binding, value, parentNode);
     QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false);
@@ -1276,8 +1264,7 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
     binding->offset = nameLocation.offset;
-    binding->location.line = nameLocation.startLine;
-    binding->location.column = nameLocation.startColumn;
+    binding->location.set(nameLocation.startLine, nameLocation.startColumn);
 
     const Object *obj = _objects.at(objectIndex);
     binding->valueLocation = obj->location;
@@ -1316,8 +1303,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
     alias->setNameIndex(registerString(propName));
 
     QQmlJS::SourceLocation loc = node->firstSourceLocation();
-    alias->location.line = loc.startLine;
-    alias->location.column = loc.startColumn;
+    alias->location.set(loc.startLine, loc.startColumn);
 
     alias->propertyNameIndex = emptyStringIndex;
 
@@ -1331,8 +1317,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
         rhsLoc = node->statement->firstSourceLocation();
     else
         rhsLoc = node->semicolonToken;
-    alias->referenceLocation.line = rhsLoc.startLine;
-    alias->referenceLocation.column = rhsLoc.startColumn;
+    alias->referenceLocation.set(rhsLoc.startLine, rhsLoc.startColumn);
 
     QStringList aliasReference;
 
@@ -1427,8 +1412,7 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
         COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
 
     _object->idNameIndex = registerString(idQString);
-    _object->locationOfIdProperty.line = idLocation.startLine;
-    _object->locationOfIdProperty.column = idLocation.startColumn;
+    _object->locationOfIdProperty.set(idLocation.startLine, idLocation.startColumn);
 
     return true;
 }
@@ -1474,10 +1458,10 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             binding = New<Binding>();
             binding->propertyNameIndex = propertyNameIndex;
             binding->offset = qualifiedIdElement->identifierToken.offset;
-            binding->location.line = qualifiedIdElement->identifierToken.startLine;
-            binding->location.column = qualifiedIdElement->identifierToken.startColumn;
-            binding->valueLocation.line = qualifiedIdElement->next->identifierToken.startLine;
-            binding->valueLocation.column = qualifiedIdElement->next->identifierToken.startColumn;
+            binding->location.set(qualifiedIdElement->identifierToken.startLine,
+                                  qualifiedIdElement->identifierToken.startColumn);
+            binding->valueLocation.set(qualifiedIdElement->next->identifierToken.startLine,
+                                       qualifiedIdElement->next->identifierToken.startColumn);
             binding->clearFlags();
 
             if (onAssignment)

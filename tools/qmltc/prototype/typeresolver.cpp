@@ -75,7 +75,7 @@ void TypeResolver::init(Visitor &visitor, QQmlJS::AST::Node *program)
 QQmlJSScope::Ptr TypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
 {
     qCDebug(lcTypeResolver2()).nospace()
-            << "looking for object at " << location.line << ':' << location.column;
+            << "looking for object at " << location.line() << ':' << location.column();
     return m_objectsByLocationNonConst.value(location);
 }
 

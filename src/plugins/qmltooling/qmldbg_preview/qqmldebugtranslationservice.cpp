@@ -72,8 +72,8 @@ QDebug operator<<(QDebug debug, const TranslationBindingInformation &translation
 {
     QQmlError error;
     error.setUrl(translationBindingInformation.compilationUnit->url());
-    error.setLine(translationBindingInformation.compiledBinding->valueLocation.line);
-    error.setColumn(translationBindingInformation.compiledBinding->valueLocation.column);
+    error.setLine(translationBindingInformation.compiledBinding->valueLocation.line());
+    error.setColumn(translationBindingInformation.compiledBinding->valueLocation.column());
     error.setDescription(
         QString(QLatin1String(
             "QDebug translation binding"
@@ -299,8 +299,8 @@ private:
     {
         CodeMarker c;
         c.url = information.compilationUnit->url();
-        c.line = information.compiledBinding->valueLocation.line;
-        c.column = information.compiledBinding->valueLocation.column;
+        c.line = information.compiledBinding->valueLocation.line();
+        c.column = information.compiledBinding->valueLocation.column();
         return c;
     }
     QString currentStateName;

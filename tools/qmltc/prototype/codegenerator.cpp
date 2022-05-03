@@ -1189,16 +1189,16 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             qCWarning(lcCodeGenerator)
                     << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
                                       "binding on a group property.")
-                               .arg(QString::number(binding.location.line),
-                                    QString::number(binding.location.column));
+                               .arg(QString::number(binding.location.line()),
+                                    QString::number(binding.location.column()));
             // we do not support PropertyChanges and other types with similar
             // behavior yet, so this binding is compiled
         } else {
             qCDebug(lcCodeGenerator)
                     << QStringLiteral(
                                "Binding at line %1 column %2 is deferred and thus not compiled")
-                               .arg(QString::number(binding.location.line),
-                                    QString::number(binding.location.column));
+                               .arg(QString::number(binding.location.line()),
+                                    QString::number(binding.location.column()));
             return;
         }
     }
@@ -1939,5 +1939,5 @@ void CodeGenerator::recordError(const QQmlJS::SourceLocation &location, const QS
 
 void CodeGenerator::recordError(const QV4::CompiledData::Location &location, const QString &message)
 {
-    recordError(QQmlJS::SourceLocation { 0, 0, location.line, location.column }, message);
+    recordError(QQmlJS::SourceLocation { 0, 0, location.line(), location.column() }, message);
 }

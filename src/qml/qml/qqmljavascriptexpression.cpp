@@ -129,8 +129,8 @@ QString QQmlJavaScriptExpression::expressionIdentifier() const
 {
     if (auto f = function()) {
         QString url = f->sourceFile();
-        uint lineNumber = f->compiledFunction->location.line;
-        uint columnNumber = f->compiledFunction->location.column;
+        uint lineNumber = f->compiledFunction->location.line();
+        uint columnNumber = f->compiledFunction->location.column();
         return url + QString::asprintf(":%u:%u", lineNumber, columnNumber);
     }
 

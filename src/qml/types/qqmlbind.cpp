@@ -740,7 +740,7 @@ static QQmlAnyBinding createBinding(
         if (id == QQmlBinding::Invalid) {
             return QQmlAnyBinding::createFromCodeString(
                     prop, compilationUnit->bindingValueAsString(binding), scopeObject,
-                    contextData, compilationUnit->finalUrlString(), binding->location.line);
+                    contextData, compilationUnit->finalUrlString(), binding->location.line());
         }
         QV4::Scope scope(contextData->engine()->handle());
         QV4::Scoped<QV4::QmlContext> qmlCtxt(
