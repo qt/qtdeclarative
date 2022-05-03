@@ -71,6 +71,8 @@ private slots:
     void windowChange();
     void closePolicy_data();
     void closePolicy();
+    void closePolicy_grabberInside_data();
+    void closePolicy_grabberInside();
     void activeFocusOnClose1();
     void activeFocusOnClose2();
     void activeFocusOnClose3();
@@ -510,12 +512,15 @@ void tst_QQuickPopup::closePolicy()
     QVERIFY(popup->isVisible());
     QTRY_VERIFY(popup->isOpened());
 
+    // wait for dimmer
+    QTest::qWait(50);
+
     // press outside popup and its parent
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1), 50);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
     if (closePolicy.testFlag(QQuickPopup::CloseOnPressOutside) || closePolicy.testFlag(QQuickPopup::CloseOnPressOutsideParent))
         QTRY_VERIFY(!popup->isVisible());
     else
-        QVERIFY(popup->isVisible());
+        QVERIFY(popup->isOpened());
 
     popup->open();
     QVERIFY(popup->isVisible());
@@ -523,10 +528,10 @@ void tst_QQuickPopup::closePolicy()
 
     // release outside popup and its parent
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
-    if (closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutside))
+    if (closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutside) || closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutsideParent))
         QTRY_VERIFY(!popup->isVisible());
     else
-        QVERIFY(popup->isVisible());
+        QVERIFY(popup->isOpened());
 
     popup->open();
     QVERIFY(popup->isVisible());
@@ -537,7 +542,7 @@ void tst_QQuickPopup::closePolicy()
     if (closePolicy.testFlag(QQuickPopup::CloseOnPressOutside) && !closePolicy.testFlag(QQuickPopup::CloseOnPressOutsideParent))
         QTRY_VERIFY(!popup->isVisible());
     else
-        QVERIFY(popup->isVisible());
+        QVERIFY(popup->isOpened());
 
     popup->open();
     QVERIFY(popup->isVisible());
@@ -548,7 +553,7 @@ void tst_QQuickPopup::closePolicy()
     if (closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutside) && !closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutsideParent))
         QTRY_VERIFY(!popup->isVisible());
     else
-        QVERIFY(popup->isVisible());
+        QVERIFY(popup->isOpened());
 
     popup->open();
     QVERIFY(popup->isVisible());
@@ -557,9 +562,9 @@ void tst_QQuickPopup::closePolicy()
     // press inside and release outside
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(button->x() + popup->x() + 1,
                                                                      button->y() + popup->y() + 1));
-    QVERIFY(popup->isVisible());
+    QVERIFY(popup->isOpened());
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
-    QVERIFY(popup->isVisible());
+    QVERIFY(popup->isOpened());
 
     // escape
     QTest::keyClick(window, Qt::Key_Escape);
@@ -567,6 +572,56 @@ void tst_QQuickPopup::closePolicy()
         QTRY_VERIFY(!popup->isVisible());
     else
         QVERIFY(popup->isVisible());
+}
+
+void tst_QQuickPopup::closePolicy_grabberInside_data()
+{
+    qRegisterMetaType<QQuickPopup::ClosePolicy>();
+
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<QQuickPopup::ClosePolicy>("closePolicy");
+
+    QTest::newRow("Window:CloseOnReleaseOutside") << "window.qml"<< static_cast<QQuickPopup::ClosePolicy>(QQuickPopup::CloseOnReleaseOutside);
+    QTest::newRow("Window:CloseOnReleaseOutside|Parent") << "window.qml"<< static_cast<QQuickPopup::ClosePolicy>(QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
+
+    QTest::newRow("ApplicationWindow:CloseOnReleaseOutside") << "applicationwindow.qml"<< static_cast<QQuickPopup::ClosePolicy>(QQuickPopup::CloseOnReleaseOutside);
+    QTest::newRow("ApplicationWindow:CloseOnReleaseOutside|Parent") << "applicationwindow.qml"<< static_cast<QQuickPopup::ClosePolicy>(QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
+}
+
+void tst_QQuickPopup::closePolicy_grabberInside()
+{
+    QFETCH(QString, source);
+    QFETCH(QQuickPopup::ClosePolicy, closePolicy);
+
+    QQuickControlsApplicationHelper helper(this, source);
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = window->property("popup3").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    QQuickSlider *slider = window->property("slider").value<QQuickSlider*>();
+    QVERIFY(slider);
+
+    popup->setModal(true);
+    popup->setFocus(true);
+    popup->setClosePolicy(closePolicy);
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->isOpened());
+
+    // press on a mouse grabber inside and release outside
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier,
+                      slider->handle()->mapToItem(window->contentItem(),slider->handle()->boundingRect().center()).toPoint());
+
+    QVERIFY(popup->isOpened());
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(popup->isOpened());
 }
 
 void tst_QQuickPopup::activeFocusOnClose1()

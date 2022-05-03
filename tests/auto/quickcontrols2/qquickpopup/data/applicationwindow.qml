@@ -57,7 +57,9 @@ ApplicationWindow {
 
     property alias popup: popup
     property alias popup2: popup2
+    property alias popup3: popup3
     property alias button: button
+    property alias slider: slider
 
     Button {
         id: button
@@ -77,6 +79,15 @@ ApplicationWindow {
                     anchors.fill: parent
                     onClicked: popup.close()
                 }
+            }
+        }
+
+        Popup {
+            id: popup3
+            y: parent.height
+
+            Slider {
+                id: slider
             }
         }
     }
