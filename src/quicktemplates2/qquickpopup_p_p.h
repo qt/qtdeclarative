@@ -182,6 +182,8 @@ public:
     bool hadActiveFocusBeforeExitTransition = false;
     bool interactive = true;
     bool hasClosePolicy = false;
+    bool outsidePressed = false;
+    bool outsideParentPressed = false;
     int touchId = -1;
     qreal x = 0;
     qreal y = 0;

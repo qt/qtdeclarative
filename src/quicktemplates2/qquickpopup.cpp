@@ -321,7 +321,8 @@ bool QQuickPopupPrivate::tryClose(const QPointF &pos, QQuickPopup::ClosePolicy f
 
     const bool onOutside = closePolicy & (flags & outsideFlags);
     const bool onOutsideParent = closePolicy & (flags & outsideParentFlags);
-    if (onOutside || onOutsideParent) {
+
+    if ((onOutside && outsidePressed) || (onOutsideParent && outsideParentPressed)) {
         if (!contains(pos) && (!dimmer || dimmer->contains(dimmer->mapFromScene(pos)))) {
             if (!onOutsideParent || !parentItem || !parentItem->contains(parentItem->mapFromScene(pos))) {
                 closeOrReject();
@@ -365,6 +366,8 @@ bool QQuickPopupPrivate::handlePress(QQuickItem *item, const QPointF &point, ulo
 {
     Q_UNUSED(timestamp);
     pressPoint = point;
+    outsidePressed = !contains(point);
+    outsideParentPressed = outsidePressed && parentItem && !parentItem->contains(parentItem->mapFromScene(point));
     tryClose(point, QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
     return blockInput(item, point);
 }
@@ -381,6 +384,8 @@ bool QQuickPopupPrivate::handleRelease(QQuickItem *item, const QPointF &point, u
     if (item != popupItem && !contains(pressPoint))
         tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
     pressPoint = QPointF();
+    outsidePressed = false;
+    outsideParentPressed = false;
     touchId = -1;
     return blockInput(item, point);
 }
