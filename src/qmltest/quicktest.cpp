@@ -330,8 +330,8 @@ private:
                         } else {
                             QQmlError error;
                             error.setUrl(compilationUnit->url());
-                            error.setLine(binding->location.line);
-                            error.setColumn(binding->location.column);
+                            error.setLine(binding->location.line());
+                            error.setColumn(binding->location.column());
                             error.setDescription(QStringLiteral("the 'name' property of a TestCase must be a literal string"));
                             result.errors << error;
                         }

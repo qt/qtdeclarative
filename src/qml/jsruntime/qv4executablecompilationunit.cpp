@@ -571,7 +571,9 @@ Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
         if (!valuePtr) {
             QString referenceErrorMessage = QStringLiteral("Unable to resolve import reference ");
             referenceErrorMessage += importName->toQString();
-            engine->throwReferenceError(referenceErrorMessage, fileName(), entry.location.line, entry.location.column);
+            engine->throwReferenceError(
+                    referenceErrorMessage, fileName(),
+                    entry.location.line(), entry.location.column());
             return nullptr;
         }
         imports[i] = valuePtr;
@@ -587,7 +589,9 @@ Heap::Module *ExecutableCompilationUnit::instantiate(ExecutionEngine *engine)
         if (!dependentModuleUnit->resolveExport(importName)) {
             QString referenceErrorMessage = QStringLiteral("Unable to resolve re-export reference ");
             referenceErrorMessage += importName->toQString();
-            engine->throwReferenceError(referenceErrorMessage, fileName(), entry.location.line, entry.location.column);
+            engine->throwReferenceError(
+                    referenceErrorMessage, fileName(),
+                    entry.location.line(), entry.location.column());
             return nullptr;
         }
     }

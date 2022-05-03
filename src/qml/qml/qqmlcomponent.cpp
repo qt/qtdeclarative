@@ -1436,8 +1436,10 @@ QQmlError QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(const RequiredP
     }
     error.setDescription(description);
     error.setUrl(unsetRequiredProperty.fileUrl);
-    error.setLine(qmlConvertSourceCoordinate<quint32, int>(unsetRequiredProperty.location.line));
-    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(unsetRequiredProperty.location.column));
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(
+            unsetRequiredProperty.location.line()));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(
+            unsetRequiredProperty.location.column()));
     return  error;
 }
 

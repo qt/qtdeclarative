@@ -168,8 +168,8 @@ void QQmlScriptBlob::done()
             QList<QQmlError> errors = script.script->errors();
             QQmlError error;
             error.setUrl(url());
-            error.setLine(qmlConvertSourceCoordinate<quint32, int>(script.location.line));
-            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(script.location.column));
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(script.location.line()));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(script.location.column()));
             error.setDescription(QQmlTypeLoader::tr("Script %1 unavailable").arg(script.script->urlString()));
             errors.prepend(error);
             setError(errors);
@@ -237,8 +237,8 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Exe
                 Q_ASSERT(errors.size());
                 QQmlError error(errors.takeFirst());
                 error.setUrl(m_importCache.baseUrl());
-                error.setLine(import->location.line);
-                error.setColumn(import->location.column);
+                error.setLine(import->location.line());
+                error.setColumn(import->location.column());
                 errors.prepend(error); // put it back on the list after filling out information.
                 setError(errors);
                 return;

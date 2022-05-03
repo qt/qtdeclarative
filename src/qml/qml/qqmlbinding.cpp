@@ -353,7 +353,9 @@ public:
 
     QQmlSourceLocation sourceLocation() const override final
     {
-        return QQmlSourceLocation(m_compilationUnit->fileName(), m_binding->valueLocation.line, m_binding->valueLocation.column);
+        return QQmlSourceLocation(
+                m_compilationUnit->fileName(), m_binding->valueLocation.line(),
+                m_binding->valueLocation.column());
     }
 
 
@@ -532,8 +534,8 @@ QString QQmlBinding::expressionIdentifier() const
 {
     if (auto f = function()) {
         QString url = f->sourceFile();
-        uint lineNumber = f->compiledFunction->location.line;
-        uint columnNumber = f->compiledFunction->location.column;
+        uint lineNumber = f->compiledFunction->location.line();
+        uint columnNumber = f->compiledFunction->location.column();
         return url + QString::asprintf(":%u:%u", lineNumber, columnNumber);
     }
 

@@ -468,8 +468,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         currentOffset += function->nLabelInfos * sizeof(quint32);
     }
 
-    function->location.line = irFunction->line;
-    function->location.column = irFunction->column;
+    function->location.set(irFunction->line, irFunction->column);
 
     function->codeOffset = currentOffset;
     function->codeSize = irFunction->code.size();
