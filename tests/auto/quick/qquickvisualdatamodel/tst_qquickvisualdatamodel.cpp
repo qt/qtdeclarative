@@ -434,6 +434,7 @@ private slots:
     void invalidContext();
     void externalManagedModel();
     void delegateModelChangeDelegate();
+    void noDoubleDelegateUpdate();
     void checkFilterGroupForDelegate();
     void readFromProxyObject();
 
@@ -4343,6 +4344,20 @@ void tst_qquickvisualdatamodel::delegateModelChangeDelegate()
     // After changing the delegate, expect the existing item to have the new delegate
     QCOMPARE(visualModel->object(0, QQmlIncubator::Synchronous)->objectName(), QStringLiteral("new"));
     QCOMPARE(visualModel->count(), 3);
+}
+
+void tst_qquickvisualdatamodel::noDoubleDelegateUpdate()
+{
+    // changing a delegate only refreshes its instances once
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("setDelegateNoDoubleChange.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+
+    bool ok = root->setProperty("testStarted", true);
+    QVERIFY(ok);
+    QCOMPARE(root->property("creationCount").toInt(), 1);
 }
 
 void tst_qquickvisualdatamodel::checkFilterGroupForDelegate()
