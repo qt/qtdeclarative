@@ -67,8 +67,8 @@ inline QQmlError qQmlCompileError(const QV4::CompiledData::Location &location,
                                                   const QString &description)
 {
     QQmlError error;
-    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
-    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line()));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column()));
     error.setDescription(description);
     return error;
 }

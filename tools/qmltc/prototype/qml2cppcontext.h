@@ -58,7 +58,7 @@ struct Qml2CppContext
 
     void recordError(const QV4::CompiledData::Location &location, const QString &message) const
     {
-        recordError(QQmlJS::SourceLocation { 0, 0, location.line, location.column }, message);
+        recordError(QQmlJS::SourceLocation { 0, 0, location.line(), location.column() }, message);
     }
 };
 
