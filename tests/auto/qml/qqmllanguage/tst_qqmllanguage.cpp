@@ -363,6 +363,8 @@ private slots:
     void qtbug_86482();
 
     void multiExtension();
+    void multiExtensionIndirect();
+    void extensionSpecial();
     void invalidInlineComponent();
     void warnOnInjectedParameters();
 #if QT_CONFIG(wheelevent)
@@ -6348,7 +6350,67 @@ void tst_qqmllanguage::multiExtension()
     QCOMPARE(o->property("c").toInt(), 12);
     QCOMPARE(o->property("d").toInt(), 22);
     QCOMPARE(o->property("f").toInt(), 31);
-    QCOMPARE(o->property("g").toInt(), 44);
+    QCOMPARE(o->property("g").toInt(), 44); // NB: taken from the type, not from the extension!
+}
+
+void tst_qqmllanguage::multiExtensionIndirect()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import StaticTest\nMultiExtensionIndirect {}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("a").toInt(), int('a'));
+    QCOMPARE(o->property("b").toInt(), 77); // indirect extension is not considered
+    QCOMPARE(o->property("p").toInt(), int('p'));
+    QCOMPARE(o->property("e").toInt(), int('e'));
+
+    QCOMPARE(o->property("c").toInt(), int('c')); // indirect extension is not considered
+    QCOMPARE(o->property("d").toInt(), 21); // indirect extension is not considered
+    QCOMPARE(o->property("f").toInt(), 31);
+    QCOMPARE(o->property("g").toInt(), 44); // NB: taken from the type, not from the extension!
+}
+
+void tst_qqmllanguage::extensionSpecial()
+{
+    QQmlEngine engine;
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\nExtendedInParent {}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+
+        // property a exists only in the extension type
+        QCOMPARE(o->property("a").toInt(), int('a'));
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\nExtendedByIndirect {}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+
+        // there are (visibly) no properties in this case
+        QCOMPARE(o->property("b"), QVariant());
+        QCOMPARE(o->property("c"), QVariant());
+        QCOMPARE(o->property("d"), QVariant());
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\nExtendedInParentByIndirect {}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+
+        // there are (visibly) no properties in this case (same as the previous)
+        QCOMPARE(o->property("b"), QVariant());
+        QCOMPARE(o->property("c"), QVariant());
+        QCOMPARE(o->property("d"), QVariant());
+    }
 }
 
 void tst_qqmllanguage::invalidInlineComponent()

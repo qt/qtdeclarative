@@ -1707,6 +1707,14 @@ public:
     int d() const { return 22; }
 };
 
+class IndirectExtensionB : public ExtensionB
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+public:
+    IndirectExtensionB(QObject *parent = nullptr) : ExtensionB(parent) { }
+};
+
 class MultiExtensionParent : public QObject
 {
     Q_OBJECT
@@ -1735,6 +1743,56 @@ public:
     int e() const { return 'e'; }
     int c() const { return 14; }
     int g() const { return 44; }
+};
+
+class MultiExtensionIndirect : public MultiExtensionParent
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(IndirectExtensionB)
+
+    Q_PROPERTY(int b READ b CONSTANT) // won't be able to use ExtensionB, so provide own property
+
+    Q_PROPERTY(int e READ e CONSTANT)
+    Q_PROPERTY(int c READ c CONSTANT)
+    Q_PROPERTY(int g READ g CONSTANT)
+public:
+    MultiExtensionIndirect(QObject *parent = nullptr) : MultiExtensionParent(parent) { }
+
+    int b() const { return 77; }
+
+    int e() const { return 'e'; }
+    int c() const { return 'c'; }
+    int g() const { return 44; }
+};
+
+class ExtendedInParent : public MultiExtensionParent
+{
+    Q_OBJECT
+    QML_ELEMENT
+    // properties from base type: p, c, f
+    // properties from base type's extension: a, c, d, f, g
+public:
+    ExtendedInParent(QObject *parent = nullptr) : MultiExtensionParent(parent) { }
+};
+
+class ExtendedByIndirect : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(IndirectExtensionB)
+    // properties from extension's base type: b, c, d
+public:
+    ExtendedByIndirect(QObject *parent = nullptr) : QObject(parent) { }
+};
+
+class ExtendedInParentByIndirect : public ExtendedByIndirect
+{
+    Q_OBJECT
+    QML_ELEMENT
+    // properties from base type's extension's base type: b, c, d
+public:
+    ExtendedInParentByIndirect(QObject *parent = nullptr) : ExtendedByIndirect(parent) { }
 };
 
 class StringSignaler : public QObject
