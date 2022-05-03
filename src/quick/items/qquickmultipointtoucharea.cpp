@@ -687,7 +687,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints 
             emit released(_releasedTouchPoints);
         if (moved)
             emit updated(_movedTouchPoints);
-        if (started)
+        if (started && !_pressedTouchPoints.isEmpty())
             emit pressed(_pressedTouchPoints);
         if (ended || moved || started) emit touchUpdated(_touchPoints.values());
     }
@@ -732,12 +732,15 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QEventPoint *p)
 void QQuickMultiPointTouchArea::addTouchPoint(const QMouseEvent *e)
 {
     QQuickTouchPoint *dtp = nullptr;
-    for (QQuickTouchPoint *tp : qAsConst(_touchPrototypes))
+    for (QQuickTouchPoint *tp : qAsConst(_touchPrototypes)) {
         if (!tp->inUse()) {
             tp->setInUse(true);
             dtp = tp;
             break;
+        } else if (_mouseTouchPoint == tp) {
+            return; // do not allow more than one touchpoint to react to the mouse (QTBUG-83662)
         }
+    }
 
     if (dtp == nullptr)
         dtp = new QQuickTouchPoint(false);
