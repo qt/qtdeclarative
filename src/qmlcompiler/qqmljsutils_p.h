@@ -177,6 +177,9 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     template<typename QQmlJSScopePtr, typename Action>
     static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check)
     {
+        if (!type)
+            return false;
+
         using namespace detail;
 
         // NB: among other things, getQQmlJSScopeFromSmartPtr() also resolves const
@@ -196,17 +199,26 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
             }
         };
 
+        const bool isValueType = (type->accessSemantics() == QQmlJSScope::AccessSemantics::Value);
+
         QDuplicateTracker<T> seen;
         for (T scope = type; scope && !seen.hasSeen(scope);
              scope = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->baseType())) {
-            // Extensions override their base types
             QDuplicateTracker<T> seenExtensions;
-            for (T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
-                 extension && !seenExtensions.hasSeen(extension);
-                 extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType())) {
+            // Extensions override the types they extend. However, usually base
+            // types of extensions are ignored. The unusual cases are when we
+            // have a value type or when we have the QObject type, in which case
+            // we also study the extension's base type hierarchy.
+            const bool isQObject = scope->internalName() == QLatin1String("QObject");
+            T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
+            do {
+                if (!extension || seenExtensions.hasSeen(extension))
+                    break;
+
                 if (checkWrapper(extension, QQmlJSScope::ExtensionType))
                     return true;
-            }
+                extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType());
+            } while (isValueType || isQObject);
 
             if (checkWrapper(scope, QQmlJSScope::NotExtension))
                 return true;

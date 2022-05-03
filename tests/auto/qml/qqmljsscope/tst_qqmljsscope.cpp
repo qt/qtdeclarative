@@ -128,6 +128,7 @@ private Q_SLOTS:
     void groupedPropertySyntax();
     void attachedProperties();
     void scriptIndices();
+    void extensions();
 
 public:
     tst_qqmljsscope()
@@ -566,6 +567,28 @@ void tst_qqmljsscope::scriptIndices()
 
     QCOMPARE(orderedJSScopeExpressionsRelative, orderedQmlIrExpressionsRelative);
     QCOMPARE(orderedJSScopeExpressionsAbsolute, orderedQmlIrExpressionsAbsolute);
+}
+
+void tst_qqmljsscope::extensions()
+{
+    QQmlJSScope::ConstPtr root = run(u"extensions.qml"_s);
+    QVERIFY(root);
+    QVERIFY(root->isFullyResolved());
+
+    const auto childScopes = root->childScopes();
+    QCOMPARE(childScopes.size(), 3);
+
+    QCOMPARE(childScopes[0]->baseTypeName(), u"Extended"_s);
+    QCOMPARE(childScopes[1]->baseTypeName(), u"ExtendedIndirect"_s);
+    QCOMPARE(childScopes[2]->baseTypeName(), u"ExtendedTwice"_s);
+    QVERIFY(childScopes[0]->isFullyResolved());
+    QVERIFY(childScopes[1]->isFullyResolved());
+    QVERIFY(childScopes[2]->isFullyResolved());
+
+    QCOMPARE(childScopes[0]->property(u"count"_s).typeName(), u"int"_s);
+    QCOMPARE(childScopes[1]->property(u"count"_s).typeName(), u"double"_s);
+    QCOMPARE(childScopes[2]->property(u"count"_s).typeName(), u"int"_s);
+    QCOMPARE(childScopes[2]->property(u"str"_s).typeName(), u"QString"_s);
 }
 
 QTEST_MAIN(tst_qqmljsscope)
