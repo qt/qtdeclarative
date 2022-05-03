@@ -195,22 +195,19 @@ int QV4::Compiler::JSUnitGenerator::registerQmlContextPropertyGetterLookup(int n
 
 int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::AST::RegExpLiteral *regexp)
 {
-    CompiledData::RegExp re;
-    re.stringIndex = registerString(regexp->pattern.toString());
-
-    re.flags = 0;
+    quint32 flags = 0;
     if (regexp->flags & QQmlJS::Lexer::RegExp_Global)
-        re.flags |= CompiledData::RegExp::RegExp_Global;
+        flags |= CompiledData::RegExp::RegExp_Global;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_IgnoreCase)
-        re.flags |= CompiledData::RegExp::RegExp_IgnoreCase;
+        flags |= CompiledData::RegExp::RegExp_IgnoreCase;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Multiline)
-        re.flags |= CompiledData::RegExp::RegExp_Multiline;
+        flags |= CompiledData::RegExp::RegExp_Multiline;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Unicode)
-        re.flags |= CompiledData::RegExp::RegExp_Unicode;
+        flags |= CompiledData::RegExp::RegExp_Unicode;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Sticky)
-        re.flags |= CompiledData::RegExp::RegExp_Sticky;
+        flags |= CompiledData::RegExp::RegExp_Sticky;
 
-    regexps.append(re);
+    regexps.append(CompiledData::RegExp(flags, registerString(regexp->pattern.toString())));
     return regexps.size() - 1;
 }
 
