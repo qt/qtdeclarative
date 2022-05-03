@@ -44,17 +44,29 @@ Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
 template<typename Action>
 static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const Action &check)
 {
+    if (!type)
+        return false;
+
+    const bool isValueType = (type->accessSemantics() == QQmlJSScope::AccessSemantics::Value);
+
     QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
     for (QQmlJSScope::ConstPtr scope = type; scope && !seen.hasSeen(scope);
          scope = scope->baseType()) {
-        // Extensions override their base types
+
         QDuplicateTracker<QQmlJSScope::ConstPtr> seenExtensions;
-        for (QQmlJSScope::ConstPtr extension = scope->extensionType();
-             extension && !seenExtensions.hasSeen(extension);
-             extension = extension->baseType()) {
+        // Extensions override the types they extend. However, usually base
+        // types of extensions are ignored. The unusual cases are when we
+        // have a value type or when we have the QObject type, in which case
+        // we also study the extension's base type hierarchy.
+        const bool isQObject = scope->internalName() == QLatin1String("QObject");
+        QQmlJSScope::ConstPtr extension = scope->extensionType();
+        do {
+            if (!extension || seenExtensions.hasSeen(extension))
+                break;
             if (check(extension, QQmlJSTypeResolver::Extension))
                 return true;
-        }
+            extension = extension->baseType();
+        } while (isValueType || isQObject);
 
         if (check(scope, QQmlJSTypeResolver::Base))
             return true;

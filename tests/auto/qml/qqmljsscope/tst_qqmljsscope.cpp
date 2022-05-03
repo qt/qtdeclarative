@@ -77,19 +77,13 @@ class tst_qqmljsscope : public QQmlDataTest
         if (!error.message.isEmpty())
             return QQmlJSScope::ConstPtr();
 
-        const QStringList importPaths = {
-            QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
-            dataDirectory(),
-        };
-
-        QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
         QQmlJSLogger logger;
         logger.setFileName(url);
         logger.setCode(sourceCode);
         logger.setSilent(true);
         QQmlJSScope::Ptr target = QQmlJSScope::create();
-        QQmlJSImportVisitor visitor(target, &importer, &logger, dataDirectory());
-        QQmlJSTypeResolver typeResolver { &importer };
+        QQmlJSImportVisitor visitor(target, &m_importer, &logger, dataDirectory());
+        QQmlJSTypeResolver typeResolver { &m_importer };
         typeResolver.init(&visitor, document.program);
         return visitor.result();
     }
@@ -100,9 +94,26 @@ private Q_SLOTS:
     void orderedBindings();
     void signalCreationDifferences();
     void descriptiveNameOfNull();
+    void extensions();
 
 public:
-    tst_qqmljsscope() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
+    tst_qqmljsscope()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
+        , m_importer(
+                {
+                        QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+                        dataDirectory(),
+                        // Note: to be able to import the QQmlJSScopeTests
+                        // correctly, we need an additional import path. Use
+                        // this application's binary directory as done by
+                        // QQmlImportDatabase
+                        QCoreApplication::applicationDirPath(),
+                },
+                nullptr)
+    {}
+
+private:
+    QQmlJSImporter m_importer;
 };
 
 void tst_qqmljsscope::initTestCase()
@@ -178,6 +189,28 @@ void tst_qqmljsscope::descriptiveNameOfNull()
     QQmlJSRegisterContent unscoped = QQmlJSRegisterContent::create(
                 stored, property, QQmlJSRegisterContent::ScopeProperty, QQmlJSScope::ConstPtr());
     QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_qs);
+}
+
+void tst_qqmljsscope::extensions()
+{
+    QQmlJSScope::ConstPtr root = run(u"extensions.qml"_qs);
+    QVERIFY(root);
+    QVERIFY(root->isFullyResolved());
+
+    const auto childScopes = root->childScopes();
+    QCOMPARE(childScopes.size(), 3);
+
+    QCOMPARE(childScopes[0]->baseTypeName(), u"Extended"_qs);
+    QCOMPARE(childScopes[1]->baseTypeName(), u"ExtendedIndirect"_qs);
+    QCOMPARE(childScopes[2]->baseTypeName(), u"ExtendedTwice"_qs);
+    QVERIFY(childScopes[0]->isFullyResolved());
+    QVERIFY(childScopes[1]->isFullyResolved());
+    QVERIFY(childScopes[2]->isFullyResolved());
+
+    QCOMPARE(childScopes[0]->property(u"count"_qs).typeName(), u"int"_qs);
+    QCOMPARE(childScopes[1]->property(u"count"_qs).typeName(), u"double"_qs);
+    QCOMPARE(childScopes[2]->property(u"count"_qs).typeName(), u"int"_qs);
+    QCOMPARE(childScopes[2]->property(u"str"_qs).typeName(), u"QString"_qs);
 }
 
 QTEST_MAIN(tst_qqmljsscope)
