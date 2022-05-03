@@ -741,16 +741,17 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
 
     The following example illustrates using groups to select items in a model.
 
-    \note In contrast to normal attached properties, those cannot be set in a declarative way.
+    \snippet delegatemodel/delegatemodelgroup.qml 0
+    \keyword dm-groups-property
+
+
+    \warning In contrast to normal attached properties, those cannot be set in a declarative way.
     The following would result in an error:
     \badcode
     delegate: Rectangle {
         DelegateModel.inSelected: true
     }
     \endcode
-
-    \snippet delegatemodel/delegatemodelgroup.qml 0
-    \keyword dm-groups-property
 */
 
 QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
