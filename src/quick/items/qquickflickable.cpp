@@ -138,7 +138,8 @@ void QQuickFlickableVisibleArea::updateVisible()
     qreal pagePos = 0;
     qreal pageSize = 0;
     if (!qFuzzyIsNull(maxYBounds)) {
-        pagePos = (-p->vData.move.value() + flickable->minYExtent()) / maxYBounds;
+        qreal y = p->pixelAligned ? Round(p->vData.move.value()) : p->vData.move.value();
+        pagePos = (-y + flickable->minYExtent()) / maxYBounds;
         pageSize = viewheight / maxYBounds;
     }
 
@@ -156,7 +157,8 @@ void QQuickFlickableVisibleArea::updateVisible()
     const qreal maxxextent = -flickable->maxXExtent() + flickable->minXExtent();
     const qreal maxXBounds = maxxextent + viewwidth;
     if (!qFuzzyIsNull(maxXBounds)) {
-        pagePos = (-p->hData.move.value() + flickable->minXExtent()) / maxXBounds;
+        qreal x = p->pixelAligned ? Round(p->hData.move.value()) : p->hData.move.value();
+        pagePos = (-x + flickable->minXExtent()) / maxXBounds;
         pageSize = viewwidth / maxXBounds;
     } else {
         pagePos = 0;

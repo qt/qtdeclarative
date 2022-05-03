@@ -2350,6 +2350,7 @@ void tst_qquickflickable::overshoot()
 {
     QFETCH(QQuickFlickable::BoundsBehavior, boundsBehavior);
     QFETCH(int, boundsMovement);
+    QFETCH(bool, pixelAligned);
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("overshoot.qml"));
@@ -2359,6 +2360,7 @@ void tst_qquickflickable::overshoot()
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
     QVERIFY(flickable);
+    flickable->setPixelAligned(pixelAligned);
 
     QCOMPARE(flickable->width(), 200.0);
     QCOMPARE(flickable->height(), 200.0);
@@ -2405,7 +2407,7 @@ void tst_qquickflickable::overshoot()
     QMetaObject::invokeMethod(flickable, "reset");
 
     // flick past the beginning
-    flick(window.data(), QPoint(10, 10), QPoint(50, 50), 100);
+    flick(window.data(), QPoint(10, 10), QPoint(50, 50), 50);
     QTRY_VERIFY(!flickable->property("flicking").toBool());
 
     if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) && (boundsBehavior & QQuickFlickable::OvershootBounds)) {
@@ -2474,7 +2476,7 @@ void tst_qquickflickable::overshoot()
     QMetaObject::invokeMethod(flickable, "reset");
 
     // flick past the end
-    flick(window.data(), QPoint(50, 50), QPoint(10, 10), 100);
+    flick(window.data(), QPoint(50, 50), QPoint(10, 10), 50);
     QTRY_VERIFY(!flickable->property("flicking").toBool());
 
     if ((boundsMovement == QQuickFlickable::FollowBoundsBehavior) && (boundsBehavior & QQuickFlickable::OvershootBounds)) {
@@ -2507,29 +2509,53 @@ void tst_qquickflickable::overshoot_data()
 {
     QTest::addColumn<QQuickFlickable::BoundsBehavior>("boundsBehavior");
     QTest::addColumn<int>("boundsMovement");
+    QTest::addColumn<bool>("pixelAligned");
 
     QTest::newRow("StopAtBounds,FollowBoundsBehavior")
             << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds)
-            << int(QQuickFlickable::FollowBoundsBehavior);
+            << int(QQuickFlickable::FollowBoundsBehavior) << false;
     QTest::newRow("DragOverBounds,FollowBoundsBehavior")
             << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds)
-            << int(QQuickFlickable::FollowBoundsBehavior);
+            << int(QQuickFlickable::FollowBoundsBehavior) << false;
     QTest::newRow("OvershootBounds,FollowBoundsBehavior")
             << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds)
-            << int(QQuickFlickable::FollowBoundsBehavior);
+            << int(QQuickFlickable::FollowBoundsBehavior) << false;
     QTest::newRow("DragAndOvershootBounds,FollowBoundsBehavior")
             << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds)
-            << int(QQuickFlickable::FollowBoundsBehavior);
+            << int(QQuickFlickable::FollowBoundsBehavior) << false;
 
     QTest::newRow("DragOverBounds,StopAtBounds")
             << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds)
-            << int(QQuickFlickable::StopAtBounds);
+            << int(QQuickFlickable::StopAtBounds) << false;
     QTest::newRow("OvershootBounds,StopAtBounds")
             << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds)
-            << int(QQuickFlickable::StopAtBounds);
+            << int(QQuickFlickable::StopAtBounds) << false;
     QTest::newRow("DragAndOvershootBounds,StopAtBounds")
             << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds)
-            << int(QQuickFlickable::StopAtBounds);
+            << int(QQuickFlickable::StopAtBounds) << false;
+
+    QTest::newRow("StopAtBounds,FollowBoundsBehavior,pixelAligned")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior) << true;
+    QTest::newRow("DragOverBounds,FollowBoundsBehavior,pixelAligned")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior) << true;
+    QTest::newRow("OvershootBounds,FollowBoundsBehavior,pixelAligned")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior) << true;
+    QTest::newRow("DragAndOvershootBounds,FollowBoundsBehavior,pixelAligned")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds)
+            << int(QQuickFlickable::FollowBoundsBehavior) << true;
+
+    QTest::newRow("DragOverBounds,StopAtBounds,pixelAligned")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds)
+            << int(QQuickFlickable::StopAtBounds) << true;
+    QTest::newRow("OvershootBounds,StopAtBounds,pixelAligned")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds)
+            << int(QQuickFlickable::StopAtBounds) << true;
+    QTest::newRow("DragAndOvershootBounds,StopAtBounds,pixelAligned")
+            << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds)
+            << int(QQuickFlickable::StopAtBounds) << true;
 }
 
 void tst_qquickflickable::overshoot_reentrant()
