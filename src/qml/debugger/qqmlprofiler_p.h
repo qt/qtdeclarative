@@ -176,7 +176,7 @@ public:
 
         RefLocation(QV4::ExecutableCompilationUnit *ref, const QUrl &url,
                     const QV4::CompiledData::Object *obj, const QString &type)
-            : Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
+            : Location(QQmlSourceLocation(type, obj->location.line(), obj->location.column()), url),
               locationType(Creating), sent(false)
         {
             unit = ref;

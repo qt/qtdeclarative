@@ -399,8 +399,10 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
         if (binding->type == QV4::CompiledData::Binding::Type_Null) {
             QQmlError warning;
             warning.setUrl(compilationUnit->url());
-            warning.setLine(qmlConvertSourceCoordinate<quint32, int>(binding->valueLocation.line));
-            warning.setColumn(qmlConvertSourceCoordinate<quint32, int>(binding->valueLocation.column));
+            warning.setLine(qmlConvertSourceCoordinate<quint32, int>(
+                    binding->valueLocation.line()));
+            warning.setColumn(qmlConvertSourceCoordinate<quint32, int>(
+                    binding->valueLocation.column()));
             warning.setDescription(error + tr(" - Assigning null to incompatible properties in QML "
                                               "is deprecated. This will become a compile error in "
                                               "future versions of Qt."));

@@ -745,8 +745,8 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
             QQmlError error(errors.takeFirst());
             error.setUrl(m_importCache.baseUrl());
             const QV4::CompiledData::Location importLocation = data->importLocation(this);
-            error.setLine(qmlConvertSourceCoordinate<quint32, int>(importLocation.line));
-            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(importLocation.column));
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(importLocation.line()));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(importLocation.column()));
             errors.prepend(error); // put it back on the list after filling out information.
             setError(errors);
         }
