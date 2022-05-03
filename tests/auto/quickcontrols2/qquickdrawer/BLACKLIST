@@ -15,3 +15,9 @@ android
 android
 [multiTouch]
 android
+
+# QTBUG-103200
+[Material::dragMargin]
+opensuse-leap
+[Imagine::dragMargin]
+opensuse-leap

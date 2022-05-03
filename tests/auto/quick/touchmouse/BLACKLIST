@@ -11,3 +11,7 @@ windows gcc developer-build
 
 [hoverEnabled]
 * # QTBUG-86729
+
+# QTBUG-103200
+[touchCancelWillCancelMousePress]
+opensuse-leap

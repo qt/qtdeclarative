@@ -3,3 +3,7 @@ macos-11
 
 [flickVelocity]
 macos-11
+
+# QTBUG-103200
+[movingAndFlicking]
+opensuse-leap

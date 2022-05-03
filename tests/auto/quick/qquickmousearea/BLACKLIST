@@ -10,3 +10,6 @@ opensuse-leap
 [pressOneAndTapAnother]
 opensuse-leap
 
+# QTBUG-103200
+[nestedFlickableStopAtBounds]
+opensuse-leap

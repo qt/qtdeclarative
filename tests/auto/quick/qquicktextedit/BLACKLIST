@@ -11,3 +11,9 @@ macos ci
 
 [hAlignVisual]
 sles
+
+# QTBUG-103200
+[keyEventPropagation]
+opensuse-leap
+[inFlickableTouch]
+opensuse-leap
