@@ -636,9 +636,6 @@ void QSGRenderThread::syncAndRender()
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRenderLoopFrame);
     Q_TRACE(QSG_sync_entry);
 
-    QElapsedTimer waitTimer;
-    waitTimer.start();
-
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "syncAndRender()");
 
     if (profileFrames) {
@@ -661,7 +658,8 @@ void QSGRenderThread::syncAndRender()
     // updatePaintNode() on the items and they may want to do resource updates.
     // Also relevant for applications that connect to the before/afterSynchronizing
     // signals and want to do graphics stuff already there.
-    if (cd->swapchain && windowSize.width() > 0 && windowSize.height() > 0) {
+    const bool hasValidSwapChain = (cd->swapchain && windowSize.width() > 0 && windowSize.height() > 0);
+    if (hasValidSwapChain) {
         // always prefer what the surface tells us, not the QWindow
         const QSize effectiveOutputSize = cd->swapchain->surfacePixelSize();
         // An update request could still be delivered right before we get an
@@ -760,7 +758,7 @@ void QSGRenderThread::syncAndRender()
 
     // Zero size windows do not initialize a swapchain and
     // rendercontext. So no sync or render can be done then.
-    const bool canRender = d->renderer && cd->swapchain && windowSize.width() > 0 && windowSize.height() > 0;
+    const bool canRender = d->renderer && hasValidSwapChain;
 
     if (canRender) {
         if (!syncRequested) // else this was already done in sync()
@@ -775,16 +773,14 @@ void QSGRenderThread::syncAndRender()
                                   QQuickProfiler::SceneGraphRenderLoopRender);
         Q_TRACE(QSG_swap_entry);
 
-        if (cd->swapchain) {
-            QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain);
-            if (frameResult != QRhi::FrameOpSuccess) {
-                if (frameResult == QRhi::FrameOpDeviceLost)
-                    handleDeviceLoss();
-                else if (frameResult == QRhi::FrameOpError)
-                    qWarning("Failed to end frame");
-                if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
-                    QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
-            }
+        QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain);
+        if (frameResult != QRhi::FrameOpSuccess) {
+            if (frameResult == QRhi::FrameOpDeviceLost)
+                handleDeviceLoss();
+            else if (frameResult == QRhi::FrameOpError)
+                qWarning("Failed to end frame");
+            if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
+                QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
         }
         d->fireFrameSwapped();
     } else {
@@ -804,7 +800,7 @@ void QSGRenderThread::syncAndRender()
 
     // beforeFrameBegin - afterFrameEnd must always come in pairs; if there was
     // no before due to 0 size then there shouldn't be an after either
-   if (canRender)
+   if (hasValidSwapChain)
         emit window->afterFrameEnd();
 
     // Though it would be more correct to put this block directly after
@@ -1281,14 +1277,14 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
     // specialcasing exposure in polishAndSync.
     w->thread->window = window;
 
+#ifndef QT_NO_DEBUG
     if (w->window->width() <= 0 || w->window->height() <= 0
         || (w->window->isTopLevel() && !w->window->geometry().intersects(w->window->screen()->availableGeometry()))) {
-#ifndef QT_NO_DEBUG
         qWarning().noquote().nospace() << "QSGThreadedRenderLoop: expose event received for window "
             << w->window << " with invalid geometry: " << w->window->geometry()
             << " on " << w->window->screen();
-#endif
     }
+#endif
 
     // Because we are going to bind a GL context to it, make sure it
     // is created.
