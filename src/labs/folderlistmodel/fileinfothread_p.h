@@ -63,6 +63,8 @@
 #include "fileproperty_p.h"
 #include "qquickfolderlistmodel_p.h"
 
+QT_BEGIN_NAMESPACE
+
 class FileInfoThread : public QThread
 {
     Q_OBJECT
@@ -129,5 +131,7 @@ private:
     bool showOnlyReadable;
     bool caseSensitive;
 };
+
+QT_END_NAMESPACE
 
 #endif // FILEINFOTHREAD_P_H

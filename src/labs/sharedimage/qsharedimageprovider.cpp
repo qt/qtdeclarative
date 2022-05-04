@@ -46,6 +46,7 @@
 
 Q_DECLARE_METATYPE(QQuickImageProviderOptions)
 
+QT_BEGIN_NAMESPACE
 
 QuickSharedImageLoader::QuickSharedImageLoader(QObject *parent) : QSharedImageLoader(parent) {}
 
@@ -137,3 +138,5 @@ QImage SharedImageProvider::requestImage(const QString &id, QSize *size, const Q
 
     return img;
 }
+
+QT_END_NAMESPACE
