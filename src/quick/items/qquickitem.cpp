@@ -61,6 +61,7 @@
 #include <QtCore/private/qnumeric_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/private/qduplicatetracker_p.h>
 
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlengine_p.h>
@@ -2537,6 +2538,7 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
     QQuickItem *current = item;
     qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: startItem:" << startItem;
     qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: firstFromItem:" << firstFromItem;
+    QDuplicateTracker<QQuickItem *> cycleDetector;
     do {
         qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: current:" << current;
         qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: from:" << from;
@@ -2603,7 +2605,10 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
         // traversed all of the chain (by compare the [current] item with [startItem])
         // Since the [startItem] might be promoted to its parent if it is invisible,
         // we still have to check [current] item with original start item
-        if ((current == startItem || current == originalStartItem) && from == firstFromItem) {
+        // We might also run into a cycle before we reach firstFromItem again
+        // but note that we have to ignore current if we are meant to skip it
+        if (((current == startItem || current == originalStartItem) && from == firstFromItem) ||
+                (!skip && cycleDetector.hasSeen(current))) {
             // wrapped around, avoid endless loops
             if (item == contentItem) {
                 qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return contentItem";
