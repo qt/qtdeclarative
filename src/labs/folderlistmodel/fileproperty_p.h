@@ -54,6 +54,8 @@
 #include <QFileInfo>
 #include <QDateTime>
 
+QT_BEGIN_NAMESPACE
+
 class FileProperty
 {
 public:
@@ -100,4 +102,7 @@ private:
     QDateTime mLastModified;
     QDateTime mLastRead;
 };
+
+QT_END_NAMESPACE
+
 #endif // FILEPROPERTY_P_H
