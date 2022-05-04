@@ -1171,6 +1171,7 @@ void QQuickTextInput::setInputMask(const QString &im)
 
 /*!
     \qmlproperty bool QtQuick::TextInput::acceptableInput
+    \readonly
 
     This property is always true unless a validator or input mask has been set.
     If a validator or input mask has been set, this property will only be true
