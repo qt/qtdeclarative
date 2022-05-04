@@ -109,7 +109,10 @@ void tst_cursor::controls()
         QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
 
         QTest::mouseMove(&view, control->mapToScene(QPointF(0, 0)).toPoint());
+#ifndef Q_OS_WEBOS
+        //webOS cursor handling uses BitmapCursor for ArrowCursor
         QCOMPARE(view.cursor().shape(), Qt::ArrowCursor);
+#endif
 
         QTest::mouseMove(&view, control->mapToScene(QPointF(control->width() + 1, control->height() + 1)).toPoint());
         QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
@@ -145,7 +148,10 @@ void tst_cursor::editable()
         control->setProperty("editable", false);
         QCOMPARE(control->cursor().shape(), Qt::ArrowCursor);
         QCOMPARE(control->contentItem()->cursor().shape(), Qt::ArrowCursor);
+#ifndef Q_OS_WEBOS
+        //webOS cursor handling uses BitmapCursor for ArrowCursor
         QCOMPARE(view.cursor().shape(), Qt::ArrowCursor);
+#endif
 
         QTest::mouseMove(&view, control->mapToScene(QPointF(control->width() + 1, control->height() + 1)).toPoint());
         QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
@@ -172,7 +178,10 @@ void tst_cursor::pageIndicator()
     QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
 
     indicator->setInteractive(true);
+#ifndef Q_OS_WEBOS
+    //webOS cursor handling uses BitmapCursor for ArrowCursor
     QCOMPARE(view.cursor().shape(), Qt::ArrowCursor);
+#endif
 
     QTest::mouseMove(&view, indicator->mapToScene(QPointF(indicator->width() + 1, indicator->height() + 1)).toPoint());
     QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
@@ -206,7 +215,10 @@ void tst_cursor::scrollBar()
     QTest::mouseMove(window, scrollBarPos);
 
     QVERIFY(scrollBar->isActive());
+#ifndef Q_OS_WEBOS
+    //webOS cursor handling uses BitmapCursor for ArrowCursor
     QCOMPARE(window->cursor().shape(), scrollBar->cursor().shape());
+#endif
     QCOMPARE(scrollBar->cursor().shape(), Qt::CursorShape::ArrowCursor);
 
     scrollBar->setInteractive(false);
