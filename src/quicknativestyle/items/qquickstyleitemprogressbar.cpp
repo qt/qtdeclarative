@@ -119,3 +119,5 @@ void QQuickStyleItemProgressBar::initStyleOption(QStyleOptionProgressBar &styleO
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemprogressbar.cpp"
