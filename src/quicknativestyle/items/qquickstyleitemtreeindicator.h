@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquicktreeviewdelegate_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemTreeIndicator : public QQuickStyleItem
 {
     Q_OBJECT
@@ -56,5 +58,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionViewItem &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMTREEINDICATOR_H

@@ -39,6 +39,8 @@
 
 #include "qquickstyleitemframe.h"
 
+QT_BEGIN_NAMESPACE
+
 StyleItemGeometry QQuickStyleItemFrame::calculateGeometry()
 {
     QStyleOptionFrame styleOption;
@@ -68,3 +70,5 @@ void QQuickStyleItemFrame::initStyleOption(QStyleOptionFrame &styleOption) const
     styleOption.frameShape = QStyleOptionFrame::StyledPanel;
     styleOption.features = QStyleOptionFrame::Flat;
 }
+
+QT_END_NAMESPACE

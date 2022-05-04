@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickprogressbar_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemProgressBar : public QQuickStyleItem
 {
     Q_OBJECT
@@ -60,5 +62,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionProgressBar &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMPROGRESSBAR_H

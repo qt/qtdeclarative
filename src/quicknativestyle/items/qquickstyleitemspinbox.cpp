@@ -40,6 +40,8 @@
 #include "qquickstyleitemspinbox.h"
 #include <QtQuickTemplates2/private/qquickindicatorbutton_p.h>
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemSpinBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ComboBoxLabel, controlSize(control));
@@ -111,3 +113,5 @@ void QQuickStyleItemSpinBox::initStyleOption(QStyleOptionSpinBox &styleOption) c
     styleOption.buttonSymbols = QStyleOptionSpinBox::UpDownArrows;
     styleOption.stepEnabled = QStyleOptionSpinBox::StepEnabled;
 }
+
+QT_END_NAMESPACE

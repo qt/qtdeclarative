@@ -39,6 +39,8 @@
 
 #include "qquickstyleitemslider.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemSlider::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
@@ -124,3 +126,5 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption) con
     styleOption.sliderValue = int((slider->value() - min) * normalizeMultiplier);
     styleOption.sliderPosition = int(slider->position() * styleOption.maximum);
 }
+
+QT_END_NAMESPACE

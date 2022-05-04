@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickscrollbar_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemScrollBar : public QQuickStyleItem
 {
     Q_OBJECT
@@ -73,5 +75,7 @@ private:
 private:
    SubControl m_subControl = Groove;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMSCROLLBAR_H

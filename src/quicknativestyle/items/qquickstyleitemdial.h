@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickdial_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemDial : public QQuickStyleItem
 {
     Q_OBJECT
@@ -59,5 +61,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionSlider &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMDIAL_H

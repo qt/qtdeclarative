@@ -39,6 +39,8 @@
 
 #include "qquickstyleitemtextfield.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemTextField::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ComboBoxLabel, controlSize(control));
@@ -93,3 +95,5 @@ void QQuickStyleItemTextField::initStyleOption(QStyleOptionFrame &styleOption) c
     if (textField->isReadOnly())
         styleOption.state |= QStyle::State_ReadOnly;
 }
+
+QT_END_NAMESPACE

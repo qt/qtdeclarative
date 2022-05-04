@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickgroupbox_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemGroupBox : public QQuickStyleItem
 {
     Q_OBJECT
@@ -69,5 +71,7 @@ private:
 
     void initStyleOption(QStyleOptionGroupBox &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMGROUPBOX_H
