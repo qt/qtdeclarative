@@ -427,6 +427,13 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 
 static const qreal openCloseVelocityThreshold = 300;
 
+// Overrides QQuickPopupPrivate::blockInput, which is called by
+// QQuickPopupPrivate::handlePress/Move/Release, which we call in our own
+// handlePress/Move/Release overrides.
+// This implementation conflates two things: should the event going to the item get
+// modally blocked by us? Or should we accept the event and become the grabber?
+// Those are two fundamentally different questions for the drawer as a (usually)
+// interactive control.
 bool QQuickDrawerPrivate::blockInput(QQuickItem *item, const QPointF &point) const
 {
     Q_Q(const QQuickDrawer);
@@ -457,7 +464,7 @@ bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ul
     velocityCalculator.startMeasuring(point, timestamp);
 
     if (!QQuickPopupPrivate::handlePress(item, point, timestamp))
-        return false;
+        return interactive && popupItem == item;
 
     return true;
 }
