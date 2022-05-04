@@ -352,7 +352,7 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
 
         auto scriptBindingsBegin =
                 std::find_if(sortedBindings.cbegin(), sortedBindings.cend(),
-                             [](auto it) { return it->type == QmlIR::Binding::Type_Script; });
+                             [](auto it) { return it->type() == QmlIR::Binding::Type_Script; });
         auto it = sortedBindings.cbegin();
         for (; it != scriptBindingsBegin; ++it) {
             m_prototypeCodegen->compileBinding(current, **it, object,

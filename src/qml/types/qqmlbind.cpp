@@ -731,7 +731,7 @@ static QQmlAnyBinding createBinding(
         const QQmlRefPointer<QQmlContextData> &contextData,
         QObject *scopeObject)
 {
-    switch (binding->type) {
+    switch (binding->type()) {
     case QV4::CompiledData::Binding::Type_Translation:
     case QV4::CompiledData::Binding::Type_TranslationById:
         return QQmlAnyBinding::createTranslationBinding(prop, compilationUnit, binding, scopeObject);
@@ -767,8 +767,9 @@ void QQmlBindPrivate::decodeBinding(
     const QString propertyName = propertyPrefix
             + compilationUnit->stringAt(binding->propertyNameIndex);
 
-    if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
-        || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+    switch (binding->type()) {
+    case QV4::CompiledData::Binding::Type_GroupProperty:
+    case QV4::CompiledData::Binding::Type_AttachedProperty: {
         const QString pre = propertyName + u'.';
         const QV4::CompiledData::Object *subObj
                 = compilationUnit->objectAt(binding->value.objectIndex);
@@ -776,6 +777,9 @@ void QQmlBindPrivate::decodeBinding(
         for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding)
             decodeBinding(q, pre, deferredData, subBinding, immediateState);
         return;
+    }
+    default:
+        break;
     }
 
     QQmlBindEntry entry;
@@ -815,7 +819,7 @@ void QQmlBindPrivate::decodeBinding(
         entry.currentKind = entry.current.set(binding, entry.currentKind);
     };
 
-    switch (binding->type) {
+    switch (binding->type()) {
     case QV4::CompiledData::Binding::Type_AttachedProperty:
     case QV4::CompiledData::Binding::Type_GroupProperty:
         Q_UNREACHABLE(); // Handled above
@@ -848,6 +852,9 @@ void QQmlBindPrivate::decodeBinding(
         break;
     case QV4::CompiledData::Binding::Type_Null:
         setVariant(QVariant::fromValue(nullptr));
+        break;
+    case QV4::CompiledData::Binding::Type_Object:
+    case QV4::CompiledData::Binding::Type_Invalid:
         break;
     }
 

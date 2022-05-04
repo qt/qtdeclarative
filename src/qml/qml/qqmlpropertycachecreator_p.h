@@ -301,7 +301,8 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         auto binding = obj->bindingsBegin();
         auto end = obj->bindingsEnd();
         for ( ; binding != end; ++binding) {
-            if (binding->type == QV4::CompiledData::Binding::Type_Object && (binding->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
+            if (binding->type() == QV4::CompiledData::Binding::Type_Object
+                    && (binding->flags() & QV4::CompiledData::Binding::IsOnAssignment)) {
                 // If the on assignment is inside a group property, we need to distinguish between QObject based
                 // group properties and value type group properties. For the former the base type is derived from
                 // the property that references us, for the latter we only need a meta-object on the referencing object
@@ -347,7 +348,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
     auto binding = obj->bindingsBegin();
     auto end = obj->bindingsEnd();
     for (; binding != end; ++binding) {
-        switch (binding->type) {
+        switch (binding->type()) {
         case QV4::CompiledData::Binding::Type_Object:
         case QV4::CompiledData::Binding::Type_GroupProperty:
             // We can resolve object and group properties if we have a property cache.
@@ -890,12 +891,15 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
     auto binding = object.bindingsBegin();
     auto end = object.bindingsEnd();
     for (; binding != end; ++binding) {
-        if (binding->type != QV4::CompiledData::Binding::Type_Object
-            && binding->type != QV4::CompiledData::Binding::Type_AttachedProperty
-            && binding->type != QV4::CompiledData::Binding::Type_GroupProperty)
-            continue;
-
-        collectObjectsWithAliasesRecursively(binding->value.objectIndex, objectsWithAliases);
+        switch (binding->type()) {
+        case QV4::CompiledData::Binding::Type_Object:
+        case QV4::CompiledData::Binding::Type_AttachedProperty:
+        case QV4::CompiledData::Binding::Type_GroupProperty:
+            collectObjectsWithAliasesRecursively(binding->value.objectIndex, objectsWithAliases);
+            break;
+        default:
+            break;
+        }
     }
 }
 

@@ -46,7 +46,7 @@ using namespace Qt::StringLiterals;
  * signature and the QML scope and doesn't visit the byte code.
  */
 
-static QString bindingTypeDescription(QmlIR::Binding::ValueType type)
+static QString bindingTypeDescription(QmlIR::Binding::Type type)
 {
     switch (type) {
     case QmlIR::Binding::Type_Invalid:
@@ -150,9 +150,9 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
     QQmlJSCompilePass::Function function;
     function.qmlScope = m_scopeType;
 
-    if (irBinding.type != QmlIR::Binding::Type_Script) {
+    if (irBinding.type() != QmlIR::Binding::Type_Script) {
         diagnose(u"Binding is not a script binding, but %1."_s.arg(
-                     bindingTypeDescription(QmlIR::Binding::ValueType(quint32(irBinding.type)))),
+                     bindingTypeDescription(QmlIR::Binding::Type(quint32(irBinding.type())))),
                  QtDebugMsg, bindingLocation, error);
     }
 

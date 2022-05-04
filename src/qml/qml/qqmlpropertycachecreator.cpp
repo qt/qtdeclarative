@@ -125,8 +125,10 @@ QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(
 
 bool QQmlBindingInstantiationContext::resolveInstantiatingProperty()
 {
-    if (!instantiatingBinding || instantiatingBinding->type != QV4::CompiledData::Binding::Type_GroupProperty)
+    if (!instantiatingBinding
+           || instantiatingBinding->type() != QV4::CompiledData::Binding::Type_GroupProperty) {
         return true;
+    }
 
     Q_ASSERT(referencingObjectIndex >= 0);
     Q_ASSERT(referencingObjectPropertyCache);

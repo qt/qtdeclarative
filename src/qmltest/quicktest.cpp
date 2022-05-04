@@ -318,7 +318,7 @@ private:
                 // Look for override of name in this type
                 for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
                     if (compilationUnit->stringAt(binding->propertyNameIndex) == QLatin1String("name")) {
-                        if (binding->type == QV4::CompiledData::Binding::Type_String) {
+                        if (binding->type() == QV4::CompiledData::Binding::Type_String) {
                             result.testCaseName = compilationUnit->stringAt(binding->stringIndex);
                         } else {
                             QQmlError error;
@@ -348,7 +348,7 @@ private:
         }
 
         for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
-            if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+            if (binding->type() == QV4::CompiledData::Binding::Type_Object) {
                 const Object *child = compilationUnit->objectAt(binding->value.objectIndex);
                 result << enumerateTestCases(compilationUnit, child);
             }

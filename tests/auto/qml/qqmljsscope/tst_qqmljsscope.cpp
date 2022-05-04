@@ -548,7 +548,7 @@ void tst_qqmljsscope::scriptIndices()
             populateQmlIRArrays(irObject, name, it->index);
         }
         for (auto it = irObject->bindingsBegin(); it != irObject->bindingsEnd(); ++it) {
-            if (it->type != QmlIR::Binding::Type_Script)
+            if (it->type() != QmlIR::Binding::Type_Script)
                 continue;
             QString name = document.stringAt(it->propertyNameIndex);
             int index = it->value.compiledScriptIndex;

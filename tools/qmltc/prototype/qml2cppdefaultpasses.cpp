@@ -303,7 +303,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
             return;
 
         // attached property is special
-        if (binding.type == QmlIR::Binding::Type_AttachedProperty) {
+        if (binding.type() == QmlIR::Binding::Type_AttachedProperty) {
             const auto [attachedObject, attachedType] = objects.at(binding.value.objectIndex);
             if (!attachedObject || !attachedType) {
                 context.recordError(binding.location,
@@ -328,8 +328,8 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 
         // TODO: why isList() needed here?
         if (!p.isWritable() && !p.isList()
-            && !(binding.flags & QmlIR::Binding::InitializerForReadOnlyDeclaration)
-            && binding.type != QmlIR::Binding::Type_GroupProperty) {
+            && !binding.hasFlag(QmlIR::Binding::InitializerForReadOnlyDeclaration)
+            && binding.type() != QmlIR::Binding::Type_GroupProperty) {
             context.recordError(binding.location,
                                 u"Binding on read-only property '" + propName + u"'");
         }
@@ -906,7 +906,7 @@ static void updateImplicitComponents(const Qml2CppContext &context, Qml2CppObjec
                                      QList<Qml2CppObject> &objects, Update update)
 {
     const auto checkAndUpdate = [&](const QmlIR::Binding &binding) {
-        if (binding.type != QmlIR::Binding::Type_Object)
+        if (binding.type() != QmlIR::Binding::Type_Object)
             return;
         if (object.irObject->flags & QV4::CompiledData::Object::IsComponent) // already set
             return;
@@ -1012,12 +1012,15 @@ static void setObjectId(const Qml2CppContext &context, const QList<Qml2CppObject
 
     std::for_each(irObject->bindingsBegin(), irObject->bindingsEnd(),
                   [&](const QmlIR::Binding &binding) {
-                      if (binding.type != QV4::CompiledData::Binding::Type_Object
-                          && binding.type != QV4::CompiledData::Binding::Type_AttachedProperty
-                          && binding.type != QV4::CompiledData::Binding::Type_GroupProperty) {
-                          return;
+                      switch (binding.type()) {
+                      case QV4::CompiledData::Binding::Type_Object:
+                      case QV4::CompiledData::Binding::Type_AttachedProperty:
+                      case QV4::CompiledData::Binding::Type_GroupProperty:
+                          setObjectId(context, objects, binding.value.objectIndex, idToObjectIndex);
+                          break;
+                      default:
+                          break;
                       }
-                      setObjectId(context, objects, binding.value.objectIndex, idToObjectIndex);
                   });
 }
 

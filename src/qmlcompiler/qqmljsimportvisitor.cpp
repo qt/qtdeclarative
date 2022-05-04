@@ -1659,7 +1659,7 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
         return 0;
     };
     auto discardCommentString = [](QStringView) {return -1;};
-    auto finalizeBinding = [&](QV4::CompiledData::Binding::ValueType type,
+    auto finalizeBinding = [&](QV4::CompiledData::Binding::Type type,
                                QV4::CompiledData::TranslationData) {
         if (type == QV4::CompiledData::Binding::Type_Translation) {
             binding.setTranslation(mainString);
