@@ -18,6 +18,8 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2MaterialStyleImplPlugin
+    DEPENDENCIES
+        QtQuick/auto
     PLUGIN_TARGET qtquickcontrols2materialstyleimplplugin
     NO_PLUGIN_OPTIONAL
     SOURCES
