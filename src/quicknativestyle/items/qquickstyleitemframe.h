@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickframe_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemFrame : public QQuickStyleItem
 {
     Q_OBJECT
@@ -55,5 +57,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionFrame &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMFRAME_H

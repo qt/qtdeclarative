@@ -39,6 +39,8 @@
 
 #include "qquickstyleitemprogressbar.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemProgressBar::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
@@ -115,3 +117,5 @@ void QQuickStyleItemProgressBar::initStyleOption(QStyleOptionProgressBar &styleO
         styleOption.progress = progressBar->value();
     }
 }
+
+QT_END_NAMESPACE

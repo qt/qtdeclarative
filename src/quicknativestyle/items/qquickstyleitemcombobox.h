@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemComboBox : public QQuickStyleItem
 {
     Q_OBJECT
@@ -59,5 +61,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionComboBox &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMCOMBOBOX_H

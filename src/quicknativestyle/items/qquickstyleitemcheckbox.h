@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickcheckbox_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemCheckBox : public QQuickStyleItem
 {
     Q_OBJECT
@@ -59,5 +61,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionButton &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMCHECKBOX_H

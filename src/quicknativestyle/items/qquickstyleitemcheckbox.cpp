@@ -39,6 +39,8 @@
 
 #include "qquickstyleitemcheckbox.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemCheckBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_RadioButtonLabel, controlSize(control));
@@ -90,3 +92,5 @@ void QQuickStyleItemCheckBox::initStyleOption(QStyleOptionButton &styleOption) c
     else
         styleOption.state |= checkbox->isChecked() ? QStyle::State_On : QStyle::State_Off;
 }
+
+QT_END_NAMESPACE

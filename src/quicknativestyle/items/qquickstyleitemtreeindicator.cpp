@@ -39,6 +39,8 @@
 
 #include "qquickstyleitemtreeindicator.h"
 
+QT_BEGIN_NAMESPACE
+
 void QQuickStyleItemTreeIndicator::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
@@ -76,3 +78,5 @@ void QQuickStyleItemTreeIndicator::initStyleOption(QStyleOptionViewItem &styleOp
     if (delegate->expanded())
         styleOption.state |= QStyle::State_Open;
 }
+
+QT_END_NAMESPACE

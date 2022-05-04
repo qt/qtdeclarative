@@ -39,6 +39,8 @@
 
 #include "qquickstyleitemscrollbar.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemScrollBar::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
@@ -152,3 +154,5 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption) 
     styleOption.maximum = 1;
     styleOption.sliderValue = 0;
 }
+
+QT_END_NAMESPACE

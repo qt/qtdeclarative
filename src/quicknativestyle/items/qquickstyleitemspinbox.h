@@ -43,6 +43,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickspinbox_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemSpinBox : public QQuickStyleItem
 {
     Q_OBJECT
@@ -72,5 +74,7 @@ private:
 private:
    SubControl m_subControl = Frame;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMSPINBOX_H
