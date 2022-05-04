@@ -96,13 +96,13 @@ void tst_qqmltranslation::translation()
             const bool expectCompiledTranslation = compiledTranslations.contains(propertyName);
 
             if (expectCompiledTranslation) {
-                if (binding->type != QV4::CompiledData::Binding::Type_Translation)
+                if (binding->type() != QV4::CompiledData::Binding::Type_Translation)
                     qDebug() << "binding for property" << propertyName << "is not a compiled translation";
-                QCOMPARE(quint32(binding->type), quint32(QV4::CompiledData::Binding::Type_Translation));
+                QCOMPARE(binding->type(), QV4::CompiledData::Binding::Type_Translation);
             } else {
-                if (binding->type == QV4::CompiledData::Binding::Type_Translation)
+                if (binding->type() == QV4::CompiledData::Binding::Type_Translation)
                     qDebug() << "binding for property" << propertyName << "is not supposed to be a compiled translation";
-                QVERIFY(binding->type != QV4::CompiledData::Binding::Type_Translation);
+                QVERIFY(binding->type() != QV4::CompiledData::Binding::Type_Translation);
             }
         }
     }
@@ -148,11 +148,11 @@ void tst_qqmltranslation::idTranslation()
         for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
             const QString propertyName = compilationUnit->stringAt(binding->propertyNameIndex);
             if (propertyName == "idTranslation") {
-                if (binding->type != QV4::CompiledData::Binding::Type_TranslationById)
+                if (binding->type() != QV4::CompiledData::Binding::Type_TranslationById)
                     qDebug() << "binding for property" << propertyName << "is not a compiled translation";
-                QCOMPARE(quint32(binding->type), quint32(QV4::CompiledData::Binding::Type_TranslationById));
+                QCOMPARE(binding->type(), QV4::CompiledData::Binding::Type_TranslationById);
             } else {
-                QVERIFY(binding->type != QV4::CompiledData::Binding::Type_Translation);
+                QVERIFY(binding->type() != QV4::CompiledData::Binding::Type_Translation);
             }
         }
     }

@@ -862,7 +862,7 @@ bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *e
 QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Binding *binding) const
 {
     using namespace CompiledData;
-    switch (binding->type) {
+    switch (binding->type()) {
     case Binding::Type_Script:
     case Binding::Type_String:
         return stringAt(binding->stringIndex);
@@ -910,7 +910,7 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
 QString ExecutableCompilationUnit::bindingValueAsScriptString(
         const CompiledData::Binding *binding) const
 {
-    return (binding->type == CompiledData::Binding::Type_String)
+    return (binding->type() == CompiledData::Binding::Type_String)
             ? CompiledData::Binding::escapedString(stringAt(binding->stringIndex))
             : bindingValueAsString(binding);
 }

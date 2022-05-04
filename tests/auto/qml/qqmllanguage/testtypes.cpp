@@ -174,7 +174,7 @@ void EnumSupportingCustomParser::verifyBindings(const QQmlRefPointer<QV4::Execut
         return;
     }
 
-    if (binding->type != QV4::CompiledData::Binding::Type_Script) {
+    if (binding->type() != QV4::CompiledData::Binding::Type_Script) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
         return;
     }

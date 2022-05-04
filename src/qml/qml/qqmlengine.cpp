@@ -1812,7 +1812,7 @@ void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCo
     const QV4::CompiledData::Binding *binding = compiledObject->bindingTable();
     for (quint32 i = 0; i < compiledObject->nBindings; ++i, ++binding) {
         const QQmlPropertyData *property = propertyData.at(i);
-        if (property && binding->flags & QV4::CompiledData::Binding::IsDeferredBinding)
+        if (property && binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding))
             deferData->bindings.insert(property->coreIndex(), binding);
     }
 

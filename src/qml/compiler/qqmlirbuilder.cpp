@@ -319,13 +319,17 @@ void Object::appendRequiredPropertyExtraData(RequiredPropertyExtraData *extraDat
 QString Object::appendBinding(Binding *b, bool isListBinding)
 {
     const bool bindingToDefaultProperty = (b->propertyNameIndex == quint32(0));
-    if (!isListBinding && !bindingToDefaultProperty
-        && b->type != QV4::CompiledData::Binding::Type_GroupProperty
-        && b->type != QV4::CompiledData::Binding::Type_AttachedProperty
-        && !(b->flags & QV4::CompiledData::Binding::IsOnAssignment)) {
+    if (!isListBinding
+            && !bindingToDefaultProperty
+            && b->type() != QV4::CompiledData::Binding::Type_GroupProperty
+            && b->type() != QV4::CompiledData::Binding::Type_AttachedProperty
+            && !b->hasFlag(QV4::CompiledData::Binding::IsOnAssignment)) {
         Binding *existing = findBinding(b->propertyNameIndex);
-        if (existing && existing->isValueBinding() == b->isValueBinding() && !(existing->flags & QV4::CompiledData::Binding::IsOnAssignment))
+        if (existing
+                && existing->isValueBinding() == b->isValueBinding()
+                && !existing->hasFlag(QV4::CompiledData::Binding::IsOnAssignment)) {
             return tr("Property value set multiple times");
+        }
     }
     if (bindingToDefaultProperty)
         insertSorted(b);
@@ -1076,24 +1080,24 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
 {
     QQmlJS::SourceLocation loc = statement->firstSourceLocation();
     binding->valueLocation.set(loc.startLine, loc.startColumn);
-    binding->type = QV4::CompiledData::Binding::Type_Invalid;
+    binding->setType(QV4::CompiledData::Binding::Type_Invalid);
     if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
-        binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
+        binding->setFlag(QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration);
 
     QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
     if (exprStmt) {
         QQmlJS::AST::ExpressionNode * const expr = exprStmt->expression;
         if (QQmlJS::AST::StringLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(expr)) {
-            binding->type = QV4::CompiledData::Binding::Type_String;
+            binding->setType(QV4::CompiledData::Binding::Type_String);
             binding->stringIndex = registerString(lit->value.toString());
         } else if (expr->kind == QQmlJS::AST::Node::Kind_TrueLiteral) {
-            binding->type = QV4::CompiledData::Binding::Type_Boolean;
+            binding->setType(QV4::CompiledData::Binding::Type_Boolean);
             binding->value.b = true;
         } else if (expr->kind == QQmlJS::AST::Node::Kind_FalseLiteral) {
-            binding->type = QV4::CompiledData::Binding::Type_Boolean;
+            binding->setType(QV4::CompiledData::Binding::Type_Boolean);
             binding->value.b = false;
         } else if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(expr)) {
-            binding->type = QV4::CompiledData::Binding::Type_Number;
+            binding->setType(QV4::CompiledData::Binding::Type_Number);
             binding->value.constantValueIndex = jsGenerator->registerConstant(QV4::Encode(lit->value));
         } else if (QQmlJS::AST::CallExpression *call = QQmlJS::AST::cast<QQmlJS::AST::CallExpression *>(expr)) {
             if (QQmlJS::AST::IdentifierExpression *base = QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(call->base)) {
@@ -1102,21 +1106,21 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
                 // below.
             }
         } else if (QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression *>(expr)) {
-            binding->flags |= QV4::CompiledData::Binding::IsFunctionExpression;
+            binding->setFlag(QV4::CompiledData::Binding::IsFunctionExpression);
         } else if (QQmlJS::AST::UnaryMinusExpression *unaryMinus = QQmlJS::AST::cast<QQmlJS::AST::UnaryMinusExpression *>(expr)) {
             if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(unaryMinus->expression)) {
-                binding->type = QV4::CompiledData::Binding::Type_Number;
+                binding->setType(QV4::CompiledData::Binding::Type_Number);
                 binding->value.constantValueIndex = jsGenerator->registerConstant(QV4::Encode(-lit->value));
             }
         } else if (QQmlJS::AST::cast<QQmlJS::AST::NullExpression *>(expr)) {
-            binding->type = QV4::CompiledData::Binding::Type_Null;
+            binding->setType(QV4::CompiledData::Binding::Type_Null);
             binding->value.nullMarker = 0;
         }
     }
 
     // Do binding instead
-    if (binding->type == QV4::CompiledData::Binding::Type_Invalid) {
-        binding->type = QV4::CompiledData::Binding::Type_Script;
+    if (binding->type() == QV4::CompiledData::Binding::Type_Invalid) {
+        binding->setType(QV4::CompiledData::Binding::Type_Script);
 
         CompiledFunctionOrExpression *expr = New<CompiledFunctionOrExpression>();
         expr->node = statement;
@@ -1172,7 +1176,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (args)
             return; // too many arguments, stop
 
-        binding->type = QV4::CompiledData::Binding::Type_Translation;
+        binding->setType(QV4::CompiledData::Binding::Type_Translation);
         binding->value.translationDataIndex = jsGenerator->registerTranslation(translationData);
     } else if (base == QLatin1String("qsTrId")) {
         QV4::CompiledData::TranslationData translationData;
@@ -1205,7 +1209,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (args)
             return; // too many arguments, stop
 
-        binding->type = QV4::CompiledData::Binding::Type_TranslationById;
+        binding->setType(QV4::CompiledData::Binding::Type_TranslationById);
         binding->value.translationDataIndex = jsGenerator->registerTranslation(translationData);
     } else if (base == QLatin1String("QT_TR_NOOP") || base == QLatin1String("QT_TRID_NOOP")) {
         if (!args || !args->expression)
@@ -1222,7 +1226,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (args)
             return; // too many arguments, stop
 
-        binding->type = QV4::CompiledData::Binding::Type_String;
+        binding->setType(QV4::CompiledData::Binding::Type_String);
         binding->stringIndex = jsGenerator->registerString(str.toString());
     } else if (base == QLatin1String("QT_TRANSLATE_NOOP")) {
         if (!args || !args->expression)
@@ -1243,7 +1247,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (args)
             return; // too many arguments, stop
 
-        binding->type = QV4::CompiledData::Binding::Type_String;
+        binding->setType(QV4::CompiledData::Binding::Type_String);
         binding->stringIndex = jsGenerator->registerString(str.toString());
     }
 }
@@ -1281,7 +1285,7 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
     binding->propertyNameIndex = propertyNameIndex;
     binding->offset = nameLocation.offset;
     binding->location.set(nameLocation.startLine, nameLocation.startColumn);
-    binding->flags = 0;
+    binding->clearFlags();
     setBindingValue(binding, value, parentNode);
     QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false);
     if (!error.isEmpty()) {
@@ -1304,21 +1308,21 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
     const Object *obj = _objects.at(objectIndex);
     binding->valueLocation = obj->location;
 
-    binding->flags = 0;
+    binding->clearFlags();
 
     if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
-        binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
+        binding->setFlag(QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration);
 
     // No type name on the initializer means it must be a group property
     if (_objects.at(objectIndex)->inheritedTypeNameIndex == emptyStringIndex)
-        binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
+        binding->setType(Binding::Type_GroupProperty);
     else
-        binding->type = QV4::CompiledData::Binding::Type_Object;
+        binding->setType(Binding::Type_Object);
 
     if (isOnAssignment)
-        binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
+        binding->setFlag(Binding::IsOnAssignment);
     if (isListItem)
-        binding->flags |= QV4::CompiledData::Binding::IsListItem;
+        binding->setFlag(Binding::IsListItem);
 
     binding->value.objectIndex = objectIndex;
     QString error = bindingsTarget()->appendBinding(binding, isListItem);
@@ -1497,15 +1501,19 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
                                   qualifiedIdElement->identifierToken.startColumn);
             binding->valueLocation.set(qualifiedIdElement->next->identifierToken.startLine,
                                        qualifiedIdElement->next->identifierToken.startColumn);
-            binding->flags = 0;
+            binding->location.set(qualifiedIdElement->identifierToken.startLine,
+                                  qualifiedIdElement->identifierToken.startColumn);
+            binding->valueLocation.set(qualifiedIdElement->next->identifierToken.startLine,
+                                       qualifiedIdElement->next->identifierToken.startColumn);
+            binding->clearFlags();
 
             if (onAssignment)
-                binding->flags |= QV4::CompiledData::Binding::IsOnAssignment;
+                binding->setFlag(QV4::CompiledData::Binding::IsOnAssignment);
 
             if (isAttachedProperty)
-                binding->type = QV4::CompiledData::Binding::Type_AttachedProperty;
+                binding->setType(QV4::CompiledData::Binding::Type_AttachedProperty);
             else
-                binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
+                binding->setType(QV4::CompiledData::Binding::Type_GroupProperty);
 
             int objIndex = 0;
             if (!defineQMLObject(&objIndex, nullptr, QQmlJS::SourceLocation(), nullptr, nullptr))
@@ -1842,7 +1850,7 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
             continue;
         QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
         *bindingToWrite = *b;
-        if (b->type == QV4::CompiledData::Binding::Type_Script)
+        if (b->type() == QV4::CompiledData::Binding::Type_Script)
             bindingToWrite->value.compiledScriptIndex = o->runtimeFunctionIndices.at(b->value.compiledScriptIndex);
         bindingPtr += sizeof(QV4::CompiledData::Binding);
     }
@@ -1952,7 +1960,7 @@ bool JSCodeGen::compileComponent(int contextObject)
     if (obj->flags & QV4::CompiledData::Object::IsComponent && !obj->isInlineComponent) {
         Q_ASSERT(obj->bindingCount() == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
-        Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
+        Q_ASSERT(componentBinding->type() == QV4::CompiledData::Binding::Type_Object);
         contextObject = componentBinding->value.objectIndex;
     }
     for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it)
@@ -1980,11 +1988,12 @@ bool JSCodeGen::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int s
     }
 
     for (const QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
-        if (binding->type < QV4::CompiledData::Binding::Type_Object)
+        const Binding::Type bindingType = binding->type();
+        if (bindingType < QV4::CompiledData::Binding::Type_Object)
             continue;
 
         int target = binding->value.objectIndex;
-        int scope = binding->type == QV4::CompiledData::Binding::Type_Object ? target : scopeObjectIndex;
+        int scope = bindingType == QV4::CompiledData::Binding::Type_Object ? target : scopeObjectIndex;
 
         if (!compileJavaScriptCodeInObjectsRecursively(binding->value.objectIndex, scope))
             return false;

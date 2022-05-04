@@ -239,18 +239,22 @@ public:
 
 void QQuickPropertyChangesParser::verifyList(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
-    if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-        error(compilationUnit->objectAt(binding->value.objectIndex), QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
-        return;
-    }
-
-    if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
-        || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+    switch (binding->type()) {
+    case QV4::CompiledData::Binding::Type_Object:
+        error(compilationUnit->objectAt(binding->value.objectIndex),
+              QQuickPropertyChanges::tr(
+                      "PropertyChanges does not support creating state-specific objects."));
+        break;
+    case QV4::CompiledData::Binding::Type_GroupProperty:
+    case QV4::CompiledData::Binding::Type_AttachedProperty: {
         const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
-        for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding) {
+        for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding)
             verifyList(compilationUnit, subBinding);
-        }
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -273,8 +277,9 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
 
     QString propertyName = propertyPrefix + compilationUnit->stringAt(binding->propertyNameIndex);
 
-    if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
-        || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+    switch (binding->type()) {
+    case QV4::CompiledData::Binding::Type_GroupProperty:
+    case QV4::CompiledData::Binding::Type_AttachedProperty: {
         QString pre = propertyName + QLatin1Char('.');
         const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
@@ -282,6 +287,9 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
             decodeBinding(pre, compilationUnit, subBinding);
         }
         return;
+    }
+    default:
+        break;
     }
 
     if (propertyName.count() >= 3 &&
@@ -299,7 +307,8 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         }
     }
 
-    if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
+    if (binding->type() == QV4::CompiledData::Binding::Type_Script
+            || binding->isTranslationBinding()) {
         QUrl url = QUrl();
         int line = -1;
         int column = -1;
@@ -323,7 +332,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     }
 
     QVariant var;
-    switch (binding->type) {
+    switch (binding->type()) {
     case QV4::CompiledData::Binding::Type_Script:
     case QV4::CompiledData::Binding::Type_Translation:
     case QV4::CompiledData::Binding::Type_TranslationById:

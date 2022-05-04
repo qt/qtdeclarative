@@ -2719,7 +2719,7 @@ void QQmlListModel::sync()
 
 bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
-    if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+    if (binding->type() >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
         const QV4::CompiledData::Object *target = compilationUnit->objectAt(targetObjectIndex);
         QString objName = compilationUnit->stringAt(target->inheritedTypeNameIndex);
@@ -2747,7 +2747,7 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::ExecutableCom
             if (!verifyProperty(compilationUnit, binding))
                 return false;
         }
-    } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
+    } else if (binding->type() == QV4::CompiledData::Binding::Type_Script) {
         QString scriptStr = compilationUnit->bindingValueAsScriptString(binding);
         if (!binding->isFunctionExpression() && !definesEmptyList(scriptStr)) {
             QByteArray script = scriptStr.toUtf8();
@@ -2770,7 +2770,8 @@ bool QQmlListModelParser::applyProperty(
     const QString elementName = compilationUnit->stringAt(binding->propertyNameIndex);
 
     bool roleSet = false;
-    if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+    const QV4::CompiledData::Binding::Type bindingType = binding->type();
+    if (bindingType >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
         const QV4::CompiledData::Object *target = compilationUnit->objectAt(targetObjectIndex);
 
@@ -2803,13 +2804,13 @@ bool QQmlListModelParser::applyProperty(
             value = QVariant::fromValue<const QV4::CompiledData::Binding*>(binding);
         } else if (binding->evaluatesToString()) {
             value = compilationUnit->bindingValueAsString(binding);
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
+        } else if (bindingType == QV4::CompiledData::Binding::Type_Number) {
             value = compilationUnit->bindingValueAsNumber(binding);
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
+        } else if (bindingType == QV4::CompiledData::Binding::Type_Boolean) {
             value = binding->valueAsBoolean();
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Null) {
+        } else if (bindingType == QV4::CompiledData::Binding::Type_Null) {
             value = QVariant::fromValue(nullptr);
-        } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
+        } else if (bindingType == QV4::CompiledData::Binding::Type_Script) {
             QString scriptStr = compilationUnit->bindingValueAsScriptString(binding);
             if (definesEmptyList(scriptStr)) {
                 const ListLayout::Role &role = model->getOrCreateListRole(elementName);
@@ -2872,7 +2873,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::
     bool setRoles = false;
 
     for (const QV4::CompiledData::Binding *binding : bindings) {
-        if (binding->type != QV4::CompiledData::Binding::Type_Object)
+        if (binding->type() != QV4::CompiledData::Binding::Type_Object)
             continue;
         setRoles |= applyProperty(compilationUnit, binding, rv->m_listModel, /*outter element index*/-1);
     }
