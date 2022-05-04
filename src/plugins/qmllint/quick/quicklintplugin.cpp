@@ -407,3 +407,5 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 }
 
 QT_END_NAMESPACE
+
+#include "moc_quicklintplugin.cpp"

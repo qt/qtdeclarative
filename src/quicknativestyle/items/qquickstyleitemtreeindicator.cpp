@@ -80,3 +80,5 @@ void QQuickStyleItemTreeIndicator::initStyleOption(QStyleOptionViewItem &styleOp
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemtreeindicator.cpp"

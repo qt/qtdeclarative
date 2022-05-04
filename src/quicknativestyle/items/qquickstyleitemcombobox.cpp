@@ -94,3 +94,5 @@ void QQuickStyleItemComboBox::initStyleOption(QStyleOptionComboBox &styleOption)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemcombobox.cpp"

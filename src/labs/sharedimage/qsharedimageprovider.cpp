@@ -140,3 +140,5 @@ QImage SharedImageProvider::requestImage(const QString &id, QSize *size, const Q
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsharedimageprovider_p.cpp"

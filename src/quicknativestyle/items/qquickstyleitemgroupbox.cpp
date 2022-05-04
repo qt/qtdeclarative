@@ -105,3 +105,5 @@ QPointF QQuickStyleItemGroupBox::labelPos() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemgroupbox.cpp"

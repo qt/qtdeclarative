@@ -128,3 +128,5 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption) con
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemslider.cpp"
