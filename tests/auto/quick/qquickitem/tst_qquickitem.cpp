@@ -195,6 +195,7 @@ private slots:
     void focusSubItemInNonFocusScope();
     void parentItemWithFocus();
     void reparentFocusedItem();
+    void activeFocusChangedOrder();
 
     void constructor();
     void setParentItem();
@@ -960,6 +961,93 @@ void tst_qquickitem::reparentFocusedItem()
     // Parenting the item to another item within the same focus scope shouldn't change it's focus.
     child.setParentItem(&sibling);
     FVERIFY();
+}
+
+void tst_qquickitem::activeFocusChangedOrder()
+{
+    // This test checks that the activeFocusChanged signal first comes for an
+    // object that has lost focus, and only after that - for an object that
+    // has received focus.
+
+    {
+        // Two FocusScopes inside a Window
+        QQuickWindow window;
+        QVERIFY(ensureFocus(&window));
+        QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
+
+        QQuickFocusScope scope1(window.contentItem());
+        QQuickItem scope1Child(&scope1);
+
+        QQuickFocusScope scope2(window.contentItem());
+        QQuickItem scope2Child(&scope2);
+
+        scope1Child.forceActiveFocus();
+        QTRY_VERIFY(scope1.hasActiveFocus());
+
+        int counter = 0;
+        connect(&scope1, &QQuickItem::activeFocusChanged, [&counter, &scope1](bool focus) {
+            QCOMPARE(scope1.childItems().front()->hasActiveFocus(), focus);
+            QCOMPARE(counter, 0);
+            counter++;
+        });
+        connect(&scope2, &QQuickItem::activeFocusChanged, [&counter, &scope2](bool focus) {
+            QCOMPARE(scope2.childItems().front()->hasActiveFocus(), focus);
+            QCOMPARE(counter, 1);
+            counter++;
+        });
+
+        // A guard is needed so that connections are destroyed before the items.
+        // Otherwise the slots will be called during destruction, and test will
+        // crash (because childItems will be empty).
+        auto guard = qScopeGuard([&scope1, &scope2]() {
+            scope1.disconnect();
+            scope2.disconnect();
+        });
+        Q_UNUSED(guard)
+
+        scope2Child.forceActiveFocus();
+        QTRY_VERIFY(scope2.hasActiveFocus());
+        QCOMPARE(counter, 2); // make sure that both signals are received
+    }
+
+    {
+        // Two Items inside a Window (no explicict FocusScopes)
+        QQuickWindow window;
+        QVERIFY(ensureFocus(&window));
+        QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
+
+        QQuickItem item1(window.contentItem());
+
+        QQuickItem item2(window.contentItem());
+
+        item1.forceActiveFocus();
+        QTRY_VERIFY(item1.hasActiveFocus());
+
+        int counter = 0;
+        connect(&item1, &QQuickItem::activeFocusChanged, [&counter](bool focus) {
+            QVERIFY(!focus);
+            QCOMPARE(counter, 0);
+            counter++;
+        });
+        connect(&item2, &QQuickItem::activeFocusChanged, [&counter](bool focus) {
+            QVERIFY(focus);
+            QCOMPARE(counter, 1);
+            counter++;
+        });
+
+        // A guard is needed so that connections are destroyed before the items.
+        // Otherwise the slots will be called during destruction, and test will
+        // fail.
+        auto guard = qScopeGuard([&item1, &item2]() {
+            item1.disconnect();
+            item2.disconnect();
+        });
+        Q_UNUSED(guard)
+
+        item2.forceActiveFocus();
+        QTRY_VERIFY(item2.hasActiveFocus());
+        QCOMPARE(counter, 2); // make sure that both signals are received
+    }
 }
 
 void tst_qquickitem::constructor()
