@@ -735,13 +735,14 @@ template <typename ObjectContainer>
 inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const QV4::CompiledData::ParameterType &param,
                                                                            QString *customTypeName)
 {
-    if (param.indexIsBuiltinType) {
+    if (param.indexIsBuiltinType()) {
         // built-in type
-        return metaTypeForPropertyType(static_cast<QV4::CompiledData::BuiltinType>(int(param.typeNameIndexOrBuiltinType)));
+        return metaTypeForPropertyType(
+                static_cast<QV4::CompiledData::BuiltinType>(param.typeNameIndexOrBuiltinType()));
     }
 
     // lazily resolved type
-    const QString typeName = stringAt(param.typeNameIndexOrBuiltinType);
+    const QString typeName = stringAt(param.typeNameIndexOrBuiltinType());
     if (customTypeName)
         *customTypeName = typeName;
     QQmlType qmltype;
