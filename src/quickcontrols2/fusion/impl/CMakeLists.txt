@@ -16,6 +16,8 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2FusionStyleImplPlugin
+    DEPENDENCIES
+        QtQuick/auto
     PLUGIN_TARGET qtquickcontrols2fusionstyleimplplugin
     NO_PLUGIN_OPTIONAL
     SOURCES
