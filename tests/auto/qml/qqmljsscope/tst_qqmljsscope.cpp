@@ -65,13 +65,14 @@ class tst_qqmljsscope : public QQmlDataTest
         return QString::fromUtf8(data);
     }
 
-    QQmlJSScope::ConstPtr run(QString url)
+    QQmlJSScope::ConstPtr run(QString url, bool expectErrorsOrWarnings = false)
     {
         QmlIR::Document document(false);
-        return run(url, &document);
+        return run(url, &document, expectErrorsOrWarnings);
     }
 
-    QQmlJSScope::ConstPtr run(QString url, QmlIR::Document *document)
+    QQmlJSScope::ConstPtr run(QString url, QmlIR::Document *document,
+                              bool expectErrorsOrWarnings = false)
     {
         url = testFile(url);
         const QString sourceCode = loadUrl(url);
@@ -92,11 +93,19 @@ class tst_qqmljsscope : public QQmlDataTest
         QQmlJSLogger logger;
         logger.setFileName(url);
         logger.setCode(sourceCode);
-        logger.setSilent(true);
+        logger.setSilent(expectErrorsOrWarnings);
         QQmlJSScope::Ptr target = QQmlJSScope::create();
         QQmlJSImportVisitor visitor(target, &m_importer, &logger, dataDirectory());
         QQmlJSTypeResolver typeResolver { &m_importer };
         typeResolver.init(&visitor, document->program);
+        if (!expectErrorsOrWarnings) {
+            [&]() {
+                QVERIFY2(!logger.hasWarnings(), "Expected no warnings in this test");
+                QVERIFY2(!logger.hasErrors(), "Expected no errors in this test");
+            }();
+        }
+        if (QTest::currentTestFailed())
+            return QQmlJSScope::ConstPtr();
         return visitor.result();
     }
 
@@ -276,7 +285,7 @@ void tst_qqmljsscope::labsQmlModelsSanity()
 
 void tst_qqmljsscope::unknownCppBase()
 {
-    QQmlJSScope::ConstPtr root = run(u"unknownCppBaseAssigningToVar.qml"_s);
+    QQmlJSScope::ConstPtr root = run(u"unknownCppBaseAssigningToVar.qml"_s, true);
     QVERIFY(root);
     // we should not crash here, then it is a success
 }
