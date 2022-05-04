@@ -167,11 +167,11 @@ private:
 public:
     bool operator()(const I &x, const I &y) const
     {
-        return orderTable[x->type] < orderTable[y->type];
+        return orderTable[x->type()] < orderTable[y->type()];
     }
     bool operator()(const T &x, const T &y) const
     {
-        return orderTable[x.type] < orderTable[y.type];
+        return orderTable[x.type()] < orderTable[y.type()];
     }
 };
 
@@ -758,7 +758,7 @@ void CodeGenerator::compileObjectElements(QQmlJSAotObject &compiled, const CodeG
     // predicate
     auto scriptBindingsBegin =
             std::find_if(sortedBindings.cbegin(), sortedBindings.cend(),
-                         [](auto it) { return it->type == QmlIR::Binding::Type_Script; });
+                         [](auto it) { return it->type() == QmlIR::Binding::Type_Script; });
     auto it = sortedBindings.cbegin();
     for (; it != scriptBindingsBegin; ++it)
         compileBinding(compiled, **it, object, { object.type, u"this"_qs, u""_qs, false });
@@ -1183,8 +1183,8 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
     // Note: unlike QQmlObjectCreator, we don't have to do a complicated
     // deferral logic for bindings: if a binding is deferred, it is not compiled
     // (potentially, with all the bindings inside of it), period.
-    if (binding.flags & QV4::CompiledData::Binding::IsDeferredBinding) {
-        if (binding.type == QmlIR::Binding::Type_GroupProperty) {
+    if (binding.flags() & QV4::CompiledData::Binding::IsDeferredBinding) {
+        if (binding.type() == QmlIR::Binding::Type_GroupProperty) {
             // TODO: we should warn about this in QmlCompiler library
             qCWarning(lcCodeGenerator)
                     << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
@@ -1234,7 +1234,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
         }
     };
 
-    switch (binding.type) {
+    switch (binding.type()) {
     case QmlIR::Binding::Type_Boolean: {
         addPropertyLine(propertyName, p, binding.value.b ? u"true"_qs : u"false"_qs);
         break;
@@ -1295,7 +1295,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
         const QString qobjectParent = u"this"_qs;
         const QString objectAddr = accessor.name;
 
-        if (binding.flags & QmlIR::Binding::IsOnAssignment) {
+        if (binding.hasFlag(QmlIR::Binding::IsOnAssignment)) {
             const QString onAssignmentName = u"onAssign_" + propertyName;
             const auto uniqueId = UniqueStringId(current, onAssignmentName);
             if (!m_onAssignmentObjectsCreated.contains(uniqueId)) {
@@ -1331,7 +1331,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             return;
         }
 
-        if (p.isList() || (binding.flags & QmlIR::Binding::IsListItem)) {
+        if (p.isList() || binding.hasFlag(QmlIR::Binding::IsListItem)) {
             const QString refName = u"listref_" + propertyName;
             const auto uniqueId = UniqueStringId(current, refName);
             if (!m_listReferencesCreated.contains(uniqueId)) {
@@ -1345,7 +1345,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
         }
 
         const auto setObjectBinding = [&](const QString &value) {
-            if (p.isList() || (binding.flags & QmlIR::Binding::IsListItem)) {
+            if (p.isList() || binding.hasFlag(QmlIR::Binding::IsListItem)) {
                 const QString refName = u"listref_" + propertyName;
                 current.endInit.body << refName + u".append(" + value + u");";
             } else {
@@ -1417,7 +1417,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             // TODO: there's a special QQmlComponentAttached, which has to be
             // called? c.f. qqmlobjectcreator.cpp's finalize()
             const auto compileComponent = [&](const QmlIR::Binding &b) {
-                Q_ASSERT(b.type == QmlIR::Binding::Type_Script);
+                Q_ASSERT(b.type() == QmlIR::Binding::Type_Script);
                 compileScriptBindingOfComponent(current, irObject, type, b,
                                                 m_doc->stringAt(b.propertyNameIndex));
             };
@@ -1485,7 +1485,13 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
         const auto isGroupAffectingBinding = [](const QmlIR::Binding &b) {
             // script bindings do not require value type group property variable
             // to actually be present.
-            return b.type != QmlIR::Binding::Type_Invalid && b.type != QmlIR::Binding::Type_Script;
+            switch (b.type()) {
+            case QmlIR::Binding::Type_Invalid:
+            case QmlIR::Binding::Type_Script:
+                return false;
+            default:
+                return true;
+            }
         };
         const bool generateValueTypeCode = isValueType
                 && std::any_of(irObject->bindingsBegin(), irObject->bindingsEnd(),
@@ -1518,10 +1524,10 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
         // predicate
         auto scriptBindingsBegin =
                 std::find_if(sortedBindings.cbegin(), sortedBindings.cend(),
-                             [](auto it) { return it->type == QmlIR::Binding::Type_Script; });
+                             [](auto it) { return it->type() == QmlIR::Binding::Type_Script; });
         auto it = sortedBindings.cbegin();
         for (; it != scriptBindingsBegin; ++it) {
-            Q_ASSERT((*it)->type != QmlIR::Binding::Type_Script);
+            Q_ASSERT((*it)->type() != QmlIR::Binding::Type_Script);
             compile(*it);
         }
 
@@ -1541,7 +1547,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
 
         // once the value is written back, process the script bindings
         for (; it != sortedBindings.cend(); ++it) {
-            Q_ASSERT((*it)->type == QmlIR::Binding::Type_Script);
+            Q_ASSERT((*it)->type() == QmlIR::Binding::Type_Script);
             compile(*it);
         }
         break;

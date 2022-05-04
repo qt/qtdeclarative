@@ -882,7 +882,7 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
 {
     using namespace CompiledData;
 #if QT_CONFIG(translation)
-    switch (binding->type) {
+    switch (binding->type()) {
     case Binding::Type_TranslationById: {
         const TranslationData &translation
                 = data->translations()[binding->value.translationDataIndex];
