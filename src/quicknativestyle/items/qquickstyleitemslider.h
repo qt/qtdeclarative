@@ -40,6 +40,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemSlider : public QQuickStyleItem
 {
     Q_OBJECT
@@ -68,5 +70,7 @@ private:
 private:
    SubControl m_subControl = Groove;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMSLIDER_H

@@ -36,6 +36,8 @@
 
 #include "qquickstyleitembutton.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemButton::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_PushButtonLabel, controlSize(control));
@@ -87,3 +89,5 @@ void QQuickStyleItemButton::initStyleOption(QStyleOptionButton &styleOption) con
     if (button->isFlat())
         styleOption.features |= QStyleOptionButton::Flat;
 }
+
+QT_END_NAMESPACE

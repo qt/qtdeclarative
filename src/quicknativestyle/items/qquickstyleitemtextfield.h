@@ -40,6 +40,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemTextField : public QQuickStyleItem
 {
     Q_OBJECT
@@ -56,5 +58,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionFrame &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMTEXTFIELD_H

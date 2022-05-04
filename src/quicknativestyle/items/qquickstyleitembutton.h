@@ -40,6 +40,8 @@
 #include "qquickstyleitem.h"
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQuickStyleItemButton : public QQuickStyleItem
 {
     Q_OBJECT
@@ -56,5 +58,7 @@ protected:
 private:
     void initStyleOption(QStyleOptionButton &styleOption) const;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQUICKSTYLEITEMBUTTON_H

@@ -36,6 +36,8 @@
 
 #include "qquickstyleitemdial.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemDial::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
@@ -109,3 +111,5 @@ void QQuickStyleItemDial::initStyleOption(QStyleOptionSlider &styleOption) const
     }
 
 }
+
+QT_END_NAMESPACE

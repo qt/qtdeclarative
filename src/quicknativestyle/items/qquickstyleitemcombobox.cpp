@@ -36,6 +36,8 @@
 
 #include "qquickstyleitemcombobox.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemComboBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_PushButtonLabel, controlSize(control));
@@ -87,3 +89,5 @@ void QQuickStyleItemComboBox::initStyleOption(QStyleOptionComboBox &styleOption)
     if (!comboBox->isFlat() && !comboBox->isDown())
         styleOption.state |= QStyle::State_Raised;
 }
+
+QT_END_NAMESPACE

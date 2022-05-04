@@ -36,6 +36,8 @@
 
 #include "qquickstyleitemgroupbox.h"
 
+QT_BEGIN_NAMESPACE
+
 QFont QQuickStyleItemGroupBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_HeaderLabel, controlSize(control));
@@ -98,3 +100,5 @@ QPointF QQuickStyleItemGroupBox::labelPos() const
 {
     return m_labelPos;
 }
+
+QT_END_NAMESPACE
