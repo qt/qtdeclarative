@@ -1124,6 +1124,12 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
                         m_inlineComponentName.toString(), { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
+
+        addDefaultProperties();
+        Q_ASSERT(m_currentScope->scopeType() == QQmlJSScope::QMLScope);
+        m_qmlTypes.append(m_currentScope);
+
+        m_objectDefinitionScopes << m_currentScope;
     } else {
         enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
@@ -1133,11 +1139,6 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
 
-    addDefaultProperties();
-    if (m_currentScope->scopeType() == QQmlJSScope::QMLScope)
-        m_qmlTypes.append(m_currentScope);
-
-    m_objectDefinitionScopes << m_currentScope;
     return true;
 }
 
