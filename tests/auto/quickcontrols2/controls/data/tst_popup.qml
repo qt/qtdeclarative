@@ -1441,4 +1441,80 @@ TestCase {
         compare(shortcutActivatedSpy.count, 2)
         tryCompare(control, "visible", false)
     }
+
+    Component {
+        id: mousePropagationComponent
+        ApplicationWindow {
+            id: window
+            width: 360
+            height: 360
+            visible: true
+
+            property alias popup: popup
+            property alias popupTitle: popupTitle
+
+            Popup {
+                id: popup
+                width: 200
+                height: 200
+
+                background: Rectangle {
+                    color: "#505050"
+                    Rectangle {
+                        id: popupTitle
+                        width: parent.width
+                        height: 30
+                        color: "blue"
+
+                        property point pressedPosition: Qt.point(0, 0)
+
+                        MouseArea {
+                            enabled: true
+                            propagateComposedEvents: true
+                            anchors.fill: parent
+                            onPressed: (mouse) => {
+                                popupTitle.pressedPosition  = Qt.point(mouse.x, mouse.y)
+                            }
+                            onPositionChanged: (mouse) => {
+                                popup.x += mouse.x - popupTitle.pressedPosition.x
+                                popup.y += mouse.y - popupTitle.pressedPosition.y
+                            }
+                            onReleased: (mouse) => {
+                                popupTitle.pressedPosition = Qt.point(0, 0)
+                            }
+                        }
+                    }
+                }
+
+                Component.onCompleted: {
+                    x = parent.width / 2 - width / 2
+                    y = parent.height / 2 - height / 2
+                }
+            }
+        }
+    }
+
+    function test_mousePropagation() {
+        // Tests that Popup ignores mouse events that it doesn't handle itself
+        // so that they propagate correctly.
+        let window = createTemporaryObject(mousePropagationComponent, testCase)
+        window.requestActivate()
+        tryCompare(window, "active", true)
+
+        let popup = window.popup
+        popup.open()
+        let title = window.popupTitle
+        verify(title)
+
+        let pressPoint = Qt.point(title.width / 2, title.height / 2)
+        let oldPos = Qt.point(popup.x, popup.y)
+        mousePress(title, pressPoint.x, pressPoint.y)
+        fuzzyCompare(title.pressedPosition.x, pressPoint.x, 1)
+        fuzzyCompare(title.pressedPosition.y, pressPoint.y, 1)
+        mouseMove(title, pressPoint.x + 5, pressPoint.y + 5)
+        fuzzyCompare(popup.x, oldPos.x + 5, 1)
+        fuzzyCompare(popup.y, oldPos.y + 5, 1)
+        mouseRelease(title, pressPoint.x, pressPoint.y)
+        compare(title.pressedPosition, Qt.point(0, 0))
+    }
 }
