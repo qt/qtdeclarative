@@ -108,20 +108,18 @@ bool Parameter::init(QV4::CompiledData::Parameter *param, const QV4::Compiler::J
 
 bool Parameter::initType(QV4::CompiledData::ParameterType *paramType, const QV4::Compiler::JSUnitGenerator *stringGenerator, int typeNameIndex)
 {
-    paramType->indexIsBuiltinType = false;
-    paramType->typeNameIndexOrBuiltinType = 0;
     const QString typeName = stringGenerator->stringForIndex(typeNameIndex);
     auto builtinType = stringToBuiltinType(typeName);
     if (builtinType == QV4::CompiledData::BuiltinType::InvalidBuiltin) {
-        if (typeName.isEmpty())
+        if (typeName.isEmpty()) {
+            paramType->set(false, 0);
             return false;
-        paramType->indexIsBuiltinType = false;
-        paramType->typeNameIndexOrBuiltinType = typeNameIndex;
+        }
         Q_ASSERT(quint32(typeNameIndex) < (1u << 31));
+        paramType->set(false, typeNameIndex);
     } else {
-        paramType->indexIsBuiltinType = true;
-        paramType->typeNameIndexOrBuiltinType = static_cast<quint32>(builtinType);
         Q_ASSERT(quint32(builtinType) < (1u << 31));
+        paramType->set(true, static_cast<quint32>(builtinType));
     }
     return true;
 }
