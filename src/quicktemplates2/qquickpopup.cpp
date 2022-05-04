@@ -2550,22 +2550,19 @@ void QQuickPopup::keyReleaseEvent(QKeyEvent *event)
 void QQuickPopup::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickPopup);
-    d->handleMouseEvent(d->popupItem, event);
-    event->accept();
+    event->setAccepted(d->handleMouseEvent(d->popupItem, event));
 }
 
 void QQuickPopup::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickPopup);
-    d->handleMouseEvent(d->popupItem, event);
-    event->accept();
+    event->setAccepted(d->handleMouseEvent(d->popupItem, event));
 }
 
 void QQuickPopup::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickPopup);
-    d->handleMouseEvent(d->popupItem, event);
-    event->accept();
+    event->setAccepted(d->handleMouseEvent(d->popupItem, event));
 }
 
 void QQuickPopup::mouseDoubleClickEvent(QMouseEvent *event)
