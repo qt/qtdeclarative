@@ -199,8 +199,8 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
                 runtimeClasses[i]
                         = runtimeClasses[i]->addMember(
                                 engine->identifierTable->asPropertyKey(
-                                        runtimeStrings[member->nameOffset]),
-                                member->isAccessor
+                                        runtimeStrings[member->nameOffset()]),
+                                member->isAccessor()
                                         ? QV4::Attr_Accessor
                                         : QV4::Attr_Data);
         }
