@@ -13,6 +13,8 @@ qt_internal_add_qml_module(qtquickcontrols2universalstyleimplplugin
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2UniversalStyleImplPlugin
+    DEPENDENCIES
+        QtQuick/auto
     PLUGIN_TARGET qtquickcontrols2universalstyleimplplugin
     NO_PLUGIN_OPTIONAL
     SOURCES
