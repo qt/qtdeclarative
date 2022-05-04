@@ -29,6 +29,7 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     DEPENDENCIES
         QtQuick.Controls/auto
         QtQuick.Layouts/auto
+        QtQuick/auto
     PAST_MAJOR_VERSIONS 2
     PLUGIN_TARGET qtquickcontrols2nativestyleplugin
     NO_PLUGIN_OPTIONAL
