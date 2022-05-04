@@ -136,6 +136,11 @@ public:
                   {
                           QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
                           dataDirectory(),
+                          // Note: to be able to import the QQmlJSScopeTests
+                          // correctly, we need an additional import path. Use
+                          // this application's binary directory as done by
+                          // QQmlImportDatabase
+                          QCoreApplication::applicationDirPath(),
                   },
                   nullptr)
     {
@@ -159,6 +164,10 @@ void tst_qqmljsscope::initTestCase()
         QFile f(fi.absoluteFilePath());
         QVERIFY(f.open(QIODevice::ReadOnly));
     }
+
+    // test that we can import the module shipped with this test: if we have no
+    // errors / warnings, it is a success
+    QVERIFY(run(u"importOwnModule.qml"_s));
 }
 
 void tst_qqmljsscope::orderedBindings()
