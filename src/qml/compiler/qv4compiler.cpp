@@ -243,8 +243,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(const QStringList &members)
     CompiledData::JSClassMember *member = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
 
     for (const auto &name : members) {
-        member->nameOffset = registerString(name);
-        member->isAccessor = false;
+        member->set(registerString(name), false);
         ++member;
     }
 
