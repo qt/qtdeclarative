@@ -91,3 +91,5 @@ void QQuickStyleItemButton::initStyleOption(QStyleOptionButton &styleOption) con
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitembutton.cpp"

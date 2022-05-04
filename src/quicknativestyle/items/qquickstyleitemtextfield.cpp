@@ -94,3 +94,5 @@ void QQuickStyleItemTextField::initStyleOption(QStyleOptionFrame &styleOption) c
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemtextfield.cpp"
