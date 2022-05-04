@@ -580,9 +580,6 @@ void QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(QQuickItem **items, int
 {
     QPointer<QQuickItem> item(*items);
 
-    if (remaining)
-        notifyFocusChangesRecur(items + 1, remaining - 1, reason);
-
     if (item) {
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
@@ -599,6 +596,9 @@ void QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(QQuickItem **items, int
             emit item->activeFocusChanged(itemPrivate->activeFocus);
         }
     }
+
+    if (remaining)
+        notifyFocusChangesRecur(items + 1, remaining - 1, reason);
 }
 
 bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
