@@ -658,11 +658,11 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
         if (type != QV4::CompiledData::BuiltinType::InvalidBuiltin) {
             propertyType = metaTypeForPropertyType(type);
         } else {
-            Q_ASSERT(!p->isBuiltinType);
+            Q_ASSERT(!p->isBuiltinType());
 
             QQmlType qmltype;
             bool selfReference = false;
-            if (!imports->resolveType(stringAt(p->builtinTypeOrTypeNameIndex), &qmltype, nullptr, nullptr,
+            if (!imports->resolveType(stringAt(p->builtinTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
                                       nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
@@ -694,13 +694,13 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
                     typeIds = compilationUnit->typeIdsForComponent();
                 }
 
-                if (p->isList) {
+                if (p->isList()) {
                     propertyType = typeIds.listId;
                 } else {
                     propertyType = typeIds.id;
                 }
             } else {
-                if (p->isList) {
+                if (p->isList()) {
                     propertyType = qmltype.qListTypeId();
                 } else {
                     propertyType = qmltype.typeId();
@@ -708,13 +708,13 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
                 }
             }
 
-            if (p->isList)
+            if (p->isList())
                 propertyFlags.type = QQmlPropertyData::Flags::QListType;
             else
                 propertyFlags.type = QQmlPropertyData::Flags::QObjectDerivedType;
         }
 
-        if (!p->isReadOnly && !p->isList)
+        if (!p->isReadOnly() && !p->isList())
             propertyFlags.setIsWritable(true);
 
 
