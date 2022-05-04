@@ -158,6 +158,8 @@ the QML code to interact with C++ code.
 Further information for writing QML applications:
 \list
     \li \l {The QML Reference}
+    \li \l {Qt Quick Compiler}
+           - overview of Qt Quick Compiler components
     \li \l {QML Applications}
            - essential information for application development with QML and Qt
            Quick
