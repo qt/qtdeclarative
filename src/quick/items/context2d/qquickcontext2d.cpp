@@ -1724,7 +1724,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(cons
 }
 /*!
   \qmlmethod variant QtQuick::Context2D::createPattern(color color, enumeration patternMode)
-  This is a overload function.
+  This is an overloaded function.
   Returns a CanvasPattern object that uses the given \a color and \a patternMode.
   The valid pattern modes are:
     \list
