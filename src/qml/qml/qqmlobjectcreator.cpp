@@ -1519,7 +1519,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         QQmlPropertyData *propertyData = _propertyCache->property(_propertyCache->propertyOffset() + propertyIndex);
         // only compute stringAt if there's a chance for the lookup to succeed
         auto postHocIt = postHocRequired.isEmpty() ? postHocRequired.end() : postHocRequired.find(stringAt(property->nameIndex));
-        if (!property->isRequired && postHocRequired.end() == postHocIt)
+        if (!property->isRequired() && postHocRequired.end() == postHocIt)
             continue;
         if (postHocIt != postHocRequired.end())
             postHocRequired.erase(postHocIt);
