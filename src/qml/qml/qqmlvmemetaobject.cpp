@@ -711,7 +711,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         : QQmlEnginePrivate::get(ctxt->engine());
 
                 if (c == QMetaObject::ReadProperty) {
-                    if (property.isList) {
+                    if (property.isList()) {
                         // _id because this is an absolute property ID.
                         const QQmlPropertyData *propertyData = cache->property(_id);
                         const QMetaType propType = propertyData->propType();
@@ -838,7 +838,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 } else if (c == QMetaObject::WriteProperty) {
                     bool needActivate = false;
 
-                    if (property.isList) {
+                    if (property.isList()) {
                         // _id because this is an absolute property ID.
                         const QQmlPropertyData *propertyData = cache->property(_id);
                         const QMetaType propType = propertyData->propType();
