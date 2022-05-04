@@ -767,7 +767,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         }
                         break;
                     case QV4::CompiledData::BuiltinType::InvalidBuiltin:
-                        if (property.isList) {
+                        if (property.isList()) {
                             // when reading from the list, we need to find the correct MetaObject,
                             // namely this. However, obejct->metaObject might point to any MetaObject
                             // down the inheritance hierarchy, so we need to store how far we have
@@ -872,7 +872,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                         break;
                     case QV4::CompiledData::BuiltinType::InvalidBuiltin:
-                        if (property.isList) {
+                        if (property.isList()) {
                             // Writing such a property is not supported. Content is added through the list property
                             // methods.
                         } else {

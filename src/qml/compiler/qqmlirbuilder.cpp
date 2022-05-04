@@ -76,7 +76,7 @@ void Object::simplifyRequiredProperties() {
     for (auto it = this->propertiesBegin(); it != this->propertiesEnd(); ++it) {
         auto requiredIt = required.find(it->nameIndex);
         if (requiredIt != required.end()) {
-            it->isRequired = true;
+            it->setIsRequired(true);
             required.erase(requiredIt);
         }
     }
@@ -951,8 +951,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             const QStringView &name = node->name;
 
             Property *property = New<Property>();
-            property->isReadOnly = node->isReadonlyMember;
-            property->isRequired = node->isRequired;
+            property->setIsReadOnly(node->isReadonlyMember);
+            property->setIsRequired(node->isRequired);
 
             QV4::CompiledData::BuiltinType builtinPropertyType = Parameter::stringToBuiltinType(memberType);
             bool typeFound = builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin;
@@ -964,7 +964,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 
                 property->setCustomType(registerString(memberType));
                 if (typeModifier == QLatin1String("list")) {
-                    property->isList = true;
+                    property->setIsList(true);
                 } else if (!typeModifier.isEmpty()) {
                     recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
                     return false;
@@ -1103,7 +1103,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
     QQmlJS::SourceLocation loc = statement->firstSourceLocation();
     binding->valueLocation.set(loc.startLine, loc.startColumn);
     binding->type = QV4::CompiledData::Binding::Type_Invalid;
-    if (_propertyDeclaration && _propertyDeclaration->isReadOnly)
+    if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
         binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
     QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
@@ -1346,7 +1346,7 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
 
     binding->flags = 0;
 
-    if (_propertyDeclaration && _propertyDeclaration->isReadOnly)
+    if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
         binding->flags |= QV4::CompiledData::Binding::InitializerForReadOnlyDeclaration;
 
     // No type name on the initializer means it must be a group property
@@ -1606,7 +1606,7 @@ bool IRBuilder::isStatementNodeScript(QQmlJS::AST::Statement *statement)
 
 bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement)
 {
-    if (property->isBuiltinType || property->isList)
+    if (property->isBuiltinType() || property->isList())
         return false;
     QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(statement);
     if (!exprStmt)
