@@ -123,7 +123,7 @@ static void annotateListElements(QmlIR::Document *document)
         if (!listElementNames.contains(document->stringAt(object->inheritedTypeNameIndex)))
             continue;
         for (QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
-            if (binding->type != QV4::CompiledData::Binding::Type_Script)
+            if (binding->type() != QV4::CompiledData::Binding::Type_Script)
                 continue;
             binding->stringIndex = document->registerString(object->bindingAsString(document, binding->value.compiledScriptIndex));
         }
@@ -135,7 +135,7 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc,
 {
     for (QmlIR::Object *object: qAsConst(doc.objects)) {
         for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
-            if (binding->type != QV4::CompiledData::Binding::Type_Script)
+            if (binding->type() != QV4::CompiledData::Binding::Type_Script)
                 continue;
             const QString propName =  doc.stringAt(binding->propertyNameIndex);
             if (!propName.startsWith(QLatin1String("on"))
@@ -278,7 +278,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                 std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> result;
                 auto *module = v4CodeGen.module();
                 if (const auto *binding = bindingOrFunction.binding()) {
-                    switch (binding->type) {
+                    switch (binding->type()) {
                     case QmlIR::Binding::Type_AttachedProperty:
                     case QmlIR::Binding::Type_GroupProperty:
                         effectiveScopes.insert(
