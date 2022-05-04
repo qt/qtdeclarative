@@ -59,6 +59,8 @@
 
 #include "qsharedimageloader_p.h"
 
+QT_BEGIN_NAMESPACE
+
 class SharedImageProvider;
 
 class QuickSharedImageLoader : public QSharedImageLoader
@@ -90,4 +92,7 @@ public:
 protected:
     QScopedPointer<QuickSharedImageLoader> loader;
 };
+
+QT_END_NAMESPACE
+
 #endif // QSHAREDIMAGEPROVIDER_H

@@ -28,6 +28,8 @@
 
 #include "quicklintplugin.h"
 
+QT_BEGIN_NAMESPACE
+
 using namespace Qt::StringLiterals;
 
 ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
@@ -403,3 +405,5 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
         || manager->hasImportedModule(u"QtQuick.Controls.Windows"_s))
         manager->registerElementPass(std::make_unique<ControlsNativeValidatorPass>(manager));
 }
+
+QT_END_NAMESPACE

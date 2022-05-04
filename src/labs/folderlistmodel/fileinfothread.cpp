@@ -44,6 +44,7 @@
 
 #include <QDebug>
 
+QT_BEGIN_NAMESPACE
 
 FileInfoThread::FileInfoThread(QObject *parent)
     : QThread(parent),
@@ -367,3 +368,5 @@ void FileInfoThread::findChangeRange(const QList<FileProperty> &list, int &fromI
     // For now I let the rest of the list be updated..
     toIndex = list.size() > currentFileList.size() ? list.size() - 1 : currentFileList.size() - 1;
 }
+
+QT_END_NAMESPACE

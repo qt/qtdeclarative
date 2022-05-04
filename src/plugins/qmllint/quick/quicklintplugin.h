@@ -36,6 +36,8 @@
 
 #include <QtQmlCompiler/private/qqmlsa_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QmlLintQuickPlugin : public QObject, public QQmlSA::LintPlugin
 {
     Q_OBJECT
@@ -125,5 +127,7 @@ public:
 private:
     QQmlSA::Element m_item;
 };
+
+QT_END_NAMESPACE
 
 #endif // QUICKLINTPLUGIN_H
