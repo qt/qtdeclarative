@@ -9,6 +9,7 @@ qt_internal_add_manual_test(qmlscenegrabber
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
+        Qt::QuickControls2
 )
 
 qt6_add_shaders(qmlscenegrabber "qmlscenegrabber_shaders"

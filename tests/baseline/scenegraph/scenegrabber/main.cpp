@@ -35,6 +35,7 @@
 
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
+#include <QtQuickControls2/qquickstyle.h>
 
 #ifdef Q_OS_WIN
 #  include <fcntl.h>
@@ -161,7 +162,7 @@ int main(int argc, char *argv[])
     QGuiApplication a(argc, argv);
 
     // Parse command line
-    QString ifile, ofile;
+    QString ifile, ofile, style;
     bool noText = false;
     bool justShow = false;
     QStringList args = a.arguments();
@@ -184,13 +185,20 @@ int main(int argc, char *argv[])
         else if (ifile.isEmpty()) {
             ifile = arg;
         }
+        else if (arg == "-style") {
+            if (i < args.size()-1)
+                style = args.at(++i);
+            else
+                argError = true;
+        }
         else {
             argError = true;
             break;
         }
     }
     if (argError || ifile.isEmpty() || (ofile.isEmpty() && !justShow)) {
-        qWarning() << "Usage:" << args.at(0).toLatin1().constData() << "[-notext] <qml-infile> {-o <outfile or - for ppm on stdout>|-viewonly}";
+        qWarning() << "Usage:" << args.at(0).toLatin1().constData()
+                   << "[-notext] [-style stylename] <qml-infile> {-o <outfile or - for ppm on stdout>|-viewonly}";
         return 1;
     }
 
@@ -200,6 +208,9 @@ int main(int argc, char *argv[])
         return 1;
     }
     // End parsing
+
+    if (!style.isEmpty())
+        QQuickStyle::setStyle(style);
 
     GrabbingView v(ofile);
     v.setSource(QUrl::fromLocalFile(ifile));
