@@ -1193,8 +1193,8 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
 
 void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const
 {
-    if (object->id >= 0)
-        context->setIdValue(object->id, instance);
+    if (object->objectId() >= 0)
+        context->setIdValue(object->objectId(), instance);
 }
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
@@ -1214,7 +1214,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QQmlParserStatus *parserStatus = nullptr;
     bool installPropertyCache = true;
 
-    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+    if (obj->hasFlag(QV4::CompiledData::Object::IsComponent)) {
         isComponent = true;
         QQmlComponent *component = new QQmlComponent(engine, compilationUnit.data(), index, parent);
         typeName = QStringLiteral("<component>");
@@ -1310,7 +1310,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     ddata->setImplicitDestructible();
     // inline components are root objects, but their index is != 0, so we need
     // an additional check
-    const bool isInlineComponent = obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
+    const bool isInlineComponent = obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot);
     if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation || isInlineComponent) {
         if (ddata->context) {
             Q_ASSERT(ddata->context != context.data());
@@ -1344,7 +1344,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (isContextObject)
         context->setContextObject(instance);
 
-    if (customParser && obj->flags & QV4::CompiledData::Object::HasCustomParserBindings) {
+    if (customParser && obj->hasFlag(QV4::CompiledData::Object::HasCustomParserBindings)) {
         customParser->engine = QQmlEnginePrivate::get(engine);
         customParser->imports = compilationUnit->typeNameCache.data();
 
@@ -1587,7 +1587,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings)
+    if (_compiledObject->hasFlag(QV4::CompiledData::Object::HasDeferredBindings))
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context);
 
     const qsizetype oldRequiredPropertiesCount = sharedState->requiredProperties.size();
@@ -1637,7 +1637,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
             Q_ASSERT(binding->isGroupProperty());
             return { 0, _propertyCache->propertyOffset() + 1 }; // 4.
         }
-        Q_ASSERT(!(_compiledObject->flags & QV4::CompiledData::Object::IsComponent));
+        Q_ASSERT(!_compiledObject->hasFlag(QV4::CompiledData::Object::IsComponent));
         QQmlType type = typeRef->type();
         if (type.isValid() && !type.isInlineComponentType()) {
             return { 0, _propertyCache->propertyCount() }; // 1.

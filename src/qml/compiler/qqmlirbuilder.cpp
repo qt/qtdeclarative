@@ -1708,10 +1708,10 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         QV4::CompiledData::Object *objectToWrite = reinterpret_cast<QV4::CompiledData::Object*>(objectPtr);
         objectToWrite->inheritedTypeNameIndex = o->inheritedTypeNameIndex;
         objectToWrite->indexOfDefaultPropertyOrAlias = o->indexOfDefaultPropertyOrAlias;
-        objectToWrite->defaultPropertyIsAlias = o->defaultPropertyIsAlias;
-        objectToWrite->flags = o->flags;
+        objectToWrite->setHasAliasAsDefaultProperty(o->defaultPropertyIsAlias);
+        objectToWrite->setFlags(QV4::CompiledData::Object::Flags(o->flags));
         objectToWrite->idNameIndex = o->idNameIndex;
-        objectToWrite->id = o->id;
+        objectToWrite->setObjectId(o->id);
         objectToWrite->location = o->location;
         objectToWrite->locationOfIdProperty = o->locationOfIdProperty;
 

@@ -290,7 +290,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
     const CompiledObject *obj = objectContainer->objectAt(objectIndex);
     bool needVMEMetaObject = isVMERequired == VMEMetaObjectIsRequired::Always || obj->propertyCount() != 0 || obj->aliasCount() != 0
             || obj->signalCount() != 0 || obj->functionCount() != 0 || obj->enumCount() != 0
-            || (((obj->flags & QV4::CompiledData::Object::IsComponent)
+            || ((obj->hasFlag(QV4::CompiledData::Object::IsComponent)
                  || (objectIndex == 0 && isAddressable(objectContainer->url())))
                 && !objectContainer->resolvedType(obj->inheritedTypeNameIndex)->isFullyDynamicType());
 
@@ -670,7 +670,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
 
 
         QString propertyName = stringAt(p->nameIndex);
-        if (!obj->defaultPropertyIsAlias && propertyIdx == obj->indexOfDefaultPropertyOrAlias)
+        if (!obj->hasAliasAsDefaultProperty() && propertyIdx == obj->indexOfDefaultPropertyOrAlias)
             cache->_defaultPropertyName = propertyName;
         cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
                               propertyType, propertyTypeVersion, effectiveSignalIndex);
@@ -756,7 +756,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
     // from a binding.
     for (int i = 1; i < objectContainer->objectCount(); ++i) {
         const CompiledObject &component = *objectContainer->objectAt(i);
-        if (!(component.flags & QV4::CompiledData::Object::IsComponent))
+        if (!component.hasFlag(QV4::CompiledData::Object::IsComponent))
             continue;
 
         const auto rootBinding = component.bindingsBegin();
@@ -826,7 +826,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
         objectsWithAliases->append(objectIndex);
 
     // Stop at Component boundary
-    if (object.flags & QV4::CompiledData::Object::IsComponent && objectIndex != /*root object*/0)
+    if (object.hasFlag(QV4::CompiledData::Object::IsComponent) && objectIndex != /*root object*/0)
         return;
 
     auto binding = object.bindingsBegin();
@@ -997,7 +997,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
 
         const QString propertyName = objectContainer->stringAt(alias->nameIndex());
 
-        if (object.defaultPropertyIsAlias && aliasIndex == object.indexOfDefaultPropertyOrAlias)
+        if (object.hasAliasAsDefaultProperty() && aliasIndex == object.indexOfDefaultPropertyOrAlias)
             propertyCache->_defaultPropertyName = propertyName;
 
         propertyCache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
@@ -1013,7 +1013,7 @@ inline int QQmlPropertyCacheAliasCreator<ObjectContainer>::objectForId(const Com
     for (quint32 i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
         const int candidateIndex = component.namedObjectsInComponentTable()[i];
         const CompiledObject &candidate = *objectContainer->objectAt(candidateIndex);
-        if (candidate.id == id)
+        if (candidate.objectId() == id)
             return candidateIndex;
     }
     return -1;

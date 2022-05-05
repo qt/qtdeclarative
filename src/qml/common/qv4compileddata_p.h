@@ -868,7 +868,12 @@ static_assert(sizeof(Alias) == 20, "Alias structure needs to have the expected s
 
 struct Object
 {
-    enum Flags : unsigned int {
+private:
+    using FlagsField = quint32_le_bitfield_member<0, 15>;
+    using DefaultPropertyIsAliasField = quint32_le_bitfield_member<15, 1>;
+    using IdField = quint32_le_bitfield_member<16, 16, qint32>;
+public:
+    enum Flag : unsigned int {
         NoFlag = 0x0,
         IsComponent = 0x1, // object was identified to be an explicit or implicit component boundary
         HasDeferredBindings = 0x2, // any of the bindings are deferred
@@ -876,17 +881,15 @@ struct Object
         IsInlineComponentRoot = 0x8,
         InPartOfInlineComponent = 0x10
     };
+    Q_DECLARE_FLAGS(Flags, Flag);
 
     // Depending on the use, this may be the type name to instantiate before instantiating this
     // object. For grouped properties the type name will be empty and for attached properties
     // it will be the name of the attached type.
     quint32_le inheritedTypeNameIndex;
     quint32_le idNameIndex;
-    union {
-        quint32_le_bitfield<0, 15> flags;
-        quint32_le_bitfield<15, 1> defaultPropertyIsAlias;
-        qint32_le_bitfield<16, 16> id;
-    };
+    quint32_le_bitfield_union<FlagsField, DefaultPropertyIsAliasField, IdField>
+            flagsAndDefaultPropertyIsAliasAndId;
     qint32_le indexOfDefaultPropertyOrAlias; // -1 means no default property declared in this object
     quint16_le nFunctions;
     quint16_le nProperties;
@@ -914,6 +917,48 @@ struct Object
 //    Binding[]
 //    InlineComponent[]
 //    RequiredPropertyExtraData[]
+
+    Flags flags() const
+    {
+        return Flags(flagsAndDefaultPropertyIsAliasAndId.get<FlagsField>());
+    }
+
+    bool hasFlag(Flag flag) const
+    {
+        return flagsAndDefaultPropertyIsAliasAndId.get<FlagsField>() & flag;
+    }
+
+    void setFlag(Flag flag)
+    {
+        flagsAndDefaultPropertyIsAliasAndId.set<FlagsField>(
+                flagsAndDefaultPropertyIsAliasAndId.get<FlagsField>() | flag);
+    }
+
+    void setFlags(Flags flags)
+    {
+        flagsAndDefaultPropertyIsAliasAndId.set<FlagsField>(flags);
+    }
+
+    bool hasAliasAsDefaultProperty() const
+    {
+        return flagsAndDefaultPropertyIsAliasAndId.get<DefaultPropertyIsAliasField>();
+    }
+
+    void setHasAliasAsDefaultProperty(bool defaultAlias)
+    {
+        flagsAndDefaultPropertyIsAliasAndId.set<DefaultPropertyIsAliasField>(defaultAlias);
+    }
+
+    qint32 objectId() const
+    {
+        return flagsAndDefaultPropertyIsAliasAndId.get<IdField>();
+    }
+
+    void setObjectId(qint32 id)
+    {
+        flagsAndDefaultPropertyIsAliasAndId.set<IdField>(id);
+    }
+
 
     static int calculateSizeExcludingSignalsAndEnums(int nFunctions, int nProperties, int nAliases, int nEnums, int nSignals, int nBindings, int nNamedObjectsInComponent, int nInlineComponents, int nRequiredPropertyExtraData)
     {
