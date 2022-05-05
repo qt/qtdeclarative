@@ -421,7 +421,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
     // We need to first iterate over all inline components, as the containing component might create instances of them
     // and in that case we need to add its object count
     for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
-        const auto &ic = allICs.at(nodeIt->index);
+        const auto &ic = allICs.at(nodeIt->index());
         int lastICRoot = ic.objectIndex;
         for (int i = ic.objectIndex; i<objectCount(); ++i) {
             const QV4::CompiledData::Object *obj = objectAt(i);

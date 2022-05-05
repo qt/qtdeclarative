@@ -196,7 +196,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
 
     // create meta objects for inline components before compiling actual root component
     for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
-        const auto &ic = allICs[nodeIt->index];
+        const auto &ic = allICs[nodeIt->index()];
         QV4::ResolvedTypeReference *typeRef = objectContainer->resolvedType(ic.nameIndex);
         Q_ASSERT(propertyCaches->at(ic.objectIndex) == nullptr);
         Q_ASSERT(typeRef->typePropertyCache.isNull()); // not set yet
