@@ -1,2 +1,7 @@
 [contains:hollow square: testing points inside]
 xcb
+
+# QTBUG-100991
+[mousePropagationToParent]
+android
+
