@@ -246,7 +246,7 @@ QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectsIncrementally()
 
     // create meta objects for inline components before compiling actual root component
     if (nodeIt != nodesSorted.rend()) {
-        const auto &ic = allICs[nodeIt->index];
+        const auto &ic = allICs[nodeIt->index()];
         QV4::ResolvedTypeReference *typeRef = objectContainer->resolvedType(ic.nameIndex);
         Q_ASSERT(propertyCaches->at(ic.objectIndex).isNull());
         Q_ASSERT(typeRef->typePropertyCache().isNull()); // not set yet
