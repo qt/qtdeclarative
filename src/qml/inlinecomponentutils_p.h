@@ -53,6 +53,8 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 
+QT_BEGIN_NAMESPACE
+
 namespace icutils {
 struct Node {
     Node() = default;
@@ -161,5 +163,7 @@ inline std::vector<Node> topoSort(std::vector<Node> &nodes, AdjacencyList &adjac
     return nodesSorted;
 }
 }
+
+QT_END_NAMESPACE
 
 #endif // INLINECOMPONENTUTILS_P_H
