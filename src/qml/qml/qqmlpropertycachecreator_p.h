@@ -496,7 +496,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
     auto aend = obj->aliasesEnd();
     for ( ; a != aend; ++a) {
         bool notInRevision = false;
-        QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
+        QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex()), &notInRevision);
         if (d && d->isFinal())
             return qQmlCompileError(a->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
     }
@@ -544,7 +544,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
     for ( ; a != aend; ++a) {
         auto flags = QQmlPropertyData::defaultSignalFlags();
 
-        QString changedSigName = stringAt(a->nameIndex) + QLatin1String("Changed");
+        QString changedSigName = stringAt(a->nameIndex()) + QLatin1String("Changed");
         seenSignals.insert(changedSigName);
 
         cache->appendSignal(changedSigName, flags, effectiveMethodIndex++);
@@ -828,12 +828,12 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
         auto alias = object.aliasesBegin();
         auto end = object.aliasesEnd();
         for ( ; alias != end; ++alias) {
-            Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
+            Q_ASSERT(alias->hasFlag(QV4::CompiledData::Alias::Resolved));
 
-            const int targetObjectIndex = objectForId(component, alias->targetObjectId);
+            const int targetObjectIndex = objectForId(component, alias->targetObjectId());
             Q_ASSERT(targetObjectIndex >= 0);
 
-            if (alias->aliasToLocalAlias)
+            if (alias->isAliasToLocalAlias())
                 continue;
 
             if (alias->encodedMetaPropertyIndex == -1)
@@ -906,12 +906,12 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
     propertyFlags->setIsAlias(true);
 
-    if (alias.aliasToLocalAlias) {
+    if (alias.isAliasToLocalAlias()) {
         const QV4::CompiledData::Alias *lastAlias = &alias;
         QVarLengthArray<const QV4::CompiledData::Alias *, 4> seenAliases({lastAlias});
 
         do {
-            const int targetObjectIndex = objectForId(component, lastAlias->targetObjectId);
+            const int targetObjectIndex = objectForId(component, lastAlias->targetObjectId());
             Q_ASSERT(targetObjectIndex >= 0);
             const CompiledObject *targetObject = objectContainer->objectAt(targetObjectIndex);
             Q_ASSERT(targetObject);
@@ -928,17 +928,17 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
             seenAliases.append(targetAlias);
             lastAlias = targetAlias;
-        } while (lastAlias->aliasToLocalAlias);
+        } while (lastAlias->isAliasToLocalAlias());
 
         return propertyDataForAlias(component, *lastAlias, type, version, propertyFlags, enginePriv);
     }
 
-    const int targetObjectIndex = objectForId(component, alias.targetObjectId);
+    const int targetObjectIndex = objectForId(component, alias.targetObjectId());
     Q_ASSERT(targetObjectIndex >= 0);
     const CompiledObject &targetObject = *objectContainer->objectAt(targetObjectIndex);
 
     if (alias.encodedMetaPropertyIndex == -1) {
-        Q_ASSERT(alias.flags & QV4::CompiledData::Alias::AliasPointsToPointerObject);
+        Q_ASSERT(alias.hasFlag(QV4::CompiledData::Alias::AliasPointsToPointerObject));
         auto *typeRef = objectContainer->resolvedType(targetObject.inheritedTypeNameIndex);
         if (!typeRef) {
             // Can be caused by the alias target not being a valid id or property. E.g.:
@@ -1012,7 +1012,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         }
     }
 
-    propertyFlags->setIsWritable(!(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable);
+    propertyFlags->setIsWritable(!(alias.hasFlag(QV4::CompiledData::Alias::IsReadOnly))
+                                 && writable);
     propertyFlags->setIsResettable(resettable);
     propertyFlags->setIsBindable(bindable);
     return QQmlError();
@@ -1036,7 +1037,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
     auto alias = object.aliasesBegin();
     auto end = object.aliasesEnd();
     for ( ; alias != end; ++alias, ++aliasIndex) {
-        Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
+        Q_ASSERT(alias->hasFlag(QV4::CompiledData::Alias::Resolved));
 
         QMetaType type;
         QTypeRevision version = QTypeRevision::zero();
@@ -1046,7 +1047,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
         if (error.isValid())
             return error;
 
-        const QString propertyName = objectContainer->stringAt(alias->nameIndex);
+        const QString propertyName = objectContainer->stringAt(alias->nameIndex());
 
         if (object.hasAliasAsDefaultProperty() && aliasIndex == object.indexOfDefaultPropertyOrAlias)
             propertyCache->_defaultPropertyName = propertyName;

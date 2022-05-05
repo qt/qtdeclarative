@@ -257,7 +257,7 @@ QString Object::appendProperty(Property *prop, const QString &propertyName, bool
             return tr("Duplicate property name");
 
     for (Alias *a = target->aliases->first; a; a = a->next)
-        if (a->nameIndex == prop->nameIndex)
+        if (a->nameIndex() == prop->nameIndex)
             return tr("Property duplicates alias name");
 
     if (propertyName.constData()->isUpper())
@@ -281,13 +281,13 @@ QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefau
         target = this;
 
     const auto aliasWithSameName = std::find_if(target->aliases->begin(), target->aliases->end(), [&alias](const Alias &targetAlias){
-        return targetAlias.nameIndex == alias->nameIndex;
+        return targetAlias.nameIndex() == alias->nameIndex();
     });
     if (aliasWithSameName != target->aliases->end())
         return tr("Duplicate alias name");
 
     const auto aliasSameAsProperty = std::find_if(target->properties->begin(), target->properties->end(), [&alias](const Property &targetProp){
-        return targetProp.nameIndex == alias->nameIndex;
+        return targetProp.nameIndex == alias->nameIndex();
     });
 
     if (aliasSameAsProperty != target->properties->end())
@@ -1308,12 +1308,12 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
 bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
 {
     Alias *alias = New<Alias>();
-    alias->flags = 0;
+    alias->clearFlags();
     if (node->isReadonly())
-        alias->flags |= QV4::CompiledData::Alias::IsReadOnly;
+        alias->setFlag(QV4::CompiledData::Alias::IsReadOnly);
 
     const QString propName = node->name.toString();
-    alias->nameIndex = registerString(propName);
+    alias->setNameIndex(registerString(propName));
 
     QQmlJS::SourceLocation loc = node->firstSourceLocation();
     alias->location.line = loc.startLine;
