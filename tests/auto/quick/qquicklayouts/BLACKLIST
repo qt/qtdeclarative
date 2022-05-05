@@ -3,3 +3,12 @@ qnx
 # QTBUG-103060
 [Tests_GridLayout::test_spacings]
 android
+
+# QTBUG-103060
+[Tests_GridLayout::test_spacings]
+android
+[Tests_RowLayout::test_distributeToPixelGrid]
+android
+[Tests_RowLayout::test_rearrangeFixedSizeLayout]
+android
+
