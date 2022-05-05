@@ -33,3 +33,7 @@ opensuse-leap
 # QTBUG-95940
 [copyAndPasteKeySequence]
 opensuse-leap
+
+# QTBUG-103256
+[copyAndPasteKeySequence]
+android
