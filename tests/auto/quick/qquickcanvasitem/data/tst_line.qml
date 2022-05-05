@@ -621,6 +621,9 @@ CanvasTestCase {
 
    }
    function test_cap(row) {
+       if (Qt.platform.os === "android")
+           skip("line::test_cap crashes on Android, QTBUG-103257")
+
        var canvas = createCanvasObject(row);
        var ctx = canvas.getContext('2d');
        ctx.reset();
