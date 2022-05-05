@@ -41,3 +41,8 @@ opensuse-leap
 opensuse-leap
 [checkCursorDelegateWhenPaddingChanged]
 opensuse-leap
+
+# QTBUG-103256
+[copyAndPasteKeySequence]
+android
+
