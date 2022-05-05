@@ -6,6 +6,8 @@ qt_internal_add_qml_module(qtlabsplatformplugin
     URI "Qt.labs.platform"
     VERSION "1.1"
     CLASS_NAME QtLabsPlatformPlugin
+    DEPENDENCIES
+        QtQuick
     PLUGIN_TARGET qtlabsplatformplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
