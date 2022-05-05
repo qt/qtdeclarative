@@ -13,3 +13,11 @@ android
 android
 [textureMirroring]
 android
+[layerEffect]
+android
+[layerSourceRect]
+android
+[layerIsTextureProvider]
+android
+[changeSamplerName]
+android
