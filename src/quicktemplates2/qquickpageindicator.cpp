@@ -91,9 +91,9 @@ class QQuickPageIndicatorPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickPageIndicator)
 
 public:
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     QQuickItem *itemAt(const QPointF &pos) const;
@@ -109,21 +109,27 @@ public:
     QQuickItem *pressedItem = nullptr;
 };
 
-void QQuickPageIndicatorPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickPageIndicatorPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     QQuickControlPrivate::handlePress(point, timestamp);
-    if (interactive)
+    if (interactive) {
         updatePressed(true, point);
+        return true;
+    }
+    return false;
 }
 
-void QQuickPageIndicatorPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickPageIndicatorPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     QQuickControlPrivate::handleMove(point, timestamp);
-    if (interactive)
+    if (interactive) {
         updatePressed(true, point);
+        return true;
+    }
+    return false;
 }
 
-void QQuickPageIndicatorPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickPageIndicatorPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickPageIndicator);
     QQuickControlPrivate::handleRelease(point, timestamp);
@@ -131,7 +137,9 @@ void QQuickPageIndicatorPrivate::handleRelease(const QPointF &point, ulong times
         if (pressedItem && contentItem)
             q->setCurrentIndex(contentItem->childItems().indexOf(pressedItem));
         updatePressed(false);
+        return true;
     }
+    return false;
 }
 
 void QQuickPageIndicatorPrivate::handleUngrab()

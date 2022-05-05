@@ -113,9 +113,9 @@ public:
     bool isLargeChange(const QPointF &eventPos, qreal proposedPosition) const;
     bool isHorizontalOrVertical() const;
 
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     void cancelHandle();
@@ -244,16 +244,17 @@ bool QQuickDialPrivate::isHorizontalOrVertical() const
     return inputMode == QQuickDial::Horizontal || inputMode == QQuickDial::Vertical;
 }
 
-void QQuickDialPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickDialPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickDial);
     QQuickControlPrivate::handlePress(point, timestamp);
     pressPoint = point;
     positionBeforePress = position;
     q->setPressed(true);
+    return true;
 }
 
-void QQuickDialPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickDialPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickDial);
     QQuickControlPrivate::handleMove(point, timestamp);
@@ -270,9 +271,10 @@ void QQuickDialPrivate::handleMove(const QPointF &point, ulong timestamp)
         if (!qFuzzyCompare(pos, oldPos))
             emit q->moved();
     }
+    return true;
 }
 
-void QQuickDialPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickDialPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickDial);
     QQuickControlPrivate::handleRelease(point, timestamp);
@@ -294,6 +296,7 @@ void QQuickDialPrivate::handleRelease(const QPointF &point, ulong timestamp)
     q->setPressed(false);
     pressPoint = QPointF();
     positionBeforePress = 0;
+    return true;
 }
 
 void QQuickDialPrivate::handleUngrab()

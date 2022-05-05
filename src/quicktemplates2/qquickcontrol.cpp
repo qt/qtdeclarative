@@ -194,14 +194,17 @@ static void setActiveFocus(QQuickControl *control, Qt::FocusReason reason)
     control->forceActiveFocus(reason);
 }
 
-void QQuickControlPrivate::handlePress(const QPointF &, ulong)
+bool QQuickControlPrivate::handlePress(const QPointF &, ulong)
 {
     Q_Q(QQuickControl);
-    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
+    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease()) {
         setActiveFocus(q, Qt::MouseFocusReason);
+        return true;
+    }
+    return true;
 }
 
-void QQuickControlPrivate::handleMove(const QPointF &point, ulong)
+bool QQuickControlPrivate::handleMove(const QPointF &point, ulong)
 {
 #if QT_CONFIG(quicktemplates2_hover)
     Q_Q(QQuickControl);
@@ -209,14 +212,19 @@ void QQuickControlPrivate::handleMove(const QPointF &point, ulong)
 #else
     Q_UNUSED(point);
 #endif
+    return true;
 }
 
-void QQuickControlPrivate::handleRelease(const QPointF &, ulong)
+bool QQuickControlPrivate::handleRelease(const QPointF &, ulong)
 {
     Q_Q(QQuickControl);
-    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
+    bool accepted = true;
+    if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease()) {
         setActiveFocus(q, Qt::MouseFocusReason);
+        accepted = true;
+    }
     touchId = -1;
+    return accepted;
 }
 
 void QQuickControlPrivate::handleUngrab()
@@ -1969,22 +1977,19 @@ void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handlePress(event->position(), event->timestamp());
-    event->accept();
+    event->setAccepted(d->handlePress(event->position(), event->timestamp()));
 }
 
 void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handleMove(event->position(), event->timestamp());
-    event->accept();
+    event->setAccepted(d->handleMove(event->position(), event->timestamp()));
 }
 
 void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handleRelease(event->position(), event->timestamp());
-    event->accept();
+    event->setAccepted(d->handleRelease(event->position(), event->timestamp()));
 }
 
 void QQuickControl::mouseUngrabEvent()

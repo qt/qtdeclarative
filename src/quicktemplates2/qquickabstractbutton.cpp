@@ -138,7 +138,7 @@ void QQuickAbstractButtonPrivate::setMovePoint(const QPointF &point)
         emit q->pressYChanged();
 }
 
-void QQuickAbstractButtonPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickAbstractButtonPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractButton);
     QQuickControlPrivate::handlePress(point, timestamp);
@@ -153,9 +153,10 @@ void QQuickAbstractButtonPrivate::handlePress(const QPointF &point, ulong timest
         startPressAndHold();
     else
         stopPressAndHold();
+    return true;
 }
 
-void QQuickAbstractButtonPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickAbstractButtonPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractButton);
     QQuickControlPrivate::handleMove(point, timestamp);
@@ -166,9 +167,10 @@ void QQuickAbstractButtonPrivate::handleMove(const QPointF &point, ulong timesta
         stopPressRepeat();
     else if (holdTimer > 0 && (!pressed || QLineF(pressPoint, point).length() > QGuiApplication::styleHints()->startDragDistance()))
         stopPressAndHold();
+    return true;
 }
 
-void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickAbstractButtonPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractButton);
     // Store this here since the base class' handleRelease clears it.
@@ -216,6 +218,7 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point, ulong time
     }
 
     wasDoubleClick = false;
+    return true;
 }
 
 void QQuickAbstractButtonPrivate::handleUngrab()

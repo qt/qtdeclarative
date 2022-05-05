@@ -383,9 +383,9 @@ public:
 #if QT_CONFIG(quicktemplates2_multitouch)
     bool acceptTouch(const QTouchEvent::TouchPoint &point) override;
 #endif
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     void updateHover(const QPointF &pos);
@@ -470,7 +470,7 @@ bool QQuickRangeSliderPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 }
 #endif
 
-void QQuickRangeSliderPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickRangeSliderPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickRangeSlider);
     QQuickControlPrivate::handlePress(point, timestamp);
@@ -529,9 +529,10 @@ void QQuickRangeSliderPrivate::handlePress(const QPointF &point, ulong timestamp
         if (QQuickItem *handle = otherNode->handle())
             handle->setZ(0);
     }
+    return true;
 }
 
-void QQuickRangeSliderPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickRangeSliderPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickRangeSlider);
     QQuickControlPrivate::handleMove(point, timestamp);
@@ -549,9 +550,10 @@ void QQuickRangeSliderPrivate::handleMove(const QPointF &point, ulong timestamp)
         if (!qFuzzyCompare(pressedNode->position(), oldPos))
             emit pressedNode->moved();
     }
+    return true;
 }
 
-void QQuickRangeSliderPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickRangeSliderPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickRangeSlider);
     QQuickControlPrivate::handleRelease(point, timestamp);
@@ -559,7 +561,7 @@ void QQuickRangeSliderPrivate::handleRelease(const QPointF &point, ulong timesta
 
     QQuickRangeSliderNode *pressedNode = QQuickRangeSliderPrivate::pressedNode(touchId);
     if (!pressedNode)
-        return;
+        return true;
     QQuickRangeSliderNodePrivate *pressedNodePrivate = QQuickRangeSliderNodePrivate::get(pressedNode);
 
     if (q->keepMouseGrab() || q->keepTouchGrab()) {
@@ -580,6 +582,7 @@ void QQuickRangeSliderPrivate::handleRelease(const QPointF &point, ulong timesta
     }
     pressedNode->setPressed(false);
     pressedNodePrivate->touchId = -1;
+    return true;
 }
 
 void QQuickRangeSliderPrivate::handleUngrab()

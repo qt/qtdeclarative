@@ -134,9 +134,9 @@ public:
     void startPressRepeat();
     void stopPressRepeat();
 
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
@@ -340,7 +340,7 @@ void QQuickSpinBoxPrivate::stopPressRepeat()
     }
 }
 
-void QQuickSpinBoxPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickSpinBoxPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSpinBox);
     QQuickControlPrivate::handlePress(point, timestamp);
@@ -353,9 +353,10 @@ void QQuickSpinBoxPrivate::handlePress(const QPointF &point, ulong timestamp)
     q->setAccessibleProperty("pressed", pressed);
     if (pressed)
         startRepeatDelay();
+    return true;
 }
 
-void QQuickSpinBoxPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickSpinBoxPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSpinBox);
     QQuickControlPrivate::handleMove(point, timestamp);
@@ -370,9 +371,10 @@ void QQuickSpinBoxPrivate::handleMove(const QPointF &point, ulong timestamp)
     q->setAccessibleProperty("pressed", pressed);
     if (!pressed)
         stopPressRepeat();
+    return true;
 }
 
-void QQuickSpinBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickSpinBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSpinBox);
     QQuickControlPrivate::handleRelease(point, timestamp);
@@ -394,6 +396,7 @@ void QQuickSpinBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
 
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
+    return true;
 }
 
 void QQuickSpinBoxPrivate::handleUngrab()

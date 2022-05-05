@@ -249,6 +249,16 @@ void QQuickPanePrivate::updateContentHeight()
     emit q->contentHeightChanged();
 }
 
+/*
+    A pane needs to be opaque to mouse events, so that events don't get
+    propagated through to controls covered by the pane.
+*/
+bool QQuickPanePrivate::handlePress(const QPointF &point, ulong timestamp)
+{
+    QQuickControlPrivate::handlePress(point, timestamp);
+    return true;
+}
+
 QQuickPane::QQuickPane(QQuickItem *parent)
     : QQuickControl(*(new QQuickPanePrivate), parent)
 {

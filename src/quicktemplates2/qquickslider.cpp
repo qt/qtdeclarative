@@ -100,9 +100,9 @@ public:
     void setPosition(qreal position);
     void updatePosition();
 
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     void cancelHandle();
@@ -182,15 +182,16 @@ void QQuickSliderPrivate::updatePosition()
     setPosition(pos);
 }
 
-void QQuickSliderPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickSliderPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSlider);
     QQuickControlPrivate::handlePress(point, timestamp);
     pressPoint = point;
     q->setPressed(true);
+    return true;
 }
 
-void QQuickSliderPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickSliderPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSlider);
     QQuickControlPrivate::handleMove(point, timestamp);
@@ -204,9 +205,10 @@ void QQuickSliderPrivate::handleMove(const QPointF &point, ulong timestamp)
         setPosition(pos);
     if (!qFuzzyCompare(pos, oldPos))
         emit q->moved();
+    return true;
 }
 
-void QQuickSliderPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickSliderPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSlider);
     QQuickControlPrivate::handleRelease(point, timestamp);
@@ -225,6 +227,7 @@ void QQuickSliderPrivate::handleRelease(const QPointF &point, ulong timestamp)
     q->setKeepMouseGrab(false);
     q->setKeepTouchGrab(false);
     q->setPressed(false);
+    return true;
 }
 
 void QQuickSliderPrivate::handleUngrab()

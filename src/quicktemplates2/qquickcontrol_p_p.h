@@ -92,9 +92,9 @@ public:
 #if QT_CONFIG(quicktemplates2_multitouch)
     virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
 #endif
-    virtual void handlePress(const QPointF &point, ulong timestamp);
-    virtual void handleMove(const QPointF &point, ulong timestamp);
-    virtual void handleRelease(const QPointF &point, ulong timestamp);
+    virtual bool handlePress(const QPointF &point, ulong timestamp);
+    virtual bool handleMove(const QPointF &point, ulong timestamp);
+    virtual bool handleRelease(const QPointF &point, ulong timestamp);
     virtual void handleUngrab();
 
     void mirrorChange() override;

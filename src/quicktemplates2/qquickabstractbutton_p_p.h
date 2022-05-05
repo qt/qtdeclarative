@@ -75,9 +75,9 @@ public:
     void setPressPoint(const QPointF &point);
     void setMovePoint(const QPointF &point);
 
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     virtual bool acceptKeyClick(Qt::Key key) const;

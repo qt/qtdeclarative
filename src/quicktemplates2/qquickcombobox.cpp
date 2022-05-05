@@ -273,9 +273,9 @@ public:
 
     void createDelegateModel();
 
-    void handlePress(const QPointF &point, ulong timestamp) override;
-    void handleMove(const QPointF &point, ulong timestamp) override;
-    void handleRelease(const QPointF &point, ulong timestamp) override;
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     void cancelIndicator();
@@ -753,21 +753,23 @@ void QQuickComboBoxPrivate::createDelegateModel()
         delete oldModel;
 }
 
-void QQuickComboBoxPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickComboBoxPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickComboBox);
     QQuickControlPrivate::handlePress(point, timestamp);
     q->setPressed(true);
+    return true;
 }
 
-void QQuickComboBoxPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickComboBoxPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickComboBox);
     QQuickControlPrivate::handleMove(point, timestamp);
     q->setPressed(q->contains(point));
+    return true;
 }
 
-void QQuickComboBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickComboBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickComboBox);
     QQuickControlPrivate::handleRelease(point, timestamp);
@@ -775,6 +777,7 @@ void QQuickComboBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
         q->setPressed(false);
         togglePopup(false);
     }
+    return true;
 }
 
 void QQuickComboBoxPrivate::handleUngrab()

@@ -81,6 +81,8 @@ public:
     void updateContentWidth();
     void updateContentHeight();
 
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+
     bool hasContentWidth = false;
     bool hasContentHeight = false;
     qreal contentWidth = 0;

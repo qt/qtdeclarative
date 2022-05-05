@@ -980,7 +980,7 @@ QQuickItem *QQuickSplitViewPrivate::getContentItem()
     return new QQuickContentItem(q);
 }
 
-void QQuickSplitViewPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickSplitViewPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSplitView);
     QQuickContainerPrivate::handlePress(point, timestamp);
@@ -1031,9 +1031,10 @@ void QQuickSplitViewPrivate::handlePress(const QPointF &point, ulong timestamp)
             << " size before press=" << m_rightOrBottomItemSizeBeforePress
             << " item=" << rightOrBottomItem;
     }
+    return true;
 }
 
-void QQuickSplitViewPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickSplitViewPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     QQuickContainerPrivate::handleMove(point, timestamp);
 
@@ -1043,9 +1044,10 @@ void QQuickSplitViewPrivate::handleMove(const QPointF &point, ulong timestamp)
         // resizing to be as responsive and smooth as possible.
         updatePolish();
     }
+    return true;
 }
 
-void QQuickSplitViewPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickSplitViewPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSplitView);
     QQuickContainerPrivate::handleRelease(point, timestamp);
@@ -1066,6 +1068,7 @@ void QQuickSplitViewPrivate::handleRelease(const QPointF &point, ulong timestamp
     m_leftOrTopItemSizeBeforePress = 0.0;
     m_rightOrBottomItemSizeBeforePress = 0.0;
     q->setKeepMouseGrab(false);
+    return true;
 }
 
 void QQuickSplitViewPrivate::itemVisibilityChanged(QQuickItem *item)

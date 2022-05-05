@@ -288,7 +288,7 @@ void QQuickScrollBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit indicatorButton->implicitIndicatorHeightChanged();
 }
 
-void QQuickScrollBarPrivate::handlePress(const QPointF &point, ulong timestamp)
+bool QQuickScrollBarPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handlePress(point, timestamp);
@@ -297,7 +297,7 @@ void QQuickScrollBarPrivate::handlePress(const QPointF &point, ulong timestamp)
         if (decreaseArrow && decreaseArrow->contains(q->mapToItem(decreaseArrow, point + QPointF(0.5, 0.5)))) {
             indicatorButton->setPressed(true);
             q->decrease();
-            return;
+            return true;
         }
     }
 
@@ -306,7 +306,7 @@ void QQuickScrollBarPrivate::handlePress(const QPointF &point, ulong timestamp)
         if (increaseArrow && increaseArrow->contains(q->mapToItem(increaseArrow, point + QPointF(0.5, 0.5)))) {
             increaseObject->setPressed(true);
             q->increase();
-            return;
+            return true;
         }
     }
 
@@ -315,9 +315,10 @@ void QQuickScrollBarPrivate::handlePress(const QPointF &point, ulong timestamp)
     if (offset < 0 || offset > sz)
         offset = sz / 2;
     q->setPressed(true);
+    return true;
 }
 
-void QQuickScrollBarPrivate::handleMove(const QPointF &point, ulong timestamp)
+bool QQuickScrollBarPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handleMove(point, timestamp);
@@ -330,25 +331,26 @@ void QQuickScrollBarPrivate::handleMove(const QPointF &point, ulong timestamp)
      * scrollbar gently.
      */
     if (!pressed)
-        return;
+        return true;
 
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
     if (snapMode == QQuickScrollBar::SnapAlways)
         pos = snapPosition(pos);
     q->setPosition(pos);
+    return true;
 }
 
-void QQuickScrollBarPrivate::handleRelease(const QPointF &point, ulong timestamp)
+bool QQuickScrollBarPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handleRelease(point, timestamp);
 
     if (orientation == Qt::Vertical) {
         if (point.y() < q->topPadding() || point.y() >= (q->height() - q->bottomPadding()))
-            return;
+            return true;
     } else /* orientation == Qt::Horizontal */{
         if (point.x() < q->leftPadding() || point.x() >= (q->width() - q->rightPadding()))
-            return;
+            return true;
     }
 
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
@@ -357,6 +359,7 @@ void QQuickScrollBarPrivate::handleRelease(const QPointF &point, ulong timestamp
     q->setPosition(pos);
     offset = 0.0;
     q->setPressed(false);
+    return true;
 }
 
 void QQuickScrollBarPrivate::handleUngrab()
