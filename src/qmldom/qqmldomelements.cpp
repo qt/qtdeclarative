@@ -772,7 +772,7 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
             // check for an empty line before the current element, and preserve it
             int preNewlines = 0;
             quint32 start = el.first.offset;
-            if (start != posOfNewElements && code.size() >= start) {
+            if (start != posOfNewElements && size_t(code.size()) >= start) {
                 while (start != 0) {
                     QChar c = code.at(--start);
                     if (c == u'\n') {
