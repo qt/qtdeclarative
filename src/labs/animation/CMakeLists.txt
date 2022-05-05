@@ -3,6 +3,8 @@ qt_internal_add_qml_module(LabsAnimation
     VERSION "${PROJECT_VERSION}"
     PLUGIN_TARGET labsanimationplugin
     CLASS_NAME QtLabsAnimationPlugin
+    DEPENDENCIES
+        QtQml
     SOURCES
         qquickboundaryrule.cpp qquickboundaryrule_p.h
         qqmlanimationglobal_p.h
