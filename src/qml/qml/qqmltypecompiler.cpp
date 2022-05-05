@@ -1065,7 +1065,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
     if (!atLeastOneAliasResolved && !_objectsWithAliases.isEmpty()) {
         const QmlIR::Object *obj = qmlObjects->at(_objectsWithAliases.first());
         for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
-            if (!(alias->flags & QV4::CompiledData::Alias::Resolved)) {
+            if (!alias->hasFlag(QV4::CompiledData::Alias::Resolved)) {
                 recordError(alias->location, tr("Circular alias reference detected"));
                 return false;
             }
@@ -1087,7 +1087,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
     bool seenUnresolvedAlias = false;
 
     for (QmlIR::Alias *alias = obj->firstAlias(); alias; alias = alias->next) {
-        if (alias->flags & QV4::CompiledData::Alias::Resolved)
+        if (alias->hasFlag(QV4::CompiledData::Alias::Resolved))
             continue;
 
         seenUnresolvedAlias = true;
@@ -1103,8 +1103,8 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
 
         const QmlIR::Object *targetObject = qmlObjects->at(targetObjectIndex);
         Q_ASSERT(targetObject->id >= 0);
-        alias->targetObjectId = targetObject->id;
-        alias->aliasToLocalAlias = false;
+        alias->setTargetObjectId(targetObject->id);
+        alias->setIsAliasToLocalAlias(false);
 
         const QString aliasPropertyValue = stringAt(alias->propertyNameIndex);
 
@@ -1121,7 +1121,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
         QQmlPropertyIndex propIdx;
 
         if (property.isEmpty()) {
-            alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
+            alias->setFlag(QV4::CompiledData::Alias::AliasPointsToPointerObject);
         } else {
             QQmlPropertyCache::ConstPtr targetCache = propertyCaches.at(targetObjectIndex);
             if (!targetCache) {
@@ -1140,7 +1140,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
                 bool aliasPointsToOtherAlias = false;
                 int localAliasIndex = 0;
                 for (auto targetAlias = targetObject->aliasesBegin(), end = targetObject->aliasesEnd(); targetAlias != end; ++targetAlias, ++localAliasIndex) {
-                    if (stringAt(targetAlias->nameIndex) == property) {
+                    if (stringAt(targetAlias->nameIndex()) == property) {
                         aliasPointsToOtherAlias = true;
                         break;
                     }
@@ -1148,8 +1148,8 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
                 if (aliasPointsToOtherAlias) {
                     if (targetObjectIndex == objectIndex) {
                         alias->localAliasIndex = localAliasIndex;
-                        alias->aliasToLocalAlias = true;
-                        alias->flags |= QV4::CompiledData::Alias::Resolved;
+                        alias->setIsAliasToLocalAlias(true);
+                        alias->setFlag(QV4::CompiledData::Alias::Resolved);
                         ++numResolvedAliases;
                         continue;
                     }
@@ -1211,12 +1211,12 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
                 }
             } else {
                 if (targetProperty->isQObject())
-                    alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
+                    alias->setFlag(QV4::CompiledData::Alias::AliasPointsToPointerObject);
             }
         }
 
         alias->encodedMetaPropertyIndex = propIdx.toEncoded();
-        alias->flags |= QV4::CompiledData::Alias::Resolved;
+        alias->setFlag(QV4::CompiledData::Alias::Resolved);
         numResolvedAliases++;
     }
 

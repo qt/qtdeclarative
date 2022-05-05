@@ -147,12 +147,24 @@ static bool isReservedWord(QStringView word)
     return std::binary_search(std::begin(cppKeywords), std::end(cppKeywords), word);
 }
 
+template<typename IRElement>
+quint32 irNameIndex(const IRElement &irElement)
+{
+    return irElement.nameIndex;
+}
+
+template<>
+quint32 irNameIndex<QmlIR::Alias>(const QmlIR::Alias &alias)
+{
+    return alias.nameIndex();
+}
+
 template<typename InputIterator>
 static decltype(auto) findIrElement(const QmlIR::Document *doc, InputIterator first,
                                     InputIterator last, QStringView name)
 {
     auto it = std::find_if(first, last, [&](const auto &candidate) {
-        return name == doc->stringAt(candidate.nameIndex);
+        return name == doc->stringAt(irNameIndex(candidate));
     });
     Q_ASSERT(it != last); // must be satisfied by the caller
     return *it;

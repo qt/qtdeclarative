@@ -1659,12 +1659,12 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     for (int aliasIndex = 0; aliasIndex != _compiledObject->aliasCount(); ++aliasIndex) {
         const QV4::CompiledData::Alias* alias = _compiledObject->aliasesBegin() + aliasIndex;
         const auto originalAlias = alias;
-        while (alias->aliasToLocalAlias)
+        while (alias->isAliasToLocalAlias())
             alias = _compiledObject->aliasesBegin() + alias->localAliasIndex;
-        Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
+        Q_ASSERT(alias->hasFlag(QV4::CompiledData::Alias::Resolved));
         if (!context->isIdValueSet(0)) // TODO: Do we really want 0 here?
             continue;
-        QObject *target = context->idValue(alias->targetObjectId);
+        QObject *target = context->idValue(alias->targetObjectId());
         if (!target)
             continue;
         QQmlData *targetDData = QQmlData::get(target, /*create*/false);
@@ -1676,7 +1676,11 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
             continue;
         auto it = sharedState->requiredProperties.find(targetProperty);
         if (it != sharedState->requiredProperties.end())
-            it->aliasesToRequired.push_back(AliasToRequiredInfo {compilationUnit->stringAt(originalAlias->nameIndex), compilationUnit->finalUrl()});
+            it->aliasesToRequired.push_back(
+                    AliasToRequiredInfo {
+                            compilationUnit->stringAt(originalAlias->nameIndex()),
+                            compilationUnit->finalUrl()
+                    });
     }
 
     qSwap(_vmeMetaObject, vmeMetaObject);
