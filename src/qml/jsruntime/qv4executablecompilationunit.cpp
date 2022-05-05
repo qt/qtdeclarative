@@ -388,7 +388,7 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
     for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
         const CompiledData::Object *namedObject = objectAt(*namedObjectIndexPtr);
-        namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
+        namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->objectId());
     }
     Q_ASSERT(!namedObjectCache.isEmpty());
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
@@ -444,9 +444,10 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
         int lastICRoot = ic.objectIndex;
         for (int i = ic.objectIndex; i<objectCount(); ++i) {
             const QV4::CompiledData::Object *obj = objectAt(i);
-            bool leftCurrentInlineComponent =
-                       (i != lastICRoot && obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                    || !(obj->flags & QV4::CompiledData::Object::IsPartOfInlineComponent);
+            bool leftCurrentInlineComponent
+                    = (i != lastICRoot
+                            && obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
+                        || !obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent);
             if (leftCurrentInlineComponent)
                 break;
             inlineComponentData[lastICRoot].totalBindingCount += obj->nBindings;
@@ -476,9 +477,9 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
     int objectCount = 0;
     for (quint32 i = 0, count = this->objectCount(); i < count; ++i) {
         const QV4::CompiledData::Object *obj = objectAt(i);
-        if (obj->flags & QV4::CompiledData::Object::IsPartOfInlineComponent) {
+        if (obj->hasFlag(QV4::CompiledData::Object::IsPartOfInlineComponent))
             continue;
-        }
+
         bindingCount += obj->nBindings;
         if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
             const auto type = typeRef->type();

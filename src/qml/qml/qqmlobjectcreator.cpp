@@ -811,7 +811,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 for (int i = 0, end = compilationUnit->objectCount(); i != end; ++i) {
                     const QV4::CompiledData::Object *external = compilationUnit->objectAt(i);
                     if (external->idNameIndex == binding->propertyNameIndex) {
-                        bindingTarget = groupObject = context->idValue(external->id);
+                        bindingTarget = groupObject = context->idValue(external->objectId());
                         break;
                     }
                 }
@@ -1160,8 +1160,8 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
 
 void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const
 {
-    if (object->id >= 0)
-        context->setIdValue(object->id, instance);
+    if (object->objectId() >= 0)
+        context->setIdValue(object->objectId(), instance);
 }
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
@@ -1181,7 +1181,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     QQmlParserStatus *parserStatus = nullptr;
     bool installPropertyCache = true;
 
-    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+    if (obj->hasFlag(QV4::CompiledData::Object::IsComponent)) {
         isComponent = true;
         instance = createComponent(engine, compilationUnit.data(), index, parent, context);
         typeName = QStringLiteral("<component>");
@@ -1283,7 +1283,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     // an additional check
     const bool documentRoot = static_cast<quint32>(index) == /*root object*/ 0
             || ddata->rootObjectInCreation
-            || (obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot);
+            || obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot);
     context->installContext(
             ddata, documentRoot ? QQmlContextData::DocumentRoot : QQmlContextData::OrdinaryObject);
 
@@ -1301,7 +1301,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (isContextObject)
         context->setContextObject(instance);
 
-    if (customParser && obj->flags & QV4::CompiledData::Object::HasCustomParserBindings) {
+    if (customParser && obj->hasFlag(QV4::CompiledData::Object::HasCustomParserBindings)) {
         customParser->engine = QQmlEnginePrivate::get(engine);
         customParser->imports = compilationUnit->typeNameCache.data();
 
@@ -1533,7 +1533,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_vmeMetaObject, vmeMetaObject);
 
     _ddata->compilationUnit = compilationUnit;
-    if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings)
+    if (_compiledObject->hasFlag(QV4::CompiledData::Object::HasDeferredBindings))
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context);
 
     const qsizetype oldRequiredPropertiesCount = sharedState->requiredProperties.size();
@@ -1583,7 +1583,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
             Q_ASSERT(binding->isGroupProperty());
             return { 0, _propertyCache->propertyOffset() + 1 }; // 4.
         }
-        Q_ASSERT(!(_compiledObject->flags & QV4::CompiledData::Object::IsComponent));
+        Q_ASSERT(!_compiledObject->hasFlag(QV4::CompiledData::Object::IsComponent));
         QQmlType type = typeRef->type();
         if (type.isValid() && !type.isInlineComponentType()) {
             return { 0, _propertyCache->propertyCount() }; // 1.
