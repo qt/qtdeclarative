@@ -19,3 +19,8 @@ opensuse-leap
 # QTQAINFRA-4127
 [canvas::test_extraArgumentsIgnored:text]
 ci b2qt 32bit
+
+# QTBUG-100991
+[line::test_cap]
+android
+

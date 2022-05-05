@@ -19,3 +19,8 @@ opensuse-leap
 opensuse-leap
 [inFlickableMouse]
 opensuse-leap
+
+# QTBUG-100991
+[selectionOnFocusOut]
+android
+
