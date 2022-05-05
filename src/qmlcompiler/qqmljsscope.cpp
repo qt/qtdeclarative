@@ -29,6 +29,7 @@
 #include "qqmljsscope_p.h"
 #include "qqmljstypereader_p.h"
 #include "qqmljsimporter_p.h"
+#include "qqmljsutils_p.h"
 
 #include <QtCore/qqueue.h>
 #include <QtCore/qsharedpointer.h>
@@ -41,58 +42,6 @@
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
-
-/*! \internal
-
-    Utility method that returns proper value according to the type To. This
-    version returns From.
-*/
-template<typename To, typename From, typename std::enable_if_t<!std::is_pointer_v<To>, int> = 0>
-static auto getQQmlJSScopeFromSmartPtr(const From &p) -> From
-{
-    static_assert(!std::is_pointer_v<From>, "From has to be a smart pointer holding QQmlJSScope");
-    return p;
-}
-
-/*! \internal
-
-    Utility method that returns proper value according to the type To. This
-    version returns From::get(), which is a raw pointer. The returned type is
-    not necessary equal to To (e.g. To might be `QQmlJSScope *` while returned
-    is `const QQmlJSScope *`).
-*/
-template<typename To, typename From, typename std::enable_if_t<std::is_pointer_v<To>, int> = 0>
-static auto getQQmlJSScopeFromSmartPtr(const From &p) -> decltype(p.get())
-{
-    static_assert(!std::is_pointer_v<From>, "From has to be a smart pointer holding QQmlJSScope");
-    return p.get();
-}
-
-template<typename QQmlJSScopePtr, typename Action>
-static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check)
-{
-    // NB: among other things, getQQmlJSScopeFromSmartPtr() also resolves const
-    // vs non-const pointer issue, so use it's return value as the type
-    using T = decltype(
-            getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(std::declval<QQmlJSScope::ConstPtr>()));
-
-    QDuplicateTracker<T> seen;
-    for (T scope = type; scope && !seen.hasSeen(scope);
-         scope = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->baseType())) {
-        // Extensions override their base types
-        for (T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
-             extension && !seen.hasSeen(extension);
-             extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType())) {
-            if (check(extension))
-                return true;
-        }
-
-        if (check(scope))
-            return true;
-    }
-
-    return false;
-}
 
 void QQmlJSScope::reparent(const QQmlJSScope::Ptr &parentScope, const QQmlJSScope::Ptr &childScope)
 {
@@ -145,9 +94,8 @@ bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 
 bool QQmlJSScope::hasMethod(const QString &name) const
 {
-    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        return scope->m_methods.contains(name);
-    });
+    return QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope) { return scope->m_methods.contains(name); });
 }
 
 /*!
@@ -162,7 +110,7 @@ bool QQmlJSScope::hasMethod(const QString &name) const
 QHash<QString, QQmlJSMetaMethod> QQmlJSScope::methods() const
 {
     QHash<QString, QQmlJSMetaMethod> results;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         for (auto it = scope->m_methods.constBegin(); it != scope->m_methods.constEnd(); it++) {
             if (!results.contains(it.key()))
                 results.insert(it.key(), it.value());
@@ -177,7 +125,7 @@ QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
 {
     QList<QQmlJSMetaMethod> results;
 
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         results.append(scope->ownMethods(name));
         return false;
     });
@@ -188,7 +136,7 @@ QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name, QQmlJSMetaMeth
 {
     QList<QQmlJSMetaMethod> results;
 
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         const auto ownMethods = scope->ownMethods(name);
         for (const auto &method : ownMethods) {
             if (method.methodType() == type)
@@ -201,14 +149,13 @@ QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name, QQmlJSMetaMeth
 
 bool QQmlJSScope::hasEnumeration(const QString &name) const
 {
-    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        return scope->m_enumerations.contains(name);
-    });
+    return QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope) { return scope->m_enumerations.contains(name); });
 }
 
 bool QQmlJSScope::hasEnumerationKey(const QString &name) const
 {
-    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    return QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         for (const auto &e : scope->m_enumerations) {
             if (e.keys().contains(name))
                 return true;
@@ -221,7 +168,7 @@ QQmlJSMetaEnum QQmlJSScope::enumeration(const QString &name) const
 {
     QQmlJSMetaEnum result;
 
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         const auto it = scope->m_enumerations.find(name);
         if (it == scope->m_enumerations.end())
             return false;
@@ -236,7 +183,7 @@ QHash<QString, QQmlJSMetaEnum> QQmlJSScope::enumerations() const
 {
     QHash<QString, QQmlJSMetaEnum> results;
 
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         for (auto it = scope->m_enumerations.constBegin(); it != scope->m_enumerations.constEnd();
              it++) {
             if (!results.contains(it.key()))
@@ -467,7 +414,7 @@ void QQmlJSScope::updateChildScope(
 {
     switch (childScope->scopeType()) {
     case QQmlJSScope::GroupedPropertyScope:
-        searchBaseAndExtensionTypes(self.data(), [&](const QQmlJSScope *type) {
+        QQmlJSUtils::searchBaseAndExtensionTypes(self.data(), [&](const QQmlJSScope *type) {
             const auto propertyIt = type->m_properties.find(childScope->internalName());
             if (propertyIt != type->m_properties.end()) {
                 childScope->m_baseType.scope = QQmlJSScope::ConstPtr(propertyIt->type());
@@ -565,15 +512,14 @@ QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstP
 
 bool QQmlJSScope::hasProperty(const QString &name) const
 {
-    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        return scope->m_properties.contains(name);
-    });
+    return QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope) { return scope->m_properties.contains(name); });
 }
 
 QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
 {
     QQmlJSMetaProperty prop;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         const auto it = scope->m_properties.find(name);
         if (it == scope->m_properties.end())
             return false;
@@ -593,7 +539,7 @@ QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
 QHash<QString, QQmlJSMetaProperty> QQmlJSScope::properties() const
 {
     QHash<QString, QQmlJSMetaProperty> results;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         for (auto it = scope->m_properties.constBegin(); it != scope->m_properties.constEnd();
              it++) {
             if (!results.contains(it.key()))
@@ -608,7 +554,7 @@ QQmlJSScope::ConstPtr QQmlJSScope::ownerOfProperty(const QQmlJSScope::ConstPtr &
                                                    const QString &name)
 {
     QQmlJSScope::ConstPtr owner;
-    searchBaseAndExtensionTypes(self, [&](const QQmlJSScope::ConstPtr &scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(self, [&](const QQmlJSScope::ConstPtr &scope) {
         if (scope->hasOwnProperty(name)) {
             owner = scope;
             return true;
@@ -629,7 +575,7 @@ void QQmlJSScope::setPropertyLocallyRequired(const QString &name, bool isRequire
 bool QQmlJSScope::isPropertyRequired(const QString &name) const
 {
     bool isRequired = false;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         if (scope->isPropertyLocallyRequired(name)) {
             isRequired = true;
             return true;
@@ -741,15 +687,14 @@ QList<QQmlJSMetaPropertyBinding> QQmlJSScope::ownPropertyBindingsInQmlIROrder() 
 
 bool QQmlJSScope::hasPropertyBindings(const QString &name) const
 {
-    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        return scope->hasOwnPropertyBindings(name);
-    });
+    return QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope) { return scope->hasOwnPropertyBindings(name); });
 }
 
 QList<QQmlJSMetaPropertyBinding> QQmlJSScope::propertyBindings(const QString &name) const
 {
     QList<QQmlJSMetaPropertyBinding> bindings;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         const auto range = scope->ownPropertyBindings(name);
         for (auto it = range.first; it != range.second; ++it)
             bindings.append(*it);
@@ -760,7 +705,7 @@ QList<QQmlJSMetaPropertyBinding> QQmlJSScope::propertyBindings(const QString &na
 
 bool QQmlJSScope::hasInterface(const QString &name) const
 {
-    return searchBaseAndExtensionTypes(
+    return QQmlJSUtils::searchBaseAndExtensionTypes(
             this, [&](const QQmlJSScope *scope) { return scope->m_interfaceNames.contains(name); });
 }
 
@@ -768,7 +713,7 @@ bool QQmlJSScope::isNameDeferred(const QString &name) const
 {
     bool isDeferred = false;
 
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         const QStringList immediate = scope->ownImmediateNames();
         if (!immediate.isEmpty()) {
             isDeferred = !immediate.contains(name);
@@ -812,7 +757,7 @@ QString QQmlJSScope::baseTypeError() const
 QString QQmlJSScope::attachedTypeName() const
 {
     QString name;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         if (scope->ownAttachedType().isNull())
             return false;
         name = scope->ownAttachedTypeName();
@@ -825,7 +770,7 @@ QString QQmlJSScope::attachedTypeName() const
 QQmlJSScope::ConstPtr QQmlJSScope::attachedType() const
 {
     QQmlJSScope::ConstPtr ptr;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         if (scope->ownAttachedType().isNull())
             return false;
         ptr = scope->ownAttachedType();
@@ -853,7 +798,7 @@ bool QQmlJSScope::isResolved() const
 QString QQmlJSScope::defaultPropertyName() const
 {
     QString name;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         name = scope->ownDefaultPropertyName();
         return !name.isEmpty();
     });
@@ -863,7 +808,7 @@ QString QQmlJSScope::defaultPropertyName() const
 QString QQmlJSScope::parentPropertyName() const
 {
     QString name;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         name = scope->ownParentPropertyName();
         return !name.isEmpty();
     });
@@ -873,7 +818,7 @@ QString QQmlJSScope::parentPropertyName() const
 bool QQmlJSScope::isFullyResolved() const
 {
     bool baseResolved = true;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         if (!scope->isResolved()) {
             baseResolved = false;
             return true;

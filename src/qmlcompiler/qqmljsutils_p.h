@@ -48,11 +48,41 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qstringview.h>
 #include <QtCore/qstringbuilder.h>
+#include <private/qduplicatetracker_p.h>
 
 #include <optional>
 #include <functional>
+#include <type_traits>
 
 QT_BEGIN_NAMESPACE
+
+namespace detail {
+/*! \internal
+
+    Utility method that returns proper value according to the type To. This
+    version returns From.
+*/
+template<typename To, typename From, typename std::enable_if_t<!std::is_pointer_v<To>, int> = 0>
+static auto getQQmlJSScopeFromSmartPtr(const From &p) -> From
+{
+    static_assert(!std::is_pointer_v<From>, "From has to be a smart pointer holding QQmlJSScope");
+    return p;
+}
+
+/*! \internal
+
+    Utility method that returns proper value according to the type To. This
+    version returns From::get(), which is a raw pointer. The returned type
+    is not necessarily equal to To (e.g. To might be `QQmlJSScope *` while
+    returned is `const QQmlJSScope *`).
+*/
+template<typename To, typename From, typename std::enable_if_t<std::is_pointer_v<To>, int> = 0>
+static auto getQQmlJSScopeFromSmartPtr(const From &p) -> decltype(p.get())
+{
+    static_assert(!std::is_pointer_v<From>, "From has to be a smart pointer holding QQmlJSScope");
+    return p.get();
+}
+}
 
 class QQmlJSTypeResolver;
 struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
@@ -143,6 +173,47 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     static ResolvedAlias resolveAlias(const QQmlJSTypeResolver *typeResolver,
                                       QQmlJSMetaProperty property, QQmlJSScope::ConstPtr owner,
                                       const AliasResolutionVisitor &visitor);
+
+    template<typename QQmlJSScopePtr, typename Action>
+    static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check)
+    {
+        using namespace detail;
+
+        // NB: among other things, getQQmlJSScopeFromSmartPtr() also resolves const
+        // vs non-const pointer issue, so use it's return value as the type
+        using T = decltype(getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(
+                std::declval<QQmlJSScope::ConstPtr>()));
+
+        const auto checkWrapper = [&](const auto &scope, QQmlJSScope::ExtensionKind mode) {
+            if constexpr (std::is_invocable<Action, decltype(scope),
+                                            QQmlJSScope::ExtensionKind>::value) {
+                return check(scope, mode);
+            } else {
+                static_assert(std::is_invocable<Action, decltype(scope)>::value,
+                              "Inferred type Action has unexpected arguments");
+                Q_UNUSED(mode);
+                return check(scope);
+            }
+        };
+
+        QDuplicateTracker<T> seen;
+        for (T scope = type; scope && !seen.hasSeen(scope);
+             scope = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->baseType())) {
+            // Extensions override their base types
+            QDuplicateTracker<T> seenExtensions;
+            for (T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
+                 extension && !seenExtensions.hasSeen(extension);
+                 extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType())) {
+                if (checkWrapper(extension, QQmlJSScope::ExtensionType))
+                    return true;
+            }
+
+            if (checkWrapper(scope, QQmlJSScope::NotExtension))
+                return true;
+        }
+
+        return false;
+    }
 
     static std::optional<FixSuggestion> didYouMean(const QString &userInput,
                                                    QStringList candidates,

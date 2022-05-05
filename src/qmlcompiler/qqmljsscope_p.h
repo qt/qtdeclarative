@@ -413,6 +413,11 @@ public:
     QString extensionTypeName() const { return m_extensionTypeName; }
     void setExtensionTypeName(const QString &name) { m_extensionTypeName =  name; }
     QQmlJSScope::ConstPtr extensionType() const { return m_extensionType; }
+    enum ExtensionKind {
+        NotExtension,
+        ExtensionType,
+        ExtensionNamespace,
+    };
 
     QString valueTypeName() const { return m_valueTypeName; }
     void setValueTypeName(const QString &name) { m_valueTypeName = name; }

@@ -31,6 +31,7 @@
 #include "qqmljsimporter_p.h"
 #include "qqmljsimportvisitor_p.h"
 #include "qqmljslogger_p.h"
+#include "qqmljsutils_p.h"
 #include <private/qv4value_p.h>
 
 #include <private/qduplicatetracker_p.h>
@@ -42,28 +43,6 @@ QT_BEGIN_NAMESPACE
 using namespace Qt::StringLiterals;
 
 Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
-
-template<typename Action>
-static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const Action &check)
-{
-    QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
-    for (QQmlJSScope::ConstPtr scope = type; scope && !seen.hasSeen(scope);
-         scope = scope->baseType()) {
-        // Extensions override their base types
-        QDuplicateTracker<QQmlJSScope::ConstPtr> seenExtensions;
-        for (QQmlJSScope::ConstPtr extension = scope->extensionType();
-             extension && !seenExtensions.hasSeen(extension);
-             extension = extension->baseType()) {
-            if (check(extension, QQmlJSTypeResolver::Extension))
-                return true;
-        }
-
-        if (check(scope, QQmlJSTypeResolver::Base))
-            return true;
-    }
-
-    return false;
-}
 
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     : m_typeTracker(std::make_unique<TypeTracker>())
@@ -312,8 +291,7 @@ bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 
 bool QQmlJSTypeResolver::isNumeric(const QQmlJSScope::ConstPtr &type) const
 {
-    return searchBaseAndExtensionTypes(
-                type, [&](const QQmlJSScope::ConstPtr &scope, BaseOrExtension) {
+    return QQmlJSUtils::searchBaseAndExtensionTypes(type, [&](const QQmlJSScope::ConstPtr &scope) {
         return equals(scope, m_numberPrototype);
     });
 }
@@ -726,15 +704,17 @@ QQmlJSRegisterContent QQmlJSTypeResolver::globalType(const QQmlJSScope::ConstPtr
     return QQmlJSRegisterContent::create(storedType(type), type, QQmlJSRegisterContent::Unknown);
 }
 
-static QQmlJSRegisterContent::ContentVariant
-scopeContentVariant(QQmlJSTypeResolver::BaseOrExtension mode, bool isMethod)
+static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::ExtensionKind mode,
+                                                                 bool isMethod)
 {
     switch (mode) {
-    case QQmlJSTypeResolver::Base:
+    case QQmlJSScope::NotExtension:
         return isMethod ? QQmlJSRegisterContent::ScopeMethod : QQmlJSRegisterContent::ScopeProperty;
-    case QQmlJSTypeResolver::Extension:
+    case QQmlJSScope::ExtensionType:
         return isMethod ? QQmlJSRegisterContent::ExtensionScopeMethod
                         : QQmlJSRegisterContent::ExtensionScopeProperty;
+    case QQmlJSScope::ExtensionNamespace:
+        break;
     }
     Q_UNREACHABLE();
     return QQmlJSRegisterContent::Unknown;
@@ -760,36 +740,14 @@ static bool isRevisionAllowed(int memberRevision, const QQmlJSScope::ConstPtr &s
 QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr &scope,
                                                      const QString &name) const
 {
-    const auto isAssignedToDefaultProperty = [this](
-            const QQmlJSScope::ConstPtr &parent, const QQmlJSScope::ConstPtr &child) {
-        QString defaultPropertyName;
-        QQmlJSMetaProperty defaultProperty;
-        if (!searchBaseAndExtensionTypes(
-                    parent, [&](const QQmlJSScope::ConstPtr &scope,
-                                QQmlJSTypeResolver::BaseOrExtension mode) {
-            Q_UNUSED(mode);
-            defaultPropertyName = scope->defaultPropertyName();
-            defaultProperty = scope->property(defaultPropertyName);
-            return !defaultPropertyName.isEmpty();
-        })) {
+    const auto isAssignedToDefaultProperty = [this](const QQmlJSScope::ConstPtr &parent,
+                                                    const QQmlJSScope::ConstPtr &child) {
+        const QString defaultPropertyName = parent->defaultPropertyName();
+        if (defaultPropertyName.isEmpty()) // no reason to search for bindings
             return false;
-        }
 
-        QQmlJSScope::ConstPtr bindingHolder = parent;
-        while (bindingHolder->property(defaultPropertyName) != defaultProperty) {
-            // Only traverse the base type hierarchy here, not the extended types.
-            // Extensions cannot hold bindings.
-            bindingHolder = bindingHolder->baseType();
-
-            // Consequently, the default property may be inaccessibly
-            // hidden in some extension via shadowing.
-            // Nothing can be assigned to it then.
-            if (!bindingHolder)
-                return false;
-        }
-
-        const QList<QQmlJSMetaPropertyBinding> defaultPropBindings
-                = bindingHolder->propertyBindings(defaultPropertyName);
+        const QList<QQmlJSMetaPropertyBinding> defaultPropBindings =
+                parent->propertyBindings(defaultPropertyName);
         for (const QQmlJSMetaPropertyBinding &binding : defaultPropBindings) {
             if (binding.bindingType() == QQmlJSMetaPropertyBinding::Object
                 && equals(binding.objectType(), child)) {
@@ -799,7 +757,6 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         return false;
     };
 
-
     if (QQmlJSScope::ConstPtr identified = scopeForId(name, scope)) {
         return QQmlJSRegisterContent::create(storedType(identified), identified,
                                              QQmlJSRegisterContent::ObjectById, scope);
@@ -807,8 +764,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
 
     if (QQmlJSScope::ConstPtr base = QQmlJSScope::findCurrentQMLScope(scope)) {
         QQmlJSRegisterContent result;
-        if (searchBaseAndExtensionTypes(
-                    base, [&](const QQmlJSScope::ConstPtr &found, BaseOrExtension mode) {
+        if (QQmlJSUtils::searchBaseAndExtensionTypes(
+                    base, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
+                        Q_ASSERT(mode != QQmlJSScope::ExtensionNamespace); // no use for it here
                         if (found->hasOwnProperty(name)) {
                             QQmlJSMetaProperty prop = found->ownProperty(name);
                             if (!isRevisionAllowed(prop.revision(), scope))
@@ -903,19 +861,23 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
 }
 
 bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
-                                    QQmlJSRegisterContent *result, BaseOrExtension mode) const
+                                    QQmlJSRegisterContent *result,
+                                    QQmlJSScope::ExtensionKind mode) const
 {
     // You can't have lower case enum names in QML, even if we know the enums here.
     if (name.isEmpty() || !name.at(0).isUpper())
         return false;
+
+    const bool inExtension =
+            (mode == QQmlJSScope::ExtensionType) || (mode == QQmlJSScope::ExtensionNamespace);
 
     const auto enums = scope->ownEnumerations();
     for (const auto &enumeration : enums) {
         if (enumeration.name() == name) {
             *result = QQmlJSRegisterContent::create(
                     storedType(intType()), enumeration, QString(),
-                    mode == Extension ? QQmlJSRegisterContent::ExtensionObjectEnum
-                                      : QQmlJSRegisterContent::ObjectEnum,
+                    inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
+                                : QQmlJSRegisterContent::ObjectEnum,
                     scope);
             return true;
         }
@@ -923,8 +885,8 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
         if (enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
                     storedType(intType()), enumeration, name,
-                    mode == Extension ? QQmlJSRegisterContent::ExtensionObjectEnum
-                                      : QQmlJSRegisterContent::ObjectEnum,
+                    inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
+                                : QQmlJSRegisterContent::ObjectEnum,
                     scope);
             return true;
         }
@@ -1030,45 +992,49 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
         return lengthProperty(!equals(type, stringType()), type);
     }
 
-    const auto check = [&](const QQmlJSScope::ConstPtr &scope, BaseOrExtension mode) {
-        if (scope->hasOwnProperty(name)) {
-            const auto prop = scope->ownProperty(name);
-            result = QQmlJSRegisterContent::create(
-                    prop.isList() ? listPropertyType() : storedType(prop.type()), prop,
-                    mode == Base ? QQmlJSRegisterContent::ObjectProperty
-                                 : QQmlJSRegisterContent::ExtensionObjectProperty,
-                    scope);
-            return true;
-        }
+    const auto check = [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
+        if (mode != QQmlJSScope::ExtensionNamespace) {
+            if (scope->hasOwnProperty(name)) {
+                const auto prop = scope->ownProperty(name);
+                result = QQmlJSRegisterContent::create(
+                        prop.isList() ? listPropertyType() : storedType(prop.type()), prop,
+                        mode == QQmlJSScope::NotExtension
+                                ? QQmlJSRegisterContent::ObjectProperty
+                                : QQmlJSRegisterContent::ExtensionObjectProperty,
+                        scope);
+                return true;
+            }
 
-        if (scope->hasOwnMethod(name)) {
-            const auto methods = scope->ownMethods(name);
-            result = QQmlJSRegisterContent::create(
-                    jsValueType(), methods,
-                    mode == Base ? QQmlJSRegisterContent::ObjectMethod
-                                 : QQmlJSRegisterContent::ExtensionObjectMethod,
-                    scope);
-            return true;
-        }
+            if (scope->hasOwnMethod(name)) {
+                const auto methods = scope->ownMethods(name);
+                result = QQmlJSRegisterContent::create(
+                        jsValueType(), methods,
+                        mode == QQmlJSScope::NotExtension
+                                ? QQmlJSRegisterContent::ObjectMethod
+                                : QQmlJSRegisterContent::ExtensionObjectMethod,
+                        scope);
+                return true;
+            }
 
-        if (std::optional<QQmlJSScope::JavaScriptIdentifier> identifier =
-                    scope->findJSIdentifier(name);
-            identifier.has_value()) {
-            QQmlJSMetaProperty prop;
-            prop.setPropertyName(name);
-            prop.setTypeName(u"QJSValue"_s);
-            prop.setType(jsValueType());
-            prop.setIsWritable(!identifier->isConst);
+            if (std::optional<QQmlJSScope::JavaScriptIdentifier> identifier =
+                        scope->findJSIdentifier(name);
+                identifier.has_value()) {
+                QQmlJSMetaProperty prop;
+                prop.setPropertyName(name);
+                prop.setTypeName(u"QJSValue"_s);
+                prop.setType(jsValueType());
+                prop.setIsWritable(!identifier->isConst);
 
-            result = QQmlJSRegisterContent::create(jsValueType(), prop,
-                                                   QQmlJSRegisterContent::JavaScriptObject, type);
-            return true;
+                result = QQmlJSRegisterContent::create(
+                        jsValueType(), prop, QQmlJSRegisterContent::JavaScriptObject, type);
+                return true;
+            }
         }
 
         return checkEnums(scope, name, &result, mode);
     };
 
-    if (searchBaseAndExtensionTypes(type, check))
+    if (QQmlJSUtils::searchBaseAndExtensionTypes(type, check))
         return result;
 
     if (QQmlJSScope::ConstPtr attachedBase = typeForName(name)) {
@@ -1099,10 +1065,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberEnumType(const QQmlJSScope::Cons
 {
     QQmlJSRegisterContent result;
 
-    if (searchBaseAndExtensionTypes(type,
-                                    [&](const QQmlJSScope::ConstPtr &scope, BaseOrExtension mode) {
-                                        return checkEnums(scope, name, &result, mode);
-                                    })) {
+    if (QQmlJSUtils::searchBaseAndExtensionTypes(
+                type, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
+                    return checkEnums(scope, name, &result, mode);
+                })) {
         return result;
     }
 

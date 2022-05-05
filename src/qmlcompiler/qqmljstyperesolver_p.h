@@ -55,7 +55,6 @@ class QQmlJSImportVisitor;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypeResolver
 {
 public:
-    enum BaseOrExtension { Base, Extension };
     enum ParentMode { UseDocumentParent, UseParentProperty };
     enum CloneMode { CloneTypes, DoNotCloneTypes };
 
@@ -181,7 +180,7 @@ protected:
                                          const QString &name) const;
     bool isPrimitive(const QQmlJSScope::ConstPtr &type) const;
     bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
-                    QQmlJSRegisterContent *result, BaseOrExtension mode) const;
+                    QQmlJSRegisterContent *result, QQmlJSScope::ExtensionKind mode) const;
     bool canPrimitivelyConvertFromTo(
             const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const;
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
