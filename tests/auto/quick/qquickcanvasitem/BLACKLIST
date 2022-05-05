@@ -25,3 +25,7 @@ ci b2qt 32bit
 android
 [fillRect::test_fillRect]
 android
+
+# QTBUG-100991
+[line::test_cap]
+android
