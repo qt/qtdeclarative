@@ -94,10 +94,11 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
     object->init(pool, serializedObject->inheritedTypeNameIndex, serializedObject->idNameIndex);
 
     object->indexOfDefaultPropertyOrAlias = serializedObject->indexOfDefaultPropertyOrAlias;
-    object->defaultPropertyIsAlias = serializedObject->defaultPropertyIsAlias;
-    object->isInlineComponent = serializedObject->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
-    object->flags = serializedObject->flags;
-    object->id = serializedObject->id;
+    object->defaultPropertyIsAlias = serializedObject->hasAliasAsDefaultProperty();
+    object->isInlineComponent = serializedObject->hasFlag(
+            QV4::CompiledData::Object::IsInlineComponentRoot);
+    object->flags = serializedObject->flags();
+    object->id = serializedObject->objectId();
     object->location = serializedObject->location;
     object->locationOfIdProperty = serializedObject->locationOfIdProperty;
 

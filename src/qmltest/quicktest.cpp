@@ -309,7 +309,7 @@ private:
 
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
-        if (object->flags & Object::IsInlineComponentRoot)
+        if (object->hasFlag(Object::IsInlineComponentRoot))
             return result;
 
         if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
