@@ -231,7 +231,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
         const QV4::CompiledData::Alias *aliasData = &metaObject->compiledObject->aliasTable()[aliasId];
         if (!aliasData->isObjectAlias()) {
             QQmlContextData *ctxt = metaObject->ctxt;
-            QObject *target = ctxt->idValues[aliasData->targetObjectId].data();
+            QObject *target = ctxt->idValues[aliasData->targetObjectId()].data();
             if (!target)
                 return;
 
@@ -888,18 +888,20 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             if (id < aliasCount) {
                 const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[id];
 
-                if ((aliasData->flags & QV4::CompiledData::Alias::AliasPointsToPointerObject) && c == QMetaObject::ReadProperty)
-                        *reinterpret_cast<void **>(a[0]) = nullptr;
+                if (aliasData->hasFlag(QV4::CompiledData::Alias::AliasPointsToPointerObject)
+                        && c == QMetaObject::ReadProperty){
+                    *reinterpret_cast<void **>(a[0]) = nullptr;
+                }
 
                 if (!ctxt) return -1;
 
-                while (aliasData->aliasToLocalAlias)
+                while (aliasData->isAliasToLocalAlias())
                     aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
 
                 QQmlContext *context = ctxt->asQQmlContext();
                 QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(context);
 
-                QObject *target = ctxtPriv->data->idValues[aliasData->targetObjectId].data();
+                QObject *target = ctxtPriv->data->idValues[aliasData->targetObjectId()].data();
                 if (!target)
                     return -1;
 
@@ -1260,9 +1262,9 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
 
     const int aliasId = index - propOffset() - compiledObject->nProperties;
     const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
-    while (aliasData->aliasToLocalAlias)
+    while (aliasData->isAliasToLocalAlias())
         aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
-    *target = ctxt->idValues[aliasData->targetObjectId].data();
+    *target = ctxt->idValues[aliasData->targetObjectId()].data();
     if (!*target)
         return false;
 
@@ -1290,7 +1292,7 @@ void QQmlVMEMetaObject::connectAlias(int aliasId)
     }
 
     endpoint->metaObject = this;
-    endpoint->connect(&ctxt->idValues[aliasData->targetObjectId].bindings);
+    endpoint->connect(&ctxt->idValues[aliasData->targetObjectId()].bindings);
     endpoint->tryConnect();
 }
 

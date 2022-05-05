@@ -276,7 +276,7 @@ QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefau
         target = this;
 
     auto aliasWithSameName = std::find_if(target->aliases->begin(), target->aliases->end(), [&alias](const Alias &targetAlias){
-        return targetAlias.nameIndex == alias->nameIndex;
+        return targetAlias.nameIndex() == alias->nameIndex();
     });
     if (aliasWithSameName != target->aliases->end())
         return tr("Duplicate alias name");
@@ -1330,12 +1330,12 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
 bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
 {
     Alias *alias = New<Alias>();
-    alias->flags = 0;
+    alias->clearFlags();
     if (node->isReadonlyMember)
-        alias->flags |= QV4::CompiledData::Alias::IsReadOnly;
+        alias->setFlag(QV4::CompiledData::Alias::IsReadOnly);
 
     const QString propName = node->name.toString();
-    alias->nameIndex = registerString(propName);
+    alias->setNameIndex(registerString(propName));
 
     QQmlJS::SourceLocation loc = node->firstSourceLocation();
     alias->location.set(loc.startLine, loc.startColumn);
