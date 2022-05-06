@@ -378,6 +378,10 @@ void tst_qqmlbinding::disabledOnReadonlyProperty()
 
 void tst_qqmlbinding::delayed()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("This test crashes on Android. QTBUG-103310");
+#endif
+
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("delayed.qml"));
     QScopedPointer<QQuickItem> item {qobject_cast<QQuickItem*>(c.create())};
