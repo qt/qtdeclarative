@@ -672,9 +672,33 @@ public:
 
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
-        return role == QLatin1String("modelData")
-                ? model.list.at(index)
-                : QVariant();
+        const QVariant entry = model.list.at(index);
+        if (role == QLatin1String("modelData"))
+            return entry;
+
+        const QMetaType type = entry.metaType();
+        if (type == QMetaType::fromType<QVariantMap>())
+            return entry.toMap().value(role);
+
+        if (type == QMetaType::fromType<QVariantHash>())
+            return entry.toHash().value(role);
+
+        const QMetaType::TypeFlags typeFlags = type.flags();
+        if (typeFlags & QMetaType::PointerToQObject)
+            return entry.value<QObject *>()->property(role.toUtf8());
+
+        const QMetaObject *metaObject = type.metaObject();
+        if (!metaObject) {
+            // NB: This acquires the lock on QQmlMetaTypeData. If we had a QQmlEngine here,
+            //     we could use QQmlGadgetPtrWrapper::instance() to avoid this.
+            if (const QQmlValueType *valueType = QQmlMetaType::valueType(type))
+                metaObject = valueType->metaObject();
+            else
+                return QVariant();
+        }
+
+        const int propertyIndex = metaObject->indexOfProperty(role.toUtf8());
+        return metaObject->property(propertyIndex).readOnGadget(entry.constData());
     }
 
     QQmlDelegateModelItem *createItem(

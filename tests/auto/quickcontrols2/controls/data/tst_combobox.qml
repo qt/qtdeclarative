@@ -2337,4 +2337,23 @@ TestCase {
         compare(textField.selectedText, "")
         compare(control.currentIndex, 1)
     }
+
+    Component {
+        id: listOfGadgets
+        QtObject {
+            property list<rect> rects: [Qt.rect(1, 2, 3, 4), Qt.rect(5, 6, 7, 8)]
+        }
+    }
+
+    function test_listOfGadgetsWithRole() {
+        let model = listOfGadgets.createObject(testCase);
+        let control = createTemporaryObject(
+                comboBox, testCase, {model: model.rects, textRole: "width"});
+        verify(control);
+        compare(control.currentIndex, 0);
+        compare(control.displayText, "3");
+
+        control.currentIndex = 1;
+        compare(control.displayText, "7");
+    }
 }
