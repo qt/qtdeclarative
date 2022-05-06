@@ -1367,7 +1367,7 @@ class TimeZoneSwitch
 {
 public:
     TimeZoneSwitch(const char *newZone)
-        : doChangeZone(qstrcmp(newZone, "localtime") == 0)
+        : doChangeZone(qstrcmp(newZone, "localtime") != 0)
     {
         if (!doChangeZone)
             return;
@@ -1405,6 +1405,9 @@ void tst_qqmlqt::timeRoundtrip_data()
     // Local timezone:
     QTest::newRow("localtime") << QTime(0, 0, 0);
 
+#if defined(Q_OS_WIN) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
+    qInfo("Omitting the tests that depend on setting local time's zone");
+#else
     // No DST:
     QTest::newRow("UTC") << QTime(0, 0, 0);
     QTest::newRow("Europe/Amsterdam") << QTime(1, 0, 0);
@@ -1416,14 +1419,11 @@ void tst_qqmlqt::timeRoundtrip_data()
     QTest::newRow("Australia/Hobart") << QTime(10, 0, 0);
     QTest::newRow("Pacific/Auckland") << QTime(12, 0, 0);
     QTest::newRow("Pacific/Samoa") << QTime(13, 0, 0);
+#endif
 }
 
 void tst_qqmlqt::timeRoundtrip()
 {
-#ifdef Q_OS_WIN
-    QSKIP("On Windows, the DateObject doesn't handle DST transitions correctly when the timezone is not localtime."); // I.e.: for this test.
-#endif
-
     TimeZoneSwitch tzs(QTest::currentDataTag());
     QFETCH(QTime, time);
     qmlRegisterTypesAndRevisions<TimeProvider>("Test", 1);
