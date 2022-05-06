@@ -86,6 +86,8 @@ public:
     QBiPointer<T, T2> &operator=(const QBiPointer<T, T2> &o) noexcept = default;
     QBiPointer<T, T2> &operator=(QBiPointer<T, T2> &&o) noexcept = default;
 
+    void swap(QBiPointer &other) noexcept { std::swap(ptr_value, other.ptr_value); }
+
     inline QBiPointer(T *);
     inline QBiPointer(T2 *);
 
@@ -116,10 +118,7 @@ public:
         return !(ptr1 == ptr2);
     }
 
-    friend inline void swap(QBiPointer<T, T2> &ptr1, QBiPointer<T, T2> &ptr2) noexcept
-    {
-        qSwap(ptr1.ptr_value, ptr2.ptr_value);
-    }
+    friend void swap(QBiPointer &lhs, QBiPointer &rhs) noexcept { lhs.swap(rhs); }
 
     inline T *asT1() const;
     inline T2 *asT2() const;

@@ -88,6 +88,8 @@ public:
     inline QQmlRefPointer(QQmlRefPointer<T> &&);
     inline ~QQmlRefPointer();
 
+    void swap(QQmlRefPointer &other) noexcept { qt_ptr_swap(o, other.o); }
+
     inline QQmlRefPointer<T> &operator=(const QQmlRefPointer<T> &o);
     inline QQmlRefPointer<T> &operator=(QQmlRefPointer<T> &&o);
 
@@ -198,7 +200,7 @@ template <class T>
 QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(QQmlRefPointer<T> &&other)
 {
     QQmlRefPointer<T> m(std::move(other));
-    qSwap(o, m.o);
+    swap(m);
     return *this;
 }
 
