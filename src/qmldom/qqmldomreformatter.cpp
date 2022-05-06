@@ -633,8 +633,10 @@ protected:
         out(ast->ifToken);
         out(" ");
         out(ast->lparenToken);
-        accept(ast->expression);
+        preVisit(ast->expression);
+        ast->expression->accept0(this);
         out(ast->rparenToken);
+        postVisit(ast->expression);
         acceptBlockOrIndented(ast->ok, ast->ko);
         if (ast->ko) {
             out(ast->elseToken);
