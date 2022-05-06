@@ -236,6 +236,8 @@ private slots:
     void ignoreNonLeftMouseButtons();
     void ignoreNonLeftMouseButtons_data();
     void receiveTapOutsideContentItem();
+    void flickWhenRotated_data();
+    void flickWhenRotated();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2798,6 +2800,57 @@ void tst_qquickflickable::receiveTapOutsideContentItem()
     const QPoint bottomRight(flickable.contentItem()->width() + 5, flickable.contentItem()->height() + 5);
     QTest::mouseClick(&window, Qt::LeftButton, {}, bottomRight);
     QCOMPARE(clickedSpy.count(), 2);
+}
+
+void tst_qquickflickable::flickWhenRotated_data()
+{
+    QTest::addColumn<qreal>("rootRotation");
+    QTest::addColumn<qreal>("flickableRotation");
+    QTest::addColumn<qreal>("scale");
+
+    static constexpr qreal rotations[] = { 0, 30, 90, 180, 270 };
+    static constexpr qreal scales[] = { 0.3, 1, 1.5 };
+
+    for (const auto pr : rotations) {
+        for (const auto fr : rotations) {
+            if (pr <= 90) {
+                for (const auto s : scales)
+                    QTest::addRow("parent: %g, flickable: %g, scale: %g", pr, fr) << pr << fr << s;
+            } else {
+                // don't bother trying every scale with every set of rotations, to save time
+                QTest::addRow("parent: %g, flickable: %g, scale: 1", pr, fr) << pr << fr << qreal(1);
+            }
+        }
+    }
+}
+
+void tst_qquickflickable::flickWhenRotated() // QTBUG-99639
+{
+    QFETCH(qreal, rootRotation);
+    QFETCH(qreal, flickableRotation);
+    QFETCH(qreal, scale);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("rotatedFlickable.qml")));
+    QQuickItem *rootItem = window.rootObject();
+    QVERIFY(rootItem);
+    QQuickFlickable *flickable = rootItem->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+
+    rootItem->setRotation(rootRotation);
+    flickable->setRotation(flickableRotation);
+    rootItem->setScale(scale);
+    QVERIFY(flickable->isAtYBeginning());
+
+    // Flick in Y direction in Flickable's coordinate system and check how much it moved
+    const QPointF startPoint = flickable->mapToGlobal(QPoint(20, 180));
+    const QPointF endPoint = flickable->mapToGlobal(QPoint(20, 40));
+    flick(&window, window.mapFromGlobal(startPoint).toPoint(), window.mapFromGlobal(endPoint).toPoint(), 100);
+    QTRY_VERIFY(flickable->isMoving());
+    QTRY_VERIFY(!flickable->isMoving());
+    qCDebug(lcTests) << "flicking from" << startPoint << "to" << endPoint << ": ended at contentY" << flickable->contentY();
+    // usually flickable->contentY() is at 275 or very close
+    QVERIFY(!flickable->isAtYBeginning());
 }
 
 QTEST_MAIN(tst_qquickflickable)
