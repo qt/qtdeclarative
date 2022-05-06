@@ -89,6 +89,7 @@ private slots:
     void showTreeView();
     void expandAndCollapsUsingDoubleClick();
     void expandAndCollapseClickOnIndicator();
+    void pointerNavigationDisabled();
     void checkPropertiesRoot();
     void checkPropertiesChildren();
     void checkCurrentIndex();
@@ -163,6 +164,35 @@ void tst_qquicktreeviewdelegate::expandAndCollapseClickOnIndicator()
     WAIT_UNTIL_POLISHED;
     // Check that the view only has one row loaded again (the root of the tree)
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
+}
+
+void tst_qquicktreeviewdelegate::pointerNavigationDisabled()
+{
+    // Check that treeview respects TableView.pointerNavigationEnabled.
+    // When set to false, TreeView should not handle any pointer navigation events.
+    LOAD_TREEVIEW("unmodified.qml");
+    treeView->setPointerNavigationEnabled(false);
+
+    QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
+    QVERIFY(!treeView->isExpanded(0));
+
+    // Try to expand the root by clicking on the indicator
+    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtCell(0, 0));
+    QVERIFY(item);
+    const auto indicator = item->indicator();
+    QPoint localPos = QPoint(indicator->width() / 2, indicator->height() / 2);
+    QPoint pos = item->window()->contentItem()->mapFromItem(indicator, localPos).toPoint();
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    // The tree should still be collapsed
+    QVERIFY(!treeView->isExpanded(0));
+    QVERIFY(!QQuickTest::qIsPolishScheduled(item));
+
+    // Try a double click
+    localPos = QPoint(item->width() / 2, item->height() / 2);
+    pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
+    QTest::mouseDClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QVERIFY(!treeView->isExpanded(0));
+    QVERIFY(!QQuickTest::qIsPolishScheduled(item));
 }
 
 void tst_qquicktreeviewdelegate::checkPropertiesRoot()

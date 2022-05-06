@@ -298,6 +298,11 @@ void QQuickTreeViewDelegate::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTreeViewDelegate);
 
+    if (d->m_treeView && !d->m_treeView->pointerNavigationEnabled()) {
+        QQuickAbstractButton::mousePressEvent(event);
+        return;
+    }
+
     d->m_pressOnTopOfIndicator = d->posOnTopOfIndicator(event->position());
     if (d->m_pressOnTopOfIndicator) {
         d->handleClickOnIndicator(event, true);
@@ -331,6 +336,11 @@ void QQuickTreeViewDelegate::mouseReleaseEvent(QMouseEvent *event)
 void QQuickTreeViewDelegate::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickTreeViewDelegate);
+
+    if (d->m_treeView && !d->m_treeView->pointerNavigationEnabled()) {
+        QQuickAbstractButton::mouseDoubleClickEvent(event);
+        return;
+    }
 
     event->accept();
 
