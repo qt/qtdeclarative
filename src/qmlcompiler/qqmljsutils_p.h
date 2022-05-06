@@ -210,12 +210,13 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
             // have a value type or when we have the QObject type, in which case
             // we also study the extension's base type hierarchy.
             const bool isQObject = scope->internalName() == QLatin1String("QObject");
-            T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
+            auto [extensionPtr, extensionKind] = scope->extensionType();
+            auto extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extensionPtr);
             do {
                 if (!extension || seenExtensions.hasSeen(extension))
                     break;
 
-                if (checkWrapper(extension, QQmlJSScope::ExtensionType))
+                if (checkWrapper(extension, extensionKind))
                     return true;
                 extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType());
             } while (isValueType || isQObject);

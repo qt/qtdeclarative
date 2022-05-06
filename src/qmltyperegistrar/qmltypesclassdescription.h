@@ -55,6 +55,7 @@ struct QmlTypesClassDescription
     bool isSingleton = false;
     bool hasCustomParser = false;
     bool omitFromQmlTypes = false;
+    bool extensionIsNamespace = false;
     QStringList implementsInterfaces;
     QStringList deferredNames;
     QStringList immediateNames;

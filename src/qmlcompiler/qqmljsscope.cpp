@@ -95,7 +95,11 @@ bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 bool QQmlJSScope::hasMethod(const QString &name) const
 {
     return QQmlJSUtils::searchBaseAndExtensionTypes(
-            this, [&](const QQmlJSScope *scope) { return scope->m_methods.contains(name); });
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                return scope->m_methods.contains(name);
+            });
 }
 
 /*!
@@ -110,13 +114,17 @@ bool QQmlJSScope::hasMethod(const QString &name) const
 QHash<QString, QQmlJSMetaMethod> QQmlJSScope::methods() const
 {
     QHash<QString, QQmlJSMetaMethod> results;
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        for (auto it = scope->m_methods.constBegin(); it != scope->m_methods.constEnd(); it++) {
-            if (!results.contains(it.key()))
-                results.insert(it.key(), it.value());
-        }
-        return false;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                for (auto it = scope->m_methods.constBegin(); it != scope->m_methods.constEnd();
+                     it++) {
+                    if (!results.contains(it.key()))
+                        results.insert(it.key(), it.value());
+                }
+                return false;
+            });
 
     return results;
 }
@@ -125,10 +133,13 @@ QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
 {
     QList<QQmlJSMetaMethod> results;
 
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        results.append(scope->ownMethods(name));
-        return false;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                results.append(scope->ownMethods(name));
+                return false;
+            });
     return results;
 }
 
@@ -136,14 +147,17 @@ QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name, QQmlJSMetaMeth
 {
     QList<QQmlJSMetaMethod> results;
 
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        const auto ownMethods = scope->ownMethods(name);
-        for (const auto &method : ownMethods) {
-            if (method.methodType() == type)
-                results.append(method);
-        }
-        return false;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                const auto ownMethods = scope->ownMethods(name);
+                for (const auto &method : ownMethods) {
+                    if (method.methodType() == type)
+                        results.append(method);
+                }
+                return false;
+            });
     return results;
 }
 
@@ -414,15 +428,18 @@ void QQmlJSScope::updateChildScope(
 {
     switch (childScope->scopeType()) {
     case QQmlJSScope::GroupedPropertyScope:
-        QQmlJSUtils::searchBaseAndExtensionTypes(self.data(), [&](const QQmlJSScope *type) {
-            const auto propertyIt = type->m_properties.find(childScope->internalName());
-            if (propertyIt != type->m_properties.end()) {
-                childScope->m_baseType.scope = QQmlJSScope::ConstPtr(propertyIt->type());
-                childScope->setBaseTypeName(propertyIt->typeName());
-                return true;
-            }
-            return false;
-        });
+        QQmlJSUtils::searchBaseAndExtensionTypes(
+                self.data(), [&](const QQmlJSScope *type, QQmlJSScope::ExtensionKind mode) {
+                    if (mode == QQmlJSScope::ExtensionNamespace)
+                        return false;
+                    const auto propertyIt = type->m_properties.find(childScope->internalName());
+                    if (propertyIt != type->m_properties.end()) {
+                        childScope->m_baseType.scope = QQmlJSScope::ConstPtr(propertyIt->type());
+                        childScope->setBaseTypeName(propertyIt->typeName());
+                        return true;
+                    }
+                    return false;
+                });
         break;
     case QQmlJSScope::AttachedPropertyScope:
         if (const auto attachedBase = findType(
@@ -513,19 +530,26 @@ QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstP
 bool QQmlJSScope::hasProperty(const QString &name) const
 {
     return QQmlJSUtils::searchBaseAndExtensionTypes(
-            this, [&](const QQmlJSScope *scope) { return scope->m_properties.contains(name); });
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                return scope->m_properties.contains(name);
+            });
 }
 
 QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
 {
     QQmlJSMetaProperty prop;
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        const auto it = scope->m_properties.find(name);
-        if (it == scope->m_properties.end())
-            return false;
-        prop = *it;
-        return true;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                const auto it = scope->m_properties.find(name);
+                if (it == scope->m_properties.end())
+                    return false;
+                prop = *it;
+                return true;
+            });
     return prop;
 }
 
@@ -539,28 +563,34 @@ QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
 QHash<QString, QQmlJSMetaProperty> QQmlJSScope::properties() const
 {
     QHash<QString, QQmlJSMetaProperty> results;
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        for (auto it = scope->m_properties.constBegin(); it != scope->m_properties.constEnd();
-             it++) {
-            if (!results.contains(it.key()))
-                results.insert(it.key(), it.value());
-        }
-        return false;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                for (auto it = scope->m_properties.constBegin();
+                     it != scope->m_properties.constEnd(); it++) {
+                    if (!results.contains(it.key()))
+                        results.insert(it.key(), it.value());
+                }
+                return false;
+            });
     return results;
 }
 
-QQmlJSScope::ConstPtr QQmlJSScope::ownerOfProperty(const QQmlJSScope::ConstPtr &self,
-                                                   const QString &name)
+QQmlJSScope::AnnotatedScope QQmlJSScope::ownerOfProperty(const QQmlJSScope::ConstPtr &self,
+                                                         const QString &name)
 {
-    QQmlJSScope::ConstPtr owner;
-    QQmlJSUtils::searchBaseAndExtensionTypes(self, [&](const QQmlJSScope::ConstPtr &scope) {
-        if (scope->hasOwnProperty(name)) {
-            owner = scope;
-            return true;
-        }
-        return false;
-    });
+    QQmlJSScope::AnnotatedScope owner;
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            self, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                if (scope->hasOwnProperty(name)) {
+                    owner = { scope, mode };
+                    return true;
+                }
+                return false;
+            });
     return owner;
 }
 
@@ -575,17 +605,23 @@ void QQmlJSScope::setPropertyLocallyRequired(const QString &name, bool isRequire
 bool QQmlJSScope::isPropertyRequired(const QString &name) const
 {
     bool isRequired = false;
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        if (scope->isPropertyLocallyRequired(name)) {
-            isRequired = true;
-            return true;
-        }
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (scope->isPropertyLocallyRequired(name)) {
+                    isRequired = true;
+                    return true;
+                }
 
-        // If it has a property of that name, and that is not required, then none of the
-        // base types matter. You cannot make a derived type's property required with
-        // a "required" specification in a base type.
-        return scope->hasOwnProperty(name);
-    });
+                // the hasOwnProperty() below only makes sense if our scope is
+                // not an extension namespace
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+
+                // If it has a property of that name, and that is not required, then none of the
+                // base types matter. You cannot make a derived type's property required with
+                // a "required" specification in a base type.
+                return scope->hasOwnProperty(name);
+            });
     return isRequired;
 }
 
@@ -688,25 +724,40 @@ QList<QQmlJSMetaPropertyBinding> QQmlJSScope::ownPropertyBindingsInQmlIROrder() 
 bool QQmlJSScope::hasPropertyBindings(const QString &name) const
 {
     return QQmlJSUtils::searchBaseAndExtensionTypes(
-            this, [&](const QQmlJSScope *scope) { return scope->hasOwnPropertyBindings(name); });
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode != QQmlJSScope::NotExtension) {
+                    Q_ASSERT(!scope->hasOwnPropertyBindings(name));
+                    return false;
+                }
+                return scope->hasOwnPropertyBindings(name);
+            });
 }
 
 QList<QQmlJSMetaPropertyBinding> QQmlJSScope::propertyBindings(const QString &name) const
 {
     QList<QQmlJSMetaPropertyBinding> bindings;
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        const auto range = scope->ownPropertyBindings(name);
-        for (auto it = range.first; it != range.second; ++it)
-            bindings.append(*it);
-        return false;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode != QQmlJSScope::NotExtension) {
+                    Q_ASSERT(!scope->hasOwnPropertyBindings(name));
+                    return false;
+                }
+                const auto range = scope->ownPropertyBindings(name);
+                for (auto it = range.first; it != range.second; ++it)
+                    bindings.append(*it);
+                return false;
+            });
     return bindings;
 }
 
 bool QQmlJSScope::hasInterface(const QString &name) const
 {
     return QQmlJSUtils::searchBaseAndExtensionTypes(
-            this, [&](const QQmlJSScope *scope) { return scope->m_interfaceNames.contains(name); });
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode != QQmlJSScope::NotExtension)
+                    return false;
+                return scope->m_interfaceNames.contains(name);
+            });
 }
 
 bool QQmlJSScope::isNameDeferred(const QString &name) const
@@ -719,13 +770,11 @@ bool QQmlJSScope::isNameDeferred(const QString &name) const
             isDeferred = !immediate.contains(name);
             return true;
         }
-
         const QStringList deferred = scope->ownDeferredNames();
         if (!deferred.isEmpty()) {
             isDeferred = deferred.contains(name);
             return true;
         }
-
         return false;
     });
 
@@ -757,12 +806,15 @@ QString QQmlJSScope::baseTypeError() const
 QString QQmlJSScope::attachedTypeName() const
 {
     QString name;
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        if (scope->ownAttachedType().isNull())
-            return false;
-        name = scope->ownAttachedTypeName();
-        return true;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode != QQmlJSScope::NotExtension)
+                    return false;
+                if (scope->ownAttachedType().isNull())
+                    return false;
+                name = scope->ownAttachedTypeName();
+                return true;
+            });
 
     return name;
 }
@@ -770,12 +822,15 @@ QString QQmlJSScope::attachedTypeName() const
 QQmlJSScope::ConstPtr QQmlJSScope::attachedType() const
 {
     QQmlJSScope::ConstPtr ptr;
-    QQmlJSUtils::searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        if (scope->ownAttachedType().isNull())
-            return false;
-        ptr = scope->ownAttachedType();
-        return true;
-    });
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode != QQmlJSScope::NotExtension)
+                    return false;
+                if (scope->ownAttachedType().isNull())
+                    return false;
+                ptr = scope->ownAttachedType();
+                return true;
+            });
 
     return ptr;
 }

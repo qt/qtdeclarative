@@ -100,7 +100,7 @@ static qsizetype relativeToAbsoluteRuntimeIndex(const QmlIR::Object *irObject, q
 static std::pair<QQmlJSMetaProperty, int> getMetaPropertyIndex(const QQmlJSScope::ConstPtr &scope,
                                                                const QString &propertyName)
 {
-    auto owner = QQmlJSScope::ownerOfProperty(scope, propertyName);
+    auto owner = QQmlJSScope::ownerOfProperty(scope, propertyName).scope;
     Q_ASSERT(owner);
     auto p = owner->ownProperty(propertyName);
     if (!p.isValid())

@@ -358,6 +358,7 @@ private slots:
     void registerValueTypes();
     void extendedNamespace();
     void extendedNamespaceByObject();
+    void extendedByAttachedType();
     void factorySingleton();
     void extendedSingleton();
     void qtbug_85932();
@@ -6290,6 +6291,32 @@ void tst_qqmllanguage::extendedNamespaceByObject()
     QVERIFY(!obj.isNull());
 
     QCOMPARE(obj->property("extension").toInt(), 10);
+}
+
+void tst_qqmllanguage::extendedByAttachedType()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\n"
+                  "import QtQml\n"
+                  "QtObject {\n"
+                  "    ExtendedNamespaceByObject.attachedName: \"name for extension\"\n"
+                  "}",
+                  QUrl());
+        QVERIFY2(!c.isReady(), qPrintable(c.errorString()));
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\n"
+                  "import QtQml\n"
+                  "QtObject {\n"
+                  "    Extended.attachedName: \"name for extension\"\n"
+                  "}",
+                  QUrl());
+        QVERIFY2(!c.isReady(), qPrintable(c.errorString()));
+    }
 }
 
 void tst_qqmllanguage::factorySingleton()

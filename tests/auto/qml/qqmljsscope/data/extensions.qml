@@ -5,4 +5,7 @@ Item {
     Extended { }
     ExtendedIndirect { }
     ExtendedTwice { }
+
+    NamespaceExtended { }
+    NonNamespaceExtended { }
 }

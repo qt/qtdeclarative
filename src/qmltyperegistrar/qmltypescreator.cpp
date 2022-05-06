@@ -79,6 +79,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (!collector.extensionType.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("extension"), enquote(collector.extensionType));
 
+    if (collector.extensionIsNamespace)
+        m_qml.writeScriptBinding(QLatin1String("extensionIsNamespace"), QLatin1String("true"));
+
     if (!collector.implementsInterfaces.isEmpty()) {
         QStringList interfaces;
         for (const QString &interface : collector.implementsInterfaces)

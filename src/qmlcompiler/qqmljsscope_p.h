@@ -96,7 +96,8 @@ public:
         Array = 0x20,
         InlineComponent = 0x40,
         WrappedInImplicitComponent = 0x80,
-        HasBaseTypeError = 0x100
+        HasBaseTypeError = 0x100,
+        HasExtensionNamespace = 0x200,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -389,8 +390,8 @@ public:
     bool hasPropertyBindings(const QString &name) const;
     QList<QQmlJSMetaPropertyBinding> propertyBindings(const QString &name) const;
 
-    static QQmlJSScope::ConstPtr ownerOfProperty(const QQmlJSScope::ConstPtr &self,
-                                                 const QString &name);
+    struct AnnotatedScope; // defined later
+    static AnnotatedScope ownerOfProperty(const QQmlJSScope::ConstPtr &self, const QString &name);
 
     bool isResolved() const;
     bool isFullyResolved() const;
@@ -411,13 +412,24 @@ public:
     QQmlJSScope::ConstPtr attachedType() const;
 
     QString extensionTypeName() const { return m_extensionTypeName; }
-    void setExtensionTypeName(const QString &name) { m_extensionTypeName =  name; }
-    QQmlJSScope::ConstPtr extensionType() const { return m_extensionType; }
+    void setExtensionTypeName(const QString &name) { m_extensionTypeName = name; }
     enum ExtensionKind {
         NotExtension,
         ExtensionType,
         ExtensionNamespace,
     };
+    struct AnnotatedScope
+    {
+        QQmlJSScope::ConstPtr scope;
+        ExtensionKind extensionSpecifier = NotExtension;
+    };
+    AnnotatedScope extensionType() const
+    {
+        if (!m_extensionType)
+            return { m_extensionType, NotExtension };
+        return { m_extensionType,
+                 (m_flags & HasExtensionNamespace) ? ExtensionNamespace : ExtensionType };
+    }
 
     QString valueTypeName() const { return m_valueTypeName; }
     void setValueTypeName(const QString &name) { m_valueTypeName = name; }
@@ -444,6 +456,7 @@ public:
     bool isArrayScope() const { return m_flags & Array; }
     bool isInlineComponent() const { return m_flags & InlineComponent; }
     bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
+    bool extensionIsNamespace() const { return m_flags & HasExtensionNamespace; }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
     void setIsCreatable(bool v) { m_flags.setFlag(Creatable, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
@@ -455,6 +468,7 @@ public:
     void setIsArrayScope(bool v) { m_flags.setFlag(Array, v); }
     void setIsInlineComponent(bool v) { m_flags.setFlag(InlineComponent, v); }
     void setIsWrappedInImplicitComponent(bool v) { m_flags.setFlag(WrappedInImplicitComponent, v); }
+    void setExtensionIsNamespace(bool v) { m_flags.setFlag(HasExtensionNamespace, v); }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }
@@ -640,6 +654,10 @@ private:
     QString m_valueTypeName;
     QQmlJSScope::WeakConstPtr m_valueType;
 
+    // extension is provided as either a type (QML_{NAMESPACE_}EXTENDED) or as a
+    // namespace (QML_EXTENDED_NAMESPACE). in case of namespace, we have a more
+    // limited lookup capabilities. HasExtensionNamespace serves as a boolean to
+    // differentiate the two cases
     QString m_extensionTypeName;
     QQmlJSScope::WeakConstPtr m_extensionType;
 

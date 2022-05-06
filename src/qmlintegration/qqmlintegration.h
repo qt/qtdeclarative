@@ -124,6 +124,7 @@ QT_END_NAMESPACE
 
 #define QML_EXTENDED_NAMESPACE(EXTENDED_NAMESPACE) \
     Q_CLASSINFO("QML.Extended", #EXTENDED_NAMESPACE) \
+    Q_CLASSINFO("QML.ExtensionIsNamespace", "true") \
     static constexpr const QMetaObject *qmlExtendedNamespace() { return &EXTENDED_NAMESPACE::staticMetaObject; } \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtendedNamespace; \
     template<typename... Args> \

@@ -202,6 +202,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
     comp.setValueTypeName(jsScope->valueTypeName());
     comp.setAccessSemantics(jsScope->accessSemantics());
     comp.setExtensionTypeName(jsScope->extensionTypeName());
+    comp.setExtensionIsNamespace(jsScope->extensionIsNamespace());
     Path exportSourcePath = qmltypesFile().canonicalPath();
     QMap<int, Path> revToPath;
     auto it = objects.end();

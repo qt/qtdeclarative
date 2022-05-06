@@ -291,9 +291,12 @@ bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 
 bool QQmlJSTypeResolver::isNumeric(const QQmlJSScope::ConstPtr &type) const
 {
-    return QQmlJSUtils::searchBaseAndExtensionTypes(type, [&](const QQmlJSScope::ConstPtr &scope) {
-        return equals(scope, m_numberPrototype);
-    });
+    return QQmlJSUtils::searchBaseAndExtensionTypes(
+            type, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
+                if (mode == QQmlJSScope::ExtensionNamespace)
+                    return false;
+                return equals(scope, m_numberPrototype);
+            });
 }
 
 QQmlJSScope::ConstPtr
@@ -766,7 +769,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         QQmlJSRegisterContent result;
         if (QQmlJSUtils::searchBaseAndExtensionTypes(
                     base, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
-                        Q_ASSERT(mode != QQmlJSScope::ExtensionNamespace); // no use for it here
+                        if (mode == QQmlJSScope::ExtensionNamespace) // no use for it here
+                            return false;
                         if (found->hasOwnProperty(name)) {
                             QQmlJSMetaProperty prop = found->ownProperty(name);
                             if (!isRevisionAllowed(prop.revision(), scope))

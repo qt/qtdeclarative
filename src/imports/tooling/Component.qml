@@ -57,6 +57,7 @@ QtObject {
     property bool isCreatable: name.length > 0
     property bool isComposite: false
     property bool hasCustomParser: false
+    property bool extensionIsNamespace: false
     property string accessSemantics: "reference"
     property string defaultProperty
     property string parentProperty

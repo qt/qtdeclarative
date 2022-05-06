@@ -31,6 +31,7 @@
 
 #include <QtCore/qobject.h>
 #include <qqml.h>
+#include <QtQml/qqmlparserstatus.h>
 
 class Extension : public QObject
 {
@@ -109,6 +110,67 @@ public:
     ExtendedTwice(QObject *parent = nullptr) : Extended(parent) { }
     QByteArray getStr() const { return QByteArray(); }
     void setStr(QByteArray) { }
+};
+
+class AttachedType : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+public:
+    AttachedType(QObject *parent = nullptr) : QObject(parent) { }
+};
+
+class ExtensionNamespace : public QObject, public QQmlParserStatus
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int count READ getCount WRITE setCount NOTIFY countChanged)
+    Q_PROPERTY(QObject *p READ p CONSTANT)
+
+    Q_CLASSINFO("DefaultProperty", "objectName")
+    Q_CLASSINFO("ParentProperty", "p")
+
+    Q_INTERFACES(QQmlParserStatus)
+    QML_ATTACHED(AttachedType)
+
+    QObject *m_p = nullptr;
+
+public:
+    ExtensionNamespace(QObject *parent = nullptr) : QObject(parent), m_p(parent) { }
+    int getCount() const { return 42; }
+    void setCount(int) { }
+
+    QObject *p() const { return m_p; }
+
+    enum ExtensionEnum {
+        Value1,
+        Value2,
+    };
+    Q_ENUM(ExtensionEnum)
+
+    Q_INVOKABLE int someMethod() { return 42; }
+
+    void classBegin() override { }
+    void componentComplete() override { }
+
+    static AttachedType *qmlAttachedProperties(QObject *parent) { return new AttachedType(parent); }
+
+Q_SIGNALS:
+    void countChanged();
+};
+
+class NamespaceExtended : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED_NAMESPACE(ExtensionNamespace)
+};
+
+class NonNamespaceExtended : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(ExtensionNamespace)
 };
 
 #endif // EXTENSIONTYPES_H

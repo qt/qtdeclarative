@@ -1483,10 +1483,36 @@ public:
     enum class OtherScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3 };
 };
 
+class AttachedType : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(
+            QString attachedName READ attachedName WRITE setAttachedName NOTIFY attachedNameChanged)
+
+    QString m_name;
+
+public:
+    AttachedType(QObject *parent = nullptr) : QObject(parent) { }
+
+    QString attachedName() const { return m_name; }
+    void setAttachedName(const QString &name)
+    {
+        if (name != m_name) {
+            m_name = name;
+            Q_EMIT attachedNameChanged();
+        }
+    }
+Q_SIGNALS:
+    void attachedNameChanged();
+};
+
 class Extension : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int extension READ extension WRITE setExtension NOTIFY extensionChangedWithValue FINAL)
+
+    QML_ATTACHED(AttachedType)
 public:
     Extension(QObject *parent = nullptr) : QObject(parent) {}
     int extension() const { return ext; }
@@ -1498,6 +1524,9 @@ public:
         }
     }
     Q_INVOKABLE int invokable() { return 123; }
+
+    static AttachedType *qmlAttachedProperties(QObject *object) { return new AttachedType(object); }
+
 Q_SIGNALS:
     void extensionChanged();
     void extensionChangedWithValue(int value);

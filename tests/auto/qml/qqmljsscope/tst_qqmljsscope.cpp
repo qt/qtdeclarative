@@ -576,19 +576,59 @@ void tst_qqmljsscope::extensions()
     QVERIFY(root->isFullyResolved());
 
     const auto childScopes = root->childScopes();
-    QCOMPARE(childScopes.size(), 3);
+    QCOMPARE(childScopes.size(), 5);
 
     QCOMPARE(childScopes[0]->baseTypeName(), u"Extended"_s);
     QCOMPARE(childScopes[1]->baseTypeName(), u"ExtendedIndirect"_s);
     QCOMPARE(childScopes[2]->baseTypeName(), u"ExtendedTwice"_s);
+    QCOMPARE(childScopes[3]->baseTypeName(), u"NamespaceExtended"_s);
+    QCOMPARE(childScopes[4]->baseTypeName(), u"NonNamespaceExtended"_s);
     QVERIFY(childScopes[0]->isFullyResolved());
     QVERIFY(childScopes[1]->isFullyResolved());
     QVERIFY(childScopes[2]->isFullyResolved());
+    QVERIFY(childScopes[3]->isFullyResolved());
+    QVERIFY(childScopes[4]->isFullyResolved());
 
     QCOMPARE(childScopes[0]->property(u"count"_s).typeName(), u"int"_s);
     QCOMPARE(childScopes[1]->property(u"count"_s).typeName(), u"double"_s);
     QCOMPARE(childScopes[2]->property(u"count"_s).typeName(), u"int"_s);
     QCOMPARE(childScopes[2]->property(u"str"_s).typeName(), u"QString"_s);
+
+    QVERIFY(!childScopes[3]->hasProperty(u"count"_s));
+    QVERIFY(!childScopes[3]->property(u"count"_s).isValid());
+    QVERIFY(!childScopes[3]->hasProperty(u"p"_s));
+    QVERIFY(!childScopes[3]->property(u"p"_s).isValid());
+    QVERIFY(!childScopes[3]->hasMethod(u"someMethod"_s));
+    QVERIFY(childScopes[3]->hasEnumeration(u"ExtensionEnum"_s));
+    QVERIFY(childScopes[3]->hasEnumerationKey(u"Value1"_s));
+    QVERIFY(childScopes[3]->enumeration(u"ExtensionEnum"_s).isValid());
+    QCOMPARE(childScopes[3]->defaultPropertyName(), u"objectName"_s);
+    QCOMPARE(childScopes[3]->parentPropertyName(), u"p"_s);
+    QVERIFY(!childScopes[3]->hasInterface(u"QQmlParserStatus"_s));
+    QCOMPARE(childScopes[3]->attachedTypeName(), QString());
+    QVERIFY(!childScopes[3]->attachedType());
+
+    QVERIFY(!childScopes[3]->extensionIsNamespace());
+    QVERIFY(childScopes[3]->baseType()->extensionIsNamespace());
+
+    QVERIFY(childScopes[4]->hasProperty(u"count"_s));
+    QVERIFY(childScopes[4]->property(u"count"_s).isValid());
+    QVERIFY(childScopes[4]->hasProperty(u"p"_s));
+    QVERIFY(childScopes[4]->property(u"p"_s).isValid());
+    QVERIFY(childScopes[4]->hasMethod(u"someMethod"_s));
+    QVERIFY(childScopes[4]->hasEnumeration(u"ExtensionEnum"_s));
+    QVERIFY(childScopes[4]->hasEnumerationKey(u"Value1"_s));
+    QVERIFY(childScopes[4]->enumeration(u"ExtensionEnum"_s).isValid());
+    QCOMPARE(childScopes[4]->defaultPropertyName(), u"objectName"_s);
+    QCOMPARE(childScopes[4]->parentPropertyName(), u"p"_s);
+    QVERIFY(!childScopes[4]->hasInterface(u"QQmlParserStatus"_s));
+    QCOMPARE(childScopes[4]->attachedTypeName(), QString());
+    QVERIFY(!childScopes[4]->attachedType());
+
+    auto [owner, ownerKind] = QQmlJSScope::ownerOfProperty(childScopes[4], u"count"_s);
+    QVERIFY(owner);
+    QCOMPARE(ownerKind, QQmlJSScope::ExtensionType);
+    QCOMPARE(owner, childScopes[4]->baseType()->extensionType().scope);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

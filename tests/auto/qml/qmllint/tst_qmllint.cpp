@@ -321,7 +321,9 @@ void TestQmllint::qmltypes_data()
 void TestQmllint::qmltypes()
 {
     QFETCH(QString, file);
-    callQmllint(file, true);
+    // pass the warnings in, so that callQmllint() would show errors if any
+    QJsonArray warnings;
+    callQmllint(file, true, &warnings);
 }
 
 #ifdef QT_QMLJSROOTGEN_PRESENT

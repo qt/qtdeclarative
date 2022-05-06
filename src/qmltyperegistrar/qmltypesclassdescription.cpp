@@ -172,6 +172,9 @@ void QmlTypesClassDescription::collect(
         } else if (name == QLatin1String("QML.Extended")) {
             extensionType = value;
             collectRelated(value, types, foreign, defaultRevision);
+        } else if (name == QLatin1String("QML.ExtensionIsNamespace")) {
+            if (value == QLatin1String("true"))
+                extensionIsNamespace = true;
         } else if (name == QLatin1String("QML.Sequence")) {
             sequenceValueType = value;
             collectRelated(value, types, foreign, defaultRevision);
@@ -216,6 +219,9 @@ void QmlTypesClassDescription::collect(
                 } else if (foreignName == QLatin1String("QML.Extended")) {
                     extensionType = foreignValue;
                     collectRelated(foreignValue, types, foreign, defaultRevision);
+                } else if (foreignName == QLatin1String("QML.ExtensionIsNamespace")) {
+                    if (foreignValue == QLatin1String("true"))
+                        extensionIsNamespace = true;
                 } else if (foreignName == QLatin1String("QML.Sequence")) {
                     sequenceValueType = foreignValue;
                     collectRelated(foreignValue, types, foreign, defaultRevision);
