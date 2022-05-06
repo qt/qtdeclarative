@@ -34,6 +34,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickWindow>
+#include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickpointhandler_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
@@ -153,6 +154,7 @@ public:
 
 private slots:
     void passiveGrabberOrder();
+    void passiveGrabberItems();
     void tapHandlerDoesntOverrideSubsceneGrabber();
     void touchCompression();
     void hoverPropagation_nested_data();
@@ -214,6 +216,133 @@ void tst_qquickdeliveryagent::passiveGrabberOrder()
     // passive grabbers are visited in order, and emit tapped() at that time
     QCOMPARE(spy.senders.first(), subsceneTap);
     QCOMPARE(spy.senders.last(), rootTap);
+}
+
+class PassiveGrabberItem : public QQuickRectangle
+{
+public:
+    PassiveGrabberItem(QQuickItem *parent = nullptr) : QQuickRectangle(parent) {
+        setAcceptedMouseButtons(Qt::LeftButton);
+    }
+    void mousePressEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << "Passive grabber pressed";
+        lastPressed = true;
+        event->addPassiveGrabber(event->point(0), this);
+        event->ignore();
+    }
+    void mouseMoveEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << "Mouse move handled by passive grabber";
+        const QPointF pos = event->scenePosition();
+        const int threshold = 20;
+        bool overThreshold = pos.x() >= threshold;
+        if (overThreshold) {
+            event->setExclusiveGrabber(event->point(0), this);
+            this->setKeepMouseGrab(true);
+            event->accept();
+        } else {
+            event->ignore();
+        }
+    }
+    void mouseReleaseEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << "Passive grabber released";
+        lastPressed = false;
+        event->ignore();
+    }
+
+    bool lastPressed = false;
+};
+
+class ExclusiveGrabberItem : public QQuickRectangle
+{
+public:
+    ExclusiveGrabberItem(QQuickItem *parent = nullptr) : QQuickRectangle(parent) {
+        setAcceptedMouseButtons(Qt::LeftButton);
+    }
+    void mousePressEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << "Exclusive grabber pressed";
+        lastPressed = true;
+        event->accept();
+    }
+    void mouseMoveEvent(QMouseEvent *event) override {
+        event->accept();
+    }
+    void mouseReleaseEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << "Exclusive grabber released";
+        lastPressed = false;
+        event->accept();
+    }
+    void mouseUngrabEvent() override {
+        qCDebug(lcTests) << "Exclusive grab ended";
+        ungrabbed = true;
+    }
+
+    bool lastPressed = false;
+    bool ungrabbed = false;
+};
+
+void tst_qquickdeliveryagent::passiveGrabberItems()
+{
+    QQuickView view;
+    QQmlComponent component(view.engine());
+    qmlRegisterType<PassiveGrabberItem>("Test", 1, 0, "PassiveGrabber");
+    qmlRegisterType<ExclusiveGrabberItem>("Test", 1, 0, "ExclusiveGrabber");
+    component.loadUrl(testFileUrl("passiveGrabberItem.qml"));
+    view.setContent(QUrl(), &component, component.create());
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+    ExclusiveGrabberItem *exclusiveGrabber = root->property("exclusiveGrabber").value<ExclusiveGrabberItem*>();
+    PassiveGrabberItem *passiveGrabber = root->property("passiveGrabber").value<PassiveGrabberItem *>();
+    QVERIFY(exclusiveGrabber);
+    QVERIFY(passiveGrabber);
+
+    view.show();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(exclusiveGrabber->x() + 1, exclusiveGrabber->y() + 1));
+    auto devPriv = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice());
+    const auto &persistentPoint = devPriv->activePoints.values().first();
+    QTRY_COMPARE(persistentPoint.passiveGrabbers.count(), 1);
+    QCOMPARE(persistentPoint.passiveGrabbers.first(), passiveGrabber);
+    QCOMPARE(persistentPoint.exclusiveGrabber, exclusiveGrabber);
+    QVERIFY(exclusiveGrabber->lastPressed);
+    QVERIFY(passiveGrabber->lastPressed);
+
+    // Mouse move bigger than threshold -> passive grabber becomes exclusive grabber
+    QTest::mouseMove(&view);
+    QTRY_COMPARE(persistentPoint.exclusiveGrabber, passiveGrabber);
+    QVERIFY(exclusiveGrabber->ungrabbed);
+
+    QTest::mouseRelease(&view, Qt::LeftButton);
+    // Only the passive grabber got the release event
+    // since it became the exclusive grabber on mouseMove
+    QTRY_VERIFY(!passiveGrabber->lastPressed);
+    QVERIFY(exclusiveGrabber->lastPressed);
+    QCOMPARE(persistentPoint.passiveGrabbers.count(), 0);
+    QCOMPARE(persistentPoint.exclusiveGrabber, nullptr);
+
+    exclusiveGrabber->lastPressed = false;
+    exclusiveGrabber->ungrabbed = false;
+    passiveGrabber->lastPressed = false;
+
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(exclusiveGrabber->x() + 1, exclusiveGrabber->y() + 1));
+    const auto &pressedPoint = devPriv->activePoints.values().first();
+    QTRY_COMPARE(pressedPoint.passiveGrabbers.count(), 1);
+    QCOMPARE(pressedPoint.passiveGrabbers.first(), passiveGrabber);
+    QCOMPARE(pressedPoint.exclusiveGrabber, exclusiveGrabber);
+    QVERIFY(exclusiveGrabber->lastPressed);
+    QVERIFY(passiveGrabber->lastPressed);
+
+    // Mouse move smaller than threshold -> grab remains with the exclusive grabber
+    QTest::mouseMove(&view,  QPoint(exclusiveGrabber->x(), exclusiveGrabber->y()));
+    QTRY_COMPARE(pressedPoint.exclusiveGrabber, exclusiveGrabber);
+
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, QPoint(exclusiveGrabber->x(), exclusiveGrabber->y()));
+
+    // Both the passive and the exclusive grabber get the mouseRelease event
+    QTRY_VERIFY(!passiveGrabber->lastPressed);
+    QVERIFY(!exclusiveGrabber->lastPressed);
+    QCOMPARE(pressedPoint.passiveGrabbers.count(), 0);
+    QCOMPARE(pressedPoint.exclusiveGrabber, nullptr);
 }
 
 void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG-94012

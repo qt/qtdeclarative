@@ -302,29 +302,36 @@ static bool isWithinDragMargin(const QQuickDrawer *drawer, const QPointF &pos)
 bool QQuickDrawerPrivate::startDrag(QEvent *event)
 {
     Q_Q(QQuickDrawer);
+    delayedEnterTransition = false;
     if (!window || !interactive || dragMargin < 0.0 || qFuzzyIsNull(dragMargin))
         return false;
 
     switch (event->type()) {
     case QEvent::MouseButtonPress:
-        if (isWithinDragMargin(q, static_cast<QMouseEvent *>(event)->scenePosition())) {
-            prepareEnterTransition();
-            reposition();
-            return handleMouseEvent(window->contentItem(), static_cast<QMouseEvent *>(event));
+        if (QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event); isWithinDragMargin(q, mouseEvent->scenePosition())) {
+            // watch future events and grab the mouse once it has moved
+            // sufficiently fast or far (in grabMouse).
+            delayedEnterTransition = true;
+            mouseEvent->addPassiveGrabber(mouseEvent->point(0), popupItem);
+            handleMouseEvent(window->contentItem(), mouseEvent);
+            return false;
         }
         break;
 
 #if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchBegin:
-    case QEvent::TouchUpdate:
-        for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->points()) {
+    case QEvent::TouchUpdate: {
+        auto *touchEvent = static_cast<QTouchEvent *>(event);
+        for (const QTouchEvent::TouchPoint &point : touchEvent->points()) {
             if (point.state() == QEventPoint::Pressed && isWithinDragMargin(q, point.scenePosition())) {
-                prepareEnterTransition();
-                reposition();
-                return handleTouchEvent(window->contentItem(), static_cast<QTouchEvent *>(event));
+                delayedEnterTransition = true;
+                touchEvent->addPassiveGrabber(point, popupItem);
+                handleTouchEvent(window->contentItem(), touchEvent);
+                return false;
             }
         }
         break;
+    }
 #endif
 
     default:
@@ -372,6 +379,12 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     }
 
     if (overThreshold) {
+        if (delayedEnterTransition) {
+            prepareEnterTransition();
+            reposition();
+            delayedEnterTransition = false;
+        }
+
         popupItem->grabMouse();
         popupItem->setKeepMouseGrab(true);
         offset = offsetAt(movePoint);
@@ -418,7 +431,12 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         }
 
         if (overThreshold) {
-            popupItem->grabTouchPoints(QList<int>() << touchId);
+            if (delayedEnterTransition) {
+                prepareEnterTransition();
+                reposition();
+                delayedEnterTransition = false;
+            }
+            event->setExclusiveGrabber(point, popupItem);
             popupItem->setKeepTouchGrab(true);
             offset = offsetAt(movePoint);
         }

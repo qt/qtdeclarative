@@ -97,6 +97,7 @@ public:
     qreal position = 0;
     qreal dragMargin = 0;
     QQuickVelocityCalculator velocityCalculator;
+    bool delayedEnterTransition = false;
 };
 
 QT_END_NAMESPACE

@@ -912,29 +912,44 @@ void QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers(const QVector<QPointer
             QQuickPointerHandlerPrivate::deviceDeliveryTargets(pointerEvent->device());
     QVarLengthArray<QPair<QQuickItem *, bool>, 4> sendFilteredPointerEventResult;
     hasFiltered.clear();
-    for (auto o : passiveGrabbers) {
-        QQuickPointerHandler *handler = qobject_cast<QQuickPointerHandler *>(o);
+    for (QObject *grabberObject : passiveGrabbers) {
         // a null pointer in passiveGrabbers is unlikely, unless the grabbing handler was deleted dynamically
-        if (Q_LIKELY(handler) && !eventDeliveryTargets.contains(handler)) {
-            bool alreadyFiltered = false;
-            QQuickItem *par = handler->parentItem();
+        if (Q_UNLIKELY(!grabberObject))
+            continue;
+        // a passiveGrabber might be an item or a handler
+        if (QQuickPointerHandler *handler = qobject_cast<QQuickPointerHandler *>(grabberObject)) {
+            if (handler && !eventDeliveryTargets.contains(handler)) {
+                bool alreadyFiltered = false;
+                QQuickItem *par = handler->parentItem();
 
-            // see if we already have sent a filter event to the parent
-            auto it = std::find_if(sendFilteredPointerEventResult.begin(), sendFilteredPointerEventResult.end(),
-                                        [par](const QPair<QQuickItem *, bool> &pair) { return pair.first == par; });
-            if (it != sendFilteredPointerEventResult.end()) {
-                // Yes, the event was already filtered to that parent, do not call it again but use
-                // the result of the previous call to determine if we should call the handler.
-                alreadyFiltered = it->second;
-            } else if (par) {
-                alreadyFiltered = sendFilteredPointerEvent(pointerEvent, par);
-                sendFilteredPointerEventResult << qMakePair(par, alreadyFiltered);
+                // see if we already have sent a filter event to the parent
+                auto it = std::find_if(sendFilteredPointerEventResult.begin(), sendFilteredPointerEventResult.end(),
+                                       [par](const QPair<QQuickItem *, bool> &pair) { return pair.first == par; });
+                if (it != sendFilteredPointerEventResult.end()) {
+                    // Yes, the event was sent to that parent for filtering: do not call it again, but use
+                    // the result of the previous call to determine whether we should call the handler.
+                    alreadyFiltered = it->second;
+                } else if (par) {
+                    alreadyFiltered = sendFilteredPointerEvent(pointerEvent, par);
+                    sendFilteredPointerEventResult << qMakePair(par, alreadyFiltered);
+                }
+                if (!alreadyFiltered) {
+                    if (par)
+                        localizePointerEvent(pointerEvent, par);
+                    handler->handlePointerEvent(pointerEvent);
+                }
             }
-            if (!alreadyFiltered) {
-                if (par)
-                    localizePointerEvent(pointerEvent, par);
-                handler->handlePointerEvent(pointerEvent);
+        } else if (QQuickItem *grabberItem = static_cast<QQuickItem *>(grabberObject)) {
+            // don't steal the grab if input should remain with the exclusive grabber only
+            if (QQuickItem *excGrabber = static_cast<QQuickItem *>(pointerEvent->exclusiveGrabber(pointerEvent->point(0)))) {
+                if ((isMouseEvent(pointerEvent) && excGrabber->keepMouseGrab())
+                 || (isTouchEvent(pointerEvent) && excGrabber->keepTouchGrab())) {
+                    return;
+                }
             }
+            localizePointerEvent(pointerEvent, grabberItem);
+            QCoreApplication::sendEvent(grabberItem, pointerEvent);
+            pointerEvent->accept();
         }
     }
 }
@@ -1183,6 +1198,21 @@ bool QQuickDeliveryAgentPrivate::deliverSinglePointEventUntilAccepted(QPointerEv
     QEventPoint &point = event->point(0);
     QVector<QQuickItem *> targetItems = pointerTargets(rootItem, event, point, false, false);
     point.setAccepted(false);
+
+    // Let passive grabbers see the event. This must be done before we deliver the
+    // event to the target and to handlers that might stop event propagation.
+    // Passive grabbers cannot stop event delivery.
+    for (const auto &passiveGrabber : event->passiveGrabbers(point)) {
+        if (auto *grabberItem = qobject_cast<QQuickItem *>(passiveGrabber)) {
+            if (targetItems.contains(grabberItem))
+                continue;
+            localizePointerEvent(event, grabberItem);
+            QCoreApplication::sendEvent(grabberItem, event);
+        }
+    }
+    // Maintain the invariant that items receive input events in accepted state.
+    // A passive grabber might have explicitly ignored the event.
+    event->accept();
 
     for (QQuickItem *item : targetItems) {
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
