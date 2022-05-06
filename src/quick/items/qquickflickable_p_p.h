@@ -268,6 +268,7 @@ public:
               const QVector2D &deltas, bool overThreshold, bool momentum,
               bool velocitySensitiveOverBounds, const QVector2D &velocity);
 
+    QVector2D firstPointLocalVelocity(QPointerEvent *event);
     qint64 computeCurrentTime(QInputEvent *event) const;
     qreal devicePixelRatio() const;
 
