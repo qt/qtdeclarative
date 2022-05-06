@@ -196,6 +196,7 @@ namespace {
     enum Highlighting { NoHighlight, Highlight };
 }
 
+// ### Qt7: Remove this class. Use QQmlDelegateModel instead.
 class QQuickComboBoxDelegateModel : public QQmlDelegateModel
 {
 public:
@@ -214,20 +215,22 @@ QQuickComboBoxDelegateModel::QQuickComboBoxDelegateModel(QQuickComboBox *combo)
 
 QVariant QQuickComboBoxDelegateModel::variantValue(int index, const QString &role)
 {
-    const QVariant model = combo->model();
-    if (model.userType() == QMetaType::QVariantList) {
-        QVariant object = model.toList().value(index);
-        if (object.userType() == QMetaType::QVariantMap) {
-            const QVariantMap data = object.toMap();
-            if (data.count() == 1 && role == QLatin1String("modelData"))
-                return data.first();
-            return data.value(role);
-        } else if (object.userType() == QMetaType::QObjectStar) {
-            const QObject *data = object.value<QObject *>();
-            if (data && role != QLatin1String("modelData"))
-                return data->property(role.toUtf8());
+    // ### Qt7: Get rid of this. Why do we special case lists of variant maps with
+    //          exactly one entry? There are many other ways of producing a list of
+    //          map-like things with exactly one entry. And what if some of the maps
+    //          in the list have more than one entry? You get inconsistent results.
+    if (role == QLatin1String("modelData")) {
+        const QVariant model = combo->model();
+        if (model.metaType() == QMetaType::fromType<QVariantList>()) {
+            const QVariant object = model.toList().value(index);
+            if (object.metaType() == QMetaType::fromType<QVariantMap>()) {
+                const QVariantMap data = object.toMap();
+                if (data.count() == 1)
+                    return data.first();
+            }
         }
     }
+
     return QQmlDelegateModel::variantValue(index, role);
 }
 

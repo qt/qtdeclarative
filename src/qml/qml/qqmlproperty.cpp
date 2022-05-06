@@ -1168,7 +1168,7 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 {
     auto doRead = [&](QQmlGadgetPtrWrapper *wrapper) {
         wrapper->read(object, core.coreIndex());
-        return wrapper->property(valueTypeData.coreIndex()).read(wrapper);
+        return wrapper->readOnGadget(wrapper->property(valueTypeData.coreIndex()));
     };
 
     if (isValueType()) {

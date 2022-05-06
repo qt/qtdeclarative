@@ -1943,8 +1943,8 @@ void tst_qqmlproperty::variantMapHandling()
 
 void tst_qqmlproperty::crashOnValueProperty()
 {
-    QQmlEngine *engine = new QQmlEngine;
-    QQmlComponent component(engine);
+    QScopedPointer<QQmlEngine> engine(new QQmlEngine);
+    QQmlComponent component(engine.data());
 
     component.setData("import Test 1.0\nPropertyObject { wrectProperty.x: 10 }", QUrl());
     QScopedPointer<QObject> object(component.create());
@@ -1957,8 +1957,7 @@ void tst_qqmlproperty::crashOnValueProperty()
     QCOMPARE(p.read(), QVariant(10));
 
     //don't crash once the engine is deleted
-    delete engine;
-    engine = nullptr;
+    engine.reset();
 
     QCOMPARE(p.propertyTypeName(), "int");
     QCOMPARE(p.read(), QVariant(10));

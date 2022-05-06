@@ -110,7 +110,17 @@ public:
 
     int metaTypeId() const { return valueType()->metaTypeId(); }
     int metaCall(QMetaObject::Call type, int id, void **argv);
+
     QMetaProperty property(int index) { return valueType()->metaObject()->property(index); }
+    QVariant readOnGadget(const QMetaProperty &property) const
+    {
+        return property.readOnGadget(m_gadgetPtr);
+    }
+
+    void writeOnGadget(const QMetaProperty &property, const QVariant &value)
+    {
+        property.writeOnGadget(m_gadgetPtr, value);
+    }
 
 private:
     const QQmlValueType *valueType() const;

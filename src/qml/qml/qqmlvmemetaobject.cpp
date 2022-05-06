@@ -362,15 +362,15 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
                 QVariant newValue(metaType, a[0]);
 
                 valueType->read(object, id);
-                QVariant prevComponentValue = valueProp.read(valueType);
+                QVariant prevComponentValue = valueType->readOnGadget(valueProp);
 
                 valueType->setValue(newValue);
-                QVariant newComponentValue = valueProp.read(valueType);
+                QVariant newComponentValue = valueType->readOnGadget(valueProp);
 
                 // Don't apply the interceptor if the intercepted value has not changed
                 bool updated = false;
                 if (newComponentValue != prevComponentValue) {
-                    valueProp.write(valueType, prevComponentValue);
+                    valueType->writeOnGadget(valueProp, prevComponentValue);
                     valueType->write(object, id, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
 
                     vi->write(newComponentValue);

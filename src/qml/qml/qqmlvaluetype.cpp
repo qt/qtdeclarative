@@ -51,6 +51,10 @@ QQmlValueType::QQmlValueType(QMetaType type, const QMetaObject *gadgetMetaObject
     : metaType(type)
 {
     QMetaObjectBuilder builder(gadgetMetaObject);
+
+    // This is required for calling readOnGadget() on properties from this metaObject.
+    builder.setFlags(PropertyAccessInStaticMetaCall);
+
     dynamicMetaObject = builder.toMetaObject();
 }
 
