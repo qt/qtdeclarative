@@ -26,3 +26,7 @@ android
 android
 [scrollable]
 android
+
+# QTBUG-103200
+[Basic::contextMenuKeyboard]
+opensuse-leap

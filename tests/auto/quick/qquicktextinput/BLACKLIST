@@ -37,3 +37,7 @@ opensuse-leap
 # QTBUG-103200
 [middleClickPaste]
 opensuse-leap
+[echoMode]
+opensuse-leap
+[checkCursorDelegateWhenPaddingChanged]
+opensuse-leap
