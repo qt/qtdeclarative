@@ -122,6 +122,9 @@ private:
     T *o;
 };
 
+template <typename T>
+Q_DECLARE_TYPEINFO_BODY(QQmlRefPointer<T>, Q_RELOCATABLE_TYPE);
+
 QQmlRefCount::QQmlRefCount()
 : refCount(1)
 {

@@ -131,6 +131,9 @@ private:
     static const quintptr FlagsMask = FlagBit | Flag2Bit;
 };
 
+template <typename...Ts> // can't use commas in macros
+Q_DECLARE_TYPEINFO_BODY(QBiPointer<Ts...>, Q_PRIMITIVE_TYPE);
+
 template<typename T, typename T2>
 QBiPointer<T, T2>::QBiPointer(T *v)
 : ptr_value(quintptr(v))
