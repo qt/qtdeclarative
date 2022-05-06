@@ -168,7 +168,10 @@ ReturnedValue throwTypeError(const FunctionObject *b, const QV4::Value *, const 
 template <typename ReturnType>
 ReturnType convertJSValueToVariantType(const QJSValue &value)
 {
-    return value.toVariant().value<ReturnType>();
+    const QVariant variant = value.toVariant();
+    return variant.metaType() == QMetaType::fromType<QJSValue>()
+            ? ReturnType()
+            : variant.value<ReturnType>();
 }
 
 struct JSArrayIterator {
