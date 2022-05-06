@@ -353,6 +353,9 @@ QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
 void QQmlJSTypeResolver::trackListPropertyType(
         const QQmlJSScope::ConstPtr &trackedListElementType) const
 {
+    if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
+        return;
+
     if (m_typeTracker->trackedTypes.contains(trackedListElementType)
             && !m_typeTracker->listTypes.contains(trackedListElementType)) {
         QQmlJSScope::Ptr clone = QQmlJSScope::clone(m_listPropertyType);
@@ -363,6 +366,9 @@ void QQmlJSTypeResolver::trackListPropertyType(
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::trackedType(const QQmlJSScope::ConstPtr &type) const
 {
+    if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
+        return type;
+
     // If origin is in fact an already tracked type, track the original of that one instead.
     const auto it = m_typeTracker->trackedTypes.find(type);
     QQmlJSScope::ConstPtr orig = (it == m_typeTracker->trackedTypes.end()) ? type : it->original;
@@ -449,6 +455,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::originalContainedType(
 void QQmlJSTypeResolver::adjustTrackedType(
         const QQmlJSScope::ConstPtr &tracked, const QQmlJSScope::ConstPtr &conversion) const
 {
+    if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
+        return;
+
     const auto it = m_typeTracker->trackedTypes.find(tracked);
     Q_ASSERT(it != m_typeTracker->trackedTypes.end());
     it->replacement = comparableType(conversion);
@@ -458,6 +467,9 @@ void QQmlJSTypeResolver::adjustTrackedType(
 void QQmlJSTypeResolver::adjustTrackedType(
         const QQmlJSScope::ConstPtr &tracked, const QList<QQmlJSScope::ConstPtr> &conversions) const
 {
+    if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
+        return;
+
     const auto it = m_typeTracker->trackedTypes.find(tracked);
     Q_ASSERT(it != m_typeTracker->trackedTypes.end());
     QQmlJSScope::Ptr mutableTracked = it->clone;
@@ -475,6 +487,9 @@ void QQmlJSTypeResolver::adjustTrackedType(
 
 void QQmlJSTypeResolver::generalizeType(const QQmlJSScope::ConstPtr &type) const
 {
+    if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
+        return;
+
     const auto it = m_typeTracker->trackedTypes.find(type);
     Q_ASSERT(it != m_typeTracker->trackedTypes.end());
     *it->clone = std::move(*QQmlJSScope::clone(genericType(type)));

@@ -57,6 +57,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypeResolver
 public:
     enum BaseOrExtension { Base, Extension };
     enum ParentMode { UseDocumentParent, UseParentProperty };
+    enum CloneMode { CloneTypes, DoNotCloneTypes };
 
     QQmlJSTypeResolver(QQmlJSImporter *importer);
 
@@ -148,6 +149,9 @@ public:
     void setParentMode(ParentMode mode) { m_parentMode = mode; }
     ParentMode parentMode() const { return m_parentMode; }
 
+    void setCloneMode(CloneMode mode) { m_cloneMode = mode; }
+    bool cloneMode() const { return m_cloneMode; }
+
     QQmlJSScope::ConstPtr storedType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSScope::ConstPtr originalType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSScope::ConstPtr trackedType(const QQmlJSScope::ConstPtr &type) const;
@@ -212,6 +216,7 @@ protected:
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
 
     ParentMode m_parentMode = UseParentProperty;
+    CloneMode m_cloneMode = CloneTypes;
     QQmlJSLogger *m_logger = nullptr;
 
     struct TrackedType

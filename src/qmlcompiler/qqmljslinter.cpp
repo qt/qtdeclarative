@@ -494,6 +494,10 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             // not reparented, the document parent may indeed not be their visual parent. See
             // QTBUG-95530. Eventually, we'll need cleverer logic to deal with this.
             typeResolver.setParentMode(QQmlJSTypeResolver::UseDocumentParent);
+            // We don't need to create tracked types and such as we are just linting the code here
+            // and not actually compiling it. The duplicated scopes would cause issues during
+            // linting.
+            typeResolver.setCloneMode(QQmlJSTypeResolver::DoNotCloneTypes);
 
             typeResolver.init(&v, parser.rootNode());
 
