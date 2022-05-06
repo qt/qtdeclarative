@@ -212,6 +212,7 @@ private slots:
 
     void QTBUG_45640();
     void QTBUG_49218();
+    void positionViewAtBeginningAfterResizingCells();
     void QTBUG_48870_fastModelUpdates();
     void QTBUG_86255();
 
@@ -6695,6 +6696,34 @@ void tst_QQuickGridView::QTBUG_49218()
 
     QCOMPARE(gridview->indexAt(gridview->cellWidth() - 10, gridview->cellHeight() - 10), 0);
     delete window;
+}
+
+void tst_QQuickGridView::positionViewAtBeginningAfterResizingCells()
+{
+    // Check that positionViewAtBeginning() ends up showing row 0, even
+    // if the cells are resized while the viewport is deep down in the list (QTBUG-91461).
+    std::unique_ptr<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug91461.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.get()));
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem*>(window->rootObject());
+    QQuickGridView *gridview = qobject_cast<QQuickGridView *>(rootItem->childItems().first());
+    QVERIFY(gridview != nullptr);
+
+    gridview->positionViewAtEnd();
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    rootItem->setProperty("cellSize", 200);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    gridview->positionViewAtBeginning();
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+
+    const QPointF topLeftCorner = window->contentItem()->mapToItem(gridview->contentItem(), QPointF(20, 20));
+    const auto item0 = gridview->itemAt(topLeftCorner.x(), topLeftCorner.y());
+    QVERIFY(item0);
+
+    const int index = qmlContext(item0)->contextProperty("index").toInt();
+    QCOMPARE(index, 0);
 }
 
 void tst_QQuickGridView::keyNavigationEnabled()

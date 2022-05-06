@@ -349,9 +349,27 @@ qreal QQuickGridViewPrivate::rowPosAt(int modelIndex) const
             return lastItem->rowPos() + rows * rowSize();
         }
     }
-    return (modelIndex / columns) * rowSize();
-}
 
+    qreal rowPos = ((modelIndex / columns) * rowSize());
+
+    if (flow == QQuickGridView::FlowLeftToRight && verticalLayoutDirection == QQuickItemView::TopToBottom) {
+        // Add the effective startpos of row 0. Start by subtracting minExtent, which will contain the
+        // height of the rows outside the beginning of the content item. (Rows can end up outside if
+        // e.g flicking the viewport a long way down, changing cellSize, and then flick back).
+        // NOTE: It's not clearly understood why the flow == QQuickGridView::FlowLeftToRight guard is
+        // needed, since the flow shouldn't normally affect the y postition of an index. But without
+        // it, several auto tests start failing, so we keep it until this part is better understood.
+        rowPos -= minExtent;
+        // minExtent will also contain the size of the topMargin (vData.startMargin), the header, and
+        // the highlightRangeStart. Those should be added before the start of row 0. So we need to subtract
+        // them from the rowPos. But only the largest of topMargin and highlightRangeStart will need
+        // to be taken into account, since having a topMargin will also ensure that currentItem ends
+        // up within the requested highlight range when view is positioned at the beginning.
+        rowPos += qMax(vData.startMargin, highlightRangeStart) + headerSize();
+    }
+
+    return rowPos;
+}
 
 qreal QQuickGridViewPrivate::snapPosAt(qreal pos) const
 {
