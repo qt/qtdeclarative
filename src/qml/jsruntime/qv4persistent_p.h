@@ -104,7 +104,7 @@ public:
     PersistentValue &operator=(const PersistentValue &other);
 
     PersistentValue(PersistentValue &&other) noexcept : val(std::exchange(other.val, nullptr)) {}
-    void swap(PersistentValue &other) noexcept { qSwap(val, other.val); }
+    void swap(PersistentValue &other) noexcept { qt_ptr_swap(val, other.val); }
     QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(PersistentValue);
     ~PersistentValue() { PersistentValueStorage::free(val); }
 
