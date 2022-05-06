@@ -415,8 +415,8 @@ public:
     QQmlAnyBinding(const QQmlAnyBinding &other) noexcept { *this = other; }
     QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlAnyBinding)
 
-    friend void swap(QQmlAnyBinding &a, QQmlAnyBinding &b) noexcept { qSwap(a.d, b.d); }
-    void swap(QQmlAnyBinding &other) noexcept { qSwap(d, other.d); }
+    void swap(QQmlAnyBinding &other) noexcept { d.swap(other.d); }
+    friend void swap(QQmlAnyBinding &lhs, QQmlAnyBinding &rhs) noexcept { lhs.swap(rhs); }
 
     QQmlAnyBinding &operator=(const QQmlAnyBinding &other) noexcept
     {

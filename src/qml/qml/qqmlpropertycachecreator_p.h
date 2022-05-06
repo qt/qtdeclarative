@@ -861,7 +861,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
             }
 
         }
-        qSwap(objectsWithAliases, pendingObjects);
+        objectsWithAliases = std::move(pendingObjects);
     } while (!objectsWithAliases.isEmpty());
 }
 

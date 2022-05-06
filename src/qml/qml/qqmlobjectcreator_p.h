@@ -248,7 +248,7 @@ private:
         QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
 
         QObject *scopeObject = instance;
-        qSwap(_scopeObject, scopeObject);
+        qt_ptr_swap(_scopeObject, scopeObject);
 
         QV4::Scope valueScope(v4);
         QScopedValueRollback<QV4::Value*> jsObjectGuard(sharedState->allJavaScriptObjects,
@@ -257,32 +257,32 @@ private:
         Q_ASSERT(topLevelCreator);
         QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
 
-        qSwap(_qmlContext, qmlContext);
+        qt_ptr_swap(_qmlContext, qmlContext);
 
-        qSwap(_propertyCache, cache);
-        qSwap(_qobject, instance);
+        _propertyCache.swap(cache);
+        qt_ptr_swap(_qobject, instance);
 
         int objectIndex = deferredIndex;
-        qSwap(_compiledObjectIndex, objectIndex);
+        std::swap(_compiledObjectIndex, objectIndex);
 
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(_compiledObjectIndex);
-        qSwap(_compiledObject, obj);
-        qSwap(_ddata, declarativeData);
-        qSwap(_bindingTarget, bindingTarget);
-        qSwap(_vmeMetaObject, vmeMetaObject);
+        qt_ptr_swap(_compiledObject, obj);
+        qt_ptr_swap(_ddata, declarativeData);
+        qt_ptr_swap(_bindingTarget, bindingTarget);
+        qt_ptr_swap(_vmeMetaObject, vmeMetaObject);
 
         f();
 
-        qSwap(_vmeMetaObject, vmeMetaObject);
-        qSwap(_bindingTarget, bindingTarget);
-        qSwap(_ddata, declarativeData);
-        qSwap(_compiledObject, obj);
-        qSwap(_compiledObjectIndex, objectIndex);
-        qSwap(_qobject, instance);
-        qSwap(_propertyCache, cache);
+        qt_ptr_swap(_vmeMetaObject, vmeMetaObject);
+        qt_ptr_swap(_bindingTarget, bindingTarget);
+        qt_ptr_swap(_ddata, declarativeData);
+        qt_ptr_swap(_compiledObject, obj);
+        std::swap(_compiledObjectIndex, objectIndex);
+        qt_ptr_swap(_qobject, instance);
+        _propertyCache.swap(cache);
 
-        qSwap(_qmlContext, qmlContext);
-        qSwap(_scopeObject, scopeObject);
+        qt_ptr_swap(_qmlContext, qmlContext);
+        qt_ptr_swap(_scopeObject, scopeObject);
     }
 };
 
