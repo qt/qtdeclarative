@@ -417,6 +417,9 @@ void tst_qquickpixmapcache::lockingCrash()
 
 void tst_qquickpixmapcache::uncached()
 {
+#ifdef Q_OS_WEBOS
+    QSKIP("QQuickPixmap always loads with QQuickPixmap::Cache option in webOS");
+#endif
     QQmlEngine engine;
     engine.addImageProvider(QLatin1String("mypixmaps"), new MyPixmapProvider);
 
