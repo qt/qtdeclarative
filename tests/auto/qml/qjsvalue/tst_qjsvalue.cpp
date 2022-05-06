@@ -2871,6 +2871,10 @@ void tst_QJSValue::jsFunctionInVariant()
         QTest::ignoreMessage(QtDebugMsg, "direct call");
         log.callWithInstance(console, {"direct call"});
     }
+
+    const QVariant var = log.toVariant();
+    QCOMPARE(var.metaType(), QMetaType::fromType<QJSValue>());
+    QCOMPARE(var.value<QVariantMap>(), QVariantMap()); // Does not recurse infinitely
 }
 
 void tst_QJSValue::integerToEnum()
