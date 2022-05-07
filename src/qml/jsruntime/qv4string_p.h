@@ -88,7 +88,7 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
         new (&textStorage) QStringPrivate(std::move(text));
     }
 
-    mutable std::aligned_storage<sizeof(QStringPrivate), alignof(QStringPrivate)>::type textStorage;
+    mutable struct { alignas(QStringPrivate) unsigned char data[sizeof(QStringPrivate)]; } textStorage;
     mutable PropertyKey identifier;
     mutable uint subtype;
     mutable uint stringHash;
