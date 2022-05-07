@@ -26,6 +26,8 @@ target_sources(tst_baseline_controls
         ${test_data}
 )
 
+add_dependencies(tst_baseline_controls qmlscenegrabber)
+
 set_source_files_properties(${test_data}
     PROPERTIES
         HEADER_FILE_ONLY ON
