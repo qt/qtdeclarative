@@ -23,7 +23,13 @@ ci b2qt 32bit
 # QTBUG-103099
 [canvas::test_save]
 android
+[canvas::test_loadImage]
+android
 [fillRect::test_fillRect]
+android
+[line::test_default]
+android
+[canvas::cleanupTestCase]
 android
 
 # QTBUG-100991
