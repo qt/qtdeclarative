@@ -56,12 +56,22 @@ QQuickPlatformTheme::QQuickPlatformTheme(QObject *parent) :
 
 QVariant QQuickPlatformTheme::themeHint(QPlatformTheme::ThemeHint themeHint) const
 {
+    return getThemeHint(themeHint);
+}
+
+/*!
+    \internal
+
+    This is static to allow us to call it from C++, as we're only available as a singleton in QML.
+*/
+QVariant QQuickPlatformTheme::getThemeHint(QPlatformTheme::ThemeHint themeHint)
+{
     // Allow tests to force some theme hint values, otherwise they get very messy and difficult to understand.
     switch (themeHint) {
     case QPlatformTheme::ShowDirectoriesFirst: {
         const QVariant showDirsFirst = qEnvironmentVariable("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST");
         if (showDirsFirst.isValid() && showDirsFirst.canConvert<bool>())
-            return showDirsFirst;
+            return showDirsFirst.toBool();
         break;
     }
     default:

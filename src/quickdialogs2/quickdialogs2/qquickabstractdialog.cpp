@@ -469,11 +469,22 @@ bool QQuickAbstractDialog::useNativeDialog() const
     return true;
 }
 
+/*!
+    \internal
+
+    Called at the end of \l create().
+*/
 void QQuickAbstractDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);
 }
 
+/*!
+    \internal
+
+    Called by \l open(), after the call to \l create() and before
+    the handle/helper's \c show function is called.
+*/
 void QQuickAbstractDialog::onShow(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);

@@ -72,6 +72,8 @@ public:
     explicit QQuickPlatformTheme(QObject *parent = nullptr);
 
     Q_INVOKABLE QVariant themeHint(QPlatformTheme::ThemeHint themeHint) const;
+
+    static QVariant getThemeHint(QPlatformTheme::ThemeHint themeHint);
 };
 
 QT_END_NAMESPACE

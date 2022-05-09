@@ -64,7 +64,7 @@ class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickFileDialog : public QQuickAbstractDia
 {
     Q_OBJECT
     Q_PROPERTY(FileMode fileMode READ fileMode WRITE setFileMode NOTIFY fileModeChanged FINAL)
-    Q_PROPERTY(QUrl selectedFile READ selectedFile NOTIFY selectedFileChanged FINAL)
+    Q_PROPERTY(QUrl selectedFile READ selectedFile WRITE setSelectedFile NOTIFY selectedFileChanged FINAL)
     Q_PROPERTY(QList<QUrl> selectedFiles READ selectedFiles NOTIFY selectedFilesChanged FINAL)
     Q_PROPERTY(QUrl currentFile READ currentFile WRITE setCurrentFile NOTIFY currentFileChanged FINAL)
     Q_PROPERTY(QList<QUrl> currentFiles READ currentFiles WRITE setCurrentFiles NOTIFY currentFilesChanged FINAL)
@@ -94,6 +94,7 @@ public:
     void setFileMode(FileMode fileMode);
 
     QUrl selectedFile() const;
+    void setSelectedFile(const QUrl &selectedFile);
 
     QList<QUrl> selectedFiles() const;
 
