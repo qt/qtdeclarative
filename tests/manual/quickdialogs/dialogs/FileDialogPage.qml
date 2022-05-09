@@ -273,7 +273,6 @@ ColumnLayout {
                 TextField {
                     id: selectedFileTextField
                     text: fileDialog.selectedFile
-                    readOnly: true
                     selectByMouse: true
 
                     Layout.fillWidth: true
@@ -352,6 +351,7 @@ ColumnLayout {
                 | hideNameFilterDetailsCheckBox.fileOption
             nameFilters: nameFiltersTextField.text.split(",")
             rejectLabel: rejectLabelTextField.text
+            selectedFile: selectedFileTextField.text
         }
     }
 }

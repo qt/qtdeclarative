@@ -158,9 +158,11 @@ void QQuickFileDialog::setFileMode(FileMode mode)
 
 /*!
     \qmlproperty url QtQuick.Dialogs::FileDialog::selectedFile
-    \readonly
 
     This property holds the last file that was selected in the dialog.
+
+    It can be set to control the file that is selected when the dialog is
+    opened.
 
     If there are multiple selected files, this property refers to the first
     file.
@@ -174,6 +176,11 @@ void QQuickFileDialog::setFileMode(FileMode mode)
 QUrl QQuickFileDialog::selectedFile() const
 {
     return addDefaultSuffix(m_selectedFiles.value(0));
+}
+
+void QQuickFileDialog::setSelectedFile(const QUrl &selectedFile)
+{
+    setSelectedFiles({ selectedFile });
 }
 
 /*!
@@ -194,11 +201,14 @@ QList<QUrl> QQuickFileDialog::selectedFiles() const
 
 void QQuickFileDialog::setSelectedFiles(const QList<QUrl> &selectedFiles)
 {
+    qCDebug(lcFileDialog) << "setSelectedFiles called with" << selectedFiles;
     if (m_selectedFiles == selectedFiles)
         return;
 
-    bool firstChanged = m_selectedFiles.value(0) != selectedFiles.value(0);
+    const auto newFirstSelectedFile = selectedFiles.value(0);
+    const bool firstChanged = m_selectedFiles.value(0) != newFirstSelectedFile;
     m_selectedFiles = selectedFiles;
+    m_options->setInitiallySelectedFiles(m_selectedFiles);
     if (firstChanged) {
         emit selectedFileChanged();
         emit currentFileChanged();
@@ -534,9 +544,14 @@ void QQuickFileDialog::onCreate(QPlatformDialogHelper *dialog)
         connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickFileDialog::currentFolderChanged);
         fileDialog->setOptions(m_options);
 
-        // Need to call this manually once on creation because QPlatformFileDialogHelper::currentChanged
-        // has already been emitted by this point (because of QQuickFileDialogImplPrivate::updateSelectedFile).
-        setSelectedFiles(fileDialog->selectedFiles());
+        // If the user didn't set an initial selectedFile, ensure that we are synced
+        // with the underlying dialog in case it has set an initially selected file
+        // (as QQuickFileDialogImplPrivate::updateSelectedFile does).
+        if (m_options->initiallySelectedFiles().isEmpty()) {
+            const auto selectedFiles = fileDialog->selectedFiles();
+            if (!selectedFiles.isEmpty())
+                setSelectedFiles(selectedFiles);
+        }
     }
 }
 
@@ -556,10 +571,18 @@ void QQuickFileDialog::onShow(QPlatformDialogHelper *dialog)
         connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickFileNameFilter::update);
         fileDialog->selectNameFilter(filter);
 
-        const QUrl initialDir = m_options->initialDirectory();
-        // If it's not valid, or it's a file and not a directory, we shouldn't set it.
-        if (m_firstShow && initialDir.isValid() && QDir(QQmlFile::urlToLocalFileOrQrc(initialDir)).exists())
-            fileDialog->setDirectory(m_options->initialDirectory());
+        // If both selectedFile and currentFolder are set, prefer the former.
+        if (!m_options->initiallySelectedFiles().isEmpty()) {
+            // The user set an initial selectedFile.
+            const QUrl selectedFile = m_options->initiallySelectedFiles().first();
+            fileDialog->selectFile(selectedFile);
+        } else {
+            // The user set an initial currentFolder.
+            const QUrl initialDir = m_options->initialDirectory();
+            // If it's not valid, or it's a file and not a directory, we shouldn't set it.
+            if (m_firstShow && initialDir.isValid() && QDir(QQmlFile::urlToLocalFileOrQrc(initialDir)).exists())
+                fileDialog->setDirectory(m_options->initialDirectory());
+        }
     }
     QQuickAbstractDialog::onShow(dialog);
 }

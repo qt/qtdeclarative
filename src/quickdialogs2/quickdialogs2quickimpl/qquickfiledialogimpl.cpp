@@ -43,19 +43,24 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
-#include <QtQuickDialogs2Utils/private/qquickfilenamefilter_p.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopupitem_p_p.h>
+#include <QtQuickControls2Impl/private/qquickplatformtheme_p.h>
+#include <QtQuickDialogs2Utils/private/qquickfilenamefilter_p.h>
+
 #include "qquickfiledialogdelegate_p.h"
 #include "qquickfolderbreadcrumbbar_p.h"
 
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcCurrentFolder, "qt.quick.dialogs.quickfiledialogimpl.currentFolder")
+Q_LOGGING_CATEGORY(lcSelectedFile, "qt.quick.dialogs.quickfiledialogimpl.selectedFile")
 Q_LOGGING_CATEGORY(lcUpdateSelectedFile, "qt.quick.dialogs.quickfiledialogimpl.updateSelectedFile")
 Q_LOGGING_CATEGORY(lcOptions, "qt.quick.dialogs.quickfiledialogimpl.options")
 Q_LOGGING_CATEGORY(lcNameFilters, "qt.quick.dialogs.quickfiledialogimpl.namefilters")
 Q_LOGGING_CATEGORY(lcAttachedNameFilters, "qt.quick.dialogs.quickfiledialogimplattached.namefilters")
+Q_LOGGING_CATEGORY(lcAttachedCurrentIndex, "qt.quick.dialogs.quickfiledialogimplattached.currentIndex")
 
 QQuickFileDialogImplPrivate::QQuickFileDialogImplPrivate()
 {
@@ -102,10 +107,14 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
     if (!attached || !attached->fileDialogListView())
         return;
 
+    qCDebug(lcUpdateSelectedFile) << "updateSelectedFile called with oldFolderPath" << oldFolderPath;
+
     QString newSelectedFilePath;
-    int newSelectedFileIndex = 0;
+    int newSelectedFileIndex = -1;
     const QString newFolderPath = QQmlFile::urlToLocalFileOrQrc(currentFolder);
     if (!oldFolderPath.isEmpty() && !newFolderPath.isEmpty()) {
+        // TODO: Add another platform theme hint for this behavior too, as e.g. macOS
+        // doesn't do it this way.
         // If the user went up a directory (or several), we should set
         // selectedFile to be the directory that we were in (or
         // its closest ancestor that is a child of the new directory).
@@ -142,29 +151,68 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
         // so we can't use that. QQuickFolderListModel uses threads to fetch its data,
         // so should be considered asynchronous. We might be able to use it, but it would
         // complicate the code even more...
-        QDir newFolderDir(newFolderPath);
+        const QDir newFolderDir(newFolderPath);
         if (newFolderDir.exists()) {
-            const QFileInfoList files = newFolderDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, QDir::DirsFirst);
-            if (!files.isEmpty())
+            const QFileInfoList files = fileList(newFolderDir);
+            if (!files.isEmpty()) {
                 newSelectedFilePath = files.first().absoluteFilePath();
+                newSelectedFileIndex = 0;
+            }
         }
     }
 
     const QUrl newSelectedFileUrl = QUrl::fromLocalFile(newSelectedFilePath);
     qCDebug(lcUpdateSelectedFile) << "updateSelectedFile is setting selectedFile to" << newSelectedFileUrl;
     q->setSelectedFile(newSelectedFileUrl);
-    if (!newSelectedFilePath.isEmpty()) {
-        {
-            // Set the appropriate currentIndex for the selected file. We block signals from ListView
-            // because we don't want fileDialogListViewCurrentIndexChanged to be called, as the file
-            // it gets from the delegate will not be up-to-date (but most importantly because we already
-            // just set the selected file).
-            QSignalBlocker blocker(attached->fileDialogListView());
-            attached->fileDialogListView()->setCurrentIndex(newSelectedFileIndex);
-        }
-        if (QQuickItem *currentItem = attached->fileDialogListView()->currentItem())
-            currentItem->forceActiveFocus();
-    }
+    updateFileDialogListViewCurrentIndex(newSelectedFileIndex);
+}
+
+QFileInfoList QQuickFileDialogImplPrivate::fileList(const QDir &dir)
+{
+    QDir::SortFlags sortFlags = QDir::NoSort;
+    if (QQuickPlatformTheme::getThemeHint(QPlatformTheme::ShowDirectoriesFirst).toBool())
+        sortFlags = QDir::DirsFirst;
+    return dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, sortFlags);
+}
+
+/*!
+    \internal
+
+    Returns the index of \a filePath if the contents of \a dir were displayed
+    in fileDialogListView.
+*/
+int QQuickFileDialogImplPrivate::indexOfFileInFileDialogListView(const QString &filePath) const
+{
+    const QFileInfo newSelectedFileInfo(filePath);
+    const QFileInfoList dirs = fileList(newSelectedFileInfo.absoluteDir());
+    return dirs.indexOf(newSelectedFileInfo);
+}
+
+/*!
+    \internal
+
+    Sets the currentIndex of fileDialogListView to \a newCurrentIndex and gives
+    focus to the current item.
+*/
+void QQuickFileDialogImplPrivate::updateFileDialogListViewCurrentIndex(int newCurrentIndex)
+{
+    qCDebug(lcSelectedFile) << "updateFileDialogListViewCurrentIndex called with newCurrentIndex" << newCurrentIndex;
+    QQuickFileDialogImplAttached *attached = attachedOrWarn();
+    Q_ASSERT(attached);
+    Q_ASSERT(attached->fileDialogListView());
+
+    // We were likely trying to set an index for a file that the ListView hadn't loaded yet.
+    // For now we just select the first item, but this needs to be fixed properly: QTBUG-103547
+    if (newCurrentIndex >= attached->fileDialogListView()->count())
+        newCurrentIndex = 0;
+
+    // We block signals from ListView because we don't want fileDialogListViewCurrentIndexChanged
+    // to be called, as the file it gets from the delegate will not be up-to-date (but most
+    // importantly because we already just set the selected file).
+    QSignalBlocker blocker(attached->fileDialogListView());
+    attached->fileDialogListView()->setCurrentIndex(newCurrentIndex);
+    if (QQuickItem *currentItem = attached->fileDialogListView()->currentItem())
+        currentItem->forceActiveFocus();
 }
 
 void QQuickFileDialogImplPrivate::handleAccept()
@@ -208,7 +256,7 @@ QUrl QQuickFileDialogImpl::currentFolder() const
     return d->currentFolder;
 }
 
-void QQuickFileDialogImpl::setCurrentFolder(const QUrl &currentFolder)
+void QQuickFileDialogImpl::setCurrentFolder(const QUrl &currentFolder, SetReason setReason)
 {
     qCDebug(lcCurrentFolder) << "setCurrentFolder called with" << currentFolder;
     Q_D(QQuickFileDialogImpl);
@@ -218,8 +266,12 @@ void QQuickFileDialogImpl::setCurrentFolder(const QUrl &currentFolder)
     const QString oldFolderPath = QQmlFile::urlToLocalFileOrQrc(d->currentFolder);
 
     d->currentFolder = currentFolder;
-    // Since the directory changed, the old file can no longer be selected.
-    d->updateSelectedFile(oldFolderPath);
+    // Don't update the selectedFile if it's an Internal set, as that
+    // means that the user just set selectedFile, and we're being called as a result of that.
+    if (setReason == SetReason::External) {
+        // Since the directory changed, the old file can no longer be selected.
+        d->updateSelectedFile(oldFolderPath);
+    }
     emit currentFolderChanged(d->currentFolder);
 }
 
@@ -229,8 +281,16 @@ QUrl QQuickFileDialogImpl::selectedFile() const
     return d->selectedFile;
 }
 
+/*!
+    \internal
+
+    This is mostly called as a result of user interaction, but is also
+    called (indirectly) by QQuickFileDialog::onShow when the user set an initial
+    selectedFile.
+*/
 void QQuickFileDialogImpl::setSelectedFile(const QUrl &selectedFile)
 {
+    qCDebug(lcSelectedFile) << "setSelectedFile called with" << selectedFile;
     Q_D(QQuickFileDialogImpl);
     if (selectedFile == d->selectedFile)
         return;
@@ -238,6 +298,13 @@ void QQuickFileDialogImpl::setSelectedFile(const QUrl &selectedFile)
     d->selectedFile = selectedFile;
     d->updateEnabled();
     emit selectedFileChanged(d->selectedFile);
+}
+
+void QQuickFileDialogImpl::setInitialSelectedFile(const QUrl &file)
+{
+    Q_D(QQuickFileDialogImpl);
+    setSelectedFile(file);
+    d->setCurrentIndexToInitiallySelectedFile = true;
 }
 
 QSharedPointer<QFileDialogOptions> QQuickFileDialogImpl::options() const
@@ -425,7 +492,27 @@ void QQuickFileDialogImplAttachedPrivate::fileDialogListViewCurrentIndexChanged(
     if (!fileDialogDelegate)
         return;
 
-    fileDialogImpl->setSelectedFile(fileDialogDelegate->file());
+    const QQuickItemViewPrivate::MovementReason moveReason = QQuickItemViewPrivate::get(fileDialogListView)->moveReason;
+    qCDebug(lcAttachedCurrentIndex).nospace() << "fileDialogListView currentIndex changed to " << fileDialogListView->currentIndex()
+        << " with moveReason " << moveReason
+        << "; the file at that index is " << fileDialogDelegate->file();
+
+    // Only update selectedFile if the currentIndex changed as a result of user interaction;
+    // things like model changes (i.e. QQuickItemViewPrivate::applyModelChanges() calling
+    // QQuickItemViewPrivate::updateCurrent as a result of us changing the directory on the FolderListModel)
+    // shouldn't cause the selectedFile to change.
+    auto fileDialogImplPrivate = QQuickFileDialogImplPrivate::get(fileDialogImpl);
+    if (moveReason != QQuickItemViewPrivate::Other) {
+        fileDialogImpl->setSelectedFile(fileDialogDelegate->file());
+    } else if (fileDialogImplPrivate->setCurrentIndexToInitiallySelectedFile) {
+        // When setting selectedFile before opening the FileDialog,
+        // we need to ensure that the currentIndex is correct, because the initial change
+        // in directory will cause the underyling FolderListModel to change its folder property,
+        // which in turn resets the fileDialogListView's currentIndex to 0.
+        fileDialogImplPrivate->updateFileDialogListViewCurrentIndex(
+            fileDialogImplPrivate->indexOfFileInFileDialogListView(fileDialogImplPrivate->selectedFile.toLocalFile()));
+        fileDialogImplPrivate->setCurrentIndexToInitiallySelectedFile = false;
+    }
 }
 
 QQuickFileDialogImplAttached::QQuickFileDialogImplAttached(QObject *parent)

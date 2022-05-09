@@ -85,11 +85,19 @@ public:
 
     static QQuickFileDialogImplAttached *qmlAttachedProperties(QObject *object);
 
+    enum class SetReason {
+        // Either user interaction or e.g. a change in ListView's currentIndex after changing its model.
+        External,
+        // As a result of the user setting an initial selectedFile.
+        Internal
+    };
+
     QUrl currentFolder() const;
-    void setCurrentFolder(const QUrl &currentFolder);
+    void setCurrentFolder(const QUrl &currentFolder, SetReason setReason = SetReason::External);
 
     QUrl selectedFile() const;
     void setSelectedFile(const QUrl &file);
+    void setInitialSelectedFile(const QUrl &file);
 
     QSharedPointer<QFileDialogOptions> options() const;
     void setOptions(const QSharedPointer<QFileDialogOptions> &options);

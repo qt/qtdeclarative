@@ -34,6 +34,7 @@ qt_internal_add_qml_module(QuickDialogs2
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickControls2Impl
         Qt::QuickDialogs2Utils
         Qt::QuickDialogs2UtilsPrivate
         Qt::QuickDialogs2QuickImpl

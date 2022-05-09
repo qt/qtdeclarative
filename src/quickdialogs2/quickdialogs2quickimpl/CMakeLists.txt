@@ -97,6 +97,7 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::QuickPrivate
         Qt::QuickTemplates2
         Qt::QuickTemplates2Private
+        Qt::QuickControls2ImplPrivate
         Qt::QuickDialogs2Utils
         Qt::QuickDialogs2UtilsPrivate
     PUBLIC_LIBRARIES

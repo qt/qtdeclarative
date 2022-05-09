@@ -79,6 +79,9 @@ public:
 
     void updateEnabled();
     void updateSelectedFile(const QString &oldFolderPath);
+    static QFileInfoList fileList(const QDir &dir);
+    int indexOfFileInFileDialogListView(const QString &filePath) const;
+    void updateFileDialogListViewCurrentIndex(int newCurrentIndex);
 
     void handleAccept() override;
     void handleClick(QQuickAbstractButton *button) override;
@@ -90,6 +93,7 @@ public:
     mutable QQuickFileNameFilter *selectedNameFilter = nullptr;
     QString acceptLabel;
     QString rejectLabel;
+    bool setCurrentIndexToInitiallySelectedFile = false;
 };
 
 class QQuickFileDialogImplAttachedPrivate : public QObjectPrivate
