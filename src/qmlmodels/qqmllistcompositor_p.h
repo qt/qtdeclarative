@@ -116,7 +116,7 @@ public:
     class Q_AUTOTEST_EXPORT iterator
     {
     public:
-        inline iterator();
+        inline iterator() = default;
         inline iterator(Range *range, int offset, Group group, int groupCount);
 
         bool operator ==(const iterator &it) const { return range == it.range && offset == it.offset; }
@@ -146,14 +146,17 @@ public:
         Range *range = nullptr;
         int offset = 0;
         Group group = Default;
-        int groupFlag;
+        int groupFlag = 0;
         int groupCount = 0;
-        union {
-            struct {
-                int cacheIndex;
-            };
-            int index[MaximumGroupCount];
-        };
+        int index[MaximumGroupCount] = { 0 };
+
+        int cacheIndex() const {
+            return index[Cache];
+        }
+
+        void setCacheIndex(int cacheIndex) {
+            index[Cache] = cacheIndex;
+        }
     };
 
     class Q_AUTOTEST_EXPORT insert_iterator : public iterator
@@ -169,17 +172,20 @@ public:
 
     struct Change
     {
-        inline Change() {}
+        inline Change() = default;
         inline Change(const iterator &it, int count, uint flags, int moveId = -1);
-        int count;
-        uint flags;
-        int moveId;
-        union {
-            struct {
-                int cacheIndex;
-            };
-            int index[MaximumGroupCount];
-        };
+        int count = 0;
+        uint flags = 0;
+        int moveId = 0;
+        int index[MaximumGroupCount] = { 0 };
+
+        int cacheIndex() const {
+            return index[Cache];
+        }
+
+        void setCacheIndex(int cacheIndex) {
+            index[Cache] = cacheIndex;
+        }
 
         inline bool isMove() const { return moveId >= 0; }
         inline bool inCache() const { return flags & CacheFlag; }
@@ -305,8 +311,6 @@ private:
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Change, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Remove, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Insert, Q_PRIMITIVE_TYPE);
-
-inline QQmlListCompositor::iterator::iterator() {}
 
 inline QQmlListCompositor::iterator::iterator(
         Range *range, int offset, Group group, int groupCount)

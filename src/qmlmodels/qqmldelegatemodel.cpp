@@ -670,7 +670,7 @@ void QQmlDelegateModel::cancel(int index)
     }
 
     Compositor::iterator it = d->m_compositor.find(d->m_compositorGroup, index);
-    QQmlDelegateModelItem *cacheItem = it->inCache() ? d->m_cache.at(it.cacheIndex) : 0;
+    QQmlDelegateModelItem *cacheItem = it->inCache() ? d->m_cache.at(it.cacheIndex()) : 0;
     if (cacheItem) {
         if (cacheItem->incubationTask && !cacheItem->isObjectReferenced()) {
             d->releaseIncubator(cacheItem->incubationTask);
@@ -688,8 +688,9 @@ void QQmlDelegateModel::cancel(int index)
             cacheItem->scriptRef -= 1;
         }
         if (!cacheItem->isReferenced()) {
-            d->m_compositor.clearFlags(Compositor::Cache, it.cacheIndex, 1, Compositor::CacheFlag);
-            d->m_cache.removeAt(it.cacheIndex);
+            d->m_compositor.clearFlags(
+                        Compositor::Cache, it.cacheIndex(), 1, Compositor::CacheFlag);
+            d->m_cache.removeAt(it.cacheIndex());
             delete cacheItem;
             Q_ASSERT(d->m_cache.count() == d->m_compositor.count(Compositor::Cache));
         }
@@ -1142,7 +1143,7 @@ QQmlComponent *QQmlDelegateModelPrivate::resolveDelegate(int index)
 
 void QQmlDelegateModelPrivate::addCacheItem(QQmlDelegateModelItem *item, Compositor::iterator it)
 {
-    m_cache.insert(it.cacheIndex, item);
+    m_cache.insert(it.cacheIndex(), item);
     m_compositor.setFlags(it, 1, Compositor::CacheFlag);
     Q_ASSERT(m_cache.count() == m_compositor.count(Compositor::Cache));
 }
@@ -1231,7 +1232,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
     const auto flags = it->flags;
     const auto modelIndex = it.modelIndex();
 
-    QQmlDelegateModelItem *cacheItem = it->inCache() ? m_cache.at(it.cacheIndex) : 0;
+    QQmlDelegateModelItem *cacheItem = it->inCache() ? m_cache.at(it.cacheIndex()) : 0;
 
     if (!cacheItem || !cacheItem->delegate) {
         QQmlComponent *delegate = resolveDelegate(modelIndex);
@@ -1358,7 +1359,7 @@ QQmlIncubator::Status QQmlDelegateModel::incubationStatus(int index)
     if (!it->inCache())
         return QQmlIncubator::Null;
 
-    if (auto incubationTask = d->m_cache.at(it.cacheIndex)->incubationTask)
+    if (auto incubationTask = d->m_cache.at(it.cacheIndex())->incubationTask)
         return incubationTask->status();
 
     return QQmlIncubator::Ready;
@@ -1512,7 +1513,7 @@ void QQmlDelegateModelPrivate::itemsInserted(
         inserted[i] = 0;
 
     for (const Compositor::Insert &insert : inserts) {
-        for (; cacheIndex < insert.cacheIndex; ++cacheIndex)
+        for (; cacheIndex < insert.cacheIndex(); ++cacheIndex)
             incrementIndexes(m_cache.at(cacheIndex), m_groupCount, inserted);
 
         for (int i = 1; i < m_groupCount; ++i) {
@@ -1529,10 +1530,12 @@ void QQmlDelegateModelPrivate::itemsInserted(
         if (movedItems && insert.isMove()) {
             QList<QQmlDelegateModelItem *> items = movedItems->take(insert.moveId);
             Q_ASSERT(items.count() == insert.count);
-            m_cache = m_cache.mid(0, insert.cacheIndex) + items + m_cache.mid(insert.cacheIndex);
+            m_cache = m_cache.mid(0, insert.cacheIndex())
+                    + items + m_cache.mid(insert.cacheIndex());
         }
         if (insert.inGroup()) {
-            for (int offset = 0; cacheIndex < insert.cacheIndex + insert.count; ++cacheIndex, ++offset) {
+            for (int offset = 0; cacheIndex < insert.cacheIndex() + insert.count;
+                 ++cacheIndex, ++offset) {
                 QQmlDelegateModelItem *cacheItem = m_cache.at(cacheIndex);
                 cacheItem->groups |= insert.flags & Compositor::GroupMask;
 
@@ -1550,7 +1553,7 @@ void QQmlDelegateModelPrivate::itemsInserted(
                 }
             }
         } else {
-            cacheIndex = insert.cacheIndex + insert.count;
+            cacheIndex = insert.cacheIndex() + insert.count;
         }
     }
     for (const QList<QQmlDelegateModelItem *> cache = m_cache; cacheIndex < cache.count(); ++cacheIndex)
@@ -1620,7 +1623,7 @@ void QQmlDelegateModelPrivate::itemsRemoved(
         removed[i] = 0;
 
     for (const Compositor::Remove &remove : removes) {
-        for (; cacheIndex < remove.cacheIndex && cacheIndex < m_cache.size(); ++cacheIndex)
+        for (; cacheIndex < remove.cacheIndex() && cacheIndex < m_cache.size(); ++cacheIndex)
             incrementIndexes(m_cache.at(cacheIndex), m_groupCount, removed);
 
         for (int i = 1; i < m_groupCount; ++i) {
@@ -1635,12 +1638,12 @@ void QQmlDelegateModelPrivate::itemsRemoved(
             continue;
 
         if (movedItems && remove.isMove()) {
-            movedItems->insert(remove.moveId, m_cache.mid(remove.cacheIndex, remove.count));
-            QList<QQmlDelegateModelItem *>::iterator begin = m_cache.begin() + remove.cacheIndex;
+            movedItems->insert(remove.moveId, m_cache.mid(remove.cacheIndex(), remove.count));
+            QList<QQmlDelegateModelItem *>::iterator begin = m_cache.begin() + remove.cacheIndex();
             QList<QQmlDelegateModelItem *>::iterator end = begin + remove.count;
             m_cache.erase(begin, end);
         } else {
-            for (; cacheIndex < remove.cacheIndex + remove.count - removedCache; ++cacheIndex) {
+            for (; cacheIndex < remove.cacheIndex() + remove.count - removedCache; ++cacheIndex) {
                 QQmlDelegateModelItem *cacheItem = m_cache.at(cacheIndex);
                 if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0 && cacheItem->object) {
                     QObject *object = cacheItem->object;
@@ -2084,7 +2087,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     // Must be before the new object is inserted into the cache or its indexes will be adjusted too.
     itemsInserted(QVector<Compositor::Insert>(1, Compositor::Insert(before, 1, cacheItem->groups & ~Compositor::CacheFlag)));
 
-    m_cache.insert(before.cacheIndex, cacheItem);
+    m_cache.insert(before.cacheIndex(), cacheItem);
     m_compositor.insert(before, nullptr, 0, 1, cacheItem->groups);
 
     return true;
@@ -2982,7 +2985,7 @@ QJSValue QQmlDelegateModelGroup::get(int index)
 
     Compositor::iterator it = model->m_compositor.find(d->group, index);
     QQmlDelegateModelItem *cacheItem = it->inCache()
-            ? model->m_cache.at(it.cacheIndex)
+            ? model->m_cache.at(it.cacheIndex())
             : 0;
 
     if (!cacheItem) {
@@ -2992,7 +2995,7 @@ QJSValue QQmlDelegateModelGroup::get(int index)
             return QJSValue();
         cacheItem->groups = it->flags;
 
-        model->m_cache.insert(it.cacheIndex, cacheItem);
+        model->m_cache.insert(it.cacheIndex(), cacheItem);
         model->m_compositor.setFlags(it, 1, Compositor::CacheFlag);
     }
 
@@ -3163,7 +3166,7 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
         Compositor::iterator it = model->m_compositor.find(group, index);
         model->m_compositor.setFlags(it, 1, d->group, Compositor::PersistedFlag, &inserts);
         model->itemsInserted(inserts);
-        model->m_cache.at(it.cacheIndex)->releaseObject();
+        model->m_cache.at(it.cacheIndex())->releaseObject();
     }
 
     args->setReturnValue(QV4::QObjectWrapper::wrap(args->v4engine(), object));
@@ -3242,10 +3245,10 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
     const int resolvedIndex = toIt.modelIndex();
     void * const resolvedList = toIt->list;
 
-    QQmlDelegateModelItem *cacheItem = model->m_cache.at(fromIt.cacheIndex);
+    QQmlDelegateModelItem *cacheItem = model->m_cache.at(fromIt.cacheIndex());
     cacheItem->groups &= ~Compositor::UnresolvedFlag;
 
-    if (toIt.cacheIndex > fromIt.cacheIndex)
+    if (toIt.cacheIndex() > fromIt.cacheIndex())
         toIt.decrementIndexes(1, unresolvedFlags);
     if (!toIt->inGroup(fromGroup) || toIt.index[fromGroup] > from)
         from += 1;
@@ -3262,14 +3265,17 @@ void QQmlDelegateModelGroup::resolve(QQmlV4Function *args)
     model->m_compositor.clearFlags(fromGroup, from, 1, unresolvedFlags);
 
     if (resolvedFlags & Compositor::CacheFlag)
-        model->m_compositor.insert(Compositor::Cache, toIt.cacheIndex, resolvedList, resolvedIndex, 1, Compositor::CacheFlag);
+        model->m_compositor.insert(
+                    Compositor::Cache, toIt.cacheIndex(), resolvedList,
+                    resolvedIndex, 1, Compositor::CacheFlag);
 
     Q_ASSERT(model->m_cache.count() == model->m_compositor.count(Compositor::Cache));
 
     if (!cacheItem->isReferenced()) {
-        Q_ASSERT(toIt.cacheIndex == model->m_cache.indexOf(cacheItem));
-        model->m_cache.removeAt(toIt.cacheIndex);
-        model->m_compositor.clearFlags(Compositor::Cache, toIt.cacheIndex, 1, Compositor::CacheFlag);
+        Q_ASSERT(toIt.cacheIndex() == model->m_cache.indexOf(cacheItem));
+        model->m_cache.removeAt(toIt.cacheIndex());
+        model->m_compositor.clearFlags(
+                    Compositor::Cache, toIt.cacheIndex(), 1, Compositor::CacheFlag);
         delete cacheItem;
         Q_ASSERT(model->m_cache.count() == model->m_compositor.count(Compositor::Cache));
     } else {
@@ -3709,7 +3715,7 @@ QQmlIncubator::Status QQmlPartsModel::incubationStatus(int index)
     if (!it->inCache())
         return QQmlIncubator::Null;
 
-    if (auto incubationTask = model->m_cache.at(it.cacheIndex)->incubationTask)
+    if (auto incubationTask = model->m_cache.at(it.cacheIndex())->incubationTask)
         return incubationTask->status();
 
     return QQmlIncubator::Ready;
