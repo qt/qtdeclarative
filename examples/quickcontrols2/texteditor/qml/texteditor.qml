@@ -210,7 +210,7 @@ ApplicationWindow {
         nameFilters: openDialog.nameFilters
         selectedNameFilter.index: document.fileType === "txt" ? 0 : 1
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        onAccepted: document.saveAs(file)
+        onAccepted: document.saveAs(selectedFile)
     }
 
     FontDialog {
@@ -225,16 +225,17 @@ ApplicationWindow {
         currentColor: "black"
     }
 
-    Platform.MessageDialog {
+    MessageDialog {
+        title: qsTr("Error")
         id: errorDialog
     }
 
-    Platform.MessageDialog {
+    MessageDialog {
         id : quitDialog
         title: qsTr("Quit?")
         text: qsTr("The file has been modified. Quit anyway?")
-        buttons: (Platform.MessageDialog.Yes | Platform.MessageDialog.No)
-        onYesClicked: Qt.quit()
+        buttons: MessageDialog.Yes | MessageDialog.No
+        onButtonClicked: function (button, role) { if (role === MessageDialog.YesRole) Qt.quit() }
     }
 
     header: ToolBar {
@@ -435,7 +436,7 @@ ApplicationWindow {
         }
         onError: function (message) {
             errorDialog.text = message
-            errorDialog.visible = true
+            errorDialog.open()
         }
     }
 
