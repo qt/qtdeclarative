@@ -10,7 +10,7 @@ qt_internal_add_qml_module(QmlModels
     CLASS_NAME QtQmlModelsPlugin
     SOURCES
         qqmlchangeset.cpp qqmlchangeset_p.h
-        qqmlmodelsmodule_p.h
+        qqmlmodelsmodule.cpp qqmlmodelsmodule_p.h
         qtqmlmodelsglobal.h qtqmlmodelsglobal_p.h
     DEFINES
         QT_NO_FOREACH

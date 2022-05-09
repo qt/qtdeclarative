@@ -16,7 +16,7 @@ qt_internal_add_module(QmlDomPrivate
         qqmldomattachedinfo.cpp qqmldomattachedinfo_p.h
         qqmldomcomments.cpp qqmldomcomments_p.h
         qqmldomcompare.cpp qqmldomcompare_p.h
-        qqmldomconstants_p.h
+        qqmldomconstants.cpp qqmldomconstants_p.h
         qqmldomelements.cpp qqmldomelements_p.h
         qqmldomerrormessage.cpp qqmldomerrormessage_p.h
         qqmldomexternalitems.cpp qqmldomexternalitems_p.h

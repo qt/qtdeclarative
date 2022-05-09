@@ -27,7 +27,7 @@ qt_internal_add_qml_module(QuickControls2Impl
         qquickpaddedrectangle.cpp qquickpaddedrectangle_p.h
         qquickplaceholdertext.cpp qquickplaceholdertext_p.h
         qquickplatformtheme.cpp qquickplatformtheme_p.h
-        qtquickcontrols2foreign_p.h
+        qtquickcontrols2foreign.cpp qtquickcontrols2foreign_p.h
         qtquickcontrols2implglobal_p.h
     DEFINES
         QT_NO_CAST_FROM_ASCII

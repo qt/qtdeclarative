@@ -179,7 +179,7 @@ qt_internal_add_qml_module(Quick
         util/qquickdeliveryagent.cpp util/qquickdeliveryagent_p.h util/qquickdeliveryagent_p_p.h
         util/qquickfontloader.cpp util/qquickfontloader_p.h
         util/qquickfontmetrics.cpp util/qquickfontmetrics_p.h
-        util/qquickforeignutils_p.h
+        util/qquickforeignutils.cpp util/qquickforeignutils_p.h
         util/qquickglobal.cpp
         util/qquickimageprovider.cpp util/qquickimageprovider.h util/qquickimageprovider_p.h
         util/qquickpixmapcache.cpp util/qquickpixmapcache_p.h
