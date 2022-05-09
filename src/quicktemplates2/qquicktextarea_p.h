@@ -81,6 +81,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background")
     QML_NAMED_ELEMENT(TextArea)
+    QML_ATTACHED(QQuickTextAreaAttached)
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
