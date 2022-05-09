@@ -13,7 +13,6 @@ qt_internal_add_plugin(QQmlInspectorServiceFactoryPlugin
         highlight.cpp highlight.h
         inspecttool.cpp inspecttool.h
         qqmlinspectorservice.cpp
-        qqmlinspectorservicefactory.h
         qquickwindowinspector.cpp qquickwindowinspector.h
     LIBRARIES
         Qt::Core

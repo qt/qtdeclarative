@@ -37,7 +37,9 @@
 **
 ****************************************************************************/
 
-#include "qqmlinspectorservicefactory.h"
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmldebugservicefactory_p.h>
+
 #include "globalinspector.h"
 #include "qquickwindowinspector.h"
 
@@ -135,6 +137,14 @@ void QQmlInspectorServiceImpl::messageFromClient(const QByteArray &message)
     if (QmlJSDebugger::GlobalInspector *inspector = checkInspector())
         inspector->processMessage(message);
 }
+
+class QQmlInspectorServiceFactory : public QQmlDebugServiceFactory
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServiceFactory_iid FILE "qqmlinspectorservice.json")
+public:
+    QQmlDebugService *create(const QString &key) override;
+};
 
 QQmlDebugService *QQmlInspectorServiceFactory::create(const QString &key)
 {
