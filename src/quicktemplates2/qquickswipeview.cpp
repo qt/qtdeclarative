@@ -155,11 +155,10 @@ void QQuickSwipeViewPrivate::resizeItems()
                 qmlWarning(item) << "SwipeView has detected conflicting anchors. Unable to layout the item.";
                 item->setProperty("_q_QQuickSwipeView_warned", true);
             }
-
             if (orientation == Qt::Horizontal)
-                item->setY(0);
+                item->setPosition({i * (contentItem->width() + spacing), 0});
             else
-                item->setX(0);
+                item->setPosition({0, i * (contentItem->height() + spacing)});
             item->setSize(QSizeF(contentItem->width(), contentItem->height()));
         }
     }
