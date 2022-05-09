@@ -67,12 +67,12 @@ private:
     QPointer<QPipeEndPoint> m_remoteEndPoint;
 };
 
-class QIOPipePrivate : public QObjectPrivate
+class QIOPipePrivate final : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QIOPipe)
 public:
     QIOPipePrivate();
-    ~QIOPipePrivate() final;
+    ~QIOPipePrivate();
 
     std::unique_ptr<QPipeEndPoint> end1;
     std::unique_ptr<QPipeEndPoint> end2;
