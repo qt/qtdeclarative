@@ -10,7 +10,6 @@ qt_internal_add_plugin(QLocalClientConnectionFactoryPlugin
     PLUGIN_TYPE qmltooling
     SOURCES
         qlocalclientconnection.cpp
-        qlocalclientconnectionfactory.h
     LIBRARIES
         Qt::QmlPrivate
 )

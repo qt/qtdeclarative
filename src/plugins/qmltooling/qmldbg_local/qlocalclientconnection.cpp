@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qlocalclientconnectionfactory.h"
+#include <private/qqmldebugserverconnection_p.h>
 
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qlocalsocket.h>
@@ -153,6 +153,15 @@ void QLocalClientConnection::connectionEstablished()
 {
     m_debugServer->setDevice(m_socket);
 }
+
+class QLocalClientConnectionFactory : public QQmlDebugServerConnectionFactory
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServerConnectionFactory_iid FILE "qlocalclientconnection.json")
+    Q_INTERFACES(QQmlDebugServerConnectionFactory)
+public:
+    QQmlDebugServerConnection *create(const QString &key) override;
+};
 
 QQmlDebugServerConnection *QLocalClientConnectionFactory::create(const QString &key)
 {
