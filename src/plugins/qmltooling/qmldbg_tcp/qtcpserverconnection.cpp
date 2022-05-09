@@ -37,8 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qtcpserverconnectionfactory.h"
-
+#include <private/qqmldebugserverconnection_p.h>
 #include <private/qqmldebugserver_p.h>
 
 #include <QtCore/qplugin.h>
@@ -188,6 +187,16 @@ void QTcpServerConnection::newConnection()
     m_socket->setParent(this);
     m_debugServer->setDevice(m_socket);
 }
+
+
+class QTcpServerConnectionFactory : public QQmlDebugServerConnectionFactory
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlDebugServerConnectionFactory_iid FILE "qtcpserverconnection.json")
+    Q_INTERFACES(QQmlDebugServerConnectionFactory)
+public:
+    QQmlDebugServerConnection *create(const QString &key) override;
+};
 
 QQmlDebugServerConnection *QTcpServerConnectionFactory::create(const QString &key)
 {

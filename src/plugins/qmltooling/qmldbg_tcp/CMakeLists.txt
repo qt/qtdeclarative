@@ -10,7 +10,6 @@ qt_internal_add_plugin(QTcpServerConnectionFactoryPlugin
     PLUGIN_TYPE qmltooling
     SOURCES
         qtcpserverconnection.cpp
-        qtcpserverconnectionfactory.h
     LIBRARIES
         Qt::Network
         Qt::QmlPrivate
