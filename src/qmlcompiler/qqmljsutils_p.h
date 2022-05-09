@@ -171,7 +171,8 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
                         [](const QQmlJSMetaProperty &, const QQmlJSScope::ConstPtr &) {};
     };
     static ResolvedAlias resolveAlias(const QQmlJSTypeResolver *typeResolver,
-                                      QQmlJSMetaProperty property, QQmlJSScope::ConstPtr owner,
+                                      const QQmlJSMetaProperty &property,
+                                      const QQmlJSScope::ConstPtr &owner,
                                       const AliasResolutionVisitor &visitor);
 
     template<typename QQmlJSScopePtr, typename Action>

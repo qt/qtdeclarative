@@ -39,8 +39,9 @@ using namespace Qt::StringLiterals;
     origin, which is not an alias.
 */
 QQmlJSUtils::ResolvedAlias
-QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver, QQmlJSMetaProperty property,
-                          QQmlJSScope::ConstPtr owner,
+QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver,
+                          const QQmlJSMetaProperty &property,
+                          const QQmlJSScope::ConstPtr &owner,
                           const QQmlJSUtils::AliasResolutionVisitor &visitor)
 {
     Q_ASSERT(property.isAlias());
@@ -49,43 +50,42 @@ QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver, QQmlJSMetaProp
     ResolvedAlias result {};
     result.owner = owner;
 
-    while (property.isAlias()) {
-        {
-            // this is special (seemingly useless) block which is necessary when
-            // we have an alias pointing to an alias. this way we avoid a check
-            // whether a property is an alias at the very end of the loop body
-            owner = result.owner;
-            result = ResolvedAlias {};
-        }
+    for (QQmlJSMetaProperty nextProperty = property; nextProperty.isAlias();) {
+
+        // this is a special (seemingly useless) section which is necessary when
+        // we have an alias pointing to an alias. this way we avoid a check
+        // whether a property is an alias at the very end of the loop body
+        QQmlJSScope::ConstPtr resultOwner = result.owner;
+        result = ResolvedAlias {};
+
         visitor.reset();
 
-        auto aliasExprBits = property.aliasExpression().split(u'.');
+        auto aliasExprBits = nextProperty.aliasExpression().split(u'.');
         // resolve id first:
-        owner = typeResolver->scopeForId(aliasExprBits[0], owner);
-        if (!owner)
+        resultOwner = typeResolver->scopeForId(aliasExprBits[0], resultOwner);
+        if (!resultOwner)
             return {};
 
-        visitor.processResolvedId(owner);
+        visitor.processResolvedId(resultOwner);
 
         aliasExprBits.removeFirst(); // Note: for simplicity, remove the <id>
-        result.owner = owner;
+        result.owner = resultOwner;
         result.kind = QQmlJSUtils::AliasTarget_Object;
         // reset the property to avoid endless loop when aliasExprBits is empty
-        property = QQmlJSMetaProperty {};
+        nextProperty = QQmlJSMetaProperty {};
 
-        for (qsizetype i = 0; i < aliasExprBits.size(); ++i) {
-            const QString &bit = qAsConst(aliasExprBits)[i];
-            property = owner->property(bit);
-            if (!property.isValid())
+        for (const QString &bit : qAsConst(aliasExprBits)) {
+            nextProperty = resultOwner->property(bit);
+            if (!nextProperty.isValid())
                 return {};
 
-            visitor.processResolvedProperty(property, owner);
+            visitor.processResolvedProperty(nextProperty, resultOwner);
 
-            result.property = property;
-            result.owner = owner;
+            result.property = nextProperty;
+            result.owner = resultOwner;
             result.kind = QQmlJSUtils::AliasTarget_Property;
 
-            owner = property.type();
+            resultOwner = nextProperty.type();
         }
     }
 
