@@ -158,7 +158,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4context.cpp jsruntime/qv4context_p.h
         jsruntime/qv4dataview.cpp jsruntime/qv4dataview_p.h
         jsruntime/qv4dateobject.cpp jsruntime/qv4dateobject_p.h
-        jsruntime/qv4debugging_p.h
+        jsruntime/qv4debugging.cpp jsruntime/qv4debugging_p.h
         jsruntime/qv4domerrors.cpp jsruntime/qv4domerrors_p.h
         jsruntime/qv4engine.cpp jsruntime/qv4engine_p.h
         jsruntime/qv4enginebase_p.h
