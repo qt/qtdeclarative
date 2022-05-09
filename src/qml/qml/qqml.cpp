@@ -151,6 +151,11 @@ QObject *qmlAttachedPropertiesObject(QObject *object, QQmlAttachedPropertiesFunc
 
 QObject *qmlExtendedObject(QObject *object)
 {
+    return QQmlPrivate::qmlExtendedObject(object, 0);
+}
+
+QObject *QQmlPrivate::qmlExtendedObject(QObject *object, int index)
+{
     if (!object)
         return nullptr;
 
@@ -161,8 +166,8 @@ QObject *qmlExtendedObject(QObject *object)
 
     const int id = d->metaObject->metaCall(
                 object, QMetaObject::CustomCall,
-                QQmlProxyMetaObject::ExtensionObjectId, &result);
-    if (id != QQmlProxyMetaObject::ExtensionObjectId)
+                QQmlProxyMetaObject::extensionObjectId(index), &result);
+    if (id != QQmlProxyMetaObject::extensionObjectId(index))
         return nullptr;
 
     return static_cast<QObject *>(result);

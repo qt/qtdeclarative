@@ -65,8 +65,6 @@ QT_BEGIN_NAMESPACE
 class QQmlProxyMetaObject : public QDynamicMetaObjectData
 {
 public:
-    enum { ExtensionObjectId = std::numeric_limits<int>::min() };
-
     struct ProxyData {
         typedef QObject *(*CreateFunc)(QObject *);
         QMetaObject *metaObject;
@@ -77,6 +75,13 @@ public:
 
     QQmlProxyMetaObject(QObject *, QList<ProxyData> *);
     ~QQmlProxyMetaObject();
+
+    static constexpr int extensionObjectId(int id) noexcept
+    {
+        Q_ASSERT(id >= 0);
+        Q_ASSERT(id <= MaxExtensionCount); // MaxExtensionCount is a valid index
+        return ExtensionObjectId | id;
+    }
 
 protected:
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
@@ -91,6 +96,15 @@ private:
     QDynamicMetaObjectData *parent;
     QMetaObject *metaObject;
     QObject *object;
+
+    // ExtensionObjectId acts as a flag for whether we should interpret a
+    // QMetaObject::CustomCall as a call to fetch the extension object (see
+    // QQmlProxyMetaObject::metaCall()). MaxExtensionCount is a limit on how
+    // many extensions we can query via such mechanism
+    enum : int {
+        MaxExtensionCount = 127, // magic number so that low bits are all '1'
+        ExtensionObjectId = ~MaxExtensionCount,
+    };
 };
 
 QT_END_NAMESPACE

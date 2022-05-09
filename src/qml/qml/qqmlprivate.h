@@ -1087,6 +1087,8 @@ namespace QQmlPrivate
         };
     }
 
+    Q_QML_EXPORT QObject *qmlExtendedObject(QObject *, int);
+
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE

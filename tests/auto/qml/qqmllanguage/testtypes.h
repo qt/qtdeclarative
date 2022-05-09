@@ -1851,6 +1851,35 @@ public:
     ExtendedInParentByIndirect(QObject *parent = nullptr) : ExtendedByIndirect(parent) { }
 };
 
+class MultiExtensionThreeExtensions : public MultiExtension
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(Extension)
+public:
+    MultiExtensionThreeExtensions(QObject *parent = nullptr) : MultiExtension(parent) { }
+};
+
+class MultiExtensionWithoutExtension : public MultiExtension
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+public:
+    MultiExtensionWithoutExtension(QObject *parent = nullptr) : MultiExtension(parent) { }
+};
+
+class MultiExtensionWithExtensionInBaseBase : public MultiExtensionWithoutExtension
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(Extension)
+public:
+    MultiExtensionWithExtensionInBaseBase(QObject *parent = nullptr)
+        : MultiExtensionWithoutExtension(parent)
+    {
+    }
+};
+
 class StringSignaler : public QObject
 {
     Q_OBJECT

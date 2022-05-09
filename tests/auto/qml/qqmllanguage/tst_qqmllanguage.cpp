@@ -365,6 +365,7 @@ private slots:
     void qtbug_86482();
 
     void multiExtension();
+    void multiExtensionExtra();
     void multiExtensionIndirect();
     void extensionSpecial();
     void invalidInlineComponent();
@@ -6395,6 +6396,63 @@ void tst_qqmllanguage::multiExtension()
     QCOMPARE(o->property("d").toInt(), 22);
     QCOMPARE(o->property("f").toInt(), 31);
     QCOMPARE(o->property("g").toInt(), 44); // NB: taken from the type, not from the extension!
+
+    QObject *extension = qmlExtendedObject(o.get());
+    QVERIFY(extension != nullptr);
+    QVERIFY(qobject_cast<ExtensionB *>(extension) != nullptr);
+
+    QCOMPARE(QQmlPrivate::qmlExtendedObject(o.get(), 0), extension);
+    QObject *baseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 1);
+    QVERIFY(baseTypeExtension);
+    QVERIFY(qobject_cast<ExtensionA *>(baseTypeExtension) != nullptr);
+}
+
+void tst_qqmllanguage::multiExtensionExtra()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\nMultiExtensionThreeExtensions {}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+
+        QObject *extension = qmlExtendedObject(o.get());
+        QVERIFY(extension != nullptr);
+        QVERIFY(qobject_cast<Extension *>(extension) != nullptr);
+
+        QCOMPARE(QQmlPrivate::qmlExtendedObject(o.get(), 0), extension);
+        QObject *baseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 1);
+        QVERIFY(baseTypeExtension);
+        QVERIFY(qobject_cast<ExtensionB *>(baseTypeExtension) != nullptr);
+        QObject *baseBaseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 2);
+        QVERIFY(baseBaseTypeExtension);
+        QVERIFY(qobject_cast<ExtensionA *>(baseBaseTypeExtension) != nullptr);
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\nMultiExtensionWithExtensionInBaseBase {}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+
+        QObject *extension = qmlExtendedObject(o.get());
+        QVERIFY(extension != nullptr);
+        QVERIFY(qobject_cast<Extension *>(extension) != nullptr);
+
+        QCOMPARE(QQmlPrivate::qmlExtendedObject(o.get(), 0), extension);
+
+        QObject *pseudoExtension = QQmlPrivate::qmlExtendedObject(o.get(), 1);
+        QVERIFY(pseudoExtension);
+        QVERIFY(qobject_cast<ExtensionB *>(pseudoExtension) != nullptr);
+
+        QObject *baseBaseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 2);
+        QVERIFY(baseBaseTypeExtension);
+        QVERIFY(qobject_cast<ExtensionB *>(baseBaseTypeExtension) != nullptr);
+
+        QObject *baseBaseBaseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 3);
+        QVERIFY(baseBaseBaseTypeExtension);
+        QVERIFY(qobject_cast<ExtensionA *>(baseBaseBaseTypeExtension) != nullptr);
+    }
 }
 
 void tst_qqmllanguage::multiExtensionIndirect()

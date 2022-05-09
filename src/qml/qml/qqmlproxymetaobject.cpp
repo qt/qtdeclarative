@@ -144,11 +144,15 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
 
         break;
     }
-    case QMetaObject::CustomCall:
-        if (id != ExtensionObjectId)
+    case QMetaObject::CustomCall: {
+        if ((id & ~MaxExtensionCount) != ExtensionObjectId)
             break;
-        a[0] = getProxy(0);
+        int index = id & MaxExtensionCount;
+        if (qsizetype(index) >= metaObjects->size())
+            break;
+        a[0] = getProxy(index);
         return id;
+    }
     default:
         break;
     }
