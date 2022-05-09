@@ -55,6 +55,8 @@ private slots:
     void QTBUG_92809();
     void footerUpdate();
     void singletonModelLifetime();
+    void delegateModelRefresh();
+    void noCrashOnIndexChange();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -226,6 +228,21 @@ void tst_QQuickListView2::footerUpdate()
     QTRY_COMPARE(footer->y(), 0);
 }
 
+void tst_QQuickListView2::noCrashOnIndexChange()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("noCrashOnIndexChange.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *delegateModel = qmlContext(o.data())->objectForName("displayDelegateModel");
+    QVERIFY(delegateModel);
+
+    QObject *items = qvariant_cast<QObject *>(delegateModel->property("items"));
+    QCOMPARE(items->property("name").toString(), QStringLiteral("items"));
+    QCOMPARE(items->property("count").toInt(), 4);
+}
 
 class SingletonModel : public QStringListModel
 {
@@ -244,6 +261,15 @@ void tst_QQuickListView2::singletonModelLifetime()
     QQmlApplicationEngine engine(testFile("singletonModelLifetime.qml"));
     // needs event loop iteration for callLater to execute
     QTRY_VERIFY(engine.rootObjects().first()->property("alive").toBool());
+}
+
+void tst_QQuickListView2::delegateModelRefresh()
+{
+    // Test case originates from QTBUG-100161
+    QQmlApplicationEngine engine(testFile("delegateModelRefresh.qml"));
+    QVERIFY(!engine.rootObjects().isEmpty());
+    // needs event loop iteration for callLater to execute
+    QTRY_VERIFY(engine.rootObjects().first()->property("done").toBool());
 }
 
 QTEST_MAIN(tst_QQuickListView2)

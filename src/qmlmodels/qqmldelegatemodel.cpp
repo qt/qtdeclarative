@@ -2098,8 +2098,8 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     // Must be before the new object is inserted into the cache or its indexes will be adjusted too.
     itemsInserted(QVector<Compositor::Insert>(1, Compositor::Insert(before, 1, cacheItem->groups & ~Compositor::CacheFlag)));
 
-    before = m_compositor.insert(before, nullptr, 0, 1, cacheItem->groups);
     m_cache.insert(before.cacheIndex, cacheItem);
+    m_compositor.insert(before, nullptr, 0, 1, cacheItem->groups);
 
     return true;
 }
