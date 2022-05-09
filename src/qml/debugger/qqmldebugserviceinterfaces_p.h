@@ -126,7 +126,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QV4DebugService(float version, QObject *parent = nullptr) :
+    explicit QV4DebugService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -151,7 +151,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlProfilerService(float version, QObject *parent = nullptr) :
+    explicit QQmlProfilerService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -170,7 +170,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlEngineDebugService(float version, QObject *parent = nullptr) :
+    explicit QQmlEngineDebugService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 
     QQmlBoundSignal *nextSignal(QQmlBoundSignal *prev) { return prev->m_nextSignal; }
@@ -197,7 +197,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlDebugTranslationService(float version, QObject *parent = nullptr) :
+    explicit QQmlDebugTranslationService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 
 };
@@ -218,7 +218,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlInspectorService(float version, QObject *parent = nullptr) :
+    explicit QQmlInspectorService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -235,7 +235,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QDebugMessageService(float version, QObject *parent = nullptr) :
+    explicit QDebugMessageService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -266,7 +266,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlNativeDebugService(float version, QObject *parent = nullptr)
+    explicit QQmlNativeDebugService(float version, QObject *parent = nullptr)
         : QQmlDebugService(s_key, version,  parent) {}
 };
 
