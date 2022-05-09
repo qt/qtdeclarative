@@ -3747,8 +3747,10 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 item = createItem(it.index, QQmlIncubator::Synchronous);
             if (!item)
                 return false;
-            if (it.removedAtIndex)
+            if (it.removedAtIndex) {
+                releaseItem(item, reusableFlag);
                 continue;
+            }
 
             visibleItems.insert(index, item);
             if (index == 0)
