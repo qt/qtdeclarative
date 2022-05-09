@@ -686,4 +686,34 @@ TestCase {
         var image = grabImage(control)
         compare(image.pixel(3, 3), "#ffff00")
     }
+
+    Component {
+        id: translucentPages
+        SwipeView {
+            spacing: 10
+            padding: 10
+            Text { text: "page 0" }
+            Text { text: "page 1"; font.pointSize: 16 }
+            Text { text: "page 2"; font.pointSize: 24 }
+            Text { text: "page 3"; font.pointSize: 32 }
+        }
+    }
+
+    function test_initialPositions() { // QTBUG-102487
+        const control = createTemporaryObject(translucentPages, testCase, {width: 320, height: 200})
+        verify(control)
+        compare(control.orientation, Qt.Horizontal)
+        for (var i = 0; i < control.count; ++i) {
+            const page = control.itemAt(i)
+            // control.contentItem.width + control.spacing == 310; except Imagine style has contentItem.width == 320
+            compare(page.x, i * 310)
+            compare(page.y, 0)
+        }
+        control.orientation = Qt.Vertical
+        for (var i = 0; i < control.count; ++i) {
+            const page = control.itemAt(i)
+            compare(page.y, i * (control.contentItem.height + control.spacing))
+            compare(page.x, 0)
+        }
+    }
 }
