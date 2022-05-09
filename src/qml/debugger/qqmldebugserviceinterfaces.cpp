@@ -51,6 +51,22 @@ const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger"
 #if QT_CONFIG(translation)
 const QString QQmlDebugTranslationService::s_key = QStringLiteral("DebugTranslation");
 #endif
+
+QV4DebugService::~QV4DebugService()
+    = default;
+QQmlEngineDebugService::~QQmlEngineDebugService()
+    = default;
+QQmlInspectorService::~QQmlInspectorService()
+    = default;
+QQmlProfilerService::~QQmlProfilerService()
+    = default;
+QDebugMessageService::~QDebugMessageService()
+    = default;
+QQmlEngineControlService::~QQmlEngineControlService()
+    = default;
+QQmlNativeDebugService::~QQmlNativeDebugService()
+    = default;
+
 static QQmlDebugStatesDelegate *(*statesDelegateFactory)() = nullptr;
 void QQmlEngineDebugService::setStatesDelegateFactory(QQmlDebugStatesDelegate *(*factory)())
 {
@@ -62,6 +78,10 @@ QQmlDebugStatesDelegate *QQmlEngineDebugService::createStatesDelegate()
     return statesDelegateFactory ? statesDelegateFactory() : nullptr;
 }
 
+#if QT_CONFIG(translation)
+QQmlDebugTranslationService::~QQmlDebugTranslationService()
+    = default;
+#endif
 
 QT_END_NAMESPACE
 

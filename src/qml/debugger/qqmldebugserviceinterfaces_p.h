@@ -117,6 +117,8 @@ class Q_QML_PRIVATE_EXPORT QV4DebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QV4DebugService() override;
+
     static const QString s_key;
 
     virtual void signalEmitted(const QString &signal) = 0;
@@ -133,6 +135,8 @@ class Q_QML_PRIVATE_EXPORT QQmlProfilerService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QQmlProfilerService() override;
+
     static const QString s_key;
 
     virtual void addGlobalProfiler(QQmlAbstractProfilerAdapter *profiler) = 0;
@@ -155,6 +159,8 @@ class Q_QML_PRIVATE_EXPORT QQmlEngineDebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QQmlEngineDebugService() override;
+
     static const QString s_key;
 
     virtual void objectCreated(QJSEngine *engine, QObject *object) = 0;
@@ -183,6 +189,8 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugTranslationService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QQmlDebugTranslationService() override;
+
     static const QString s_key;
 
     virtual void foundTranslationBinding(const TranslationBindingInformation &translationBindingInformation) = 0;
@@ -199,6 +207,8 @@ class Q_QML_PRIVATE_EXPORT QQmlInspectorService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QQmlInspectorService() override;
+
     static const QString s_key;
 
     virtual void addWindow(QQuickWindow *) = 0;
@@ -216,6 +226,8 @@ class Q_QML_PRIVATE_EXPORT QDebugMessageService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QDebugMessageService() override;
+
     static const QString s_key;
 
     virtual void synchronizeTime(const QElapsedTimer &otherTimer) = 0;
@@ -231,6 +243,8 @@ class Q_QML_PRIVATE_EXPORT QQmlEngineControlService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QQmlEngineControlService() override;
+
     static const QString s_key;
 
 protected:
@@ -245,6 +259,8 @@ class Q_QML_PRIVATE_EXPORT QQmlNativeDebugService : public QQmlDebugService
 {
     Q_OBJECT
 public:
+    ~QQmlNativeDebugService() override;
+
     static const QString s_key;
 
 protected:
