@@ -108,6 +108,27 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when a \a button with the specified \a role is
     clicked.
+
+    By giving this signal a handler, you can respond to any custom button being pressed.
+    The \a button argument tells which button was clicked, while the \a role argument tells the functional role of that button.
+
+    \code
+    MessageDialog {
+        id: dialog
+        text: qsTr("The document has been modified.")
+        informativeText: qsTr("Do you want to save your changes?")
+        buttons: MessageDialog.Ok | MessageDialog.Cancel
+        onButtonClicked: function (button, role) {
+            switch (button) {
+            case MessageDialog.Ok:
+                document.save()
+                break;
+            }
+        }
+    }
+    \endcode
+
+    \sa buttons
 */
 
 QQuickMessageDialog::QQuickMessageDialog(QObject *parent)
