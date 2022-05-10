@@ -1595,6 +1595,8 @@ void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
         deliverHoverEvent(lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), 0);
         qCDebug(lcHoverTrace) << q << "frame-sync hover delivery done";
     }
+#else
+    Q_UNUSED(win);
 #endif
     if (Q_UNLIKELY(QQuickDeliveryAgentPrivate::currentEventDeliveryAgent &&
                    QQuickDeliveryAgentPrivate::currentEventDeliveryAgent != q))
