@@ -55,6 +55,7 @@ import QtQuick.Controls
 Window {
     width: 400
     height: 400
+    id: root
 
     property alias drawer: drawer
     property alias backgroundButton: backgroundButton
@@ -69,7 +70,7 @@ Window {
     Drawer {
         id: drawer
         width: 100
-        height: 400
+        height: root.height
         topPadding: 2
         leftPadding: 2
         rightPadding: 2
