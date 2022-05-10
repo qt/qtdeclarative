@@ -892,7 +892,7 @@ console.log(m.toString());
             \c angle degrees about \c axis
         \li \code
 var m = Qt.matrix4x4();
-m.rotate(180,vector3d(1,0,0));
+m.rotate(180,Qt.vector3d(1,0,0));
 console.log(m.toString());
 // QMatrix4x4(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1)
             \endcode
