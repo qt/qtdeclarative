@@ -2637,27 +2637,50 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 /*!
     \qmlmethod int QtQuick::GridView::indexAt(real x, real y)
 
-    Returns the index of the visible item containing the point \a x, \a y in content
-    coordinates.  If there is no item at the point specified, or the item is
-    not visible -1 is returned.
+    Returns the index of the visible item containing the point \a x, \a y in
+    \l {QQuickFlickable::contentItem}{content item} coordinates.  If there is
+    no item at the point specified, or the item is not visible -1 is returned.
 
     If the item is outside the visible area, -1 is returned, regardless of
     whether an item will exist at that point when scrolled into view.
 
+    \note if you add a MouseArea as a child of the GridView, it will return
+    positions in GridView coordinates rather than content item coordinates.
+    To use those positions in a call to this function, you need to map them
+    first:
+
+    \code
+    GridView {
+        id: view
+        MouseArea {
+            anchors.fill: parent
+            onClicked: (mouse) => {
+                let posInGridView = Qt.point(mouse.x, mouse.y)
+                let posInContentItem = mapToItem(view.contentItem, posInGridView)
+                let index = view.indexAt(posInContentItem.x, posInContentItem.y)
+            }
+        }
+    }
+    \endcode
+
     \b Note: methods should only be called after the Component has completed.
+
+    \sa itemAt
 */
 
 /*!
     \qmlmethod Item QtQuick::GridView::itemAt(real x, real y)
 
-    Returns the visible item containing the point \a x, \a y in content
-    coordinates.  If there is no item at the point specified, or the item is
-    not visible null is returned.
+    Returns the visible item containing the point \a x, \a y in
+    \l {QQuickFlickable::contentItem}{content item} coordinates. If there
+    is no item at the point specified, or the item is not visible null is returned.
 
     If the item is outside the visible area, null is returned, regardless of
     whether an item will exist at that point when scrolled into view.
 
     \b Note: methods should only be called after the Component has completed.
+
+    \sa indexAt
 */
 
 /*!
