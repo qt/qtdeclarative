@@ -1775,3 +1775,4 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 QT_END_NAMESPACE
 
 #include "moc_qqmlcomponent.cpp"
+#include "moc_qqmlcomponentattached_p.cpp"
