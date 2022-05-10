@@ -33,6 +33,8 @@
 **
 **
 ******************************************************************************/
+#ifndef QTQUICKCONTROLS2FOREIGN_P_H
+#define QTQUICKCONTROLS2FOREIGN_P_H
 
 #include <QtQml/qqml.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
@@ -74,3 +76,5 @@ struct QQuickSplitHandleAttachedForeign
 };
 
 QT_END_NAMESPACE
+
+#endif // QTQUICKCONTROLS2FOREIGN_P_H
