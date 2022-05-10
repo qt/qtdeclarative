@@ -1841,6 +1841,7 @@ void tst_qquickstates::parentChangeInvolvingBindings()
 {
    QQmlEngine engine;
    QQmlComponent c(&engine, testFileUrl("parentChangeInvolvingBindings.qml"));
+   Listener listener;
    QScopedPointer<QQuickItem> root { qobject_cast<QQuickItem *>(c.create()) };
    QVERIFY2(root, qPrintable(c.errorString()));
 
@@ -1848,7 +1849,6 @@ void tst_qquickstates::parentChangeInvolvingBindings()
    QVERIFY(child);
    QQuickItem *childItem = qobject_cast<QQuickItem *>(child);
    QVERIFY(childItem);
-   Listener listener;
    QQuickItemPrivate::get(childItem)->addItemChangeListener(&listener, QQuickItemPrivate::Geometry);
 
 
