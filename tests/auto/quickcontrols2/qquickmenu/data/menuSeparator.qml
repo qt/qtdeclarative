@@ -73,6 +73,7 @@ ApplicationWindow {
 
     Menu {
         id: menu
+        cascade: true
 
         Component.onCompleted: {
             addItem(newMenuItem)
