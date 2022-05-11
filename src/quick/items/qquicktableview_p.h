@@ -173,10 +173,10 @@ public:
     void setAlternatingRows(bool alternatingRows);
 
     Q_INVOKABLE void forceLayout();
-    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF());
-    Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF());
-    Q_INVOKABLE void positionViewAtRow(int row, PositionMode mode, qreal offset = 0);
-    Q_INVOKABLE void positionViewAtColumn(int column, PositionMode mode, qreal offset = 0);
+    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtRow(int row, PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtColumn(int column, PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
     Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
 

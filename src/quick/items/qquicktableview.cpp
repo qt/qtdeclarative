@@ -537,7 +537,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, PositionMode mode, point offset)
+    \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, PositionMode mode, point offset, rect subRect)
 
     Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
     that \a cell is at the position specified by \a mode. \a mode
@@ -566,6 +566,12 @@
     \code
     positionViewAtCell(Qt.point(10, 10), TableView.AlignLeft | TableView.AlignTop, Qt.point(-5, -5))
     \endcode
+
+    As of Qt 6.4, you can specify a \a subRect to position on a rectangle inside
+    the \a cell, rather than on the bounding rectangle of the whole cell. This can
+    be useful if the cell is e.g larger than the view, and you want to ensure that a
+    specific part of it is visible. The \a subRect needs to be
+    \l {QRectF::isValid()}{valid} to be taken into consideration.
 
     \note It is not recommended to use \e contentX or \e contentY
     to position the view at a particular cell. This is unreliable since removing items from
@@ -620,28 +626,39 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtCell(int column, int row, PositionMode mode, point offset)
+    \qmlmethod QtQuick::TableView::positionViewAtCell(int column, int row, PositionMode mode, point offset, rect subRect)
+
+    Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
+    that \a row and \a column is at the position specified by \a mode, \a offset and \a subRect.
 
     Convenience for calling
     \code
-    positionViewAtCell(Qt.point(column, row), mode, offset)
+    positionViewAtCell(Qt.point(column, row), mode, offset, subRect)
     \endcode
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtRow(int row, PositionMode mode, real offset)
+    \qmlmethod QtQuick::TableView::positionViewAtRow(int row, PositionMode mode, real offset, rect subRect)
+
+    Positions {Flickable::}{contentY} such that \a row is at the position specified
+    by \a mode, \a offset and \a subRect.
 
     Convenience method for calling
-
-    \c {positionViewAtCell(Qt.point(0, }\a{row}\c{), }\a{mode}\c{ & Qt.AlignVertical_Mask, Qt.point(0, }\a{offset}\c{))}
+    \code
+    positionViewAtCell(Qt.point(0, row), mode & Qt.AlignVertical_Mask, offset, subRect)
+    \endcode
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtColumn(int column, PositionMode mode, real offset)
+    \qmlmethod QtQuick::TableView::positionViewAtColumn(int column, PositionMode mode, real offset, rect subRect)
+
+    Positions {Flickable::}{contentX} such that \a column is at the position specified
+    by \a mode, \a offset and \a subRect.
 
     Convenience method for calling
-
-    \c {positionViewAtCell(Qt.point(}\a{column}\c{, 0), }\a{mode}\c{ & Qt.AlignHorizontal_Mask, Qt.point(}\a{offset}\c{, 0))}
+    \code
+    positionViewAtCell(Qt.point(column, 0), mode & Qt.AlignHorizontal_Mask, offset, subRect)
+    \endcode
 */
 
 /*!
@@ -2308,6 +2325,92 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
     return rowHeight;
 }
 
+qreal QQuickTableViewPrivate::getAlignmentContentX(int column, Qt::Alignment alignment, const qreal offset, const QRectF &subRect)
+{
+    Q_Q(QQuickTableView);
+
+    qreal contentX = 0;
+    const int columnX = getEffectiveColumnX(column);
+
+    if (subRect.isValid()) {
+        if (alignment == (Qt::AlignLeft | Qt::AlignRight)) {
+            // Special case: Align to the right as long as the left
+            // edge of the cell remains visible. Otherwise align to the left.
+            alignment = subRect.width() > q->width() ? Qt::AlignLeft : Qt::AlignRight;
+        }
+
+        if (alignment & Qt::AlignLeft) {
+            contentX = columnX + subRect.x() + offset;
+        } else if (alignment & Qt::AlignRight) {
+            contentX = columnX + subRect.right() - viewportRect.width() + offset;
+        } else if (alignment & Qt::AlignHCenter) {
+            const qreal centerDistance = (viewportRect.width() - subRect.width()) / 2;
+            contentX = columnX + subRect.x() - centerDistance + offset;
+        }
+    } else {
+        const int columnWidth = getEffectiveColumnWidth(column);
+        if (alignment == (Qt::AlignLeft | Qt::AlignRight))
+            alignment = columnWidth > q->width() ? Qt::AlignLeft : Qt::AlignRight;
+
+        if (alignment & Qt::AlignLeft) {
+            contentX = columnX + offset;
+        } else if (alignment & Qt::AlignRight) {
+            contentX = columnX + columnWidth - viewportRect.width() + offset;
+        } else if (alignment & Qt::AlignHCenter) {
+            const qreal centerDistance = (viewportRect.width() - columnWidth) / 2;
+            contentX = columnX - centerDistance + offset;
+        }
+    }
+
+    // Don't overshoot
+    contentX = qBound(-q->minXExtent(), contentX, -q->maxXExtent());
+
+    return contentX;
+}
+
+qreal QQuickTableViewPrivate::getAlignmentContentY(int row, Qt::Alignment alignment, const qreal offset, const QRectF &subRect)
+{
+    Q_Q(QQuickTableView);
+
+    qreal contentY = 0;
+    const int rowY = getEffectiveRowY(row);
+
+    if (subRect.isValid()) {
+        if (alignment == (Qt::AlignTop | Qt::AlignBottom)) {
+            // Special case: Align to the bottom as long as the top
+            // edge of the cell remains visible. Otherwise align to the top.
+            alignment = subRect.height() > q->height() ? Qt::AlignTop : Qt::AlignBottom;
+        }
+
+        if (alignment & Qt::AlignTop) {
+            contentY = rowY + subRect.y() + offset;
+        } else if (alignment & Qt::AlignBottom) {
+            contentY = rowY + subRect.bottom() - viewportRect.height() + offset;
+        } else if (alignment & Qt::AlignVCenter) {
+            const qreal centerDistance = (viewportRect.height() - subRect.height()) / 2;
+            contentY = rowY + subRect.y() - centerDistance + offset;
+        }
+    } else {
+        const int rowHeight = getEffectiveRowHeight(row);
+        if (alignment == (Qt::AlignTop | Qt::AlignBottom))
+            alignment = rowHeight > q->height() ? Qt::AlignTop : Qt::AlignBottom;
+
+        if (alignment & Qt::AlignTop) {
+            contentY = rowY + offset;
+        } else if (alignment & Qt::AlignBottom) {
+            contentY = rowY + rowHeight - viewportRect.height() + offset;
+        } else if (alignment & Qt::AlignVCenter) {
+            const qreal centerDistance = (viewportRect.height() - rowHeight) / 2;
+            contentY = rowY - centerDistance + offset;
+        }
+    }
+
+    // Don't overshoot
+    contentY = qBound(-q->minYExtent(), contentY, -q->maxYExtent());
+
+    return contentY;
+}
+
 bool QQuickTableViewPrivate::isColumnHidden(int column) const
 {
     // A column is hidden if the width is explicit set to zero (either by
@@ -2752,6 +2855,18 @@ void QQuickTableViewPrivate::loadInitialTable()
 {
     updateTableSize();
 
+    if (positionXAnimation.isRunning()) {
+        positionXAnimation.stop();
+        setLocalViewportX(positionXAnimation.to().toReal());
+        syncViewportRect();
+    }
+
+    if (positionYAnimation.isRunning()) {
+        positionYAnimation.stop();
+        setLocalViewportY(positionYAnimation.to().toReal());
+        syncViewportRect();
+    }
+
     QPoint topLeft;
     QPointF topLeftPos;
     calculateTopLeft(topLeft, topLeftPos);
@@ -2850,8 +2965,6 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
 
 void QQuickTableViewPrivate::adjustViewportXAccordingToAlignment()
 {
-    Q_Q(QQuickTableView);
-
     // Check if we are supposed to position the viewport at a certain column
     if (!rebuildOptions.testFlag(RebuildOption::PositionViewAtColumn))
         return;
@@ -2859,42 +2972,18 @@ void QQuickTableViewPrivate::adjustViewportXAccordingToAlignment()
     if (positionViewAtColumnAfterRebuild != leftColumn())
         return;
 
-    const float columnWidth = getEffectiveColumnWidth(positionViewAtColumnAfterRebuild);
+    const qreal newContentX = getAlignmentContentX(
+                positionViewAtColumnAfterRebuild,
+                positionViewAtColumnAlignment,
+                positionViewAtColumnOffset,
+                positionViewAtColumnSubRect);
 
-    if (positionViewAtColumnAlignment == (Qt::AlignLeft | Qt::AlignRight)) {
-        // Special case: Align to the right as long as the left
-        // edge of the cell remains visible. Otherwise align to the left.
-        positionViewAtColumnAlignment = columnWidth > q->width() ? Qt::AlignLeft : Qt::AlignRight;
-    }
-
-    switch (positionViewAtColumnAlignment) {
-    case Qt::AlignLeft:
-        setLocalViewportX(loadedTableOuterRect.left() + positionViewAtColumnOffset);
-        break;
-    case Qt::AlignHCenter:
-        setLocalViewportX(loadedTableOuterRect.left()
-                          - (viewportRect.width() / 2)
-                          + (columnWidth / 2)
-                          + positionViewAtColumnOffset);
-        break;
-    case Qt::AlignRight:
-        setLocalViewportX(loadedTableOuterRect.left()
-                          - viewportRect.width()
-                          + columnWidth
-                          + positionViewAtColumnOffset);
-        break;
-    default:
-        Q_TABLEVIEW_UNREACHABLE("options are checked in setter");
-        break;
-    }
-
+    setLocalViewportX(newContentX);
     syncViewportRect();
 }
 
 void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
 {
-    Q_Q(QQuickTableView);
-
     // Check if we are supposed to position the viewport at a certain row
     if (!rebuildOptions.testFlag(RebuildOption::PositionViewAtRow))
         return;
@@ -2902,35 +2991,13 @@ void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
     if (positionViewAtRowAfterRebuild != topRow())
         return;
 
-    const float rowHeight = getEffectiveRowHeight(positionViewAtRowAfterRebuild);
+    const qreal newContentY = getAlignmentContentY(
+                positionViewAtRowAfterRebuild,
+                positionViewAtRowAlignment,
+                positionViewAtRowOffset,
+                positionViewAtRowSubRect);
 
-    if (positionViewAtRowAlignment == (Qt::AlignTop | Qt::AlignBottom)) {
-        // Special case: Align to the bottom as long as the top
-        // edge of the cell remains visible. Otherwise align to the top.
-        positionViewAtRowAlignment = rowHeight > q->height() ? Qt::AlignTop : Qt::AlignBottom;
-    }
-
-    switch (positionViewAtRowAlignment) {
-    case Qt::AlignTop:
-        setLocalViewportY(loadedTableOuterRect.top() + positionViewAtRowOffset);
-        break;
-    case Qt::AlignVCenter:
-        setLocalViewportY(loadedTableOuterRect.top()
-                          - (viewportRect.height() / 2)
-                          + (rowHeight / 2)
-                          + positionViewAtRowOffset);
-        break;
-    case Qt::AlignBottom:
-        setLocalViewportY(loadedTableOuterRect.top()
-                          - viewportRect.height()
-                          + rowHeight
-                          + positionViewAtRowOffset);
-        break;
-    default:
-        Q_TABLEVIEW_UNREACHABLE("options are checked in setter");
-        break;
-    }
-
+    setLocalViewportY(newContentY);
     syncViewportRect();
 }
 
@@ -3445,8 +3512,6 @@ void QQuickTableViewPrivate::syncRebuildOptions()
     rebuildState = RebuildState::Begin;
     rebuildOptions = scheduledRebuildOptions;
     scheduledRebuildOptions = RebuildOption::None;
-    positionXAnimation.stop();
-    positionYAnimation.stop();
 
     if (loadedItems.isEmpty())
         rebuildOptions.setFlag(RebuildOption::All);
@@ -3746,45 +3811,47 @@ void QQuickTableViewPrivate::modelResetCallback()
     scheduleRebuildTable(RebuildOption::All);
 }
 
-void QQuickTableViewPrivate::positionViewAtRow(int row, Qt::Alignment alignment, qreal offset)
+void QQuickTableViewPrivate::positionViewAtRow(int row, Qt::Alignment alignment, qreal offset, const QRectF subRect)
 {
     Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
     Q_TABLEVIEW_ASSERT(verticalAlignment, alignment);
 
     if (syncHorizontally) {
-        syncView->d_func()->positionViewAtRow(row, verticalAlignment, offset);
+        syncView->d_func()->positionViewAtRow(row, verticalAlignment, offset, subRect);
     } else {
-        if (!scrollToRow(row, verticalAlignment, offset)) {
+        if (!scrollToRow(row, verticalAlignment, offset, subRect)) {
             // Could not scroll, so rebuild instead
             assignedPositionViewAtRowAfterRebuild = row;
             positionViewAtRowAlignment = verticalAlignment;
             positionViewAtRowOffset = offset;
+            positionViewAtRowSubRect = subRect;
             scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
                                  QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
         }
     }
 }
 
-void QQuickTableViewPrivate::positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset)
+void QQuickTableViewPrivate::positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset, const QRectF subRect)
 {
     Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
     Q_TABLEVIEW_ASSERT(horizontalAlignment, alignment);
 
     if (syncVertically) {
-        syncView->d_func()->positionViewAtColumn(column, horizontalAlignment, offset);
+        syncView->d_func()->positionViewAtColumn(column, horizontalAlignment, offset, subRect);
     } else {
-        if (!scrollToColumn(column, horizontalAlignment, offset)) {
+        if (!scrollToColumn(column, horizontalAlignment, offset, subRect)) {
             // Could not scroll, so rebuild instead
             assignedPositionViewAtColumnAfterRebuild = column;
             positionViewAtColumnAlignment = horizontalAlignment;
             positionViewAtColumnOffset = offset;
+            positionViewAtColumnSubRect = subRect;
             scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
                                  QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
         }
     }
 }
 
-bool QQuickTableViewPrivate::scrollToRow(int row, Qt::Alignment alignment, qreal offset)
+bool QQuickTableViewPrivate::scrollToRow(int row, Qt::Alignment alignment, qreal offset, const QRectF subRect)
 {
     Q_Q(QQuickTableView);
 
@@ -3793,11 +3860,6 @@ bool QQuickTableViewPrivate::scrollToRow(int row, Qt::Alignment alignment, qreal
     // allow moving currentIndex out of the viewport, we support scrolling
     // to a row that is adjacent to the loaded table. So start by checking
     // if we should load en extra row.
-    const Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
-    Q_TABLEVIEW_ASSERT(verticalAlignment, alignment);
-
-    qreal newContentY = q->contentY();
-
     if (row < topRow()) {
         if (row != nextVisibleEdgeIndex(Qt::TopEdge, topRow() - 1))
             return false;
@@ -3813,26 +3875,7 @@ bool QQuickTableViewPrivate::scrollToRow(int row, Qt::Alignment alignment, qreal
     if (!loadedRows.contains(row))
         return false;
 
-    const int rowY = getEffectiveRowY(row);
-    const int rowHeight = getEffectiveRowHeight(row);
-
-    if (alignment == (Qt::AlignTop | Qt::AlignBottom)) {
-        // Special case: Align to the bottom as long as the top
-        // edge of the cell remains visible. Otherwise align to the top.
-        alignment = rowHeight > q->height() ? Qt::AlignTop : Qt::AlignBottom;
-    }
-
-    if (alignment & Qt::AlignTop) {
-        newContentY = rowY + offset;
-    } else if (alignment & Qt::AlignBottom) {
-        newContentY = rowY + rowHeight - viewportRect.height() + offset;
-    } else if (alignment & Qt::AlignVCenter) {
-        const qreal centerDistance = (viewportRect.height() - rowHeight) / 2;
-        newContentY = rowY - centerDistance + offset;
-    }
-
-    // Don't overshoot when animating to a cell
-    newContentY = qBound(-q->minYExtent(), newContentY, -q->maxYExtent());
+    const qreal newContentY = getAlignmentContentY(row, alignment, offset, subRect);
     if (qFuzzyCompare(newContentY, q->contentY()))
         return true;
 
@@ -3850,7 +3893,7 @@ bool QQuickTableViewPrivate::scrollToRow(int row, Qt::Alignment alignment, qreal
     return true;
 }
 
-bool QQuickTableViewPrivate::scrollToColumn(int column, Qt::Alignment alignment, qreal offset)
+bool QQuickTableViewPrivate::scrollToColumn(int column, Qt::Alignment alignment, qreal offset, const QRectF subRect)
 {
     Q_Q(QQuickTableView);
 
@@ -3859,11 +3902,6 @@ bool QQuickTableViewPrivate::scrollToColumn(int column, Qt::Alignment alignment,
     // allow moving currentIndex out of the viewport, we support scrolling
     // to a column that is adjacent to the loaded table. So start by checking
     // if we should load en extra column.
-    const Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
-    Q_TABLEVIEW_ASSERT(horizontalAlignment, alignment);
-
-    qreal newContentX = q->contentX();
-
     if (column < leftColumn()) {
         if (column != nextVisibleEdgeIndex(Qt::LeftEdge, leftColumn() - 1))
             return false;
@@ -3879,26 +3917,7 @@ bool QQuickTableViewPrivate::scrollToColumn(int column, Qt::Alignment alignment,
     if (!loadedColumns.contains(column))
         return false;
 
-    const int columnX = getEffectiveColumnX(column);
-    const int columnWidth = getEffectiveColumnWidth(column);
-
-    if (alignment == (Qt::AlignLeft | Qt::AlignRight)) {
-        // Special case: Align to the right as long as the left
-        // edge of the cell remains visible. Otherwise align to the left.
-        alignment = columnWidth > q->width() ? Qt::AlignLeft : Qt::AlignRight;
-    }
-
-    if (alignment & Qt::AlignLeft) {
-        newContentX = columnX + offset;
-    } else if (alignment & Qt::AlignRight) {
-        newContentX = columnX + columnWidth - viewportRect.width() + offset;
-    } else if (alignment & Qt::AlignHCenter) {
-        const qreal centerDistance = (viewportRect.width() - columnWidth) / 2;
-        newContentX = columnX - centerDistance + offset;
-    }
-
-    // Don't overshoot when animating to a cell
-    newContentX = qBound(-q->minXExtent(), newContentX, -q->maxXExtent());
+    const qreal newContentX = getAlignmentContentX(column, alignment, offset, subRect);
     if (qFuzzyCompare(newContentX, q->contentX()))
         return true;
 
@@ -4457,7 +4476,7 @@ int QQuickTableView::currentColumn() const
     return d_func()->currentColumn;
 }
 
-void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset)
+void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset, const QRectF &subRect)
 {
     Q_D(QQuickTableView);
     if (row < 0 || row >= rows())
@@ -4469,23 +4488,61 @@ void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset
 
     if (mode & (AlignTop | AlignBottom | AlignVCenter)) {
         mode &= AlignTop | AlignBottom | AlignVCenter;
-        d->positionViewAtRow(row, Qt::Alignment(int(mode)), offset);
+        d->positionViewAtRow(row, Qt::Alignment(int(mode)), offset, subRect);
     } else if (mode == Contain) {
-        if (row <= topRow())
-            d->positionViewAtRow(row, Qt::AlignTop, offset);
-        else if (row >= bottomRow())
-            d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset);
+        if (row < topRow()) {
+            d->positionViewAtRow(row, Qt::AlignTop, offset, subRect);
+        } else if (row > bottomRow()) {
+            d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset, subRect);
+        } else if (row == topRow()) {
+            if (!subRect.isValid()) {
+                d->positionViewAtRow(row, Qt::AlignTop, offset, subRect);
+            } else {
+                const qreal subRectTop = d->loadedTableOuterRect.top() + subRect.top();
+                const qreal subRectBottom = d->loadedTableOuterRect.top() + subRect.bottom();
+                if (subRectTop < d->viewportRect.y())
+                    d->positionViewAtRow(row, Qt::AlignTop, offset, subRect);
+                else if (subRectBottom > d->viewportRect.bottom())
+                    d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset, subRect);
+            }
+        } else if (row == bottomRow()) {
+            if (!subRect.isValid()) {
+                d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset, subRect);
+            } else {
+                // Note: entering here means that topRow() != bottomRow(). So at least two rows are
+                // visible in the viewport, which means that the top side of the subRect is visible.
+                const qreal subRectBottom = d->loadedTableInnerRect.bottom() + subRect.bottom();
+                if (subRectBottom > d->viewportRect.bottom())
+                    d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset, subRect);
+            }
+        }
     } else if (mode == Visible) {
-        if (row < topRow())
-            d->positionViewAtRow(row, Qt::AlignTop, offset);
-        else if (row > bottomRow())
-            d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset);
+        if (row < topRow()) {
+            d->positionViewAtRow(row, Qt::AlignTop, -offset, subRect);
+        } else if (row > bottomRow()) {
+            d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset, subRect);
+        } else if (subRect.isValid()) {
+            if (row == topRow()) {
+                const qreal subRectTop = d->loadedTableOuterRect.top() + subRect.top();
+                const qreal subRectBottom = d->loadedTableOuterRect.top() + subRect.bottom();
+                if (subRectBottom < d->viewportRect.top())
+                    d->positionViewAtRow(row, Qt::AlignTop, offset, subRect);
+                else if (subRectTop > d->viewportRect.bottom())
+                    d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset, subRect);
+            } else if (row == bottomRow()) {
+                // Note: entering here means that topRow() != bottomRow(). So at least two rows are
+                // visible in the viewport, which means that the top side of the subRect is visible.
+                const qreal subRectTop = d->loadedTableInnerRect.bottom() + subRect.top();
+                if (subRectTop > d->viewportRect.bottom())
+                    d->positionViewAtRow(row, Qt::AlignTop | Qt::AlignBottom, offset, subRect);
+            }
+        }
     } else {
         qmlWarning(this) << "Unsupported mode:" << int(mode);
     }
 }
 
-void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal offset)
+void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal offset, const QRectF &subRect)
 {
     Q_D(QQuickTableView);
     if (column < 0 || column >= columns())
@@ -4497,32 +4554,70 @@ void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal 
 
     if (mode & (AlignLeft | AlignRight | AlignHCenter)) {
         mode &= AlignLeft | AlignRight | AlignHCenter;
-        d->positionViewAtColumn(column, Qt::Alignment(int(mode)), offset);
+        d->positionViewAtColumn(column, Qt::Alignment(int(mode)), offset, subRect);
     } else if (mode == Contain) {
-        if (column <= leftColumn())
-            d->positionViewAtColumn(column, Qt::AlignLeft, offset);
-        else if (column >= rightColumn())
-            d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset);
+        if (column < leftColumn()) {
+            d->positionViewAtColumn(column, Qt::AlignLeft, offset, subRect);
+        } else if (column > rightColumn()) {
+            d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset, subRect);
+        } else if (column == leftColumn()) {
+            if (!subRect.isValid()) {
+                d->positionViewAtColumn(column, Qt::AlignLeft, offset, subRect);
+            } else {
+                const qreal subRectLeft = d->loadedTableOuterRect.left() + subRect.left();
+                const qreal subRectRight = d->loadedTableOuterRect.left() + subRect.right();
+                if (subRectLeft < d->viewportRect.left())
+                    d->positionViewAtColumn(column, Qt::AlignLeft, offset, subRect);
+                else if (subRectRight > d->viewportRect.right())
+                    d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset, subRect);
+            }
+        } else if (column == rightColumn()) {
+            if (!subRect.isValid()) {
+                d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset, subRect);
+            } else {
+                // Note: entering here means that leftColumn() != rightColumn(). So at least two columns
+                // are visible in the viewport, which means that the left side of the subRect is visible.
+                const qreal subRectRight = d->loadedTableInnerRect.right() + subRect.right();
+                if (subRectRight > d->viewportRect.right())
+                    d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset, subRect);
+            }
+        }
     } else if (mode == Visible) {
-        if (column < leftColumn())
-            d->positionViewAtColumn(column, Qt::AlignLeft, -offset);
-        else if (column > rightColumn())
-            d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset);
+        if (column < leftColumn()) {
+            d->positionViewAtColumn(column, Qt::AlignLeft, -offset, subRect);
+        } else if (column > rightColumn()) {
+            d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset, subRect);
+        } else if (subRect.isValid()) {
+            if (column == leftColumn()) {
+                const qreal subRectLeft = d->loadedTableOuterRect.left() + subRect.left();
+                const qreal subRectRight = d->loadedTableOuterRect.left() + subRect.right();
+                if (subRectRight < d->viewportRect.left())
+                    d->positionViewAtColumn(column, Qt::AlignLeft, offset, subRect);
+                else if (subRectLeft > d->viewportRect.right())
+                    d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset, subRect);
+            } else if (column == rightColumn()) {
+                // Note: entering here means that leftColumn() != rightColumn(). So at least two columns
+                // are visible in the viewport, which means that the left side of the subRect is visible.
+                const qreal subRectLeft = d->loadedTableInnerRect.right() + subRect.left();
+                if (subRectLeft > d->viewportRect.right())
+                    d->positionViewAtColumn(column, Qt::AlignLeft | Qt::AlignRight, offset, subRect);
+            }
+        }
     } else {
         qmlWarning(this) << "Unsupported mode:" << int(mode);
     }
 }
 
-void QQuickTableView::positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset)
+void QQuickTableView::positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset, const QRectF &subRect)
 {
-    positionViewAtRow(cell.y(), mode, offset.y());
-    positionViewAtColumn(cell.x(), mode, offset.x());
+    positionViewAtRow(cell.y(), mode, offset.y(), subRect);
+    positionViewAtColumn(cell.x(), mode, offset.x(), subRect);
 }
 
-void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset)
+void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset, const QRectF &subRect)
 {
-    positionViewAtRow(row, mode, offset.y());
-    positionViewAtColumn(column, mode, offset.x());
+    positionViewAtRow(row, mode, offset.y(), subRect);
+    positionViewAtColumn(column, mode, offset.x(), subRect);
 }
 
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const

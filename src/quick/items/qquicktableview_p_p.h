@@ -334,6 +334,8 @@ public:
     int positionViewAtColumnAfterRebuild = 0;
     qreal positionViewAtRowOffset = 0;
     qreal positionViewAtColumnOffset = 0;
+    QRectF positionViewAtRowSubRect;
+    QRectF positionViewAtColumnSubRect;
     Qt::Alignment positionViewAtRowAlignment = Qt::AlignTop;
     Qt::Alignment positionViewAtColumnAlignment = Qt::AlignLeft;
 
@@ -385,6 +387,8 @@ public:
     qreal getEffectiveRowHeight(int row) const;
     qreal getEffectiveColumnX(int column) const;
     qreal getEffectiveColumnWidth(int column) const;
+    qreal getAlignmentContentX(int column, Qt::Alignment alignment, const qreal offset, const QRectF &subRect);
+    qreal getAlignmentContentY(int row, Qt::Alignment alignment, const qreal offset, const QRectF &subRect);
 
     int topRow() const { return *loadedRows.cbegin(); }
     int bottomRow() const { return *loadedRows.crbegin(); }
@@ -486,10 +490,10 @@ public:
     void layoutChangedCallback(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
     void modelResetCallback();
 
-    void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset);
-    void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset);
-    bool scrollToRow(int row, Qt::Alignment alignment, qreal offset);
-    bool scrollToColumn(int column, Qt::Alignment alignment, qreal offset);
+    void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset, const QRectF subRect = QRectF());
+    void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset, const QRectF subRect = QRectF());
+    bool scrollToRow(int row, Qt::Alignment alignment, qreal offset, const QRectF subRect = QRectF());
+    bool scrollToColumn(int column, Qt::Alignment alignment, qreal offset, const QRectF subRect = QRectF());
 
     void scheduleRebuildIfFastFlick();
     void setLocalViewportX(qreal contentX);
