@@ -8,6 +8,7 @@ qt_internal_add_qml_module(QuickControls2Impl
     CLASS_NAME QtQuickControls2ImplPlugin
     DEPENDENCIES
         QtQuick/auto
+        QtQuick.Templates/auto
     PLUGIN_TARGET qtquickcontrols2implplugin
     SOURCES
         qquickanimatednode.cpp qquickanimatednode_p.h
