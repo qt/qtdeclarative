@@ -1,12 +1,5 @@
 # Generated from tools.pro.
 
-
-qt_exclude_tool_directories_from_default_target(
-    qmlprofiler
-    qmlplugindump
-    qmleasing
-)
-
 if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmldom)
     add_subdirectory(qmllint)
@@ -23,7 +16,12 @@ endif()
 if(QT_FEATURE_thread AND NOT ANDROID AND NOT WASM AND NOT IOS AND NOT rtems)
     add_subdirectory(qml)
 endif()
-if(QT_FEATURE_qml_profiler AND QT_FEATURE_thread AND NOT ANDROID AND NOT WASM AND NOT rtems)
+if(QT_FEATURE_qml_profiler
+        AND QT_FEATURE_thread
+        AND NOT ANDROID
+        AND NOT IOS
+        AND NOT WASM
+        AND NOT rtems)
     add_subdirectory(qmlprofiler)
 endif()
 if(QT_FEATURE_qml_preview AND QT_FEATURE_thread AND NOT ANDROID AND NOT WASM AND NOT IOS AND NOT rtems)
@@ -33,7 +31,15 @@ if(QT_BUILD_SHARED_LIBS AND QT_FEATURE_thread AND TARGET Qt::Quick AND NOT ANDRO
     add_subdirectory(qmlscene)
     add_subdirectory(qmltime)
 endif()
-if(QT_BUILD_SHARED_LIBS AND QT_FEATURE_process AND QT_FEATURE_regularexpression AND QT_FEATURE_thread AND TARGET Qt::Quick AND NOT ANDROID AND NOT WASM AND NOT rtems)
+if(QT_BUILD_SHARED_LIBS
+        AND QT_FEATURE_process
+        AND QT_FEATURE_regularexpression
+        AND QT_FEATURE_thread
+        AND TARGET Qt::Quick
+        AND NOT ANDROID
+        AND NOT IOS
+        AND NOT WASM
+        AND NOT rtems)
     add_subdirectory(qmlplugindump)
 endif()
 if(TARGET Qt::Quick
@@ -48,6 +54,7 @@ if(TARGET Qt::Quick
         AND QT_FEATURE_spinbox
         AND QT_FEATURE_textedit
         AND NOT ANDROID
+        AND NOT IOS
         AND NOT WASM
         AND NOT rtems)
     add_subdirectory(qmleasing)
