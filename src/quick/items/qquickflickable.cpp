@@ -555,8 +555,8 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     const qreal maxyextent = -q->maxYExtent();
     const qreal minyextent = -q->minYExtent();
     const qreal ypos = -vData.move.value();
-    bool atBeginning = fuzzyLessThanOrEqualTo(ypos, minyextent);
-    bool atEnd = fuzzyLessThanOrEqualTo(maxyextent, ypos);
+    bool atBeginning = fuzzyLessThanOrEqualTo(ypos, std::ceil(minyextent));
+    bool atEnd = fuzzyLessThanOrEqualTo(std::floor(maxyextent), ypos);
 
     if (atBeginning != vData.atBeginning) {
         vData.atBeginning = atBeginning;
@@ -575,8 +575,8 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     const qreal maxxextent = -q->maxXExtent();
     const qreal minxextent = -q->minXExtent();
     const qreal xpos = -hData.move.value();
-    atBeginning = fuzzyLessThanOrEqualTo(xpos, minxextent);
-    atEnd = fuzzyLessThanOrEqualTo(maxxextent, xpos);
+    atBeginning = fuzzyLessThanOrEqualTo(xpos, std::ceil(minxextent));
+    atEnd = fuzzyLessThanOrEqualTo(std::floor(maxxextent), xpos);
 
     if (atBeginning != hData.atBeginning) {
         hData.atBeginning = atBeginning;
@@ -1657,9 +1657,9 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
             d->vData.addVelocitySample(instVelocity, d->maxVelocity);
             d->vData.updateVelocity();
             if ((yDelta > 0 && contentY() > -minYExtent()) || (yDelta < 0 && contentY() < -maxYExtent())) {
-                d->flickY(d->vData.velocity);
-                d->flickingStarted(false, true);
-                if (d->vData.flicking) {
+                const bool newFlick = d->flickY(d->vData.velocity);
+                if (newFlick && (d->vData.atBeginning != (yDelta > 0) || d->vData.atEnd != (yDelta < 0))) {
+                    d->flickingStarted(false, true);
                     d->vMoved = true;
                     movementStarting();
                 }
@@ -1674,9 +1674,9 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
             d->hData.addVelocitySample(instVelocity, d->maxVelocity);
             d->hData.updateVelocity();
             if ((xDelta > 0 && contentX() > -minXExtent()) || (xDelta < 0 && contentX() < -maxXExtent())) {
-                d->flickX(d->hData.velocity);
-                d->flickingStarted(true, false);
-                if (d->hData.flicking) {
+                const bool newFlick = d->flickX(d->hData.velocity);
+                if (newFlick && (d->hData.atBeginning != (xDelta > 0) || d->hData.atEnd != (xDelta < 0))) {
+                    d->flickingStarted(true, false);
                     d->hMoved = true;
                     movementStarting();
                 }
