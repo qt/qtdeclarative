@@ -150,6 +150,8 @@ qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2BasicStylePlugin
+    DEPENDENCIES
+        QtQuick/auto
     PLUGIN_TARGET qtquickcontrols2basicstyleplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
