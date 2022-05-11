@@ -58,6 +58,7 @@ private slots:
     void asynchronous();
 
     void handlerWithParent();
+    void boundDelegateComponent();
 };
 
 tst_qqmlinstantiator::tst_qqmlinstantiator()
@@ -295,6 +296,39 @@ void tst_qqmlinstantiator::handlerWithParent()
     for (const auto *h : handlers) {
         QCOMPARE(h->parent(), rootObject.data());
     }
+}
+
+void tst_qqmlinstantiator::boundDelegateComponent()
+{
+    QQmlEngine engine;
+    const QUrl url(testFileUrl("boundDelegateComponent.qml"));
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    for (int i = 0; i < 3; ++i) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(QLatin1String("%1:12: ReferenceError: modelData is not defined")
+                                   .arg(url.toString())));
+    }
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+    QQmlInstantiator *a = qobject_cast<QQmlInstantiator *>(
+            qmlContext(o.data())->objectForName(QStringLiteral("undefinedModelData")));
+    QVERIFY(a);
+    QCOMPARE(a->count(), 3);
+    for (int i = 0; i < 3; ++i)
+        QCOMPARE(a->objectAt(i)->objectName(), QStringLiteral("rootundefined"));
+
+    QQmlInstantiator *b = qobject_cast<QQmlInstantiator *>(
+            qmlContext(o.data())->objectForName(QStringLiteral("requiredModelData")));
+    QVERIFY(b);
+    QCOMPARE(b->count(), 3);
+    QCOMPARE(b->objectAt(0)->objectName(), QStringLiteral("root1"));
+    QCOMPARE(b->objectAt(1)->objectName(), QStringLiteral("root2"));
+    QCOMPARE(b->objectAt(2)->objectName(), QStringLiteral("root3"));
 }
 
 QTEST_MAIN(tst_qqmlinstantiator)

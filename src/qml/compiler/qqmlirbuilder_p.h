@@ -417,6 +417,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         Singleton,
         Strict,
         ListPropertyAssignBehavior,
+        ComponentBehavior
     };
 
     enum ListPropertyAssignBehaviorValue
@@ -426,10 +427,18 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         ReplaceIfNotDefault,
     };
 
+    enum ComponentBehaviorValue
+    {
+        Unbound,
+        Bound
+    };
+
     PragmaType type;
 
-    // Could become a union with type as differentiator if necessary
-    ListPropertyAssignBehaviorValue listPropertyAssignBehavior;
+    union {
+        ListPropertyAssignBehaviorValue listPropertyAssignBehavior;
+        ComponentBehaviorValue componentBehavior;
+    };
 
     QV4::CompiledData::Location location;
 };

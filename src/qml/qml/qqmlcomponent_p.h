@@ -138,6 +138,10 @@ public:
 
     QObject *doBeginCreate(QQmlComponent *q, QQmlContext *context);
     bool setInitialProperty(QObject *component, const QString &name, const QVariant& value);
+
+    bool isBound() const {
+        return compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound;
+    }
 };
 
 QT_END_NAMESPACE

@@ -175,10 +175,23 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     } else {
         Q_ASSERT(subComponentIndex >= 0);
         if (flags & CreationFlags::InlineComponent) {
+            if (compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound
+                    && compilationUnit != parentContext->typeCompilationUnit()) {
+                recordError({}, tr("Cannot instantiate bound inline component in different file"));
+                phase = ObjectsCreated;
+                return nullptr;
+            }
             objectToCreate = subComponentIndex;
             isComponentRoot = true;
         } else {
             Q_ASSERT(flags & CreationFlags::NormalObject);
+            if (compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound
+                    && sharedState->creationContext != parentContext) {
+                recordError({}, tr("Cannot instantiate bound component "
+                                   "outside its creation context"));
+                phase = ObjectsCreated;
+                return nullptr;
+            }
             const QV4::CompiledData::Object *compObj = compilationUnit->objectAt(subComponentIndex);
             objectToCreate = compObj->bindingTable()->value.objectIndex;
         }

@@ -1286,8 +1286,10 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
         for (int i = 1; i < m_groupCount; ++i)
             cacheItem->incubationTask->index[i] = it.index[i];
 
-        QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createRefCounted(
-                    QQmlContextData::get(creationContext  ? creationContext : m_context.data()));
+        QQmlRefPointer<QQmlContextData> componentContext
+                = QQmlContextData::get(creationContext  ? creationContext : m_context.data());
+
+        QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createRefCounted(componentContext);
         ctxt->setContextObject(cacheItem);
         cacheItem->contextData = ctxt;
 
@@ -1310,7 +1312,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                     cacheItem->incubationTask,
                     cacheItem->delegate,
                     m_context->engine(),
-                    ctxt,
+                    cp->isBound() ? componentContext : ctxt,
                     QQmlContextData::get(m_context));
     }
 

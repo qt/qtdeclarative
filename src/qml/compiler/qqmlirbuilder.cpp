@@ -807,6 +807,28 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
             pragma->type = Pragma::Singleton;
         } else if (node->name == QStringLiteral("Strict")) {
             pragma->type = Pragma::Strict;
+        } else if (node->name == QStringLiteral("ComponentBehavior")) {
+            for (const Pragma *prev : _pragmas) {
+                if (prev->type != Pragma::ComponentBehavior)
+                    continue;
+                recordError(node->pragmaToken,
+                            QCoreApplication::translate(
+                                    "QQmlParser", "Multiple component behavior pragmas found"));
+                return false;
+            }
+
+            pragma->type = Pragma::ComponentBehavior;
+            if (node->value == QLatin1String("Bound")) {
+                pragma->componentBehavior = Pragma::Bound;
+            } else if (node->value == QLatin1String("Unbound")) {
+                pragma->componentBehavior = Pragma::Unbound;
+            } else {
+                recordError(node->pragmaToken,
+                            QCoreApplication::translate(
+                                    "QQmlParser", "Unknown component behavior '%1' in pragma")
+                                    .arg(node->value));
+                return false;
+            }
         } else if (node->name == QStringLiteral("ListPropertyAssignBehavior")) {
             for (const Pragma *prev : _pragmas) {
                 if (prev->type != Pragma::ListPropertyAssignBehavior)
@@ -1543,6 +1565,17 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                 break;
             case Pragma::Strict:
                 createdUnit->flags |= Unit::IsStrict;
+                break;
+            case Pragma::ComponentBehavior:
+                // ### Qt7: Change the default to Bound by reverting the meaning of the flag.
+                switch (p->componentBehavior) {
+                case Pragma::Bound:
+                    createdUnit->flags |= Unit::ComponentsBound;
+                    break;
+                case Pragma::Unbound:
+                    // this is the default
+                    break;
+                }
                 break;
             case Pragma::ListPropertyAssignBehavior:
                 switch (p->listPropertyAssignBehavior) {

@@ -58,24 +58,37 @@ void QQmlIRLoader::load()
     for (quint32 i = 0; i < qmlUnit->nImports; ++i)
         output->imports << qmlUnit->importAt(i);
 
-    const auto createPragma = [&](
-            QmlIR::Pragma::PragmaType type,
-            QmlIR::Pragma::ListPropertyAssignBehaviorValue value = QmlIR::Pragma::Append) {
-        QmlIR::Pragma *p = New<QmlIR::Pragma>();
+    using QmlIR::Pragma;
+    const auto createPragma = [&](Pragma::PragmaType type) {
+        Pragma *p = New<Pragma>();
         p->location = QV4::CompiledData::Location();
         p->type = type;
-        p->listPropertyAssignBehavior = value;
         output->pragmas << p;
+        return p;
+    };
+
+    const auto createListPragma = [&](
+            Pragma::PragmaType type,
+            Pragma::ListPropertyAssignBehaviorValue value) {
+        createPragma(type)->listPropertyAssignBehavior = value;
+    };
+
+    const auto createComponentPragma = [&](
+            Pragma::PragmaType type,
+            Pragma::ComponentBehaviorValue value) {
+        createPragma(type)->componentBehavior = value;
     };
 
     if (unit->flags & QV4::CompiledData::Unit::IsSingleton)
-        createPragma(QmlIR::Pragma::Singleton);
+        createPragma(Pragma::Singleton);
     if (unit->flags & QV4::CompiledData::Unit::IsStrict)
-        createPragma(QmlIR::Pragma::Strict);
+        createPragma(Pragma::Strict);
     if (unit->flags & QV4::CompiledData::Unit::ListPropertyAssignReplace)
-        createPragma(QmlIR::Pragma::ListPropertyAssignBehavior, QmlIR::Pragma::Replace);
+        createListPragma(Pragma::ListPropertyAssignBehavior, Pragma::Replace);
     else if (unit->flags & QV4::CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
-        createPragma(QmlIR::Pragma::ListPropertyAssignBehavior, QmlIR::Pragma::ReplaceIfNotDefault);
+        createListPragma(Pragma::ListPropertyAssignBehavior, Pragma::ReplaceIfNotDefault);
+    if (unit->flags & QV4::CompiledData::Unit::ComponentsBound)
+        createComponentPragma(Pragma::ComponentBehavior, Pragma::Bound);
 
     for (uint i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *serializedObject = qmlUnit->objectAt(i);

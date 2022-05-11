@@ -61,6 +61,7 @@ private slots:
     void metaSequenceAsModel();
     void noCrashOnIndexChange();
     void innerRequired();
+    void boundDelegateComponent();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -327,6 +328,59 @@ void tst_QQuickListView2::innerRequired()
     QCOMPARE(a->itemAtIndex(0)->property("text").toString(), u"meow");
     QCOMPARE(a->itemAtIndex(1)->property("age").toInt(), 5);
     QCOMPARE(a->itemAtIndex(1)->property("text").toString(), u"woof");
+}
+
+void tst_QQuickListView2::boundDelegateComponent()
+{
+    QQmlEngine engine;
+    const QUrl url(testFileUrl("boundDelegateComponent.qml"));
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(QLatin1String("%1:12: ReferenceError: index is not defined")
+                                             .arg(url.toString())));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlContext *context = qmlContext(o.data());
+
+    QObject *inner = context->objectForName(QLatin1String("listView"));
+    QVERIFY(inner != nullptr);
+    QQuickListView *listView = qobject_cast<QQuickListView *>(inner);
+    QVERIFY(listView != nullptr);
+    QObject *item = listView->itemAtIndex(0);
+    QVERIFY(item);
+    QCOMPARE(item->objectName(), QLatin1String("fooouterundefined"));
+
+    QObject *inner2 = context->objectForName(QLatin1String("listView2"));
+    QVERIFY(inner2 != nullptr);
+    QQuickListView *listView2 = qobject_cast<QQuickListView *>(inner2);
+    QVERIFY(listView2 != nullptr);
+    QObject *item2 = listView2->itemAtIndex(0);
+    QVERIFY(item2);
+    QCOMPARE(item2->objectName(), QLatin1String("fooouter0"));
+
+    QQmlComponent *comp = qobject_cast<QQmlComponent *>(
+            context->objectForName(QLatin1String("outerComponent")));
+    QVERIFY(comp != nullptr);
+
+    for (int i = 0; i < 3; ++i) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(QLatin1String("%1:47:21: ReferenceError: model is not defined")
+                                   .arg(url.toString())));
+    }
+
+    QScopedPointer<QObject> outerItem(comp->create(context));
+    QVERIFY(!outerItem.isNull());
+    QQuickListView *innerListView = qobject_cast<QQuickListView *>(
+            qmlContext(outerItem.data())->objectForName(QLatin1String("innerListView")));
+    QVERIFY(innerListView != nullptr);
+    QCOMPARE(innerListView->count(), 3);
+    for (int i = 0; i < 3; ++i)
+        QVERIFY(innerListView->itemAtIndex(i)->objectName().isEmpty());
 }
 
 class SingletonModel : public QStringListModel

@@ -272,4 +272,66 @@ The same declaration can also be given for C++-defined types. See
 \l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE}, and
 \l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT}
 
+\section2 ComponentBehavior
+
+With this pragma you can restrict components defined in this file to only
+create objects within the context of the same file. This holds for inline
+components as well as Component elements explicitly or implicitly created
+as properties. If a component is bound to a file context, you can safely
+use IDs from the rest of the file within the component. Otherwise, the
+engine and the QML tooling cannot know in advance what type, if any, such
+IDs will resolve to at run time.
+
+In order to bind the components to the file scope specify the \c{Bound}
+argument:
+
+\qml
+pragma ComponentBehavior: Bound
+\endqml
+
+The default is \c{Unbound}. You can also specify it explicitly. In a
+future version of Qt the default will change to \c{Bound}.
+
+Delegate components bound to the file context don't receive their own
+private contexts on instantiation. This means that model data can only
+be passed via \l{Required Properties}{required properties} in this case.
+Passing model data via context properties will not work. This concerns
+delegates to e.g. \l{Instantiator}, \l{Repeater}, \l{ListView},
+\l{TableView}, \l{GridView}, \l{TreeView} and in general anything that
+uses \l{DelegateModel} internally.
+
+For example, the following will \e{not} work:
+
+\qml
+pragma ComponentBehavior: Bound
+import QtQuick
+
+ListView {
+    delegate: Rectangle {
+        color: model.myColor
+    }
+}
+\endqml
+
+The \c{delegate} property of \l{ListView} is a component. Therefore, a
+\l{Component} is implicitly created around the \l{Rectangle} here. That
+component is bound to its context. It doesn't receive the context property
+\c{model} provided by \l{ListView}. To make it work, you'd have to write
+it this way:
+
+\qml
+pragma ComponentBehavior: Bound
+import QtQuick
+
+ListView {
+    delegate: Rectangle {
+        required property color myColor
+        color: myColor
+    }
+}
+\endqml
+
+You can nest components in a QML file. The pragma holds for all components in
+the file, no matter how deeply nested.
+
 */

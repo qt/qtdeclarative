@@ -160,6 +160,7 @@ private slots:
     void initJSValueProp();
     void qmlPropertySignalExists();
     void componentTypes();
+    void boundComponent();
 
 private:
     QQmlEngine engine;
@@ -1178,6 +1179,57 @@ void tst_qqmlcomponent::componentTypes()
         QScopedPointer<QObject> enclosed(normalComponent->create());
         QVERIFY(enclosed);
         QCOMPARE(enclosed->objectName(), u"enclosed"_s);
+    }
+}
+
+void tst_qqmlcomponent::boundComponent()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("nestedBoundComponent.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(!o.isNull());
+
+        QQmlComponent *nestedComponent = o->property("c").value<QQmlComponent *>();
+        QVERIFY(nestedComponent != nullptr);
+
+        QObject *nestedObject = o->property("o").value<QObject *>();
+        QVERIFY(nestedObject != nullptr);
+        QCOMPARE(nestedObject->objectName(), QLatin1String("bound"));
+
+        QScopedPointer<QObject> contextedObject(nestedComponent->create(qmlContext(o.data())));
+        QVERIFY(!contextedObject.isNull());
+
+        QScopedPointer<QObject> uncontextedObject(nestedComponent->create());
+        QVERIFY(uncontextedObject.isNull());
+
+        QVERIFY(nestedComponent->errorString().contains(
+                QLatin1String("Cannot instantiate bound component outside its creation context")));
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("BoundInlineComponent.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+        QObject *nestedObject = o->property("o").value<QObject *>();
+        QVERIFY(nestedObject != nullptr);
+
+        QCOMPARE(nestedObject->objectName(), QLatin1String("inline"));
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("boundInlineComponentUser.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(o.isNull());
+
+        QVERIFY(component.errorString().contains(
+                QLatin1String("Cannot instantiate bound inline component in different file")));
     }
 }
 

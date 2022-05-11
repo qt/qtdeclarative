@@ -85,6 +85,7 @@ private slots:
     void requiredProperties();
     void contextProperties();
     void innerRequired();
+    void boundDelegateComponent();
 };
 
 class TestObject : public QObject
@@ -1194,6 +1195,39 @@ void tst_QQuickRepeater::innerRequired()
     QCOMPARE(a->itemAt(0)->property("text").toString(), u"meow");
     QCOMPARE(a->itemAt(1)->property("age").toInt(), 5);
     QCOMPARE(a->itemAt(1)->property("text").toString(), u"woof");
+}
+
+void tst_QQuickRepeater::boundDelegateComponent()
+{
+    QQmlEngine engine;
+    const QUrl url(testFileUrl("boundDelegateComponent.qml"));
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    for (int i = 0; i < 3; ++i) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(QLatin1String("%1:12: ReferenceError: modelData is not defined")
+                                   .arg(url.toString())));
+    }
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+    QQuickRepeater *a = qobject_cast<QQuickRepeater *>(
+            qmlContext(o.data())->objectForName(QStringLiteral("undefinedModelData")));
+    QVERIFY(a);
+    QCOMPARE(a->count(), 3);
+    for (int i = 0; i < 3; ++i)
+        QCOMPARE(a->itemAt(i)->objectName(), QStringLiteral("rootundefined"));
+
+    QQuickRepeater *b = qobject_cast<QQuickRepeater *>(
+            qmlContext(o.data())->objectForName(QStringLiteral("requiredModelData")));
+    QVERIFY(b);
+    QCOMPARE(b->count(), 3);
+    QCOMPARE(b->itemAt(0)->objectName(), QStringLiteral("rootaa"));
+    QCOMPARE(b->itemAt(1)->objectName(), QStringLiteral("rootbb"));
+    QCOMPARE(b->itemAt(2)->objectName(), QStringLiteral("rootcc"));
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

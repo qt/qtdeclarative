@@ -1164,6 +1164,7 @@ struct Unit
         ListPropertyAssignReplaceIfNotDefault = 0x100,
         ListPropertyAssignReplace
                 = ListPropertyAssignReplaceIfDefault | ListPropertyAssignReplaceIfNotDefault,
+        ComponentsBound = 0x200,
     };
     quint32_le flags;
     quint32_le stringTableSize;
