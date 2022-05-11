@@ -214,6 +214,8 @@ private slots:
     void receiveTapOutsideContentItem();
     void flickWhenRotated_data();
     void flickWhenRotated();
+    void scrollingWithFractionalExtentSize_data();
+    void scrollingWithFractionalExtentSize();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2849,6 +2851,91 @@ void tst_qquickflickable::flickWhenRotated() // QTBUG-99639
     qCDebug(lcTests) << "flicking from" << startPoint << "to" << endPoint << ": ended at contentY" << flickable->contentY();
     // usually flickable->contentY() is at 275 or very close
     QVERIFY(!flickable->isAtYBeginning());
+}
+
+
+void tst_qquickflickable::scrollingWithFractionalExtentSize_data()
+{
+    QTest::addColumn<QByteArray>("property");
+    QTest::addColumn<bool>("isYAxis");
+    QTest::addColumn<bool>("atBeginning");
+    QTest::addColumn<QQuickFlickable::BoundsBehaviorFlag>("boundsBehaviour");
+
+    QTest::newRow("minyextent") << QByteArray("topMargin") << true << true << QQuickFlickable::StopAtBounds;
+    QTest::newRow("maxyextent") << QByteArray("bottomMargin") << true << false << QQuickFlickable::StopAtBounds;
+    QTest::newRow("minxextent") << QByteArray("leftMargin") << false << true << QQuickFlickable::StopAtBounds;
+    QTest::newRow("maxxextent") << QByteArray("rightMargin") << false << false << QQuickFlickable::StopAtBounds;
+
+    QTest::newRow("minyextent") << QByteArray("topMargin") << true << true << QQuickFlickable::DragAndOvershootBounds;
+    QTest::newRow("maxyextent") << QByteArray("bottomMargin") << true << false << QQuickFlickable::DragAndOvershootBounds;
+    QTest::newRow("minxextent") << QByteArray("leftMargin") << false << true << QQuickFlickable::DragAndOvershootBounds;
+    QTest::newRow("maxxextent") << QByteArray("rightMargin") << false << false << QQuickFlickable::DragAndOvershootBounds;
+}
+
+void tst_qquickflickable::scrollingWithFractionalExtentSize() // QTBUG-101268
+{
+    QFETCH(QByteArray, property);
+    QFETCH(bool, isYAxis);
+    QFETCH(bool, atBeginning);
+    QFETCH(QQuickFlickable::BoundsBehaviorFlag, boundsBehaviour);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("fractionalExtent.qml")));
+    QQuickItem *rootItem = window.rootObject();
+    QVERIFY(rootItem);
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(rootItem);
+    QVERIFY(flickable);
+    flickable->setBoundsBehavior(boundsBehaviour);
+
+    qreal value = 100.5;
+    flickable->setProperty(property.constData(), 100.5);
+    if (isYAxis)
+        flickable->setContentY(atBeginning ? -value : value + qAbs(flickable->height() - flickable->contentHeight()));
+    else
+        flickable->setContentX(atBeginning ? -value : value + qAbs(flickable->width() - flickable->contentWidth()));
+
+    if (isYAxis) {
+        QVERIFY(atBeginning ? flickable->isAtYBeginning() : flickable->isAtYEnd());
+        QVERIFY(!flickable->isMovingVertically());
+    } else {
+        QVERIFY(atBeginning ? flickable->isAtXBeginning() : flickable->isAtXEnd());
+        QVERIFY(!flickable->isMovingHorizontally());
+    }
+
+    QPointF pos(flickable->x() + flickable->width() / 2, flickable->y() + flickable->height() / 2);
+    QPoint angleDelta(isYAxis ? 0 : (atBeginning ? -50 : 50), isYAxis ? (atBeginning ? -50 : 50) : 0);
+
+    QWheelEvent wheelEvent1(pos, window.mapToGlobal(pos), QPoint(), angleDelta,
+                               Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+
+    QGuiApplication::sendEvent(&window, &wheelEvent1);
+    qApp->processEvents();
+    if (isYAxis) {
+        QVERIFY(flickable->isMovingVertically());
+        QTRY_VERIFY(!flickable->isMovingVertically());
+        QVERIFY(!(atBeginning ? flickable->isAtYBeginning() : flickable->isAtYEnd()));
+    } else {
+        QVERIFY(flickable->isMovingHorizontally());
+        QTRY_VERIFY(!flickable->isMovingHorizontally());
+        QVERIFY(!(atBeginning ? flickable->isAtXBeginning() : flickable->isAtXEnd()));
+    }
+
+    QWheelEvent wheelEvent2(pos, window.mapToGlobal(pos), QPoint(), -angleDelta,
+                               Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+    wheelEvent2.setTimestamp(wheelEvent1.timestamp() + 10);
+
+    QGuiApplication::sendEvent(&window, &wheelEvent2);
+    qApp->processEvents();
+
+    if (isYAxis) {
+        QVERIFY(flickable->isMovingVertically());
+        QTRY_VERIFY(!flickable->isMovingVertically());
+        QVERIFY(atBeginning ? flickable->isAtYBeginning() : flickable->isAtYEnd());
+    } else {
+        QVERIFY(flickable->isMovingHorizontally());
+        QTRY_VERIFY(!flickable->isMovingHorizontally());
+        QVERIFY(atBeginning ? flickable->isAtXBeginning() : flickable->isAtXEnd());
+    }
 }
 
 QTEST_MAIN(tst_qquickflickable)
