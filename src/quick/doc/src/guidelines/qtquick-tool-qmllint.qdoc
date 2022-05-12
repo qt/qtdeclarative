@@ -51,6 +51,7 @@ qmllint warns about:
   \li Unqualified accesses of properties
   \li Usage of signal handlers without a matching signal
   \li Usage of with statements in QML
+  \li Issues related to compiling QML code
   \li Unused imports
   \li Deprecated components and properties
   \li And many other things
@@ -64,6 +65,13 @@ To add more import paths not included in the default,
 add them via the \c{-I} flag.
 
 To get an overview and explanation of all available command line options, run \c{qmllint --help}.
+
+\section2 Compiler warnings
+
+qmllint can warn you about code that cannot be compiled by \l{qmlsc}.
+
+These warnigs are not enabled by default. In order to enable them specify
+\c{--compiler warning} or adjust your settings file accordingly.
 
 \section2 Marking components and properties as deprecated
 
@@ -152,4 +160,5 @@ This can be used to more easily integrate qmllint in your pre-commit hooks or
 CI testing.
 
 \sa {Type Description Files}{qmltypes}
+\sa {QtQuick Tools and Utilities}{qtquick-tools-and-utilities}
 */
