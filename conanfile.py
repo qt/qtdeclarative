@@ -64,6 +64,15 @@ _qtdeclarative_features = [
     "quick-sprite",
     "quick-tableview",
     "quick-treeview",
+    "quickcontrols2-fusion",
+    "quickcontrols2-imagine",
+    "quickcontrols2-macos",
+    "quickcontrols2-material",
+    "quickcontrols2-universal",
+    "quickcontrols2-windows",
+    "quicktemplates2-calendar",
+    "quicktemplates2-hover",
+    "quicktemplates2-multitouch",
 ]
 
 
