@@ -48,12 +48,12 @@ disable them outright.
 
 qmllint warns about:
 \list
-  \li Unqualified accesses of properties.
-  \li Usage of signal handlers without a matching signal.
-  \li Usage of with statements in QML.
-  \li Unused imports.
-  \li Deprecated components and properties.
-  \li And many other things.
+  \li Unqualified accesses of properties
+  \li Usage of signal handlers without a matching signal
+  \li Usage of with statements in QML
+  \li Unused imports
+  \li Deprecated components and properties
+  \li And many other things
 \endlist
 
 \note In order for qmllint to work properly, it requires type information.
@@ -65,7 +65,7 @@ add them via the \c{-I} flag.
 
 To get an overview and explanation of all available command line options, run \c{qmllint --help}.
 
-\section2 Marking components and properties as deprecated.
+\section2 Marking components and properties as deprecated
 
 qmllint allows you to mark both properties and components as deprecated:
 
