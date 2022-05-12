@@ -141,6 +141,21 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
         return {};
     }
 
+    static std::optional<QQmlJSMetaProperty>
+    changeHandlerProperty(const QQmlJSScope::ConstPtr &scope, QStringView signalName)
+    {
+        if (!signalName.endsWith(QLatin1String("Changed")))
+            return {};
+        constexpr int length = int(sizeof("Changed") / sizeof(char)) - 1;
+        signalName.chop(length);
+        auto p = scope->property(signalName.toString());
+        const bool isBindable = !p.bindable().isEmpty();
+        const bool canNotify = !p.notify().isEmpty();
+        if (p.isValid() && (isBindable || canNotify))
+            return p;
+        return {};
+    }
+
     static bool hasCompositeBase(const QQmlJSScope::ConstPtr &scope)
     {
         if (!scope)

@@ -168,11 +168,9 @@ void QmltcCodeGenerator::generate_setIdValue(QStringList *block, const QString &
                                                              idString, accessor);
 }
 
-void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(QStringList *block, const QString &url,
-                                                             qsizetype index,
-                                                             const QString &accessor,
-                                                             const QString &returnType,
-                                                             const QList<QmltcVariable> &parameters)
+void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+        QStringList *block, const QString &url, QQmlJSMetaMethod::AbsoluteFunctionIndex index,
+        const QString &accessor, const QString &returnType, const QList<QmltcVariable> &parameters)
 {
     *block << u"QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(" + accessor + u"));";
 
@@ -199,7 +197,9 @@ void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(QStringList *block,
 
     *block << u"void *_a[] = { " + args.join(u", "_s) + u" };";
     *block << u"QMetaType _t[] = { " + types.join(u", "_s) + u" };";
-    *block << u"e->executeRuntimeFunction(" + url + u", " + QString::number(index) + u", "
+    const qsizetype runtimeIndex = static_cast<qsizetype>(index);
+    Q_ASSERT(runtimeIndex >= 0);
+    *block << u"e->executeRuntimeFunction(" + url + u", " + QString::number(runtimeIndex) + u", "
                     + accessor + u", " + QString::number(parameters.size()) + u", _a, _t);";
     if (returnType != u"void"_s)
         *block << u"return " + returnValueName + u";";

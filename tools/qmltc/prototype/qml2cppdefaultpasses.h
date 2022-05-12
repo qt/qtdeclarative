@@ -43,12 +43,9 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 //   twice)
 void checkForNamingCollisionsWithCpp(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 
-// TODO: the below passes are not "default" (cannot be directly added)
-
 // ensures that all QQmlJSScope objects have unique internalName() and checks
 // whether some name is C++ reserved keyword
-QHash<QString, qsizetype> makeUniqueCppNames(const Qml2CppContext &context,
-                                             QList<Qml2CppObject> &objects);
+void makeUniqueCppNames(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 
 // sets up QML-originated base types of \a objects and \a objects themselves.
 // processed types are expected to be generated to C++. returns a set of QML
@@ -60,8 +57,7 @@ QSet<QString> setupQmlCppTypes(const Qml2CppContext &context, QList<Qml2CppObjec
 // value type, etc.). returns aliases which point to ids. must be done after
 // setupQmlCppTypes() since some (own) aliased properties are not fully set up
 // untile then and thus do not have the necessary information
-QSet<QQmlJSMetaProperty> deferredResolveValidateAliases(const Qml2CppContext &context,
-                                                        QList<Qml2CppObject> &objects);
+void deferredResolveValidateAliases(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 
 // finds all required C++ include files that are needed for the generated C++
 QSet<QString> findCppIncludes(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
@@ -80,10 +76,6 @@ QHash<int, int> findAndResolveImplicitComponents(const Qml2CppContext &context,
                                                  QList<Qml2CppObject> &objects);
 
 void setObjectIds(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
-
-// finds an immediate parent of each to-be-compiled type
-QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr>
-findImmediateParents(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 
 QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
                                                 QList<Qml2CppObject> &objects);

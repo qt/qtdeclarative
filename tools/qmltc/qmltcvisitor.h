@@ -42,7 +42,6 @@ QT_BEGIN_NAMESPACE
 class QmltcVisitor : public QQmlJSImportVisitor
 {
     void findCppIncludes();
-    void findTypeIndicesInQmlDocument();
     void postVisitResolve(const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>>
                                   &qmlIrOrderedBindings);
 
@@ -77,16 +76,14 @@ public:
 
     qsizetype qmlComponentIndex(const QQmlJSScope::ConstPtr &type) const
     {
-        Q_ASSERT(m_syntheticTypeIndices.contains(type));
         Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
-        Q_ASSERT(type->isComponentRootElement());
-        return m_syntheticTypeIndices[type] + qmlTypes().size();
+        return m_syntheticTypeIndices.value(type, -1);
     }
 
     qsizetype qmlIrObjectIndex(const QQmlJSScope::ConstPtr &type) const
     {
-        Q_ASSERT(m_qmlIrObjectIndices.contains(type));
         Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+        Q_ASSERT(m_qmlIrObjectIndices.contains(type));
         return m_qmlIrObjectIndices[type];
     }
 

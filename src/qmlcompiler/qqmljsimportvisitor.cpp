@@ -928,21 +928,6 @@ void QQmlJSImportVisitor::processPropertyBindings()
     }
 }
 
-static std::optional<QQmlJSMetaProperty>
-propertyForChangeHandler(const QQmlJSScope::ConstPtr &scope, QString name)
-{
-    if (!name.endsWith(QLatin1String("Changed")))
-        return {};
-    constexpr int length = int(sizeof("Changed") / sizeof(char)) - 1;
-    name.chop(length);
-    auto p = scope->property(name);
-    const bool isBindable = !p.bindable().isEmpty();
-    const bool canNotify = !p.notify().isEmpty();
-    if (p.isValid() && (isBindable || canNotify))
-        return p;
-    return {};
-}
-
 void QQmlJSImportVisitor::checkSignals()
 {
     for (auto it = m_signals.constBegin(); it != m_signals.constEnd(); ++it) {
@@ -963,7 +948,8 @@ void QQmlJSImportVisitor::checkSignals()
             if (signal.has_value()) {
                 if (signalScope->hasMethod(*signal)) {
                     setSignalMethod(signalScope, *signal);
-                } else if (auto p = propertyForChangeHandler(signalScope, *signal); p.has_value()) {
+                } else if (auto p = QQmlJSUtils::changeHandlerProperty(signalScope, *signal);
+                           p.has_value()) {
                     // we have a change handler of the form "onXChanged" where 'X'
                     // is a property name
 
@@ -1930,7 +1916,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
             const auto methods = scope->methods(signalName, QQmlJSMetaMethod::Signal);
             if (!methods.isEmpty())
                 kind = QQmlJSMetaPropertyBinding::Script_SignalHandler;
-            else if (propertyForChangeHandler(scope, signalName).has_value())
+            else if (QQmlJSUtils::changeHandlerProperty(scope, signalName).has_value())
                 kind = QQmlJSMetaPropertyBinding::Script_ChangeHandler;
             // ### TODO: needs an error if kind is still Invalid
 
