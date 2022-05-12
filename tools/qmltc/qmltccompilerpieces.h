@@ -89,7 +89,8 @@ struct QmltcCodeGenerator
     inline QString generate_typeCount(Predicate p) const;
 
     static void generate_callExecuteRuntimeFunction(QStringList *block, const QString &url,
-                                                    qsizetype index, const QString &accessor,
+                                                    QQmlJSMetaMethod::AbsoluteFunctionIndex index,
+                                                    const QString &accessor,
                                                     const QString &returnType,
                                                     const QList<QmltcVariable> &parameters = {});
 
@@ -233,8 +234,11 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
 
     if (int id = visitor->runtimeId(type); id >= 0) {
         current.init.body << u"// 3. set id since it is provided"_s;
+        QString idString = visitor->addressableScopes().id(type);
+        if (idString.isEmpty())
+            idString = u"<unknown>"_s;
         QmltcCodeGenerator::generate_setIdValue(&current.init.body, u"context"_s, id, u"this"_s,
-                                                u"<unknown>"_s);
+                                                idString);
     }
 
     // if type has an extension, create a dynamic meta object for it

@@ -60,6 +60,22 @@ QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, Qm
 // incomplete type in the header (~std::unique_ptr<> fails with a static_assert)
 QmltcCompiler::~QmltcCompiler() = default;
 
+QString QmltcCompiler::newSymbol(const QString &base)
+{
+    QString symbol = base;
+    symbol.replace(QLatin1String("."), QLatin1String("_"));
+    while (symbol.startsWith(QLatin1Char('_')) && symbol.size() >= 2
+           && (symbol[1].isUpper() || symbol[1] == QLatin1Char('_'))) {
+        symbol.remove(0, 1);
+    }
+    if (!m_symbols.contains(symbol)) {
+        m_symbols.insert(symbol, 1);
+    } else {
+        symbol += u"_" + QString::number(m_symbols[symbol]++);
+    }
+    return symbol;
+}
+
 void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
 {
     m_info = info;
@@ -89,7 +105,7 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
 
     QmltcMethod urlMethod;
     compileUrlMethod(urlMethod, generator.urlMethodName());
-    m_prototypeCodegen->setUrlMethodName(urlMethod.name);
+    m_urlMethodName = urlMethod.name;
 
     const auto objects = m_prototypeCodegen->objects();
     QList<CodeGenerator::CodeGenObject> filteredObjects;
@@ -305,10 +321,21 @@ void QmltcCompiler::compileType(
     compileElements(current, type);
 }
 
+template<typename Iterator>
+static Iterator partitionBindings(Iterator first, Iterator last)
+{
+    // NB: the code generator cares about script bindings being processed at a
+    // later point, so we should sort or partition the range. we do a stable
+    // partition since the relative order of binding evaluation affects the UI
+    return std::stable_partition(first, last, [](const QQmlJSMetaPropertyBinding &b) {
+        // we want script bindings to be at the end, so do the negation of "is
+        // script binding"
+        return b.bindingType() != QQmlJSMetaPropertyBinding::Script;
+    });
+}
+
 void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::ConstPtr &type)
 {
-    const CodeGenerator::CodeGenObject &object = m_prototypeCodegen->objectFromType(type);
-
     // compile components of a type:
     // - enums
     // - properties
@@ -346,25 +373,11 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
     for (const QQmlJSMetaMethod &m : methods)
         compileMethod(current, m, type);
 
-    {
-        const auto sortedBindings = CodeGenerator::toOrderedSequence(
-                object.irObject->bindingsBegin(), object.irObject->bindingsEnd(),
-                object.irObject->bindingCount());
+    auto bindings = type->ownPropertyBindingsInQmlIROrder();
+    partitionBindings(bindings.begin(), bindings.end());
 
-        auto scriptBindingsBegin =
-                std::find_if(sortedBindings.cbegin(), sortedBindings.cend(),
-                             [](auto it) { return it->type() == QmlIR::Binding::Type_Script; });
-        auto it = sortedBindings.cbegin();
-        for (; it != scriptBindingsBegin; ++it) {
-            m_prototypeCodegen->compileBinding(current, **it, object,
-                                               { object.type, u"this"_s, u""_s, false });
-        }
-
-        for (; it != sortedBindings.cend(); ++it) {
-            m_prototypeCodegen->compileBinding(current, **it, object,
-                                               { type, u"this"_s, u""_s, false });
-        }
-    }
+    for (auto it = bindings.begin(); it != bindings.end(); ++it)
+        compileBinding(current, *it, type, { type });
 }
 
 void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
@@ -385,6 +398,8 @@ compileMethodParameters(const QStringList &names,
                         const QList<QSharedPointer<const QQmlJSScope>> &types,
                         bool allowUnnamed = false)
 {
+    Q_ASSERT(names.size() == types.size());
+
     QList<QmltcVariable> parameters;
     const auto size = names.size();
     parameters.reserve(size);
@@ -399,22 +414,23 @@ compileMethodParameters(const QStringList &names,
     return parameters;
 }
 
+static QString figureReturnType(const QQmlJSMetaMethod &m)
+{
+    const bool isVoidMethod =
+            m.returnTypeName() == u"void" || m.methodType() == QQmlJSMetaMethod::Signal;
+    Q_ASSERT(isVoidMethod || m.returnType());
+    QString type;
+    if (isVoidMethod) {
+        type = u"void"_s;
+    } else {
+        type = m.returnType()->augmentedInternalName();
+    }
+    return type;
+}
+
 void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
                                   const QQmlJSScope::ConstPtr &owner)
 {
-    const auto figureReturnType = [](const QQmlJSMetaMethod &m) {
-        const bool isVoidMethod =
-                m.returnTypeName() == u"void" || m.methodType() == QQmlJSMetaMethod::Signal;
-        Q_ASSERT(isVoidMethod || m.returnType());
-        QString type;
-        if (isVoidMethod) {
-            type = u"void"_s;
-        } else {
-            type = m.returnType()->augmentedInternalName();
-        }
-        return type;
-    };
-
     const auto returnType = figureReturnType(m);
     const auto paramNames = m.parameterNames();
     const auto paramTypes = m.parameterTypes();
@@ -424,12 +440,10 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
 
     QStringList code;
     if (methodType != QQmlJSMetaMethod::Signal) {
-        const qsizetype index =
-                static_cast<qsizetype>(owner->ownRuntimeFunctionIndex(m.jsFunctionIndex()));
-        Q_ASSERT(index >= 0);
         QmltcCodeGenerator urlGenerator { m_url, m_visitor };
         QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
-                &code, urlGenerator.urlMethodName() + u"()", index, u"this"_s, returnType,
+                &code, urlGenerator.urlMethodName() + u"()",
+                owner->ownRuntimeFunctionIndex(m.jsFunctionIndex()), u"this"_s, returnType,
                 compiledParams);
     }
 
@@ -784,85 +798,610 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
     }
 }
 
+static QString generate_callCompilationUnit(const QString &urlMethodName)
+{
+    return u"QQmlEnginePrivate::get(engine)->compilationUnitFromUrl(%1())"_s.arg(urlMethodName);
+}
+
 void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
                                    const QQmlJSScope::ConstPtr &type,
                                    const BindingAccessorData &accessor)
 {
-    Q_UNUSED(current);
-    Q_UNUSED(accessor);
     QString propertyName = binding.propertyName();
-    if (propertyName.isEmpty()) {
-        // if empty, try default property
-        for (QQmlJSScope::ConstPtr t = type->baseType(); t && propertyName.isEmpty();
-             t = t->baseType()) {
-            propertyName = t->defaultPropertyName();
+    Q_ASSERT(!propertyName.isEmpty());
+
+    auto bindingType = binding.bindingType();
+
+    // Note: unlike QQmlObjectCreator, we don't have to do a complicated
+    // deferral logic for bindings: if a binding is deferred, it is not compiled
+    // (potentially, with all the bindings inside of it), period.
+    if (type->isNameDeferred(propertyName)) {
+        const auto location = binding.sourceLocation();
+        if (bindingType == QQmlJSMetaPropertyBinding::GroupProperty) {
+            qCWarning(lcQmltcCompiler)
+                    << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
+                                      "binding on a group property.")
+                               .arg(QString::number(location.startLine),
+                                    QString::number(location.startColumn));
+            // we do not support PropertyChanges and other types with similar
+            // behavior yet, so this binding is compiled
+        } else {
+            qCDebug(lcQmltcCompiler)
+                    << QStringLiteral(
+                               "Binding at line %1 column %2 is deferred and thus not compiled")
+                               .arg(QString::number(location.startLine),
+                                    QString::number(location.startColumn));
+            return;
         }
     }
-    Q_ASSERT(!propertyName.isEmpty());
+
+    const auto assignToProperty = [&](const QQmlJSMetaProperty &p, const QString &value,
+                                      bool constructFromQObject = false) {
+        if (p.isAlias() && m_prototypeCodegen->hasQmlCompiledBaseType(type)) {
+            qCDebug(lcQmltcCompiler) << u"Property '" + p.propertyName()
+                            + u"' is an alias on type '" + type->internalName()
+                            + u"' which is a QML type compiled to C++. The assignment is special"
+                            + u"in this case";
+            // TODO: attest whether we could simplify this (see why prototype
+            // did special code generation)
+            QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, type, p, value,
+                                                          accessor.name, constructFromQObject);
+        } else {
+            QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, type, p, value,
+                                                          accessor.name, constructFromQObject);
+        }
+    };
+
     QQmlJSMetaProperty p = type->property(propertyName);
-    Q_ASSERT(p.isValid());
     QQmlJSScope::ConstPtr propertyType = p.type();
-    Q_ASSERT(propertyType);
 
-    // NB: we assume here that QmltcVisitor took care of type mismatches and
-    // other errors, so the compiler just needs to add correct instructions,
-    // without if-checking every type
+    const auto addObjectBinding = [&](const QString &value) {
+        if (p.isList()) {
+            const auto &listName =
+                    m_uniques[UniqueStringId(current, propertyName)].qmlListVariableName;
+            Q_ASSERT(!listName.isEmpty());
+            current.endInit.body << u"%1.append(%2);"_qs.arg(listName, value);
+        } else {
+            assignToProperty(p, value, /* constructFromQObject = */ true);
+        }
+    };
 
-    QmltcCodeGenerator generator {};
+    // when property is list, create a local variable (unique per-scope &&
+    // per-property) that would be used to append new elements
+    if (p.isList()) {
+        auto &listName = m_uniques[UniqueStringId(current, propertyName)].qmlListVariableName;
+        if (listName.isEmpty()) { // not created yet, add extra instructions
+            listName = u"listref_" + propertyName;
+            current.endInit.body << QStringLiteral("QQmlListReference %1(%2, %3);")
+                                            .arg(listName, accessor.name,
+                                                 QQmlJSUtils::toLiteral(propertyName,
+                                                                        u"QByteArrayLiteral"));
+            current.endInit.body << QStringLiteral("Q_ASSERT(%1.canAppend());").arg(listName);
+        }
+    }
 
     switch (binding.bindingType()) {
     case QQmlJSMetaPropertyBinding::BoolLiteral: {
         const bool value = binding.boolValue();
-        generator.generate_assignToProperty(&current.init.body, type, p,
-                                            value ? u"true"_s : u"false"_s, accessor.name);
+        assignToProperty(p, value ? u"true"_s : u"false"_s);
         break;
     }
     case QQmlJSMetaPropertyBinding::NumberLiteral: {
-        const QString value = QString::number(binding.numberValue());
-        generator.generate_assignToProperty(&current.init.body, type, p, value, accessor.name);
+        assignToProperty(p, QString::number(binding.numberValue()));
         break;
     }
     case QQmlJSMetaPropertyBinding::StringLiteral: {
-        const QString value = binding.stringValue();
-        generator.generate_assignToProperty(&current.init.body, type, p,
-                                            QQmlJSUtils::toLiteral(value), accessor.name);
+        assignToProperty(p, QQmlJSUtils::toLiteral(binding.stringValue()));
         break;
     }
     case QQmlJSMetaPropertyBinding::Null: {
         // poor check: null bindings are only supported for var and objects
-        if (propertyType != m_typeResolver->varType()
-            && propertyType->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-            // TODO: this should really be done before the compiler here
+        Q_ASSERT(propertyType->isSameType(m_typeResolver->varType())
+                 || propertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference);
+        if (propertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+            assignToProperty(p, u"nullptr"_s);
+        else
+            assignToProperty(p, u"QVariant::fromValue(nullptr)"_s);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::Script: {
+        QString bindingSymbolName = type->internalName() + u'_' + propertyName + u"_binding";
+        bindingSymbolName.replace(u'.', u'_'); // can happen with group properties
+        compileScriptBinding(current, binding, bindingSymbolName, type, propertyName, propertyType,
+                             accessor);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::Object: {
+        // NB: object is compiled with compileType(), here just need to use it
+        auto object = binding.objectType();
+
+        // Note: despite a binding being set for `accessor`, we use "this" as a
+        // parent of a created object. Both attached and grouped properties are
+        // parented by "this", so lifetime-wise we should be fine
+        const QString qobjectParent = u"this"_s;
+
+        if (!propertyType) {
             recordError(binding.sourceLocation(),
-                        u"Cannot assign null to incompatible property"_s);
-        } else if (propertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
-            generator.generate_assignToProperty(&current.init.body, type, p, u"nullptr"_s,
-                                                accessor.name);
+                        u"Binding on property '" + propertyName + u"' of unknown type");
+            return;
+        }
+
+        // special case of implicit or explicit component:
+        if (qsizetype index = m_visitor->qmlComponentIndex(object); index >= 0) {
+            // TODO: or do this in current.init? - yes, because otherwise
+            // components are not going to be id-accessible, which is bad
+
+            const QString objectName = newSymbol(u"sc"_s);
+            current.endInit.body << u"{"_s;
+            current.endInit.body << QStringLiteral(
+                                            "auto thisContext = QQmlData::get(%1)->outerContext;")
+                                            .arg(qobjectParent);
+            current.endInit.body << QStringLiteral(
+                                            "auto %1 = QQmlObjectCreator::createComponent(engine, "
+                                            "%2, %3, %4, thisContext);")
+                                            .arg(objectName,
+                                                 generate_callCompilationUnit(m_urlMethodName),
+                                                 QString::number(index), qobjectParent);
+            current.endInit.body << QStringLiteral("thisContext->installContext(QQmlData::get(%1), "
+                                                   "QQmlContextData::OrdinaryObject);")
+                                            .arg(objectName);
+
+            // objects wrapped in implicit components do not have visible ids,
+            // however, explicit components can have an id and that one is going
+            // to be visible in the common document context
+            if (!object->isComponentRootElement()) {
+                if (int id = m_visitor->runtimeId(object); id >= 0) {
+                    QString idString = m_visitor->addressableScopes().id(object);
+                    if (idString.isEmpty())
+                        idString = u"<unknown>"_s;
+                    QmltcCodeGenerator::generate_setIdValue(&current.endInit.body, u"thisContext"_s,
+                                                            id, objectName, idString);
+                }
+            }
+            addObjectBinding(objectName);
+            current.endInit.body << u"}"_s;
+            break;
+        }
+
+        const QString objectName = newSymbol(u"o"_s);
+        current.init.body << u"auto %1 = new %2(creator, engine, %3);"_s.arg(
+                objectName, object->internalName(), qobjectParent);
+        current.init.body << u"creator->set(%1, %2);"_s.arg(
+                QString::number(m_visitor->creationIndex(object)), objectName);
+
+        // refetch the same object during endInit to set the bindings
+        current.endInit.body << u"auto %1 = creator->get<%2>(%3);"_s.arg(
+                objectName, object->internalName(),
+                QString::number(m_visitor->creationIndex(object)));
+        addObjectBinding(objectName);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::Interceptor:
+        Q_FALLTHROUGH();
+    case QQmlJSMetaPropertyBinding::ValueSource: {
+        // NB: object is compiled with compileType(), here just need to use it
+        QSharedPointer<const QQmlJSScope> object;
+        if (bindingType == QQmlJSMetaPropertyBinding::Interceptor)
+            object = binding.interceptorType();
+        else
+            object = binding.valueSourceType();
+
+        // Note: despite a binding being set for `accessor`, we use "this" as a
+        // parent of a created object. Both attached and grouped properties are
+        // parented by "this", so lifetime-wise we should be fine
+        const QString qobjectParent = u"this"_s;
+
+        if (!propertyType) {
+            recordError(binding.sourceLocation(),
+                        u"Binding on property '" + propertyName + u"' of unknown type");
+            return;
+        }
+
+        auto &objectName = m_uniques[UniqueStringId(current, propertyName)].onAssignmentObjectName;
+        if (objectName.isEmpty()) {
+            objectName = u"onAssign_" + propertyName;
+
+            current.init.body << u"auto %1 = new %2(creator, engine, %3);"_s.arg(
+                    objectName, object->internalName(), qobjectParent);
+            current.init.body << u"creator->set(%1, %2);"_s.arg(
+                    QString::number(m_visitor->creationIndex(object)), objectName);
+
+            current.endInit.body << u"auto %1 = creator->get<%2>(%3);"_s.arg(
+                    objectName, object->internalName(),
+                    QString::number(m_visitor->creationIndex(object)));
+        }
+
+        // NB: we expect one "on" assignment per property, so creating
+        // QQmlProperty each time should be fine (unlike QQmlListReference)
+        current.endInit.body << u"{"_s;
+        current.endInit.body << u"QQmlProperty qmlprop(%1, %2);"_s.arg(
+                accessor.name, QQmlJSUtils::toLiteral(propertyName));
+        current.endInit.body
+                << u"QT_PREPEND_NAMESPACE(QQmlCppOnAssignmentHelper)::set(%1, qmlprop);"_s.arg(
+                           objectName);
+        current.endInit.body << u"}"_s;
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::AttachedProperty: {
+        Q_ASSERT(accessor.name == u"this"_s); // doesn't have to hold, in fact
+        const auto attachedType = binding.attachingType();
+        Q_ASSERT(attachedType);
+        auto subbindings = attachedType->ownPropertyBindingsInQmlIROrder();
+        if (propertyName == u"Component"_s) {
+            // TODO: there's a special QQmlComponentAttached, which has to be
+            // called? c.f. qqmlobjectcreator.cpp's finalize()
+            for (const auto &b : qAsConst(subbindings)) {
+                Q_ASSERT(b.bindingType() == QQmlJSMetaPropertyBinding::Script);
+                compileScriptBindingOfComponent(current, attachedType, b, b.propertyName());
+            }
         } else {
-            generator.generate_assignToProperty(&current.init.body, type, p,
-                                                u"QVariant::fromValue(nullptr)"_s, accessor.name);
+            const QString attachingTypeName = propertyName; // acts as an identifier
+            auto attachingType = m_typeResolver->typeForName(attachingTypeName);
+
+            QString attachedTypeName = attachedType->baseTypeName();
+            Q_ASSERT(!attachedTypeName.isEmpty());
+
+            auto &attachedMemberName =
+                    m_uniques[UniqueStringId(current, propertyName)].attachedVariableName;
+            if (attachedMemberName.isEmpty()) {
+                attachedMemberName = u"m_" + attachingTypeName;
+                // add attached type as a member variable to allow noop lookup
+                current.variables.emplaceBack(attachedTypeName + u" *", attachedMemberName,
+                                              u"nullptr"_s);
+                // Note: getting attached property is fairly expensive
+                const QString getAttachedPropertyLine = u"qobject_cast<" + attachedTypeName
+                        + u" *>(qmlAttachedPropertiesObject<" + attachingType->internalName()
+                        + u">(this, /* create = */ true))";
+                current.endInit.body
+                        << attachedMemberName + u" = " + getAttachedPropertyLine + u";";
+            }
+
+            // compile bindings of the attached property
+            partitionBindings(subbindings.begin(), subbindings.end());
+            for (const auto &b : qAsConst(subbindings)) {
+                compileBinding(current, b, attachedType,
+                               { type, attachedMemberName, propertyName, false });
+            }
         }
         break;
     }
-    // case QQmlJSMetaPropertyBinding::RegExpLiteral:
-    // case QQmlJSMetaPropertyBinding::Translation:
-    // case QQmlJSMetaPropertyBinding::TranslationById:
-    // case QQmlJSMetaPropertyBinding::Script:
-    // case QQmlJSMetaPropertyBinding::Object:
-    // case QQmlJSMetaPropertyBinding::Interceptor:
-    // case QQmlJSMetaPropertyBinding::ValueSource:
-    // case QQmlJSMetaPropertyBinding::AttachedProperty:
-    // case QQmlJSMetaPropertyBinding::GroupProperty:
+    case QQmlJSMetaPropertyBinding::GroupProperty: {
+        Q_ASSERT(accessor.name == u"this"_s); // doesn't have to hold, in fact
+        if (p.read().isEmpty()) {
+            recordError(binding.sourceLocation(),
+                        u"READ function of group property '" + propertyName + u"' is unknown");
+            return;
+        }
+
+        auto groupType = binding.groupType();
+        Q_ASSERT(groupType);
+
+        const bool isValueType =
+                propertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Value;
+        if (!isValueType
+            && propertyType->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
+            recordError(binding.sourceLocation(),
+                        u"Group property '" + propertyName + u"' has unsupported access semantics");
+            return;
+        }
+
+        auto subbindings = groupType->ownPropertyBindingsInQmlIROrder();
+        auto firstScript = partitionBindings(subbindings.begin(), subbindings.end());
+
+        // if we have no non-script bindings, we have no bindings that affect
+        // the value type group, so no reason to generate the wrapping code
+        const bool generateValueTypeCode = isValueType && (subbindings.begin() != firstScript);
+
+        QString groupAccessor =
+                QmltcCodeGenerator::wrap_privateClass(accessor.name, p) + u"->" + p.read() + u"()";
+        // NB: used when isValueType == true
+        const QString groupPropertyVarName = accessor.name + u"_group_" + propertyName;
+        // value types are special
+        if (generateValueTypeCode) {
+            if (p.write().isEmpty()) { // just reject this
+                recordError(binding.sourceLocation(),
+                            u"Group property '" + propertyName
+                                    + u"' is a value type without a setter");
+                return;
+            }
+
+            current.endInit.body << u"auto " + groupPropertyVarName + u" = " + groupAccessor + u";";
+            // addressof operator is to make the binding logic work, which
+            // expects that `accessor.name` is a pointer type
+            groupAccessor = QmltcCodeGenerator::wrap_addressof(groupPropertyVarName);
+        }
+
+        // compile bindings of the grouped property
+        const auto compile = [&](const QQmlJSMetaPropertyBinding &b) {
+            compileBinding(current, b, groupType,
+                           { type, groupAccessor, propertyName, isValueType });
+        };
+
+        auto it = subbindings.begin();
+        for (; it != firstScript; ++it) {
+            Q_ASSERT(it->bindingType() != QQmlJSMetaPropertyBinding::Script);
+            compile(*it);
+        }
+
+        // NB: script bindings are special on group properties. if our group is
+        // a value type, the binding would be installed on the *object* that
+        // holds the value type and not on the value type itself. this may cause
+        // subtle side issues (esp. when script binding is actually a simple
+        // enum value assignment - which is not recognized specially):
+        //
+        // auto valueTypeGroupProperty = getCopy();
+        // installBinding(valueTypeGroupProperty, "subproperty1"); // changes subproperty1 value
+        // setCopy(valueTypeGroupProperty); // oops, subproperty1 value changed to old again
+        if (generateValueTypeCode) { // write the value type back
+            current.endInit.body << QmltcCodeGenerator::wrap_privateClass(accessor.name, p) + u"->"
+                            + p.write() + u"(" + groupPropertyVarName + u");";
+        }
+
+        // once the value is written back, process the script bindings
+        for (; it != subbindings.end(); ++it) {
+            Q_ASSERT(it->bindingType() == QQmlJSMetaPropertyBinding::Script);
+            compile(*it);
+        }
+        break;
+    }
     case QQmlJSMetaPropertyBinding::Invalid: {
-        m_logger->log(u"This binding is invalid"_s, Log_Compiler, binding.sourceLocation());
+        recordError(binding.sourceLocation(), u"This binding is invalid"_s);
         break;
     }
     default: {
-        m_logger->log(u"Binding type is not supported (yet)"_s, Log_Compiler,
-                      binding.sourceLocation());
+        recordError(binding.sourceLocation(), u"Binding is not supported"_s);
         break;
     }
     }
+}
+
+// returns compiled script binding for "property changed" handler in a form of object type
+static QmltcType compileScriptBindingPropertyChangeHandler(const QQmlJSMetaPropertyBinding &binding,
+                                                           const QQmlJSScope::ConstPtr &objectType,
+                                                           const QString &urlMethodName,
+                                                           const QString &functorCppType,
+                                                           const QString &objectCppType)
+{
+    QmltcType bindingFunctor {};
+    bindingFunctor.cppType = functorCppType;
+    bindingFunctor.ignoreInit = true;
+
+    // default member variable and ctor:
+    const QString pointerToObject = objectCppType + u" *";
+    bindingFunctor.variables.emplaceBack(
+            QmltcVariable { pointerToObject, u"m_self"_s, u"nullptr"_s });
+    bindingFunctor.baselineCtor.name = functorCppType;
+    bindingFunctor.baselineCtor.parameterList.emplaceBack(
+            QmltcVariable { pointerToObject, u"self"_s, QString() });
+    bindingFunctor.baselineCtor.initializerList.emplaceBack(u"m_self(self)"_s);
+
+    // call operator:
+    QmltcMethod callOperator {};
+    callOperator.returnType = u"void"_s;
+    callOperator.name = u"operator()"_s;
+    callOperator.modifiers << u"const"_s;
+    QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+            &callOperator.body, urlMethodName + u"()",
+            objectType->ownRuntimeFunctionIndex(binding.scriptIndex()), u"m_self"_s, u"void"_s, {});
+
+    bindingFunctor.functions.emplaceBack(std::move(callOperator));
+
+    return bindingFunctor;
+}
+
+// finds property for given scope and returns it together with the absolute
+// property index in the property array of the corresponding QMetaObject
+static std::pair<QQmlJSMetaProperty, int> getMetaPropertyIndex(const QQmlJSScope::ConstPtr &scope,
+                                                               const QString &propertyName)
+{
+    auto owner = QQmlJSScope::ownerOfProperty(scope, propertyName).scope;
+    Q_ASSERT(owner);
+    auto p = owner->ownProperty(propertyName);
+    if (!p.isValid())
+        return { p, -1 };
+    int index = p.index();
+    if (index < 0) // this property doesn't have index - comes from QML
+        return { p, -1 };
+    // owner is not included in absolute index
+
+    // TODO: we also have to go over extensions here!
+    for (QQmlJSScope::ConstPtr base = owner->baseType(); base; base = base->baseType())
+        index += int(base->ownProperties().size());
+    return { p, index };
+}
+
+void QmltcCompiler::compileScriptBinding(QmltcType &current,
+                                         const QQmlJSMetaPropertyBinding &binding,
+                                         const QString &bindingSymbolName,
+                                         const QQmlJSScope::ConstPtr &objectType,
+                                         const QString &propertyName,
+                                         const QQmlJSScope::ConstPtr &propertyType,
+                                         const QmltcCompiler::BindingAccessorData &accessor)
+{
+    const auto compileScriptSignal = [&](const QString &name) {
+        QString This_signal = u"this"_s;
+        QString This_slot = u"this"_s;
+        QString objectClassName_signal = objectType->internalName();
+        QString objectClassName_slot = objectType->internalName();
+
+        // TODO: ugly crutch to make stuff work
+        if (accessor.name != u"this"_s) { // e.g. if attached property
+            This_signal = accessor.name;
+            This_slot = u"this"_s; // still
+            objectClassName_signal = objectType->baseTypeName();
+            objectClassName_slot = current.cppType; // real base class where slot would go
+        }
+        Q_ASSERT(!objectClassName_signal.isEmpty());
+        Q_ASSERT(!objectClassName_slot.isEmpty());
+
+        const auto signalMethods = objectType->methods(name, QQmlJSMetaMethod::Signal);
+        Q_ASSERT(!signalMethods.isEmpty()); // an error somewhere else
+        QQmlJSMetaMethod signal = signalMethods.at(0);
+        Q_ASSERT(signal.methodType() == QQmlJSMetaMethod::Signal);
+
+        const QString signalName = signal.methodName();
+        const QString slotName = newSymbol(signalName + u"_slot");
+
+        const QString signalReturnType = figureReturnType(signal);
+        const QList<QmltcVariable> slotParameters = compileMethodParameters(
+                signal.parameterNames(), signal.parameterTypes(), /* allow unnamed = */ true);
+
+        // SignalHander specific:
+        QmltcMethod slotMethod {};
+        slotMethod.returnType = signalReturnType;
+        slotMethod.name = slotName;
+        slotMethod.parameterList = slotParameters;
+
+        QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+                &slotMethod.body, m_urlMethodName + u"()",
+                objectType->ownRuntimeFunctionIndex(binding.scriptIndex()),
+                u"this"_s, // Note: because script bindings always use current QML object scope
+                signalReturnType, slotParameters);
+        slotMethod.type = QQmlJSMetaMethod::Slot;
+
+        current.functions << std::move(slotMethod);
+        current.endInit.body << u"QObject::connect(" + This_signal + u", "
+                        + QmltcCodeGenerator::wrap_qOverload(slotParameters,
+                                                             u"&" + objectClassName_signal + u"::"
+                                                                     + signalName)
+                        + u", " + This_slot + u", &" + objectClassName_slot + u"::" + slotName
+                        + u");";
+    };
+
+    switch (binding.scriptKind()) {
+    case QQmlJSMetaPropertyBinding::Script_PropertyBinding: {
+        if (!propertyType) {
+            recordError(binding.sourceLocation(),
+                        u"Binding on property '" + propertyName + u"' of unknown type");
+            return;
+        }
+
+        auto [property, absoluteIndex] = getMetaPropertyIndex(objectType, propertyName);
+        if (absoluteIndex < 0) {
+            recordError(binding.sourceLocation(),
+                        u"Binding on unknown property '" + propertyName + u"'");
+            return;
+        }
+
+        QString bindingTarget = accessor.name;
+
+        int valueTypeIndex = -1;
+        if (accessor.isValueType) {
+            Q_ASSERT(accessor.scope != objectType);
+            bindingTarget = u"this"_s; // TODO: not necessarily "this"?
+            auto [groupProperty, groupPropertyIndex] =
+                    getMetaPropertyIndex(accessor.scope, accessor.propertyName);
+            if (groupPropertyIndex < 0) {
+                recordError(binding.sourceLocation(),
+                            u"Binding on group property '" + accessor.propertyName
+                                    + u"' of unknown type");
+                return;
+            }
+            valueTypeIndex = absoluteIndex;
+            absoluteIndex = groupPropertyIndex; // e.g. index of accessor.name
+        }
+
+        QmltcCodeGenerator::generate_createBindingOnProperty(
+                &current.endInit.body, generate_callCompilationUnit(m_urlMethodName),
+                u"this"_s, // NB: always using enclosing object as a scope for the binding
+                static_cast<qsizetype>(objectType->ownRuntimeFunctionIndex(binding.scriptIndex())),
+                bindingTarget, // binding target
+                absoluteIndex, property, valueTypeIndex, accessor.name);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::Script_SignalHandler: {
+        const auto name = QQmlJSUtils::signalName(propertyName);
+        Q_ASSERT(name.has_value());
+        compileScriptSignal(*name);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::Script_ChangeHandler: {
+        const QString objectClassName = objectType->internalName();
+        const QString bindingFunctorName = newSymbol(bindingSymbolName + u"Functor");
+
+        const auto signalName = QQmlJSUtils::signalName(propertyName);
+        Q_ASSERT(signalName.has_value()); // an error somewhere else
+        const auto actualProperty = QQmlJSUtils::changeHandlerProperty(objectType, *signalName);
+        Q_ASSERT(actualProperty.has_value()); // an error somewhere else
+        const auto actualPropertyType = actualProperty->type();
+        if (!actualPropertyType) {
+            recordError(binding.sourceLocation(),
+                        u"Binding on property '" + actualProperty->propertyName()
+                                + u"' of unknown type");
+            return;
+        }
+
+        // due to historical reasons (QQmlObjectCreator), prefer NOTIFY over
+        // BINDABLE when both are available. thus, test for notify first
+        const QString notifyString = actualProperty->notify();
+        if (!notifyString.isEmpty()) {
+            compileScriptSignal(notifyString);
+            break;
+        }
+        const QString bindableString = actualProperty->bindable();
+        QString typeOfQmlBinding =
+                u"std::unique_ptr<QPropertyChangeHandler<" + bindingFunctorName + u">>";
+
+        current.children << compileScriptBindingPropertyChangeHandler(
+                binding, objectType, m_urlMethodName, bindingFunctorName, objectClassName);
+
+        // TODO: this could be dropped if QQmlEngine::setContextForObject() is
+        // done before currently generated C++ object is constructed
+        current.endInit.body << bindingSymbolName + u".reset(new QPropertyChangeHandler<"
+                        + bindingFunctorName + u">("
+                        + QmltcCodeGenerator::wrap_privateClass(accessor.name, *actualProperty)
+                        + u"->" + bindableString + u"().onValueChanged(" + bindingFunctorName + u"("
+                        + accessor.name + u"))));";
+
+        current.variables.emplaceBack(
+                QmltcVariable { typeOfQmlBinding, bindingSymbolName, QString() });
+        break;
+    }
+    default:
+        recordError(binding.sourceLocation(), u"Invalid script binding found"_s);
+        break;
+    }
+}
+
+// TODO: should use "compileScriptBinding" instead of custom code
+void QmltcCompiler::compileScriptBindingOfComponent(QmltcType &current,
+                                                    const QQmlJSScope::ConstPtr &type,
+                                                    const QQmlJSMetaPropertyBinding &binding,
+                                                    const QString &propertyName)
+{
+    const auto signalName = QQmlJSUtils::signalName(propertyName);
+    Q_ASSERT(signalName.has_value());
+    const QList<QQmlJSMetaMethod> signalMethods = type->methods(*signalName);
+    Q_ASSERT(!signalMethods.isEmpty());
+    // Component signals do not have parameters
+    Q_ASSERT(signalMethods.at(0).parameterNames().isEmpty());
+    const QString signalReturnType = figureReturnType(signalMethods.at(0));
+    const QString slotName = newSymbol(*signalName + u"_slot");
+
+    // SignalHander specific:
+    QmltcMethod slotMethod {};
+    slotMethod.returnType = signalReturnType;
+    slotMethod.name = slotName;
+
+    // Component is special:
+    QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+            &slotMethod.body, m_urlMethodName + u"()",
+            type->ownRuntimeFunctionIndex(binding.scriptIndex()), u"this"_s, signalReturnType);
+    slotMethod.type = QQmlJSMetaMethod::Slot;
+
+    // TODO: there's actually an attached type, which has completed/destruction
+    // signals that are typically emitted -- do we care enough about supporting
+    // that? see QQmlComponentAttached
+    if (*signalName == u"completed"_s) {
+        current.handleOnCompleted.body << slotName + u"();";
+    } else if (*signalName == u"destruction"_s) {
+        if (!current.dtor) {
+            current.dtor = QmltcDtor {};
+            current.dtor->name = u"~" + current.cppType;
+        }
+        current.dtor->body << slotName + u"();";
+    }
+    current.functions << std::move(slotMethod);
 }
 
 QT_END_NAMESPACE

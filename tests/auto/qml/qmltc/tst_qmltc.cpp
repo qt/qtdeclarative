@@ -2087,6 +2087,8 @@ void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
     QCOMPARE(created.bChangedCount1(), 1);
     one->setC(2.5);
     QCOMPARE(created.cChangedCount1(), 1);
+    one->setD(-10);
+    QCOMPARE(created.dChangedCount1(), 1);
     two->setC(44.5);
     QCOMPARE(created.cChangedCount2(), 1);
     three->setC(42.0);

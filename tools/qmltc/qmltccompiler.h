@@ -36,6 +36,7 @@
 #include <QtCore/qcommandlineparser.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qhash.h>
 
 #include <private/qqmljslogger_p.h>
 
@@ -68,6 +69,12 @@ private:
     QQmlJSLogger *m_logger = nullptr;
     std::unique_ptr<CodeGenerator> m_prototypeCodegen;
     QmltcCompilerInfo m_info {}; // miscellaneous input/output information
+    QString m_urlMethodName;
+
+    struct UniqueStringId;
+    struct QmltcTypeLocalData;
+    // per-type, per-property code generation cache of created symbols
+    QHash<UniqueStringId, QmltcTypeLocalData> m_uniques;
 
     void compileUrlMethod(QmltcMethod &urlMethod, const QString &urlMethodName);
     void
@@ -102,6 +109,61 @@ private:
     };
     void compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
                         const QQmlJSScope::ConstPtr &type, const BindingAccessorData &accessor);
+
+    // special case (for simplicity)
+    void compileScriptBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+                              const QString &bindingSymbolName, const QQmlJSScope::ConstPtr &type,
+                              const QString &propertyName,
+                              const QQmlJSScope::ConstPtr &propertyType,
+                              const BindingAccessorData &accessor);
+
+    // TODO: remove this special case
+    void compileScriptBindingOfComponent(QmltcType &current, const QQmlJSScope::ConstPtr &type,
+                                         const QQmlJSMetaPropertyBinding &binding,
+                                         const QString &propertyName);
+
+    /*!
+        \internal
+        Helper structure that acts as a key in a hash-table of
+        QmltcType-specific data (such as local variable names). Using a
+        hash-table allows to avoid creating the same variables multiple times
+        during binding compilation, which leads to better code generation and
+        faster object creation. This is really something that the QML optimizer
+        should do, but we have only this home-grown alternative at the moment
+    */
+    struct UniqueStringId
+    {
+        QString unique;
+        UniqueStringId(const QmltcType &context, const QString &property)
+            : unique(context.cppType + u"_" + property) // this is unique enough
+        {
+            Q_ASSERT(!context.cppType.isEmpty());
+            Q_ASSERT(!property.isEmpty());
+        }
+        friend bool operator==(const UniqueStringId &x, const UniqueStringId &y)
+        {
+            return x.unique == y.unique;
+        }
+        friend bool operator!=(const UniqueStringId &x, const UniqueStringId &y)
+        {
+            return !(x == y);
+        }
+        friend size_t qHash(const UniqueStringId &x, size_t seed = 0)
+        {
+            return qHash(x.unique, seed);
+        }
+    };
+
+    struct QmltcTypeLocalData
+    {
+        // empty QString() means that the local data is not present (yet)
+        QString qmlListVariableName;
+        QString onAssignmentObjectName;
+        QString attachedVariableName;
+    };
+
+    QHash<QString, qsizetype> m_symbols;
+    QString newSymbol(const QString &base);
 
     bool hasErrors() const { return m_logger->hasErrors(); }
     void recordError(const QQmlJS::SourceLocation &location, const QString &message,

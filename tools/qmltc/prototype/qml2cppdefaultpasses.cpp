@@ -513,10 +513,8 @@ static void updateInternalName(QQmlJSScope::Ptr root, QString prefix,
     }
 }
 
-QHash<QString, qsizetype> makeUniqueCppNames(const Qml2CppContext &context,
-                                             QList<Qml2CppObject> &objects)
+void makeUniqueCppNames(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 {
-    // TODO: fix return type names of the methods as well
     Q_UNUSED(objects);
 
     QHash<QString, qsizetype> typeCounts;
@@ -530,16 +528,15 @@ QHash<QString, qsizetype> makeUniqueCppNames(const Qml2CppContext &context,
     if (typeCounts.contains(cppName)) {
         context.recordError(root->sourceLocation(),
                             u"Root object name '" + cppName + u"' is reserved");
-        return typeCounts;
+        return;
     }
     if (cppName.isEmpty()) {
         context.recordError(root->sourceLocation(), u"Root object's name is empty"_s);
-        return typeCounts;
+        return;
     }
     typeCounts.insert(cppName, 1);
 
     updateInternalName(root, cppName, typeCounts);
-    return typeCounts;
 }
 
 static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Ptr &type,
@@ -748,11 +745,8 @@ static void resolveValidateOrSkipAlias(const Qml2CppContext &context,
     aliasOwner.type->addOwnProperty(alias);
 }
 
-QSet<QQmlJSMetaProperty> deferredResolveValidateAliases(const Qml2CppContext &context,
-                                                        QList<Qml2CppObject> &objects)
+void deferredResolveValidateAliases(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 {
-    QSet<QQmlJSMetaProperty> aliasesToId;
-
     QSet<QQmlJSMetaProperty> unresolved;
     for (const auto &object : objects) {
         const auto [irObject, type] = object;
@@ -773,7 +767,6 @@ QSet<QQmlJSMetaProperty> deferredResolveValidateAliases(const Qml2CppContext &co
                     p.setRead(compiledData.read);
                 // NB: id-pointing aliases are read-only
                 type->addOwnProperty(p);
-                aliasesToId.insert(p);
                 continue;
             }
             unresolved.insert(p);
@@ -792,8 +785,6 @@ QSet<QQmlJSMetaProperty> deferredResolveValidateAliases(const Qml2CppContext &co
             }
         }
     }
-
-    return aliasesToId;
 }
 
 static void addFirstCppIncludeFromType(QSet<QString> &cppIncludes,
@@ -1042,33 +1033,6 @@ void setObjectIds(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
             set(i);
     }
     set(0);
-}
-
-QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr>
-findImmediateParents(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
-{
-    Q_UNUSED(context);
-
-    QSet<QQmlJSScope::ConstPtr> suitableParents;
-    std::transform(objects.cbegin(), objects.cend(),
-                   std::inserter(suitableParents, suitableParents.end()),
-                   [](const Qml2CppObject &object) { return object.type; });
-
-    QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr> immediateParents;
-
-    // suitable parents are the ones that would eventually create the child
-    // types (through recursive logic), so the first such parent in a hierarchy
-    // is an immediate parent
-    for (const Qml2CppObject &object : objects) {
-        for (auto parent = object.type->parentScope(); parent; parent = parent->parentScope()) {
-            if (suitableParents.contains(parent)) {
-                immediateParents.insert(object.type, parent);
-                break;
-            }
-        }
-    }
-
-    return immediateParents;
 }
 
 QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
