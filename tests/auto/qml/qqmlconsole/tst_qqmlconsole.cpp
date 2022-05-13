@@ -1,30 +1,5 @@
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the test suite of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:GPL-EXCEPT$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3 as published by the Free Software
-** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
-** included in the packaging of this file. Please review the following
-** information to ensure the GNU General Public License requirements will
-** be met: https://www.gnu.org/licenses/gpl-3.0.html.
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+// Copyright (C) 2016 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 #include <qtest.h>
 #include <QDebug>
 #include <QQmlEngine>
@@ -132,28 +107,28 @@ void tst_qqmlconsole::categorized_logging()
     QVERIFY(messageHandler.messages().contains("qt.test.warning: console.warn"));
     QVERIFY(messageHandler.messages().contains("qt.test.warning: console.error"));
 
-    QString emptyCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(56).arg(5) +
+    QString emptyCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(20).arg(5) +
                             "QML LoggingCategory: Declaring the name of a LoggingCategory is mandatory and cannot be changed later";
     QVERIFY(messageHandler.messages().contains(emptyCategory));
 
 
-    QString notChangedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
+    QString notChangedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(9).arg(5) +
                             "QML LoggingCategory: The name of a LoggingCategory cannot be changed after the component is completed";
     QVERIFY(!messageHandler.messages().contains(notChangedCategory));
-    QString changedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(50).arg(5) +
+    QString changedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(14).arg(5) +
                             "QML LoggingCategory: The name of a LoggingCategory cannot be changed after the component is completed";
     QVERIFY(messageHandler.messages().contains(changedCategory));
 
 
-    QString notChangedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
+    QString notChangedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(9).arg(5) +
                             "QML LoggingCategory: The defaultLogLevel of a LoggingCategory cannot be changed after the component is completed";
     QVERIFY(!messageHandler.messages().contains(notChangedDefaultLogLevel));
-    QString changedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(50).arg(5) +
+    QString changedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(14).arg(5) +
                             "QML LoggingCategory: The defaultLogLevel of a LoggingCategory cannot be changed after the component is completed";
     QVERIFY(messageHandler.messages().contains(changedDefaultLogLevel));
 
 
-    QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(78) +
+    QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(42) +
                             "Error: A QmlLoggingCatgory was provided without a valid name";
     QVERIFY(messageHandler.messages().contains(useEmptyCategory));
 
@@ -164,10 +139,10 @@ void tst_qqmlconsole::tracing()
 {
     QUrl testUrl = testFileUrl("tracing.qml");
 
-    QString traceText = QString::fromLatin1("tracing (%1:%2)\n").arg(testUrl.toString()).arg(37)
+    QString traceText = QString::fromLatin1("tracing (%1:%2)\n").arg(testUrl.toString()).arg(12)
             + QString::fromLatin1("expression for onCompleted (%1:%2)")
                       .arg(testUrl.toString())
-                      .arg(41);
+                      .arg(16);
 
     QTest::ignoreMessage(QtDebugMsg, qPrintable(traceText));
 
@@ -199,13 +174,13 @@ void tst_qqmlconsole::testAssert()
     QString assert1 = "This will fail\n"
             + QString::fromLatin1("expression for onCompleted (%1:%2)")
                       .arg(testUrl.toString())
-                      .arg(42);
+                      .arg(17);
 
     QString assert2 = "This will fail too\n"
-            + QString::fromLatin1("assertFail (%1:%2)\n").arg(testUrl.toString()).arg(35)
+            + QString::fromLatin1("assertFail (%1:%2)\n").arg(testUrl.toString()).arg(10)
             + QString::fromLatin1("expression for onCompleted (%1:%2)")
                       .arg(testUrl.toString())
-                      .arg(47);
+                      .arg(22);
 
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert1));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert2));
@@ -224,13 +199,13 @@ void tst_qqmlconsole::exception()
     QString exception1 = "Exception 1\n"
             + QString::fromLatin1("expression for onCompleted (%1:%2)")
                       .arg(testUrl.toString())
-                      .arg(38);
+                      .arg(13);
 
     QString exception2 = "Exception 2\n"
-            + QString::fromLatin1("exceptionFail (%1:%2)\n").arg(testUrl.toString()).arg(33)
+            + QString::fromLatin1("exceptionFail (%1:%2)\n").arg(testUrl.toString()).arg(8)
             + QString::fromLatin1("expression for onCompleted (%1:%2)")
                       .arg(testUrl.toString())
-                      .arg(43);
+                      .arg(18);
 
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception1));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception2));
