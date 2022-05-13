@@ -349,9 +349,9 @@ RequiredProperties &QQmlComponentPrivate::requiredProperties()
     return state.creator->requiredProperties();
 }
 
-bool QQmlComponentPrivate::hadRequiredProperties() const
+bool QQmlComponentPrivate::hadTopLevelRequiredProperties() const
 {
-    return state.creator->componentHadRequiredProperties();
+    return state.creator->componentHadTopLevelRequiredProperties();
 }
 
 void QQmlComponentPrivate::clear()

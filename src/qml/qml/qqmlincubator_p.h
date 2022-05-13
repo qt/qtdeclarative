@@ -106,7 +106,7 @@ public:
     void forceCompletion(QQmlInstantiationInterrupt &i);
     void incubate(QQmlInstantiationInterrupt &i);
     RequiredProperties &requiredProperties();
-    bool hadRequiredProperties() const;
+    bool hadTopLevelRequiredProperties() const;
 };
 
 QT_END_NAMESPACE

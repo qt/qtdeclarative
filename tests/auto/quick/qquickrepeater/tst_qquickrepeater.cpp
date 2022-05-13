@@ -84,6 +84,7 @@ private slots:
     void ownership();
     void requiredProperties();
     void contextProperties();
+    void innerRequired();
 };
 
 class TestObject : public QObject
@@ -1172,6 +1173,27 @@ void tst_QQuickRepeater::contextProperties()
         for (QQuickItem *child : item->childItems())
             items.enqueue(child);
     }
+}
+
+void tst_QQuickRepeater::innerRequired()
+{
+    QQmlEngine engine;
+    const QUrl url(testFileUrl("innerRequired.qml"));
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+    QQuickRepeater *a = qobject_cast<QQuickRepeater *>(
+            qmlContext(o.data())->objectForName(QStringLiteral("repeater")));
+    QVERIFY(a);
+
+    QCOMPARE(a->count(), 2);
+    QCOMPARE(a->itemAt(0)->property("age").toInt(), 8);
+    QCOMPARE(a->itemAt(0)->property("text").toString(), u"meow");
+    QCOMPARE(a->itemAt(1)->property("age").toInt(), 5);
+    QCOMPARE(a->itemAt(1)->property("text").toString(), u"woof");
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

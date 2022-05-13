@@ -111,7 +111,7 @@ struct QQmlObjectCreatorSharedState : QQmlRefCount
     QRecursionNode recursionNode;
     RequiredProperties requiredProperties;
     QList<DeferredQPropertyBinding> allQPropertyBindings;
-    bool hadRequiredProperties;
+    bool hadTopLevelRequiredProperties;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
@@ -150,7 +150,7 @@ public:
     QFiniteStack<QQmlGuard<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
 
     RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
-    bool componentHadRequiredProperties() const {return sharedState->hadRequiredProperties;}
+    bool componentHadTopLevelRequiredProperties() const {return sharedState->hadTopLevelRequiredProperties;}
 
     static QQmlComponent *createComponent(QQmlEngine *engine,
                                           QV4::ExecutableCompilationUnit *compilationUnit,
@@ -160,7 +160,8 @@ public:
 private:
     QQmlObjectCreator(QQmlRefPointer<QQmlContextData> contextData,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-                      QQmlObjectCreatorSharedState *inheritedSharedState);
+                      QQmlObjectCreatorSharedState *inheritedSharedState,
+                      bool isContextObject);
 
     void init(QQmlRefPointer<QQmlContextData> parentContext);
 
@@ -218,6 +219,7 @@ private:
     const QQmlPropertyCacheVector *propertyCaches;
     QQmlRefPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
+    bool isContextObject;
     QQmlIncubatorPrivate *incubator;
 
     QObject *_qobject;

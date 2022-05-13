@@ -961,7 +961,7 @@ static void bindingFunction(
 void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
 {
     auto incubatorPriv = QQmlIncubatorPrivate::get(this);
-    if (incubatorPriv->hadRequiredProperties()) {
+    if (incubatorPriv->hadTopLevelRequiredProperties()) {
         QQmlData *d = QQmlData::get(object);
         auto contextData = d ? d->context : nullptr;
         if (contextData) {

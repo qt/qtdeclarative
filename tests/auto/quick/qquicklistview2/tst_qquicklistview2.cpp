@@ -60,6 +60,7 @@ private slots:
     void sectionsNoOverlap();
     void metaSequenceAsModel();
     void noCrashOnIndexChange();
+    void innerRequired();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -305,6 +306,27 @@ void tst_QQuickListView2::noCrashOnIndexChange()
     QObject *items = qvariant_cast<QObject *>(delegateModel->property("items"));
     QCOMPARE(items->property("name").toString(), QStringLiteral("items"));
     QCOMPARE(items->property("count").toInt(), 4);
+}
+
+void tst_QQuickListView2::innerRequired()
+{
+    QQmlEngine engine;
+    const QUrl url(testFileUrl("innerRequired.qml"));
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+    QQuickListView *a = qobject_cast<QQuickListView *>(
+            qmlContext(o.data())->objectForName(QStringLiteral("listView")));
+    QVERIFY(a);
+
+    QCOMPARE(a->count(), 2);
+    QCOMPARE(a->itemAtIndex(0)->property("age").toInt(), 8);
+    QCOMPARE(a->itemAtIndex(0)->property("text").toString(), u"meow");
+    QCOMPARE(a->itemAtIndex(1)->property("age").toInt(), 5);
+    QCOMPARE(a->itemAtIndex(1)->property("text").toString(), u"woof");
 }
 
 class SingletonModel : public QStringListModel

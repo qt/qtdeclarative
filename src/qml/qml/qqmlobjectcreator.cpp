@@ -82,6 +82,7 @@ QQmlObjectCreator::QQmlObjectCreator(
     , propertyCaches(&compilationUnit->propertyCaches)
     , sharedState(new QQmlObjectCreatorSharedState, QQmlRefPointer<QQmlObjectCreatorSharedState>::Adopt)
     , topLevelCreator(true)
+    , isContextObject(true)
     , incubator(incubator)
 {
     init(std::move(parentContext));
@@ -93,7 +94,7 @@ QQmlObjectCreator::QQmlObjectCreator(
     sharedState->allJavaScriptObjects = nullptr;
     sharedState->creationContext = creationContext;
     sharedState->rootContext.reset();
-    sharedState->hadRequiredProperties = false;
+    sharedState->hadTopLevelRequiredProperties = false;
 
     if (auto profiler = QQmlEnginePrivate::get(engine)->profiler) {
         Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
@@ -103,15 +104,15 @@ QQmlObjectCreator::QQmlObjectCreator(
     }
 }
 
-QQmlObjectCreator::QQmlObjectCreator(
-        QQmlRefPointer<QQmlContextData> parentContext,
+QQmlObjectCreator::QQmlObjectCreator(QQmlRefPointer<QQmlContextData> parentContext,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-        QQmlObjectCreatorSharedState *inheritedSharedState)
+        QQmlObjectCreatorSharedState *inheritedSharedState, bool isContextObject)
     : phase(Startup)
     , compilationUnit(compilationUnit)
     , propertyCaches(&compilationUnit->propertyCaches)
     , sharedState(inheritedSharedState)
     , topLevelCreator(false)
+    , isContextObject(isContextObject)
     , incubator(nullptr)
 {
     init(std::move(parentContext));
@@ -1249,7 +1250,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             }
 
             if (!type.isInlineComponentType()) {
-                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data());
+                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data(),
+                                             isContextObject);
                 instance = subCreator.create();
                 if (!instance) {
                     errors += subCreator.errors;
@@ -1258,7 +1260,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             } else {
                 int subObjectId = type.inlineComponentId();
                 QScopedValueRollback<int> rollback {compilationUnit->icRoot, subObjectId};
-                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data());
+                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data(),
+                                             isContextObject);
                 instance = subCreator.create(subObjectId, nullptr, nullptr, CreationFlags::InlineComponent);
                 if (!instance) {
                     errors += subCreator.errors;
@@ -1559,7 +1562,8 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
             continue;
         if (postHocIt != postHocRequired.end())
             postHocRequired.erase(postHocIt);
-        sharedState->hadRequiredProperties = true;
+        if (isContextObject)
+            sharedState->hadTopLevelRequiredProperties = true;
         sharedState->requiredProperties.insert(propertyData,
                                                RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
 
@@ -1617,7 +1621,8 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         if (postHocIt != postHocRequired.end())
             postHocRequired.erase(postHocIt);
 
-        sharedState->hadRequiredProperties = true;
+        if (isContextObject)
+            sharedState->hadTopLevelRequiredProperties = true;
         sharedState->requiredProperties.insert(
                 propertyData,
                 RequiredPropertyInfo {
@@ -1647,7 +1652,8 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
                 continue;
             postHocRequired.erase(postHocIt);
 
-            sharedState->hadRequiredProperties = true;
+            if (isContextObject)
+                sharedState->hadTopLevelRequiredProperties = true;
             sharedState->requiredProperties.insert(
                     propertyData,
                     RequiredPropertyInfo {

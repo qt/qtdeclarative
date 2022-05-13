@@ -108,7 +108,7 @@ public:
 
     int start;
     RequiredProperties& requiredProperties();
-    bool hadRequiredProperties() const;
+    bool hadTopLevelRequiredProperties() const;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
     struct ConstructionState {

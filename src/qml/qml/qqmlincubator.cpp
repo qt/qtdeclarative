@@ -696,9 +696,9 @@ RequiredProperties &QQmlIncubatorPrivate::requiredProperties()
     return creator->requiredProperties();
 }
 
-bool QQmlIncubatorPrivate::hadRequiredProperties() const
+bool QQmlIncubatorPrivate::hadTopLevelRequiredProperties() const
 {
-    return creator->componentHadRequiredProperties();
+    return creator->componentHadTopLevelRequiredProperties();
 }
 
 /*!
