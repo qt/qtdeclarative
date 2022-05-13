@@ -269,6 +269,16 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("crashConnections")
             << QStringLiteral("crashConnections.qml")
             << Result { { Message { QStringLiteral("Unqualified access"), 4, 13 } } };
+
+    QTest::newRow("delegateContextProperties")
+            << QStringLiteral("delegateContextProperties.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 6, 14 },
+                          Message { QStringLiteral("Unqualified access"), 7, 15 },
+                          Message { QStringLiteral("model is implicitly injected into this "
+                                                   "delegate. Add a required property instead.") },
+                          Message {
+                                  QStringLiteral("index is implicitly injected into this delegate. "
+                                                 "Add a required property instead.") } } };
 }
 
 void TestQmllint::testUnknownCausesFail()

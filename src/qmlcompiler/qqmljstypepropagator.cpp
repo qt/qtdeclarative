@@ -364,26 +364,53 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
         }
     }
 
-    for (QQmlJSScope::ConstPtr scope = m_function->qmlScope; !scope.isNull();
-         scope = scope->parentScope()) {
-        if (scope->hasProperty(name)) {
-            const QString id = m_function->addressableScopes.id(scope);
+    // Might be a delegate just missing a required property.
+    // This heuristic does not recognize all instances of this occurring but should be sufficient
+    // protection against wrongly suggesting to add an id to the view to access the model that way
+    // which is very misleading
+    if (name == u"model" || name == u"index") {
+        if (QQmlJSScope::ConstPtr parent = m_function->qmlScope->parentScope(); !parent.isNull()) {
+            const auto bindings = parent->ownPropertyBindings(u"delegate"_s);
 
-            suggestion = FixSuggestion {};
+            for (auto it = bindings.first; it != bindings.second; it++) {
+                if (!it->hasObject())
+                    continue;
+                if (it->objectType() == m_function->qmlScope) {
+                    suggestion = FixSuggestion {};
 
-            QQmlJS::SourceLocation fixLocation = location;
-            fixLocation.length = 0;
-            suggestion->fixes << FixSuggestion::Fix {
-                name + QLatin1String(" is a member of a parent element\n")
-                        + QLatin1String("      You can qualify the access with its id "
-                                        "to avoid this warning:\n"),
-                fixLocation, (id.isEmpty() ? u"<id>."_s : (id + u'.')), QString(), id.isEmpty()
-            };
-
-            if (id.isEmpty()) {
-                suggestion->fixes << FixSuggestion::Fix {
-                    u"You first have to give the element an id"_s, QQmlJS::SourceLocation {}, {}
+                    suggestion->fixes << FixSuggestion::Fix {
+                        name + u" is implicitly injected into this delegate. Add a required property instead."_s,
+                        m_function->qmlScope->sourceLocation(), QString(), QString(), true
+                    };
                 };
+
+                break;
+            }
+        }
+    }
+
+    if (!suggestion.has_value()) {
+        for (QQmlJSScope::ConstPtr scope = m_function->qmlScope; !scope.isNull();
+             scope = scope->parentScope()) {
+            if (scope->hasProperty(name)) {
+                const QString id = m_function->addressableScopes.id(scope);
+
+                suggestion = FixSuggestion {};
+
+                QQmlJS::SourceLocation fixLocation = location;
+                fixLocation.length = 0;
+                suggestion->fixes << FixSuggestion::Fix {
+                    name + QLatin1String(" is a member of a parent element\n")
+                            + QLatin1String("      You can qualify the access with its id "
+                                            "to avoid this warning:\n"),
+                    fixLocation, (id.isEmpty() ? u"<id>."_s : (id + u'.')), QString(), id.isEmpty()
+                };
+
+                if (id.isEmpty()) {
+                    suggestion->fixes << FixSuggestion::Fix {
+                        u"You first have to give the element an id"_s, QQmlJS::SourceLocation {}, {}
+                    };
+                }
             }
         }
     }
