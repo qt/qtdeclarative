@@ -45,6 +45,7 @@ set(qml_files
     attachedBaseEnum.qml
     bindToValueType.qml
     blockComments.qml
+    boundComponents.qml
     callContextPropertyLookupResult.qml
     childobject.qml
     colorAsVariant.qml

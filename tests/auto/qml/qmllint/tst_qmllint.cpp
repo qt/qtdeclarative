@@ -1016,6 +1016,15 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << QStringLiteral("assignNonExistingTypeToVarProp.qml")
             << Result { { Message { QStringLiteral(
                        "NonExistingType was not found. Did you add all import paths?") } } };
+    QTest::newRow("unboundComponents")
+            << QStringLiteral("unboundComponents.qml")
+            << Result { {
+                         Message { QStringLiteral("Unqualified access"), 10, 25 },
+                         Message { QStringLiteral("Unqualified access"), 14, 33 }
+               } };
+    QTest::newRow("badlyBoundComponents")
+            << QStringLiteral("badlyBoundComponents.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 18, 36 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1169,6 +1178,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("requiredWithRootLevelAlias") << QStringLiteral("RequiredWithRootLevelAlias.qml");
     QTest::newRow("jsVarDeclarations") << QStringLiteral("jsVarDeclarations.qml");
     QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml");
+    QTest::newRow("boundComponents") << QStringLiteral("boundComponents.qml");
 }
 
 void TestQmllint::cleanQmlCode()

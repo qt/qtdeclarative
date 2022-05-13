@@ -135,6 +135,7 @@ private slots:
     void invisibleTypes();
     void invalidPropertyType();
     void valueTypeLists();
+    void boundComponents();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2118,6 +2119,22 @@ void tst_QmlCppCodegen::valueTypeLists()
     QCOMPARE(qvariant_cast<int>(o->property("intInBounds")), 7);
     QVERIFY(o->metaObject()->indexOfProperty("intOutOfBounds") > 0);
     QVERIFY(!o->property("intOutOfBounds").isValid());
+}
+
+void tst_QmlCppCodegen::boundComponents()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/boundComponents.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QObject *c1o = o->property("o").value<QObject *>();
+    QVERIFY(c1o != nullptr);
+    QCOMPARE(c1o->objectName(), u"bar"_s);
+
+    QObject *c2o = c1o->property("o").value<QObject *>();
+    QVERIFY(c2o != nullptr);
+    QCOMPARE(c2o->objectName(), u"bar12"_s);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

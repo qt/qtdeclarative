@@ -2102,6 +2102,17 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
     if (pragma->name == u"Singleton")
         m_rootIsSingleton = true;
 
+    if (pragma->name == u"ComponentBehavior") {
+        if (pragma->value == u"Bound") {
+            m_scopesById.setComponentsAreBound(true);
+        } else if (pragma->value == u"Unbound") {
+            m_scopesById.setComponentsAreBound(false);
+        } else {
+            m_logger->log(u"Unkonwn argument \"%s\" to pragma ComponentBehavior"_s
+                                  .arg(pragma->value), Log_Syntax, pragma->firstSourceLocation());
+        }
+    }
+
     return true;
 }
 

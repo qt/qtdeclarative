@@ -50,6 +50,8 @@ QT_BEGIN_NAMESPACE
 class QQmlJSScopesById
 {
 public:
+    void setComponentsAreBound(bool bound) { m_componentsAreBound = bound; }
+
     QString id(const QQmlJSScope::ConstPtr &scope) const
     {
         for (auto it = m_scopesById.begin(), end = m_scopesById.end(); it != end; ++it) {
@@ -70,11 +72,13 @@ public:
         const auto range =  m_scopesById.equal_range(id);
         if (range.first == range.second)
             return QQmlJSScope::ConstPtr();
-        const QQmlJSScope::ConstPtr root = componentRoot(referrer);
+        const QQmlJSScope::ConstPtr referrerRoot = componentRoot(referrer);
+
         for (auto it = range.first; it != range.second; ++it) {
-            if (componentRoot(*it) == root)
+            if (isComponentVisible(componentRoot(*it), referrerRoot))
                 return *it;
         }
+
         return QQmlJSScope::ConstPtr();
     }
 
@@ -108,7 +112,22 @@ private:
         return scope;
     }
 
+    bool isComponentVisible(
+            const QQmlJSScope::ConstPtr &observed, const QQmlJSScope::ConstPtr &observer) const
+    {
+        if (!m_componentsAreBound)
+            return observed == observer;
+
+        for (QQmlJSScope::ConstPtr scope = observer; scope; scope = scope->parentScope()) {
+            if (scope == observed)
+                return true;
+        }
+
+        return false;
+    }
+
     QMultiHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
+    bool m_componentsAreBound = false;
 };
 
 QT_END_NAMESPACE
