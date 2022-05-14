@@ -41,6 +41,7 @@
 #include <QtGui/private/qrhi_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qsgrhisupport_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -199,6 +200,8 @@ void QQuickRenderTarget::setMirrorVertically(bool enable)
     \return a new QQuickRenderTarget referencing an OpenGL texture object
     specified by \a textureId.
 
+    \a format specifies the native format of the texture.
+
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
 
@@ -218,10 +221,13 @@ void QQuickRenderTarget::setMirrorVertically(bool enable)
     sample count. It is the caller's responsibility to ensure that the native
     resource exists as long as necessary.
 
+    \since 6.4
+
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
-QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount)
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint format,
+                                                         const QSize &pixelSize, int sampleCount)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
@@ -239,9 +245,26 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const Q
     d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
-    d->u.nativeTexture = { textureId, 0 };
+
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromGL(format);
+    d->u.nativeTexture = { textureId, 0, uint(rhiFormat), 0 };
 
     return rt;
+}
+
+/*!
+    This is an overloaded function.
+
+    \return a new QQuickRenderTarget referencing an OpenGL texture object specified
+    by \a textureId and of the given \c pixelSize \c sampleCount.
+
+    \overload
+
+    It assumes the format of \c texture is RGBA8.
+*/
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount)
+{
+    return fromOpenGLTexture(textureId, 0, pixelSize, sampleCount);
 }
 
 /*!
@@ -295,8 +318,10 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferI
 #endif
 
 /*!
-    \return a new QQuickRenderTarget referencing an D3D11 texture object
+    \return a new QQuickRenderTarget referencing a D3D11 texture object
     specified by \a texture.
+
+    \a format specifies the DXGI_FORMAT of the texture.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -313,11 +338,14 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferI
     it merely contains references and the associated metadata of the size and
     sample count. It is the caller's responsibility to ensure that the native
     resource exists as long as necessary.
+
+    \since 6.4
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
 #if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
-QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount)
+QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint format,
+                                                        const QSize &pixelSize, int sampleCount)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
@@ -335,15 +363,35 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSi
     d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
-    d->u.nativeTexture = { quint64(texture), 0 };
+
+    QRhiTexture::Flags flags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromD3D11(format, &flags);
+    d->u.nativeTexture = { quint64(texture), 0, uint(rhiFormat), uint(flags) };
 
     return rt;
+}
+
+/*!
+    This is an overloaded function.
+
+    \return a new QQuickRenderTarget referencing a D3D11 texture object specified by
+    \a texture and of the given \c pixelSize \c sampleCount.
+
+    \overload
+
+    It assumes the format of \c texture is RGBA8.
+*/
+QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount)
+{
+    return fromD3D11Texture(texture, 0, pixelSize, sampleCount);
 }
 #endif
 
 /*!
-    \return a new QQuickRenderTarget referencing an Metal texture object
+    \return a new QQuickRenderTarget referencing a Metal texture object
     specified by \a texture.
+
+    \a format specifies the MTLPixelFormat of the texture.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -361,10 +409,13 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSi
     sample count. It is the caller's responsibility to ensure that the native
     resource exists as long as necessary.
 
+    \since 6.4
+
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
-QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount)
+QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uint format,
+                                                        const QSize &pixelSize, int sampleCount)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
@@ -382,16 +433,36 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
     d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
-    d->u.nativeTexture = { quint64(texture), 0 };
+
+    QRhiTexture::Flags flags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromMetal(format, &flags);
+    d->u.nativeTexture = { quint64(texture), 0, uint(rhiFormat), uint(flags) };
 
     return rt;
+}
+
+/*!
+    This is an overloaded function.
+
+    \return a new QQuickRenderTarget referencing a Metal texture object specified by
+    \a texture and of the given \c pixelSize \c sampleCount.
+
+    \overload
+
+    It assumes the format of \c texture is RGBA8.
+*/
+QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount)
+{
+    return fromMetalTexture(texture, 0, pixelSize, sampleCount);
 }
 #endif
 
 /*!
-    \return a new QQuickRenderTarget referencing an Vulkan image object
+    \return a new QQuickRenderTarget referencing a Vulkan image object
     specified by \a image. The current \a layout of the image must be provided
     as well.
+
+    \a format specifies the VkFormat of the image.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -409,10 +480,13 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
     sample count. It is the caller's responsibility to ensure that the native
     resource exists as long as necessary.
 
+    \since 6.4
+
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
 #if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
-QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount)
+QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, VkFormat format,
+                                                       const QSize &pixelSize, int sampleCount)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
@@ -430,9 +504,27 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
     d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
-    d->u.nativeTexture = { quint64(image), layout };
+
+    QRhiTexture::Flags flags;
+    auto rhiFormat = QSGRhiSupport::toRhiTextureFormatFromVulkan(format, &flags);
+    d->u.nativeTexture = { quint64(image), layout, uint(rhiFormat), uint(flags) };
 
     return rt;
+}
+
+/*!
+    This is an overloaded function.
+
+    \return a new QQuickRenderTarget referencing n Vulkan image object specified by
+    \a image and of the given \c layout \c pixelSize \c sampleCount.
+
+    \overload
+
+    It assumes the format of \c image is RGBA8.
+*/
+QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount)
+{
+    return fromVulkanImage(image, layout, VK_FORMAT_UNDEFINED, pixelSize, sampleCount);
 }
 #endif
 
@@ -512,7 +604,9 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
         break;
     case QQuickRenderTargetPrivate::Type::NativeTexture:
         if (d->u.nativeTexture.object != other.d->u.nativeTexture.object
-                || d->u.nativeTexture.layout != other.d->u.nativeTexture.layout)
+                || d->u.nativeTexture.layout != other.d->u.nativeTexture.layout
+                || d->u.nativeTexture.rhiFormat != other.d->u.nativeTexture.rhiFormat
+                || d->u.nativeTexture.rhiFlags != other.d->u.nativeTexture.rhiFlags)
             return false;
         break;
     case QQuickRenderTargetPrivate::Type::NativeRenderbuffer:
@@ -576,7 +670,10 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
 
     case Type::NativeTexture:
     {
-        std::unique_ptr<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, sampleCount, QRhiTexture::RenderTarget));
+        const auto format = u.nativeTexture.rhiFormat == QRhiTexture::UnknownFormat ? QRhiTexture::RGBA8
+                                                                                    : QRhiTexture::Format(u.nativeTexture.rhiFormat);
+        const auto flags = QRhiTexture::RenderTarget | QRhiTexture::Flags(u.nativeTexture.rhiFlags);
+        std::unique_ptr<QRhiTexture> texture(rhi->newTexture(format, pixelSize, sampleCount, flags));
         if (!texture->createFrom({ u.nativeTexture.object, u.nativeTexture.layout })) {
             qWarning("Failed to build wrapper texture for QQuickRenderTarget");
             return false;

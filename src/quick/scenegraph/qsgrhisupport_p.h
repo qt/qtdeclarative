@@ -97,6 +97,22 @@ public:
     static QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
     static void checkEnvQSgInfo();
 
+#if QT_CONFIG(opengl)
+    static QRhiTexture::Format toRhiTextureFormatFromGL(uint format);
+#endif
+
+#if QT_CONFIG(vulkan)
+    static QRhiTexture::Format toRhiTextureFormatFromVulkan(uint format, QRhiTexture::Flags *flags);
+#endif
+
+#if defined(Q_OS_WIN)
+    static QRhiTexture::Format toRhiTextureFormatFromD3D11(uint format, QRhiTexture::Flags *flags);
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    static QRhiTexture::Format toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags *flags);
+#endif
+
     void configure(QSGRendererInterface::GraphicsApi api);
 
     QRhi::Implementation rhiBackend() const { return m_rhiBackend; }

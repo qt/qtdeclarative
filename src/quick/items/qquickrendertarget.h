@@ -74,19 +74,23 @@ public:
     void setMirrorVertically(bool enable);
 
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromOpenGLTexture(uint textureId, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromOpenGLRenderBuffer(uint renderbufferId, const QSize &pixelSize, int sampleCount = 1);
 #endif
 
 #if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromD3D11Texture(void *texture, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount = 1);
 #endif
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount = 1);
 #endif
 
 #if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromVulkanImage(VkImage image, VkImageLayout layout, VkFormat format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount = 1);
 #endif
 

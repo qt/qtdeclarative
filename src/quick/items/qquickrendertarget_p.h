@@ -85,6 +85,8 @@ public:
     struct NativeTexture {
         quint64 object;
         int layout;
+        uint rhiFormat;
+        uint rhiFlags;
     };
     union {
         NativeTexture nativeTexture;

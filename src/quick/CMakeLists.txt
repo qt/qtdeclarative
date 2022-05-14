@@ -397,6 +397,7 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengl
 qt_internal_extend_target(Quick CONDITION IOS OR MACOS
     SOURCES
         scenegraph/coreapi/qsgtexture_mac.mm
+        scenegraph/qsgrhisupport_mac.mm
 )
 
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_thread

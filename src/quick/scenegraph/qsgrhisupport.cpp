@@ -53,6 +53,10 @@
 #include <QOperatingSystemVersion>
 #include <QOffscreenSurface>
 
+#ifdef Q_OS_WIN
+#include <dxgiformat.h>
+#endif
+
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -206,6 +210,722 @@ void QSGRhiSupport::checkEnvQSgInfo()
     if (qEnvironmentVariableIsSet("QSG_INFO"))
         const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
 }
+
+
+#if QT_CONFIG(opengl)
+#ifndef GL_BGRA
+#define GL_BGRA                           0x80E1
+#endif
+
+#ifndef GL_R8
+#define GL_R8                             0x8229
+#endif
+
+#ifndef GL_RG8
+#define GL_RG8                            0x822B
+#endif
+
+#ifndef GL_RG
+#define GL_RG                             0x8227
+#endif
+
+#ifndef GL_R16
+#define GL_R16                            0x822A
+#endif
+
+#ifndef GL_RG16
+#define GL_RG16                           0x822C
+#endif
+
+#ifndef GL_RED
+#define GL_RED                            0x1903
+#endif
+
+#ifndef GL_RGBA8
+#define GL_RGBA8                          0x8058
+#endif
+
+#ifndef GL_RGBA32F
+#define GL_RGBA32F                        0x8814
+#endif
+
+#ifndef GL_RGBA16F
+#define GL_RGBA16F                        0x881A
+#endif
+
+#ifndef GL_R16F
+#define GL_R16F                           0x822D
+#endif
+
+#ifndef GL_R32F
+#define GL_R32F                           0x822E
+#endif
+
+#ifndef GL_HALF_FLOAT
+#define GL_HALF_FLOAT                     0x140B
+#endif
+
+#ifndef GL_DEPTH_COMPONENT16
+#define GL_DEPTH_COMPONENT16              0x81A5
+#endif
+
+#ifndef GL_DEPTH_COMPONENT24
+#define GL_DEPTH_COMPONENT24              0x81A6
+#endif
+
+#ifndef GL_DEPTH_COMPONENT32F
+#define GL_DEPTH_COMPONENT32F             0x8CAC
+#endif
+
+#ifndef GL_STENCIL_INDEX
+#define GL_STENCIL_INDEX                  0x1901
+#endif
+
+#ifndef GL_STENCIL_INDEX8
+#define GL_STENCIL_INDEX8                 0x8D48
+#endif
+
+#ifndef GL_DEPTH24_STENCIL8
+#define GL_DEPTH24_STENCIL8               0x88F0
+#endif
+
+#ifndef GL_DEPTH_STENCIL_ATTACHMENT
+#define GL_DEPTH_STENCIL_ATTACHMENT       0x821A
+#endif
+
+#ifndef GL_DEPTH_STENCIL
+#define GL_DEPTH_STENCIL                  0x84F9
+#endif
+
+#ifndef GL_PRIMITIVE_RESTART_FIXED_INDEX
+#define GL_PRIMITIVE_RESTART_FIXED_INDEX  0x8D69
+#endif
+
+#ifndef GL_FRAMEBUFFER_SRGB
+#define GL_FRAMEBUFFER_SRGB 0x8DB9
+#endif
+
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER               0x8CA8
+#endif
+
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER               0x8CA9
+#endif
+
+#ifndef GL_MAX_DRAW_BUFFERS
+#define GL_MAX_DRAW_BUFFERS               0x8824
+#endif
+
+#ifndef GL_TEXTURE_COMPARE_MODE
+#define GL_TEXTURE_COMPARE_MODE           0x884C
+#endif
+
+#ifndef GL_COMPARE_REF_TO_TEXTURE
+#define GL_COMPARE_REF_TO_TEXTURE         0x884E
+#endif
+
+#ifndef GL_TEXTURE_COMPARE_FUNC
+#define GL_TEXTURE_COMPARE_FUNC           0x884D
+#endif
+
+#ifndef GL_MAX_SAMPLES
+#define GL_MAX_SAMPLES                    0x8D57
+#endif
+
+#ifndef GL_SHADER_STORAGE_BUFFER
+#define GL_SHADER_STORAGE_BUFFER          0x90D2
+#endif
+
+#ifndef GL_READ_ONLY
+#define GL_READ_ONLY                      0x88B8
+#endif
+
+#ifndef GL_WRITE_ONLY
+#define GL_WRITE_ONLY                     0x88B9
+#endif
+
+#ifndef GL_READ_WRITE
+#define GL_READ_WRITE                     0x88BA
+#endif
+
+#ifndef GL_COMPUTE_SHADER
+#define GL_COMPUTE_SHADER                 0x91B9
+#endif
+
+#ifndef GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT
+#define GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT 0x00000001
+#endif
+
+#ifndef GL_ELEMENT_ARRAY_BARRIER_BIT
+#define GL_ELEMENT_ARRAY_BARRIER_BIT       0x00000002
+#endif
+
+#ifndef GL_UNIFORM_BARRIER_BIT
+#define GL_UNIFORM_BARRIER_BIT             0x00000004
+#endif
+
+#ifndef GL_BUFFER_UPDATE_BARRIER_BIT
+#define GL_BUFFER_UPDATE_BARRIER_BIT       0x00000200
+#endif
+
+#ifndef GL_SHADER_STORAGE_BARRIER_BIT
+#define GL_SHADER_STORAGE_BARRIER_BIT      0x00002000
+#endif
+
+#ifndef GL_TEXTURE_FETCH_BARRIER_BIT
+#define GL_TEXTURE_FETCH_BARRIER_BIT       0x00000008
+#endif
+
+#ifndef GL_SHADER_IMAGE_ACCESS_BARRIER_BIT
+#define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT 0x00000020
+#endif
+
+#ifndef GL_PIXEL_BUFFER_BARRIER_BIT
+#define GL_PIXEL_BUFFER_BARRIER_BIT        0x00000080
+#endif
+
+#ifndef GL_TEXTURE_UPDATE_BARRIER_BIT
+#define GL_TEXTURE_UPDATE_BARRIER_BIT      0x00000100
+#endif
+
+#ifndef GL_FRAMEBUFFER_BARRIER_BIT
+#define GL_FRAMEBUFFER_BARRIER_BIT         0x00000400
+#endif
+
+#ifndef GL_ALL_BARRIER_BITS
+#define GL_ALL_BARRIER_BITS               0xFFFFFFFF
+#endif
+
+#ifndef GL_VERTEX_PROGRAM_POINT_SIZE
+#define GL_VERTEX_PROGRAM_POINT_SIZE      0x8642
+#endif
+
+#ifndef GL_POINT_SPRITE
+#define GL_POINT_SPRITE                   0x8861
+#endif
+
+#ifndef GL_MAP_READ_BIT
+#define GL_MAP_READ_BIT                   0x0001
+#endif
+
+#ifndef GL_MAP_WRITE_BIT
+#define GL_MAP_WRITE_BIT                  0x0002
+#endif
+
+#ifndef GL_TEXTURE_2D_MULTISAMPLE
+#define GL_TEXTURE_2D_MULTISAMPLE         0x9100
+#endif
+
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#define GL_TEXTURE_EXTERNAL_OES           0x8D65
+#endif
+
+#ifndef GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS
+#define GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS 0x90EB
+#endif
+
+#ifndef GL_MAX_COMPUTE_WORK_GROUP_COUNT
+#define GL_MAX_COMPUTE_WORK_GROUP_COUNT   0x91BE
+#endif
+
+#ifndef GL_MAX_COMPUTE_WORK_GROUP_SIZE
+#define GL_MAX_COMPUTE_WORK_GROUP_SIZE    0x91BF
+#endif
+
+#ifndef GL_TEXTURE_CUBE_MAP_SEAMLESS
+#define GL_TEXTURE_CUBE_MAP_SEAMLESS      0x884F
+#endif
+
+#ifndef GL_CONTEXT_LOST
+#define GL_CONTEXT_LOST                   0x0507
+#endif
+
+#ifndef GL_PROGRAM_BINARY_LENGTH
+#define GL_PROGRAM_BINARY_LENGTH          0x8741
+#endif
+
+#ifndef GL_NUM_PROGRAM_BINARY_FORMATS
+#define GL_NUM_PROGRAM_BINARY_FORMATS     0x87FE
+#endif
+
+#ifndef GL_UNPACK_ROW_LENGTH
+#define GL_UNPACK_ROW_LENGTH              0x0CF2
+#endif
+
+#ifndef GL_TEXTURE_3D
+#define GL_TEXTURE_3D                     0x806F
+#endif
+
+#ifndef GL_TEXTURE_WRAP_R
+#define GL_TEXTURE_WRAP_R                 0x8072
+#endif
+
+#ifndef GL_TEXTURE_RECTANGLE
+#define GL_TEXTURE_RECTANGLE              0x84F5
+#endif
+
+#ifndef GL_TEXTURE_2D_ARRAY
+#define GL_TEXTURE_2D_ARRAY               0x8C1A
+#endif
+
+#ifndef GL_MAX_ARRAY_TEXTURE_LAYERS
+#define GL_MAX_ARRAY_TEXTURE_LAYERS       0x88FF
+#endif
+
+#ifndef GL_MAX_VERTEX_UNIFORM_COMPONENTS
+#define GL_MAX_VERTEX_UNIFORM_COMPONENTS  0x8B4A
+#endif
+
+#ifndef GL_MAX_FRAGMENT_UNIFORM_COMPONENTS
+#define GL_MAX_FRAGMENT_UNIFORM_COMPONENTS 0x8B49
+#endif
+
+#ifndef GL_MAX_VERTEX_UNIFORM_VECTORS
+#define GL_MAX_VERTEX_UNIFORM_VECTORS     0x8DFB
+#endif
+
+#ifndef GL_MAX_FRAGMENT_UNIFORM_VECTORS
+#define GL_MAX_FRAGMENT_UNIFORM_VECTORS   0x8DFD
+#endif
+
+#ifndef GL_RGB10_A2
+#define GL_RGB10_A2                       0x8059
+#endif
+
+#ifndef GL_UNSIGNED_INT_2_10_10_10_REV
+#define GL_UNSIGNED_INT_2_10_10_10_REV    0x8368
+#endif
+
+#ifndef GL_MAX_VARYING_COMPONENTS
+#define GL_MAX_VARYING_COMPONENTS         0x8B4B
+#endif
+
+#ifndef GL_MAX_VARYING_FLOATS
+#define GL_MAX_VARYING_FLOATS             0x8B4B
+#endif
+
+#ifndef GL_MAX_VARYING_VECTORS
+#define GL_MAX_VARYING_VECTORS            0x8DFC
+#endif
+
+#ifndef GL_TESS_CONTROL_SHADER
+#define GL_TESS_CONTROL_SHADER            0x8E88
+#endif
+
+#ifndef GL_TESS_EVALUATION_SHADER
+#define GL_TESS_EVALUATION_SHADER         0x8E87
+#endif
+
+#ifndef GL_PATCH_VERTICES
+#define GL_PATCH_VERTICES                 0x8E72
+#endif
+
+#ifndef GL_LINE
+#define GL_LINE                           0x1B01
+#endif
+
+#ifndef GL_FILL
+#define GL_FILL                           0x1B02
+#endif
+
+#ifndef GL_PATCHES
+#define GL_PATCHES                        0x000E
+#endif
+
+#ifndef GL_GEOMETRY_SHADER
+#define GL_GEOMETRY_SHADER                0x8DD9
+#endif
+
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format)
+{
+    auto rhiFormat = QRhiTexture::UnknownFormat;
+    switch (format) {
+    case GL_RGBA:
+        Q_FALLTHROUGH();
+    case GL_RGBA8:
+        rhiFormat = QRhiTexture::RGBA8;
+        break;
+    case GL_BGRA:
+        rhiFormat = QRhiTexture::BGRA8;
+        break;
+    case GL_R16:
+        rhiFormat = QRhiTexture::R16;
+        break;
+    case GL_RG16:
+        rhiFormat = QRhiTexture::RG16;
+        break;
+    case GL_RED:
+        Q_FALLTHROUGH();
+    case GL_R8:
+        rhiFormat = QRhiTexture::R8;
+        break;
+    case GL_RG:
+        Q_FALLTHROUGH();
+    case GL_RG8:
+        rhiFormat = QRhiTexture::RG8;
+        break;
+    case GL_ALPHA:
+        rhiFormat = QRhiTexture::RED_OR_ALPHA8;
+        break;
+    case GL_RGBA16F:
+        rhiFormat = QRhiTexture::RGBA16F;
+        break;
+    case GL_RGBA32F:
+        rhiFormat = QRhiTexture::RGBA32F;
+        break;
+    case GL_R16F:
+        rhiFormat = QRhiTexture::R16F;
+        break;
+    case GL_R32F:
+        rhiFormat = QRhiTexture::R32F;
+        break;
+    case GL_RGB10_A2:
+        rhiFormat = QRhiTexture::RGB10A2;
+        break;
+    case GL_DEPTH_COMPONENT:
+        Q_FALLTHROUGH();
+    case GL_DEPTH_COMPONENT16:
+        rhiFormat = QRhiTexture::D16;
+        break;
+    case GL_DEPTH_COMPONENT24:
+        rhiFormat = QRhiTexture::D24;
+        break;
+    case GL_DEPTH_STENCIL:
+        Q_FALLTHROUGH();
+    case GL_DEPTH24_STENCIL8:
+        rhiFormat = QRhiTexture::D24S8;
+        break;
+    case GL_DEPTH_COMPONENT32F:
+        rhiFormat = QRhiTexture::D32F;
+        break;
+    default:
+        qWarning("GL format %d is not supported", format);
+        break;
+    }
+    return rhiFormat;
+}
+#endif
+
+#if QT_CONFIG(vulkan)
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromVulkan(uint format, QRhiTexture::Flags *flags)
+{
+    auto rhiFormat = QRhiTexture::UnknownFormat;
+    bool sRGB = false;
+    switch (format) {
+    case VK_FORMAT_R8G8B8A8_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_R8G8B8A8_UNORM:
+        rhiFormat = QRhiTexture::RGBA8;
+        break;
+    case VK_FORMAT_B8G8R8A8_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_B8G8R8A8_UNORM:
+        rhiFormat = QRhiTexture::BGRA8;
+        break;
+    case VK_FORMAT_R8_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_R8_UNORM:
+        rhiFormat = QRhiTexture::R8;
+        break;
+    case VK_FORMAT_R8G8_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_R8G8_UNORM:
+        rhiFormat = QRhiTexture::RG8;
+        break;
+    case VK_FORMAT_R16_UNORM:
+        rhiFormat = QRhiTexture::R16;
+        break;
+    case VK_FORMAT_R16G16_UNORM:
+        rhiFormat = QRhiTexture::RG16;
+        break;
+    case VK_FORMAT_R16G16B16A16_SFLOAT:
+        rhiFormat = QRhiTexture::RGBA16F;
+        break;
+    case VK_FORMAT_R32G32B32A32_SFLOAT:
+        rhiFormat = QRhiTexture::RGBA32F;
+        break;
+    case VK_FORMAT_R16_SFLOAT:
+        rhiFormat = QRhiTexture::R16F;
+        break;
+    case VK_FORMAT_R32_SFLOAT:
+        rhiFormat = QRhiTexture::R32F;
+        break;
+    case VK_FORMAT_A2B10G10R10_UNORM_PACK32: // intentionally
+        Q_FALLTHROUGH();
+    case VK_FORMAT_A2R10G10B10_UNORM_PACK32:
+        rhiFormat = QRhiTexture::RGB10A2;
+        break;
+    case VK_FORMAT_D16_UNORM:
+        rhiFormat = QRhiTexture::D16;
+        break;
+    case VK_FORMAT_X8_D24_UNORM_PACK32:
+        rhiFormat = QRhiTexture::D24;
+        break;
+    case VK_FORMAT_D24_UNORM_S8_UINT:
+        rhiFormat = QRhiTexture::D24S8;
+        break;
+    case VK_FORMAT_D32_SFLOAT:
+        rhiFormat = QRhiTexture::D32F;
+        break;
+    case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::BC1;
+        break;
+    case VK_FORMAT_BC2_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_BC2_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::BC2;
+        break;
+    case VK_FORMAT_BC3_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_BC3_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::BC3;
+        break;
+    case VK_FORMAT_BC4_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::BC4;
+        break;
+    case VK_FORMAT_BC5_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::BC5;
+        break;
+    case VK_FORMAT_BC6H_UFLOAT_BLOCK:
+        rhiFormat = QRhiTexture::BC6H;
+        break;
+    case VK_FORMAT_BC7_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_BC7_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::BC7;
+        break;
+    case VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ETC2_RGB8;
+        break;
+    case VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ETC2_RGB8A1;
+        break;
+    case VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ETC2_RGBA8;
+        break;
+    case VK_FORMAT_ASTC_4x4_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_4x4_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_4x4;
+        break;
+    case VK_FORMAT_ASTC_5x4_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_5x4_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_5x4;
+        break;
+    case VK_FORMAT_ASTC_5x5_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_5x5_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_5x5;
+        break;
+    case VK_FORMAT_ASTC_6x5_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_6x5_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_6x5;
+        break;
+    case VK_FORMAT_ASTC_6x6_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_6x6_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_6x6;
+        break;
+    case VK_FORMAT_ASTC_8x5_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_8x5_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_8x5;
+        break;
+    case VK_FORMAT_ASTC_8x6_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_8x6_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_8x6;
+        break;
+    case VK_FORMAT_ASTC_8x8_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_8x8_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_8x8;
+        break;
+    case VK_FORMAT_ASTC_10x5_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_10x5_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_10x5;
+        break;
+    case VK_FORMAT_ASTC_10x6_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_10x6_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_10x6;
+        break;
+    case VK_FORMAT_ASTC_10x8_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_10x8_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_10x8;
+        break;
+    case VK_FORMAT_ASTC_10x10_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_10x10_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_10x10;
+        break;
+    case VK_FORMAT_ASTC_12x10_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_12x10_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_12x10;
+        break;
+    case VK_FORMAT_ASTC_12x12_SRGB_BLOCK:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case VK_FORMAT_ASTC_12x12_UNORM_BLOCK:
+        rhiFormat = QRhiTexture::ASTC_12x12;
+        break;
+    default:
+        qWarning("VkFormat %d is not supported", format);
+        break;
+    }
+    if (sRGB)
+        (*flags) |=(QRhiTexture::sRGB);
+    return rhiFormat;
+}
+#endif
+
+#ifdef Q_OS_WIN
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromD3D11(uint format, QRhiTexture::Flags *flags)
+{
+    auto rhiFormat = QRhiTexture::UnknownFormat;
+    bool sRGB = false;
+    switch (format) {
+    case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case DXGI_FORMAT_R8G8B8A8_UNORM:
+        rhiFormat = QRhiTexture::RGBA8;
+        break;
+    case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case DXGI_FORMAT_B8G8R8A8_UNORM:
+        rhiFormat = QRhiTexture::BGRA8;
+        break;
+    case DXGI_FORMAT_R8_UNORM:
+        rhiFormat = QRhiTexture::R8;
+        break;
+    case DXGI_FORMAT_R8G8_UNORM:
+        rhiFormat = QRhiTexture::RG8;
+        break;
+    case DXGI_FORMAT_R16_UNORM:
+        rhiFormat = QRhiTexture::R16;
+        break;
+    case DXGI_FORMAT_R16G16_UNORM:
+        rhiFormat = QRhiTexture::RG16;
+        break;
+    case DXGI_FORMAT_R16G16B16A16_FLOAT:
+        rhiFormat = QRhiTexture::RGBA16F;
+        break;
+    case DXGI_FORMAT_R32G32B32A32_FLOAT:
+        rhiFormat = QRhiTexture::RGBA32F;
+        break;
+    case DXGI_FORMAT_R16_FLOAT:
+        rhiFormat = QRhiTexture::R16F;
+        break;
+    case DXGI_FORMAT_R32_FLOAT:
+        rhiFormat = QRhiTexture::R32F;
+        break;
+    case DXGI_FORMAT_R10G10B10A2_UNORM:
+        rhiFormat = QRhiTexture::RGB10A2;
+        break;
+    case DXGI_FORMAT_R16_TYPELESS:
+        rhiFormat = QRhiTexture::D16;
+        break;
+    case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
+        rhiFormat = QRhiTexture::D24;
+        break;
+    case DXGI_FORMAT_D24_UNORM_S8_UINT:
+        rhiFormat = QRhiTexture::D24S8;
+        break;
+    case DXGI_FORMAT_R32_TYPELESS:
+        rhiFormat = QRhiTexture::D32F;
+        break;
+    case DXGI_FORMAT_BC1_UNORM_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case DXGI_FORMAT_BC1_UNORM:
+        rhiFormat = QRhiTexture::BC1;
+        break;
+    case DXGI_FORMAT_BC2_UNORM_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case DXGI_FORMAT_BC2_UNORM:
+        rhiFormat = QRhiTexture::BC2;
+        break;
+    case DXGI_FORMAT_BC3_UNORM_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case DXGI_FORMAT_BC3_UNORM:
+        rhiFormat = QRhiTexture::BC3;
+        break;
+    case DXGI_FORMAT_BC4_UNORM:
+        rhiFormat = QRhiTexture::BC4;
+        break;
+    case DXGI_FORMAT_BC5_UNORM:
+        rhiFormat = QRhiTexture::BC5;
+        break;
+    case DXGI_FORMAT_BC6H_UF16:
+        rhiFormat = QRhiTexture::BC6H;
+        break;
+    case DXGI_FORMAT_BC7_UNORM_SRGB:
+        sRGB = true;
+        Q_FALLTHROUGH();
+    case DXGI_FORMAT_BC7_UNORM:
+        rhiFormat = QRhiTexture::BC7;
+        break;
+    default:
+        qWarning("DXGI_FORMAT %d is not supported", format);
+        break;
+    }
+    if (sRGB)
+        (*flags) |=(QRhiTexture::sRGB);
+    return rhiFormat;
+}
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+namespace QSGRhiSupportMac {
+    QRhiTexture::Format toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags *flags);
+}
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags *flags)
+{
+    return QSGRhiSupportMac::toRhiTextureFormatFromMetal(format, flags);
+}
+#endif
 
 void QSGRhiSupport::configure(QSGRendererInterface::GraphicsApi api)
 {
