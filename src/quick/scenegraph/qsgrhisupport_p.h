@@ -147,6 +147,8 @@ public:
     QRhiSwapChain::Format swapChainFormat() const { return m_swapChainFormat; }
     void applySwapChainFormat(QRhiSwapChain *scWithWindowSet);
 
+    QRhiTexture::Format toRhiTextureFormat(uint nativeFormat, QRhiTexture::Flags *flags) const;
+
 private:
     QSGRhiSupport();
     void applySettings();

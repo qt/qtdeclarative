@@ -45,6 +45,7 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
 #include <QtGui/private/qrhi_p.h>
+#include <QtQuick/private/qsgrhisupport_p.h>
 
 #include <qtquick_tracepoints_p.h>
 
@@ -102,7 +103,7 @@ void QSGPlainTexture::setTexture(QRhiTexture *texture) // RHI only
 
 void QSGPlainTexture::setTextureFromNativeTexture(QRhi *rhi,
                                                   quint64 nativeObjectHandle,
-                                                  int nativeLayout,
+                                                  int nativeLayout, uint nativeFormat,
                                                   const QSize &size,
                                                   QQuickWindow::CreateTextureOptions options,
                                                   QQuickWindowPrivate::TextureFromNativeTextureFlags flags)
@@ -113,7 +114,16 @@ void QSGPlainTexture::setTextureFromNativeTexture(QRhi *rhi,
     if (flags.testFlag(QQuickWindowPrivate::NativeTextureIsExternalOES))
         texFlags |= QRhiTexture::ExternalOES;
 
-    QRhiTexture *t = rhi->newTexture(QRhiTexture::RGBA8, size, 1, texFlags);
+    QRhiTexture::Format format = QRhiTexture::RGBA8;
+
+    QRhiTexture::Flags formatFlags;
+    auto rhiFormat = QSGRhiSupport::instance()->toRhiTextureFormat(nativeFormat, &formatFlags);
+    if (rhiFormat != QRhiTexture::UnknownFormat) {
+        format = rhiFormat;
+        texFlags |= formatFlags;
+    }
+
+    QRhiTexture *t = rhi->newTexture(format, size, 1, texFlags);
 
     // ownership of the native object is never taken
     t->createFrom({nativeObjectHandle, nativeLayout});

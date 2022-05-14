@@ -184,9 +184,17 @@ public:
 
     QSGTexture *createTextureFromNativeTexture(quint64 nativeObjectHandle,
                                                int nativeLayout,
+                                               uint nativeFormat,
                                                const QSize &size,
                                                QQuickWindow::CreateTextureOptions options,
                                                TextureFromNativeTextureFlags flags = {}) const;
+    QSGTexture *createTextureFromNativeTexture(quint64 nativeObjectHandle,
+                                               int nativeLayout,
+                                               const QSize &size,
+                                               QQuickWindow::CreateTextureOptions options,
+                                               TextureFromNativeTextureFlags flags = {}) const {
+        return createTextureFromNativeTexture(nativeObjectHandle, nativeLayout, 0, size, options, flags);
+    }
 
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 

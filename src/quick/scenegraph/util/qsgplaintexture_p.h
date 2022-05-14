@@ -90,6 +90,7 @@ public:
     void setTextureFromNativeTexture(QRhi *rhi,
                                      quint64 nativeObjectHandle,
                                      int nativeLayout,
+                                     uint nativeFormat,
                                      const QSize &size,
                                      QQuickWindow::CreateTextureOptions options,
                                      QQuickWindowPrivate::TextureFromNativeTextureFlags flags);

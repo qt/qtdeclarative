@@ -1664,4 +1664,29 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet)
     }
 }
 
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormat(uint nativeFormat, QRhiTexture::Flags *flags) const
+{
+    switch (m_rhiBackend) {
+#if QT_CONFIG(vulkan)
+    case QRhi::Vulkan:
+        return toRhiTextureFormatFromVulkan(nativeFormat, flags);
+#endif
+#if QT_CONFIG(opengl)
+    case QRhi::OpenGLES2:
+        Q_UNUSED(flags);
+        return toRhiTextureFormatFromGL(nativeFormat);
+#endif
+#ifdef Q_OS_WIN
+    case QRhi::D3D11:
+        return toRhiTextureFormatFromD3D11(nativeFormat, flags);
+#endif
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    case QRhi::Metal:
+        return toRhiTextureFormatFromMetal(nativeFormat, flags);
+#endif
+    default:
+        return QRhiTexture::UnknownFormat;
+    }
+}
+
 QT_END_NAMESPACE
