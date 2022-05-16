@@ -17,3 +17,5 @@ macos ci
 # QTBUG-103089
 [QTBUG_48044_currentItemNotVisibleAfterTransition]
 android
+[contentHeightWithDelayRemove]
+android
