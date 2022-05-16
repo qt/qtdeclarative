@@ -575,21 +575,29 @@ void tst_qv4debugger::readLocals()
     QString script =
             "var f = function(a, b) {\n"
             "  var c = a + b\n"
+            "  let e = 'jaja'\n"
+            "  const ff = 'nenene'\n"
             "  var d = a - b\n" // breakpoint, c should be set, d should be undefined
             "  return c === d\n"
             "}\n"
             "f(1, 2, 3);\n";
-    debugger()->addBreakPoint("readLocals", 3);
+    debugger()->addBreakPoint("readLocals", 5);
     evaluateJavaScript(script, "readLocals");
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
-    QCOMPARE(frame0.size(), 5); // locals and parameters
+    QCOMPARE(frame0.size(), 7); // locals and parameters
     QVERIFY(frame0.contains("c"));
     QCOMPARE(frame0.type("c"), QStringLiteral("number"));
     QCOMPARE(frame0.value("c").toDouble(), 3.0);
     QVERIFY(frame0.contains("d"));
     QCOMPARE(frame0.type("d"), QStringLiteral("undefined"));
+    QVERIFY(frame0.contains("e"));
+    QCOMPARE(frame0.type("e"), QStringLiteral("string"));
+    QCOMPARE(frame0.value("e").toString(), QStringLiteral("jaja"));
+    QVERIFY(frame0.contains("ff"));
+    QCOMPARE(frame0.type("ff"), QStringLiteral("string"));
+    QCOMPARE(frame0.value("ff").toString(), QStringLiteral("nenene"));
 }
 
 void tst_qv4debugger::readObject()

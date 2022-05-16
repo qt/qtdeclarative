@@ -169,6 +169,8 @@ private slots:
     void checkTableviewInsideAsyncLoader();
     void hideRowsAndColumns_data();
     void hideRowsAndColumns();
+    void hideAndShowFirstColumn();
+    void hideAndShowFirstRow();
     void checkThatRevisionedPropertiesCannotBeUsedInOldImports();
     void checkSyncView_rootView_data();
     void checkSyncView_rootView();
@@ -2411,6 +2413,82 @@ void tst_QQuickTableView::hideRowsAndColumns()
 
     for (const int column : tableViewPrivate->loadedColumns.keys())
         QVERIFY(!columnsToHideList.contains(column));
+}
+
+void tst_QQuickTableView::hideAndShowFirstColumn()
+{
+    // Check that if we hide the first column, it will move
+    // the second column to the origin of the viewport. Then check
+    // that if we show the first column again, it will reappear at
+    // the origin of the viewport, and as such, pushing the second
+    // column to the right of it.
+    LOAD_TABLEVIEW("hiderowsandcolumns.qml");
+
+    const int modelSize = 5;
+    auto model = TestModelAsVariant(modelSize, modelSize);
+    tableView->setModel(model);
+
+    // Start by making the first column hidden
+    const auto columnsToHideList = QList<int>() << 0;
+    view->rootObject()->setProperty("columnsToHide", QVariant::fromValue(columnsToHideList));
+
+    WAIT_UNTIL_POLISHED;
+
+    const int expectedColumnCount = modelSize - columnsToHideList.count();
+    QCOMPARE(tableViewPrivate->loadedColumns.count(), expectedColumnCount);
+    QCOMPARE(tableViewPrivate->leftColumn(), 1);
+    QCOMPARE(tableView->contentX(), 0);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.x(), 0);
+
+    // Make the first column in the model visible again
+    const auto emptyList = QList<int>();
+    view->rootObject()->setProperty("columnsToHide", QVariant::fromValue(emptyList));
+    tableView->forceLayout();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedColumns.count(), modelSize);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableView->contentX(), 0);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.x(), 0);
+}
+
+void tst_QQuickTableView::hideAndShowFirstRow()
+{
+    // Check that if we hide the first row, it will move
+    // the second row to the origin of the viewport. Then check
+    // that if we show the first row again, it will reappear at
+    // the origin of the viewport, and as such, pushing the second
+    // row below it.
+    LOAD_TABLEVIEW("hiderowsandcolumns.qml");
+
+    const int modelSize = 5;
+    auto model = TestModelAsVariant(modelSize, modelSize);
+    tableView->setModel(model);
+
+    // Start by making the first row hidden
+    const auto rowsToHideList = QList<int>() << 0;
+    view->rootObject()->setProperty("rowsToHide", QVariant::fromValue(rowsToHideList));
+
+    WAIT_UNTIL_POLISHED;
+
+    const int expectedRowsCount = modelSize - rowsToHideList.count();
+    QCOMPARE(tableViewPrivate->loadedRows.count(), expectedRowsCount);
+    QCOMPARE(tableViewPrivate->topRow(), 1);
+    QCOMPARE(tableView->contentY(), 0);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.y(), 0);
+
+    // Make the first row in the model visible again
+    const auto emptyList = QList<int>();
+    view->rootObject()->setProperty("rowsToHide", QVariant::fromValue(emptyList));
+    tableView->forceLayout();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedRows.count(), modelSize);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableView->contentY(), 0);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.y(), 0);
 }
 
 void tst_QQuickTableView::checkThatRevisionedPropertiesCannotBeUsedInOldImports()

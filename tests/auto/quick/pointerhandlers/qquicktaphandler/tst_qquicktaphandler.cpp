@@ -71,15 +71,25 @@ private slots:
     void buttonsMultiTouch();
     void componentUserBehavioralOverride();
     void rightLongPressIgnoreWheel();
+    void nonTopLevelParentWindow();
 
 private:
-    void createView(QScopedPointer<QQuickView> &window, const char *fileName);
+    void createView(QScopedPointer<QQuickView> &window, const char *fileName,
+                    QWindow *parent = nullptr);
     QTouchDevice *touchDevice;
+    void mouseEvent(QEvent::Type type, Qt::MouseButton button, const QPoint &point,
+                    QWindow *targetWindow, QWindow *mapToWindow);
 };
 
-void tst_TapHandler::createView(QScopedPointer<QQuickView> &window, const char *fileName)
+void tst_TapHandler::createView(QScopedPointer<QQuickView> &window, const char *fileName,
+                                QWindow *parent)
 {
-    window.reset(new QQuickView);
+    window.reset(new QQuickView(parent));
+    if (parent) {
+        parent->show();
+        QVERIFY(QTest::qWaitForWindowActive(parent));
+    }
+
     window->setSource(testFileUrl(fileName));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
     QQuickViewTestUtil::centerOnScreen(window.data());
@@ -88,6 +98,20 @@ void tst_TapHandler::createView(QScopedPointer<QQuickView> &window, const char *
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
+}
+
+void tst_TapHandler::mouseEvent(QEvent::Type type, Qt::MouseButton button, const QPoint &point,
+                                QWindow *targetWindow, QWindow *mapToWindow)
+{
+    QVERIFY(targetWindow);
+    QVERIFY(mapToWindow);
+    auto buttons = button;
+    if (type == QEvent::MouseButtonRelease) {
+        buttons = Qt::NoButton;
+    }
+    QMouseEvent me(type, point, mapToWindow->mapToGlobal(point), button, buttons,
+                   Qt::KeyboardModifiers());
+    QVERIFY(qApp->notify(targetWindow, &me));
 }
 
 void tst_TapHandler::initTestCase()
@@ -743,6 +767,31 @@ void tst_TapHandler::rightLongPressIgnoreWheel()
     QTest::mouseRelease(window, Qt::RightButton, Qt::NoModifier, p1, 500);
     QTRY_COMPARE(tap->isPressed(), false);
     QCOMPARE(tappedSpy.count(), 0);
+}
+
+void tst_TapHandler::nonTopLevelParentWindow() // QTBUG-91716
+{
+    QScopedPointer<QQuickWindow> parentWindowPtr(new QQuickWindow);
+    auto parentWindow = parentWindowPtr.get();
+    parentWindow->setGeometry(400, 400, 250, 250);
+
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "simpleTapHandler.qml", parentWindow);
+    auto window = windowPtr.get();
+    window->setGeometry(10, 10, 100, 100);
+
+    QQuickItem *root = window->rootObject();
+
+    auto p1 = QPoint(20, 20);
+    mouseEvent(QEvent::MouseButtonPress, Qt::LeftButton, p1, window, parentWindow);
+    mouseEvent(QEvent::MouseButtonRelease, Qt::LeftButton, p1, window, parentWindow);
+
+    QCOMPARE(root->property("tapCount").toInt(), 1);
+
+    QTest::touchEvent(window, touchDevice).press(0, p1, parentWindow).commit();
+    QTest::touchEvent(window, touchDevice).release(0, p1, parentWindow).commit();
+
+    QCOMPARE(root->property("tapCount").toInt(), 2);
 }
 
 QTEST_MAIN(tst_TapHandler)

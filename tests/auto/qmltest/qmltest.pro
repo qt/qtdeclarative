@@ -15,7 +15,6 @@ SUBDIRS += \
     listview \
     objectmodel \
     pathview \
-    pixel \
     positioners \
     qqmlbinding \
     qtbug46798 \

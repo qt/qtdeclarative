@@ -556,7 +556,10 @@ void QQuickPinchArea::updatePinch()
                         d->inPinch = true;
                         d->stealMouse = true;
                         if (d->pinch && d->pinch->target()) {
-                            d->pinchStartPos = pinch()->target()->position();
+                            auto targetParent = pinch()->target()->parentItem();
+                            d->pinchStartPos = targetParent ?
+                                        targetParent->mapToScene(pinch()->target()->position()) :
+                                        pinch()->target()->position();
                             d->pinchStartScale = d->pinch->target()->scale();
                             d->pinchStartRotation = d->pinch->target()->rotation();
                             d->pinch->setActive(true);
@@ -604,6 +607,9 @@ void QQuickPinchArea::updatePinchTarget()
         s = qMin(qMax(pinch()->minimumScale(),s), pinch()->maximumScale());
         pinch()->target()->setScale(s);
         QPointF pos = d->sceneLastCenter - d->sceneStartCenter + d->pinchStartPos;
+        if (auto targetParent = pinch()->target()->parentItem())
+            pos = targetParent->mapFromScene(pos);
+
         if (pinch()->axis() & QQuickPinch::XAxis) {
             qreal x = pos.x();
             if (x < pinch()->xmin())

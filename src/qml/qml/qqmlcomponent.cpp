@@ -375,10 +375,15 @@ bool QQmlComponentPrivate::setInitialProperty(QObject *component, const QString&
 {
     QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(component, name, requiredProperties());
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
-    if (!prop.isValid() || !privProp->writeValueProperty(value, {})) {
+    const bool isValid = prop.isValid();
+    if (!isValid || !privProp->writeValueProperty(value, {})) {
         QQmlError error{};
         error.setUrl(url);
-        error.setDescription(QLatin1String("Could not set property %1").arg(name));
+        if (isValid)
+            error.setDescription(QLatin1String("Could not set initial property %1").arg(name));
+        else
+            error.setDescription(QLatin1String("Setting initial properties failed: %2 does not have a property called %1").arg(name,
+                                                                                            QQmlMetaType::prettyTypeName(component)));
         state.errors.push_back(error);
         return false;
     } else
@@ -829,6 +834,14 @@ QObject *QQmlComponent::create(QQmlContext *context)
     Create an object instance of this component, and initialize its toplevel
     properties with \a initialProperties. \a context specifies the context
     where the object instance is to be created.
+
+    \omit
+    TODO: also mention errorString() when QTBUG-93239 is fixed
+    \endomit
+
+    If any of the \c initialProperties cannot be set, \l isError() will return
+    \c true, and the \l errors() function can be used to
+    get detailed information about the error(s).
 
     \sa QQmlComponent::create
     \since 5.14

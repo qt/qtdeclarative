@@ -28,8 +28,13 @@
 
 namespace WTF {
 
+// avoid false positive detection by apple
+// by putting the function inside an inline namespace
+// to obtain different name mangling
+inline namespace hidden {
 WTF_EXPORT_PRIVATE size_t pageSize();
 WTF_EXPORT_PRIVATE size_t pageMask();
+}
 inline bool isPageAligned(void* address) { return !(reinterpret_cast<intptr_t>(address) & (pageSize() - 1)); }
 inline bool isPageAligned(size_t size) { return !(size & (pageSize() - 1)); }
 inline bool isPowerOfTwo(size_t size) { return !(size & (size - 1)); }

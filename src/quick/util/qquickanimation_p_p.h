@@ -135,7 +135,7 @@ public:
     void setAnimValue(QQuickBulkValueUpdater *value);
     QQuickBulkValueUpdater *getAnimValue() const { return animValue; }
 
-    void setFromSourcedValue(bool *value) { fromSourced = value; }
+    void setFromIsSourcedValue(bool *value) { fromIsSourced = value; }
 
     int duration() const override { return m_duration; }
     void setDuration(int msecs) { m_duration = msecs; }
@@ -150,7 +150,7 @@ protected:
 
 private:
     QQuickBulkValueUpdater *animValue;
-    bool *fromSourced;
+    bool *fromIsSourced;
     int m_duration;
     QEasingCurve easing;
 };
@@ -311,7 +311,7 @@ public:
 class Q_AUTOTEST_EXPORT QQuickAnimationPropertyUpdater : public QQuickBulkValueUpdater
 {
 public:
-    QQuickAnimationPropertyUpdater() : interpolatorType(0), interpolator(nullptr), prevInterpolatorType(0), reverse(false), fromSourced(false), fromDefined(false), wasDeleted(nullptr) {}
+    QQuickAnimationPropertyUpdater() : interpolatorType(0), interpolator(nullptr), prevInterpolatorType(0), reverse(false), fromIsSourced(false), fromIsDefined(false), wasDeleted(nullptr) {}
     ~QQuickAnimationPropertyUpdater() override;
 
     void setValue(qreal v) override;
@@ -323,8 +323,8 @@ public:
     QVariantAnimation::Interpolator interpolator;
     int prevInterpolatorType;   //for generic
     bool reverse;
-    bool fromSourced;
-    bool fromDefined;
+    bool fromIsSourced;
+    bool fromIsDefined;
     bool *wasDeleted;
 };
 

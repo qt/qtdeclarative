@@ -216,7 +216,8 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
         return false;
 
     QV4::ScopedObject scopeObject(scope, engine()->newObject());
-    if (ctxt->d()->type == QV4::Heap::ExecutionContext::Type_CallContext) {
+    if (ctxt->d()->type == QV4::Heap::ExecutionContext::Type_CallContext ||
+            ctxt->d()->type == QV4::Heap::ExecutionContext::Type_BlockContext) {
         QStringList names;
         Refs collectedRefs;
 

@@ -813,7 +813,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event
     \readonly
     \qmlproperty int QtQuick::EventPoint::pointId
 
-    This property holds the ID of the event, if any.
+    This property holds the ID of the point, if any.
 
     Touchpoints have automatically-incrementing IDs: each time the user
     presses a finger against the touchscreen, it will be a larger number.
@@ -826,12 +826,8 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event
     \readonly
     \qmlproperty bool QtQuick::EventPoint::accepted
 
-    Setting \a accepted to true prevents the event from being propagated to
-    Items below the PointerHandler's Item.
-
-    Generally, if the handler acts on the mouse event, then it should be
-    accepted so that items lower in the stacking order do not also respond to
-    the same event.
+    Indicates whether this point has been accepted during delivery thus far.
+    This flag cannot be usefully set from QML.
 */
 
 /*!

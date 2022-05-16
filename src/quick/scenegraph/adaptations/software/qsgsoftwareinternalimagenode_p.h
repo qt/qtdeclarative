@@ -54,6 +54,8 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgtexturematerial_p.h>
 
+#include <QtCore/QPointer>
+
 QT_BEGIN_NAMESPACE
 
 namespace QSGSoftwareHelpers {
@@ -132,7 +134,7 @@ private:
     QRectF m_innerSourceRect;
     QRectF m_subSourceRect;
 
-    QSGTexture *m_texture;
+    QPointer<QSGTexture> m_texture;
     QPixmap m_cachedMirroredPixmap;
 
     bool m_mirror;

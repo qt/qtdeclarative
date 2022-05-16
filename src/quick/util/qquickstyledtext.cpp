@@ -46,6 +46,8 @@
 #include "qquickstyledtext_p.h"
 #include <QQmlContext>
 
+Q_LOGGING_CATEGORY(lcStyledText, "qt.quick.styledtext")
+
 /*
     QQuickStyledText supports few tags:
 
@@ -566,6 +568,8 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
                 textOut += QChar(34);
             else if (entity == QLatin1String("nbsp"))
                 textOut += QChar(QChar::Nbsp);
+            else
+                qCWarning(lcStyledText) << "StyledText doesn't support entity" << entity;
             return;
         } else if (*ch == QLatin1Char(' ')) {
             QStringRef entity(&textIn, entityStart - 1, entityLength + 1);

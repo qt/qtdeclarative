@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,40 +26,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtTest 1.1
+import QtQuick 2.12
 
-Rectangle {
-    id:rect
-    width: 40
-    height: 40
-    color:"red"
-    TestCase {
-        name: "Pixels"
-        when: windowShown
-
-        function test_pixel() {
-           skip("test_pixel() is unstable, QTBUG-27671")
-           var img = grabImage(rect);
-           compare(img.pixel(20, 20), Qt.rgba(255, 0, 0, 255));
-           compare(img.red(1,1), 255);
-           compare(img.green(1,1), 0);
-           compare(img.blue(1,1), 0);
-           compare(img.alpha(1,1), 255);
-
-           fuzzyCompare(img.red(1,1), 254, 2);
-           fuzzyCompare(img.pixel(1,1), Qt.rgba(254, 0, 0, 254), 2);
-           fuzzyCompare(img.pixel(1,1), "#FF0201", 2);
-
-           rect.color = "blue";
-           waitForRendering(rect);
-           img = grabImage(rect);
-           compare(img.pixel(20, 20), Qt.rgba(0, 0, 255, 255));
-           compare(img.red(1,1), 0);
-           compare(img.green(1,1), 0);
-           compare(img.blue(1,1), 255);
-           compare(img.alpha(1,1), 255);
-        }
-
+Item {
+    id: root
+    width: 100
+    height: 100
+    property int tapCount: 0
+    TapHandler {
+        onTapped: { ++root.tapCount }
     }
 }
