@@ -29,7 +29,11 @@ android
 android
 [line::test_default]
 android
+[canvas::test_extraArgumentsIgnored]
+android
 [canvas::cleanupTestCase]
+android
+[transform::cleanupTestCase]
 android
 
 # QTBUG-100991
