@@ -831,6 +831,18 @@ namespace QQmlPrivate
         return elementName;
     }
 
+    template<typename>
+    struct QmlMarkerFunction;
+
+    template<typename Ret, typename Class>
+    struct QmlMarkerFunction<Ret (Class::*)()>
+    {
+        using ClassType = Class;
+    };
+
+    template<typename T, typename Marker>
+    using QmlTypeHasMarker = std::is_same<T, typename QmlMarkerFunction<Marker>::ClassType>;
+
     template<class T, class = std::void_t<>>
     struct QmlExtended
     {
@@ -840,7 +852,9 @@ namespace QQmlPrivate
     template<class T>
     struct QmlExtended<T, std::void_t<typename T::QmlExtendedType>>
     {
-        using Type = typename T::QmlExtendedType;
+        using Type = typename std::conditional<
+                QmlTypeHasMarker<T, decltype(&T::qt_qmlMarker_extended)>::value,
+                typename T::QmlExtendedType, void>::type;
     };
 
     template<class T, class = std::void_t<>>
@@ -852,7 +866,13 @@ namespace QQmlPrivate
     template<class T>
     struct QmlExtendedNamespace<T, std::void_t<decltype(T::qmlExtendedNamespace())>>
     {
-        static constexpr const QMetaObject *metaObject() { return T::qmlExtendedNamespace(); }
+        static constexpr const QMetaObject *metaObject()
+        {
+            if constexpr (QmlTypeHasMarker<T, decltype(&T::qt_qmlMarker_extendedNamespace)>::value)
+                return T::qmlExtendedNamespace();
+            else
+                return nullptr;
+        }
     };
 
     template<class T, class = std::void_t<>>

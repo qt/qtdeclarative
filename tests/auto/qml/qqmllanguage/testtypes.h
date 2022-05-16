@@ -1629,6 +1629,14 @@ public:
     int own() const { return 93; }
 };
 
+class ExtendedByNamespaceInParent : public ExtendedByNamespace
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    ExtendedByNamespaceInParent(QObject *parent = nullptr) : ExtendedByNamespace(parent) { }
+};
+
 class ExtendedNamespaceByObject : public QObject
 {
     Q_OBJECT

@@ -367,6 +367,7 @@ private slots:
     void multiExtension();
     void multiExtensionExtra();
     void multiExtensionIndirect();
+    void multiExtensionQmlTypes();
     void extensionSpecial();
     void invalidInlineComponent();
     void warnOnInjectedParameters();
@@ -6441,15 +6442,11 @@ void tst_qqmllanguage::multiExtensionExtra()
 
         QCOMPARE(QQmlPrivate::qmlExtendedObject(o.get(), 0), extension);
 
-        QObject *pseudoExtension = QQmlPrivate::qmlExtendedObject(o.get(), 1);
-        QVERIFY(pseudoExtension);
-        QVERIFY(qobject_cast<ExtensionB *>(pseudoExtension) != nullptr);
-
-        QObject *baseBaseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 2);
+        QObject *baseBaseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 1);
         QVERIFY(baseBaseTypeExtension);
         QVERIFY(qobject_cast<ExtensionB *>(baseBaseTypeExtension) != nullptr);
 
-        QObject *baseBaseBaseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 3);
+        QObject *baseBaseBaseTypeExtension = QQmlPrivate::qmlExtendedObject(o.get(), 2);
         QVERIFY(baseBaseBaseTypeExtension);
         QVERIFY(qobject_cast<ExtensionA *>(baseBaseBaseTypeExtension) != nullptr);
     }
@@ -6471,6 +6468,34 @@ void tst_qqmllanguage::multiExtensionIndirect()
     QCOMPARE(o->property("d").toInt(), 21); // indirect extension is not considered
     QCOMPARE(o->property("f").toInt(), 31);
     QCOMPARE(o->property("g").toInt(), 44); // NB: taken from the type, not from the extension!
+}
+
+void tst_qqmllanguage::multiExtensionQmlTypes()
+{
+    QQmlType extendedType = QQmlMetaType::qmlType(&MultiExtensionParent::staticMetaObject,
+                                                  QStringLiteral("StaticTest"), QTypeRevision());
+    QVERIFY(extendedType.isValid());
+    QVERIFY(extendedType.extensionFunction());
+    QVERIFY(extendedType.extensionMetaObject() != nullptr);
+
+    QQmlType nonExtendedType = QQmlMetaType::qmlType(&ExtendedInParent::staticMetaObject,
+                                                     QStringLiteral("StaticTest"), QTypeRevision());
+    QVERIFY(nonExtendedType.isValid());
+    QVERIFY(!nonExtendedType.extensionFunction());
+    QCOMPARE(nonExtendedType.extensionMetaObject(), nullptr);
+
+    QQmlType namespaceExtendedType = QQmlMetaType::qmlType(
+            &ExtendedByNamespace::staticMetaObject, QStringLiteral("StaticTest"), QTypeRevision());
+    QVERIFY(namespaceExtendedType.isValid());
+    QVERIFY(!namespaceExtendedType.extensionFunction()); // namespaces are non-creatable
+    QVERIFY(namespaceExtendedType.extensionMetaObject() != nullptr);
+
+    QQmlType namespaceNonExtendedType =
+            QQmlMetaType::qmlType(&ExtendedByNamespaceInParent::staticMetaObject,
+                                  QStringLiteral("StaticTest"), QTypeRevision());
+    QVERIFY(namespaceNonExtendedType.isValid());
+    QVERIFY(!namespaceNonExtendedType.extensionFunction());
+    QCOMPARE(namespaceNonExtendedType.extensionMetaObject(), nullptr);
 }
 
 void tst_qqmllanguage::extensionSpecial()

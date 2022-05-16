@@ -240,7 +240,7 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                          QQmlMetaType::ClonePolicy policy)
 {
     // Set classname
-    builder.setClassName(ignoreEnd->className());
+    builder.setClassName(mo->className());
 
     // Clone Q_CLASSINFO
     for (int ii = mo->classInfoOffset(); ii < mo->classInfoCount(); ++ii) {
