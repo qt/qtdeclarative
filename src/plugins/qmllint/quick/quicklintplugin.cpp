@@ -413,9 +413,9 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
 
     auto group = swipe.first->groupType();
 
-    const auto ownDirBindings = { group->ownPropertyBindings(u"right"_s),
-                                  group->ownPropertyBindings(u"left"_s),
-                                  group->ownPropertyBindings(u"behind"_s) };
+    const std::array ownDirBindings = { group->ownPropertyBindings(u"right"_s),
+                                        group->ownPropertyBindings(u"left"_s),
+                                        group->ownPropertyBindings(u"behind"_s) };
 
     auto ownBindingIterator =
             std::find_if(ownDirBindings.begin(), ownDirBindings.end(),
