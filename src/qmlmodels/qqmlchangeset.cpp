@@ -557,16 +557,17 @@ void QQmlChangeSet::change(QVector<Change> *changes)
 
 QDebug operator <<(QDebug debug, const QQmlChangeSet &set)
 {
+    QDebugStateSaver stateSaver(debug);
     debug.nospace() << "QQmlChangeSet(";
     const QVector<QQmlChangeSet::Change> &removes = set.removes();
     for (const QQmlChangeSet::Change &remove : removes)
-        debug << remove;
+        debug << remove << ' ';
     const QVector<QQmlChangeSet::Change> &inserts = set.inserts();
     for (const QQmlChangeSet::Change &insert : inserts)
-        debug << insert;
+        debug << insert << ' ';
     const QVector<QQmlChangeSet::Change> &changes = set.changes();
     for (const QQmlChangeSet::Change &change : changes)
-        debug << change;
+        debug << change << ' ';
     return debug.nospace() << ')';
 }
 
@@ -576,7 +577,8 @@ QDebug operator <<(QDebug debug, const QQmlChangeSet &set)
 
 QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change)
 {
-    return (debug.nospace() << "Change(" << change.index << ',' << change.count << ')').space();
+    QDebugStateSaver stateSaver(debug);
+    return debug.nospace() << "Change(" << change.index << ',' << change.count << ')';
 }
 
 QT_END_NAMESPACE
