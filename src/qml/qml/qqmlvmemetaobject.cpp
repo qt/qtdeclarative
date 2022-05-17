@@ -753,7 +753,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         } else if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
                             // Value type list
                             QV4::Scope scope(engine);
-                            QV4::ScopedObject sequence(scope, *(md->data() + id));
+                            QV4::Scoped<QV4::Sequence> sequence(scope, *(md->data() + id));
                             const void *data = sequence
                                     ? QV4::SequencePrototype::getRawContainerPtr(sequence, propType)
                                     : nullptr;
@@ -849,7 +849,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         } else if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
                             // Value type list
                             QV4::Scope scope(engine);
-                            QV4::ScopedObject sequence(scope, *(md->data() + id));
+                            QV4::Scoped<QV4::Sequence> sequence(scope, *(md->data() + id));
                             void *data = sequence
                                     ? QV4::SequencePrototype::getRawContainerPtr(sequence, propType)
                                     : nullptr;

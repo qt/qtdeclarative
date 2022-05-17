@@ -240,28 +240,27 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
         }
         // No other QObject's are allowed to be sent
         push(data, valueheader(WorkerUndefined));
-    } else if (const Object *o = v.as<Object>()) {
-        if (o->isListType()) {
-            // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
-            uint seqLength = ScopedValue(scope, o->get(engine->id_length()))->toUInt32();
-            uint length = seqLength + 1;
-            if (length > 0xFFFFFF) {
-                push(data, valueheader(WorkerUndefined));
-                return;
-            }
-            reserve(data, sizeof(quint32) + length * sizeof(quint32));
-            push(data, valueheader(WorkerSequence, length));
-
-            // sequence type
-            serialize(data, QV4::Value::fromInt32(
-                          QV4::SequencePrototype::metaTypeForSequence(o).id()), engine);
-
-            ScopedValue val(scope);
-            for (uint ii = 0; ii < seqLength; ++ii)
-                serialize(data, (val = o->get(ii)), engine); // sequence elements
-
+    } else if (const Sequence *s = v.as<Sequence>()) {
+        // valid sequence.  we generate a length (sequence length + 1 for the sequence type)
+        uint seqLength = ScopedValue(scope, s->get(engine->id_length()))->toUInt32();
+        uint length = seqLength + 1;
+        if (length > 0xFFFFFF) {
+            push(data, valueheader(WorkerUndefined));
             return;
         }
+        reserve(data, sizeof(quint32) + length * sizeof(quint32));
+        push(data, valueheader(WorkerSequence, length));
+
+        // sequence type
+        serialize(data, QV4::Value::fromInt32(
+                                QV4::SequencePrototype::metaTypeForSequence(s).id()), engine);
+
+        ScopedValue val(scope);
+        for (uint ii = 0; ii < seqLength; ++ii)
+            serialize(data, (val = s->get(ii)), engine); // sequence elements
+
+        return;
+    } else if (const Object *o = v.as<Object>()) {
         const QVariant variant = engine->toVariant(v, QMetaType::fromType<QUrl>(), false);
         if (variant.userType() == QMetaType::QUrl) {
             serializeString(data, variant.value<QUrl>().toString(), WorkerUrl);

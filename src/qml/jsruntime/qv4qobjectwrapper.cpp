@@ -1543,8 +1543,8 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
             }
         }
 
-        if (auto sequenceMetaType = SequencePrototype::metaTypeForSequence(obj); sequenceMetaType.isValid()) {
-            if (sequenceMetaType == conversionMetaType)
+        if (const Sequence *sequence = obj->as<Sequence>()) {
+            if (SequencePrototype::metaTypeForSequence(sequence) == conversionMetaType)
                 return 1;
             else
                 return 10;
@@ -1888,10 +1888,9 @@ void CallArgument::initAsType(QMetaType metaType)
 template <class T, class M>
 bool CallArgument::fromContainerValue(const Value &value, M CallArgument::*member)
 {
-    const Object *object = value.as<Object>();
-    if (object && object->isListType()) {
+    if (const Sequence *sequence = value.as<Sequence>()) {
         if (T* ptr = static_cast<T *>(SequencePrototype::getRawContainerPtr(
-                                          object, QMetaType(type)))) {
+                    sequence, QMetaType(type)))) {
             (this->*member) = ptr;
             return true;
         }

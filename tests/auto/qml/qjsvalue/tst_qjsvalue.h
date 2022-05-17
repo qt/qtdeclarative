@@ -149,6 +149,7 @@ private slots:
     void stringAndUrl();
     void jsFunctionInVariant();
     void integerToEnum();
+    void sequenceConversion();
 
 private:
     void newEngine()

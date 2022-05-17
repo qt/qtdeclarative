@@ -1568,8 +1568,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
             return v->toVariant();
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
-        } else if (object->isListType()) {
-            return QV4::SequencePrototype::toVariant(object);
+        } else if (QV4::Sequence *s = object->as<QV4::Sequence>()) {
+            return QV4::SequencePrototype::toVariant(s);
         }
     }
 
@@ -2462,28 +2462,24 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     ;
     }
 
-    {
-        if (metaType.flags() & QMetaType::IsEnumeration) {
-            *reinterpret_cast<int *>(data) = value.toInt32();
-            return true;
-        }
+    if (metaType.flags() & QMetaType::IsEnumeration) {
+        *reinterpret_cast<int *>(data) = value.toInt32();
+        return true;
+    }
 
-        if (metaType == QMetaType::fromType<QQmlListReference>()) {
-            if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
-                *reinterpret_cast<QQmlListReference *>(data) = wrapper->toListReference();
-                return true;
-            }
+    if (metaType == QMetaType::fromType<QQmlListReference>()) {
+        if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+            *reinterpret_cast<QQmlListReference *>(data) = wrapper->toListReference();
+            return true;
         }
     }
 
-    {
-        if (const QQmlValueTypeWrapper *vtw = value.as<QQmlValueTypeWrapper>()) {
-            const QMetaType valueType = vtw->type();
-            if (valueType == metaType)
-                return vtw->toGadget(data);
-            if (QMetaType::canConvert(valueType, metaType))
-                return QMetaType::convert(valueType, vtw->d()->gadgetPtr(), metaType, data);
-        }
+    if (const QQmlValueTypeWrapper *vtw = value.as<QQmlValueTypeWrapper>()) {
+        const QMetaType valueType = vtw->type();
+        if (valueType == metaType)
+            return vtw->toGadget(data);
+        if (QMetaType::canConvert(valueType, metaType))
+            return QMetaType::convert(valueType, vtw->d()->gadgetPtr(), metaType, data);
     }
 
     // Try to use magic; for compatibility with qjsvalue_cast.
@@ -2543,6 +2539,15 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
             Q_ASSERT(val.metaType() == metaType);
             metaType.destruct(data);
             metaType.construct(data, val.constData());
+            return true;
+        }
+    }
+
+    if (const QV4::Sequence *sequence = value.as<Sequence>()) {
+        const QVariant result = QV4::SequencePrototype::toVariant(sequence);
+        if (result.metaType() == metaType) {
+            metaType.destruct(data);
+            metaType.construct(data, result.constData());
             return true;
         }
     }

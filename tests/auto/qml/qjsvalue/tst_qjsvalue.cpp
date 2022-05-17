@@ -2894,4 +2894,17 @@ void tst_QJSValue::integerToEnum()
     QCOMPARE(qjsvalue_cast<int>(enumVal), static_cast<int>(QQmlComponent::Error));
 }
 
+void tst_QJSValue::sequenceConversion()
+{
+    QJSEngine engine;
+
+    const QList<QRectF> rectList {
+        QRectF(1, 2, 3, 4),
+        QRectF(5, 6, 7, 8),
+    };
+
+    const QJSValue val = engine.toScriptValue(rectList);
+    QCOMPARE(engine.fromScriptValue<QList<QRectF>>(val), rectList);
+}
+
 QTEST_MAIN(tst_QJSValue)

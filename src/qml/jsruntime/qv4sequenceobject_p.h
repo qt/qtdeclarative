@@ -69,6 +69,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct Sequence;
 struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
 {
     V4_PROTOTYPE(arrayPrototype)
@@ -81,10 +82,65 @@ struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
     static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant &v, bool *succeeded);
     static ReturnedValue fromData(QV4::ExecutionEngine *engine, QMetaType type, const void *data, bool *succeeded);
 
-    static QMetaType metaTypeForSequence(const Object *object);
-    static QVariant toVariant(Object *object);
+    static QMetaType metaTypeForSequence(const Sequence *object);
+    static QVariant toVariant(const Sequence *object);
     static QVariant toVariant(const Value &array, QMetaType typeHint, bool *succeeded);
-    static void *getRawContainerPtr(const Object *object, QMetaType typeHint);
+    static void *getRawContainerPtr(const Sequence *object, QMetaType typeHint);
+};
+
+namespace Heap {
+
+struct Sequence : Object {
+    void init(const QQmlType &qmlType, const void *container);
+    void init(QObject *object, int propertyIndex, const QQmlType &qmlType, bool readOnly);
+    void destroy();
+
+    mutable void *container;
+    const QQmlTypePrivate *typePrivate;
+    QV4QPointer<QObject> object;
+    int propertyIndex;
+    bool isReference : 1;
+    bool isReadOnly : 1;
+};
+
+}
+
+struct Q_QML_PRIVATE_EXPORT Sequence : public QV4::Object
+{
+    V4_OBJECT2(Sequence, QV4::Object)
+    Q_MANAGED_TYPE(V4Sequence)
+    V4_PROTOTYPE(sequencePrototype)
+    V4_NEEDS_DESTROY
+public:
+    static const QMetaType valueMetaType(const Heap::Sequence *p);
+    static QV4::ReturnedValue virtualGet(
+            const QV4::Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *that, PropertyKey id, const QV4::Value &value, Value *receiver);
+    static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index);
+    static bool virtualDeleteProperty(QV4::Managed *that, PropertyKey id);
+    static bool virtualIsEqualTo(Managed *that, Managed *other);
+    static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
+
+    qsizetype size() const;
+    QVariant at(int index) const;
+    void append(const QVariant &item);
+    void replace(int index, const QVariant &item);
+    void removeLast(int num);
+    QVariant toVariant() const;
+
+    //  ### Qt 7 use qsizetype instead.
+    QV4::ReturnedValue containerGetIndexed(uint index, bool *hasProperty) const;
+
+    //  ### Qt 7 use qsizetype instead.
+    bool containerPutIndexed(uint index, const QV4::Value &value);
+
+    QV4::PropertyAttributes containerQueryIndexed(uint index) const;
+    bool containerDeleteIndexedProperty(uint index);
+    bool containerIsEqualTo(Managed *other);
+    bool sort(const FunctionObject *f, const Value *, const Value *argv, int argc);
+    void *getRawContainerPtr() const;
+    void loadReference() const;
+    void storeReference();
 };
 
 }
