@@ -20,12 +20,6 @@ opensuse-leap
 [canvas::test_extraArgumentsIgnored:text]
 ci b2qt 32bit
 
-# QTBUG-103099
-[canvas::test_save]
-android
-[fillRect::test_fillRect]
-android
-
 # QTBUG-100991
 [line::test_cap]
 android
