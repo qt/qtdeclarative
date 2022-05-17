@@ -92,7 +92,8 @@ QT_END_NAMESPACE
     enum class QmlIsSingleton {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSingleton; \
     template<typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_singleton() {}
 
 #define QML_ADDED_IN_MINOR_VERSION(VERSION) \
     Q_CLASSINFO("QML.AddedInVersion", Q_REVISION(VERSION))
@@ -113,14 +114,16 @@ QT_END_NAMESPACE
     Q_CLASSINFO("QML.Attached", #ATTACHED_TYPE) \
     using QmlAttachedType = ATTACHED_TYPE; \
     template<class, class, bool> friend struct QML_PRIVATE_NAMESPACE::QmlAttached; \
-    template<class> friend struct QML_PRIVATE_NAMESPACE::QmlAttachedAccessor;
+    template<class> friend struct QML_PRIVATE_NAMESPACE::QmlAttachedAccessor; \
+    inline constexpr void qt_qmlMarker_attached() {}
 
 #define QML_EXTENDED(EXTENDED_TYPE) \
     Q_CLASSINFO("QML.Extended", #EXTENDED_TYPE) \
     using QmlExtendedType = EXTENDED_TYPE; \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtended; \
     template<typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_extended() {}
 
 #define QML_EXTENDED_NAMESPACE(EXTENDED_NAMESPACE) \
     Q_CLASSINFO("QML.Extended", #EXTENDED_NAMESPACE) \
@@ -128,7 +131,8 @@ QT_END_NAMESPACE
     static constexpr const QMetaObject *qmlExtendedNamespace() { return &EXTENDED_NAMESPACE::staticMetaObject; } \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtendedNamespace; \
     template<typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_extendedNamespace() {}
 
 #define QML_NAMESPACE_EXTENDED(EXTENDED_NAMESPACE) \
     Q_CLASSINFO("QML.Extended", #EXTENDED_NAMESPACE)
@@ -138,7 +142,8 @@ QT_END_NAMESPACE
     enum class QmlIsInterface {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlInterface; \
     template<typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_interface() {}
 
 #define QML_IMPLEMENTS_INTERFACES(INTERFACES) \
     Q_INTERFACES(INTERFACES) \
@@ -151,7 +156,8 @@ QT_END_NAMESPACE
     enum class QmlIsSequence {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSequence; \
     template<typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_sequence() {}
 
 #define QML_UNAVAILABLE \
     QML_FOREIGN(QQmlTypeNotAvailable)

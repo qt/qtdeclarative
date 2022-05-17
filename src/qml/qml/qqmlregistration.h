@@ -51,7 +51,8 @@ QT_BEGIN_NAMESPACE
     using QmlForeignType = FOREIGN_TYPE; \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlResolved; \
     template<typename... Args> \
-    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_foreign() {}
 
 #define QML_FOREIGN_NAMESPACE(FOREIGN_NAMESPACE) \
     Q_CLASSINFO("QML.Foreign", #FOREIGN_NAMESPACE)
