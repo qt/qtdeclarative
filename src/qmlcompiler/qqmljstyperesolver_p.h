@@ -107,6 +107,7 @@ public:
 
     bool isPrimitive(const QQmlJSRegisterContent &type) const;
     bool isNumeric(const QQmlJSRegisterContent &type) const;
+    bool isIntegral(const QQmlJSRegisterContent &type) const;
 
     bool canConvertFromTo(const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const;
     bool canConvertFromTo(const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to) const;

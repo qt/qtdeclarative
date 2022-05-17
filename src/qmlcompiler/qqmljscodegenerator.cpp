@@ -812,6 +812,15 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     const QString baseName = use(registerVariable(base));
     const QString indexName = use(m_state.accumulatorVariableIn);
 
+    const QString voidAssignment = u"    "_qs + m_state.accumulatorVariableOut + u" = "_qs +
+            conversion(m_typeResolver->globalType(m_typeResolver->voidType()),
+                       m_state.accumulatorOut, QString()) + u";\n"_qs;
+
+    if (!m_typeResolver->isIntegral(m_state.accumulatorIn)) {
+        m_body += u"if (!QJSNumberCoercion::isInteger("_qs + indexName + u"))\n"_qs
+                + voidAssignment
+                + u"else "_qs;
+    }
     // Our QQmlListProperty only keeps plain QObject*.
     const auto valueType = m_typeResolver->valueType(baseType);
     const auto elementType = m_typeResolver->globalType(
@@ -824,9 +833,8 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
             conversion(elementType, m_state.accumulatorOut,
                        baseName + u".at(&"_qs + baseName + u", "_qs
                        + indexName + u')') + u";\n"_qs;
-    m_body += u"else\n"_qs;
-    m_body += u"    "_qs + m_state.accumulatorVariableOut + u" = {}"_qs;
-    m_body += u";\n"_qs;
+    m_body += u"else\n"_qs
+            + voidAssignment;
 }
 
 void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
@@ -837,6 +845,7 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     m_body.setWriteRegister(QString());
 
     const QQmlJSRegisterContent baseType = registerType(base);
+    const QQmlJSRegisterContent indexType = registerType(index);
 
     if (!m_typeResolver->isNumeric(registerType(index)) || !baseType.isList()) {
         reject(u"StoreElement with non-list base type or non-numeric arguments"_qs);
@@ -855,8 +864,11 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
     const auto elementType = m_typeResolver->globalType(m_typeResolver->genericType(
                                           m_typeResolver->containedType(valueType)));
 
-    m_body += u"if ("_qs + indexName + u" >= 0 && "_qs + indexName
-            + u" < "_qs + baseName + u".count(&"_qs + baseName
+    m_body += u"if ("_qs;
+    if (!m_typeResolver->isIntegral(indexType))
+        m_body += u"QJSNumberCoercion::isInteger("_qs + indexName + u") && "_qs;
+    m_body += indexName + u" >= 0 && "_qs
+            + indexName + u" < "_qs + baseName + u".count(&"_qs + baseName
             + u"))\n"_qs;
     m_body += u"    "_qs + baseName + u".replace(&"_qs + baseName
             + u", "_qs + indexName + u", "_qs;

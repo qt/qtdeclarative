@@ -255,6 +255,11 @@ bool QQmlJSTypeResolver::isNumeric(const QQmlJSRegisterContent &type) const
     return isNumeric(containedType(type));
 }
 
+bool QQmlJSTypeResolver::isIntegral(const QQmlJSRegisterContent &type) const
+{
+    return containedType(type) == m_intType;
+}
+
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 {
     return type == m_intType || type == m_realType || type == m_floatType || type == m_boolType
