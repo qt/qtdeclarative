@@ -339,9 +339,10 @@ void QQmlJSTypeResolver::trackListPropertyType(
 
     if (m_typeTracker->trackedTypes.contains(trackedListElementType)
             && !m_typeTracker->listTypes.contains(trackedListElementType)) {
-        QQmlJSScope::Ptr clone = QQmlJSScope::clone(m_listPropertyType);
+        const QQmlJSScope::ConstPtr list = listType(trackedListElementType, UseListReference);
+        QQmlJSScope::Ptr clone = QQmlJSScope::clone(list);
         m_typeTracker->listTypes[trackedListElementType] = clone;
-        m_typeTracker->trackedTypes[clone] = { m_listPropertyType, QQmlJSScope::ConstPtr(), clone };
+        m_typeTracker->trackedTypes[clone] = { list, QQmlJSScope::ConstPtr(), clone };
     }
 }
 
@@ -784,7 +785,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
                                 }
                             }
                             result = QQmlJSRegisterContent::create(
-                                    prop.isList() ? listPropertyType() : storedType(prop.type()),
+                                    prop.isList()
+                                            ? listType(prop.type(), UseListReference)
+                                            : storedType(prop.type()),
                                     prop, scopeContentVariant(mode, false), scope);
                             return true;
                         }
@@ -1001,7 +1004,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
             if (scope->hasOwnProperty(name)) {
                 const auto prop = scope->ownProperty(name);
                 result = QQmlJSRegisterContent::create(
-                        prop.isList() ? listPropertyType() : storedType(prop.type()), prop,
+                        prop.isList()
+                                ? listType(prop.type(), UseListReference)
+                                : storedType(prop.type()),
+                        prop,
                         mode == QQmlJSScope::NotExtension
                                 ? QQmlJSRegisterContent::ObjectProperty
                                 : QQmlJSRegisterContent::ExtensionObjectProperty,
@@ -1095,7 +1101,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
     if (type.isProperty()) {
         const auto prop = type.property();
         if (prop.isList() && name == u"length"_s)
-            return lengthProperty(true, listPropertyType());
+            return lengthProperty(true, listType(prop.type(), UseListReference));
         return memberType(prop.type(), name);
     }
     if (type.isEnumeration()) {
@@ -1156,7 +1162,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
     return {};
 }
 
-QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent &listType) const
+QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent &list) const
 {
     QQmlJSScope::ConstPtr scope;
     QQmlJSScope::ConstPtr value;
@@ -1169,15 +1175,15 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
         return QQmlJSScope::ConstPtr();
     };
 
-    if (listType.isType()) {
-        scope = listType.type();
+    if (list.isType()) {
+        scope = list.type();
         value = valueType(scope);
-    } else if (listType.isConversion()) {
-        value = valueType(listType.conversionResult());
-    } else if (listType.isProperty()) {
-        const auto prop = listType.property();
+    } else if (list.isConversion()) {
+        value = valueType(list.conversionResult());
+    } else if (list.isProperty()) {
+        const auto prop = list.property();
         if (prop.isList()) {
-            scope = m_listPropertyType;
+            scope = listType(prop.type(), UseListReference);
             value = prop.type();
         } else {
             scope = prop.type();
@@ -1227,7 +1233,9 @@ bool QQmlJSTypeResolver::registerContains(const QQmlJSRegisterContent &reg,
         return equals(reg.conversionResult(), type);
     if (reg.isProperty()) {
         const auto prop = reg.property();
-        return prop.isList() ? equals(type, listPropertyType()) : equals(prop.type(), type);
+        return prop.isList()
+                ? equals(type, listType(prop.type(), UseListReference))
+                : equals(type, prop.type());
     }
     if (reg.isEnumeration())
         return equals(type, intType());

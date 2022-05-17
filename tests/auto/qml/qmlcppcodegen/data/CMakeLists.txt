@@ -137,6 +137,7 @@ set(qml_files
     unknownParameter.qml
     unusedAttached.qml
     urlString.qml
+    valueTypeLists.qml
     valueTypeProperty.qml
     variantlist.qml
     voidfunction.qml

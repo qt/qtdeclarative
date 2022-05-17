@@ -121,7 +121,7 @@ public:
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent scopedType(const QQmlJSScope::ConstPtr &scope, const QString &name) const;
     QQmlJSRegisterContent memberType(const QQmlJSRegisterContent &type, const QString &name) const;
-    QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &listType) const;
+    QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &list) const;
     QQmlJSRegisterContent returnType(const QQmlJSScope::ConstPtr &type,
                                      QQmlJSRegisterContent::ContentVariant variant) const;
 

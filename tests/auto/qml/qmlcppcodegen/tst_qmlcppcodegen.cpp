@@ -134,6 +134,7 @@ private slots:
     void fromBoolValue();
     void invisibleTypes();
     void invalidPropertyType();
+    void valueTypeLists();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2093,6 +2094,26 @@ void tst_QmlCppCodegen::invalidPropertyType()
 
     o->setProperty("useListDelegate", QVariant::fromValue<bool>(true));
     QVERIFY(myCppType->useListDelegate());
+}
+
+void tst_QmlCppCodegen::valueTypeLists()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/valueTypeLists.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(qvariant_cast<QRectF>(o->property("rectInBounds")), QRectF(1, 2, 3, 4));
+    QVERIFY(o->metaObject()->indexOfProperty("rectOutOfBounds") > 0);
+    QVERIFY(!o->property("rectOutOfBounds").isValid());
+
+    QCOMPARE(qvariant_cast<QString>(o->property("stringInBounds")), QStringLiteral("bbb"));
+    QVERIFY(o->metaObject()->indexOfProperty("stringOutOfBounds") > 0);
+    QVERIFY(!o->property("stringOutOfBounds").isValid());
+
+    QCOMPARE(qvariant_cast<int>(o->property("intInBounds")), 7);
+    QVERIFY(o->metaObject()->indexOfProperty("intOutOfBounds") > 0);
+    QVERIFY(!o->property("intOutOfBounds").isValid());
 }
 
 void tst_QmlCppCodegen::runInterpreted()
