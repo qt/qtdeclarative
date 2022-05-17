@@ -48,6 +48,10 @@ QT_BEGIN_NAMESPACE
 class QJSNumberCoercion
 {
 public:
+    static constexpr bool isInteger(double d) {
+        return equals(d, d) && equals(static_cast<int>(d), d);
+    }
+
     static constexpr int toInteger(double d) {
         if (!equals(d, d))
             return 0;
