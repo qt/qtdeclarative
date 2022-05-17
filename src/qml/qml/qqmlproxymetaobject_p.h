@@ -65,12 +65,26 @@ QT_BEGIN_NAMESPACE
 class QQmlProxyMetaObject : public QDynamicMetaObjectData
 {
 public:
+    enum ProxyType {
+        ProxyIsExtension,
+        ProxyIsObject,
+    };
     struct ProxyData {
         typedef QObject *(*CreateFunc)(QObject *);
-        QMetaObject *metaObject;
-        CreateFunc createFunc;
-        int propertyOffset;
-        int methodOffset;
+        QMetaObject *metaObject = nullptr;
+        CreateFunc createFunc = nullptr; // function to create the proxy object
+
+        // precalculated offsets of metaObject member
+        int propertyOffset = 0;
+        int methodOffset = 0;
+
+        // cached offsets of metaObject's origin (metaObject is a clone of
+        // origin). unlike offsets above, these might not be available later
+        // during proxy calls since we lose the origin of a non-extension proxy
+        int originPropertyOffset = 0;
+        int originMethodOffset = 0;
+
+        ProxyType type = ProxyIsExtension;
     };
 
     QQmlProxyMetaObject(QObject *, QList<ProxyData> *);

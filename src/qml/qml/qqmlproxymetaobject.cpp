@@ -78,9 +78,11 @@ QObject *QQmlProxyMetaObject::getProxy(int index)
             return nullptr;
 
         QObject *proxy = data.createFunc(object);
-        const QMetaObject *metaObject = proxy->metaObject();
         proxies[index] = proxy;
+        if (data.type == ProxyIsObject)
+            return proxies[index];
 
+        const QMetaObject *metaObject = proxy->metaObject();
         int localOffset = data.metaObject->methodOffset();
         int methodOffset = metaObject->methodOffset();
         int methods = metaObject->methodCount() - methodOffset;
@@ -114,7 +116,7 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
 
             QObject *proxy = getProxy(ii);
             Q_ASSERT(proxy);
-            const int localProxyOffset = proxy->metaObject()->propertyOffset();
+            const int localProxyOffset = metaObjects->at(ii).originPropertyOffset;
             const int localProxyId = id - globalPropertyOffset + localProxyOffset;
             return proxy->qt_metacall(c, localProxyId, a);
         }
@@ -137,7 +139,7 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
 
             QObject *proxy = getProxy(ii);
             Q_ASSERT(proxy);
-            const int localMethodOffset = proxy->metaObject()->methodOffset();
+            const int localMethodOffset = metaObjects->at(ii).originMethodOffset;
             const int localMethodId = id - globalMethodOffset + localMethodOffset;
             return proxy->qt_metacall(c, localMethodId, a);
         }
@@ -148,6 +150,17 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
         if ((id & ~MaxExtensionCount) != ExtensionObjectId)
             break;
         int index = id & MaxExtensionCount;
+
+        // map extension index to proxy index
+        int absoluteIndex = 0;
+        for (int i = -1; absoluteIndex < metaObjects->size(); ++absoluteIndex) {
+            if (metaObjects->at(absoluteIndex).type == ProxyIsExtension)
+                ++i;
+            if (i == index)
+                break;
+        }
+        index = absoluteIndex;
+
         if (qsizetype(index) >= metaObjects->size())
             break;
         a[0] = getProxy(index);

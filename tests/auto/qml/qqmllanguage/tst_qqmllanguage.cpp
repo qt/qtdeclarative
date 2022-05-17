@@ -6509,9 +6509,14 @@ void tst_qqmllanguage::extensionSpecial()
         QVERIFY2(c.isReady(), qPrintable(c.errorString()));
         QScopedPointer<QObject> o(c.create());
         QVERIFY(o);
-
         // property a exists only in the extension type
         QCOMPARE(o->property("a").toInt(), int('a'));
+        // property c exists on the leaf type and that should be prioritized
+        // over the base type extension's one
+        QCOMPARE(o->property("c").toInt(), 1111);
+
+        o->setProperty("objectName", u"foobar"_s);
+        QCOMPARE(o->property("objectName").toString(), u"foobar"_s);
     }
 
     {

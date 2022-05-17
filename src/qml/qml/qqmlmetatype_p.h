@@ -256,17 +256,20 @@ public:
     static int registerUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration);
     static void clearTypeRegistrations();
 
-    static QList<QQmlProxyMetaObject::ProxyData> proxyData(const QMetaObject *mo,
-                                                           const QMetaObject *baseMetaObject,
-                                                           QMetaObject *lastMetaObject);
+    static QList<QQmlProxyMetaObject::ProxyData>
+    proxyData(QQmlTypePrivate *type, const QMetaObject *mo, const QMetaObject *baseMetaObject);
 
     enum ClonePolicy {
         CloneAll, // default
         CloneEnumsOnly, // skip properties and methods
     };
+    enum CloneTarget {
+        CloneTargetExtension,
+        CloneTargetObject,
+    };
     static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                       const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd,
-                      ClonePolicy policy);
+                      ClonePolicy policy, CloneTarget target);
 
     static void qmlInsertModuleRegistration(const QString &uri, void (*registerFunction)());
     static void qmlRemoveModuleRegistration(const QString &uri);
