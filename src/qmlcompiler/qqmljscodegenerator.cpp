@@ -493,7 +493,7 @@ void QQmlJSCodeGenerator::generate_MoveRegExp(int regExpId, int destReg)
 void QQmlJSCodeGenerator::generate_LoadClosure(int value)
 {
     Q_UNUSED(value)
-    BYTECODE_UNIMPLEMENTED();
+    reject(u"LoadClosure"_s);
 }
 
 void QQmlJSCodeGenerator::generate_LoadName(int nameIndex)

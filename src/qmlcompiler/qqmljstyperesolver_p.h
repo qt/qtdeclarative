@@ -80,6 +80,7 @@ public:
     QQmlJSScope::ConstPtr jsPrimitiveType() const { return m_jsPrimitiveType; }
     QQmlJSScope::ConstPtr listPropertyType() const { return m_listPropertyType; }
     QQmlJSScope::ConstPtr metaObjectType() const { return m_metaObjectType; }
+    QQmlJSScope::ConstPtr functionType() const { return m_functionType; }
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
@@ -208,6 +209,7 @@ protected:
     QQmlJSScope::ConstPtr m_jsPrimitiveType;
     QQmlJSScope::ConstPtr m_listPropertyType;
     QQmlJSScope::ConstPtr m_metaObjectType;
+    QQmlJSScope::ConstPtr m_functionType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
 
     QQmlJSScopesById m_objectsById;

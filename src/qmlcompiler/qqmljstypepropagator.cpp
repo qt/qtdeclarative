@@ -258,7 +258,9 @@ void QQmlJSTypePropagator::generate_MoveRegExp(int regExpId, int destReg)
 void QQmlJSTypePropagator::generate_LoadClosure(int value)
 {
     Q_UNUSED(value)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    // TODO: Check the function at index and see whether it's a generator to return another type
+    // instead.
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->functionType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadName(int nameIndex)

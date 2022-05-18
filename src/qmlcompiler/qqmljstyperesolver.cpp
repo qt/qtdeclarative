@@ -87,6 +87,11 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     metaObjectType->setAccessSemantics(QQmlJSScope::AccessSemantics::Reference);
     m_metaObjectType = metaObjectType;
 
+    QQmlJSScope::Ptr functionType = QQmlJSScope::create();
+    functionType->setInternalName(u"function"_s);
+    functionType->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
+    m_functionType = functionType;
+
     m_jsGlobalObject = importer->jsGlobalObject();
     auto numberMethods = m_jsGlobalObject->methods(u"Number"_s);
     Q_ASSERT(numberMethods.length() == 1);
