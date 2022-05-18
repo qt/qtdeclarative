@@ -154,6 +154,7 @@ private:
 
 class QPlatformDialogHelperForeign
 {
+    Q_GADGET
     QML_FOREIGN(QPlatformDialogHelper)
     QML_NAMED_ELEMENT(StandardButton)
     QML_UNCREATABLE("Cannot create an instance of StandardButton")
