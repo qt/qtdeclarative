@@ -1430,6 +1430,14 @@ void QQmlMetaType::unregisterType(int typeIndex)
     }
 }
 
+void QQmlMetaType::registerMetaObjectForType(const QMetaObject *metaobject, QQmlTypePrivate *type)
+{
+    Q_ASSERT(type);
+
+    QQmlMetaTypeDataPtr data;
+    data->metaObjectToType.insert(metaobject, type);
+}
+
 static bool hasActiveInlineComponents(const QQmlTypePrivate *d)
 {
     for (const QQmlType &ic : qAsConst(d->objectIdToICType)) {
@@ -1635,7 +1643,8 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
 
     const QQmlMetaTypeDataPtr data;
 
-    auto createProxyMetaObject = [&](const QMetaObject *superdataBaseMetaObject,
+    auto createProxyMetaObject = [&](QQmlTypePrivate *This,
+                                     const QMetaObject *superdataBaseMetaObject,
                                      const QMetaObject *extMetaObject,
                                      QObject *(*extFunc)(QObject *)) {
         if (!extMetaObject)
@@ -1652,16 +1661,17 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
             lastMetaObject->d.superdata = mmo;
         QQmlProxyMetaObject::ProxyData data = { mmo, extFunc, 0, 0 };
         metaObjects << data;
+        registerMetaObjectForType(mmo, This);
     };
 
     while (mo) {
         QQmlTypePrivate *t = data->metaObjectToType.value(mo);
         if (t) {
             if (t->regType == QQmlType::CppType) {
-                createProxyMetaObject(t->baseMetaObject, t->extraData.cd->extMetaObject,
+                createProxyMetaObject(t, t->baseMetaObject, t->extraData.cd->extMetaObject,
                                       t->extraData.cd->extFunc);
             } else if (t->regType == QQmlType::SingletonType) {
-                createProxyMetaObject(t->baseMetaObject, t->extraData.sd->extMetaObject,
+                createProxyMetaObject(t, t->baseMetaObject, t->extraData.sd->extMetaObject,
                                       t->extraData.sd->extFunc);
             }
         }

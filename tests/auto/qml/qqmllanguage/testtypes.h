@@ -1888,6 +1888,38 @@ public:
     }
 };
 
+class RevisionedExtension : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int extension READ extension WRITE setExtension REVISION(1, 0))
+public:
+    RevisionedExtension(QObject *parent = nullptr) : QObject(parent) {}
+    int extension() const { return m_ext; }
+    void setExtension(int e) { m_ext = e; }
+private:
+    int m_ext = 42;
+};
+
+class ExtendedWithRevisionOld : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(RevisionedExtension)
+    QML_ADDED_IN_VERSION(0, 5)
+public:
+    ExtendedWithRevisionOld(QObject *parent = nullptr) : QObject(parent) { }
+};
+
+class ExtendedWithRevisionNew : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(RevisionedExtension)
+    QML_ADDED_IN_VERSION(1, 0)
+public:
+    ExtendedWithRevisionNew(QObject *parent = nullptr) : QObject(parent) { }
+};
+
 class StringSignaler : public QObject
 {
     Q_OBJECT

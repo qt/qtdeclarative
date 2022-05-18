@@ -369,6 +369,7 @@ private slots:
     void multiExtensionIndirect();
     void multiExtensionQmlTypes();
     void extensionSpecial();
+    void extensionRevision();
     void invalidInlineComponent();
     void warnOnInjectedParameters();
 #if QT_CONFIG(wheelevent)
@@ -6537,6 +6538,28 @@ void tst_qqmllanguage::extensionSpecial()
         QCOMPARE(o->property("b"), QVariant());
         QCOMPARE(o->property("c"), QVariant());
         QCOMPARE(o->property("d"), QVariant());
+    }
+}
+
+void tst_qqmllanguage::extensionRevision()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest 0.5\nExtendedWithRevisionOld { extension: 40\n}", QUrl());
+        QVERIFY(!c.isReady());
+        QRegularExpression error(
+                ".*\"ExtendedWithRevisionOld.extension\" is not available in StaticTest 0.5.*");
+        QVERIFY2(error.match(c.errorString()).hasMatch(),
+                 qPrintable(u"Unmatched error: "_s + c.errorString()));
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest 1.0\nExtendedWithRevisionNew { extension: 40\n}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
     }
 }
 

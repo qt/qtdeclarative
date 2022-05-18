@@ -232,6 +232,7 @@ void QQmlTypePrivate::init() const
         mmo->d.superdata = mo;
         QQmlProxyMetaObject::ProxyData data = { mmo, extFunc, 0, 0 };
         metaObjects << data;
+        QQmlMetaType::registerMetaObjectForType(mmo, const_cast<QQmlTypePrivate *>(this));
     };
 
     if (regType == QQmlType::SingletonType)
