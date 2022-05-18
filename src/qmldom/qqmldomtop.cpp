@@ -225,8 +225,8 @@ std::shared_ptr<OwningItem> DomUniverse::doCopy(DomItem &) const
 void DomUniverse::loadFile(DomItem &self, QString filePath, QString logicalPath, Callback callback,
                            LoadOptions loadOptions, std::optional<DomType> fileType)
 {
-    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0), callback,
-             loadOptions, fileType);
+    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+             callback, loadOptions, fileType);
 }
 
 static DomType fileTypeForPath(DomItem &self, QString canonicalFilePath)
@@ -262,9 +262,9 @@ void DomUniverse::loadFile(DomItem &self, QString canonicalFilePath, QString log
     case DomType::QmltypesFile:
     case DomType::QmldirFile:
     case DomType::QmlDirectory:
-        m_queue.enqueue(ParsingTask { QDateTime::currentDateTime(), loadOptions, fType,
-                                      canonicalFilePath, logicalPath, code, codeDate,
-                                      self.ownerAs<DomUniverse>(), callback });
+        m_queue.enqueue(ParsingTask{ QDateTime::currentDateTimeUtc(), loadOptions, fType,
+                                     canonicalFilePath, logicalPath, code, codeDate,
+                                     self.ownerAs<DomUniverse>(), callback });
         break;
     default:
         self.addError(myErrors()
@@ -288,7 +288,7 @@ updateEntry(DomItem &univ, std::shared_ptr<T> newItem,
     std::shared_ptr<ExternalItemPair<T>> oldValue;
     std::shared_ptr<ExternalItemPair<T>> newValue;
     QString canonicalPath = newItem->canonicalFilePath();
-    QDateTime now = QDateTime::currentDateTime();
+    QDateTime now = QDateTime::currentDateTimeUtc();
     {
         QMutexLocker l(mutex);
         auto it = map.find(canonicalPath);
@@ -373,7 +373,7 @@ void DomUniverse::execQueue()
                 }
             }
             if (!skipParse) {
-                contentDate = QDateTime::currentDateTime();
+                contentDate = QDateTime::currentDateTimeUtc();
                 if (QFileInfo(canonicalPath).isDir()) {
                     code = QDir(canonicalPath)
                                    .entryList(QDir::NoDotAndDotDot | QDir::Files, QDir::Name)
@@ -403,7 +403,7 @@ void DomUniverse::execQueue()
             }
         }
         if (!skipParse) {
-            QDateTime now(QDateTime::currentDateTime());
+            QDateTime now(QDateTime::currentDateTimeUtc());
             if (t.kind == DomType::QmlFile) {
                 shared_ptr<QmlFile> qmlFile(new QmlFile(canonicalPath, code, contentDate));
                 shared_ptr<DomEnvironment> envPtr(new DomEnvironment(
@@ -582,9 +582,9 @@ void LoadInfo::advanceLoad(DomItem &self)
     }
     switch (myStatus) {
     case Status::NotStarted:
-        refreshedDataAt(QDateTime::currentDateTime());
+        refreshedDataAt(QDateTime::currentDateTimeUtc());
         doAddDependencies(self);
-        refreshedDataAt(QDateTime::currentDateTime());
+        refreshedDataAt(QDateTime::currentDateTimeUtc());
         {
             QMutexLocker l(mutex());
             Q_ASSERT(m_status == Status::Starting);
@@ -599,7 +599,7 @@ void LoadInfo::advanceLoad(DomItem &self)
     case Status::Starting:
     case Status::InProgress:
         if (depValid) {
-            refreshedDataAt(QDateTime::currentDateTime());
+            refreshedDataAt(QDateTime::currentDateTimeUtc());
             if (!dep.uri.isEmpty()) {
                 self.loadModuleDependency(
                         dep.uri, dep.version,
@@ -873,11 +873,11 @@ DomTop::Callback envCallbackForFile(
                 newValue = oldValue->makeCopy(oldValueObj);
                 if (newValue->current != newItemPtr) {
                     newValue->current = newItemPtr;
-                    newValue->setCurrentExposedAt(QDateTime::currentDateTime());
+                    newValue->setCurrentExposedAt(QDateTime::currentDateTimeUtc());
                 }
             } else {
                 newValue = std::shared_ptr<ExternalItemInfo<T>>(
-                        new ExternalItemInfo<T>(newItemPtr, QDateTime::currentDateTime()));
+                        new ExternalItemInfo<T>(newItemPtr, QDateTime::currentDateTimeUtc()));
             }
             {
                 QMutexLocker l(envPtr->mutex());
@@ -1165,7 +1165,7 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
                               DomTop::Callback endCallback, LoadOptions loadOptions,
                               std::optional<DomType> fileType, ErrorHandler h)
 {
-    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0),
+    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
              loadCallback, directDepsCallback, endCallback, loadOptions, fileType, h);
 }
 
@@ -1217,7 +1217,7 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
         if (!newValue && (options() & Option::NoReload) && m_base) {
             if (auto v = m_base->qmlDirectoryWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
-                QDateTime now = QDateTime::currentDateTime();
+                QDateTime now = QDateTime::currentDateTimeUtc();
                 std::shared_ptr<ExternalItemInfo<QmlDirectory>> newV(
                         new ExternalItemInfo<QmlDirectory>(v->current, now, v->revision(),
                                                            v->lastDataUpdateAt()));
@@ -1248,7 +1248,7 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
         if (!newValue && (options() & Option::NoReload) && m_base) {
             if (auto v = m_base->qmlFileWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
-                QDateTime now = QDateTime::currentDateTime();
+                QDateTime now = QDateTime::currentDateTimeUtc();
                 std::shared_ptr<ExternalItemInfo<QmlFile>> newV(new ExternalItemInfo<QmlFile>(
                         v->current, now, v->revision(), v->lastDataUpdateAt()));
                 newValue = newV;
@@ -1278,7 +1278,7 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
         if (!newValue && (options() & Option::NoReload) && m_base) {
             if (auto v = m_base->qmltypesFileWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
-                QDateTime now = QDateTime::currentDateTime();
+                QDateTime now = QDateTime::currentDateTimeUtc();
                 std::shared_ptr<ExternalItemInfo<QmltypesFile>> newV(
                         new ExternalItemInfo<QmltypesFile>(v->current, now, v->revision(),
                                                            v->lastDataUpdateAt()));
@@ -1309,7 +1309,7 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
         if (!newValue && (options() & Option::NoReload) && m_base) {
             if (auto v = m_base->qmldirFileWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
-                QDateTime now = QDateTime::currentDateTime();
+                QDateTime now = QDateTime::currentDateTimeUtc();
                 std::shared_ptr<ExternalItemInfo<QmldirFile>> newV(new ExternalItemInfo<QmldirFile>(
                         v->current, now, v->revision(), v->lastDataUpdateAt()));
                 newValue = newV;
@@ -1980,7 +1980,7 @@ addExternalItem(std::shared_ptr<T> file, QString key,
     if (!file)
         return {};
     std::shared_ptr<ExternalItemInfo<T>> eInfo(
-            new ExternalItemInfo<T>(file, QDateTime::currentDateTime()));
+            new ExternalItemInfo<T>(file, QDateTime::currentDateTimeUtc()));
     {
         QMutexLocker l(mutex);
         auto it = map.find(key);
@@ -2174,7 +2174,7 @@ void DomEnvironment::loadPendingDependencies(DomItem &self)
 bool DomEnvironment::finishLoadingDependencies(DomItem &self, int waitMSec)
 {
     bool hasPendingLoads = true;
-    QDateTime endTime = QDateTime::currentDateTime().addMSecs(waitMSec);
+    QDateTime endTime = QDateTime::currentDateTimeUtc().addMSecs(waitMSec);
     for (int i = 0; i < waitMSec / 10 + 2; ++i) {
         loadPendingDependencies(self);
         auto lInfos = loadInfos();
@@ -2187,7 +2187,7 @@ bool DomEnvironment::finishLoadingDependencies(DomItem &self, int waitMSec)
         }
         if (!hasPendingLoads)
             break;
-        auto missing = QDateTime::currentDateTime().msecsTo(endTime);
+        auto missing = QDateTime::currentDateTimeUtc().msecsTo(endTime);
         if (missing < 0)
             break;
         if (missing > 100)

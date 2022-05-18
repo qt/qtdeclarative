@@ -113,7 +113,7 @@ public:
     constexpr static DomType kindValue = DomType::QmlDirectory;
     DomType kind() const override { return kindValue; }
     QmlDirectory(QString filePath = QString(), QStringList dirList = QStringList(),
-                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0),
+                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
                  int derivedFrom = 0);
     QmlDirectory(const QmlDirectory &o) = default;
 
@@ -152,7 +152,8 @@ public:
     static ErrorGroups myParsingErrors();
 
     QmldirFile(QString filePath = QString(), QString code = QString(),
-               QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0), int derivedFrom = 0)
+               QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+               int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmldirFilePath(filePath),
                              derivedFrom, code)
     {
@@ -216,7 +217,7 @@ public:
     constexpr static DomType kindValue = DomType::JsFile;
     DomType kind() const override { return kindValue; }
     JsFile(QString filePath = QString(),
-           QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0),
+           QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
            Path pathFromTop = Path(), int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, pathFromTop, derivedFrom)
     {
@@ -247,7 +248,8 @@ public:
 
     QmlFile(const QmlFile &o);
     QmlFile(QString filePath = QString(), QString code = QString(),
-            QDateTime lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0), int derivedFrom = 0);
+            QDateTime lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+            int derivedFrom = 0);
     static ErrorGroups myParsingErrors();
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor)
             override; // iterates the *direct* subpaths, returns false if a quick end was requested
@@ -347,7 +349,7 @@ public:
     DomType kind() const override { return kindValue; }
 
     QmltypesFile(QString filePath = QString(), QString code = QString(),
-                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0),
+                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
                  int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmltypesFilePath(filePath),
                              derivedFrom, code)
@@ -415,7 +417,8 @@ public:
     DomType kind() const override { return kindValue; }
 
     GlobalScope(QString filePath = QString(),
-                QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0), int derivedFrom = 0)
+                QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+                int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::globalScopePath(filePath),
                              derivedFrom)
     {

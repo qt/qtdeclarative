@@ -62,7 +62,7 @@ public:
     DomType kind() const override { return kindValue; }
 
     ModuleIndex(QString uri, int majorVersion, int derivedFrom = 0,
-                QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0))
+                QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
         : OwningItem(derivedFrom, lastDataUpdateAt), m_uri(uri), m_majorVersion(majorVersion)
     {
     }

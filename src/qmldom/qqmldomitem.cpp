@@ -2213,7 +2213,7 @@ QDateTime DomItem::createdAt()
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->createdAt(); }, *m_owner);
     else
-        return QDateTime::fromMSecsSinceEpoch(0);
+        return QDateTime::fromMSecsSinceEpoch(0, Qt::UTC);
 }
 
 QDateTime DomItem::frozenAt()
@@ -2221,7 +2221,7 @@ QDateTime DomItem::frozenAt()
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->frozenAt(); }, *m_owner);
     else
-        return QDateTime::fromMSecsSinceEpoch(0);
+        return QDateTime::fromMSecsSinceEpoch(0, Qt::UTC);
 }
 
 QDateTime DomItem::lastDataUpdateAt()
@@ -2229,7 +2229,7 @@ QDateTime DomItem::lastDataUpdateAt()
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->lastDataUpdateAt(); }, *m_owner);
     else
-        return QDateTime::fromMSecsSinceEpoch(0);
+        return QDateTime::fromMSecsSinceEpoch(0, Qt::UTC);
 }
 
 void DomItem::addError(ErrorMessage msg)
@@ -2433,7 +2433,7 @@ DomItem DomItem::fromCode(QString code, DomType fileType)
 
     DomItem tFile;
     env.loadFile(
-            QString(), QString(), code, QDateTime::currentDateTime(),
+            QString(), QString(), code, QDateTime::currentDateTimeUtc(),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad, fileType);
     env.loadPendingDependencies();
@@ -2925,19 +2925,28 @@ OwningItems), Access to the rest is *not* controlled, it should either be by a s
 
 */
 
-OwningItem::OwningItem(int derivedFrom):
-    m_derivedFrom(derivedFrom), m_revision(nextRevision()),
-    m_createdAt(QDateTime::currentDateTime()), m_lastDataUpdateAt(m_createdAt), m_frozenAt(QDateTime::fromMSecsSinceEpoch(0))
+OwningItem::OwningItem(int derivedFrom)
+    : m_derivedFrom(derivedFrom),
+      m_revision(nextRevision()),
+      m_createdAt(QDateTime::currentDateTimeUtc()),
+      m_lastDataUpdateAt(m_createdAt),
+      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
 {}
 
-OwningItem::OwningItem(int derivedFrom, QDateTime lastDataUpdateAt):
-    m_derivedFrom(derivedFrom), m_revision(nextRevision()),
-    m_createdAt(QDateTime::currentDateTime()), m_lastDataUpdateAt(lastDataUpdateAt), m_frozenAt(QDateTime::fromMSecsSinceEpoch(0))
+OwningItem::OwningItem(int derivedFrom, QDateTime lastDataUpdateAt)
+    : m_derivedFrom(derivedFrom),
+      m_revision(nextRevision()),
+      m_createdAt(QDateTime::currentDateTimeUtc()),
+      m_lastDataUpdateAt(lastDataUpdateAt),
+      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
 {}
 
-OwningItem::OwningItem(const OwningItem &o):
-    m_derivedFrom(o.revision()), m_revision(nextRevision()),
-    m_createdAt(QDateTime::currentDateTime()),   m_lastDataUpdateAt(o.lastDataUpdateAt()), m_frozenAt(QDateTime::fromMSecsSinceEpoch(0))
+OwningItem::OwningItem(const OwningItem &o)
+    : m_derivedFrom(o.revision()),
+      m_revision(nextRevision()),
+      m_createdAt(QDateTime::currentDateTimeUtc()),
+      m_lastDataUpdateAt(o.lastDataUpdateAt()),
+      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
 {
     QMultiMap<Path, ErrorMessage> my_errors;
     {
@@ -3015,7 +3024,7 @@ bool OwningItem::frozen() const
 bool OwningItem::freeze()
 {
     if (!frozen()) {
-        m_frozenAt = QDateTime::currentDateTime();
+        m_frozenAt = QDateTime::currentDateTimeUtc();
         if (m_frozenAt <= m_createdAt)
             m_frozenAt = m_createdAt.addSecs(1);
         return true;

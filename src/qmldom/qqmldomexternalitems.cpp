@@ -65,7 +65,7 @@ ErrorGroups QmldirFile::myParsingErrors()
 std::shared_ptr<QmldirFile> QmldirFile::fromPathAndCode(QString path, QString code)
 {
     QString canonicalFilePath = QFileInfo(path).canonicalFilePath();
-    QDateTime dataUpdate = QDateTime::currentDateTime();
+    QDateTime dataUpdate = QDateTime::currentDateTimeUtc();
     std::shared_ptr<QmldirFile> res(new QmldirFile(canonicalFilePath, code, dataUpdate));
     if (canonicalFilePath.isEmpty() && !path.isEmpty())
         res->addErrorLocal(

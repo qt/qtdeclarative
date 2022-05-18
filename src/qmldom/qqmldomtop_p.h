@@ -64,10 +64,13 @@ class QMLDOM_EXPORT ExternalItemPairBase: public OwningItem { // all access shou
 public:
     constexpr static DomType kindValue = DomType::ExternalItemPair;
     DomType kind() const final override { return kindValue; }
-    ExternalItemPairBase(QDateTime validExposedAt = QDateTime::fromMSecsSinceEpoch(0),
-                         QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0),
-                         int derivedFrom=0, QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0)):
-        OwningItem(derivedFrom, lastDataUpdateAt), validExposedAt(validExposedAt), currentExposedAt(currentExposedAt)
+    ExternalItemPairBase(QDateTime validExposedAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+                         QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+                         int derivedFrom = 0,
+                         QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
+        : OwningItem(derivedFrom, lastDataUpdateAt),
+          validExposedAt(validExposedAt),
+          currentExposedAt(currentExposedAt)
     {}
     ExternalItemPairBase(const ExternalItemPairBase &o):
         OwningItem(o), validExposedAt(o.validExposedAt), currentExposedAt(o.currentExposedAt)
@@ -125,11 +128,13 @@ public:
     constexpr static DomType kindValue = DomType::ExternalItemPair;
     friend class DomUniverse;
     ExternalItemPair(std::shared_ptr<T> valid = {}, std::shared_ptr<T> current = {},
-                     QDateTime validExposedAt = QDateTime::fromMSecsSinceEpoch(0),
-                     QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0),
-                     int derivedFrom = 0, QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0)):
-        ExternalItemPairBase(validExposedAt, currentExposedAt, derivedFrom, lastDataUpdateAt),
-        valid(valid), current(current)
+                     QDateTime validExposedAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+                     QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+                     int derivedFrom = 0,
+                     QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
+        : ExternalItemPairBase(validExposedAt, currentExposedAt, derivedFrom, lastDataUpdateAt),
+          valid(valid),
+          current(current)
     {}
     ExternalItemPair(const ExternalItemPair &o):
         ExternalItemPairBase(o), valid(o.valid), current(o.current)
@@ -364,9 +369,9 @@ public:
     constexpr static DomType kindValue = DomType::ExternalItemInfo;
     DomType kind() const final override { return kindValue; }
     ExternalItemInfoBase(Path canonicalPath,
-                         QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0),
+                         QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
                          int derivedFrom = 0,
-                         QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0))
+                         QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
         : OwningItem(derivedFrom, lastDataUpdateAt),
           m_canonicalPath(canonicalPath),
           m_currentExposedAt(currentExposedAt)
@@ -449,9 +454,9 @@ protected:
 public:
     constexpr static DomType kindValue = DomType::ExternalItemInfo;
     ExternalItemInfo(std::shared_ptr<T> current = std::shared_ptr<T>(),
-                     QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0),
+                     QDateTime currentExposedAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
                      int derivedFrom = 0,
-                     QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0))
+                     QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
         : ExternalItemInfoBase(current->canonicalPath().dropTail(), currentExposedAt, derivedFrom,
                                lastDataUpdateAt),
           current(current)
@@ -509,7 +514,8 @@ public:
     };
 
     LoadInfo(Path elPath = Path(), Status status = Status::NotStarted, int nLoaded = 0,
-             int derivedFrom = 0, QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0))
+             int derivedFrom = 0,
+             QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
         : OwningItem(derivedFrom, lastDataUpdateAt),
           m_elementCanonicalPath(elPath),
           m_status(status),
