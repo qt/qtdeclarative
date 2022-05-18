@@ -2370,6 +2370,10 @@ void tst_qquicktext::implicitSize_data()
 
 void tst_qquicktext::implicitSize()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("This segfaults on Android, QTBUG-103096");
+#endif
+
     QFETCH(QString, text);
     QFETCH(QString, width);
     QFETCH(QString, format);
