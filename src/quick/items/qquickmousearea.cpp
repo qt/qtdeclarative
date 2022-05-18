@@ -806,7 +806,8 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
             QQuickWindow *w = window();
             if (w && w->mouseGrabberItem() == this)
                 ungrabMouse();
-            setKeepMouseGrab(false);
+            if (!d->preventStealing)
+                setKeepMouseGrab(false);
         }
     }
     d->doubleClick = false;
