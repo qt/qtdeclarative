@@ -28,11 +28,13 @@
 
 #include <qbaselinetest.h>
 
-#include <QtCore/QCoreApplication>
 #include <QtCore/QDirIterator>
 #include <QtCore/QDebug>
 #include <QtCore/QProcess>
+#include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
+#include <QtGui/QPalette>
+#include <QtGui/QFont>
 #include <QtQuickControls2/QQuickStyle>
 
 #include <algorithm>
@@ -117,6 +119,12 @@ void tst_Baseline_Controls::initTestCase()
     if (grabberPath.isEmpty())
         grabberPath = QCoreApplication::applicationDirPath() + "/../scenegraph/qmlscenegrabber";
 
+    QBaselineTest::setProject("QuickControls");
+    // Set key platform properties that are relevant for the appearance of controls
+    const QString platformName = QGuiApplication::platformName() + "-" + QSysInfo::productType();
+    QBaselineTest::addClientProperty("PlatformName", platformName);
+    QBaselineTest::addClientProperty("OSVersion", QSysInfo::productVersion());
+
     const char *backendVarName = "QT_QUICK_BACKEND";
     const QString backend = qEnvironmentVariable(backendVarName, QString::fromLatin1("default"));
     QBaselineTest::addClientProperty(QString::fromLatin1(backendVarName), backend);
@@ -133,12 +141,39 @@ void tst_Baseline_Controls::initTestCase()
         const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
         stack = QString::fromLatin1("RHI_%1").arg(rhiBackend);
     }
-    QBaselineTest::setProject("QuickControls");
+
     QBaselineTest::addClientProperty(QString::fromLatin1("GraphicsStack"), stack);
+
+    // Assume that text that's darker than the background means we run in light mode
+    // See also qwidgetbaselinetest.cpp
+    QPalette palette;
+    QFont font;
+    QByteArray appearanceBytes;
+    {
+        QDataStream appearanceStream(&appearanceBytes, QIODevice::WriteOnly);
+        appearanceStream << palette << font;
+        const qreal screenDpr = QGuiApplication::primaryScreen()->devicePixelRatio();
+        if (screenDpr != 1.0) {
+            qWarning() << "DPR is" << screenDpr << "- images will not be compared to 1.0 baseline!";
+            appearanceStream << screenDpr;
+        }
+    }
+    const quint16 appearanceId = qChecksum(appearanceBytes);
+
+    const QColor windowColor = palette.window().color();
+    const QColor textColor = palette.text().color();
+    const QString appearanceIdString = (windowColor.value() > textColor.value()
+                                        ? QString("light-%1") : QString("dark-%1"))
+                                        .arg(appearanceId, 0, 16);
+    QBaselineTest::addClientProperty("AppearanceID", appearanceIdString);
 
     QByteArray msg;
     if (!QBaselineTest::connectToBaselineServer(&msg))
         QSKIP(msg);
+
+    // let users know where they can find the results
+    qDebug() << "PlatformName computed to be:" << platformName;
+    qDebug() << "Appearance ID computed as:" << appearanceIdString;
 }
 
 void tst_Baseline_Controls::init()
