@@ -43,6 +43,11 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
     return module[typeName.toString()].scope;
 }
 
+Element GenericPass::resolveLiteralType(const QQmlJSMetaPropertyBinding &binding)
+{
+    return binding.literalType(d->manager->m_typeResolver);
+}
+
 /*!
  * \brief PassManager::registerElementPass registers ElementPass
           with the pass manager.

@@ -48,6 +48,8 @@ public:
     void emitWarning(QAnyStringView message,
                      QQmlJS::SourceLocation srcLocation = QQmlJS::SourceLocation());
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
+    Element resolveLiteralType(const QQmlJSMetaPropertyBinding &binding);
+
 private:
     std::unique_ptr<GenericPassPrivate> d; // PIMPL might be overkill
 };

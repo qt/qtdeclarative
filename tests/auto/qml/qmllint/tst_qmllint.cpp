@@ -1759,6 +1759,19 @@ void TestQmllint::quickPlugin()
                                    16, 9 },
                      } });
 
+    runTest("pluginQuick_varProp.qml",
+            Result {
+                    { Message {
+                              u"Unexpected type for property \"contentItem\" expected QQuickPathView, QQuickListView got QQuickItem"_s },
+                      Message {
+                              u"Unexpected type for property \"columnWidthProvider\" expected function got null"_s },
+                      Message {
+                              u"Unexpected type for property \"textFromValue\" expected function got null"_s },
+                      Message {
+                              u"Unexpected type for property \"valueFromText\" expected function got int"_s },
+                      Message {
+                              u"Unexpected type for property \"rowHeightProvider\" expected function got int"_s } } });
+
     runTest("pluginQuick_attachedClean.qml", Result::clean());
 }
 #endif

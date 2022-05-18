@@ -406,13 +406,91 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
     }
 }
 
+VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
+        QQmlSA::PassManager *manager,
+        const QMultiHash<QString, TypeDescription> &expectedPropertyTypes)
+    : QQmlSA::PropertyPass(manager)
+{
+    QMultiHash<QString, QQmlJSScope::ConstPtr> propertyTypes;
+
+    for (const auto &pair : expectedPropertyTypes.asKeyValueRange()) {
+        QQmlSA::Element propType;
+
+        if (!pair.second.module.isEmpty()) {
+            propType = resolveType(pair.second.module, pair.second.name);
+            if (propType.isNull())
+                continue;
+        } else {
+            auto scope = QQmlJSScope::create();
+            scope->setInternalName(pair.second.name);
+            propType = scope;
+        }
+
+        propertyTypes.insert(pair.first, propType);
+    }
+
+    m_expectedPropertyTypes = propertyTypes;
+}
+
+void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
+                                            const QString &propertyName,
+                                            const QQmlJSMetaPropertyBinding &binding,
+                                            const QQmlSA::Element &bindingScope,
+                                            const QQmlSA::Element &value)
+{
+    Q_UNUSED(bindingScope);
+
+    const auto range = m_expectedPropertyTypes.equal_range(propertyName);
+
+    if (range.first == range.second)
+        return;
+
+    QQmlSA::Element bindingType;
+
+    if (!value.isNull()) {
+        bindingType = value;
+    } else {
+        if (QQmlJSMetaPropertyBinding::isLiteralBinding(binding.bindingType())) {
+            bindingType = resolveLiteralType(binding);
+        } else {
+            switch (binding.bindingType()) {
+            case QQmlJSMetaPropertyBinding::Object:
+                bindingType = binding.objectType();
+                break;
+            case QQmlJSMetaPropertyBinding::Script:
+                break;
+            default:
+                return;
+            }
+        }
+    }
+
+    if (std::find_if(range.first, range.second,
+                     [&](const QQmlSA::Element &scope) { return element->inherits(scope); })
+        == range.second) {
+
+        const QString bindingTypeName = QQmlJSScope::prettyName(
+                bindingType->isComposite() ? bindingType->baseType()->internalName()
+                                           : bindingType->internalName());
+        QStringList expectedTypeNames;
+
+        for (auto it = range.first; it != range.second; it++)
+            expectedTypeNames << QQmlJSScope::prettyName(it.value()->internalName());
+
+        emitWarning(u"Unexpected type for property \"%1\" expected %2 got %3"_s.arg(
+                            propertyName, expectedTypeNames.join(u", "_s), bindingTypeName),
+                    binding.sourceLocation());
+    }
+}
+
 void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
     const bool hasQuick = manager->hasImportedModule("QtQuick");
     const bool hasQuickLayouts = manager->hasImportedModule("QtQuick.Layouts");
     const bool hasQuickControls = manager->hasImportedModule("QtQuick.Templates")
-            || manager->hasImportedModule("QtQuick.Controls");
+            || manager->hasImportedModule("QtQuick.Controls")
+            || manager->hasImportedModule("QtQuick.Controls.Basic");
 
     Q_UNUSED(rootElement);
 
@@ -459,17 +537,29 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 
     auto attachedPropertyType = std::make_shared<AttachedPropertyTypeValidatorPass>(manager);
 
-    auto addAttachedWarning =
-            [&](AttachedPropertyTypeValidatorPass::TypeDescription attachedType,
-                QList<AttachedPropertyTypeValidatorPass::TypeDescription> allowedTypes,
-                QAnyStringView warning, bool allowInDelegate = false) {
-                QString attachedTypeName = attachedPropertyType->addWarning(
-                        attachedType, allowedTypes, allowInDelegate, warning);
-                manager->registerPropertyPass(attachedPropertyType, attachedType.module,
-                                              u"$internal$."_s + attachedTypeName);
+    auto addAttachedWarning = [&](TypeDescription attachedType, QList<TypeDescription> allowedTypes,
+                                  QAnyStringView warning, bool allowInDelegate = false) {
+        QString attachedTypeName = attachedPropertyType->addWarning(attachedType, allowedTypes,
+                                                                    allowInDelegate, warning);
+        manager->registerPropertyPass(attachedPropertyType, attachedType.module,
+                                      u"$internal$."_s + attachedTypeName, {}, false);
+    };
+
+    auto addVarBindingWarning =
+            [&](QAnyStringView moduleName, QAnyStringView typeName,
+                const QMultiHash<QString, TypeDescription> &expectedPropertyTypes) {
+                auto varBindingType = std::make_shared<VarBindingTypeValidatorPass>(
+                        manager, expectedPropertyTypes);
+                for (const auto &propertyName : expectedPropertyTypes.uniqueKeys()) {
+                    manager->registerPropertyPass(varBindingType, moduleName, typeName,
+                                                  propertyName);
+                }
             };
 
     if (hasQuick) {
+        addVarBindingWarning("QtQuick", "TableView",
+                             { { "columnWidthProvider", { "", "function" } },
+                               { "rowHeightProvider", { "", "function" } } });
         addAttachedWarning({ "QtQuick", "Accessible" }, { { "QtQuick", "Item" } },
                            "Accessible must be attached to an Item");
         addAttachedWarning({ "QtQuick", "LayoutMirroring" },
@@ -509,6 +599,12 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                 { "QtQuick.Templates", "Tumbler" }, { { "QtQuick", "Tumbler" } },
                 "Tumbler: attached properties of Tumbler must be accessed through a delegate item",
                 true);
+        addVarBindingWarning("QtQuick.Templates", "Tumbler",
+                             { { "contentItem", { "QtQuick", "PathView" } },
+                               { "contentItem", { "QtQuick", "ListView" } } });
+        addVarBindingWarning("QtQuick.Templates", "SpinBox",
+                             { { "textFromValue", { "", "function" } },
+                               { "valueFromText", { "", "function" } } });
     }
 
     if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_s)
