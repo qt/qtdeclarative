@@ -10,4 +10,8 @@ QtObject {
     property list<date> values4: [aDate, aDate, aDate]
     property list<real> values5: [1, 2, 3.4, "30", undefined, null]
     property list<QtObject> values6: [self, self, self]
+
+    property int inIntList: values3[1]
+    property date inDateList: values4[2]
+    property real inRealList: values5[3]
 }

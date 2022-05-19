@@ -1205,15 +1205,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
     property.setTypeName(value->internalName());
     property.setType(value);
 
-    QQmlJSScope::ConstPtr stored;
-
-    // Special handling of stored type here: List lookup can always produce undefined
-    if (isPrimitive(value))
-        stored = jsPrimitiveType();
-    else
-        stored = jsValueType();
-
-    return QQmlJSRegisterContent::create(stored, property, QQmlJSRegisterContent::ListValue, scope);
+    return QQmlJSRegisterContent::create(
+            storedType(value), property, QQmlJSRegisterContent::ListValue, scope);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::returnType(

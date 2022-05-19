@@ -667,7 +667,10 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
         addReadAccumulator(m_typeResolver->globalType(m_typeResolver->realType()));
 
     addReadRegister(base, baseRegister);
-    setAccumulator(m_typeResolver->valueType(baseRegister));
+    // We can end up with undefined.
+    setAccumulator(m_typeResolver->merge(
+            m_typeResolver->valueType(baseRegister),
+            m_typeResolver->globalType(m_typeResolver->voidType())));
 }
 
 void QQmlJSTypePropagator::generate_StoreElement(int base, int index)

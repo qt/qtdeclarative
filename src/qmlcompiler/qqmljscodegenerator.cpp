@@ -627,11 +627,6 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
         return;
     }
 
-    if (!m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
-        reject(u"indirect LoadElement"_s);
-        return;
-    }
-
     AccumulatorConverter registers(this);
 
     const QString baseName = registerVariable(base);
@@ -646,18 +641,32 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
                 + voidAssignment
                 + u"else "_s;
     }
-    // Our QQmlListProperty only keeps plain QObject*.
-    const auto valueType = m_typeResolver->valueType(baseType);
-    const auto elementType = m_typeResolver->globalType(
-                m_typeResolver->genericType(m_typeResolver->containedType(valueType)));
+
+    if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->listPropertyType())) {
+        // Our QQmlListProperty only keeps plain QObject*.
+        const auto valueType = m_typeResolver->valueType(baseType);
+        const auto elementType = m_typeResolver->globalType(
+                    m_typeResolver->genericType(m_typeResolver->containedType(valueType)));
+
+        m_body += u"if ("_s + indexName + u" >= 0 && "_s + indexName
+                + u" < "_s + baseName + u".count(&"_s + baseName
+                + u"))\n"_s;
+        m_body += u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
+                conversion(elementType, m_state.accumulatorOut(),
+                           baseName + u".at(&"_s + baseName + u", "_s
+                           + indexName + u')') + u";\n"_s;
+        m_body += u"else\n"_s
+                + voidAssignment;
+        return;
+    }
+
+    const auto elementType = m_typeResolver->valueType(baseType);
 
     m_body += u"if ("_s + indexName + u" >= 0 && "_s + indexName
-            + u" < "_s + baseName + u".count(&"_s + baseName
-            + u"))\n"_s;
+            + u" < "_s + baseName + u".count())\n"_s;
     m_body += u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
             conversion(elementType, m_state.accumulatorOut(),
-                       baseName + u".at(&"_s + baseName + u", "_s
-                       + indexName + u')') + u";\n"_s;
+                       baseName + u".at("_s + indexName + u')') + u";\n"_s;
     m_body += u"else\n"_s
             + voidAssignment;
 }

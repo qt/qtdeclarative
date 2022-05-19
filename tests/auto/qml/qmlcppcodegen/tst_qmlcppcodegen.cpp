@@ -937,6 +937,9 @@ void tst_QmlCppCodegen::outOfBoundsArray()
     QVERIFY(!object.isNull());
     QVERIFY(object->metaObject()->indexOfProperty("oob") > 0);
     QVERIFY(!object->property("oob").isValid());
+    const QVariant oob2 = object->property("oob2");
+    QCOMPARE(oob2.metaType(), QMetaType::fromType<QObject *>());
+    QCOMPARE(oob2.value<QObject *>(), nullptr);
 }
 
 void tst_QmlCppCodegen::compositeSingleton()
@@ -1948,6 +1951,10 @@ void tst_QmlCppCodegen::typedArray()
     QCOMPARE(values6.count(&values6), 3);
     for (int i = 0; i < 3; ++i)
         QCOMPARE(values6.at(&values6, i), o.data());
+
+    QCOMPARE(o->property("inIntList").toInt(), 2);
+    QCOMPARE(qvariant_cast<QDateTime>(o->property("inDateList")), date);
+    QCOMPARE(o->property("inRealList").toDouble(), 30.0);
 }
 
 void tst_QmlCppCodegen::prefixedType()
