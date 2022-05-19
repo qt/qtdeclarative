@@ -103,7 +103,7 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
                 return;
             }
 
-            const QFileInfoList dirs = newFolderDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::DirsFirst);
+            const QFileInfoList dirs = newFolderDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, fileListSortFlags());
             const QFileInfo newSelectedFileInfo(newSelectedFilePath);
             // The directory can contain files, but since we put dirs first, that should never affect the indices.
             newSelectedFileIndex = dirs.indexOf(newSelectedFileInfo);
@@ -127,9 +127,8 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
         // complicate the code even more...
         const QDir newFolderDir(newFolderPath);
         if (newFolderDir.exists()) {
-            const QFileInfoList files = fileList(newFolderDir);
-            if (!files.isEmpty()) {
-                newSelectedFilePath = files.first().absoluteFilePath();
+            if (!cachedFileList.isEmpty()) {
+                newSelectedFilePath = cachedFileList.first().absoluteFilePath();
                 newSelectedFileIndex = 0;
             }
         }
@@ -138,56 +137,88 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
     const QUrl newSelectedFileUrl = QUrl::fromLocalFile(newSelectedFilePath);
     qCDebug(lcUpdateSelectedFile) << "updateSelectedFile is setting selectedFile to" << newSelectedFileUrl;
     q->setSelectedFile(newSelectedFileUrl);
-    updateFileDialogListViewCurrentIndex(newSelectedFileIndex);
+    // If the index is -1, there are no files in the directory, and so fileDialogListView's
+    // currentIndex will already be -1.
+    if (newSelectedFileIndex != -1)
+        tryUpdateFileDialogListViewCurrentIndex(newSelectedFileIndex);
+}
+
+QDir::SortFlags QQuickFileDialogImplPrivate::fileListSortFlags()
+{
+    QDir::SortFlags sortFlags = QDir::IgnoreCase;
+    if (QQuickPlatformTheme::getThemeHint(QPlatformTheme::ShowDirectoriesFirst).toBool())
+        sortFlags.setFlag(QDir::DirsFirst);
+    return sortFlags;
 }
 
 QFileInfoList QQuickFileDialogImplPrivate::fileList(const QDir &dir)
 {
-    QDir::SortFlags sortFlags = QDir::NoSort;
-    if (QQuickPlatformTheme::getThemeHint(QPlatformTheme::ShowDirectoriesFirst).toBool())
-        sortFlags = QDir::DirsFirst;
-    return dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, sortFlags);
+    return dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, fileListSortFlags());
 }
 
-/*!
-    \internal
-
-    Returns the index of \a filePath if the contents of \a dir were displayed
-    in fileDialogListView.
-*/
-int QQuickFileDialogImplPrivate::indexOfFileInFileDialogListView(const QString &filePath) const
+void QQuickFileDialogImplPrivate::setFileDialogListViewCurrentIndex(int newCurrentIndex)
 {
-    const QFileInfo newSelectedFileInfo(filePath);
-    const QFileInfoList dirs = fileList(newSelectedFileInfo.absoluteDir());
-    return dirs.indexOf(newSelectedFileInfo);
+    qCDebug(lcSelectedFile) << "setting fileDialogListView's currentIndex to" << newCurrentIndex;
+
+    // We block signals from ListView because we don't want fileDialogListViewCurrentIndexChanged
+    // to be called, as the file it gets from the delegate will not be up-to-date (but most
+    // importantly because we already just set the selected file).
+    QQuickFileDialogImplAttached *attached = attachedOrWarn();
+    const QSignalBlocker blocker(attached->fileDialogListView());
+    attached->fileDialogListView()->setCurrentIndex(newCurrentIndex);
+    attached->fileDialogListView()->positionViewAtIndex(newCurrentIndex, QQuickListView::Center);
+    if (QQuickItem *currentItem = attached->fileDialogListView()->currentItem())
+        currentItem->forceActiveFocus();
 }
 
 /*!
     \internal
 
-    Sets the currentIndex of fileDialogListView to \a newCurrentIndex and gives
+    Tries to set the currentIndex of fileDialogListView to \a newCurrentIndex and gives
     focus to the current item.
 */
-void QQuickFileDialogImplPrivate::updateFileDialogListViewCurrentIndex(int newCurrentIndex)
+void QQuickFileDialogImplPrivate::tryUpdateFileDialogListViewCurrentIndex(int newCurrentIndex)
 {
-    qCDebug(lcSelectedFile) << "updateFileDialogListViewCurrentIndex called with newCurrentIndex" << newCurrentIndex;
+    qCDebug(lcSelectedFile) << "tryUpdateFileDialogListViewCurrentIndex called with newCurrentIndex" << newCurrentIndex;
     QQuickFileDialogImplAttached *attached = attachedOrWarn();
     Q_ASSERT(attached);
     Q_ASSERT(attached->fileDialogListView());
 
     // We were likely trying to set an index for a file that the ListView hadn't loaded yet.
-    // For now we just select the first item, but this needs to be fixed properly: QTBUG-103547
-    if (newCurrentIndex >= attached->fileDialogListView()->count())
-        newCurrentIndex = 0;
+    // We need to wait until the ListView has loaded all expected items, but since we have no
+    // efficient way of verifying that, we just check that the count is as expected.
+    if (newCurrentIndex != -1 && newCurrentIndex >= attached->fileDialogListView()->count()) {
+        qCDebug(lcSelectedFile) << "- trying to set currentIndex to" << newCurrentIndex
+            << "but fileDialogListView only has" << attached->fileDialogListView()->count()
+            << "items; setting pendingCurrentIndexToSet to" << newCurrentIndex;
+        pendingCurrentIndexToSet = newCurrentIndex;
+        QObjectPrivate::connect(attached->fileDialogListView(), &QQuickItemView::countChanged,
+            this, &QQuickFileDialogImplPrivate::fileDialogListViewCountChanged, Qt::ConnectionType(Qt::DirectConnection | Qt::UniqueConnection));
+        return;
+    }
 
-    // We block signals from ListView because we don't want fileDialogListViewCurrentIndexChanged
-    // to be called, as the file it gets from the delegate will not be up-to-date (but most
-    // importantly because we already just set the selected file).
-    QSignalBlocker blocker(attached->fileDialogListView());
-    attached->fileDialogListView()->setCurrentIndex(newCurrentIndex);
-    attached->fileDialogListView()->positionViewAtIndex(newCurrentIndex, QQuickListView::Center);
-    if (QQuickItem *currentItem = attached->fileDialogListView()->currentItem())
-        currentItem->forceActiveFocus();
+    setFileDialogListViewCurrentIndex(newCurrentIndex);
+}
+
+void QQuickFileDialogImplPrivate::fileDialogListViewCountChanged()
+{
+    QQuickFileDialogImplAttached *attached = attachedOrWarn();
+    qCDebug(lcSelectedFile) << "fileDialogListView count changed to" << attached->fileDialogListView()->count();
+
+    if (pendingCurrentIndexToSet != -1 && pendingCurrentIndexToSet < attached->fileDialogListView()->count()) {
+        // The view now has all of the items we expect it to, so we can set
+        // its currentIndex back to the selected file.
+        qCDebug(lcSelectedFile) << "- ListView has expected count;"
+            << "applying pending fileDialogListView currentIndex" << pendingCurrentIndexToSet;
+
+        QObjectPrivate::disconnect(attached->fileDialogListView(), &QQuickItemView::countChanged,
+            this, &QQuickFileDialogImplPrivate::fileDialogListViewCountChanged);
+        setFileDialogListViewCurrentIndex(pendingCurrentIndexToSet);
+        pendingCurrentIndexToSet = -1;
+        qCDebug(lcSelectedFile) << "- reset pendingCurrentIndexToSet to -1";
+    } else {
+        qCDebug(lcSelectedFile) << "- ListView doesn't yet have expected count of" << cachedFileList.size();
+    }
 }
 
 void QQuickFileDialogImplPrivate::handleAccept()
@@ -233,8 +264,20 @@ QUrl QQuickFileDialogImpl::currentFolder() const
 
 void QQuickFileDialogImpl::setCurrentFolder(const QUrl &currentFolder, SetReason setReason)
 {
-    qCDebug(lcCurrentFolder) << "setCurrentFolder called with" << currentFolder;
     Q_D(QQuickFileDialogImpl);
+    qCDebug(lcCurrentFolder).nospace() << "setCurrentFolder called with " << currentFolder
+        << " (old currentFolder is " << d->currentFolder << ")";
+
+    // As we would otherwise get the file list from scratch in a couple of places,
+    // just get it once and cache it.
+    // We need to cache it before the equality check, otherwise opening the dialog
+    // several times in the same directory wouldn't update the cache.
+    if (!currentFolder.isEmpty())
+        d->cachedFileList = d->fileList(QQmlFile::urlToLocalFileOrQrc(currentFolder));
+    else
+        d->cachedFileList.clear();
+    qCDebug(lcCurrentFolder) << "- cachedFileList size is now " << d->cachedFileList.size();
+
     if (currentFolder == d->currentFolder)
         return;
 
@@ -275,11 +318,31 @@ void QQuickFileDialogImpl::setSelectedFile(const QUrl &selectedFile)
     emit selectedFileChanged(d->selectedFile);
 }
 
-void QQuickFileDialogImpl::setInitialSelectedFile(const QUrl &file)
+/*!
+    \internal
+
+    Called when showing the FileDialog each time, so long as
+    QFileDialogOptions::initiallySelectedFiles is not empty.
+*/
+void QQuickFileDialogImpl::setInitialCurrentFolderAndSelectedFile(const QUrl &file)
 {
     Q_D(QQuickFileDialogImpl);
+    const QUrl fileDirUrl = QUrl::fromLocalFile(QFileInfo(file.toLocalFile()).dir().absolutePath());
+    const bool currentFolderChanged = d->currentFolder != fileDirUrl;
+    qCDebug(lcSelectedFile) << "setting initial currentFolder to" << fileDirUrl << "and selectedFile to" << file;
+    setCurrentFolder(fileDirUrl, QQuickFileDialogImpl::SetReason::Internal);
     setSelectedFile(file);
     d->setCurrentIndexToInitiallySelectedFile = true;
+
+    // If the currentFolder didn't change, the FolderListModel won't change and
+    // neither will the ListView. This means that setFileDialogListViewCurrentIndex
+    // will never get called and the currentIndex will not reflect selectedFile.
+    // We need to account for that here.
+    if (!currentFolderChanged) {
+        const QFileInfo newSelectedFileInfo(d->selectedFile.toLocalFile());
+        const int indexOfSelectedFileInFileDialogListView = d->cachedFileList.indexOf(newSelectedFileInfo);
+        d->tryUpdateFileDialogListViewCurrentIndex(indexOfSelectedFileInFileDialogListView);
+    }
 }
 
 QSharedPointer<QFileDialogOptions> QQuickFileDialogImpl::options() const
@@ -441,7 +504,7 @@ QQuickFileDialogImplAttached *QQuickFileDialogImplPrivate::attachedOrWarn()
 {
     Q_Q(QQuickFileDialogImpl);
     QQuickFileDialogImplAttached *attached = static_cast<QQuickFileDialogImplAttached*>(
-        qmlAttachedPropertiesObject<QQuickFileDialogImpl>(q));
+        qmlAttachedPropertiesObject<QQuickFileDialogImpl>(q, false));
     if (!attached)
         qmlWarning(q) << "Expected FileDialogImpl attached object to be present on" << this;
     return attached;
@@ -484,8 +547,9 @@ void QQuickFileDialogImplAttachedPrivate::fileDialogListViewCurrentIndexChanged(
         // we need to ensure that the currentIndex is correct, because the initial change
         // in directory will cause the underyling FolderListModel to change its folder property,
         // which in turn resets the fileDialogListView's currentIndex to 0.
-        fileDialogImplPrivate->updateFileDialogListViewCurrentIndex(
-            fileDialogImplPrivate->indexOfFileInFileDialogListView(fileDialogImplPrivate->selectedFile.toLocalFile()));
+        const QFileInfo newSelectedFileInfo(fileDialogImplPrivate->selectedFile.toLocalFile());
+        const int indexOfSelectedFileInFileDialogListView = fileDialogImplPrivate->cachedFileList.indexOf(newSelectedFileInfo);
+        fileDialogImplPrivate->tryUpdateFileDialogListViewCurrentIndex(indexOfSelectedFileInFileDialogListView);
         fileDialogImplPrivate->setCurrentIndexToInitiallySelectedFile = false;
     }
 }
