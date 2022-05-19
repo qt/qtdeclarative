@@ -23,6 +23,7 @@ set(qml_files
     "SwipeDelegate.qml"
     "StackView.qml"
     "TreeViewDelegate.qml"
+    "ScrollBar.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
