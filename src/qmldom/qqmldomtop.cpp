@@ -32,6 +32,10 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+#define Q_CONSTINIT
+#endif
+
 using namespace Qt::StringLiterals;
 
 namespace QQmlJS {

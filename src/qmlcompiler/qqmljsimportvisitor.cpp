@@ -1609,7 +1609,6 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
     leaveEnvironment();
 }
 
-
 // ### TODO: add warning about suspicious translation binding when returning false?
 void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView base,
                               QQmlJS::AST::ArgumentList *args)
@@ -1620,8 +1619,7 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
         return 0;
     };
     auto discardCommentString = [](QStringView) {return -1;};
-    auto finalizeBinding = [&](QV4::CompiledData::Binding::Type type,
-                               QV4::CompiledData::TranslationData) {
+    auto finalizeBinding = [&](QV4::CompiledData::Binding::Type type, QV4::CompiledData::TranslationData) {
         if (type == QV4::CompiledData::Binding::Type_Translation) {
             binding.setTranslation(mainString);
         } else if (type == QV4::CompiledData::Binding::Type_TranslationById) {

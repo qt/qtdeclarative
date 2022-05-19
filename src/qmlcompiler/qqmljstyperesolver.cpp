@@ -101,8 +101,11 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
 QQmlJSScope::ConstPtr
 QQmlJSTypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
+    // #if required for standalone DOM compilation against Qt 6.2
     qCDebug(lcTypeResolver()).nospace()
             << "looking for object at " << location.line() << ':' << location.column();
+#endif
     return m_objectsByLocation[location];
 }
 
