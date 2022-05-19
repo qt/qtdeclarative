@@ -349,7 +349,8 @@ void QQmlJSTypeResolver::trackListPropertyType(
 
     if (m_typeTracker->trackedTypes.contains(trackedListElementType)
             && !m_typeTracker->listTypes.contains(trackedListElementType)) {
-        const QQmlJSScope::ConstPtr list = listType(trackedListElementType, UseListReference);
+        const QQmlJSScope::ConstPtr list = listType(
+                comparableType(trackedListElementType), UseListReference);
         QQmlJSScope::Ptr clone = QQmlJSScope::clone(list);
         m_typeTracker->listTypes[trackedListElementType] = clone;
         m_typeTracker->trackedTypes[clone] = { list, QQmlJSScope::ConstPtr(), clone };
