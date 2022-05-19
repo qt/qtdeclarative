@@ -129,6 +129,7 @@ private Q_SLOTS:
     void attachedProperties();
     void scriptIndices();
     void extensions();
+    void emptyBlockBinding();
 
 public:
     tst_qqmljsscope()
@@ -177,14 +178,14 @@ void tst_qqmljsscope::orderedBindings()
     QVERIFY(root);
 
     auto [pBindingsBegin, pBindingsEnd] = root->ownPropertyBindings(u"p"_s);
-    QVERIFY(std::distance(pBindingsBegin, pBindingsEnd) == 2);
+    QCOMPARE(std::distance(pBindingsBegin, pBindingsEnd), 2);
 
     // check that the bindings are properly ordered
     QCOMPARE(pBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
     QCOMPARE(std::next(pBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Interceptor);
 
     auto [itemsBindingsBegin, itemsBindingsEnd] = root->ownPropertyBindings(u"items"_s);
-    QVERIFY(std::distance(itemsBindingsBegin, itemsBindingsEnd) == 2);
+    QCOMPARE(std::distance(itemsBindingsBegin, itemsBindingsEnd), 2);
 
     QCOMPARE(itemsBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
     QCOMPARE(std::next(itemsBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Object);
@@ -629,6 +630,14 @@ void tst_qqmljsscope::extensions()
     QVERIFY(owner);
     QCOMPARE(ownerKind, QQmlJSScope::ExtensionType);
     QCOMPARE(owner, childScopes[4]->baseType()->extensionType().scope);
+}
+
+void tst_qqmljsscope::emptyBlockBinding()
+{
+    QQmlJSScope::ConstPtr root = run(u"emptyBlockBinding.qml"_s);
+    QVERIFY(root);
+    QVERIFY(root->hasOwnPropertyBindings(u"x"_s));
+    QVERIFY(root->hasOwnPropertyBindings(u"y"_s));
 }
 
 QTEST_MAIN(tst_qqmljsscope)

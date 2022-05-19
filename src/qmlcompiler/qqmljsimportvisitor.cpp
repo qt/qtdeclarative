@@ -1679,24 +1679,17 @@ QQmlJSImportVisitor::LiteralOrScriptParseResult
 QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
                                                  const QQmlJS::AST::Statement *statement)
 {
+    if (statement == nullptr)
+        return LiteralOrScriptParseResult::Invalid;
+
     const auto *exprStatement = cast<const ExpressionStatement *>(statement);
 
     if (exprStatement == nullptr) {
-        if (const auto *blockStatement = cast<const Block *>(statement)) {
-            // this is a special case of script binding because:
-            // 1. we are trying to parse a binding (this function's logic)
-            // 2. we encounter a block statement
-            Q_ASSERT(blockStatement->statements);
-            auto first = blockStatement->statements->statement;
-            if (first == nullptr)
-                return LiteralOrScriptParseResult::Invalid;
-            QQmlJSMetaPropertyBinding binding(first->firstSourceLocation(), name);
-            binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                     QQmlJSMetaPropertyBinding::Script_PropertyBinding);
-            m_currentScope->addOwnPropertyBinding(binding);
-            return LiteralOrScriptParseResult::Script;
-        }
-        return LiteralOrScriptParseResult::Invalid;
+        QQmlJSMetaPropertyBinding binding(statement->firstSourceLocation(), name);
+        binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
+                                 QQmlJSMetaPropertyBinding::Script_PropertyBinding);
+        m_currentScope->addOwnPropertyBinding(binding);
+        return LiteralOrScriptParseResult::Script;
     }
 
     auto expr = exprStatement->expression;
