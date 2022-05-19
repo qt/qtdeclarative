@@ -145,14 +145,11 @@ void QQuickPlatformFileDialog::selectFile(const QUrl &file)
     }
 
     // Since we're only called once each time the FileDialog is shown,
-    // we call setInitialSelectedFile here, which will ensure that
+    // we call setInitialCurrentFolderAndSelectedFile here, which will ensure that
     // the first currentIndex change (to 0, as a result of the ListView's model changing
     // as a result of the FolderListModel directory change) is effectively
     // ignored and the correct index for the initial selectedFile is maintained.
-    const QUrl fileDirUrl = QUrl::fromLocalFile(QFileInfo(file.toLocalFile()).dir().absolutePath());
-    qCDebug(lcQuickPlatformFileDialog) << "setting initial currentFolder to" << fileDirUrl << "and selectedFile to" << file;
-    m_dialog->setCurrentFolder(fileDirUrl, QQuickFileDialogImpl::SetReason::Internal);
-    m_dialog->setInitialSelectedFile(file);
+    m_dialog->setInitialCurrentFolderAndSelectedFile(file);
 }
 
 // TODO: support for multiple selected files

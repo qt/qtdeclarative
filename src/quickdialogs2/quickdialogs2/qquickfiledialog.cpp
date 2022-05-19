@@ -42,6 +42,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlinfo.h>
 
 #include <QtQuickDialogs2Utils/private/qquickfilenamefilter_p.h>
 
@@ -204,6 +205,22 @@ void QQuickFileDialog::setSelectedFiles(const QList<QUrl> &selectedFiles)
     qCDebug(lcFileDialog) << "setSelectedFiles called with" << selectedFiles;
     if (m_selectedFiles == selectedFiles)
         return;
+
+    if (m_fileMode == SaveFile && selectedFiles.size() > 1) {
+        qmlWarning(this) << "Cannot set more than one selected file when fileMode is SaveFile";
+        return;
+    }
+
+    if (m_fileMode != SaveFile) {
+        for (const auto &selectedFile : selectedFiles) {
+            const QString selectedFilePath = selectedFile.toLocalFile();
+            if (!QFileInfo::exists(selectedFilePath)) {
+                qmlWarning(this) << "Cannot set " << selectedFilePath
+                    << " as a selected file because it doesn't exist";
+                return;
+            }
+        }
+    }
 
     const auto newFirstSelectedFile = selectedFiles.value(0);
     const bool firstChanged = m_selectedFiles.value(0) != newFirstSelectedFile;

@@ -97,7 +97,7 @@ public:
 
     QUrl selectedFile() const;
     void setSelectedFile(const QUrl &file);
-    void setInitialSelectedFile(const QUrl &file);
+    void setInitialCurrentFolderAndSelectedFile(const QUrl &file);
 
     QSharedPointer<QFileDialogOptions> options() const;
     void setOptions(const QSharedPointer<QFileDialogOptions> &options);
