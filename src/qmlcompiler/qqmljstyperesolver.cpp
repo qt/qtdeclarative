@@ -1178,6 +1178,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
             return scope->valueType();
         else if (equals(scope, m_jsValueType) || equals(scope, m_varType))
             return m_jsValueType;
+        else if (equals(scope, m_stringType))
+            return m_stringType;
         return QQmlJSScope::ConstPtr();
     };
 

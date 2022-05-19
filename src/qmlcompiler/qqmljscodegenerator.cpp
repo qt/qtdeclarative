@@ -622,7 +622,9 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
 
     const QQmlJSRegisterContent baseType = registerType(base);
 
-    if (!m_typeResolver->isNumeric(m_state.accumulatorIn()) || !baseType.isList()) {
+    if (!m_typeResolver->isNumeric(m_state.accumulatorIn())
+            || (!baseType.isList()
+                && !m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType()))) {
         reject(u"LoadElement with non-list base type or non-numeric arguments"_s);
         return;
     }
@@ -662,11 +664,16 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
 
     const auto elementType = m_typeResolver->valueType(baseType);
 
+    QString access = baseName + u".at("_s + indexName + u')';
+
+    // TODO: Once we get a char type in QML, use it here.
+    if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType()))
+        access = u"QString("_s + access + u")"_s;
+
     m_body += u"if ("_s + indexName + u" >= 0 && "_s + indexName
-            + u" < "_s + baseName + u".count())\n"_s;
+            + u" < "_s + baseName + u".size())\n"_s;
     m_body += u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
-            conversion(elementType, m_state.accumulatorOut(),
-                       baseName + u".at("_s + indexName + u')') + u";\n"_s;
+            conversion(elementType, m_state.accumulatorOut(), access) + u";\n"_s;
     m_body += u"else\n"_s
             + voidAssignment;
 }

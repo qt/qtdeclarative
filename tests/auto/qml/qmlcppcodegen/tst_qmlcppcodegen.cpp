@@ -1955,6 +1955,20 @@ void tst_QmlCppCodegen::typedArray()
     QCOMPARE(o->property("inIntList").toInt(), 2);
     QCOMPARE(qvariant_cast<QDateTime>(o->property("inDateList")), date);
     QCOMPARE(o->property("inRealList").toDouble(), 30.0);
+    QCOMPARE(o->property("inCharList").toString(), QStringLiteral("f"));
+
+    const QMetaObject *metaObject = o->metaObject();
+    QMetaMethod method = metaObject->method(metaObject->indexOfMethod("stringAt10(QString)"));
+    QVERIFY(method.isValid());
+
+    // If LoadElement threw an exception the function would certainly return neither 10 nor 20.
+    int result = 0;
+    method.invoke(
+                o.data(), Q_RETURN_ARG(int, result), Q_ARG(QString, QStringLiteral("a")));
+    QCOMPARE(result, 10);
+    method.invoke(
+                o.data(), Q_RETURN_ARG(int, result), Q_ARG(QString, QStringLiteral("aaaaaaaaaaa")));
+    QCOMPARE(result, 20);
 }
 
 void tst_QmlCppCodegen::prefixedType()
@@ -2126,6 +2140,10 @@ void tst_QmlCppCodegen::valueTypeLists()
     QCOMPARE(qvariant_cast<int>(o->property("intInBounds")), 7);
     QVERIFY(o->metaObject()->indexOfProperty("intOutOfBounds") > 0);
     QVERIFY(!o->property("intOutOfBounds").isValid());
+
+    QCOMPARE(qvariant_cast<QString>(o->property("charInBounds")), QStringLiteral("d"));
+    QVERIFY(o->metaObject()->indexOfProperty("charOutOfBounds") > 0);
+    QVERIFY(!o->property("charOutOfBounds").isValid());
 }
 
 void tst_QmlCppCodegen::boundComponents()

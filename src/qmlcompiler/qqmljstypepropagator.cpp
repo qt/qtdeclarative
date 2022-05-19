@@ -652,7 +652,8 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
 {
     const QQmlJSRegisterContent baseRegister = m_state.registers[base];
 
-    if (baseRegister.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence
+    if ((baseRegister.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence
+         && !m_typeResolver->registerIsStoredIn(baseRegister, m_typeResolver->stringType()))
             || !m_typeResolver->isNumeric(m_state.accumulatorIn())) {
         const auto jsValue = m_typeResolver->globalType(m_typeResolver->jsValueType());
         addReadAccumulator(jsValue);
