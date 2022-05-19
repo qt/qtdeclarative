@@ -1,10 +1,10 @@
 # Generated from qqmlchangeset.pro.
 
 #####################################################################
-## tst_qqmlhangeset Test:
+## tst_qqmlchangeset Test:
 #####################################################################
 
-qt_internal_add_test(tst_qqmlhangeset
+qt_internal_add_test(tst_qqmlchangeset
     SOURCES
         tst_qqmlchangeset.cpp
     PUBLIC_LIBRARIES
