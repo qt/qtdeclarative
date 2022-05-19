@@ -15,6 +15,7 @@ set(qml_files
     "PageIndicator.qml"
     "TextArea.qml"
     "TextField.qml"
+    "ScrollIndicator.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
