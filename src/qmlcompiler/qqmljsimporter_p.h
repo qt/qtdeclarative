@@ -145,6 +145,7 @@ private:
     Import readDirectory(const QString &directory);
 
     QQmlJSScope::Ptr localFile2ScopeTree(const QString &filePath);
+    static void setQualifiedNamesOn(const Import &import);
 
     QStringList m_importPaths;
 

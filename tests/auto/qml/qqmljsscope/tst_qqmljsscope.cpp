@@ -130,6 +130,7 @@ private Q_SLOTS:
     void scriptIndices();
     void extensions();
     void emptyBlockBinding();
+    void qualifiedName();
 
 public:
     tst_qqmljsscope()
@@ -638,6 +639,65 @@ void tst_qqmljsscope::emptyBlockBinding()
     QVERIFY(root);
     QVERIFY(root->hasOwnPropertyBindings(u"x"_s));
     QVERIFY(root->hasOwnPropertyBindings(u"y"_s));
+}
+
+void tst_qqmljsscope::qualifiedName()
+{
+    QQmlJSScope::ConstPtr root = run(u"qualifiedName.qml"_s);
+
+    auto qualifiedNameOf = [](const QQmlJSScope::ConstPtr &ptr) {
+        return ptr->baseType()->qualifiedName();
+    };
+
+    QQmlJSScope::ConstPtr item = root;
+
+    // normal case
+    QCOMPARE(qualifiedNameOf(item), "QtQuick/Item 2.0-6.3");
+
+    QCOMPARE(item->childScopes().size(), 4);
+    QQmlJSScope::ConstPtr textInItem = item->childScopes()[0];
+    QQmlJSScope::ConstPtr nonQualifiedComponentInItem = item->childScopes()[1];
+    QQmlJSScope::ConstPtr qualifiedComponentInItem = item->childScopes()[2];
+    QQmlJSScope::ConstPtr componentInItem = item->childScopes()[3];
+
+    // qualified case
+    QCOMPARE(qualifiedNameOf(nonQualifiedComponentInItem), "QtQuick/TextEdit 2.0-6.3");
+
+    // qualified case
+    QCOMPARE(qualifiedNameOf(qualifiedComponentInItem), "QtQuick/TextEdit 2.0-6.3");
+
+    // normal case
+    QCOMPARE(qualifiedNameOf(textInItem), "QtQuick/Text 2.0-6.3");
+    // qualified import of builtin variable
+    QCOMPARE(qualifiedNameOf(componentInItem), "QML/Component 1.0");
+    QCOMPARE(componentInItem->baseType()->moduleName(), "QML");
+
+    QCOMPARE(componentInItem->childScopes().size(), 1);
+
+    QQmlJSScope::ConstPtr itemInComponent = componentInItem->childScopes()[0];
+
+    QCOMPARE(qualifiedNameOf(itemInComponent), "QtQuick/Item 2.0-6.3");
+
+    QCOMPARE(itemInComponent->childScopes().size(), 5);
+    QQmlJSScope::ConstPtr qualifiedImportTextInItemInComponent = itemInComponent->childScopes()[0];
+    QQmlJSScope::ConstPtr textInItemInComponent = itemInComponent->childScopes()[1];
+    QQmlJSScope::ConstPtr qualifiedImportTextInputInItemInComponent =
+            itemInComponent->childScopes()[2];
+    QQmlJSScope::ConstPtr indirectImportTimerInItemInComponent = itemInComponent->childScopes()[3];
+    QQmlJSScope::ConstPtr qualifiedImportTimerInItemInComponent = itemInComponent->childScopes()[4];
+
+    QCOMPARE(qualifiedNameOf(qualifiedImportTextInItemInComponent), "QtQuick/Text 2.0-6.3");
+    QCOMPARE(qualifiedNameOf(textInItemInComponent), "QtQuick/Text 2.0-6.3");
+    QCOMPARE(textInItemInComponent->baseType()->moduleName(), "QtQuick");
+    QCOMPARE(qualifiedImportTextInItemInComponent->baseType()->moduleName(), "QtQuick");
+
+    QCOMPARE(qualifiedNameOf(qualifiedImportTextInputInItemInComponent),
+             "QtQuick/TextInput 2.0-6.3");
+
+    QCOMPARE(qualifiedNameOf(indirectImportTimerInItemInComponent), "QtQml/Timer 2.0-6.0");
+    QCOMPARE(qualifiedNameOf(qualifiedImportTimerInItemInComponent), "QtQml/Timer 2.0-6.0");
+    QCOMPARE(indirectImportTimerInItemInComponent->baseType()->moduleName(), "QtQml");
+    QCOMPARE(qualifiedImportTimerInItemInComponent->baseType()->moduleName(), "QtQml");
 }
 
 QTEST_MAIN(tst_qqmljsscope)

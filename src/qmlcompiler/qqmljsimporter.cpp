@@ -513,6 +513,7 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
         return m_builtins;
 
     Import result;
+    result.name = QStringLiteral("QML");
 
     QStringList qmltypesFiles = { QStringLiteral("builtins.qmltypes"),
                                   QStringLiteral("jsroot.qmltypes") };
@@ -523,7 +524,7 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
                 readQmltypes(it.next(), &result.objects, &result.dependencies);
                 qmltypesFiles.removeOne(it.fileName());
             }
-
+            setQualifiedNamesOn(result);
             importDependencies(result, &m_builtins);
 
             if (qmltypesFiles.isEmpty())
@@ -731,6 +732,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         const QFileInfo file(qmldirPath);
         if (file.exists()) {
             const auto import = readQmldir(file.canonicalPath());
+            setQualifiedNamesOn(import);
             m_seenQmldirFiles.insert(qmldirPath, import);
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
@@ -795,6 +797,25 @@ void QQmlJSImporter::setImportPaths(const QStringList &importPaths)
 QQmlJSScope::ConstPtr QQmlJSImporter::jsGlobalObject() const
 {
     return m_builtins.cppNames[u"GlobalObject"_s].scope;
+}
+
+void QQmlJSImporter::setQualifiedNamesOn(const Import &import)
+{
+    for (auto &object : import.objects) {
+        if (object.exports.isEmpty())
+            continue;
+        const QString qualifiedName = QQmlJSScope::qualifiedNameFrom(
+                    import.name, object.exports.first().type(),
+                    object.exports.first().revision(),
+                    object.exports.last().revision());
+        if (auto *factory = object.scope.factory()) {
+            factory->setQualifiedName(qualifiedName);
+            factory->setModuleName(import.name);
+        } else {
+            object.scope->setQualifiedName(qualifiedName);
+            object.scope->setModuleName(import.name);
+        }
+    }
 }
 
 QT_END_NAMESPACE
