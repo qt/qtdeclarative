@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFileNameFilter;
 
-class QQuickFileDialogImplPrivate : public QQuickDialogPrivate
+class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFileDialogImplPrivate : public QQuickDialogPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickFileDialogImpl)
@@ -43,9 +43,11 @@ public:
 
     void updateEnabled();
     void updateSelectedFile(const QString &oldFolderPath);
+    static QDir::SortFlags fileListSortFlags();
     static QFileInfoList fileList(const QDir &dir);
-    int indexOfFileInFileDialogListView(const QString &filePath) const;
-    void updateFileDialogListViewCurrentIndex(int newCurrentIndex);
+    void setFileDialogListViewCurrentIndex(int newCurrentIndex);
+    void tryUpdateFileDialogListViewCurrentIndex(int newCurrentIndex);
+    void fileDialogListViewCountChanged();
 
     void handleAccept() override;
     void handleClick(QQuickAbstractButton *button) override;
@@ -58,6 +60,8 @@ public:
     QString acceptLabel;
     QString rejectLabel;
     bool setCurrentIndexToInitiallySelectedFile = false;
+    QFileInfoList cachedFileList;
+    int pendingCurrentIndexToSet = -1;
 };
 
 class QQuickFileDialogImplAttachedPrivate : public QObjectPrivate
