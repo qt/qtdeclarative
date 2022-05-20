@@ -42,6 +42,7 @@
 #include <qtqmlcompilerexports.h>
 
 #include <private/qqmljsscope_p.h>
+#include <QtCore/qset.h>
 
 #include <map>
 #include <unordered_map>
@@ -126,7 +127,8 @@ public:
     void registerElementPass(std::unique_ptr<ElementPass> pass);
     bool registerPropertyPass(std::shared_ptr<PropertyPass> pass, QAnyStringView moduleName,
                               QAnyStringView typeName,
-                              QAnyStringView propertyName = QAnyStringView());
+                              QAnyStringView propertyName = QAnyStringView(),
+                              bool allowInheritance = true);
     void analyze(const Element &root);
 
     bool hasImportedModule(QAnyStringView name) const;
@@ -134,8 +136,8 @@ public:
 private:
     friend struct ::QQmlJSTypePropagator;
 
-    std::vector<PropertyPass *> findPropertyUsePasses(const QQmlSA::Element &element,
-                                                      const QString &propertyName);
+    QSet<PropertyPass *> findPropertyUsePasses(const QQmlSA::Element &element,
+                                               const QString &propertyName);
 
     void analyzeWrite(const QQmlSA::Element &element, QString propertyName,
                       const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
@@ -153,12 +155,19 @@ private:
         bool isAttached;
     };
 
+    struct PropertyPassInfo
+    {
+        QStringList properties;
+        std::shared_ptr<PropertyPass> pass;
+        bool allowInheritance = true;
+    };
+
     void addBindingSourceLocations(const QQmlSA::Element &element,
                                    const QQmlSA::Element &scope = QQmlSA::Element(),
                                    const QString prefix = QString(), bool isAttached = false);
 
     std::vector<std::unique_ptr<ElementPass>> m_elementPasses;
-    std::multimap<std::pair<QString, QString>, std::shared_ptr<PropertyPass>> m_propertyPasses;
+    std::multimap<QString, PropertyPassInfo> m_propertyPasses;
     std::unordered_map<quint32, BindingInfo> m_bindingsByLocation;
     QQmlJSImportVisitor *m_visitor;
     QQmlJSTypeResolver *m_typeResolver;

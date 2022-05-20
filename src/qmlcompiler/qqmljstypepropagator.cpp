@@ -97,6 +97,12 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
 
 void QQmlJSTypePropagator::generate_Ret()
 {
+    if (m_passManager != nullptr && m_function->isProperty) {
+        m_passManager->analyzeBinding(m_function->qmlScope,
+                                      m_typeResolver->containedType(m_state.accumulatorIn()),
+                                      getCurrentBindingSourceLocation());
+    }
+
     if (m_function->isSignalHandler) {
         // Signal handlers cannot return anything.
     } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()
@@ -123,12 +129,6 @@ void QQmlJSTypePropagator::generate_Ret()
             addReadAccumulator(m_state.accumulatorIn());
         else
             addReadAccumulator(m_returnType);
-    }
-
-    if (m_passManager != nullptr && m_function->isProperty) {
-        m_passManager->analyzeBinding(m_function->qmlScope,
-                                      m_typeResolver->containedType(m_state.accumulatorIn()),
-                                      getCurrentBindingSourceLocation());
     }
 
     m_state.setHasSideEffects(true);

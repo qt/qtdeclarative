@@ -32,6 +32,7 @@
 #include "qqmljslogger_p.h"
 #include "qqmljstyperesolver_p.h"
 #include "qqmljsimportvisitor_p.h"
+#include "qqmljsutils_p.h"
 
 #include <memory>
 
@@ -101,7 +102,7 @@ static QString lookupName(const QQmlSA::Element &element, LookupMode mode = Look
 
 bool PassManager::registerPropertyPass(std::shared_ptr<PropertyPass> pass,
                                        QAnyStringView moduleName, QAnyStringView typeName,
-                                       QAnyStringView propertyName)
+                                       QAnyStringView propertyName, bool allowInheritance)
 {
     QString name;
     if (!moduleName.isEmpty() && !typeName.isEmpty()) {
@@ -114,7 +115,11 @@ bool PassManager::registerPropertyPass(std::shared_ptr<PropertyPass> pass,
 
         name = lookupName(element, Register);
     }
-    m_propertyPasses.insert({ std::make_pair<>(name, propertyName.toString()), std::move(pass) });
+    const PassManager::PropertyPassInfo passInfo {
+        propertyName.isEmpty() ? QStringList {} : QStringList { propertyName.toString() },
+        std::move(pass), allowInheritance
+    };
+    m_propertyPasses.insert({ name, passInfo });
 
     return true;
 }
@@ -195,7 +200,7 @@ void PassManager::analyzeBinding(const Element &element, const QQmlSA::Element &
     for (PropertyPass *pass : findPropertyUsePasses(element, propertyName))
         pass->onBinding(element, propertyName, binding, bindingScope, value);
 
-    if (!info->second.isAttached)
+    if (!info->second.isAttached || bindingScope->baseType().isNull())
         return;
 
     for (PropertyPass *pass : findPropertyUsePasses(bindingScope->baseType(), propertyName))
@@ -207,20 +212,35 @@ bool PassManager::hasImportedModule(QAnyStringView module) const
     return m_visitor->imports().contains(u"$module$." + module.toString());
 }
 
-std::vector<PropertyPass *> PassManager::findPropertyUsePasses(const QQmlSA::Element &element,
-                                                               const QString &propertyName)
+QSet<PropertyPass *> PassManager::findPropertyUsePasses(const QQmlSA::Element &element,
+                                                        const QString &propertyName)
 {
-    const QString typeName = lookupName(element);
-    std::vector<PropertyPass *> passes;
-    for (const auto &key :
-         { std::make_pair<>(typeName, propertyName), std::make_pair<>(QString(), propertyName),
-           std::make_pair<>(typeName, QString()) }) {
-        auto pass = m_propertyPasses.equal_range(key);
-        if (pass.first == pass.second)
-            continue;
+    QStringList typeNames { lookupName(element) };
 
-        for (auto it = pass.first; it != pass.second; it++)
-            passes.push_back(it->second.get());
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            element, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind mode) {
+                Q_UNUSED(mode);
+                typeNames.append(lookupName(scope));
+                return false;
+            });
+
+    QSet<PropertyPass *> passes;
+
+    for (const QString &typeName : typeNames) {
+        for (auto &pass :
+             { m_propertyPasses.equal_range(u""_s), m_propertyPasses.equal_range(typeName) }) {
+            if (pass.first == pass.second)
+                continue;
+
+            for (auto it = pass.first; it != pass.second; it++) {
+                if (typeName != typeNames.constFirst() && !it->second.allowInheritance)
+                    continue;
+                if (it->second.properties.isEmpty()
+                    || it->second.properties.contains(propertyName)) {
+                    passes.insert(it->second.pass.get());
+                }
+            }
+        }
     }
     return passes;
 }
