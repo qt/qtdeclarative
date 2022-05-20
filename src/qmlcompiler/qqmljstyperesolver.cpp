@@ -215,10 +215,7 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
         if (result == boolType())
             return QQmlJSRegisterContent::create(intType(), intType(),
                                                  QQmlJSRegisterContent::Builtin);
-        if (isNumeric(result))
-            return QQmlJSRegisterContent::create(realType(), realType(),
-                                                 QQmlJSRegisterContent::Builtin);
-        return QQmlJSRegisterContent::create(jsPrimitiveType(), realType(),
+        return QQmlJSRegisterContent::create(realType(), realType(),
                                              QQmlJSRegisterContent::Builtin);
     }
     case QSOperator::Op::Mul:
@@ -226,9 +223,7 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
     case QSOperator::Op::Exp:
     case QSOperator::Op::Mod:
         return QQmlJSRegisterContent::create(
-                isNumeric(merge(containedType(left), containedType(right))) ? realType()
-                                                                            : jsPrimitiveType(),
-                realType(), QQmlJSRegisterContent::Builtin);
+                realType(), realType(), QQmlJSRegisterContent::Builtin);
     case QSOperator::Op::As:
         return right;
     default:
