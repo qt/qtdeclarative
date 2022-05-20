@@ -4931,7 +4931,7 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         const int nextRow = d->nextVisibleEdgeIndex(Qt::TopEdge, currentCell.y() - 1);
         if (nextRow == kEdgeIndexAtEnd)
             break;
-        const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow - 1) ? topMargin() : 0;
+        const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow - 1) ? -topMargin() : 0;
         positionViewAtRow(nextRow, Contain, marginY);
         endMoveCurrentIndex({currentCell.x(), nextRow});
         break; }
@@ -4940,7 +4940,7 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         const int nextRow = d->nextVisibleEdgeIndex(Qt::BottomEdge, currentCell.y() + 1);
         if (nextRow == kEdgeIndexAtEnd)
             break;
-        const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow + 1) ? bottomMargin() : 0;
+        const qreal marginY = d->atTableEnd(Qt::BottomEdge, nextRow + 1) ? bottomMargin() : 0;
         positionViewAtRow(nextRow, Contain, marginY);
         endMoveCurrentIndex({currentCell.x(), nextRow});
         break; }
@@ -4949,7 +4949,7 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         const int nextColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, currentCell.x() - 1);
         if (nextColumn == kEdgeIndexAtEnd)
             break;
-        const qreal marginX = d->atTableEnd(Qt::LeftEdge, nextColumn - 1) ? leftMargin() : 0;
+        const qreal marginX = d->atTableEnd(Qt::LeftEdge, nextColumn - 1) ? -leftMargin() : 0;
         positionViewAtColumn(nextColumn, Contain, marginX);
         endMoveCurrentIndex({nextColumn, currentCell.y()});
         break; }
@@ -4958,7 +4958,7 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         const int nextColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, currentCell.x() + 1);
         if (nextColumn == kEdgeIndexAtEnd)
             break;
-        const qreal marginX = d->atTableEnd(Qt::LeftEdge, nextColumn + 1) ? leftMargin() : 0;
+        const qreal marginX = d->atTableEnd(Qt::RightEdge, nextColumn + 1) ? rightMargin() : 0;
         positionViewAtColumn(nextColumn, Contain, marginX);
         endMoveCurrentIndex({nextColumn, currentCell.y()});
         break; }

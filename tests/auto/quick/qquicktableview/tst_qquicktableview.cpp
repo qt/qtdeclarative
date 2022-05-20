@@ -227,6 +227,7 @@ private slots:
     void setCurrentIndexOnFirstKeyPress_data();
     void setCurrentIndexOnFirstKeyPress();
     void setCurrentIndexFromMouse();
+    void showMarginsWhenNavigatingToEnd();
     void disableKeyNavigation();
     void disablePointerNavigation();
     void selectUsingArrowKeys();
@@ -4697,6 +4698,56 @@ void tst_QQuickTableView::setCurrentIndexFromMouse()
     QVERIFY(itemAtEnd->property(kCurrent).toBool());
     QCOMPARE(tableView->currentColumn(), cellAtEnd.x());
     QCOMPARE(tableView->currentRow(), cellAtEnd.y());
+}
+
+void tst_QQuickTableView::showMarginsWhenNavigatingToEnd()
+{
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setAnimate(false);
+    tableView->setFocus(true);
+
+    QQuickWindow *window = tableView->window();
+
+    WAIT_UNTIL_POLISHED;
+
+    const qreal margin = 10;
+    tableView->setLeftMargin(margin);
+    tableView->setRightMargin(margin);
+    tableView->setTopMargin(margin);
+    tableView->setBottomMargin(margin);
+
+    selectionModel.setCurrentIndex(tableView->modelIndex(QPoint(1, 1)), QItemSelectionModel::NoUpdate);
+
+    // move to cell 0, 1
+    QCOMPARE(tableView->contentX(), 0);
+    QTest::keyPress(window, Qt::Key_Left);
+    QCOMPARE(tableView->contentX(), -margin);
+
+    // move to cell 0, 0
+    QCOMPARE(tableView->contentY(), 0);
+    QTest::keyPress(window, Qt::Key_Up);
+    QCOMPARE(tableView->contentY(), -margin);
+
+    selectionModel.setCurrentIndex(tableView->modelIndex(QPoint(38, 38)), QItemSelectionModel::NoUpdate);
+    tableView->positionViewAtCell(tableView->cellAtIndex(selectionModel.currentIndex()), QQuickTableView::Contain);
+
+    WAIT_UNTIL_POLISHED;
+
+    // move to cell 39, 38
+    QTest::keyPress(window, Qt::Key_Right);
+    const qreal cellRightEdge = tableViewPrivate->loadedTableOuterRect.right();
+    QCOMPARE(tableView->contentX(), cellRightEdge + margin - tableView->width());
+
+    // move to cell 39, 39
+    QTest::keyPress(window, Qt::Key_Down);
+    const qreal cellBottomEdge = tableViewPrivate->loadedTableOuterRect.bottom();
+    QCOMPARE(tableView->contentY(), cellBottomEdge + margin - tableView->height());
 }
 
 void tst_QQuickTableView::disablePointerNavigation()
