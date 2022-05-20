@@ -1685,7 +1685,13 @@ QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
     const auto *exprStatement = cast<const ExpressionStatement *>(statement);
 
     if (exprStatement == nullptr) {
-        QQmlJSMetaPropertyBinding binding(statement->firstSourceLocation(), name);
+        QQmlJS::SourceLocation location = statement->firstSourceLocation();
+
+        if (const auto *block = cast<const Block *>(statement); block && block->statements) {
+            location = block->statements->firstSourceLocation();
+        }
+
+        QQmlJSMetaPropertyBinding binding(location, name);
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
                                  QQmlJSMetaPropertyBinding::Script_PropertyBinding);
         m_currentScope->addOwnPropertyBinding(binding);
