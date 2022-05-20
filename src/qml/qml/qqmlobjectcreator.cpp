@@ -1426,7 +1426,7 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         data->clearPendingBindingBit(b->targetPropertyIndex().coreIndex());
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                       QQmlPropertyData::DontRemoveBinding);
-        if (b->kind() == QQmlAbstractBinding::Binding) {
+        if (b->kind() == QQmlAbstractBinding::QmlBinding) {
             QQmlBinding *binding = static_cast<QQmlBinding*>(b.data());
             if (!binding->hasError() && !binding->hasDependencies()
                     && !binding->hasUnresolvedNames()) {

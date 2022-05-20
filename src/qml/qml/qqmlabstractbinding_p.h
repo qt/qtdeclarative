@@ -67,7 +67,8 @@ protected:
 public:
     enum Kind {
         ValueTypeProxy,
-        Binding,
+        QmlBinding,
+        PropertyToPropertyBinding,
     };
 
     virtual ~QQmlAbstractBinding();
@@ -87,17 +88,23 @@ public:
     // binding is not enabled or added to the object.
     QObject *targetObject() const { return m_target.data(); }
 
+    void setTarget(const QQmlProperty &);
+    bool setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);
+    bool setTarget(QObject *, int coreIndex, bool coreIsAlias, int valueTypeIndex);
+
     virtual void setEnabled(bool e, QQmlPropertyData::WriteFlags f = QQmlPropertyData::DontRemoveBinding) = 0;
 
     void addToObject();
     void removeFromObject();
 
-    static void printBindingLoopError(QQmlProperty &prop);
+    static void printBindingLoopError(const QQmlProperty &prop);
 
     inline QQmlAbstractBinding *nextBinding() const;
 
     inline bool canUseAccessor() const
     { return m_nextBinding.tag().testFlag(CanUseAccessor); }
+    void setCanUseAccessor(bool canUseAccessor)
+    { m_nextBinding.setTag(m_nextBinding.tag().setFlag(CanUseAccessor, canUseAccessor)); }
 
     struct RefCount {
         RefCount() {}
@@ -131,6 +138,15 @@ protected:
     inline bool isAddedToObject() const;
 
     inline void setNextBinding(QQmlAbstractBinding *);
+
+    void getPropertyData(
+            const QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const;
+
+    inline bool updatingFlag() const;
+    inline void setUpdatingFlag(bool);
+    inline bool enabledFlag() const;
+    inline void setEnabledFlag(bool);
+    void updateCanUseAccessor();
 
     QQmlPropertyIndex m_targetIndex;
 
@@ -166,6 +182,26 @@ void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)
     if (m_nextBinding.data() && !m_nextBinding->ref.deref())
         delete m_nextBinding.data();
     m_nextBinding = b;
+}
+
+bool QQmlAbstractBinding::updatingFlag() const
+{
+    return m_target.tag().testFlag(UpdatingBinding);
+}
+
+void QQmlAbstractBinding::setUpdatingFlag(bool v)
+{
+    m_target.setTag(m_target.tag().setFlag(UpdatingBinding, v));
+}
+
+bool QQmlAbstractBinding::enabledFlag() const
+{
+    return m_target.tag().testFlag(BindingEnabled);
+}
+
+void QQmlAbstractBinding::setEnabledFlag(bool v)
+{
+    m_target.setTag(m_target.tag().setFlag(BindingEnabled, v));
 }
 
 QT_END_NAMESPACE

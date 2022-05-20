@@ -91,7 +91,8 @@ public:
         None = 0,
         QQmlBoundSignal = 1,
         QQmlJavaScriptExpressionGuard = 2,
-        QQmlVMEMetaObjectEndpoint = 3
+        QQmlVMEMetaObjectEndpoint = 3,
+        QQmlPropertyGuard = 4,
     };
 
     inline QQmlNotifierEndpoint(Callback callback);

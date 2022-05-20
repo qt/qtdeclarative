@@ -665,12 +665,7 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
     const bool wasEnabled = enabledFlag();
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
-
-    m_nextBinding.setTag(m_nextBinding.tag().setFlag(CanUseAccessor)); // Always use accessors, only not when:
-    if (auto interceptorMetaObject = QQmlInterceptorMetaObject::get(targetObject())) {
-        if (!m_targetIndex.isValid() || interceptorMetaObject->intercepts(m_targetIndex))
-            m_nextBinding.setTag(m_nextBinding.tag().setFlag(CanUseAccessor, false));
-    }
+    updateCanUseAccessor();
 
     if (e && !wasEnabled)
         update(flags);
@@ -679,85 +674,6 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
 QString QQmlBinding::expression() const
 {
     return QStringLiteral("function() { [native code] }");
-}
-
-void QQmlBinding::setTarget(const QQmlProperty &prop)
-{
-    auto pd = QQmlPropertyPrivate::get(prop);
-    setTarget(prop.object(), pd->core, &pd->valueTypeData);
-}
-
-bool QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const QQmlPropertyData *valueType)
-{
-    return setTarget(object, core.coreIndex(), core.isAlias(),
-                     valueType ? valueType->coreIndex() : -1);
-}
-
-bool QQmlBinding::setTarget(QObject *object, int coreIndex, bool coreIsAlias, int valueTypeIndex)
-{
-    m_target = object;
-
-    if (!object) {
-        m_targetIndex = QQmlPropertyIndex();
-        return false;
-    }
-
-    for (bool isAlias = coreIsAlias; isAlias;) {
-        QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
-
-        int aValueTypeIndex;
-        if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
-            // can't resolve id (yet)
-            m_target = nullptr;
-            m_targetIndex = QQmlPropertyIndex();
-            return false;
-        }
-        if (valueTypeIndex == -1)
-            valueTypeIndex = aValueTypeIndex;
-
-        QQmlData *data = QQmlData::get(object, false);
-        if (!data || !data->propertyCache) {
-            m_target = nullptr;
-            m_targetIndex = QQmlPropertyIndex();
-            return false;
-        }
-        const QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
-        Q_ASSERT(propertyData);
-
-        m_target = object;
-        isAlias = propertyData->isAlias();
-        coreIndex = propertyData->coreIndex();
-    }
-    m_targetIndex = QQmlPropertyIndex(coreIndex, valueTypeIndex);
-
-    QQmlData *data = QQmlData::get(m_target.data(), true);
-    if (!data->propertyCache)
-        data->propertyCache = QQmlMetaType::propertyCache(m_target->metaObject());
-
-    return true;
-}
-
-void QQmlBinding::getPropertyData(const QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const
-{
-    Q_ASSERT(propertyData);
-
-    QQmlData *data = QQmlData::get(m_target.data(), false);
-    Q_ASSERT(data);
-
-    if (Q_UNLIKELY(!data->propertyCache))
-        data->propertyCache = QQmlMetaType::propertyCache(m_target->metaObject());
-
-    *propertyData = data->propertyCache->property(m_targetIndex.coreIndex());
-    Q_ASSERT(*propertyData);
-
-    if (Q_UNLIKELY(m_targetIndex.hasValueTypeIndex() && valueTypeData)) {
-        const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType((*propertyData)->propType());
-        Q_ASSERT(valueTypeMetaObject);
-        QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
-        valueTypeData->setFlags(QQmlPropertyData::flagsForProperty(vtProp));
-        valueTypeData->setPropType(vtProp.metaType());
-        valueTypeData->setCoreIndex(m_targetIndex.valueTypeIndex());
-    }
 }
 
 QVector<QQmlProperty> QQmlBinding::dependencies() const

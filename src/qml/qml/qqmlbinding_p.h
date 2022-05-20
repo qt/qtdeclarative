@@ -95,16 +95,11 @@ public:
             const QV4::CompiledData::Binding *binding, QObject *obj,
             const QQmlRefPointer<QQmlContextData> &ctxt);
 
-    Kind kind() const final { return QQmlAbstractBinding::Binding; }
+    Kind kind() const final { return QQmlAbstractBinding::QmlBinding; }
 
     ~QQmlBinding() override;
 
     bool mustCaptureBindableProperty() const final {return true;}
-
-    void setTarget(const QQmlProperty &);
-    bool setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);
-    bool setTarget(QObject *, int coreIndex, bool coreIsAlias, int valueTypeIndex);
-
     void refresh() override;
 
     void setEnabled(bool, QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding) override;
@@ -142,7 +137,6 @@ protected:
     virtual void doUpdate(const DeleteWatcher &watcher,
                           QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) = 0;
 
-    void getPropertyData(const QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const;
     int getPropertyType() const;
 
     bool slowWrite(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
@@ -158,11 +152,6 @@ protected:
     }
 
 private:
-    inline bool updatingFlag() const;
-    inline void setUpdatingFlag(bool);
-    inline bool enabledFlag() const;
-    inline void setEnabledFlag(bool);
-
     static QQmlBinding *newBinding(const QQmlPropertyData *property);
     static QQmlBinding *newBinding(QMetaType propertyType);
 
@@ -170,26 +159,6 @@ private:
     QV4::PersistentValue m_boundFunction; // used for Qt.binding() that are created from a bound function object
     void handleWriteError(const void *result, QMetaType resultType, QMetaType metaType);
 };
-
-bool QQmlBinding::updatingFlag() const
-{
-    return m_target.tag().testFlag(UpdatingBinding);
-}
-
-void QQmlBinding::setUpdatingFlag(bool v)
-{
-    m_target.setTag(m_target.tag().setFlag(UpdatingBinding, v));
-}
-
-bool QQmlBinding::enabledFlag() const
-{
-    return m_target.tag().testFlag(BindingEnabled);
-}
-
-void QQmlBinding::setEnabledFlag(bool v)
-{
-    m_target.setTag(m_target.tag().setFlag(BindingEnabled, v));
-}
 
 QT_END_NAMESPACE
 

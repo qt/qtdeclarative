@@ -555,7 +555,7 @@ void QObjectWrapper::setProperty(
 
     if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
         if (auto binding = QQmlPropertyPrivate::binding(object, QQmlPropertyIndex(property->coreIndex()))) {
-            Q_ASSERT(binding->kind() == QQmlAbstractBinding::Binding);
+            Q_ASSERT(binding->kind() == QQmlAbstractBinding::QmlBinding);
             const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
             const auto stackFrame = engine->currentStackFrame;
             qCInfo(lcBindingRemoval,

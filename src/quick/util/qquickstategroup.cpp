@@ -386,7 +386,7 @@ bool QQuickStateGroupPrivate::updateAutoState()
                 // if there is a binding, the value in when might not be up-to-date at this point
                 // so we manually re-evaluate the binding
                 QQmlAbstractBinding *abstractBinding = potentialWhenBinding.asAbstractBinding();
-                if (abstractBinding && abstractBinding->kind() == QQmlAbstractBinding::Binding) {
+                if (abstractBinding && abstractBinding->kind() == QQmlAbstractBinding::QmlBinding) {
                     QQmlBinding *binding = static_cast<QQmlBinding *>(abstractBinding);
                     if (binding->hasValidContext())
                         whenValue = binding->evaluate().toBool();

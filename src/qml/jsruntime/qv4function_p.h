@@ -127,8 +127,6 @@ public:
                             const QQmlPrivate::AOTCompiledFunction *aotFunction);
     void destroy();
 
-    bool isSyntheticAotFunction() const { return codeData == nullptr && aotFunction != nullptr; }
-
     // used when dynamically assigning signal handlers (QQmlConnection)
     void updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters);
 
@@ -154,18 +152,6 @@ public:
             return nullptr;
         return executableCompilationUnit()->runtimeFunctions[compiledFunction->nestedFunctionIndex];
     }
-};
-
-struct SyntheticAotFunction : public Function
-{
-    SyntheticAotFunction(ExecutionEngine *engine, QQmlPrivate::AOTCompiledFunction aotFunction)
-        : Function(engine, &m_aotFunction)
-        , m_aotFunction(std::move(aotFunction))
-    {
-    }
-
-private:
-    QQmlPrivate::AOTCompiledFunction m_aotFunction;
 };
 
 }

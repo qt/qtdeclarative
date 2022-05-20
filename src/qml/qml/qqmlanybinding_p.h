@@ -273,7 +273,7 @@ public:
     bool hasError() {
         if (isAbstractPropertyBinding()) {
             auto abstractBinding = asAbstractBinding();
-            if (abstractBinding->kind() != QQmlAbstractBinding::Binding)
+            if (abstractBinding->kind() != QQmlAbstractBinding::QmlBinding)
                 return false;
             return static_cast<QQmlBinding *>(abstractBinding)->hasError();
         } else {

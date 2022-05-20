@@ -49,12 +49,14 @@ typedef void (*Callback)(QQmlNotifierEndpoint *, void **);
 void QQmlBoundSignal_callback(QQmlNotifierEndpoint *, void **);
 void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
 void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *, void **);
+void QQmlPropertyGuard_callback(QQmlNotifierEndpoint *, void **);
 
 static Callback QQmlNotifier_callbacks[] = {
     nullptr,
     QQmlBoundSignal_callback,
     QQmlJavaScriptExpressionGuard_callback,
-    QQmlVMEMetaObjectEndpoint_callback
+    QQmlVMEMetaObjectEndpoint_callback,
+    QQmlPropertyGuard_callback
 };
 
 namespace {

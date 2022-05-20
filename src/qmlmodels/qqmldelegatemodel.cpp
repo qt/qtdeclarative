@@ -49,6 +49,7 @@
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlpropertytopropertybinding_p.h>
 #include <private/qjsvalue_p.h>
 
 #include <private/qv4value_p.h>
@@ -940,24 +941,6 @@ static bool isDoneIncubating(QQmlIncubator::Status status)
      return status == QQmlIncubator::Ready || status == QQmlIncubator::Error;
 }
 
-static void bindingFunction(
-        const QQmlPrivate::AOTCompiledContext *context, void *resultPtr, void **)
-{
-    // metaCall expects initialized memory, the AOT function passes uninitialized memory.
-    QObject *scopeObject = context->qmlScopeObject;
-    const int propertyIndex = context->extraData;
-    const QMetaObject *metaObject = scopeObject->metaObject();
-    const QMetaProperty property = metaObject->property(propertyIndex);
-    property.metaType().construct(resultPtr);
-
-    context->qmlEngine()->captureProperty(scopeObject, property);
-
-    int status = -1;
-    int flags = 0;
-    void *argv[] = { resultPtr, nullptr, &status, &flags };
-    metaObject->metacall(scopeObject, QMetaObject::ReadProperty, propertyIndex, argv);
-}
-
 void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
 {
     auto incubatorPriv = QQmlIncubatorPrivate::get(this);
@@ -1022,18 +1005,9 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
                             object, propName, requiredProperties,
                             engine, &wasInRequired);
                 if (wasInRequired) {
-                    QV4::SyntheticAotFunction *function = new QV4::SyntheticAotFunction(
-                            engine->handle(), QQmlPrivate::AOTCompiledFunction {
-                                i, prop.metaType(), {}, bindingFunction
-                            });
-
-                    if (!qmlContext) {
-                        qmlContext = QV4::QmlContext::create(
-                                v4->rootContext(), contextData, itemOrProxy);
-                    }
-
-                    QQmlAnyBinding binding = QQmlAnyBinding::createFromFunction(
-                                targetProp, function, itemOrProxy, contextData, qmlContext);
+                    QQmlAnyBinding binding;
+                    binding = new QQmlPropertyToPropertyBinding(
+                            engine, itemOrProxy, i, targetProp.object(), targetProp.index());
                     binding.installOn(targetProp);
                 }
             }
