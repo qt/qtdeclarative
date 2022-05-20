@@ -249,19 +249,6 @@ public:
     { return QQuickDeliveryAgentPrivate::dragOverThreshold(d, axis, event, startDragThreshold); }
     void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason)
     { deliveryAgentPrivate()->clearFocusInScope(scope, item, reason); }
-    void handleTouchEvent(QTouchEvent *e)
-    {
-        // setup currentEventDeliveryAgent like in  QQuickDeliveryAgent::event
-        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = deliveryAgentPrivate()->q_func();
-        deliveryAgentPrivate()->handleTouchEvent(e);
-        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = nullptr;
-    }
-    void handleMouseEvent(QMouseEvent *e)
-    {
-        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = deliveryAgentPrivate()->q_func();
-        deliveryAgentPrivate()->handleMouseEvent(e);
-        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = nullptr;
-    }
     // ^^^ currently in use in Controls 2; TODO remove
 
     // data property

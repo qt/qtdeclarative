@@ -546,7 +546,10 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
             }
         }
 
-        QQuickWindowPrivate::get(d->window)->handleTouchEvent(static_cast<QTouchEvent *>(event));
+        // setup currentEventDeliveryAgent like in QQuickDeliveryAgent::event
+        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = d->deliveryAgent();
+        d->deliveryAgentPrivate()->handleTouchEvent(static_cast<QTouchEvent *>(event));
+        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = nullptr;
 
         // If a touch event hasn't been accepted after being delivered, there
         // were no items interested in touch events at any of the touch points.
@@ -563,7 +566,10 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
 #endif
             emit pressed();
 
-        QQuickWindowPrivate::get(d->window)->handleMouseEvent(static_cast<QMouseEvent *>(event));
+        // setup currentEventDeliveryAgent like in QQuickDeliveryAgent::event
+        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = d->deliveryAgent();
+        d->deliveryAgentPrivate()->handleMouseEvent(static_cast<QMouseEvent *>(event));
+        QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = nullptr;
 
         // If a mouse event hasn't been accepted after being delivered, there
         // was no item interested in mouse events at the mouse point. Make sure
