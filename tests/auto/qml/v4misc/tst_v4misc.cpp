@@ -177,6 +177,10 @@ void tst_v4misc::subClassing()
 
 void tst_v4misc::nestingDepth()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("tst_v4misc::nestingDepth crashes on Android, see QTBUG-103743.");
+#endif
+
     { // left recursive
         QString s(40000, '`');
 
