@@ -46,10 +46,13 @@ using namespace QLspSpecification;
 
 class tst_QmllsCompletions : public QQmlDataTest
 {
+    using ExpectedCompletion = QPair<QString, CompletionItemKind>;
+    using ExpectedCompletions = QList<ExpectedCompletion>;
+
     Q_OBJECT
 public:
     tst_QmllsCompletions();
-    void checkCompletions(QByteArray uri, int lineNr, int character, QStringList expected,
+    void checkCompletions(QByteArray uri, int lineNr, int character, ExpectedCompletions expected,
                           QStringList notExpected);
 private slots:
     void initTestCase() final;
@@ -134,49 +137,106 @@ void tst_QmllsCompletions::completions_data()
     QTest::addColumn<QByteArray>("uri");
     QTest::addColumn<int>("lineNr");
     QTest::addColumn<int>("character");
-    QTest::addColumn<QStringList>("expected");
+    QTest::addColumn<ExpectedCompletions>("expected");
     QTest::addColumn<QStringList>("notExpected");
 
     QByteArray uri = testFileUrl("completions/Yyy.qml").toString().toUtf8();
+
     QTest::newRow("objEmptyLine") << uri << 7 << 0
-                                  << QStringList({ u"Rectangle"_s, u"property"_s, u"width"_s,
-                                                   u"function"_s })
+                                  << ExpectedCompletions({
+                                             { u"Rectangle"_s, CompletionItemKind::Field },
+                                             { u"property"_s, CompletionItemKind::Keyword },
+                                             { u"width"_s, CompletionItemKind::Property },
+                                             { u"function"_s, CompletionItemKind::Keyword },
+                                     })
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s });
-    QTest::newRow("inBindingLabel")
-            << uri << 4 << 9 << QStringList({ u"Rectangle"_s, u"property"_s, u"width"_s })
-            << QStringList({ u"QtQuick"_s, u"vector4d"_s });
+
+    QTest::newRow("inBindingLabel") << uri << 4 << 9
+                                    << ExpectedCompletions({
+                                               { u"Rectangle"_s, CompletionItemKind::Field },
+                                               { u"property"_s, CompletionItemKind::Keyword },
+                                               { u"width"_s, CompletionItemKind::Property },
+                                       })
+                                    << QStringList({ u"QtQuick"_s, u"vector4d"_s });
+
     QTest::newRow("afterBinding") << uri << 4 << 10
-                                  << QStringList({ u"Rectangle"_s, u"width"_s, u"vector4d"_s })
+                                  << ExpectedCompletions({
+                                             { u"Rectangle"_s, CompletionItemKind::Field },
+                                             { u"width"_s, CompletionItemKind::Field },
+                                             { u"vector4d"_s, CompletionItemKind::Field },
+                                     })
                                   << QStringList({ u"QtQuick"_s, u"property"_s });
-    QTest::newRow("afterId") // suppress?
-            << uri << 3 << 7 << QStringList({ u"import"_s })
-            << QStringList(
-                       { u"QtQuick"_s, u"property"_s, u"Rectangle"_s, u"width"_s, u"vector4d"_s });
-    QTest::newRow("fileStart") << uri << 0 << 0 << QStringList({ u"Rectangle"_s, u"import"_s })
+
+    // suppress?
+    QTest::newRow("afterId") << uri << 3 << 7
+                             << ExpectedCompletions({
+                                        { u"import"_s, CompletionItemKind::Keyword },
+                                })
+                             << QStringList({ u"QtQuick"_s, u"property"_s, u"Rectangle"_s,
+                                              u"width"_s, u"vector4d"_s });
+
+    QTest::newRow("fileStart") << uri << 0 << 0
+                               << ExpectedCompletions({
+                                          { u"Rectangle"_s, CompletionItemKind::Field },
+                                          { u"import"_s, CompletionItemKind::Keyword },
+                                  })
                                << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s });
-    QTest::newRow("importImport") << uri << 0 << 3 << QStringList({ u"Rectangle"_s, u"import"_s })
+
+    QTest::newRow("importImport") << uri << 0 << 3
+                                  << ExpectedCompletions({
+                                             { u"Rectangle"_s, CompletionItemKind::Field },
+                                             { u"import"_s, CompletionItemKind::Keyword },
+                                     })
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s });
+
     QTest::newRow("importModuleStart")
-            << uri << 0 << 7 << QStringList({ u"QtQuick"_s })
+            << uri << 0 << 7
+            << ExpectedCompletions({
+                       { u"QtQuick"_s, CompletionItemKind::Module },
+               })
             << QStringList({ u"vector4d"_s, u"width"_s, u"Rectangle"_s, u"import"_s });
+
     QTest::newRow("importVersionStart")
-            << uri << 0 << 15 << QStringList({ u"2"_s, u"as"_s })
+            << uri << 0 << 15
+            << ExpectedCompletions({
+                       { u"2"_s, CompletionItemKind::Constant },
+                       { u"as"_s, CompletionItemKind::Keyword },
+               })
             << QStringList({ u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s });
-    //    QTest::newRow("importVersionMinor") << uri << 0 << 17 << QStringList({u"15"_s})
-    //                                  << QStringList({u"as"_s, u"Rectangle"_s, u"import"_s,
-    //                                  u"vector4d"_s, u"width"_s});
+
+    // QTest::newRow("importVersionMinor")
+    //         << uri << 0 << 17
+    //         << ExpectedCompletions({
+    //                    { u"15"_s, CompletionItemKind::Constant },
+    //            })
+    //         << QStringList({ u"as"_s, u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s });
+
     QTest::newRow("inScript") << uri << 5 << 14
-                              << QStringList({ u"Rectangle"_s, u"vector4d"_s, u"lala()"_s,
-                                               u"width"_s })
+                              << ExpectedCompletions({
+                                         { u"Rectangle"_s, CompletionItemKind::Field },
+                                         { u"vector4d"_s, CompletionItemKind::Field },
+                                         { u"lala()"_s, CompletionItemKind{ 0 } },
+                                         { u"width"_s, CompletionItemKind::Field },
+                                 })
                               << QStringList({ u"import"_s });
-    QTest::newRow("expandBase1") << uri << 8 << 23 << QStringList({ u"width"_s, u"foo"_s })
+
+    QTest::newRow("expandBase1") << uri << 8 << 23
+                                 << ExpectedCompletions({
+                                            { u"width"_s, CompletionItemKind::Field },
+                                            { u"foo"_s, CompletionItemKind::Field },
+                                    })
                                  << QStringList({ u"import"_s, u"Rectangle"_s });
-    QTest::newRow("expandBase2") << uri << 9 << 29 << QStringList({ u"width"_s, u"color"_s })
+
+    QTest::newRow("expandBase2") << uri << 9 << 29
+                                 << ExpectedCompletions({
+                                            { u"width"_s, CompletionItemKind::Field },
+                                            { u"color"_s, CompletionItemKind::Field },
+                                    })
                                  << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s });
 }
 
 void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int character,
-                                            QStringList expected, QStringList notExpected)
+                                            ExpectedCompletions expected, QStringList notExpected)
 {
     CompletionParams cParams;
     cParams.position.line = lineNr;
@@ -188,23 +248,58 @@ void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int char
     m_protocol.requestCompletion(
             cParams,
             [clean, uri, expected, notExpected](auto res) {
+                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
+
+                if (!cItems) {
+                    return;
+                }
+
                 QSet<QString> labels;
+
                 if (const QList<CompletionItem> *cItems =
                             std::get_if<QList<CompletionItem>>(&res)) {
-                    for (const CompletionItem &c : *cItems)
+                    for (const CompletionItem &c : *cItems) {
                         labels << c.label;
+                    }
                 }
-                for (const QString &exp : expected) {
-                    QVERIFY2(labels.contains(exp),
+                for (const ExpectedCompletion &exp : expected) {
+                    QVERIFY2(labels.contains(exp.first),
                              u"no %1 in %2"_s
-                                     .arg(exp,
+                                     .arg(exp.first,
                                           QStringList(labels.begin(), labels.end()).join(u", "_s))
                                      .toUtf8());
+                    if (labels.contains(exp.first)) {
+                        for (const CompletionItem &c : *cItems) {
+                            const auto kind = static_cast<CompletionItemKind>(c.kind->toInt());
+
+                            bool foundEntry = false;
+                            bool hasCorrectKind = false;
+                            for (const ExpectedCompletion &e : expected) {
+                                if (c.label == e.first) {
+                                    foundEntry = true;
+                                    hasCorrectKind |= kind == e.second;
+                                }
+                            }
+
+                            // Ignore QVERIFY for those completions not in the expected list.
+                            if (!foundEntry)
+                                continue;
+
+                            QVERIFY2(hasCorrectKind,
+                                     qPrintable(
+                                             QString::fromLatin1(
+                                                     "Completion item '%1' has wrong kind '%2'")
+                                                     .arg(c.label)
+                                                     .arg(QMetaEnum::fromType<CompletionItemKind>()
+                                                                  .valueToKey((int)kind))));
+                        }
+                    }
                 }
                 for (const QString &nexp : notExpected) {
                     QVERIFY2(!labels.contains(nexp),
                              u"found unexpected completion  %1"_s.arg(nexp).toUtf8());
                 }
+
                 clean();
             },
             [clean](const ResponseError &err) {
@@ -220,7 +315,7 @@ void tst_QmllsCompletions::completions()
     QFETCH(QByteArray, uri);
     QFETCH(int, lineNr);
     QFETCH(int, character);
-    QFETCH(QStringList, expected);
+    QFETCH(ExpectedCompletions, expected);
     QFETCH(QStringList, notExpected);
 
     checkCompletions(uri, lineNr, character, expected, notExpected);
@@ -230,7 +325,12 @@ void tst_QmllsCompletions::buildDir()
 {
     QString filePath = u"completions/fromBuildDir.qml"_s;
     QByteArray uri = testFileUrl(filePath).toString().toUtf8();
-    checkCompletions(uri, 3, 0, QStringList({ u"property"_s, u"function"_s, u"Rectangle"_s }),
+    checkCompletions(uri, 3, 0,
+                     ExpectedCompletions({
+                             { u"property"_s, CompletionItemKind::Keyword },
+                             { u"function"_s, CompletionItemKind::Keyword },
+                             { u"Rectangle"_s, CompletionItemKind::Field },
+                     }),
                      QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s }));
     Notifications::AddBuildDirsParams bDirs;
     UriToBuildDirs ub;
@@ -248,8 +348,13 @@ void tst_QmllsCompletions::buildDir()
     didChange.contentChanges.append(change);
     m_protocol.notifyDidChangeTextDocument(didChange);
     checkCompletions(uri, 3, 0,
-                     QStringList({ u"BuildDirType"_s, u"Rectangle"_s, u"property"_s, u"width"_s,
-                                   u"function"_s }),
+                     ExpectedCompletions({
+                             { u"BuildDirType"_s, CompletionItemKind::Field },
+                             { u"Rectangle"_s, CompletionItemKind::Field },
+                             { u"property"_s, CompletionItemKind::Keyword },
+                             { u"width"_s, CompletionItemKind::Property },
+                             { u"function"_s, CompletionItemKind::Keyword },
+                     }),
                      QStringList({ u"QtQuick"_s, u"vector4d"_s }));
 }
 void tst_QmllsCompletions::cleanupTestCase()
