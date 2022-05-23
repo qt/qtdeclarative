@@ -4109,7 +4109,6 @@ void QQuickTableViewPrivate::setCurrentIndexFromTap(const QPointF &pos)
     if (!cellIsValid(cell))
         return;
 
-    q->positionViewAtCell(cell, QQuickTableView::Contain);
     setCurrentIndex(cell);
 }
 
