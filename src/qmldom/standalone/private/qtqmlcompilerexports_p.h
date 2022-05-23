@@ -35,6 +35,18 @@
 **
 ** $QT_END_LICENSE$
 **/
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API. It exists purely as an
+// implementation detail. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include "../qqmldom_global.h"
 #ifndef QTQMLCOMPILEREXPORTS_P_H
 #define QTQMLCOMPILEREXPORTS_P_H
