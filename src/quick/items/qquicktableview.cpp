@@ -406,6 +406,29 @@
 */
 
 /*!
+    \qmlproperty bool QtQuick::TableView::alternatingRows
+
+    This property controls whether the background color of the rows should alternate.
+    The default value is style dependent.
+
+    \note This property is only a hint, and might therefore not be
+    respected by custom delegates. It's recommended that a delegate alternates
+    between \c palette.base and \c palette.alternateBase when this hint is
+    \c true, so that the colors can be set from outside of the delegate.
+    For example:
+
+    \code
+    background: Rectangle {
+        color: control.row === control.tableView.currentRow
+               ? control.palette.highlight
+               : (control.tableView.alternatingRows && control.row % 2 !== 0
+               ? control.palette.alternateBase
+               : control.palette.base)
+    }
+    \endcode
+*/
+
+/*!
     \qmlproperty int QtQuick::TableView::leftColumn
 
     This property holds the leftmost column that is currently visible inside the view.
@@ -4894,6 +4917,21 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         QQuickFlickable::keyPressEvent(e);
         break;
     }
+}
+
+bool QQuickTableView::alternatingRows() const
+{
+    return d_func()->alternatingRows;
+}
+
+void QQuickTableView::setAlternatingRows(bool alternatingRows)
+{
+    Q_D(QQuickTableView);
+    if (d->alternatingRows == alternatingRows)
+        return;
+
+    d->alternatingRows = alternatingRows;
+    emit alternatingRowsChanged();
 }
 
 class QObjectPrivate;

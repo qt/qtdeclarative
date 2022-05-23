@@ -230,6 +230,7 @@ private slots:
     void selectUsingHomeAndEndKeys();
     void selectUsingPageUpDownKeys();
     void testDeprecatedApi();
+    void alternatingRows();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -4946,6 +4947,18 @@ void tst_QQuickTableView::testDeprecatedApi()
 
     QCOMPARE(tableView->rightColumn(), model.columnCount() - 1);
     QCOMPARE(tableView->bottomRow(), model.rowCount() - 1);
+}
+
+void tst_QQuickTableView::alternatingRows()
+{
+    // Check that you can set 'alternate'
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    QVERIFY(tableView->alternatingRows());
+    tableView->setAlternatingRows(false);
+    QVERIFY(!tableView->alternatingRows());
+    tableView->setAlternatingRows(true);
+    QVERIFY(tableView->alternatingRows());
 }
 
 QTEST_MAIN(tst_QQuickTableView)

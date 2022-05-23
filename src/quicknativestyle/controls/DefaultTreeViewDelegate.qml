@@ -79,7 +79,9 @@ T.TreeViewDelegate {
     background: Rectangle {
         color: control.row === control.treeView.currentRow
                ? control.palette.highlight
-               : (control.row % 2 === 0 ? control.palette.base : control.palette.alternateBase)
+               : (control.treeView.alternatingRows && control.row % 2 !== 0
+               ? control.palette.alternateBase
+               : control.palette.base)
     }
 
     contentItem: Label {

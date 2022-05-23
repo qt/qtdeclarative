@@ -290,6 +290,7 @@ public:
     bool animate = true;
     bool keyNavigationEnabled = true;
     bool pointerNavigationEnabled = true;
+    bool alternatingRows = true;
 
     // isTransposed is currently only used by HeaderView.
     // Consider making it public.
