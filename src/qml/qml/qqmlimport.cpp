@@ -46,7 +46,6 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qpluginloader.h>
 #include <QtCore/qlibraryinfo.h>
-#include <QtCore/qreadwritelock.h>
 #include <QtQml/qqmlextensioninterface.h>
 #include <QtQml/qqmlextensionplugin.h>
 #include <private/qqmlextensionplugin_p.h>
