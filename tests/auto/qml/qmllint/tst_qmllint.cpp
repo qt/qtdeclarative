@@ -1535,13 +1535,9 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
 
     const auto toDescription = [](const QJsonArray &warnings, const QString &substring,
                                   quint32 line, quint32 column, bool must = true) {
-        // Note: this actually produces a very poorly formatted multi-line
-        // description, but this is how we also do it in cleanQmlCode test case,
-        // so this should suffice. in any case this mainly aids the debugging
-        // and CI stays (or should stay) clean.
-        QString msg = QStringLiteral("qmllint output '%1' %2 contain '%3'")
+        QString msg = QStringLiteral("qmllint output:\n%1\nIt %2 contain '%3'")
                               .arg(QString::fromUtf8(
-                                           QJsonDocument(warnings).toJson(QJsonDocument::Compact)),
+                                           QJsonDocument(warnings).toJson(QJsonDocument::Indented)),
                                    must ? u"must" : u"must NOT", substring);
         if (line != 0 || column != 0)
             msg += u" (%1:%2)"_s.arg(line).arg(column);
@@ -1551,11 +1547,11 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
 
     if (shouldContain == StringContained) {
         if (!contains)
-            qWarning() << toDescription(warnings, substring, line, column);
+            qWarning().noquote() << toDescription(warnings, substring, line, column);
         QVERIFY(contains);
     } else {
         if (contains)
-            qWarning() << toDescription(warnings, substring, line, column, false);
+            qWarning().noquote() << toDescription(warnings, substring, line, column, false);
         QVERIFY(!contains);
     }
 }
