@@ -32,64 +32,7 @@
 \title qt_target_compile_qml_to_cpp
 \target qt6_target_compile_qml_to_cpp
 
-\brief Compiles QML files (.qml) to C++ source code with \l{Qml Type Compiler}{qmltc}.
-
-\section1 Synopsis
-
-\badcode
-qt_target_compile_qml_to_cpp(
-    target
-    QML_FILES ...
-    [NAMESPACE namespace]
-    [IMPORT_PATHS ...]
-)
-
-\endcode
-
-\versionlessCMakeCommandsNote qt6_target_compile_qml_to_cpp()
-
-\section1 Description
-
-By default, \l{Qml Type Compiler}{qmltc} creates lower-case \c{.h} and \c{.cpp}
-files for a given \c{.qml} file. For example, \c{Foo.qml} ends up being compiled
-into \c{foo.h} and \c{foo.cpp}.
-
-The created C++ files are placed into a dedicated \c{.qmltc/<target>/}
-sub-directory of the \c BINARY_DIR of the \c target passed as an argument to
-this command. These files are then automatically added to the target sources and
-compiled as Qt C++ code along with other source files.
-
-\note This command is in technology preview and may change in future releases.
-
-\section1 Arguments
-
-The \c target specifies the name of the binary that the QML files belong to. In
-order for the compilation to succeed, the target is expected to be a valid QML
-module, defined with qt_add_qml_module() command.
-
-\c QML_FILES lists the \c{.qml} files that are going to be compiled into C++. In
-most cases, all the target's QML files would be specified in the QML_FILES. This
-way, QML_FILES argument of this command is equivalent to QML_FILES argument of
-the qt_add_qml_module() command.
-
-\c NAMESPACE argument defines a namespace, in which the generated C++ code
-resides. By default, no namespace is specified for user projects. The code
-generated from Qt's own sources is put under a QT_NAMESPACE namespace.
-
-\c IMPORT_PATHS can be used to add locations that contain QML modules. The
-specified entries are passed to qmltc and allow to correctly import modules that
-do not reside under the location specified by QLibraryInfo::QmlImportsPath.
-
-While processing QML_FILES, the following source file properties are respected:
-\list
-    \li \c{QT_QMLTC_FILE_BASENAME}: use this source file property to specify a
-        non-default .h and .cpp file name, which might be useful to e.g. resolve
-        conflicting file names (imagine you have main.qml that is being
-        compiled, but main.h already exists, so #include "main.h" might not do
-        what you expect it to do). QT_QMLTC_FILE_BASENAME is expected to be a
-        file name (without extension), so any preceding directory is ignored.
-        Unlike in the case of default behavior, the QT_QMLTC_FILE_BASENAME is
-        not lower-cased.
-\endlist
+This command is removed in Qt 6.4 in favor of \l{qt6_add_qml_module} which can
+now invoke qmltc internally as described in the \l{qmltc-cmake}{qmltc section}.
 
 */

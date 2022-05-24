@@ -71,6 +71,8 @@ qt_add_qml_module(
     [NO_CACHEGEN]
     [NO_RESOURCE_TARGET_PATH]
     [NO_IMPORT_SCAN]
+    [ENABLE_TYPE_COMPILER]
+    [TYPE_COMPILER_NAMESPACE namespace]
 )
 
 \endcode
@@ -296,6 +298,40 @@ to the QML file containing the \c {pragma Singleton} statement.
 
 See \l{qt_target_qml_sources_example}{qt_target_qml_sources()} for an example on
 how to set the \c QT_QML_SINGLETON_TYPE property.
+
+\target qmltc-cmake
+\section2 Compiling QML to C++ with QML Type Compiler
+
+If a QML module has \c{.qml} files, you can compile them to C++ using \l{QML
+Type Compiler}{qmltc}. Unlike \l{qmlcachegen-auto}{bytecode compilation}, you
+have to explicitly enable qmltc via \l{ENABLE_TYPE_COMPILER} argument. In which
+case, \c{.qml} files specified under \c{QML_FILES} would be compiled. Files
+ending with \c{.js} and \c{.mjs} are ignored as qmltc does not compile
+JavaScript code. Additionally, files marked with QT_QML_SKIP_TYPE_COMPILER
+source file property are also skipped.
+
+By default, qmltc creates lower-case \c{.h} and \c{.cpp} files for a given
+\c{.qml} file. For example, \c{Foo.qml} ends up being compiled into \c{foo.h}
+and \c{foo.cpp}.
+
+The created C++ files are placed into a dedicated \c{.qmltc/<target>/}
+sub-directory of the \c BINARY_DIR of the \c target. These files are then
+automatically added to the target sources and compiled as Qt C++ code along with
+other source files.
+
+While processing QML_FILES, the following source file properties are respected:
+\list
+    \li \c{QT_QMLTC_FILE_BASENAME}: use this source file property to specify a
+        non-default .h and .cpp file name, which might be useful to e.g. resolve
+        conflicting file names (imagine you have main.qml that is being
+        compiled, but main.h already exists, so #include "main.h" might not do
+        what you expect it to do). QT_QMLTC_FILE_BASENAME is expected to be a
+        file name (without extension), so any preceding directory is ignored.
+        Unlike in the case of default behavior, the QT_QMLTC_FILE_BASENAME is
+        not lower-cased.
+    \li \c{QT_QML_SKIP_TYPE_COMPILER}: use this source file property to
+        specify that a QML file must be ignored by qmltc.
+\endlist
 
 \section1 Arguments
 
@@ -560,4 +596,13 @@ to provide the information needed by deployment scripts (see
 responsibility of ensuring all required plugins are instantiated and linked for
 static builds. For non-static builds the project must manually work out
 and deploy all QML modules used by an executable target.
+
+\target ENABLE_TYPE_COMPILER
+\c ENABLE_TYPE_COMPILER can be used to compile \c{.qml} files to C++ source code
+with \l{QML Type Compiler}{qmltc}.
+
+\c TYPE_COMPILER_NAMESPACE argument defines a namespace, in which the generated
+C++ code resides. By default, no namespace is specified for user projects. The
+code generated from Qt's own sources is put under a QT_NAMESPACE namespace.
+
 */

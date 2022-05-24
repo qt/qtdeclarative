@@ -45,16 +45,14 @@ qt6_add_qml_module(${application_name}
     VERSION 1.0
     URI QmltcExample
     QML_FILES ${application_qml_files}
+
+    # Compile qml files (listed in QML_FILES) to C++ using qmltc and add these
+    # files to the application binary:
+    ENABLE_TYPE_COMPILER
 )
 #! [qmltc-add-qml-module]
 
 #! [qmltc-compile-to-cpp]
 # (qmltc-specific) Link *private* libraries that correspond to QML modules:
 target_link_libraries(${application_name} PRIVATE Qt::QmlPrivate Qt::QuickPrivate)
-
-# Compile qml files (listed in QML_FILES) to C++ using qmltc and add these files
-# to the application binary:
-qt6_target_compile_qml_to_cpp(${application_name}
-    QML_FILES ${application_qml_files}
-)
 #! [qmltc-compile-to-cpp]

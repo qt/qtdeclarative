@@ -48,8 +48,7 @@ In order to enable qmltc:
 \list
     \li Create a \l{qt_add_qml_module}{proper QML module} for your application.
 
-    \li Invoke qmltc, for example, through the \l{qt_target_compile_qml_to_cpp}
-    {CMake API}.
+    \li Invoke qmltc, for example, through the \l{qmltc-cmake}{CMake API}.
 
     \li \c{#include} the generated header file(s) in the application source
     code.
@@ -99,8 +98,8 @@ require a CMake-driven build flow as well since this flow is centered around
 proper QML modules and their infrastructure.
 
 The easy way to add qmltc compilation is by using the dedicated
-\l{qt_target_compile_qml_to_cpp}{CMake API} as part of a QML module creation for
-the application. Consider a simple application directory structure:
+\l{qmltc-cmake}{CMake API} as part of a QML module creation for the application.
+Consider a simple application directory structure:
 
 \badcode
 .
@@ -170,7 +169,7 @@ import path to scan for - would be completely ignored by the ahead-of-time qmltc
 procedure.
 
 \note To add import paths to the qmltc compilation, consider using a relevant
-argument of the \l{qt_target_compile_qml_to_cpp}{CMake command} instead.
+argument of the \l{qmltc-cmake}{CMake command} instead.
 
 Generally, you can think of it this way: QQmlEngine involves the application
 process to run, while qmltc does not as it operates \e{before} your application
@@ -196,8 +195,8 @@ inspecting the corresponding QML document.
 However, the generated code is still somewhat confusing, especially given that
 your application should use the qmltc output on the C++ side directly. There are
 two parts of the generated code: CMake build files structure and the generated
-C++ format. The former is covered in the \l{qt_target_compile_qml_to_cpp}{CMake
-API of qmltc} and the latter is covered here.
+C++ format. The former is covered in the \l{qmltc-cmake}{CMake API of qmltc} and
+the latter is covered here.
 
 Consider a simple HelloWorld type, that has a \c hello property, a function to
 print that property, and a signal emitted when the object of that type is

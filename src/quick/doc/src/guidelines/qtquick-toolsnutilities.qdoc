@@ -121,7 +121,7 @@ either via command line options or by using a settings file.
 Its generated output acts as an alternative to the QQmlComponent-based object
 creation.
 
-Once enabled through \l{qt_target_compile_qml_to_cpp}{CMake}, \c qmltc runs
+Once enabled through \l{qmltc-cmake}{CMake}, \c qmltc runs
 ahead of time during your project build phase.
 
 To make use of the compiled C++, you \e must modify your application-side C++

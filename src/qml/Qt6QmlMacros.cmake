@@ -28,6 +28,7 @@ function(qt6_add_qml_module target)
         NO_IMPORT_SCAN
         # TODO: Remove once all usages have also been removed
         SKIP_TYPE_REGISTRATION
+        ENABLE_TYPE_COMPILER
 
         # Used only by _qt_internal_qml_type_registration()
         # TODO: Remove this once qt6_extract_metatypes does not install by default.
@@ -57,6 +58,7 @@ function(qt6_add_qml_module target)
         RESOURCE_EXPORT
         INSTALL_DIRECTORY
         INSTALL_LOCATION
+        TYPE_COMPILER_NAMESPACE
     )
 
     set(args_multi
@@ -150,6 +152,13 @@ function(qt6_add_qml_module target)
             "NO_PLUGIN was specified, but PLUGIN_TARGET was also given. "
             "At most one of these can be present."
             )
+    endif()
+
+    if (DEFINED arg_TYPE_COMPILER_NAMESPACE AND NOT arg_ENABLE_TYPE_COMPILER)
+        message(WARNING
+            "TYPE_COMPILER_NAMESPACE is set, but ENABLE_TYPE_COMPILER is not specified. "
+            "The TYPE_COMPILER_NAMESPACE value will be ignored."
+        )
     endif()
 
     set(is_executable FALSE)
@@ -634,6 +643,14 @@ function(qt6_add_qml_module target)
         endif()
     endif()
 
+    if (arg_ENABLE_TYPE_COMPILER)
+        _qt_internal_target_enable_qmltc(${target}
+            QML_FILES ${arg_QML_FILES}
+            IMPORT_PATHS ${arg_IMPORT_PATH}
+            NAMESPACE ${arg_TYPE_COMPILER_NAMESPACE}
+        )
+    endif()
+
     if(arg_OUTPUT_TARGETS)
         set(${arg_OUTPUT_TARGETS} ${output_targets} PARENT_SCOPE)
     endif()
@@ -1094,7 +1111,7 @@ function(_qt_internal_qml_get_qt_framework_path_moc_option target out_var)
 endfunction()
 
 # Compile Qml files (.qml) to C++ source files with Qml Type Compiler (qmltc).
-function(qt6_target_compile_qml_to_cpp target)
+function(_qt_internal_target_enable_qmltc target)
     set(args_option "")
     set(args_single NAMESPACE)
     set(args_multi QML_FILES IMPORT_PATHS)
@@ -1129,7 +1146,6 @@ function(qt6_target_compile_qml_to_cpp target)
     set(generated_sources_other_scope)
 
     set(compiled_files) # compiled files list to be used to generate MOC C++
-    set(non_qml_files) # non .qml files to warn about
     set(qmltc_executable "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltc>")
     if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
         set(qmltc_executable "$<COMMAND_CONFIG:${qmltc_executable}>")
@@ -1211,7 +1227,10 @@ function(qt6_target_compile_qml_to_cpp target)
 
     foreach(qml_file_src IN LISTS arg_QML_FILES)
         if(NOT qml_file_src MATCHES "\\.(qml)$")
-            list(APPEND non_qml_files ${qml_file_src})
+            continue()
+        endif()
+        get_source_file_property(skip_qmltc ${qml_file_src} QT_QML_SKIP_TYPE_COMPILER)
+        if(skip_qmltc)
             continue()
         endif()
 
@@ -1315,15 +1334,14 @@ function(qt6_target_compile_qml_to_cpp target)
         )
     endif()
 
-    if(non_qml_files)
-        list(JOIN non_qml_files "\n  " file_list)
-        message(WARNING
-            "Only .qml files should be added with this function. "
-            "The following files were not processed:"
-            "\n  ${file_list}"
-        )
-    endif()
+endfunction()
 
+function(qt6_target_compile_qml_to_cpp target)
+    message(WARNING
+        "qt6_target_compile_qml_to_cpp() can no longer be used standalone and is planned to be "
+        "removed in a future Qt release. To enable qmltc compilation, use:\n"
+        "qt6_add_qml_module(${target} ... ENABLE_TYPE_COMPILER)"
+    )
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)

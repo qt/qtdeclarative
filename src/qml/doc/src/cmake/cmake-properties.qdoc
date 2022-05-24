@@ -183,5 +183,23 @@ version after the \c{.0} release, specify those versions using this property.
 Use this property to specify a non-default \c .h and \c .cpp file name, which helps to resolve
 conflicting file names.
 
-\sa{qt_target_compile_qml_to_cpp}
+\sa{qmltc-cmake}
+*/
+
+/*!
+\page cmake-source-file-property-QT_QML_SKIP_TYPE_COMPILER.html
+\ingroup cmake-source-file-properties-qtqml
+
+\title QT_QML_SKIP_TYPE_COMPILER
+\target cmake-source-file-property-QT_QML_SKIP_TYPE_COMPILER
+
+\summary {Excludes a file from being compiled to C++ using qmltc.}
+
+\cmakepropertysince 6.4
+\preliminarycmakeproperty
+
+Set this property to \c TRUE to prevent the \c{.qml} file from being compiled to
+C++ during qmltc compilation.
+
+\sa{qmltc-cmake}
 */

@@ -82,6 +82,8 @@ set(qml_sources
     LocalWithOnCompleted.qml
     LocallyImported_context.qml
 #   SingletonThing.qml
+
+    badFile.qml
 )
 
 set(js_sources
@@ -98,6 +100,8 @@ set(common_libraries
 
 set_source_files_properties(NameConflict.qml PROPERTIES
     QT_QMLTC_FILE_BASENAME ResolvedNameConflict)
+
+set_source_files_properties(badFile.qml PROPERTIES QT_QML_SKIP_TYPE_COMPILER TRUE)
 
 # set_source_files_properties(SingletonThing.qml PROPERTIES
 #    QT_QML_SINGLETON_TYPE true)
@@ -119,11 +123,8 @@ qt6_add_qml_module(qmltc_test_module
         ${js_sources}
     DEPENDENCIES
         QtQuick
-)
-qt_internal_target_compile_qml_to_cpp(qmltc_test_module
-    NAMESPACE QmltcTest
-    QML_FILES
-        ${qml_sources}
+    ENABLE_TYPE_COMPILER
+    TYPE_COMPILER_NAMESPACE QmltcTest
 )
 
 qt_autogen_tools_initial_setup(qmltc_test_moduleplugin)
