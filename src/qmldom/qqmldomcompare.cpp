@@ -151,7 +151,7 @@ bool domCompare(DomItem &i1, DomItem &i2, function_ref<bool(Path, DomItem &, Dom
 
 QStringList
 domCompareStrList(DomItem &i1, DomItem &i2,
-                  function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter,
+                  function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter,
                   DomCompareStrList stopAtFirstDiff)
 {
     QStringList res;

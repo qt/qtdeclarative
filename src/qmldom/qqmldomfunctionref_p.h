@@ -17,32 +17,44 @@
 
 #include <QtCore/private/qglobal_p.h>
 
-#include <functional>
-// function_ref has been proposed for the C++20 standard, see
-//    http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0792r2.html
-// uses it if available, replace it with a const ref to std::function otherwise
-
-#ifndef __cpp_lib_function_ref
+#if !defined(Q_CC_MSVC) || Q_CC_MSVC >= 1930
+#include <QtCore/qxpfunctional.h>
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 template <typename T>
-using function_ref = const std::function<T> &;
+using function_ref = qxp::function_ref<T>;
 } // namespace Dom
 } // namespace QQmlJS
 QT_END_NAMESPACE
 
 #else
 
+#include <functional>
+
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
-using std::function_ref;
+namespace _detail {
+template <typename T>
+struct function_ref_helper { using type = std::function<T>; };
+// std::function doesn't grok the const in <int(int) const>, so remove:
+template <typename R, typename...Args>
+struct function_ref_helper<R(Args...) const> : function_ref_helper<R(Args...)> {};
+// std::function doesn't grok the noexcept in <int(int) noexcept>, so remove:
+template <typename R, typename...Args>
+struct function_ref_helper<R(Args...) noexcept> : function_ref_helper<R(Args...)> {};
+// and both together:
+template <typename R, typename...Args>
+struct function_ref_helper<R(Args...) const noexcept> : function_ref_helper<R(Args...)> {};
+} // namespace _detail
+template <typename T>
+using function_ref = const typename _detail::function_ref_helper<T>::type &;
 } // namespace Dom
 } // namespace QQmlJS
 QT_END_NAMESPACE
 
-#endif // __cpp_lib_function_ref
+#endif
 
 #endif // QQMLDOMFUNCTIONREF_P_H

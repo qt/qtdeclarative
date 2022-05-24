@@ -34,12 +34,12 @@ enum DomCompareStrList { FirstDiff, AllDiffs };
 
 QMLDOM_EXPORT QStringList domCompareStrList(
         DomItem &i1, DomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
+        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff);
 
 inline QStringList domCompareStrList(
         MutableDomItem &i1, DomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
+        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff)
 {
     DomItem ii1 = i1.item();
@@ -48,7 +48,7 @@ inline QStringList domCompareStrList(
 
 inline QStringList domCompareStrList(
         DomItem &i1, MutableDomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
+        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff)
 {
     DomItem ii2 = i2.item();
@@ -57,7 +57,7 @@ inline QStringList domCompareStrList(
 
 inline QStringList domCompareStrList(
         MutableDomItem &i1, MutableDomItem &i2,
-        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
+        function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &) const> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff)
 {
     DomItem ii1 = i1.item();
