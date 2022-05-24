@@ -160,6 +160,7 @@ private slots:
     void negativeZStackingOrder();
     void containsMouseAndVisibility();
     void doubleClickToHide();
+    void releaseFirstTouchAfterSecond();
 
 private:
     int startDragDistance() const {
@@ -2413,6 +2414,25 @@ void tst_QQuickMouseArea::doubleClickToHide()
 
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, {10, 10});
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 2);
+}
+
+void tst_QQuickMouseArea::releaseFirstTouchAfterSecond() // QTBUG-103766
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("simple.qml")));
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+    QSignalSpy pressSpy(mouseArea, SIGNAL(pressed(QQuickMouseEvent*)));
+    QSignalSpy releaseSpy(mouseArea, &QQuickMouseArea::released);
+
+    QTest::touchEvent(&window, device).press(0, {20, 20});
+    QTRY_COMPARE(pressSpy.count(), 1);
+    QTest::touchEvent(&window, device).stationary(0).press(1, {100, 20});
+    QCOMPARE(pressSpy.count(), 1);   // touchpoint 0 is the touchmouse, touchpoint 1 is ignored
+    QTest::touchEvent(&window, device).stationary(0).release(1, {100, 20});
+    QCOMPARE(releaseSpy.count(), 0); // touchpoint 0 is the touchmouse, and remains pressed
+    QTest::touchEvent(&window, device).release(0, {20, 20});
+    QTRY_COMPARE(releaseSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
