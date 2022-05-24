@@ -16,6 +16,7 @@ set(qml_files
     "TextArea.qml"
     "TextField.qml"
     "ScrollIndicator.qml"
+    "ItemDelegate.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"

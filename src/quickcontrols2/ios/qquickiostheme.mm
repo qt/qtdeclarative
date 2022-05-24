@@ -60,6 +60,7 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     QColor white;
     QColor disabled;
     QColor grey;
+    QColor dark;
 #ifdef Q_OS_IOS
     background = qt_mac_toQColor(UIColor.systemBackgroundColor.CGColor);
     placeholderText = qt_mac_toQColor(UIColor.placeholderTextColor.CGColor);
@@ -67,6 +68,7 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     disabled = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
     white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
     grey = qt_mac_toQColor(UIColor.opaqueSeparatorColor.CGColor);
+    dark = qt_mac_toQColor(UIColor.systemGray6Color.CGColor);
 #else
     background = QQuickStylePrivate::isDarkSystemTheme() ? QColor(Qt::black) : QColor(Qt::white);
     placeholderText = QColor(qRgba(60, 60, 67, 77));
@@ -74,6 +76,7 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     white = QColor(qRgba(255, 255, 255, 255));
     disabled = QColor(qRgba(118, 118, 128, 31));
     grey = QColor(qRgba(142, 142, 147, 255));
+    dark = QColor(qRgba(28, 28, 30, 255));
 #endif
     systemPalette.setColor(QPalette::Window, background);
     systemPalette.setColor(QPalette::Base, background);
@@ -91,6 +94,7 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     systemPalette.setColor(QPalette::Highlight, blue);
 
     systemPalette.setColor(QPalette::Mid, grey);
+    systemPalette.setColor(QPalette::Dark, dark);
 
     theme->setPalette(QQuickTheme::System, systemPalette);
 }
