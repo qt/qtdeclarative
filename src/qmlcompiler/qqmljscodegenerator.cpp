@@ -1166,6 +1166,81 @@ void QQmlJSCodeGenerator::generate_CallProperty(int nameIndex, int baseReg, int 
     reject(u"CallProperty"_s);
 }
 
+bool QQmlJSCodeGenerator::inlineTranslateMethod(const QString &name, int argc, int argv)
+{
+    addInclude(u"qcoreapplication.h"_s);
+
+    const auto arg = [&](int i, const QQmlJSScope::ConstPtr &type) {
+        Q_ASSERT(i < argc);
+        return conversion(registerType(argv + i).storedType(), type, registerVariable(argv + i));
+    };
+
+    const auto stringArg = [&](int i) {
+        return i < argc
+                ? (arg(i, m_typeResolver->stringType()) + u".toUtf8().constData()"_s)
+                : u"\"\""_s;
+    };
+
+    const auto intArg = [&](int i) {
+        return i < argc ? arg(i, m_typeResolver->intType()) : u"-1"_s;
+    };
+
+    const auto stringRet = [&](const QString &expression) {
+        return conversion(
+                m_typeResolver->stringType(), m_state.accumulatorOut().storedType(), expression);
+    };
+
+    const auto capture = [&]() {
+        m_body += u"aotContext->captureTranslation();\n"_s;
+    };
+
+    if (name == u"QT_TRID_NOOP"_s || name == u"QT_TR_NOOP"_s) {
+        Q_ASSERT(argc > 0);
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + stringRet(arg(0, m_typeResolver->stringType())) + u";\n"_s;
+        return true;
+    }
+
+    if (name == u"QT_TRANSLATE_NOOP"_s) {
+        Q_ASSERT(argc > 1);
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + stringRet(arg(1, m_typeResolver->stringType())) + u";\n"_s;
+        return true;
+    }
+
+    if (name == u"qsTrId"_s) {
+        capture();
+        // We inline qtTrId() here because in the !QT_CONFIG(translation) case it's unavailable.
+        // QCoreApplication::translate() is always available in some primitive form.
+        // Also, this saves a function call.
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + stringRet(u"QCoreApplication::translate(nullptr, "_s + stringArg(0) +
+                            u", nullptr, "_s + intArg(1) + u")"_s) + u";\n"_s;
+        return true;
+    }
+
+    if (name == u"qsTr"_s) {
+        capture();
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + stringRet(u"QCoreApplication::translate("_s
+                            + u"aotContext->translationContext().toUtf8().constData(), "_s
+                            + stringArg(0) + u", "_s + stringArg(1) + u", "_s
+                            + intArg(2) + u")"_s) + u";\n"_s;
+        return true;
+    }
+
+    if (name == u"qsTranslate"_s) {
+        capture();
+        m_body += m_state.accumulatorVariableOut + u" = "_s
+                + stringRet(u"QCoreApplication::translate("_s
+                            + stringArg(0) + u", "_s + stringArg(1) + u", "_s
+                            + stringArg(2) + u", "_s + intArg(3) + u")"_s) + u";\n"_s;
+        return true;
+    }
+
+    return false;
+}
+
 bool QQmlJSCodeGenerator::inlineMathMethod(const QString &name, int argc, int argv)
 {
     addInclude(u"cmath"_s);
@@ -1371,6 +1446,14 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
         reject(u"call to untyped JavaScript function"_s);
+
+    if (m_typeResolver->equals(m_state.accumulatorOut().scopeType(),
+                               m_typeResolver->jsGlobalObject())) {
+        const QString name = m_jsUnitGenerator->stringForIndex(
+                m_jsUnitGenerator->lookupNameIndex(index));
+        if (inlineTranslateMethod(name, argc, argv))
+            return;
+    }
 
     AccumulatorConverter registers(this);
 

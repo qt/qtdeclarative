@@ -123,6 +123,7 @@ private slots:
     void objectToString();
     void throwObjectName();
     void javaScriptArgument();
+    void translation();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2240,6 +2241,33 @@ void tst_QmlCppCodegen::javaScriptArgument()
     QCOMPARE(o->property("b").toDouble(), 9.0);
     QCOMPARE(o->property("c").toString(), u"5t-1"_qs);
     QCOMPARE(o->property("d").toString(), u"9"_qs);
+}
+
+void tst_QmlCppCodegen::translation()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/translation.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("translate2"), u"s"_s);
+    QCOMPARE(o->property("translate3"), u"s"_s);
+    QCOMPARE(o->property("translate4"), u"s"_s);
+
+    QCOMPARE(o->property("translateNoop2"), u"s"_s);
+    QCOMPARE(o->property("translateNoop3"), u"s"_s);
+
+    QCOMPARE(o->property("tr1"), u"s"_s);
+    QCOMPARE(o->property("tr2"), u"s"_s);
+    QCOMPARE(o->property("tr3"), u"s"_s);
+
+    QCOMPARE(o->property("trNoop1"), u"s"_s);
+    QCOMPARE(o->property("trNoop2"), u"s"_s);
+
+    QCOMPARE(o->property("trId1"), u"s"_s);
+    QCOMPARE(o->property("trId2"), u"s"_s);
+
+    QCOMPARE(o->property("trIdNoop1"), u"s"_s);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

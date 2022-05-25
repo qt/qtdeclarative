@@ -600,6 +600,8 @@ namespace QQmlPrivate
         // Run QQmlPropertyCapture::captureProperty() without retrieving the value.
         bool captureLookup(uint index, QObject *object) const;
         bool captureQmlContextPropertyLookup(uint index) const;
+        void captureTranslation() const;
+        QString translationContext() const;
         QMetaType lookupResultMetaType(uint index) const;
         void storeNameSloppy(uint nameIndex, void *value, QMetaType type) const;
         QJSValue javaScriptGlobalProperty(uint nameIndex) const;

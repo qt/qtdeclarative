@@ -1942,6 +1942,42 @@ ReturnedValue GlobalExtensions::method_qsTranslateNoOp(const FunctionObject *b, 
         return argv[1].asReturnedValue();
 }
 
+QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
+{
+    QString context;
+    CppStackFrame *frame = engine->currentStackFrame;
+
+    // The first non-empty source URL in the call stack determines the translation context.
+    while (frame && context.isEmpty()) {
+        if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
+            const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
+            QString fileName = unit->fileName();
+            QUrl url(unit->fileName());
+            if (url.isValid() && url.isRelative()) {
+                context = url.fileName();
+            } else {
+                context = QQmlFile::urlToLocalFileOrQrc(fileName);
+                if (context.isEmpty() && fileName.startsWith(QLatin1String(":/")))
+                    context = fileName;
+            }
+            context = QFileInfo(context).baseName();
+        }
+        frame = frame->parentFrame();
+    }
+
+    if (context.isEmpty()) {
+        if (QQmlRefPointer<QQmlContextData> ctxt = engine->callingQmlContext()) {
+            QString path = ctxt->urlString();
+            int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+            int lastDot = path.lastIndexOf(QLatin1Char('.'));
+            int length = lastDot - (lastSlash + 1);
+            context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
+        }
+    }
+
+    return context;
+}
+
 /*!
     \qmlmethod string Qt::qsTr(string sourceText, string disambiguation, int n)
 
@@ -1971,43 +2007,10 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
     if ((argc > 2) && !argv[2].isNumber())
         THROW_GENERIC_ERROR("qsTr(): third argument (n) must be a number");
 
-    QString context;
-    CppStackFrame *frame = scope.engine->currentStackFrame;
-    // The first non-empty source URL in the call stack determines the translation context.
-    while (frame && context.isEmpty()) {
-        if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
-            const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
-            QString fileName = unit->fileName();
-            QUrl url(unit->fileName());
-            if (url.isValid() && url.isRelative()) {
-                context = url.fileName();
-            } else {
-                context = QQmlFile::urlToLocalFileOrQrc(fileName);
-                if (context.isEmpty() && fileName.startsWith(QLatin1String(":/")))
-                    context = fileName;
-            }
-            context = QFileInfo(context).baseName();
-        }
-        frame = frame->parentFrame();
-    }
-
-    if (context.isEmpty()) {
-        if (QQmlRefPointer<QQmlContextData> ctxt = scope.engine->callingQmlContext()) {
-            QString path = ctxt->urlString();
-            int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-            int lastDot = path.lastIndexOf(QLatin1Char('.'));
-            int length = lastDot - (lastSlash + 1);
-            context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
-        }
-    }
-
-    QString text = argv[0].toQStringNoThrow();
-    QString comment;
-    if (argc > 1)
-        comment = argv[1].toQStringNoThrow();
-    int n = -1;
-    if (argc > 2)
-        n = argv[2].toInt32();
+    const QString context = currentTranslationContext(scope.engine);
+    const QString text = argv[0].toQStringNoThrow();
+    const QString comment = argc > 1 ? argv[1].toQStringNoThrow() : QString();
+    const int n = argc > 2 ? argv[2].toInt32() : -1;
 
     if (QQmlEnginePrivate *ep = (scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : nullptr))
         if (ep->propertyCapture)

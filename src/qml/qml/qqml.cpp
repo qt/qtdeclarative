@@ -19,6 +19,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4errorobject_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlfinalizer_p.h>
 
 #include <QtCore/qmutex.h>
@@ -763,18 +764,26 @@ void AOTCompiledContext::setReturnValueUndefined() const
     }
 }
 
-static void captureFallbackProperty(
-        QObject *object, int coreIndex, int notifyIndex, bool isConstant,
-        QQmlContextData *qmlContext)
+static QQmlPropertyCapture *propertyCapture(const QQmlContextData *qmlContext)
 {
-    if (!qmlContext || isConstant)
-        return;
+    if (!qmlContext)
+        return nullptr;
 
     QQmlEngine *engine = qmlContext->engine();
     Q_ASSERT(engine);
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     Q_ASSERT(ep);
-    if (QQmlPropertyCapture *capture = ep->propertyCapture)
+    return ep->propertyCapture;
+}
+
+static void captureFallbackProperty(
+        QObject *object, int coreIndex, int notifyIndex, bool isConstant,
+        const QQmlContextData *qmlContext)
+{
+    if (isConstant)
+        return;
+
+    if (QQmlPropertyCapture *capture = propertyCapture(qmlContext))
         capture->captureProperty(object, coreIndex, notifyIndex);
 }
 
@@ -782,14 +791,10 @@ static void captureObjectProperty(
         QObject *object, const QQmlPropertyCache *propertyCache,
         const QQmlPropertyData *property, QQmlContextData *qmlContext)
 {
-    if (!qmlContext || property->isConstant())
+    if (property->isConstant())
         return;
 
-    QQmlEngine *engine = qmlContext->engine();
-    Q_ASSERT(engine);
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    Q_ASSERT(ep);
-    if (QQmlPropertyCapture *capture = ep->propertyCapture)
+    if (QQmlPropertyCapture *capture = propertyCapture(qmlContext))
         capture->captureProperty(object, propertyCache, property);
 }
 
@@ -1057,6 +1062,21 @@ bool AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
     }
 
     return false;
+}
+
+void AOTCompiledContext::captureTranslation() const
+{
+    if (QQmlPropertyCapture *capture = propertyCapture(qmlContext))
+        capture->captureTranslation();
+}
+
+QString AOTCompiledContext::translationContext() const
+{
+#if QT_CONFIG(translation)
+    return QV4::GlobalExtensions::currentTranslationContext(engine->handle());
+#else
+    return QString();
+#endif
 }
 
 QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const

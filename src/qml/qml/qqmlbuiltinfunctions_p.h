@@ -209,6 +209,7 @@ struct Q_QML_PRIVATE_EXPORT GlobalExtensions {
     static void init(Object *globalObject, QJSEngine::Extensions extensions);
 
 #if QT_CONFIG(translation)
+    static QString currentTranslationContext(ExecutionEngine *engine);
     static ReturnedValue method_qsTranslate(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_qsTranslateNoOp(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_qsTr(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);

@@ -136,6 +136,7 @@ set(qml_files
     themergood.qml
     throwObjectName.qml
     toString.qml
+    translation.qml
     typePropertyClash.qml
     typedArray.qml
     undefinedResets.qml

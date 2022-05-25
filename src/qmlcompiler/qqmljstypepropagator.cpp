@@ -1027,7 +1027,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     }
 
     addReadRegister(base, callBase);
-    propagateCall(member.method(), argc, argv);
+    propagateCall(member.method(), argc, argv, member.scopeType());
 }
 
 QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMethod> &methods,
@@ -1149,7 +1149,9 @@ void QQmlJSTypePropagator::addReadRegister(int index, const QQmlJSRegisterConten
     m_state.addReadRegister(index, m_typeResolver->convert(m_state.registers[index], convertTo));
 }
 
-void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv)
+void QQmlJSTypePropagator::propagateCall(
+        const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
+        const QQmlJSScope::ConstPtr &scope)
 {
     QStringList errors;
     const QQmlJSMetaMethod match = bestMatchForCall(methods, argc, argv, &errors);
@@ -1167,9 +1169,11 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
             ? m_typeResolver->jsValueType()
             : QQmlJSScope::ConstPtr(match.returnType());
     setAccumulator(m_typeResolver->returnType(
-                       returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType(),
-                       match.isJavaScriptFunction() ? QQmlJSRegisterContent::JavaScriptReturnValue
-                                                    : QQmlJSRegisterContent::MethodReturnValue));
+            returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType(),
+            match.isJavaScriptFunction()
+                    ? QQmlJSRegisterContent::JavaScriptReturnValue
+                    : QQmlJSRegisterContent::MethodReturnValue,
+            scope));
     if (!m_state.accumulatorOut().isValid())
         setError(u"Cannot store return type of method %1()."_s.arg(match.methodName()));
 
@@ -1187,6 +1191,114 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
         }
         addReadRegister(argv + i, m_typeResolver->globalType(m_typeResolver->jsValueType()));
     }
+}
+
+bool QQmlJSTypePropagator::propagateTranslationMethod(
+        const QList<QQmlJSMetaMethod> &methods, int argc, int argv)
+{
+    if (methods.length() != 1)
+        return false;
+
+    const QQmlJSMetaMethod method = methods.front();
+    const QQmlJSRegisterContent intType
+            = m_typeResolver->globalType(m_typeResolver->intType());
+    const QQmlJSRegisterContent stringType
+            = m_typeResolver->globalType(m_typeResolver->stringType());
+    const QQmlJSRegisterContent returnType
+            = m_typeResolver->returnType(
+                    m_typeResolver->stringType(), QQmlJSRegisterContent::MethodReturnValue,
+                    m_typeResolver->jsGlobalObject());
+
+    if (method.methodName() == u"qsTranslate"_s) {
+        switch (argc) {
+        case 4:
+            addReadRegister(argv + 3, intType);    // n
+            Q_FALLTHROUGH();
+        case 3:
+            addReadRegister(argv + 2, stringType); // disambiguation
+            Q_FALLTHROUGH();
+        case 2:
+            addReadRegister(argv + 1, stringType); // sourceText
+            addReadRegister(argv, stringType);     // context
+            setAccumulator(returnType);
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    if (method.methodName() == u"QT_TRANSLATE_NOOP"_s) {
+        switch (argc) {
+        case 3:
+            addReadRegister(argv + 2, stringType); // disambiguation
+            Q_FALLTHROUGH();
+        case 2:
+            addReadRegister(argv + 1, stringType); // sourceText
+            addReadRegister(argv, stringType);     // context
+            setAccumulator(returnType);
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    if (method.methodName() == u"qsTr"_s) {
+        switch (argc) {
+        case 3:
+            addReadRegister(argv + 2, intType);    // n
+            Q_FALLTHROUGH();
+        case 2:
+            addReadRegister(argv + 1, stringType); // disambiguation
+            Q_FALLTHROUGH();
+        case 1:
+            addReadRegister(argv, stringType);     // sourceText
+            setAccumulator(returnType);
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    if (method.methodName() == u"QT_TR_NOOP"_s) {
+        switch (argc) {
+        case 2:
+            addReadRegister(argv + 1, stringType); // disambiguation
+            Q_FALLTHROUGH();
+        case 1:
+            addReadRegister(argv, stringType);     // sourceText
+            setAccumulator(returnType);
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    if (method.methodName() == u"qsTrId"_s) {
+        switch (argc) {
+        case 2:
+            addReadRegister(argv + 1, intType);    // n
+            Q_FALLTHROUGH();
+        case 1:
+            addReadRegister(argv, stringType);     // id
+            setAccumulator(returnType);
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    if (method.methodName() == u"QT_TRID_NOOP"_s) {
+        switch (argc) {
+        case 1:
+            addReadRegister(argv, stringType);     // id
+            setAccumulator(returnType);
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    return false;
 }
 
 void QQmlJSTypePropagator::generate_CallPropertyLookup(int lookupIndex, int base, int argc,
@@ -1224,8 +1336,13 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
             = m_typeResolver->scopedType(m_function->qmlScope, functionName);
     if (resolvedContent.isMethod()) {
         const auto methods = resolvedContent.method();
+        if (resolvedContent.variant() == QQmlJSRegisterContent::JavaScriptGlobal) {
+            if (propagateTranslationMethod(methods, argc, argv))
+                return;
+        }
+
         if (!methods.isEmpty()) {
-            propagateCall(methods, argc, argv);
+            propagateCall(methods, argc, argv, resolvedContent.scopeType());
             return;
         }
     }

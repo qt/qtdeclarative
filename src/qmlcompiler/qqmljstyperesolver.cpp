@@ -1200,11 +1200,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::returnType(
-        const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant) const
+        const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant,
+        const QQmlJSScope::ConstPtr &scope) const
 {
     Q_ASSERT(variant == QQmlJSRegisterContent::MethodReturnValue
              || variant == QQmlJSRegisterContent::JavaScriptReturnValue);
-    return QQmlJSRegisterContent::create(storedType(type), type, variant);
+    return QQmlJSRegisterContent::create(storedType(type), type, variant, scope);
 }
 
 bool QQmlJSTypeResolver::registerIsStoredIn(

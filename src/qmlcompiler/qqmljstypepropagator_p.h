@@ -196,7 +196,10 @@ private:
     QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
 
     QQmlJSRegisterContent propagateBinaryOperation(QSOperator::Op op, int lhs);
-    void propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
+    void propagateCall(
+            const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
+            const QQmlJSScope::ConstPtr &scope);
+    bool propagateTranslationMethod(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
     void propagatePropertyLookup(const QString &name);
     void propagateScopeLookupCall(const QString &functionName, int argc, int argv);
     void saveRegisterStateForJump(int offset);
