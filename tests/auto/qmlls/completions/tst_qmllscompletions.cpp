@@ -238,29 +238,26 @@ void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int char
                 QDuplicateTracker<QByteArray> fieldsTracker;
                 QDuplicateTracker<QByteArray> propertiesTracker;
 
-                if (const QList<CompletionItem> *cItems =
-                            std::get_if<QList<CompletionItem>>(&res)) {
-                    for (const CompletionItem &c : *cItems) {
-                        if (c.kind->toInt() == int(CompletionItemKind::Module)) {
-                            QVERIFY2(!modulesTracker.hasSeen(c.label),
-                                     "Duplicate module: " + c.label);
-                        } else if (c.kind->toInt() == int(CompletionItemKind::Keyword)) {
-                            QVERIFY2(!keywordsTracker.hasSeen(c.label),
-                                     "Duplicate keyword: " + c.label);
-                        } else if (c.kind->toInt() == int(CompletionItemKind::Class)) {
-                            QVERIFY2(!classesTracker.hasSeen(c.label),
-                                     "Duplicate class: " + c.label);
-                        } else if (c.kind->toInt() == int(CompletionItemKind::Field)) {
-                            QVERIFY2(!fieldsTracker.hasSeen(c.label),
-                                     "Duplicate field: " + c.label);
-                        } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
-                            QVERIFY2(!propertiesTracker.hasSeen(c.label),
-                                     "Duplicate property: " + c.label);
-                        }
-
-                        labels << c.label;
+                for (const CompletionItem &c : *cItems) {
+                    if (c.kind->toInt() == int(CompletionItemKind::Module)) {
+                        QVERIFY2(!modulesTracker.hasSeen(c.label), "Duplicate module: " + c.label);
+                    } else if (c.kind->toInt() == int(CompletionItemKind::Keyword)) {
+                        QVERIFY2(!keywordsTracker.hasSeen(c.label),
+                                 "Duplicate keyword: " + c.label);
+                    } else if (c.kind->toInt() == int(CompletionItemKind::Class)) {
+                        QVERIFY2(!classesTracker.hasSeen(c.label), "Duplicate class: " + c.label);
+                    } else if (c.kind->toInt() == int(CompletionItemKind::Field)) {
+                        QVERIFY2(!fieldsTracker.hasSeen(c.label), "Duplicate field: " + c.label);
+                    } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
+                        QVERIFY2(!propertiesTracker.hasSeen(c.label),
+                                 "Duplicate property: " + c.label);
+                        QVERIFY2(c.insertText == c.label + u": "_s,
+                                 "a property should end with a colon with a space for "
+                                 "'insertText', for better coding experience");
                     }
+                    labels << c.label;
                 }
+
                 for (const ExpectedCompletion &exp : expected) {
                     QVERIFY2(labels.contains(exp.first),
                              u"no %1 in %2"_s

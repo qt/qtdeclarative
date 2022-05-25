@@ -423,6 +423,7 @@ static QList<CompletionItem> bindingsCompletions(DomItem &containingObject)
                         qCDebug(complLog) << "adding property" << *it2;
                         CompletionItem comp;
                         comp.label = it2->toUtf8();
+                        comp.insertText = (*it2 + u": "_s).toUtf8();
                         comp.kind = int(CompletionItemKind::Property);
                         res.append(comp);
                     }
