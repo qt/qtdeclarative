@@ -457,7 +457,7 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
 {
     // returns completions for the reachable types or attributes from context
     QList<CompletionItem> res;
-    QSet<QString> symbols;
+    QMap<CompletionItemKind, QSet<QString>> symbols;
     QSet<quintptr> visited;
     QList<Path> visitedRefs;
     auto addLocalSymbols = [&res, typeCompletionType, completeMethodCalls, &symbols](DomItem &el) {
@@ -466,18 +466,19 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
             return false;
         case TypeCompletionsType::Types:
             switch (el.internalKind()) {
-            case DomType::ImportScope:
+            case DomType::ImportScope: {
+                const QSet<QString> localSymbols = el.localSymbolNames(
+                        LocalSymbolsType::QmlTypes | LocalSymbolsType::Namespaces);
                 qCDebug(complLog) << "adding local symbols of:" << el.internalKindStr()
-                                  << el.canonicalPath()
-                                  << el.localSymbolNames(LocalSymbolsType::QmlTypes
-                                                         | LocalSymbolsType::Namespaces);
-                symbols += el.localSymbolNames(LocalSymbolsType::QmlTypes
-                                               | LocalSymbolsType::Namespaces);
+                                  << el.canonicalPath() << localSymbols;
+                symbols[CompletionItemKind::Class] += localSymbols;
                 break;
-            default:
+            }
+            default: {
                 qCDebug(complLog) << "skipping local symbols for non type" << el.internalKindStr()
                                   << el.canonicalPath();
                 break;
+            }
             }
             break;
         case TypeCompletionsType::TypesAndAttributes:
@@ -518,7 +519,7 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
             }
             qCDebug(complLog) << "adding local symbols of:" << el.internalKindStr()
                               << el.canonicalPath() << localSymbols;
-            symbols += localSymbols;
+            symbols[CompletionItemKind::Field] += localSymbols;
             break;
         }
         return true;
@@ -546,11 +547,15 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
         context.resolve(toSearch, addReachableSymbols, &defaultErrorHandler);
         // add attached types? technically we should...
     }
-    for (const QString &s : qAsConst(symbols)) {
-        CompletionItem comp;
-        comp.label = s.toUtf8();
-        comp.kind = int(CompletionItemKind::Field);
-        res.append(comp);
+    for (auto symbolKinds = symbols.constBegin(); symbolKinds != symbols.constEnd();
+         ++symbolKinds) {
+        for (auto symbol = symbolKinds.value().constBegin();
+             symbol != symbolKinds.value().constEnd(); ++symbol) {
+            CompletionItem comp;
+            comp.label = symbol->toUtf8();
+            comp.kind = int(symbolKinds.key());
+            res.append(comp);
+        }
     }
     return res;
 }

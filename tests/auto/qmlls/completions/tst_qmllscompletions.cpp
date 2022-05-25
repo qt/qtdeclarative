@@ -144,7 +144,7 @@ void tst_QmllsCompletions::completions_data()
 
     QTest::newRow("objEmptyLine") << uri << 7 << 0
                                   << ExpectedCompletions({
-                                             { u"Rectangle"_s, CompletionItemKind::Field },
+                                             { u"Rectangle"_s, CompletionItemKind::Class },
                                              { u"property"_s, CompletionItemKind::Keyword },
                                              { u"width"_s, CompletionItemKind::Property },
                                              { u"function"_s, CompletionItemKind::Keyword },
@@ -153,7 +153,7 @@ void tst_QmllsCompletions::completions_data()
 
     QTest::newRow("inBindingLabel") << uri << 4 << 9
                                     << ExpectedCompletions({
-                                               { u"Rectangle"_s, CompletionItemKind::Field },
+                                               { u"Rectangle"_s, CompletionItemKind::Class },
                                                { u"property"_s, CompletionItemKind::Keyword },
                                                { u"width"_s, CompletionItemKind::Property },
                                        })
@@ -177,14 +177,14 @@ void tst_QmllsCompletions::completions_data()
 
     QTest::newRow("fileStart") << uri << 0 << 0
                                << ExpectedCompletions({
-                                          { u"Rectangle"_s, CompletionItemKind::Field },
+                                          { u"Rectangle"_s, CompletionItemKind::Class },
                                           { u"import"_s, CompletionItemKind::Keyword },
                                   })
                                << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s });
 
     QTest::newRow("importImport") << uri << 0 << 3
                                   << ExpectedCompletions({
-                                             { u"Rectangle"_s, CompletionItemKind::Field },
+                                             { u"Rectangle"_s, CompletionItemKind::Class },
                                              { u"import"_s, CompletionItemKind::Keyword },
                                      })
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s });
@@ -329,7 +329,7 @@ void tst_QmllsCompletions::buildDir()
                      ExpectedCompletions({
                              { u"property"_s, CompletionItemKind::Keyword },
                              { u"function"_s, CompletionItemKind::Keyword },
-                             { u"Rectangle"_s, CompletionItemKind::Field },
+                             { u"Rectangle"_s, CompletionItemKind::Class },
                      }),
                      QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s }));
     Notifications::AddBuildDirsParams bDirs;
@@ -349,8 +349,8 @@ void tst_QmllsCompletions::buildDir()
     m_protocol.notifyDidChangeTextDocument(didChange);
     checkCompletions(uri, 3, 0,
                      ExpectedCompletions({
-                             { u"BuildDirType"_s, CompletionItemKind::Field },
-                             { u"Rectangle"_s, CompletionItemKind::Field },
+                             { u"BuildDirType"_s, CompletionItemKind::Class },
+                             { u"Rectangle"_s, CompletionItemKind::Class },
                              { u"property"_s, CompletionItemKind::Keyword },
                              { u"width"_s, CompletionItemKind::Property },
                              { u"function"_s, CompletionItemKind::Keyword },
