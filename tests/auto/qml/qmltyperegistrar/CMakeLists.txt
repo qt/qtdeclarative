@@ -22,7 +22,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         hppheader.hpp
         # noextheader special case
         tst_qmltyperegistrar.cpp tst_qmltyperegistrar.h
-        foo.cpp foo.h
+        foo.cpp foo.h duplicatedExports.h
         ${moc_files}
     INCLUDE_DIRECTORIES
         foreign

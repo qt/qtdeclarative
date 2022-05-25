@@ -24,6 +24,36 @@ struct ScopedPointerFileCloser
     static inline void cleanup(FILE *handle) { if (handle) fclose(handle); }
 };
 
+struct ExclusiveVersionRange
+{
+    QString claimerName;
+    QTypeRevision addedIn;
+    QTypeRevision removedIn;
+};
+
+/*!
+ * \brief True if x was removed before y was introduced.
+ * \param o
+ * \return
+ */
+bool operator<(const ExclusiveVersionRange &x, const ExclusiveVersionRange &y)
+{
+    if (x.removedIn.isValid())
+        return y.addedIn.isValid() ? x.removedIn <= y.addedIn : true;
+    else
+        return false;
+}
+
+/*!
+ * \brief True when x and y share a common version. (Warning: not transitive!)
+ * \param o
+ * \return
+ */
+bool operator==(const ExclusiveVersionRange &x, const ExclusiveVersionRange &y)
+{
+    return !(x < y) && !(y < x);
+}
+
 static bool argumentsFromCommandLineAndFile(QStringList &allArguments, const QStringList &arguments)
 {
     allArguments.reserve(arguments.size());
@@ -299,21 +329,41 @@ int main(int argc, char **argv)
         return QJsonValue();
     };
 
+    QHash<QString, QList<ExclusiveVersionRange>> qmlElementInfos;
+
     for (const QJsonObject &classDef : types) {
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
         QString targetName = className;
         QString extendedName;
         bool seenQmlElement = false;
+        QString qmlElementName;
+        QTypeRevision addedIn;
+        QTypeRevision removedIn;
+
         const QJsonArray classInfos = classDef.value(QLatin1String("classInfos")).toArray();
         for (const QJsonValueConstRef v : classInfos) {
             const QString name = v[QStringLiteral("name")].toString();
-            if (name == QStringLiteral("QML.Element"))
+            if (name == QStringLiteral("QML.Element")) {
                 seenQmlElement = true;
-            else if (name == QStringLiteral("QML.Foreign"))
+                qmlElementName = v[QStringLiteral("value")].toString();
+            } else if (name == QStringLiteral("QML.Foreign"))
                 targetName = v[QLatin1String("value")].toString();
             else if (name == QStringLiteral("QML.Extended"))
                 extendedName = v[QStringLiteral("value")].toString();
+            else if (name == QStringLiteral("QML.AddedInVersion")) {
+                int version = v[QStringLiteral("value")].toString().toInt();
+                addedIn = QTypeRevision::fromEncodedVersion(version);
+            } else if (name == QStringLiteral("QML.RemovedInVersion")) {
+                int version = v[QStringLiteral("value")].toString().toInt();
+                removedIn = QTypeRevision::fromEncodedVersion(version);
+            }
+        }
+
+        if (seenQmlElement && qmlElementName != u"anonymous") {
+            if (qmlElementName == u"auto")
+                qmlElementName = className;
+            qmlElementInfos[qmlElementName].append({ className, addedIn, removedIn });
         }
 
         // We want all related metatypes to be registered by name, so that we can look them up
@@ -487,6 +537,48 @@ int main(int argc, char **argv)
         }
     }
 
+    auto printConflictingVersion = [](const ExclusiveVersionRange &r) -> QString {
+        QString s = r.claimerName;
+        if (r.addedIn.isValid()) {
+            s += u" (added in %1.%2)"_s.arg(r.addedIn.majorVersion()).arg(r.addedIn.minorVersion());
+        }
+        if (r.removedIn.isValid()) {
+            s += u" (removed in %1.%2)"_s.arg(r.removedIn.majorVersion())
+                         .arg(r.removedIn.minorVersion());
+        }
+        return s;
+    };
+
+    for (const auto &[qmlName, exportsForSameQmlName] : qmlElementInfos.asKeyValueRange()) {
+        // needs a least two cpp classes exporting the same qml element to potentially have a
+        // conflict
+        if (exportsForSameQmlName.size() < 2)
+            continue;
+
+        // sort exports by versions to find conflicting exports
+        std::sort(exportsForSameQmlName.begin(), exportsForSameQmlName.end());
+        auto conflictingExportStartIt = exportsForSameQmlName.cbegin();
+        while (1) {
+            // conflicting versions evaluate to true under operator==
+            conflictingExportStartIt =
+                    std::adjacent_find(conflictingExportStartIt, exportsForSameQmlName.cend());
+            if (conflictingExportStartIt == exportsForSameQmlName.cend())
+                break;
+
+            auto conflictingExportEndIt = std::find_if_not(
+                    conflictingExportStartIt, exportsForSameQmlName.cend(),
+                    [=](const auto &x) -> bool { return x == *conflictingExportStartIt; });
+            QString registeringCppClasses = conflictingExportStartIt->claimerName;
+            std::for_each(std::next(conflictingExportStartIt), conflictingExportEndIt,
+                          [&](const auto &q) {
+                              registeringCppClasses += u", %1"_s.arg(printConflictingVersion(q));
+                          });
+            qWarning().noquote() << "Warning:" << qmlName
+                                 << "was registered multiple times by following Cpp classes: "
+                                 << registeringCppClasses;
+            conflictingExportStartIt = conflictingExportEndIt;
+        }
+    }
     fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, %s);",
             qPrintable(module), qPrintable(majorVersion), qPrintable(minorVersion));
     fprintf(output, "\n}\n");
