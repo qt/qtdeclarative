@@ -450,6 +450,8 @@ void QQmlJSScope::updateChildScope(
                     const auto propertyIt = type->m_properties.find(childScope->internalName());
                     if (propertyIt != type->m_properties.end()) {
                         childScope->m_baseType.scope = QQmlJSScope::ConstPtr(propertyIt->type());
+                        if (propertyIt->type())
+                            childScope->m_semantics = propertyIt->type()->accessSemantics();
                         childScope->setBaseTypeName(propertyIt->typeName());
                         return true;
                     }
@@ -526,11 +528,13 @@ void QQmlJSScope::resolveGeneralizedGroup(
         const Ptr &self, const ConstPtr &baseType,
         const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
 {
+    Q_ASSERT(baseType);
     // Generalized group properties are always composite,
     // which means we expect contextualTypes to be QML names.
     Q_ASSERT(self->isComposite());
 
     self->m_baseType.scope = baseType;
+    self->m_semantics = baseType->accessSemantics();
     resolveNonEnumTypes(self, contextualTypes, usedTypes);
 }
 

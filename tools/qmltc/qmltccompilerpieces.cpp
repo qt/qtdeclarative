@@ -68,17 +68,9 @@ QmltcCodeGenerator::wrap_extensionType(const QQmlJSScope::ConstPtr &type,
 
         // have to wrap the property into an extension, but we need to figure
         // out whether the type is QObject-based or not
-        bool inheritsQObject = false;
-        for (auto t = QQmlJSScope::nonCompositeBaseType(type); t; t = t->baseType()) {
-            if (t->internalName() == u"QObject"_s) {
-                inheritsQObject = true;
-                break;
-            }
-        }
-
         prologue << u"{"_s;
         const QString extensionObjectName = u"extObject"_s;
-        if (inheritsQObject) {
+        if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
             // we have a Q_OBJECT. in this case, we call qmlExtendedObject()
             // function that should return us the extension object. for that we
             // have to figure out which specific extension we want here

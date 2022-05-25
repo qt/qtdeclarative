@@ -394,6 +394,7 @@ void tst_qqmljsscope::groupedPropertySyntax()
     QCOMPARE(fontBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
     auto fontScope = fontBindings[0].groupType();
     QVERIFY(fontScope);
+    QCOMPARE(fontScope->accessSemantics(), QQmlJSScope::AccessSemantics::Value);
     auto subbindings = fontScope->ownPropertyBindings();
     QCOMPARE(subbindings.size(), 2);
 
@@ -422,6 +423,7 @@ void tst_qqmljsscope::attachedProperties()
         QCOMPARE(binding.bindingType(), QQmlJSMetaPropertyBinding::AttachedProperty);
         auto keysScope = binding.attachingType();
         QVERIFY(keysScope);
+        QCOMPARE(keysScope->accessSemantics(), QQmlJSScope::AccessSemantics::Reference);
         *bindings = keysScope->ownPropertyBindings();
     };
 
