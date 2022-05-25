@@ -210,11 +210,12 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     });
 
     QObject::connect(m_dragHandler, &QQuickDragHandler::activeChanged, [this]() {
-        const QPointF pos = m_dragHandler->centroid().position();
+        const QPointF startPos = m_dragHandler->centroid().pressPosition();
+        const QPointF dragPos = m_dragHandler->centroid().position();
         if (m_dragHandler->active()) {
             m_selectable->clearSelection();
-            m_selectable->setSelectionStartPos(pos);
-            m_selectable->setSelectionEndPos(pos);
+            m_selectable->setSelectionStartPos(startPos);
+            m_selectable->setSelectionEndPos(dragPos);
             m_draggedHandle = nullptr;
             updateHandles();
             updateActiveState(true);
