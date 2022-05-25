@@ -343,8 +343,11 @@ void QQuickTreeViewDelegate::mousePressEvent(QMouseEvent *event)
     }
 
     const bool interactOnPress = !treeView()->isInteractive();
-    if (interactOnPress && contains(event->position()))
+    if (interactOnPress && contains(event->position())) {
         d->setCurrentIndex(event->position());
+        if (d->m_treeView && d->m_treeView->selectionModel())
+            d->m_treeView->selectionModel()->clearSelection();
+    }
 
     QQuickAbstractButton::mousePressEvent(event);
 }
@@ -360,8 +363,11 @@ void QQuickTreeViewDelegate::mouseReleaseEvent(QMouseEvent *event)
     }
 
     const bool interactOnRelease = treeView()->isInteractive();
-    if (interactOnRelease && contains(event->position()))
+    if (interactOnRelease && contains(event->position())) {
         d->setCurrentIndex(event->position());
+        if (d->m_treeView && d->m_treeView->selectionModel())
+            d->m_treeView->selectionModel()->clearSelection();
+    }
 
     QQuickAbstractButton::mouseReleaseEvent(event);
 }

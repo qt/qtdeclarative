@@ -94,6 +94,7 @@ private slots:
     void checkPropertiesChildren();
     void checkCurrentIndex();
     void checkClickedSignal();
+    void clearSelectionOnClick();
 };
 
 tst_qquicktreeviewdelegate::tst_qquicktreeviewdelegate()
@@ -312,6 +313,24 @@ void tst_qquicktreeviewdelegate::checkClickedSignal()
     pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
     QCOMPARE(clickedSpy.count(), 1);
+}
+
+void tst_qquicktreeviewdelegate::clearSelectionOnClick()
+{
+    LOAD_TREEVIEW("unmodified.qml");
+
+    // Select root item
+    const auto index = treeView->selectionModel()->model()->index(0, 0);
+    treeView->selectionModel()->select(index, QItemSelectionModel::Select);
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 1);
+
+    // Click on a cell. This should remove the selection
+    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtCell(0, 0));
+    QVERIFY(item);
+    QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
+    QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 0);
 }
 
 QTEST_MAIN(tst_qquicktreeviewdelegate)
