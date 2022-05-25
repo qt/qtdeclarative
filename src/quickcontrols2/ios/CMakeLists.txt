@@ -20,6 +20,7 @@ set(qml_files
     "SwitchDelegate.qml"
     "RadioDelegate.qml"
     "CheckDelegate.qml"
+    "SwipeDelegate.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
