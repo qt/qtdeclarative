@@ -2815,7 +2815,7 @@ void tst_qquickflickable::flickWhenRotated_data()
         for (const auto fr : rotations) {
             if (pr <= 90) {
                 for (const auto s : scales)
-                    QTest::addRow("parent: %g, flickable: %g, scale: %g", pr, fr) << pr << fr << s;
+                    QTest::addRow("parent: %g, flickable: %g, scale: %g", pr, fr, s) << pr << fr << s;
             } else {
                 // don't bother trying every scale with every set of rotations, to save time
                 QTest::addRow("parent: %g, flickable: %g, scale: 1", pr, fr) << pr << fr << qreal(1);
