@@ -1,4 +1,4 @@
-add_subdirectory(data)
+add_subdirectory(QmltcTests)
 
 set(test_sources
     nameconflict.h nameconflict.cpp
