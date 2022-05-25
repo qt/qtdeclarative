@@ -54,6 +54,7 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qv4compileddata_p.h>
 
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
@@ -88,6 +89,13 @@ public:
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
 
     QQmlJSImporter *importer() { return m_importer; } // ### should this be restricted?
+
+    struct UnfinishedBinding
+    {
+        QQmlJSScope::Ptr owner;
+        std::function<QQmlJSMetaPropertyBinding()> create;
+        QQmlJSScope::BindingTargetSpecifier specifier = QQmlJSScope::SimplePropertyTarget;
+    };
 
 protected:
     // Linter warnings, we might want to move this at some point
@@ -182,6 +190,8 @@ protected:
     // A set of all types that have been used during type resolution
     QSet<QString> m_usedTypes;
 
+    QList<UnfinishedBinding> m_bindings;
+
     // stores JS functions and Script bindings per scope (only the name). mimics
     // the content of QmlIR::Object::functionsAndExpressions
     QHash<QQmlJSScope::ConstPtr, QList<QString>> m_functionsAndExpressions;
@@ -227,6 +237,7 @@ protected:
     bool isTypeResolved(const QQmlJSScope::ConstPtr &type);
 
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
+    void setAllBindings();
     void addDefaultProperties();
     void processDefaultProperties();
     void processPropertyBindings();

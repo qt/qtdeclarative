@@ -131,6 +131,7 @@ private Q_SLOTS:
     void extensions();
     void emptyBlockBinding();
     void qualifiedName();
+    void resolvedNonUniqueScopes();
 
 public:
     tst_qqmljsscope()
@@ -700,6 +701,48 @@ void tst_qqmljsscope::qualifiedName()
     QCOMPARE(qualifiedNameOf(qualifiedImportTimerInItemInComponent), "QtQml/Timer 2.0-6.0");
     QCOMPARE(indirectImportTimerInItemInComponent->baseType()->moduleName(), "QtQml");
     QCOMPARE(qualifiedImportTimerInItemInComponent->baseType()->moduleName(), "QtQml");
+}
+
+void tst_qqmljsscope::resolvedNonUniqueScopes()
+{
+    QQmlJSScope::ConstPtr root = run(u"resolvedNonUniqueScope.qml"_s);
+    QVERIFY(root);
+
+    const auto value = [](const QMultiHash<QString, QQmlJSMetaPropertyBinding> &bindings,
+                          const QString &key) {
+        return bindings.value(key, QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation {}));
+    };
+
+    {
+        auto topLevelBindings = root->propertyBindings(u"Component"_s);
+        QCOMPARE(topLevelBindings.size(), 1);
+        QCOMPARE(topLevelBindings[0].bindingType(), QQmlJSMetaPropertyBinding::AttachedProperty);
+        auto componentScope = topLevelBindings[0].attachingType();
+        auto componentBindings = componentScope->ownPropertyBindings();
+        QCOMPARE(componentBindings.size(), 2);
+        auto onCompletedBinding = value(componentBindings, u"onCompleted"_s);
+        QVERIFY(onCompletedBinding.isValid());
+        QCOMPARE(onCompletedBinding.bindingType(), QQmlJSMetaPropertyBinding::Script);
+        QCOMPARE(onCompletedBinding.scriptKind(), QQmlJSMetaPropertyBinding::Script_SignalHandler);
+        auto onDestructionBinding = value(componentBindings, u"onDestruction"_s);
+        QVERIFY(onDestructionBinding.isValid());
+        QCOMPARE(onDestructionBinding.bindingType(), QQmlJSMetaPropertyBinding::Script);
+        QCOMPARE(onDestructionBinding.scriptKind(),
+                 QQmlJSMetaPropertyBinding::Script_SignalHandler);
+    }
+
+    {
+        auto topLevelBindings = root->propertyBindings(u"p"_s);
+        QCOMPARE(topLevelBindings.size(), 1);
+        QCOMPARE(topLevelBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
+        auto pScope = topLevelBindings[0].groupType();
+        auto pBindings = pScope->ownPropertyBindings();
+        QCOMPARE(pBindings.size(), 1);
+        auto onXChangedBinding = value(pBindings, u"onXChanged"_s);
+        QVERIFY(onXChangedBinding.isValid());
+        QCOMPARE(onXChangedBinding.bindingType(), QQmlJSMetaPropertyBinding::Script);
+        QCOMPARE(onXChangedBinding.scriptKind(), QQmlJSMetaPropertyBinding::Script_SignalHandler);
+    }
 }
 
 QTEST_MAIN(tst_qqmljsscope)
