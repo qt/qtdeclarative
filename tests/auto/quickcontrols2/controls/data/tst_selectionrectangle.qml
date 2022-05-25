@@ -337,7 +337,7 @@ TestCase {
         }
 
         // Drag on the bottom right handle, so that the selection shrinks to cell 1, 1
-        mouseDrag(tableView, cellWidth * 2, cellHeight * 2, -cellWidth / 2, -cellHeight / 2, Qt.LeftButton)
+        mouseDrag(tableView, (cellWidth * 3) - 1, (cellHeight * 3) - 1, -cellWidth, -cellHeight, Qt.LeftButton)
         compare(tableView.selectionModel.selectedIndexes.length, 1)
         verify(tableView.selectionModel.isSelected(tableView.model.index(1, 1)))
     }
