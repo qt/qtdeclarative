@@ -18,6 +18,7 @@ set(qml_files
     "ScrollIndicator.qml"
     "ItemDelegate.qml"
     "SwitchDelegate.qml"
+    "RadioDelegate.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
