@@ -194,6 +194,15 @@ int main(int argc, char **argv)
     info.resourcePath = paths.first();
     info.outputNamespace = parser.value(namespaceOption);
 
+    if (info.outputCppFile.isEmpty()) {
+        fprintf(stderr, "An output C++ file is required. Pass one using --impl");
+        return EXIT_FAILURE;
+    }
+    if (info.outputHFile.isEmpty()) {
+        fprintf(stderr, "An output C++ header file is required. Pass one using --header");
+        return EXIT_FAILURE;
+    }
+
     QQmlJSImporter importer { importPaths, &mapper };
     QQmlJSLogger logger;
     logger.setFileName(url);
