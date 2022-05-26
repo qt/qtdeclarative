@@ -105,6 +105,9 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
     This signal is emitted when the spin box value has been interactively
     modified by the user by either touch, mouse, wheel, or keys.
+    In the case of interaction via keyboard, the signal is only emitted
+    when the text has been accepted; meaning when the enter or return keys
+    are pressed, or the input field loses focus.
 */
 
 class QQuickSpinBoxPrivate : public QQuickControlPrivate
