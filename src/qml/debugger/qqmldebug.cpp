@@ -63,7 +63,7 @@ QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
     if (printWarning && !s_printedWarning.test_and_set(std::memory_order_relaxed))
         fprintf(stderr, "QML debugging is enabled. Only use this in a safe environment.\n");
-    QQmlEnginePrivate::qml_debugging_enabled = true;
+    QQmlEnginePrivate::qml_debugging_enabled.store(true, std::memory_order_relaxed);
 }
 
 /*!
