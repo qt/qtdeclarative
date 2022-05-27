@@ -193,7 +193,7 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
     \endcode
 */
 
-bool QQmlEnginePrivate::qml_debugging_enabled = false;
+std::atomic<bool> QQmlEnginePrivate::qml_debugging_enabled{false};
 bool QQmlEnginePrivate::s_designerMode = false;
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
