@@ -59,12 +59,17 @@ QT_BEGIN_NAMESPACE
 
 Q_CONSTINIT static std::atomic_flag s_printedWarning = Q_ATOMIC_FLAG_INIT;
 
-QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
+void QQmlDebuggingEnabler::enableDebugging(bool printWarning)
 {
     if (printWarning && !s_printedWarning.test_and_set(std::memory_order_relaxed))
         fprintf(stderr, "QML debugging is enabled. Only use this in a safe environment.\n");
     QQmlEnginePrivate::qml_debugging_enabled.store(true, std::memory_order_relaxed);
 }
+
+QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
+{
+    enableDebugging(printWarning);
+};
 
 /*!
  * Retrieves the plugin keys of the debugger services provided by default. The debugger services
