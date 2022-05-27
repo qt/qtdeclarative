@@ -111,7 +111,7 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
     if (!params)
         return nullptr;
 
-    if (!QQmlEnginePrivate::qml_debugging_enabled) {
+    if (!QQmlEnginePrivate::qml_debugging_enabled.load(std::memory_order_relaxed)) {
         if (!params->arguments.isEmpty()) {
             qWarning().noquote() << QString::fromLatin1(
                                         "QML Debugger: Ignoring \"-qmljsdebugger=%1\". Debugging "

@@ -84,6 +84,8 @@
 
 #include <qproperty.h>
 
+#include <atomic>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
@@ -279,7 +281,7 @@ public:
     static bool designerMode();
     static void activateDesignerMode();
 
-    static bool qml_debugging_enabled;
+    static std::atomic<bool> qml_debugging_enabled;
 
     mutable QMutex networkAccessManagerMutex;
 

@@ -162,7 +162,7 @@ QT_BEGIN_NAMESPACE
     \endcode
 */
 
-bool QQmlEnginePrivate::qml_debugging_enabled = false;
+std::atomic<bool> QQmlEnginePrivate::qml_debugging_enabled{false};
 bool QQmlEnginePrivate::s_designerMode = false;
 
 bool QQmlEnginePrivate::designerMode()
