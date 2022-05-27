@@ -168,7 +168,8 @@ void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char 
 
 /*!
     \macro Q_IMPORT_QML_PLUGIN(PluginName)
-    \relates <QQmlExtensionPlugin>
+    \since 6.2
+    \relates QQmlExtensionPlugin
 
     Ensures the plugin whose metadata-declaring class is named \a PluginName
     is linked into static builds.
