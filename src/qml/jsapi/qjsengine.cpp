@@ -478,7 +478,7 @@ void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSVal
 */
 void QJSEngine::setInterrupted(bool interrupted)
 {
-    m_v4Engine->isInterrupted = interrupted;
+    m_v4Engine->isInterrupted.storeRelaxed(interrupted);
 }
 
 /*!
@@ -489,7 +489,7 @@ void QJSEngine::setInterrupted(bool interrupted)
 */
 bool QJSEngine::isInterrupted() const
 {
-    return m_v4Engine->isInterrupted.loadAcquire();
+    return m_v4Engine->isInterrupted.loadRelaxed();
 }
 
 static QUrl urlForFileName(const QString &fileName)
@@ -571,7 +571,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
                                       );
         }
     }
-    if (v4->isInterrupted.loadAcquire())
+    if (v4->isInterrupted.loadRelaxed())
         result = v4->newErrorObject(QStringLiteral("Interrupted"));
 
     return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
@@ -611,7 +611,7 @@ QJSValue QJSEngine::importModule(const QString &fileName)
     if (m_v4Engine->hasException)
         return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
     moduleUnit->evaluate();
-    if (!m_v4Engine->isInterrupted.loadAcquire())
+    if (!m_v4Engine->isInterrupted.loadRelaxed())
         return QJSValuePrivate::fromReturnedValue(moduleNamespace->asReturnedValue());
 
     return QJSValuePrivate::fromReturnedValue(

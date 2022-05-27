@@ -360,7 +360,7 @@ static inline QV4::Value &stackValue(QV4::Value *stack, size_t slot, const JSTyp
 #undef CHECK_EXCEPTION
 #endif
 #define CHECK_EXCEPTION \
-    if (engine->hasException || engine->isInterrupted.loadAcquire()) \
+    if (engine->hasException || engine->isInterrupted.loadRelaxed()) \
         goto handleUnwind
 
 static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
@@ -1525,7 +1525,7 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         // We do start the exception handler in case of isInterrupted. The exception handler will
         // immediately abort, due to the same isInterrupted. We don't skip the exception handler
         // because the current behavior is easier to implement in the JIT.
-        Q_ASSERT(engine->hasException || engine->isInterrupted.loadAcquire() || frame->unwindLevel);
+        Q_ASSERT(engine->hasException || engine->isInterrupted.loadRelaxed() || frame->unwindLevel);
         if (!frame->unwindHandler) {
             acc = Encode::undefined();
             return acc;
