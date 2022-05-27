@@ -54,6 +54,10 @@ public:
         return updatePolishCalled;
     }
 
+    Q_INVOKABLE void clearUpdatePolishCalled() {
+        updatePolishCalled = false;
+    }
+
     void updatePolish() override
     {
         updatePolishCalled = true;

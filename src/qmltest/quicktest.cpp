@@ -128,6 +128,9 @@ bool QQuickTest::qIsPolishScheduled(const QQuickItem *item)
             QVERIFY(QQuickTest::qWaitForPolish(window));
     \endcode
 
+    The QML equivalent of this function is
+    \l [QML]{TestCase::}{isPolishScheduled()}.
+
     \sa QQuickItem::polish(), QQuickItem::updatePolish(),
         QQuickTest::qWaitForPolish()
 */
@@ -186,6 +189,9 @@ bool QQuickTest::qWaitForPolish(const QQuickItem *item, int timeout)
 
     Returns \c true if \c qIsPolishScheduled(item) returns false for all items
     within \a timeout milliseconds, otherwise returns \c false.
+
+    The QML equivalent of this function is
+    \l [QML]{TestCase::}{waitForPolish()}.
 
     \sa QQuickItem::polish(), QQuickItem::updatePolish(),
         QQuickTest::qIsPolishScheduled()

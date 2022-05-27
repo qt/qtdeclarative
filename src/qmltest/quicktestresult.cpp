@@ -800,14 +800,30 @@ QObject *QuickTestResult::findChild(QObject *parent, const QString &objectName)
     return parent ? parent->findChild<QObject*>(objectName) : 0;
 }
 
-bool QuickTestResult::isPolishScheduled(QQuickItem *item) const
+bool QuickTestResult::isPolishScheduled(QObject *itemOrWindow) const
 {
-    return QQuickTest::qIsPolishScheduled(item);
+    if (auto item = qobject_cast<QQuickItem*>(itemOrWindow))
+        return QQuickTest::qIsPolishScheduled(item);
+
+    if (auto window = qobject_cast<QQuickWindow*>(itemOrWindow))
+        return QQuickTest::qIsPolishScheduled(window);
+
+    qmlWarning(this) << "isPolishScheduled() expects either an Item or Window, but got"
+        << QDebug::toString(itemOrWindow);
+    return false;
 }
 
-bool QuickTestResult::waitForItemPolished(QQuickItem *item, int timeout)
+bool QuickTestResult::waitForPolish(QObject *itemOrWindow, int timeout) const
 {
-    return QQuickTest::qWaitForPolish(item, timeout);
+    if (auto item = qobject_cast<QQuickItem*>(itemOrWindow))
+        return QQuickTest::qWaitForPolish(item, timeout);
+
+    if (auto window = qobject_cast<QQuickWindow*>(itemOrWindow))
+        return QQuickTest::qWaitForPolish(window, timeout);
+
+    qmlWarning(this) << "waitForItemPolish() expects either an Item or Window, but got"
+        << QDebug::toString(itemOrWindow);
+    return false;
 }
 
 namespace QTest {

@@ -521,16 +521,21 @@ Item {
 
     /*!
         \since 5.13
-        \qmlmethod bool TestCase::isPolishScheduled(object item)
+        \qmlmethod bool TestCase::isPolishScheduled(object itemOrWindow)
 
-        Returns \c true if \l {QQuickItem::}{updatePolish()} has not been called
-        on \a item since the last call to \l {QQuickItem::}{polish()},
-        otherwise returns \c false.
+        If \a itemOrWindow is an \l Item, this function returns \c true if
+        \l {QQuickItem::}{updatePolish()} has not been called on it since the
+        last call to \l {QQuickItem::}{polish()}, otherwise returns \c false.
+
+        Since Qt 6.4, if \a itemOrWindow is a \l Window, this function returns
+        \c true if \l {QQuickItem::}{updatePolish()} has not been called on any
+        item it manages since the last call to \l {QQuickItem::}{polish()} on
+        those items, otherwise returns \c false.
 
         When assigning values to properties in QML, any layouting the item
         must do as a result of the assignment might not take effect immediately,
         but can instead be postponed until the item is polished. For these cases,
-        you can use this function to ensure that the item has been polished
+        you can use this function to ensure that items have been polished
         before the execution of the test continues. For example:
 
         \code
@@ -545,20 +550,21 @@ Item {
         makes it obvious why an item wasn't polished and allows tests to
         fail early under such circumstances.
 
-        \sa waitForItemPolished(), QQuickItem::polish(), QQuickItem::updatePolish()
+        \sa waitForPolish(), QQuickItem::polish(), QQuickItem::updatePolish()
     */
-    function isPolishScheduled(item) {
-        if (!item || typeof item !== "object") {
-            qtest_results.fail("Argument must be a valid Item; actual type is " + typeof item,
+    function isPolishScheduled(itemOrWindow) {
+        if (!itemOrWindow || typeof itemOrWindow !== "object") {
+            qtest_results.fail("Argument must be a valid Item or Window; actual type is " + typeof itemOrWindow,
                 util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }
 
-        return qtest_results.isPolishScheduled(item)
+        return qtest_results.isPolishScheduled(itemOrWindow)
     }
 
     /*!
         \since 5.13
+        \deprecated [6.4] Use \l qWaitForPolish() instead.
         \qmlmethod bool waitForItemPolished(object item, int timeout = 5000)
 
         Waits for \a timeout milliseconds or until
@@ -570,8 +576,29 @@ Item {
         \sa isPolishScheduled(), QQuickItem::polish(), QQuickItem::updatePolish()
     */
     function waitForItemPolished(item, timeout) {
-        if (!item || typeof item !== "object") {
-            qtest_results.fail("First argument must be a valid Item; actual type is " + typeof item,
+        return waitForPolish(item, timeout)
+    }
+
+    /*!
+        \since 6.4
+        \qmlmethod bool waitForPolish(object windowOrItem, int timeout = 5000)
+
+        If \a windowOrItem is an Item, this functions waits for \a timeout
+        milliseconds or until \c isPolishScheduled(windowOrItem) returns \c false.
+        Returns \c true if \c isPolishScheduled(windowOrItem) returns \c false within
+        \a timeout milliseconds, otherwise returns \c false.
+
+        If \c windowOrItem is a Window, this functions waits for \c timeout
+        milliseconds or until \c isPolishScheduled() returns \c false for
+        all items managed by the window. Returns \c true if
+        \c isPolishScheduled() returns \c false for all items within
+        \a timeout milliseconds, otherwise returns \c false.
+
+        \sa isPolishScheduled(), QQuickItem::polish(), QQuickItem::updatePolish()
+    */
+    function waitForPolish(windowOrItem, timeout) {
+        if (!windowOrItem || typeof windowOrItem !== "object") {
+            qtest_results.fail("First argument must be a valid Item or Window; actual type is " + typeof windowOrItem,
                 util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }
@@ -585,7 +612,7 @@ Item {
         if (!timeout)
             timeout = 5000
 
-        return qtest_results.waitForItemPolished(item, timeout)
+        return qtest_results.waitForPolish(windowOrItem, timeout)
     }
 
     /*!

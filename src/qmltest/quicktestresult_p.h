@@ -57,6 +57,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -164,8 +165,8 @@ public Q_SLOTS:
 
     Q_REVISION(1, 1) QObject *findChild(QObject *parent, const QString &objectName);
 
-    Q_REVISION(1, 13) bool isPolishScheduled(QQuickItem *item) const;
-    Q_REVISION(1, 13) bool waitForItemPolished(QQuickItem *item, int timeout);
+    Q_REVISION(1, 13) bool isPolishScheduled(QObject *itemOrWindow) const;
+    Q_REVISION(6, 4) bool waitForPolish(QObject *itemOrWindow, int timeout) const;
 
 public:
     // Helper functions for the C++ main() shell.
