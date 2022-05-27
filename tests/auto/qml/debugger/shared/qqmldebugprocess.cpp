@@ -106,7 +106,8 @@ void QQmlDebugProcess::stop()
     if (m_process.state() != QProcess::NotRunning) {
         disconnect(&m_process, &QProcess::errorOccurred, this, &QQmlDebugProcess::processError);
         m_process.kill();
-        m_process.waitForFinished(5000);
+        if (!m_process.waitForFinished(5000))
+            qFatal("Debug process refused to be killed. We need to crash now.");
     }
 }
 
