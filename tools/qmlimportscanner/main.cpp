@@ -647,6 +647,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // QQmlDirParser returnes QMultiHashes. Ensure deterministic output.
+    QHashSeed::setDeterministicGlobalSeed();
+
     QStringList qmlRootPaths;
     QStringList scanFiles;
     QStringList qmlImportPaths;
