@@ -4096,8 +4096,9 @@ void QQuickItem::mouseReleaseEvent(QMouseEvent *event)
 
     \input item.qdocinc accepting-events
   */
-void QQuickItem::mouseDoubleClickEvent(QMouseEvent *)
+void QQuickItem::mouseDoubleClickEvent(QMouseEvent *event)
 {
+    event->ignore();
 }
 
 /*!

@@ -149,6 +149,8 @@ void tst_PointHandler::tabletStylus()
     QQuickPointHandler *handler = window->rootObject()->findChild<QQuickPointHandler *>("pointHandler");
     QVERIFY(handler);
     handler->setAcceptedDevices(QInputDevice::DeviceType::Stylus);
+    // avoid generating a double click
+    QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10);
 
     QSignalSpy activeSpy(handler, SIGNAL(activeChanged()));
     QSignalSpy pointSpy(handler, SIGNAL(pointChanged()));
