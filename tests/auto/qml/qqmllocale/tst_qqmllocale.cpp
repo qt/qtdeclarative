@@ -35,7 +35,6 @@
 #include <QtCore/QDateTime>
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qscopedpointer.h>
-#include <QtCore/qtimezone.h>
 #include <qcolor.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -1318,9 +1317,12 @@ void tst_qqmllocale::numberOptions()
             }
         }
     )", QUrl("testdata"));
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "Error: Locale: Number.fromLocaleString(): Invalid format");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg,
+                         "Error: Locale: Number.fromLocaleString(): Invalid format");
     QScopedPointer<QObject> root {comp.create()};
-    qDebug() << comp.errorString();
+    const auto error = comp.errorString();
+    if (!error.isEmpty())
+        qDebug() << error;
     QVERIFY(root);
     QCOMPARE(root->property("formatted").toString(), QLatin1String("10000,0000"));
     QCOMPARE(root->property("caughtException").toBool(), true);
