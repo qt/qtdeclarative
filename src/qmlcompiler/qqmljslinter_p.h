@@ -65,8 +65,16 @@ public:
         const QString &description() const { return m_description; }
         const QString &version() const { return m_version; }
         const QString &author() const { return m_author; }
+        const QList<QQmlJSLogger::Category> categories() const
+        {
+            return m_categories;
+        }
         bool isBuiltin() const { return m_isBuiltin; }
         bool isValid() const { return m_isValid; }
+        bool isInternal() const
+        {
+            return m_isInternal;
+        }
 
         bool isEnabled() const
         {
@@ -87,9 +95,12 @@ public:
         QString m_version;
         QString m_author;
 
+        QList<QQmlJSLogger::Category> m_categories;
         QQmlSA::LintPlugin *m_instance;
         QPluginLoader *m_loader = nullptr;
         bool m_isBuiltin;
+        bool m_isInternal =
+                false; // Internal plugins are those developed and maintained inside the Qt project
         bool m_isValid = false;
         bool m_isEnabled = true;
     };
@@ -100,7 +111,7 @@ public:
     LintResult lintFile(const QString &filename, const QString *fileContents, const bool silent,
                         QJsonArray *json, const QStringList &qmlImportPaths,
                         const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                        const QMap<QString, QQmlJSLogger::Option> &options);
+                        const QList<QQmlJSLogger::Category> &categories);
 
     FixResult applyFixes(QString *fixedCode, bool silent);
 

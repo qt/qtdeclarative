@@ -3,9 +3,17 @@
 
 #include "quicklintplugin.h"
 
+#include <QtQmlCompiler/private/qqmljslogger_p.h>
+
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+
+static constexpr LoggerWarningId quickLayoutPositioning { "Quick.layout-positioning" };
+static constexpr LoggerWarningId quickAttachedPropertyType { "Quick.attached-property-type" };
+static constexpr LoggerWarningId quickControlsNativeCustomize { "Quick.controls-native-customize" };
+static constexpr LoggerWarningId quickAnchorCombinations { "Quick.anchor-combinations" };
+static constexpr LoggerWarningId quickUnexpectedVarType { "Quick.unexpected-var-type" };
 
 ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
         QQmlSA::PassManager *manager)
@@ -49,7 +57,7 @@ void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
 
             auto bindings = element->ownPropertyBindings(warning.propertyName);
 
-            emitWarning(warning.message, bindings.first->sourceLocation());
+            emitWarning(warning.message, quickLayoutPositioning, bindings.first->sourceLocation());
         }
         break;
     }
@@ -114,7 +122,7 @@ void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &ele
         }
     }
 
-    emitWarning(warning->message, location);
+    emitWarning(warning->message, quickAttachedPropertyType, location);
 }
 
 void AttachedPropertyTypeValidatorPass::onBinding(const QQmlSA::Element &element,
@@ -231,7 +239,7 @@ void ControlsNativeValidatorPass::run(const QQmlSA::Element &element)
                                                "qtquickcontrols2-customize.html#customization-"
                                                "reference for more information.")
                                         .arg(propertyName),
-                                element->sourceLocation());
+                                quickControlsNativeCustomize, element->sourceLocation());
                 }
             }
             // Since all the different types we have rules for don't inherit from each other (except
@@ -312,7 +320,7 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
         if (warnLoc.isValid()) {
             emitWarning(
                     "Cannot specify left, right, and horizontalCenter anchors at the same time.",
-                    warnLoc);
+                    quickAnchorCombinations, warnLoc);
         }
     }
 
@@ -321,7 +329,7 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
                 ownSourceLocation({ u"top"_s, u"bottom"_s, u"verticalCenter"_s });
         if (warnLoc.isValid()) {
             emitWarning("Cannot specify top, bottom, and verticalCenter anchors at the same time.",
-                        warnLoc);
+                        quickAnchorCombinations, warnLoc);
         }
     }
 
@@ -332,7 +340,7 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
         if (warnLoc.isValid()) {
             emitWarning("Baseline anchor cannot be used in conjunction with top, bottom, or "
                         "verticalCenter anchors.",
-                        warnLoc);
+                        quickAnchorCombinations, warnLoc);
         }
     }
 }
@@ -375,7 +383,7 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
                     emitWarning(
                             u"SwipeDelegate: Cannot use horizontal anchors with %1; unable to layout the item."_s
                                     .arg(property),
-                            location);
+                            quickAnchorCombinations, location);
                     break;
                 }
             }
@@ -406,7 +414,7 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
     if (group->hasPropertyBindings(u"behind"_s)
         && (group->hasPropertyBindings(u"right"_s) || group->hasPropertyBindings(u"left"_s))) {
         emitWarning("SwipeDelegate: Cannot set both behind and left/right properties",
-                    ownBindingIterator->first->sourceLocation());
+                    quickAnchorCombinations, ownBindingIterator->first->sourceLocation());
     }
 }
 
@@ -484,7 +492,7 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
 
         emitWarning(u"Unexpected type for property \"%1\" expected %2 got %3"_s.arg(
                             propertyName, expectedTypeNames.join(u", "_s), bindingTypeName),
-                    binding.sourceLocation());
+                    quickUnexpectedVarType, binding.sourceLocation());
     }
 }
 

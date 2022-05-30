@@ -52,7 +52,7 @@ public:
                         .arg(name)
                         .arg(declarationLocation.startLine)
                         .arg(declarationLocation.startColumn),
-                Log_Type, accessLocation);
+                qmlType, accessLocation);
     }
 
 private:
@@ -83,6 +83,8 @@ QQmlJSLinter::Plugin::Plugin(QQmlJSLinter::Plugin &&plugin) noexcept
     m_loader = plugin.m_loader;
     m_isValid = plugin.m_isValid;
     m_isBuiltin = plugin.m_isBuiltin;
+    m_isInternal = plugin.m_isInternal;
+    m_categories = plugin.m_categories;
 
     // Mark the old Plugin as invalid and make sure it doesn't delete the loader
     plugin.m_loader = nullptr;
@@ -140,7 +142,8 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
 
     QJsonObject pluginMetaData = metaData[u"MetaData"].toObject();
 
-    for (const QString &requiredKey : { u"name"_s, u"version"_s, u"author"_s }) {
+    for (const QString &requiredKey :
+         { u"name"_s, u"version"_s, u"author"_s, u"loggingCategories"_s }) {
         if (!pluginMetaData.contains(requiredKey)) {
             qWarning() << pluginName << "is missing the required " << requiredKey
                        << "metadata, skipping";
@@ -152,6 +155,36 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
     m_author = pluginMetaData[u"author"].toString();
     m_version = pluginMetaData[u"version"].toString();
     m_description = pluginMetaData[u"description"].toString(u"-/-"_s);
+    m_isInternal = pluginMetaData[u"isInternal"].toBool(false);
+
+    if (!pluginMetaData[u"loggingCategories"].isArray()) {
+        qWarning() << pluginName << "has loggingCategories which are not an array, skipping";
+        return false;
+    }
+
+    QJsonArray categories = pluginMetaData[u"loggingCategories"].toArray();
+
+    for (const QJsonValue &value : categories) {
+        if (!value.isObject()) {
+            qWarning() << pluginName << "has invalid loggingCategories entries, skipping";
+            return false;
+        }
+
+        QJsonObject object = value.toObject();
+
+        for (const QString &requiredKey : { u"name"_s, u"description"_s }) {
+            if (!object.contains(requiredKey)) {
+                qWarning() << pluginName << " logging category is missing the required "
+                           << requiredKey << "metadata, skipping";
+                return false;
+            }
+        }
+
+        const QString categoryId =
+                (m_isInternal ? u""_s : u"Plugin."_s) + m_name + u'.' + object[u"name"].toString();
+        m_categories << QQmlJSLogger::Category { categoryId, categoryId,
+                                                 object[u"description"].toString(), QtWarningMsg };
+    }
 
     return true;
 }
@@ -211,9 +244,9 @@ std::vector<QQmlJSLinter::Plugin> QQmlJSLinter::loadPlugins(QStringList paths)
 void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
                                  const QList<QQmlJS::SourceLocation> &comments)
 {
-    QHash<int, QSet<QQmlJSLoggerCategory>> disablesPerLine;
-    QHash<int, QSet<QQmlJSLoggerCategory>> enablesPerLine;
-    QHash<int, QSet<QQmlJSLoggerCategory>> oneLineDisablesPerLine;
+    QHash<int, QSet<QString>> disablesPerLine;
+    QHash<int, QSet<QString>> enablesPerLine;
+    QHash<int, QSet<QString>> oneLineDisablesPerLine;
 
     const QString code = logger->code();
     const QStringList lines = code.split(u'\n');
@@ -229,20 +262,24 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
 
         const QString command = words.at(1);
 
-        QSet<QQmlJSLoggerCategory> categories;
+        QSet<QString> categories;
         for (qsizetype i = 2; i < words.size(); i++) {
             const QString category = words.at(i);
-            const auto option = logger->options().constFind(category);
-            if (option != logger->options().constEnd())
-                categories << option->m_category;
+            const auto loggerCategories = logger->categories();
+            const auto categoryExists = std::any_of(
+                    loggerCategories.cbegin(), loggerCategories.cend(),
+                    [&](const QQmlJSLogger::Category &cat) { return cat.id().name() == category; });
+
+            if (categoryExists)
+                categories << category;
             else
                 logger->log(u"qmllint directive on unknown category \"%1\""_s.arg(category),
-                            Log_Syntax, loc);
+                            qmlSyntax, loc);
         }
 
         if (categories.isEmpty()) {
-            for (const auto &option : logger->options())
-                categories << option.m_category;
+            for (const auto &option : logger->categories())
+                categories << option.id().name().toString();
         }
 
         if (command == u"disable"_s) {
@@ -264,7 +301,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
         } else if (command == u"enable"_s) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
-            logger->log(u"Invalid qmllint directive \"%1\" provided"_s.arg(command), Log_Syntax,
+            logger->log(u"Invalid qmllint directive \"%1\" provided"_s.arg(command), qmlSyntax,
                         loc);
         }
     }
@@ -272,7 +309,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
     if (disablesPerLine.isEmpty() && oneLineDisablesPerLine.isEmpty())
         return;
 
-    QSet<QQmlJSLoggerCategory> currentlyDisabled;
+    QSet<QString> currentlyDisabled;
     for (qsizetype i = 1; i <= lines.length(); i++) {
         currentlyDisabled.unite(disablesPerLine[i]).subtract(enablesPerLine[i]);
 
@@ -290,7 +327,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                                                 QJsonArray *json, const QStringList &qmlImportPaths,
                                                 const QStringList &qmldirFiles,
                                                 const QStringList &resourceFiles,
-                                                const QMap<QString, QQmlJSLogger::Option> &options)
+                                                const QList<QQmlJSLogger::Category> &categories)
 {
     // Make sure that we don't expose an old logger if we return before a new one is created.
     m_logger.reset();
@@ -452,15 +489,22 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                                             m_logger->fileName(), m_importer.resourceFileMapper()),
                                     qmldirFiles };
 
-            parseComments(m_logger.get(), engine.comments());
+            if (m_enablePlugins) {
+                for (const Plugin &plugin : m_plugins) {
+                    for (const QQmlJSLogger::Category &category : plugin.categories())
+                        m_logger->registerCategory(category);
+                }
+            }
 
-            for (auto it = options.cbegin(); it != options.cend(); ++it) {
-                if (!it.value().m_changed)
+            for (auto it = categories.cbegin(); it != categories.cend(); ++it) {
+                if (!it->changed)
                     continue;
 
-                m_logger->setCategoryIgnored(it.value().m_category, it.value().m_ignored);
-                m_logger->setCategoryLevel(it.value().m_category, it.value().m_level);
+                m_logger->setCategoryIgnored(it->id(), it->ignored);
+                m_logger->setCategoryLevel(it->id(), it->level);
             }
+
+            parseComments(m_logger.get(), engine.comments());
 
             QQmlJSTypeResolver typeResolver(&m_importer);
 
@@ -533,8 +577,8 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
 
             if (!warnings.isEmpty()) {
                 m_logger->log(QStringLiteral("Type warnings occurred while evaluating file:"),
-                              Log_Import, QQmlJS::SourceLocation());
-                m_logger->processMessages(warnings, Log_Import);
+                              qmlImport, QQmlJS::SourceLocation());
+                m_logger->processMessages(warnings, qmlImport);
             }
 
             success &= !m_logger->hasWarnings() && !m_logger->hasErrors();

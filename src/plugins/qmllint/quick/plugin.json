@@ -2,5 +2,33 @@
     "name": "Quick",
     "author": "Qt",
     "description": "Warns about QtQuick best practices",
-    "version": "1.0"
+    "version": "1.0",
+    "isInternal": true,
+    "loggingCategories": [
+        {
+            "name": "layout-positioning",
+            "settingsName": "LayoutsPositioning",
+            "description": "Warn about using the wrong kind of positioning in layouts"
+        },
+        {
+            "name": "attached-property-type",
+            "settingsName": "AttachedPropertyType",
+            "description": "Warn about attached properties being used in the wrong type"
+        },
+        {
+            "name": "anchor-combinations",
+            "settingsName": "Anchors",
+            "description": "Warn about invalid anchor combinations"
+        },
+        {
+            "name": "controls-native-customize",
+            "settingsName": "ControlsNativeCustomize",
+            "description": "Warn about unsupported customizing of native controls"
+        },
+        {
+            "name": "unexpected-var-type",
+            "settingsName": "UnexpectedVarType",
+            "description": "Warn about incompatible types being set on var properties"
+        }
+    ]
 }

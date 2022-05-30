@@ -247,12 +247,12 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
                         methods.isEmpty() ? u"no signal"_s : u"too many signals"_s;
                 m_logger->log(
                         u"internal error: %1 found for property '%2'"_s.arg(errorString, name),
-                        Log_Compiler, publicMember->identifierToken);
+                        qmlCompiler, publicMember->identifierToken);
                 return false;
             } else if (methods[0].methodType() != QQmlJSMetaMethod::Signal) {
                 m_logger->log(u"internal error: method %1 of property %2 must be a signal"_s.arg(
                                       notifyName, name),
-                              Log_Compiler, publicMember->identifierToken);
+                              qmlCompiler, publicMember->identifierToken);
                 return false;
             }
         }
@@ -279,7 +279,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiInlineComponent *component)
 {
     if (!QQmlJSImportVisitor::visit(component))
         return false;
-    m_logger->log(u"Inline components are not supported"_s, Log_Compiler,
+    m_logger->log(u"Inline components are not supported"_s, qmlCompiler,
                   component->firstSourceLocation());
     // despite the failure, return true here so that we do not assert in
     // QQmlJSImportVisitor::endVisit(UiInlineComponent)
@@ -536,7 +536,7 @@ void QmltcVisitor::setupAliases()
                                                     QQmlJSUtils::AliasResolutionVisitor {});
             if (result.kind == QQmlJSUtils::AliasTarget_Invalid) {
                 m_logger->log(QStringLiteral("Cannot resolve alias \"%1\"").arg(p.propertyName()),
-                              Log_Alias, current->sourceLocation());
+                              qmlAlias, current->sourceLocation());
                 continue;
             }
             setAliasData(&p, result);
@@ -658,7 +658,7 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
         if (!isReserved(name))
             return;
         m_logger->log(errorPrefix + u" '" + name + u"' is a reserved C++ word, consider renaming",
-                      Log_Compiler, type->sourceLocation());
+                      qmlCompiler, type->sourceLocation());
     };
 
     const auto enums = type->ownEnumerations();

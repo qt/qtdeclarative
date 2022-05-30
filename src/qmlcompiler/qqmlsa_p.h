@@ -17,6 +17,7 @@
 #include <qtqmlcompilerexports.h>
 
 #include <private/qqmljsscope_p.h>
+#include <private/qqmljslogger_p.h>
 #include <QtCore/qset.h>
 
 #include <map>
@@ -45,7 +46,7 @@ public:
     GenericPass(PassManager *manager);
     virtual ~GenericPass();
 
-    void emitWarning(QAnyStringView message,
+    void emitWarning(QAnyStringView message, LoggerWarningId id,
                      QQmlJS::SourceLocation srcLocation = QQmlJS::SourceLocation());
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
     Element resolveLiteralType(const QQmlJSMetaPropertyBinding &binding);

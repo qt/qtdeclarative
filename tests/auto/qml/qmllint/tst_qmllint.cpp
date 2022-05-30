@@ -111,8 +111,7 @@ private:
                      QStringList importDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
                      DefaultImportOption defaultImports = UseDefaultImports,
-                     QMap<QString, QQmlJSLogger::Option> *options = nullptr,
-                     bool autoFixable = false);
+                     QList<QQmlJSLogger::Category> *categories = nullptr, bool autoFixable = false);
 
     void searchWarnings(const QJsonArray &warnings, const QString &string,
                         QtMsgType type = QtWarningMsg, quint32 line = 0, quint32 column = 0,
@@ -133,7 +132,7 @@ private:
     void runTest(const QString &testFile, const Result &result, QStringList importDirs = {},
                  QStringList qmltypesFiles = {}, QStringList resources = {},
                  DefaultImportOption defaultImports = UseDefaultImports,
-                 QMap<QString, QQmlJSLogger::Option> *options = nullptr);
+                 QList<QQmlJSLogger::Category> *categories = nullptr);
 
     QString m_qmllintPath;
     QString m_qmljsrootgenPath;
@@ -707,7 +706,8 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("duplicated id")
             << QStringLiteral("duplicateId.qml")
             << Result { { Message {
-                       QStringLiteral("Found a duplicated id. id root was first declared ") } } };
+                       QStringLiteral("Found a duplicated id. id root was first declared "), 0, 0,
+                       QtCriticalMsg } } };
 
     QTest::newRow("string as id") << QStringLiteral("stringAsId.qml")
                                   << Result { { Message { QStringLiteral(
@@ -1213,12 +1213,15 @@ void TestQmllint::compilerWarnings()
 
     QJsonArray warnings;
 
-    auto options = QQmlJSLogger::options();
+    auto categories = QQmlJSLogger::defaultCategories();
+
+    auto category = std::find(categories.begin(), categories.end(), qmlCompiler);
+    Q_ASSERT(category != categories.end());
 
     if (enableCompilerWarnings)
-        options[u"compiler"_s].setLevel(u"warning"_s);
+        category->setLevel(u"warning"_s);
 
-    runTest(filename, result, {}, {}, {}, UseDefaultImports, &options);
+    runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
 }
 
 void TestQmllint::controlsSanity_data()
@@ -1242,10 +1245,14 @@ void TestQmllint::controlsSanity()
 
     QJsonArray warnings;
 
-    auto options = QQmlJSLogger::options();
-    options[u"controls-sanity"_s].setLevel(u"warning"_s);
+    auto categories = QQmlJSLogger::defaultCategories();
 
-    runTest(filename, result, {}, {}, {}, UseDefaultImports, &options);
+    auto category = std::find(categories.begin(), categories.end(), qmlControlsSanity);
+    Q_ASSERT(category != categories.end());
+
+    category->setLevel(u"warning"_s);
+
+    runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
 }
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
@@ -1338,7 +1345,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
                               QStringList importPaths, QStringList qmldirFiles,
                               QStringList resources, DefaultImportOption defaultImports,
-                              QMap<QString, QQmlJSLogger::Option> *options, bool autoFixable)
+                              QList<QQmlJSLogger::Category> *categories, bool autoFixable)
 {
     QJsonArray jsonOutput;
 
@@ -1348,7 +1355,8 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
     QQmlJSLinter::LintResult lintResult = m_linter.lintFile(
             lintedFile, nullptr, true, warnings ? &jsonOutput : nullptr,
             defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths : importPaths,
-            qmldirFiles, resources, options != nullptr ? *options : QQmlJSLogger::options());
+            qmldirFiles, resources,
+            categories != nullptr ? *categories : QQmlJSLogger::defaultCategories());
 
     bool success = lintResult == QQmlJSLinter::LintSuccess;
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
@@ -1376,7 +1384,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
             file.close();
 
             callQmllint(QFileInfo(file).absoluteFilePath(), true, nullptr, importPaths, qmldirFiles,
-                        resources, defaultImports, options, false);
+                        resources, defaultImports, categories, false);
 
             const QString fixedPath = testFile(info.baseName() + u".fixed.qml"_s);
 
@@ -1404,11 +1412,11 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 void TestQmllint::runTest(const QString &testFile, const Result &result, QStringList importDirs,
                           QStringList qmltypesFiles, QStringList resources,
                           DefaultImportOption defaultImports,
-                          QMap<QString, QQmlJSLogger::Option> *options)
+                          QList<QQmlJSLogger::Category> *categories)
 {
     QJsonArray warnings;
     callQmllint(testFile, result.flags.testFlag(Result::Flag::ExitsNormally), &warnings, importDirs,
-                qmltypesFiles, resources, defaultImports, options,
+                qmltypesFiles, resources, defaultImports, categories,
                 result.flags.testFlag(Result::Flag::AutoFixable));
     checkResult(warnings, result);
 }
@@ -1583,15 +1591,18 @@ void TestQmllint::additionalImplicitImport()
 void TestQmllint::attachedPropertyReuse()
 {
 
-    auto options = QQmlJSLogger::options();
-    options[u"multiple-attached-objects"_s].setLevel(u"warning"_s);
+    auto categories = QQmlJSLogger::defaultCategories();
+    auto category = std::find(categories.begin(), categories.end(), qmlAttachedPropertyReuse);
+    Q_ASSERT(category != categories.end());
+
+    category->setLevel(u"warning"_s);
     runTest("attachedPropNotReused.qml",
             Result { { Message { QStringLiteral("Using attached type QQuickKeyNavigationAttached "
                                                 "already initialized in a parent "
                                                 "scope") } } },
-            {}, {}, {}, UseDefaultImports, &options);
+            {}, {}, {}, UseDefaultImports, &categories);
 
-    runTest("attachedPropEnum.qml", Result::clean(), {}, {}, {}, UseDefaultImports, &options);
+    runTest("attachedPropEnum.qml", Result::clean(), {}, {}, {}, UseDefaultImports, &categories);
 }
 
 void TestQmllint::missingBuiltinsNoCrash()

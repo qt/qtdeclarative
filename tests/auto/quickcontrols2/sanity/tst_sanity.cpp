@@ -11,6 +11,7 @@
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljsast_p.h>
+#include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -40,23 +41,28 @@ private:
     QStringList m_importPaths;
 
     QQmlJSLinter m_linter;
-    QMap<QString, QQmlJSLogger::Option> m_options;
+    QList<QQmlJSLogger::Category> m_categories;
 };
 
 tst_Sanity::tst_Sanity()
     : m_importPaths({ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) }),
       m_linter(m_importPaths),
-      m_options(QQmlJSLogger::options())
+      m_categories(QQmlJSLogger::defaultCategories())
 {
     // We do not care about any warnings that aren't explicitly created by controls-sanity.
     // Mainly because a lot of false positives are generated because we are linting files from
     // different modules directly without their generated qmldirs.
-    for (const QString &key : m_options.keys())
-        m_options[key].setLevel(u"disable"_s);
 
-    m_options[u"deferred-property-id"_s].setLevel(u"warning"_s);
-    m_options[u"controls-sanity"_s].setLevel(u"warning"_s);
-    m_options[u"multiple-attached-objects"_s].setLevel(u"warning"_s);
+    m_linter.setPluginsEnabled(false);
+
+    for (auto &category : m_categories) {
+        if (category == qmlDeferredPropertyId || category == qmlControlsSanity
+            || category == qmlAttachedPropertyReuse) {
+            category.setLevel(u"warning"_s);
+        } else {
+            category.setLevel(u"disable"_s);
+        }
+    }
 }
 
 void tst_Sanity::initTestCase()
@@ -109,7 +115,7 @@ void tst_Sanity::qmllint()
 
     QJsonArray output;
     bool success =
-            m_linter.lintFile(filePath, nullptr, true, &output, m_importPaths, {}, {}, m_options)
+            m_linter.lintFile(filePath, nullptr, true, &output, m_importPaths, {}, {}, m_categories)
             == QQmlJSLinter::LintSuccess;
 
     QVERIFY2(success, qPrintable(QJsonDocument(output).toJson(QJsonDocument::Compact)));

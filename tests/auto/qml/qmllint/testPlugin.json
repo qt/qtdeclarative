@@ -2,5 +2,13 @@
     "name": "testPlugin",
     "author": "Qt",
     "description": "A test plugin for tst_qmllint",
-    "version": "1.0"
+    "version": "1.0",
+    "isInternal": true,
+    "loggingCategories": [
+        {
+            "name": "test",
+            "settingsName": "TestWarning",
+            "description": "A warning type used in tests"
+        }
+    ]
 }

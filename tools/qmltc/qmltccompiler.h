@@ -140,17 +140,17 @@ private:
 
     bool hasErrors() const { return m_logger->hasErrors(); }
     void recordError(const QQmlJS::SourceLocation &location, const QString &message,
-                     QQmlJSLoggerCategory category = Log_Compiler)
+                     LoggerWarningId id = qmlCompiler)
     {
         // pretty much any compiler error is a critical error (we cannot
         // generate code - compilation fails)
-        m_logger->log(message, category, location);
+        m_logger->log(message, id, location);
     }
     void recordError(const QV4::CompiledData::Location &location, const QString &message,
-                     QQmlJSLoggerCategory category = Log_Compiler)
+                     LoggerWarningId id = qmlCompiler)
     {
         recordError(QQmlJS::SourceLocation { 0, 0, location.line(), location.column() }, message,
-                    category);
+                    id);
     }
 };
 

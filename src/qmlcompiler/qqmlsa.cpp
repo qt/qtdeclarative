@@ -31,9 +31,10 @@ GenericPass::GenericPass(PassManager *manager)
     d->manager = manager;
 }
 
-void GenericPass::emitWarning(QAnyStringView message, QQmlJS::SourceLocation srcLocation)
+void GenericPass::emitWarning(QAnyStringView message, LoggerWarningId id,
+                              QQmlJS::SourceLocation srcLocation)
 {
-    d->manager->m_visitor->logger()->log(message.toString(), Log_Plugin, srcLocation);
+    d->manager->m_visitor->logger()->log(message.toString(), id, srcLocation);
 }
 
 Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeName)
@@ -226,13 +227,14 @@ QSet<PropertyPass *> PassManager::findPropertyUsePasses(const QQmlSA::Element &e
 }
 
 void DebugElementPass::run(const Element &element) {
-    emitWarning(u"Type: " + element->baseTypeName());
+    emitWarning(u"Type: " + element->baseTypeName(), qmlPlugin);
     if (auto bindings = element->propertyBindings(u"objectName"_s); !bindings.isEmpty()) {
-        emitWarning(u"is named: " + bindings.first().stringValue());
+        emitWarning(u"is named: " + bindings.first().stringValue(), qmlPlugin);
     }
     if (auto defPropName = element->defaultPropertyName(); !defPropName.isEmpty()) {
         emitWarning(u"binding " + QString::number(element->propertyBindings(defPropName).size())
-                    + u" elements to property "_s + defPropName);
+                            + u" elements to property "_s + defPropName,
+                    qmlPlugin);
     }
 }
 
@@ -287,7 +289,7 @@ void DebugPropertyPass::onRead(const QQmlSA::Element &element, const QString &pr
                         + u' ' + propertyName + u' ' + readScope->internalName() + u' '
                         + QString::number(location.startLine) + u':'
                         + QString::number(location.startColumn),
-                location);
+                qmlPlugin, location);
 }
 
 void DebugPropertyPass::onBinding(const QQmlSA::Element &element, const QString &propertyName,
@@ -308,7 +310,7 @@ void DebugPropertyPass::onBinding(const QQmlSA::Element &element, const QString 
                                                                   : bindingScope->internalName())
                         + u"' "_s + QString::number(location.startLine) + u':'
                         + QString::number(location.startColumn),
-                location);
+                qmlPlugin, location);
 }
 
 void DebugPropertyPass::onWrite(const QQmlSA::Element &element, const QString &propertyName,
@@ -319,7 +321,7 @@ void DebugPropertyPass::onWrite(const QQmlSA::Element &element, const QString &p
                         + value->internalName() + u' ' + writeScope->internalName() + u' '
                         + QString::number(location.startLine) + u':'
                         + QString::number(location.startColumn),
-                location);
+                qmlPlugin, location);
 }
 }
 

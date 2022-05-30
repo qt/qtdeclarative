@@ -30,17 +30,12 @@ using namespace Qt::StringLiterals;
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    const QSet<QQmlJSLoggerCategory> exceptions {
-        Log_ControlsSanity, // this category is just weird
-        Log_UnusedImport, // not critical
-    };
-
-    for (int i = 0; i <= static_cast<int>(QQmlJSLoggerCategory_Last); ++i) {
-        const auto c = static_cast<QQmlJSLoggerCategory>(i);
-        if (exceptions.contains(c))
+    for (const QQmlJSLogger::Category &category : logger.categories()) {
+        if (category == qmlControlsSanity // this category is just weird
+            || category == qmlUnusedImports)
             continue;
-        logger.setCategoryLevel(c, QtCriticalMsg);
-        logger.setCategoryIgnored(c, false);
+        logger.setCategoryLevel(category.id(), QtCriticalMsg);
+        logger.setCategoryIgnored(category.id(), false);
     }
 }
 
@@ -227,9 +222,9 @@ int main(int argc, char **argv)
 
     QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
     if (!warnings.isEmpty()) {
-        logger.log(QStringLiteral("Type warnings occurred while compiling file:"), Log_Import,
+        logger.log(QStringLiteral("Type warnings occurred while compiling file:"), qmlImport,
                    QQmlJS::SourceLocation());
-        logger.processMessages(warnings, Log_Import);
+        logger.processMessages(warnings, qmlImport);
         // Log_Import is critical for the compiler
         return EXIT_FAILURE;
     }

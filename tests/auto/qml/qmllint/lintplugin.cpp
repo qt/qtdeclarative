@@ -5,6 +5,8 @@
 
 using namespace Qt::StringLiterals;
 
+static constexpr LoggerWarningId plugin { "testPlugin.test" };
+
 class ElementTest : public QQmlSA::ElementPass
 {
 public:
@@ -22,17 +24,18 @@ public:
     {
         auto property = element->property(u"radius"_s);
         if (!property.isValid() || element->property(u"radius"_s).typeName() != u"double") {
-            emitWarning(u"Failed to verify radius property", element->sourceLocation());
+            emitWarning(u"Failed to verify radius property", plugin, element->sourceLocation());
             return;
         }
 
         auto bindings = element->propertyBindings(u"radius"_s);
         if (bindings.isEmpty() || bindings.constFirst().numberValue() != 5) {
-            emitWarning(u"Failed to verify radius property binding", element->sourceLocation());
+            emitWarning(u"Failed to verify radius property binding", plugin,
+                        element->sourceLocation());
             return;
         }
 
-        emitWarning(u"ElementTest OK", element->sourceLocation());
+        emitWarning(u"ElementTest OK", plugin, element->sourceLocation());
     }
 
 private:
@@ -56,7 +59,7 @@ public:
                                                                            : value->baseTypeName()))
                             .arg(binding.bindingType())
                             .arg(bindingScope->baseTypeName()),
-                    bindingScope->sourceLocation());
+                    plugin, bindingScope->sourceLocation());
     }
 
     void onRead(const QQmlSA::Element &element, const QString &propertyName,
@@ -64,7 +67,7 @@ public:
     {
         emitWarning(u"Saw read on %1 property %2 in scope %3"_s.arg(
                             element->baseTypeName(), propertyName, readScope->baseTypeName()),
-                    location);
+                    plugin, location);
     }
 
     void onWrite(const QQmlSA::Element &element, const QString &propertyName,
@@ -76,7 +79,7 @@ public:
                             (value->internalName().isNull() ? value->baseTypeName()
                                                             : value->internalName()),
                             writeScope->baseTypeName()),
-                    location);
+                    plugin, location);
     }
 };
 
@@ -97,7 +100,7 @@ public:
     void run(const QQmlSA::Element &element) override
     {
         Q_UNUSED(element)
-        emitWarning(m_message);
+        emitWarning(m_message, plugin);
     }
 
 private:

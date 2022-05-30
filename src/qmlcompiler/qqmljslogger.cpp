@@ -21,93 +21,127 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
-    static QMap<QString, QQmlJSLogger::Option> optionsMap = {
-        { QStringLiteral("required"),
-          QQmlJSLogger::Option(Log_Required, QStringLiteral("RequiredProperty"),
-                               QStringLiteral("Warn about required properties"), QtWarningMsg) },
-        { QStringLiteral("alias"),
-          QQmlJSLogger::Option(Log_Alias, QStringLiteral("PropertyAlias"),
-                               QStringLiteral("Warn about alias errors"), QtWarningMsg) },
-        { QStringLiteral("import"),
-          QQmlJSLogger::Option(Log_Import, QStringLiteral("ImportFailure"),
-                               QStringLiteral("Warn about failing imports and deprecated qmltypes"),
-                               QtWarningMsg) },
-        { QStringLiteral("with"),
-          QQmlJSLogger::Option(Log_WithStatement, QStringLiteral("WithStatement"),
-                               QStringLiteral("Warn about with statements as they can cause false "
-                                              "positives when checking for unqualified access"),
-                               QtWarningMsg) },
-        { QStringLiteral("inheritance-cycle"),
-          QQmlJSLogger::Option(Log_InheritanceCycle, QStringLiteral("InheritanceCycle"),
-                               QStringLiteral("Warn about inheritance cycles"), QtWarningMsg) },
-        { QStringLiteral("deprecated"),
-          QQmlJSLogger::Option(Log_Deprecation, QStringLiteral("Deprecated"),
-                               QStringLiteral("Warn about deprecated properties and types"),
-                               QtWarningMsg) },
-        { QStringLiteral("signal"),
-          QQmlJSLogger::Option(Log_Signal, QStringLiteral("BadSignalHandler"),
-                               QStringLiteral("Warn about bad signal handler parameters"),
-                               QtWarningMsg) },
-        { QStringLiteral("type"),
-          QQmlJSLogger::Option(Log_Type, QStringLiteral("TypeError"),
-                               QStringLiteral("Warn about unresolvable types and type mismatches"),
-                               QtWarningMsg) },
-        { QStringLiteral("property"),
-          QQmlJSLogger::Option(Log_Property, QStringLiteral("UnknownProperty"),
-                               QStringLiteral("Warn about unknown properties"), QtWarningMsg) },
-        { QStringLiteral("deferred-property-id"),
-          QQmlJSLogger::Option(
-                  Log_DeferredPropertyId, QStringLiteral("DeferredPropertyId"),
-                  QStringLiteral(
-                          "Warn about making deferred properties immediate by giving them an id."),
-                  QtWarningMsg) },
-        { QStringLiteral("unqualified"),
-          QQmlJSLogger::Option(
-                  Log_UnqualifiedAccess, QStringLiteral("UnqualifiedAccess"),
-                  QStringLiteral("Warn about unqualified identifiers and how to fix them"),
-                  QtWarningMsg) },
-        { QStringLiteral("unused-imports"),
-          QQmlJSLogger::Option(Log_UnusedImport, QStringLiteral("UnusedImports"),
-                               QStringLiteral("Warn about unused imports"), QtInfoMsg) },
-        { QStringLiteral("multiline-strings"),
-          QQmlJSLogger::Option(Log_MultilineString, QStringLiteral("MultilineStrings"),
-                               QStringLiteral("Warn about multiline strings"), QtInfoMsg) },
-        { QStringLiteral("compiler"),
-          QQmlJSLogger::Option(Log_Compiler, QStringLiteral("CompilerWarnings"),
-                               QStringLiteral("Warn about compiler issues"), QtCriticalMsg, true) },
-        { QStringLiteral("controls-sanity"),
-          QQmlJSLogger::Option(
-                  Log_ControlsSanity, QStringLiteral("ControlsSanity"),
-                  QStringLiteral("Performance checks used for QuickControl's implementation"),
-                  QtCriticalMsg, true) },
-        { QStringLiteral("multiple-attached-objects"),
-          QQmlJSLogger::Option(
-                  Log_AttachedPropertyReuse, QStringLiteral("AttachedPropertyReuse"),
-                  QStringLiteral("Warn if attached types from parent components aren't reused"),
-                  QtCriticalMsg, true) },
-        { QStringLiteral("plugin"),
-          QQmlJSLogger::Option(Log_Plugin, QStringLiteral("LintPluginWarnings"),
-                               QStringLiteral("Warn if a qmllint plugin finds an issue"),
-                               QtWarningMsg) }
+const LoggerWarningId qmlRequired { "required" };
+const LoggerWarningId qmlAlias { "alias" };
+const LoggerWarningId qmlImport { "import" };
+const LoggerWarningId qmlRecursionDepthErrors { "recursion-depth-errors" };
+const LoggerWarningId qmlWith { "with" };
+const LoggerWarningId qmlInheritanceCycle { "inheritance-cycle" };
+const LoggerWarningId qmlDeprecated { "deprecated" };
+const LoggerWarningId qmlSignal { "signal" };
+const LoggerWarningId qmlType { "type" };
+const LoggerWarningId qmlProperty { "property" };
+const LoggerWarningId qmlDeferredPropertyId { "deferred-property-id" };
+const LoggerWarningId qmlUnqualified { "unqualified" };
+const LoggerWarningId qmlUnusedImports { "unused-imports" };
+const LoggerWarningId qmlMultilineStrings { "multiline-strings" };
+const LoggerWarningId qmlSyntax { "syntax" };
+const LoggerWarningId qmlSyntaxIdQuotation { "syntax.id-quotation" };
+const LoggerWarningId qmlSyntaxDuplicateIds { "syntax.duplicate-ids" };
+const LoggerWarningId qmlCompiler { "compiler" };
+const LoggerWarningId qmlControlsSanity { "controls-sanity" };
+const LoggerWarningId qmlAttachedPropertyReuse { "attached-property-reuse" };
+const LoggerWarningId qmlPlugin { "plugin" };
+
+const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
+{
+    static const QList<QQmlJSLogger::Category> cats = {
+        QQmlJSLogger::Category { qmlRequired.name().toString(), QStringLiteral("RequiredProperty"),
+                                 QStringLiteral("Warn about required properties"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlAlias.name().toString(), QStringLiteral("PropertyAlias"),
+                                 QStringLiteral("Warn about alias errors"), QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlImport.name().toString(), QStringLiteral("ImportFailure"),
+                QStringLiteral("Warn about failing imports and deprecated qmltypes"),
+                QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlRecursionDepthErrors.name().toString(), QStringLiteral("ImportFailure"),
+                QStringLiteral("Warn about failing imports and deprecated qmltypes"), QtWarningMsg,
+                false, true },
+        QQmlJSLogger::Category {
+                qmlWith.name().toString(), QStringLiteral("WithStatement"),
+                QStringLiteral("Warn about with statements as they can cause false "
+                               "positives when checking for unqualified access"),
+                QtWarningMsg },
+        QQmlJSLogger::Category { qmlInheritanceCycle.name().toString(),
+                                 QStringLiteral("InheritanceCycle"),
+                                 QStringLiteral("Warn about inheritance cycles"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlDeprecated.name().toString(), QStringLiteral("Deprecated"),
+                                 QStringLiteral("Warn about deprecated properties and types"),
+                                 QtWarningMsg },
+        QQmlJSLogger::Category { qmlSignal.name().toString(), QStringLiteral("BadSignalHandler"),
+                                 QStringLiteral("Warn about bad signal handler parameters"),
+                                 QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlType.name().toString(), QStringLiteral("TypeError"),
+                QStringLiteral("Warn about unresolvable types and type mismatches"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlProperty.name().toString(), QStringLiteral("UnknownProperty"),
+                                 QStringLiteral("Warn about unknown properties"), QtWarningMsg },
+
+        QQmlJSLogger::Category {
+                qmlDeferredPropertyId.name().toString(), QStringLiteral("DeferredPropertyId"),
+                QStringLiteral(
+                        "Warn about making deferred properties immediate by giving them an id."),
+                QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlUnqualified.name().toString(), QStringLiteral("UnqualifiedAccess"),
+                QStringLiteral("Warn about unqualified identifiers and how to fix them"),
+                QtWarningMsg },
+        QQmlJSLogger::Category { qmlUnusedImports.name().toString(),
+                                 QStringLiteral("UnusedImports"),
+                                 QStringLiteral("Warn about unused imports"), QtInfoMsg },
+        QQmlJSLogger::Category { qmlMultilineStrings.name().toString(),
+                                 QStringLiteral("MultilineStrings"),
+                                 QStringLiteral("Warn about multiline strings"), QtInfoMsg },
+        QQmlJSLogger::Category { qmlSyntax.name().toString(), QString(),
+                                 QStringLiteral("Syntax errors"), QtWarningMsg, false, true },
+        QQmlJSLogger::Category { qmlSyntaxIdQuotation.name().toString(), QString(),
+                                 QStringLiteral("ID quotation"), QtWarningMsg, false, true },
+        QQmlJSLogger::Category { qmlSyntaxDuplicateIds.name().toString(), QString(),
+                                 QStringLiteral("ID duplication"), QtCriticalMsg, false, true },
+        QQmlJSLogger::Category { qmlCompiler.name().toString(), QStringLiteral("CompilerWarnings"),
+                                 QStringLiteral("Warn about compiler issues"), QtWarningMsg, true },
+
+        QQmlJSLogger::Category {
+                qmlControlsSanity.name().toString(), QStringLiteral("ControlsSanity"),
+                QStringLiteral("Performance checks used for QuickControl's implementation"),
+                QtCriticalMsg, true },
+
+        QQmlJSLogger::Category {
+                qmlAttachedPropertyReuse.name().toString(), QStringLiteral("AttachedPropertyReuse"),
+                QStringLiteral("Warn if attached types from parent components aren't reused"),
+                QtCriticalMsg, true },
+        QQmlJSLogger::Category { qmlPlugin.name().toString(), QStringLiteral("LintPluginWarnings"),
+                                 QStringLiteral("Warn if a qmllint plugin finds an issue"),
+                                 QtWarningMsg }
     };
 
-    return optionsMap;
+    return cats;
+}
+
+const QList<QQmlJSLogger::Category> QQmlJSLogger::categories() const
+{
+    return m_categories.values();
+}
+
+void QQmlJSLogger::registerCategory(const QQmlJSLogger::Category &category)
+{
+    if (m_categories.contains(category.name)) {
+        qWarning() << "Trying to re-register existing logger category" << category.name;
+        return;
+    }
+
+    m_categoryLevels[category.name] = category.level;
+    m_categoryIgnored[category.name] = category.ignored;
+    m_categories.insert(category.name, category);
 }
 
 QQmlJSLogger::QQmlJSLogger()
 {
-    const auto &opt = options();
-    for (auto it = opt.cbegin(); it != opt.cend(); ++it) {
-        m_categoryLevels[it.value().m_category] = it.value().m_level;
-        m_categoryIgnored[it.value().m_category] = it.value().m_ignored;
-    }
+    static const QList<QQmlJSLogger::Category> cats = defaultCategories();
 
-    // These have to be set up manually since we don't expose it as an option
-    m_categoryLevels[Log_RecursionDepthError] = QtCriticalMsg;
-    m_categoryLevels[Log_Syntax] = QtWarningMsg; // TODO: because we usually report it as a warning!
-    m_categoryLevels[Log_SyntaxIdQuotation] = QtWarningMsg;
-    m_categoryLevels[Log_SyntaxDuplicateIds] = QtCriticalMsg;
+    for (const QQmlJSLogger::Category &category : cats)
+        registerCategory(category);
 
     // setup color output
     m_output.insertMapping(QtCriticalMsg, QColorOutput::RedForeground);
@@ -126,17 +160,20 @@ static bool isMsgTypeLess(QtMsgType a, QtMsgType b)
     return level[a] < level[b];
 }
 
-void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
+void QQmlJSLogger::log(const QString &message, LoggerWarningId id,
                        const QQmlJS::SourceLocation &srcLocation, QtMsgType type, bool showContext,
                        bool showFileName, const std::optional<FixSuggestion> &suggestion,
                        const QString overrideFileName)
 {
-    if (isCategoryIgnored(category))
+    Q_ASSERT(m_categoryLevels.contains(id.name().toString()));
+
+    if (isCategoryIgnored(id))
         return;
 
     // Note: assume \a type is the type we should prefer for logging
 
-    if (srcLocation.isValid() && m_ignoredWarnings[srcLocation.startLine].contains(category))
+    if (srcLocation.isValid()
+        && m_ignoredWarnings[srcLocation.startLine].contains(id.name().toString()))
         return;
 
     QString prefix;
@@ -180,9 +217,9 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
 }
 
 void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messages,
-                                   QQmlJSLoggerCategory category)
+                                   LoggerWarningId id)
 {
-    if (messages.isEmpty() || isCategoryIgnored(category))
+    if (messages.isEmpty() || isCategoryIgnored(id))
         return;
 
     m_output.write(QStringLiteral("---\n"));
@@ -190,7 +227,7 @@ void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messa
     // TODO: we should instead respect message's category here (potentially, it
     // should hold a category instead of type)
     for (const QQmlJS::DiagnosticMessage &message : messages)
-        log(message.message, category, QQmlJS::SourceLocation(), false, false);
+        log(message.message, id, QQmlJS::SourceLocation(), false, false);
 
     m_output.write(QStringLiteral("---\n\n"));
 }

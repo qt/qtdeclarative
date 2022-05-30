@@ -241,8 +241,8 @@ int main(int argc, char **argv)
             QQmlJSLogger logger;
 
             // Always trigger the qFatal() on "pragma Strict" violations.
-            logger.setCategoryLevel(Log_Compiler, QtCriticalMsg);
-            logger.setCategoryIgnored(Log_Compiler, false);
+            logger.setCategoryLevel(qmlCompiler, QtCriticalMsg);
+            logger.setCategoryIgnored(qmlCompiler, false);
 
             // By default, we're completely silent,
             // as the lcAotCompiler category default is QtFatalMsg
@@ -265,8 +265,8 @@ int main(int argc, char **argv)
 
             if (!warnings.isEmpty()) {
                 logger.log(QStringLiteral("Type warnings occurred while compiling file:"),
-                           Log_Import, QQmlJS::SourceLocation());
-                logger.processMessages(warnings, Log_Import);
+                           qmlImport, QQmlJS::SourceLocation());
+                logger.processMessages(warnings, qmlImport);
             }
         }
     } else if (inputFile.endsWith(QLatin1String(".js")) || inputFile.endsWith(QLatin1String(".mjs"))) {

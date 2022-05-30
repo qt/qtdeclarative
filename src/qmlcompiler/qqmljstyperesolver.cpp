@@ -661,7 +661,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
 
         m_logger->log(u"Object type %1 is not derived from QObject or QQmlComponent"_s.arg(
                               type->internalName()),
-                      Log_Compiler, type->sourceLocation());
+                      qmlCompiler, type->sourceLocation());
 
         // Reference types that are not QObject or QQmlComponent are likely JavaScript objects.
         // We don't want to deal with those, but m_jsValueType is the best generic option.
@@ -815,12 +815,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
             if (!genericType(attached)) {
                 m_logger->log(u"Cannot resolve generic base of attached %1"_s.arg(
                                       attached->internalName()),
-                              Log_Compiler, attached->sourceLocation());
+                              qmlCompiler, attached->sourceLocation());
                 return {};
             } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
                 m_logger->log(u"Cannot retrieve attached object for non-reference type %1"_s.arg(
                                       type->internalName()),
-                              Log_Compiler, type->sourceLocation());
+                              qmlCompiler, type->sourceLocation());
                 return {};
             } else {
                 // We don't know yet whether we need the attached or the plain object. In direct
@@ -1046,12 +1046,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
             if (!genericType(attached)) {
                 m_logger->log(u"Cannot resolve generic base of attached %1"_s.arg(
                                       attached->internalName()),
-                              Log_Compiler, attached->sourceLocation());
+                              qmlCompiler, attached->sourceLocation());
                 return {};
             } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
                 m_logger->log(u"Cannot retrieve attached object for non-reference type %1"_s.arg(
                                       type->internalName()),
-                              Log_Compiler, type->sourceLocation());
+                              qmlCompiler, type->sourceLocation());
                 return {};
             } else {
                 return QQmlJSRegisterContent::create(storedType(attached), attached,
@@ -1120,7 +1120,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
             m_logger->log(
                     u"Cannot use non-reference type %1 as base of namespaced attached type"_s.arg(
                             type.scopeType()->internalName()),
-                    Log_Type, type.scopeType()->sourceLocation());
+                    qmlType, type.scopeType()->sourceLocation());
             return {};
         }
 

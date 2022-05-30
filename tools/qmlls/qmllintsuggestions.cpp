@@ -152,12 +152,12 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
         fileContents = doc.field(Fields::code).value().toString();
         QStringList qmltypesFiles;
         QStringList resourceFiles;
-        QMap<QString, QQmlJSLogger::Option> options;
+        QList<QQmlJSLogger::Category> categories;
 
         QQmlJSLinter linter(imports);
 
         linter.lintFile(filename, &fileContents, silent, nullptr, imports, qmltypesFiles,
-                        resourceFiles, options);
+                        resourceFiles, categories);
         auto addLength = [&fileContents](Position &position, int startOffset, int length) {
             int i = startOffset;
             int iEnd = i + length;
