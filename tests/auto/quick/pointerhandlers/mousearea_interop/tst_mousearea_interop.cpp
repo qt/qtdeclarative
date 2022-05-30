@@ -55,6 +55,7 @@ private slots:
     void dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch_data();
     void dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch();
     void hoverHandlerDoesntHoverOnPress();
+    void doubleClickInMouseAreaWithDragHandlerInGrandparent();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -207,6 +208,24 @@ void tst_MouseAreaInterop::hoverHandlerDoesntHoverOnPress() // QTBUG-72843
     QTRY_COMPARE(ma->pressed(), false);
     QCOMPARE(handler->isHovered(), true);
     QCOMPARE(hoveredChangedSpy.count(), 0);
+}
+
+void tst_MouseAreaInterop::doubleClickInMouseAreaWithDragHandlerInGrandparent()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("dragHandlerInMouseAreaGrandparent.qml")));
+
+    QQuickDragHandler *handler = window.rootObject()->findChild<QQuickDragHandler*>();
+    QVERIFY(handler);
+    QSignalSpy dragActiveSpy(handler, &QQuickDragHandler::activeChanged);
+    QQuickMouseArea *ma = window.rootObject()->findChild<QQuickMouseArea*>();
+    QVERIFY(ma);
+    QSignalSpy dClickSpy(ma, &QQuickMouseArea::doubleClicked);
+    QPoint p = ma->mapToScene(ma->boundingRect().center()).toPoint();
+
+    QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p);
+    QCOMPARE(dClickSpy.count(), 1);
+    QCOMPARE(dragActiveSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_MouseAreaInterop)

@@ -1536,8 +1536,7 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
     case QEvent::MouseButtonDblClick:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
                               event->button(), event->buttons());
-        if (allowDoubleClick)
-            deliverPointerEvent(event);
+        deliverPointerEvent(event);
         break;
     case QEvent::MouseMove: {
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
@@ -2017,11 +2016,9 @@ void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, b
 
     // Let the Item's handlers (if any) have the event first.
     // However, double click should never be delivered to handlers.
-    if (pointerEvent->type() != QEvent::MouseButtonDblClick) {
-        bool wasAccepted = pointerEvent->allPointsAccepted();
+    if (pointerEvent->type() != QEvent::MouseButtonDblClick)
         itemPrivate->handlePointerEvent(pointerEvent);
-        allowDoubleClick = wasAccepted || !(isMouse && pointerEvent->isBeginEvent() && pointerEvent->allPointsAccepted());
-    }
+
     if (handlersOnly)
         return;
 

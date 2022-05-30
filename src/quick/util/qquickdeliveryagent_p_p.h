@@ -118,7 +118,6 @@ public:
 #endif
     uchar compressedTouchCount = 0;
     bool allowChildEventFiltering = true;
-    bool allowDoubleClick = true;
     bool frameSynchronousHoverEnabled = true;
     bool hoveredLeafItemFound = false;
 

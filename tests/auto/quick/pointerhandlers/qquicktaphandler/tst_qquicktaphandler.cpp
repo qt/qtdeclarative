@@ -75,6 +75,8 @@ private slots:
     void rightLongPressIgnoreWheel();
     void negativeZStackingOrder();
     void nonTopLevelParentWindow();
+    void nestedDoubleTap_data();
+    void nestedDoubleTap();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName,
@@ -837,7 +839,7 @@ void tst_TapHandler::rightLongPressIgnoreWheel()
 void tst_TapHandler::negativeZStackingOrder() // QTBUG-83114
 {
     QScopedPointer<QQuickView> windowPtr;
-    createView(windowPtr, "tapHandlersOverlapped.qml");
+    createView(windowPtr, "nested.qml");
     QQuickView *window = windowPtr.data();
     QQuickItem *root = window->rootObject();
 
@@ -889,6 +891,42 @@ void tst_TapHandler::nonTopLevelParentWindow() // QTBUG-91716
     QTest::touchEvent(window, touchDevice).release(0, p1, parentWindow).commit();
 
     QCOMPARE(root->property("tapCount").toInt(), 2);
+}
+
+void tst_TapHandler::nestedDoubleTap_data()
+{
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("childGesturePolicy");
+
+    QTest::newRow("DragThreshold") << QQuickTapHandler::GesturePolicy::DragThreshold;
+    QTest::newRow("WithinBounds") << QQuickTapHandler::GesturePolicy::WithinBounds;
+    QTest::newRow("ReleaseWithinBounds") << QQuickTapHandler::GesturePolicy::ReleaseWithinBounds;
+    QTest::newRow("DragWithinBounds") << QQuickTapHandler::GesturePolicy::DragWithinBounds;
+}
+
+void tst_TapHandler::nestedDoubleTap() // QTBUG-102625
+{
+    QFETCH(QQuickTapHandler::GesturePolicy, childGesturePolicy);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("nested.qml")));
+    QQuickItem *root = window.rootObject();
+    QQuickTapHandler *parentTapHandler = root->findChild<QQuickTapHandler*>("parentTapHandler");
+    QVERIFY(parentTapHandler);
+    QSignalSpy parentSpy(parentTapHandler, &QQuickTapHandler::doubleTapped);
+    QQuickTapHandler *childTapHandler = root->findChild<QQuickTapHandler*>("childTapHandler");
+    QVERIFY(childTapHandler);
+    QSignalSpy childSpy(childTapHandler, &QQuickTapHandler::doubleTapped);
+    childTapHandler->setGesturePolicy(childGesturePolicy);
+
+    QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, QPoint(150, 100));
+
+    QCOMPARE(childSpy.count(), 1);
+    // If the child gets by with a passive grab, both handlers see tap and double-tap.
+    // If the child takes an exclusive grab and stops event propagation, the parent doesn't see them.
+    QCOMPARE(parentSpy.count(),
+             childGesturePolicy == QQuickTapHandler::GesturePolicy::DragThreshold ? 1 : 0);
+    QCOMPARE(root->property("taps").toList().count(),
+             childGesturePolicy == QQuickTapHandler::GesturePolicy::DragThreshold ? 4 : 2);
 }
 
 QTEST_MAIN(tst_TapHandler)

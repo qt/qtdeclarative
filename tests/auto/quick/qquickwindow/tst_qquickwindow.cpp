@@ -1247,6 +1247,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QCOMPARE(item->lastVelocityFromMouseMove, velocity);
 //    QVERIFY(item->lastMouseCapabilityFlags.testFlag(QInputDevice::Capability::Velocity)); // TODO
 
+    QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10); // avoid generating a double-click
     // Now the same with a transformation.
     item->setRotation(90); // clockwise
     QMutableEventPoint::setState(points[0], QEventPoint::State::Pressed);
