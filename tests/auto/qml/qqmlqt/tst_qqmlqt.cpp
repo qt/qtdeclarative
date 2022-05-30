@@ -1413,7 +1413,7 @@ void tst_qqmlqt::timeRoundtrip_data()
     // Local timezone:
     QTest::newRow("localtime") << QTime(0, 0, 0);
 
-#if defined(Q_OS_WIN) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
+#if defined(Q_OS_WIN) || defined(Q_OS_ANDROID)
     qInfo("Omitting the tests that depend on setting local time's zone");
 #else
     // No DST:
