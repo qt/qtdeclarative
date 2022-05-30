@@ -6,10 +6,10 @@ set(qml_files
     "qml/ColorDialog.qml"
     "qml/ColorInputs.qml"
     "qml/FileDialog.qml"
-    "qml/FolderDialog.qml"
     "qml/FileDialogDelegate.qml"
     "qml/FileDialogDelegateLabel.qml"
     "qml/FolderBreadcrumbBar.qml"
+    "qml/FolderDialog.qml"
     "qml/FolderDialogDelegate.qml"
     "qml/FolderDialogDelegateLabel.qml"
     "qml/FontDialog.qml"
@@ -21,8 +21,8 @@ set(qml_files
     "qml/+Fusion/ColorDialog.qml"
     "qml/+Fusion/FileDialog.qml"
     "qml/+Fusion/FileDialogDelegate.qml"
-    "qml/+Fusion/FolderDialog.qml"
     "qml/+Fusion/FolderBreadcrumbBar.qml"
+    "qml/+Fusion/FolderDialog.qml"
     "qml/+Fusion/FolderDialogDelegate.qml"
     "qml/+Fusion/FontDialog.qml"
     "qml/+Fusion/MessageDialog.qml"
@@ -74,33 +74,33 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         qquickfiledialogimpl.cpp
         qquickfiledialogimpl_p.h
         qquickfiledialogimpl_p_p.h
-        qquickfolderdialogimpl.cpp
-        qquickfolderdialogimpl_p.h
-        qquickfolderdialogimpl_p_p.h
         qquickfolderbreadcrumbbar.cpp
         qquickfolderbreadcrumbbar_p.h
         qquickfolderbreadcrumbbar_p_p.h
+        qquickfolderdialogimpl.cpp
+        qquickfolderdialogimpl_p.h
+        qquickfolderdialogimpl_p_p.h
+        qquickfontdialogimpl.cpp
+        qquickfontdialogimpl_p.h
+        qquickfontdialogimpl_p_p.h
+        qquickmessagedialogimpl.cpp
+        qquickmessagedialogimpl_p.h
+        qquickmessagedialogimpl_p_p.h
         qquickplatformcolordialog.cpp
         qquickplatformcolordialog_p.h
         qquickplatformfiledialog.cpp
         qquickplatformfiledialog_p.h
         qquickplatformfolderdialog.cpp
         qquickplatformfolderdialog_p.h
-        qquickplatformfontdialog_p.h
         qquickplatformfontdialog.cpp
-        qtquickdialogs2quickimplforeign_p.h
-        qtquickdialogs2quickimplforeign.cpp
-        qtquickdialogs2quickimplglobal_p.h
-        qquickfontdialogimpl_p.h
-        qquickfontdialogimpl_p_p.h
-        qquickfontdialogimpl.cpp
-        qquickmessagedialogimpl_p.h
-        qquickmessagedialogimpl_p_p.h
-        qquickmessagedialogimpl.cpp
-        qquickplatformmessagedialog_p.h
+        qquickplatformfontdialog_p.h
         qquickplatformmessagedialog.cpp
+        qquickplatformmessagedialog_p.h
         qquicksaturationlightnesspicker.cpp
         qquicksaturationlightnesspicker_p.h
+        qtquickdialogs2quickimplforeign.cpp
+        qtquickdialogs2quickimplforeign_p.h
+        qtquickdialogs2quickimplglobal_p.h
     QML_FILES
         ${qml_files}
     DEFINES
@@ -158,26 +158,26 @@ set(qtquickdialogs2quickimpl_resource_files
     "images/folder-icon-square@2x.png"
     "images/folder-icon-square@3x.png"
     "images/folder-icon-square@4x.png"
-    "images/imagine/filedialogdelegate-background@2x.9.png"
-    "images/imagine/filedialogdelegate-background@3x.9.png"
-    "images/imagine/filedialogdelegate-background@4x.9.png"
-    "images/imagine/filedialogdelegate-background.9.png"
+    "images/imagine/filedialogdelegate-background-disabled.9.png"
     "images/imagine/filedialogdelegate-background-disabled@2x.9.png"
     "images/imagine/filedialogdelegate-background-disabled@3x.9.png"
     "images/imagine/filedialogdelegate-background-disabled@4x.9.png"
-    "images/imagine/filedialogdelegate-background-disabled.9.png"
-    "images/imagine/filedialogdelegate-background-pressed@2x.9.png"
-    "images/imagine/filedialogdelegate-background-pressed@3x.9.png"
-    "images/imagine/filedialogdelegate-background-pressed@4x.9.png"
-    "images/imagine/filedialogdelegate-background-pressed.9.png"
+    "images/imagine/filedialogdelegate-background-focused.9.png"
     "images/imagine/filedialogdelegate-background-focused@2x.9.png"
     "images/imagine/filedialogdelegate-background-focused@3x.9.png"
     "images/imagine/filedialogdelegate-background-focused@4x.9.png"
-    "images/imagine/filedialogdelegate-background-focused.9.png"
+    "images/imagine/filedialogdelegate-background-highlighted.9.png"
     "images/imagine/filedialogdelegate-background-highlighted@2x.9.png"
     "images/imagine/filedialogdelegate-background-highlighted@3x.9.png"
     "images/imagine/filedialogdelegate-background-highlighted@4x.9.png"
-    "images/imagine/filedialogdelegate-background-highlighted.9.png"
+    "images/imagine/filedialogdelegate-background-pressed.9.png"
+    "images/imagine/filedialogdelegate-background-pressed@2x.9.png"
+    "images/imagine/filedialogdelegate-background-pressed@3x.9.png"
+    "images/imagine/filedialogdelegate-background-pressed@4x.9.png"
+    "images/imagine/filedialogdelegate-background.9.png"
+    "images/imagine/filedialogdelegate-background@2x.9.png"
+    "images/imagine/filedialogdelegate-background@3x.9.png"
+    "images/imagine/filedialogdelegate-background@4x.9.png"
     "images/up-icon-round.png"
     "images/up-icon-round@2x.png"
     "images/up-icon-round@3x.png"

@@ -20,11 +20,11 @@ qt_internal_add_qml_module(QuickDialogs2
         qquickfolderdialog_p.h
         qquickfontdialog.cpp
         qquickfontdialog_p.h
+        qquickmessagedialog.cpp
+        qquickmessagedialog_p.h
         qtquickdialogs2foreign.cpp
         qtquickdialogs2foreign_p.h
         qtquickdialogs2global_p.h
-        qquickmessagedialog_p.h
-        qquickmessagedialog.cpp
     DEFINES
         QT_BUILD_QUICKDIALOGS2_LIB
         QT_NO_CAST_FROM_ASCII
