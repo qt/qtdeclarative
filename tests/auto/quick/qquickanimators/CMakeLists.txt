@@ -15,7 +15,6 @@ qt_internal_add_test(tst_qquickanimators
         tst_qquickanimators.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
