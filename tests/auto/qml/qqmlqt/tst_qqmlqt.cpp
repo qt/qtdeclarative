@@ -783,6 +783,7 @@ void tst_qqmlqt::dateTimeConversion()
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("dateTimeConversion.qml"));
     QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj != nullptr, qPrintable(component.errorString()));
 
     QCOMPARE(obj->property("qdate").toDate(), date);
     QCOMPARE(obj->property("qtime").toTime(), time);
