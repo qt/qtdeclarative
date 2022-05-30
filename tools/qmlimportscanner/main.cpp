@@ -249,10 +249,14 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
 
     if (!importsAndDependencies.isEmpty())
         pluginInfo[dependenciesLiteral()] = importsAndDependencies;
-    if (!componentFiles.isEmpty())
+    if (!componentFiles.isEmpty()) {
+        componentFiles.sort();
         pluginInfo[componentsLiteral()] = componentFiles;
-    if (!scriptFiles.isEmpty())
+    }
+    if (!scriptFiles.isEmpty()) {
+        scriptFiles.sort();
         pluginInfo[scriptsLiteral()] = scriptFiles;
+    }
 
     if (!parser.preferredPath().isEmpty())
         pluginInfo[preferLiteral()] = parser.preferredPath();
@@ -684,6 +688,9 @@ int main(int argc, char *argv[])
         printUsage(appName);
         return 1;
     }
+
+    // QQmlDirParser returnes QMultiHashes. Ensure deterministic output.
+    QHashSeed::setDeterministicGlobalSeed();
 
     QStringList qmlRootPaths;
     QStringList scanFiles;
