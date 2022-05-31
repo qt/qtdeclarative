@@ -216,8 +216,11 @@ private slots:
     void checkSelectionModelWithUnrequiredSelectedProperty();
     void removeAndAddSelectionModel();
     void warnOnWrongModelInSelectionModel();
-    void testSelectableStartPosEndPos_data();
-    void testSelectableStartPosEndPos();
+    void selectionBehaviorCells_data();
+    void selectionBehaviorCells();
+    void selectionBehaviorRows();
+    void selectionBehaviorColumns();
+    void selectionBehaviorDisabled();
     void testSelectableStartPosEndPosOutsideView();
     void testSelectableScrollTowardsPos();
     void setCurrentIndexFromSelectionModel();
@@ -4103,7 +4106,7 @@ void tst_QQuickTableView::warnOnWrongModelInSelectionModel()
     selectionModel.setCurrentIndex(model2.index(0, 0), QItemSelectionModel::NoUpdate);
 }
 
-void tst_QQuickTableView::testSelectableStartPosEndPos_data()
+void tst_QQuickTableView::selectionBehaviorCells_data()
 {
     QTest::addColumn<QPoint>("endCellDist");
 
@@ -4129,7 +4132,7 @@ void tst_QQuickTableView::testSelectableStartPosEndPos_data()
     QTest::newRow("diagonal bottom right to top left") << QPoint(2, -2);
 }
 
-void tst_QQuickTableView::testSelectableStartPosEndPos()
+void tst_QQuickTableView::selectionBehaviorCells()
 {
     // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
     // and clearSelection correctly. Do this by calling setSelectionStartPos/setSelectionEndPos on top of
@@ -4146,6 +4149,7 @@ void tst_QQuickTableView::testSelectableStartPosEndPos()
     WAIT_UNTIL_POLISHED;
 
     QCOMPARE(selectionModel.hasSelection(), false);
+    QCOMPARE(tableView->selectionBehavior(), QQuickTableView::SelectCells);
 
     const QPoint startCell(5, 5);
     const QPoint endCell = startCell + endCellDist;
@@ -4197,6 +4201,138 @@ void tst_QQuickTableView::testSelectableStartPosEndPos()
     QCOMPARE(actualCountAfterWrap, expectedCount);
 
     tableViewPrivate->clearSelection();
+    QCOMPARE(selectionModel.hasSelection(), false);
+}
+
+void tst_QQuickTableView::selectionBehaviorRows()
+{
+    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
+    // and clearSelection correctly for QQuickTableView::SelectRows.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setSelectionBehavior(QQuickTableView::SelectRows);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel.hasSelection(), false);
+
+    // Drag from row 0 to row 3
+    tableViewPrivate->setSelectionStartPos(QPointF(0, 0));
+    tableViewPrivate->setSelectionEndPos(QPointF(60, 60));
+
+    QCOMPARE(selectionModel.hasSelection(), true);
+
+    const int expectedCount = 10 * 3; // all columns * three rows
+    int actualCount = selectionModel.selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < tableView->columns(); ++x) {
+        for (int y = 0; y < 3; ++y) {
+            const auto index = model.index(y, x);
+            QVERIFY(selectionModel.isSelected(index));
+        }
+    }
+
+    selectionModel.clear();
+    QCOMPARE(selectionModel.hasSelection(), false);
+
+    // Drag from row 3 to row 0 (and overshoot mouse)
+    tableViewPrivate->setSelectionStartPos(QPointF(60, 60));
+    tableViewPrivate->setSelectionEndPos(QPointF(-10, -10));
+
+    QCOMPARE(selectionModel.hasSelection(), true);
+
+    actualCount = selectionModel.selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < tableView->columns(); ++x) {
+        for (int y = 0; y < 3; ++y) {
+            const auto index = model.index(y, x);
+            QVERIFY(selectionModel.isSelected(index));
+        }
+    }
+}
+
+void tst_QQuickTableView::selectionBehaviorColumns()
+{
+    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
+    // and clearSelection correctly for QQuickTableView::SelectColumns.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setSelectionBehavior(QQuickTableView::SelectColumns);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel.hasSelection(), false);
+
+    // Drag from column 0 to column 3
+    tableViewPrivate->setSelectionStartPos(QPointF(0, 0));
+    tableViewPrivate->setSelectionEndPos(QPointF(60, 60));
+
+    QCOMPARE(selectionModel.hasSelection(), true);
+
+    const int expectedCount = 10 * 3; // all rows * three columns
+    int actualCount = selectionModel.selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < 3; ++x) {
+        for (int y = 0; y < tableView->rows(); ++y) {
+            const auto index = model.index(y, x);
+            QVERIFY(selectionModel.isSelected(index));
+        }
+    }
+
+    selectionModel.clear();
+    QCOMPARE(selectionModel.hasSelection(), false);
+
+    // Drag from column 3 to column 0 (and overshoot mouse)
+    tableViewPrivate->setSelectionStartPos(QPointF(60, 60));
+    tableViewPrivate->setSelectionEndPos(QPointF(-10, -10));
+
+    QCOMPARE(selectionModel.hasSelection(), true);
+
+    actualCount = selectionModel.selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < 3; ++x) {
+        for (int y = 0; y < tableView->rows(); ++y) {
+            const auto index = model.index(y, x);
+            QVERIFY(selectionModel.isSelected(index));
+        }
+    }
+}
+
+void tst_QQuickTableView::selectionBehaviorDisabled()
+{
+    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
+    // and clearSelection correctly for QQuickTableView::SelectionDisabled.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setSelectionBehavior(QQuickTableView::SelectionDisabled);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel.hasSelection(), false);
+
+    // Drag from column 0 to column 3
+    tableViewPrivate->setSelectionStartPos(QPointF(0, 0));
+    tableViewPrivate->setSelectionEndPos(QPointF(60, 60));
+
     QCOMPARE(selectionModel.hasSelection(), false);
 }
 

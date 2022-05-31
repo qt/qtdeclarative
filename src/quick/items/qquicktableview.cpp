@@ -191,10 +191,13 @@
 
     \section1 Selecting items
 
-    You can add selection support to TableView by assigning an ItemSelectionModel to
+    You can add selection support to TableView by assigning an \l ItemSelectionModel to
     the \l selectionModel property. It will then use this model to control which
     delegate items should be shown as selected, and which item should be shown as
-    current. To find out whether a delegate is selected or current, declare the
+    current. You can set \l selectionBehavior to control if the user should
+    be allowed to select individual cells, rows, or columns.
+
+    To find out whether a delegate is selected or current, declare the
     following properties:
 
     \code
@@ -534,6 +537,22 @@
     using mouse or touch. The default value is \c true.
 
     \sa selectionModel, keyNavigationEnabled, interactive
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick::TableView::selectionBehavior
+    \since 6.4
+
+    This property holds whether the user can select single cells, rows or columns.
+
+    \list
+    \li TableView.SelectionDisabled - the user cannot perform selections.
+    \li TableView.SelectCells (default) - the user can select individual cells.
+    \li TableView.SelectRows - the user can only select rows.
+    \li TableView.SelectColumns - the user can only select columns.
+    \endlist
+
+    \sa {Selecting items}, selectionModel, keyNavigationEnabled
 */
 
 /*!
@@ -1041,14 +1060,26 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
         return;
 
     const QRect prevSelection = selection();
-    selectionStartCell = clampedCellAtPos(pos);
-
-    if (!cellIsValid(selectionStartCell))
+    const QPoint clampedCell = clampedCellAtPos(pos);
+    if (!cellIsValid(clampedCell))
         return;
 
-    // Update selection rectangle
-    selectionStartCellRect = loadedTableItem(selectionStartCell)->geometry();
-    setCurrentIndex(selectionStartCell);
+    setCurrentIndex(clampedCell);
+    selectionStartCellRect = loadedTableItem(clampedCell)->geometry();
+
+    switch (selectionBehavior) {
+    case QQuickTableView::SelectCells:
+        selectionStartCell = clampedCell;
+        break;
+    case QQuickTableView::SelectRows:
+        selectionStartCell = QPoint(0, clampedCell.y());
+        break;
+    case QQuickTableView::SelectColumns:
+        selectionStartCell = QPoint(clampedCell.x(), 0);
+        break;
+    case QQuickTableView::SelectionDisabled:
+        return;
+    }
 
     if (!cellIsValid(selectionEndCell))
         return;
@@ -1072,14 +1103,26 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
         return;
 
     const QRect prevSelection = selection();
-    selectionEndCell = clampedCellAtPos(pos);
-
-    if (!cellIsValid(selectionEndCell))
+    const QPoint clampedCell = clampedCellAtPos(pos);
+    if (!cellIsValid(clampedCell))
         return;
 
-    // Update selection rectangle
-    selectionEndCellRect = loadedTableItem(selectionEndCell)->geometry();
-    setCurrentIndex(selectionEndCell);
+    setCurrentIndex(clampedCell);
+    selectionEndCellRect = loadedTableItem(clampedCell)->geometry();;
+
+    switch (selectionBehavior) {
+    case QQuickTableView::SelectCells:
+        selectionEndCell = clampedCell;
+        break;
+    case QQuickTableView::SelectRows:
+        selectionEndCell = QPoint(tableSize.width() - 1, clampedCell.y());
+        break;
+    case QQuickTableView::SelectColumns:
+        selectionEndCell = QPoint(clampedCell.x(), tableSize.height() - 1);
+        break;
+    case QQuickTableView::SelectionDisabled:
+        return;
+    }
 
     if (!cellIsValid(selectionStartCell))
         return;
@@ -5027,6 +5070,21 @@ void QQuickTableView::setAlternatingRows(bool alternatingRows)
 
     d->alternatingRows = alternatingRows;
     emit alternatingRowsChanged();
+}
+
+QQuickTableView::SelectionBehavior QQuickTableView::selectionBehavior() const
+{
+    return d_func()->selectionBehavior;
+}
+
+void QQuickTableView::setSelectionBehavior(SelectionBehavior selectionBehavior)
+{
+    Q_D(QQuickTableView);
+    if (d->selectionBehavior == selectionBehavior)
+        return;
+
+    d->selectionBehavior = selectionBehavior;
+    emit selectionBehaviorChanged();
 }
 
 class QObjectPrivate;

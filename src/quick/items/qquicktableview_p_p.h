@@ -327,6 +327,7 @@ public:
     Qt::Orientations assignedSyncDirection = Qt::Horizontal | Qt::Vertical;
 
     QPointer<QItemSelectionModel> selectionModel;
+    QQuickTableView::SelectionBehavior selectionBehavior = QQuickTableView::SelectCells;
 
     int assignedPositionViewAtRowAfterRebuild = 0;
     int assignedPositionViewAtColumnAfterRebuild = 0;
@@ -342,8 +343,8 @@ public:
     QQuickPropertyAnimation positionXAnimation;
     QQuickPropertyAnimation positionYAnimation;
 
-    QPoint selectionStartCell;
-    QPoint selectionEndCell;
+    QPoint selectionStartCell = {-1, -1};
+    QPoint selectionEndCell = {-1, -1};
     QRectF selectionStartCellRect;
     QRectF selectionEndCellRect;
 

@@ -95,6 +95,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(int currentRow READ currentRow NOTIFY currentRowChanged REVISION(6, 4) FINAL)
     Q_PROPERTY(int currentColumn READ currentColumn NOTIFY currentColumnChanged REVISION(6, 4) FINAL)
     Q_PROPERTY(bool alternatingRows READ alternatingRows WRITE setAlternatingRows NOTIFY alternatingRowsChanged REVISION(6, 4) FINAL)
+    Q_PROPERTY(SelectionBehavior selectionBehavior READ selectionBehavior WRITE setSelectionBehavior NOTIFY selectionBehaviorChanged REVISION(6, 4) FINAL)
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -114,6 +115,14 @@ public:
     };
     Q_FLAG(PositionModeFlag)
     Q_DECLARE_FLAGS(PositionMode, PositionModeFlag)
+
+    enum SelectionBehavior {
+        SelectionDisabled,
+        SelectCells,
+        SelectRows,
+        SelectColumns
+    };
+    Q_ENUM(SelectionBehavior)
 
     QQuickTableView(QQuickItem *parent = nullptr);
     ~QQuickTableView() override;
@@ -172,6 +181,9 @@ public:
     bool alternatingRows() const;
     void setAlternatingRows(bool alternatingRows);
 
+    SelectionBehavior selectionBehavior() const;
+    void setSelectionBehavior(SelectionBehavior selectionBehavior);
+
     Q_INVOKABLE void forceLayout();
     Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
     Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
@@ -227,6 +239,7 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void currentRowChanged();
     Q_REVISION(6, 4) void currentColumnChanged();
     Q_REVISION(6, 4) void alternatingRowsChanged();
+    Q_REVISION(6, 4) void selectionBehaviorChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
