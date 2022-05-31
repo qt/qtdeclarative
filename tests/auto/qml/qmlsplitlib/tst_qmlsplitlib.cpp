@@ -17,7 +17,7 @@ private slots:
 void tst_splitlib::verifyComponent()
 {
     QQmlEngine engine;
-    QQmlComponent c(&engine, QStringLiteral("qrc:/SplitLib/main.qml"));
+    QQmlComponent c(&engine, QStringLiteral("qrc:/qt/qml/SplitLib/main.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer o(c.create());
     QVERIFY(!o.isNull());

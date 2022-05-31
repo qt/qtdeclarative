@@ -44,6 +44,7 @@ target_compile_definitions(${application_name} PRIVATE
 qt6_add_qml_module(${application_name}
     VERSION 1.0
     URI QmltcExample
+    AUTO_RESOURCE_PREFIX
     QML_FILES ${application_qml_files}
 
     # Compile qml files (listed in QML_FILES) to C++ using qmltc and add these

@@ -23,6 +23,7 @@ qt_add_qml_module(
     [STATIC | SHARED]
     [PLUGIN_TARGET plugin_target]
     [OUTPUT_DIRECTORY output_dir]
+    [AUTO_RESOURCE_PREFIX]
     [RESOURCE_PREFIX resource_prefix]
     [CLASS_NAME class_name]
     [TYPEINFO typeinfo]
@@ -200,6 +201,13 @@ The resource path of each file is determined by its path relative to the
 current source directory (\c CMAKE_CURRENT_SOURCE_DIR). This resource path is
 appended to a prefix formed by concatenating the \l{RESOURCE_PREFIX} and
 the target path (but see \l NO_RESOURCE_TARGET_PATH for an exception to this).
+
+Since Qt 6.4, you can specify \l{AUTO_RESOURCE_PREFIX}. If
+\l{AUTO_RESOURCE_PREFIX} is specified, \l{RESOURCE_PREFIX} is set to
+\c{/qt/qml}. This way, your modules are automatically
+placed in the default import path of the QML engine. If you don't do this, you
+should set up a \l{QML Import Path} to point to your resource prefix.
+
 Ordinarily, the project should aim to place \c{.qml} files in
 the same relative location as they would have in the resources. If the \c{.qml}
 file is in a different relative directory to its desired resource path, its

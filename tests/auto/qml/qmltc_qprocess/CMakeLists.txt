@@ -9,6 +9,7 @@ qt_internal_add_test(tst_qmltc_qprocess
 qt6_add_qml_module(tst_qmltc_qprocess
     VERSION 1.0
     URI QmltcQProcessTests
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         data/dummy.qml
         data/inlineComponent.qml

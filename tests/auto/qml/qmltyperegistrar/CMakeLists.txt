@@ -70,6 +70,7 @@ qt_enable_autogen_tool(tst-qmltyperegistrar-with-dashes "moc" ON)
 qt_add_qml_module(tst-qmltyperegistrar-with-dashes
     URI Module-With-Dashes
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     SOURCES
         foo.cpp foo.h
 )

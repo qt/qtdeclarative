@@ -1539,7 +1539,14 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 : engine(e)
 {
     filePluginPath << QLatin1String(".");
-    // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML_IMPORT_PATH, $QML2_IMPORT_PATH, QLibraryInfo::QmlImportsPath
+    // Search order is:
+    // 1. android or macos specific bundle paths.
+    // 2. applicationDirPath()
+    // 3. qrc:/qt-project.org/imports
+    // 4. qrc:/qt/qml
+    // 5. $QML2_IMPORT_PATH
+    // 6. $QML_IMPORT_PATH
+    // 7. QLibraryInfo::QmlImportsPath
 
     QString installImportsPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     addImportPath(installImportsPath);
@@ -1556,6 +1563,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     addEnvImportPath("QML_IMPORT_PATH");
     addEnvImportPath("QML2_IMPORT_PATH");
 
+    addImportPath(QStringLiteral("qrc:/qt/qml"));
     addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
     addImportPath(QCoreApplication::applicationDirPath());
 

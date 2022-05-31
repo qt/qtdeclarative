@@ -170,6 +170,7 @@ qt6_add_qml_module(codegen_test_module
     VERSION 1.0
     URI TestTypes
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
+    AUTO_RESOURCE_PREFIX
     DEPENDENCIES
         QtQuick
         QtQuick.Templates

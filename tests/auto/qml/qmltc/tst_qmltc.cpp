@@ -108,59 +108,59 @@ void tst_qmltc::initTestCase()
     // Note: just check whether the QML code is valid. QQmlComponent is good for
     // it. also, we can use qrc to make sure the file is in the resource system.
     QUrl urls[] = {
-        QUrl("qrc:/QmltcTests/NameConflict.qml"),
-        QUrl("qrc:/QmltcTests/HelloWorld.qml"),
-        QUrl("qrc:/QmltcTests/simpleQtQuickTypes.qml"),
-        QUrl("qrc:/QmltcTests/typeWithEnums.qml"),
-        QUrl("qrc:/QmltcTests/methods.qml"),
-        QUrl("qrc:/QmltcTests/properties.qml"),
-        QUrl("qrc:/QmltcTests/ObjectWithId.qml"),
-        QUrl("qrc:/QmltcTests/documentWithIds.qml"),
-        QUrl("qrc:/QmltcTests/importNamespace.qml"),
-        QUrl("qrc:/QmltcTests/deferredProperties.qml"),
-        QUrl("qrc:/QmltcTests/deferredProperties_group.qml"),
-        QUrl("qrc:/QmltcTests/deferredProperties_attached.qml"),
-        QUrl("qrc:/QmltcTests/deferredProperties_complex.qml"),
-        QUrl("qrc:/QmltcTests/extensionTypeBindings.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/NameConflict.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/HelloWorld.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/simpleQtQuickTypes.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/typeWithEnums.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/methods.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/properties.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/ObjectWithId.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/documentWithIds.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/importNamespace.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/deferredProperties.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_group.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_attached.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_complex.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/extensionTypeBindings.qml"),
 
-        QUrl("qrc:/QmltcTests/signalHandlers.qml"),
-        QUrl("qrc:/QmltcTests/javaScriptFunctions.qml"),
-        QUrl("qrc:/QmltcTests/changingBindings.qml"),
-        QUrl("qrc:/QmltcTests/propertyAlias.qml"),
-        QUrl("qrc:/QmltcTests/propertyAlias_external.qml"),
-        QUrl("qrc:/QmltcTests/complexAliases.qml"),
-        QUrl("qrc:/QmltcTests/propertyChangeHandler.qml"),
-        QUrl("qrc:/QmltcTests/NestedHelloWorld.qml"),
-        QUrl("qrc:/QmltcTests/ComponentHelloWorld.qml"),
-        QUrl("qrc:/QmltcTests/propertyReturningFunction.qml"),
-        QUrl("qrc:/QmltcTests/listProperty.qml"),
-        QUrl("qrc:/QmltcTests/listPropertySameName.qml"),
-        QUrl("qrc:/QmltcTests/defaultProperty.qml"),
-        QUrl("qrc:/QmltcTests/defaultPropertyCorrectSelection.qml"),
-        QUrl("qrc:/QmltcTests/AttachedProperty.qml"),
-        QUrl("qrc:/QmltcTests/attachedPropertyDerived.qml"),
-        QUrl("qrc:/QmltcTests/groupedProperty.qml"),
-        QUrl("qrc:/QmltcTests/groupedProperty_qquicktext.qml"),
-        QUrl("qrc:/QmltcTests/localImport.qml"),
-        QUrl("qrc:/QmltcTests/newPropertyBoundToOld.qml"),
-        QUrl("qrc:/QmltcTests/oldPropertyBoundToNew.qml"),
-        QUrl("qrc:/QmltcTests/nonLocalQmlPropertyBoundToAny.qml"),
-        QUrl("qrc:/QmltcTests/justAnimation.qml"),
-        QUrl("qrc:/QmltcTests/justAnimationOnAlias.qml"),
-        QUrl("qrc:/QmltcTests/behaviorAndAnimation.qml"),
-        QUrl("qrc:/QmltcTests/behaviorAndAnimationOnAlias.qml"),
-        QUrl("qrc:/QmltcTests/bindingsThroughIds.qml"),
-        QUrl("qrc:/QmltcTests/localImport_context.qml"),
-        QUrl("qrc:/QmltcTests/neighbors_context.qml"),
-        QUrl("qrc:/QmltcTests/delegate_context.qml"),
-        QUrl("qrc:/QmltcTests/nontrivial_context.qml"),
-        QUrl("qrc:/QmltcTests/javascriptCaller.qml"),
-        QUrl("qrc:/QmltcTests/listView.qml"),
-        QUrl("qrc:/QmltcTests/bindingOnValueType.qml"),
-        QUrl("qrc:/QmltcTests/keyEvents.qml"),
-        QUrl("qrc:/QmltcTests/PrivateProperty.qml"),
-        QUrl("qrc:/QmltcTests/privatePropertySubclass.qml"),
-        QUrl("qrc:/QmltcTests/calqlatrBits.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/signalHandlers.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/javaScriptFunctions.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/changingBindings.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/propertyAlias.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/propertyAlias_external.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/complexAliases.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/propertyChangeHandler.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/NestedHelloWorld.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/ComponentHelloWorld.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/propertyReturningFunction.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/listProperty.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/listPropertySameName.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/defaultProperty.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/defaultPropertyCorrectSelection.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/AttachedProperty.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/attachedPropertyDerived.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/groupedProperty.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/groupedProperty_qquicktext.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/localImport.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/newPropertyBoundToOld.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/oldPropertyBoundToNew.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/nonLocalQmlPropertyBoundToAny.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/justAnimation.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/justAnimationOnAlias.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/behaviorAndAnimation.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/behaviorAndAnimationOnAlias.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/bindingsThroughIds.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/localImport_context.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/neighbors_context.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/delegate_context.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/nontrivial_context.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/javascriptCaller.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/listView.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/bindingOnValueType.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/keyEvents.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/PrivateProperty.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/privatePropertySubclass.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/calqlatrBits.qml"),
     };
 
     QQmlEngine e;
@@ -768,7 +768,7 @@ void tst_qmltc::extensionTypeBindings()
     {
         QQmlEngine e;
         QQmlComponent component(&e);
-        component.loadUrl(QUrl("qrc:/QmltcTests/extensionTypeBindings.qml"));
+        component.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/extensionTypeBindings.qml"));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
@@ -1186,7 +1186,7 @@ void tst_qmltc::propertyChangeHandler()
     {
         QQmlEngine e;
         QQmlComponent c(&e);
-        c.loadUrl(QUrl("qrc:/QmltcTests/propertyChangeHandler.qml"));
+        c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/propertyChangeHandler.qml"));
         QScopedPointer<QObject> root(c.create());
         QVERIFY2(root, qPrintable(c.errorString()));
         QCOMPARE(root->property("watcher").toInt(), 42);
@@ -1725,7 +1725,7 @@ void tst_qmltc::contextHierarchy_rootBaseIsQml()
     {
         QQmlEngine e;
         QQmlComponent c(&e);
-        c.loadUrl(QUrl("qrc:/QmltcTests/localImport_context.qml"));
+        c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/localImport_context.qml"));
         QScopedPointer<QObject> root(c.create());
         QVERIFY2(root, qPrintable(c.errorString()));
         // sanity
@@ -1824,7 +1824,7 @@ void tst_qmltc::contextHierarchy_delegate()
     {
         QQmlEngine e;
         QQmlComponent c(&e);
-        c.loadUrl(QUrl("qrc:/QmltcTests/delegate_context.qml"));
+        c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/delegate_context.qml"));
         QScopedPointer<QObject> root(c.create());
         QVERIFY2(root, qPrintable(c.errorString()));
         QQmlListReference data(root.get(), "data");

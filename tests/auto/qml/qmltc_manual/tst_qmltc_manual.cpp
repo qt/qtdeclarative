@@ -124,7 +124,8 @@ void tst_qmltc_manual::signalHandlers()
 void tst_qmltc_manual::signalHandlers_qmlcachegen()
 {
     // use qmlcachegen's compilation unit
-    signalHandlers_impl(QUrl("qrc:/QmltcManualTests/data/signalHandlers.qml"));
+    signalHandlers_impl(
+                QUrl("qrc:/qt/qml/QmltcManualTests/data/signalHandlers.qml"));
 }
 
 void tst_qmltc_manual::jsFunctions()

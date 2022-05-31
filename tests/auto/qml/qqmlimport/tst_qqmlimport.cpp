@@ -218,6 +218,7 @@ void tst_QQmlImport::importPathOrder()
 #endif
     expectedImportPaths << appDirPath
                         << QLatin1String("qrc:/qt-project.org/imports")
+                        << QLatin1String("qrc:/qt/qml")
                         << qml2Imports;
     QQmlEngine engine;
     QCOMPARE(engine.importPathList(), expectedImportPaths);

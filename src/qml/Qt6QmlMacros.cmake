@@ -16,6 +16,7 @@ function(qt6_add_qml_module target)
         SHARED
         DESIGNER_SUPPORTED
         FOLLOW_FOREIGN_VERSIONING
+        AUTO_RESOURCE_PREFIX
         NO_PLUGIN
         NO_PLUGIN_OPTIONAL
         NO_CREATE_PLUGIN_TARGET
@@ -440,7 +441,31 @@ function(qt6_add_qml_module target)
         endif()
     endforeach()
 
-    _qt_internal_canonicalize_resource_path("${arg_RESOURCE_PREFIX}" arg_RESOURCE_PREFIX)
+    if(arg_AUTO_RESOURCE_PREFIX)
+        if(arg_RESOURCE_PREFIX)
+            message(FATAL_ERROR
+                "Both RESOURCE_PREFIX and AUTO_RESOURCE_PREFIX are specified for ${target}. "
+                "You can only have one."
+            )
+        else()
+            set(arg_RESOURCE_PREFIX "/qt/qml")
+        endif()
+    elseif(arg_RESOURCE_PREFIX)
+        _qt_internal_canonicalize_resource_path("${arg_RESOURCE_PREFIX}" arg_RESOURCE_PREFIX)
+    elseif(arg_NO_RESOURCE_TARGET_PATH)
+        # Suppress the warning if NO_RESOURCE_TARGET_PATH is given.
+        # In that case, we assume the user knows what they want.
+        set(arg_RESOURCE_PREFIX "/")
+    else()
+        message(WARNING
+            "Neither RESOURCE_PREFIX nor AUTO_RESOURCE_PREFIX are specified for ${target}. "
+            "The resource root directory, ':/', is used as prefix. If this is what you want, "
+            "specify '/' as RESOURCE_PREFIX. The recommended resource directory to be used as "
+            "prefix is ':/qt/qml/'. Specify AUTO_RESOURCE_PREFIX to use it."
+        )
+        set(arg_RESOURCE_PREFIX "/")
+    endif()
+
     if(arg_NO_RESOURCE_TARGET_PATH)
         set(qt_qml_module_resource_prefix "${arg_RESOURCE_PREFIX}")
     else()

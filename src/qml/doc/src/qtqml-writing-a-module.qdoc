@@ -204,32 +204,37 @@ qt_add_qml_module(
 \section1 Eliminating Run Time File System Access
 
 If all QML modules are always loaded from the resource
-file system, you can deploy the application as a single binary. Let's first
-consider the simple case:
+file system, you can deploy the application as a single binary.
+
+Generally, you should pass the \c AUTO_RESOURCE_PREFIX without arguments to
+\l{qt_add_qml_module}. This way, your modules are placed in
+\c{:/qt/qml/} in the resource file system. Since Qt 6.4,
+this is part of the default \l{QML Import Path}, but not used by Qt itself. For
+modules to be used within your application, this is the right place.
+
+If you have instead specified a custom \c RESOURCE_PREFIX, you have to add the
+custom resource prefix to the \l{QML Import Path}. You can also add multiple
+resource prefixes:
 
 \badcode
 QQmlEngine qmlEngine;
-qmlEngine.addImportPath(QStringLiteral(":/"));
+qmlEngine.addImportPath(QStringLiteral(":/my/resource/prefix"));
+qmlEngine.addImportPath(QStringLiteral(":/other/resource/prefix"));
 // Use qmlEngine to load the main.qml file.
 \endcode
 
-\note ":/" is used for simplicity here. See \l {Custom Directory Layouts}
-for more complex cases.
+This might be necessary when using third party libraries to avoid module name
+conflicts. Using a custom resource prefix is discouraged in all other cases.
 
-If all the modules are linked into the application and if you're following
-the default resource directory structure, do not add any further import paths as
-those might override the one you added.
+The path \c :/qt-project.org/imports/ is also part of the default \l{QML Import
+Path}. For modules that are heavily re-used across different projects or Qt
+versions, \c :/qt-project.org/imports/ is acceptable as resource prefix. Qt's
+own QML modules are placed there, though. You have to be careful not to
+overwrite them.
 
-If you have specified a custom \c RESOURCE_PREFIX, you have to add the custom
-resource prefix to the import path instead. You can also add multiple resource
-prefixes.
-
-The path \c :/qt-project.org/imports/ is part of the default QML import path. If
-you use it, you don't have to specially add it. Qt's own QML modules are placed
-there, though. You have to be careful not to overwrite them. For modules that are
-heavily re-used across different projects \c :/qt-project.org/imports/ is
-acceptable. By using it you can avoid forcing all the users to add custom
-import paths.
+Do not add any unnecessary import paths. The QML engine might find your modules
+in the wrong place then. This can trigger problems which can only be reproduced
+in specific environments.
 
 \section1 Integrating custom QML plugins
 

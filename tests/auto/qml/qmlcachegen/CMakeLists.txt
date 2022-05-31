@@ -25,6 +25,7 @@ qt_internal_add_test(tst_qmlcachegen
 qt6_add_qml_module(tst_qmlcachegen
     URI cachegentest
     VERSION 1.0
+    RESOURCE_PREFIX "/"
 )
 
 set(qmake_workerscripts_test_qml_files

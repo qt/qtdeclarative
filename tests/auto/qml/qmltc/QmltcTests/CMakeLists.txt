@@ -125,6 +125,7 @@ target_link_libraries(qmltc_test_module PUBLIC ${common_libraries})
 qt6_add_qml_module(qmltc_test_module
     VERSION 1.0
     URI QmltcTests
+    AUTO_RESOURCE_PREFIX
     SOURCES
         ${cpp_sources}
     QML_FILES

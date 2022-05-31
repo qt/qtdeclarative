@@ -9,6 +9,7 @@ qt6_add_qml_module(additional_qml_module
     CLASS_NAME "BasicExtension"
     VERSION 1.0
     URI "BasicExtension"
+    RESOURCE_PREFIX "/"
     QML_FILES
         Extension.qml
         More.ui.qml

@@ -3,6 +3,7 @@ qt_autogen_tools_initial_setup(qmlqtimeexample)
 qt6_add_qml_module(qmlqtimeexample
     VERSION 1.0
     URI "TimeExample"
+    RESOURCE_PREFIX "/"
     SOURCES
         timemodel.cpp timemodel.h
     QML_FILES

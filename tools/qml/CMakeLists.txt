@@ -42,6 +42,7 @@ qt_internal_add_resource(qml qml
 
 # Turn the tool into its own self-contained qml module
 qt6_add_qml_module(qml
+    RESOURCE_PREFIX "/qt-project.org"
     URI QmlRuntime.Config
     VERSION 1.0
 )

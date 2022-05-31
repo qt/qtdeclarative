@@ -19,7 +19,8 @@ qt_internal_add_tool(${target_name}
 qt_internal_return_unless_building_tools()
 
 # Turn the tool into its own self-contained qml module
-qt6_add_qml_module(${target_name}
+qt_internal_add_qml_module(${target_name}
     URI QmlTime
     VERSION 1.0
+    NO_PLUGIN
 )
