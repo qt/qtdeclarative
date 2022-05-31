@@ -51,6 +51,7 @@
 #endif
 
 #include <QOperatingSystemVersion>
+#include <QLockFile>
 #include <QOffscreenSurface>
 
 #ifdef Q_OS_WIN
@@ -1228,20 +1229,34 @@ void QSGRhiSupport::prepareWindowForRhi(QQuickWindow *window)
 #endif
 }
 
+static inline QString pipelineCacheLockFileName(const QString &name)
+{
+    return name + QLatin1String(".lck");
+}
+
 void QSGRhiSupport::preparePipelineCache(QRhi *rhi)
 {
     if (m_pipelineCacheLoad.isEmpty())
         return;
 
+    QLockFile lock(pipelineCacheLockFileName(m_pipelineCacheLoad));
+    if (!lock.lock()) {
+        qWarning("Could not create pipeline cache lock file '%s'",
+                 qPrintable(lock.fileName()));
+        return;
+    }
+
     QFile f(m_pipelineCacheLoad);
-    if (f.open(QIODevice::ReadOnly)) {
-        qCDebug(QSG_LOG_INFO, "Attempting to seed pipeline cache from '%s'",
-                qPrintable(m_pipelineCacheLoad));
-        rhi->setPipelineCacheData(f.readAll());
-    } else {
+    if (!f.open(QIODevice::ReadOnly)) {
         qWarning("Could not open pipeline cache source file '%s'",
                  qPrintable(m_pipelineCacheLoad));
+        return;
     }
+
+    qCDebug(QSG_LOG_INFO, "Attempting to seed pipeline cache from '%s'",
+            qPrintable(m_pipelineCacheLoad));
+
+    rhi->setPipelineCacheData(f.readAll());
 }
 
 // must be called on the render thread
@@ -1391,14 +1406,20 @@ void QSGRhiSupport::destroyRhi(QRhi *rhi)
 
     if (!rhi->isDeviceLost()) {
         if (!m_pipelineCacheSave.isEmpty()) {
-            QFile f(m_pipelineCacheSave);
-            if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-                qCDebug(QSG_LOG_INFO, "Writing pipeline cache contents to '%s'",
-                        qPrintable(m_pipelineCacheSave));
-                f.write(rhi->pipelineCacheData());
+            QLockFile lock(pipelineCacheLockFileName(m_pipelineCacheSave));
+            if (lock.lock()) {
+                QFile f(m_pipelineCacheSave);
+                if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                    qCDebug(QSG_LOG_INFO, "Writing pipeline cache contents to '%s'",
+                            qPrintable(m_pipelineCacheSave));
+                    f.write(rhi->pipelineCacheData());
+                } else {
+                    qWarning("Could not open pipeline cache output file '%s'",
+                             qPrintable(m_pipelineCacheSave));
+                }
             } else {
-                qWarning("Could not open pipeline cache output file '%s'",
-                         qPrintable(m_pipelineCacheSave));
+                qWarning("Could not create pipeline cache lock file '%s'",
+                         qPrintable(lock.fileName()));
             }
         }
     }
