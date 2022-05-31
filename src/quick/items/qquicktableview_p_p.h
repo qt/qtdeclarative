@@ -539,7 +539,7 @@ public:
     QSizeF scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step) override;
 
     QPoint clampedCellAtPos(const QPointF &pos) const;
-    void updateSelection(const QRect &oldSelection, const QRect &newSelection);
+    virtual void updateSelection(const QRect &oldSelection, const QRect &newSelection);
     QRect selection() const;
     // ----------------
 };

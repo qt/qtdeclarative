@@ -43,9 +43,10 @@ import TestModel
 Rectangle {
     id: root
 
-    implicitWidth: padding + label.x + label.implicitWidth + padding
-    implicitHeight: label.implicitHeight * 1.5
-    color: current ? "lightgreen" : "white"
+    implicitWidth: 100 // hard-coded to make it easier to test the layout
+    implicitHeight: 25
+    clip: true
+    color: current || selected ? "lightgreen" : "white"
 
     property alias text: label.text
 
@@ -59,6 +60,7 @@ Rectangle {
     required property int hasChildren
     required property int depth
     required property bool current
+    required property bool selected
 
     TapHandler {
         onTapped: treeView.toggleExpanded(row)

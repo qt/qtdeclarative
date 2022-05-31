@@ -110,6 +110,11 @@ private slots:
     void updatedModifiedModel();
     void insertRows();
     void toggleExpandedUsingArrowKeys();
+    void selectionBehaviorCells_data();
+    void selectionBehaviorCells();
+    void selectionBehaviorRows();
+    void selectionBehaviorColumns();
+    void selectionBehaviorDisabled();
 };
 
 tst_qquicktreeview::tst_qquicktreeview()
@@ -793,6 +798,228 @@ void tst_qquicktreeview::toggleExpandedUsingArrowKeys()
     QTest::keyPress(window, Qt::Key_Left);
     QVERIFY(!treeView->isExpanded(row0));
     QCOMPARE(treeView->selectionModel()->currentIndex(), treeView->modelIndex(0, row0));
+}
+
+void tst_qquicktreeview::selectionBehaviorCells_data()
+{
+    QTest::addColumn<QPoint>("startCell");
+    QTest::addColumn<QPoint>("endCellDist");
+
+    QTest::newRow("QPoint(0, 0), QPoint(0, 0)") << QPoint(0, 0) << QPoint(0, 0);
+
+    QTest::newRow("QPoint(0, 1), QPoint(0, 1)") << QPoint(0, 1) << QPoint(0, 1);
+    QTest::newRow("QPoint(0, 2), QPoint(0, 2)") << QPoint(0, 2) << QPoint(0, 2);
+
+    QTest::newRow("QPoint(2, 2), QPoint(0, 0)") << QPoint(2, 2) << QPoint(0, 0);
+    QTest::newRow("QPoint(2, 2), QPoint(1, 0)") << QPoint(2, 2) << QPoint(1, 0);
+    QTest::newRow("QPoint(2, 2), QPoint(2, 0)") << QPoint(2, 2) << QPoint(2, 0);
+    QTest::newRow("QPoint(2, 2), QPoint(-1, 0)") << QPoint(2, 2) << QPoint(-1, 0);
+    QTest::newRow("QPoint(2, 2), QPoint(-2, 0)") << QPoint(2, 2) << QPoint(-2, 0);
+    QTest::newRow("QPoint(2, 2), QPoint(0, 1)") << QPoint(2, 2) << QPoint(0, 1);
+    QTest::newRow("QPoint(2, 2), QPoint(0, 2)") << QPoint(2, 2) << QPoint(0, 2);
+    QTest::newRow("QPoint(2, 2), QPoint(0, -1)") << QPoint(2, 2) << QPoint(0, -1);
+    QTest::newRow("QPoint(2, 2), QPoint(0, -2)") << QPoint(2, 2) << QPoint(0, -2);
+
+    QTest::newRow("QPoint(2, 2), QPoint(1, 1)") << QPoint(2, 2) << QPoint(1, 1);
+    QTest::newRow("QPoint(2, 2), QPoint(1, 2)") << QPoint(2, 2) << QPoint(1, 2);
+    QTest::newRow("QPoint(2, 2), QPoint(1, -1)") << QPoint(2, 2) << QPoint(1, -1);
+    QTest::newRow("QPoint(2, 2), QPoint(1, -2)") << QPoint(2, 2) << QPoint(1, -2);
+
+    QTest::newRow("QPoint(2, 2), QPoint(-1, 1)") << QPoint(2, 2) << QPoint(-1, 1);
+    QTest::newRow("QPoint(2, 2), QPoint(-1, 2)") << QPoint(2, 2) << QPoint(-1, 2);
+    QTest::newRow("QPoint(2, 2), QPoint(-1, -1)") << QPoint(2, 2) << QPoint(-1, -1);
+    QTest::newRow("QPoint(2, 2), QPoint(-1, -2)") << QPoint(2, 2) << QPoint(-1, -2);
+}
+
+void tst_qquicktreeview::selectionBehaviorCells()
+{
+    // Check that the TreeView implement the overridden updateSelection()
+    // function correctly wrt QQuickTableView::SelectCells.
+    QFETCH(QPoint, startCell);
+    QFETCH(QPoint, endCellDist);
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    const auto selectionModel = treeView->selectionModel();
+    treeView->expand(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel->hasSelection(), false);
+    treeView->setSelectionBehavior(QQuickTableView::SelectCells);
+
+    const QPoint endCell = startCell + endCellDist;
+    const QPoint endCellWrapped = startCell - endCellDist;
+
+    const QQuickItem *startItem = treeView->itemAtCell(startCell);
+    const QQuickItem *endItem = treeView->itemAtCell(endCell);
+    const QQuickItem *endItemWrapped = treeView->itemAtCell(endCellWrapped);
+    QVERIFY(startItem);
+    QVERIFY(endItem);
+    QVERIFY(endItemWrapped);
+
+    const QPointF startPos(startItem->x(), startItem->y());
+    const QPointF endPos(endItem->x(), endItem->y());
+    const QPointF endPosWrapped(endItemWrapped->x(), endItemWrapped->y());
+
+    treeViewPrivate->setSelectionStartPos(startPos);
+    treeViewPrivate->setSelectionEndPos(endPos);
+
+    QCOMPARE(selectionModel->hasSelection(), true);
+
+    const int x1 = qMin(startCell.x(), endCell.x());
+    const int x2 = qMax(startCell.x(), endCell.x());
+    const int y1 = qMin(startCell.y(), endCell.y());
+    const int y2 = qMax(startCell.y(), endCell.y());
+
+    for (int x = x1; x < x2; ++x) {
+        for (int y = y1; y < y2; ++y) {
+            const auto index = treeView->modelIndex(x, y);
+            QVERIFY(selectionModel->isSelected(index));
+        }
+    }
+
+    const int expectedCount = (x2 - x1 + 1) * (y2 - y1 + 1);
+    const int actualCount = selectionModel->selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    // Wrap the selection
+    treeViewPrivate->setSelectionEndPos(endPosWrapped);
+
+    for (int x = x2; x < x1; ++x) {
+        for (int y = y2; y < y1; ++y) {
+            const auto index = model->index(y, x);
+            QVERIFY(selectionModel->isSelected(index));
+        }
+    }
+
+    const int actualCountAfterWrap = selectionModel->selectedIndexes().count();
+    QCOMPARE(actualCountAfterWrap, expectedCount);
+
+    treeViewPrivate->clearSelection();
+    QCOMPARE(selectionModel->hasSelection(), false);
+}
+
+void tst_qquicktreeview::selectionBehaviorRows()
+{
+    // Check that the TreeView implement the overridden updateSelection()
+    // function correctly wrt QQuickTableView::SelectionRows.
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    const auto selectionModel = treeView->selectionModel();
+    QCOMPARE(treeView->selectionBehavior(), QQuickTableView::SelectRows);
+    treeView->expand(0);
+    treeView->setInteractive(false);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel->hasSelection(), false);
+
+    // Drag from row 0 to row 3
+    treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
+    treeViewPrivate->setSelectionEndPos(QPointF(80, 60));
+
+    QCOMPARE(selectionModel->hasSelection(), true);
+
+    const int expectedCount = treeView->columns() * 3; // all columns * three rows
+    int actualCount = selectionModel->selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < treeView->columns(); ++x) {
+        for (int y = 0; y < 3; ++y) {
+            const auto index = treeView->modelIndex(x, y);
+            QVERIFY(selectionModel->isSelected(index));
+        }
+    }
+
+    selectionModel->clear();
+    QCOMPARE(selectionModel->hasSelection(), false);
+
+    // Drag from row 3 to row 0 (and overshoot mouse)
+    treeViewPrivate->setSelectionStartPos(QPointF(80, 60));
+    treeViewPrivate->setSelectionEndPos(QPointF(-10, -10));
+
+    QCOMPARE(selectionModel->hasSelection(), true);
+
+    actualCount = selectionModel->selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < treeView->columns(); ++x) {
+        for (int y = 0; y < 3; ++y) {
+            const auto index = treeView->modelIndex(x, y);
+            QVERIFY(selectionModel->isSelected(index));
+        }
+    }
+}
+
+void tst_qquicktreeview::selectionBehaviorColumns()
+{
+    // Check that the TreeView implement the overridden updateSelection()
+    // function correctly wrt QQuickTableView::SelectColumns.
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    const auto selectionModel = treeView->selectionModel();
+    treeView->setSelectionBehavior(QQuickTableView::SelectColumns);
+    treeView->expand(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel->hasSelection(), false);
+
+    // Drag from column 0 to column 3
+    treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
+    treeViewPrivate->setSelectionEndPos(QPointF(225, 90));
+
+    QCOMPARE(selectionModel->hasSelection(), true);
+
+    const int expectedCount = treeView->rows() * 3; // all rows * three columns
+    int actualCount = selectionModel->selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < 3; ++x) {
+        for (int y = 0; y < treeView->rows(); ++y) {
+            const auto index = treeView->modelIndex(x, y);
+            QVERIFY(selectionModel->isSelected(index));
+        }
+    }
+
+    selectionModel->clear();
+    QCOMPARE(selectionModel->hasSelection(), false);
+
+    // Drag from column 3 to column 0 (and overshoot mouse)
+    treeViewPrivate->setSelectionStartPos(QPointF(225, 90));
+    treeViewPrivate->setSelectionEndPos(QPointF(-10, -10));
+
+    QCOMPARE(selectionModel->hasSelection(), true);
+
+    actualCount = selectionModel->selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    for (int x = 0; x < 3; ++x) {
+        for (int y = 0; y < treeView->rows(); ++y) {
+            const auto index = treeView->modelIndex(x, y);
+            QVERIFY(selectionModel->isSelected(index));
+        }
+    }
+}
+
+void tst_qquicktreeview::selectionBehaviorDisabled()
+{
+    // Check that the TreeView implement the overridden updateSelection()
+    // function correctly wrt QQuickTableView::SelectionDisabled.
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    const auto selectionModel = treeView->selectionModel();
+    treeView->setSelectionBehavior(QQuickTableView::SelectionDisabled);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel->hasSelection(), false);
+
+    // Drag from column 0 to column 3
+    treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
+    treeViewPrivate->setSelectionEndPos(QPointF(60, 60));
+
+    QCOMPARE(selectionModel->hasSelection(), false);
 }
 
 QTEST_MAIN(tst_qquicktreeview)

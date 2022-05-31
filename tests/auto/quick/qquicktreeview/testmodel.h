@@ -78,7 +78,7 @@ public:
 
 private:
     QScopedPointer<TreeItem> m_rootItem;
-    int m_columnCount = 2;
+    int m_columnCount = 5;
 };
 
 #endif // TESTMODEL_H

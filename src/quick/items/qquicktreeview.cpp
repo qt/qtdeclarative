@@ -360,10 +360,68 @@ void QQuickTreeViewPrivate::updateRequiredProperties(int serializedModelIndex, Q
     setRequiredProperty("depth", m_treeModelToTableModel.depthAtRow(row), serializedModelIndex, object, init);
 }
 
+void QQuickTreeViewPrivate::updateSelection(const QRect &oldSelection, const QRect &newSelection)
+{
+    Q_Q(QQuickTreeView);
+
+    const QRect oldRect = oldSelection.normalized();
+    const QRect newRect = newSelection.normalized();
+
+    if (oldSelection == newSelection)
+        return;
+
+    // Select the rows inside newRect that doesn't overlap with oldRect
+    for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row) {
+        if (oldRect.y() != -1 && oldRect.y() <= row && row <= oldRect.y() + oldRect.height())
+            continue;
+        const QModelIndex startIndex = q->modelIndex(newRect.x(), row);
+        const QModelIndex endIndex = q->modelIndex(newRect.x() + newRect.width(), row);
+        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+    }
+
+    if (oldRect.x() != -1) {
+        // Since oldRect is valid, this update is a continuation of an already existing selection!
+
+        // Select the columns inside newRect that don't overlap with oldRect
+        for (int column = newRect.x(); column <= newRect.x() + newRect.width(); ++column) {
+            if (oldRect.x() <= column && column <= oldRect.x() + oldRect.width())
+                continue;
+            for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row)
+                selectionModel->select(q->modelIndex(column, row), QItemSelectionModel::Select);
+        }
+
+        // Unselect the rows inside oldRect that don't overlap with newRect
+        for (int row = oldRect.y(); row <= oldRect.y() + oldRect.height(); ++row) {
+            if (newRect.y() <= row && row <= newRect.y() + newRect.height())
+                continue;
+            const QModelIndex startIndex = q->modelIndex(oldRect.x(), row);
+            const QModelIndex endIndex = q->modelIndex(oldRect.x() + oldRect.width(), row);
+            selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        }
+
+        // Unselect the columns inside oldRect that don't overlap with newRect
+        for (int column = oldRect.x(); column <= oldRect.x() + oldRect.width(); ++column) {
+            if (newRect.x() <= column && column <= newRect.x() + newRect.width())
+                continue;
+            // Since we're not allowed to call select/unselect on the selectionModel with
+            // indices from different parents, and since indicies from different parents are
+            // expected when working with trees, we need to unselect the indices in the column
+            // one by one, rather than the whole column in one go. This, however, can cause a
+            // lot of selection fragments in the selectionModel, which eventually can hurt
+            // performance. But large selections containing a lot of columns is not normally
+            // the case for a treeview, so accept this potential corner case for now.
+            for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row)
+                selectionModel->select(q->modelIndex(column, row), QItemSelectionModel::Deselect);
+        }
+    }
+}
+
 QQuickTreeView::QQuickTreeView(QQuickItem *parent)
     : QQuickTableView(*(new QQuickTreeViewPrivate), parent)
 {
     Q_D(QQuickTreeView);
+
+    setSelectionBehavior(SelectRows);
 
     // Note: QQuickTableView will only ever see the table model m_treeModelToTableModel, and
     // never the actual tree model that is assigned to us by the application.

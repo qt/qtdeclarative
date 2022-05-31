@@ -78,6 +78,7 @@ public:
                              const QVector<int> &roles);
 
     void updateRequiredProperties(int serializedModelIndex, QObject *object, bool init);
+    void updateSelection(const QRect &oldSelection, const QRect &newSelection) override;
 
 public:
     QQmlTreeModelToTableModel m_treeModelToTableModel;

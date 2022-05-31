@@ -47,7 +47,10 @@ NativeStyle.DefaultTreeViewDelegate {
     palette.highlightedText: "white"
 
     background: Rectangle {
-        color: control.row === control.treeView.currentRow
+        color: control.selected || control.current
+               || ((control.treeView.selectionBehavior === TableView.SelectRows
+               || control.treeView.selectionBehavior === TableView.SelectionDisabled)
+               && control.row === control.treeView.currentRow)
                ? control.palette.highlight
                : (control.treeView.alternatingRows && control.row % 2 !== 0
                ? control.palette.alternateBase

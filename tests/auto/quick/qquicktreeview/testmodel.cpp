@@ -126,7 +126,7 @@ QModelIndex TestModel::index(int row, int column, const QModelIndex &parent) con
     if (!hasIndex(row, column, parent))
         return QModelIndex();
     if (!parent.isValid())
-        return createIndex(0, 0, m_rootItem.data());
+        return createIndex(row, column, m_rootItem.data());
     return createIndex(row, column, treeItem(parent)->m_childItems.at(row));
 }
 
