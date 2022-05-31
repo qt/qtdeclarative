@@ -77,8 +77,7 @@ private:
     int m_shoeSize = 0;
 };
 
-
-// ![0]
+// ![1]
 class Boy : public Person
 {
     Q_OBJECT
@@ -97,6 +96,6 @@ public:
 };
 //! [girl class]
 
-// ![0]
+// ![1]
 
 #endif // PERSON_H
