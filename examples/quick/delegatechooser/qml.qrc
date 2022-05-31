@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/delegatechooser">
+    <qresource prefix="/qt/qml/delegatechooser">
         <file>delegatechooser.qml</file>
     </qresource>
 </RCC>

@@ -26,6 +26,7 @@ target_link_libraries(stringlistmodelexample PUBLIC
 qt_add_qml_module(stringlistmodelexample
     URI stringlistmodel
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "view.qml"
 )

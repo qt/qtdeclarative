@@ -32,7 +32,7 @@ int main(int argc, char ** argv)
     view.setInitialProperties({{ "model", QVariant::fromValue(dataList) }});
 //![0]
 
-    view.setSource(QUrl("qrc:/stringlistmodel/view.qml"));
+    view.setSource(QUrl("qrc:/qt/qml/stringlistmodel/view.qml"));
     view.show();
 
     return app.exec();

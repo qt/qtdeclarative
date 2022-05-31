@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/draganddrop">
+    <qresource prefix="/qt/qml/draganddrop">
         <file>draganddrop.qml</file>
         <file>tiles/DragTile.qml</file>
         <file>tiles/DropTile.qml</file>

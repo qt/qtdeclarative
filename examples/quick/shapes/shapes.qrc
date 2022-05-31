@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/shapes">
+    <qresource prefix="/qt/qml/shapes">
         <file>main.qml</file>
         <file>shapegallery.qml</file>
         <file>interactive.qml</file>

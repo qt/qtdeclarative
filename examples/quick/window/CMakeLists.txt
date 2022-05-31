@@ -25,6 +25,7 @@ set_target_properties(windowexample PROPERTIES
 qt_add_qml_module(windowexample
     URI window
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "AllScreens.qml"
         "CurrentScreen.qml"

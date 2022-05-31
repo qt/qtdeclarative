@@ -23,6 +23,7 @@ set_target_properties(externaldraganddropexample PROPERTIES
 qt_add_qml_module(externaldraganddropexample
     URI externaldraganddrop
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "DragAndDropTextItem.qml"
         "externaldraganddrop.qml"

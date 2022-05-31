@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/righttoleft">
+    <qresource prefix="/qt/qml/righttoleft">
         <file>righttoleft.qml</file>
         <file>layoutdirection/layoutdirection.qml</file>
         <file>layoutmirroring/layoutmirroring.qml</file>

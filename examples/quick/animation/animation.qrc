@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/animation">
+    <qresource prefix="/qt/qml/animation">
         <file>animation.qml</file>
         <file>basics/images/face-smile.png</file>
         <file>basics/images/moon.png</file>

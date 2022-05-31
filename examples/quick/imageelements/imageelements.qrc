@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/imageelements">
+    <qresource prefix="/qt/qml/imageelements">
         <file>animatedimage.qml</file>
         <file>animatedsprite.qml</file>
         <file>borderimage.qml</file>

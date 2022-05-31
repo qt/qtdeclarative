@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/dynamicview">
+    <qresource prefix="/qt/qml/dynamicview">
         <file>dynamicview.qml</file>
         <file>ListSelector.qml</file>
         <file>PetsModel.qml</file>

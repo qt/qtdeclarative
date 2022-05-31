@@ -31,6 +31,7 @@ target_link_libraries(rendercontrol_d3d11example PUBLIC
 # Resources:
 qt_add_qml_module(rendercontrol_d3d11example
     URI rendercontrol
+    AUTO_RESOURCE_PREFIX
     VERSION 1.0
     QML_FILES
         "demo.qml"

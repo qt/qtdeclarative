@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/accessibility">
+    <qresource prefix="/qt/qml/accessibility">
         <file>accessibility.qml</file>
         <file>Button.qml</file>
         <file>Checkbox.qml</file>

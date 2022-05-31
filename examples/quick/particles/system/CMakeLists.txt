@@ -30,6 +30,7 @@ add_dependencies(systemexample system_shared)
 qt_add_qml_module(systemexample
     URI system
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "dynamiccomparison.qml"
         "dynamicemitters.qml"

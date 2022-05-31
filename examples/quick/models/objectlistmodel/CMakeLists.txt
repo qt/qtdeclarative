@@ -27,6 +27,7 @@ target_link_libraries(objectlistmodelexample PUBLIC
 qt_add_qml_module(objectlistmodelexample
     URI objectlistmodel
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "view.qml"
 )

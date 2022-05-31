@@ -21,7 +21,6 @@
     app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
     ADD_MACOS_BUNDLE_IMPORT_PATH\
-    view.engine()->addImportPath(QStringLiteral(":/"));\
     if (qEnvironmentVariableIntValue("QT_QUICK_CORE_PROFILE")) {\
         QSurfaceFormat f = view.format();\
         f.setProfile(QSurfaceFormat::CoreProfile);\
@@ -35,7 +34,7 @@
     }\
     view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);\
     new QQmlFileSelector(view.engine(), &view);\
-    view.setSource(QUrl("qrc:///" #NAME ".qml")); \
+    view.setSource(QUrl("qrc:/qt/qml/" #NAME ".qml")); \
     if (view.status() == QQuickView::Error)\
         return -1;\
     view.setResizeMode(QQuickView::SizeRootObjectToView);\

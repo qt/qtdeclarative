@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     qputenv("QML_XHR_ALLOW_FILE_READ", QByteArray("1"));
 
     view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);
-    view.setSource(QUrl("qrc:///xmlhttprequest/xmlhttprequest.qml"));
+    view.setSource(QUrl("qrc:/qt/qml/xmlhttprequest/xmlhttprequest.qml"));
     if (view.status() == QQuickView::Error)
         return -1;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

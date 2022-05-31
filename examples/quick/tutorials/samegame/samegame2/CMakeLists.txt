@@ -23,6 +23,7 @@ set_target_properties(samegame2 PROPERTIES
 qt_add_qml_module(samegame2
     URI samegame
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "Block.qml"
         "Button.qml"

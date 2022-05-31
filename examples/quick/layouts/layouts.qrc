@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="/layouts">
+<qresource prefix="/qt/qml/layouts">
   <file>layouts.qml</file>
 </qresource>
 </RCC>

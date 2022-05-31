@@ -30,6 +30,7 @@ target_link_libraries(shadereffectsexample PUBLIC
 qt_add_qml_module(shadereffectsexample
     URI shadereffects
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "shadereffects.qml"
     RESOURCES

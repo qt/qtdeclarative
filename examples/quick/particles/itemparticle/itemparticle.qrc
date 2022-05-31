@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/itemparticle">
+    <qresource prefix="/qt/qml/itemparticle">
         <file>itemparticle.qml</file>
         <file>delegates.qml</file>
         <file>script.js</file>

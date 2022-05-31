@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="/abstractitemmodel">
+<qresource prefix="/qt/qml/abstractitemmodel">
     <file>view.qml</file>
 </qresource>
 </RCC>

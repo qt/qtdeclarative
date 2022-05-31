@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/samegame">
+    <qresource prefix="/qt/qml/samegame">
         <file>samegame.qml</file>
         <file>BoomBlock.qml</file>
         <file>Button.qml</file>

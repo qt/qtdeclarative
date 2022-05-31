@@ -30,6 +30,7 @@ target_link_libraries(dialcontrolexample PUBLIC
 qt_add_qml_module(dialcontrolexample
     URI dialcontrol
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "Dial.qml"
         "QuitButton.qml"

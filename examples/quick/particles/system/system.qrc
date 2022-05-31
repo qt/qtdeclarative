@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/system">
+    <qresource prefix="/qt/qml/system">
         <file>system.qml</file>
         <file>dynamiccomparison.qml</file>
         <file>dynamicemitters.qml</file>

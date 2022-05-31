@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/emitters">
+    <qresource prefix="/qt/qml/emitters">
         <file>emitters.qml</file>
         <file>burstandpulse.qml</file>
         <file>customemitter.qml</file>

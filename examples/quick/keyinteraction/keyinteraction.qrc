@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/keyinteraction">
+    <qresource prefix="/qt/qml/keyinteraction">
         <file>keyinteraction.qml</file>
         <file>focus.qml</file>
         <file>ContextMenu.qml</file>

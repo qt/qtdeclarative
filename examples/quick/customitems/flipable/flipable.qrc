@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/flipable">
+    <qresource prefix="/qt/qml/flipable">
         <file>flipable.qml</file>
         <file>5_heart.png</file>
         <file>9_club.png</file>

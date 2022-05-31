@@ -23,7 +23,7 @@ int main(int argc, char ** argv)
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setInitialProperties({{"model", QVariant::fromValue(&model)}});
 //![0]
-    view.setSource(QUrl("qrc:/abstractitemmodel/view.qml"));
+    view.setSource(QUrl("qrc:/qt/qml/abstractitemmodel/view.qml"));
     view.show();
 
     return app.exec();

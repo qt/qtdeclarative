@@ -26,6 +26,7 @@ target_link_libraries(mouseareaexample PUBLIC
 qt_add_qml_module(mouseareaexample
     URI mousearea
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "mousearea-wheel-example.qml"
         "mousearea.qml"

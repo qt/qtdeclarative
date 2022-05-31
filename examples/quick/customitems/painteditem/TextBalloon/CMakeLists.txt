@@ -8,6 +8,7 @@ qt_add_qml_module(qmltextballoon
     VERSION 1.0
     URI "TextBalloon"
     PLUGIN_TARGET qmltextballoon
+    AUTO_RESOURCE_PREFIX
     SOURCES
         textballoon.cpp textballoon.h
 )

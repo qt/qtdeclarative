@@ -30,6 +30,7 @@ add_dependencies(emittersexample emitters_shared)
 qt_add_qml_module(emittersexample
     URI emitters
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "burstandpulse.qml"
         "customemitter.qml"

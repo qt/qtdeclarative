@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/threading">
+    <qresource prefix="/qt/qml/threading">
         <file>threading.qml</file>
         <file>threadedlistmodel/timedisplay.qml</file>
         <file>threadedlistmodel/dataloader.mjs</file>

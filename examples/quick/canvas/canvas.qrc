@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/canvas">
+    <qresource prefix="/qt/qml/canvas">
         <file>canvas.qml</file>
         <file>LabeledSlider.qml</file>
         <file>bezierCurve/bezierCurve.qml</file>

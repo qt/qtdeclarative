@@ -241,7 +241,7 @@ void WindowSingleThreaded::exposeEvent(QExposeEvent *)
     if (isExposed()) {
         if (!m_quickInitialized) {
             m_cubeRenderer->render(this, m_context, m_quickReady ? m_textureId : 0);
-            startQuick(QStringLiteral("qrc:/rendercontrol/demo.qml"));
+            startQuick(QStringLiteral("qrc:/qt/qml/rendercontrol/demo.qml"));
         }
     }
 }

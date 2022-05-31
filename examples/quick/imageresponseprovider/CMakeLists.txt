@@ -15,6 +15,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 qt6_add_qml_module(qmlimageresponseproviderplugin
     VERSION 1.0
     URI "ImageResponseProviderCore"
+    AUTO_RESOURCE_PREFIX
     PLUGIN_TARGET qmlimageresponseproviderplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE

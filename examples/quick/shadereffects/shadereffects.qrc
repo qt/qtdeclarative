@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/shadereffects">
+    <qresource prefix="/qt/qml/shadereffects">
         <file>shadereffects.qml</file>
         <file>content/face-smile.png</file>
         <file>content/qt-logo.png</file>

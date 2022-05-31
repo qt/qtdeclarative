@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/affectors">
+    <qresource prefix="/qt/qml/affectors">
         <file>affectors.qml</file>
         <file>age.qml</file>
         <file>attractor.qml</file>

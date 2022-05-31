@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/text">
+    <qresource prefix="/qt/qml/text">
         <file>text.qml</file>
         <file>fonts/availableFonts.qml</file>
         <file>fonts/banner.qml</file>

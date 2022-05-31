@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/views">
+    <qresource prefix="/qt/qml/views">
         <file>gridview/gridview-example.qml</file>
         <file>gridview/pics/AddressBook_48.png</file>
         <file>gridview/pics/AudioPlayer_48.png</file>

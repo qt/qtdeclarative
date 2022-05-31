@@ -71,7 +71,8 @@ Window::Window(Engine *engine)
     m_quickWindow = new QQuickWindow(m_renderControl);
 
     m_qmlEngine = new QQmlEngine;
-    m_qmlComponent = new QQmlComponent(m_qmlEngine, QUrl(QLatin1String("qrc:/rendercontrol/demo.qml")));
+    m_qmlComponent = new QQmlComponent(
+                m_qmlEngine, QUrl(QLatin1String("qrc:/qt/qtml/rendercontrol/demo.qml")));
     if (m_qmlComponent->isError()) {
         for (const QQmlError &error : m_qmlComponent->errors())
             qWarning() << error.url() << error.line() << error;

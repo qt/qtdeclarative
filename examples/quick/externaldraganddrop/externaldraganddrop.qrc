@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/externaldraganddrop">
+    <qresource prefix="/qt/qml/externaldraganddrop">
         <file>externaldraganddrop.qml</file>
         <file>DragAndDropTextItem.qml</file>
     </qresource>

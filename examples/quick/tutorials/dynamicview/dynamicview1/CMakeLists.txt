@@ -23,6 +23,7 @@ set_target_properties(dynamicview1 PROPERTIES
 qt_add_qml_module(dynamicview1
     URI dynamicview
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         dynamicview.qml
         PetsModel.qml

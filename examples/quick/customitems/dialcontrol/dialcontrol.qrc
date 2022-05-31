@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/dialcontrol">
+    <qresource prefix="/qt/qml/dialcontrol">
         <file>Dial.qml</file>
         <file>QuitButton.qml</file>
         <file>background.png</file>

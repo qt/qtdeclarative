@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/positioners">
+    <qresource prefix="/qt/qml/positioners">
         <file>positioners.qml</file>
         <file>positioners-attachedproperties.qml</file>
         <file>positioners-transitions.qml</file>

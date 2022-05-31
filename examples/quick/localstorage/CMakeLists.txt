@@ -20,6 +20,7 @@ qt_add_executable(localstorageexample
 qt_add_qml_module(localstorageexample
     URI localstorage
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "Database.js"
         "Header.qml"

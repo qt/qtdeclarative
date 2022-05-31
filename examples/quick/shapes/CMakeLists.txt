@@ -34,6 +34,7 @@ add_dependencies(shapesexample shapes_shared)
 qt_add_qml_module(shapesexample
     URI shapes
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "clippedtigers.qml"
         "interactive.qml"

@@ -20,6 +20,7 @@ qt_add_executable(layoutsexample
 qt_add_qml_module(layoutsexample
     URI layouts
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "layouts.qml"
 )

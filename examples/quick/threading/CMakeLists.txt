@@ -34,6 +34,7 @@ add_dependencies(threadingexample threading_shared)
 qt_add_qml_module(threadingexample
     URI threading
     VERSION 1.0
+    AUTO_RESOURCE_PREFIX
     QML_FILES
         "threadedlistmodel/dataloader.mjs"
         "threadedlistmodel/timedisplay.qml"

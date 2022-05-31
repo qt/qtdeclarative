@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/touchinteraction">
+    <qresource prefix="/qt/qml/touchinteraction">
         <file>touchinteraction.qml</file>
         <file>flickable/basic-flickable.qml</file>
         <file>flickable/corkboards.qml</file>

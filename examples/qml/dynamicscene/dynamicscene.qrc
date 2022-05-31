@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/dynamicscene">
+    <qresource prefix="/qt/qml/dynamicscene">
         <file>dynamicscene.qml</file>
         <file>images/face-smile.png</file>
         <file>images/moon.png</file>

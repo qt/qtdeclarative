@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/imageparticle">
+    <qresource prefix="/qt/qml/imageparticle">
         <file>imageparticle.qml</file>
         <file>allatonce.qml</file>
         <file>colored.qml</file>
