@@ -370,6 +370,7 @@ private slots:
     void multiExtensionQmlTypes();
     void extensionSpecial();
     void extensionRevision();
+    void extendedGroupProperty();
     void invalidInlineComponent();
     void warnOnInjectedParameters();
 #if QT_CONFIG(wheelevent)
@@ -6561,6 +6562,26 @@ void tst_qqmllanguage::extensionRevision()
         QScopedPointer<QObject> o(c.create());
         QVERIFY(o);
     }
+}
+
+void tst_qqmllanguage::extendedGroupProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(import StaticTest 1.0
+        ExtendedInGroup {
+            group.value: 42
+            group.value2: 42
+        }
+    )", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    ExtendedInGroup *extendedInGroup = qobject_cast<ExtendedInGroup *>(o.data());
+    QVERIFY(extendedInGroup);
+    QCOMPARE(extendedInGroup->group()->value(), 42);
+    QCOMPARE(extendedInGroup->group()->value2(), 42);
 }
 
 void tst_qqmllanguage::invalidInlineComponent()

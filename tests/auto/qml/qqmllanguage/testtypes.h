@@ -1920,6 +1920,31 @@ public:
     ExtendedWithRevisionNew(QObject *parent = nullptr) : QObject(parent) { }
 };
 
+class MyExtendedGroupedObject : public MyGroupedObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    QML_EXTENDED(Extension)
+    Q_PROPERTY(int value2 READ value2 WRITE setValue2)
+    int m_value2 = 0;
+public:
+    int value2() const { return m_value2; }
+    void setValue2(int v) { m_value2 = v; }
+};
+
+class ExtendedInGroup : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(MyExtendedGroupedObject *group READ group)
+
+    MyExtendedGroupedObject m_group;
+public:
+    ExtendedInGroup(QObject *parent = nullptr) : QObject(parent) { }
+
+    MyExtendedGroupedObject *group() { return &m_group; }
+};
+
 class StringSignaler : public QObject
 {
     Q_OBJECT
