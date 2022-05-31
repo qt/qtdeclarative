@@ -6513,6 +6513,10 @@ void tst_qqmllanguage::extensionSpecial()
 
         // property a exists only in the extension type
         QCOMPARE(o->property("a").toInt(), int('a'));
+
+        // property c exists on the leaf type but since extension's properties
+        // are effectively FINAL, it is not used
+        QCOMPARE(o->property("c").toInt(), 11);
     }
 
     {
