@@ -12,9 +12,9 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/rendercontrol/rendercontrol
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_executable(rendercontrol_d3d11example WIN32 MACOSX_BUNDLE
-    engine.cpp
+    engine.cpp engine.h
     main.cpp
-    window.cpp
+    window.cpp window.h
 )
 
 target_link_libraries(rendercontrol_d3d11example PUBLIC

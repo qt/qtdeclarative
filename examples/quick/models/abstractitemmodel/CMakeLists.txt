@@ -13,7 +13,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_executable(abstractitemmodelexample WIN32 MACOSX_BUNDLE
     main.cpp
-    model.cpp
+    model.cpp model.h
 )
 
 target_link_libraries(abstractitemmodelexample PUBLIC

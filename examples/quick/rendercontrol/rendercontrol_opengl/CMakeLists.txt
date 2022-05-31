@@ -12,9 +12,9 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/rendercontrol/rendercontrol
 find_package(Qt6 REQUIRED COMPONENTS Core Gui OpenGL Qml Quick)
 
 qt_add_executable(rendercontrol_openglexample WIN32 MACOSX_BUNDLE
-    cuberenderer.cpp
+    cuberenderer.cpp cuberenderer.h
     main.cpp
-    window_singlethreaded.cpp
+    window_singlethreaded.cpp window_singlethreaded.h
 )
 
 target_link_libraries(rendercontrol_openglexample PUBLIC

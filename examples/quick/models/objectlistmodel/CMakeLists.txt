@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/models/objectlistmodel")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_executable(objectlistmodelexample WIN32 MACOSX_BUNDLE
-    dataobject.cpp
+    dataobject.cpp dataobject.h
     main.cpp
 )
 
