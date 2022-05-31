@@ -518,8 +518,16 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick::TextInput::horizontalAlignment
     \qmlproperty enumeration QtQuick::TextInput::effectiveHorizontalAlignment
+    \readonly
+
+    When using the attached property LayoutMirroring::enabled to mirror application
+    layouts, the horizontal alignment of text will also be mirrored. However, the property
+    \l horizontalAlignment will remain unchanged. To query the effective horizontal alignment
+    of TextInput, use the read-only property \c effectiveHorizontalAlignment.
+*/
+/*!
+    \qmlproperty enumeration QtQuick::TextInput::horizontalAlignment
     \qmlproperty enumeration QtQuick::TextInput::verticalAlignment
 
     Sets the horizontal alignment of the text within the TextInput item's
@@ -542,7 +550,7 @@ void QQuickTextInput::setSelectedTextColor(const QColor &color)
     When using the attached property LayoutMirroring::enabled to mirror application
     layouts, the horizontal alignment of text will also be mirrored. However, the property
     \c horizontalAlignment will remain unchanged. To query the effective horizontal alignment
-    of TextInput, use the read-only property \c effectiveHorizontalAlignment.
+    of TextInput, use the read-only property \l effectiveHorizontalAlignment.
 */
 QQuickTextInput::HAlignment QQuickTextInput::hAlign() const
 {
@@ -862,6 +870,7 @@ void QQuickTextInput::setCursorPosition(int cp)
 
 /*!
     \qmlproperty rectangle QtQuick::TextInput::cursorRectangle
+    \readonly
 
     The rectangle where the standard text cursor is rendered within the text input.  Read only.
 
@@ -903,6 +912,7 @@ QRectF QQuickTextInput::cursorRectangle() const
     This property is read-only. To change the selection, use select(start,end),
     selectAll(), or selectWord().
 
+    \readonly
     \sa selectionEnd, cursorPosition, selectedText
 */
 int QQuickTextInput::selectionStart() const
@@ -918,6 +928,7 @@ int QQuickTextInput::selectionStart() const
     This property is read-only. To change the selection, use select(start,end),
     selectAll(), or selectWord().
 
+    \readonly
     \sa selectionStart, cursorPosition, selectedText
 */
 int QQuickTextInput::selectionEnd() const
@@ -948,6 +959,7 @@ void QQuickTextInput::select(int start, int end)
 
 /*!
     \qmlproperty string QtQuick::TextInput::selectedText
+    \readonly
 
     This read-only property provides the text currently selected in the
     text input.
@@ -2473,6 +2485,7 @@ void QQuickTextInput::setPersistentSelection(bool on)
 
 /*!
     \qmlproperty bool QtQuick::TextInput::canPaste
+    \readonly
 
     Returns true if the TextInput is writable and the content of the clipboard is
     suitable for pasting into the TextInput.
@@ -2494,6 +2507,7 @@ bool QQuickTextInput::canPaste() const
 
 /*!
     \qmlproperty bool QtQuick::TextInput::canUndo
+    \readonly
 
     Returns true if the TextInput is writable and there are previous operations
     that can be undone.
@@ -2507,6 +2521,7 @@ bool QQuickTextInput::canUndo() const
 
 /*!
     \qmlproperty bool QtQuick::TextInput::canRedo
+    \readonly
 
     Returns true if the TextInput is writable and there are \l {undo}{undone}
     operations that can be redone.
@@ -2520,6 +2535,7 @@ bool QQuickTextInput::canRedo() const
 
 /*!
     \qmlproperty real QtQuick::TextInput::contentWidth
+    \readonly
 
     Returns the width of the text, including the width past the width
     which is covered due to insufficient wrapping if \l wrapMode is set.
@@ -2533,6 +2549,7 @@ qreal QQuickTextInput::contentWidth() const
 
 /*!
     \qmlproperty real QtQuick::TextInput::contentHeight
+    \readonly
 
     Returns the height of the text, including the height past the height
     that is covered if the text does not fit within the set height.
@@ -2696,7 +2713,7 @@ void QQuickTextInput::focusOutEvent(QFocusEvent *event)
 
 /*!
     \qmlproperty bool QtQuick::TextInput::inputMethodComposing
-
+    \readonly
 
     This property holds whether the TextInput has partial text input from an
     input method.
