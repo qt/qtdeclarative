@@ -10,11 +10,27 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*)
 list(APPEND test_data ${test_data_glob})
 
+set(SNIPPETS_PATH \\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2/doc/snippets\\\")
+
+if(WEBOS)
+    # Collect snippets for webOS
+    file(GLOB_RECURSE test_snippets_glob
+        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2/doc/snippets/*)
+    list(APPEND test_snippets ${test_snippets_glob})
+
+    # Copy snippets to a location which is included in the webOS emulator image
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data/snippets)
+    file(COPY ${test_snippets} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/data/snippets)
+
+    set(SNIPPETS_PATH \\\"./data/snippets\\\")
+endif()
+
 qt_internal_add_test(tst_snippets
     SOURCES
         tst_snippets.cpp
     DEFINES
-        QQC2_SNIPPETS_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2/doc/snippets\\\"
+        QQC2_SNIPPETS_PATH=${SNIPPETS_PATH}
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
