@@ -165,7 +165,7 @@ developed in the previous examples into two types - a \c Boy and a \c Girl.
 
 \section1 Declare Boy and Girl
 
-\snippet referenceexamples/coercion/person.h 0
+\snippet referenceexamples/coercion/person.h 1
 
 The Person class remains unaltered in this example and the Boy and Girl C++
 classes are trivial extensions of it. The types and their QML name are
