@@ -1836,12 +1836,8 @@ class ExtendedInParent : public MultiExtensionParent
     QML_ELEMENT
     // properties from base type: p, c, f
     // properties from base type's extension: a, c, d, f, g
-
-    Q_PROPERTY(int c READ c CONSTANT) // overwrite base type extension's property
 public:
     ExtendedInParent(QObject *parent = nullptr) : MultiExtensionParent(parent) { }
-
-    int c() { return 1111; }
 };
 
 class ExtendedByIndirect : public QObject

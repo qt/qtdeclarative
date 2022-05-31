@@ -237,7 +237,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 
 void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                          const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd,
-                         QQmlMetaType::ClonePolicy policy, QQmlMetaType::CloneTarget target)
+                         QQmlMetaType::ClonePolicy policy)
 {
     // Set classname
     builder.setClassName(mo->className());
@@ -272,19 +272,6 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                 found = name == other.name();
             }
 
-            // do not clone signals from the type itself: they are hard to do
-            // right from both QML and C++. instead, just ignore they exist and
-            // put a dummy into the slot instead. the disadvantage is that
-            // extension signals would always shadow type signals regardless of
-            // where in the chain an extension exists. however, this behavior is
-            // how it used to work, so there is no regression
-            const bool ignoreSignal = (target == QQmlMetaType::CloneTargetObject
-                                       && method.methodType() == QMetaMethod::Signal);
-            if (ignoreSignal) {
-                builder.addSignal(QByteArray("__qml_ignore__") + method.methodSignature());
-                continue;
-            }
-
             QMetaMethodBuilder m = builder.addMethod(method);
             if (found) // SKIP
                 m.setAccess(QMetaMethod::Private);
@@ -294,16 +281,8 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         for (int ii = mo->propertyOffset(); ii < mo->propertyCount(); ++ii) {
             QMetaProperty property = mo->property(ii);
 
-            // do not clone final properties from the type itself, otherwise
-            // they would be considered overridden (error). following the same
-            // logic, extension properties must not override type's final
-            // properties, so this is somewhat safe proxy-model-wise
-            const bool ignoreProperty =
-                    (target == QQmlMetaType::CloneTargetObject && property.isFinal());
-
             int otherIndex = ignoreEnd->indexOfProperty(property.name());
-            if (ignoreProperty
-                || (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount())) {
+            if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
                 builder.addProperty(QByteArray("__qml_ignore__") + property.name(),
                                     QByteArray("void"));
                 // Skip
@@ -1655,106 +1634,51 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
     return typeName;
 }
 
-template<typename Action>
-static void iterateExtensions(const QQmlMetaTypeDataPtr &typeData, QQmlTypePrivate *t,
-                              const QMetaObject *mo, Action visit)
+QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject *mo,
+                                                              const QMetaObject *baseMetaObject,
+                                                              QMetaObject *lastMetaObject)
 {
-    Q_ASSERT(t);
-    Q_ASSERT(mo);
+    QList<QQmlProxyMetaObject::ProxyData> metaObjects;
+    mo = mo->d.superdata;
 
-    bool finish = false;
-    while (mo && !finish) {
+    const QQmlMetaTypeDataPtr data;
+
+    auto createProxyMetaObject = [&](QQmlTypePrivate *This,
+                                     const QMetaObject *superdataBaseMetaObject,
+                                     const QMetaObject *extMetaObject,
+                                     QObject *(*extFunc)(QObject *)) {
+        if (!extMetaObject)
+            return;
+
+        QMetaObjectBuilder builder;
+        clone(builder, extMetaObject, superdataBaseMetaObject, baseMetaObject,
+              extFunc ? QQmlMetaType::CloneAll : QQmlMetaType::CloneEnumsOnly);
+        QMetaObject *mmo = builder.toMetaObject();
+        mmo->d.superdata = baseMetaObject;
+        if (!metaObjects.isEmpty())
+            metaObjects.constLast().metaObject->d.superdata = mmo;
+        else if (lastMetaObject)
+            lastMetaObject->d.superdata = mmo;
+        QQmlProxyMetaObject::ProxyData data = { mmo, extFunc, 0, 0 };
+        metaObjects << data;
+        registerMetaObjectForType(mmo, This);
+    };
+
+    while (mo) {
+        QQmlTypePrivate *t = data->metaObjectToType.value(mo);
         if (t) {
             if (t->regType == QQmlType::CppType) {
-                finish = visit(t, t->baseMetaObject, t->extraData.cd->extMetaObject,
-                               t->extraData.cd->extFunc);
+                createProxyMetaObject(t, t->baseMetaObject, t->extraData.cd->extMetaObject,
+                                      t->extraData.cd->extFunc);
             } else if (t->regType == QQmlType::SingletonType) {
-                finish = visit(t, t->baseMetaObject, t->extraData.sd->extMetaObject,
-                               t->extraData.sd->extFunc);
+                createProxyMetaObject(t, t->baseMetaObject, t->extraData.sd->extMetaObject,
+                                      t->extraData.sd->extFunc);
             }
         }
         mo = mo->d.superdata;
-        t = typeData->metaObjectToType.value(mo);
-    }
-}
-
-QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(QQmlTypePrivate *type,
-                                                              const QMetaObject *mo,
-                                                              const QMetaObject *baseMetaObject)
-{
-    const QQmlMetaTypeDataPtr data;
-
-    qsizetype extensionCount = 0;
-    iterateExtensions(data, type, mo,
-                      [&](QQmlTypePrivate *, const QMetaObject *, const QMetaObject *extMetaObject,
-                          QObject *(*)(QObject *)) {
-                          if (extMetaObject)
-                              ++extensionCount;
-                          return false;
-                      });
-
-    // don't generate proxies if there are no extensions
-    if (extensionCount == 0)
-        return {};
-
-    QList<QQmlProxyMetaObject::ProxyData> proxies;
-    QList<const QMetaObject *> proxyOrigins;
-
-    qsizetype proxyCount = 0;
-    auto createProxy = [&](QQmlTypePrivate *This, const QMetaObject *superdataBaseMetaObject,
-                           const QMetaObject *extMetaObject, QObject *(*extFunc)(QObject *)) {
-        if (extMetaObject) {
-            QMetaObjectBuilder builder;
-            clone(builder, extMetaObject, superdataBaseMetaObject, baseMetaObject,
-                  extFunc ? QQmlMetaType::CloneAll : QQmlMetaType::CloneEnumsOnly,
-                  QQmlMetaType::CloneTargetExtension);
-            QMetaObject *mmo = builder.toMetaObject();
-            proxies << QQmlProxyMetaObject::ProxyData { mmo, extFunc };
-            registerMetaObjectForType(mmo, This);
-            proxyOrigins << extMetaObject;
-
-            ++proxyCount;
-        }
-
-        // even if current QQmlType is not extended, its parent could be, in
-        // which case this type's meta object should come before the extension
-        // meta object of the parent
-        QMetaObjectBuilder builder;
-        clone(builder, superdataBaseMetaObject, superdataBaseMetaObject, superdataBaseMetaObject,
-              QQmlMetaType::CloneAll, QQmlMetaType::CloneTargetObject);
-        QMetaObject *baseClone = builder.toMetaObject();
-
-        const auto identity = [](QObject *object) { return object; };
-        proxies << QQmlProxyMetaObject::ProxyData {
-            baseClone, identity, 0, 0, 0, 0, QQmlProxyMetaObject::ProxyIsObject
-        };
-        registerMetaObjectForType(baseClone, This);
-        proxyOrigins << superdataBaseMetaObject;
-
-        return proxyCount == extensionCount; // early exit
-    };
-    iterateExtensions(data, type, mo, createProxy);
-
-    // bind the meta objects into a chain
-    for (qsizetype i = 0; i < proxies.size() - 1; ++i)
-        proxies[i].metaObject->d.superdata = proxies[i + 1].metaObject;
-    proxies.constLast().metaObject->d.superdata = baseMetaObject;
-
-    // once there is a proper meta object chain, populate the rest of the
-    // ProxyData structure
-    Q_ASSERT(proxies.size() == proxyOrigins.size());
-    for (int ii = 0; ii < proxies.count(); ++ii) {
-        auto &proxyData = proxies[ii];
-        proxyData.propertyOffset = proxyData.metaObject->propertyOffset();
-        proxyData.methodOffset = proxyData.metaObject->methodOffset();
-
-        const QMetaObject *origin = proxyOrigins[ii];
-        Q_ASSERT(origin);
-        proxyData.originPropertyOffset = origin->propertyOffset();
-        proxyData.originMethodOffset = origin->methodOffset();
     }
 
-    return proxies;
+    return metaObjects;
 }
 
 static bool isInternalType(int idx)

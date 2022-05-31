@@ -219,8 +219,37 @@ void QQmlTypePrivate::init() const
         return;
     }
 
-    // init() is a const function, so const_cast `this`:
-    metaObjects = QQmlMetaType::proxyData(const_cast<QQmlTypePrivate *>(this), mo, baseMetaObject);
+    auto setupExtendedMetaObject = [&](const QMetaObject *extMetaObject,
+                                       QObject *(*extFunc)(QObject *)) {
+        if (!extMetaObject)
+            return;
+
+        // XXX - very inefficient
+        QMetaObjectBuilder builder;
+        QQmlMetaType::clone(builder, extMetaObject, extMetaObject, extMetaObject,
+                            extFunc ? QQmlMetaType::CloneAll : QQmlMetaType::CloneEnumsOnly);
+        QMetaObject *mmo = builder.toMetaObject();
+        mmo->d.superdata = mo;
+        QQmlProxyMetaObject::ProxyData data = { mmo, extFunc, 0, 0 };
+        metaObjects << data;
+        QQmlMetaType::registerMetaObjectForType(mmo, const_cast<QQmlTypePrivate *>(this));
+    };
+
+    if (regType == QQmlType::SingletonType)
+        setupExtendedMetaObject(extraData.sd->extMetaObject, extraData.sd->extFunc);
+    else if (regType == QQmlType::CppType)
+        setupExtendedMetaObject(extraData.cd->extMetaObject, extraData.cd->extFunc);
+
+    metaObjects.append(QQmlMetaType::proxyData(
+            mo, baseMetaObject, metaObjects.isEmpty() ? nullptr
+                                                      : metaObjects.constLast().metaObject));
+
+    for (int ii = 0; ii < metaObjects.count(); ++ii) {
+        metaObjects[ii].propertyOffset =
+                metaObjects.at(ii).metaObject->propertyOffset();
+        metaObjects[ii].methodOffset =
+                metaObjects.at(ii).metaObject->methodOffset();
+    }
 
     // Check for revisioned details
     {
