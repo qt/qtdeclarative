@@ -22,7 +22,7 @@ target_link_libraries(qmli18n PRIVATE
 )
 
 qt_add_qml_module(qmli18n
-    URI dynamicscene
+    URI i18n
     VERSION 1.0
     QML_FILES
         qml-i18n.qml
