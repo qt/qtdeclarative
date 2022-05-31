@@ -200,7 +200,9 @@ void QQuickRenderTarget::setMirrorVertically(bool enable)
     \return a new QQuickRenderTarget referencing an OpenGL texture object
     specified by \a textureId.
 
-    \a format specifies the native format of the texture.
+    \a format specifies the native internal format of the
+    texture. Only texture formats that are supported by Qt's rendering
+    infrastructure should be used.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -253,14 +255,32 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint fo
 }
 
 /*!
-    This is an overloaded function.
-
-    \return a new QQuickRenderTarget referencing an OpenGL texture object specified
-    by \a textureId and of the given \c pixelSize \c sampleCount.
-
     \overload
 
-    It assumes the format of \c texture is RGBA8.
+    \return a new QQuickRenderTarget referencing an OpenGL texture
+    object specified by \a textureId. The texture is assumed to have a
+    format of GL_RGBA (GL_RGBA8).
+
+    \a pixelSize specifies the size of the image, in pixels. Currently
+    only 2D textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native
+    object is a multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    The OpenGL object name \a textureId must be a valid name in the rendering
+    context used by the Qt Quick scenegraph.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
 */
 QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount)
 {
@@ -321,7 +341,8 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferI
     \return a new QQuickRenderTarget referencing a D3D11 texture object
     specified by \a texture.
 
-    \a format specifies the DXGI_FORMAT of the texture.
+    \a format specifies the DXGI_FORMAT of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -372,14 +393,29 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint form
 }
 
 /*!
-    This is an overloaded function.
-
-    \return a new QQuickRenderTarget referencing a D3D11 texture object specified by
-    \a texture and of the given \c pixelSize \c sampleCount.
-
     \overload
 
-    It assumes the format of \c texture is RGBA8.
+    \return a new QQuickRenderTarget referencing a D3D11 texture
+    object specified by \a texture. The texture is assumed to have a
+    format of DXGI_FORMAT_R8G8B8A8_UNORM.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
 */
 QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount)
 {
@@ -391,7 +427,8 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSi
     \return a new QQuickRenderTarget referencing a Metal texture object
     specified by \a texture.
 
-    \a format specifies the MTLPixelFormat of the texture.
+    \a format specifies the MTLPixelFormat of the texture. Only texture formats
+    that are supported by Qt's rendering infrastructure should be used.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -442,14 +479,29 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uin
 }
 
 /*!
-    This is an overloaded function.
-
-    \return a new QQuickRenderTarget referencing a Metal texture object specified by
-    \a texture and of the given \c pixelSize \c sampleCount.
-
     \overload
 
-    It assumes the format of \c texture is RGBA8.
+    \return a new QQuickRenderTarget referencing a Metal texture object
+    specified by \a texture. The texture is assumed to have a format of
+    MTLPixelFormatRGBA8Unorm.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
 */
 QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount)
 {
@@ -462,7 +514,8 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
     specified by \a image. The current \a layout of the image must be provided
     as well.
 
-    \a format specifies the VkFormat of the image.
+    \a format specifies the VkFormat of the image. Only image formats that are
+    supported by Qt's rendering infrastructure should be used.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -513,14 +566,29 @@ QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLay
 }
 
 /*!
-    This is an overloaded function.
-
-    \return a new QQuickRenderTarget referencing n Vulkan image object specified by
-    \a image and of the given \c layout \c pixelSize \c sampleCount.
-
     \overload
 
-    It assumes the format of \c image is RGBA8.
+    \return a new QQuickRenderTarget referencing n Vulkan image object specified
+    by \a image. The image is assumed to have a format of
+    VK_FORMAT_R8G8B8A8_UNORM.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
 */
 QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount)
 {
