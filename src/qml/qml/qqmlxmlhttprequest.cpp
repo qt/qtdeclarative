@@ -1513,11 +1513,8 @@ QStringDecoder QQmlXMLHttpRequest::findTextDecoder() const
         decoder = QStringDecoder(reader.documentEncoding().toString().toUtf8());
     }
 
-    if (!decoder.isValid() && m_mime == "text/html") {
-        auto encoding = QStringConverter::encodingForHtml(m_responseEntityBody);
-        if (encoding)
-            decoder = QStringDecoder(*encoding);
-    }
+    if (!decoder.isValid() && m_mime == "text/html")
+        decoder = QStringDecoder::decoderForHtml(m_responseEntityBody);
 
     if (!decoder.isValid()) {
         auto encoding = QStringConverter::encodingForData(m_responseEntityBody);
