@@ -190,6 +190,27 @@ Item {
         }
 
         Component {
+            id: tabComponent
+            Rectangle {
+                color: "#ff0000"
+            }
+        }
+
+        function test_attachedDynamicRendered() {
+            let layout = createTemporaryObject(stackLayoutComponent, container, { "anchors.fill": parent })
+            verify(layout)
+
+            let item1 = tabComponent.createObject(layout, { objectName: "item1" })
+            verify(item1)
+            compare(item1.StackLayout.index, 0)
+            compare(item1.StackLayout.isCurrentItem, true)
+            compare(item1.StackLayout.layout, layout)
+
+            tryCompare(item1, "width", 200)
+            tryCompare(item1, "height", 200)
+        }
+
+        Component {
             id: attachedStackLayoutComponent
 
             StackLayout {
@@ -271,6 +292,23 @@ Item {
             compare(layout.item2.index, 1)
             compare(layout.item2.isCurrentItem, false)
             compare(layout.item2.layout, layout)
+        }
+
+        function test_implicitSize() {
+            let layout = createTemporaryObject(stackLayoutComponent, container)
+            verify(layout)
+            let item1 = itemComponent.createObject(layout, { objectName: "item1", implicitWidth: 10, implicitHeight: 10 })
+            verify(item1)
+            compare(item1.implicitWidth, 10)
+            compare(item1.implicitHeight, 10)
+            let item2 = itemComponent.createObject(layout, { objectName: "item2", implicitWidth: 20, implicitHeight: 20 })
+            verify(item2)
+            compare(item2.implicitWidth, 20)
+            compare(item2.implicitHeight, 20)
+            verify(isPolishScheduled(layout))
+            verify(waitForItemPolished(layout))
+            compare(layout.implicitWidth, 20)
+            compare(layout.implicitHeight, 20)
         }
     }
 }

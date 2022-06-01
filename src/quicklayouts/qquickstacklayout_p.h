@@ -79,7 +79,7 @@ public:
     QSizeF sizeHint(Qt::SizeHint whichSizeHint) const override;
     void setAlignment(QQuickItem *item, Qt::Alignment align)  override;
     void invalidate(QQuickItem *childItem = nullptr)  override;
-    void updateLayoutItems()  override;
+    void updateLayoutItems() override { }
     void rearrange(const QSizeF &) override;
 
     // iterator
@@ -96,6 +96,7 @@ signals:
 private:
     static void collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints);
     bool shouldIgnoreItem(QQuickItem *item) const;
+    void childItemsChanged();
     Q_DECLARE_PRIVATE(QQuickStackLayout)
 
     friend class QQuickStackLayoutAttached;
