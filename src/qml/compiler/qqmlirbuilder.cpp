@@ -1301,7 +1301,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
     if (aliasReference.count() < 1 || aliasReference.count() > 3)
         COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
 
-     alias->idIndex = registerString(aliasReference.first());
+     alias->setIdIndex(registerString(aliasReference.first()));
 
      QString propertyValue = aliasReference.value(1);
      if (aliasReference.count() == 3)

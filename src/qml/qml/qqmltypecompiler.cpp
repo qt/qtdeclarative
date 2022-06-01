@@ -1071,7 +1071,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
 
         seenUnresolvedAlias = true;
 
-        const int idIndex = alias->idIndex;
+        const int idIndex = alias->idIndex();
         const int targetObjectIndex = _idToObjectIndex.value(idIndex, -1);
         if (targetObjectIndex == -1) {
             *error = qQmlCompileError(
@@ -1134,7 +1134,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
                     }
 
                     // restore
-                    alias->idIndex = idIndex;
+                    alias->setIdIndex(idIndex);
                     // Try again later and resolve the target alias first.
                     break;
                 }
