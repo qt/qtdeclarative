@@ -1,5 +1,6 @@
 import QtQml
 import QtQuick
+import QQmlJSScopeTests 1.0
 
 Text {
     id: root
@@ -102,6 +103,33 @@ Text {
         }
     }
 
+    property list<Item> itemList: [
+        Text {
+            function jsInsideArrayScope() { return 42; }
+        },
+        Item {
+            property var x123: function(a) { return a + 77; }
+            function jsInsideArrayScope2(flag) {
+                var closure = () => { return "foobar"; };
+                if (flag)
+                    return closure;
+                return () => { return "bazbar"; };
+            }
+        },
+        Rectangle {} // dummy
+    ]
+
+    // translations:
+    property string translated1: qsTr("bad but ok")
+    property string translated2: qsTrId("bad_but_ok_id")
+    property string translated3: qsTr("bad but ok") + "?"
+    property string translated4: qsTrId("bad_but_ok_id") + "?"
+
+    property string translated5
+    property string translated6
+    translated5: qsTr("bad but ok")
+    translated6: qsTrId("bad_but_ok_id")
+
     // function with nested one
     function jsFunctionReturningFunctions() {
         return [ function() { return 42 }, () => { return "42" } ];
@@ -110,5 +138,14 @@ Text {
     // function with Qt.binding()
     function bindText() {
         root.text = Qt.binding( function() { return jsFuncTyped("foo") + "bar"; } );
+    }
+
+    // special code which fails somehow:
+    TypeWithProperties {
+        onAChanged: console.log("x");
+    }
+
+    TypeWithProperties {
+        onAChanged: function() { }
     }
 }

@@ -45,6 +45,7 @@
 #include "qqmljsscope_p.h"
 #include "qqmljsmetatypes_p.h"
 
+#include <QtCore/qstack.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qstringview.h>
 #include <QtCore/qstringbuilder.h>
@@ -227,6 +228,28 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
         }
 
         return false;
+    }
+
+    template<typename Action>
+    static void traverseFollowingQmlIrObjectStructure(const QQmlJSScope::Ptr &root, Action act)
+    {
+        // We *have* to perform DFS here: QmlIR::Object entries within the
+        // QmlIR::Document are stored in the order they appear during AST traversal
+        // (which does DFS)
+        QStack<QQmlJSScope::Ptr> stack;
+        stack.push(root);
+
+        while (!stack.isEmpty()) {
+            QQmlJSScope::Ptr current = stack.pop();
+
+            act(current);
+
+            auto children = current->childScopes();
+            // arrays are special: they are reverse-processed in QmlIRBuilder
+            if (!current->isArrayScope())
+                std::reverse(children.begin(), children.end()); // left-to-right DFS
+            stack.append(std::move(children));
+        }
     }
 
     static std::optional<FixSuggestion> didYouMean(const QString &userInput,

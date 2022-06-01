@@ -195,12 +195,35 @@ protected:
     // stores JS functions and Script bindings per scope (only the name). mimics
     // the content of QmlIR::Object::functionsAndExpressions
     QHash<QQmlJSScope::ConstPtr, QList<QString>> m_functionsAndExpressions;
-    QString m_currentOuterFunction;
-    QHash<QString, int> m_innerFunctions;
+
+    struct FunctionOrExpressionIdentifier
+    {
+        QQmlJSScope::ConstPtr scope;
+        QString name;
+        friend bool operator==(const FunctionOrExpressionIdentifier &x,
+                               const FunctionOrExpressionIdentifier &y)
+        {
+            return x.scope == y.scope && x.name == y.name;
+        }
+        friend bool operator!=(const FunctionOrExpressionIdentifier &x,
+                               const FunctionOrExpressionIdentifier &y)
+        {
+            return !(x == y);
+        }
+        friend size_t qHash(const FunctionOrExpressionIdentifier &x, size_t seed = 0)
+        {
+            return qHashMulti(seed, x.scope, x.name);
+        }
+    };
+
+    // tells whether last-processed UiScriptBinding is truly a script binding
+    bool m_thisScriptBindingIsJavaScript = false;
+    QStack<FunctionOrExpressionIdentifier> m_functionStack;
+    // stores the number of functions inside each function
+    QHash<FunctionOrExpressionIdentifier, int> m_innerFunctions;
     QQmlJSMetaMethod::RelativeFunctionIndex
     addFunctionOrExpression(const QQmlJSScope::ConstPtr &scope, const QString &name);
-    void incrementInnerFunctionCount();
-    void clearCurrentOuterFunction(const QString &name);
+    void forgetFunctionExpression(const QString &name);
     int synthesizeCompilationUnitRuntimeFunctionIndices(const QQmlJSScope::Ptr &scope,
                                                         int count) const;
     void populateRuntimeFunctionIndicesForDocument() const;
@@ -255,8 +278,9 @@ protected:
     bool rootScopeIsValid() const { return m_exportedRootScope->sourceLocation().isValid(); }
 
     QQmlJSLogger *m_logger;
-    enum class LiteralOrScriptParseResult { Invalid, Script, Literal };
-    LiteralOrScriptParseResult parseLiteralOrScriptBinding(const QString name, const QQmlJS::AST::Statement *statement);
+    enum class LiteralOrScriptParseResult { Invalid, Script, Literal, Translation };
+    LiteralOrScriptParseResult parseLiteralOrScriptBinding(const QString &name,
+                                                           const QQmlJS::AST::Statement *statement);
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;

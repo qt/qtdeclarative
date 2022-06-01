@@ -457,6 +457,56 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope)
     return scope->baseTypeName();
 }
 
+struct FunctionOrExpressionIdentifier
+{
+    QString name;
+    QQmlJS::SourceLocation loc = QQmlJS::SourceLocation {}; // source location of owning scope
+    int index = -1; // relative or absolute script index
+    FunctionOrExpressionIdentifier() = default;
+    FunctionOrExpressionIdentifier(const QString &name, const QQmlJS::SourceLocation &l, int i)
+        : name(name), loc(l), index(i)
+    {
+    }
+    FunctionOrExpressionIdentifier(const QString &name, const QV4::CompiledData::Location &l, int i)
+        : name(name), loc(QQmlJS::SourceLocation { 0, 0, l.line(), l.column() }), index(i)
+    {
+    }
+
+    friend bool operator<(const FunctionOrExpressionIdentifier &x,
+                          const FunctionOrExpressionIdentifier &y)
+    {
+        // source location is taken from the owner scope so would be non-unique,
+        // while name must be unique within that scope. so: if source locations
+        // match, compare by name
+        if (x.loc == y.loc)
+            return x.name < y.name;
+
+        // otherwise, compare by start line first, if they match, then by column
+        if (x.loc.startLine == y.loc.startLine)
+            return x.loc.startColumn < y.loc.startColumn;
+        return x.loc.startLine < y.loc.startLine;
+    }
+    friend bool operator==(const FunctionOrExpressionIdentifier &x,
+                           const FunctionOrExpressionIdentifier &y)
+    {
+        // equal-compare by name and index
+        return x.index == y.index && x.name == y.name;
+    }
+    friend bool operator!=(const FunctionOrExpressionIdentifier &x,
+                           const FunctionOrExpressionIdentifier &y)
+    {
+        return !(x == y);
+    }
+    friend QDebug &operator<<(QDebug &stream, const FunctionOrExpressionIdentifier &x)
+    {
+        const QString dump = u"(%1, %2, loc %3:%4)"_s.arg(x.name, QString::number(x.index),
+                                                          QString::number(x.loc.startLine),
+                                                          QString::number(x.loc.startColumn));
+        stream << dump;
+        return stream.maybeSpace();
+    }
+};
+
 void tst_qqmljsscope::scriptIndices()
 {
     {
@@ -473,31 +523,30 @@ void tst_qqmljsscope::scriptIndices()
     QVERIFY(root);
     QVERIFY(document.javaScriptCompilationUnit.unitData());
 
-    using IndexedString = std::pair<QString, int>;
     // compare QQmlJSScope and QmlIR:
 
     // {property, function}Name and relative (per-object) function table index
-    QList<IndexedString> orderedJSScopeExpressionsRelative;
-    QList<IndexedString> orderedQmlIrExpressionsRelative;
+    QList<FunctionOrExpressionIdentifier> orderedJSScopeExpressionsRelative;
+    QList<FunctionOrExpressionIdentifier> orderedQmlIrExpressionsRelative;
     // {property, function}Name and absolute (per-document) function table index
-    QList<IndexedString> orderedJSScopeExpressionsAbsolute;
-    QList<IndexedString> orderedQmlIrExpressionsAbsolute;
+    QList<FunctionOrExpressionIdentifier> orderedJSScopeExpressionsAbsolute;
+    QList<FunctionOrExpressionIdentifier> orderedQmlIrExpressionsAbsolute;
 
     const auto populateQQmlJSScopeArrays =
             [&](const QQmlJSScope::ConstPtr &scope, const QString &name,
                 QQmlJSMetaMethod::RelativeFunctionIndex relativeIndex) {
-                orderedJSScopeExpressionsRelative.emplaceBack(name,
+                orderedJSScopeExpressionsRelative.emplaceBack(name, scope->sourceLocation(),
                                                               static_cast<int>(relativeIndex));
                 auto absoluteIndex = scope->ownRuntimeFunctionIndex(relativeIndex);
-                orderedJSScopeExpressionsAbsolute.emplaceBack(name,
+                orderedJSScopeExpressionsAbsolute.emplaceBack(name, scope->sourceLocation(),
                                                               static_cast<int>(absoluteIndex));
             };
 
     const auto populateQmlIRArrays = [&](const QmlIR::Object *irObject, const QString &name,
                                          int relative) {
-        orderedQmlIrExpressionsRelative.emplaceBack(name, relative);
+        orderedQmlIrExpressionsRelative.emplaceBack(name, irObject->location, relative);
         auto absolute = irObject->runtimeFunctionIndices.at(relative);
-        orderedQmlIrExpressionsAbsolute.emplaceBack(name, absolute);
+        orderedQmlIrExpressionsAbsolute.emplaceBack(name, irObject->location, absolute);
     };
 
     const auto suitableScope = [](const QQmlJSScope::ConstPtr &scope) {
@@ -513,7 +562,6 @@ void tst_qqmljsscope::scriptIndices()
         queue.pop_front();
 
         if (suitableScope(current)) {
-
             const auto methods = current->ownMethods();
             for (const auto &method : methods) {
                 if (method.methodType() == QQmlJSMetaMethod::Signal)
@@ -561,15 +609,11 @@ void tst_qqmljsscope::scriptIndices()
         }
     }
 
-    auto less = [](const IndexedString &x, const IndexedString &y) { return x.first < y.first; };
-    std::sort(orderedJSScopeExpressionsRelative.begin(), orderedJSScopeExpressionsRelative.end(),
-              less);
-    std::sort(orderedQmlIrExpressionsRelative.begin(), orderedQmlIrExpressionsRelative.end(), less);
+    std::sort(orderedJSScopeExpressionsRelative.begin(), orderedJSScopeExpressionsRelative.end());
+    std::sort(orderedQmlIrExpressionsRelative.begin(), orderedQmlIrExpressionsRelative.end());
 
-    std::sort(orderedJSScopeExpressionsAbsolute.begin(), orderedJSScopeExpressionsAbsolute.end(),
-              less);
-    std::sort(orderedQmlIrExpressionsAbsolute.begin(), orderedQmlIrExpressionsAbsolute.end(), less);
-
+    std::sort(orderedJSScopeExpressionsAbsolute.begin(), orderedJSScopeExpressionsAbsolute.end());
+    std::sort(orderedQmlIrExpressionsAbsolute.begin(), orderedQmlIrExpressionsAbsolute.end());
     QCOMPARE(orderedJSScopeExpressionsRelative, orderedQmlIrExpressionsRelative);
     QCOMPARE(orderedJSScopeExpressionsAbsolute, orderedQmlIrExpressionsAbsolute);
 }
