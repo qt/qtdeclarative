@@ -86,6 +86,7 @@ set(qml_files
     infinities.qml
     invisibleBase.qml
     invisibleTypes.qml
+    invisibleListElementType.qml
     intEnumCompare.qml
     intOverflow.qml
     interactive.qml

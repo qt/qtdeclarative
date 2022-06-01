@@ -140,6 +140,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(
         const QQmlJSScope::ConstPtr &elementType, ListMode mode) const
 {
+    if (elementType.isNull())
+        return QQmlJSScope::ConstPtr();
+
     auto it = m_typeTracker->listTypes.find(elementType);
     if (it != m_typeTracker->listTypes.end())
         return *it;

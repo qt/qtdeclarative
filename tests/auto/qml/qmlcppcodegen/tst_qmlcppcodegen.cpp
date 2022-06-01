@@ -136,6 +136,7 @@ private slots:
     void invalidPropertyType();
     void valueTypeLists();
     void boundComponents();
+    void invisibleListElementType();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2160,6 +2161,32 @@ void tst_QmlCppCodegen::boundComponents()
     QObject *c2o = c1o->property("o").value<QObject *>();
     QVERIFY(c2o != nullptr);
     QCOMPARE(c2o->objectName(), u"bar12"_s);
+}
+
+class InvisibleListElementType : public QObject
+{
+    Q_OBJECT
+public:
+    InvisibleListElementType(QObject *parent = nullptr) : QObject(parent) {}
+};
+
+void tst_QmlCppCodegen::invisibleListElementType()
+{
+    qmlRegisterType<InvisibleListElementType>("Invisible", 1, 0, "InvisibleListElement");
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/invisibleListElementType.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *a = o->property("a").value<QObject *>();
+    QVERIFY(a);
+
+    const QVariant x = a->property("x");
+    QCOMPARE(x.metaType(), QMetaType::fromType<QQmlListReference>());
+    const QQmlListReference ref = x.value<QQmlListReference>();
+    QVERIFY(ref.isValid());
+    QCOMPARE(ref.size(), 0);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
