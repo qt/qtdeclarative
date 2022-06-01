@@ -215,8 +215,11 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 ReturnedValue ArrayBufferPrototype::method_get_byteLength(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
     const ArrayBuffer *a = thisObject->as<ArrayBuffer>();
-    if (!a || a->hasDetachedArrayData() || a->isSharedArrayBuffer())
+    if (!a || a->isSharedArrayBuffer())
         return f->engine()->throwTypeError();
+
+    if (a->hasDetachedArrayData())
+        return Encode(0);
 
     return Encode(a->arrayDataLength());
 }

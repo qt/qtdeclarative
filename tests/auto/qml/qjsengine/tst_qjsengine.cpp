@@ -261,6 +261,7 @@ private slots:
     void thisInConstructor();
     void forOfAndGc();
     void jsExponentiate();
+    void arrayBuffer();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5591,6 +5592,24 @@ void tst_QJSEngine::jsExponentiate()
         for (double b : numbers)
             QCOMPARE(exp.call({a, b}).toNumber(), pow.call({a, b}).toNumber());
     }
+}
+
+void tst_QJSEngine::arrayBuffer()
+{
+
+    QJSEngine engine;
+    auto test = [&engine](const QByteArray &ba) {
+        QJSValue value = engine.toScriptValue(ba);
+        engine.globalObject().setProperty("array", value);
+
+        const auto result = engine.evaluate("(function(){ return array.byteLength; })()");
+
+        QVERIFY(result.isNumber());
+        QCOMPARE(result.toInt(), ba.size());
+    };
+
+    test({});
+    test("Hello");
 }
 
 QTEST_MAIN(tst_QJSEngine)
