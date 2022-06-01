@@ -121,8 +121,8 @@ private:
 
     struct Import {
         QString name;
-        bool isStaticModule;
-        bool isSystemModule;
+        bool isStaticModule = false;
+        bool isSystemModule = false;
 
         QHash<QString, QQmlJSExportedScope> objects;
         QHash<QString, QQmlJSExportedScope> scripts;
