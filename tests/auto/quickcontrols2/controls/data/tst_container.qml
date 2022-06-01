@@ -169,7 +169,7 @@ TestCase {
 
     // don't crash (QTBUG-61310)
     function test_repeater(data) {
-        var control = createTemporaryObject(data.component)
+        var control = createTemporaryObject(data.component, testCase)
         verify(control)
 
         compare(control.itemAt(0).objectName, "0")
