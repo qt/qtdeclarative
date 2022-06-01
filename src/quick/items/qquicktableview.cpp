@@ -223,6 +223,14 @@
 
     \note \l{Qt Quick Controls} offers a SelectionRectangle that can be used
     to let the user select cells.
+
+    \section1 Keyboard navigation
+
+    In order to support keyboard navigation, you need to assign an \l ItemSelectionModel
+    to the \l selectionModel property. TableView will then use this model to manipulate
+    the model's \l {QQuickItemSelectionModel::currentIndex()}{currentIndex}. You can
+    disable keyboard navigation fully (in case you want to implement your own key
+    handlers) by setting \l keyNavigationEnabled to \c false.
 */
 
 /*!
@@ -470,6 +478,9 @@
     This read-only property holds the column in the view that contains the
     item that is current. If no item is current, it will be \c -1.
 
+    \note In order for TableView to report what the current column is, you
+    need to assign an \l ItemSelectionModel to \l selectionModel.
+
     \sa currentRow, selectionModel, {Selecting items}
 */
 
@@ -479,6 +490,9 @@
 
     This read-only property holds the row in the view that contains the item
     that is current. If no item is current, it will be \c -1.
+
+    \note In order for TableView to report what the current row is, you
+    need to assign an \l ItemSelectionModel to \l selectionModel.
 
     \sa currentColumn, selectionModel, {Selecting items}
 */
@@ -525,7 +539,10 @@
     to change \l {QItemSelectionModel::currentIndex()}{the current index}
     using the keyboard. The default value is \c true.
 
-    \sa selectionModel, pointerNavigationEnabled, interactive
+    \note In order for TableView to support keyboard navigation, you
+    need to assign an \l ItemSelectionModel to \l selectionModel.
+
+    \sa {Keyboard navigation}, selectionModel, selectionBehavior, pointerNavigationEnabled, interactive
 */
 
 /*!
