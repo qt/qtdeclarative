@@ -60,7 +60,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickLabelPrivate : public QQuickTextPrivate, public QQuickItemChangeListener
+class Q_AUTOTEST_EXPORT QQuickLabelPrivate : public QQuickTextPrivate, public QQuickItemChangeListener
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif

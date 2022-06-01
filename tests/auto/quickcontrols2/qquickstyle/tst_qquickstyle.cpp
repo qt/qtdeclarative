@@ -152,7 +152,9 @@ void tst_QQuickStyle::configurationFile()
     // Make it small so that there's less possibility for the default/system
     // pixel size to match it and give us false positives.
     QCOMPARE(label->font().pixelSize(), 3);
+#ifdef QT_BUILD_INTERNAL
     QCOMPARE(QQuickLabelPrivate::get(label)->palette()->windowText(), Qt::red);
+#endif
 }
 
 void tst_QQuickStyle::commandLineArgument()
