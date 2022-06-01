@@ -129,7 +129,7 @@ struct TableIterator
 struct Location
 {
     Location() : m_data(QSpecialIntegerBitfieldZero) {}
-    Location(quint32 l, quint32 c)
+    Location(quint32 l, quint32 c) : Location()
     {
         m_data.set<LineField>(l);
         m_data.set<ColumnField>(c);
@@ -182,7 +182,7 @@ struct RegExp
     };
 
     RegExp() : m_data(QSpecialIntegerBitfieldZero) {}
-    RegExp(quint32 flags, quint32 stringIndex)
+    RegExp(quint32 flags, quint32 stringIndex) : RegExp()
     {
         m_data.set<FlagsField>(flags);
         m_data.set<StringIndexField>(stringIndex);
@@ -211,7 +211,7 @@ struct Lookup
     quint32 nameIndex() const { return m_data.get<NameIndexField>(); }
 
     Lookup() : m_data(QSpecialIntegerBitfieldZero) {}
-    Lookup(Type type, quint32 nameIndex)
+    Lookup(Type type, quint32 nameIndex) : Lookup()
     {
         m_data.set<TypeAndFlagsField>(type);
         m_data.set<NameIndexField>(nameIndex);
