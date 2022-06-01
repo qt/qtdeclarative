@@ -163,7 +163,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
             // update immediately, and do not keep track of sent version, thus in extreme cases sent
             // updates could be out of sync
             lastUpdate.version = version;
-            lastUpdate.invalidUpdatesSince = {};
+            lastUpdate.invalidUpdatesSince.reset();
         }
     }
     QString fileContents;
