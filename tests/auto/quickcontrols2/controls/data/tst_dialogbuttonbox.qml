@@ -528,4 +528,86 @@ TestCase {
             control.destroy()
         }
     }
+
+    Component {
+        id: contentItemDeletionOrder1
+
+        Item {
+            objectName: "parentItem"
+
+            Item {
+                id: item
+                objectName: "contentItem"
+            }
+            DialogButtonBox {
+                objectName: "control"
+                contentItem: item
+            }
+        }
+    }
+
+    Component {
+        id: contentItemDeletionOrder2
+
+        Item {
+            objectName: "parentItem"
+
+            DialogButtonBox {
+                objectName: "control"
+                contentItem: item
+            }
+            Item {
+                id: item
+                objectName: "contentItem"
+            }
+        }
+    }
+
+    function test_contentItemDeletionOrder() {
+        var control1 = createTemporaryObject(contentItemDeletionOrder1, testCase)
+        verify(control1)
+        var control2 = createTemporaryObject(contentItemDeletionOrder2, testCase)
+        verify(control2)
+    }
+
+    Component {
+        id: backgroundDeletionOrder1
+
+        Item {
+            objectName: "parentItem"
+
+            Item {
+                id: item
+                objectName: "backgroundItem"
+            }
+            DialogButtonBox {
+                objectName: "control"
+                background: item
+            }
+        }
+    }
+
+    Component {
+        id: backgroundDeletionOrder2
+
+        Item {
+            objectName: "parentItem"
+
+            DialogButtonBox {
+                objectName: "control"
+                background: item
+            }
+            Item {
+                id: item
+                objectName: "backgroundItem"
+            }
+        }
+    }
+
+    function test_backgroundDeletionOrder() {
+        var control1 = createTemporaryObject(backgroundDeletionOrder1, testCase)
+        verify(control1)
+        var control2 = createTemporaryObject(backgroundDeletionOrder2, testCase)
+        verify(control2)
+    }
 }

@@ -497,6 +497,13 @@ QQuickDialogButtonBox::QQuickDialogButtonBox(QQuickItem *parent)
 
 QQuickDialogButtonBox::~QQuickDialogButtonBox()
 {
+    Q_D(QQuickDialogButtonBox);
+    // QQuickContainerPrivate does call this, but as our type information has already been
+    // destroyed by that point (since this destructor has already run), it won't call our
+    // implementation. So, we need to make sure our implementation is called. If we don't do this,
+    // the listener we installed on the contentItem won't get removed, possibly resulting in
+    // heap-use-after-frees.
+    contentItemChange(nullptr, d->contentItem);
 }
 
 /*!
