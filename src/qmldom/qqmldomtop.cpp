@@ -48,7 +48,6 @@
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 
-#include <QtCore/QAtomicInt>
 #include <QtCore/QBasicMutex>
 #include <QtCore/QCborArray>
 #include <QtCore/QDebug>
@@ -157,11 +156,14 @@ DomUniverse::DomUniverse(QString universeName, Options options):
 
 std::shared_ptr<DomUniverse> DomUniverse::guaranteeUniverse(std::shared_ptr<DomUniverse> univ)
 {
-    static QAtomicInt counter(0);
+    const auto next = [] {
+        static std::atomic<int> counter(0);
+        return counter.fetch_add(1, std::memory_order_relaxed) + 1;
+    };
     if (univ)
         return univ;
     return std::shared_ptr<DomUniverse>(
-            new DomUniverse(QLatin1String("universe") + QString::number(++counter)));
+            new DomUniverse(QLatin1String("universe") + QString::number(next())));
 }
 
 DomItem DomUniverse::create(QString universeName, Options options)
