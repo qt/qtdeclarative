@@ -308,7 +308,7 @@ void tst_qquicktreeviewdelegate::checkClickedSignal()
     // Click on the indicator
     const auto indicator = item->property("indicator").value<QQuickItem *>();
     QVERIFY(indicator);
-    localPos = QPoint(indicator->width() / 2, indicator->height() / 2);
+    localPos = QPoint(indicator->x() + indicator->width() / 2, indicator->y() + indicator->height() / 2);
     pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
     QCOMPARE(clickedSpy.count(), 1);
