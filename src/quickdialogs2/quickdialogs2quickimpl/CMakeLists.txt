@@ -67,6 +67,10 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         qquickcolordialogimpl.cpp
         qquickcolordialogimpl_p.h
         qquickcolordialogimpl_p_p.h
+        qquickcolordialogutils_p.h
+        qquickcolordialogutils.cpp
+        qquickcolorinputs.cpp
+        qquickcolorinputs_p.h
         qquickdialogimplfactory.cpp
         qquickdialogimplfactory_p.h
         qquickfiledialogdelegate.cpp

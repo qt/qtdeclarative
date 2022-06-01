@@ -37,6 +37,7 @@ ColorDialogImpl {
     ColorDialogImpl.eyeDropperButton: eyeDropperButton
     ColorDialogImpl.buttonBox: buttonBox
     ColorDialogImpl.colorPicker: colorPicker
+    ColorDialogImpl.colorInputs: inputs
     ColorDialogImpl.alphaSlider: alphaSlider
 
     background: Rectangle {
@@ -128,7 +129,6 @@ ColorDialogImpl {
         Slider {
             id: alphaSlider
             objectName: "alphaSlider"
-            visible: control.showAlpha
             orientation: Qt.Horizontal
             value: control.alpha
             implicitHeight: 20
@@ -186,26 +186,7 @@ ColorDialogImpl {
         ColorInputs {
             id: inputs
 
-            spacing: 12
-            currentColor: control.color
-            red: control.red
-            green: control.green
-            blue: control.blue
-            hue: control.hue
-            saturation: control.saturation
-            value: control.value
-            lightness: control.lightness
-            alpha: control.alpha
-            showAlpha: control.showAlpha
-            onEmitHex: function (hex) { control.color = hex; }
-            onEmitRed: function (r) { control.red = r; }
-            onEmitGreen: function (g) { control.green = g; }
-            onEmitBlue: function (b) { control.blue = b; }
-            onEmitHue: function (h) { control.hue = h; }
-            onEmitSaturation: function (s) { control.saturation = s; }
-            onEmitValue: function(v) { control.value = v; }
-            onEmitLightness: function (l) { control.lightness = l; }
-            onEmitAlpha: function (a) { control.alpha = a; }
+            color: control.color
 
             Layout.fillWidth: true
             Layout.leftMargin: 12
@@ -250,6 +231,11 @@ ColorDialogImpl {
                     anchors.margins: 4
                     color: control.color
                 }
+            }
+
+            Item {
+                // empty space filler
+                Layout.fillWidth: true
             }
 
             DialogButtonBox {

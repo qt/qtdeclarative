@@ -23,6 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickDialogButtonBox;
 class QQuickAbstractColorPicker;
+class QQuickColorInputs;
 class QQuickSlider;
 
 class QQuickColorDialogImplAttached;
@@ -42,7 +43,6 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickColorDialogImpl : public QQu
     Q_PROPERTY(int green READ green WRITE setGreen NOTIFY colorChanged FINAL)
     Q_PROPERTY(int blue READ blue WRITE setBlue NOTIFY colorChanged FINAL)
     Q_PROPERTY(bool isHsl READ isHsl WRITE setHsl NOTIFY specChanged FINAL)
-    Q_PROPERTY(bool showAlpha READ showAlpha NOTIFY showAlphaChanged)
     QML_NAMED_ELEMENT(ColorDialogImpl)
     QML_ATTACHED(QQuickColorDialogImplAttached)
     QML_ADDED_IN_VERSION(6, 4)
@@ -85,18 +85,13 @@ public:
     bool isHsl() const;
     void setHsl(bool hsl);
 
-    bool showAlpha();
-
     Q_INVOKABLE void invokeEyeDropper();
 
 Q_SIGNALS:
     void colorChanged(const QColor &color);
     void specChanged();
-    void showAlphaChanged();
 
 private:
-    static std::pair<qreal, qreal> getSaturationAndValue(qreal saturation, qreal lightness);
-    static std::pair<qreal, qreal> getSaturationAndLightness(qreal saturation, qreal value);
     Q_DISABLE_COPY(QQuickColorDialogImpl)
     Q_DECLARE_PRIVATE(QQuickColorDialogImpl)
 };
@@ -106,12 +101,17 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickColorDialogImplAttached : pu
     Q_OBJECT
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox WRITE setButtonBox NOTIFY buttonBoxChanged FINAL)
     Q_PROPERTY(QQuickAbstractButton *eyeDropperButton READ eyeDropperButton WRITE setEyeDropperButton NOTIFY eyeDropperButtonChanged FINAL)
-    Q_PROPERTY(QQuickAbstractColorPicker *colorPicker READ colorPicker WRITE setColorPicker NOTIFY colorPickerChanged)
-    Q_PROPERTY(QQuickSlider *alphaSlider READ alphaSlider WRITE setAlphaSlider NOTIFY alphaSliderChanged)
+    Q_PROPERTY(QQuickAbstractColorPicker *colorPicker READ colorPicker WRITE setColorPicker NOTIFY
+                       colorPickerChanged FINAL)
+    Q_PROPERTY(QQuickColorInputs *colorInputs READ colorInputs WRITE setColorInputs NOTIFY
+                       colorInputsChanged FINAL)
+    Q_PROPERTY(QQuickSlider *alphaSlider READ alphaSlider WRITE setAlphaSlider NOTIFY
+                       alphaSliderChanged FINAL)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquickabstractbutton_p.h>)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquickslider_p.h>)
     Q_MOC_INCLUDE("qquickabstractcolorpicker_p.h")
+    Q_MOC_INCLUDE("qquickcolorinputs_p.h")
 
 public:
     explicit QQuickColorDialogImplAttached(QObject *parent = nullptr);
@@ -125,6 +125,9 @@ public:
     QQuickAbstractColorPicker *colorPicker() const;
     void setColorPicker(QQuickAbstractColorPicker *colorPicker);
 
+    QQuickColorInputs *colorInputs() const;
+    void setColorInputs(QQuickColorInputs *colorInputs);
+
     QQuickSlider *alphaSlider() const;
     void setAlphaSlider(QQuickSlider *alphaSlider);
 
@@ -132,6 +135,7 @@ Q_SIGNALS:
     void buttonBoxChanged();
     void eyeDropperButtonChanged();
     void colorPickerChanged();
+    void colorInputsChanged();
     void alphaSliderChanged();
 
 private:
