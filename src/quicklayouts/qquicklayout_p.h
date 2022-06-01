@@ -173,7 +173,6 @@ protected:
     unsigned m_isReady : 1;
     unsigned m_disableRearrange : 1;
     unsigned m_hasItemChangeListeners : 1;      // if false, we don't need to remove its item change listeners...
-    mutable QSet<QQuickItem *> m_ignoredItems;
 };
 
 

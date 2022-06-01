@@ -313,7 +313,6 @@ void QQuickStackLayout::invalidate(QQuickItem *childItem)
 void QQuickStackLayout::updateLayoutItems()
 {
     Q_D(QQuickStackLayout);
-    d->m_ignoredItems.clear();
     const int count = itemCount();
     int oldIndex = d->currentIndex;
     if (!d->explicitCurrentIndex)
@@ -384,10 +383,7 @@ void QQuickStackLayout::collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints
 
 bool QQuickStackLayout::shouldIgnoreItem(QQuickItem *item) const
 {
-    const bool ignored = QQuickItemPrivate::get(item)->isTransparentForPositioner();
-    if (ignored)
-        d_func()->m_ignoredItems << item;
-    return ignored;
+    return QQuickItemPrivate::get(item)->isTransparentForPositioner();
 }
 
 QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
