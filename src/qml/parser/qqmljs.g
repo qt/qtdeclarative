@@ -75,6 +75,14 @@
 
 %token T_ERROR
 
+-- states for line by line parsing
+%token T_EOL
+%token T_PARTIAL_COMMENT "non closed multiline comment"
+%token T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL "multiline single quote string literal"
+%token T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL "multiline double quote string literal"
+%token T_PARTIAL_TEMPLATE_HEAD "(template head)"
+%token T_PARTIAL_TEMPLATE_MIDDLE "(template middle)"
+
 --- feed tokens
 %token T_FEED_UI_PROGRAM
 %token T_FEED_UI_OBJECT_MEMBER

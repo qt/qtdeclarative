@@ -1,0 +1,5 @@
+# QTBUG-105697
+[testFormatter]
+android
+[testLineByLineLex]
+android

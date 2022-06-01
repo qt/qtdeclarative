@@ -93,8 +93,12 @@ public:
         NoQmlImport
     };
 
+    enum class LexMode { WholeCode, LineByLine };
+
+    enum class CodeContinuation { Reset, Continue };
+
 public:
-    Lexer(Engine *engine);
+    Lexer(Engine *engine, LexMode lexMode = LexMode::WholeCode);
 
     int parseModeFlags() const {
         int flags = 0;
@@ -112,7 +116,8 @@ public:
     void setStaticIsKeyword(bool b) { _staticIsKeyword = b; }
 
     QString code() const;
-    void setCode(const QString &code, int lineno, bool qmlMode = true);
+    void setCode(const QString &code, int lineno, bool qmlMode = true,
+                 CodeContinuation codeContinuation = CodeContinuation::Reset);
 
     int lex();
 
@@ -120,17 +125,17 @@ public:
     bool scanDirectives(Directives *directives, DiagnosticMessage *error);
 
     int regExpFlags() const { return _state.patternFlags; }
-    QString regExpPattern() const { return _state.tokenText; }
+    QString regExpPattern() const { return _tokenText; }
 
     int tokenKind() const { return _state.tokenKind; }
-    int tokenOffset() const { return _state.tokenStartPtr - _code.unicode(); }
-    int tokenLength() const { return _state.tokenLength; }
+    int tokenOffset() const { return _currentOffset + _tokenStartPtr - _code.unicode(); }
+    int tokenLength() const { return _tokenLength; }
 
-    int tokenStartLine() const { return _state.tokenLine; }
-    int tokenStartColumn() const { return _state.tokenColumn; }
+    int tokenStartLine() const { return _tokenLine; }
+    int tokenStartColumn() const { return _tokenColumn; }
 
-    inline QStringView tokenSpell() const { return _state.tokenSpell; }
-    inline QStringView rawString() const { return _state.rawString; }
+    inline QStringView tokenSpell() const { return _tokenSpell; }
+    inline QStringView rawString() const { return _rawString; }
     double tokenValue() const { return _state.tokenValue; }
     QString tokenText() const;
 
@@ -147,24 +152,16 @@ public:
         BalancedParentheses
     };
 
+    enum class CommentState { NoComment, HadComment, InMultilineComment };
+
     void enterGeneratorBody() { ++_state.generatorLevel; }
     void leaveGeneratorBody() { --_state.generatorLevel; }
 
     struct State
     {
-        QString tokenText;
-        QString errorMessage;
-        QStringView tokenSpell;
-        QStringView rawString;
-
-        const QChar *codePtr = nullptr;
-        const QChar *tokenStartPtr = nullptr;
-
-        QChar currentChar = u'\n';
         Error errorCode = NoError;
 
-        int currentLineNumber = 0;
-        int currentColumnNumber = 0;
+        QChar currentChar = u'\n';
         double tokenValue = 0;
 
         // parentheses state
@@ -179,9 +176,6 @@ public:
 
         int patternFlags = 0;
         int tokenKind = 0;
-        int tokenLength = 0;
-        int tokenLine = 0;
-        int tokenColumn = 0;
         ImportState importState = ImportState::NoQmlImport;
 
         bool validTokenText = false;
@@ -190,9 +184,54 @@ public:
         bool terminator = false;
         bool followsClosingBrace = false;
         bool delimited = true;
-        bool skipLinefeed = false;
         bool handlingDirectives = false;
+        CommentState comments = CommentState::NoComment;
         int generatorLevel = 0;
+
+        friend bool operator==(State const &s1, State const &s2)
+        {
+            if (s1.errorCode != s2.errorCode)
+                return false;
+            if (s1.currentChar != s2.currentChar)
+                return false;
+            if (s1.tokenValue != s2.tokenValue)
+                return false;
+            if (s1.parenthesesState != s2.parenthesesState)
+                return false;
+            if (s1.parenthesesCount != s2.parenthesesCount)
+                return false;
+            if (s1.outerTemplateBraceCount != s2.outerTemplateBraceCount)
+                return false;
+            if (s1.bracesCount != s2.bracesCount)
+                return false;
+            if (s1.stackToken != s2.stackToken)
+                return false;
+            if (s1.patternFlags != s2.patternFlags)
+                return false;
+            if (s1.tokenKind != s2.tokenKind)
+                return false;
+            if (s1.importState != s2.importState)
+                return false;
+            if (s1.validTokenText != s2.validTokenText)
+                return false;
+            if (s1.prohibitAutomaticSemicolon != s2.prohibitAutomaticSemicolon)
+                return false;
+            if (s1.restrictedKeyword != s2.restrictedKeyword)
+                return false;
+            if (s1.terminator != s2.terminator)
+                return false;
+            if (s1.followsClosingBrace != s2.followsClosingBrace)
+                return false;
+            if (s1.delimited != s2.delimited)
+                return false;
+            if (s1.handlingDirectives != s2.handlingDirectives)
+                return false;
+            if (s1.generatorLevel != s2.generatorLevel)
+                return false;
+            return true;
+        }
+
+        friend bool operator!=(State const &s1, State const &s2) { return !(s1 == s2); }
     };
 
     const State &state() const;
@@ -229,10 +268,29 @@ private:
 private:
     Engine *_engine;
 
+    LexMode _lexMode = LexMode::WholeCode;
     QString _code;
     const QChar *_endPtr;
     bool _qmlMode;
     bool _staticIsKeyword = false;
+
+    bool _skipLinefeed = false;
+
+    int _currentLineNumber = 0;
+    int _currentColumnNumber = 0;
+    int _currentOffset = 0;
+
+    int _tokenLength = 0;
+    int _tokenLine = 0;
+    int _tokenColumn = 0;
+
+    QString _tokenText;
+    QString _errorMessage;
+    QStringView _tokenSpell;
+    QStringView _rawString;
+
+    const QChar *_codePtr = nullptr;
+    const QChar *_tokenStartPtr = nullptr;
 
     State _state;
 };

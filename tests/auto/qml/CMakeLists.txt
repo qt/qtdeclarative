@@ -10,6 +10,7 @@ qt_exclude_tool_directories_from_default_target(
 
 add_subdirectory(registrationmacros)
 add_subdirectory(parserstress)
+add_subdirectory(linebylinelex)
 add_subdirectory(qjsprimitivevalue)
 add_subdirectory(qjsvalueiterator)
 add_subdirectory(qjsonbinding)

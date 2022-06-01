@@ -15,6 +15,8 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/QScopedValueRollback>
 
+#include <optional>
+
 using namespace QQmlJS;
 
 static inline int regExpFlagFromChar(const QChar &ch)
@@ -44,7 +46,8 @@ static inline QChar convertHex(QChar c1, QChar c2)
     return QChar((convertHex(c1.unicode()) << 4) + convertHex(c2.unicode()));
 }
 
-Lexer::Lexer(Engine *engine) : _engine(engine), _endPtr(nullptr), _qmlMode(true)
+Lexer::Lexer(Engine *engine, LexMode lexMode)
+    : _engine(engine), _lexMode(lexMode), _endPtr(nullptr), _qmlMode(true)
 {
     if (engine)
         engine->setLexer(this);
@@ -60,74 +63,65 @@ QString Lexer::code() const
     return _code;
 }
 
-void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
+void Lexer::setCode(const QString &code, int lineno, bool qmlMode,
+                    Lexer::CodeContinuation codeContinuation)
 {
+    if (codeContinuation == Lexer::CodeContinuation::Continue)
+        _currentOffset += _code.length();
+    else
+        _currentOffset = 0;
     if (_engine)
         _engine->setCode(code);
 
     _qmlMode = qmlMode;
     _code = code;
+    _skipLinefeed = false;
 
-    _state.tokenText.clear();
-    _state.tokenText.reserve(1024);
-    _state.errorMessage.clear();
-    _state.tokenSpell = QStringView();
-    _state.rawString = QStringView();
+    _tokenText.clear();
+    _tokenText.reserve(1024);
+    _errorMessage.clear();
+    _tokenSpell = QStringView();
+    _rawString = QStringView();
 
-    _state.codePtr = code.unicode();
-    _endPtr = _state.codePtr + code.length();
-    _state.tokenStartPtr = _state.codePtr;
+    _codePtr = code.unicode();
+    _endPtr = _codePtr + code.length();
+    _tokenStartPtr = _codePtr;
 
-    _state.currentChar = u'\n';
-    _state.errorCode = NoError;
+    if (lineno >= 0)
+        _currentLineNumber = lineno;
+    _currentColumnNumber = 0;
+    _tokenLine = _currentLineNumber;
+    _tokenColumn = 0;
+    _tokenLength = 0;
 
-    _state.currentLineNumber = lineno;
-    _state.currentColumnNumber = 0;
-    _state.tokenValue = 0;
-
-    // parentheses state
-    _state.parenthesesState = IgnoreParentheses;
-    _state.parenthesesCount = 0;
-
-    _state.stackToken = -1;
-
-    _state.patternFlags = 0;
-    _state.tokenLength = 0;
-    _state.tokenLine = lineno;
-    _state.tokenColumn = 0;
-
-    _state.validTokenText = false;
-    _state.prohibitAutomaticSemicolon = false;
-    _state.restrictedKeyword = false;
-    _state.terminator = false;
-    _state.followsClosingBrace = false;
-    _state.delimited = true;
+    if (codeContinuation == Lexer::CodeContinuation::Reset)
+        _state = State {};
 }
 
 void Lexer::scanChar()
 {
-    if (_state.skipLinefeed) {
-        Q_ASSERT(*_state.codePtr == u'\n');
-        ++_state.codePtr;
-        _state.skipLinefeed = false;
+    if (_skipLinefeed) {
+        Q_ASSERT(*_codePtr == u'\n');
+        ++_codePtr;
+        _skipLinefeed = false;
     }
-    _state.currentChar = *_state.codePtr++;
-    ++_state.currentColumnNumber;
+    _state.currentChar = *_codePtr++;
+    ++_currentColumnNumber;
 
     if (isLineTerminator()) {
         if (_state.currentChar == u'\r') {
-            if (_state.codePtr < _endPtr && *_state.codePtr == u'\n')
-                _state.skipLinefeed = true;
+            if (_codePtr < _endPtr && *_codePtr == u'\n')
+                _skipLinefeed = true;
             _state.currentChar = u'\n';
         }
-        ++_state.currentLineNumber;
-        _state.currentColumnNumber = 0;
+        ++_currentLineNumber;
+        _currentColumnNumber = 0;
     }
 }
 
 QChar Lexer::peekChar()
 {
-    auto peekPtr = _state.codePtr;
+    auto peekPtr = _codePtr;
     if (peekPtr < _endPtr)
         return *peekPtr;
     return QChar();
@@ -201,12 +195,88 @@ int octalDigit(QChar c)
 int Lexer::lex()
 {
     const int previousTokenKind = _state.tokenKind;
+    int tokenKind;
+    bool firstPass = true;
 
   again:
-      _state.tokenSpell = QStringView();
-      _state.rawString = QStringView();
-      _state.tokenKind = scanToken();
-      _state.tokenLength = _state.codePtr - _state.tokenStartPtr - 1;
+      tokenKind = T_ERROR;
+      _tokenSpell = QStringView();
+      _rawString = QStringView();
+      if (firstPass && _state.stackToken == -1) {
+          firstPass = false;
+          if (_codePtr > _endPtr && _lexMode == LexMode::LineByLine && !_code.isEmpty())
+              return T_EOL;
+
+          if (_state.comments == CommentState::InMultilineComment) {
+              scanChar();
+              _tokenStartPtr = _codePtr - 1;
+              _tokenLine = _currentLineNumber;
+              _tokenColumn = _currentColumnNumber;
+              while (_codePtr <= _endPtr) {
+                  if (_state.currentChar == u'*') {
+                      scanChar();
+                      if (_state.currentChar == u'/') {
+                          scanChar();
+                          if (_engine) {
+                              _engine->addComment(tokenOffset() + 2,
+                                                  _codePtr - _tokenStartPtr - 1 - 4,
+                                                  tokenStartLine(), tokenStartColumn() + 2);
+                          }
+                          tokenKind = T_COMMENT;
+                          break;
+                      }
+                  } else {
+                      scanChar();
+                  }
+              }
+              if (tokenKind == T_ERROR)
+                  tokenKind = T_PARTIAL_COMMENT;
+          } else {
+              // handle multiline continuation
+              std::optional<ScanStringMode> scanMode;
+              switch (previousTokenKind) {
+              case T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL:
+                  scanMode = ScanStringMode::SingleQuote;
+                  break;
+              case T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL:
+                  scanMode = ScanStringMode::DoubleQuote;
+                  break;
+              case T_PARTIAL_TEMPLATE_HEAD:
+                  scanMode = ScanStringMode::TemplateHead;
+                  break;
+              case T_PARTIAL_TEMPLATE_MIDDLE:
+                  scanMode = ScanStringMode::TemplateContinuation;
+                  break;
+              default:
+                  break;
+              }
+              if (scanMode) {
+                  scanChar();
+                  _tokenStartPtr = _codePtr - 1;
+                  _tokenLine = _currentLineNumber;
+                  _tokenColumn = _currentColumnNumber;
+                  tokenKind = scanString(*scanMode);
+              }
+          }
+      }
+      if (tokenKind == T_ERROR)
+          tokenKind = scanToken();
+      _tokenLength = _codePtr - _tokenStartPtr - 1;
+      switch (tokenKind) {
+      // end of line and comments should not "overwrite" the old token type...
+      case T_EOL:
+          return tokenKind;
+      case T_COMMENT:
+          _state.comments = CommentState::HadComment;
+          return tokenKind;
+      case T_PARTIAL_COMMENT:
+          _state.comments = CommentState::InMultilineComment;
+          return tokenKind;
+      default:
+          _state.comments = CommentState::NoComment;
+          break;
+      }
+      _state.tokenKind = tokenKind;
 
       _state.delimited = false;
       _state.restrictedKeyword = false;
@@ -297,7 +367,7 @@ uint Lexer::decodeUnicodeEscapeCharacter(bool *ok)
 {
     Q_ASSERT(_state.currentChar == u'u');
     scanChar(); // skip u
-    if (_state.codePtr + 4 <= _endPtr && isHexDigit(_state.currentChar)) {
+    if (_codePtr + 4 <= _endPtr && isHexDigit(_state.currentChar)) {
         uint codePoint = 0;
         for (int i = 0; i < 4; ++i) {
             int digit = hexDigit(_state.currentChar);
@@ -310,14 +380,14 @@ uint Lexer::decodeUnicodeEscapeCharacter(bool *ok)
 
         *ok = true;
         return codePoint;
-    } else if (_state.codePtr < _endPtr && _state.currentChar == u'{') {
+    } else if (_codePtr < _endPtr && _state.currentChar == u'{') {
         scanChar(); // skip '{'
         uint codePoint = 0;
         if (!isHexDigit(_state.currentChar))
             // need at least one hex digit
             goto error;
 
-        while (_state.codePtr <= _endPtr) {
+        while (_codePtr <= _endPtr) {
             int digit = hexDigit(_state.currentChar);
             if (digit < 0)
                 break;
@@ -338,10 +408,9 @@ uint Lexer::decodeUnicodeEscapeCharacter(bool *ok)
         return codePoint;
     }
 
-  error:
-      _state.errorCode = IllegalUnicodeEscapeSequence;
-      _state.errorMessage =
-              QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
+error:
+    _state.errorCode = IllegalUnicodeEscapeSequence;
+    _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
 
     *ok = false;
     return 0;
@@ -349,7 +418,7 @@ uint Lexer::decodeUnicodeEscapeCharacter(bool *ok)
 
 QChar Lexer::decodeHexEscapeCharacter(bool *ok)
 {
-    if (isHexDigit(_state.codePtr[0]) && isHexDigit(_state.codePtr[1])) {
+    if (isHexDigit(_codePtr[0]) && isHexDigit(_codePtr[1])) {
         scanChar();
 
         const QChar c1 = _state.currentChar;
@@ -434,71 +503,46 @@ int Lexer::scanToken()
         return scanString(TemplateContinuation);
     }
 
-    _state.terminator = false;
+    if (_state.comments == CommentState::NoComment)
+        _state.terminator = false;
 
 again:
     _state.validTokenText = false;
 
-    // handle comment can be called after a '/' has been read
-    // and returns true if it actually encountered a comment
-    auto handleComment = [this]() {
-        if (_state.currentChar == u'*') {
-            scanChar();
-            while (_state.codePtr <= _endPtr) {
-                if (_state.currentChar == u'*') {
-                    scanChar();
-                    if (_state.currentChar == u'/') {
-                        scanChar();
-
-                        if (_engine) {
-                            _engine->addComment(tokenOffset() + 2,
-                                                _state.codePtr - _state.tokenStartPtr - 1 - 4,
-                                                tokenStartLine(), tokenStartColumn() + 2);
-                        }
-
-                        return true;
-                    }
-                } else {
-                    scanChar();
-                }
-            }
-        } else if (_state.currentChar == u'/') {
-            while (_state.codePtr <= _endPtr && !isLineTerminator()) {
-                scanChar();
-            }
-            if (_engine) {
-                _engine->addComment(tokenOffset() + 2,
-                                    _state.codePtr - _state.tokenStartPtr - 1 - 2, tokenStartLine(),
-                                    tokenStartColumn() + 2);
-            }
-            return true;
-        }
-        return false;
-    };
-
     while (_state.currentChar.isSpace()) {
         if (isLineTerminator()) {
+            bool isAtEnd = (_codePtr + (_skipLinefeed ? 1 : 0)) == _endPtr;
             if (_state.restrictedKeyword) {
                 // automatic semicolon insertion
-                _state.tokenLine = _state.currentLineNumber;
-                _state.tokenColumn = _state.currentColumnNumber;
-                _state.tokenStartPtr = _state.codePtr - 1;
+                _tokenLine = _currentLineNumber;
+                _tokenColumn = _currentColumnNumber;
+                _tokenStartPtr = _codePtr - 1;
                 return T_SEMICOLON;
-            } else {
+            } else if (_lexMode == LexMode::WholeCode || !isAtEnd) {
                 _state.terminator = true;
                 syncProhibitAutomaticSemicolon();
-            }
+            } // else we will do the previous things at the start of next line...
         }
 
         scanChar();
     }
 
-    _state.tokenStartPtr = _state.codePtr - 1;
-    _state.tokenLine = _state.currentLineNumber;
-    _state.tokenColumn = _state.currentColumnNumber;
+    _tokenStartPtr = _codePtr - 1;
+    _tokenLine = _currentLineNumber;
+    _tokenColumn = _currentColumnNumber;
 
-    if (_state.codePtr > _endPtr)
-        return EOF_SYMBOL;
+    if (_codePtr >= _endPtr) {
+        if (_lexMode == LexMode::LineByLine) {
+            if (!_code.isEmpty()) {
+                _state.currentChar = *(_codePtr - 2);
+                return T_EOL;
+            } else {
+                return EOF_SYMBOL;
+            }
+        } else if (_codePtr > _endPtr) {
+            return EOF_SYMBOL;
+        }
+    }
 
     const QChar ch = _state.currentChar;
     scanChar();
@@ -594,14 +638,50 @@ again:
     case u':': return T_COLON;
 
     case u'/':
-        if (handleComment())
-            goto again;
-        else if (_state.currentChar == u'=') {
+        switch (_state.currentChar.unicode()) {
+        case u'*':
+            scanChar();
+            while (_codePtr <= _endPtr) {
+                if (_state.currentChar == u'*') {
+                    scanChar();
+                    if (_state.currentChar == u'/') {
+                        scanChar();
+                        if (_engine) {
+                            _engine->addComment(tokenOffset() + 2,
+                                                _codePtr - _tokenStartPtr - 1 - 4, tokenStartLine(),
+                                                tokenStartColumn() + 2);
+                        }
+                        if (_lexMode == LexMode::LineByLine)
+                            return T_COMMENT;
+                        else
+                            goto again;
+                    }
+                } else {
+                    scanChar();
+                }
+            }
+            if (_lexMode == LexMode::LineByLine)
+                return T_PARTIAL_COMMENT;
+            else
+                goto again;
+        case u'/':
+            while (_codePtr <= _endPtr && !isLineTerminator()) {
+                scanChar();
+            }
+            if (_engine) {
+                _engine->addComment(tokenOffset() + 2, _codePtr - _tokenStartPtr - 1 - 2,
+                                    tokenStartLine(), tokenStartColumn() + 2);
+            }
+            if (_lexMode == LexMode::LineByLine)
+                return T_COMMENT;
+            else
+                goto again;
+        case u'=':
             scanChar();
             return T_DIVIDE_EQ;
+        default:
+            return T_DIVIDE_;
         }
-        return T_DIVIDE_;
-
     case u'.':
         if (_state.importState == ImportState::SawImport)
             return T_DOT;
@@ -614,8 +694,7 @@ again:
                 return T_ELLIPSIS;
             } else {
                 _state.errorCode = IllegalCharacter;
-                _state.errorMessage =
-                        QCoreApplication::translate("QQmlParser", "Unexpected token '.'");
+                _errorMessage = QCoreApplication::translate("QQmlParser", "Unexpected token '.'");
                 return T_ERROR;
             }
         }
@@ -726,16 +805,19 @@ again:
             return scanNumber(ch);
 
     case '#':
-        if (_state.currentLineNumber == 1 && _state.currentColumnNumber == 2) {
+        if (_currentLineNumber == 1 && _currentColumnNumber == 2) {
             // shebang support
-            while (_state.codePtr <= _endPtr && !isLineTerminator()) {
+            while (_codePtr <= _endPtr && !isLineTerminator()) {
                 scanChar();
             }
             if (_engine) {
-                _engine->addComment(tokenOffset(), _state.codePtr - _state.tokenStartPtr - 1,
-                                    tokenStartLine(), tokenStartColumn());
+                _engine->addComment(tokenOffset(), _codePtr - _tokenStartPtr - 1, tokenStartLine(),
+                                    tokenStartColumn());
             }
-            goto again;
+            if (_lexMode == LexMode::LineByLine)
+                return T_COMMENT;
+            else
+                goto again;
         }
         Q_FALLTHROUGH();
 
@@ -754,26 +836,25 @@ again:
         }
         if (isIdentifierStart(c)) {
             if (identifierWithEscapeChars) {
-                _state.tokenText.resize(0);
+                _tokenText.resize(0);
                 if (QChar::requiresSurrogates(c)) {
-                    _state.tokenText += QChar(QChar::highSurrogate(c));
-                    _state.tokenText += QChar(QChar::lowSurrogate(c));
+                    _tokenText += QChar(QChar::highSurrogate(c));
+                    _tokenText += QChar(QChar::lowSurrogate(c));
                 } else {
-                    _state.tokenText += QChar(c);
+                    _tokenText += QChar(c);
                 }
                 _state.validTokenText = true;
             }
-            while (_state.codePtr <= _endPtr) {
+            while (_codePtr <= _endPtr) {
                 c = _state.currentChar.unicode();
-                if (QChar::isHighSurrogate(c) && QChar::isLowSurrogate(_state.codePtr->unicode())) {
+                if (QChar::isHighSurrogate(c) && QChar::isLowSurrogate(_codePtr->unicode())) {
                     scanChar();
                     c = QChar::surrogateToUcs4(ushort(c), _state.currentChar.unicode());
-                } else if (_state.currentChar == u'\\' && _state.codePtr[0] == u'u') {
+                } else if (_state.currentChar == u'\\' && _codePtr[0] == u'u') {
                     if (!identifierWithEscapeChars) {
                         identifierWithEscapeChars = true;
-                        _state.tokenText.resize(0);
-                        _state.tokenText.insert(0, _state.tokenStartPtr,
-                                                _state.codePtr - _state.tokenStartPtr - 1);
+                        _tokenText.resize(0);
+                        _tokenText.insert(0, _tokenStartPtr, _codePtr - _tokenStartPtr - 1);
                         _state.validTokenText = true;
                     }
 
@@ -787,10 +868,10 @@ again:
                         break;
 
                     if (QChar::requiresSurrogates(c)) {
-                        _state.tokenText += QChar(QChar::highSurrogate(c));
-                        _state.tokenText += QChar(QChar::lowSurrogate(c));
+                        _tokenText += QChar(QChar::highSurrogate(c));
+                        _tokenText += QChar(QChar::lowSurrogate(c));
                     } else {
-                        _state.tokenText += QChar(c);
+                        _tokenText += QChar(c);
                     }
                     continue;
                 }
@@ -800,43 +881,82 @@ again:
 
                 if (identifierWithEscapeChars) {
                     if (QChar::requiresSurrogates(c)) {
-                        _state.tokenText += QChar(QChar::highSurrogate(c));
-                        _state.tokenText += QChar(QChar::lowSurrogate(c));
+                        _tokenText += QChar(QChar::highSurrogate(c));
+                        _tokenText += QChar(QChar::lowSurrogate(c));
                     } else {
-                        _state.tokenText += QChar(c);
+                        _tokenText += QChar(c);
                     }
                 }
                 scanChar();
             }
 
-            _state.tokenLength = _state.codePtr - _state.tokenStartPtr - 1;
+            _tokenLength = _codePtr - _tokenStartPtr - 1;
 
             int kind = T_IDENTIFIER;
 
             if (!identifierWithEscapeChars)
-                kind = classify(_state.tokenStartPtr, _state.tokenLength, parseModeFlags());
+                kind = classify(_tokenStartPtr, _tokenLength, parseModeFlags());
 
             if (kind == T_FUNCTION) {
                 continue_skipping:
-                    while (_state.codePtr < _endPtr && _state.currentChar.isSpace())
+                    while (_codePtr < _endPtr && _state.currentChar.isSpace())
                         scanChar();
                     if (_state.currentChar == u'*') {
-                        _state.tokenLength = _state.codePtr - _state.tokenStartPtr - 1;
+                        _tokenLength = _codePtr - _tokenStartPtr - 1;
                         kind = T_FUNCTION_STAR;
                         scanChar();
                     } else if (_state.currentChar == u'/') {
                         scanChar();
-                        if (handleComment())
-                            goto continue_skipping;
+                        switch (_state.currentChar.unicode()) {
+                        case u'*':
+                            scanChar();
+                            while (_codePtr <= _endPtr) {
+                                if (_state.currentChar == u'*') {
+                                    scanChar();
+                                    if (_state.currentChar == u'/') {
+                                        scanChar();
+                                        if (_engine) {
+                                            _engine->addComment(tokenOffset() + 2,
+                                                                _codePtr - _tokenStartPtr - 1 - 4,
+                                                                tokenStartLine(),
+                                                                tokenStartColumn() + 2);
+                                        }
+                                        if (_lexMode == LexMode::LineByLine)
+                                            return T_COMMENT;
+                                        goto continue_skipping;
+                                    }
+                                } else {
+                                    scanChar();
+                                }
+                            }
+                            if (_lexMode == LexMode::LineByLine)
+                                return T_PARTIAL_COMMENT;
+                            else
+                                goto continue_skipping;
+                        case u'/':
+                            while (_codePtr <= _endPtr && !isLineTerminator()) {
+                                scanChar();
+                            }
+                            if (_engine) {
+                                _engine->addComment(tokenOffset() + 2,
+                                                    _codePtr - _tokenStartPtr - 1 - 2,
+                                                    tokenStartLine(), tokenStartColumn() + 2);
+                            }
+                            if (_lexMode == LexMode::LineByLine)
+                                return T_COMMENT;
+                            else
+                                goto continue_skipping;
+                        default:
+                            break;
+                        }
                     }
             }
 
             if (_engine) {
                 if (kind == T_IDENTIFIER && identifierWithEscapeChars)
-                    _state.tokenSpell = _engine->newStringRef(_state.tokenText);
+                    _tokenSpell = _engine->newStringRef(_tokenText);
                 else
-                    _state.tokenSpell = _engine->midRef(_state.tokenStartPtr - _code.unicode(),
-                                                        _state.tokenLength);
+                    _tokenSpell = _engine->midRef(_tokenStartPtr - _code.unicode(), _tokenLength);
             }
 
             return kind;
@@ -852,77 +972,83 @@ again:
 int Lexer::scanString(ScanStringMode mode)
 {
     QChar quote = (mode == TemplateContinuation) ? QChar(TemplateHead) : QChar(mode);
+    // we actually use T_STRING_LITERAL also for multiline strings, should we want to
+    // change that we should set it to:
+    //     _state.tokenKind == T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL ||
+    //     _state.tokenKind == T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL
+    // here and uncomment the multilineStringLiteral = true below.
     bool multilineStringLiteral = false;
 
-    const QChar *startCode = _state.codePtr - 1;
+    const QChar *startCode = _codePtr - 1;
     // in case we just parsed a \r, we need to reset this flag to get things working
     // correctly in the loop below and afterwards
-    _state.skipLinefeed = false;
+    _skipLinefeed = false;
     bool first = true;
 
     if (_engine) {
-        while (_state.codePtr <= _endPtr) {
+        while (_codePtr <= _endPtr) {
             if (isLineTerminator()) {
                 if ((quote == u'`' || qmlMode())) {
                     if (first)
-                        --_state.currentLineNumber; // will be read again in scanChar()
+                        --_currentLineNumber; // will be read again in scanChar()
                     break;
                 }
                 _state.errorCode = IllegalCharacter;
-                _state.errorMessage = QCoreApplication::translate(
-                        "QQmlParser", "Stray newline in string literal");
+                _errorMessage = QCoreApplication::translate("QQmlParser",
+                                                            "Stray newline in string literal");
                 return T_ERROR;
             } else if (_state.currentChar == u'\\') {
                 break;
             } else if (_state.currentChar == u'$' && quote == u'`') {
                 break;
             } else if (_state.currentChar == quote) {
-                _state.tokenSpell = _engine->midRef(startCode - _code.unicode(),
-                                                    _state.codePtr - startCode - 1);
-                _state.rawString = _state.tokenSpell;
+                _tokenSpell =
+                        _engine->midRef(startCode - _code.unicode(), _codePtr - startCode - 1);
+                _rawString = _tokenSpell;
                 scanChar();
 
                 if (quote == u'`')
                     _state.bracesCount = _state.outerTemplateBraceCount.pop();
-
                 if (mode == TemplateHead)
                     return T_NO_SUBSTITUTION_TEMPLATE;
                 else if (mode == TemplateContinuation)
                     return T_TEMPLATE_TAIL;
+                else if (multilineStringLiteral)
+                    return T_MULTILINE_STRING_LITERAL;
                 else
                     return T_STRING_LITERAL;
             }
             // don't use scanChar() here, that would transform \r sequences and the midRef() call would create the wrong result
-            _state.currentChar = *_state.codePtr++;
-            ++_state.currentColumnNumber;
+            _state.currentChar = *_codePtr++;
+            ++_currentColumnNumber;
             first = false;
         }
     }
 
     // rewind by one char, so things gets scanned correctly
-    --_state.codePtr;
-    --_state.currentColumnNumber;
+    --_codePtr;
+    --_currentColumnNumber;
 
     _state.validTokenText = true;
-    _state.tokenText = QString(startCode, _state.codePtr - startCode);
+    _tokenText = QString(startCode, _codePtr - startCode);
 
     auto setRawString = [&](const QChar *end) {
         QString raw(startCode, end - startCode - 1);
         raw.replace(QLatin1String("\r\n"), QLatin1String("\n"));
         raw.replace(u'\r', u'\n');
-        _state.rawString = _engine->newStringRef(raw);
+        _rawString = _engine->newStringRef(raw);
     };
 
     scanChar();
 
-    while (_state.codePtr <= _endPtr) {
+    while (_codePtr <= _endPtr) {
         if (_state.currentChar == quote) {
             scanChar();
 
             if (_engine) {
-                _state.tokenSpell = _engine->newStringRef(_state.tokenText);
+                _tokenSpell = _engine->newStringRef(_tokenText);
                 if (quote == u'`')
-                    setRawString(_state.codePtr - 1);
+                    setRawString(_codePtr - 1);
             }
 
             if (quote == u'`')
@@ -934,21 +1060,21 @@ int Lexer::scanString(ScanStringMode mode)
                 return T_NO_SUBSTITUTION_TEMPLATE;
 
             return multilineStringLiteral ? T_MULTILINE_STRING_LITERAL : T_STRING_LITERAL;
-        } else if (quote == u'`' && _state.currentChar == u'$' && *_state.codePtr == u'{') {
+        } else if (quote == u'`' && _state.currentChar == u'$' && *_codePtr == u'{') {
             scanChar();
             scanChar();
             _state.bracesCount = 1;
             if (_engine) {
-                _state.tokenSpell = _engine->newStringRef(_state.tokenText);
-                setRawString(_state.codePtr - 2);
+                _tokenSpell = _engine->newStringRef(_tokenText);
+                setRawString(_codePtr - 2);
             }
 
             return (mode == TemplateHead ? T_TEMPLATE_HEAD : T_TEMPLATE_MIDDLE);
         } else if (_state.currentChar == u'\\') {
             scanChar();
-            if (_state.codePtr > _endPtr) {
+            if (_codePtr > _endPtr) {
                 _state.errorCode = IllegalEscapeSequence;
-                _state.errorMessage = QCoreApplication::translate(
+                _errorMessage = QCoreApplication::translate(
                         "QQmlParser", "End of file reached at escape sequence");
                 return T_ERROR;
             }
@@ -964,7 +1090,7 @@ int Lexer::scanString(ScanStringMode mode)
                     return T_ERROR;
                 if (QChar::requiresSurrogates(codePoint)) {
                     // need to use a surrogate pair
-                    _state.tokenText += QChar(QChar::highSurrogate(codePoint));
+                    _tokenText += QChar(QChar::highSurrogate(codePoint));
                     u = QChar::lowSurrogate(codePoint);
                 } else {
                     u = QChar(codePoint);
@@ -977,7 +1103,7 @@ int Lexer::scanString(ScanStringMode mode)
                 u = decodeHexEscapeCharacter(&ok);
                 if (!ok) {
                     _state.errorCode = IllegalHexadecimalEscapeSequence;
-                    _state.errorMessage = QCoreApplication::translate(
+                    _errorMessage = QCoreApplication::translate(
                             "QQmlParser", "Illegal hexadecimal escape sequence");
                     return T_ERROR;
                 }
@@ -995,7 +1121,7 @@ int Lexer::scanString(ScanStringMode mode)
             case u'v':  u = u'\v'; scanChar(); break;
 
             case u'0':
-                if (!_state.codePtr->isDigit()) {
+                if (!_codePtr->isDigit()) {
                     scanChar();
                     u = u'\0';
                     break;
@@ -1011,7 +1137,7 @@ int Lexer::scanString(ScanStringMode mode)
             case u'8':
             case u'9':
                 _state.errorCode = IllegalEscapeSequence;
-                _state.errorMessage = QCoreApplication::translate(
+                _errorMessage = QCoreApplication::translate(
                         "QQmlParser", "Octal escape sequences are not allowed");
                 return T_ERROR;
 
@@ -1019,6 +1145,8 @@ int Lexer::scanString(ScanStringMode mode)
             case u'\n':
             case 0x2028u:
             case 0x2029u:
+                // uncomment the following to use T_MULTILINE_STRING_LITERAL
+                // multilineStringLiteral = true;
                 scanChar();
                 continue;
 
@@ -1028,16 +1156,23 @@ int Lexer::scanString(ScanStringMode mode)
                 scanChar();
             }
 
-            _state.tokenText += u;
+            _tokenText += u;
         } else {
-            _state.tokenText += _state.currentChar;
+            _tokenText += _state.currentChar;
             scanChar();
         }
     }
-
+    if (_lexMode == LexMode::LineByLine && !_code.isEmpty()) {
+        if (mode == TemplateContinuation)
+            return T_PARTIAL_TEMPLATE_MIDDLE;
+        else if (mode == TemplateHead)
+            return T_PARTIAL_TEMPLATE_HEAD;
+        else if (mode == SingleQuote)
+            return T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL;
+        return T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL;
+    }
     _state.errorCode = UnclosedStringLiteral;
-    _state.errorMessage =
-            QCoreApplication::translate("QQmlParser", "Unclosed string at end of line");
+    _errorMessage = QCoreApplication::translate("QQmlParser", "Unclosed string at end of line");
     return T_ERROR;
 }
 
@@ -1052,11 +1187,10 @@ int Lexer::scanNumber(QChar ch)
 
             if (!isHexDigit(_state.currentChar)) {
                 _state.errorCode = IllegalNumber;
-                _state.errorMessage =
-                        QCoreApplication::translate(
-                                "QQmlParser",
-                                "At least one hexadecimal digit is required after '0%1'")
-                                .arg(ch);
+                _errorMessage = QCoreApplication::translate(
+                                        "QQmlParser",
+                                        "At least one hexadecimal digit is required after '0%1'")
+                                        .arg(ch);
                 return T_ERROR;
             }
 
@@ -1080,7 +1214,7 @@ int Lexer::scanNumber(QChar ch)
 
             if (!isOctalDigit(_state.currentChar.unicode())) {
                 _state.errorCode = IllegalNumber;
-                _state.errorMessage =
+                _errorMessage =
                         QCoreApplication::translate(
                                 "QQmlParser", "At least one octal digit is required after '0%1'")
                                 .arg(ch);
@@ -1107,7 +1241,7 @@ int Lexer::scanNumber(QChar ch)
 
             if (_state.currentChar.unicode() != u'0' && _state.currentChar.unicode() != u'1') {
                 _state.errorCode = IllegalNumber;
-                _state.errorMessage =
+                _errorMessage =
                         QCoreApplication::translate(
                                 "QQmlParser", "At least one binary digit is required after '0%1'")
                                 .arg(ch);
@@ -1130,8 +1264,8 @@ int Lexer::scanNumber(QChar ch)
             return T_NUMERIC_LITERAL;
         } else if (_state.currentChar.isDigit() && !qmlMode()) {
             _state.errorCode = IllegalCharacter;
-            _state.errorMessage = QCoreApplication::translate(
-                    "QQmlParser", "Decimal numbers can't start with '0'");
+            _errorMessage = QCoreApplication::translate("QQmlParser",
+                                                        "Decimal numbers can't start with '0'");
             return T_ERROR;
         }
     }
@@ -1158,9 +1292,8 @@ int Lexer::scanNumber(QChar ch)
     }
 
     if (_state.currentChar == u'e' || _state.currentChar == u'E') {
-        if (_state.codePtr[0].isDigit()
-            || ((_state.codePtr[0] == u'+' || _state.codePtr[0] == u'-')
-                && _state.codePtr[1].isDigit())) {
+        if (_codePtr[0].isDigit()
+            || ((_codePtr[0] == u'+' || _codePtr[0] == u'-') && _codePtr[1].isDigit())) {
 
             chars.append(_state.currentChar.unicode());
             scanChar(); // consume `e'
@@ -1185,7 +1318,7 @@ int Lexer::scanNumber(QChar ch)
 
     if (end - begin != chars.size()) {
         _state.errorCode = IllegalExponentIndicator;
-        _state.errorMessage =
+        _errorMessage =
                 QCoreApplication::translate("QQmlParser", "Illegal syntax for exponential number");
         return T_ERROR;
     }
@@ -1215,12 +1348,12 @@ int Lexer::scanVersionNumber(QChar ch)
 
 bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
 {
-    _state.tokenText.resize(0);
+    _tokenText.resize(0);
     _state.validTokenText = true;
     _state.patternFlags = 0;
 
     if (prefix == EqualPrefix)
-        _state.tokenText += u'=';
+        _tokenText += u'=';
 
     while (true) {
         switch (_state.currentChar.unicode()) {
@@ -1232,78 +1365,77 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
             while (isIdentLetter(_state.currentChar)) {
                 int flag = regExpFlagFromChar(_state.currentChar);
                 if (flag == 0 || _state.patternFlags & flag) {
-                    _state.errorMessage =
-                            QCoreApplication::translate("QQmlParser",
-                                                        "Invalid regular expression flag '%0'")
-                                    .arg(QChar(_state.currentChar));
+                    _errorMessage = QCoreApplication::translate(
+                                            "QQmlParser", "Invalid regular expression flag '%0'")
+                                            .arg(QChar(_state.currentChar));
                     return false;
                 }
                 _state.patternFlags |= flag;
                 scanChar();
             }
 
-            _state.tokenLength = _state.codePtr - _state.tokenStartPtr - 1;
+            _tokenLength = _codePtr - _tokenStartPtr - 1;
             return true;
 
         case u'\\':
             // regular expression backslash sequence
-            _state.tokenText += _state.currentChar;
+            _tokenText += _state.currentChar;
             scanChar();
 
-            if (_state.codePtr > _endPtr || isLineTerminator()) {
-                _state.errorMessage = QCoreApplication::translate(
+            if (_codePtr > _endPtr || isLineTerminator()) {
+                _errorMessage = QCoreApplication::translate(
                         "QQmlParser", "Unterminated regular expression backslash sequence");
                 return false;
             }
 
-            _state.tokenText += _state.currentChar;
+            _tokenText += _state.currentChar;
             scanChar();
             break;
 
         case u'[':
             // regular expression class
-            _state.tokenText += _state.currentChar;
+            _tokenText += _state.currentChar;
             scanChar();
 
-            while (_state.codePtr <= _endPtr && !isLineTerminator()) {
+            while (_codePtr <= _endPtr && !isLineTerminator()) {
                 if (_state.currentChar == u']')
                     break;
                 else if (_state.currentChar == u'\\') {
                     // regular expression backslash sequence
-                    _state.tokenText += _state.currentChar;
+                    _tokenText += _state.currentChar;
                     scanChar();
 
-                    if (_state.codePtr > _endPtr || isLineTerminator()) {
-                        _state.errorMessage = QCoreApplication::translate(
+                    if (_codePtr > _endPtr || isLineTerminator()) {
+                        _errorMessage = QCoreApplication::translate(
                                 "QQmlParser", "Unterminated regular expression backslash sequence");
                         return false;
                     }
 
-                    _state.tokenText += _state.currentChar;
+                    _tokenText += _state.currentChar;
                     scanChar();
                 } else {
-                    _state.tokenText += _state.currentChar;
+                    _tokenText += _state.currentChar;
                     scanChar();
                 }
             }
 
             if (_state.currentChar != u']') {
-                _state.errorMessage = QCoreApplication::translate(
+                _errorMessage = QCoreApplication::translate(
                         "QQmlParser", "Unterminated regular expression class");
                 return false;
             }
 
-            _state.tokenText += _state.currentChar;
+            _tokenText += _state.currentChar;
             scanChar(); // skip ]
             break;
 
         default:
-            if (_state.codePtr > _endPtr || isLineTerminator()) {
-                _state.errorMessage = QCoreApplication::translate(
+            if (_codePtr > _endPtr || isLineTerminator()) {
+                _errorMessage = QCoreApplication::translate(
                         "QQmlParser", "Unterminated regular expression literal");
                 return false;
             } else {
-                _state.tokenText += _state.currentChar;
+                _tokenText += _state.currentChar;
                 scanChar();
             }
         } // switch
@@ -1329,7 +1461,7 @@ unsigned Lexer::isLineTerminatorSequence() const
     case 0x2029u:
         return 1;
     case 0x000Du:
-        if (_state.codePtr->unicode() == 0x000Au)
+        if (_codePtr->unicode() == 0x000Au)
             return 2;
         else
             return 1;
@@ -1371,12 +1503,12 @@ bool Lexer::isOctalDigit(ushort c)
 QString Lexer::tokenText() const
 {
     if (_state.validTokenText)
-        return _state.tokenText;
+        return _tokenText;
 
     if (_state.tokenKind == T_STRING_LITERAL)
-        return QString(_state.tokenStartPtr + 1, _state.tokenLength - 2);
+        return QString(_tokenStartPtr + 1, _tokenLength - 2);
 
-    return QString(_state.tokenStartPtr, _state.tokenLength);
+    return QString(_tokenStartPtr, _tokenLength);
 }
 
 Lexer::Error Lexer::errorCode() const
@@ -1386,7 +1518,7 @@ Lexer::Error Lexer::errorCode() const
 
 QString Lexer::errorMessage() const
 {
-    return _state.errorMessage;
+    return _errorMessage;
 }
 
 void Lexer::syncProhibitAutomaticSemicolon()
