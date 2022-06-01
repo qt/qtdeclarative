@@ -844,6 +844,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 }
                 // Might be that the async provider was so quick it emitted the signal before we
                 // could connect to it.
+                //
+                // loadAcquire() synchronizes-with storeRelease() in QQuickImageResponsePrivate::_q_finished():
                 if (static_cast<QQuickImageResponsePrivate*>(QObjectPrivate::get(response))->finished.loadAcquire()) {
                     QMetaObject::invokeMethod(threadObject, "asyncResponseFinished",
                                               Qt::QueuedConnection, Q_ARG(QQuickImageResponse*, response));

@@ -25,9 +25,13 @@ class QQuickImageResponsePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickImageResponse)
 public:
-    QAtomicInteger<qint32> finished = false;
+    QAtomicInteger<bool> finished = false;
 
-    void _q_finished() { finished = true; }
+    void _q_finished()
+    {
+        // synchronizes-with the loadAcquire in QQuickPixmapReader::processJob:
+        finished.storeRelease(true);
+    }
 };
 
 
