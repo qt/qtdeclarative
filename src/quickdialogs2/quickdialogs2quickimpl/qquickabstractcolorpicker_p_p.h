@@ -19,6 +19,7 @@
 #include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
 
 #include "qquickabstractcolorpicker_p.h"
+#include "qquickcolordialogutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -45,22 +46,13 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    struct
-    {
-        qreal h = .0;
-        qreal s = .0;
-        union {
-            qreal v = 1.0;
-            qreal l;
-        };
-        qreal a = 1.0;
-    } m_hsva;
+    HSVA m_hsva;
     QPointF m_pressPoint;
     QQuickDeferredPointer<QQuickItem> m_handle;
-    bool m_pressed : 1;
+    bool m_pressed = false;
 
 protected:
-    bool m_hsl : 1; // Use hsv by default.
+    bool m_hsl = false; // Use hsv by default.
 };
 
 QT_END_NAMESPACE

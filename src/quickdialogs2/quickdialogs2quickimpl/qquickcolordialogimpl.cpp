@@ -4,6 +4,8 @@
 #include "qquickcolordialogimpl_p.h"
 #include "qquickcolordialogimpl_p_p.h"
 
+#include "qquickcolordialogutils_p.h"
+
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 
 #include <qpa/qplatformintegration.h>
@@ -58,8 +60,7 @@ bool QQuickEyeDropperEventFilter::eventFilter(QObject *obj, QEvent *event)
     }
 }
 
-QQuickColorDialogImplPrivate::QQuickColorDialogImplPrivate()
-{}
+QQuickColorDialogImplPrivate::QQuickColorDialogImplPrivate() = default;
 
 QQuickColorDialogImplPrivate::~QQuickColorDialogImplPrivate()
 {
@@ -178,13 +179,38 @@ QColor QQuickColorDialogImpl::color() const
 void QQuickColorDialogImpl::setColor(const QColor &c)
 {
     Q_D(QQuickColorDialogImpl);
-
     if (color().rgba() == c.rgba())
         return;
 
-    d->m_hsva.h = d->m_hsl ? c.hslHueF() : c.hsvHueF();
-    d->m_hsva.s = d->m_hsl ? c.hslSaturationF() : c.hsvSaturationF();
-    d->m_hsva.v = d->m_hsl ? c.lightnessF() : c.valueF();
+    // If we get a QColor from an Hsv or Hsl color system,
+    // we want to get the raw values without the risk of QColor converting them,
+    // and possible deleting relevant information for achromatic cases.
+    if (c.spec() == QColor::Spec::Hsv) {
+        d->m_hsva.h = qBound(.0, c.hsvHueF(), 1.0);
+        if (d->m_hsl) {
+            const auto sl = getSaturationAndLightness(c.hsvSaturationF(), c.valueF());
+            d->m_hsva.s = qBound(.0, sl.first, 1.0);
+            d->m_hsva.l = qBound(.0, sl.second, 1.0);
+        } else {
+            d->m_hsva.s = qBound(.0, c.hsvSaturationF(), 1.0);
+            d->m_hsva.v = qBound(.0, c.valueF(), 1.0);
+        }
+    } else if (c.spec() == QColor::Spec::Hsl) {
+        d->m_hsva.h = qBound(.0, c.hslHueF(), 1.0);
+        if (d->m_hsl) {
+            d->m_hsva.s = qBound(.0, c.hslSaturationF(), 1.0);
+            d->m_hsva.l = qBound(.0, c.lightnessF(), 1.0);
+        } else {
+            const auto sv = getSaturationAndValue(c.hslSaturationF(), c.lightnessF());
+            d->m_hsva.s = qBound(.0, sv.first, 1.0);
+            d->m_hsva.v = qBound(.0, sv.second, 1.0);
+        }
+    } else {
+        d->m_hsva.h = qBound(.0, d->m_hsl ? c.hslHueF() : c.hsvHueF(), 1.0);
+        d->m_hsva.s = qBound(.0, d->m_hsl ? c.hslSaturationF() : c.hsvSaturationF(), 1.0);
+        d->m_hsva.v = qBound(.0, d->m_hsl ? c.lightnessF() : c.valueF(), 1.0);
+    }
+
     d->m_hsva.a = c.alphaF();
 
     emit colorChanged(color());
@@ -379,12 +405,6 @@ void QQuickColorDialogImpl::setHsl(bool hsl)
     emit specChanged();
 }
 
-bool QQuickColorDialogImpl::showAlpha()
-{
-    Q_D(const QQuickColorDialogImpl);
-    return d->m_showAlpha;
-}
-
 QSharedPointer<QColorDialogOptions> QQuickColorDialogImpl::options() const
 {
     Q_D(const QQuickColorDialogImpl);
@@ -406,14 +426,10 @@ void QQuickColorDialogImpl::setOptions(const QSharedPointer<QColorDialogOptions>
         if (d->options) {
             attached->buttonBox()->setVisible(
                     !(d->options->options() & QColorDialogOptions::NoButtons));
-        }
-    }
 
-    if (d->options) {
-        const bool showAlpha = d->options->options() & QColorDialogOptions::ShowAlphaChannel;
-        if (showAlpha != d->m_showAlpha) {
-            d->m_showAlpha = showAlpha;
-            emit showAlphaChanged();
+            const bool showAlpha = d->options->options() & QColorDialogOptions::ShowAlphaChannel;
+            attached->alphaSlider()->setVisible(showAlpha);
+            attached->colorInputs()->setShowAlpha(showAlpha);
         }
     }
 }
@@ -422,25 +438,6 @@ void QQuickColorDialogImpl::invokeEyeDropper()
 {
     Q_D(QQuickColorDialogImpl);
     d->eyeDropperEnter();
-}
-
-std::pair<qreal, qreal> QQuickColorDialogImpl::getSaturationAndValue(qreal saturation,
-                                                                     qreal lightness)
-{
-    const qreal v = lightness + saturation * qMin(lightness, 1 - lightness);
-    if (v == .0)
-        return { .0, .0 };
-    const qreal s = 2 * (1 - lightness / v);
-    return { s, v };
-}
-std::pair<qreal, qreal> QQuickColorDialogImpl::getSaturationAndLightness(qreal saturation,
-                                                                         qreal value)
-{
-    const qreal l = value * (1 - saturation / 2);
-    if (l == .0)
-        return { .0, .0 };
-    const qreal s = (value - l) / qMin(l, 1 - l);
-    return { s, l };
 }
 
 QQuickColorDialogImplAttached::QQuickColorDialogImplAttached(QObject *parent)
@@ -579,6 +576,38 @@ void QQuickColorDialogImplAttached::setAlphaSlider(QQuickSlider *alphaSlider)
     }
 
     emit alphaSliderChanged();
+}
+
+QQuickColorInputs *QQuickColorDialogImplAttached::colorInputs() const
+{
+    Q_D(const QQuickColorDialogImplAttached);
+    return d->colorInputs;
+}
+
+void QQuickColorDialogImplAttached::setColorInputs(QQuickColorInputs *colorInputs)
+{
+    Q_D(QQuickColorDialogImplAttached);
+
+    if (d->colorInputs == colorInputs)
+        return;
+
+    if (d->colorInputs) {
+        QQuickColorDialogImpl *colorDialogImpl = qobject_cast<QQuickColorDialogImpl *>(parent());
+        if (colorDialogImpl)
+            QObject::disconnect(d->colorInputs, &QQuickColorInputs::colorModified,
+                                colorDialogImpl, &QQuickColorDialogImpl::setColor);
+    }
+
+    d->colorInputs = colorInputs;
+
+    if (d->colorInputs) {
+        QQuickColorDialogImpl *colorDialogImpl = qobject_cast<QQuickColorDialogImpl *>(parent());
+        if (colorDialogImpl)
+            QObject::connect(d->colorInputs, &QQuickColorInputs::colorModified,
+                             colorDialogImpl, &QQuickColorDialogImpl::setColor);
+    }
+
+    emit colorInputsChanged();
 }
 
 QT_END_NAMESPACE

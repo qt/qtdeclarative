@@ -3,16 +3,15 @@
 
 #include "qquickabstractcolorpicker_p_p.h"
 
+#include "qquickcolordialogutils_p.h"
+
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
 
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
 
-QQuickAbstractColorPickerPrivate::QQuickAbstractColorPickerPrivate()
-    : m_pressed(false), m_hsl(false)
-{
-}
+QQuickAbstractColorPickerPrivate::QQuickAbstractColorPickerPrivate() = default;
 
 static inline QString handleName()
 {
@@ -25,7 +24,6 @@ bool QQuickAbstractColorPickerPrivate::handlePress(const QPointF &point, ulong t
     QQuickControlPrivate::handlePress(point, timestamp);
     m_pressPoint = point;
     q->setPressed(true);
-
     q->updateColor(point);
     return true;
 }
@@ -111,6 +109,13 @@ QColor QQuickAbstractColorPicker::color() const
 void QQuickAbstractColorPicker::setColor(const QColor &c)
 {
     Q_D(QQuickAbstractColorPicker);
+    // QColor represents a theoretical color, rather than simply an rgba value.
+    // Therefore, two QColor objects can be different,
+    // and yet translate to the same rgba value.
+    // Since the color picker can reuse the same rgba value for multiple pixels,
+    // we should not return early if the rgba() values are equal,
+    // but only if the QColor objects are exactly the same.
+
     if (color() == c)
         return;
 
@@ -351,25 +356,4 @@ void QQuickAbstractColorPicker::updateColor(const QPointF &pos)
     setColor(c);
 
     emit colorPicked(c);
-}
-
-std::pair<qreal, qreal> QQuickAbstractColorPicker::getSaturationAndValue(qreal saturation,
-                                                                         qreal lightness)
-{
-    const qreal v = lightness + saturation * qMin(lightness, 1 - lightness);
-    if (v == .0)
-        return { .0, .0 };
-
-    const qreal s = 2 * (1 - lightness / v);
-    return { s, v };
-}
-std::pair<qreal, qreal> QQuickAbstractColorPicker::getSaturationAndLightness(qreal saturation,
-                                                                             qreal value)
-{
-    const qreal l = value * (1 - saturation / 2);
-    if (l == .0)
-        return { .0, .0 };
-
-    const qreal s = (value - l) / qMin(l, 1 - l);
-    return { s, l };
 }

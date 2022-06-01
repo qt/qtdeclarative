@@ -17,6 +17,7 @@
 
 #include "qquickcolordialogimpl_p.h"
 #include "qquickabstractcolorpicker_p.h"
+#include "qquickcolorinputs_p.h"
 
 #include <QtQuickTemplates2/private/qquickdialog_p_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
@@ -69,16 +70,7 @@ public:
     void alphaSliderMoved();
 
     QSharedPointer<QColorDialogOptions> options;
-    struct
-    {
-        qreal h = .0;
-        qreal s = .0;
-        union {
-            qreal v = 1.0;
-            qreal l;
-        };
-        qreal a = 1.0;
-    } m_hsva;
+    HSVA m_hsva;
     std::unique_ptr<QQuickEyeDropperEventFilter> eyeDropperEventFilter;
     QPointer<QQuickWindow> m_eyeDropperWindow;
     QColor m_eyeDropperPreviousColor;
@@ -92,6 +84,7 @@ class QQuickColorDialogImplAttachedPrivate : public QObjectPrivate
 public:
     QPointer<QQuickDialogButtonBox> buttonBox;
     QPointer<QQuickAbstractButton> eyeDropperButton;
+    QPointer<QQuickColorInputs> colorInputs;
     QPointer<QQuickAbstractColorPicker> colorPicker;
     QPointer<QQuickSlider> alphaSlider;
 

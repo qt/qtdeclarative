@@ -87,8 +87,6 @@ protected:
 
 private:
     void updateColor(const QPointF &pos);
-    static std::pair<qreal, qreal> getSaturationAndValue(qreal saturation, qreal lightness);
-    static std::pair<qreal, qreal> getSaturationAndLightness(qreal saturation, qreal value);
     Q_DISABLE_COPY(QQuickAbstractColorPicker)
     Q_DECLARE_PRIVATE(QQuickAbstractColorPicker)
 };
