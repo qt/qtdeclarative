@@ -4974,14 +4974,14 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
     auto endMoveCurrentIndex = [=](const QPoint &cell){
         if (select) {
             if (d->polishScheduled)
-                forceLayout();
+                d->q_func()->forceLayout();
             const int serializedEndIndex = d->modelIndexAtCell(cell);
             if (d->loadedItems.contains(serializedEndIndex)) {
                 const QRectF endGeometry = d->loadedItems.value(serializedEndIndex)->geometry();
                 d->setSelectionEndPos(endGeometry.center());
             }
         }
-        d->selectionModel->setCurrentIndex(modelIndex(cell), QItemSelectionModel::NoUpdate);
+        d->selectionModel->setCurrentIndex(d->q_func()->modelIndex(cell), QItemSelectionModel::NoUpdate);
     };
 
     switch (e->key()) {
