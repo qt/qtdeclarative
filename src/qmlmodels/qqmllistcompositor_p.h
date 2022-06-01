@@ -312,6 +312,10 @@ Q_DECLARE_TYPEINFO(QQmlListCompositor::Change, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Remove, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Insert, Q_PRIMITIVE_TYPE);
 
+QT_WARNING_PUSH
+// GCC isn't wrong, as groupCount is public in iterator, but we tried Q_ASSUME(),
+// right in front of the loops, and it didn't help, so we disable the warning:
+QT_WARNING_DISABLE_GCC("-Warray-bounds")
 inline QQmlListCompositor::iterator::iterator(
         Range *range, int offset, Group group, int groupCount)
     : range(range)
@@ -339,6 +343,7 @@ inline void QQmlListCompositor::iterator::decrementIndexes(int difference, uint 
             index[i] -= difference;
     }
 }
+QT_WARNING_POP // -Warray-bounds
 
 inline QQmlListCompositor::insert_iterator::insert_iterator(
         Range *range, int offset, Group group, int groupCount)
