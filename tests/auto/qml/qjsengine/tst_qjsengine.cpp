@@ -5421,7 +5421,7 @@ void tst_QJSEngine::urlObject()
 
     check(QStringLiteral("href"), url.toString());
     check(QStringLiteral("origin"), QStringLiteral("http://example.com:777"));
-    check(QStringLiteral("protocol"), url.scheme());
+    check(QStringLiteral("protocol"), url.scheme() + QLatin1Char(':'));
     check(QStringLiteral("username"), url.userName());
     check(QStringLiteral("password"), url.password());
     check(QStringLiteral("host"), url.host() + u':' + QString::number(url.port()));
