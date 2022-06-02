@@ -131,7 +131,7 @@ void UrlObject::setUrl(const QUrl &url)
     d()->port.set(engine(),
                   engine()->newString(url.port() == -1 ? QLatin1String("")
                                                        : QString::number(url.port())));
-    d()->protocol.set(engine(), engine()->newString(url.scheme()));
+    d()->protocol.set(engine(), engine()->newString(url.scheme() + QLatin1Char(':')));
     d()->search.set(engine(), engine()->newString(url.query()));
     d()->username.set(engine(), engine()->newString(url.userName()));
 
@@ -186,15 +186,23 @@ bool UrlObject::setPort(QString port)
     return true;
 }
 
-bool UrlObject::setProtocol(QString protocol)
+bool UrlObject::setProtocol(QString protocolOrScheme)
 {
     QUrl url = toQUrl();
-    url.setScheme(protocol);
+    // If there is one or several ':' in the protocolOrScheme,
+    // everything from the first colon is removed.
+
+    qsizetype firstColonPos = protocolOrScheme.indexOf(QLatin1Char(':'));
+
+    if (firstColonPos != -1)
+        protocolOrScheme.truncate(firstColonPos);
+
+    url.setScheme(protocolOrScheme);
 
     if (!url.isValid())
         return false;
 
-    d()->protocol.set(engine(), engine()->newString(url.scheme()));
+    d()->protocol.set(engine(), engine()->newString(url.scheme() + QLatin1Char(':')));
     d()->href.set(engine(), engine()->newString(url.toString()));
 
     updateOrigin();
