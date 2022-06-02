@@ -278,9 +278,9 @@ protected:
     bool rootScopeIsValid() const { return m_exportedRootScope->sourceLocation().isValid(); }
 
     QQmlJSLogger *m_logger;
-    enum class LiteralOrScriptParseResult { Invalid, Script, Literal, Translation };
-    LiteralOrScriptParseResult parseLiteralOrScriptBinding(const QString &name,
-                                                           const QQmlJS::AST::Statement *statement);
+    enum class BindingExpressionParseResult { Invalid, Script, Literal, Translation };
+    BindingExpressionParseResult parseBindingExpression(const QString &name,
+                                                        const QQmlJS::AST::Statement *statement);
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;

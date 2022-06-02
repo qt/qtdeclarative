@@ -1498,16 +1498,16 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
 #endif
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
-        LiteralOrScriptParseResult parseResult = LiteralOrScriptParseResult::Invalid;
+        BindingExpressionParseResult parseResult = BindingExpressionParseResult::Invalid;
         // if property is an alias, initialization expression is not a binding
         if (!isAlias) {
-            parseResult = parseLiteralOrScriptBinding(publicMember->name.toString(),
-                                                      publicMember->statement);
+            parseResult =
+                    parseBindingExpression(publicMember->name.toString(), publicMember->statement);
         }
 
         // however, if we have a property with a script binding assigned to it,
         // we have to create a new scope
-        if (parseResult == LiteralOrScriptParseResult::Script) {
+        if (parseResult == BindingExpressionParseResult::Script) {
             Q_ASSERT(!m_savedBindingOuterScope); // automatically true due to grammar
             m_savedBindingOuterScope = m_currentScope;
             enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("binding"),
@@ -1675,12 +1675,12 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
 #endif
 }
 
-QQmlJSImportVisitor::LiteralOrScriptParseResult
-QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString &name,
-                                                 const QQmlJS::AST::Statement *statement)
+QQmlJSImportVisitor::BindingExpressionParseResult
+QQmlJSImportVisitor::parseBindingExpression(const QString &name,
+                                            const QQmlJS::AST::Statement *statement)
 {
     if (statement == nullptr)
-        return LiteralOrScriptParseResult::Invalid;
+        return BindingExpressionParseResult::Invalid;
 
     const auto *exprStatement = cast<const ExpressionStatement *>(statement);
 
@@ -1695,7 +1695,7 @@ QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString &name,
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
                                  QQmlJSMetaPropertyBinding::Script_PropertyBinding);
         m_bindings.append(UnfinishedBinding { m_currentScope, [=]() { return binding; } });
-        return LiteralOrScriptParseResult::Script;
+        return BindingExpressionParseResult::Script;
     }
 
     auto expr = exprStatement->expression;
@@ -1763,12 +1763,12 @@ QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString &name,
     // translations are neither literal bindings nor script bindings
     if (binding.bindingType() == QQmlJSMetaPropertyBinding::Translation
         || binding.bindingType() == QQmlJSMetaPropertyBinding::TranslationById) {
-        return LiteralOrScriptParseResult::Translation;
+        return BindingExpressionParseResult::Translation;
     }
     if (!QQmlJSMetaPropertyBinding::isLiteralBinding(binding.bindingType()))
-        return LiteralOrScriptParseResult::Script;
+        return BindingExpressionParseResult::Script;
     m_literalScopesToCheck << m_currentScope;
-    return LiteralOrScriptParseResult::Literal;
+    return BindingExpressionParseResult::Literal;
 }
 
 void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding)
@@ -1886,8 +1886,8 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         m_propertyBindings[m_currentScope].append(
                 { m_savedBindingOuterScope, group->firstSourceLocation(), name.toString() });
         // ### TODO: report Invalid parse status as a warning/error
-        auto result = parseLiteralOrScriptBinding(name.toString(), scriptBinding->statement);
-        m_thisScriptBindingIsJavaScript = (result == LiteralOrScriptParseResult::Script);
+        auto result = parseBindingExpression(name.toString(), scriptBinding->statement);
+        m_thisScriptBindingIsJavaScript = (result == BindingExpressionParseResult::Script);
     } else {
         const auto statement = scriptBinding->statement;
         QStringList signalParameters;
