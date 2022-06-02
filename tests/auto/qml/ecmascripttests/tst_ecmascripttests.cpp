@@ -21,7 +21,10 @@ void tst_EcmaScriptTests::runInterpreted()
 #if defined(Q_PROCESSOR_X86_64)
     QDir::setCurrent(QLatin1String(SRCDIR));
     Test262Runner runner(QString(), "test262");
-    runner.setFlags(Test262Runner::ForceBytecode|Test262Runner::WithTestExpectations|Test262Runner::Parallel|Test262Runner::Verbose);
+    runner.setFlags(Test262Runner::ForceBytecode
+                    | Test262Runner::WithTestExpectations
+                    | Test262Runner::Parallel
+                    | Test262Runner::Verbose);
     bool result = runner.run();
     QVERIFY(result);
 #endif
@@ -32,7 +35,10 @@ void tst_EcmaScriptTests::runJitted()
 #if defined(Q_PROCESSOR_X86_64)
     QDir::setCurrent(QLatin1String(SRCDIR));
     Test262Runner runner(QString(), "test262");
-    runner.setFlags(Test262Runner::ForceJIT|Test262Runner::WithTestExpectations|Test262Runner::Parallel|Test262Runner::Verbose);
+    runner.setFlags(Test262Runner::ForceJIT
+                    | Test262Runner::WithTestExpectations
+                    | Test262Runner::Parallel
+                    | Test262Runner::Verbose);
     bool result = runner.run();
     QVERIFY(result);
 #endif
