@@ -66,7 +66,7 @@ ApplicationWindow {
         let displayingControl = listView.currentIndex !== -1
         let currentControlName = displayingControl
             ? listView.model.get(listView.currentIndex).title.toLowerCase() : ""
-        let url = "https://doc.qt.io/qt-5/"
+        let url = "https://doc.qt.io/qt-6/"
             + (displayingControl
                ? "qml-qtquick-controls2-" + currentControlName + ".html"
                : "qtquick-controls2-qmlmodule.html");
