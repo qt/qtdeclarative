@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
     \list
     \li \l orientation
     \li \l position
-    \li \l size
+    \li \l {ScrollBar::} {size}
     \li \l active
     \endlist
 
