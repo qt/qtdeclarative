@@ -900,7 +900,7 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMod
     // The shader manager is shared between renderers (think for example Item
     // layers that create a new Renderer each) with the same rendercontext (and
     // so same QRhi).
-    m_shaderManager = ctx->findChild<ShaderManager *>(QStringLiteral("__qt_ShaderManager"), Qt::FindDirectChildrenOnly);
+    m_shaderManager = ctx->findChild<ShaderManager *>(QString(), Qt::FindDirectChildrenOnly);
     if (!m_shaderManager) {
         m_shaderManager = new ShaderManager(ctx);
         m_shaderManager->setObjectName(QStringLiteral("__qt_ShaderManager"));
