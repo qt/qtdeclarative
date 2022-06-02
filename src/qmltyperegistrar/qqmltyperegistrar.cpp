@@ -1,28 +1,15 @@
-// Copyright (C) 2019 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltypescreator.h"
-#include "metatypesjsonprocessor.h"
-
-#include <QCoreApplication>
-#include <QCommandLineParser>
-#include <QtDebug>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QJsonValue>
 #include <QFile>
-#include <QScopedPointer>
-#include <QSaveFile>
-#include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonValue>
 
-#include <cstdlib>
+#include "qqmltyperegistrar_p.h"
+#include "qqmltypescreator_p.h"
 
-using namespace Qt::StringLiterals;
-
-struct ScopedPointerFileCloser
-{
-    static inline void cleanup(FILE *handle) { if (handle) fclose(handle); }
-};
+QT_BEGIN_NAMESPACE
+using namespace Qt::Literals;
 
 struct ExclusiveVersionRange
 {
@@ -54,7 +41,8 @@ bool operator==(const ExclusiveVersionRange &x, const ExclusiveVersionRange &y)
     return !(x < y) && !(y < x);
 }
 
-static bool argumentsFromCommandLineAndFile(QStringList &allArguments, const QStringList &arguments)
+bool QmlTypeRegistrar::argumentsFromCommandLineAndFile(QStringList &allArguments,
+                                                       const QStringList &arguments)
 {
     allArguments.reserve(arguments.size());
     for (const QString &argument : arguments) {
@@ -83,7 +71,8 @@ static bool argumentsFromCommandLineAndFile(QStringList &allArguments, const QSt
     return true;
 }
 
-static int runExtract(const QString & baseName, const MetaTypesJsonProcessor &processor) {
+int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonProcessor &processor)
+{
     if (processor.types().isEmpty()) {
         fprintf(stderr, "Error: No types to register found in library\n");
         return EXIT_FAILURE;
@@ -117,136 +106,43 @@ static int runExtract(const QString & baseName, const MetaTypesJsonProcessor &pr
     return EXIT_SUCCESS;
 }
 
-int main(int argc, char **argv)
+QJsonValue QmlTypeRegistrar::findType(const QString &name) const
 {
-    // Produce reliably the same output for the same input by disabling QHash's random seeding.
-    qSetGlobalQHashSeed(0);
-
-    QCoreApplication app(argc, argv);
-    QCoreApplication::setApplicationName(QStringLiteral("qmltyperegistrar"));
-    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
-
-    QCommandLineParser parser;
-    parser.addHelpOption();
-    parser.addVersionOption();
-
-    QCommandLineOption outputOption(QStringLiteral("o"));
-    outputOption.setDescription(QStringLiteral("Write output to specified file."));
-    outputOption.setValueName(QStringLiteral("file"));
-    outputOption.setFlags(QCommandLineOption::ShortOptionStyle);
-    parser.addOption(outputOption);
-
-    QCommandLineOption privateIncludesOption(
-            QStringLiteral("private-includes"),
-            QStringLiteral("Include headers ending in \"_p.h\" using \"#include <private/foo_p.h>\""
-                           "rather than \"#include <foo_p.h>\"."));
-    parser.addOption(privateIncludesOption);
-
-    QCommandLineOption importNameOption(QStringLiteral("import-name"));
-    importNameOption.setDescription(QStringLiteral("Name of the module to use for type and module "
-                                                   "registrations."));
-    importNameOption.setValueName(QStringLiteral("module name"));
-    parser.addOption(importNameOption);
-
-    QCommandLineOption pastMajorVersionOption(QStringLiteral("past-major-version"));
-    pastMajorVersionOption.setDescription(QStringLiteral("Past major version to use for type and module "
-                                                         "registrations."));
-    pastMajorVersionOption.setValueName(QStringLiteral("past major version"));
-    parser.addOption(pastMajorVersionOption);
-
-    QCommandLineOption majorVersionOption(QStringLiteral("major-version"));
-    majorVersionOption.setDescription(QStringLiteral("Major version to use for type and module "
-                                                     "registrations."));
-    majorVersionOption.setValueName(QStringLiteral("major version"));
-    parser.addOption(majorVersionOption);
-
-    QCommandLineOption minorVersionOption(QStringLiteral("minor-version"));
-    minorVersionOption.setDescription(QStringLiteral("Minor version to use for module "
-                                                     "registration."));
-    minorVersionOption.setValueName(QStringLiteral("minor version"));
-    parser.addOption(minorVersionOption);
-
-    QCommandLineOption namespaceOption(QStringLiteral("namespace"));
-    namespaceOption.setDescription(QStringLiteral("Generate type registration functions "
-                                                  "into a C++ namespace."));
-    namespaceOption.setValueName(QStringLiteral("namespace"));
-    parser.addOption(namespaceOption);
-
-    QCommandLineOption pluginTypesOption(QStringLiteral("generate-qmltypes"));
-    pluginTypesOption.setDescription(QStringLiteral("Generate qmltypes into specified file."));
-    pluginTypesOption.setValueName(QStringLiteral("qmltypes file"));
-    parser.addOption(pluginTypesOption);
-
-    QCommandLineOption foreignTypesOption(QStringLiteral("foreign-types"));
-    foreignTypesOption.setDescription(QStringLiteral(
-                                          "Comma separated list of other modules' metatypes files "
-                                          "to consult for foreign types when generating "
-                                          "qmltypes file."));
-    foreignTypesOption.setValueName(QStringLiteral("foreign types"));
-    parser.addOption(foreignTypesOption);
-
-    QCommandLineOption followForeignVersioningOption(QStringLiteral("follow-foreign-versioning"));
-    followForeignVersioningOption.setDescription(
-            QStringLiteral("If this option is set the versioning scheme of foreign base classes "
-                           "will be respected instead of ignored. Mostly useful for modules who "
-                           "want to follow Qt's versioning scheme."));
-    parser.addOption(followForeignVersioningOption);
-
-    QCommandLineOption extract(u"extract"_s);
-    extract.setDescription(u"Extract QML types from a module and use QML_FOREIGN to register them"_s);
-    parser.addOption(extract);
-
-    parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
-                                 QStringLiteral("MOC generated json output."));
-
-    QStringList arguments;
-    if (!argumentsFromCommandLineAndFile(arguments, app.arguments()))
-        return EXIT_FAILURE;
-
-    parser.process(arguments);
-
-    const QString module = parser.value(importNameOption);
-
-    MetaTypesJsonProcessor processor(parser.isSet(privateIncludesOption));
-    if (!processor.processTypes(parser.positionalArguments()))
-        return EXIT_FAILURE;
-
-    processor.postProcessTypes();
-
-    if (parser.isSet(foreignTypesOption))
-        processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
-
-    processor.postProcessForeignTypes();
-
-
-    if (parser.isSet(extract)) {
-        if (!parser.isSet(outputOption)) {
-            fprintf(stderr, "Error: The output file name must be provided\n");
-            return EXIT_FAILURE;
-        }
-        QString baseName = parser.value(outputOption);
-        return runExtract(baseName, processor);
+    for (const QJsonObject &type : m_types) {
+        if (type[QLatin1String("qualifiedClassName")] != name)
+            continue;
+        return type;
     }
+    return QJsonValue();
+};
 
-    FILE *output = stdout;
-    QScopedPointer<FILE, ScopedPointerFileCloser> outputFile;
-
-
-    if (parser.isSet(outputOption)) {
-        // extract does its own file handling
-        QString outputName = parser.value(outputOption);
-#if defined(_MSC_VER)
-        if (_wfopen_s(&output, reinterpret_cast<const wchar_t *>(outputName.utf16()), L"w") != 0) {
-#else
-        output = fopen(QFile::encodeName(outputName).constData(), "w"); // create output file
-        if (!output) {
-#endif
-            fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(outputName));
-            return EXIT_FAILURE;
-        }
-        outputFile.reset(output);
+QJsonValue QmlTypeRegistrar::findTypeForeign(const QString &name) const
+{
+    for (const QJsonObject &type : m_foreignTypes) {
+        if (type[QLatin1String("qualifiedClassName")] != name)
+            continue;
+        return type;
     }
+    return QJsonValue();
+};
 
+QString conflictingVersionToString(const ExclusiveVersionRange &r)
+{
+    using namespace Qt::StringLiterals;
+
+    QString s = r.claimerName;
+    if (r.addedIn.isValid()) {
+        s += u" (added in %1.%2)"_s.arg(r.addedIn.majorVersion()).arg(r.addedIn.minorVersion());
+    }
+    if (r.removedIn.isValid()) {
+        s += u" (removed in %1.%2)"_s.arg(r.removedIn.majorVersion())
+                     .arg(r.removedIn.minorVersion());
+    }
+    return s;
+};
+
+void QmlTypeRegistrar::write(FILE *output)
+{
     fprintf(output,
             "/****************************************************************************\n"
             "** Generated QML type registration code\n**\n");
@@ -257,23 +153,22 @@ int main(int argc, char **argv)
             "#include <QtQml/qqml.h>\n"
             "#include <QtQml/qqmlmoduleregistration.h>\n");
 
-    const QStringList includes = processor.includes();
-    for (const QString &include : includes)
+    for (const QString &include : m_includes)
         fprintf(output, "\n#include <%s>", qPrintable(include));
 
     fprintf(output, "\n\n");
 
     // Keep this in sync with _qt_internal_get_escaped_uri in CMake
-    QString moduleAsSymbol = module;
+    QString moduleAsSymbol = m_module;
     moduleAsSymbol.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9]")), QStringLiteral("_"));
 
-    QString underscoredModuleAsSymbol = module;
+    QString underscoredModuleAsSymbol = m_module;
     underscoredModuleAsSymbol.replace(QLatin1Char('.'), QLatin1Char('_'));
 
     if (underscoredModuleAsSymbol != moduleAsSymbol
             || underscoredModuleAsSymbol.isEmpty()
             || underscoredModuleAsSymbol.front().isDigit()) {
-        qWarning() << module << "is an invalid QML module URI. You cannot import this.";
+        qWarning() << m_module << "is an invalid QML module URI. You cannot import this.";
     }
 
     const QString functionName = QStringLiteral("qml_register_types_") + moduleAsSymbol;
@@ -285,53 +180,28 @@ int main(int argc, char **argv)
             "#endif\n"
             "\n");
 
-    const QString targetNamespace = parser.value(namespaceOption);
-    if (!targetNamespace.isEmpty())
-        fprintf(output, "namespace %s {\n", qPrintable(targetNamespace));
+    if (!m_targetNamespace.isEmpty())
+        fprintf(output, "namespace %s {\n", qPrintable(m_targetNamespace));
 
     fprintf(output, "Q_QMLTYPE_EXPORT void %s()\n{", qPrintable(functionName));
-    const auto majorVersion = parser.value(majorVersionOption);
-    const auto pastMajorVersions = parser.values(pastMajorVersionOption);
-    const auto minorVersion = parser.value(minorVersionOption);
-    const bool followForeignVersioning = parser.isSet(followForeignVersioningOption);
+    const quint8 majorVersion = m_moduleVersion.majorVersion();
+    const quint8 minorVersion = m_moduleVersion.minorVersion();
 
-    for (const auto &version : pastMajorVersions) {
-        fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, 0);\n    qmlRegisterModule(\"%s\", %s, 254);",
-                qPrintable(module), qPrintable(version), qPrintable(module), qPrintable(version));
+    for (const auto &version : m_pastMajorVersions) {
+        fprintf(output,
+                "\n    qmlRegisterModule(\"%s\", %u, 0);\n    qmlRegisterModule(\"%s\", %u, 254);",
+                qPrintable(m_module), (version), qPrintable(m_module), (version));
     }
 
-    if (minorVersion.toInt() != 0) {
-        fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, 0);",
-                qPrintable(module), qPrintable(majorVersion));
+    if (minorVersion != 0) {
+        fprintf(output, "\n    qmlRegisterModule(\"%s\", %u, 0);", qPrintable(m_module),
+                majorVersion);
     }
 
-    auto moduleVersion = QTypeRevision::fromVersion(majorVersion.toInt(), minorVersion.toInt());
-
-    const QVector<QJsonObject> types = processor.types();
-    const QVector<QJsonObject> foreignTypes = processor.foreignTypes();
     QVector<QString> typesRegisteredAnonymously;
-
-    const auto &findType = [&](const QString &name) -> QJsonValue {
-        for (const QJsonObject &type : types) {
-            if (type[QLatin1String("qualifiedClassName")] != name)
-                continue;
-            return type;
-        }
-        return QJsonValue();
-    };
-
-    const auto &findTypeForeign = [&](const QString &name) -> QJsonValue {
-        for (const QJsonObject &type : foreignTypes) {
-            if (type[QLatin1String("qualifiedClassName")] != name)
-                continue;
-            return type;
-        }
-        return QJsonValue();
-    };
-
     QHash<QString, QList<ExclusiveVersionRange>> qmlElementInfos;
 
-    for (const QJsonObject &classDef : types) {
+    for (const QJsonObject &classDef : m_types) {
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
         QString targetName = className;
@@ -378,9 +248,9 @@ int main(int argc, char **argv)
                 if (className == targetName)
                     return true;
 
-                const QJsonObject *target = QmlTypesClassDescription::findType(types, targetName);
+                const QJsonObject *target = QmlTypesClassDescription::findType(m_types, targetName);
                 if (!target)
-                    target = QmlTypesClassDescription::findType(foreignTypes, targetName);
+                    target = QmlTypesClassDescription::findType(m_foreignTypes, targetName);
 
                 if (!target)
                     return false;
@@ -414,10 +284,11 @@ int main(int argc, char **argv)
             };
 
             if (seenQmlElement) {
-                fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(%s, "
-                                "\"%s\", %s, nullptr, %s, %s);",
-                        qPrintable(metaObjectPointer(targetName)), qPrintable(module),
-                        qPrintable(majorVersion), qPrintable(metaObjectPointer(className)),
+                fprintf(output,
+                        "\n    qmlRegisterNamespaceAndRevisions(%s, "
+                        "\"%s\", %u, nullptr, %s, %s);",
+                        qPrintable(metaObjectPointer(targetName)), qPrintable(m_module),
+                        (majorVersion), qPrintable(metaObjectPointer(className)),
                         extendedName.isEmpty() ? "nullptr"
                                                : qPrintable(metaObjectPointer(extendedName)));
             }
@@ -430,12 +301,12 @@ int main(int argc, char **argv)
                             continue;
 
                         QTypeRevision revision = QTypeRevision::fromEncodedVersion(object[QLatin1String("revision")].toInt());
-                        if (moduleVersion < revision) {
+                        if (m_moduleVersion < revision) {
                             qWarning().noquote()
                                     << "Warning:" << className << "is trying to register" << type
                                     << object[QStringLiteral("name")].toString()
                                     << "with future version" << revision
-                                    << "when module version is only" << moduleVersion;
+                                    << "when module version is only" << m_moduleVersion;
                         }
                     }
                 };
@@ -443,13 +314,13 @@ int main(int argc, char **argv)
                 const QJsonArray methods = classDef[QLatin1String("methods")].toArray();
                 const QJsonArray properties = classDef[QLatin1String("properties")].toArray();
 
-                if (moduleVersion.isValid()) {
+                if (m_moduleVersion.isValid()) {
                     checkRevisions(properties, QLatin1String("property"));
                     checkRevisions(methods, QLatin1String("method"));
                 }
 
-                fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);",
-                        qPrintable(className), qPrintable(module), qPrintable(majorVersion));
+                fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %u);",
+                        qPrintable(className), qPrintable(m_module), (majorVersion));
 
                 const QJsonValue superClasses = classDef[QLatin1String("superClasses")];
 
@@ -486,25 +357,26 @@ int main(int argc, char **argv)
 
                                         typesRegisteredAnonymously.append(typeName);
 
-                                        if (followForeignVersioning) {
+                                        if (m_followForeignVersioning) {
                                             fprintf(output,
                                                     "\n    "
                                                     "qmlRegisterAnonymousTypesAndRevisions<%s>(\"%"
                                                     "s\", "
-                                                    "%s);",
-                                                    qPrintable(typeName), qPrintable(module),
-                                                    qPrintable(majorVersion));
+                                                    "%u);",
+                                                    qPrintable(typeName), qPrintable(m_module),
+                                                    (majorVersion));
                                             break;
                                         }
 
-                                        for (const QString &version :
-                                             pastMajorVersions + QStringList { majorVersion }) {
+                                        for (const auto &version : m_pastMajorVersions
+                                                     + decltype(m_pastMajorVersions){
+                                                             majorVersion }) {
                                             fprintf(output,
                                                     "\n    "
                                                     "qmlRegisterAnonymousType<%s, 254>(\"%s\", "
-                                                    "%s);",
-                                                    qPrintable(typeName), qPrintable(module),
-                                                    qPrintable(version));
+                                                    "%u);",
+                                                    qPrintable(typeName), qPrintable(m_module),
+                                                    (version));
                                         }
                                         break;
                                     }
@@ -537,19 +409,7 @@ int main(int argc, char **argv)
         }
     }
 
-    auto printConflictingVersion = [](const ExclusiveVersionRange &r) -> QString {
-        QString s = r.claimerName;
-        if (r.addedIn.isValid()) {
-            s += u" (added in %1.%2)"_s.arg(r.addedIn.majorVersion()).arg(r.addedIn.minorVersion());
-        }
-        if (r.removedIn.isValid()) {
-            s += u" (removed in %1.%2)"_s.arg(r.removedIn.majorVersion())
-                         .arg(r.removedIn.minorVersion());
-        }
-        return s;
-    };
-
-    for (const auto [qmlName, exportsForSameQmlName] : qmlElementInfos.asKeyValueRange()) {
+    for (const auto &[qmlName, exportsForSameQmlName] : qmlElementInfos.asKeyValueRange()) {
         // needs a least two cpp classes exporting the same qml element to potentially have a
         // conflict
         if (exportsForSameQmlName.size() < 2)
@@ -571,7 +431,7 @@ int main(int argc, char **argv)
             QString registeringCppClasses = conflictingExportStartIt->claimerName;
             std::for_each(std::next(conflictingExportStartIt), conflictingExportEndIt,
                           [&](const auto &q) {
-                              registeringCppClasses += u", %1"_s.arg(printConflictingVersion(q));
+                              registeringCppClasses += u", %1"_s.arg(conflictingVersionToString(q));
                           });
             qWarning().noquote() << "Warning:" << qmlName
                                  << "was registered multiple times by following Cpp classes: "
@@ -579,25 +439,55 @@ int main(int argc, char **argv)
             conflictingExportStartIt = conflictingExportEndIt;
         }
     }
-    fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, %s);",
-            qPrintable(module), qPrintable(majorVersion), qPrintable(minorVersion));
+    fprintf(output, "\n    qmlRegisterModule(\"%s\", %u, %u);", qPrintable(m_module),
+            (majorVersion), (minorVersion));
     fprintf(output, "\n}\n");
     fprintf(output, "\nstatic const QQmlModuleRegistration registration(\"%s\", %s);\n",
-            qPrintable(module), qPrintable(functionName));
+            qPrintable(m_module), qPrintable(functionName));
 
-    if (!targetNamespace.isEmpty())
-        fprintf(output, "} // namespace %s\n", qPrintable(targetNamespace));
-
-    if (!parser.isSet(pluginTypesOption))
-        return EXIT_SUCCESS;
-
-    QmlTypesCreator creator;
-    creator.setOwnTypes(processor.types());
-    creator.setForeignTypes(processor.foreignTypes());
-    creator.setReferencedTypes(processor.referencedTypes());
-    creator.setModule(module);
-    creator.setVersion(QTypeRevision::fromVersion(parser.value(majorVersionOption).toInt(), 0));
-
-    creator.generate(parser.value(pluginTypesOption));
-    return EXIT_SUCCESS;
+    if (!m_targetNamespace.isEmpty())
+        fprintf(output, "} // namespace %s\n", qPrintable(m_targetNamespace));
 }
+
+void QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)
+{
+    QmlTypesCreator creator;
+    creator.setOwnTypes(m_types);
+    creator.setForeignTypes(m_foreignTypes);
+    creator.setReferencedTypes(m_referencedTypes);
+    creator.setModule(m_module);
+    creator.setVersion(m_moduleVersion);
+
+    creator.generate(pluginTypesFile);
+}
+
+void QmlTypeRegistrar::setModuleNameAndNamespace(const QString &module,
+                                                 const QString &targetNamespace)
+{
+    m_module = module;
+    m_targetNamespace = targetNamespace;
+}
+void QmlTypeRegistrar::setModuleVersions(QTypeRevision moduleVersion,
+                                         const QList<quint8> &pastMajorVersions,
+                                         bool followForeignVersioning)
+{
+    m_moduleVersion = moduleVersion;
+    m_pastMajorVersions = pastMajorVersions;
+    m_followForeignVersioning = followForeignVersioning;
+}
+void QmlTypeRegistrar::setIncludes(const QList<QString> &includes)
+{
+    m_includes = includes;
+}
+void QmlTypeRegistrar::setTypes(const QVector<QJsonObject> &types,
+                                const QVector<QJsonObject> &foreignTypes)
+{
+    m_types = types;
+    m_foreignTypes = foreignTypes;
+}
+void QmlTypeRegistrar::setReferencedTypes(const QStringList &referencedTypes)
+{
+    m_referencedTypes = referencedTypes;
+}
+
+QT_END_NAMESPACE

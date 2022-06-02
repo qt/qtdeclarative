@@ -1,14 +1,27 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef QMLTYPESCLASSDESCRIPTION_H
-#define QMLTYPESCLASSDESCRIPTION_H
+#ifndef QMLTYPESCLASSDESCRIPTION_P_H
+#define QMLTYPESCLASSDESCRIPTION_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include <QtCore/qstring.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qset.h>
 #include <QtCore/qversionnumber.h>
+
+QT_BEGIN_NAMESPACE
 
 struct QmlTypesClassDescription
 {
@@ -60,4 +73,5 @@ private:
     void collectInterfaces(const QJsonObject *classDef);
 };
 
-#endif // QMLTYPESCLASSDESCRIPTION_H
+QT_END_NAMESPACE
+#endif // QMLTYPESCLASSDESCRIPTION_P_H

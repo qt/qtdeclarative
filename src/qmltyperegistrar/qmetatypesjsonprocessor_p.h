@@ -1,14 +1,27 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef METATYPESJSONPROCESSOR_H
-#define METATYPESJSONPROCESSOR_H
+#ifndef METATYPESJSONPROCESSOR_P_H
+#define METATYPESJSONPROCESSOR_P_H
 
-#include "qmltypesclassdescription.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qqmltypesclassdescription_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qjsonobject.h>
+
+QT_BEGIN_NAMESPACE
 
 class MetaTypesJsonProcessor
 {
@@ -40,7 +53,7 @@ private:
     void addRelatedTypes();
 
     void sortTypes(QVector<QJsonObject> &types);
-    QString resolvedInclude(const QString &include);;
+    QString resolvedInclude(const QString &include);
     void processTypes(const QJsonObject &types);
     void processForeignTypes(const QJsonObject &types);
 
@@ -50,5 +63,6 @@ private:
     QVector<QJsonObject> m_foreignTypes;
     bool m_privateIncludes = false;
 };
+QT_END_NAMESPACE
 
-#endif // METATYPESJSONPROCESSOR_H
+#endif // METATYPESJSONPROCESSOR_P_H

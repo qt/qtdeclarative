@@ -1,10 +1,12 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltypesclassdescription.h"
-#include "qmltypescreator.h"
+#include "qqmltypesclassdescription_p.h"
+#include "qqmltypescreator_p.h"
 
 #include <QtCore/qjsonarray.h>
+
+QT_BEGIN_NAMESPACE
 
 static void collectExtraVersions(const QJsonObject *component, const QString &key,
                                  QList<QTypeRevision> &extraVersions)
@@ -265,3 +267,5 @@ void QmlTypesClassDescription::collectRelated(const QString &related,
     else if (const QJsonObject *other = findType(foreign, related))
         collect(other, types, foreign, RelatedType, defaultRevision);
 }
+
+QT_END_NAMESPACE

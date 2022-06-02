@@ -29,13 +29,13 @@
 #include <QtCore/QProcess>
 #include <QtCore/private/qobject_p.h>
 #include <QtCore/private/qmetaobject_p.h>
+#include <QtQmlTypeRegistrar/private/qqmljsstreamwriter_p.h>
 
 #include <QRegularExpression>
 #include <iostream>
 #include <algorithm>
 
 #include "qmltypereader.h"
-#include "qqmljsstreamwriter_p.h"
 
 #ifdef QT_SIMULATOR
 #include <QtGui/private/qsimulatorconnection_p.h>

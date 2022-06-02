@@ -13,6 +13,7 @@
     "QtQmlModels" => "$basedir/src/qmlmodels",
     "QtQmlWorkerScript" => "$basedir/src/qmlworkerscript",
     "QtQmlCompiler" => "$basedir/src/qmlcompiler",
+    "QtQmlTypeRegistrar" => "$basedir/src/qmltyperegistrar/",
     "QtQmlDom" => "$basedir/src/qmldom",
     "QtQuickLayouts" => "$basedir/src/quicklayouts",
     "QtQmlLocalStorage" => "$basedir/src/qmllocalstorage",

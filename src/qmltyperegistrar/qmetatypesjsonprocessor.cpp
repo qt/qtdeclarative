@@ -1,12 +1,14 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "metatypesjsonprocessor.h"
+#include "qmetatypesjsonprocessor_p.h"
 
 #include <QtCore/qfile.h>
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qqueue.h>
+
+QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
@@ -356,3 +358,5 @@ void MetaTypesJsonProcessor::processForeignTypes(const QJsonObject &types)
         m_foreignTypes.append(classDef);
     }
 }
+
+QT_END_NAMESPACE

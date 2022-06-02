@@ -1,8 +1,8 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltypescreator.h"
-#include "qmltypesclassdescription.h"
+#include "qqmltypescreator_p.h"
+#include "qqmltypesclassdescription_p.h"
 
 #include <QtCore/qset.h>
 #include <QtCore/qjsonarray.h>
@@ -12,6 +12,8 @@
 #include <QtCore/qversionnumber.h>
 
 using namespace Qt::StringLiterals;
+
+QT_BEGIN_NAMESPACE
 
 static QString enquote(const QString &string)
 {
@@ -416,4 +418,6 @@ void QmlTypesCreator::generate(const QString &outFileName)
     file.write(m_output);
     file.commit();
 }
+
+QT_END_NAMESPACE
 
