@@ -71,9 +71,9 @@ John MacFarlane writes:
 ## Hyperlinks
 
 Hyperlinks can be written with the link text first, and the URL immediately
-following: [Qt Assistant](http://doc.qt.io/qt-5/qtassistant-index.html)
+following: [Qt Assistant](http://doc.qt.io/qt-6/qtassistant-index.html)
 
-A plain url is automatically recognized: https://doc.qt.io/qt-5/qml-qtquick-text.html
+A plain url is automatically recognized: https://doc.qt.io/qt-6/qml-qtquick-text.html
 
 There are also "reference links" where the link text is first labeled
 and then the URL for the label is given elsewhere:
@@ -104,7 +104,7 @@ to form a task list.
 - List items can include images: ![red square](red.png)
 - and even nested quotes, like this:
 
-  The [Qt Documentation](https://doc.qt.io/qt-5/qml-qtquick-textedit.html#details)
+  The [Qt Documentation](https://doc.qt.io/qt-6/qml-qtquick-textedit.html#details)
   points out that
   > The TextEdit item displays a block of editable, formatted text.
   >
@@ -155,7 +155,7 @@ One of the GitHub extensions is support for tables:
 # Related Work
 
 Some Qt Widgets also support Markdown.
-[QTextEdit](https://doc.qt.io/qt-5/qtextedit.html) has similar WYSIWYG
+[QTextEdit](https://doc.qt.io/qt-6/qtextedit.html) has similar WYSIWYG
 editing features as TextEdit and TextArea: you can edit the rendered text
 directly. You can use
 [QTextDocument::toMarkdown](https://doc-snapshots.qt.io/qt5-dev/qtextdocument.html#toMarkdown)

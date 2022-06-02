@@ -53,5 +53,5 @@ import QtQuick 2.0
 Image {
     width: 200
     height: 100
-    source: "http://doc.qt.io/qt-5/images/logo.png"
+    source: "http://doc.qt.io/qt-6/images/logo.png"
 }
