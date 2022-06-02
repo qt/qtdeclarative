@@ -165,13 +165,16 @@ protected:
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;
+    QStringList m_qmldirFiles;
+    QQmlJSScope::Ptr m_currentScope;
+    const QQmlJSScope::Ptr m_exportedRootScope;
+    QQmlJSImporter *m_importer = nullptr;
+    QQmlJSLogger *m_logger = nullptr;
+
     QStringView m_inlineComponentName;
     bool m_nextIsInlineComponent = false;
     bool m_rootIsSingleton = false;
-    QStringList m_qmldirFiles;
-    QQmlJSScope::Ptr m_currentScope;
     QQmlJSScope::Ptr m_savedBindingOuterScope;
-    const QQmlJSScope::Ptr m_exportedRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
     QQmlJSScopesById m_scopesById;
     QQmlJSImporter::ImportedTypes m_rootScopeImports;
@@ -228,8 +231,6 @@ protected:
                                                         int count) const;
     void populateRuntimeFunctionIndicesForDocument() const;
 
-    QQmlJSImporter *m_importer;
-
     void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
                           const QQmlJS::SourceLocation &location);
     // Finds an existing scope before attempting to create a new one. Returns \c
@@ -277,7 +278,6 @@ protected:
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
     bool rootScopeIsValid() const { return m_exportedRootScope->sourceLocation().isValid(); }
 
-    QQmlJSLogger *m_logger;
     enum class BindingExpressionParseResult { Invalid, Script, Literal, Translation };
     BindingExpressionParseResult parseBindingExpression(const QString &name,
                                                         const QQmlJS::AST::Statement *statement);
