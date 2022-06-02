@@ -88,6 +88,7 @@ private slots:
     void initTestCase() override;
     void showTreeView();
     void expandAndCollapsUsingDoubleClick();
+    void expandAndCollapseClickOnIndicator_data();
     void expandAndCollapseClickOnIndicator();
     void pointerNavigationDisabled();
     void checkPropertiesRoot();
@@ -141,9 +142,21 @@ void tst_qquicktreeviewdelegate::expandAndCollapsUsingDoubleClick()
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 }
 
+void tst_qquicktreeviewdelegate::expandAndCollapseClickOnIndicator_data()
+{
+    QTest::addColumn<bool>("interactive");
+    QTest::newRow("interactive") << true;
+    QTest::newRow("not interactive") << false;
+}
+
 void tst_qquicktreeviewdelegate::expandAndCollapseClickOnIndicator()
 {
+    QFETCH(bool, interactive);
+
     LOAD_TREEVIEW("unmodified.qml");
+
+    treeView->setInteractive(interactive);
+
     // Check that the view only has one row loaded so far (the root of the tree)
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 
@@ -153,18 +166,33 @@ void tst_qquicktreeviewdelegate::expandAndCollapseClickOnIndicator()
     const auto indicator = item->indicator();
     const QPoint localPos = QPoint(indicator->width() / 2, indicator->height() / 2);
     const QPoint pos = item->window()->contentItem()->mapFromItem(indicator, localPos).toPoint();
-    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+
+    // When treeview is interactive, we toggle expanded on pointer release
+    // to not interfere with flicking. Otherwise we expand already on press.
+    if (interactive)
+        QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    else
+        QTest::mousePress(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
 
     WAIT_UNTIL_POLISHED;
     // We now expect 5 rows, the root pluss it's 4 children
     QCOMPARE(treeViewPrivate->loadedRows.count(), 5);
 
+    if (!interactive)
+        QTest::mouseRelease(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+
     // Collapse the root again
-    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    if (interactive)
+        QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    else
+        QTest::mousePress(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
 
     WAIT_UNTIL_POLISHED;
     // Check that the view only has one row loaded again (the root of the tree)
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
+
+    if (!interactive)
+        QTest::mouseRelease(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
 }
 
 void tst_qquicktreeviewdelegate::pointerNavigationDisabled()

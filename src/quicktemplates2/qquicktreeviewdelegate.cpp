@@ -278,7 +278,7 @@ void QQuickTreeViewDelegatePrivate::handleClickOnIndicator(QMouseEvent *event, b
     // To not interfere with flicking, we only toggle expanded on press
     // if the flickable is not interactive. Otherwise we do it on release.
     const bool interactOnRelease = q->treeView()->isInteractive();
-    if (isPress && interactOnRelease)
+    if (isPress == interactOnRelease)
         return;
 
     auto view = q->treeView();
