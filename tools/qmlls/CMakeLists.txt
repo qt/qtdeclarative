@@ -2,10 +2,9 @@
 ## qmlls Tool:
 #####################################################################
 
-qt_get_tool_target_name(target_name qmlls)
-qt_internal_add_tool(${target_name}
+qt_internal_add_app(qmlls
     TARGET_DESCRIPTION "QML Language Server"
-    TOOLS_TARGET Qml # special case
+    INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         qlanguageserver.h qlanguageserver_p.h qlanguageserver.cpp
         qqmllanguageserver.h qqmllanguageserver.cpp
@@ -19,6 +18,8 @@ qt_internal_add_tool(${target_name}
         qqmlcodemodel.h qqmlcodemodel.cpp
         ../shared/qqmltoolingsettings.h
         ../shared/qqmltoolingsettings.cpp
+    DEFINES
+        QT_USE_QSTRINGBUILDER
     PUBLIC_LIBRARIES
         Qt::QmlPrivate
         Qt::CorePrivate
@@ -26,4 +27,4 @@ qt_internal_add_tool(${target_name}
         Qt::LanguageServerPrivate
         Qt::QmlLintPrivate
 )
-qt_internal_return_unless_building_tools()
+set_target_properties(qmlls PROPERTIES WIN32_EXECUTABLE FALSE)
