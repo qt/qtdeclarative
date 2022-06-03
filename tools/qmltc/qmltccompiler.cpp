@@ -76,7 +76,7 @@ QString QmltcCompiler::newSymbol(const QString &base)
     return symbol;
 }
 
-void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
+void QmltcCompiler::compile(const QmltcCompilerInfo &info)
 {
     m_info = info;
     Q_ASSERT(!m_info.outputCppFile.isEmpty());
@@ -84,10 +84,16 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
     Q_ASSERT(!m_info.resourcePath.isEmpty());
 
     m_prototypeCodegen =
-            std::make_unique<CodeGenerator>(m_url, m_logger, doc, m_typeResolver, m_visitor, &info);
+            std::make_unique<CodeGenerator>(m_url, m_logger, m_typeResolver, m_visitor, &info);
+
+    // Note: we only compile "pure" QML types. any component-wrapped type is
+    // expected to appear through a binding
+    auto pureTypes = m_visitor->pureQmlTypes();
+    Q_ASSERT(m_visitor->result() == pureTypes.at(0));
 
     QSet<QString> cppIncludesFromPrototype;
-    m_prototypeCodegen->prepare(&cppIncludesFromPrototype);
+    m_prototypeCodegen->prepare(&cppIncludesFromPrototype,
+                                QSet<QQmlJSScope::ConstPtr>(pureTypes.cbegin(), pureTypes.cend()));
     if (hasErrors())
         return;
 
@@ -96,45 +102,32 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
         return base && base->internalName() == u"QQmlComponent"_s;
     };
 
-    // Note: we only compile "pure" QML types. any component-wrapped type is
-    // expected to appear through a binding
-    auto pureTypes = m_visitor->pureQmlTypes();
-    const QSet<QQmlJSScope::ConstPtr> types(pureTypes.begin(), pureTypes.end());
-
     QmltcCodeGenerator generator { m_url, m_visitor };
 
     QmltcMethod urlMethod;
     compileUrlMethod(urlMethod, generator.urlMethodName());
     m_urlMethodName = urlMethod.name;
 
-    const auto objects = m_prototypeCodegen->objects();
-    QList<CodeGenerator::CodeGenObject> filteredObjects;
-    filteredObjects.reserve(objects.size());
-    std::copy_if(objects.cbegin(), objects.cend(), std::back_inserter(filteredObjects),
-                 [&](const auto &object) { return types.contains(object.type); });
+    QQmlJSScope::ConstPtr root = pureTypes.at(0);
 
     QList<QmltcType> compiledTypes;
-    QQmlJSScope::ConstPtr root = m_visitor->result();
     if (isComponent(root)) {
         compiledTypes.reserve(1);
         compiledTypes.emplaceBack(); // create empty type
         const auto compile = [&](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
             generator.generate_initCodeForTopLevelComponent(current, type);
         };
-        Q_ASSERT(root == filteredObjects.at(0).type);
         compileType(compiledTypes.back(), root, compile);
     } else {
         const auto compile = [this](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
             compileTypeElements(current, type);
         };
 
-        compiledTypes.reserve(filteredObjects.size());
-        for (const auto &object : filteredObjects) {
-            Q_ASSERT(object.type->scopeType() == QQmlJSScope::QMLScope);
-            if (m_prototypeCodegen->ignoreObject(object))
-                continue;
+        compiledTypes.reserve(pureTypes.size());
+        for (const auto &type : pureTypes) {
+            Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
             compiledTypes.emplaceBack(); // create empty type
-            compileType(compiledTypes.back(), object.type, compile);
+            compileType(compiledTypes.back(), type, compile);
         }
     }
     if (hasErrors())
@@ -837,7 +830,7 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
 
     const auto assignToProperty = [&](const QQmlJSMetaProperty &p, const QString &value,
                                       bool constructFromQObject = false) {
-        if (p.isAlias() && m_prototypeCodegen->hasQmlCompiledBaseType(type)) {
+        if (p.isAlias() && QQmlJSUtils::hasCompositeBase(type)) {
             qCDebug(lcQmltcCompiler) << u"Property '" + p.propertyName()
                             + u"' is an alias on type '" + type->internalName()
                             + u"' which is a QML type compiled to C++. The assignment is special"

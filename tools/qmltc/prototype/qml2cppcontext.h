@@ -44,11 +44,9 @@ QT_BEGIN_NAMESPACE
 
 struct Qml2CppContext
 {
-    const QmlIR::Document *document = nullptr;
     const QmltcTypeResolver *typeResolver = nullptr;
     QString documentUrl;
     QQmlJSLogger *logger = nullptr;
-    const QHash<QQmlJSScope::ConstPtr, qsizetype> *typeIndices = nullptr; // TODO: remove this?
 
     void recordError(const QQmlJS::SourceLocation &location, const QString &message) const
     {
@@ -62,35 +60,28 @@ struct Qml2CppContext
     }
 };
 
-struct Qml2CppObject
-{
-    QmlIR::Object *irObject = nullptr; // raw IR object representation
-    QQmlJSScope::Ptr type; // Qml/JS type representation for IR object
-};
-
 // the corner stone of the compiler: compiler pass function prototype. the main
 // idea is that, given "context" as input and object hierarchy as input/output,
 // you run an arbitrary function (e.g. to verify that QQmlJSScope::ConstPtr
 // types are valid).
 using Qml2CppCompilerPass = std::function<void(/* IN */ const Qml2CppContext &,
-                                               /* INOUT */ QList<Qml2CppObject> &)>;
+                                               /* INOUT */ QList<QQmlJSScope::Ptr> &)>;
 
 class Qml2CppCompilerPassExecutor
 {
     Qml2CppContext m_context;
-    QList<Qml2CppObject> &m_objects;
+    QList<QQmlJSScope::Ptr> &m_objects;
     QList<Qml2CppCompilerPass> m_passes;
 
 public:
-    Qml2CppCompilerPassExecutor(const QmlIR::Document *doc, const QmltcTypeResolver *resolver,
-                                const QString &url, QList<Qml2CppObject> &objects,
-                                const QHash<QQmlJSScope::ConstPtr, qsizetype> &typeIndices)
-        : m_context { doc, resolver, url, nullptr, &typeIndices }, m_objects { objects }
+    Qml2CppCompilerPassExecutor(const QmltcTypeResolver *resolver, const QString &url,
+                                QList<QQmlJSScope::Ptr> &objects)
+        : m_context { resolver, url }, m_objects { objects }
     {
     }
 
     // add new pass to the executor. first pass is typically the one that
-    // populates the Qml2CppObject list
+    // populates the QQmlJSScope::Ptr list
     void addPass(Qml2CppCompilerPass pass) { m_passes.append(pass); }
 
     // runs passes in the order of their insertion, populating \a logger on

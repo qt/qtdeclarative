@@ -32,7 +32,6 @@
 
 #include "qmltccompiler.h"
 
-#include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
 #include <private/qqmljsresourcefilemapper_p.h>
 
@@ -42,6 +41,13 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qcommandlineparser.h>
+
+#include <QtQml/private/qqmljslexer_p.h>
+#include <QtQml/private/qqmljsparser_p.h>
+#include <QtQml/private/qqmljsengine_p.h>
+#include <QtQml/private/qqmljsastvisitor_p.h>
+#include <QtQml/private/qqmljsast_p.h>
+#include <QtQml/private/qqmljsdiagnosticmessage_p.h>
 
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
 
@@ -165,12 +171,20 @@ int main(int argc, char **argv)
     }
 
     // main logic:
-    QmlIR::Document document(false); // used by QmltcTypeResolver/QQmlJSTypeResolver
-    // NB: JS unit generated here is ignored, so use noop function
-    QQmlJSSaveFunction noop([](auto &&...) { return true; });
-    QQmlJSCompileError error;
-    if (!qCompileQmlFile(document, url, noop, nullptr, &error)) {
-        error.augment(u"Error compiling qml file: "_s).print();
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(sourceCode, /*lineno = */ 1);
+    QQmlJS::Parser qmlParser(&engine);
+    if (!qmlParser.parse()) {
+        const auto diagnosticMessages = qmlParser.diagnosticMessages();
+        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+            fprintf(stderr, "%s\n",
+                    qPrintable(QStringLiteral("%1:%2:%3: %4")
+                                       .arg(inputFile)
+                                       .arg(m.loc.startLine)
+                                       .arg(m.loc.startColumn)
+                                       .arg(m.message)));
+        }
         return EXIT_FAILURE;
     }
 
@@ -212,7 +226,7 @@ int main(int argc, char **argv)
     QmltcVisitor visitor(&importer, &logger,
                          QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
     QmltcTypeResolver typeResolver { &importer };
-    typeResolver.init(&visitor, document.program);
+    typeResolver.init(&visitor, qmlParser.rootNode());
 
     if (logger.hasErrors())
         return EXIT_FAILURE;
@@ -227,7 +241,7 @@ int main(int argc, char **argv)
     }
 
     QmltcCompiler compiler(url, &typeResolver, &visitor, &logger);
-    compiler.compile(info, &document);
+    compiler.compile(info);
 
     if (logger.hasErrors())
         return EXIT_FAILURE;
