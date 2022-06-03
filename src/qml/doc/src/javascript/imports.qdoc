@@ -133,5 +133,13 @@ var importedEnumValue = JsQtTest.MyQmlObject.EnumValue3
 In particular, this may be useful in order to access functionality provided
 via a singleton type; see QML_SINGLETON for more information.
 
-\note The .import syntax doesn't work for scripts used in the \l {WorkerScript}
+Your JavaScript resource by default can access all imports of the component
+that imports the resource. It does not have access to the componpents's imports
+if it is declared as a stateless library (using \c{.pragma library}) or contains
+an explicit \c{.import} statment.
+
+\note The .import syntax doesn't work for scripts used in \l {WorkerScript}
+
+\sa {Defining JavaScript Resources in QML}
+
 */
