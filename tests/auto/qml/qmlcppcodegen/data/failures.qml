@@ -3,6 +3,7 @@ import TestTypes
 import Ambiguous 1.2
 
 QtObject {
+    id: self
     property string attachedForNonObject: objectName.Component.objectName
     property string attachedForNasty: Nasty.objectName
 
@@ -27,4 +28,6 @@ QtObject {
     }
 
     Component.onCompleted: doesNotExist()
+
+    property string aString: self + "a"
 }
