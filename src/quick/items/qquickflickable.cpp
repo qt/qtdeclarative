@@ -2606,18 +2606,20 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
+    QPointerEvent *pointerEvent = e->isPointerEvent() ? static_cast<QPointerEvent *>(e) : nullptr;
 
-    auto wantsPointerEvent_helper = [=]() {
-        QPointerEvent *pe = static_cast<QPointerEvent *>(e);
-        QQuickDeliveryAgentPrivate::localizePointerEvent(pe, this);
-        const bool wants = d->wantsPointerEvent(pe);
+    auto wantsPointerEvent_helper = [this, d, i, pointerEvent]() {
+        Q_ASSERT(pointerEvent);
+        QQuickDeliveryAgentPrivate::localizePointerEvent(pointerEvent, this);
+        const bool wants = d->wantsPointerEvent(pointerEvent);
         // re-localize event back to \a i before returning
-        QQuickDeliveryAgentPrivate::localizePointerEvent(pe, i);
+        QQuickDeliveryAgentPrivate::localizePointerEvent(pointerEvent, i);
         return wants;
     };
 
     if (!isVisible() || !isEnabled() || !isInteractive() ||
-            (e->isPointerEvent() && !wantsPointerEvent_helper())) {
+            (pointerEvent && isMoving() && pointerEvent->isBeginEvent()) ||
+            (pointerEvent && !wantsPointerEvent_helper())) {
         d->cancelInteraction();
         return QQuickItem::childMouseEventFilter(i, e);
     }
@@ -2629,8 +2631,8 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
         qCDebug(lcFilter) << "filtering UngrabMouse" << spe->points().first() << "for" << i << "grabber is" << grabber;
         if (grabber != this)
             mouseUngrabEvent(); // A child has been ungrabbed
-    } else if (e->isPointerEvent()) {
-        return filterPointerEvent(i, static_cast<QPointerEvent *>(e));
+    } else if (pointerEvent) {
+        return filterPointerEvent(i, pointerEvent);
     }
 
     return QQuickItem::childMouseEventFilter(i, e);
