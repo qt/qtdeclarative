@@ -120,6 +120,7 @@ private slots:
     void boundComponents();
     void invisibleListElementType();
     void typePropertyClash();
+    void objectToString();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2192,6 +2193,20 @@ void tst_QmlCppCodegen::typePropertyClash()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), u"Size: 5"_s);
+}
+
+void tst_QmlCppCodegen::objectToString()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/toString.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtWarningMsg, "qrc:/TestTypes/toString.qml:6: no");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("yes").toString(), u"yes yes"_s);
+    QCOMPARE(o->property("no").toString(), u" no"_s); // throws, but that is ignored
 }
 
 void tst_QmlCppCodegen::runInterpreted()

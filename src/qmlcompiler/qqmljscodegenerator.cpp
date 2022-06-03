@@ -2060,8 +2060,8 @@ void QQmlJSCodeGenerator::generate_Mod(int lhs)
     const auto rhsVar = conversion(
                 m_state.accumulatorIn().storedType(), m_typeResolver->jsPrimitiveType(),
                 m_state.accumulatorVariableIn);
-    Q_ASSERT(!lhsVar.isEmpty());
-    Q_ASSERT(!rhsVar.isEmpty());
+    Q_ASSERT(m_error->isValid() || !lhsVar.isEmpty());
+    Q_ASSERT(m_error->isValid() || !rhsVar.isEmpty());
 
     m_body += m_state.accumulatorVariableOut;
     m_body += u" = "_s;
@@ -2262,8 +2262,8 @@ void QQmlJSCodeGenerator::generateArithmeticOperation(int lhs, const QString &cp
                                    registerVariable(lhs));
     const auto rhsVar = conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
                                    m_state.accumulatorVariableIn);
-    Q_ASSERT(!lhsVar.isEmpty());
-    Q_ASSERT(!rhsVar.isEmpty());
+    Q_ASSERT(m_error->isValid() || !lhsVar.isEmpty());
+    Q_ASSERT(m_error->isValid() || !rhsVar.isEmpty());
 
     const QQmlJSRegisterContent originalOut = m_typeResolver->original(m_state.accumulatorOut());
     m_body += m_state.accumulatorVariableOut;
@@ -2611,10 +2611,10 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
             return u"QJSPrimitiveValue("_s + variable + u')' + retrieve;
     }
 
-    // TODO: more efficient string conversions, possibly others
+    // TODO: add more conversions
 
-    return u"aotContext->engine->fromScriptValue<"_s + castTargetName(to)
-            + u">(aotContext->engine->toScriptValue("_s + variable + u"))"_s;
+    reject(u"conversion from "_s + from->internalName() + u" to "_s + to->internalName());
+    return QString();
 }
 
 int QQmlJSCodeGenerator::nextJSLine(uint line) const
