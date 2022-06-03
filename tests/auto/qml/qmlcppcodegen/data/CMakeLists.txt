@@ -129,6 +129,7 @@ set(qml_files
     signal.qml
     signalHandler.qml
     specificParent.qml
+    stringArg.qml
     stringLength.qml
     testlogger.js
     text.qml

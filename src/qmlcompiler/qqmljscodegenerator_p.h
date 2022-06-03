@@ -261,6 +261,7 @@ private:
     QString argumentsList(int argc, int argv, QString *outVar);
     QString castTargetName(const QQmlJSScope::ConstPtr &type) const;
 
+    bool inlineStringMethod(const QString &name, int base, int argc, int argv);
     bool inlineTranslateMethod(const QString &name, int argc, int argv);
     bool inlineMathMethod(const QString &name, int argc, int argv);
 

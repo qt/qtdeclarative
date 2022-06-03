@@ -1027,6 +1027,14 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     }
 
     addReadRegister(base, callBase);
+
+    if (m_typeResolver->registerContains(callBase, m_typeResolver->stringType())) {
+        if (propertyName == u"arg"_s && argc == 1) {
+            propagateStringArgCall(argv);
+            return;
+        }
+    }
+
     propagateCall(member.method(), argc, argv, member.scopeType());
 }
 
@@ -1299,6 +1307,24 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
     }
 
     return false;
+}
+
+void QQmlJSTypePropagator::propagateStringArgCall(int argv)
+{
+    setAccumulator(m_typeResolver->returnType(
+                       m_typeResolver->stringType(), QQmlJSRegisterContent::MethodReturnValue,
+                       m_typeResolver->stringType()));
+    Q_ASSERT(m_state.accumulatorOut().isValid());
+
+    const QQmlJSScope::ConstPtr input = m_typeResolver->containedType(m_state.registers[argv]);
+    if (m_typeResolver->equals(input, m_typeResolver->intType()))
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->intType()));
+    else if (m_typeResolver->equals(input, m_typeResolver->realType()))
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
+    else if (m_typeResolver->equals(input, m_typeResolver->boolType()))
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->boolType()));
+    else
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->stringType()));
 }
 
 void QQmlJSTypePropagator::generate_CallPropertyLookup(int lookupIndex, int base, int argc,

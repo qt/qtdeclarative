@@ -124,6 +124,7 @@ private slots:
     void throwObjectName();
     void javaScriptArgument();
     void translation();
+    void stringArg();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2268,6 +2269,21 @@ void tst_QmlCppCodegen::translation()
     QCOMPARE(o->property("trId2"), u"s"_s);
 
     QCOMPARE(o->property("trIdNoop1"), u"s"_s);
+}
+
+void tst_QmlCppCodegen::stringArg()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/stringArg.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("stringArg"), u"a foozly thing"_s);
+    QCOMPARE(o->property("falseArg"), u"a 0 thing"_s);
+    QCOMPARE(o->property("trueArg"), u"a 1 thing"_s);
+    QCOMPARE(o->property("zeroArg"), u"a 0 thing"_s);
+    QCOMPARE(o->property("intArg"), u"a 11 thing"_s);
+    QCOMPARE(o->property("realArg"), u"a 12.25 thing"_s);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

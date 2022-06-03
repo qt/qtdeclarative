@@ -1166,6 +1166,38 @@ void QQmlJSCodeGenerator::generate_CallProperty(int nameIndex, int baseReg, int 
     reject(u"CallProperty"_s);
 }
 
+bool QQmlJSCodeGenerator::inlineStringMethod(const QString &name, int base, int argc, int argv)
+{
+    if (name != u"arg"_s || argc != 1)
+        return false;
+
+    const auto arg = [&](const QQmlJSScope::ConstPtr &type) {
+        return conversion(registerType(argv).storedType(), type, registerVariable(argv));
+    };
+
+    const auto ret = [&](const QString &arg) {
+        const QString expression = conversion(
+                    registerType(base).storedType(), m_typeResolver->stringType(),
+                    registerVariable(base)) + u".arg("_s + arg + u')';
+        return conversion(
+                m_typeResolver->stringType(), m_state.accumulatorOut().storedType(), expression);
+    };
+
+    const QQmlJSRegisterContent input = m_state.readRegister(argv);
+    m_body += m_state.accumulatorVariableOut + u" = "_s;
+
+    if (m_typeResolver->registerContains(input, m_typeResolver->intType()))
+        m_body += ret(arg(m_typeResolver->intType()));
+    else if (m_typeResolver->registerContains(input, m_typeResolver->boolType()))
+        m_body += ret(arg(m_typeResolver->boolType()));
+    else if (m_typeResolver->registerContains(input, m_typeResolver->realType()))
+        m_body += ret(arg(m_typeResolver->realType()));
+    else
+        m_body += ret(arg(m_typeResolver->stringType()));
+    m_body += u";\n"_s;
+    return true;
+}
+
 bool QQmlJSCodeGenerator::inlineTranslateMethod(const QString &name, int argc, int argv)
 {
     addInclude(u"qcoreapplication.h"_s);
@@ -1387,6 +1419,13 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
             if (inlineMathMethod(name, argc, argv))
                 return;
         }
+
+        if (m_typeResolver->equals(m_typeResolver->originalContainedType(baseType),
+                                   m_typeResolver->stringType())) {
+            if (inlineStringMethod(name, base, argc, argv))
+                return;
+        }
+
 
         reject(u"call to property '%1' of %2"_s.arg(name, baseType.descriptiveName()));
     }
