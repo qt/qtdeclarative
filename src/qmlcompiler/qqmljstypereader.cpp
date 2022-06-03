@@ -81,10 +81,10 @@ bool QQmlJSTypeReader::operator ()(const QSharedPointer<QQmlJSScope> &scope)
     logger.setCode(code);
     logger.setSilent(true);
 
-    QQmlJSImportVisitor membersVisitor(
+    auto membersVisitor = m_importer->makeImportVisitor(
             scope, m_importer, &logger,
             QQmlJSImportVisitor::implicitImportDirectory(m_file, m_importer->resourceFileMapper()));
-    rootNode->accept(&membersVisitor);
+    rootNode->accept(membersVisitor.get());
     return true;
 }
 

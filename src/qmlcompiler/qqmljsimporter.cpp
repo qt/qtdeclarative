@@ -29,6 +29,8 @@
 #include "qqmljsimporter_p.h"
 #include "qqmljstypedescriptionreader_p.h"
 #include "qqmljstypereader_p.h"
+#include "qqmljsimportvisitor_p.h"
+#include "qqmljslogger_p.h"
 
 #include <QtQml/private/qqmlimportresolver_p.h>
 
@@ -142,6 +144,21 @@ static bool isComposite(const QQmlJSScope::ConstPtr &scope)
 {
     // The only thing the factory can do is load a composite type.
     return scope.factory() || scope->isComposite();
+}
+
+QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
+                               bool useOptionalImports)
+    : m_importPaths(importPaths),
+      m_builtins({}),
+      m_mapper(mapper),
+      m_useOptionalImports(useOptionalImports),
+      m_createImportVisitor([](const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
+                               QQmlJSLogger *logger, const QString &implicitImportDirectory,
+                               const QStringList &qmldirFiles) {
+          return new QQmlJSImportVisitor(target, importer, logger, implicitImportDirectory,
+                                         qmldirFiles);
+      })
+{
 }
 
 QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
@@ -816,6 +833,15 @@ void QQmlJSImporter::setQualifiedNamesOn(const Import &import)
             object.scope->setModuleName(import.name);
         }
     }
+}
+
+std::unique_ptr<QQmlJSImportVisitor>
+QQmlJSImporter::makeImportVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
+                                  QQmlJSLogger *logger, const QString &implicitImportDirectory,
+                                  const QStringList &qmldirFiles)
+{
+    return std::unique_ptr<QQmlJSImportVisitor>(
+            m_createImportVisitor(target, importer, logger, implicitImportDirectory, qmldirFiles));
 }
 
 QT_END_NAMESPACE
