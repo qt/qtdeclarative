@@ -45,20 +45,19 @@
 #include "qqmljsresourcefilemapper_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
+class QQmlJSImportVisitor;
+class QQmlJSLogger;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImporter
 {
 public:
     using ImportedTypes = QHash<QString, QQmlJSImportedScope>;
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
-                   bool useOptionalImports = false)
-        : m_importPaths(importPaths),
-          m_builtins({}),
-          m_mapper(mapper),
-          m_useOptionalImports(useOptionalImports)
-    {}
+                   bool useOptionalImports = false);
 
     QQmlJSResourceFileMapper *resourceFileMapper() { return m_mapper; }
     void setResourceFileMapper(QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
@@ -96,6 +95,15 @@ public:
     void setImportPaths(const QStringList &importPaths);
 
     QQmlJSScope::ConstPtr jsGlobalObject() const;
+
+    std::unique_ptr<QQmlJSImportVisitor>
+    makeImportVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
+                      QQmlJSLogger *logger, const QString &implicitImportDirectory,
+                      const QStringList &qmldirFiles = QStringList());
+    using ImportVisitorCreator = QQmlJSImportVisitor *(*)(const QQmlJSScope::Ptr &,
+                                                          QQmlJSImporter *, QQmlJSLogger *,
+                                                          const QString &, const QStringList &);
+    void setImportVisitorCreator(ImportVisitorCreator create) { m_createImportVisitor = create; }
 
 private:
     friend class QDeferredFactory<QQmlJSScope>;
@@ -159,6 +167,8 @@ private:
     AvailableTypes m_builtins;
     QQmlJSResourceFileMapper *m_mapper = nullptr;
     bool m_useOptionalImports;
+
+    ImportVisitorCreator m_createImportVisitor = nullptr;
 };
 
 QT_END_NAMESPACE
