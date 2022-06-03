@@ -58,7 +58,7 @@ class QmltcCompiler
 public:
     QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
                   QQmlJSLogger *logger);
-    void compile(const QmltcCompilerInfo &info, QmlIR::Document *doc);
+    void compile(const QmltcCompilerInfo &info);
 
     ~QmltcCompiler();
 

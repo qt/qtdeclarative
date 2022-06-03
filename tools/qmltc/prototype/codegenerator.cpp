@@ -53,12 +53,11 @@ using namespace Qt::StringLiterals;
 
 Q_LOGGING_CATEGORY(lcCodeGenerator, "qml.qmltc.compiler", QtWarningMsg);
 
-CodeGenerator::CodeGenerator(const QString &url, QQmlJSLogger *logger, QmlIR::Document *doc,
+CodeGenerator::CodeGenerator(const QString &url, QQmlJSLogger *logger,
                              const QmltcTypeResolver *localResolver, const QmltcVisitor *visitor,
                              const QmltcCompilerInfo *info)
     : m_url(url),
       m_logger(logger),
-      m_doc(doc),
       m_localTypeResolver(localResolver),
       m_visitor(visitor),
       m_info(info)
@@ -68,82 +67,33 @@ CodeGenerator::CodeGenerator(const QString &url, QQmlJSLogger *logger, QmlIR::Do
     Q_ASSERT(!m_info->outputCppFile.isEmpty());
 }
 
-void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
+void CodeGenerator::prepare(QSet<QString> *requiredCppIncludes,
+                            const QSet<QQmlJSScope::ConstPtr> &suitableTypes)
 {
-    const auto &objects = m_doc->objects;
-    m_objects.reserve(objects.size());
-
-    m_typeToObjectIndex.reserve(objects.size());
-
-    for (qsizetype objectIndex = 0; objectIndex != objects.size(); ++objectIndex) {
-        QmlIR::Object *irObject = objects[objectIndex];
-        if (!irObject) {
-            recordError(QQmlJS::SourceLocation {},
-                        u"Internal compiler error: IR object is null"_s);
-            return;
-        }
-        QQmlJSScope::Ptr object = m_localTypeResolver->scopeForLocation(irObject->location);
-        if (!object) {
-            recordError(irObject->location, u"Object of unknown type"_s);
-            return;
-        }
-        m_typeToObjectIndex.insert(object, objectIndex);
-        m_objects.emplaceBack(CodeGenObject { irObject, object });
-    }
+    // Note: needed because suitable types are const
+    QList<QQmlJSScope::Ptr> objects;
+    objects.reserve(suitableTypes.size());
+    const auto addSuitableObject = [&](const QQmlJSScope::Ptr &current) {
+        if (suitableTypes.contains(current))
+            objects.emplaceBack(current);
+    };
+    QQmlJSUtils::traverseFollowingQmlIrObjectStructure(m_visitor->result(), addSuitableObject);
 
     // objects are constructed, now we can run compiler passes to make sure the
     // objects are in good state
-    Qml2CppCompilerPassExecutor executor(m_doc, m_localTypeResolver, m_url, m_objects,
-                                         m_typeToObjectIndex);
-    executor.addPass(&verifyTypes);
+    Qml2CppCompilerPassExecutor executor(m_localTypeResolver, m_url, objects);
     executor.addPass(&checkForNamingCollisionsWithCpp);
     executor.addPass(&makeUniqueCppNames);
-    const auto setupQmlBaseTypes = [&](const Qml2CppContext &context,
-                                       QList<Qml2CppObject> &objects) {
-        m_qmlCompiledBaseTypes = setupQmlCppTypes(context, objects);
-    };
-    executor.addPass(setupQmlBaseTypes);
+    executor.addPass(&setupQmlCppTypes);
     executor.addPass(&deferredResolveValidateAliases);
     const auto populateCppIncludes = [&](const Qml2CppContext &context,
-                                         QList<Qml2CppObject> &objects) {
-        requiredCppIncludes = findCppIncludes(context, objects);
+                                         QList<QQmlJSScope::Ptr> &objects) {
+        *requiredCppIncludes = findCppIncludes(context, objects);
     };
     executor.addPass(populateCppIncludes);
-    const auto resolveExplicitComponents = [&](const Qml2CppContext &context,
-                                               QList<Qml2CppObject> &objects) {
-        m_componentIndices.insert(findAndResolveExplicitComponents(context, objects));
-    };
-    const auto resolveImplicitComponents = [&](const Qml2CppContext &context,
-                                               QList<Qml2CppObject> &objects) {
-        m_componentIndices.insert(findAndResolveImplicitComponents(context, objects));
-    };
-    executor.addPass(resolveExplicitComponents);
-    executor.addPass(resolveImplicitComponents);
-    executor.addPass(&setObjectIds); // NB: must be after Component resolution
-    const auto setIgnoredTypes = [&](const Qml2CppContext &context, QList<Qml2CppObject> &objects) {
-        m_ignoredTypes = collectIgnoredTypes(context, objects);
-    };
-    executor.addPass(setIgnoredTypes);
 
     // run all passes:
     executor.run(m_logger);
-}
-
-void CodeGenerator::prepare(QSet<QString> *cppIncludes)
-{
-    constructObjects(*cppIncludes); // this populates all the codegen objects
-}
-
-bool CodeGenerator::ignoreObject(const CodeGenObject &object) const
-{
-    if (m_ignoredTypes.contains(object.type)) {
-        // e.g. object.type is a view delegate
-        qCDebug(lcCodeGenerator) << u"Scope '" + object.type->internalName()
-                        + u"' is a QQmlComponent sub-component. It won't be compiled to "
-                          u"C++.";
-        return true;
-    }
-    return false;
 }
 
 void CodeGenerator::recordError(const QQmlJS::SourceLocation &location, const QString &message)
