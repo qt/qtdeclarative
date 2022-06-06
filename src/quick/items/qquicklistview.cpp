@@ -130,6 +130,8 @@ public:
     bool hasStickyHeader() const override;
     bool hasStickyFooter() const override;
 
+    void initializeComponentItem(QQuickItem *item) const override;
+
     void changedVisibleIndex(int newIndex) override;
     void initializeCurrentItem() override;
 
@@ -1573,6 +1575,14 @@ bool QQuickListViewPrivate::hasStickyHeader() const
 bool QQuickListViewPrivate::hasStickyFooter() const
 {
     return footer && footerPositioning != QQuickListView::InlineFooter;
+}
+
+void QQuickListViewPrivate::initializeComponentItem(QQuickItem *item) const
+{
+    QQuickListViewAttached *attached = static_cast<QQuickListViewAttached *>(
+            qmlAttachedPropertiesObject<QQuickListView>(item));
+    if (attached) // can be null for default components (see createComponentItem)
+        attached->setView(const_cast<QQuickListView*>(q_func()));
 }
 
 void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change,
