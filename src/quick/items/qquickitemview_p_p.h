@@ -178,6 +178,7 @@ public:
 
     QQuickItem *createHighlightItem() const;
     QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false) const;
+    virtual void initializeComponentItem(QQuickItem *) const;
 
     void updateCurrent(int modelIndex);
     void updateTrackedItem();
