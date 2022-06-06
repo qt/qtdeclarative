@@ -208,6 +208,8 @@ public:
     void updateHeader() override;
     void updateFooter() override;
 
+    void initializeComponentItem(QQuickItem *item) const override;
+
     void changedVisibleIndex(int newIndex) override;
     void initializeCurrentItem() override;
 
@@ -851,6 +853,14 @@ void QQuickGridViewPrivate::updateFooter()
 
     if (created)
         emit q->footerItemChanged();
+}
+
+void QQuickGridViewPrivate::initializeComponentItem(QQuickItem *item) const
+{
+    QQuickGridViewAttached *attached = static_cast<QQuickGridViewAttached *>(
+        qmlAttachedPropertiesObject<QQuickGridView>(item));
+    if (attached)
+        attached->setView(const_cast<QQuickGridView*>(q_func()));
 }
 
 void QQuickGridViewPrivate::updateHeader()
