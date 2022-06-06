@@ -72,7 +72,7 @@ Item {
             ListElement { size: 300; }
         }
         delegate: Rectangle {
-            width: parent.width
+            width: list.width
             color: index % 2 == 0 ? "red" : "blue"
             height: size
             Text { anchors.centerIn: parent; text: index }
