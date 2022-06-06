@@ -57,8 +57,6 @@ FxViewItem::FxViewItem(QQuickItem *i, QQuickItemView *v, bool own, QQuickItemVie
     , view(v)
     , attached(attached)
 {
-    if (attached) // can be null for default components (see createComponentItem)
-        attached->setView(view);
 }
 
 QQuickItemViewChangeSet::QQuickItemViewChangeSet()
@@ -2502,10 +2500,27 @@ QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component,
             item->setZ(zValue);
         QQml_setParent_noEvent(item, q->contentItem());
         item->setParentItem(q->contentItem());
+
+        initializeComponentItem(item);
     }
     if (component)
         component->completeCreate();
     return item;
+}
+
+/*!
+    \internal
+
+    Allows derived classes to do any initialization required for \a item
+    before completeCreate() is called on it. For example, any attached
+    properties required by the item can be set.
+
+    This is similar to initItem(), but as that has logic specific to
+    delegate items, we use a separate function for non-delegates.
+*/
+void QQuickItemViewPrivate::initializeComponentItem(QQuickItem *item) const
+{
+    Q_UNUSED(item);
 }
 
 void QQuickItemViewPrivate::updateTrackedItem()
