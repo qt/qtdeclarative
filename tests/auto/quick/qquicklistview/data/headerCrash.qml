@@ -12,7 +12,7 @@ ListView {
     }
 
     delegate: Rectangle {
-        width: parent.width; height: 20
+        width: myList.width; height: 20
         color: index % 2 ? "green" : "red"
     }
 
