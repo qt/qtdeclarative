@@ -436,6 +436,9 @@ void tst_QQuickListView::cleanupTestCase()
 template <class T>
 void tst_QQuickListView::items(const QUrl &source)
 {
+    // Make sure we outlive the view, or the context property will become null.
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     T model;
@@ -446,7 +449,6 @@ void tst_QQuickListView::items(const QUrl &source)
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(source);
@@ -517,6 +519,8 @@ void tst_QQuickListView::items(const QUrl &source)
 template <class T>
 void tst_QQuickListView::changed(const QUrl &source)
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     T model;
@@ -527,7 +531,6 @@ void tst_QQuickListView::changed(const QUrl &source)
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(source);
@@ -555,6 +558,8 @@ void tst_QQuickListView::changed(const QUrl &source)
 template <class T>
 void tst_QQuickListView::inserted(const QUrl &source)
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
@@ -567,7 +572,6 @@ void tst_QQuickListView::inserted(const QUrl &source)
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(source);
@@ -659,11 +663,12 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -960,6 +965,8 @@ void tst_QQuickListView::insertBeforeVisible_data()
 template <class T>
 void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     T model;
@@ -969,7 +976,6 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(source);
@@ -1323,6 +1329,8 @@ void tst_QQuickListView::removed_more_data()
 template <class T>
 void tst_QQuickListView::clear(const QUrl &source, QQuickItemView::VerticalLayoutDirection verticalLayoutDirection)
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     T model;
@@ -1332,7 +1340,6 @@ void tst_QQuickListView::clear(const QUrl &source, QQuickItemView::VerticalLayou
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(source);
@@ -1855,6 +1862,8 @@ void tst_QQuickListView::multipleChanges_data()
 
 void tst_QQuickListView::swapWithFirstItem()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     QaimModel model;
@@ -1864,7 +1873,6 @@ void tst_QQuickListView::swapWithFirstItem()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -1883,6 +1891,8 @@ void tst_QQuickListView::swapWithFirstItem()
 
 void tst_QQuickListView::checkCountForMultiColumnModels()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     // Check that a list view will only load items for the first
     // column, even if the model reports that it got several columns.
     // We test this since QQmlDelegateModel has been changed to
@@ -1900,7 +1910,6 @@ void tst_QQuickListView::checkCountForMultiColumnModels()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -2037,6 +2046,8 @@ void tst_QQuickListView::enforceRange_withoutHighlight()
 
 void tst_QQuickListView::spacing()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     QaimModel model;
@@ -2046,7 +2057,6 @@ void tst_QQuickListView::spacing()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -2967,8 +2977,8 @@ void tst_QQuickListView::keyNavigation()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QQuickView *window = getView();
     QScopedPointer<TestObject> testObject(new TestObject);
+    QQuickView *window = getView();
     window->rootContext()->setContextProperty("testModel", &model);
     window->rootContext()->setContextProperty("testObject", testObject.data());
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -3172,6 +3182,8 @@ void tst_QQuickListView::itemListFlicker()
 
 void tst_QQuickListView::cacheBuffer()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     QaimModel model;
@@ -3181,7 +3193,6 @@ void tst_QQuickListView::cacheBuffer()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -3274,6 +3285,8 @@ void tst_QQuickListView::cacheBuffer()
 
 void tst_QQuickListView::positionViewAtBeginningEnd()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     QaimModel model;
@@ -3283,7 +3296,6 @@ void tst_QQuickListView::positionViewAtBeginningEnd()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
     window->show();
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -3332,6 +3344,8 @@ void tst_QQuickListView::positionViewAtIndex()
     QFETCH(QQuickListView::PositionMode, mode);
     QFETCH(qreal, contentY);
 
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QQuickView *window = getView();
 
     QaimModel model;
@@ -3341,7 +3355,6 @@ void tst_QQuickListView::positionViewAtIndex()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
     window->show();
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -3681,6 +3694,8 @@ void tst_QQuickListView::manualHighlight()
 
 void tst_QQuickListView::QTBUG_11105()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
     QaimModel model;
     for (int i = 0; i < 30; i++)
@@ -3689,7 +3704,6 @@ void tst_QQuickListView::QTBUG_11105()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -4351,6 +4365,8 @@ void tst_QQuickListView::resetModel_headerFooter()
 
 void tst_QQuickListView::resizeView()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
     QaimModel model;
     for (int i = 0; i < 40; i++)
@@ -4359,7 +4375,6 @@ void tst_QQuickListView::resizeView()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -4460,6 +4475,8 @@ void tst_QQuickListView::resizeViewAndRepaint()
 
 void tst_QQuickListView::sizeLessThan1()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     QaimModel model;
@@ -4469,7 +4486,6 @@ void tst_QQuickListView::sizeLessThan1()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("sizelessthan1.qml"));
@@ -4590,6 +4606,8 @@ void tst_QQuickListView::resizeFirstDelegate()
 {
     // QTBUG-20712: Content Y jumps constantly if first delegate height == 0
     // and other delegates have height > 0
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QScopedPointer<QQuickView> window(createView());
 
     // bug only occurs when all items in the model are visible
@@ -4600,7 +4618,6 @@ void tst_QQuickListView::resizeFirstDelegate()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -4798,6 +4815,8 @@ void tst_QQuickListView::indexAt_itemAt()
     QFETCH(qreal, y);
     QFETCH(int, index);
 
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     QQuickView *window = getView();
 
     QaimModel model;
@@ -4807,7 +4826,6 @@ void tst_QQuickListView::indexAt_itemAt()
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", testObject.data());
 
     window->setSource(testFileUrl("listviewtest.qml"));
@@ -6675,8 +6693,8 @@ void tst_QQuickListView::populateTransitions()
             model.addItem("item" + QString::number(i), "");
     }
 
+    QScopedPointer<TestObject> testObject(new TestObject());
     QQuickView *window = getView();
-    QScopedPointer<TestObject> testObject(new TestObject(window->rootContext()));
     window->rootContext()->setContextProperty("testModel", &model);
     window->rootContext()->setContextProperty("testObject", testObject.data());
     window->rootContext()->setContextProperty("usePopulateTransition", usePopulateTransition);
@@ -6799,12 +6817,12 @@ void tst_QQuickListView::populateTransitions_data()
 void tst_QQuickListView::sizeTransitions()
 {
     QFETCH(bool, topToBottom);
+    QScopedPointer<TestObject> testObject(new TestObject);
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
     QaimModel model;
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("topToBottom", topToBottom);
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testObject", &model);
     window->setSource(testFileUrl("sizeTransitions.qml"));
     window->show();
@@ -6859,9 +6877,9 @@ void tst_QQuickListView::addTransitions()
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
+    QScopedPointer<TestObject> testObject(new TestObject);
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionFrom", &model_targetItems_transitionFrom);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
@@ -7054,9 +7072,9 @@ void tst_QQuickListView::moveTransitions()
     QaimModel model_targetItems_transitionVia;
     QaimModel model_displacedItems_transitionVia;
 
+    QScopedPointer<TestObject> testObject(new TestObject);
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionVia", &model_targetItems_transitionVia);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
@@ -7256,9 +7274,9 @@ void tst_QQuickListView::removeTransitions()
     QaimModel model_targetItems_transitionTo;
     QaimModel model_displacedItems_transitionVia;
 
+    QScopedPointer<TestObject> testObject(new TestObject);
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("model_targetItems_transitionTo", &model_targetItems_transitionTo);
     ctxt->setContextProperty("model_displacedItems_transitionVia", &model_displacedItems_transitionVia);
@@ -7454,9 +7472,9 @@ void tst_QQuickListView::displacedTransitions()
     QPointF moveDisplaced_transitionVia(50, -100);
     QPointF removeDisplaced_transitionVia(150, 100);
 
+    QScopedPointer<TestObject> testObject(new TestObject());
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
-    QScopedPointer<TestObject> testObject(new TestObject(window));
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testObject", testObject.data());
     ctxt->setContextProperty("model_displaced_transitionVia", &model_displaced_transitionVia);
@@ -7680,9 +7698,9 @@ void tst_QQuickListView::multipleTransitions()
     for (int i = 0; i < initialCount; i++)
         model.addItem("Original item" + QString::number(i), "");
 
+    QScopedPointer<TestObject> testObject(new TestObject);
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
-    QScopedPointer<TestObject> testObject(new TestObject);
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testObject", testObject.data());
     ctxt->setContextProperty("addTargets_transitionFrom", addTargets_transitionFrom);
@@ -7847,9 +7865,9 @@ void tst_QQuickListView::multipleDisplaced()
     for (int i = 0; i < 30; i++)
         model.addItem("Original item" + QString::number(i), "");
 
+    QScopedPointer<TestObject> testObject(new TestObject());
     QQuickView *window = getView();
     QQmlContext *ctxt = window->rootContext();
-    QScopedPointer<TestObject> testObject(new TestObject(window));
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("testObject", testObject.data());
     window->setSource(testFileUrl("multipleDisplaced.qml"));
@@ -9520,8 +9538,8 @@ void tst_QQuickListView::itemFiltered()
     QScopedPointer<QQuickView> window(createView());
     window->engine()->rootContext()->setContextProperty("_model", &proxy2);
     QQmlComponent component(window->engine());
-    component.setData("import QtQuick 2.4; ListView { "
-                      "anchors.fill: parent; model: _model; delegate: Text { width: parent.width;"
+    component.setData("import QtQuick 2.4; ListView { id: listView; "
+                      "anchors.fill: parent; model: _model; delegate: Text { width: listView.width;"
                       "text: model.display; } }",
                       QUrl());
     window->setContent(QUrl(), &component, component.create());
@@ -9804,12 +9822,24 @@ void tst_QQuickListView::delegateWithRequiredProperties()
 
 void tst_QQuickListView::reuse_reuseIsOffByDefault()
 {
+    QScopedPointer<TestObject> testObject(new TestObject);
+
     // Check that delegate recycling is off by default. The reason is that
     // ListView needs to be backwards compatible with legacy applications. And
     // when using delegate recycling, there are certain differences, like that
     // a delegates Component.onCompleted will just be called the first time the
     // item is created, and not when it's reused.
     QScopedPointer<QQuickView> window(createView());
+
+    QaimModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    ctxt->setContextProperty("testObject", testObject.data());
+
     window->setSource(testFileUrl("listviewtest.qml"));
     window->resize(640, 480);
     window->show();
