@@ -17,6 +17,17 @@ Rectangle {
                 property string prevSection: ListView.previousSection
                 height: 20;
                 width: 240
+
+                ListView.onRemove: sequentialAnimation.start()
+
+                SequentialAnimation {
+                    id: sequentialAnimation
+
+                    PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: true }
+                    NumberAnimation { target: wrapper; property: "height"; to: 0; duration: 100; easing.type: Easing.InOutQuad }
+                    PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: false }
+                }
+
                 Rectangle {
                     height: 20
                     width: parent.width
@@ -45,11 +56,6 @@ Rectangle {
                         x: 200
                         text: wrapper.y
                     }
-                }
-                ListView.onRemove: SequentialAnimation {
-                    PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: true }
-                    NumberAnimation { target: wrapper; property: "height"; to: 0; duration: 100; easing.type: Easing.InOutQuad }
-                    PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: false }
                 }
             }
         }

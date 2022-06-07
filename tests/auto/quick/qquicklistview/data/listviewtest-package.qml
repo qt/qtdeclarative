@@ -79,7 +79,20 @@ Rectangle {
                     objectName: "wrapper"
                     height: 20
                     width: 240
+                    color: ListView.isCurrentItem ? "lightsteelblue" : "white"
+
                     Package.name: "package"
+
+                    ListView.onRemove: sequentialAnimation.start()
+
+                    SequentialAnimation {
+                        id: sequentialAnimation
+                        PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: true }
+                        NumberAnimation { target: wrapper; property: "scale"; to: 0; duration: 250; easing.type: "InOutQuad" }
+                        PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: false }
+
+                    }
+
                     Text {
                         text: index
                     }
@@ -98,13 +111,6 @@ Rectangle {
                     Text {
                         x: 200
                         text: wrapper.y
-                    }
-                    color: ListView.isCurrentItem ? "lightsteelblue" : "white"
-                    ListView.onRemove: SequentialAnimation {
-                        PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: true }
-                        NumberAnimation { target: wrapper; property: "scale"; to: 0; duration: 250; easing.type: "InOutQuad" }
-                        PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: false }
-
                     }
                 }
             }

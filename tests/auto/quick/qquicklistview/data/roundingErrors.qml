@@ -80,7 +80,7 @@ ListView {
 
     DropArea {
         anchors.fill: parent
-        onPositionChanged: {
+        onPositionChanged: (drag) => {
             var to = listview.indexAt(drag.x + listview.contentX, 0)
             if (to !== -1) {
                 var from = drag.source.DelegateModel.itemsIndex
