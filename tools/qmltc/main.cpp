@@ -218,12 +218,19 @@ int main(int argc, char **argv)
     }
 
     QQmlJSImporter importer { importPaths, &mapper };
+    auto createQmltcVisitor = [](const QQmlJSScope::Ptr &root, QQmlJSImporter *importer,
+                                 QQmlJSLogger *logger, const QString &implicitImportDirectory,
+                                 const QStringList &qmldirFiles) -> QQmlJSImportVisitor * {
+        return new QmltcVisitor(root, importer, logger, implicitImportDirectory, qmldirFiles);
+    };
+    importer.setImportVisitorCreator(createQmltcVisitor);
+
     QQmlJSLogger logger;
     logger.setFileName(url);
     logger.setCode(sourceCode);
     setupLogger(logger);
 
-    QmltcVisitor visitor(&importer, &logger,
+    QmltcVisitor visitor(QQmlJSScope::create(), &importer, &logger,
                          QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
     QmltcTypeResolver typeResolver { &importer };
     typeResolver.init(&visitor, qmlParser.rootNode());
