@@ -4,7 +4,7 @@
 
 qt_get_tool_target_name(target_name qmlls)
 qt_internal_add_tool(${target_name}
-    TARGET_DESCRIPTION "QML languageserver"
+    TARGET_DESCRIPTION "QML Language Server"
     TOOLS_TARGET Qml # special case
     SOURCES
         lspcustomtypes.h
