@@ -49,14 +49,6 @@ void makeUniqueCppNames(const Qml2CppContext &context, QList<QQmlJSScope::Ptr> &
 // originated base types for all \a objects
 void setupQmlCppTypes(const Qml2CppContext &context, QList<QQmlJSScope::Ptr> &objects);
 
-// resolves and finishes the verification of property aliases (checks that a
-// READ method is present and a WRITE method is present as well if the type is a
-// value type, etc.). returns aliases which point to ids. must be done after
-// setupQmlCppTypes() since some (own) aliased properties are not fully set up
-// untile then and thus do not have the necessary information
-void deferredResolveValidateAliases(const Qml2CppContext &context,
-                                    QList<QQmlJSScope::Ptr> &objects);
-
 // finds all required C++ include files that are needed for the generated C++
 QSet<QString> findCppIncludes(const Qml2CppContext &context, QList<QQmlJSScope::Ptr> &objects);
 

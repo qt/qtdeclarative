@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 #include "qmltcvisitor.h"
+#include "qmltcpropertyutils.h"
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qstack.h>
@@ -285,6 +286,7 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 
     postVisitResolve(bindings);
     findCppIncludes();
+    setupAliases();
 }
 
 QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
@@ -477,6 +479,48 @@ void QmltcVisitor::postVisitResolve(
         return false;
     };
     iterateTypes(m_exportedRootScope, qmlIrOrderedBindings, setRuntimeId);
+}
+
+static void setAliasData(QQmlJSMetaProperty *alias, const QQmlJSUtils::ResolvedAlias &origin)
+{
+    Q_ASSERT(origin.kind != QQmlJSUtils::AliasTarget_Invalid);
+    QmltcPropertyData compiledData(*alias);
+    if (alias->read().isEmpty())
+        alias->setRead(compiledData.read);
+    if (origin.kind == QQmlJSUtils::AliasTarget_Object) // id-pointing aliases only have READ method
+        return;
+    if (origin.property.isWritable() && alias->write().isEmpty())
+        alias->setWrite(compiledData.write);
+    if (!origin.property.notify().isEmpty() && alias->notify().isEmpty())
+        alias->setNotify(compiledData.notify);
+    if (!origin.property.bindable().isEmpty() && alias->bindable().isEmpty())
+        alias->setBindable(compiledData.bindable);
+}
+
+void QmltcVisitor::setupAliases()
+{
+    QStack<QQmlJSScope::Ptr> types;
+    types.push(m_exportedRootScope);
+
+    while (!types.isEmpty()) {
+        QQmlJSScope::Ptr current = types.pop();
+        auto properties = current->ownProperties();
+
+        for (QQmlJSMetaProperty &p : properties) {
+            if (!p.isAlias())
+                continue;
+
+            auto result = QQmlJSUtils::resolveAlias(m_scopesById, p, current,
+                                                    QQmlJSUtils::AliasResolutionVisitor {});
+            if (result.kind == QQmlJSUtils::AliasTarget_Invalid) {
+                m_logger->log(QStringLiteral("Cannot resolve alias \"%1\"").arg(p.propertyName()),
+                              Log_Alias, current->sourceLocation());
+                continue;
+            }
+            setAliasData(&p, result);
+            current->addOwnProperty(p);
+        }
+    }
 }
 
 QT_END_NAMESPACE
