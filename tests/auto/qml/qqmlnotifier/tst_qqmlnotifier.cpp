@@ -361,7 +361,8 @@ void tst_qqmlnotifier::deleteFromHandler()
         process.setProgram(QCoreApplication::applicationFilePath());
         process.setArguments({"deleteFromHandler"});
         process.start();
-        QTRY_COMPARE(process.exitStatus(), QProcess::CrashExit);
+        const bool ok = process.waitForFinished(90000);
+        QVERIFY(ok);
         const QByteArray output = process.readAllStandardOutput();
         QVERIFY(output.contains("QFATAL"));
         QVERIFY(output.contains("destroyed while one of its QML signal handlers is in progress"));
