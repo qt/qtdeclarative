@@ -27,6 +27,7 @@ set(qml_files
     "TabButton.qml"
     "ToolButton.qml"
     "MenuBarItem.qml"
+    "Frame.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
