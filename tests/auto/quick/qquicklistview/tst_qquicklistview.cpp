@@ -380,7 +380,7 @@ public:
 };
 
 tst_QQuickListView::tst_QQuickListView()
-     : QQmlDataTest(QT_QMLTEST_DATADIR)
+     : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
      , m_view(nullptr)
 {
 }
@@ -2336,8 +2336,15 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(20,0));
     QTest::mouseMove(window, QPoint(20,20));
     QTest::mouseMove(window, QPoint(20,70));
+    // This should also apply to the negative coordinates above, but: QTBUG-104046.
+    static const QRegularExpression warningRegex("Mouse event at \\d+, \\d+ occurs outside target window \\(\\d+x\\d+\\).*");
+    QVERIFY(warningRegex.isValid());
+    if (distance >= window->size().height())
+        QTest::ignoreMessage(QtWarningMsg, warningRegex);
     QTest::mouseMove(window, QPoint(20,distance));
 
+    if (distance >= window->size().height())
+        QTest::ignoreMessage(QtWarningMsg, warningRegex);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(20,distance));
     // view should settle back at 0
     QTRY_COMPARE(listview->contentY(), 0.0);
@@ -3255,7 +3262,8 @@ void tst_QQuickListView::cacheBuffer()
         controller.incubateWhile(&b);
     }
 
-    // negative cache buffer is ignored
+    // it should warn when setting a negative cache buffer
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Cannot set a negative cache buffer"));
     listview->setCacheBuffer(-1);
     QCOMPARE(listview->cacheBuffer(), 200);
 }
@@ -5162,10 +5170,12 @@ void tst_QQuickListView::marginsResize()
 
     QPoint flickStart(20, 20);
     QPoint flickEnd(20, 20);
+    // We use 179 instead of 180 as we want to avoid the "Mouse event occurs outside target window" warning.
+    const int flickDistance = 179;
     if (orientation == QQuickListView::Vertical)
-        flickStart.ry() += (verticalLayoutDirection == QQuickItemView::TopToBottom) ? 180 : -180;
+        flickStart.ry() += (verticalLayoutDirection == QQuickItemView::TopToBottom) ? flickDistance : -flickDistance;
     else
-        flickStart.rx() += (layoutDirection == Qt::LeftToRight) ? 180 : -180;
+        flickStart.rx() += (layoutDirection == Qt::LeftToRight) ? flickDistance : -flickDistance;
 
     QQuickView *window = getView();
 
@@ -5196,7 +5206,7 @@ void tst_QQuickListView::marginsResize()
         QTRY_COMPARE(listview->contentX(), end);
 
     // flick past the end and check content pos still settles on correct extents
-    flick(window, flickStart, flickEnd, 180);
+    flick(window, flickStart, flickEnd, flickDistance);
     QTRY_VERIFY(!listview->isMoving());
     if (orientation == QQuickListView::Vertical)
         QTRY_COMPARE(listview->contentY(), end);
@@ -5211,7 +5221,7 @@ void tst_QQuickListView::marginsResize()
         QTRY_COMPARE(listview->contentX(), start);
 
     // flick past the beginning and check content pos still settles on correct extents
-    flick(window, flickEnd, flickStart, 180);
+    flick(window, flickEnd, flickStart, flickDistance);
     QTRY_VERIFY(!listview->isMoving());
     if (orientation == QQuickListView::Vertical)
         QTRY_COMPARE(listview->contentY(), start);

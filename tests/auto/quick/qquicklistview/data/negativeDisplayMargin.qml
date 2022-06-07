@@ -63,8 +63,8 @@ ListView {
         onHeightChanged: updatedDelegateCreationRange();
         Connections {
             target: list
-            onContentYChanged: updatedDelegateCreationRange();
-            onHeightChanged: updatedDelegateCreationRange();
+            function onContentYChanged() { updatedDelegateCreationRange(); }
+            function onHeightChanged() { updatedDelegateCreationRange(); }
         }
     }
 

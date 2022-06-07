@@ -35,9 +35,12 @@ Item {
         delegate: Text {
             id: wrapper
             height: 100
-            text: index + listView.count
+            text: index
             ListView.delayRemove: listView.useDelayRemove
-            ListView.onRemove: SequentialAnimation {
+            ListView.onRemove: sequentialAnimation.start()
+
+            SequentialAnimation {
+                id: sequentialAnimation
                 PauseAnimation { duration: wrapper.ListView.delayRemove ? 100 : 0 }
                 PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: false }
             }
