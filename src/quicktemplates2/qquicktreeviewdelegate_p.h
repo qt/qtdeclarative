@@ -54,13 +54,13 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktreeview_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTreeViewDelegatePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTreeViewDelegate : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTreeViewDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     Q_PROPERTY(qreal indentation READ indentation WRITE setIndentation NOTIFY indentationChanged FINAL)
