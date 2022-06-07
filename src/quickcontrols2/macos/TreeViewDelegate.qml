@@ -11,14 +11,9 @@ NativeStyle.DefaultTreeViewDelegate {
     palette.highlightedText: "white"
 
     background: Rectangle {
-        color: control.selected || control.current
-               || ((control.treeView.selectionBehavior === TableView.SelectRows
-               || control.treeView.selectionBehavior === TableView.SelectionDisabled)
-               && control.row === control.treeView.currentRow)
-               ? control.palette.highlight
+        color: control.highlighted ? control.palette.highlight
                : (control.treeView.alternatingRows && control.row % 2 !== 0
-               ? control.palette.alternateBase
-               : control.palette.base)
+               ? control.palette.alternateBase : control.palette.base)
         // Ideally we want a rounded background for the whole row, also when
         // there are more than one column. But until Rectangle gains support
         // for corners with individual radii, we simplify it (QTBUG-48774)

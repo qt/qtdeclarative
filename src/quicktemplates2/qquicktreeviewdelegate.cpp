@@ -3,7 +3,7 @@
 
 #include "qquicktreeviewdelegate_p.h"
 
-#include <QtQuickTemplates2/private/qquickabstractbutton_p_p.h>
+#include <QtQuickTemplates2/private/qquickitemdelegate_p_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuick/private/qquicktreeview_p_p.h>
 
@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype TreeViewDelegate
-    \inherits AbstractButton
+    \inherits ItemDelegate
     \inqmlmodule QtQuick.Controls
     \since 6.3
     \ingroup qtquickcontrols2-delegates
@@ -33,7 +33,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    TreeViewDelegate inherits \l AbstractButton, which means that
+    TreeViewDelegate inherits \l ItemDelegate, which means that
     it's composed of three items: a \l[QML]{Control::}{background},
     a \l [QML]{Control::}{contentItem}, and an
     \l [QML]{AbstractButton::}{indicator}. TreeViewDelegate takes care
@@ -64,14 +64,14 @@ QT_BEGIN_NAMESPACE
     contentItem is controlled with \l rightMargin.
 
     \section2 Interacting with pointers
-    TreeViewDelegate inherits \l AbstractButton. This means that it will emit signals
+    TreeViewDelegate inherits \l ItemDelegate. This means that it will emit signals
     such as \l {AbstractButton::clicked()}{clicked} when the user clicks on the delegate.
     If needed, you could connect to that signal to implement application specific
     functionality, in addition to the default expand/collapse behavior (and even set \l
     {QQuickTableView::pointerNavigationEnabled}{pointerNavigationEnabled} to \c false, to
     disable the default behavior as well).
 
-    But the AbstractButton API does not give you information about the position of the
+    But the ItemDelegate API does not give you information about the position of the
     click, or which modifiers are being held. If this is needed, a better approach would
     be to use pointer handlers. To ensure that they don't interfere with the
     existing logic in TreeViewDelegate, install them on a child item, e.g:
@@ -183,7 +183,7 @@ QT_BEGIN_NAMESPACE
     \sa leftMargin, indentation, {QQuickControl::}{spacing}
 */
 
-class QQuickTreeViewDelegatePrivate : public QQuickAbstractButtonPrivate
+class QQuickTreeViewDelegatePrivate : public QQuickItemDelegatePrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTreeViewDelegate)
@@ -279,7 +279,7 @@ void QQuickTreeViewDelegatePrivate::setCurrentIndex(const QPointF pos)
 }
 
 QQuickTreeViewDelegate::QQuickTreeViewDelegate(QQuickItem *parent)
-    : QQuickAbstractButton(*(new QQuickTreeViewDelegatePrivate), parent)
+    : QQuickItemDelegate(*(new QQuickTreeViewDelegatePrivate), parent)
 {
 }
 

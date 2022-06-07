@@ -20,6 +20,11 @@ T.TreeViewDelegate {
     topPadding: contentItem ? (height - contentItem.implicitHeight) / 2 : 0
     leftPadding: !mirrored ? leftMargin + __contentIndent : width - leftMargin - __contentIndent - implicitContentWidth
 
+    highlighted: control.selected || control.current
+               || ((control.treeView.selectionBehavior === TableView.SelectRows
+               || control.treeView.selectionBehavior === TableView.SelectionDisabled)
+               && control.row === control.treeView.currentRow)
+
     required property int row
     required property var model
     readonly property real __contentIndent: !isTreeNode ? 0 : (depth * indentation) + (indicator ? indicator.width + spacing : 0)
@@ -41,24 +46,15 @@ T.TreeViewDelegate {
     }
 
     background: Rectangle {
-        color: control.selected || control.current ||
-               ((control.treeView.selectionBehavior === TableView.SelectRows
-               || control.treeView.selectionBehavior === TableView.SelectionDisabled)
-               && control.row === control.treeView.currentRow)
-               ? control.palette.highlight
+        color: control.highlighted ? control.palette.highlight
                : (control.treeView.alternatingRows && control.row % 2 !== 0
-               ? control.palette.alternateBase
-               : control.palette.base)
+               ? control.palette.alternateBase : control.palette.base)
     }
 
     contentItem: Label {
         clip: false
         text: control.model.display
         elide: Text.ElideRight
-        color: control.selected || control.current ||
-               ((control.treeView.selectionBehavior === TableView.SelectRows
-               || control.treeView.selectionBehavior === TableView.SelectionDisabled)
-               && control.row === control.treeView.currentRow)
-               ? control.palette.highlightedText : control.palette.buttonText
+        color: control.highlighted ? control.palette.highlightedText : control.palette.buttonText
     }
 }
