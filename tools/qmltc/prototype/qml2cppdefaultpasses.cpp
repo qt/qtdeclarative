@@ -323,25 +323,6 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
         // this file name will be discovered during findCppIncludes
         type->setFilePath(QFileInfo(filePath).baseName().toLower() + u".h"_s);
     }
-
-    const auto properties = type->ownProperties();
-    for (auto it = properties.cbegin(); it != properties.cend(); ++it) {
-        QQmlJSMetaProperty p = it.value();
-        Q_ASSERT(it.key() == p.propertyName());
-
-        if (p.isAlias()) // we'll process aliases separately
-            continue;
-
-        QmltcPropertyData compiledData(p);
-        if (p.read().isEmpty())
-            p.setRead(compiledData.read);
-        if (p.write().isEmpty() && p.isWritable() && !p.isList())
-            p.setWrite(compiledData.write);
-        if (p.bindable().isEmpty() && !p.isList())
-            p.setBindable(compiledData.bindable);
-        // TODO: p.setNotify(compiledData.notify); - ?
-        type->addOwnProperty(p);
-    }
 }
 
 void setupQmlCppTypes(const Qml2CppContext &context, QList<QQmlJSScope::Ptr> &objects)

@@ -47,7 +47,7 @@ class QmltcVisitor : public QQmlJSImportVisitor
     void setupAliases();
 
 public:
-    QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+    QmltcVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
                  const QString &implicitImportDirectory,
                  const QStringList &qmldirFiles = QStringList());
 

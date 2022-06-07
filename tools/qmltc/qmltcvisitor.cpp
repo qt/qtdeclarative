@@ -67,10 +67,10 @@ static bool isOrUnderComponent(QQmlJSScope::ConstPtr type)
     return false;
 }
 
-QmltcVisitor::QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
-                           const QString &implicitImportDirectory, const QStringList &qmldirFiles)
-    : QQmlJSImportVisitor(
-            QQmlJSScope::create(), importer, logger, implicitImportDirectory, qmldirFiles)
+QmltcVisitor::QmltcVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
+                           QQmlJSLogger *logger, const QString &implicitImportDirectory,
+                           const QStringList &qmldirFiles)
+    : QQmlJSImportVisitor(target, importer, logger, implicitImportDirectory, qmldirFiles)
 {
     m_qmlTypeNames.append(QFileInfo(logger->fileName()).baseName()); // put document root
 }
@@ -160,7 +160,6 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
     if (m_currentScope->scopeType() != QQmlJSScope::QMLScope)
         return true;
 
-    Q_ASSERT(m_currentScope->internalName().isEmpty());
     Q_ASSERT(!m_currentScope->baseTypeName().isEmpty());
     if (m_currentScope != m_exportedRootScope) // not document root
         m_qmlTypeNames.append(m_currentScope->baseTypeName());
@@ -188,7 +187,6 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
         return false;
 
     Q_ASSERT(m_currentScope->scopeType() == QQmlJSScope::QMLScope);
-    Q_ASSERT(m_currentScope->internalName().isEmpty());
     Q_ASSERT(!m_currentScope->baseTypeName().isEmpty());
     if (m_currentScope != m_exportedRootScope) // not document root
         m_qmlTypeNames.append(m_currentScope->baseTypeName());
@@ -218,9 +216,23 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
     if (publicMember->type == QQmlJS::AST::UiPublicMember::Property) {
         const auto name = publicMember->name.toString();
 
-        // TODO: we should set the composite type property methods here, but as
-        // of now this is done in the pass over the types after the ast
-        // traversal
+        QQmlJSScope::Ptr owner =
+                m_savedBindingOuterScope ? m_savedBindingOuterScope : m_currentScope;
+        QQmlJSMetaProperty property = owner->ownProperty(name);
+        Q_ASSERT(property.isValid());
+        if (!property.isAlias()) { // aliases are covered separately
+            QmltcPropertyData compiledData(property);
+            if (property.read().isEmpty())
+                property.setRead(compiledData.read);
+            if (!property.isList()) {
+                if (property.write().isEmpty() && property.isWritable())
+                    property.setWrite(compiledData.write);
+                // Note: prefer BINDABLE to NOTIFY
+                if (property.bindable().isEmpty())
+                    property.setBindable(compiledData.bindable);
+            }
+            owner->addOwnProperty(property);
+        }
 
         const QString notifyName = name + u"Changed"_s;
         // also check that notify is already a method of the scope
