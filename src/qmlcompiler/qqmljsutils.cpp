@@ -28,6 +28,7 @@
 
 #include "qqmljsutils_p.h"
 #include "qqmljstyperesolver_p.h"
+#include "qqmljsscopesbyid_p.h"
 
 #include <algorithm>
 
@@ -38,16 +39,15 @@ using namespace Qt::StringLiterals;
     Fully resolves alias \a property and returns the information about the
     origin, which is not an alias.
 */
-QQmlJSUtils::ResolvedAlias
-QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver,
-                          const QQmlJSMetaProperty &property,
-                          const QQmlJSScope::ConstPtr &owner,
-                          const QQmlJSUtils::AliasResolutionVisitor &visitor)
+template<typename ScopeForId>
+static QQmlJSUtils::ResolvedAlias
+resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
+             const QQmlJSScope::ConstPtr &owner, const QQmlJSUtils::AliasResolutionVisitor &visitor)
 {
     Q_ASSERT(property.isAlias());
     Q_ASSERT(owner);
 
-    ResolvedAlias result {};
+    QQmlJSUtils::ResolvedAlias result {};
     result.owner = owner;
 
     for (QQmlJSMetaProperty nextProperty = property; nextProperty.isAlias();) {
@@ -56,13 +56,13 @@ QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver,
         // we have an alias pointing to an alias. this way we avoid a check
         // whether a property is an alias at the very end of the loop body
         QQmlJSScope::ConstPtr resultOwner = result.owner;
-        result = ResolvedAlias {};
+        result = QQmlJSUtils::ResolvedAlias {};
 
         visitor.reset();
 
         auto aliasExprBits = nextProperty.aliasExpression().split(u'.');
         // resolve id first:
-        resultOwner = typeResolver->scopeForId(aliasExprBits[0], resultOwner);
+        resultOwner = scopeForId(aliasExprBits[0], resultOwner);
         if (!resultOwner)
             return {};
 
@@ -90,6 +90,30 @@ QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver,
     }
 
     return result;
+}
+
+QQmlJSUtils::ResolvedAlias QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver,
+                                                     const QQmlJSMetaProperty &property,
+                                                     const QQmlJSScope::ConstPtr &owner,
+                                                     const AliasResolutionVisitor &visitor)
+{
+    return ::resolveAlias(
+            [&](const QString &id, const QQmlJSScope::ConstPtr &referrer) {
+                return typeResolver->scopeForId(id, referrer);
+            },
+            property, owner, visitor);
+}
+
+QQmlJSUtils::ResolvedAlias QQmlJSUtils::resolveAlias(const QQmlJSScopesById &idScopes,
+                                                     const QQmlJSMetaProperty &property,
+                                                     const QQmlJSScope::ConstPtr &owner,
+                                                     const AliasResolutionVisitor &visitor)
+{
+    return ::resolveAlias(
+            [&](const QString &id, const QQmlJSScope::ConstPtr &referrer) {
+                return idScopes.scope(id, referrer);
+            },
+            property, owner, visitor);
 }
 
 std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,

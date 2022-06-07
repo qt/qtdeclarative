@@ -86,6 +86,7 @@ static auto getQQmlJSScopeFromSmartPtr(const From &p) -> decltype(p.get())
 }
 
 class QQmlJSTypeResolver;
+class QQmlJSScopesById;
 struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
 {
     /*! \internal
@@ -187,6 +188,10 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
                         [](const QQmlJSMetaProperty &, const QQmlJSScope::ConstPtr &) {};
     };
     static ResolvedAlias resolveAlias(const QQmlJSTypeResolver *typeResolver,
+                                      const QQmlJSMetaProperty &property,
+                                      const QQmlJSScope::ConstPtr &owner,
+                                      const AliasResolutionVisitor &visitor);
+    static ResolvedAlias resolveAlias(const QQmlJSScopesById &idScopes,
                                       const QQmlJSMetaProperty &property,
                                       const QQmlJSScope::ConstPtr &owner,
                                       const AliasResolutionVisitor &visitor);

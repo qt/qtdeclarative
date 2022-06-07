@@ -85,7 +85,6 @@ void CodeGenerator::prepare(QSet<QString> *requiredCppIncludes,
     executor.addPass(&checkForNamingCollisionsWithCpp);
     executor.addPass(&makeUniqueCppNames);
     executor.addPass(&setupQmlCppTypes);
-    executor.addPass(&deferredResolveValidateAliases);
     const auto populateCppIncludes = [&](const Qml2CppContext &context,
                                          QList<QQmlJSScope::Ptr> &objects) {
         *requiredCppIncludes = findCppIncludes(context, objects);

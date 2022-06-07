@@ -44,6 +44,7 @@ class QmltcVisitor : public QQmlJSImportVisitor
     void findCppIncludes();
     void postVisitResolve(const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>>
                                   &qmlIrOrderedBindings);
+    void setupAliases();
 
 public:
     QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
