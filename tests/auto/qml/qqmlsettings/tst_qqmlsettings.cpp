@@ -21,7 +21,7 @@ public:
 private slots:
     void initTestCase() override;
 
-    void init();
+    void init() override;
     void cleanup();
 
     void basic();
@@ -136,6 +136,8 @@ void tst_QQmlSettings::initTestCase()
 
 void tst_QQmlSettings::init()
 {
+    QQmlDataTest::init();
+
     QSettings settings;
     settings.clear();
 

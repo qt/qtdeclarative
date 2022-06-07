@@ -55,8 +55,9 @@ private:
     bool isInvalidFile(const QFileInfo &fileName) const;
 };
 
+// Don't fail on warnings because we read a lot of QML files that might intentionally be malformed.
 TestQmlformat::TestQmlformat()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
 {
 }
 

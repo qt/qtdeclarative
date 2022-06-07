@@ -27,7 +27,7 @@ public:
     tst_cursor();
 
 private slots:
-    void init();
+    void init() override;
     void controls_data();
     void controls();
     void editable();
@@ -44,6 +44,8 @@ tst_cursor::tst_cursor()
 
 void tst_cursor::init()
 {
+    QQmlDataTest::init();
+
 #if QT_CONFIG(cursor)
     // Ensure mouse cursor was not left by previous tests where widgets
     // will appear, as it could cause events and interfere with the tests.

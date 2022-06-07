@@ -35,9 +35,10 @@ public:
     }
 
 private slots:
-    void init()
+    void init() override
     {
         QQmlDebugTest::initTestCase();
+        QQmlDebugTest::init();
         initDebugTranslationConnection();
 
         QVersionedPacket<QQmlDebugConnector> packet;

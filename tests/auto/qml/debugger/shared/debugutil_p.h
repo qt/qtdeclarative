@@ -23,7 +23,8 @@ class QQmlDebugTest : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    QQmlDebugTest(const char *qmlTestDataDir);
+    QQmlDebugTest(const char *qmlTestDataDir,
+        FailOnWarningsPolicy failOnWarningsPolicy = FailOnWarningsPolicy::DoNotFailOnWarnings);
 
 public:
     static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
