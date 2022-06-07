@@ -187,7 +187,7 @@ public:
 private slots:
     void initTestCase() override;
     void cleanupTestCase();
-    void init();
+    void init() override;
     void cleanup();
 
     void defaults();
@@ -230,6 +230,8 @@ void tst_QQuickHeaderView::cleanupTestCase()
 
 void tst_QQuickHeaderView::init()
 {
+    QQmlDataTest::init();
+
     engine = new QQmlEngine(this);
 }
 

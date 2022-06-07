@@ -10,8 +10,8 @@
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
 
-QQmlDebugTest::QQmlDebugTest(const char *qmlTestDataDir)
-    : QQmlDataTest(qmlTestDataDir)
+QQmlDebugTest::QQmlDebugTest(const char *qmlTestDataDir, FailOnWarningsPolicy failOnWarningsPolicy)
+    : QQmlDataTest(qmlTestDataDir, failOnWarningsPolicy)
 {
 }
 

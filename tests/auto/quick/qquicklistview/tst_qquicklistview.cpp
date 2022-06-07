@@ -54,7 +54,7 @@ public:
 private slots:
     // WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
 
-    void init();
+    void init() override;
     void cleanupTestCase();
     // Test QAbstractItemModel model types
     void qAbstractItemModel_package_items();
@@ -387,6 +387,8 @@ tst_QQuickListView::tst_QQuickListView()
 
 void tst_QQuickListView::init()
 {
+    QQmlDataTest::init();
+
 #ifdef SHARE_VIEWS
     if (m_view && QString(QTest::currentTestFunction()) != testForView) {
         testForView = QString();

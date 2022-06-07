@@ -48,7 +48,7 @@ public:
 public slots:
     void initTestCase() override;
     void cleanupTestCase();
-    void init();
+    void init() override;
     void cleanup();
 
 private slots:
@@ -90,6 +90,7 @@ void tst_QQuickAccessible::cleanupTestCase()
 
 void tst_QQuickAccessible::init()
 {
+    QQmlDataTest::init();
     QTestAccessibility::clearEvents();
 }
 
