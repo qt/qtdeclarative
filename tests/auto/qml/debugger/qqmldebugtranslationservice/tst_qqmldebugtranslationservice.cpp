@@ -76,8 +76,9 @@ private slots:
         QVERIFY(hooks->qt_qmlDebugEnableService(qPrintable(QQmlDebugTranslationServiceImpl::s_key)));
     }
 
-    void init()
+    void init() override
     {
+        QQmlDebugTest::init();
         hooks->qt_qmlDebugClearBuffer();
         QVERIFY(currentDebugServiceMessage().isEmpty());
     }

@@ -67,7 +67,7 @@ public:
     tst_QQuickGridView();
 
 private slots:
-    void init();
+    void init() override;
     void cleanupTestCase();
     void items();
     void changed();
@@ -328,6 +328,8 @@ tst_QQuickGridView::tst_QQuickGridView()
 
 void tst_QQuickGridView::init()
 {
+    QQmlDataTest::init();
+
 #ifdef SHARE_VIEWS
     if (m_view && QString(QTest::currentTestFunction()) != testForView) {
         testForView = QString();

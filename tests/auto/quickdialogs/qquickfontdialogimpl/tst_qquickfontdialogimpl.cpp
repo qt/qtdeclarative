@@ -133,8 +133,11 @@ private:
     QVERIFY2(closePopup(&dialogHelper, BUTTON, errorMessage), qPrintable(errorMessage));           \
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
 
+// We don't want to fail on warnings until QTBUG-98964 is fixed,
+// as we deliberately prevent deferred execution in some of the tests here,
+// which causes warnings.
 tst_QQuickFontDialogImpl::tst_QQuickFontDialogImpl()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
 {
 }
 

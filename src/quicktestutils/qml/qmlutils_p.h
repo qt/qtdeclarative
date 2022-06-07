@@ -55,7 +55,13 @@ class QQmlDataTest : public QObject
 {
     Q_OBJECT
 public:
-    QQmlDataTest(const char *qmlTestDataDir);
+    enum class FailOnWarningsPolicy {
+        DoNotFailOnWarnings,
+        FailOnWarnings
+    };
+
+    QQmlDataTest(const char *qmlTestDataDir,
+        FailOnWarningsPolicy failOnWarningsPolicy = FailOnWarningsPolicy::DoNotFailOnWarnings);
     virtual ~QQmlDataTest();
 
     QString testFile(const QString &fileName) const;
@@ -81,6 +87,7 @@ public:
 
 public slots:
     virtual void initTestCase();
+    virtual void init();
 
 private:
     static QQmlDataTest *m_instance;
@@ -93,6 +100,7 @@ private:
     QTemporaryDir m_cacheDir;
     QString m_directory;
     bool m_usesOwnCacheDir = false;
+    FailOnWarningsPolicy m_failOnWarningsPolicy = FailOnWarningsPolicy::DoNotFailOnWarnings;
 };
 
 class QQmlTestMessageHandler

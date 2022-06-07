@@ -34,8 +34,8 @@
 #include <QtCore/qeventloop.h>
 #include <QtCore/qtimer.h>
 
-QQmlDebugTest::QQmlDebugTest(const char *qmlTestDataDir)
-    : QQmlDataTest(qmlTestDataDir)
+QQmlDebugTest::QQmlDebugTest(const char *qmlTestDataDir, FailOnWarningsPolicy failOnWarningsPolicy)
+    : QQmlDataTest(qmlTestDataDir, failOnWarningsPolicy)
 {
 }
 

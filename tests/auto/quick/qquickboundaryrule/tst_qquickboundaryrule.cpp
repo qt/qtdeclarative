@@ -41,9 +41,16 @@ public:
     tst_qquickboundaryrule() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
-    void init() { qApp->processEvents(); }  //work around animation timer bug (QTBUG-22865)
+    void init() override;
     void dragHandler();
 };
+
+void tst_qquickboundaryrule::init()
+{
+    QQmlDataTest::init();
+    //work around animation timer bug (QTBUG-22865)
+    qApp->processEvents();
+}
 
 void tst_qquickboundaryrule::dragHandler()
 {

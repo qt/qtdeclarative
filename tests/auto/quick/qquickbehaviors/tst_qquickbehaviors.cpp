@@ -46,7 +46,7 @@ public:
     tst_qquickbehaviors() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
-    void init() { qApp->processEvents(); }  //work around animation timer bug (QTBUG-22865)
+    void init() override;
     void simpleBehavior();
     void scriptTriggered();
     void cppTriggered();
@@ -80,6 +80,13 @@ private slots:
     void bindableProperty();
     void defaultQProperty();
 };
+
+void tst_qquickbehaviors::init()
+{
+    QQmlDataTest::init();
+    //work around animation timer bug (QTBUG-22865)
+    qApp->processEvents();
+}
 
 void tst_qquickbehaviors::simpleBehavior()
 {

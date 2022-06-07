@@ -131,8 +131,11 @@ private:
     const QKeySequence editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
 };
 
+// We don't want to fail on warnings until QTBUG-98964 is fixed,
+// as we deliberately prevent deferred execution in some of the tests here,
+// which causes warnings.
 tst_QQuickFileDialogImpl::tst_QQuickFileDialogImpl()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
 {
 }
 

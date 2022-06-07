@@ -112,7 +112,7 @@ private slots:
     void initTestCase() override;
     void cleanupTestCase();
 
-    void init();
+    void init() override;
     void cleanup();
 
     void creation_data();
@@ -208,8 +208,11 @@ extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
     }
 }
 
+// We don't want to fail on warnings until QTBUG-98964 is fixed,
+// as we deliberately prevent deferred execution in some of the tests here,
+// which causes warnings.
 tst_customization::tst_customization()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
 {
 }
 
@@ -228,6 +231,8 @@ void tst_customization::cleanupTestCase()
 
 void tst_customization::init()
 {
+    QQmlDataTest::init();
+
     engine = new QQmlEngine(this);
     engine->addImportPath(testFile("styles"));
 

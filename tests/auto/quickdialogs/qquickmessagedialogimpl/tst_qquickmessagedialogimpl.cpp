@@ -77,7 +77,13 @@ private slots:
     void detailedText();
 };
 
-tst_QQuickMessageDialogImpl::tst_QQuickMessageDialogImpl() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
+// We don't want to fail on warnings until QTBUG-98964 is fixed,
+// as we deliberately prevent deferred execution in some of the tests here,
+// which causes warnings.
+tst_QQuickMessageDialogImpl::tst_QQuickMessageDialogImpl()
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
+{
+}
 
 void tst_QQuickMessageDialogImpl::changeText_data()
 {
