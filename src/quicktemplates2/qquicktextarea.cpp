@@ -425,9 +425,6 @@ void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
     if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(q_func()))
         accessibleAttached->set_readOnly(isReadOnly);
 #endif
-#if QT_CONFIG(cursor)
-    q_func()->setCursor(isReadOnly && !selectByMouse ? Qt::ArrowCursor : Qt::IBeamCursor);
-#endif
 }
 
 #if QT_CONFIG(accessibility)
@@ -509,9 +506,7 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
     setAcceptedMouseButtons(Qt::AllButtons);
     d->setImplicitResizeEnabled(false);
     d->pressHandler.control = this;
-#if QT_CONFIG(cursor)
-    setCursor(Qt::IBeamCursor);
-#endif
+
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::readOnlyChanged);
 }
