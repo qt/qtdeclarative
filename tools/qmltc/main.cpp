@@ -232,6 +232,7 @@ int main(int argc, char **argv)
 
     QmltcVisitor visitor(QQmlJSScope::create(), &importer, &logger,
                          QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
+    visitor.setMode(QmltcVisitor::Compile);
     QmltcTypeResolver typeResolver { &importer };
     typeResolver.init(&visitor, qmlParser.rootNode());
 

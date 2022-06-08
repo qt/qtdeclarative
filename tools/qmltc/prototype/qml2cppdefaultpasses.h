@@ -33,17 +33,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// checks whether some names in QQmlJSScope types:
-// - are known C++ vocabulary items
-// - are defined several times (e.g. property or enum with the same name appears
-//   twice)
-void checkForNamingCollisionsWithCpp(const Qml2CppContext &context,
-                                     QList<QQmlJSScope::Ptr> &objects);
-
-// ensures that all QQmlJSScope objects have unique internalName() and checks
-// whether some name is C++ reserved keyword
-void makeUniqueCppNames(const Qml2CppContext &context, QList<QQmlJSScope::Ptr> &objects);
-
 // sets up QML-originated base types of \a objects and \a objects themselves.
 // processed types are expected to be generated to C++. returns a set of QML
 // originated base types for all \a objects

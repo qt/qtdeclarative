@@ -299,6 +299,11 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
     postVisitResolve(bindings);
     findCppIncludes();
     setupAliases();
+
+    if (m_mode != Mode::Compile)
+        return;
+    for (const QQmlJSScope::ConstPtr &type : m_pureQmlTypes)
+        checkForNamingCollisionsWithCpp(type);
 }
 
 QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
@@ -533,6 +538,152 @@ void QmltcVisitor::setupAliases()
             current->addOwnProperty(p);
         }
     }
+}
+
+void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &type)
+{
+    static const QString cppKeywords[] = {
+        u"alignas"_s,
+        u"alignof"_s,
+        u"and"_s,
+        u"and_eq"_s,
+        u"asm"_s,
+        u"atomic_cancel"_s,
+        u"atomic_commit"_s,
+        u"atomic_noexcept"_s,
+        u"auto"_s,
+        u"bitand"_s,
+        u"bitor"_s,
+        u"bool"_s,
+        u"break"_s,
+        u"case"_s,
+        u"catch"_s,
+        u"char"_s,
+        u"char8_t"_s,
+        u"char16_t"_s,
+        u"char32_t"_s,
+        u"class"_s,
+        u"compl"_s,
+        u"concept"_s,
+        u"const"_s,
+        u"consteval"_s,
+        u"constexpr"_s,
+        u"const_cast"_s,
+        u"continue"_s,
+        u"co_await"_s,
+        u"co_return"_s,
+        u"co_yield"_s,
+        u"decltype"_s,
+        u"default"_s,
+        u"delete"_s,
+        u"do"_s,
+        u"double"_s,
+        u"dynamic_cast"_s,
+        u"else"_s,
+        u"enum"_s,
+        u"explicit"_s,
+        u"export"_s,
+        u"extern"_s,
+        u"false"_s,
+        u"float"_s,
+        u"for"_s,
+        u"friend"_s,
+        u"goto"_s,
+        u"if"_s,
+        u"inline"_s,
+        u"int"_s,
+        u"long"_s,
+        u"mutable"_s,
+        u"namespace"_s,
+        u"new"_s,
+        u"noexcept"_s,
+        u"not"_s,
+        u"not_eq"_s,
+        u"nullptr"_s,
+        u"operator"_s,
+        u"or"_s,
+        u"or_eq"_s,
+        u"private"_s,
+        u"protected"_s,
+        u"public"_s,
+        u"reflexpr"_s,
+        u"register"_s,
+        u"reinterpret_cast"_s,
+        u"requires"_s,
+        u"return"_s,
+        u"short"_s,
+        u"signed"_s,
+        u"sizeof"_s,
+        u"static"_s,
+        u"static_assert"_s,
+        u"static_cast"_s,
+        u"struct"_s,
+        u"switch"_s,
+        u"synchronized"_s,
+        u"template"_s,
+        u"this"_s,
+        u"thread_local"_s,
+        u"throw"_s,
+        u"true"_s,
+        u"try"_s,
+        u"typedef"_s,
+        u"typeid"_s,
+        u"typename"_s,
+        u"union"_s,
+        u"unsigned"_s,
+        u"using"_s,
+        u"virtual"_s,
+        u"void"_s,
+        u"volatile"_s,
+        u"wchar_t"_s,
+        u"while"_s,
+        u"xor"_s,
+        u"xor_eq"_s,
+    };
+
+    const auto isReserved = [&](QStringView word) {
+        if (word.startsWith(QChar(u'_')) && word.size() >= 2
+            && (word[1].isUpper() || word[1] == QChar(u'_'))) {
+            return true; // Identifiers starting with underscore and uppercase are reserved in C++
+        }
+        return std::binary_search(std::begin(cppKeywords), std::end(cppKeywords), word);
+    };
+
+    const auto validate = [&](QStringView name, QStringView errorPrefix) {
+        if (!isReserved(name))
+            return;
+        m_logger->log(errorPrefix + u" '" + name + u"' is a reserved C++ word, consider renaming",
+                      Log_Compiler, type->sourceLocation());
+    };
+
+    const auto enums = type->ownEnumerations();
+    for (auto it = enums.cbegin(); it != enums.cend(); ++it) {
+        const QQmlJSMetaEnum e = it.value();
+        validate(e.name(), u"Enumeration");
+
+        const auto enumKeys = e.keys();
+        for (const auto &key : enumKeys)
+            validate(key, u"Enumeration '%1' key"_qs.arg(e.name()));
+    }
+
+    const auto properties = type->ownProperties();
+    for (auto it = properties.cbegin(); it != properties.cend(); ++it) {
+        const QQmlJSMetaProperty &p = it.value();
+        validate(p.propertyName(), u"Property");
+    }
+
+    const auto methods = type->ownMethods();
+    for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
+        const QQmlJSMetaMethod &m = it.value();
+        validate(m.methodName(), u"Method");
+
+        const auto parameterNames = m.parameterNames();
+        for (const auto &name : parameterNames)
+            validate(name, u"Method '%1' parameter"_s.arg(m.methodName()));
+    }
+
+    // TODO: one could also test signal handlers' parameters but we do not store
+    // this information in QQmlJSMetaPropertyBinding currently
 }
 
 QT_END_NAMESPACE

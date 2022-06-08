@@ -45,6 +45,7 @@ class QmltcVisitor : public QQmlJSImportVisitor
     void postVisitResolve(const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>>
                                   &qmlIrOrderedBindings);
     void setupAliases();
+    void checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &type);
 
 public:
     QmltcVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
@@ -121,6 +122,9 @@ public:
         return m_typesWithDeferredBindings.contains(type);
     }
 
+    enum Mode { Import, Compile };
+    void setMode(Mode mode) { m_mode = mode; }
+
 protected:
     QStringList m_qmlTypeNames; // names of QML types arranged as a stack
     QHash<QString, int> m_qmlTypeNameCounts;
@@ -138,6 +142,8 @@ protected:
     QList<QQmlJSScope::ConstPtr> qmlTypes() const { return QQmlJSImportVisitor::qmlTypes(); }
 
     QHash<QQmlJSScope::ConstPtr, int> m_typesWithId;
+
+    Mode m_mode = Mode::Import;
 };
 
 QT_END_NAMESPACE
