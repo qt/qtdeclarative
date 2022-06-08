@@ -47,6 +47,7 @@
 #include "gradients.h"
 #include "qjsvalueassignments.h"
 #include "extensiontypebindings.h"
+#include "qtbug103956_main.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -835,6 +836,15 @@ void tst_qmltc::extensionTypeBindings()
         QCOMPARE(withExtensionNamespace->getCount(), -77);
         QCOMPARE(withExtensionNamespace->property("count").toInt(), -77);
     }
+}
+
+// QTBUG-103956
+void tst_qmltc::visibleAliasMethods()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(qtbug103956_main) created(&e);
+    QVERIFY(created.firstComponent());
+    QCOMPARE(created.firstComponent()->setMe(), true);
 }
 
 void tst_qmltc::signalHandlers()

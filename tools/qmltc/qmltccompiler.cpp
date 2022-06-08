@@ -603,17 +603,9 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
             Q_ASSERT(id >= 0); // since the type is found by id, it must have an id
 
             AliasResolutionFrame queryIdFrame {};
-            queryIdFrame.prologue << u"auto context = QQmlData::get(%1)->outerContext;"_s.arg(
-                    AliasResolutionFrame::inVar);
-            // there's a special case: when `this` type has compiled QML type as
-            // a base type and it is not a root, it has a non-root first
-            // context, so we need to step one level up
-            if (QQmlJSUtils::hasCompositeBase(owner) && owner != m_visitor->result()) {
-                Q_ASSERT(!owner->baseTypeName().isEmpty());
-                queryIdFrame.prologue
-                        << u"// `this` is special: not a root and its base type is compiled"_s;
-                queryIdFrame.prologue << u"context = context->parent().data();"_s;
-            }
+            Q_ASSERT(frames.top().outVar == u"this"_s); // so inVar would be "this" as well
+            queryIdFrame.prologue << u"auto context = %1::q_qmltc_thisContext;"_s.arg(
+                    owner->internalName());
 
             // doing the above allows us to lookup id object by index (fast)
             queryIdFrame.outVar = u"alias_objectById_" + aliasExprBits.front(); // unique enough

@@ -59,6 +59,7 @@ private slots:
     void gradients(); // QTBUG-102560
     void jsvalueAssignments();
     void extensionTypeBindings();
+    void visibleAliasMethods(); // QTBUG-103956
 
     void signalHandlers();
     void jsFunctions();
