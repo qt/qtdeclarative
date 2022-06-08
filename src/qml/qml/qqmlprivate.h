@@ -867,7 +867,9 @@ namespace QQmlPrivate
     template<class T>
     struct QmlSingleton<T, std::void_t<typename T::QmlIsSingleton>>
     {
-        static constexpr bool Value = bool(T::QmlIsSingleton::yes);
+        static constexpr bool Value =
+                QmlTypeHasMarker<T, decltype(&T::qt_qmlMarker_singleton)>::value
+                && bool(T::QmlIsSingleton::yes);
     };
 
     template<class T, class = std::void_t<>>

@@ -2272,4 +2272,53 @@ public:
         return new AnotherAttachMe(object);
     }
 };
+
+class OriginalSingleton : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+
+private:
+    Q_PROPERTY(QString abc READ abc WRITE setAbc NOTIFY abcChanged)
+
+    QString m_abc;
+signals:
+    void abcChanged(const QString &);
+
+public:
+    QString abc() const { return m_abc; }
+    void setAbc(const QString &abc)
+    {
+        m_abc = abc;
+        emit abcChanged(abc);
+    }
+};
+
+class LeakingSingleton : public OriginalSingleton
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
+class DerivedSingleton : public OriginalSingleton
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    Q_PROPERTY(QString anotherAbc READ anotherAbc WRITE setAnotherAbc NOTIFY anotherAbcChanged)
+
+    QString m_anotherAbc;
+signals:
+    void anotherAbcChanged(const QString &);
+
+public:
+    QString anotherAbc() const { return m_anotherAbc; }
+    void setAnotherAbc(const QString &abc)
+    {
+        m_anotherAbc = abc;
+        emit anotherAbcChanged(abc);
+    }
+};
+
 #endif // TESTTYPES_H

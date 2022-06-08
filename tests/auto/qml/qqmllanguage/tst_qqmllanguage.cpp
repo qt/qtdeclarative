@@ -384,6 +384,7 @@ private slots:
     void uncreatableAttached();
     void resetGadgetProperty();
     void leakingAttributesQmlAttached();
+    void leakingAttributesQmlSingleton();
 
 private:
     QQmlEngine engine;
@@ -7260,6 +7261,81 @@ void tst_qqmllanguage::leakingAttributesQmlAttached()
         attached = qmlAttachedPropertiesObject<DerivedQmlAttached>(o.data());
         QVERIFY(attached);
         QCOMPARE(attached->property("anotherAbc"), QVariant("I am not a bool."));
+    }
+}
+
+void tst_qqmllanguage::leakingAttributesQmlSingleton()
+{
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+import StaticTest
+import QtQuick
+Item {
+    Text { text: OriginalSingleton.abc }
+    Text { text: OriginalSingleton.abc }
+    Text { id: check }
+    Component.onCompleted: {
+        OriginalSingleton.abc = "Updated string content!"
+        check.text = "onCompletedExecuted!"
+    }
+})",
+                  QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QCOMPARE(o->children().size(), 4);
+        QCOMPARE(o->children()[2]->property("text"), QVariant("onCompletedExecuted!"));
+        QCOMPARE(o->children()[0]->property("text"), QVariant("Updated string content!"));
+        QCOMPARE(o->children()[1]->property("text"), QVariant("Updated string content!"));
+    }
+    {
+        QQmlComponent c(&engine);
+
+        c.setData(R"(
+import StaticTest
+import QtQuick
+Item {
+    property var text: LeakingSingleton.abc
+    property var text2: LeakingSingleton.abc
+    Text { id: check }
+    Component.onCompleted: {
+        LeakingSingleton.abc = "Updated string content!"
+        check.text = "onCompletedExecuted!"
+    }
+})",
+                  QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QCOMPARE(o->children().size(), 2);
+        QCOMPARE(o->children().front()->property("text"), QVariant("onCompletedExecuted!"));
+        // empty because not a singleton -> LeakingSingleton.abc is [undefined]
+        QVERIFY(!o->property("text").isValid());
+        QVERIFY(!o->property("text2").isValid());
+    }
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+import StaticTest
+import QtQuick
+Item {
+     Text { text: DerivedSingleton.anotherAbc }
+     Text { text: DerivedSingleton.anotherAbc }
+     Text { id: check }
+     Component.onCompleted: {
+         DerivedSingleton.anotherAbc = "Updated string content!";
+         check.text = "onCompletedExecuted!"
+     }
+})",
+                  QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QCOMPARE(o->children().size(), 4);
+        QCOMPARE(o->children()[2]->property("text"), QVariant("onCompletedExecuted!"));
+        QCOMPARE(o->children()[0]->property("text"), QVariant("Updated string content!"));
+        QCOMPARE(o->children()[1]->property("text"), QVariant("Updated string content!"));
     }
 }
 
