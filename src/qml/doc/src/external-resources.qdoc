@@ -2,52 +2,39 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \externalpage http://www.ecma-international.org/publications/standards/Ecma-262.htm
+    \externalpage https://www.ecma-international.org/publications-and-standards/standards/ecma-262/
     \title ECMA-262
 */
 
 /*!
-    \externalpage http://qmlbook.github.io/
-    \title Qt5 Cadaques
-*/
-
-/*!
-    \externalpage http://www.w3schools.com/jsref/default.asp
+    \externalpage https://www.w3schools.com/jsref/default.asp
     \title W3Schools JavaScript Reference
 */
 
 /*!
     \externalpage https://tc39.es/ecma262/#sec-date-objects
-    \title {ECMAScript Specification of Date}
+    \title ECMAScript Specification of Date
 */
 
 /*!
-    \externalpage https://www.froglogic.com/squish/gui-testing
-    \title Squish
+    \externalpage https://www.qt.io/product/testing-tools#squish
+    \title Squish GUI Test Automation Tool
 */
 /*!
-    \externalpage http://doc.qt.io/GammaRay
-    \title GammaRay
+    \externalpage https://doc.qt.io/GammaRay
+    \title GammaRay Manual
 */
 /*!
-    \externalpage http://doc.qt.io/QtQmlLive
-    \title QmlLive
+    \externalpage https://doc.qt.io/QtQmlLive
+    \title QmlLive Manual
 */
 /*!
-    \externalpage http://doc.qt.io/qtcreator/creator-debugging-qml.html
-    \title QML Debugger
+    \externalpage https://doc.qt.io/qtcreator/creator-debugging-qml.html
+    \title Qt Creator: QML Debugger
 */
 /*!
-    \externalpage http://doc.qt.io/qtcreator/creator-qml-performance-monitor.html
-    \title QML Profiler
-*/
-/*!
-    \externalpage http://doc.qt.io/qtcreator/index.html
-    \title Qt Creator Manual
-*/
-/*!
-    \externalpage https://doc.qt.io/qtcreator/creator-project-creating.html#creating-resource-files
-    \title Creating Resource Files
+    \externalpage https://doc.qt.io/qtcreator/creator-qml-performance-monitor.html
+    \title Qt Creator: QML Profiler
 */
 /*!
     \externalpage https://fontawesome.com/

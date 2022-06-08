@@ -19,60 +19,60 @@ debugging features for Qt Quick make working with Qt Quick easier.
 
 \section1 Qt Design Studio
 
-\l{Qt Design Studio} enables designing Qt Quick-based UIs using simple
-drag-n-drop gestures that most designers are familiar with. It offers UI
-elements from the Qt Quick and Qt Quick Controls modules, as well as
-integration for custom UI elements.
+\l{Qt Design Studio Manual}{Qt Design Studio} enables designing Qt Quick-based
+UIs using simple drag-n-drop gestures that most designers are familiar with.
+It offers UI elements from the Qt Quick and Qt Quick Controls modules, as well
+as integration for custom UI elements.
 
 \section1 QML Debugger
 
-The \l{QML debugger} is a very useful utility that enables:
+The \l{Qt Creator: QML Debugger}{QML Debugger} is a very useful utility that
+enables:
 \list
  \li debugging JavaScript functions,
  \li executing JavaScript expressions,
  \li and inspecting QML properties.
 \endlist
 
-The QML debugger is part of both \l{Qt Creator} and \l{Qt Design Studio}.
+The QML debugger is part of both \e{Qt Creator} and \e{Qt Design Studio}.
 
 \section1 QML Profiler
 
-The \l{QML profiler} enables you to get necessary diagnostic information,
-allowing you to analyze the application code for performance issues. For
-example, too much JavaScript in each frame, long-running C++ functions, and
-so on.
+The \l{Qt Creator: QML Profiler}{QML Profiler} enables you to get necessary
+diagnostic information, allowing you to analyze the application code for
+performance issues. For example, too much JavaScript in each frame,
+long-running C++ functions, and so on.
 
-The profiler is part of both \l{Qt Creator} and \l{Qt Design Studio}.
+The profiler is part of both \e{Qt Creator} and \e{Qt Design Studio}.
 
 \section1 QmlLive
 
-\l{QmlLive} is a 3rd party tool that offers a QML runtime capable of rendering
-changes to the code in realtime. It avoids the need to rebuild the
-application after every code change and install it on the target device.
-You can also extend it to build a custom runtime that suits your needs.
+\l{QmlLive Manual}{QmlLive} is a 3rd party tool that offers a QML runtime
+capable of rendering changes to the code in realtime. It avoids the need to
+rebuild the application after every code change and install it on the target
+device. You can also extend it to build a custom runtime that suits your needs.
 
 \section1 GammaRay
 
-\l{GammaRay} is a useful utility that provides diagnostic information
-about your application. It is similar to the QML Profiler described in the
-earlier section, but offers a lot more. For example, the number of items or
-QObjects created, function calls made, time taken by each function call,
+\l{GammaRay Manual}{GammaRay} is a useful utility that provides diagnostic
+information about your application. It is similar to the QML Profiler described
+in the earlier section, but offers a lot more. For example, the number of items
+or QObjects created, function calls made, time taken by each function call,
 property value introspection at runtime, and so on. Such information is very
 handy, especially while debugging QML applications.
 
 \section1 Squish
 
-\l{Squish} is a well-known testing tool that automates UI testing by recording
-your actions or running scripts. Once the tests are setup, UI tests are a lot
-easier to run.
+\l{Squish GUI Test Automation Tool}{Squish} is a well-known testing tool that
+automates UI testing by recording your actions or running scripts. Once the
+tests are setup, UI tests are a lot easier to run.
 
 \section1 qmllint
 
-\l{qmllint} is a tool shipped with Qt, that verifies the syntatic validity of QML files.
-It also warns about some QML anti-patterns. If you want to disable a specific
-warning type, you can find the appropriate flag for doing so by passing \c{--help} on the command line.
-
-See the full documentation page of \l{qmllint} for details.
+\l{qtquick-tool-qmllint.html}{qmllint} is a tool shipped with Qt, that verifies
+the syntatic validity of QML files. It also warns about some QML anti-patterns.
+If you want to disable a specific warning type, you can find the appropriate
+flag for doing so by passing \c{--help} on the command line.
 
 \section1 qmlformat
 
