@@ -12,6 +12,7 @@
 #include <QtQuick/private/qquicktableview_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 class tst_QQmlTableModel : public QQmlDataTest
 {
@@ -39,10 +40,8 @@ private slots:
 
 void tst_QQmlTableModel::appendRemoveRow()
 {
-    QQuickView view(testFileUrl("common.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("common.qml")));
 
     auto *model = view.rootObject()->property("testModel") .value<QAbstractTableModel *>();
     QVERIFY(model);
@@ -184,10 +183,8 @@ void tst_QQmlTableModel::appendRemoveRow()
 
 void tst_QQmlTableModel::appendRowToEmptyModel()
 {
-    QQuickView view(testFileUrl("empty.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("empty.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -219,10 +216,8 @@ void tst_QQmlTableModel::appendRowToEmptyModel()
 
 void tst_QQmlTableModel::clear()
 {
-    QQuickView view(testFileUrl("common.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("common.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -258,10 +253,8 @@ void tst_QQmlTableModel::clear()
 
 void tst_QQmlTableModel::getRow()
 {
-    QQuickView view(testFileUrl("common.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("common.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -289,10 +282,8 @@ void tst_QQmlTableModel::getRow()
 
 void tst_QQmlTableModel::insertRow()
 {
-    QQuickView view(testFileUrl("common.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("common.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -445,10 +436,8 @@ void tst_QQmlTableModel::insertRow()
 
 void tst_QQmlTableModel::moveRow()
 {
-    QQuickView view(testFileUrl("common.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("common.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -573,10 +562,8 @@ void tst_QQmlTableModel::moveRow()
 
 void tst_QQmlTableModel::setRow()
 {
-    QQuickView view(testFileUrl("common.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("common.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -733,10 +720,9 @@ void tst_QQmlTableModel::setRow()
 
 void tst_QQmlTableModel::setDataThroughDelegate()
 {
-    QQuickView view(testFileUrl("setDataThroughDelegate.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("setDataThroughDelegate.qml")));
+
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -796,10 +782,8 @@ void tst_QQmlTableModel::setDataThroughDelegate()
 // Start off with empty rows and then set them to test rowCountChanged().
 void tst_QQmlTableModel::setRowsImperatively()
 {
-    QQuickView view(testFileUrl("empty.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("empty.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -833,10 +817,8 @@ void tst_QQmlTableModel::setRowsImperatively()
 
 void tst_QQmlTableModel::setRowsMultipleTimes()
 {
-    QQuickView view(testFileUrl("setRowsMultipleTimes.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("setRowsMultipleTimes.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -890,10 +872,8 @@ void tst_QQmlTableModel::setRowsMultipleTimes()
 
 void tst_QQmlTableModel::dataAndEditing()
 {
-    QQuickView view(testFileUrl("dataAndSetData.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("dataAndSetData.qml")));
 
     auto *model = view.rootObject()->property("model").value<QAbstractTableModel*>();
     QVERIFY(model);
@@ -929,10 +909,8 @@ void tst_QQmlTableModel::omitTableModelColumnIndex()
 
 void tst_QQmlTableModel::complexRow()
 {
-    QQuickView view(testFileUrl("complex.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("complex.qml")));
 
     QQuickTableView *tableView = qobject_cast<QQuickTableView*>(view.rootObject());
     QVERIFY(tableView);
@@ -953,10 +931,8 @@ void tst_QQmlTableModel::complexRow()
 
 void tst_QQmlTableModel::appendRowWithDouble()
 {
-    QQuickView view(testFileUrl("intAndDouble.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("intAndDouble.qml")));
 
     auto *model = view.rootObject()->property("testModel").value<QAbstractTableModel*>();
     QVERIFY(model);
