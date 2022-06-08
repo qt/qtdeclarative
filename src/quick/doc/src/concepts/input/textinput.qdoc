@@ -21,7 +21,7 @@ respective documentation.
 The \e validator types enforce the type and format of
 \l TextInput objects.
 
-\annotatedlist qtquick-text-validator
+\annotatedlist qtquick-text-validators
 
 \snippet qml/texthandling.qml int validator
 The validator types bind to \c {TextInput}'s \c validator property.
@@ -33,14 +33,4 @@ The regular expression in the snippet will only allow the inputted text to be
 Note that QML parses JavaScript regular expressions, while Qt's
 \l {QRegularExpression} class' regular expressions are based on Perl regular expressions.
 
-*/
-
-/*!
-\page qtquick-text-validator.html
-\ingroup qtquick-text-validator
-\title Qt Quick Text Validators
-\brief Types that validate text input
-
-The \l {Qt Quick Text Input Handling and Validators} page has information about
-validating user text input.
 */

@@ -12,6 +12,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QIntValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
+    \ingroup qtquick-text-validators
     \brief Defines a validator for integer values.
 
     The IntValidator type provides a validator for integer values.
@@ -77,6 +78,7 @@ void QQuickIntValidator::resetLocaleName()
     \instantiates QDoubleValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
+    \ingroup qtquick-text-validators
     \brief Defines a validator for non-integer numbers.
 
     The DoubleValidator type provides a validator for non-integer numbers.
@@ -173,6 +175,7 @@ void QQuickDoubleValidator::resetLocaleName()
     \instantiates QRegularExpressionValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
+    \ingroup qtquick-text-validators
     \brief Provides a string validator.
     \since 5.14
 
