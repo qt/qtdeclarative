@@ -1568,15 +1568,20 @@ bool QQuickTextEdit::selectByMouse() const
 void QQuickTextEdit::setSelectByMouse(bool on)
 {
     Q_D(QQuickTextEdit);
-    if (d->selectByMouse != on) {
-        d->selectByMouse = on;
-        setKeepMouseGrab(on);
-        if (on)
-            d->control->setTextInteractionFlags(d->control->textInteractionFlags() | Qt::TextSelectableByMouse);
-        else
-            d->control->setTextInteractionFlags(d->control->textInteractionFlags() & ~Qt::TextSelectableByMouse);
-        emit selectByMouseChanged(on);
-    }
+    if (d->selectByMouse == on)
+        return;
+
+    d->selectByMouse = on;
+    setKeepMouseGrab(on);
+    if (on)
+        d->control->setTextInteractionFlags(d->control->textInteractionFlags() | Qt::TextSelectableByMouse);
+    else
+        d->control->setTextInteractionFlags(d->control->textInteractionFlags() & ~Qt::TextSelectableByMouse);
+
+#if QT_CONFIG(cursor)
+    d->updateMouseCursorShape();
+#endif
+    emit selectByMouseChanged(on);
 }
 
 /*!
@@ -1638,6 +1643,9 @@ void QQuickTextEdit::setReadOnly(bool r)
 
 #if QT_CONFIG(im)
     updateInputMethod(Qt::ImEnabled);
+#endif
+#if QT_CONFIG(cursor)
+    d->updateMouseCursorShape();
 #endif
     q_canPasteChanged();
     emit readOnlyChanged(r);
@@ -2431,7 +2439,7 @@ void QQuickTextEditPrivate::init()
     updateDefaultTextOption();
     q->updateSize();
 #if QT_CONFIG(cursor)
-    q->setCursor(Qt::IBeamCursor);
+    updateMouseCursorShape();
 #endif
 }
 
@@ -2715,9 +2723,8 @@ void QQuickTextEdit::q_linkHovered(const QString &link)
     emit linkHovered(link);
 #if QT_CONFIG(cursor)
     if (link.isEmpty()) {
-        setCursor(d->cursorToRestoreAfterHover);
+        d->updateMouseCursorShape();
     } else if (cursor().shape() != Qt::PointingHandCursor) {
-        d->cursorToRestoreAfterHover = cursor().shape();
         setCursor(Qt::PointingHandCursor);
     }
 #endif
@@ -2728,9 +2735,8 @@ void QQuickTextEdit::q_markerHovered(bool hovered)
     Q_D(QQuickTextEdit);
 #if QT_CONFIG(cursor)
     if (!hovered) {
-        setCursor(d->cursorToRestoreAfterHover);
+        d->updateMouseCursorShape();
     } else if (cursor().shape() != Qt::PointingHandCursor) {
-        d->cursorToRestoreAfterHover = cursor().shape();
         setCursor(Qt::PointingHandCursor);
     }
 #endif
@@ -3000,6 +3006,14 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     Q_Q(QQuickTextEdit);
     IS_SIGNAL_CONNECTED(q, QQuickTextEdit, linkHovered, (const QString &));
 }
+
+#if QT_CONFIG(cursor)
+void QQuickTextEditPrivate::updateMouseCursorShape()
+{
+    Q_Q(QQuickTextEdit);
+    q->setCursor(q->isReadOnly() && !q->selectByMouse() ? Qt::ArrowCursor : Qt::IBeamCursor);
+}
+#endif
 
 /*!
     \qmlsignal QtQuick::TextEdit::linkHovered(string link)
