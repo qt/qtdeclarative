@@ -32,6 +32,10 @@ set(qml_sources
     QmlTypeWithBaseTypeExtension.qml
     extensionTypeBindings.qml
 
+    qtbug103956/SubComponent.qml
+    qtbug103956/MainComponent.qml
+    qtbug103956/qtbug103956_main.qml
+
     signalHandlers.qml
     javaScriptFunctions.qml
     changingBindings.qml

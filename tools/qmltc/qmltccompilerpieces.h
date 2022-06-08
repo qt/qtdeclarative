@@ -232,6 +232,11 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
             current.init.body << u"context->setContextObject(this);"_s;
     }
 
+    // context is this document's context. we must remember it in each type
+    current.variables.emplaceBack(u"QQmlRefPointer<QQmlContextData>"_s, u"q_qmltc_thisContext"_s,
+                                  u"nullptr"_s);
+    current.init.body << u"%1::q_qmltc_thisContext = context;"_s.arg(type->internalName());
+
     if (int id = visitor->runtimeId(type); id >= 0) {
         current.init.body << u"// 3. set id since it is provided"_s;
         QString idString = visitor->addressableScopes().id(type);
