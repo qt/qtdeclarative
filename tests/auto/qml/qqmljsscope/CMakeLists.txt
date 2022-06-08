@@ -15,6 +15,9 @@ qt_internal_add_test(tst_qqmljsscope
 
         qqmljsscope_test_module
         qqmljsscope_test_moduleplugin
+
+        qualified_names_test_module
+        qualified_names_test_moduleplugin
     TESTDATA
         ${test_data}
 )
@@ -37,3 +40,4 @@ qt_internal_extend_target(tst_qqmljsscope CONDITION NOT ANDROID AND NOT IOS
 )
 
 add_subdirectory(QQmlJSScopeTests)
+add_subdirectory(QualifiedNamesTests)
