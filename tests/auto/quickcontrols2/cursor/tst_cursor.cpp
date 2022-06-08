@@ -58,6 +58,7 @@ private slots:
     void editable();
     void pageIndicator();
     void scrollBar();
+    void textArea();
 };
 
 tst_cursor::tst_cursor()
@@ -223,6 +224,19 @@ void tst_cursor::scrollBar()
 
     scrollBar->setInteractive(false);
     QCOMPARE(window->cursor().shape(), textArea->cursor().shape());
+}
+
+// QTBUG-104089
+void tst_cursor::textArea()
+{
+    QQuickTextArea textArea;
+    QCOMPARE(textArea.cursor().shape(), Qt::IBeamCursor);
+
+    textArea.setReadOnly(true);
+    QCOMPARE(textArea.cursor().shape(), Qt::ArrowCursor);
+
+    textArea.setSelectByMouse(true);
+    QCOMPARE(textArea.cursor().shape(), Qt::IBeamCursor);
 }
 
 QTEST_MAIN(tst_cursor)

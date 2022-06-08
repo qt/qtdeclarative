@@ -147,6 +147,10 @@ public:
     Qt::LayoutDirection textDirection(const QString &text) const;
     bool isLinkHoveredConnected();
 
+#if QT_CONFIG(cursor)
+    void updateMouseCursorShape();
+#endif
+
     void setNativeCursorEnabled(bool) {}
     void handleFocusEvent(QFocusEvent *event);
     void addCurrentTextNodeToRoot(QQuickTextNodeEngine *, QSGTransformNode *, QQuickTextNode*, TextNodeIterator&, int startPos);
@@ -211,7 +215,6 @@ public:
     Qt::InputMethodHints inputMethodHints;
 #endif
     UpdateType updateType;
-    Qt::CursorShape cursorToRestoreAfterHover = Qt::IBeamCursor;
 
     bool dirty : 1;
     bool richText : 1;

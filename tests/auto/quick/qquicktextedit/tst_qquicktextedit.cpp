@@ -2612,8 +2612,6 @@ void tst_qquicktextedit::linkHover()
     QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
     QCOMPARE(hover.last()[0].toString(), QString());
 
-    texteditObject->setCursor(Qt::OpenHandCursor);
-
     QCursor::setPos(linkPos);
     QTRY_COMPARE(hover.count(), 3);
     QCOMPARE(window.cursor().shape(), Qt::PointingHandCursor);
@@ -2621,7 +2619,7 @@ void tst_qquicktextedit::linkHover()
 
     QCursor::setPos(textPos);
     QTRY_COMPARE(hover.count(), 4);
-    QCOMPARE(window.cursor().shape(), Qt::OpenHandCursor);
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
     QCOMPARE(hover.last()[0].toString(), QString());
 }
 #endif
