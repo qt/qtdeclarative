@@ -82,8 +82,6 @@ void CodeGenerator::prepare(QSet<QString> *requiredCppIncludes,
     // objects are constructed, now we can run compiler passes to make sure the
     // objects are in good state
     Qml2CppCompilerPassExecutor executor(m_localTypeResolver, m_url, objects);
-    executor.addPass(&checkForNamingCollisionsWithCpp);
-    executor.addPass(&makeUniqueCppNames);
     executor.addPass(&setupQmlCppTypes);
     const auto populateCppIncludes = [&](const Qml2CppContext &context,
                                          QList<QQmlJSScope::Ptr> &objects) {
