@@ -24,11 +24,6 @@
 #include "qv4context_p.h"
 #include "qv4string_p.h"
 
-#if QT_CONFIG(qml_itemmodel)
-#include <QtCore/qabstractitemmodel.h>
-#include <QtCore/qitemselectionmodel.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -136,12 +131,6 @@ QT_DECLARE_SEQUENTIAL_CONTAINER(QIntStdVectorForeign, std::vector<int>, int);
 QT_DECLARE_SEQUENTIAL_CONTAINER(QBoolStdVectorForeign, std::vector<bool>, bool);
 QT_DECLARE_SEQUENTIAL_CONTAINER(QStringStdVectorForeign, std::vector<QString>, QString);
 QT_DECLARE_SEQUENTIAL_CONTAINER(QUrlStdVectorForeign, std::vector<QUrl>, QUrl);
-
-#if QT_CONFIG(qml_itemmodel)
-QT_DECLARE_SEQUENTIAL_CONTAINER(QModelIndexListForeign, QModelIndexList, QModelIndex);
-QT_DECLARE_SEQUENTIAL_CONTAINER(QModelIndexStdVectorForeign, std::vector<QModelIndex>, QModelIndex);
-QT_DECLARE_SEQUENTIAL_CONTAINER(QItemSelectionForeign, QItemSelection, QItemSelectionRange);
-#endif
 
 #undef QT_DECLARE_SEQUENTIAL_CONTAINER
 

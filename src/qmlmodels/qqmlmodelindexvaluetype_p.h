@@ -131,6 +131,33 @@ public:
     inline bool isEmpty() const { return v.isEmpty(); }
 };
 
+struct QModelIndexListForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(QModelIndex)
+    QML_FOREIGN(QModelIndexList)
+    QML_ADDED_IN_VERSION(2, 0)
+};
+
+struct QModelIndexStdVectorForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(QModelIndex)
+    QML_FOREIGN(std::vector<QModelIndex>)
+    QML_ADDED_IN_VERSION(2, 0)
+};
+
+struct QItemSelectionForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(QItemSelectionRange)
+    QML_FOREIGN(QItemSelection)
+    QML_ADDED_IN_VERSION(2, 0)
+};
+
 #undef QLISTVALUETYPE_INVOKABLE_API
 
 QT_END_NAMESPACE
