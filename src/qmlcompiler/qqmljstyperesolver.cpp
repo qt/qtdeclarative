@@ -853,14 +853,21 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
             }
         }
 
-        // A plain reference to a non-singleton, non-attached type.
-        // If it's undefined, we can actually get an "instance" of it.
-        // Therefore, use a primitive value to store it.
-        // Otherwise this is a plain type reference without instance.
-        // We may still need the plain type reference for enum lookups,
-        // so store it in QJSValue for now.
-        return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
-                                             QQmlJSRegisterContent::MetaType, type);
+        switch (type->accessSemantics()) {
+        case QQmlJSScope::AccessSemantics::None:
+        case QQmlJSScope::AccessSemantics::Reference:
+            // A plain reference to a non-singleton, non-attached type.
+            // We may still need the plain type reference for enum lookups,
+            // Store it as QMetaObject.
+            // This only works with namespaces and object types.
+            return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
+                                                 QQmlJSRegisterContent::MetaType, type);
+        case QQmlJSScope::AccessSemantics::Sequence:
+        case QQmlJSScope::AccessSemantics::Value:
+            // This is not actually a type reference. You cannot get the metaobject
+            // of a value type in QML and sequences don't even have metaobjects.
+            break;
+        }
     }
 
     if (m_jsGlobalObject->hasProperty(name)) {
