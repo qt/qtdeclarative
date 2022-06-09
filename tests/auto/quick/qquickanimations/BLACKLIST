@@ -12,3 +12,7 @@ macos ci
 #QTBUG-98516
 [opacityAnimationFromZero]
 macos ci
+
+# QTBUG-104107
+[frameAnimation2]
+macos ci
