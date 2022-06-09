@@ -31,8 +31,6 @@ namespace QQuickVisualTestUtils
 
     void dumpTree(QQuickItem *parent, int depth = 0);
 
-    [[nodiscard]] bool delegateVisible(QQuickItem *item);
-
     void moveMouseAway(QQuickWindow *window);
     void centerOnScreen(QQuickWindow *window);
 
