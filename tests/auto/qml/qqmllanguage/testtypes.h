@@ -2210,6 +2210,21 @@ private:
     QString m_name;
 };
 
+class BindableOnly : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int score BINDABLE scoreBindable READ default WRITE default FINAL)
+    QML_ELEMENT
+public:
+    BindableOnly(QObject *parent = nullptr)
+        : QObject(parent)
+        , m_score(4)
+    {}
+    QBindable<int> scoreBindable() { return QBindable<int>(&m_score); }
+private:
+    QProperty<int> m_score;
+};
+
 void registerTypes();
 
 class AttachMe : public QObject

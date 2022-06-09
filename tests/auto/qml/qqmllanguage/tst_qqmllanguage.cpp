@@ -387,6 +387,7 @@ private slots:
     void leakingAttributesQmlSingleton();
     void leakingAttributesQmlForeign();
     void attachedOwnProperties();
+    void bindableOnly();
 
 private:
     QQmlEngine engine;
@@ -7389,6 +7390,23 @@ void tst_qqmllanguage::attachedOwnProperties()
     QVERIFY(!o.isNull());
     const QStringList expected {"objectName", "objectNameChanged", "completed", "destruction"};
     QCOMPARE(o->property("props").value<QStringList>(), expected);
+}
+
+void tst_qqmllanguage::bindableOnly()
+{
+    qmlRegisterTypesAndRevisions<BindableOnly>("ABC", 1);
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine);
+    c.setData("import ABC\nBindableOnly {\nproperty int a: score\n}", QUrl(u"bindableOnly.qml"_s));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    BindableOnly *bindableOnly = qobject_cast<BindableOnly *>(o.data());
+    QCOMPARE(bindableOnly->scoreBindable().value(), 4);
+    QCOMPARE(o->property("a").toInt(), 4);
+    bindableOnly->scoreBindable().setValue(5);
+    QCOMPARE(bindableOnly->scoreBindable().value(), 5);
+    QCOMPARE(o->property("a").toInt(), 5);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
