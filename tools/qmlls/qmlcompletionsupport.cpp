@@ -81,7 +81,7 @@ void QmlCompletionSupport::setupCapabilities(
     QLspSpecification::CompletionOptions cOptions;
     if (serverCapabilities.capabilities.completionProvider)
         cOptions = *serverCapabilities.capabilities.completionProvider;
-    cOptions.resolveProvider = true;
+    cOptions.resolveProvider = false;
     cOptions.triggerCharacters = QList<QByteArray>({ QByteArray(".") });
     serverCapabilities.capabilities.completionProvider = cOptions;
 }
