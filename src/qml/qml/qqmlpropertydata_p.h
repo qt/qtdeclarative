@@ -361,8 +361,6 @@ public:
 
 private:
     friend class QQmlPropertyCache;
-    void lazyLoad(const QMetaProperty &);
-    void lazyLoad(const QMetaMethod &);
 
     Flags m_flags;
     qint16 m_coreIndex = -1;
