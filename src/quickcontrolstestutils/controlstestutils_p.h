@@ -37,7 +37,7 @@ namespace QQuickControlsTestUtils
 
     struct QQuickStyleHelper
     {
-        bool updateStyle(const QString &style);
+        [[nodiscard]] bool updateStyle(const QString &style);
 
         QString currentStyle;
         QScopedPointer<QQmlEngine> engine;
