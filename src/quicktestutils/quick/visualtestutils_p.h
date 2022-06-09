@@ -62,7 +62,7 @@ namespace QQuickVisualTestUtils
         QPoint mFrom;
     };
 
-    [[nodiscard]] bool delegateVisible(QQuickItem *item);
+    [[nodiscard]] bool isDelegateVisible(QQuickItem *item);
 
     /*
        Find an item with the specified objectName.  If index is supplied then the

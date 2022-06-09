@@ -541,7 +541,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
     int firstVisibleIndex = -1;
     for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (item && delegateVisible(item)) {
+        if (item && isDelegateVisible(item)) {
             firstVisibleIndex = i;
             break;
         }
@@ -963,7 +963,7 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item) {
             QRectF itemRect(item->x(), item->y(), item->width(), item->height());
-            if (delegateVisible(item) && viewRect.intersects(itemRect)) {
+            if (isDelegateVisible(item) && viewRect.intersects(itemRect)) {
                 firstVisibleIndex = i;
                 QQmlExpression en(qmlContext(item), item, "name");
                 firstName = en.evaluate().toString();
@@ -1311,7 +1311,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     int firstVisibleIndex = -1;
     for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (item && delegateVisible(item)) {
+        if (item && isDelegateVisible(item)) {
             firstVisibleIndex = i;
             break;
         }
@@ -1891,9 +1891,9 @@ void tst_QQuickGridView::currentIndex()
 
     // moving currentItem out of view should make it invisible
     gridview->setCurrentIndex(0);
-    QTRY_VERIFY(delegateVisible(gridview->currentItem()));
+    QTRY_VERIFY(isDelegateVisible(gridview->currentItem()));
     gridview->setContentY(200);
-    QTRY_VERIFY(!delegateVisible(gridview->currentItem()));
+    QTRY_VERIFY(!isDelegateVisible(gridview->currentItem()));
 
     delete window;
 }
@@ -3662,7 +3662,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
         QTRY_VERIFY(item);
         QTRY_COMPARE(item->x(), qreal((i%3)*80));
         QTRY_COMPARE(item->y(), qreal((i/3)*60));
-        QCOMPARE(delegateVisible(item), i < 9); // inside view visible, outside not visible
+        QCOMPARE(isDelegateVisible(item), i < 9); // inside view visible, outside not visible
     }
 
     // ensure items outside view become invisible
@@ -3676,7 +3676,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
         QTRY_VERIFY(item);
         QTRY_COMPARE(item->x(), qreal((i%3)*80));
         QTRY_COMPARE(item->y(), qreal((i/3)*60));
-        QCOMPARE(delegateVisible(item), i < 6); // inside view visible, outside not visible
+        QCOMPARE(isDelegateVisible(item), i < 6); // inside view visible, outside not visible
     }
 
     delete window;
@@ -6049,23 +6049,23 @@ void tst_QQuickGridView::unrequestedVisibility()
     QQuickItem *item;
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 4));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     rightview->setCurrentIndex(0);
 
@@ -6073,9 +6073,9 @@ void tst_QQuickGridView::unrequestedVisibility()
     QTRY_COMPARE(rightview->contentY(), 0.0);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     QVERIFY(!findItem<QQuickItem>(leftContent, "wrapper", 11));
     QVERIFY(!findItem<QQuickItem>(rightContent, "wrapper", 11));
@@ -6086,98 +6086,98 @@ void tst_QQuickGridView::unrequestedVisibility()
     QTRY_COMPARE(rightview->contentY(), 0.0);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QTRY_COMPARE(delegateVisible(item), false);
+    QTRY_COMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a non-visible item into view
     model.moveItems(10, 9, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QTRY_VERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a visible item out of view
     model.moveItems(5, 3, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a non-visible item into view
     model.moveItems(3, 5, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a visible item out of view
     model.moveItems(9, 10, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a non-visible item into view
     model.moveItems(10, 9, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     delete window;
 }
@@ -6465,22 +6465,22 @@ void tst_QQuickGridView::displayMargin()
     QQuickItem *item97;
 
     QVERIFY(item0 = findItem<QQuickItem>(content, "delegate", 0));
-    QCOMPARE(delegateVisible(item0), true);
+    QCOMPARE(isDelegateVisible(item0), true);
 
     // the 97th item should be within the end margin
     QVERIFY(item97 = findItem<QQuickItem>(content, "delegate", 96));
-    QCOMPARE(delegateVisible(item97), true);
+    QCOMPARE(isDelegateVisible(item97), true);
 
     // GridView staggers item creation, so the 118th item should be outside the end margin.
     QVERIFY(findItem<QQuickItem>(content, "delegate", 117) == nullptr);
 
     // the first delegate should still be within the begin margin
     gridview->positionViewAtIndex(20, QQuickGridView::Beginning);
-    QCOMPARE(delegateVisible(item0), true);
+    QCOMPARE(isDelegateVisible(item0), true);
 
     // the first delegate should now be outside the begin margin
     gridview->positionViewAtIndex(36, QQuickGridView::Beginning);
-    QCOMPARE(delegateVisible(item0), false);
+    QCOMPARE(isDelegateVisible(item0), false);
 
     delete window;
 }
@@ -6504,26 +6504,26 @@ void tst_QQuickGridView::negativeDisplayMargin()
     QVERIFY(content != nullptr);
 
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 0));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 7));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 8));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // Flick until contentY means that delegate8 should be visible
     listview->setProperty("contentY", 500);
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 8));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     listview->setProperty("contentY", 1000);
     QTRY_VERIFY(item = findItem<QQuickItem>(content, "delegate", 14));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     listview->setProperty("contentY", 0);
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 4));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     delete window;
 }
