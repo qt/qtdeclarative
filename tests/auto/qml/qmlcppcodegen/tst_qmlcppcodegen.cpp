@@ -138,6 +138,7 @@ private slots:
     void valueTypeLists();
     void boundComponents();
     void invisibleListElementType();
+    void typePropertyClash();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2199,6 +2200,17 @@ void tst_QmlCppCodegen::invisibleListElementType()
     const QQmlListReference ref = x.value<QQmlListReference>();
     QVERIFY(ref.isValid());
     QCOMPARE(ref.size(), 0);
+}
+
+void tst_QmlCppCodegen::typePropertyClash()
+{
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(u"size"_s, 5);
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/typePropertyClash.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"Size: 5"_s);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

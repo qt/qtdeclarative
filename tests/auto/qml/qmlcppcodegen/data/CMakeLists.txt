@@ -133,6 +133,7 @@ set(qml_files
     text.qml
     themerbad.qml
     themergood.qml
+    typePropertyClash.qml
     typedArray.qml
     undefinedResets.qml
     unknownAttached.qml
