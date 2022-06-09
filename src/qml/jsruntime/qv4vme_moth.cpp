@@ -442,8 +442,8 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     Q_ASSERT(function->aotFunction);
     Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
                   function->executableCompilationUnit()->fileName(),
-                  function->compiledFunction->location.line,
-                  function->compiledFunction->location.column);
+                  function->compiledFunction->location.line(),
+                  function->compiledFunction->location.column());
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
 
     const qsizetype numFunctionArguments = function->aotFunction->argumentTypes.size();
@@ -525,8 +525,8 @@ ReturnedValue VME::exec(JSTypesStackFrame *frame, ExecutionEngine *engine)
     Function *function = frame->v4Function;
     Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
                   function->executableCompilationUnit()->fileName(),
-                  function->compiledFunction->location.line,
-                  function->compiledFunction->location.column);
+                  function->compiledFunction->location.line(),
+                  function->compiledFunction->location.column());
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
     QV4::Debugging::Debugger *debugger = engine->debugger();
 
