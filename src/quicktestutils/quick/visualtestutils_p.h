@@ -56,12 +56,12 @@ namespace QQuickVisualTestUtils
 
     void dumpTree(QQuickItem *parent, int depth = 0);
 
-    bool delegateVisible(QQuickItem *item);
+    [[nodiscard]] bool delegateVisible(QQuickItem *item);
 
     void moveMouseAway(QQuickWindow *window);
     void centerOnScreen(QQuickWindow *window);
 
-    bool delegateVisible(QQuickItem *item);
+    [[nodiscard]] bool delegateVisible(QQuickItem *item);
 
     /*
        Find an item with the specified objectName.  If index is supplied then the
@@ -165,7 +165,7 @@ namespace QQuickVisualTestUtils
         afterwards to assign the delegate.
     */
     template<typename T>
-    bool findViewDelegateItem(QQuickItemView *itemView, int index, T &delegateItem,
+    [[nodiscard]] bool findViewDelegateItem(QQuickItemView *itemView, int index, T &delegateItem,
         FindViewDelegateItemFlags flags = FindViewDelegateItemFlag::PositionViewAtIndex)
     {
         delegateItem = qobject_cast<T>(findViewDelegateItem(itemView, index, flags));

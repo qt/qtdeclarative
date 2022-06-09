@@ -192,7 +192,8 @@ namespace QQuickViewTestUtils
         int m_rowCount;
     };
 
-    bool testVisibleItems(const QQuickItemViewPrivate *priv, bool *nonUnique, FxViewItem **failItem, int *expectedIdx);
+    [[nodiscard]] bool testVisibleItems(const QQuickItemViewPrivate *priv,
+        bool *nonUnique, FxViewItem **failItem, int *expectedIdx);
 }
 
 namespace QQuickTouchUtils {
@@ -200,8 +201,9 @@ namespace QQuickTouchUtils {
 }
 
 namespace QQuickTest {
-    bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut = true, QByteArray *errorMessage = nullptr);
-    bool showView(QQuickView &v, const QUrl &url);
+    [[nodiscard]] bool initView(QQuickView &v, const QUrl &url,
+        bool moveMouseOut = true, QByteArray *errorMessage = nullptr);
+    [[nodiscard]] bool showView(QQuickView &v, const QUrl &url);
 }
 
 QT_END_NAMESPACE
