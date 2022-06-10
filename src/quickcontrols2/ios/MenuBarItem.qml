@@ -35,4 +35,8 @@ T.MenuBarItem {
         color: control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
                                : control.palette.mid
     }
+
+    background: Item {
+        implicitHeight: 49
+    }
 }

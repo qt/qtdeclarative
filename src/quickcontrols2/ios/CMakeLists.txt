@@ -30,7 +30,11 @@ set(qml_files
     "Frame.qml"
     "GroupBox.qml"
     "SplitView.qml"
+    "TabBar.qml"
+    "ToolBar.qml"
+    "MenuBar.qml"
 )
+
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
 )
