@@ -2,6 +2,8 @@ pragma Strict
 import TestTypes 1.0
 
 CppBaseClass {
+    id: self
+
     enum EE {
         AA, BB, CC
     }
@@ -14,4 +16,9 @@ CppBaseClass {
 
     // An actual binding. Can't be removed because cppProp may be manually set.
     cppProp2: cppProp * 2
+
+    property int a: boo[0]
+    function incA() : void {
+        self.a = self.boo[1];
+    }
 }

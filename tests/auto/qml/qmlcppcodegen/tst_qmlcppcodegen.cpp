@@ -42,6 +42,7 @@ class tst_QmlCppCodegen : public QObject
     Q_OBJECT
 private slots:
     void simpleBinding();
+    void cppValueTypeList();
     void anchorsFill();
     void signalHandler();
     void idAccess();
@@ -158,6 +159,17 @@ void tst_QmlCppCodegen::simpleBinding()
         QCOMPARE(base->cppProp.value(), 9);
         QCOMPARE(base->cppProp2.value(), 18);
     }
+}
+
+void tst_QmlCppCodegen::cppValueTypeList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/TestTypes/Test.qml"_s));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), component.errorString().toUtf8().constData());
+    QCOMPARE(object->property("a").toInt(), 16);
+    QMetaObject::invokeMethod(object.data(), "incA");
+    QCOMPARE(object->property("a").toInt(), 17);
 }
 
 void tst_QmlCppCodegen::anchorsFill()
