@@ -385,6 +385,7 @@ private slots:
     void resetGadgetProperty();
     void leakingAttributesQmlAttached();
     void leakingAttributesQmlSingleton();
+    void leakingAttributesQmlForeign();
 
 private:
     QQmlEngine engine;
@@ -7336,6 +7337,36 @@ Item {
         QCOMPARE(o->children()[2]->property("text"), QVariant("onCompletedExecuted!"));
         QCOMPARE(o->children()[0]->property("text"), QVariant("Updated string content!"));
         QCOMPARE(o->children()[1]->property("text"), QVariant("Updated string content!"));
+    }
+}
+
+void tst_qqmllanguage::leakingAttributesQmlForeign()
+{
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+import StaticTest
+ForeignerForeign {
+     abc: "Hello World"
+})",
+                  QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QVERIFY(o->property("abc").isValid());
+    }
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+import StaticTest
+LeakingForeignerForeign {
+})",
+                  QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QVERIFY(o->property("anotherAbc").isValid());
+        QVERIFY(!o->property("abc").isValid());
     }
 }
 

@@ -855,7 +855,9 @@ namespace QQmlPrivate
     template<class T>
     struct QmlResolved<T, std::void_t<typename T::QmlForeignType>>
     {
-        using Type = typename T::QmlForeignType;
+        using Type = typename std::conditional<
+                QmlTypeHasMarker<T, decltype(&T::qt_qmlMarker_foreign)>::value,
+                typename T::QmlForeignType, T>::type;
     };
 
     template<class T, class = std::void_t<>>
