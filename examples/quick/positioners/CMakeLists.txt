@@ -24,7 +24,6 @@ qt_add_executable(positionersexample
 
 qt_add_qml_module(positionersexample
     URI positioners
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "positioners-attachedproperties.qml"

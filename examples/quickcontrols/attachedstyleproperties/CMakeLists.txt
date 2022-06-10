@@ -22,7 +22,6 @@ qt_add_executable(attachedstylepropertiesexample
 
 qt_add_qml_module(attachedstylepropertiesexample
     URI App
-    VERSION 1.0
     QML_FILES
         attachedstyleproperties.qml
     NO_RESOURCE_TARGET_PATH

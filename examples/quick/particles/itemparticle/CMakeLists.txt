@@ -32,7 +32,6 @@ add_dependencies(itemparticleexample itemparticle_shared)
 # Resources:
 qt_add_qml_module(itemparticleexample
     URI itemparticle
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "itemparticle.qml"

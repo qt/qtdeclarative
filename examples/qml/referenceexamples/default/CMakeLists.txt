@@ -32,7 +32,6 @@ target_link_libraries(default PUBLIC
 
 qt_add_qml_module(default
     URI People
-    VERSION 1.0
     QML_FILES example.qml
     NO_RESOURCE_TARGET_PATH
 )

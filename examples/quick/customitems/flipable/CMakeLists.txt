@@ -30,7 +30,6 @@ target_link_libraries(flipableexample PUBLIC
 
 qt_add_qml_module(flipableexample
     URI flipable
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "flipable.qml"

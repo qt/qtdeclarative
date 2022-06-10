@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import QmltcExample 1.0 // application's own QML module
+import QmltcExample // application's own QML module
 
 Rectangle {
     id: window

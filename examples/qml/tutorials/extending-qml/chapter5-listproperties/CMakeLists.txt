@@ -34,7 +34,6 @@ target_link_libraries(chapter5-listproperties PUBLIC
 
 qt_add_qml_module(chapter5-listproperties
     URI Charts
-    VERSION 1.0
     QML_FILES app.qml
     NO_RESOURCE_TARGET_PATH
     DEPENDENCIES QtQuick

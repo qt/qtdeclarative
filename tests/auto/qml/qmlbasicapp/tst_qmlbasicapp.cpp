@@ -110,7 +110,7 @@ void tst_basicapp::qmldirContents()
         QVERIFY(contents.contains("typeinfo"));
         QVERIFY(contents.contains("depends QtQml"));
         QVERIFY(contents.contains("prefer :/TimeExample2/"));
-        QVERIFY(contents.contains("Clock 1.0 Clock.qml"));
+        QVERIFY(contents.contains("Clock 254.0 Clock.qml"));
 
         QFile qmldirInResources(":/TimeExample2/qmldir");
         QVERIFY(qmldirInResources.open(QIODevice::ReadOnly));
@@ -121,7 +121,7 @@ void tst_basicapp::qmldirContents()
         QFile qmldir(basedir + "/BasicExtension/qmldir");
         QVERIFY(qmldir.open(QIODevice::ReadOnly));
         const QByteArray contents = qmldir.readAll();
-        QVERIFY(contents.contains("More 1.0 More.ui.qml"));
+        QVERIFY(contents.contains("More 254.0 More.ui.qml"));
         QVERIFY(contents.contains("Less.js"));
         QVERIFY(contents.contains("ESModule.mjs"));
         QVERIFY(!contents.contains("lowerCase.js"));

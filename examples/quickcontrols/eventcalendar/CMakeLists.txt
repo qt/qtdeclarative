@@ -35,7 +35,6 @@ target_link_libraries(eventcalendar PUBLIC
 
 qt_add_qml_module(eventcalendar
     URI App
-    VERSION 1.0
     QML_FILES
         MonthGridDelegate.qml
         eventcalendar.qml

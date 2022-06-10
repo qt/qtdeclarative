@@ -33,7 +33,6 @@ target_link_libraries(maskedmousearea PUBLIC
 
 qt_add_qml_module(maskedmousearea
     URI Example
-    VERSION 1.0
     QML_FILES
         maskedmousearea.qml
     RESOURCES

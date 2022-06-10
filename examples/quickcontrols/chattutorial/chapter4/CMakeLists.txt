@@ -31,7 +31,6 @@ target_link_libraries(chattutorial-chapter4 PRIVATE
 # Resources:
 qt_add_qml_module(chattutorial-chapter4
     URI chapter4
-    VERSION 1.0
     QML_FILES
         "ContactPage.qml"
         "ConversationPage.qml"

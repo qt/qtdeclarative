@@ -18,7 +18,6 @@ qt_autogen_tools_initial_setup(testCppTypes)
 target_link_libraries(testCppTypes PRIVATE Qt::Qml Qt::QmlPrivate Qt::Quick)
 
 qt6_add_qml_module(testCppTypes
-    VERSION 1.0
     URI TestTypes
     SOURCES
         commontypes.h

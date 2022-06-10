@@ -16,7 +16,6 @@ set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/quick/imageresponseprov
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt6_add_qml_module(qmlimageresponseproviderplugin
-    VERSION 1.0
     URI "ImageResponseProviderCore"
     AUTO_RESOURCE_PREFIX
     PLUGIN_TARGET qmlimageresponseproviderplugin

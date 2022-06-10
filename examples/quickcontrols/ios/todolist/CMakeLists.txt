@@ -38,7 +38,6 @@ set_source_files_properties(Database.qml PROPERTIES
 
 qt_add_qml_module(todolist
     URI App
-    VERSION 1.0
     QML_FILES
         AppSettings.qml
         Database.qml

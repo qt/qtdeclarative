@@ -33,7 +33,6 @@ target_link_libraries(qml_pixelator PUBLIC
 
 qt_add_qml_module(qml_pixelator
     URI ImageModel
-    VERSION 1.0
     QML_FILES main.qml
     RESOURCES qt.png
     NO_RESOURCE_TARGET_PATH

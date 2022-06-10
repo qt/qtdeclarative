@@ -33,7 +33,6 @@ add_dependencies(textexample text_shared)
 
 qt_add_qml_module(textexample
     URI text
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "fonts/availableFonts.qml"

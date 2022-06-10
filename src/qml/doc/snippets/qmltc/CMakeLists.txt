@@ -45,7 +45,6 @@ target_compile_definitions(${application_name} PRIVATE
 #! [qmltc-add-qml-module]
 # Make the application into a proper QML module:
 qt6_add_qml_module(${application_name}
-    VERSION 1.0
     URI QmltcExample
     AUTO_RESOURCE_PREFIX
     QML_FILES ${application_qml_files}

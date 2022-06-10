@@ -33,7 +33,6 @@ target_link_libraries(qquickwidgetversuswindow_opengl PRIVATE
 
 qt_add_qml_module(qquickwidgetversuswindow_opengl
     URI fbitem
-    VERSION 1.0
     QML_FILES test.qml
     RESOURCE_PREFIX /qquickwidgetversuswindow_opengl
     NO_RESOURCE_TARGET_PATH

@@ -33,7 +33,6 @@ target_link_libraries(networkaccessmanagerfactory PUBLIC
 
 qt_add_qml_module(networkaccessmanagerfactory
     URI Example
-    VERSION 1.0
     QML_FILES view.qml
     NO_RESOURCE_TARGET_PATH
 )

@@ -30,7 +30,6 @@ add_dependencies(pointerhandlersexample pointerhandlers_shared)
 
 qt_add_qml_module(pointerhandlersexample
     URI pointerhandlers
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "components/Button.qml"

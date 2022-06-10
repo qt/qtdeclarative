@@ -10,7 +10,6 @@ qt_autogen_tools_initial_setup(additional_qml_module_plugin)
 qt6_add_qml_module(additional_qml_module
     PLUGIN_TARGET additional_qml_module_plugin
     CLASS_NAME "BasicExtension"
-    VERSION 1.0
     URI "BasicExtension"
     RESOURCE_PREFIX "/"
     QML_FILES

@@ -33,7 +33,6 @@ add_dependencies(touchinteractionexample touchinteraction_shared)
 
 qt_add_qml_module(touchinteractionexample
     URI touchinteraction
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "flickable/Panel.qml"

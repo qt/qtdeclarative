@@ -33,7 +33,6 @@ target_link_libraries(vulkantextureimport PRIVATE
 
 qt_add_qml_module(vulkantextureimport
     URI VulkanTextureImport
-    VERSION 1.0
     QML_FILES
         main.qml
     RESOURCES

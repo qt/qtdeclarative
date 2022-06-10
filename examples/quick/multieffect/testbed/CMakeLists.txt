@@ -33,7 +33,6 @@ add_dependencies(testbedexample testbed_shared)
 # Resources:
 qt_add_qml_module(testbedexample
     URI testbed
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
     "qml/FpsItem.qml"

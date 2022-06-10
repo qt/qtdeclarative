@@ -31,7 +31,6 @@ target_link_libraries(chattutorial-chapter5 PRIVATE
 # Resources:
 qt_add_qml_module(chattutorial-chapter5
     URI chapter5
-    VERSION 1.0
     QML_FILES
         "+Material/ChatToolBar.qml"
         "ChatToolBar.qml"
