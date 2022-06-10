@@ -35,6 +35,7 @@ private slots:
     void jsvalueAssignments();
     void extensionTypeBindings();
     void visibleAliasMethods(); // QTBUG-103956
+    void nonStandardIncludesInsideModule(); // QTBUG-104094
 
     void signalHandlers();
     void jsFunctions();

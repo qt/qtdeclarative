@@ -1174,6 +1174,42 @@ function(_qt_internal_qml_map_build_files target qml_files qrc_file_out_var)
     set(${qrc_file_out_var} ${generated_qrc_file} PARENT_SCOPE)
 endfunction()
 
+# Creates a qrc file that maps QML file path to generated C++ header file name
+function(_qt_internal_qml_add_qmltc_file_mapping_resource qrc_file target qml_files)
+    get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+    set(qrcContents "")
+
+    # go over all QML_FILES, mapping QML files to generated C++ sources
+    foreach(qml_file IN LISTS qml_files)
+        get_filename_component(file_absolute ${qml_file} ABSOLUTE)
+        get_filename_component(file_basename ${file_absolute} NAME_WLE) # extension is always .qml
+        string(REGEX REPLACE "[$#?]+" "_" compiled_file ${file_basename})
+
+        # NB: use <lowercase(file_name)>.<extension> pattern. if
+        # lowercase(file_name) is already taken (e.g. project has main.qml and
+        # main.h/main.cpp), the compilation might fail. in this case, expect
+        # user to specify QT_QMLTC_FILE_BASENAME
+        string(TOLOWER ${compiled_file} file_name)
+
+        get_source_file_property(specified_file_name ${qml_file} QT_QMLTC_FILE_BASENAME)
+        if (specified_file_name)
+            get_filename_component(file_name ${specified_file_name} NAME_WLE)
+        endif()
+
+        # <file_name>.h is enough as corresponding .cpp is not interesting (and
+        # we can get it easily by replacing the extension)
+        string(APPEND qrcContents "    <file alias=\"${file_name}.h\">${file_absolute}</file>\n")
+    endforeach()
+
+    # dump the contents into the .qrc file
+    set(template_file "${__qt_qml_macros_module_base_dir}/Qt6QmltcFileMappingTemplate.qrc.in")
+    set(generated_qrc_file "${output_dir}/.qmltc/${target}/${target}_qmltc_file_map.qrc")
+    set(qt_qml_qmltc_file_mapping_contents "${qrcContents}")
+    configure_file(${template_file} ${generated_qrc_file})
+
+    set(${qrc_file} ${generated_qrc_file} PARENT_SCOPE)
+endfunction()
+
 # Compile Qml files (.qml) to C++ source files with Qml Type Compiler (qmltc).
 function(_qt_internal_target_enable_qmltc target)
     set(args_option "")
@@ -1283,12 +1319,8 @@ function(_qt_internal_target_enable_qmltc target)
         endif()
     endforeach()
 
-    # qmltc needs qrc files to supply to the QQmlJSResourceFileMapper
-    _qt_internal_genex_getjoinedproperty(qrc_args ${target}
-        _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
-    )
-    list(APPEND common_args ${qrc_args})
-
+    # ignore non-QML and to-be-skipped QML files
+    set(filtered_qml_files "")
     foreach(qml_file_src IN LISTS arg_QML_FILES)
         if(NOT qml_file_src MATCHES "\\.(qml)$")
             continue()
@@ -1297,7 +1329,23 @@ function(_qt_internal_target_enable_qmltc target)
         if(skip_qmltc)
             continue()
         endif()
+        list(APPEND filtered_qml_files ${qml_file_src})
+    endforeach()
 
+    # qmltc needs qrc files to supply to the QQmlJSResourceFileMapper
+    _qt_internal_genex_getjoinedproperty(qrc_args ${target}
+        _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
+    )
+    # NB: pass qml files variable as string to preserve its list nature
+    # (otherwise we lose all but first element of the list inside a function)
+    _qt_internal_qml_add_qmltc_file_mapping_resource(
+        qmltc_file_map_qrc ${target} "${filtered_qml_files}")
+    # append --resource <qrc> to qmltc's command line
+    list(APPEND qrc_args --resource "${qmltc_file_map_qrc}")
+
+    list(APPEND common_args ${qrc_args})
+
+    foreach(qml_file_src IN LISTS filtered_qml_files)
         get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
 
         get_filename_component(file_basename ${file_absolute} NAME_WLE) # extension is always .qml
@@ -1335,6 +1383,8 @@ function(_qt_internal_target_enable_qmltc target)
                 "${file_absolute}"
                 ${qml_module_files}
                 $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
+                ${qmltc_file_map_qrc}
+            COMMENT "Compiling ${qml_file_src} with qmltc"
             VERBATIM
         )
 

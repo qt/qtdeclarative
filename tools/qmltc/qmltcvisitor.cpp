@@ -6,6 +6,8 @@
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qstack.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <private/qqmljsutils_p.h>
 
@@ -14,6 +16,8 @@
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+
+Q_DECLARE_LOGGING_CATEGORY(lcQmltcCompiler)
 
 static QString uniqueNameFromPieces(const QStringList &pieces, QHash<QString, int> &repetitions)
 {
@@ -52,8 +56,8 @@ QmltcVisitor::QmltcVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *impor
 
 void QmltcVisitor::findCppIncludes()
 {
-    // TODO: this pass is fairly slow: we have to do exhaustive search because
-    // some C++ code could do forward declarations
+    // TODO: this pass is slow: we have to do exhaustive search because some C++
+    // code could do forward declarations and they are hard to handle correctly
     QSet<const QQmlJSScope *> visitedTypes; // we can still improve by walking all types only once
     const auto visitType = [&visitedTypes](const QQmlJSScope::ConstPtr &type) -> bool {
         if (visitedTypes.contains(type.data()))
@@ -61,19 +65,26 @@ void QmltcVisitor::findCppIncludes()
         visitedTypes.insert(type.data());
         return false;
     };
+    const auto addCppInclude = [this](const QQmlJSScope::ConstPtr &type) {
+        if (QString includeFile = type->filePath(); includeFile.endsWith(u".h"))
+            m_cppIncludes.insert(std::move(includeFile));
+    };
 
-    const auto populateFromType = [&](const QQmlJSScope::ConstPtr &type) {
-        if (!type) // TODO: it is a crutch
+    const auto findInType = [&](const QQmlJSScope::ConstPtr &type) {
+        if (!type)
             return;
         if (visitType(type)) // optimization - don't call nonCompositeBaseType() needlessly
             return;
-        auto t = QQmlJSScope::nonCompositeBaseType(type);
-        if (t != type && visitType(t))
-            return;
 
-        QString includeFile = t->filePath();
-        if (includeFile.endsWith(u".h"))
-            m_cppIncludes.insert(std::move(includeFile));
+        // look in type
+        addCppInclude(type);
+
+        // look in type's base type
+        auto base = type->baseType();
+        Q_ASSERT(base || !type->isComposite());
+        if (!base || visitType(base))
+            return;
+        addCppInclude(base);
     };
 
     const auto constructPrivateInclude = [](QStringView publicInclude) -> QString {
@@ -90,20 +101,25 @@ void QmltcVisitor::findCppIncludes()
     };
 
     // walk the whole type hierarchy
-    for (const QQmlJSScope::ConstPtr &type : qAsConst(m_pureQmlTypes)) {
-        // TODO: figure how to NOT walk all the types. theoretically, we can
-        // stop at first non-composite type
-        for (auto t = type; t; t = t->baseType()) {
-            if (visitType(t))
-                break;
-            // look in type
-            if (auto includeFile = t->filePath(); includeFile.endsWith(u".h"))
-                m_cppIncludes.insert(std::move(includeFile));
+    QStack<QQmlJSScope::ConstPtr> types;
+    types.push(m_exportedRootScope);
+    while (!types.isEmpty()) {
+        auto type = types.pop();
+        Q_ASSERT(type);
+
+        const auto scopeType = type->scopeType();
+        if (scopeType != QQmlJSScope::QMLScope && scopeType != QQmlJSScope::GroupedPropertyScope
+            && scopeType != QQmlJSScope::AttachedPropertyScope) {
+            continue;
+        }
+
+        for (auto t = type; !type->isArrayScope() && t; t = t->baseType()) {
+            findInType(t);
 
             // look in properties
             const auto properties = t->ownProperties();
             for (const QQmlJSMetaProperty &p : properties) {
-                populateFromType(p.type());
+                findInType(p.type());
 
                 if (p.isPrivate() && t->filePath().endsWith(u".h")) {
                     const QString ownersInclude = t->filePath();
@@ -116,20 +132,32 @@ void QmltcVisitor::findCppIncludes()
             // look in methods
             const auto methods = t->ownMethods();
             for (const QQmlJSMetaMethod &m : methods) {
-                populateFromType(m.returnType());
-                // TODO: debug Q_ASSERT(m.returnType())
+                findInType(m.returnType());
+
                 const auto parameters = m.parameterTypes();
                 for (const auto &param : parameters)
-                    populateFromType(param);
+                    findInType(param);
             }
         }
+
+        types.append(type->childScopes());
     }
+
+    // remove own include
+    m_cppIncludes.remove(m_exportedRootScope->filePath());
 }
 
 bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
 {
+    const bool processingRoot = !rootScopeIsValid();
+
     if (!QQmlJSImportVisitor::visit(object))
         return false;
+
+    if (processingRoot) {
+        Q_ASSERT(rootScopeIsValid());
+        setRootFilePath();
+    }
 
     // we're not interested in non-QML scopes
     if (m_currentScope->scopeType() != QQmlJSScope::QMLScope)
@@ -272,11 +300,13 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
     }
 
     postVisitResolve(bindings);
-    findCppIncludes();
     setupAliases();
 
     if (m_mode != Mode::Compile)
         return;
+
+    findCppIncludes();
+
     for (const QQmlJSScope::ConstPtr &type : m_pureQmlTypes)
         checkForNamingCollisionsWithCpp(type);
 }
@@ -659,6 +689,57 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
 
     // TODO: one could also test signal handlers' parameters but we do not store
     // this information in QQmlJSMetaPropertyBinding currently
+}
+
+void QmltcVisitor::setRootFilePath()
+{
+    const QString filePath = m_exportedRootScope->filePath();
+    if (filePath.endsWith(u".h")) // assume the correct path is set
+        return;
+    Q_ASSERT(filePath.endsWith(u".qml"_s));
+
+    const QString correctedFilePath = sourceDirectoryPath(filePath);
+    const QStringList paths = m_importer->resourceFileMapper()->resourcePaths(
+            QQmlJSResourceFileMapper::localFileFilter(correctedFilePath));
+    auto firstHeader = std::find_if(paths.cbegin(), paths.cend(),
+                                    [](const QString &x) { return x.endsWith(u".h"_s); });
+    if (firstHeader == paths.cend()) {
+        const QString matchedPaths = paths.isEmpty() ? u"<none>"_s : paths.join(u", ");
+        qCDebug(lcQmltcCompiler,
+                "Failed to find a header file name for path %s. Paths checked:\n%s",
+                correctedFilePath.toUtf8().constData(), matchedPaths.toUtf8().constData());
+        return;
+    }
+    // NB: get the file name to avoid prefixes
+    m_exportedRootScope->setFilePath(QFileInfo(*firstHeader).fileName());
+}
+
+/*! \internal
+
+    Returns a source directory path for a corresponding \a path which is either
+    a source directory path (rarely - when processing currently-compiled file)
+    or a build directory path (mostly - when importing a module/file).
+*/
+QString QmltcVisitor::sourceDirectoryPath(const QString &path)
+{
+    const QStringList resourcePaths = m_importer->resourceFileMapper()->resourcePaths(
+            QQmlJSResourceFileMapper::localFileFilter(path));
+    // path could be pointing to a source directory already
+    const QString uniquePrefix = u"/qt_qml_module_dir_mapping/"_s;
+    if (resourcePaths.size() != 1 || !resourcePaths[0].startsWith(uniquePrefix)) {
+        // found nothing or path is a source directory path already. either way
+        // return the input here and let the caller take care of it
+        const QString matchedPaths =
+                resourcePaths.isEmpty() ? u"<none>"_s : resourcePaths.join(u", ");
+        qCDebug(lcQmltcCompiler,
+                "Path %s is not a build directory path. Resource paths that matched:\n%s",
+                path.toUtf8().constData(), matchedPaths.toUtf8().constData());
+        return path;
+    }
+    QString sourceDirPath = resourcePaths[0];
+    sourceDirPath.remove(0, uniquePrefix.size());
+    Q_ASSERT(QFileInfo(sourceDirPath).exists());
+    return sourceDirPath;
 }
 
 QT_END_NAMESPACE

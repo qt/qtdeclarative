@@ -31,6 +31,7 @@ set(qml_sources
     QmlTypeWithExtension.qml
     QmlTypeWithBaseTypeExtension.qml
     extensionTypeBindings.qml
+    nonStandardInclude.qml
 
     qtbug103956/SubComponent.qml
     qtbug103956/MainComponent.qml
