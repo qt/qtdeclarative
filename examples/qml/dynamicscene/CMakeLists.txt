@@ -26,7 +26,6 @@ target_link_libraries(dynamicsceneexample PUBLIC
 
 qt_add_qml_module(dynamicsceneexample
     URI dynamicscene
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "GenericSceneItem.qml"

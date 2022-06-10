@@ -35,7 +35,6 @@ endforeach()
 #![1]
 qt_add_qml_module(qmlqtimeexample
     OUTPUT_DIRECTORY imports/TimeExample
-    VERSION 1.0
     URI "TimeExample"
     SOURCES timemodel.cpp timemodel.h
     AUTO_RESOURCE_PREFIX

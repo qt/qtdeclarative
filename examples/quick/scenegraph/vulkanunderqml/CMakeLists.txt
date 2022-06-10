@@ -33,7 +33,6 @@ target_link_libraries(vulkanunderqml PRIVATE
 
 qt_add_qml_module(vulkanunderqml
     URI VulkanUnderQML
-    VERSION 1.0
     QML_FILES
         main.qml
     RESOURCES

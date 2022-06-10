@@ -5,7 +5,6 @@
 qt_add_qml_module(UnregisteredTypes
     STATIC
     URI UnregisteredTypes
-    VERSION 1.0
     NO_GENERATE_QMLTYPES
     NO_PLUGIN
     SOURCES uncreatable.h

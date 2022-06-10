@@ -1,5 +1,5 @@
 import QtQuick
-import QQmlJSScopeTests 1.0
+import QQmlJSScopeTests
 
 Item {
     Extended { }

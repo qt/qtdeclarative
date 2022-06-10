@@ -31,7 +31,6 @@ qt_add_library(tst_qqmlengine_qml STATIC)
 qt_autogen_tools_initial_setup(tst_qqmlengine_qml)
 qt_add_qml_module(tst_qqmlengine_qml
     URI OnlyDeclarative
-    VERSION 1.0
     SOURCES
         "declarativelyregistered.h"
         "declarativelyregistered.cpp"

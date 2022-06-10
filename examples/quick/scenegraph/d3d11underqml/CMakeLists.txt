@@ -35,7 +35,6 @@ target_link_libraries(d3d11underqml PUBLIC
 
 qt_add_qml_module(d3d11underqml
     URI D3D11UnderQML
-    VERSION 1.0
     QML_FILES
         main.qml
     RESOURCES

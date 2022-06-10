@@ -27,7 +27,6 @@ target_link_libraries(chattutorial-chapter2 PRIVATE
 
 qt_add_qml_module(chattutorial-chapter2
     URI chapter2
-    VERSION 1.0
     QML_FILES
         "main.qml"
     RESOURCES

@@ -25,7 +25,6 @@ qt_internal_add_test(tst_qquicklistview2
 
 qt6_add_qml_module(tst_qquicklistview2
     URI Test
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
 )
 

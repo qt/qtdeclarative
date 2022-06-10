@@ -1,6 +1,6 @@
 import QtQml
 import QtQuick
-import QQmlJSScopeTests 1.0
+import QQmlJSScopeTests
 
 Text {
     id: root

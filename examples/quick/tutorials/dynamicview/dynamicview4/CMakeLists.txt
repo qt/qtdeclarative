@@ -25,7 +25,6 @@ set_target_properties(dynamicview4 PROPERTIES
 
 qt_add_qml_module(dynamicview4
     URI dynamicview
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         dynamicview.qml

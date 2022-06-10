@@ -31,7 +31,6 @@ target_link_libraries(rendercontrol_openglexample PRIVATE
 # Resources:
 qt_add_qml_module(rendercontrol_openglexample
     URI rendercontrol
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "demo.qml"

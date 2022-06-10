@@ -42,6 +42,5 @@ qt_internal_add_shaders(tst_qquickitemrhiintegration "shaders"
 
 qt_add_qml_module(tst_qquickitemrhiintegration
     URI TestQquickitemrhiintegration
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
 )

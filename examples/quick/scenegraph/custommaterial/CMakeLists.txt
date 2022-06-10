@@ -28,7 +28,6 @@ target_link_libraries(custommaterial_declarative PRIVATE
 
 qt_add_qml_module(custommaterial_declarative
     URI ExampleCustomMaterial
-    VERSION 1.0
     QML_FILES
         main.qml
     RESOURCE_PREFIX /scenegraph/custommaterial

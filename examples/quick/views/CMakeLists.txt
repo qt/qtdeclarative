@@ -36,7 +36,6 @@ add_dependencies(viewsexample views_shared)
 
 qt_add_qml_module(viewsexample
     URI views
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "delegatemodel/dragselection.qml"

@@ -28,7 +28,6 @@ target_link_libraries(embeddedinwidgetsexample PRIVATE
 # Resources:
 qt_add_qml_module(embeddedinwidgetsexample
     URI embeddedinwidgets
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "main.qml"

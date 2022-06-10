@@ -28,7 +28,6 @@ target_link_libraries(threadedanimation PRIVATE
 
 qt_add_qml_module(threadedanimation
     URI Spinner
-    VERSION 1.0
     QML_FILES main.qml
     RESOURCES spinner.png
     RESOURCE_PREFIX /scenegraph/threadedanimation

@@ -25,7 +25,6 @@ set_target_properties(samegame3 PROPERTIES
 
 qt_add_qml_module(samegame3
     URI samegame
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "Block.qml"

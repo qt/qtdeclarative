@@ -18,7 +18,7 @@
 qt_add_qml_module(
     target
     URI uri
-    VERSION version
+    [VERSION version]
     [PAST_MAJOR_VERSIONS ...]
     [STATIC | SHARED]
     [PLUGIN_TARGET plugin_target]
@@ -363,7 +363,9 @@ alphanumeric or dot characters. Other QML modules may use this name in
 \l{Module Definition qmldir Files}{qmldir} file. The \c URI is also used to
 form the \e{target path} by replacing dots with forward slashes.
 
-A QML module must also define a \c VERSION in the form \c{Major.Minor}, where
+\section2 Versions
+
+A QML module can also define a \c VERSION in the form \c{Major.Minor}, where
 both \c Major and \c Minor must be integers. An additional \c{.Patch}
 component may be appended, but will be ignored. A list of earlier major
 versions the module provides types for can also optionally be given after the
@@ -372,6 +374,11 @@ See \l{qtqml-modules-identifiedmodules.html}{Identified Modules} for further
 in-depth discussion of the module URI and version numbering,
 \l{Registering past major versions} for registering past major versions, and
 \l{Keeping module versions in sync} for keeping module versions in sync.
+
+If you don't need versions you should omit the \c VERSION argument. It defaults
+to the highest possible version. Internal versioning of QML modules has some
+fundamental flaws. You should use an external package management mechanism to
+manage different versions of your QML modules.
 
 \section2 Adding sources and resources to the module
 

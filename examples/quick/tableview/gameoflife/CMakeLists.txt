@@ -33,7 +33,6 @@ target_link_libraries(gameoflife PUBLIC
 
 qt_add_qml_module(gameoflife
     URI GameOfLifeModel
-    VERSION 1.0
     QML_FILES main.qml
     RESOURCES gosperglidergun.cells
     NO_RESOURCE_TARGET_PATH

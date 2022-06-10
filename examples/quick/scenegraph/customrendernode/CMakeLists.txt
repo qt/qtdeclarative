@@ -28,7 +28,6 @@ target_link_libraries(customrendernode PRIVATE
 
 qt_add_qml_module(customrendernode
     URI SceneGraphRendering
-    VERSION 1.0
     QML_FILES
         main.qml
     RESOURCE_PREFIX /scenegraph/customrendernode

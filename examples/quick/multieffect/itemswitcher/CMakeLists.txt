@@ -33,7 +33,6 @@ add_dependencies(itemswitcherexample itemswitcher_shared)
 # Resources:
 qt_add_qml_module(itemswitcherexample
     URI itemswitcher
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
     "qml/main.qml"

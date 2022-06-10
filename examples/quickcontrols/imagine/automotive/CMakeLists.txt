@@ -20,7 +20,6 @@ qt_add_executable(automotiveexample WIN32 MACOSX_BUNDLE
 
 qt_add_qml_module(automotiveexample
     URI automotive
-    VERSION 1.0
     NO_RESOURCE_TARGET_PATH
     QML_FILES
         "qml/FeatureButton.qml"

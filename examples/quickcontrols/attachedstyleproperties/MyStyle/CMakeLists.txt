@@ -6,7 +6,6 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/attachedstyleproper
 
 qt_add_qml_module(MyStyle
     URI MyStyle
-    VERSION 1.0
     IMPORTS
         QtQuick.Controls.Material
     QML_FILES

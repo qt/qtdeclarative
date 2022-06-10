@@ -26,7 +26,6 @@ target_link_libraries(swipetoremoveexample PUBLIC
 # Resources:
 qt_add_qml_module(swipetoremoveexample
     URI swipetoremove
-    VERSION 1.0
     NO_RESOURCE_TARGET_PATH
     QML_FILES
         "swipetoremove.qml"

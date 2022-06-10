@@ -33,7 +33,6 @@ target_link_libraries(chapter3-bindings PUBLIC
 
 qt_add_qml_module(chapter3-bindings
     URI Charts
-    VERSION 1.0
     QML_FILES app.qml
     NO_RESOURCE_TARGET_PATH
     DEPENDENCIES QtQuick

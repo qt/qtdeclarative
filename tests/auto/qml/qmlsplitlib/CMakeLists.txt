@@ -25,7 +25,6 @@ qt_autogen_tools_initial_setup(tst_qmlsplitlib)
 qt6_generate_foreign_qml_types(tst_qmlsplitlib_library tst_qmlsplitlib)
 
 qt6_add_qml_module(tst_qmlsplitlib
-    VERSION 1.0
     URI "SplitLib"
     AUTO_RESOURCE_PREFIX
     QML_FILES

@@ -32,7 +32,6 @@ add_dependencies(imageparticleexample imageparticle_shared)
 # Resources:
 qt_add_qml_module(imageparticleexample
     URI imageparticle
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "allatonce.qml"

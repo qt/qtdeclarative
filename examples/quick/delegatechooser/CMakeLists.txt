@@ -29,7 +29,6 @@ add_dependencies(delegatechooserexample delegatechooser_shared)
 
 qt_add_qml_module(delegatechooserexample
     URI delegatechooser
-    VERSION 1.0
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "delegatechooser.qml"

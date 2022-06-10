@@ -30,7 +30,6 @@ target_link_libraries(quickwidget PRIVATE
 
 qt_add_qml_module(quickwidget
     URI QuickWidgetExample
-    VERSION 1.0
     QML_FILES
         rotatingsquare.qml
     RESOURCE_PREFIX /quickwidget

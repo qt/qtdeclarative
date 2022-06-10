@@ -20,7 +20,6 @@ qt_add_executable(galleryexample WIN32 MACOSX_BUNDLE
 
 qt_add_qml_module(galleryexample
     URI gallery
-    VERSION 1.0
     NO_RESOURCE_TARGET_PATH
     QML_FILES
         "+Material/ToolBar.qml"

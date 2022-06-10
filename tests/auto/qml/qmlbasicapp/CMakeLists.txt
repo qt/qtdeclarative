@@ -10,7 +10,6 @@ qt_internal_add_test(tst_qmlbasicapp
 )
 
 qt6_add_qml_module(tst_qmlbasicapp
-    VERSION 1.0
     URI "BasicApp"
     RESOURCE_PREFIX "/"
     QML_FILES

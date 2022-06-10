@@ -28,7 +28,6 @@ target_link_libraries(twotextureproviders PRIVATE
 
 qt_add_qml_module(twotextureproviders
     URI SceneGraphRendering
-    VERSION 1.0
     QML_FILES
         main.qml
     RESOURCE_PREFIX /scenegraph/twotextureproviders

@@ -34,7 +34,6 @@ target_link_libraries(openglunderqml PRIVATE
 
 qt_add_qml_module(openglunderqml
     URI OpenGLUnderQML
-    VERSION 1.0
     QML_FILES main.qml
     RESOURCE_PREFIX /scenegraph/openglunderqml
     NO_RESOURCE_TARGET_PATH

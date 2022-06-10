@@ -4,7 +4,6 @@
 qt6_add_library(qmlqtimeexample2 STATIC)
 qt_autogen_tools_initial_setup(qmlqtimeexample2)
 qt6_add_qml_module(qmlqtimeexample2
-    VERSION 1.0
     URI "TimeExample2"
     RESOURCE_PREFIX "/"
     SOURCES

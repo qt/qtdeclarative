@@ -33,7 +33,6 @@ target_link_libraries(fboitem PRIVATE
 
 qt_add_qml_module(fboitem
     URI SceneGraphRendering
-    VERSION 1.0
     QML_FILES main.qml
     RESOURCES shaders/checker.frag.qsb
     RESOURCE_PREFIX /scenegraph/fboitem
