@@ -236,10 +236,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
     if (hasExtension) {
         current.init.body << u"{"_s;
         current.init.body << u"auto cppData = QmltcTypeData(this);"_s;
-        current.init.body
-                << QStringLiteral(
-                           "qmltcCreateDynamicMetaObject(this, &%1::staticMetaObject, cppData);")
-                           .arg(type->internalName());
+        current.init.body << u"qmltcCreateDynamicMetaObject(this, cppData);"_s;
         current.init.body << u"}"_s;
     }
 
