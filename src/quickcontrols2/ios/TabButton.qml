@@ -13,7 +13,6 @@ T.TabButton {
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
-
     padding: 6
     spacing: 6
 
@@ -22,17 +21,22 @@ T.TabButton {
     icon.color: checked ? control.palette.button : control.palette.dark
 
     display: TabButton.TextUnderIcon
-    font.pointSize: 13
+    font.pointSize: 12
 
     contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display
+        alignment: Qt.AlignCenter
 
         icon: control.icon
         text: control.text
         font: control.font
         color: checked ? control.palette.button : control.palette.dark
         opacity: control.enabled ? 1 : 0.5
+    }
+
+    background: Item {
+        implicitHeight: 49
     }
 }
