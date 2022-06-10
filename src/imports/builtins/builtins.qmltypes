@@ -162,6 +162,12 @@ Module {
     }
 
     Component {
+        name: "uint"
+        extension: "Number"
+        accessSemantics: "value"
+    }
+
+    Component {
         name: "float"
         extension: "Number"
         accessSemantics: "value"
