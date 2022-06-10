@@ -2212,4 +2212,64 @@ private:
 
 void registerTypes();
 
+class AttachMe : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool abc READ abc WRITE setAbc NOTIFY abcChanged)
+    QML_ANONYMOUS
+
+    bool m_abc;
+signals:
+    void abcChanged();
+
+public:
+    AttachMe(QObject *parent) : QObject(parent) { }
+    bool abc() const { return m_abc; }
+    void setAbc(bool abc) { m_abc = abc; }
+};
+
+class AnotherAttachMe : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString anotherAbc READ anotherAbc WRITE setAnotherAbc NOTIFY anotherAbcChanged)
+    QML_ANONYMOUS
+
+    QString m_anotherAbc;
+signals:
+    void anotherAbcChanged();
+
+public:
+    AnotherAttachMe(QObject *parent) : QObject(parent) { }
+    QString anotherAbc() const { return m_anotherAbc; }
+    void setAnotherAbc(const QString &abc) { m_anotherAbc = abc; }
+};
+
+class OriginalQmlAttached : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(AttachMe)
+    QML_ELEMENT
+
+public:
+    static AttachMe *qmlAttachedProperties(QObject *object) { return new AttachMe(object); }
+};
+
+class LeakingQmlAttached : public OriginalQmlAttached
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
+class DerivedQmlAttached : public OriginalQmlAttached
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ATTACHED(AnotherAttachMe)
+
+public:
+    static AnotherAttachMe *qmlAttachedProperties(QObject *object)
+    {
+        return new AnotherAttachMe(object);
+    }
+};
 #endif // TESTTYPES_H

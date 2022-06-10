@@ -383,6 +383,7 @@ private slots:
     void componentMix();
     void uncreatableAttached();
     void resetGadgetProperty();
+    void leakingAttributesQmlAttached();
 
 private:
     QQmlEngine engine;
@@ -7208,6 +7209,58 @@ void tst_qqmllanguage::resetGadgetProperty()
     MyObject *m = qobject_cast<MyObject *>(o.data());
     QVERIFY(m);
     QCOMPARE(m->m_gadget.value(), 25);
+}
+
+void tst_qqmllanguage::leakingAttributesQmlAttached()
+{
+    // Check for leakage in the QML_ATTACHED macro
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\n"
+                  "import QtQuick\n"
+                  "Item {"
+                  "     OriginalQmlAttached.abc: true"
+                  "}",
+                  QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QObject *attached = qmlAttachedPropertiesObject<OriginalQmlAttached>(o.data());
+        QVERIFY(attached);
+        QCOMPARE(attached->property("abc"), QVariant(true));
+    }
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\n"
+                  "import QtQuick\n"
+                  "Item {"
+                  "     LeakingQmlAttached.abc: true"
+                  "}",
+                  QUrl());
+        QVERIFY(!c.isReady());
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import StaticTest\n"
+                  "import QtQuick\n"
+                  "Item {"
+                  "     DerivedQmlAttached.anotherAbc: \"I am not a bool.\"\n"
+                  "     OriginalQmlAttached.abc: true"
+                  "}",
+                  QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+
+        QObject *attached = qmlAttachedPropertiesObject<OriginalQmlAttached>(o.data());
+        QVERIFY(attached);
+        QCOMPARE(attached->property("abc"), QVariant(true));
+
+        attached = qmlAttachedPropertiesObject<DerivedQmlAttached>(o.data());
+        QVERIFY(attached);
+        QCOMPARE(attached->property("anotherAbc"), QVariant("I am not a bool."));
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

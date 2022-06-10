@@ -153,6 +153,18 @@ namespace QQmlPrivate
         return ConstructionMode::None;
     }
 
+    template<typename>
+    struct QmlMarkerFunction;
+
+    template<typename Ret, typename Class>
+    struct QmlMarkerFunction<Ret (Class::*)()>
+    {
+        using ClassType = Class;
+    };
+
+    template<typename T, typename Marker>
+    using QmlTypeHasMarker = std::is_same<T, typename QmlMarkerFunction<Marker>::ClassType>;
+
     template<typename T>
     void createInto(void *memory, void *) { new (memory) QQmlElement<T>; }
 
@@ -353,7 +365,9 @@ namespace QQmlPrivate
             static Func attachedPropertiesFunc() { return nullptr; };
         };
 
-        using Type = typename OverridableAttachedType<T, typename T::QmlAttachedType>::Type;
+        using Type = typename std::conditional<
+                QmlTypeHasMarker<T, decltype(&T::qt_qmlMarker_attached)>::value,
+                typename OverridableAttachedType<T, typename T::QmlAttachedType>::Type, void>::type;
         using Func = typename Properties<T, Type>::Func;
 
         static const QMetaObject *staticMetaObject()
@@ -799,18 +813,6 @@ namespace QQmlPrivate
 
         return elementName;
     }
-
-    template<typename>
-    struct QmlMarkerFunction;
-
-    template<typename Ret, typename Class>
-    struct QmlMarkerFunction<Ret (Class::*)()>
-    {
-        using ClassType = Class;
-    };
-
-    template<typename T, typename Marker>
-    using QmlTypeHasMarker = std::is_same<T, typename QmlMarkerFunction<Marker>::ClassType>;
 
     template<class T, class = std::void_t<>>
     struct QmlExtended
