@@ -182,17 +182,30 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
     } else if (type == QLatin1String("quint64")) {
         type = QLatin1String("qulonglong");
     } else {
+        auto handleList = [&](QLatin1String list) {
+            if (!type.startsWith(list) || !type.endsWith(QLatin1Char('>')))
+                return false;
 
-        const QLatin1String listProperty("QQmlListProperty<");
-        if (type.startsWith(listProperty)) {
+            const int listSize = list.size();
+            const QString elementType = type.mid(listSize, type.size() - listSize - 1).trimmed();
+
+            // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
+            // produce double pointers. QList is only for value types. We can't handle QLists
+            // of pointers (unless specially registered, but then they're not isList).
+            if (elementType.endsWith(QLatin1Char('*')))
+                return false;
+
             isList = true;
-            const int listPropertySize = listProperty.size();
-            type = type.mid(listPropertySize, type.size() - listPropertySize - 1);
-        }
+            type = elementType;
+            return true;
+        };
 
-        if (type.endsWith(QLatin1Char('*'))) {
-            isPointer = true;
-            type = type.left(type.size() - 1);
+        if (!handleList(QLatin1String("QQmlListProperty<"))
+                && !handleList(QLatin1String("QList<"))) {
+            if (type.endsWith(QLatin1Char('*'))) {
+                isPointer = true;
+                type = type.left(type.size() - 1);
+            }
         }
     }
 
