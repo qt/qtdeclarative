@@ -1104,6 +1104,8 @@ void QSGRhiSupport::destroyRhi(QRhi *rhi)
         return;
 
     if (!rhi->isDeviceLost()) {
+        qCDebug(QSG_LOG_INFO, "Total time spent on pipeline creation during the lifetime of the QRhi was %lld ms",
+                rhi->statistics().totalPipelineCreationTime);
         if (!m_pipelineCacheSave.isEmpty()) {
             QLockFile lock(pipelineCacheLockFileName(m_pipelineCacheSave));
             if (lock.lock()) {
