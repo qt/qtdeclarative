@@ -27,7 +27,6 @@ struct QmltcCompilerInfo
     QString resourcePath;
 };
 
-class CodeGenerator;
 class QmltcCompiler
 {
 public:
@@ -42,7 +41,6 @@ private:
     QmltcTypeResolver *m_typeResolver = nullptr;
     QmltcVisitor *m_visitor = nullptr;
     QQmlJSLogger *m_logger = nullptr;
-    std::unique_ptr<CodeGenerator> m_prototypeCodegen;
     QmltcCompilerInfo m_info {}; // miscellaneous input/output information
     QString m_urlMethodName;
 

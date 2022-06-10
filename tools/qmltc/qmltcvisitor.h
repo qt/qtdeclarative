@@ -21,6 +21,9 @@ class QmltcVisitor : public QQmlJSImportVisitor
                                   &qmlIrOrderedBindings);
     void setupAliases();
     void checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &type);
+    void setRootFilePath();
+
+    QString sourceDirectoryPath(const QString &path);
 
 public:
     QmltcVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,

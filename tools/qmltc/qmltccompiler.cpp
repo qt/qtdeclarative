@@ -7,8 +7,6 @@
 #include "qmltcpropertyutils.h"
 #include "qmltccompilerpieces.h"
 
-#include "prototype/codegenerator.h"
-
 #include <QtCore/qloggingcategory.h>
 #include <private/qqmljsutils_p.h>
 
@@ -58,19 +56,10 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     Q_ASSERT(!m_info.outputHFile.isEmpty());
     Q_ASSERT(!m_info.resourcePath.isEmpty());
 
-    m_prototypeCodegen =
-            std::make_unique<CodeGenerator>(m_url, m_logger, m_typeResolver, m_visitor, &info);
-
     // Note: we only compile "pure" QML types. any component-wrapped type is
     // expected to appear through a binding
     auto pureTypes = m_visitor->pureQmlTypes();
     Q_ASSERT(m_visitor->result() == pureTypes.at(0));
-
-    QSet<QString> cppIncludesFromPrototype;
-    m_prototypeCodegen->prepare(&cppIncludesFromPrototype,
-                                QSet<QQmlJSScope::ConstPtr>(pureTypes.cbegin(), pureTypes.cend()));
-    if (hasErrors())
-        return;
 
     const auto isComponent = [](const QQmlJSScope::ConstPtr &type) {
         auto base = type->baseType();
@@ -114,7 +103,7 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     program.hPath = m_info.outputHFile;
     program.outNamespace = m_info.outputNamespace;
     program.compiledTypes = compiledTypes;
-    program.includes = m_visitor->cppIncludeFiles() | cppIncludesFromPrototype;
+    program.includes = m_visitor->cppIncludeFiles();
     program.urlMethod = urlMethod;
 
     QmltcOutput out;

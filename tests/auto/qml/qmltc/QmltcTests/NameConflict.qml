@@ -1,2 +1,4 @@
 import QtQml
-QtObject {}
+QtObject {
+    property int x: 42
+}

@@ -166,21 +166,32 @@ int main(int argc, char **argv)
     const QStringList resourceFiles = parser.values(resourceOption);
     QQmlJSResourceFileMapper mapper(resourceFiles);
 
+    const auto firstQml = [](const QStringList &paths) {
+        auto it = std::find_if(paths.cbegin(), paths.cend(),
+                               [](const QString &x) { return x.endsWith(u".qml"_s); });
+        if (it == paths.cend())
+            return QString();
+        return *it;
+    };
     // verify that we can map current file to qrc (then use the qrc path later)
     const QStringList paths = mapper.resourcePaths(QQmlJSResourceFileMapper::localFileFilter(url));
     if (paths.isEmpty()) {
         fprintf(stderr, "Failed to find a resource path for file: %s\n", qPrintable(inputFile));
         return EXIT_FAILURE;
     } else if (paths.size() > 1) {
-        fprintf(stderr, "Too many (expected 1) resource paths for file: %s\n",
-                qPrintable(inputFile));
-        return EXIT_FAILURE;
+        bool good = !firstQml(paths).isEmpty();
+        good &= std::any_of(paths.cbegin(), paths.cend(),
+                            [](const QString &x) { return x.endsWith(u".h"_s); });
+        if (!good || paths.size() > 2) {
+            fprintf(stderr, "Unexpected resource paths for file: %s\n", qPrintable(inputFile));
+            return EXIT_FAILURE;
+        }
     }
 
     QmltcCompilerInfo info;
     info.outputCppFile = parser.value(outputCppOption);
     info.outputHFile = parser.value(outputHOption);
-    info.resourcePath = paths.first();
+    info.resourcePath = firstQml(paths);
     info.outputNamespace = parser.value(namespaceOption);
 
     if (info.outputCppFile.isEmpty()) {

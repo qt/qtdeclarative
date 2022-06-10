@@ -405,6 +405,7 @@ qt_internal_add_qml_module(Qml
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlDeploySupport.cmake"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlModuleDirMappingTemplate.qrc.in"
+        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmltcFileMappingTemplate.qrc.in"
         ${extra_cmake_files}
     EXTRA_CMAKE_INCLUDES
         "${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"

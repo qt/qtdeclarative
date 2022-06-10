@@ -23,6 +23,7 @@
 #include "qjsvalueassignments.h"
 #include "extensiontypebindings.h"
 #include "qtbug103956_main.h"
+#include "nonstandardinclude.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -820,6 +821,14 @@ void tst_qmltc::visibleAliasMethods()
     PREPEND_NAMESPACE(qtbug103956_main) created(&e);
     QVERIFY(created.firstComponent());
     QCOMPARE(created.firstComponent()->setMe(), true);
+}
+
+// QTBUG-104094
+void tst_qmltc::nonStandardIncludesInsideModule()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(nonStandardInclude) created(&e);
+    QVERIFY(created.good());
 }
 
 void tst_qmltc::signalHandlers()
