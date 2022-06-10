@@ -18,6 +18,8 @@
 #include <QtCore/qthreadpool.h>
 #include <QtCore/qtimer.h>
 
+#include <QtJsonRpc/private/qhttpmessagestreamparser_p.h>
+
 #include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
 #include <QtQmlCompiler/private/qqmljscompiler_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
@@ -30,8 +32,6 @@
 #ifndef QT_BOOTSTRAPPED
 #    include <QtCore/qlibraryinfo.h>
 #endif
-
-#include "qlanguageserver_p.h"
 
 #include <iostream>
 #ifdef Q_OS_WIN32
@@ -51,12 +51,40 @@ public:
     void run()
     {
         auto guard = qScopeGuard([this]() { emit eof(); });
-        char data[256];
-        auto buffer = static_cast<char *>(data);
-        while (std::cin.get(buffer[0])) { // should poll/select and process events
-            const int read = std::cin.readsome(buffer + 1, 255) + 1;
-            emit receivedData(QByteArray(buffer, read));
+        const constexpr qsizetype bufSize = 1024;
+        qsizetype bytesInBuf = 0;
+        char bufferData[2 * bufSize];
+        char *buffer = static_cast<char *>(bufferData);
+
+        auto trySend = [this, &bytesInBuf, buffer]() {
+            if (bytesInBuf == 0)
+                return;
+            qsizetype toSend = bytesInBuf;
+            bytesInBuf = 0;
+            QByteArray dataToSend(buffer, toSend);
+            emit receivedData(dataToSend);
+        };
+        QHttpMessageStreamParser streamParser(
+                [](const QByteArray &, const QByteArray &) { /* just a header, do nothing */ },
+                [&trySend](const QByteArray &) {
+                    // message body
+                    trySend();
+                },
+                [&trySend](QtMsgType, QString) {
+                    // there was an error
+                    trySend();
+                },
+                QHttpMessageStreamParser::UNBUFFERED);
+
+        while (std::cin.get(buffer[bytesInBuf])) { // should poll/select and process events
+            qsizetype readNow = std::cin.readsome(buffer + bytesInBuf + 1, bufSize) + 1;
+            QByteArray toAdd(buffer + bytesInBuf, readNow);
+            bytesInBuf += readNow;
+            if (bytesInBuf >= bufSize)
+                trySend();
+            streamParser.receiveData(toAdd);
         }
+        trySend();
     }
 signals:
     void receivedData(const QByteArray &data);
