@@ -10,8 +10,7 @@
 
 QT_BEGIN_NAMESPACE
 
-void qmltcCreateDynamicMetaObject(QObject *object, const QMetaObject *staticMetaObject,
-                                  const QmltcTypeData &data)
+void qmltcCreateDynamicMetaObject(QObject *object, const QmltcTypeData &data)
 {
     // TODO: when/if qmltc-compiled types would be registered via
     // qmltyperegistrar, instead of creating a dummy QQmlTypePrivate, fetch the
@@ -19,9 +18,11 @@ void qmltcCreateDynamicMetaObject(QObject *object, const QMetaObject *staticMeta
     // along with the meta object, module name and revision. all that should be
     // available ahead-of-time to qmltc.
     auto qmlTypePrivate = new QQmlTypePrivate(data.regType);
-    // place the newly created QQmlTypePrivate into the qml meta data storage so
-    // that it is properly deleted
-    QQmlMetaType::registerMetaObjectForType(staticMetaObject, qmlTypePrivate);
+
+    // tie qmlTypePrivate destruction to objects's destruction. the type's
+    // content is not needed once the associated object is deleted
+    QObject::connect(object, &QObject::destroyed,
+                     [qmlTypePrivate](QObject *) { qmlTypePrivate->release(); });
 
     // initialize QQmlType::QQmlCppTypeData
     Q_ASSERT(data.regType == QQmlType::CppType);

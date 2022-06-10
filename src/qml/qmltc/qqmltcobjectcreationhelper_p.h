@@ -118,9 +118,7 @@ struct QmltcTypeData
     }
 };
 
-Q_QML_PRIVATE_EXPORT void qmltcCreateDynamicMetaObject(QObject *object,
-                                                       const QMetaObject *staticMetaObject,
-                                                       const QmltcTypeData &data);
+Q_QML_PRIVATE_EXPORT void qmltcCreateDynamicMetaObject(QObject *object, const QmltcTypeData &data);
 
 QT_END_NAMESPACE
 
