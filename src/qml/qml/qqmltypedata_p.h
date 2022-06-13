@@ -71,6 +71,7 @@ public:
 
     CompositeMetaTypeIds typeIds(int objectId = 0) const;
     QByteArray typeClassName() const { return m_typeClassName; }
+    SourceCodeData backupSourceCode() const { return m_backupSourceCode; }
 
 protected:
     void done() override;

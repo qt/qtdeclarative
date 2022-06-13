@@ -98,6 +98,10 @@ void tst_QQMLTypeLoader::trimCache()
         url.setQuery(QString::number(i));
 
         QQmlTypeData *data = loader.getType(url).take();
+
+        // Backup source code should be dropped right after loading, even without cache trimming.
+        QVERIFY(!data->backupSourceCode().isValid());
+
         // Run an event loop to receive the callback that release()es.
         QTRY_COMPARE(data->count(), 2);
 
@@ -660,6 +664,7 @@ static void getCompilationUnitAndRuntimeInfo(QQmlRefPointer<QV4::ExecutableCompi
     QQmlTypeLoader &loader = QQmlEnginePrivate::get(engine)->typeLoader;
     auto typeData = loader.getType(url);
     QVERIFY(typeData);
+    QVERIFY(!typeData->backupSourceCode().isValid());
 
     if (typeData->isError()) {
         const auto errors = typeData->errors();
