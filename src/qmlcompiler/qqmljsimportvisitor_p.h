@@ -256,6 +256,7 @@ protected:
     enum class BindingExpressionParseResult { Invalid, Script, Literal, Translation };
     BindingExpressionParseResult parseBindingExpression(const QString &name,
                                                         const QQmlJS::AST::Statement *statement);
+    bool isImportPrefix(QString prefix) const;
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;

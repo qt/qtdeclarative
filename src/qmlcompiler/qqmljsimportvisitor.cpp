@@ -1732,6 +1732,19 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
     return BindingExpressionParseResult::Literal;
 }
 
+bool QQmlJSImportVisitor::isImportPrefix(QString prefix) const
+{
+    if (prefix.isEmpty() || !prefix.front().isUpper())
+        return false;
+
+    auto it = m_rootScopeImports.find(prefix);
+
+    if (it == m_rootScopeImports.end())
+        return false;
+
+    return it->scope.isNull();
+}
+
 void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding)
 {
     const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
@@ -1816,23 +1829,32 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     }
 
     auto group = id;
+
+    QString prefix;
     for (; group->next; group = group->next) {
         const QString name = group->name.toString();
         if (name.isEmpty())
             break;
 
+        if (group == id && isImportPrefix(name)) {
+            prefix = name + u'.';
+            continue;
+        }
+
         const bool isAttachedProperty = name.front().isUpper();
         if (isAttachedProperty) {
             // attached property
-            enterEnvironmentNonUnique(QQmlJSScope::AttachedPropertyScope,
-                                      name, group->firstSourceLocation());
+            enterEnvironmentNonUnique(QQmlJSScope::AttachedPropertyScope, prefix + name,
+                                      group->firstSourceLocation());
         } else {
             // grouped property
-            enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, name,
+            enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, prefix + name,
                                       group->firstSourceLocation());
         }
-        m_bindings.append(
-                createNonUniqueScopeBinding(m_currentScope, name, group->firstSourceLocation()));
+        m_bindings.append(createNonUniqueScopeBinding(m_currentScope, prefix + name,
+                                                      group->firstSourceLocation()));
+
+        prefix.clear();
     }
 
     auto name = group->name;
@@ -2242,22 +2264,32 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     bool needsResolution = false;
     int scopesEnteredCounter = 0;
+
+    QString prefix;
     for (auto group = uiob->qualifiedId; group->next; group = group->next) {
         const QString idName = group->name.toString();
 
         if (idName.isEmpty())
             break;
 
+        if (group == uiob->qualifiedId && isImportPrefix(idName)) {
+            prefix = idName + u'.';
+            continue;
+        }
+
         const auto scopeKind = idName.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
                                                         : QQmlJSScope::GroupedPropertyScope;
 
-        bool exists = enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+        bool exists =
+                enterEnvironmentNonUnique(scopeKind, prefix + idName, group->firstSourceLocation());
 
-        m_bindings.append(
-                createNonUniqueScopeBinding(m_currentScope, idName, group->firstSourceLocation()));
+        m_bindings.append(createNonUniqueScopeBinding(m_currentScope, prefix + idName,
+                                                      group->firstSourceLocation()));
 
         ++scopesEnteredCounter;
         needsResolution = needsResolution || !exists;
+
+        prefix.clear();
     }
 
     for (int i=0; i < scopesEnteredCounter; ++i) { // leave the scopes we entered again
@@ -2286,18 +2318,28 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
     auto group = uiob->qualifiedId;
     int scopesEnteredCounter = 0;
+
+    QString prefix;
     for (; group->next; group = group->next) {
         const QString idName = group->name.toString();
 
         if (idName.isEmpty())
             break;
 
+        if (group == uiob->qualifiedId && isImportPrefix(idName)) {
+            prefix = idName + u'.';
+            continue;
+        }
+
         const auto scopeKind = idName.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
                                                         : QQmlJSScope::GroupedPropertyScope;
         // definitely exists
-        [[maybe_unused]] bool exists = enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+        [[maybe_unused]] bool exists =
+                enterEnvironmentNonUnique(scopeKind, prefix + idName, group->firstSourceLocation());
         Q_ASSERT(exists);
         scopesEnteredCounter++;
+
+        prefix.clear();
     }
 
     // on ending the visit to UiObjectBinding, set the property type to the

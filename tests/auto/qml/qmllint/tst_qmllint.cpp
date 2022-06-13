@@ -1154,6 +1154,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("jsVarDeclarations") << QStringLiteral("jsVarDeclarations.qml");
     QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml");
     QTest::newRow("boundComponents") << QStringLiteral("boundComponents.qml");
+    QTest::newRow("prefixedAttachedProperty") << QStringLiteral("prefixedAttachedProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()
