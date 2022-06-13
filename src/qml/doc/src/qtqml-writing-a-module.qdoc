@@ -179,7 +179,7 @@ set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml)
 
 The output directories of QML modules move to the new location.
 Likewise, the \c qmllint and \c qmlcachegen invocations are automatically
-adapted to use the new output directory as an \l {QML Import Path}{import path}.
+adapted to use the new output directory as an \l[QtQml]{QML Import Path}{import path}.
 Because the new output directory is not part of the default QML import path,
 you have to add it explicitly at run time, so that the QML modules can be found.
 
