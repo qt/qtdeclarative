@@ -841,6 +841,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("multipleGrouped") << QStringLiteral("multiGrouped.qml");
     QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
     QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml");
+    QTest::newRow("prefixedAttachedProperty") << QStringLiteral("prefixedAttachedProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -190,6 +190,8 @@ protected:
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
     bool rootScopeIsValid() const { return m_exportedRootScope->sourceLocation().isValid(); }
 
+    bool isImportPrefix(QString prefix) const;
+
     QQmlJSLogger m_logger;
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
