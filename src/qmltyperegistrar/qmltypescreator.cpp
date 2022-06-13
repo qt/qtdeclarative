@@ -142,6 +142,32 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
     bool isList = false;
     bool isPointer = false;
 
+    auto handleList = [&](QLatin1String list) {
+        if (!type.startsWith(list) || !type.endsWith(QLatin1Char('>')))
+            return false;
+
+        const int listSize = list.size();
+        const QString elementType = type.mid(listSize, type.size() - listSize - 1).trimmed();
+
+        // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
+        // produce double pointers. QList is only for value types. We can't handle QLists
+        // of pointers (unless specially registered, but then they're not isList).
+        if (elementType.endsWith(QLatin1Char('*')))
+            return false;
+
+        isList = true;
+        type = elementType;
+        return true;
+    };
+
+    if (!handleList(QLatin1String("QQmlListProperty<"))
+            && !handleList(QLatin1String("QList<"))) {
+        if (type.endsWith(QLatin1Char('*'))) {
+            isPointer = true;
+            type = type.left(type.size() - 1);
+        }
+    }
+
     if (type == QLatin1String("qreal")) {
 #ifdef QT_COORD_TYPE_STRING
         type = QLatin1String(QT_COORD_TYPE_STRING)
@@ -156,32 +182,6 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
         type = QLatin1String("qlonglong");
     } else if (type == QLatin1String("quint64")) {
         type = QLatin1String("qulonglong");
-    } else {
-        auto handleList = [&](QLatin1String list) {
-            if (!type.startsWith(list) || !type.endsWith(QLatin1Char('>')))
-                return false;
-
-            const int listSize = list.size();
-            const QString elementType = type.mid(listSize, type.size() - listSize - 1).trimmed();
-
-            // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
-            // produce double pointers. QList is only for value types. We can't handle QLists
-            // of pointers (unless specially registered, but then they're not isList).
-            if (elementType.endsWith(QLatin1Char('*')))
-                return false;
-
-            isList = true;
-            type = elementType;
-            return true;
-        };
-
-        if (!handleList(QLatin1String("QQmlListProperty<"))
-                && !handleList(QLatin1String("QList<"))) {
-            if (type.endsWith(QLatin1Char('*'))) {
-                isPointer = true;
-                type = type.left(type.size() - 1);
-            }
-        }
     }
 
     m_qml.writeScriptBinding(typeKey, enquote(type));

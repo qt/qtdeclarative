@@ -21,4 +21,10 @@ CppBaseClass {
     function incA() : void {
         self.a = self.boo[1];
     }
+
+    property real b: hoo[0]
+    function incB() : void {
+        self.b = self.hoo[1];
+    }
+
 }
