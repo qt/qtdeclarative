@@ -22,6 +22,8 @@
 
 #include <QtCore/qversionnumber.h>
 
+#include <type_traits>
+
 QT_BEGIN_NAMESPACE
 
 class QString;
@@ -95,10 +97,10 @@ enum class VariableScope {
 template <typename T1, typename T2>
 T1 cast(T2 *ast)
 {
-    if (ast && ast->kind == static_cast<T1>(0)->K)
+    if (ast && ast->kind == std::remove_pointer_t<T1>::K)
         return static_cast<T1>(ast);
 
-    return 0;
+    return nullptr;
 }
 
 FunctionExpression *asAnonymousFunctionDefinition(AST::Node *n);
