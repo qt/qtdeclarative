@@ -133,7 +133,7 @@
         ├─── Button.qml
         └─── qmldir
         \endcode
-    \li The files must be in a directory that is findable via the \l {QML Import Path}.
+    \li The files must be in a directory that is findable via the \l[QtQml]{QML Import Path}.
 
         For example, if the path to \e MyStyle directory mentioned above was
         \c /home/user/MyApp/MyStyle, then \c /home/user/MyApp must be added to
