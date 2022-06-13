@@ -105,10 +105,13 @@ namespace QQmlPrivate
             // the size that was allocated.
             ::operator delete (ptr);
         }
+#ifdef Q_CC_MSVC
         static void operator delete(void *, void *) {
             // Deliberately empty placement delete operator.
             // Silences MSVC warning C4291: no matching operator delete found
+            // On MinGW it causes -Wmismatched-new-delete, though.
         }
+#endif
     };
 
     enum class ConstructionMode
