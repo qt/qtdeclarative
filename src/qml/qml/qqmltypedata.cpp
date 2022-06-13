@@ -277,6 +277,7 @@ void QQmlTypeData::setCompileUnit(const Container &container)
 void QQmlTypeData::done()
 {
     auto cleanup = qScopeGuard([this]{
+        m_backupSourceCode = SourceCodeData();
         m_document.reset();
         m_typeReferences.clear();
         if (isError()) {
@@ -401,7 +402,6 @@ void QQmlTypeData::done()
         qCDebug(DBG_DISK_CACHE) << "Checksum mismatch for cached version of" << m_compiledData->fileName();
         if (!loadFromSource())
             return;
-        m_backupSourceCode = SourceCodeData();
         m_compiledData.reset();
     }
 

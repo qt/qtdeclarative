@@ -85,6 +85,11 @@ public:
         QDateTime sourceTimeStamp() const;
         bool exists() const;
         bool isEmpty() const;
+        bool isValid() const
+        {
+            return hasInlineSourceCode || !fileInfo.filePath().isEmpty();
+        }
+
     private:
         friend class QQmlDataBlob;
         friend class QQmlTypeLoader;

@@ -2524,6 +2524,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlEnginePrivate *eng = QQmlEnginePrivate::get(&engine);
         QQmlRefPointer<QQmlTypeData> td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
+        QVERIFY(!td->backupSourceCode().isValid());
 
         QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
         readOnlyQmlUnit.reset(compilationUnit->unitData());

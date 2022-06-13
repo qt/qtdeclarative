@@ -1061,6 +1061,7 @@ void tst_qqmlengine::qrcUrls()
     {
         QQmlRefPointer<QQmlTypeData> oneQml(pEngine->typeLoader.getType(QUrl("qrc:/qrcurls.qml")));
         QVERIFY(oneQml.data() != nullptr);
+        QVERIFY(!oneQml->backupSourceCode().isValid());
         QQmlRefPointer<QQmlTypeData> twoQml(pEngine->typeLoader.getType(QUrl("qrc:///qrcurls.qml")));
         QVERIFY(twoQml.data() != nullptr);
         QCOMPARE(oneQml.data(), twoQml.data());
@@ -1069,6 +1070,7 @@ void tst_qqmlengine::qrcUrls()
     {
         QQmlRefPointer<QQmlTypeData> oneJS(pEngine->typeLoader.getType(QUrl("qrc:/qrcurls.js")));
         QVERIFY(oneJS.data() != nullptr);
+        QVERIFY(!oneJS->backupSourceCode().isValid());
         QQmlRefPointer<QQmlTypeData> twoJS(pEngine->typeLoader.getType(QUrl("qrc:///qrcurls.js")));
         QVERIFY(twoJS.data() != nullptr);
         QCOMPARE(oneJS.data(), twoJS.data());
