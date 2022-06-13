@@ -1510,6 +1510,7 @@ void QQuickTextEdit::componentComplete()
     }
     if (d->cursorComponent && isCursorVisible())
         QQuickTextUtil::createCursor(d);
+    polish();
 }
 
 /*!
@@ -2466,8 +2467,8 @@ void QQuickTextEdit::q_textChanged()
     updateSize();
 
     markDirtyNodesForRange(0, d->document->characterCount(), 0);
-    polish();
     if (isComponentComplete()) {
+        polish();
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
@@ -2516,8 +2517,8 @@ void QQuickTextEdit::q_contentsChange(int pos, int charsRemoved, int charsAdded)
 
     markDirtyNodesForRange(pos, editRange, delta);
 
-    polish();
     if (isComponentComplete()) {
+        polish();
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
@@ -2545,8 +2546,8 @@ void QQuickTextEdit::updateSelection()
     // No need for node updates when we go from an empty selection to another empty selection
     if (d->control->textCursor().hasSelection() || d->hadSelection) {
         markDirtyNodesForRange(qMin(d->lastSelectionStart, d->control->textCursor().selectionStart()), qMax(d->control->textCursor().selectionEnd(), d->lastSelectionEnd), 0);
-        polish();
         if (isComponentComplete()) {
+            polish();
             d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
             update();
         }
@@ -2690,8 +2691,8 @@ void QQuickTextEdit::updateWholeDocument()
             node.setDirty();
     }
 
-    polish();
     if (isComponentComplete()) {
+        polish();
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
@@ -2702,8 +2703,8 @@ void QQuickTextEdit::invalidateBlock(const QTextBlock &block)
     Q_D(QQuickTextEdit);
     markDirtyNodesForRange(block.position(), block.position() + block.length(), 0);
 
-    polish();
     if (isComponentComplete()) {
+        polish();
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
@@ -2712,8 +2713,8 @@ void QQuickTextEdit::invalidateBlock(const QTextBlock &block)
 void QQuickTextEdit::updateCursor()
 {
     Q_D(QQuickTextEdit);
-    polish();
-    if (isComponentComplete()) {
+    if (isComponentComplete() && isVisible()) {
+        polish();
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
