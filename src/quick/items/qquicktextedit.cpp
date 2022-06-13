@@ -2238,6 +2238,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
                     if (inView) {
                         if (!engine.hasContents()) {
+                            if (node && !node->parent())
+                                d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
                             node = d->createTextNode();
                             updateNodeTransform(node, nodeOffset);
                             nodeStart = block.position();
