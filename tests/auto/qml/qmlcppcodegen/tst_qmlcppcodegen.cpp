@@ -153,6 +153,10 @@ void tst_QmlCppCodegen::cppValueTypeList()
     QCOMPARE(object->property("a").toInt(), 16);
     QMetaObject::invokeMethod(object.data(), "incA");
     QCOMPARE(object->property("a").toInt(), 17);
+
+    QCOMPARE(object->property("b").toDouble(), 0.25);
+    QMetaObject::invokeMethod(object.data(), "incB");
+    QCOMPARE(object->property("b").toDouble(), 13.5);
 }
 
 void tst_QmlCppCodegen::anchorsFill()

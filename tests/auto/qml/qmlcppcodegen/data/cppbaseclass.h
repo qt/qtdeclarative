@@ -14,6 +14,7 @@ class CppBaseClass : public QObject
     Q_PROPERTY(int cppProp MEMBER cppProp BINDABLE cppPropBindable FINAL)
     Q_PROPERTY(int cppProp2 MEMBER cppProp2 BINDABLE cppProp2Bindable FINAL)
     Q_PROPERTY(QList<int> boo MEMBER boo FINAL CONSTANT)
+    Q_PROPERTY(QList<qreal> hoo MEMBER hoo FINAL CONSTANT)
     QML_ELEMENT
 public:
     CppBaseClass(QObject *parent = nullptr)
@@ -21,6 +22,9 @@ public:
     {
         boo.append(16);
         boo.append(17);
+
+        hoo.append(0.25);
+        hoo.append(13.5);
     }
 
     QProperty<int> cppProp;
@@ -33,6 +37,7 @@ public:
 
 private:
     QList<int> boo;
+    QList<qreal> hoo;
 };
 
 inline void CppBaseClass::doCall(QObject *foo)
