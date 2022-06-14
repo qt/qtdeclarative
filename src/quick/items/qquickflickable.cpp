@@ -371,7 +371,7 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
         qreal dist = v2 / (accel * 2.0);
         if (v > 0)
             dist = -dist;
-        qreal target = -std::round(-(data.move.value() - dist));
+        qreal target = std::round(data.move.value() - dist);
         dist = -target + data.move.value();
         accel = v2 / (2.0f * qAbs(dist));
 
@@ -497,14 +497,14 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
         // We could animate, but since it is less than 0.5 pixel it's probably not worthwhile.
         resetTimeline(data);
         qreal val = data.move.value();
-        if (qAbs(-std::round(-val) - val) < 0.25) // round small differences
-            val = -std::round(-val);
+        if (std::abs(std::round(val) - val) < 0.25) // round small differences
+            val = std::round(val);
         else if (data.smoothVelocity.value() > 0) // continue direction of motion for larger
-            val = -qFloor(-val);
+            val = std::ceil(val);
         else if (data.smoothVelocity.value() < 0)
-            val = -qCeil(-val);
+            val = std::floor(val);
         else // otherwise round
-            val = -std::round(-val);
+            val = std::round(val);
         timeline.set(data.move, val);
     }
     data.inOvershoot = false;
