@@ -4418,6 +4418,7 @@ void tst_qqmllanguage::deepProperty()
 void tst_qqmllanguage::groupAssignmentFailure()
 {
     auto ep = std::make_unique<QQmlEngine>();
+    QTest::failOnWarning("QQmlComponent: Component destroyed while completion pending");
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(".*Invalid property assignment: url expected - Assigning null to incompatible properties in QML is deprecated. This will become a compile error in future versions of Qt..*"));
     QQmlComponent component(ep.get(), testFileUrl("groupFailure.qml"));
     QScopedPointer<QObject> o(component.create());
@@ -5038,7 +5039,7 @@ static void beginDeferredOnce(QQmlEnginePrivate *enginePriv,
         for (const QV4::CompiledData::Binding *binding: reversedBindings)
             state.creator->populateDeferredBinding(property, deferData->deferredIdx, binding);
         state.creator->finalizePopulateDeferred();
-        state.errors << state.creator->errors;
+        state.appendErrors(state.creator->errors);
 
         deferredState->push_back(std::move(state));
 

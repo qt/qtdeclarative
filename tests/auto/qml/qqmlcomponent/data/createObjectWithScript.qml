@@ -8,6 +8,9 @@ Item{
     property QtObject bindingTestObject : null
     property QtObject bindingThisTestObject : null
 
+    property QtObject badRequired: null
+    property QtObject goodRequired: null
+
     Component{
         id: a
         Rectangle {
@@ -33,11 +36,21 @@ Item{
         }
     }
 
+    Component {
+        id: d
+        Item {
+            required property int i
+        }
+    }
+
     Component.onCompleted: {
         root.declarativerectangle = a.createObject(root, {"x":17,"y":17, "color":"white", "border.width":3, "innerRect.border.width": 20});
         root.declarativeitem = b.createObject(root, {"x":17,"y":17,"testBool":true,"testInt":17,"testObject":root});
 
         root.bindingTestObject = c.createObject(root, {'testValue': Qt.binding(function(){return width * 3}) })  // use root.width
         root.bindingThisTestObject = c.createObject(root, {'testValue': Qt.binding(function(){return this.width * 3}) })  // use width of Item within 'c'
+
+        root.badRequired = d.createObject(root, { "not_i": 42 });
+        root.goodRequired = d.createObject(root, { "i": 42 });
     }
 }

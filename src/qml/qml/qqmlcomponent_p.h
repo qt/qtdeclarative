@@ -75,10 +75,31 @@ public:
     bool hadTopLevelRequiredProperties() const;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
+    struct AnnotatedQmlError
+    {
+        AnnotatedQmlError() = default;
+        AnnotatedQmlError(const QQmlError &error) // convenience ctor
+            : error(error)
+        {
+        }
+        AnnotatedQmlError(const QQmlError &error, bool transient)
+            : error(error), isTransient(transient)
+        {
+        }
+        QQmlError error;
+        bool isTransient = false; // tells if the error is temporary (e.g. unset required property)
+    };
+
     struct ConstructionState {
         std::unique_ptr<QQmlObjectCreator> creator;
-        QList<QQmlError> errors;
+        QList<AnnotatedQmlError> errors;
         bool completePending = false;
+
+        void appendErrors(const QList<QQmlError> &qmlErrors)
+        {
+            for (const QQmlError &e : qmlErrors)
+                errors.emplaceBack(e);
+        }
     };
     ConstructionState state;
 
@@ -102,6 +123,13 @@ public:
 
     QObject *doBeginCreate(QQmlComponent *q, QQmlContext *context);
     bool setInitialProperty(QObject *component, const QString &name, const QVariant& value);
+
+    enum CreateBehavior {
+        CreateDefault,
+        CreateWarnAboutRequiredProperties,
+    };
+    QObject *createWithProperties(QObject *parent, const QVariantMap &properties,
+                                  QQmlContext *context, CreateBehavior behavior = CreateDefault);
 
     bool isBound() const {
         return compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound;

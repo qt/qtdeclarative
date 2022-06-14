@@ -303,7 +303,8 @@ void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data
 
     if (!compilationUnit) {
         Q_ASSERT(data->isError());
-        state.errors = data->errors();
+        state.errors.clear();
+        state.appendErrors(data->errors());
     }
 }
 
@@ -359,7 +360,7 @@ bool QQmlComponentPrivate::setInitialProperty(
         segment = scope.engine->newString(properties.last());
         object->put(segment, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
         if (scope.engine->hasException) {
-            state.errors.push_back(scope.engine->catchExceptionAsQmlError());
+            qmlWarning(base, scope.engine->catchExceptionAsQmlError());
             scope.engine->hasException = false;
             return false;
         }
@@ -380,7 +381,7 @@ bool QQmlComponentPrivate::setInitialProperty(
                                                 "%2 does not have a property called %1")
                                          .arg(name, QQmlMetaType::prettyTypeName(base)));
         }
-        state.errors.push_back(error);
+        qmlWarning(base, error);
         return false;
     }
 
@@ -408,8 +409,8 @@ QQmlComponent::~QQmlComponent()
 
         if (isError()) {
             qWarning() << "This may have been caused by one of the following errors:";
-            for (const QQmlError &error : qAsConst(d->state.errors))
-                qWarning().nospace().noquote() << QLatin1String("    ") << error;
+            for (const QQmlComponentPrivate::AnnotatedQmlError &e : qAsConst(d->state.errors))
+                qWarning().nospace().noquote() << QLatin1String("    ") << e.error;
         }
 
         // we might not have the creator anymore if the engine is gone
@@ -710,7 +711,7 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
     if (newUrl.isEmpty()) {
         QQmlError error;
         error.setDescription(QQmlComponent::tr("Invalid empty URL"));
-        state.errors << error;
+        state.errors.emplaceBack(error);
         return;
     }
 
@@ -746,10 +747,11 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
 QList<QQmlError> QQmlComponent::errors() const
 {
     Q_D(const QQmlComponent);
-    if (isError())
-        return d->state.errors;
-    else
-        return QList<QQmlError>();
+    QList<QQmlError> errors;
+    errors.reserve(d->state.errors.size());
+    for (const QQmlComponentPrivate::AnnotatedQmlError &annotated : d->state.errors)
+        errors.emplaceBack(annotated.error);
+    return errors;
 }
 
 /*!
@@ -773,7 +775,8 @@ QString QQmlComponent::errorString() const
     QString ret;
     if(!isError())
         return ret;
-    for (const QQmlError &e : d->state.errors) {
+    for (const QQmlComponentPrivate::AnnotatedQmlError &annotated : d->state.errors) {
+        const QQmlError &e = annotated.error;
         ret += e.url().toString() + QLatin1Char(':') +
                QString::number(e.line()) + QLatin1Char(' ') +
                e.description() + QLatin1Char('\n');
@@ -824,23 +827,7 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 QObject *QQmlComponent::create(QQmlContext *context)
 {
     Q_D(QQmlComponent);
-
-    QObject *rv = d->doBeginCreate(this, context);
-    if (rv) {
-        completeCreate();
-    } else if (d->state.completePending) {
-        // overridden completCreate might assume that
-        // the object has actually been created
-        ++creationDepth;
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(d->engine);
-        d->complete(ep, &d->state);
-        --creationDepth;
-    }
-    if (rv && !d->requiredProperties().empty()) {
-        delete  rv;
-        return nullptr;
-    }
-    return rv;
+    return d->createWithProperties(nullptr, QVariantMap {}, context);
 }
 
 /*!
@@ -851,9 +838,9 @@ QObject *QQmlComponent::create(QQmlContext *context)
     TODO: also mention errorString() when QTBUG-93239 is fixed
     \endomit
 
-    If any of the \c initialProperties cannot be set, \l isError() will return
-    \c true, and the \l errors() function can be used to
-    get detailed information about the error(s).
+    If any of the \a initialProperties cannot be set, a warning is issued. If
+    there are unset required properties, the object creation fails and returns
+    \c nullptr, in which case \l isError() will return \c true.
 
     \sa QQmlComponent::create
     \since 5.14
@@ -861,15 +848,46 @@ QObject *QQmlComponent::create(QQmlContext *context)
 QObject *QQmlComponent::createWithInitialProperties(const QVariantMap& initialProperties, QQmlContext *context)
 {
     Q_D(QQmlComponent);
+    return d->createWithProperties(nullptr, initialProperties, context);
+}
 
-    QObject *rv = d->doBeginCreate(this, context);
-    if (rv) {
-        setInitialProperties(rv, initialProperties);
-        completeCreate();
-    }
-    if (!d->requiredProperties().empty()) {
-        d->requiredProperties().clear();
+static void QQmlComponent_setQmlParent(QObject *me, QObject *parent); // forward declaration
+
+/*! \internal
+ */
+QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVariantMap &properties,
+                                                    QQmlContext *context, CreateBehavior behavior)
+{
+    Q_Q(QQmlComponent);
+
+    QObject *rv = doBeginCreate(q, context);
+    if (!rv) {
+        if (state.completePending) {
+            // overridden completCreate might assume that
+            // the object has actually been created
+            ++creationDepth;
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+            complete(ep, &state);
+            --creationDepth;
+        }
         return nullptr;
+    }
+
+    QQmlComponent_setQmlParent(rv, parent); // internally checks if parent is nullptr
+
+    q->setInitialProperties(rv, properties);
+    q->completeCreate();
+
+    if (!requiredProperties().empty()) {
+        if (behavior == CreateWarnAboutRequiredProperties) {
+            const RequiredProperties &unsetRequiredProperties = requiredProperties();
+            for (const auto &unsetRequiredProperty : unsetRequiredProperties) {
+                const QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
+                qmlWarning(rv, error);
+            }
+        }
+        delete rv;
+        rv = nullptr;
     }
     return rv;
 }
@@ -915,7 +933,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     auto cleanup = qScopeGuard([this] {
         if (!state.errors.isEmpty() && lcQmlComponentGeneral().isDebugEnabled()) {
             for (const auto &e : qAsConst(state.errors)) {
-                qCDebug(lcQmlComponentGeneral) << "QQmlComponent: " << e.toString();
+                qCDebug(lcQmlComponentGeneral) << "QQmlComponent: " << e.error.toString();
             }
         }
     });
@@ -938,6 +956,16 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         qWarning("QQmlComponent: Cannot create new component instance before completing the previous");
         return nullptr;
     }
+
+    // filter out temporary errors as they do not really affect component's
+    // state (they are not part of the document compilation)
+    state.errors.erase(std::remove_if(state.errors.begin(), state.errors.end(),
+                                      [](const QQmlComponentPrivate::AnnotatedQmlError &e) {
+                                          return e.isTransient;
+                                      }),
+                       state.errors.end());
+    if (state.creator)
+        requiredProperties().clear();
 
     if (!q->isReady()) {
         qWarning("QQmlComponent: Component is not ready");
@@ -962,7 +990,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     state.creator.reset(new QQmlObjectCreator(std::move(context), compilationUnit, creationContext));
     rv = state.creator->create(start);
     if (!rv)
-        state.errors = state.creator->errors;
+        state.appendErrors(state.creator->errors);
     enginePriv->dereferenceScarceResources();
 
     if (rv) {
@@ -997,7 +1025,7 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
                                  QQmlRefPointer<QQmlContextData>()));
 
         if (!state.creator->populateDeferredProperties(object, deferredData))
-            state.errors << state.creator->errors;
+            state.appendErrors(state.creator->errors);
         deferredData->bindings.clear();
 
         deferredState->push_back(std::move(state));
@@ -1103,7 +1131,7 @@ void QQmlComponentPrivate::completeCreate()
     const RequiredProperties& unsetRequiredProperties = requiredProperties();
     for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
         QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
-        state.errors.push_back(error);
+        state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
     }
     if (state.completePending) {
         ++creationDepth;
@@ -1545,46 +1573,14 @@ QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &propert
 {
     Q_D(QQmlComponent);
     Q_ASSERT(d->engine);
-
-    QQmlContext *ctxt = creationContext();
-    if (!ctxt)
-        ctxt = d->engine->rootContext();
-
-    QObject *rv = beginCreate(ctxt);
-    if (!rv)
-        return nullptr;
-
-    Q_ASSERT(d->state.errors.isEmpty()); // otherwise beginCreate() would return nullptr
-
-    QQmlComponent_setQmlParent(rv, parent);
-
-    if (!properties.isEmpty()) {
-        setInitialProperties(rv, properties);
-        if (!d->state.errors.isEmpty()) {
-            qmlWarning(rv, d->state.errors);
-            d->state.errors.clear();
-        }
+    QObject *rv = d->createWithProperties(parent, properties, creationContext(),
+                                          QQmlComponentPrivate::CreateWarnAboutRequiredProperties);
+    if (rv) {
+        QQmlData *qmlData = QQmlData::get(rv);
+        Q_ASSERT(qmlData);
+        qmlData->explicitIndestructibleSet = false;
+        qmlData->indestructible = false;
     }
-
-    if (!d->requiredProperties().empty()) {
-        QList<QQmlError> errors;
-        for (const auto &requiredProperty: qAsConst(d->requiredProperties())) {
-            errors.push_back(QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(
-                    requiredProperty));
-        }
-        if (!errors.isEmpty())
-            qmlWarning(rv, errors);
-        delete rv;
-        return nullptr;
-    }
-
-    d->completeCreate();
-
-    QQmlData *qmlData = QQmlData::get(rv);
-    Q_ASSERT(qmlData);
-    qmlData->explicitIndestructibleSet = false;
-    qmlData->indestructible = false;
-
     return rv;
 }
 
