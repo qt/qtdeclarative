@@ -1031,6 +1031,32 @@ void tst_qqmlcomponent::testSetInitialProperties()
         QVERIFY(obj);
         QVERIFY(comp.errorString().contains("Setting initial properties failed: Item does not have a property called notThePropertiesYoureLookingFor"));
     }
+
+    // QJSValue unpacking - QTBUG-101440
+    {
+        QQmlComponent comp(&eng);
+        comp.setData(R"(
+            import QtQml
+            QtObject {
+                property int x
+                property int y: func ? func() : -1
+                property var func // special
+            }
+        )", QUrl());
+
+        QJSValue data = eng.evaluate("({ \"x\": 42, \"func\": (function() { return 42; }) })");
+        QVERIFY(data.isObject());
+        QVariant var = data.toVariant();
+        QCOMPARE(var.typeId(), QMetaType::QVariantMap);
+        QVariantMap properties = var.toMap();
+        QScopedPointer<QObject> object { comp.createWithInitialProperties(properties) };
+        QVERIFY(object);
+        QCOMPARE(object->property("x"), 42);
+        QCOMPARE(object->property("y"), 42);
+        QJSValue func = eng.toScriptValue(object->property("func"));
+        QVERIFY(func.isCallable());
+        QCOMPARE(func.call().toInt(), 42);
+    }
 }
 
 void tst_qqmlcomponent::createInsideJSModule()
