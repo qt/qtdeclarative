@@ -172,8 +172,8 @@ namespace QQuickVisualTestUtils
     {
     public:
         QQuickApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath,
-                const QStringList &qmlImportPaths = {},
-                const QVariantMap &initialProperties = {});
+                const QVariantMap &initialProperties = {},
+                const QStringList &qmlImportPaths = {});
 
         // Return a C-style string instead of QString because that's what QTest uses for error messages,
         // so it saves code at the calling site.

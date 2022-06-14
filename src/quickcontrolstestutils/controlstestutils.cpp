@@ -34,8 +34,8 @@
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 
 QQuickControlsTestUtils::QQuickControlsApplicationHelper::QQuickControlsApplicationHelper(QQmlDataTest *testCase,
-    const QString &testFilePath, const QStringList &qmlImportPaths, const QVariantMap &initialProperties)
-    : QQuickApplicationHelper(testCase, testFilePath, qmlImportPaths, initialProperties)
+    const QString &testFilePath, const QVariantMap &initialProperties, const QStringList &qmlImportPaths)
+    : QQuickApplicationHelper(testCase, testFilePath, initialProperties, qmlImportPaths)
 {
     if (ready)
         appWindow = qobject_cast<QQuickApplicationWindow*>(cleanup.data());

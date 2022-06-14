@@ -68,7 +68,7 @@ tst_StyleImportsCompileTimeQmlOnly::tst_StyleImportsCompileTimeQmlOnly()
 void tst_StyleImportsCompileTimeQmlOnly::importQmlOnlyStyleWithoutControls()
 {
     QQuickControlsApplicationHelper helper(this,
-        QLatin1String("importQmlOnlyStyleWithoutControls.qml"), QStringList() << dataDirectory());
+        QLatin1String("importQmlOnlyStyleWithoutControls.qml"), {}, QStringList() << dataDirectory());
     QVERIFY2(helper.ready, helper.failureMessage());
 
     auto button = helper.window->property("button").value<QQuickButton*>();
