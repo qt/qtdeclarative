@@ -140,7 +140,6 @@ public:
 
     bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
     int maxTextureSize() const override { return m_maxTextureSize; }
-    bool separateIndexBuffer() const;
 
     int msaaSampleCount() const { return m_initParams.sampleCount; }
 
