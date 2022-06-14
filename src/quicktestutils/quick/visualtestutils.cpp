@@ -140,7 +140,8 @@ QQuickItem *QQuickVisualTestUtils::findViewDelegateItem(QQuickItemView *itemView
     return itemView->itemAtIndex(index);
 }
 
-QQuickVisualTestUtils::QQuickApplicationHelper::QQuickApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath, const QStringList &qmlImportPaths, const QVariantMap &initialProperties)
+QQuickVisualTestUtils::QQuickApplicationHelper::QQuickApplicationHelper(QQmlDataTest *testCase,
+    const QString &testFilePath, const QVariantMap &initialProperties, const QStringList &qmlImportPaths)
 {
     for (const auto &path : qmlImportPaths)
         engine.addImportPath(path);

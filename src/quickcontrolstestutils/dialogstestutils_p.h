@@ -67,7 +67,7 @@ class DialogTestHelper
 public:
     DialogTestHelper(QQmlDataTest *testCase, const QString &testFilePath,
             const QStringList &qmlImportPaths = {}, const QVariantMap &initialProperties = {}) :
-        appHelper(testCase, testFilePath, qmlImportPaths, initialProperties)
+        appHelper(testCase, testFilePath, initialProperties, qmlImportPaths)
     {
         if (!appHelper.ready)
             return;
