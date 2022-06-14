@@ -48,6 +48,15 @@
 
     \b {See also} \l {Switch Control}.
 
+    \section1 TreeViewDelegate Control
+
+    \image qtquickcontrols2-treeviewdelegate.png
+
+    \l A TreeViewDelegate is a delegate that can be assigned to the delegate property
+    of a TreeView.
+
+    \b {See also} \l {TreeView Control}.
+
     \section1 Related Information
     \list
     \li \l {Qt Quick Controls Guidelines}
