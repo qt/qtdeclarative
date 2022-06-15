@@ -72,6 +72,4 @@ private:
 };
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QList<QObject*>)
-
 #endif // QQMLCONTEXT_H
