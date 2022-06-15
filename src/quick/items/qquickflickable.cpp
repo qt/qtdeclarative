@@ -7,6 +7,8 @@
 #include "qquickwindow.h"
 #include "qquickwindow_p.h"
 #include "qquickevents_p_p.h"
+#include "qquickmousearea_p.h"
+#include "qquickdrag_p.h"
 
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -2517,6 +2519,23 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
     bool receiverDisabled = receiver && !receiver->isEnabled();
     bool stealThisEvent = d->stealMouse;
     bool receiverKeepsGrab = receiver && (receiver->keepMouseGrab() || receiver->keepTouchGrab());
+    bool receiverRelinquishGrab = false;
+
+    // Special case for MouseArea, try to guess what it does with the event
+    if (auto *mouseArea = qmlobject_cast<QQuickMouseArea *>(receiver)) {
+        bool preventStealing = mouseArea->preventStealing();
+        if (mouseArea->drag() && mouseArea->drag()->target())
+            preventStealing = true;
+        if (!preventStealing && receiverKeepsGrab) {
+            receiverRelinquishGrab = !receiverDisabled
+                    || (QQuickDeliveryAgentPrivate::isMouseEvent(event)
+                        && firstPoint.state() == QEventPoint::State::Pressed
+                        && (receiver->acceptedMouseButtons() & static_cast<QMouseEvent *>(event)->button()));
+            if (receiverRelinquishGrab)
+                receiverKeepsGrab = false;
+        }
+    }
+
     if ((stealThisEvent || contains(localPos)) && (!receiver || !receiverKeepsGrab || receiverDisabled)) {
         QScopedPointer<QPointerEvent> localizedEvent(QQuickDeliveryAgentPrivate::clonePointerEvent(event, localPos));
         localizedEvent->setAccepted(false);
@@ -2527,7 +2546,7 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
         case QEventPoint::State::Pressed:
             d->handlePressEvent(localizedEvent.data());
             d->captureDelayedPress(receiver, event);
-            stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
+            stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by handlePressEvent
             break;
         case QEventPoint::State::Released:
             d->handleReleaseEvent(localizedEvent.data());
@@ -2544,7 +2563,7 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
             event->setExclusiveGrabber(firstPoint, this);
         }
 
-        const bool filtered = stealThisEvent || d->delayedPressEvent || receiverDisabled;
+        const bool filtered = !receiverRelinquishGrab && (stealThisEvent || d->delayedPressEvent || receiverDisabled);
         if (filtered) {
             event->setAccepted(true);
         }

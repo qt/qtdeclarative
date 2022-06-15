@@ -192,6 +192,7 @@ private slots:
     void stopAtBounds();
     void stopAtBounds_data();
     void nestedMouseAreaUsingTouch();
+    void nestedMouseAreaPropagateComposedEvents();
     void nestedSliderUsingTouch();
     void nestedSliderUsingTouch_data();
     void pressDelayWithLoader();
@@ -2099,6 +2100,27 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     // draggable item should have moved up
     QQuickItem *nested = window->rootObject()->findChild<QQuickItem*>("nested");
     QVERIFY(nested->y() < 100.0);
+}
+
+void tst_qquickflickable::nestedMouseAreaPropagateComposedEvents()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("nestedmouseareapce.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
+    window->show();
+    QVERIFY(window->rootObject() != nullptr);
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable != nullptr);
+
+    QCOMPARE(flickable->contentY(), 50.0f);
+    flickWithTouch(window.data(), QPoint(100, 300), QPoint(100, 200));
+
+    // flickable should have moved
+    QVERIFY(!qFuzzyCompare(flickable->contentY(), 50.0));
 }
 
 void tst_qquickflickable::nestedSliderUsingTouch_data()
