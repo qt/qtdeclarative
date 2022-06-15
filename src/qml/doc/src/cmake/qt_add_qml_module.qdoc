@@ -283,6 +283,17 @@ target will be the \c target followed by \c{_qmllint}. An \c{all_qmllint}
 target which depends on all the individual \c{*_qmllint} targets is also
 provided as a convenience.
 
+\target qml-naming-js-files
+\section2 Naming conventions for \c{.js} files
+
+JavaScript file names that are intended to be addressed as components should
+start with an uppercase letter.
+
+Alternatively, you may use lowercase file names and set the source file
+property
+\l{cmake-source-file-property-QT_QML_SOURCE_TYPENAME}{QT_QML_SOURCE_TYPE_NAME}
+to the desired type name.
+
 \target qml-cmake-singletons
 \section2 Singletons
 
