@@ -2608,8 +2608,11 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     ps->setRenderPassDescriptor(renderPassDescriptor());
 
     QRhiGraphicsPipeline::Flags flags;
-    if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor))
+    if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor)
+            || needsBlendConstant(m_gstate.srcAlpha) || needsBlendConstant(m_gstate.dstAlpha))
+    {
         flags |= QRhiGraphicsPipeline::UsesBlendConstants;
+    }
     if (m_gstate.usesScissor)
         flags |= QRhiGraphicsPipeline::UsesScissor;
     if (m_gstate.stencilTest)
@@ -2623,8 +2626,10 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     QRhiGraphicsPipeline::TargetBlend blend;
     blend.colorWrite = m_gstate.colorWrite;
     blend.enable = m_gstate.blending;
-    blend.srcColor = blend.srcAlpha = m_gstate.srcColor;
-    blend.dstColor = blend.dstAlpha = m_gstate.dstColor;
+    blend.srcColor = m_gstate.srcColor;
+    blend.dstColor = m_gstate.dstColor;
+    blend.srcAlpha = m_gstate.srcAlpha;
+    blend.dstAlpha = m_gstate.dstAlpha;
     ps->setTargetBlends({ blend });
 
     ps->setDepthTest(m_gstate.depthTest);
@@ -2762,6 +2767,17 @@ static void rendererToMaterialGraphicsState(QSGMaterialShader::GraphicsPipelineS
     dst->srcColor = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->srcColor);
     dst->dstColor = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->dstColor);
 
+    // For compatibility with any existing code, separateBlendFactors defaults
+    // to _false_ which means that materials that do not touch srcAlpha and
+    // dstAlpha will continue to use srcColor and dstColor as the alpha
+    // blending factors. New code that needs different values for color/alpha,
+    // can explicitly set separateBlendFactors to true and then set srcAlpha
+    // and dstAlpha as well.
+    dst->separateBlendFactors = false;
+
+    dst->srcAlpha = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->srcAlpha);
+    dst->dstAlpha = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->dstAlpha);
+
     dst->colorWrite = QSGMaterialShader::GraphicsPipelineState::ColorMask(int(src->colorWrite));
 
     dst->cullMode = QSGMaterialShader::GraphicsPipelineState::CullMode(src->cullMode);
@@ -2774,6 +2790,13 @@ static void materialToRendererGraphicsState(GraphicsState *dst,
     dst->blending = src->blendEnable;
     dst->srcColor = QRhiGraphicsPipeline::BlendFactor(src->srcColor);
     dst->dstColor = QRhiGraphicsPipeline::BlendFactor(src->dstColor);
+    if (src->separateBlendFactors) {
+        dst->srcAlpha = QRhiGraphicsPipeline::BlendFactor(src->srcAlpha);
+        dst->dstAlpha = QRhiGraphicsPipeline::BlendFactor(src->dstAlpha);
+    } else {
+        dst->srcAlpha = dst->srcColor;
+        dst->dstAlpha = dst->dstColor;
+    }
     dst->colorWrite = QRhiGraphicsPipeline::ColorMask(int(src->colorWrite));
     dst->cullMode = QRhiGraphicsPipeline::CullMode(src->cullMode);
     dst->polygonMode = QRhiGraphicsPipeline::PolygonMode(src->polygonMode);
@@ -2994,8 +3017,11 @@ void Renderer::updateMaterialStaticData(ShaderManager::Shader *sms,
         if (changed) {
             m_gstateStack.push(m_gstate);
             materialToRendererGraphicsState(&m_gstate, &shaderPs);
-            if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor))
+            if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor)
+                    || needsBlendConstant(m_gstate.srcAlpha) || needsBlendConstant(m_gstate.dstAlpha))
+            {
                 batch->blendConstant = shaderPs.blendConstant;
+            }
             *gstateChanged = true;
         }
     }
@@ -3989,6 +4015,8 @@ bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept
             && a.blending == b.blending
             && a.srcColor == b.srcColor
             && a.dstColor == b.dstColor
+            && a.srcAlpha == b.srcAlpha
+            && a.dstAlpha == b.dstAlpha
             && a.colorWrite == b.colorWrite
             && a.cullMode == b.cullMode
             && a.usesScissor == b.usesScissor

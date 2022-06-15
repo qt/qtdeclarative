@@ -597,6 +597,8 @@ struct GraphicsState
     bool blending = false;
     QRhiGraphicsPipeline::BlendFactor srcColor = QRhiGraphicsPipeline::One;
     QRhiGraphicsPipeline::BlendFactor dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+    QRhiGraphicsPipeline::BlendFactor srcAlpha = QRhiGraphicsPipeline::One;
+    QRhiGraphicsPipeline::BlendFactor dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     QRhiGraphicsPipeline::ColorMask colorWrite = QRhiGraphicsPipeline::ColorMask(0xF);
     QRhiGraphicsPipeline::CullMode cullMode = QRhiGraphicsPipeline::None;
     bool usesScissor = false;
