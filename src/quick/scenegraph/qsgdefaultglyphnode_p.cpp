@@ -238,7 +238,8 @@ bool QSG24BitTextMaskRhiShader::updateGraphicsPipelineState(RenderState &state, 
     ps->srcColor = GraphicsPipelineState::ConstantColor;
     ps->dstColor = GraphicsPipelineState::OneMinusSrcColor;
 
-    QVector4D color = qsg_premultiply(mat->color(), state.opacity());
+    QVector4D color = mat->color();
+
     //        if (useSRGB())
     //            color = qt_sRGB_to_linear_RGB(color);
 
