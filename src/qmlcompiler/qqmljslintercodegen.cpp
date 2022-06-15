@@ -33,14 +33,15 @@ void QQmlJSLinterCodegen::setDocument(const QmlIR::JSCodeGen *codegen,
 
 std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
 QQmlJSLinterCodegen::compileBinding(const QV4::Compiler::Context *context,
-                                    const QmlIR::Binding &irBinding)
+                                    const QmlIR::Binding &irBinding, QQmlJS::AST::Node *astNode)
 {
-    QQmlJSFunctionInitializer initializer(&m_typeResolver, m_currentObject, m_currentScope);
+    QQmlJSFunctionInitializer initializer(
+                &m_typeResolver, m_currentObject->location, m_currentScope->location);
 
     QQmlJS::DiagnosticMessage initializationError;
     const QString name = m_document->stringAt(irBinding.propertyNameIndex);
     QQmlJSCompilePass::Function function =
-            initializer.run(context, name, irBinding, &initializationError);
+            initializer.run(context, name, astNode, irBinding, &initializationError);
     if (initializationError.isValid())
         diagnose(initializationError.message, initializationError.type, initializationError.loc);
 
@@ -60,13 +61,13 @@ QQmlJSLinterCodegen::compileBinding(const QV4::Compiler::Context *context,
 
 std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
 QQmlJSLinterCodegen::compileFunction(const QV4::Compiler::Context *context,
-                                     const QmlIR::Function &irFunction)
+                                     const QString &name, QQmlJS::AST::Node *astNode)
 {
     QQmlJS::DiagnosticMessage initializationError;
-    QQmlJSFunctionInitializer initializer(&m_typeResolver, m_currentObject, m_currentScope);
-    const QString name = m_document->stringAt(irFunction.nameIndex);
+    QQmlJSFunctionInitializer initializer(
+                &m_typeResolver, m_currentObject->location, m_currentScope->location);
     QQmlJSCompilePass::Function function =
-            initializer.run(context, name, irFunction, &initializationError);
+            initializer.run(context, name, astNode, &initializationError);
     if (initializationError.isValid())
         diagnose(initializationError.message, initializationError.type, initializationError.loc);
 

@@ -66,7 +66,8 @@ protected:
     using Instruction = QV4::Moth::Instruction;
 public:
     Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
-            CodegenWarningInterface *iface = defaultCodegenWarningInterface());
+            CodegenWarningInterface *iface = defaultCodegenWarningInterface(),
+            bool storeSourceLocations = false);
 
     void generateFromProgram(const QString &fileName,
                              const QString &finalUrl,
@@ -514,7 +515,7 @@ public:
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, QQmlJS::AST::Node *ast,
                                QQmlJS::AST::FormalParameterList *formals,
-                               QQmlJS::AST::StatementList *body, bool storeSourceLocation = false);
+                               QQmlJS::AST::StatementList *body);
 
 protected:
     void statement(QQmlJS::AST::Statement *ast);
@@ -772,6 +773,7 @@ protected:
     bool inFormalParameterList = false;
     bool functionEndsWithReturn = false;
     bool _tailCallsAreAllowed = true;
+    bool storeSourceLocations = false;
     QSet<QString> m_globalNames;
     QSet<QQmlJS::AST::Node*> m_seenOptionalChainNodes;
     QHash<QQmlJS::AST::Node*, Moth::BytecodeGenerator::Label> m_optionalChainLabels;

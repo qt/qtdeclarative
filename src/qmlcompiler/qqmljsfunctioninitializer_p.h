@@ -23,21 +23,22 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSFunctionInitializer
     Q_DISABLE_COPY_MOVE(QQmlJSFunctionInitializer)
 public:
     QQmlJSFunctionInitializer(
-            const QQmlJSTypeResolver *typeResolver, const QmlIR::Object *object,
-            const QmlIR::Object *scope)
+            const QQmlJSTypeResolver *typeResolver,
+            const QV4::CompiledData::Location &objectLocation,
+            const QV4::CompiledData::Location &scopeLocation)
         : m_typeResolver(typeResolver)
-        , m_currentObject(object)
-        , m_scopeType(typeResolver->scopeForLocation(scope->location))
-        , m_objectType(typeResolver->scopeForLocation(object->location))
+        , m_scopeType(typeResolver->scopeForLocation(scopeLocation))
+        , m_objectType(typeResolver->scopeForLocation(objectLocation))
     {}
 
     QQmlJSCompilePass::Function run(
             const QV4::Compiler::Context *context,
-            const QString &propertyName, const QmlIR::Binding &irBinding,
+            const QString &propertyName, QQmlJS::AST::Node *astNode,
+            const QmlIR::Binding &irBinding,
             QQmlJS::DiagnosticMessage *error);
     QQmlJSCompilePass::Function run(
             const QV4::Compiler::Context *context,
-            const QString &functionName, const QmlIR::Function &irFunction,
+            const QString &functionName, QQmlJS::AST::Node *astNode,
             QQmlJS::DiagnosticMessage *error);
 
 private:
@@ -46,7 +47,6 @@ private:
             QQmlJSCompilePass::Function *function, QQmlJS::DiagnosticMessage *error);
 
     const QQmlJSTypeResolver *m_typeResolver = nullptr;
-    const QmlIR::Object *m_currentObject = nullptr;
     const QQmlJSScope::ConstPtr m_scopeType;
     const QQmlJSScope::ConstPtr m_objectType;
 };

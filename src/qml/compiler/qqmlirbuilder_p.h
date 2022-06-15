@@ -577,12 +577,12 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
     JSCodeGen(Document *document, const QSet<QString> &globalNames,
               QV4::Compiler::CodegenWarningInterface *iface =
-                      QV4::Compiler::defaultCodegenWarningInterface());
+                      QV4::Compiler::defaultCodegenWarningInterface(),
+              bool storeSourceLocations = false);
 
     // Returns mapping from input functions to index in IR::Module::functions / compiledData->runtimeFunctions
     QVector<int>
-    generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions,
-                                          bool storeSourceLocation = false);
+    generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
     bool generateCodeForComponents(const QVector<quint32> &componentRoots);
     bool compileComponent(int contextObject);

@@ -143,6 +143,7 @@ set(qml_files
     throwObjectName.qml
     toString.qml
     translation.qml
+    trivialSignalHandler.qml
     typePropertyClash.qml
     typedArray.qml
     undefinedResets.qml

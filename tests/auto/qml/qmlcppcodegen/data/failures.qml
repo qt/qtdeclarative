@@ -30,4 +30,8 @@ QtObject {
     Component.onCompleted: doesNotExist()
 
     property string aString: self + "a"
+
+    property BirthdayParty party: BirthdayParty {
+        onPartyStarted: (foozle) => { objectName = foozle }
+    }
 }

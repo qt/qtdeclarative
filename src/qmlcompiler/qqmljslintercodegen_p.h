@@ -44,10 +44,11 @@ public:
 
     void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) override;
     std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
-    compileBinding(const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding) override;
+    compileBinding(const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding,
+                   QQmlJS::AST::Node *astNode) override;
     std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
-    compileFunction(const QV4::Compiler::Context *context,
-                    const QmlIR::Function &irFunction) override;
+    compileFunction(const QV4::Compiler::Context *context, const QString &name,
+                    QQmlJS::AST::Node *astNode) override;
 
     void setTypeResolver(QQmlJSTypeResolver typeResolver)
     {

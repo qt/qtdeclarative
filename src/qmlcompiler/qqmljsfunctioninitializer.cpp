@@ -86,6 +86,20 @@ void QQmlJSFunctionInitializer::populateSignature(
                 signatureError(u"Functions without type annotations won't be compiled"_s);
             }
         }
+    } else {
+        for (qsizetype i = 0, end = arguments.length(); i != end; ++i) {
+            const QQmlJS::AST::BoundName &argument = arguments[i];
+            if (argument.typeAnnotation) {
+                if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
+                    if (!m_typeResolver->registerContains(function->argumentTypes[i], type)) {
+                        signatureError(u"Type annotation %1 on signal handler "
+                                        "contradicts signal argument type %2"_s
+                                       .arg(argument.typeAnnotation->type->toString(),
+                                            function->argumentTypes[i].descriptiveName()));
+                    }
+                }
+            }
+        }
     }
 
     if (!function->returnType) {
@@ -121,7 +135,9 @@ static void diagnose(
 
 QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         const QV4::Compiler::Context *context,
-        const QString &propertyName, const QmlIR::Binding &irBinding,
+        const QString &propertyName,
+        QQmlJS::AST::Node *astNode,
+        const QmlIR::Binding &irBinding,
         QQmlJS::DiagnosticMessage *error)
 {
     QQmlJS::SourceLocation bindingLocation;
@@ -149,6 +165,21 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
             for (const auto &method : methods) {
                 if (method.methodType() == QQmlJSMetaMethod::Signal) {
                     function.isSignalHandler = true;
+                    const auto argumentTypes = method.parameterTypes();
+                    for (qsizetype i = 0, end = argumentTypes.length(); i < end; ++i) {
+                        const auto &type = argumentTypes[i];
+                        if (type.isNull()) {
+                            diagnose(u"Cannot resolve the argument type %1."_s
+                                           .arg(method.parameterTypeNames()[i]),
+                                     QtDebugMsg, bindingLocation, error);
+                            function.argumentTypes.append(
+                                        m_typeResolver->tracked(
+                                            m_typeResolver->globalType(m_typeResolver->varType())));
+                        } else {
+                            function.argumentTypes.append(m_typeResolver->tracked(
+                                                              m_typeResolver->globalType(type)));
+                        }
+                    }
                     break;
                 }
             }
@@ -185,8 +216,6 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
     }
 
     QQmlJS::MemoryPool pool;
-    auto astNode = m_currentObject->functionsAndExpressions->slowAt(
-                irBinding.value.compiledScriptIndex)->node;
     auto ast = astNode->asFunctionDefinition();
     if (!ast) {
         QQmlJS::AST::Statement *stmt = astNode->statementCast();
@@ -212,7 +241,7 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
 
 QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         const QV4::Compiler::Context *context,
-        const QString &functionName, const QmlIR::Function &irFunction,
+        const QString &functionName, QQmlJS::AST::Node *astNode,
         QQmlJS::DiagnosticMessage *error)
 {
     Q_UNUSED(functionName);
@@ -220,7 +249,6 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
     QQmlJSCompilePass::Function function;
     function.qmlScope = m_scopeType;
 
-    auto astNode = m_currentObject->functionsAndExpressions->slowAt(irFunction.index)->node;
     auto ast = astNode->asFunctionDefinition();
     Q_ASSERT(ast);
 

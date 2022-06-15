@@ -71,13 +71,14 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
 }
 
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
-                 CodegenWarningInterface *interface)
+                 CodegenWarningInterface *interface, bool storeSourceLocations)
     : _module(nullptr),
       _returnAddress(-1),
       _context(nullptr),
       _labelledStatement(nullptr),
       jsUnitGenerator(jsUnitGenerator),
       _strictMode(strict),
+      storeSourceLocations(storeSourceLocations),
       _fileNameIsUrl(false),
       _interface(interface)
 {
@@ -3246,7 +3247,7 @@ static bool endsWithReturn(Module *module, Node *node)
 }
 
 int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals,
-                            AST::StatementList *body, bool storeSourceLocation)
+                            AST::StatementList *body)
 {
     enterContext(ast);
 
@@ -3278,7 +3279,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
     // AOT compilation, so mark the surrounding function as only-returning-a-closure.
     _context->returnsClosure = body && body->statement && cast<ExpressionStatement *>(body->statement) && cast<FunctionExpression *>(cast<ExpressionStatement *>(body->statement)->expression);
 
-    BytecodeGenerator bytecode(_context->line, _module->debugMode, storeSourceLocation);
+    BytecodeGenerator bytecode(_context->line, _module->debugMode, storeSourceLocations);
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;

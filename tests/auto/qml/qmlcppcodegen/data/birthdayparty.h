@@ -51,6 +51,11 @@ private:
     int m_eee = 25;
 };
 
+struct Foozle {
+    Q_GADGET
+    int foo = 1;
+};
+
 class BirthdayParty : public QObject
 {
     Q_OBJECT
@@ -74,6 +79,7 @@ public:
 
 signals:
     void hostChanged();
+    void partyStarted(Foozle foozle);
 
 private:
     Person *m_host;

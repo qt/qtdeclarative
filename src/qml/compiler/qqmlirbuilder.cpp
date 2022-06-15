@@ -1807,8 +1807,10 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
 }
 
 JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames,
-                     QV4::Compiler::CodegenWarningInterface *interface)
-    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/ false, interface),
+                     QV4::Compiler::CodegenWarningInterface *interface,
+                     bool storeSourceLocations)
+    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/ false, interface,
+                             storeSourceLocations),
       document(document)
 {
     m_globalNames = globalNames;
@@ -1817,7 +1819,7 @@ JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames,
 }
 
 QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
-        const QList<CompiledFunctionOrExpression> &functions, bool storeSourceLocation)
+        const QList<CompiledFunctionOrExpression> &functions)
 {
     auto qmlName = [&](const CompiledFunctionOrExpression &c) {
         if (c.nameIndex != 0)
@@ -1888,7 +1890,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
         }
 
         int idx = defineFunction(name, function ? function : qmlFunction.parentNode,
-                                 function ? function->formals : nullptr, body, storeSourceLocation);
+                                 function ? function->formals : nullptr, body);
         runtimeFunctionIndices[i] = idx;
     }
 
