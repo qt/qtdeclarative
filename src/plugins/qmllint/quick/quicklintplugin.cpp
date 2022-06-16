@@ -99,14 +99,18 @@ void AttachedPropertyTypeValidatorPass::checkWarnings(const QQmlSA::Element &ele
         if (scopeUsedIn->isPropertyRequired(u"index"_s)
             || scopeUsedIn->isPropertyRequired(u"model"_s))
             return;
-        if (scopeUsedIn->parentScope()) {
-            for (const QQmlJSMetaPropertyBinding &binding :
-                 scopeUsedIn->parentScope()->propertyBindings(u"delegate"_s)) {
-                if (!binding.hasObject())
-                    continue;
-                if (binding.objectType() == scopeUsedIn)
-                    return;
-            }
+
+        // If the scope is at the root level, we cannot know whether it will be used
+        // as a delegate or not.
+        if (!scopeUsedIn->parentScope() || scopeUsedIn->parentScope()->internalName() == u"global"_s)
+           return;
+
+        for (const QQmlJSMetaPropertyBinding &binding :
+             scopeUsedIn->parentScope()->propertyBindings(u"delegate"_s)) {
+            if (!binding.hasObject())
+                continue;
+            if (binding.objectType() == scopeUsedIn)
+                return;
         }
     }
 
