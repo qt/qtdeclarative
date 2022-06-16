@@ -70,6 +70,10 @@ QT_BEGIN_NAMESPACE
     The visual appearance of MonthGrid can be changed by
     implementing a \l {delegate}{custom delegate}.
 
+    When viewing any given month, MonthGrid shows days from the previous and
+    next month. This means it always shows six rows, even when first or last
+    row is entirely within an adjacent month.
+
     \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
 */
 
