@@ -52,7 +52,10 @@ namespace QQuickVisualTestUtils
                 continue;
             if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
                 if (index != -1) {
-                    QQmlExpression e(qmlContext(item), item, u"index"_s);
+                    QQmlContext *context = qmlContext(item);
+                    if (!context->isValid())
+                        continue;
+                    QQmlExpression e(context, item, u"index"_s);
                     if (e.evaluate().toInt() == index)
                         return static_cast<T*>(item);
                 } else {
