@@ -31,7 +31,11 @@ function(_qt_internal_generate_android_qml_deployment_settings out_var target)
         # over other qml import paths. By default QT_QML_OUTPUT_DIRECTORY is set to
         # ${CMAKE_BINARY_DIR}/android-qml for Android.
         get_target_property(native_qml_import_paths "${target}" _qt_native_qml_import_paths)
-        list(PREPEND native_qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
+        if(native_qml_import_paths)
+            list(PREPEND native_qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
+        else()
+            set(native_qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
+        endif()
         set_property(TARGET "${target}" PROPERTY
             "_qt_native_qml_import_paths" "${native_qml_import_paths}")
     endif()
