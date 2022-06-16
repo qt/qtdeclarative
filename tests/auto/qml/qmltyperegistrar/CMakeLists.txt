@@ -74,3 +74,5 @@ qt_add_qml_module(tst-qmltyperegistrar-with-dashes
         foo.cpp foo.h
 )
 qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashesplugin)
+
+add_subdirectory(VersionZero)

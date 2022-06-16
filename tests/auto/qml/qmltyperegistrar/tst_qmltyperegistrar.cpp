@@ -396,4 +396,14 @@ void tst_qmltyperegistrar::foreignRevisionedProperty()
 }
 #endif
 
+void tst_qmltyperegistrar::typeInModuleMajorVersionZero()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(QStringLiteral("import VersionZero\n"
+                             "TypeInModuleMajorVersionZero {}\n").toUtf8(),
+              QUrl(QTest::currentDataTag()));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

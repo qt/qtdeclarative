@@ -532,6 +532,7 @@ private slots:
 
     void addRemoveVersion_data();
     void addRemoveVersion();
+    void typeInModuleMajorVersionZero();
 
 private:
     QByteArray qmltypesData;
