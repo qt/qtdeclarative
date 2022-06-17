@@ -14,6 +14,7 @@
 // We mean it.
 //
 
+#include "qquickscreen_p.h"
 #include "qquickwindow_p.h"
 #include <QtQml/private/qv4persistent_p.h>
 #include "qquickwindowcontainer_p.h"
@@ -39,6 +40,7 @@ public:
     QObject *visualParent = nullptr;
     QPointer<QQuickWindowContainer> windowContainer;
     qreal z = 0.0;
+    mutable QQuickScreenInfo *screenInfo = nullptr;
 };
 
 QT_END_NAMESPACE

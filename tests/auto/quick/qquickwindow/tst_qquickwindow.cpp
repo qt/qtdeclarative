@@ -19,6 +19,7 @@
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QSignalSpy>
 #include <private/qquickwindow_p.h>
+#include <private/qquickscreen_p.h>
 #include <private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QRunnable>
@@ -552,6 +553,9 @@ private slots:
     void visibilityDoesntClobberWindowState();
 
     void eventTypes();
+
+    void screenReusesQQuickScreenInfoInstance();
+    void screenInfoInstanceIsDestroyedAfterAScreenChange();
 
 private:
     QPointingDevice *touchDevice; // TODO make const after fixing QTBUG-107864
@@ -4186,6 +4190,42 @@ void tst_qquickwindow::eventTypes()
     QObject *created = component.create();
     QScopedPointer<QObject> cleanup(created);
     QVERIFY(created);
+}
+
+void tst_qquickwindow::screenReusesQQuickScreenInfoInstance()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("screenInfoSpaceLeak.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+
+    QCOMPARE(window->findChildren<QQuickScreenInfo*>().size(), 1);
+}
+
+void tst_qquickwindow::screenInfoInstanceIsDestroyedAfterAScreenChange()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("screenChangesDestroyScreenInfo.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+
+    QVERIFY(window->findChild<QQuickScreenInfo*>());
+
+    emit window->screenChanged(nullptr);
+
+    QCOMPARE(window->findChild<QQuickScreenInfo*>(), nullptr);
 }
 
 QTEST_MAIN(tst_qquickwindow)

@@ -44,7 +44,13 @@ QQuickWindowQmlImpl::QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow
         d->visibilityExplicitlySet = false;
         emit QQuickWindowQmlImpl::visibilityChanged(d->visibility);
     });
-    connect(this, &QWindow::screenChanged, this, &QQuickWindowQmlImpl::screenChanged);
+    connect(this, &QWindow::screenChanged, this, [this]() {
+        Q_D(QQuickWindowQmlImpl);
+        delete d->screenInfo;
+        d->screenInfo = nullptr;
+
+        emit QQuickWindowQmlImpl::screenChanged();
+    });
 
     // We shadow the x and y properties, so that we can re-map them in case
     // we have an Item as our visual parent, which will result in creating an
@@ -529,7 +535,10 @@ qreal QQuickWindowQmlImpl::z() const
 
 QObject *QQuickWindowQmlImpl::screen() const
 {
-    return new QQuickScreenInfo(const_cast<QQuickWindowQmlImpl *>(this), QWindow::screen());
+    Q_D(const QQuickWindowQmlImpl);
+    if (!d->screenInfo)
+        d->screenInfo = new QQuickScreenInfo(const_cast<QQuickWindowQmlImpl *>(this), QWindow::screen());
+    return d->screenInfo;
 }
 
 void QQuickWindowQmlImpl::setScreen(QObject *screen)
