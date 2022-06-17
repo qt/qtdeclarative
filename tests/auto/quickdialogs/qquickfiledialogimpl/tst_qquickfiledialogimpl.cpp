@@ -92,6 +92,7 @@ private slots:
     void chooseFolderViaEnter();
     void chooseFileAndThenFolderViaTextEdit();
     void cancelDialogWhileTextEditHasFocus();
+    void closingDialogCancels();
     void goUp();
     void goUpWhileTextEditHasFocus();
     void goIntoLargeFolder();
@@ -652,6 +653,33 @@ void tst_QQuickFileDialogImpl::cancelDialogWhileTextEditHasFocus()
     // The ListView that contains the breadcrumb delegates should be visible.
     QVERIFY(breadcrumbBar->contentItem()->isVisible());
     QVERIFY(!breadcrumbBar->textField()->isVisible());
+}
+
+void tst_QQuickFileDialogImpl::closingDialogCancels()
+{
+    // Open the dialog.
+    DialogTestHelper<QQuickFileDialog, QQuickFileDialogImpl> dialogHelper(this, "fileDialog.qml");
+    OPEN_QUICK_DIALOG();
+
+    QSignalSpy accepted(dialogHelper.dialog, &QQuickAbstractDialog::accepted);
+    QSignalSpy rejected(dialogHelper.dialog, &QQuickAbstractDialog::rejected);
+
+    // Accept the dialog.
+    QVERIFY(QMetaObject::invokeMethod(dialogHelper.window(), "doneAccepted"));
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
+    QCOMPARE(accepted.size(), 1);
+    QCOMPARE(rejected.size(), 0);
+
+    // Re-open the dialog.
+    accepted.clear();
+    OPEN_QUICK_DIALOG();
+
+    // Close the dialog.
+    CLOSE_QUICK_DIALOG();
+    QCOMPARE(accepted.size(), 0);
+    QEXPECT_FAIL("", "QTBUG-101973", Continue);
+    QCOMPARE(rejected.size(), 1);
 }
 
 void tst_QQuickFileDialogImpl::goUp()
