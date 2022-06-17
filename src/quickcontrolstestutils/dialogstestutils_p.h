@@ -83,6 +83,13 @@ QVERIFY(dialogHelper.waitForWindowActive()); \
 QVERIFY(dialogHelper.openDialog()); \
 QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
+#define CLOSE_QUICK_DIALOG() \
+    do { \
+        dialogHelper.dialog->close(); \
+        QVERIFY(!dialogHelper.dialog->isVisible()); \
+        QTRY_VERIFY(!dialogHelper.quickDialog->isVisible()); \
+    } while (false)
+
 QT_BEGIN_NAMESPACE
 class QWindow;
 
