@@ -5,6 +5,7 @@
 #include "qqmllanguageserver.h"
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtCore/qthreadpool.h>
+#include <QtCore/private/qduplicatetracker_p.h>
 #include <QtCore/QRegularExpression>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
@@ -329,20 +330,26 @@ static QList<CompletionItem> importCompletions(DomItem &file, const CompletionCo
         switch (importCompletionType) {
         case ImportCompletionType::None:
             break;
-        case ImportCompletionType::Module:
+        case ImportCompletionType::Module: {
+            QDuplicateTracker<QString> modulesSeen;
             for (const QString &uri : envPtr->moduleIndexUris(env)) {
                 QStringView base = ctx.base(); // if we allow spaces we should get rid of them
                 if (uri.startsWith(base)) {
                     QStringList rest = uri.mid(base.length()).split(u'.');
                     if (rest.isEmpty())
                         continue;
-                    CompletionItem comp;
-                    comp.label = rest.first().toUtf8();
-                    comp.kind = int(CompletionItemKind::Module);
-                    res.append(comp);
+
+                    const QString label = rest.first();
+                    if (!modulesSeen.hasSeen(label)) {
+                        CompletionItem comp;
+                        comp.label = label.toUtf8();
+                        comp.kind = int(CompletionItemKind::Module);
+                        res.append(comp);
+                    }
                 }
             }
             break;
+        }
         case ImportCompletionType::Version:
             if (ctx.base().isEmpty()) {
                 for (int majorV :

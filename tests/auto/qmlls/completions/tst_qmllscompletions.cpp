@@ -3,6 +3,7 @@
 #include <QtJsonRpc/private/qjsonrpcprotocol_p.h>
 #include <QtLanguageServer/private/qlanguageserverprotocol_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtCore/private/qduplicatetracker_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qprocess.h>
@@ -231,10 +232,32 @@ void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int char
                 }
 
                 QSet<QString> labels;
+                QDuplicateTracker<QByteArray> modulesTracker;
+                QDuplicateTracker<QByteArray> keywordsTracker;
+                QDuplicateTracker<QByteArray> classesTracker;
+                QDuplicateTracker<QByteArray> fieldsTracker;
+                QDuplicateTracker<QByteArray> propertiesTracker;
 
                 if (const QList<CompletionItem> *cItems =
                             std::get_if<QList<CompletionItem>>(&res)) {
                     for (const CompletionItem &c : *cItems) {
+                        if (c.kind->toInt() == int(CompletionItemKind::Module)) {
+                            QVERIFY2(!modulesTracker.hasSeen(c.label),
+                                     "Duplicate module: " + c.label);
+                        } else if (c.kind->toInt() == int(CompletionItemKind::Keyword)) {
+                            QVERIFY2(!keywordsTracker.hasSeen(c.label),
+                                     "Duplicate keyword: " + c.label);
+                        } else if (c.kind->toInt() == int(CompletionItemKind::Class)) {
+                            QVERIFY2(!classesTracker.hasSeen(c.label),
+                                     "Duplicate class: " + c.label);
+                        } else if (c.kind->toInt() == int(CompletionItemKind::Field)) {
+                            QVERIFY2(!fieldsTracker.hasSeen(c.label),
+                                     "Duplicate field: " + c.label);
+                        } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
+                            QVERIFY2(!propertiesTracker.hasSeen(c.label),
+                                     "Duplicate property: " + c.label);
+                        }
+
                         labels << c.label;
                     }
                 }
@@ -267,7 +290,7 @@ void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int char
                                                      "Completion item '%1' has wrong kind '%2'")
                                                      .arg(c.label)
                                                      .arg(QMetaEnum::fromType<CompletionItemKind>()
-                                                                  .valueToKey((int)kind))));
+                                                                  .valueToKey(int(kind)))));
                         }
                     }
                 }
