@@ -477,21 +477,31 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     if (format == d->format)
         return;
 
-    bool wasRich = d->richText;
+    const bool wasRich = d->richText;
+    const bool wasMarkdown = d->markdownText;
     d->richText = format == RichText || (format == AutoText && (wasRich || Qt::mightBeRichText(text())));
     d->markdownText = format == MarkdownText;
 
-#if QT_CONFIG(texthtmlparser)
     if (isComponentComplete()) {
-        if (wasRich && !d->richText) {
+#if QT_CONFIG(texthtmlparser)
+        if (wasRich && !d->richText && !d->markdownText) {
             d->control->setPlainText(!d->textCached ? d->control->toHtml() : d->text);
             updateSize();
         } else if (!wasRich && d->richText) {
             d->control->setHtml(!d->textCached ? d->control->toPlainText() : d->text);
             updateSize();
         }
-    }
 #endif
+#if QT_CONFIG(textmarkdownwriter) && QT_CONFIG(textmarkdownreader)
+        if (wasMarkdown && !d->markdownText && !d->richText) {
+            d->control->setPlainText(!d->textCached ? d->control->toMarkdown() : d->text);
+            updateSize();
+        } else if (!wasMarkdown && d->markdownText) {
+            d->control->setMarkdownText(!d->textCached ? d->control->toPlainText() : d->text);
+            updateSize();
+        }
+#endif
+    }
 
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
@@ -1324,7 +1334,7 @@ QString QQuickTextEdit::selectedText() const
 {
     Q_D(const QQuickTextEdit);
 #if QT_CONFIG(texthtmlparser)
-    return d->richText
+    return d->richText || d->markdownText
             ? d->control->textCursor().selectedText()
             : d->control->textCursor().selection().toPlainText();
 #else
@@ -1493,6 +1503,11 @@ void QQuickTextEdit::componentComplete()
 #if QT_CONFIG(texthtmlparser)
     if (d->richText)
         d->control->setHtml(d->text);
+    else
+#endif
+#if QT_CONFIG(textmarkdownreader)
+    if (d->markdownText)
+        d->control->setMarkdownText(d->text);
     else
 #endif
     if (!d->text.isEmpty()) {
@@ -2904,7 +2919,7 @@ QString QQuickTextEdit::getText(int start, int end) const
     cursor.setPosition(start, QTextCursor::MoveAnchor);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
 #if QT_CONFIG(texthtmlparser)
-    return d->richText
+    return d->richText || d->markdownText
             ? cursor.selectedText()
             : cursor.selection().toPlainText();
 #else
@@ -2937,6 +2952,12 @@ QString QQuickTextEdit::getFormattedText(int start, int end) const
 #else
         return cursor.selection().toPlainText();
 #endif
+    } else if (d->markdownText) {
+#if QT_CONFIG(textmarkdownwriter)
+        return cursor.selection().toMarkdown();
+#else
+        return cursor.selection().toPlainText();
+#endif
     } else {
         return cursor.selection().toPlainText();
     }
@@ -2958,6 +2979,12 @@ void QQuickTextEdit::insert(int position, const QString &text)
     if (d->richText) {
 #if QT_CONFIG(texthtmlparser)
         cursor.insertHtml(text);
+#else
+        cursor.insertText(text);
+#endif
+    } else if (d->markdownText) {
+#if QT_CONFIG(textmarkdownreader)
+        cursor.insertMarkdown(text);
 #else
         cursor.insertText(text);
 #endif
@@ -3103,15 +3130,21 @@ void QQuickTextEdit::append(const QString &text)
     if (!d->document->isEmpty())
         cursor.insertBlock();
 
-#if QT_CONFIG(texthtmlparser)
     if (d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text))) {
+#if QT_CONFIG(texthtmlparser)
         cursor.insertHtml(text);
+#else
+        cursor.insertText(text);
+#endif
+    } else if (d->format == MarkdownText) {
+#if QT_CONFIG(textmarkdownreader)
+        cursor.insertMarkdown(text);
+#else
+        cursor.insertText(text);
+#endif
     } else {
         cursor.insertText(text);
     }
-#else
-    cursor.insertText(text);
-#endif // texthtmlparser
 
     cursor.endEditBlock();
     d->control->updateCursorRectangle(false);

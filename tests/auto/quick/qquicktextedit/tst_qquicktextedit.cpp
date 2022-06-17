@@ -193,6 +193,11 @@ private slots:
 
     void keyEventPropagation();
 
+    void markdown();
+#if QT_CONFIG(clipboard)
+    void pasteHtmlIntoMarkdown();
+#endif
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -200,6 +205,7 @@ private:
 #endif
 
     void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = {});
+    bool isMainFontFixed();
 
     QStringList standard;
     QStringList richText;
@@ -588,6 +594,19 @@ void tst_qquicktextedit::textFormat()
         QCOMPARE(textObject->textFormat(), QQuickTextEdit::PlainText);
     }
     {
+        QQmlComponent textComponent(&engine);
+        textComponent.setData("import QtQuick 2.0\nTextEdit { text: \"_Hello_\"; textFormat: Text.MarkdownText }", QUrl::fromLocalFile(""));
+        QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
+
+        QVERIFY(textObject != nullptr);
+        QCOMPARE(textObject->textFormat(), QQuickTextEdit::MarkdownText);
+        QVERIFY(textObject->textDocument());
+        auto doc = textObject->textDocument()->textDocument();
+        QVERIFY(doc);
+        QTextCursor cursor(doc);
+        QVERIFY(cursor.charFormat().fontUnderline());
+    }
+    {
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.0\n TextEdit {}", QUrl());
         QScopedPointer<QObject> object(component.create());
@@ -608,6 +627,10 @@ void tst_qquicktextedit::textFormat()
         edit->setTextFormat(QQuickTextEdit::PlainText);
         QCOMPARE(edit->textFormat(), QQuickTextEdit::PlainText);
         QCOMPARE(spy.count(), 2);
+
+        edit->setTextFormat(QQuickTextEdit::MarkdownText);
+        QCOMPARE(edit->textFormat(), QQuickTextEdit::MarkdownText);
+        QCOMPARE(spy.count(), 3);
     }
 }
 
@@ -3296,6 +3319,16 @@ void tst_qquicktextedit::simulateKey(QWindow *view, int key, Qt::KeyboardModifie
     QGuiApplication::sendEvent(view, &release);
 }
 
+bool tst_qquicktextedit::isMainFontFixed()
+{
+    bool ret = QFontInfo(QGuiApplication::font()).fixedPitch();
+    if (ret) {
+        qCWarning(lcTests) << "QFontDatabase::GeneralFont is monospaced: markdown writing is likely to use too many backticks"
+                           << QFontDatabase::systemFont(QFontDatabase::GeneralFont);
+    }
+    return ret;
+}
+
 void tst_qquicktextedit::textInput()
 {
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
@@ -4560,6 +4593,22 @@ void tst_qquicktextedit::append_data()
             << standard.at(0) + QString("\nHello")
             << 0 << 0 << 0
             << false << false;
+
+    QTest::newRow("markdown into markdown")
+            << QString("**Hello**") << QQuickTextEdit::MarkdownText
+            << 0 << 0
+            << QString(" *world*")
+            << QString("Hello\u2029world")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("rich text into markdown")
+            << QString("**Hello**") << QQuickTextEdit::MarkdownText
+            << 0 << 0
+            << QString(" <i>world</i>")
+            << QString("Hello\u2029world")
+            << 0 << 0 << 0
+            << false << false;
 }
 
 void tst_qquicktextedit::append()
@@ -4593,8 +4642,9 @@ void tst_qquicktextedit::append()
 
     textEdit->append(appendText);
 
-    if (textFormat == QQuickTextEdit::RichText || (textFormat == QQuickTextEdit::AutoText && (
-            Qt::mightBeRichText(text) || Qt::mightBeRichText(appendText)))) {
+    if (textFormat == QQuickTextEdit::RichText || textFormat == QQuickTextEdit::MarkdownText ||
+            (textFormat == QQuickTextEdit::AutoText &&
+             (Qt::mightBeRichText(text) || Qt::mightBeRichText(appendText)))) {
         QCOMPARE(textEdit->getText(0, expectedText.length()), expectedText);
     } else {
         QCOMPARE(textEdit->text(), expectedText);
@@ -4774,6 +4824,39 @@ void tst_qquicktextedit::insert_data()
             << standard.at(0)
             << 0 << 0 << 0
             << false << false;
+
+    const QString markdownBaseString("# Hello\nWorld\n");
+    QTest::newRow("markdown into markdown at end")
+            << markdownBaseString << QQuickTextEdit::MarkdownText
+            << 0 << 0 << 11
+            << QString("\n## Other\ntext")
+            << QString("Hello\u2029World\u2029Other\u2029text")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("markdown into markdown in the middle")
+            << markdownBaseString << QQuickTextEdit::MarkdownText
+            << 0 << 0 << 6
+            << QString("## Other\ntext\n")
+            << QString("Hello\u2029Other\u2029text\u2029World")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("markdown into markdown in the middle no newlines")
+            << markdownBaseString << QQuickTextEdit::MarkdownText
+            << 0 << 0 << 6
+            << QString("## Other\ntext")
+            << QString("Hello\u2029Other\u2029textWorld")
+            << 0 << 0 << 0
+            << false << false;
+
+    QTest::newRow("markdown with bold span into markdown")
+            << QString("# Heading\n text") << QQuickTextEdit::MarkdownText
+            << 0 << 0 << 8
+            << QString("*Body*")
+            << QString("Heading\u2029Bodytext")
+            << 0 << 0 << 0
+            << false << false;
 }
 
 void tst_qquicktextedit::insert()
@@ -4808,12 +4891,13 @@ void tst_qquicktextedit::insert()
 
     textEdit->insert(insertPosition, insertText);
 
-    if (textFormat == QQuickTextEdit::RichText || (textFormat == QQuickTextEdit::AutoText && (
-            Qt::mightBeRichText(text) || Qt::mightBeRichText(insertText)))) {
+    if (textFormat == QQuickTextEdit::RichText || textFormat == QQuickTextEdit::MarkdownText ||
+            (textFormat == QQuickTextEdit::AutoText &&
+                (Qt::mightBeRichText(text) || Qt::mightBeRichText(insertText)))) {
         QCOMPARE(textEdit->getText(0, expectedText.length()), expectedText);
+        qCDebug(lcTests) << "with formatting:" << textEdit->getFormattedText(0, 100);
     } else {
         QCOMPARE(textEdit->text(), expectedText);
-
     }
     QCOMPARE(textEdit->length(), expectedText.length());
 
@@ -6139,6 +6223,88 @@ void tst_qquicktextedit::keyEventPropagation()
     upKey = upSpy.takeFirst();
     QCOMPARE(upKey.at(0).toInt(), Qt::Key_Right);
 }
+
+void tst_qquicktextedit::markdown()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("markdown.qml")));
+    QQuickTextEdit *te = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(te);
+    QVERIFY(te->textDocument());
+    auto doc = te->textDocument()->textDocument();
+    QVERIFY(doc);
+    const QString mdSource("# Heading\n\nBody\n\n");
+
+    // Component.onCompleted has pre-populated a string in italics
+    QCOMPARE(te->text(), "*whee*\n\n");
+    QCOMPARE(te->getText(0, 100), "whee");
+    QCOMPARE(te->getFormattedText(0, 100), "*whee*\n\n");
+    QVERIFY(QTextCursor(doc).charFormat().font().italic());
+
+    if (isMainFontFixed())
+        QSKIP("fixed-pitch main font (QTBUG-103484)");
+    te->clear();
+    te->insert(0, mdSource);
+    QCOMPARE(te->text(), mdSource);
+    QCOMPARE(te->getText(0, 12), "Heading\u2029Body");
+    QCOMPARE(te->getFormattedText(0, 12), "# Heading\n\nBody\n\n");
+    QCOMPARE(QTextCursor(doc).blockFormat().headingLevel(), 1);
+
+    te->selectAll();
+    QCOMPARE(te->selectedText(), "Heading\u2029Body");
+
+    te->clear();
+    te->setText(mdSource);
+    QCOMPARE(te->text(), mdSource);
+    QCOMPARE(te->getText(0, 12), "Heading\u2029Body");
+    QCOMPARE(te->getFormattedText(0, 12), "# Heading\n\nBody\n\n");
+    QCOMPARE(QTextCursor(doc).blockFormat().headingLevel(), 1);
+
+    te->insert(12, "_text_");
+    QCOMPARE(te->text(), "# Heading\n\nBody_text_\n\n");
+    QCOMPARE(te->getText(0, 100), "Heading\u2029Bodytext");
+    QCOMPARE(te->getFormattedText(0, 100), "# Heading\n\nBody_text_\n\n");
+    QTextCursor cursor(doc);
+    cursor.movePosition(QTextCursor::End);
+    QVERIFY(cursor.charFormat().fontUnderline());
+}
+
+#if QT_CONFIG(clipboard)
+void tst_qquicktextedit::pasteHtmlIntoMarkdown()
+{
+    if (isMainFontFixed())
+        QSKIP("fixed-pitch main font (QTBUG-103484)");
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("markdown.qml")));
+    QQuickTextEdit *te = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(te);
+    QVERIFY(te->textDocument());
+    auto doc = te->textDocument()->textDocument();
+    QVERIFY(doc);
+
+    QMimeData *mData = new QMimeData; // not a leak: if it's stack-allocated, we get a double free
+    mData->setHtml("<b>Hello <i>world</i></b>");
+    QGuiApplication::clipboard()->setMimeData(mData);
+
+    te->selectAll();
+    te->paste();
+    QTRY_COMPARE(te->text(), "**Hello *world***\n\n");
+    QCOMPARE(te->getFormattedText(0, 100), "**Hello *world***\n\n");
+    QCOMPARE(te->textFormat(), QQuickTextEdit::MarkdownText);
+    QCOMPARE(te->getText(0, 100), "Hello world");
+
+    QGuiApplication::clipboard()->clear();
+    te->selectAll();
+    te->copy();
+    QTRY_VERIFY(QGuiApplication::clipboard()->mimeData()->hasHtml());
+    QVERIFY(QGuiApplication::clipboard()->mimeData()->hasText());
+    const auto *md = QGuiApplication::clipboard()->mimeData();
+    qCDebug(lcTests) << "mime types available" << md->formats();
+    qCDebug(lcTests) << "HTML" << md->html();
+    // QTextDocumentFragment::toHtml() is subject to change, so we don't QCOMPARE this verbose HTML
+    QVERIFY(md->html().toLatin1().startsWith('<'));
+}
+#endif
 
 QTEST_MAIN(tst_qquicktextedit)
 
