@@ -88,6 +88,39 @@ QQmlListReference::QQmlListReference()
 {
 }
 
+#if QT_DEPRECATED_SINCE(6, 4)
+/*!
+\since 6.1
+\obsolete [6.4] Use the constructors without QQmlEngine argument instead.
+
+Constructs a QQmlListReference from a QVariant \a variant containing a QQmlListProperty. If
+\a variant does not contain a list property, an invalid QQmlListReference is created. If the object
+owning the list property is destroyed after the reference is constructed, it will automatically
+become invalid.  That is, it is safe to hold QQmlListReference instances even after the object is
+deleted.
+
+The \a engine is unused.
+*/
+QQmlListReference::QQmlListReference(const QVariant &variant, [[maybe_unused]] QQmlEngine *engine)
+    : QQmlListReference(variant)
+{}
+
+/*!
+\obsolete [6.4] Use the constructors without QQmlEngine argument instead.
+
+Constructs a QQmlListReference for \a object's \a property.  If \a property is not a list
+property, an invalid QQmlListReference is created.  If \a object is destroyed after
+the reference is constructed, it will automatically become invalid.  That is, it is safe to hold
+QQmlListReference instances even after \a object is deleted.
+
+The \a engine is unused.
+*/
+QQmlListReference::QQmlListReference(QObject *object, const char *property,
+                                     [[maybe_unused]] QQmlEngine *engine)
+    : QQmlListReference(object, property)
+{}
+#endif
+
 /*!
 \since 6.1
 

@@ -162,14 +162,12 @@ class Q_QML_EXPORT QQmlListReference
 public:
     QQmlListReference();
 
-#if QT_DEPRECATED_SINCE(6, 3)
+#if QT_DEPRECATED_SINCE(6, 4)
     QT_DEPRECATED_X("Drop the QQmlEngine* argument")
-    QQmlListReference(const QVariant &variant, QQmlEngine *)
-        : QQmlListReference(variant) {}
+    QQmlListReference(const QVariant &variant, [[maybe_unused]] QQmlEngine *engine);
 
     QT_DEPRECATED_X("Drop the QQmlEngine* argument")
-    QQmlListReference(QObject *o, const char *property, QQmlEngine *)
-        : QQmlListReference(o, property) {}
+    QQmlListReference(QObject *o, const char *property, [[maybe_unused]] QQmlEngine *engine);
 #endif
 
     explicit QQmlListReference(const QVariant &variant);
