@@ -398,6 +398,8 @@ void TestQmllint::resources()
     callQmllint(testFile("resource.qml"), false);
     callQmllint(testFile("badResource.qml"), true);
     callQmllint(testFile("T/b.qml"), true, nullptr, {}, {}, { testFile("T/a.qrc") });
+    callQmllint(testFile("relPathQrc/Foo/Thing.qml"), true, nullptr, {}, {},
+                { testFile("relPathQrc/resources.qrc") });
 }
 
 void TestQmllint::dirtyQmlCode_data()

@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/fooBar/">
+    <file alias="Foo/Thing1.qml">Foo/Thing.qml</file>
+    <file alias="Bar/Thing2.qml">Bar/Thing2.qml</file>
+  </qresource>
+</RCC>
+

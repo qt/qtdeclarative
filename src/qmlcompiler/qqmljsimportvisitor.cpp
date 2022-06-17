@@ -2006,7 +2006,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     if (!filename.isEmpty()) {
         const QFileInfo file(filename);
         const QString absolute = file.isRelative()
-                ? QDir(m_implicitImportDirectory).filePath(filename)
+                ? QDir::cleanPath(QDir(m_implicitImportDirectory).filePath(filename))
                 : filename;
 
         if (absolute.startsWith(u':')) {
