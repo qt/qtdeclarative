@@ -472,29 +472,46 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
                 while (it != methods.cend()) {
                     localSymbols.remove(it.key());
                     if (completeMethodCalls == FunctionCompletion::Declaration) {
-                        CompletionItem comp;
-                        QString label = it.key() + u"(";
-                        QString doc = it.key() + u"(";
-                        bool first = true;
+                        QStringList parameters;
                         for (const MethodParameter &pInfo : qAsConst(it->parameters)) {
-                            if (first)
-                                first = false;
-                            else {
-                                label += u",";
-                                doc += u",";
-                            }
-                            label += pInfo.name;
+                            QStringList param;
                             if (!pInfo.typeName.isEmpty())
-                                doc += pInfo.typeName + u" ";
-                            doc += pInfo.name;
+                                param << pInfo.typeName;
+                            if (!pInfo.name.isEmpty())
+                                param << pInfo.name;
                             if (pInfo.defaultValue) {
-                                doc += u"=";
-                                doc += pInfo.defaultValue->code();
+                                param << u"= " + pInfo.defaultValue->code();
+                            }
+                            parameters.append(param.join(' '));
+                        }
+
+                        QString commentsStr;
+
+                        if (!it->comments.regionComments.isEmpty()) {
+                            for (const Comment &c : it->comments.regionComments[0].preComments) {
+                                commentsStr += c.rawComment().toString().trimmed() + '\n';
                             }
                         }
-                        comp.detail = label.toUtf8();
+
+                        CompletionItem comp;
+                        comp.documentation =
+                                u"%1%2(%3)"_s.arg(commentsStr, it.key(), parameters.join(u", "))
+                                        .toUtf8();
                         comp.label = (it.key() + u"()").toUtf8();
-                        comp.documentation = doc.toUtf8();
+                        comp.kind = int(CompletionItemKind::Function);
+
+                        if (it->typeName.isEmpty())
+                            comp.detail = "returns void";
+                        else
+                            comp.detail = (u"returns "_s + it->typeName).toUtf8();
+
+                        // Only append full bracket if there are no parameters
+                        if (it->parameters.isEmpty())
+                            comp.insertText = comp.label;
+                        else
+                            // add snippet support?
+                            comp.insertText = (it.key() + u"(").toUtf8();
+
                         res.append(comp);
                     }
                     ++it;
