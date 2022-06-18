@@ -108,7 +108,8 @@ tst_Qmlls::tst_Qmlls()
     connect(&m_server, &QProcess::readyReadStandardError, this,
             [this]() { qWarning() << "LSPerr" << m_server.readAllStandardError(); });
 
-    m_qmllsPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmlls");
+    m_qmllsPath =
+            QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath) + QLatin1String("/qmlls");
 #ifdef Q_OS_WIN
     m_qmllsPath += QLatin1String(".exe");
 #endif
