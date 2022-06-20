@@ -130,6 +130,7 @@ private slots:
     void fromBoolValue();
     void invisibleTypes();
     void functionTakingVar();
+    void javaScriptArgument();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2000,6 +2001,21 @@ void tst_QmlCppCodegen::functionTakingVar()
     e->executeRuntimeFunction(document, 0, o.data(), 1, args, types);
 
     QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
+}
+
+void tst_QmlCppCodegen::javaScriptArgument()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/javaScriptArgument.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("a").toDouble(), 4.0);
+    QCOMPARE(o->property("b").toDouble(), 9.0);
+    QCOMPARE(o->property("c").toString(), u"5t-1"_qs);
+    QCOMPARE(o->property("d").toString(), u"9"_qs);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

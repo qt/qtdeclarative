@@ -586,8 +586,11 @@ void QQmlJSCodeGenerator::generate_LoadReg(int reg)
 void QQmlJSCodeGenerator::generate_StoreReg(int reg)
 {
     INJECT_TRACE_INFO(generate_StoreReg);
-
     Q_ASSERT(m_state.accumulatorIn.isValid());
+
+    if (isArgument(reg))
+        reject(u"writing into a function argument"_qs);
+
     const QString var = registerVariable(reg);
     m_body.setWriteRegister(var);
     if (var.isEmpty())

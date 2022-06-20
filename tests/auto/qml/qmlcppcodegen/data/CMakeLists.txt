@@ -88,6 +88,7 @@ set(qml_files
     interactive.qml
     interceptor.qml
     isnan.qml
+    javaScriptArgument.qml
     jsMathObject.qml
     jsimport.qml
     jsmoduleimport.qml

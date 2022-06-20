@@ -347,6 +347,11 @@ private:
         return m_typeResolver->jsGlobalObject()->property(u"Math"_qs).type();
     }
 
+    bool isArgument(int registerIndex) const
+    {
+        return registerIndex >= QV4::CallData::OffsetCount && registerIndex < firstRegisterIndex();
+    }
+
     int firstRegisterIndex() const
     {
         return QV4::CallData::OffsetCount + m_function->argumentTypes.count();
