@@ -1364,26 +1364,8 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
             }
             isDeferred = true;
         } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
-            if (seenSubObjectWithId) {
-                qCInfo(lcQmlTypeCompiler,
-                       "Binding on %s is not deferred as requested by the DeferredPropertyNames "
-                       "(%s) class info because one or more of its sub-objects contain an id.",
-                       qPrintable(name), qPrintable(deferredPropertyNames.join(u',')));
-            } else if (binding->type() == Binding::Type_GroupProperty) {
-                // The binding may already be deferred via the surrounding scope.
-                // e.g. PropertyChanges { control.contentItem.opacity: 0.75 }
-                // Here, contentItem is a group property which prevents its deferral. But as
-                // control is already deferred by being a generalized group property, there is
-                // no point in warning here.
-                if (scopeDeferred == ScopeDeferred::False) {
-                    qCInfo(lcQmlTypeCompiler,
-                           "Binding on %s is not deferred as requested by the DeferredPropertyNames"
-                           " (%s) class info because it constitutes a group property.",
-                           qPrintable(name), qPrintable(deferredPropertyNames.join(u',')));
-                }
-            } else {
+            if (!seenSubObjectWithId && binding->type() != Binding::Type_GroupProperty)
                 isDeferred = true;
-            }
         }
 
         if (binding->type() >= Binding::Type_Object) {

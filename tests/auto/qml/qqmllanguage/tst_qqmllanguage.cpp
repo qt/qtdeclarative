@@ -5182,11 +5182,6 @@ void tst_qqmllanguage::deferredProperties_extra()
 {
     // Note: because ExtraDeferredProperties defers only a `group` property, the
     // deferral does not actually work.
-    QTest::ignoreMessage(
-            QtMsgType::QtInfoMsg,
-            "Binding on group is not deferred as requested by the DeferredPropertyNames "
-            "(group,MyQmlObject) class info because it constitutes a group property.");
-
     qmlRegisterType<GroupType>("deferred.properties.extra", 1, 0, "GroupType");
     qmlRegisterType<ExtraDeferredProperties>("deferred.properties.extra", 1, 0,
                                              "ExtraDeferredProperties");
