@@ -1319,7 +1319,7 @@ void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 
 void QQmlJSTypePropagator::generate_ThrowException()
 {
-    setAccumulator(QQmlJSRegisterContent());
+    addReadAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
     m_state.setHasSideEffects(true);
     m_state.skipInstructionsUntilNextJumpTarget = true;
 }

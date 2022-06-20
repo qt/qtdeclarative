@@ -133,6 +133,7 @@ set(qml_files
     text.qml
     themerbad.qml
     themergood.qml
+    throwObjectName.qml
     toString.qml
     typePropertyClash.qml
     typedArray.qml

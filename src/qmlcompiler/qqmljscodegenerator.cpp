@@ -177,8 +177,11 @@ QT_WARNING_POP
 
 QString QQmlJSCodeGenerator::errorReturnValue()
 {
-    if (m_function->returnType)
-        return conversion(m_typeResolver->voidType(), m_function->returnType, QString());
+    if (auto ret = m_function->returnType) {
+        return ret->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
+                ? conversion(m_typeResolver->nullType(), ret, QString())
+                : ret->internalName() + u"()"_s;
+    }
     return QString();
 }
 
