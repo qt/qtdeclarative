@@ -2403,13 +2403,21 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
 
 QString QQmlJSCodeGenerator::registerVariable(int index) const
 {
+    auto it = m_registerVariables.find(index);
+    if (it != m_registerVariables.end()) {
+        const QString variable = it->value(registerType(index).storedType());
+        if (!variable.isEmpty())
+            return variable;
+    }
+
     if (index >= QV4::CallData::OffsetCount && index < firstRegisterIndex()) {
         const int argumentIndex = index - QV4::CallData::OffsetCount;
         return u"*static_cast<"_s
                 + castTargetName(m_function->argumentTypes[argumentIndex].storedType())
                 + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"])"_s;
     }
-    return m_registerVariables.value(index).value(registerType(index).storedType());
+
+    return QString();
 }
 
 QString QQmlJSCodeGenerator::changedRegisterVariable() const
@@ -2420,9 +2428,14 @@ QString QQmlJSCodeGenerator::changedRegisterVariable() const
 
 QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
 {
+    auto it = m_state.registers.find(index);
+    if (it != m_state.registers.end())
+        return it.value();
+
     if (index >= QV4::CallData::OffsetCount && index < firstRegisterIndex())
         return m_function->argumentTypes[index - QV4::CallData::OffsetCount];
-    return m_state.registers[index];
+
+    return QQmlJSRegisterContent();
 }
 
 QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
