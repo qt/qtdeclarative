@@ -738,7 +738,7 @@ public:
             } else {
                 pathFromOwner = current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting,
                                                                 &bindingPtr);
-                Q_ASSERT_X(bindingPtr, className, "binding could not be retrived");
+                Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
                 qmlFile.addError(
                         myParseErrors()
                                 .warning(tr("id attributes should only be a lower case letter "
@@ -750,7 +750,7 @@ public:
         } else {
             pathFromOwner =
                     current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
-            Q_ASSERT_X(bindingPtr, className, "binding could not be retrived");
+            Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
         }
         if (bindingPtr)
             pushEl(pathFromOwner, *bindingPtr, el);
