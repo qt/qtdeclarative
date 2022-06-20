@@ -35,10 +35,6 @@
 #include <QtGui/qstylehints.h>
 #include <qmath.h>
 
-#ifdef Q_OS_MAC
-#include <Carbon/Carbon.h>
-#endif
-
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
 Q_DECLARE_METATYPE(Qt::Key)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
@@ -48,22 +44,6 @@ Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 static bool isPlatformWayland()
 {
     return !QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive);
-}
-
-QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
-{
-    // XXX This will be replaced by some clever persistent platform image store.
-    QString persistent_dir = QQmlDataTest::instance()->dataDirectory();
-    QString arch = "unknown-architecture"; // QTest needs to help with this.
-
-    QString expectfile = persistent_dir + QDir::separator() + filebasename + QLatin1Char('-') + arch + ".png";
-
-    if (!QFile::exists(expectfile)) {
-        actual.save(expectfile);
-        qWarning() << "created" << expectfile;
-    }
-
-    return expectfile;
 }
 
 typedef QPair<int, QChar> Key;
