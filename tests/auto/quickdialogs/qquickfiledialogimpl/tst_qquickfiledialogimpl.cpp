@@ -705,7 +705,6 @@ void tst_QQuickFileDialogImpl::closingDialogCancels()
     // Close the dialog.
     CLOSE_QUICK_DIALOG();
     QCOMPARE(accepted.size(), 0);
-    QEXPECT_FAIL("", "QTBUG-101973", Continue);
     QCOMPARE(rejected.size(), 1);
 }
 
