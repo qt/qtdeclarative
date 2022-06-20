@@ -135,6 +135,7 @@ private slots:
     void watch_expression_data();
     void watch_context();
     void watch_file();
+    void debuggerCrashOnAttach();
 
     void queryAvailableEngines();
     void queryRootContexts();
@@ -330,7 +331,8 @@ void tst_QQmlEngineDebugService::initTestCase()
         "itemWithFunctions.qml",
         "rectangleWithTransitions.qml",
         "customTypes.qml",
-        "jsonTest.qml"
+        "jsonTest.qml",
+        "debuggerCrashOnAttach.qml"
     };
 
     for (auto file : fileNames) {
@@ -478,6 +480,7 @@ void tst_QQmlEngineDebugService::watch_object()
 
     int origWidth = m_rootItem->property("width").toInt();
     int origHeight = m_rootItem->property("height").toInt();
+
     m_rootItem->setProperty("width", origWidth*2);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(valueChanged(QByteArray,QVariant))));
     m_rootItem->setProperty("height", origHeight*2);
@@ -645,7 +648,7 @@ void tst_QQmlEngineDebugService::queryRootContexts()
     // root context query sends only root object data - it doesn't fill in
     // the children or property info
     QCOMPARE(context.objects.count(), 0);
-    QCOMPARE(context.contexts.count(), 7);
+    QCOMPARE(context.contexts.count(), 8);
     QVERIFY(context.contexts[0].debugId >= 0);
     QCOMPARE(context.contexts[0].name, QString("tst_QQmlDebug_childContext"));
 }
@@ -1353,6 +1356,18 @@ void tst_QQmlEngineDebugService::createObjectOnDestruction()
     // Doesn't crash and doesn't give us another signal for the object created on destruction.
     QTest::qWait(500);
     QCOMPARE(spy.count(), 2);
+}
+
+void tst_QQmlEngineDebugService::debuggerCrashOnAttach() {
+    QQmlEngineDebugObjectReference obj = findRootObject(6);
+    QVERIFY(!obj.className.isEmpty());
+
+    bool success;
+
+    m_dbg->addWatch(obj, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+    QCOMPARE(m_dbg->valid(), true);
 }
 
 int main(int argc, char *argv[])
