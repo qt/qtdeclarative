@@ -22,10 +22,6 @@
 #include <math.h>
 #include <qmath.h>
 
-#ifdef Q_OS_OSX
-#include <Carbon/Carbon.h>
-#endif
-
 #include "qplatformdefs.h"
 #include <QtQuickTestUtils/private/platformquirks_p.h>
 #include <QtQuickTestUtils/private/platforminputcontext_p.h>
@@ -35,22 +31,6 @@ Q_DECLARE_METATYPE(QQuickTextInput::EchoMode)
 Q_DECLARE_METATYPE(Qt::Key)
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-
-QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
-{
-    // XXX This will be replaced by some clever persistent platform image store.
-    QString persistent_dir = QQmlDataTest::instance()->dataDirectory();
-    QString arch = "unknown-architecture"; // QTest needs to help with this.
-
-    QString expectfile = persistent_dir + QDir::separator() + filebasename + QLatin1Char('-') + arch + ".png";
-
-    if (!QFile::exists(expectfile)) {
-        actual.save(expectfile);
-        qWarning() << "created" << expectfile;
-    }
-
-    return expectfile;
-}
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {
