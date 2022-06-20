@@ -94,9 +94,6 @@ void tst_QQuickControl::fractionalFontSize()
 
 void tst_QQuickControl::resizeBackgroundKeepsBindings()
 {
-    QTest::ignoreMessage(
-            QtMsgType::QtInfoMsg,
-            QRegularExpression("Binding on background is not deferred .*"));
     QQuickApplicationHelper helper(this, QStringLiteral("resizeBackgroundKeepsBindings.qml"));
     QQuickWindow *window = helper.window;
     window->show();
