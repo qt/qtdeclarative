@@ -131,6 +131,7 @@ private slots:
     void invisibleTypes();
     void functionTakingVar();
     void javaScriptArgument();
+    void throwObjectName();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2016,6 +2017,18 @@ void tst_QmlCppCodegen::javaScriptArgument()
     QCOMPARE(o->property("b").toDouble(), 9.0);
     QCOMPARE(o->property("c").toString(), u"5t-1"_qs);
     QCOMPARE(o->property("d").toString(), u"9"_qs);
+}
+
+void tst_QmlCppCodegen::throwObjectName()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/throwObjectName.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtWarningMsg, "qrc:/TestTypes/throwObjectName.qml:5:5: ouch");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->objectName().isEmpty());
 }
 
 void tst_QmlCppCodegen::runInterpreted()

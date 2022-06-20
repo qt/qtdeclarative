@@ -1038,7 +1038,7 @@ void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 
 void QQmlJSTypePropagator::generate_ThrowException()
 {
-    m_state.accumulatorOut = QQmlJSRegisterContent();
+    m_state.skipInstructionsUntilNextJumpTarget = true;
 }
 
 void QQmlJSTypePropagator::generate_GetException()
