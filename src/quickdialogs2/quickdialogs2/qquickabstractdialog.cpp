@@ -89,8 +89,6 @@ Q_LOGGING_CATEGORY(lcDialogs, "qt.quick.dialogs")
     This signal is emitted when the dialog has been accepted either
     interactively or by calling \l accept().
 
-    \note This signal is \e not emitted when closing the dialog with \l close().
-
     \sa rejected()
 */
 
@@ -100,7 +98,7 @@ Q_LOGGING_CATEGORY(lcDialogs, "qt.quick.dialogs")
     This signal is emitted when the dialog has been rejected either
     interactively or by calling \l reject().
 
-    \note This signal is \e not emitted when closing the dialog with \l close().
+    This signal is also emitted when closing the dialog with \l close().
 
     \sa accepted()
 */
@@ -290,14 +288,17 @@ void QQuickAbstractDialog::open()
 
     onShow(m_handle.get());
     m_visible = m_handle->show(m_flags, m_modality, m_parentWindow);
-    if (m_visible)
+    if (m_visible) {
+        m_result = Rejected; // in case an accepted dialog gets re-opened, then closed
         emit visibleChanged();
+    }
 }
 
 /*!
     \qmlmethod void QtQuick.Dialogs::Dialog::close()
 
-    Closes the dialog.
+    Closes the dialog and emits either the \l accepted() or \l rejected()
+    signal.
 
     \sa visible, open()
 */
@@ -310,6 +311,11 @@ void QQuickAbstractDialog::close()
     m_handle->hide();
     m_visible = false;
     emit visibleChanged();
+
+    if (m_result == Accepted)
+        emit accepted();
+    else // if (m_result == Rejected)
+        emit rejected();
 }
 
 /*!
@@ -345,13 +351,8 @@ void QQuickAbstractDialog::reject()
 */
 void QQuickAbstractDialog::done(StandardCode result)
 {
-    close();
     setResult(result);
-
-    if (result == Accepted)
-        emit accepted();
-    else if (result == Rejected)
-        emit rejected();
+    close();
 }
 
 void QQuickAbstractDialog::classBegin()
