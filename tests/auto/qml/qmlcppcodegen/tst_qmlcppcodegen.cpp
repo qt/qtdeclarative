@@ -121,6 +121,7 @@ private slots:
     void invisibleListElementType();
     void typePropertyClash();
     void objectToString();
+    void throwObjectName();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2211,6 +2212,18 @@ void tst_QmlCppCodegen::objectToString()
 
     QCOMPARE(o->property("yes").toString(), u"yes yes"_s);
     QCOMPARE(o->property("no").toString(), u" no"_s); // throws, but that is ignored
+}
+
+void tst_QmlCppCodegen::throwObjectName()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/throwObjectName.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtWarningMsg, "qrc:/TestTypes/throwObjectName.qml:5:5: ouch");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->objectName().isEmpty());
 }
 
 void tst_QmlCppCodegen::runInterpreted()
