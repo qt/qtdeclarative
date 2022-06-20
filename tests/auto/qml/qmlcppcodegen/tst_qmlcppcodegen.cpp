@@ -122,6 +122,7 @@ private slots:
     void typePropertyClash();
     void objectToString();
     void throwObjectName();
+    void javaScriptArgument();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2224,6 +2225,21 @@ void tst_QmlCppCodegen::throwObjectName()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QVERIFY(o->objectName().isEmpty());
+}
+
+void tst_QmlCppCodegen::javaScriptArgument()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/javaScriptArgument.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("a").toDouble(), 4.0);
+    QCOMPARE(o->property("b").toDouble(), 9.0);
+    QCOMPARE(o->property("c").toString(), u"5t-1"_qs);
+    QCOMPARE(o->property("d").toString(), u"9"_qs);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
