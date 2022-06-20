@@ -442,6 +442,7 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
                                             const QQmlSA::Element &bindingScope,
                                             const QQmlSA::Element &value)
 {
+    Q_UNUSED(element);
     Q_UNUSED(bindingScope);
 
     const auto range = m_expectedPropertyTypes.equal_range(propertyName);
@@ -470,7 +471,7 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
     }
 
     if (std::find_if(range.first, range.second,
-                     [&](const QQmlSA::Element &scope) { return element->inherits(scope); })
+                     [&](const QQmlSA::Element &scope) { return bindingType->inherits(scope); })
         == range.second) {
 
         const QString bindingTypeName = QQmlJSScope::prettyName(

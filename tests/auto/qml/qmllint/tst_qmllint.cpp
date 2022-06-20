@@ -1772,7 +1772,7 @@ void TestQmllint::quickPlugin()
                               u"Unexpected type for property \"valueFromText\" expected function got int"_s },
                       Message {
                               u"Unexpected type for property \"rowHeightProvider\" expected function got int"_s } } });
-
+    runTest("pluginQuick_varPropClean.qml", Result::clean());
     runTest("pluginQuick_attachedClean.qml", Result::clean());
     runTest("pluginQuick_attachedIgnore.qml", Result::clean());
 }
