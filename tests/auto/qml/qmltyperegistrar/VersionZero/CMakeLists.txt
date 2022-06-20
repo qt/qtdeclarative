@@ -8,7 +8,7 @@ qt_add_qml_module(tst_qmltyperegistrar_major_version_zero
     SOURCES
         version_zero_type.h
 )
-qt_autogen_tools_initial_setup(tst_qmltyperegistrar_major_version_zero)
+qt_autogen_tools_initial_setup(tst_qmltyperegistrar_major_version_zeroplugin)
 
 # Make sure the backing library is found on Windows next to the executable
 set_target_properties(
