@@ -417,7 +417,7 @@ VarBindingTypeValidatorPass::VarBindingTypeValidatorPass(
 {
     QMultiHash<QString, QQmlJSScope::ConstPtr> propertyTypes;
 
-    for (const auto &pair : expectedPropertyTypes.asKeyValueRange()) {
+    for (const auto pair : expectedPropertyTypes.asKeyValueRange()) {
         QQmlSA::Element propType;
 
         if (!pair.second.module.isEmpty()) {
