@@ -204,8 +204,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 {
     contentData.append(item);
     item->setParentItem(contentItem);
-    if (qobject_cast<QQuickItemView *>(contentItem))
-        QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-53262
+    QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-53262
     if (complete)
         resizeItem(item);
     QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
