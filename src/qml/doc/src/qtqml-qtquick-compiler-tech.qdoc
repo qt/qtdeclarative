@@ -17,17 +17,17 @@ time, rather than at run time. This allows for:
 
 The Qt Quick Compiler consist of two components:
 \list
-    \li {QML Type Compiler}
-    \li {QML Script Compiler}
+    \li \l {QML Type Compiler}
+    \li \l {QML Script Compiler}
 \endlist
 
-\note \l{qmltc}, \l{qmlsc} and \l{qmlcachegen} are internal build tools. If you
+\note \e qmltc, \e qmlsc and \l qmlcachegen are internal build tools. If you
 need to care about their invocation, you are either writing a build system, or
 you are doing something wrong.
 
 \subtitle The QML Type Compiler
 
-The QML Type Compiler (\l qmltc) compiles QML types to C++ classes. These C++
+The \l{QML Type Compiler}, \e(qmltc) compiles QML types to C++ classes. These C++
 classes are then added to your application and can be instantiated from other
 C++ code. This way you can avoid much of the overhead of using \l{QQmlComponent}
 to create instances of your QML types. In order to benefit from \l qmltc, you
@@ -40,11 +40,11 @@ though.
 
 \subtitle The QML Script Compiler
 
-The QML Script Compiler (\l qmlsc and \l qmlcachegen) compiles bindings and
+The \l{QML Script Compiler}, (\e qmlsc and \e qmlcachegen) compiles bindings and
 functions to both, an efficient byte code and C++ functions. This process
 automatically happens behind the scenes if you are using \l{qt_add_qml_module}
 to specify your QML modules. At compile time, for each QML or JavaScript
-document a corresponding C++ file is created and built into application. The
+document a corresponding C++ file is created and built into the application. The
 C++ file then contains a \e{QML compilation unit}, which consists of:
 
 \list
@@ -58,8 +58,8 @@ at run time and instead uses the pre-built compilation unit to load the QML
 component and its functions and bindings more quickly. The functions and
 bindings that were compiled to C++ can also be executed faster. Other bindings
 and functions are either interpreted directly from the byte code, or compiled
-to machine code via a JIT compilation step at run time. At compile time, a
-more involved type analysis can be performed. Therefore, the generated C++ code
+to machine code via a JIT compilation step at run time. At compile time, more
+involved type analysis can be performed. Therefore, the generated C++ code
 is generally more efficient than the result of the JIT compilation.
 
 There are limitations on what JavaScript constructs can be compiled to C++.
@@ -75,11 +75,10 @@ Extensions are installed. It has the following additional features over
         and the methods of those types are directly called. Conversely, in
         Indirect Mode, \e qmlcachegen or \e qmlsc call methods through the
         lookup mechanism which is also used in the interpreter and JIT.
-    \li It can compiled documents in Static Mode. In that case, \e qmlsc assumes
+    \li It can compile documents in Static Mode. In that case, \e qmlsc assumes
         that no properties of any types exposed to C++ can be shadowed by
         derived types. This allows for more bindings and functions to be
-        compiled, but generates invalid code if any properties are actually
-        shadowed.
+        compiled, but generates invalid code if any properties are shadowed.
 \endlist
 
 Instead of producing C++ as output, \l {qmlsc} and \l {qmlcachegen} can also
@@ -97,9 +96,9 @@ The following table summarizes the differences between \l{qmltc},
 
 \table
     \header
-        \li \l qmltc
-        \li \l qmlcachegen
-        \li \l qmlsc
+        \li \e qmltc
+        \li \e qmlcachegen
+        \li \e qmlsc
     \row
         \li Compiles QML types to C++ classes
         \li Compiles QML documents to QML compilation units

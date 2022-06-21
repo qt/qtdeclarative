@@ -6,11 +6,11 @@
 \title QML Script Compiler
 \brief A tool to compile functions and expressions in QML.
 
-The QML Script Compiler will compile functions and expressions in QML files of an
-application into C++ code within limitations set by the nature of JavaScript.
-It replaces \e qmlcachegen, and simply generates C++ code in addition to byte
-code for functions that can be exhaustively analyzed. The following flow chart
-explains the compilation of \e qmlsc.
+The QML Script Compiler, \c qmlsc will compile functions and expressions in QML
+files of an application into C++ code within limitations set by the nature of
+JavaScript. It replaces \e qmlcachegen, and simply generates C++ code in addition
+to byte code for functions that can be exhaustively analyzed. The following flow
+chart explains the compilation of \e qmlsc.
 
 \image qmlsc-compilation-scheme.png
 
