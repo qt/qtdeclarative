@@ -342,6 +342,15 @@ public:
         return true;
     }
 
+    bool resetProperty(QObject *target, WriteFlags flags) const
+    {
+        if (flags.testFlag(BypassInterceptor) && hasStaticMetaCallFunction())
+            staticMetaCallFunction()(target, QMetaObject::ResetProperty, relativePropertyIndex(), nullptr);
+        else
+            doMetacall<QMetaObject::ResetProperty>(target, coreIndex(), nullptr);
+        return true;
+    }
+
     static Flags defaultSignalFlags()
     {
         Flags f;

@@ -382,6 +382,7 @@ private slots:
     void valueTypeList();
     void componentMix();
     void uncreatableAttached();
+    void resetGadgetProperty();
 
 private:
     QQmlEngine engine;
@@ -7158,6 +7159,55 @@ void tst_qqmllanguage::uncreatableAttached()
     QVERIFY(o.isNull());
     QVERIFY(c.errorString().contains(
                 QLatin1String("Could not create attached properties object 'ItemAttached'")));
+}
+
+class MyGadget
+{
+    Q_GADGET
+    Q_PROPERTY(int value READ value WRITE setValue RESET resetValue)
+
+public:
+    int value() const { return m_value; }
+    void setValue(int value) { m_value = value; }
+    void resetValue() { setValue(25); }
+
+    bool operator==(const MyGadget &other) const { return m_value == other.m_value; }
+    bool operator!=(const MyGadget &other) const { return m_value != other.m_value; }
+
+private:
+    int m_value = -1;
+};
+
+class MyObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(MyGadget gadget MEMBER m_gadget RESET resetGadget NOTIFY gadgetChanged)
+    void resetGadget() { qDebug("FAIL"); }
+
+public:
+    MyObject(QObject *parent = nullptr) : QObject(parent) { }
+    MyGadget m_gadget;
+
+signals:
+    void gadgetChanged();
+};
+
+void tst_qqmllanguage::resetGadgetProperty()
+{
+    qmlRegisterType<MyObject>("MyObject", 1, 0, "MyObject");
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                "import QtQml 2.0; import MyObject 1.0; MyObject { gadget.value: undefined }",
+                QUrl());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+    MyObject *m = qobject_cast<MyObject *>(o.data());
+    QVERIFY(m);
+    QCOMPARE(m->m_gadget.value(), 25);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

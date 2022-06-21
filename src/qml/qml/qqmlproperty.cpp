@@ -1259,42 +1259,109 @@ bool QQmlPropertyPrivate::writeValueProperty(const QVariant &value, QQmlProperty
     return writeValueProperty(object, core, valueTypeData, value, effectiveContext(), flags);
 }
 
-bool
-QQmlPropertyPrivate::writeValueProperty(QObject *object,
-                                        const QQmlPropertyData &core,
-                                        const QQmlPropertyData &valueTypeData,
-                                        const QVariant &value,
-                                        const QQmlRefPointer<QQmlContextData> &context,
-                                        QQmlPropertyData::WriteFlags flags)
+static void removeValuePropertyBinding(
+            QObject *object, const QQmlPropertyData &core,
+            const QQmlPropertyData &valueTypeData, QQmlPropertyData::WriteFlags flags)
 {
     // Remove any existing bindings on this property
-    if (!(flags & QQmlPropertyData::DontRemoveBinding) && object)
-        removeBinding(object, encodedIndex(core, valueTypeData));
-
-    bool rv = false;
-    if (valueTypeData.isValid()) {
-        auto doWrite = [&](QQmlGadgetPtrWrapper *wrapper) {
-            wrapper->read(object, core.coreIndex());
-            rv = write(wrapper, valueTypeData, value, context, flags);
-            wrapper->write(object, core.coreIndex(), flags);
-        };
-
-        QQmlGadgetPtrWrapper *wrapper = context
-                ? QQmlGadgetPtrWrapper::instance(context->engine(), core.propType())
-                : nullptr;
-        if (wrapper) {
-            doWrite(wrapper);
-        } else if (QQmlValueType *valueType = QQmlMetaType::valueType(core.propType())) {
-            QQmlGadgetPtrWrapper wrapper(valueType, nullptr);
-            doWrite(&wrapper);
-        }
-
-    } else {
-        rv = write(object, core, value, context, flags);
+    if (!(flags & QQmlPropertyData::DontRemoveBinding) && object) {
+        QQmlPropertyPrivate::removeBinding(
+                    object, QQmlPropertyPrivate::encodedIndex(core, valueTypeData));
     }
+}
 
+template<typename Op>
+bool changePropertyAndWriteBack(
+            QObject *object, int coreIndex, QQmlGadgetPtrWrapper *wrapper,
+            QQmlPropertyData::WriteFlags flags, Op op)
+{
+    wrapper->read(object, coreIndex);
+    const bool rv = op(wrapper);
+    wrapper->write(object, coreIndex, flags);
     return rv;
 }
+
+template<typename Op>
+bool changeThroughGadgetPtrWrapper(
+            QObject *object, const QQmlPropertyData &core,
+            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags,
+            Op op)
+{
+    if (QQmlGadgetPtrWrapper *wrapper = context
+            ? QQmlGadgetPtrWrapper::instance(context->engine(), core.propType())
+            : nullptr) {
+        return changePropertyAndWriteBack(object, core.coreIndex(), wrapper, flags, op);
+    }
+
+    if (QQmlValueType *valueType = QQmlMetaType::valueType(core.propType())) {
+        QQmlGadgetPtrWrapper wrapper(valueType, nullptr);
+        return changePropertyAndWriteBack(object, core.coreIndex(), &wrapper, flags, op);
+    }
+
+    return false;
+}
+
+bool QQmlPropertyPrivate::writeValueProperty(
+            QObject *object, const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
+            const QVariant &value, const QQmlRefPointer<QQmlContextData> &context,
+            QQmlPropertyData::WriteFlags flags)
+{
+    removeValuePropertyBinding(object, core, valueTypeData, flags);
+
+    if (!valueTypeData.isValid())
+        return write(object, core, value, context, flags);
+
+    return changeThroughGadgetPtrWrapper(object, core, context, flags,
+                                         [&](QQmlGadgetPtrWrapper *wrapper) {
+        return write(wrapper, valueTypeData, value, context, flags);
+    });
+}
+
+bool QQmlPropertyPrivate::resetValueProperty(
+            QObject *object, const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
+            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags)
+{
+    removeValuePropertyBinding(object, core, valueTypeData, flags);
+
+    if (!valueTypeData.isValid())
+        return reset(object, core, flags);
+
+    return changeThroughGadgetPtrWrapper(object, core, context, flags,
+                                         [&](QQmlGadgetPtrWrapper *wrapper) {
+        return reset(wrapper, valueTypeData, flags);
+    });
+}
+
+// We need to prevent new-style bindings from being removed.
+struct BindingFixer
+{
+    Q_DISABLE_COPY_MOVE(BindingFixer);
+
+    BindingFixer(QObject *object, const QQmlPropertyData &property,
+                 QQmlPropertyData::WriteFlags flags)
+    {
+        if (!property.isBindable() || !(flags & QQmlPropertyData::DontRemoveBinding))
+            return;
+
+        QUntypedBindable bindable;
+        void *argv[] = {&bindable};
+        QMetaObject::metacall(object, QMetaObject::BindableProperty, property.coreIndex(), argv);
+        untypedBinding = bindable.binding();
+        if (auto priv = QPropertyBindingPrivate::get(untypedBinding))
+            priv->setSticky(true);
+    }
+
+    ~BindingFixer()
+    {
+        if (untypedBinding.isNull())
+            return;
+        auto priv = QPropertyBindingPrivate::get(untypedBinding);
+        priv->setSticky(false);
+    }
+
+private:
+    QUntypedPropertyBinding untypedBinding;
+};
 
 bool QQmlPropertyPrivate::write(
         QObject *object, const QQmlPropertyData &property, const QVariant &value,
@@ -1303,23 +1370,7 @@ bool QQmlPropertyPrivate::write(
     const QMetaType propertyMetaType = property.propType();
     const QMetaType variantMetaType = value.metaType();
 
-    // we need to prevent new-style bindings from being  removed
-    QUntypedPropertyBinding untypedBinding;
-    if (property.isBindable() && (flags & QQmlPropertyData::DontRemoveBinding)) {
-        QUntypedBindable bindable;
-        void *argv[] = {&bindable};
-        QMetaObject::metacall(object, QMetaObject::BindableProperty, property.coreIndex(), argv);
-        untypedBinding = bindable.binding();
-        auto priv = QPropertyBindingPrivate::get(untypedBinding);
-        if (priv)
-          priv->setSticky(true);
-    }
-    auto bindingFixer = qScopeGuard([&](){
-        if (untypedBinding.isNull())
-            return;
-        auto priv = QPropertyBindingPrivate::get(untypedBinding);
-        priv->setSticky(false);
-    });
+    const BindingFixer bindingFixer(object, property, flags);
 
     if (property.isEnum()) {
         QMetaProperty prop = object->metaObject()->property(property.coreIndex());
@@ -1562,6 +1613,15 @@ bool QQmlPropertyPrivate::write(
         }
     }
 
+    return true;
+}
+
+bool QQmlPropertyPrivate::reset(
+        QObject *object, const QQmlPropertyData &property,
+        QQmlPropertyData::WriteFlags flags)
+{
+    const BindingFixer bindingFixer(object, property, flags);
+    property.resetProperty(object, flags);
     return true;
 }
 

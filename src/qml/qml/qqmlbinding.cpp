@@ -526,9 +526,10 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(core.coreIndex(), result);
-    } else if (isUndefined && core.isResettable()) {
-        void *args[] = { nullptr };
-        QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
+    } else if (isUndefined
+               && (valueTypeData.isValid() ? valueTypeData.isResettable() : core.isResettable())) {
+        QQmlPropertyPrivate::resetValueProperty(
+                    m_target.data(), core, valueTypeData, context(), flags);
     } else if (isUndefined && type == QMetaType::QVariant) {
         QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
     } else if (metaType == QMetaType::fromType<QJSValue>()) {

@@ -84,8 +84,14 @@ public:
                                    const QQmlPropertyData &, const QQmlPropertyData &valueTypeData,
                                    const QVariant &, const QQmlRefPointer<QQmlContextData> &,
                                    QQmlPropertyData::WriteFlags flags = {});
+    static bool resetValueProperty(QObject *,
+                                   const QQmlPropertyData &, const QQmlPropertyData &valueTypeData,
+                                   const QQmlRefPointer<QQmlContextData> &,
+                                   QQmlPropertyData::WriteFlags flags = {});
     static bool write(QObject *, const QQmlPropertyData &, const QVariant &,
                       const QQmlRefPointer<QQmlContextData> &,
+                      QQmlPropertyData::WriteFlags flags = {});
+    static bool reset(QObject *, const QQmlPropertyData &,
                       QQmlPropertyData::WriteFlags flags = {});
     static void findAliasTarget(QObject *, QQmlPropertyIndex, QObject **, QQmlPropertyIndex *);
 
