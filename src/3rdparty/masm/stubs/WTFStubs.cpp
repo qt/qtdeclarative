@@ -44,6 +44,10 @@
 #include <qbytearray.h> // qvsnprintf
 #include <FilePrintStream.h>
 
+#if ENABLE(ASSEMBLER) && CPU(X86) && !OS(MAC_OS_X)
+#include <MacroAssemblerX86Common.h>
+#endif
+
 namespace WTF {
 
 void* fastMalloc(size_t size)
@@ -142,8 +146,6 @@ void WTFInvokeCrashHook()
 
 
 #if ENABLE(ASSEMBLER) && CPU(X86) && !OS(MAC_OS_X)
-#include <MacroAssemblerX86Common.h>
-
 JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse2CheckState = JSC::MacroAssemblerX86Common::NotCheckedSSE2;
 #endif
 
