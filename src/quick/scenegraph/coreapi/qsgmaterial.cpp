@@ -141,7 +141,7 @@ QSGMaterial::~QSGMaterial()
 /*!
     \enum QSGMaterial::Flag
 
-    \value Blending Set this flag to true if the material requires GL_BLEND to be
+    \value Blending Set this flag to true if the material requires blending to be
     enabled during rendering.
 
     \value RequiresDeterminant Set this flag to true if the material relies on

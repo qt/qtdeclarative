@@ -601,6 +601,12 @@ bool QSGMaterialShader::updateGraphicsPipelineState(RenderState &state, Graphics
     updatePipelineState() implementation, if there is one. The scenegraph will
     then internally apply these changes to the active graphics pipeline state,
     then rolling them back as appropriate.
+
+    When updateGraphicsPipelineState() is called, the struct has all members
+    set to a valid value to reflect the renderer's current state. Not changing
+    any values (or not reimplementing the function) indicates that the material
+    is fine with the defaults (which are dynamic however, depending on
+    QSGMaterial flags, for example).
  */
 
 /*!
@@ -662,6 +668,81 @@ bool QSGMaterialShader::updateGraphicsPipelineState(RenderState &state, Graphics
 
     \value Fill The interior of the polygon is filled (default)
     \value Line Boundary edges of the polygon are drawn as line segments.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::blendEnable
+    \since 5.14
+    \brief Enables blending.
+
+    \note Changing this flag should be done with care, and is best avoided.
+    Rather, materials should always use the QSGMaterial::Blend flag to indicate
+    that they wish to use blending. Changing this value from false to true for
+    a material that did not declare QSGMaterial::Blend can lead to unexpected
+    visual results.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::srcColor
+    \since 5.14
+    \brief Source blending factor, either RGB or RGBA depending on separateBlendFactors.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::dstColor
+    \since 5.14
+    \brief Destination blending factor, either RGB or RGBA depending on separateBlendFactors.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::colorWrite
+    \since 5.14
+    \brief Color write mask.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::blendConstant
+    \since 5.14
+    \brief Blend constant applicable when a blending factor is set to use a constant value.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::cullMode
+    \since 5.14
+    \brief Cull mode.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::polygonMode
+    \since 6.4
+    \brief Polygon rasterization mode.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::separateBlendFactors
+    \since 6.5
+    \brief Indicates that alpha blending factors are specified separately.
+
+    False by default, meaning both RGB and alpha blending factors are defined
+    by srcColor and dstColor. When set to true, the alpha blending factors are
+    taken from srcAlpha and dstAlpha instead, and srcColor and dstColor applies
+    only to RGB.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::srcAlpha
+    \since 6.5
+    \brief Source alpha blending factor.
+
+    Applies only when separateBlendFactors is set to true.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::dstAlpha
+    \since 6.5
+    \brief Destination alpha blending factor.
+
+    Applies only when separateBlendFactors is set to true.
  */
 
 /*!

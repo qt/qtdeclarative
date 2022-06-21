@@ -3103,6 +3103,51 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
  */
 
 /*!
+    \variable QQuickWindow::GraphicsStateInfo::currentFrameSlot
+    \since 5.14
+    \brief the current frame slot index while recording a frame.
+
+    When the scenegraph renders with lower level 3D APIs such as Vulkan or
+    Metal, it is the Qt's responsibility to ensure blocking whenever starting a
+    new frame and finding the CPU is already a certain number of frames ahead
+    of the GPU (because the command buffer submitted in frame no. \c{current} -
+    \c{FramesInFlight} has not yet completed). With other graphics APIs, such
+    as OpenGL or Direct 3D 11 this level of control is not exposed to the API
+    client but rather handled by the implementation of the graphics API.
+
+    By extension, this also means that the appropriate double (or triple)
+    buffering of resources, such as buffers, is up to the graphics API client
+    to manage. Most commonly, a uniform buffer where the data changes between
+    frames cannot simply change its contents when submitting a frame, given
+    that that frame may still be active ("in flight") when starting to record
+    the next frame. To avoid stalling the pipeline, one way is to have multiple
+    buffers (and memory allocations) under the hood, thus realizing at least a
+    double buffered scheme for such resources.
+
+    Applications that integrate rendering done directly with a graphics API
+    such as Vulkan may want to perform a similar double or triple buffering of
+    their own graphics resources, in a way that is compatible with the Qt
+    rendering engine's frame submission process. That then involves knowing the
+    values for the maximum number of in-flight frames (which is typically 2 or
+    3) and the current frame slot index, which is a number running 0, 1, ..,
+    FramesInFlight-1, and then wrapping around. The former is exposed in the
+    \l{QQuickWindow::GraphicsStateInfo::framesInFlight}{framesInFlight}
+    variable. The latter, current index, is this value.
+
+    For an example of using these values in practice, refer to the {Scene Graph
+    - Vulkan Under QML} and {Scene Graph - Vulkan Texture Import} examples.
+ */
+
+/*!
+    \variable QQuickWindow::GraphicsStateInfo::framesInFlight
+    \since 5.14
+    \brief the maximum number of frames kept in flight.
+
+    See \l{QQuickWindow::GraphicsStateInfo::currentFrameSlot}{currentFrameSlot}
+    for a detailed description.
+ */
+
+/*!
     \return a reference to a GraphicsStateInfo struct describing some of the
     RHI's internal state, in particular, the double or tripple buffering status
     of the backend (such as, the Vulkan or Metal integrations). This is
