@@ -103,6 +103,7 @@ private slots:
     void menuItemWidthAfterImplicitWidthChanged();
     void menuItemWidthAfterRetranslate();
     void giveMenuItemFocusOnButtonPress();
+    void customMenuCullItems();
 };
 
 tst_QQuickMenu::tst_QQuickMenu()
@@ -1998,6 +1999,27 @@ void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QVERIFY(menu);
     QTRY_VERIFY(menu->isOpened());
+}
+
+void tst_QQuickMenu::customMenuCullItems()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("customMenuCullItems.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+
+    QQuickItem *menuItemFirst = menu->itemAt(0);
+    QQuickItem *menuItemLast = menu->itemAt(menu->count() - 1);
+    QVERIFY(menuItemFirst);
+    QVERIFY(menuItemLast);
+    QTRY_VERIFY(!QQuickItemPrivate::get(menuItemFirst)->culled);
+    QTRY_VERIFY(QQuickItemPrivate::get(menuItemLast)->culled);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
