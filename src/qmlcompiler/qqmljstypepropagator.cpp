@@ -575,6 +575,9 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         m_passManager->analyzeRead(m_function->qmlScope, name, m_function->qmlScope,
                                    getCurrentSourceLocation());
     }
+
+    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ScopeAttached)
+        m_attachedContext = QQmlJSScope::ConstPtr();
 }
 
 void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
@@ -825,9 +828,16 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
     }
 
     if (m_passManager != nullptr) {
-        m_passManager->analyzeRead(m_typeResolver->containedType(m_state.accumulatorIn()),
-                                   propertyName, m_function->qmlScope, getCurrentSourceLocation());
+        const bool isAttached =
+                m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectAttached;
+
+        m_passManager->analyzeRead(
+                m_typeResolver->containedType(m_state.accumulatorIn()), propertyName,
+                isAttached ? m_attachedContext : m_function->qmlScope, getCurrentSourceLocation());
     }
+
+    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectAttached)
+        m_attachedContext = m_typeResolver->containedType(m_state.accumulatorIn());
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::ObjectEnum:
@@ -896,9 +906,12 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
     }
 
     if (m_passManager != nullptr) {
+        const bool isAttached = callBase.variant() == QQmlJSRegisterContent::ObjectAttached;
+
         m_passManager->analyzeWrite(m_typeResolver->containedType(callBase), propertyName,
                                     m_typeResolver->containedType(m_state.accumulatorIn()),
-                                    m_function->qmlScope, getCurrentSourceLocation());
+                                    isAttached ? m_attachedContext : m_function->qmlScope,
+                                    getCurrentSourceLocation());
     }
 
     m_state.setHasSideEffects(true);

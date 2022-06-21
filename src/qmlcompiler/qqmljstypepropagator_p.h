@@ -230,6 +230,7 @@ private:
     QQmlJSRegisterContent m_returnType;
     QQmlJSTypeInfo *m_typeInfo = nullptr;
     QQmlSA::PassManager *m_passManager = nullptr;
+    QQmlJSScope::ConstPtr m_attachedContext;
 
     // Not part of the state, as the back jumps are the reason for running multiple passes
     QMultiHash<int, ExpectedRegisterState> m_jumpOriginRegisterStateByTargetInstructionOffset;
