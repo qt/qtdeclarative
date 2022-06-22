@@ -200,10 +200,10 @@ inline uint SparseArray::pop_front()
         idx = n->value;
         deleteNode(n);
         // adjust all size_left indices on the path to leftmost item by 1
-        SparseArrayNode *n = root();
-        while (n) {
-            n->size_left -= 1;
-            n = n->left;
+        SparseArrayNode *rootNode = root();
+        while (rootNode) {
+            rootNode->size_left -= 1;
+            rootNode = rootNode->left;
         }
     }
     return idx;
