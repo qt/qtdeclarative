@@ -1,3 +1,7 @@
 [tapDelegateDuringFlicking]
 android
 
+# QTBUG-104509
+[DragAndOvershootBounds]
+android
+
