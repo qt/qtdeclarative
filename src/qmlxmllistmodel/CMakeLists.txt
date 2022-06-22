@@ -12,6 +12,7 @@ qt_internal_add_qml_module(QmlXmlListModel
         QT_BUILD_QMLXMLLISTMODEL_LIB
     LIBRARIES
         Qt::CorePrivate
+        Qt::QmlModelsPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Qml

@@ -43,6 +43,15 @@ struct QAbstractItemModelForeign
     QML_ADDED_IN_VERSION(6, 5)
     QML_UNCREATABLE("QAbstractItemModel is abstract in C++.")
 };
+
+struct QAbstractListModelForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QAbstractListModel)
+    QML_NAMED_ELEMENT(AbstractListModel)
+    QML_ADDED_IN_VERSION(6, 5)
+    QML_UNCREATABLE("QAbstractListModel is abstract in C++.")
+};
 #endif
 
 QT_END_NAMESPACE
