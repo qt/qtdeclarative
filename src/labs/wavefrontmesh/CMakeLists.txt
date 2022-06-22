@@ -4,7 +4,7 @@ qt_internal_add_qml_module(LabsWavefrontMesh
     PLUGIN_TARGET qmlwavefrontmeshplugin
     CLASS_NAME QmlWavefrontMeshPlugin
     DEPENDENCIES
-        QtQuick
+        QtQuick/auto
     SOURCES
         qwavefrontmesh.cpp qwavefrontmesh_p.h
         qqmlwavefrontmeshglobal_p.h

@@ -10,7 +10,7 @@ qt_internal_add_qml_module(QuickShapesPrivate
     NO_GENERATE_PLUGIN_SOURCE
     CLASS_NAME QmlShapesPlugin
     DEPENDENCIES
-        QtQuick
+        QtQuick/auto
     INTERNAL_MODULE
     SOURCES
         qquickshape.cpp qquickshape_p.h

@@ -5,7 +5,7 @@ qt_internal_add_qml_module(QmlCore
     PLUGIN_TARGET qtqmlcoreplugin
     CLASS_NAME QtQmlCorePlugin
     DEPENDENCIES
-        QtQml
+        QtQml/auto
     SOURCES
         qqmlsysteminformation_p.h
         qqmlsysteminformation.cpp

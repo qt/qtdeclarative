@@ -8,7 +8,7 @@ qt_internal_add_qml_module(QuickParticlesPrivate
     PLUGIN_TARGET particlesplugin
     CLASS_NAME QtQuick2ParticlesPlugin
     DEPENDENCIES
-        QtQuick
+        QtQuick/auto
     INTERNAL_MODULE
     SOURCES
         qquickage.cpp qquickage_p.h

@@ -11,7 +11,7 @@ qt_internal_add_qml_module(QuickTest
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 1
     DEPENDENCIES
-        QtQuick.Window
+        QtQuick.Window/auto
     CONFIG_MODULE_NAME qmltest
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES

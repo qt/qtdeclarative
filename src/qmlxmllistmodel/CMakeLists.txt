@@ -4,7 +4,7 @@ qt_internal_add_qml_module(QmlXmlListModel
     PLUGIN_TARGET qmlxmllistmodelplugin
     CLASS_NAME QtQmlXmlListModelPlugin
     DEPENDENCIES
-        QtQml
+        QtQml/auto
     SOURCES
         qqmlxmllistmodel_p.h qqmlxmllistmodel.cpp
         qtqmlxmllistmodelglobal_p.h
