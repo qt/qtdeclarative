@@ -1,4 +1,6 @@
 # QTBUG-103064
+[touchDragMulti]
+android
 [touchDrag]
 android
 [touchDragMultiSliders]
