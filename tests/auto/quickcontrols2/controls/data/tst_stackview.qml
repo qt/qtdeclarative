@@ -1558,4 +1558,37 @@ TestCase {
         verify(control.currentItem.i === 42)
         control.pop(StackView.Immediate)
     }
+
+    // QTBUG-104491
+    // Tests that correctly set a busy state when the transition is stolen(canceled)
+    function test_continuousTransition() {
+        let redRect = createTemporaryObject(rectangleComponent, testCase, { color: "red" })
+        verify(redRect)
+        let blueRect = createTemporaryObject(rectangleComponent, testCase, { color: "blue" })
+        verify(blueRect)
+        let greenRect = createTemporaryObject(rectangleComponent, testCase, { color: "green" })
+        verify(greenRect)
+        let yellowRect = createTemporaryObject(rectangleComponent, testCase, { color: "yellow" })
+        verify(yellowRect)
+        let control = createTemporaryObject(qtbug96966_stackViewComponent, testCase,
+                                            { "anchors.fill": testCase, initialItem: redRect })
+        verify(control)
+
+        control.push(blueRect)
+        control.pop()
+        tryCompare(control, "busy", true)
+        tryCompare(control, "busy", false)
+
+        control.push(blueRect)
+        control.push(greenRect)
+        control.push(yellowRect)
+        tryCompare(control, "busy", true)
+        tryCompare(control, "busy", false)
+
+        control.pop()
+        control.pop()
+        control.pop()
+        tryCompare(control, "busy", true)
+        tryCompare(control, "busy", false)
+    }
 }
