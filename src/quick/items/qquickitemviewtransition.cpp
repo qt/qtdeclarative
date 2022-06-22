@@ -545,6 +545,8 @@ void QQuickItemViewTransitionableItem::stopTransition()
 {
     if (transition)
         RETURN_IF_DELETED(transition->cancel());
+    delete transition;
+    transition = nullptr;
     clearCurrentScheduledTransition();
     resetNextTransitionPos();
 }
