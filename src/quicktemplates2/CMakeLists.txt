@@ -8,7 +8,7 @@
 qt_internal_add_qml_module(QuickTemplates2
     URI "QtQuick.Templates"
     VERSION "${PROJECT_VERSION}"
-    CLASSNAME QtQuickTemplates2Plugin
+    CLASS_NAME QtQuickTemplates2Plugin
     DEPENDENCIES
         QtQuick/auto
     PLUGIN_TARGET qtquicktemplates2plugin

@@ -32,7 +32,7 @@ endif()
 qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     URI "QtQuick.NativeStyle"
     VERSION "${PROJECT_VERSION}"
-    CLASSNAME QtQuickControls2NativeStylePlugin
+    CLASS_NAME QtQuickControls2NativeStylePlugin
     DEPENDENCIES
         QtQuick.Controls/auto
         QtQuick.Layouts/auto
