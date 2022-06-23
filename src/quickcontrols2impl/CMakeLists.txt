@@ -15,7 +15,6 @@ qt_internal_add_qml_module(QuickControls2Impl
     PLUGIN_TARGET qtquickcontrols2implplugin
     SOURCES
         qquickanimatednode.cpp qquickanimatednode_p.h
-        qquickattachedobject.cpp qquickattachedobject_p.h
         qquickchecklabel.cpp qquickchecklabel_p.h
         qquickclippedtext.cpp qquickclippedtext_p.h
         qquickcolor.cpp qquickcolor_p.h

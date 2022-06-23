@@ -399,7 +399,7 @@ static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme them
     return theme;
 }
 
-QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickAttachedObject(parent),
+QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickAttachedPropertyPropagator(parent),
     m_customPrimary(globalPrimaryCustom),
     m_customAccent(globalAccentCustom),
     m_customForeground(globalForegroundCustom),
@@ -412,7 +412,7 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickAttachedObject
     m_foreground(globalForeground),
     m_background(globalBackground)
 {
-    QQuickAttachedObject::init();
+    QQuickAttachedPropertyPropagator::initialize();
 }
 
 QQuickMaterialStyle *QQuickMaterialStyle::qmlAttachedProperties(QObject *object)
@@ -464,7 +464,7 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
 void QQuickMaterialStyle::propagateTheme()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritTheme(m_theme);
@@ -530,7 +530,7 @@ void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
 void QQuickMaterialStyle::propagatePrimary()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritPrimary(m_primary, m_customPrimary);
@@ -594,7 +594,7 @@ void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
 void QQuickMaterialStyle::propagateAccent()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritAccent(m_accent, m_customAccent);
@@ -666,7 +666,7 @@ void QQuickMaterialStyle::inheritForeground(uint foreground, bool custom, bool h
 void QQuickMaterialStyle::propagateForeground()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritForeground(m_foreground, m_customForeground, m_hasForeground);
@@ -731,7 +731,7 @@ void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool h
 void QQuickMaterialStyle::propagateBackground()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
             material->inheritBackground(m_background, m_customBackground, m_hasBackground);
@@ -1319,7 +1319,7 @@ void QQuickMaterialStyle::initGlobals()
     }
 }
 
-void QQuickMaterialStyle::attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent)
+void QQuickMaterialStyle::attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent)
 {
     Q_UNUSED(oldParent);
     QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);

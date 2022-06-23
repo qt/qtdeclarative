@@ -27,6 +27,7 @@ qt_internal_add_qml_module(QuickControls2
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
+        qquickattachedpropertypropagator.cpp qquickattachedpropertypropagator.h
         qquickstyle.cpp qquickstyle.h qquickstyle_p.h
         qquickstyleplugin.cpp qquickstyleplugin_p.h
         qtquickcontrols2global.h

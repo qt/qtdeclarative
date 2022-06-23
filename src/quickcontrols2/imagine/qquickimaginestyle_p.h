@@ -17,11 +17,11 @@
 
 #include <QtCore/qvariant.h>
 #include <QtQml/qqml.h>
-#include <QtQuickControls2Impl/private/qquickattachedobject_p.h>
+#include <QtQuickControls2/qquickattachedpropertypropagator.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickImagineStyle : public QQuickAttachedObject
+class QQuickImagineStyle : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
     Q_PROPERTY(QString path READ path WRITE setPath RESET resetPath NOTIFY pathChanged FINAL)
@@ -48,7 +48,7 @@ Q_SIGNALS:
     void pathChanged();
 
 protected:
-    void attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent) override;
+    void attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent) override;
 
 private:
     void init();

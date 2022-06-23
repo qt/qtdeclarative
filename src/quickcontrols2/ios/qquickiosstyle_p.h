@@ -17,11 +17,11 @@
 
 #include <QtCore/qvariant.h>
 #include <QtQml/qqml.h>
-#include <QtQuickControls2Impl/private/qquickattachedobject_p.h>
+#include <QtQuickControls2/qquickattachedpropertypropagator.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickIOSStyle : public QQuickAttachedObject
+class QQuickIOSStyle : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
     Q_PROPERTY(QUrl url READ url CONSTANT)

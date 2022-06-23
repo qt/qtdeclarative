@@ -16,11 +16,12 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtQuickControls2Impl/private/qquickattachedobject_p.h>
+#include <QtQml/qqml.h>
+#include <QtQuickControls2/qquickattachedpropertypropagator.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialStyle : public QQuickAttachedObject
+class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
@@ -256,7 +257,7 @@ Q_SIGNALS:
     void toolTextColorChanged();
 
 protected:
-    void attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent) override;
+    void attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent) override;
 
 private:
     void init();

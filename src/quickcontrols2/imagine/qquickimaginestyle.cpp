@@ -17,7 +17,7 @@ static QString ensureSlash(const QString &path)
 }
 
 QQuickImagineStyle::QQuickImagineStyle(QObject *parent)
-    : QQuickAttachedObject(parent),
+    : QQuickAttachedPropertyPropagator(parent),
       m_path(*GlobalPath())
 {
     init();
@@ -58,7 +58,7 @@ void QQuickImagineStyle::inheritPath(const QString &path)
 void QQuickImagineStyle::propagatePath()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickImagineStyle *imagine = qobject_cast<QQuickImagineStyle *>(child);
         if (imagine)
             imagine->inheritPath(m_path);
@@ -98,7 +98,7 @@ QUrl QQuickImagineStyle::url() const
     return QUrl::fromLocalFile(path);
 }
 
-void QQuickImagineStyle::attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent)
+void QQuickImagineStyle::attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent)
 {
     Q_UNUSED(oldParent);
     QQuickImagineStyle *imagine = qobject_cast<QQuickImagineStyle *>(newParent);
@@ -129,7 +129,7 @@ void QQuickImagineStyle::init()
         globalsInitialized = true;
     }
 
-    QQuickAttachedObject::init(); // TODO: lazy init?
+    QQuickAttachedPropertyPropagator::initialize(); // TODO: lazy init?
 }
 
 QT_END_NAMESPACE

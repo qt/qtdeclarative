@@ -18,7 +18,7 @@ static QQuickIOSStyle::Theme qquickios_effective_theme()
 }
 
 QQuickIOSStyle::QQuickIOSStyle(QObject *parent)
-    : QQuickAttachedObject(parent)
+    : QQuickAttachedPropertyPropagator(parent)
 {
     init();
     m_theme = qquickios_effective_theme();
@@ -41,7 +41,7 @@ void QQuickIOSStyle::init()
     //     QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("iOS"));
     //     globalsInitialized = true;
     // }
-    QQuickAttachedObject::init(); // TODO: lazy init?
+    QQuickAttachedPropertyPropagator::initialize(); // TODO: lazy init?
 }
 
 QQuickIOSStyle::Theme QQuickIOSStyle::theme() const

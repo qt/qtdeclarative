@@ -595,6 +595,14 @@ qDebug() << "Value of MessageBoard.expired:" << attached->expired();
 \endcode
 
 
+\section3 Propagating Attached Properties
+
+\l QQuickAttachedPropertyPropagator can be subclassed to propagate attached properties
+from a parent object to its children, similar to \l {Control::}{font} and
+\l {Item::}{palette} propagation. It supports propagation through
+\l {Item}{items}, \l {Popup}{popups}, and \l {Window}{windows}.
+
+
 \section2 Property Modifier Types
 
 A property modifier type is a special kind of QML object type.  A property

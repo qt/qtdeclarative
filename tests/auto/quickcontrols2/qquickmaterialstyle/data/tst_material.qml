@@ -275,49 +275,199 @@ TestCase {
         compare(popupObject.label2.color.toString(), popupObject.Material.textSelectionColor.toString())
     }
 
-    function test_window() {
-        let parent = createTemporaryObject(windowComponent)
+    component StyledChildWindow: Window {
+        objectName: "styledChildWindow"
 
-        let control = button.createObject(parent.contentItem)
-        compare(control.Material.primary, parent.Material.primary)
-        compare(control.Material.accent, parent.Material.accent)
-        compare(control.Material.background, parent.Material.background)
-        compare(control.Material.foreground, parent.Material.foreground)
-        compare(control.Material.theme, parent.Material.theme)
+        Material.objectName: objectName + "MaterialAttached"
+        Material.theme: Material.Dark
+        Material.primary: Material.Brown
+        Material.accent: Material.Green
+        Material.background: Material.Yellow
+        Material.foreground: Material.Grey
+    }
 
-        let styledChild = styledWindowComponent.createObject(parent)
-        verify(styledChild.Material.primary !== parent.Material.primary)
-        verify(styledChild.Material.accent !== parent.Material.accent)
-        verify(styledChild.Material.background !== parent.Material.background)
-        verify(styledChild.Material.foreground !== parent.Material.foreground)
-        verify(styledChild.Material.theme !== parent.Material.theme)
+    component StyledChildAppWindow: ApplicationWindow {
+        objectName: "styledChildAppWindow"
 
-        let unstyledChild = windowComponent.createObject(parent)
-        compare(unstyledChild.Material.primary, parent.Material.primary)
-        compare(unstyledChild.Material.accent, parent.Material.accent)
-        compare(unstyledChild.Material.background, parent.Material.background)
-        compare(unstyledChild.Material.foreground, parent.Material.foreground)
-        compare(unstyledChild.Material.theme, parent.Material.theme)
+        Material.objectName: objectName + "MaterialAttached"
+        Material.theme: Material.Dark
+        Material.primary: Material.Brown
+        Material.accent: Material.Green
+        Material.background: Material.Yellow
+        Material.foreground: Material.Grey
+    }
 
-        parent.Material.primary = Material.Lime
+    component UnstyledChildWindow: Window {
+        objectName: "unstyledChildWindow"
+        Material.objectName: objectName + "MaterialAttached"
+    }
+
+    component UnstyledChildAppWindow: ApplicationWindow {
+        objectName: "unstyledChildAppWindow"
+        Material.objectName: objectName + "MaterialAttached"
+    }
+
+    Component {
+        id: parentWindowComponent
+
+        Window {
+            objectName: "rootWindow"
+
+            Material.objectName: objectName + "MaterialAttached"
+
+            property alias styledChildWindow: styledChildWindow
+            property alias unstyledChildWindow: unstyledChildWindow
+
+            StyledChildWindow {
+                id: styledChildWindow
+            }
+
+            UnstyledChildWindow {
+                id: unstyledChildWindow
+            }
+        }
+    }
+
+    Component {
+        id: parentAppWindowComponent
+
+        ApplicationWindow {
+            objectName: "rootAppWindow"
+
+            Material.objectName: objectName + "MaterialAttached"
+
+            property alias styledChildWindow: styledChildWindow
+            property alias unstyledChildWindow: unstyledChildWindow
+
+            StyledChildAppWindow {
+                id: styledChildWindow
+            }
+
+            UnstyledChildAppWindow {
+                id: unstyledChildWindow
+            }
+        }
+    }
+
+    Component {
+        id: parentMixed1WindowComponent
+
+        ApplicationWindow {
+            objectName: "rootAppWindow"
+
+            Material.objectName: objectName + "MaterialAttached"
+
+            property alias styledChildWindow: styledChildWindow
+            property alias unstyledChildWindow: unstyledChildWindow
+
+            StyledChildWindow {
+                id: styledChildWindow
+            }
+
+            UnstyledChildWindow {
+                id: unstyledChildWindow
+            }
+        }
+    }
+
+    Component {
+        id: parentMixed2WindowComponent
+
+        Window {
+            id: rootWindow
+            objectName: "rootWindow"
+
+            Material.objectName: objectName + "MaterialAttached"
+
+            property alias styledChildWindow: styledChildWindow
+            property alias unstyledChildWindow: unstyledChildWindow
+
+            StyledChildAppWindow {
+                id: styledChildWindow
+            }
+
+            UnstyledChildAppWindow {
+                id: unstyledChildWindow
+            }
+        }
+    }
+
+    function test_window_data() {
+        return [
+            { tag: "Window", component: parentWindowComponent },
+            { tag: "ApplicationWindow", component: parentAppWindowComponent },
+            // Test a combination of Window and ApplicationWindow.
+            { tag: "mixed-1", component: parentMixed1WindowComponent },
+            { tag: "mixed-2", component: parentMixed2WindowComponent },
+        ]
+    }
+
+    function test_window(data) {
+        let parentWindow = createTemporaryObject(data.component, null)
+        verify(parentWindow)
+
+        let control = button.createObject(parentWindow.contentItem)
+        verify(control)
+        compare(control.Material.primary, parentWindow.Material.primary)
+        compare(control.Material.accent, parentWindow.Material.accent)
+        compare(control.Material.background, parentWindow.Material.background)
+        compare(control.Material.foreground, parentWindow.Material.foreground)
+        compare(control.Material.theme, parentWindow.Material.theme)
+
+        let styledChildWindow = parentWindow.styledChildWindow
+        verify(styledChildWindow)
+        verify(styledChildWindow.Material.primary !== parentWindow.Material.primary)
+        verify(styledChildWindow.Material.accent !== parentWindow.Material.accent)
+        verify(styledChildWindow.Material.background !== parentWindow.Material.background)
+        verify(styledChildWindow.Material.foreground !== parentWindow.Material.foreground)
+        verify(styledChildWindow.Material.theme !== parentWindow.Material.theme)
+
+        let unstyledChildWindow = parentWindow.unstyledChildWindow
+        verify(unstyledChildWindow)
+        compare(unstyledChildWindow.Material.primary, parentWindow.Material.primary)
+        compare(unstyledChildWindow.Material.accent, parentWindow.Material.accent)
+        compare(unstyledChildWindow.Material.background, parentWindow.Material.background)
+        compare(unstyledChildWindow.Material.foreground, parentWindow.Material.foreground)
+        compare(unstyledChildWindow.Material.theme, parentWindow.Material.theme)
+
+        parentWindow.Material.primary = Material.Lime
         compare(control.Material.primary, Material.color(Material.Lime))
-        verify(styledChild.Material.primary !== Material.color(Material.Lime))
-        // ### TODO: compare(unstyledChild.Material.primary, Material.color(Material.Lime))
+        verify(styledChildWindow.Material.primary !== Material.color(Material.Lime))
+        compare(unstyledChildWindow.Material.primary, Material.color(Material.Lime))
 
-        parent.Material.accent = Material.Cyan
+        parentWindow.Material.accent = Material.Cyan
         compare(control.Material.accent, Material.color(Material.Cyan))
-        verify(styledChild.Material.accent !== Material.color(Material.Cyan))
-        // ### TODO: compare(unstyledChild.Material.accent, Material.color(Material.Cyan))
+        verify(styledChildWindow.Material.accent !== Material.color(Material.Cyan))
+        compare(unstyledChildWindow.Material.accent, Material.color(Material.Cyan))
 
-        parent.Material.background = Material.Indigo
+        parentWindow.Material.background = Material.Indigo
         compare(control.Material.background, Material.color(Material.Indigo))
-        verify(styledChild.Material.background !== Material.color(Material.Indigo))
-        // ### TODO: compare(unstyledChild.Material.background, Material.color(Material.Indigo))
+        verify(styledChildWindow.Material.background !== Material.color(Material.Indigo))
+        compare(unstyledChildWindow.Material.background, Material.color(Material.Indigo))
 
-        parent.Material.foreground = Material.Pink
+        parentWindow.Material.foreground = Material.Pink
         compare(control.Material.foreground, Material.color(Material.Pink))
-        verify(styledChild.Material.foreground !== Material.color(Material.Pink))
-        // ### TODO: compare(unstyledChild.Material.foreground, Material.color(Material.Pink))
+        verify(styledChildWindow.Material.foreground !== Material.color(Material.Pink))
+        compare(unstyledChildWindow.Material.foreground, Material.color(Material.Pink))
+
+        // Test that theme changes are propagated to child windows.
+        // Make sure that this check actually does something (in case the default changes).
+        compare(parentWindow.Material.theme, Material.Light)
+        // styledChildWindow was already dark, so make it light to verify that it doesn't change.
+        styledChildWindow.Material.theme = Material.Light
+        // Reset background since Theme affects it and we use it to test that the colors change.
+        parentWindow.Material.background = undefined
+        // Setting theme to Dark should result in the background colors of control and unstyledChildWindow changing.
+        // Note that since Window is unstyled, its actual (background) color won't change.
+        parentWindow.Material.theme = Material.Dark
+        compare(control.Material.theme, Material.Dark)
+        compare(styledChildWindow.Material.theme, Material.Light)
+        compare(unstyledChildWindow.Material.theme, Material.Dark)
+        // Make sure that the colors actually changed.
+        compare(parentWindow.Material.background, Qt.color("#303030"))
+        compare(control.Material.background, parentWindow.Material.background)
+        verify(styledChildWindow.Material.background !== parentWindow.Material.background)
+        compare(unstyledChildWindow.Material.background, parentWindow.Material.background)
     }
 
     function test_loader() {

@@ -118,11 +118,11 @@ static QRgb GlobalBackground = qquickuniversal_light_color(QQuickUniversalStyle:
 static bool HasGlobalForeground = false;
 static bool HasGlobalBackground = false;
 
-QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickAttachedObject(parent),
+QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickAttachedPropertyPropagator(parent),
     m_hasForeground(HasGlobalForeground), m_hasBackground(HasGlobalBackground), m_theme(GlobalTheme),
     m_accent(GlobalAccent), m_foreground(GlobalForeground), m_background(GlobalBackground)
 {
-    init();
+    initialize();
 }
 
 QQuickUniversalStyle *QQuickUniversalStyle::qmlAttachedProperties(QObject *object)
@@ -166,7 +166,7 @@ void QQuickUniversalStyle::inheritTheme(Theme theme)
 void QQuickUniversalStyle::propagateTheme()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritTheme(m_theme);
@@ -216,7 +216,7 @@ void QQuickUniversalStyle::inheritAccent(QRgb accent)
 void QQuickUniversalStyle::propagateAccent()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritAccent(m_accent);
@@ -270,7 +270,7 @@ void QQuickUniversalStyle::inheritForeground(QRgb foreground, bool has)
 void QQuickUniversalStyle::propagateForeground()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritForeground(m_foreground, m_hasForeground);
@@ -325,7 +325,7 @@ void QQuickUniversalStyle::inheritBackground(QRgb background, bool has)
 void QQuickUniversalStyle::propagateBackground()
 {
     const auto styles = attachedChildren();
-    for (QQuickAttachedObject *child : styles) {
+    for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(child);
         if (universal)
             universal->inheritBackground(m_background, m_hasBackground);
@@ -473,7 +473,7 @@ QColor QQuickUniversalStyle::systemColor(SystemColor role) const
     return QColor::fromRgba(m_theme == QQuickUniversalStyle::Dark ? qquickuniversal_dark_color(role) : qquickuniversal_light_color(role));
 }
 
-void QQuickUniversalStyle::attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent)
+void QQuickUniversalStyle::attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent)
 {
     Q_UNUSED(oldParent);
     QQuickUniversalStyle *universal = qobject_cast<QQuickUniversalStyle *>(newParent);
