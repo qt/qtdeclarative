@@ -574,10 +574,28 @@ class TestClassWithClassInfo : public QObject
 #define ARRAY_SIZE(arr) \
     int(sizeof(arr) / sizeof(arr[0]))
 
+template <typename T, typename = void>
+struct SizeofOffsetsAndSizes_helper
+{
+    static constexpr size_t value = sizeof(T::offsetsAndSize); // old moc
+};
+
+template <typename T>
+struct SizeofOffsetsAndSizes_helper<T, std::void_t<decltype(T::offsetsAndSizes)>>
+{
+    static constexpr size_t value = sizeof(T::offsetsAndSizes); // new moc
+};
+
+template <typename T>
+constexpr size_t sizeofOffsetsAndSizes(const T &)
+{
+    return SizeofOffsetsAndSizes_helper<T>::value;
+}
+
 #define TEST_CLASS(Class) \
     QTest::newRow(#Class) \
             << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_##Class) \
-            << int(sizeof(qt_meta_stringdata_##Class.offsetsAndSize) / (sizeof(uint) * 2))
+            << int(sizeofOffsetsAndSizes(qt_meta_stringdata_##Class) / (sizeof(uint) * 2))
 
 Q_DECLARE_METATYPE(const QMetaObject*);
 
