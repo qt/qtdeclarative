@@ -24,6 +24,7 @@
 #include "extensiontypebindings.h"
 #include "qtbug103956_main.h"
 #include "nonstandardinclude.h"
+#include "memberproperties.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -829,6 +830,21 @@ void tst_qmltc::nonStandardIncludesInsideModule()
     QQmlEngine e;
     PREPEND_NAMESPACE(nonStandardInclude) created(&e);
     QVERIFY(created.good());
+}
+
+void tst_qmltc::memberProperties()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(memberProperties) created(&e);
+    QCOMPARE(created.property("x"), 42);
+    QCOMPARE(created.m_y, u"fourty two"_s);
+    QCOMPARE(created.xAlias(), 42);
+    QCOMPARE(created.yAlias(), u"fourty two"_s);
+
+    created.setXAlias(43);
+    QCOMPARE(created.property("x"), 43);
+    created.setYAlias(u"foo"_s);
+    QCOMPARE(created.m_y, u"foo"_s);
 }
 
 void tst_qmltc::signalHandlers()
