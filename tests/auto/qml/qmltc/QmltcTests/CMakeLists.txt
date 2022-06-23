@@ -12,6 +12,8 @@ set(cpp_sources
     cpptypes/deferredpropertytypes.h cpptypes/deferredpropertytypes.cpp
     # extension types:
     cpptypes/extensiontypes.h cpptypes/extensiontypes.cpp
+
+    cpptypes/typewithmemberproperties.h
 )
 
 set(qml_sources
@@ -32,6 +34,7 @@ set(qml_sources
     QmlTypeWithBaseTypeExtension.qml
     extensionTypeBindings.qml
     nonStandardInclude.qml
+    memberProperties.qml
 
     qtbug103956/SubComponent.qml
     qtbug103956/MainComponent.qml

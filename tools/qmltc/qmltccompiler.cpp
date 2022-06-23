@@ -654,21 +654,28 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
     getter.returnType = underlyingType;
     getter.name = compilationData.read;
     getter.body += prologue;
-    if (result.kind == QQmlJSUtils::AliasTarget_Property)
-        getter.body << u"return " + latestAccessor + u"->" + result.property.read() + u"();";
-    else // AliasTarget_Object
+    if (result.kind == QQmlJSUtils::AliasTarget_Property) {
+        if (QString read = result.property.read(); !read.isEmpty()) {
+            getter.body << u"return %1->%2();"_s.arg(latestAccessor, read);
+        } else { // use QObject::property() as a fallback when read method is unknown
+            getter.body << u"return qvariant_cast<%1>(%2->property(\"%3\"));"_s.arg(
+                    underlyingType, latestAccessor, result.property.propertyName());
+        }
+    } else { // AliasTarget_Object
         getter.body << u"return " + latestAccessor + u";";
+    }
     getter.body += epilogue;
     getter.userVisible = true;
     current.functions.emplaceBack(getter);
     mocLines << u"READ"_s << getter.name;
 
-    if (QString setName = result.property.write(); !setName.isEmpty()) {
+    if (result.property.isWritable()) {
         Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
         QmltcMethod setter {};
         setter.returnType = u"void"_s;
         setter.name = compilationData.write;
 
+        const QString setName = result.property.write();
         QList<QQmlJSMetaMethod> methods = result.owner->methods(setName);
         if (methods.isEmpty()) { // when we are compiling the property as well
             // QmltcVariable
@@ -687,8 +694,17 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
                        std::back_inserter(parameterNames),
                        [](const QmltcVariable &x) { return x.name; });
         QString commaSeparatedParameterNames = parameterNames.join(u", "_s);
-        setter.body << latestAccessor + u"->" + setName
-                        + u"(%1)"_s.arg(commaSeparatedParameterNames) + u";";
+        if (!setName.isEmpty()) {
+            setter.body << u"%1->%2(%3);"_s.arg(latestAccessor, setName,
+                                                commaSeparatedParameterNames);
+        } else { // use QObject::setProperty() as fallback when write method is unknown
+            Q_ASSERT(parameterNames.size() == 1);
+            const QString variantName = u"var_" + aliasName; // fairly unique
+            setter.body << u"QVariant %1;"_s.arg(variantName);
+            setter.body << u"%1.setValue(%2);"_s.arg(variantName, commaSeparatedParameterNames);
+            setter.body << u"%1->setProperty(\"%2\", std::move(%3));"_s.arg(
+                    latestAccessor, result.property.propertyName(), variantName);
+        }
         setter.body += joinFrames(
                 frames, [](const AliasResolutionFrame &frame) { return frame.epilogueForWrite; });
         setter.body += epilogue; // NB: *after* epilogueForWrite - see prologue construction
