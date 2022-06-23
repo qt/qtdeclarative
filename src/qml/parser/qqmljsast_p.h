@@ -3706,6 +3706,8 @@ public:
 
 // attributes
     SourceLocation enumToken;
+    SourceLocation identifierToken;
+    SourceLocation lbraceToken;
     SourceLocation rbraceToken;
     QStringView name;
     UiEnumMemberList *members;

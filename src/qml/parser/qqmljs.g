@@ -1443,6 +1443,8 @@ UiObjectMember: T_ENUM T_IDENTIFIER T_LBRACE EnumMemberList T_RBRACE;
     case $rule_number: {
         AST::UiEnumDeclaration *enumDeclaration = new (pool) AST::UiEnumDeclaration(stringRef(2), sym(4).UiEnumMemberList->finish());
         enumDeclaration->enumToken = loc(1);
+        enumDeclaration->identifierToken = loc(2);
+        enumDeclaration->lbraceToken = loc(3);
         enumDeclaration->rbraceToken = loc(5);
         sym(1).Node = enumDeclaration;
         break;
