@@ -132,6 +132,7 @@ private slots:
     void functionTakingVar();
     void javaScriptArgument();
     void throwObjectName();
+    void conversionDecrement();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2029,6 +2030,26 @@ void tst_QmlCppCodegen::throwObjectName()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QVERIFY(o->objectName().isEmpty());
+}
+
+void tst_QmlCppCodegen::conversionDecrement()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/conversionDecrement.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("currentPageIndex").toInt(), 0);
+    o->setProperty("pages", 5);
+    QCOMPARE(o->property("currentPageIndex").toInt(), 3);
+    o->setProperty("pages", 4);
+    QCOMPARE(o->property("currentPageIndex").toInt(), 0);
+    o->setProperty("pages", 6);
+    QCOMPARE(o->property("currentPageIndex").toInt(), 4);
+    o->setProperty("pages", 60);
+    QCOMPARE(o->property("currentPageIndex").toInt(), 3);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

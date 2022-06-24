@@ -52,6 +52,7 @@ set(qml_files
     compositesingleton.qml
     construct.qml
     contextParam.qml
+    conversionDecrement.qml
     conversions.qml
     conversions2.qml
     curlygrouped.qml
