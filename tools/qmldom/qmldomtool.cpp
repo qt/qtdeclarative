@@ -14,6 +14,7 @@
 #include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <QtQmlDom/private/qqmldomelements_p.h>
 #include <QtQmlDom/private/qqmldomfieldfilter_p.h>
+#include <QtQmlDom/private/qqmldomastdumper_p.h>
 
 #include <cstdio>
 #include <optional>
@@ -108,6 +109,10 @@ int main(int argc, char *argv[])
                           "and the last version are kept), "),
             QLatin1String("nBackups"));
     parser.addOption(nBackupsOption);
+
+    QCommandLineOption dumpAstOption(QStringList() << "dump-ast",
+                                     QLatin1String("Dumps the AST of the given QML file."));
+    parser.addOption(dumpAstOption);
 
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
@@ -254,7 +259,25 @@ int main(int argc, char *argv[])
             }
             hadFailures = hadFailures || !bool(res);
         }
-    } else if (parser.isSet(dumpOption) || !parser.isSet(reformatOption)) {
+    } else if (parser.isSet(dumpAstOption)) {
+        if (pathsToDump.length() > 1) {
+            qWarning() << "--dump-ast can only be used with a single file";
+            return 1;
+        }
+        for (auto &fileItem : loadedFiles) {
+            const auto file = fileItem.fileObject().ownerAs<QmlFile>();
+            if (!file) {
+                qWarning() << "cannot dump AST for" << fileItem.canonicalPath();
+                qWarning() << "is it a valid QML file?";
+                continue;
+            }
+            const QString ast =
+                    QQmlJS::Dom::astNodeDump(file->ast(), AstDumperOption::DumpNode, 1, 0);
+            QTextStream ts(stdout);
+            ts << ast << Qt::flush;
+        }
+    } else if (parser.isSet(dumpOption) || !parser.isSet(reformatOption)
+               || !parser.isSet(dumpAstOption)) {
         qDebug() << "will dump\n";
         QTextStream ts(stdout);
         auto sink = [&ts](QStringView v) {
