@@ -2159,8 +2159,18 @@ void ExecutionEngine::createQtObject()
     QV4::Scope scope(this);
     QtObject *qtObject = new QtObject(this);
     QJSEngine::setObjectOwnership(qtObject, QJSEngine::JavaScriptOwnership);
-    QV4::ScopedObject qt(scope, QV4::QObjectWrapper::wrap(this, qtObject));
-    globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
+
+    QV4::ScopedObject qtObjectWrapper(
+                scope, QV4::QObjectWrapper::wrap(this, qtObject));
+    QV4::ScopedObject qtNamespaceWrapper(
+                scope, QV4::QMetaObjectWrapper::create(this, &Qt::staticMetaObject));
+    QV4::ScopedObject qtObjectProtoWrapper(
+                scope, qtObjectWrapper->getPrototypeOf());
+
+    qtNamespaceWrapper->setPrototypeOf(qtObjectProtoWrapper);
+    qtObjectWrapper->setPrototypeOf(qtNamespaceWrapper);
+
+    globalObject->defineDefaultProperty(QStringLiteral("Qt"), qtObjectWrapper);
 }
 
 const QSet<QString> &ExecutionEngine::illegalNames() const

@@ -69,6 +69,7 @@ private slots:
     void listPropertyAsQJSValue();
     void stringToColor();
     void qobjectToString();
+    void qtNamespaceInQtObject();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1583,6 +1584,21 @@ void tst_qqmlengine::qobjectToString()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QCOMPARE(o->objectName(), QStringLiteral("things things 4"));
+}
+
+void tst_qqmlengine::qtNamespaceInQtObject()
+{
+    QQmlEngine engine;
+    QJSValue qtObject = engine.globalObject().property(QStringLiteral("Qt"));
+
+    // Qt namespace enums are there.
+    QCOMPARE(qtObject.property(QStringLiteral("Checked")).toInt(), 2);
+
+    // QtObject methods are also there.
+    QVERIFY(qtObject.property(QStringLiteral("rect")).isCallable());
+
+    // QObject is also there.
+    QVERIFY(qtObject.hasProperty(QStringLiteral("objectName")));
 }
 
 QTEST_MAIN(tst_qqmlengine)

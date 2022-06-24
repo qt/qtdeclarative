@@ -1652,7 +1652,7 @@ void tst_QmlCppCodegen::intEnumCompare()
         QVERIFY2(c.isReady(), qPrintable(c.errorString()));
         QScopedPointer<QObject> o(c.create());
         QVERIFY(o);
-        QCOMPARE(o->property("c").toBool(), false);
+        QCOMPARE(o->property("c").toBool(), true);
         QCOMPARE(o->property("d").toBool(), false);
     }
 }
