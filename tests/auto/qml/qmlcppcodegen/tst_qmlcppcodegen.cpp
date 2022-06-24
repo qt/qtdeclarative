@@ -1468,6 +1468,12 @@ void tst_QmlCppCodegen::undefinedResets()
     person->setShoeSize(10);
     QCOMPARE(person->shoeSize(), 10);
     QCOMPARE(person->name(), u"Marge"_s);
+
+    person->setName(u"no one"_s);
+    QCOMPARE(person->name(), u"no one"_s);
+
+    person->setObjectName(u"the one"_s);
+    QCOMPARE(person->name(), u"Bart"_s);
 }
 
 void tst_QmlCppCodegen::innerObjectNonShadowable()

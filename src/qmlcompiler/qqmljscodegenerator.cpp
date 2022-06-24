@@ -610,24 +610,14 @@ void QQmlJSCodeGenerator::generate_StoreNameSloppy(int nameIndex)
     switch (type.variant()) {
     case QQmlJSRegisterContent::ScopeProperty:
     case QQmlJSRegisterContent::ExtensionScopeProperty: {
-        if (!m_typeResolver->registerContains(m_state.accumulatorIn(), type.property().type())) {
-            m_body += u"{\n"_s;
-            m_body += u"auto converted = "_s
-                    + conversion(m_state.accumulatorIn(), type, m_state.accumulatorVariableIn)
-                    + u";\n"_s;
-            m_body += u"aotContext->storeNameSloppy("_s + QString::number(nameIndex)
-                    + u", "_s + contentPointer(type, u"converted"_s)
-                    + u", "_s + contentType(type, u"converted"_s) + u')';
-            m_body += u";\n"_s;
-            m_body += u"}\n"_s;
-        } else {
-            m_body += u"aotContext->storeNameSloppy("_s + QString::number(nameIndex)
-                    + u", "_s
-                    + contentPointer(m_state.accumulatorIn(), m_state.accumulatorVariableIn)
-                    + u", "_s
-                    + contentType(m_state.accumulatorIn(), m_state.accumulatorVariableIn) + u')';
-            m_body += u";\n"_s;
-        }
+        // Do not convert here. We may intentionally pass the "wrong" type, for example to trigger
+        // a property reset.
+        m_body += u"aotContext->storeNameSloppy("_s + QString::number(nameIndex)
+                + u", "_s
+                + contentPointer(m_state.accumulatorIn(), m_state.accumulatorVariableIn)
+                + u", "_s
+                + contentType(m_state.accumulatorIn(), m_state.accumulatorVariableIn) + u')';
+        m_body += u";\n"_s;
         break;
     }
     case QQmlJSRegisterContent::ScopeMethod:

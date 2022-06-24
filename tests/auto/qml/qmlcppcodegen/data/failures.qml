@@ -34,4 +34,10 @@ QtObject {
     property BirthdayParty party: BirthdayParty {
         onPartyStarted: (foozle) => { objectName = foozle }
     }
+
+    signal foo()
+    signal bar()
+
+    // Cannot assign potential undefined
+    onFoo: objectName = self.bar()
 }
