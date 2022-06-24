@@ -2324,7 +2324,7 @@ void QQmlJSCodeGenerator::generateInPlaceOperation(const QString &cppOperator)
     m_body += u"auto converted = "_s + var + u";\n"_s;
     m_body += m_state.accumulatorVariableOut + u" = "_s + conversion(
                 m_typeResolver->original(m_state.accumulatorOut()),
-                m_state.accumulatorOut(), cppOperator + u"converted"_s) + u";\n"_s;
+                m_state.accumulatorOut(), u'(' + cppOperator + u"converted)"_s) + u";\n"_s;
     m_body += u"}\n"_s;
     generateOutputVariantConversion(m_typeResolver->containedType(original));
 }
