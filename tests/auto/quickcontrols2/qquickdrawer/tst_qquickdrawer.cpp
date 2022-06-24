@@ -42,6 +42,8 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -364,8 +366,7 @@ void tst_QQuickDrawer::position()
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
@@ -412,8 +413,7 @@ void tst_QQuickDrawer::dragMargin()
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickDrawer *drawer = helper.appWindow->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
@@ -560,7 +560,7 @@ void tst_QQuickDrawer::dragHandlerInteraction()
     auto window = helper.appWindow;;
     QVERIFY(window);
     window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QTest::mousePress(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(250, 250));
     QTest::mouseMove(window, QPoint(100, 100));
     QTest::mouseRelease(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(100, 100));
@@ -587,8 +587,7 @@ void tst_QQuickDrawer::hover()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer*>();
     QVERIFY(drawer);
@@ -914,7 +913,7 @@ void tst_QQuickDrawer::multiTouch()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickOverlay *overlay = QQuickOverlay::overlay(window);
     QVERIFY(overlay);
@@ -1068,6 +1067,9 @@ void tst_QQuickDrawer::interactive_data()
 
 void tst_QQuickDrawer::interactive()
 {
+    if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation)))
+        QSKIP("Window activation is not supported");
+
     QFETCH(QString, source);
     QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1193,7 +1195,7 @@ void tst_QQuickDrawer::dragOverModalShadow()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
     QVERIFY(drawer);
@@ -1250,7 +1252,7 @@ void tst_QQuickDrawer::nonModal()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
     QVERIFY(drawer);
@@ -1334,7 +1336,7 @@ void tst_QQuickDrawer::slider()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
     QVERIFY(drawer);
@@ -1382,7 +1384,7 @@ void tst_QQuickDrawer::topEdgeScreenEdge()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
     QVERIFY(drawer);
