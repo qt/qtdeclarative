@@ -1,6 +1,8 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtTest>
 #include <QtQml>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -29,11 +31,19 @@ private slots:
     void mnemonics();
     void addRemove();
     void checkHighlightWhenMenuDismissed();
+
+private:
+    static bool hasWindowActivation();
 };
 
 tst_qquickmenubar::tst_qquickmenubar()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+}
+
+bool tst_qquickmenubar::hasWindowActivation()
+{
+    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 void tst_qquickmenubar::delegate()
@@ -51,6 +61,9 @@ void tst_qquickmenubar::delegate()
 
 void tst_qquickmenubar::mouse()
 {
+    if (!hasWindowActivation())
+        QSKIP("Window activation is not supported");
+
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
@@ -227,6 +240,9 @@ void tst_qquickmenubar::mouse()
 
 void tst_qquickmenubar::keys()
 {
+    if (!hasWindowActivation())
+        QSKIP("Window activation is not supported");
+
     QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
@@ -416,6 +432,9 @@ void tst_qquickmenubar::keys()
 
 void tst_qquickmenubar::mnemonics()
 {
+    if (!hasWindowActivation())
+        QSKIP("Window activation is not supported");
+
 #if defined(Q_OS_MACOS) or defined(Q_OS_WEBOS)
     QSKIP("Mnemonics are not used on this platform");
 #endif
@@ -636,7 +655,7 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
 
     centerOnScreen(window.data());
     moveMouseAway(window.data());
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickMenuBar *menuBar = window->findChild<QQuickMenuBar *>("menuBar");
     QVERIFY(menuBar);
