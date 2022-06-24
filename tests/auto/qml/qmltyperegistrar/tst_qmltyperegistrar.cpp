@@ -381,4 +381,9 @@ void tst_qmltyperegistrar::typeInModuleMajorVersionZero()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 }
 
+void tst_qmltyperegistrar::resettableProperty()
+{
+    QVERIFY(qmltypesData.contains(R"(reset: "resetFoo")"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

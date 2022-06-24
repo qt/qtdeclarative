@@ -268,6 +268,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaProperty
     QString m_typeName;
     QString m_read;
     QString m_write;
+    QString m_reset;
     QString m_bindable;
     QString m_notify;
     QString m_privateClass;
@@ -295,6 +296,9 @@ public:
 
     void setWrite(const QString &write) { m_write = write; }
     QString write() const { return m_write; }
+
+    void setReset(const QString &reset) { m_reset = reset; }
+    QString reset() const { return m_reset; }
 
     void setBindable(const QString &bindable) { m_bindable = bindable; }
     QString bindable() const { return m_bindable; }

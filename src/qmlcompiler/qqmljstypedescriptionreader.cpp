@@ -359,6 +359,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setRead(readStringBinding(script));
         } else if (id == QLatin1String("write")) {
             property.setWrite(readStringBinding(script));
+        } else if (id == QLatin1String("reset")) {
+            property.setReset(readStringBinding(script));
         } else if (id == QLatin1String("notify")) {
             property.setNotify(readStringBinding(script));
         } else if (id == QLatin1String("index")) {
@@ -368,8 +370,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
         } else {
             addWarning(script->firstSourceLocation(),
                        tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, "
-                          "isFinal, bindable, read, write, notify, index and isList script "
-                          "bindings."));
+                          "isFinal, isList, bindable, read, write, reset, notify, index, and "
+                          "privateClass and script bindings."));
         }
     }
 

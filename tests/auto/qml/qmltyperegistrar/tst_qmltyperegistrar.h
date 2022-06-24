@@ -466,6 +466,31 @@ public:
     RemovedInEarlyVersion(QObject *parent = nullptr) : AddedInLateVersion(parent) {}
 };
 
+class HasResettableProperty : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int foo READ foo WRITE setFoo RESET resetFoo NOTIFY fooChanged)
+public:
+    HasResettableProperty(QObject *parent = nullptr) : QObject(parent) {}
+
+    int foo() const { return m_foo; }
+    void setFoo(int newFoo)
+    {
+        if (m_foo == newFoo)
+            return;
+        m_foo = newFoo;
+        emit fooChanged();
+    }
+    void resetFoo() { setFoo(12); }
+
+signals:
+    void fooChanged();
+
+private:
+    int m_foo = 12;
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -508,6 +533,7 @@ private slots:
     void addRemoveVersion_data();
     void addRemoveVersion();
     void typeInModuleMajorVersionZero();
+    void resettableProperty();
 
 private:
     QByteArray qmltypesData;

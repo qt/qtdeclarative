@@ -216,6 +216,9 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties)
         const auto write = obj.constFind(QLatin1String("write"));
         if (write != obj.constEnd())
             m_qml.writeScriptBinding(QLatin1String("write"), enquote(write->toString()));
+        const auto reset = obj.constFind(QLatin1String("reset"));
+        if (reset != obj.constEnd())
+            m_qml.writeScriptBinding(QLatin1String("reset"), enquote(reset->toString()));
         const auto notify = obj.constFind(QLatin1String("notify"));
         if (notify != obj.constEnd())
             m_qml.writeScriptBinding(QLatin1String("notify"), enquote(notify->toString()));
