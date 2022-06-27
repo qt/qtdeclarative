@@ -2790,15 +2790,19 @@ QQmlJSCodeGenerator::AccumulatorConverter::AccumulatorConverter(QQmlJSCodeGenera
     const QQmlJSScope::ConstPtr origStored = resolver->originalType(stored);
 
     // If the stored type differs or if we store in QVariant and the contained type differs,
-    // then we have to use a temporary.
+    // then we have to use a temporary ...
     if (!resolver->equals(origStored, stored)
         || (!resolver->equals(origContained, resolver->containedType(accumulatorOut))
             && resolver->equals(stored, resolver->varType()))) {
-        generator->m_state.accumulatorVariableOut = u"retrieved"_s;
+
+        const bool storable = isTypeStorable(resolver, origStored);
+        generator->m_state.accumulatorVariableOut = storable ? u"retrieved"_s : QString();
         generator->m_state.setRegister(Accumulator, resolver->original(accumulatorOut));
         generator->m_body += u"{\n"_s;
-        generator->m_body += origStored->augmentedInternalName() + u' '
-                + generator->m_state.accumulatorVariableOut + u";\n";
+        if (storable) {
+            generator->m_body += origStored->augmentedInternalName() + u' '
+                    + generator->m_state.accumulatorVariableOut + u";\n";
+        }
     } else if (generator->m_state.accumulatorVariableIn == generator->m_state.accumulatorVariableOut
                && generator->m_state.readsRegister(Accumulator)
                && resolver->registerIsStoredIn(

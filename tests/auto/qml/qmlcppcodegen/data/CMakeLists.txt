@@ -144,6 +144,7 @@ set(qml_files
     undefinedResets.qml
     unknownAttached.qml
     unknownParameter.qml
+    unstoredUndefined.qml
     unusedAttached.qml
     urlString.qml
     valueTypeLists.qml

@@ -126,6 +126,7 @@ private slots:
     void translation();
     void stringArg();
     void conversionDecrement();
+    void unstoredUndefined();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2306,6 +2307,15 @@ void tst_QmlCppCodegen::conversionDecrement()
     QCOMPARE(o->property("currentPageIndex").toInt(), 4);
     o->setProperty("pages", 60);
     QCOMPARE(o->property("currentPageIndex").toInt(), 3);
+}
+
+void tst_QmlCppCodegen::unstoredUndefined()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/unstoredUndefined.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->objectName(), u"NaN"_s);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
