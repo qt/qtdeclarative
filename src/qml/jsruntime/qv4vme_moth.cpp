@@ -423,7 +423,11 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
             memcpy(transformedArguments, frame->argv(), frame->argc() * sizeof(void *));
         }
 
-        Q_ASSERT(argumentType.sizeOf() > 0);
+        if (argumentType.sizeOf() == 0) {
+            transformedArguments[i] = nullptr;
+            continue;
+        }
+
         Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
 
         if (argumentType == QMetaType::fromType<QVariant>()) {
@@ -431,6 +435,11 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
                 new (arg) QVariant(frame->argTypes()[i], frame->argv()[i]);
             else
                 new (arg) QVariant();
+        } else if (argumentType == QMetaType::fromType<QJSPrimitiveValue>()) {
+            if (frame->argc() > i)
+                new (arg) QJSPrimitiveValue(frame->argTypes()[i], frame->argv()[i]);
+            else
+                new (arg) QJSPrimitiveValue();
         } else {
             argumentType.construct(arg);
             if (frame->argc() > i)
@@ -484,8 +493,11 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
     if (transformedArguments) {
         for (int i = 0; i < numFunctionArguments; ++i) {
-            if (i >= frame->argc() || transformedArguments[i] != frame->argv()[i])
-                function->aotFunction->argumentTypes[i].destruct(transformedArguments[i]);
+            void *arg = transformedArguments[i];
+            if (arg == nullptr)
+                continue;
+            if (i >= frame->argc() || arg != frame->argv()[i])
+                function->aotFunction->argumentTypes[i].destruct(arg);
         }
     }
 }

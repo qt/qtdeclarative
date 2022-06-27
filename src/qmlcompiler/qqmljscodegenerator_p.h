@@ -244,6 +244,12 @@ protected:
     QString m_body;
     CodegenState m_state;
 
+    void resetState()
+    {
+        m_state.State::operator=(initialState(m_function));
+        m_state.accumulatorVariableIn = m_state.accumulatorVariableOut = QString();
+    }
+
 private:
     void generateExceptionCheck();
     void generateEqualityOperation(int lhs, const QString &function, bool invert);
@@ -269,11 +275,6 @@ private:
     {
         using namespace Qt::StringLiterals;
         return m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
-    }
-
-    int firstRegisterIndex() const
-    {
-        return QV4::CallData::OffsetCount + m_function->argumentTypes.count();
     }
 
     int nextJSLine(uint line) const;

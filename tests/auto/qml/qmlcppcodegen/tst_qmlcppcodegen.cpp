@@ -2243,8 +2243,24 @@ void tst_QmlCppCodegen::javaScriptArgument()
 
     QCOMPARE(o->property("a").toDouble(), 4.0);
     QCOMPARE(o->property("b").toDouble(), 9.0);
-    QCOMPARE(o->property("c").toString(), u"5t-1"_qs);
-    QCOMPARE(o->property("d").toString(), u"9"_qs);
+    QCOMPARE(o->property("c").toString(), u"5t-1"_s);
+    QCOMPARE(o->property("d").toString(), u"9"_s);
+    QCOMPARE(o->property("e").toString(), u"10"_s);
+    QCOMPARE(o->property("f").toString(), u"-10"_s);
+
+    const QStringList scales {
+        "0 ", "1 ", "10 ", "100 ", "1000 ", "9.77k", "97.7k", "977k", "9.54M", "95.4M", "954M",
+        "9.31G", "93.1G", "931G", "9.09T", "-1 ", "-10 ", "-100 ", "-1000 ", "-9.77k", "-97.7k",
+        "-977k", "-9.54M", "-95.4M", "-954M", "-9.31G", "-93.1G", "-931G", "-9.09T"
+    };
+
+    QCOMPARE(o->property("scales").value<QStringList>(), scales);
+
+    double thing = 12.0;
+    QString result;
+    QMetaObject::invokeMethod(
+                o.data(), "forwardArg", Q_RETURN_ARG(QString, result), Q_ARG(double, thing));
+    QCOMPARE(result, u"12 ");
 }
 
 void tst_QmlCppCodegen::translation()

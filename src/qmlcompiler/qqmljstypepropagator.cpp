@@ -2200,6 +2200,8 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
                     // different value
                     //                    currentRegister->m_state.value = {};
                 }
+            } else if (isArgument(registerIndex)) {
+                mergeRegister(registerIndex, newType, argumentType(registerIndex));
             } else {
                 mergeRegister(registerIndex, newType, newType);
             }
@@ -2325,6 +2327,9 @@ QQmlJSRegisterContent QQmlJSTypePropagator::checkedInputRegister(int reg)
 {
     const auto regIt = m_state.registers.find(reg);
     if (regIt == m_state.registers.end()) {
+        if (isArgument(reg))
+            return argumentType(reg);
+
         setError(u"Type error: could not infer the type of an expression"_s);
         return {};
     }

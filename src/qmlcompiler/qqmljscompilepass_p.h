@@ -163,6 +163,23 @@ protected:
     const Function *m_function = nullptr;
     QQmlJS::DiagnosticMessage *m_error = nullptr;
 
+    int firstRegisterIndex() const
+    {
+        return FirstArgument + m_function->argumentTypes.count();
+    }
+
+    bool isArgument(int registerIndex) const
+    {
+        return registerIndex >= FirstArgument && registerIndex < firstRegisterIndex();
+    }
+
+    QQmlJSRegisterContent argumentType(int registerIndex) const
+    {
+        Q_ASSERT(isArgument(registerIndex));
+        return m_function->argumentTypes[registerIndex - FirstArgument];
+    }
+
+
     State initialState(const Function *function)
     {
         State state;

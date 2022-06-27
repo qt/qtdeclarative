@@ -126,9 +126,10 @@ public:
     Q_IMPLICIT constexpr QJSPrimitiveValue(int value) noexcept : d(value) {}
     Q_IMPLICIT constexpr QJSPrimitiveValue(double value) noexcept : d(value) {}
     Q_IMPLICIT QJSPrimitiveValue(QString string) noexcept : d(std::move(string)) {}
-    explicit QJSPrimitiveValue(const QVariant &variant) noexcept
+
+    explicit QJSPrimitiveValue(const QMetaType type, const void *value) noexcept
     {
-        switch (variant.typeId()) {
+        switch (type.id()) {
         case QMetaType::UnknownType:
             d = QJSPrimitiveUndefined();
             break;
@@ -136,21 +137,26 @@ public:
             d = QJSPrimitiveNull();
             break;
         case QMetaType::Bool:
-            d = variant.toBool();
+            d = *static_cast<const bool *>(value);
             break;
         case QMetaType::Int:
-            d = variant.toInt();
+            d = *static_cast<const int *>(value);
             break;
         case QMetaType::Double:
-            d = variant.toDouble();
+            d = *static_cast<const double *>(value);
             break;
         case QMetaType::QString:
-            d = variant.toString();
+            d = *static_cast<const QString *>(value);
             break;
         default:
             // Unsupported. Remains undefined.
             break;
         }
+    }
+
+    explicit QJSPrimitiveValue(const QVariant &variant) noexcept
+        : QJSPrimitiveValue(variant.metaType(), variant.data())
+    {
     }
 
     constexpr bool toBoolean() const
