@@ -43,7 +43,15 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
         const InstructionAnnotations &annotations)
 {
     m_annotations = annotations;
-    m_basicBlocks.insert_or_assign(0, BasicBlock());
+
+    for (int i = 0, end = function->argumentTypes.length(); i != end; ++i) {
+        InstructionAnnotation annotation;
+        annotation.changedRegisterIndex = FirstArgument + i;
+        annotation.changedRegister = function->argumentTypes[i];
+        m_annotations[-annotation.changedRegisterIndex] = annotation;
+    }
+
+    m_basicBlocks.insert_or_assign(m_annotations.begin().key(), BasicBlock());
 
     const QByteArray byteCode = function->code;
     decode(byteCode.constData(), static_cast<uint>(byteCode.length()));

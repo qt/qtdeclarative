@@ -131,6 +131,29 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+  \fn QJSPrimitiveValue::QJSPrimitiveValue(QMetaType type, const void *value)
+  \since 6.4
+
+  Creates a QJSPrimitiveValue of type \a type, and initializes with
+  \a value if \a type can be stored in QJSPrimtiveValue. \a value must not
+  be nullptr in that case. If \a type cannot be stored this results in a
+  QJSPrimitiveValue of type Undefined.
+
+  Note that you have to pass the address of the variable you want stored.
+
+  Usually, you never have to use this constructor, use the one taking QVariant
+  instead.
+ */
+
+/*!
+  \fn QJSPrimitiveValue::QJSPrimitiveValue(const QVariant &value)
+
+  Creates a QJSPrimitiveValue from the contents of \a value if those contents
+  can be stored in QJSPrimtiveValue. Otherwise this results in a
+  QJSPrimitiveValue of type Undefined.
+ */
+
+/*!
   \fn bool QJSPrimitiveValue::toBoolean() const
 
   Returns the value coerced a boolean by JavaScript rules.

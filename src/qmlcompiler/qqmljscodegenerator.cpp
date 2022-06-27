@@ -125,7 +125,7 @@ QT_WARNING_POP
     for (const auto loopLabel : m_context->labelInfo)
         m_labels.insert(loopLabel, u"label_%1"_s.arg(m_labels.count()));
 
-    m_state.State::operator=(initialState(function));
+    resetState();
     const QByteArray byteCode = function->code;
     decode(byteCode.constData(), static_cast<uint>(byteCode.length()));
 
@@ -133,7 +133,14 @@ QT_WARNING_POP
     result.includes.swap(m_includes);
 
     QDuplicateTracker<QString> generatedVariables;
-    for (const auto &registerTypes : qAsConst(m_registerVariables)) {
+    for (auto registerIt = m_registerVariables.cbegin(), registerEnd = m_registerVariables.cend();
+         registerIt != registerEnd; ++registerIt) {
+        const auto &registerTypes = *registerIt;
+        const int registerIndex = registerIt.key();
+
+        const bool registerIsArgument = isArgument(registerIndex);
+        const bool isReadonlyArgument = registerIsArgument && registerTypes.size() == 1;
+
         for (auto registerTypeIt = registerTypes.constBegin(), end = registerTypes.constEnd();
              registerTypeIt != end; ++registerTypeIt) {
 
@@ -142,14 +149,25 @@ QT_WARNING_POP
             if (generatedVariables.hasSeen(registerTypeIt.value()))
                 continue;
 
+            // We would like to make the variable a const ref if it's a readonly argument,
+            // but due to the various call interfaces accepting non-const values, we can't.
+            // We rely on those calls to still not modify their arguments in place.
+
             result.code += storedType->internalName();
 
             if (storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
                 result.code += u" *"_s;
             else
-                result.code += u' ';
+                result.code += isReadonlyArgument ? u" &"_s : u" "_s;
 
             result.code += registerTypeIt.value();
+            if (registerIsArgument && m_typeResolver->registerIsStoredIn(
+                        argumentType(registerIndex), storedType)) {
+                const int argumentIndex = registerIndex - FirstArgument;
+                result.code += u" = " + u"*static_cast<"_s
+                        + castTargetName(m_function->argumentTypes[argumentIndex].storedType())
+                        + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"])"_s;
+            }
             result.code += u";\n"_s;
         }
     }
@@ -223,6 +241,7 @@ void QQmlJSCodeGenerator::generate_Ret()
 
     m_body += u";\n"_s;
     m_skipUntilNextLabel = true;
+    resetState();
 }
 
 void QQmlJSCodeGenerator::generate_Debug()
@@ -1457,6 +1476,8 @@ void QQmlJSCodeGenerator::generate_ThrowException()
                          m_typeResolver->jsValueType()),
                      m_state.accumulatorVariableIn) + u");\n"_s;
     m_body += u"return "_s + errorReturnValue() + u";\n"_s;
+    m_skipUntilNextLabel = true;
+    resetState();
 }
 
 void QQmlJSCodeGenerator::generate_GetException()
@@ -1669,6 +1690,7 @@ void QQmlJSCodeGenerator::generate_Jump(int offset)
     generateJumpCodeWithTypeConversions(offset);
     m_body += u";\n"_s;
     m_skipUntilNextLabel = true;
+    resetState();
 }
 
 void QQmlJSCodeGenerator::generate_JumpTrue(int offset)
@@ -2180,7 +2202,8 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
 
 void QQmlJSCodeGenerator::endInstruction(QV4::Moth::Instr::Type)
 {
-    generateJumpCodeWithTypeConversions(0);
+    if (!m_skipUntilNextLabel)
+        generateJumpCodeWithTypeConversions(0);
 }
 
 void QQmlJSCodeGenerator::generateSetInstructionPointer()
@@ -2410,13 +2433,6 @@ QString QQmlJSCodeGenerator::registerVariable(int index) const
             return variable;
     }
 
-    if (index >= QV4::CallData::OffsetCount && index < firstRegisterIndex()) {
-        const int argumentIndex = index - QV4::CallData::OffsetCount;
-        return u"*static_cast<"_s
-                + castTargetName(m_function->argumentTypes[argumentIndex].storedType())
-                + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"])"_s;
-    }
-
     return QString();
 }
 
@@ -2431,9 +2447,6 @@ QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
     auto it = m_state.registers.find(index);
     if (it != m_state.registers.end())
         return it.value();
-
-    if (index >= QV4::CallData::OffsetCount && index < firstRegisterIndex())
-        return m_function->argumentTypes[index - QV4::CallData::OffsetCount];
 
     return QQmlJSRegisterContent();
 }
