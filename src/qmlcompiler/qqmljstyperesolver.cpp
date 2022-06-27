@@ -260,6 +260,16 @@ bool QQmlJSTypeResolver::isIntegral(const QQmlJSRegisterContent &type) const
     return containedType(type) == m_intType;
 }
 
+bool QQmlJSTypeResolver::canHoldUndefined(const QQmlJSRegisterContent &content) const
+{
+    const auto canBeUndefined = [this](const QQmlJSScope::ConstPtr &type) {
+        return type == m_voidType || type == m_varType
+                || type == m_jsValueType || type == m_jsPrimitiveType;
+    };
+
+    return canBeUndefined(content.storedType()) && canBeUndefined(containedType(content));
+}
+
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 {
     return type == m_intType || type == m_realType || type == m_floatType || type == m_boolType

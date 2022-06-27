@@ -27,4 +27,9 @@ QtObject {
     }
 
     Component.onCompleted: doesNotExist()
+
+    signal foo()
+    signal bar()
+    // Cannot assign potential undefined
+    onFoo: objectName = self.bar()
 }

@@ -531,6 +531,7 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
 {
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
     const QQmlJSRegisterContent type = m_typeResolver->scopedType(m_function->qmlScope, name);
+    const QQmlJSRegisterContent in = m_state.accumulatorIn;
 
     if (!type.isValid()) {
         setError(u"Cannot find name "_qs + name);
@@ -551,10 +552,13 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
         return;
     }
 
-    if (!canConvertFromTo(m_state.accumulatorIn, type)) {
+    if (!canConvertFromTo(in, type)) {
         setError(u"cannot convert from %1 to %2"_qs
-                         .arg(m_state.accumulatorIn.descriptiveName(), type.descriptiveName()));
+                         .arg(in.descriptiveName(), type.descriptiveName()));
     }
+
+    if (m_typeResolver->canHoldUndefined(in) && !m_typeResolver->canHoldUndefined(type))
+        setError(u"Cannot assign potential undefined to %1"_qs.arg(type.descriptiveName()));
 }
 
 void QQmlJSTypePropagator::generate_StoreNameStrict(int name)
