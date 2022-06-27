@@ -146,23 +146,22 @@ int main(int argc, char **argv)
                                     parser.isSet(followForeignVersioningOption));
     typeRegistrar.setTypes(processor.types(), processor.foreignTypes());
 
-    FILE *output = stdout;
     QScopedPointer<FILE, ScopedPointerFileCloser> outputFile;
 
     if (parser.isSet(outputOption)) {
         // extract does its own file handling
         QString outputName = parser.value(outputOption);
-#if defined(_MSC_VER)
-        if (_wfopen_s(&output, reinterpret_cast<const wchar_t *>(outputName.utf16()), L"w") != 0) {
-#else
-        output = fopen(QFile::encodeName(outputName).constData(), "w"); // create output file
-        if (!output) {
-#endif
+        QFile file(outputName);
+        if (!file.open(QIODeviceBase::WriteOnly)) {
             fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(outputName));
             return EXIT_FAILURE;
         }
+        QTextStream output(&file);
+        typeRegistrar.write(output);
+    } else {
+        QTextStream output(stdin);
+        typeRegistrar.write(output);
     }
-    typeRegistrar.write(output);
 
     if (!parser.isSet(pluginTypesOption))
         return EXIT_SUCCESS;

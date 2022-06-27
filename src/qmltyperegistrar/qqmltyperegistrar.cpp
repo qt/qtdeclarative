@@ -141,22 +141,23 @@ QString conflictingVersionToString(const ExclusiveVersionRange &r)
     return s;
 };
 
-void QmlTypeRegistrar::write(FILE *output)
+void QmlTypeRegistrar::write(QTextStream &output)
 {
-    fprintf(output,
-            "/****************************************************************************\n"
-            "** Generated QML type registration code\n**\n");
-    fprintf(output,
-            "** WARNING! All changes made in this file will be lost!\n"
-            "*****************************************************************************/\n\n");
-    fprintf(output,
-            "#include <QtQml/qqml.h>\n"
-            "#include <QtQml/qqmlmoduleregistration.h>\n");
+    output << uR"(/****************************************************************************
+** Generated QML type registration code
+**
+** WARNING! All changes made in this file will be lost!
+*****************************************************************************/
+
+
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlmoduleregistration.h>
+)"_s;
 
     for (const QString &include : m_includes)
-        fprintf(output, "\n#include <%s>", qPrintable(include));
+        output << u"\n#include <%1>"_s.arg(include);
 
-    fprintf(output, "\n\n");
+    output << u"\n\n"_s;
 
     // Keep this in sync with _qt_internal_get_escaped_uri in CMake
     QString moduleAsSymbol = m_module;
@@ -172,30 +173,32 @@ void QmlTypeRegistrar::write(FILE *output)
     }
 
     const QString functionName = QStringLiteral("qml_register_types_") + moduleAsSymbol;
-    fprintf(output,
-            "#if !defined(QT_STATIC)\n"
-            "#define Q_QMLTYPE_EXPORT Q_DECL_EXPORT\n"
-            "#else\n"
-            "#define Q_QMLTYPE_EXPORT\n"
-            "#endif\n"
-            "\n");
+    output << uR"(
+#if !defined(QT_STATIC)
+#define Q_QMLTYPE_EXPORT Q_DECL_EXPORT
+#else
+#define Q_QMLTYPE_EXPORT
+#endif
+)"_s;
 
     if (!m_targetNamespace.isEmpty())
-        fprintf(output, "namespace %s {\n", qPrintable(m_targetNamespace));
+        output << u"namespace "_s << m_targetNamespace << u" {\n"_s;
 
-    fprintf(output, "Q_QMLTYPE_EXPORT void %s()\n{", qPrintable(functionName));
+    output << u"Q_QMLTYPE_EXPORT void "_s << functionName << u"()\n{"_s;
     const quint8 majorVersion = m_moduleVersion.majorVersion();
     const quint8 minorVersion = m_moduleVersion.minorVersion();
 
     for (const auto &version : m_pastMajorVersions) {
-        fprintf(output,
-                "\n    qmlRegisterModule(\"%s\", %u, 0);\n    qmlRegisterModule(\"%s\", %u, 254);",
-                qPrintable(m_module), (version), qPrintable(m_module), (version));
+        output << uR"(
+    qmlRegisterModule("%1", %2, 0);
+    qmlRegisterModule("%1", %2, 254);)"_s.arg(m_module)
+                          .arg(version);
     }
 
     if (minorVersion != 0) {
-        fprintf(output, "\n    qmlRegisterModule(\"%s\", %u, 0);", qPrintable(m_module),
-                majorVersion);
+        output << uR"(
+    qmlRegisterModule("%1", %2, 0);)"_s.arg(m_module)
+                          .arg(majorVersion);
     }
 
     QVector<QString> typesRegisteredAnonymously;
@@ -265,18 +268,15 @@ void QmlTypeRegistrar::write(FILE *output)
             };
 
             if (targetIsNamespace()) {
-                fprintf(output, "\n    {");
-                fprintf(output, "\n        Q_CONSTINIT static auto metaType "
-                                "= QQmlPrivate::metaTypeForNamespace("
-                                "[](const QtPrivate::QMetaTypeInterface *) { "
-                                "return &%s::staticMetaObject; "
-                                "}, \"%s\");",
-                        qPrintable(targetName), qPrintable(targetTypeName));
-                fprintf(output, "\n        QMetaType(&metaType).id();");
-                fprintf(output, "\n    }");
+                output << uR"(
+    {
+        Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(
+            [](const QtPrivate::QMetaTypeInterface *) {return &%1::staticMetaObject;},
+            "%2");
+        QMetaType(&metaType).id();
+    })"_s.arg(targetName, targetTypeName);
             } else {
-                fprintf(output, "\n    QMetaType::fromType<%s>().id();",
-                        qPrintable(targetTypeName));
+                output << u"\n    QMetaType::fromType<%1>().id();"_s.arg(targetTypeName);
             }
 
             auto metaObjectPointer = [](const QString &name) -> QString {
@@ -284,13 +284,13 @@ void QmlTypeRegistrar::write(FILE *output)
             };
 
             if (seenQmlElement) {
-                fprintf(output,
-                        "\n    qmlRegisterNamespaceAndRevisions(%s, "
-                        "\"%s\", %u, nullptr, %s, %s);",
-                        qPrintable(metaObjectPointer(targetName)), qPrintable(m_module),
-                        (majorVersion), qPrintable(metaObjectPointer(className)),
-                        extendedName.isEmpty() ? "nullptr"
-                                               : qPrintable(metaObjectPointer(extendedName)));
+                output << uR"(
+    qmlRegisterNamespaceAndRevisions(%1, "%2", %3, nullptr, %4, %5);)"_s
+                                  .arg(metaObjectPointer(targetName), m_module)
+                                  .arg(majorVersion)
+                                  .arg(metaObjectPointer(className),
+                                       extendedName.isEmpty() ? QStringLiteral("nullptr")
+                                                              : metaObjectPointer(extendedName));
             }
         } else {
             if (seenQmlElement) {
@@ -319,8 +319,9 @@ void QmlTypeRegistrar::write(FILE *output)
                     checkRevisions(methods, QLatin1String("method"));
                 }
 
-                fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %u);",
-                        qPrintable(className), qPrintable(m_module), (majorVersion));
+                output << uR"(
+    qmlRegisterTypesAndRevisions<%1>("%2", %3);)"_s.arg(className, m_module)
+                                  .arg(majorVersion);
 
                 const QJsonValue superClasses = classDef[QLatin1String("superClasses")];
 
@@ -358,25 +359,18 @@ void QmlTypeRegistrar::write(FILE *output)
                                         typesRegisteredAnonymously.append(typeName);
 
                                         if (m_followForeignVersioning) {
-                                            fprintf(output,
-                                                    "\n    "
-                                                    "qmlRegisterAnonymousTypesAndRevisions<%s>(\"%"
-                                                    "s\", "
-                                                    "%u);",
-                                                    qPrintable(typeName), qPrintable(m_module),
-                                                    (majorVersion));
+                                            output << uR"(
+    qmlRegisterAnonymousTypesAndRevisions<%1>("%2", %3);)"_s.arg(typeName, m_module)
+                                                              .arg(majorVersion);
                                             break;
                                         }
 
                                         for (const auto &version : m_pastMajorVersions
                                                      + decltype(m_pastMajorVersions){
                                                              majorVersion }) {
-                                            fprintf(output,
-                                                    "\n    "
-                                                    "qmlRegisterAnonymousType<%s, 254>(\"%s\", "
-                                                    "%u);",
-                                                    qPrintable(typeName), qPrintable(m_module),
-                                                    (version));
+                                            output << uR"(
+    qmlRegisterAnonymousType<%1, 254>("%2", %3);)"_s.arg(typeName, m_module)
+                                                              .arg(version);
                                         }
                                         break;
                                     }
@@ -402,9 +396,9 @@ void QmlTypeRegistrar::write(FILE *output)
                     }
                 }
             } else {
-                fprintf(output, "\n    QMetaType::fromType<%s%s>().id();",
-                        qPrintable(className),
-                        classDef.value(QLatin1String("object")).toBool() ? " *" : "");
+                output << uR"(
+    QMetaType::fromType<%1%2>().id();)"_s.arg(
+                        className, classDef.value(QLatin1String("object")).toBool() ? u" *" : u"");
             }
         }
     }
@@ -439,14 +433,18 @@ void QmlTypeRegistrar::write(FILE *output)
             conflictingExportStartIt = conflictingExportEndIt;
         }
     }
-    fprintf(output, "\n    qmlRegisterModule(\"%s\", %u, %u);", qPrintable(m_module),
-            (majorVersion), (minorVersion));
-    fprintf(output, "\n}\n");
-    fprintf(output, "\nstatic const QQmlModuleRegistration registration(\"%s\", %s);\n",
-            qPrintable(m_module), qPrintable(functionName));
+    output << uR"(
+    qmlRegisterModule("%1", %2, %3);
+}
+
+static const QQmlModuleRegistration registration("%1", %4);
+)"_s.arg(m_module)
+                      .arg(majorVersion)
+                      .arg(minorVersion)
+                      .arg(functionName);
 
     if (!m_targetNamespace.isEmpty())
-        fprintf(output, "} // namespace %s\n", qPrintable(m_targetNamespace));
+        output << u"} // namespace %1\n"_s.arg(m_targetNamespace);
 }
 
 void QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)

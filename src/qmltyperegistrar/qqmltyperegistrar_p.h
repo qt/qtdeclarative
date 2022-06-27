@@ -40,7 +40,7 @@ class QmlTypeRegistrar
     QJsonValue findTypeForeign(const QString &name) const;
 
 public:
-    void write(FILE *output);
+    void write(QTextStream &os);
     void generatePluginTypes(const QString &pluginTypesFile);
     void setModuleNameAndNamespace(const QString &module, const QString &targetNamespace);
     void setModuleVersions(QTypeRevision moduleVersion, const QList<quint8> &pastMajorVersions,
