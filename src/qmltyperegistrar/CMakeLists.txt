@@ -23,6 +23,14 @@ qt_internal_add_tool(${target_name}
     PUBLIC_LIBRARIES
         Qt::CorePrivate
 )
+
+# Install public prf files.
+set(qmltyperegistrar_mkspecs "${CMAKE_CURRENT_SOURCE_DIR}/qmltypes.prf")
+set(mkspecs_install_dir "${INSTALL_MKSPECSDIR}")
+qt_path_join(mkspecs_install_dir "${QT_INSTALL_DIR}" "${mkspecs_install_dir}" "features")
+qt_copy_or_install(FILES "${qmltyperegistrar_mkspecs}"
+                   DESTINATION ${mkspecs_install_dir})
+
 qt_internal_return_unless_building_tools()
 
 #### Keys ignored in scope 1:.:.:qmltyperegistrar.pro:<TRUE>:
@@ -42,12 +50,3 @@ qt_internal_return_unless_building_tools()
 
 #### Keys ignored in scope 3:.:.:qmltyperegistrar.pro:else:
 # COPIES = "build_integration"
-
-# special case begin
-# Install public prf files.
-set(qmltyperegistrar_mkspecs "${CMAKE_CURRENT_SOURCE_DIR}/qmltypes.prf")
-set(mkspecs_install_dir "${INSTALL_MKSPECSDIR}")
-qt_path_join(mkspecs_install_dir "${QT_INSTALL_DIR}" "${mkspecs_install_dir}" "features")
-qt_copy_or_install(FILES "${qmltyperegistrar_mkspecs}"
-                   DESTINATION ${mkspecs_install_dir})
-# special case end
