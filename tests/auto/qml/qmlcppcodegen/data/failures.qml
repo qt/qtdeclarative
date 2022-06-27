@@ -30,4 +30,9 @@ QtObject {
     Component.onCompleted: doesNotExist()
 
     property string aString: self + "a"
+
+    signal foo()
+    signal bar()
+    // Cannot assign potential undefined
+    onFoo: objectName = self.bar()
 }
