@@ -15,21 +15,21 @@ class QQmlEngine;
 class Q_QML_EXPORT QQmlTypesExtensionInterface
 {
 public:
-    virtual ~QQmlTypesExtensionInterface() = default;
+    virtual ~QQmlTypesExtensionInterface();
     virtual void registerTypes(const char *uri) = 0;
 };
 
 class Q_QML_EXPORT QQmlExtensionInterface : public QQmlTypesExtensionInterface
 {
 public:
-    ~QQmlExtensionInterface() override = default;
+    ~QQmlExtensionInterface() override;
     virtual void initializeEngine(QQmlEngine *engine, const char *uri) = 0;
 };
 
 class Q_QML_EXPORT QQmlEngineExtensionInterface
 {
 public:
-    virtual ~QQmlEngineExtensionInterface() = default;
+    virtual ~QQmlEngineExtensionInterface();
     virtual void initializeEngine(QQmlEngine *engine, const char *uri) = 0;
 };
 

@@ -274,7 +274,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmlenumvalue_p.h
         qml/qqmlerror.cpp qml/qqmlerror.h
         qml/qqmlexpression.cpp qml/qqmlexpression.h qml/qqmlexpression_p.h
-        qml/qqmlextensioninterface.h
+        qml/qqmlextensioninterface.cpp qml/qqmlextensioninterface.h
         qml/qqmlextensionplugin.cpp qml/qqmlextensionplugin.h qml/qqmlextensionplugin_p.h
         qml/qqmlfile.cpp qml/qqmlfile.h
         qml/qqmlfileselector.cpp qml/qqmlfileselector.h qml/qqmlfileselector_p.h
