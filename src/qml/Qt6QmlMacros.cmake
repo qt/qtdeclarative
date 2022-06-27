@@ -599,6 +599,14 @@ function(qt6_add_qml_module target)
 
     target_sources(${target} PRIVATE ${arg_SOURCES})
 
+    # QML tooling might need to map build dir paths to source dir paths. Create
+    # a mapping file before qt6_target_qml_sources() to be able to use it
+    if(arg_ENABLE_TYPE_COMPILER)
+        # But: for now, only enable this when dealing with qmltc
+        _qt_internal_qml_map_build_files(${target} "${arg_QML_FILES}" dir_map_qrc)
+        set_property(TARGET ${target} APPEND PROPERTY _qt_generated_qrc_files "${dir_map_qrc}")
+    endif()
+
     set(cache_target)
     qt6_target_qml_sources(${target}
         __QT_INTERNAL_FORCE_DEFER_QMLDIR
@@ -1108,6 +1116,37 @@ function(_qt_internal_qml_get_qt_framework_path_moc_option target out_var)
     else()
         set(${out_var} "" PARENT_SCOPE)
     endif()
+endfunction()
+
+# creates a QRC mapping between QML files in build directory and QML files in
+# source directory
+function(_qt_internal_qml_map_build_files target qml_files qrc_file_out_var)
+    get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+    if(NOT output_dir)
+        # TODO: we might want to support non-qml modules here (think QML
+        # language server) but it is unclear whether the below code would
+        # succeed, so just abort here until we have a proper test case
+        message(WARNING "Target ${target} is not a QML module. Cannot detect its output directory")
+        return()
+    endif()
+
+    set(qrcContents "")
+
+    foreach(qml_file IN LISTS qml_files)
+        get_filename_component(src_dir_path ${qml_file} ABSOLUTE)
+        # Note: follow the logic of cloning the QML file over to build dir
+        __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file})
+        set(build_dir_path "${output_dir}/${file_resource_path}")
+        string(APPEND qrcContents "    <file alias=\"${src_dir_path}\">${build_dir_path}</file>\n")
+    endforeach()
+
+    # dump the contents into the .qrc file
+    set(template_file "${__qt_qml_macros_module_base_dir}/Qt6QmlModuleDirMappingTemplate.qrc.in")
+    set(generated_qrc_file "${output_dir}/${target}_qml_module_dir_map.qrc")
+    set(qt_qml_module_dir_mapping_contents "${qrcContents}")
+    configure_file(${template_file} ${generated_qrc_file})
+
+    set(${qrc_file_out_var} ${generated_qrc_file} PARENT_SCOPE)
 endfunction()
 
 # Compile Qml files (.qml) to C++ source files with Qml Type Compiler (qmltc).
