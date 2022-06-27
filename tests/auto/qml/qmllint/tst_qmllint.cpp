@@ -987,7 +987,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("callJSValue")
             << QStringLiteral("callJSValueProp.qml")
             << Result { { Message { QStringLiteral(
-                       "Property \"callLater\" is a QJSValue property. It may or may not be "
+                       "Property \"gradient\" is a QJSValue property. It may or may not be "
                        "a method. Use a regular Q_INVOKABLE instead.") } } };
     QTest::newRow("assignNonExistingTypeToVarProp")
             << QStringLiteral("assignNonExistingTypeToVarProp.qml")
@@ -1157,6 +1157,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml");
     QTest::newRow("boundComponents") << QStringLiteral("boundComponents.qml");
     QTest::newRow("prefixedAttachedProperty") << QStringLiteral("prefixedAttachedProperty.qml");
+    QTest::newRow("callLater") << QStringLiteral("callLater.qml");
 }
 
 void TestQmllint::cleanQmlCode()

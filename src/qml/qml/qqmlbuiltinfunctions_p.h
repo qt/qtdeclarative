@@ -38,7 +38,6 @@ class Q_QML_EXPORT QtObject : public QObject
     Q_PROPERTY(QQmlPlatform *platform READ platform CONSTANT)
     Q_PROPERTY(QObject *inputMethod READ inputMethod CONSTANT)
     Q_PROPERTY(QObject *styleHints READ styleHints CONSTANT)
-    Q_PROPERTY(QJSValue callLater READ callLater CONSTANT)
 
 #if QT_CONFIG(translation)
     Q_PROPERTY(QString uiLanguage READ uiLanguage WRITE setUiLanguage BINDABLE uiLanguageBindable)
@@ -133,11 +132,7 @@ public:
             QObject *parent = nullptr) const;
 
     Q_INVOKABLE QJSValue binding(const QJSValue &function) const;
-
-    // We can't make this invokable as it uses actual varargs
-    static QV4::ReturnedValue method_callLater(
-            const QV4::FunctionObject *b, const QV4::Value *thisObject,
-            const QV4::Value *argv, int argc);
+    Q_INVOKABLE void callLater(QQmlV4Function *args);
 
 #if QT_CONFIG(translation)
     QString uiLanguage() const;
@@ -151,7 +146,6 @@ public:
 
     QObject *inputMethod() const;
     QObject *styleHints() const;
-    QJSValue callLater() const;
 
 private:
     friend struct QV4::ExecutionEngine;
@@ -166,7 +160,6 @@ private:
     QQmlApplication *m_application = nullptr;
 
     QV4::ExecutionEngine *m_engine = nullptr;
-    QJSValue m_callLater;
 };
 
 namespace QV4 {

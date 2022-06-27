@@ -267,13 +267,6 @@ the same object as is returned from the Qt.include() call.
 QtObject::QtObject(ExecutionEngine *engine)
     : m_engine(engine)
 {
-    QV4::Scope scope(engine);
-    QV4::ScopedString callLaterName(scope, engine->newIdentifier(QStringLiteral("callLater")));
-
-    QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createBuiltinFunction(
-                engine, callLaterName, QQmlDelayedCallQueue::addUniquelyAndExecuteLater, 1));
-
-    m_callLater = QJSValuePrivate::fromReturnedValue(function.asReturnedValue());
 }
 
 QtObject *QtObject::create(QQmlEngine *, QJSEngine *jsEngine)
@@ -1459,6 +1452,11 @@ QJSValue QtObject::binding(const QJSValue &function) const
                 Encode(e->memoryManager->allocate<QQmlBindingFunction>(f)));
 }
 
+void QtObject::callLater(QQmlV4Function *args)
+{
+    m_engine->delayedCallQueue()->addUniquelyAndExecuteLater(m_engine, args);
+}
+
 
 QQmlPlatform *QtObject::platform()
 {
@@ -1484,11 +1482,6 @@ QObject *QtObject::inputMethod() const
 QObject *QtObject::styleHints() const
 {
     return QQml_guiProvider()->styleHints();
-}
-
-QJSValue QtObject::callLater() const
-{
-    return m_callLater;
 }
 
 void QV4::Heap::ConsoleObject::init()
@@ -2176,11 +2169,6 @@ be passed on to the function invoked. Note that if redundant calls
 are eliminated, then only the last set of arguments will be passed to the
 function.
 */
-ReturnedValue QtObject::method_callLater(const FunctionObject *b, const Value *thisObject,
-                                         const Value *argv, int argc)
-{
-    return b->engine()->delayedCallQueue()->addUniquelyAndExecuteLater(b, thisObject, argv, argc);
-}
 
 QT_END_NAMESPACE
 

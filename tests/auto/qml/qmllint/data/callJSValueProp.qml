@@ -1,6 +1,6 @@
-import QtQml
+import QtQuick
 
-QtObject {
-    function foo() {}
-    Component.onCompleted: Qt.callLater(foo);
+Rectangle {
+    // Note: gradient is not actually callable
+    Component.onCompleted: gradient(42);
 }
