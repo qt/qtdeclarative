@@ -2766,6 +2766,12 @@ void QQuickFlickable::movementStarting()
     if (!wasMoving && (d->hData.moving || d->vData.moving)) {
         emit movingChanged();
         emit movementStarted();
+#if QT_CONFIG(accessibility)
+        if (QAccessible::isActive()) {
+            QAccessibleEvent ev(this, QAccessible::ScrollingStart);
+            QAccessible::updateAccessibility(&ev);
+        }
+#endif
     }
 }
 
@@ -2810,6 +2816,12 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     if (wasMoving && !isMoving()) {
         emit movingChanged();
         emit movementEnded();
+#if QT_CONFIG(accessibility)
+        if (QAccessible::isActive()) {
+            QAccessibleEvent ev(this, QAccessible::ScrollingEnd);
+            QAccessible::updateAccessibility(&ev);
+        }
+#endif
     }
 
     if (hMovementEnding) {
