@@ -1,0 +1,218 @@
+[
+    {
+        "classes": [
+            {
+                "className": "Exported",
+                "object": true,
+                "qualifiedClassName": "Exported",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "258"
+                    }
+                ],
+                "className": "ExportedQmlElement",
+                "object": true,
+                "qualifiedClassName": "ExportedQmlElement",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "ExportedQmlElement"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "258"
+                    }
+                ],
+                "className": "ExportedQmlElement2",
+                "object": true,
+                "qualifiedClassName": "ExportedQmlElement2",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "ExportedQmlElement"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "256"
+                    },
+                    {
+                        "name": "QML.RemovedInVersion",
+                        "value": "263"
+                    }
+                ],
+                "className": "ExportedQmlElementDifferentVersion",
+                "object": true,
+                "qualifiedClassName": "ExportedQmlElementDifferentVersion",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "SameNameSameExport"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "Exported"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "258"
+                    }
+                ],
+                "className": "SameNameSameExport",
+                "object": true,
+                "qualifiedClassName": "SameNameSameExport",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "SameNameSameExport"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "Exported"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "258"
+                    }
+                ],
+                "className": "SameNameSameExport2",
+                "object": true,
+                "qualifiedClassName": "SameNameSameExport2",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "SameNameSameExport"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "Exported"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "256"
+                    }
+                ],
+                "className": "SameNameSameExportDifferentVersion",
+                "object": true,
+                "qualifiedClassName": "SameNameSameExportDifferentVersion",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "Exported"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "258"
+                    }
+                ],
+                "className": "SameName",
+                "gadget": true,
+                "qualifiedClassName": "SameName"
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "Exported"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "258"
+                    }
+                ],
+                "className": "SameName2",
+                "gadget": true,
+                "qualifiedClassName": "SameName2"
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "Exported"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "256"
+                    }
+                ],
+                "className": "SameNameDifferentVersion",
+                "gadget": true,
+                "qualifiedClassName": "SameNameDifferentVersion"
+            }
+        ],
+        "inputFile": "duplicatedExports.h",
+        "outputRevision": 68
+    }
+]

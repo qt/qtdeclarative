@@ -12,6 +12,8 @@
 #include <QtCore/qproperty.h>
 #include <QtCore/qtimeline.h>
 #include <QtCore/qrect.h>
+#include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
+#include <QtCore/qtemporaryfile.h>
 
 #ifdef QT_QUICK_LIB
 #    include <QtQuick/qquickitem.h>
@@ -534,6 +536,7 @@ private slots:
     void addRemoveVersion();
     void typeInModuleMajorVersionZero();
     void resettableProperty();
+    void duplicateExportWarnings();
 
 private:
     QByteArray qmltypesData;

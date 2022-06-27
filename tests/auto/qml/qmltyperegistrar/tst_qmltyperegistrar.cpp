@@ -386,4 +386,33 @@ void tst_qmltyperegistrar::resettableProperty()
     QVERIFY(qmltypesData.contains(R"(reset: "resetFoo")"));
 }
 
+void tst_qmltyperegistrar::duplicateExportWarnings()
+{
+    QmlTypeRegistrar r;
+    QString moduleName = "tstmodule";
+    QString targetNamespace = "tstnamespace";
+    r.setModuleNameAndNamespace(moduleName, targetNamespace);
+
+    MetaTypesJsonProcessor processor(true);
+    QVERIFY(processor.processTypes({ ":/duplicatedExports.json" }));
+    processor.postProcessTypes();
+    QVector<QJsonObject> types = processor.types();
+    QVector<QJsonObject> typesforeign = processor.foreignTypes();
+    r.setTypes(types, typesforeign);
+
+    auto expectWarning = [](QString message) {
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
+    };
+    expectWarning("Warning: ExportedQmlElement was registered multiple times by following Cpp "
+                  "classes:  ExportedQmlElement, ExportedQmlElement2 (added in 1.2), "
+                  "ExportedQmlElementDifferentVersion (added in 1.0) (removed in 1.7)");
+    expectWarning("Warning: SameNameSameExport was registered multiple times by following Cpp "
+                  "classes:  SameNameSameExport, SameNameSameExport2 (added in 1.2), "
+                  "SameNameSameExportDifferentVersion (added in 1.0)");
+
+    QString outputData;
+    QTextStream output(&outputData, QIODeviceBase::ReadWrite);
+    r.write(output);
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

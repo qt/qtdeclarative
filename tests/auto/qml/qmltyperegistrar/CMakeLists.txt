@@ -7,6 +7,9 @@
 ## tst_qmltyperegistrar Test:
 #####################################################################
 
+add_subdirectory(VersionZero)
+add_subdirectory(foreign)
+
 qt_manual_moc(moc_files OUTPUT_MOC_JSON_FILES json_list noextheader
               INCLUDE_DIRECTORY_TARGETS Qt::Qml)
 
@@ -34,6 +37,8 @@ qt_internal_add_test(tst_qmltyperegistrar
         Qt::Qml
         foreign
         tst_qmltyperegistrarPrivate
+        Qt::QmlTypeRegistrarPrivate
+        tst_qmltyperegistrar_major_version_zero
 )
 
 qt_internal_extend_target(tst_qmltyperegistrar CONDITION TARGET Qt::Quick
@@ -64,7 +69,6 @@ set_target_properties(tst_qmltyperegistrar PROPERTIES
 # qt6_add_qml_module() doesn't allow us to pass through MANUAL_MOC_JSON_FILES
 # yet, so we have to call it directly to test that code path for now.
 _qt_internal_qml_type_registration(tst_qmltyperegistrar MANUAL_MOC_JSON_FILES ${json_list})
-add_subdirectory(foreign)
 
 qt_add_library(tst-qmltyperegistrar-with-dashes)
 qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashes)
@@ -79,4 +83,9 @@ qt_add_qml_module(tst-qmltyperegistrar-with-dashes
 )
 qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashesplugin)
 
-add_subdirectory(VersionZero)
+qt_internal_add_resource(tst_qmltyperegistrar "resources"
+    PREFIX
+        "/"
+    FILES
+        duplicatedExports.json
+)
