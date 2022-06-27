@@ -12,7 +12,6 @@ MessageDialogImpl {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            contentWidth + leftPadding + rightPadding,
                             implicitHeaderWidth,
                             rowLayout.implicitWidth)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
@@ -39,11 +38,11 @@ MessageDialogImpl {
         elide: Label.ElideRight
         // TODO: QPlatformTheme::TitleBarFont
         font.pixelSize: 20
+        visible: control.title.length > 0
 
         leftPadding: 24
         rightPadding: 24
         topPadding: 18
-        height: control.title.length > 0 ? implicitHeight : 0
 
         background: Rectangle {
             x: 1; y: 1 // // FlyoutBorderThemeThickness
@@ -53,20 +52,25 @@ MessageDialogImpl {
         }
     }
 
-    contentItem: ColumnLayout {
+    contentItem: Column {
+        spacing: 24
+
         Label {
             id: textLabel
             objectName: "textLabel"
             text: control.text
-
-            Layout.margins: 16
+            visible: text.length > 0
+            wrapMode: Text.Wrap
+            width: parent.width
         }
+
         Label {
             id: informativeTextLabel
             objectName: "informativeTextLabel"
             text: control.informativeText
-
-            Layout.margins: 16
+            visible: text.length > 0
+            wrapMode: Text.Wrap
+            width: parent.width
         }
     }
 

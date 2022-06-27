@@ -13,7 +13,6 @@ MessageDialogImpl {
     id: control
 
     implicitWidth: Math.max(control.implicitBackgroundWidth + control.leftInset + control.rightInset,
-                            control.contentWidth + control.leftPadding + control.rightPadding,
                             control.implicitHeaderWidth,
                             rowLayout.implicitWidth)
     implicitHeight: Math.max(control.implicitBackgroundHeight + control.topInset + control.bottomInset,
@@ -54,22 +53,26 @@ MessageDialogImpl {
         padding: 6
     }
 
-    contentItem: ColumnLayout {
+    contentItem: Column {
+        padding: 6
+        spacing: 24
+
         Label {
             id: textLabel
             objectName: "textLabel"
             text: control.text
             visible: text.length > 0
-
-            Layout.margins: 12
+            wrapMode: Text.Wrap
+            width: parent.width - parent.leftPadding - parent.rightPadding
         }
+
         Label {
             id: informativeTextLabel
             objectName: "informativeTextLabel"
             text: control.informativeText
             visible: text.length > 0
-
-            Layout.margins: 12
+            wrapMode: Text.Wrap
+            width: parent.width - parent.leftPadding - parent.rightPadding
         }
     }
 

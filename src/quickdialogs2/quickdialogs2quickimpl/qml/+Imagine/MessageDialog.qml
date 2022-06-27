@@ -15,7 +15,6 @@ MessageDialogImpl {
     // Can't set implicitWidth of the NinePatchImage background, so we do it here.
     implicitWidth: Math.max(320,
                             implicitBackgroundWidth + leftInset + rightInset,
-                            contentWidth + leftPadding + rightPadding,
                             implicitHeaderWidth,
                             rowLayout.implicitWidth)
     implicitHeight: Math.max(160,
@@ -71,20 +70,25 @@ MessageDialogImpl {
         }
     }
 
-    contentItem: ColumnLayout {
+    contentItem: Column {
+        padding: 8
+        spacing: 16
+
         Label {
             id: textLabel
             objectName: "textLabel"
             text: control.text
-
-            Layout.margins: 16
+            visible: text.length > 0
+            wrapMode: Text.Wrap
+            width: parent.width - parent.leftPadding - parent.rightPadding
         }
         Label {
             id: informativeTextLabel
             objectName: "informativeTextLabel"
             text: control.informativeText
-
-            Layout.margins: 16
+            visible: text.length > 0
+            wrapMode: Text.Wrap
+            width: parent.width - parent.leftPadding - parent.rightPadding
         }
     }
 
