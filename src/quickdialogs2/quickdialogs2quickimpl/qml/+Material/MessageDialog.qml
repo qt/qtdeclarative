@@ -53,20 +53,25 @@ MessageDialogImpl {
         bottomPadding: 24
     }
 
-    contentItem: ColumnLayout {
+    contentItem: Column {
+        spacing: 24
+
         Label {
             id: textLabel
             objectName: "textLabel"
             text: control.text
-
-            Layout.margins: 16
+            visible: text.length > 0
+            wrapMode: Text.Wrap
+            width: parent.width - parent.leftPadding - parent.rightPadding
         }
+
         Label {
             id: informativeTextLabel
             objectName: "informativeTextLabel"
             text: control.informativeText
-
-            Layout.margins: 16
+            visible: text.length > 0
+            wrapMode: Text.Wrap
+            width: parent.width - parent.leftPadding - parent.rightPadding
         }
     }
 
