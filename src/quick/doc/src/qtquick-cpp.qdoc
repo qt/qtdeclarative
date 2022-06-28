@@ -10,11 +10,6 @@
   \brief The Qt Quick module provides classes for embedding Qt Quick
   in Qt/C++ applications.
 
-  To include the definitions of the module's classes, use the
-  following directive:
-
-  \snippet code/doc_src_qtquick.cpp 0
-
   \if !defined(qtforpython)
   To link against the module, add this line to your \l qmake \c
   .pro file:
