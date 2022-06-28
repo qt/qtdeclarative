@@ -64,6 +64,8 @@ private slots:
     void noCrashOnIndexChange();
     void tapDelegateDuringFlicking_data();
     void tapDelegateDuringFlicking();
+    void flickDuringFlicking_data();
+    void flickDuringFlicking();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -378,6 +380,68 @@ void tst_QQuickListView2::tapDelegateDuringFlicking() // QTBUG-103832
     QCOMPARE(releasedDelegates.last(), lastPressed);
     QCOMPARE(tappedDelegates.last(), lastPressed);
     QCOMPARE(canceledDelegates.count(), 1); // only the first press was canceled, not the second
+}
+
+void tst_QQuickListView2::flickDuringFlicking_data()
+{
+    QTest::addColumn<QByteArray>("qmlFile");
+    QTest::addColumn<QQuickFlickable::BoundsBehavior>("boundsBehavior");
+
+    QTest::newRow("Button StopAtBounds") << QByteArray("buttonDelegate.qml")
+                                         << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds);
+    QTest::newRow("MouseArea StopAtBounds") << QByteArray("mouseAreaDelegate.qml")
+                                            << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds);
+    QTest::newRow("Button DragOverBounds") << QByteArray("buttonDelegate.qml")
+                                           << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds);
+    QTest::newRow("MouseArea DragOverBounds") << QByteArray("mouseAreaDelegate.qml")
+                                              << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds);
+    QTest::newRow("Button OvershootBounds") << QByteArray("buttonDelegate.qml")
+                                            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds);
+    QTest::newRow("MouseArea OvershootBounds") << QByteArray("mouseAreaDelegate.qml")
+                                               << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds);
+    QTest::newRow("Button DragAndOvershootBounds") << QByteArray("buttonDelegate.qml")
+                                                   << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
+    QTest::newRow("MouseArea DragAndOvershootBounds") << QByteArray("mouseAreaDelegate.qml")
+                                                      << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
+}
+
+void tst_QQuickListView2::flickDuringFlicking() // QTBUG-103832
+{
+    QFETCH(QByteArray, qmlFile);
+    QFETCH(QQuickFlickable::BoundsBehavior, boundsBehavior);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFile.constData())));
+    QQuickListView *listView = qobject_cast<QQuickListView*>(window.rootObject());
+    QVERIFY(listView);
+    listView->setBoundsBehavior(boundsBehavior);
+
+    flickWithTouch(&window, {100, 400}, {100, 100});
+    QTRY_VERIFY(listView->contentY() > 1000); // let it flick some distance
+    QVERIFY(listView->isFlicking()); // we want to test the case when it's moving and then we flick again
+    const qreal posBeforeSecondFlick = listView->contentY();
+
+    // flick again during flicking, and make sure that it doesn't jump back to the first delegate,
+    // but flicks incrementally further from the position at that time
+    QTest::touchEvent(&window, touchDevice.data()).press(0, {100, 400});
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "second press: contentY" << posBeforeSecondFlick << "->" << listView->contentY();
+    qCDebug(lcTests) << "pressed delegates" << listView->property("pressedDelegates").toList();
+    QVERIFY(listView->contentY() >= posBeforeSecondFlick);
+
+    QTest::qWait(20);
+    QTest::touchEvent(&window, touchDevice.data()).move(0, {100, 300});
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "first move after second press: contentY" << posBeforeSecondFlick << "->" << listView->contentY();
+    QVERIFY(listView->contentY() >= posBeforeSecondFlick);
+
+    QTest::qWait(20);
+    QTest::touchEvent(&window, touchDevice.data()).move(0, {100, 200});
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "second move after second press: contentY" << posBeforeSecondFlick << "->" << listView->contentY();
+    QVERIFY(listView->contentY() >= posBeforeSecondFlick + 100);
+
+    QTest::touchEvent(&window, touchDevice.data()).release(0, {100, 100});
 }
 
 void tst_QQuickListView2::flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to)
