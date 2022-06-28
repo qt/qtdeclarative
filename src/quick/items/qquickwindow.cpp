@@ -1649,14 +1649,6 @@ void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
     da->handleMouseEvent(event);
 }
 
-void QQuickWindowPrivate::flushFrameSynchronousEvents()
-{
-    Q_Q(QQuickWindow);
-    auto da = deliveryAgentPrivate();
-    Q_ASSERT(da);
-    da->flushFrameSynchronousEvents(q);
-}
-
 #if QT_CONFIG(cursor)
 void QQuickWindowPrivate::updateCursor(const QPointF &scenePos, QQuickItem *rootItem)
 {

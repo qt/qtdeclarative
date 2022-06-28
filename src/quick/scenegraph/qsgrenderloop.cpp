@@ -527,7 +527,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         i++;
     }
 
-    cd->flushFrameSynchronousEvents();
+    cd->deliveryAgentPrivate()->flushFrameSynchronousEvents(window);
     // Event delivery/processing triggered the window to be deleted or stop rendering.
     if (!m_windows.contains(window))
         return;

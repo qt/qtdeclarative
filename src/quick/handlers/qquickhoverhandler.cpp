@@ -101,7 +101,7 @@ bool QQuickHoverHandler::wantsPointerEvent(QPointerEvent *event)
     }
 
     // Some hover events come from QQuickWindow::tabletEvent(). In between,
-    // some hover events come from QQWindowPrivate::flushFrameSynchronousEvents(),
+    // some hover events come from QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(),
     // but those look like mouse events. If a particular HoverHandler instance
     // is filtering for tablet events only (e.g. by setting
     // acceptedDevices:PointerDevice.Stylus), those events should not cause

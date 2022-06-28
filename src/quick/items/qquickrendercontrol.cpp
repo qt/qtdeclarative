@@ -321,7 +321,7 @@ void QQuickRenderControl::polishItems()
         return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
-    cd->flushFrameSynchronousEvents();
+    cd->deliveryAgentPrivate()->flushFrameSynchronousEvents(d->window);
     if (!d->window)
         return;
     cd->polishItems();

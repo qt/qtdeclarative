@@ -95,7 +95,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
     data.updatePending = false;
 
     if (!data.grabOnly) {
-        cd->flushFrameSynchronousEvents();
+        cd->deliveryAgentPrivate()->flushFrameSynchronousEvents(window);
         // Event delivery/processing triggered the window to be deleted or stop rendering.
         if (!m_windows.contains(window))
             return;

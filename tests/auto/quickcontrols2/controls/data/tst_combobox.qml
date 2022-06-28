@@ -90,7 +90,7 @@ TestCase {
     }
 
     function init() {
-        // QTBUG-61225: Move the mouse away to avoid QQuickWindowPrivate::flushFrameSynchronousEvents()
+        // QTBUG-61225: Move the mouse away to avoid QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents()
         // delivering interfering hover events based on the last mouse position from earlier tests. For
         // example, ComboBox::test_activation() kept receiving hover events for the last mouse position
         // from CheckDelegate::test_checked().

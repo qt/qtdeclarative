@@ -115,9 +115,6 @@ public:
     QQuickDeliveryAgentPrivate *deliveryAgentPrivate() const
     { return deliveryAgent ? static_cast<QQuickDeliveryAgentPrivate *>(QQuickDeliveryAgentPrivate::get(deliveryAgent)) : nullptr; }
 
-    // TODO remove this: it was moved to QQuickDeliveryAgentPrivate
-    void flushFrameSynchronousEvents();
-
 #if QT_CONFIG(cursor)
     QQuickItem *cursorItem = nullptr;
     QQuickPointerHandler *cursorHandler = nullptr;

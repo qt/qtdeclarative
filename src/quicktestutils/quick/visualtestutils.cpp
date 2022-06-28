@@ -45,7 +45,7 @@ void QQuickVisualTestUtils::moveMouseAway(QQuickWindow *window)
     QCursor::setPos(window->frameGeometry().bottomLeft() + QPoint(-10, 10));
 #endif
 
-    // make sure hover events from QQuickWindowPrivate::flushFrameSynchronousEvents()
+    // make sure hover events from QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents()
     // do not interfere with the tests
     QEvent leave(QEvent::Leave);
     QCoreApplication::sendEvent(window, &leave);

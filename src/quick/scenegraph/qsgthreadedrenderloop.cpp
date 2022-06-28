@@ -1473,7 +1473,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     }
 
     // Flush pending touch events.
-    QQuickWindowPrivate::get(window)->flushFrameSynchronousEvents();
+    QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->flushFrameSynchronousEvents(window);
     // The delivery of the event might have caused the window to stop rendering
     w = windowFor(m_windows, window);
     if (!w || !w->thread || !w->thread->window) {
