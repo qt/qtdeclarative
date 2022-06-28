@@ -340,8 +340,8 @@ protected:
     Value *sym_stack = nullptr;
     int *state_stack = nullptr;
     SourceLocation *location_stack = nullptr;
-    QList<QStringView> string_stack;
-    QList<QStringView> rawString_stack;
+    std::vector<QStringView> string_stack;
+    std::vector<QStringView> rawString_stack;
 
     AST::Node *program = nullptr;
 
