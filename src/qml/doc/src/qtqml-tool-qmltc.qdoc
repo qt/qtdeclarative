@@ -5,6 +5,7 @@
 \page qtqml-tool-qmltc.html
 \title QML Type Compiler
 \brief A tool to compile QML types to C++ ahead of time.
+\keyword qmltc
 
 The QML Type Compiler, \c qmltc, is a tool shipped with Qt to translate QML
 types into C++ types that are \e{ahead-of-time} compiled as part of the user
