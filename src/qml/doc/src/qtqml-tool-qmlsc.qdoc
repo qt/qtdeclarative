@@ -5,6 +5,7 @@
 \page qtqml-tool-qmlsc.html
 \title QML Script Compiler
 \brief A tool to compile functions and expressions in QML.
+\keyword qmlsc
 
 The QML Script Compiler, \c qmlsc will compile functions and expressions in QML
 files of an application into C++ code within limitations set by the nature of
