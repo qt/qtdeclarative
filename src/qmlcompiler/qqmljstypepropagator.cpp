@@ -2041,19 +2041,10 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
             }
 
             auto currentRegister = m_state.registers.find(registerIndex);
-            if (currentRegister != m_state.registers.end()) {
-                if (currentRegister.value() != newType) {
-                    mergeRegister(registerIndex, newType, currentRegister.value());
-                } else {
-                    // Clear the constant value as this from a jump that might be merging two
-                    // different value
-                    //                    currentRegister->m_state.value = {};
-                }
-            } else if (isArgument(registerIndex)) {
-                mergeRegister(registerIndex, newType, argumentType(registerIndex));
-            } else {
+            if (currentRegister != m_state.registers.end())
+                mergeRegister(registerIndex, newType, currentRegister.value());
+            else
                 mergeRegister(registerIndex, newType, newType);
-            }
         }
     }
 

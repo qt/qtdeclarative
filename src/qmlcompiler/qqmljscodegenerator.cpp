@@ -125,7 +125,11 @@ QT_WARNING_POP
     for (const auto loopLabel : m_context->labelInfo)
         m_labels.insert(loopLabel, u"label_%1"_s.arg(m_labels.count()));
 
-    resetState();
+    // Initialize the first instruction's state to hold the arguments.
+    // After this, the arguments (or whatever becomes of them) are carried
+    // over into any further basic blocks automatically.
+    m_state.State::operator=(initialState(m_function));
+
     const QByteArray byteCode = function->code;
     decode(byteCode.constData(), static_cast<uint>(byteCode.length()));
 
