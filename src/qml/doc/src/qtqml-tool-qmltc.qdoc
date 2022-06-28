@@ -123,7 +123,7 @@ Then the CMake code would usually look similar to the following:
 \codeline
 \snippet qmltc/CMakeLists.txt qmltc-compile-to-cpp
 
-\section3 Using the generated C++
+\section3 Using the Generated C++
 
 Unlike in the case of QQmlComponent instantiation, the output of qmltc, being
 C++ code, is used directly by the application. Generally, constructing a new
@@ -133,27 +133,36 @@ or, for example, combined with QQuickWindow to be drawn on screen. Given a
 \c{myApp.qml} file, the application code (in both cases) would typically look
 like this:
 
-\table 100 %
-
-\header
-    \li Using QQmlComponent
-    \li Using qmltc-generated class
-\row
-    \li \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-include
-    \li \snippet qmltc/tst_qmltc_examples.cpp qmltc-include
-\row
-    \li \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-0
-        \codeline
-        \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-1
-        \codeline
-        \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-2
-        \codeline
-        \snippet qmltc/tst_qmltc_examples.cpp qmltc-app-exec
-
-    \li \snippet qmltc/tst_qmltc_examples.cpp qmltc-app-code
-        \codeline
-        \snippet qmltc/tst_qmltc_examples.cpp qmltc-app-exec
-\endtable
+\if defined(onlinedocs)
+    \tab {generated-c++}{tab-qqmlcomponent}{Using QQmlComponent}{checked}
+    \tab {generated-c++}{tab-qmltc}{Using qmltc-generated class}{}
+    \tabcontent {tab-qqmlcomponent}
+\else
+   \section4 Using QQmlComponent
+\endif
+\snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-include
+\codeline
+\snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-0
+\codeline
+\snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-1
+\codeline
+\snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-2
+\codeline
+\snippet qmltc/tst_qmltc_examples.cpp qmltc-app-exec
+\if defined(onlinedocs)
+    \endtabcontent
+    \tabcontent {tab-qmltc}
+\else
+    \section4 Using qmltc-generated class
+\endif
+\snippet qmltc/tst_qmltc_examples.cpp qmltc-include
+\codeline
+\snippet qmltc/tst_qmltc_examples.cpp qmltc-app-code
+\codeline
+\snippet qmltc/tst_qmltc_examples.cpp qmltc-app-exec
+\if defined(onlinedocs)
+    \endtabcontent
+\endif
 
 \section2 QML engine
 
