@@ -74,7 +74,9 @@ private slots:
     void menuSeparator();
     void repeater();
     void order();
+#if QT_CONFIG(cursor)
     void popup();
+#endif
     void actions();
 #if QT_CONFIG(shortcut)
     void actionShortcuts();
@@ -784,8 +786,15 @@ void tst_QQuickMenu::order()
     }
 }
 
+#if QT_CONFIG(cursor)
 void tst_QQuickMenu::popup()
 {
+#if defined(Q_OS_ANDROID)
+    QSKIP("Setting cursor position is not supported on Android");
+#endif
+    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+        QSKIP("Setting cursor position is not supported on Wayland");
+
     QQuickControlsApplicationHelper helper(this, QLatin1String("popup.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -809,8 +818,6 @@ void tst_QQuickMenu::popup()
     QQuickItem *button = window->property("button").value<QQuickItem *>();
     QVERIFY(button);
 
-    // Android does not support settings cursor position
-#if QT_CONFIG(cursor) && !defined(Q_OS_ANDROID)
     QPoint oldCursorPos = QCursor::pos();
     QPoint cursorPos = window->mapToGlobal(QPoint(11, 22));
     QCursor::setPos(cursorPos);
@@ -939,8 +946,8 @@ void tst_QQuickMenu::popup()
 
     QCursor::setPos(oldCursorPos);
     QTRY_COMPARE(QCursor::pos(), oldCursorPos);
-#endif
 }
+#endif // QT_CONFIG(cursor)
 
 void tst_QQuickMenu::actions()
 {
