@@ -244,11 +244,7 @@ protected:
     QString m_body;
     CodegenState m_state;
 
-    void resetState()
-    {
-        m_state.State::operator=(initialState(m_function));
-        m_state.accumulatorVariableIn = m_state.accumulatorVariableOut = QString();
-    }
+    void resetState() { m_state = CodegenState(); }
 
 private:
     void generateExceptionCheck();
