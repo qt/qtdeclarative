@@ -483,6 +483,25 @@ QObject *QQmlType::create(void **memory, size_t additionalMemory) const
     return rv;
 }
 
+/*!
+    \internal
+    Like create, but also allocates memory behind the object, constructs a QQmlData there
+    and lets the objects declarativeData point to the newly created QQmlData.
+ */
+QObject *QQmlType::createWithQQmlData() const
+{
+    void *ddataMemory = nullptr;
+    auto instance = create(&ddataMemory, sizeof(QQmlData));
+    if (!instance)
+        return nullptr;
+    QQmlData *ddata = new (ddataMemory) QQmlData;
+    ddata->ownMemory = false;
+    QObjectPrivate* p = QObjectPrivate::get(instance);
+    Q_ASSERT(!p->isDeletingChildren);
+    p->declarativeData = ddata;
+    return instance;
+}
+
 QQmlType::SingletonInstanceInfo *QQmlType::singletonInstanceInfo() const
 {
     if (!d)

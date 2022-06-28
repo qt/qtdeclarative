@@ -1182,19 +1182,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         if (type.isValid() && !type.isInlineComponentType()) {
             typeName = type.qmlTypeName();
 
-            void *ddataMemory = nullptr;
-            instance = type.create(&ddataMemory, sizeof(QQmlData));
+            instance = type.createWithQQmlData();
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return nullptr;
-            }
-
-            {
-                QQmlData *ddata = new (ddataMemory) QQmlData;
-                ddata->ownMemory = false;
-                QObjectPrivate* p = QObjectPrivate::get(instance);
-                Q_ASSERT(!p->isDeletingChildren);
-                p->declarativeData = ddata;
             }
 
             const int finalizerCast = type.finalizerCast();

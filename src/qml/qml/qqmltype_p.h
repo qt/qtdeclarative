@@ -73,6 +73,7 @@ public:
 
     QObject *create() const;
     QObject *create(void **, size_t) const;
+    QObject *createWithQQmlData() const;
 
     typedef void (*CreateFunc)(void *, void *);
     CreateFunc createFunction() const;
