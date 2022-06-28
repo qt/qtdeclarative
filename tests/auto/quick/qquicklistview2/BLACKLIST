@@ -1,3 +1,5 @@
 [tapDelegateDuringFlicking]
-android
+android # QTBUG-104471
+[flickDuringFlicking]
+android # QTBUG-104471
 
