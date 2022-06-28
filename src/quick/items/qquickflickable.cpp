@@ -2582,7 +2582,9 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
         case QEventPoint::State::Pressed:
             d->handlePressEvent(localizedEvent.data());
             d->captureDelayedPress(receiver, event);
-            stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by handlePressEvent
+            // never grab the pointing device on press during filtering: do it later, during a move
+            d->stealMouse = false;
+            stealThisEvent = false;
             break;
         case QEventPoint::State::Released:
             d->handleReleaseEvent(localizedEvent.data());
@@ -2637,7 +2639,6 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
     };
 
     if (!isVisible() || !isEnabled() || !isInteractive() ||
-            (pointerEvent && isMoving() && pointerEvent->isBeginEvent()) ||
             (pointerEvent && !wantsPointerEvent_helper())) {
         d->cancelInteraction();
         return QQuickItem::childMouseEventFilter(i, e);
