@@ -135,13 +135,14 @@ std::shared_ptr<DomUniverse> DomUniverse::guaranteeUniverse(std::shared_ptr<DomU
     };
     if (univ)
         return univ;
-    return std::shared_ptr<DomUniverse>(
-            new DomUniverse(QLatin1String("universe") + QString::number(next())));
+
+    return std::make_shared<DomUniverse>(
+            QLatin1String("universe") + QString::number(next()));
 }
 
 DomItem DomUniverse::create(QString universeName, Options options)
 {
-    std::shared_ptr<DomUniverse> res(new DomUniverse(universeName, options));
+    auto res = std::make_shared<DomUniverse>(universeName, options);
     return DomItem(res);
 }
 
@@ -218,7 +219,7 @@ std::shared_ptr<OwningItem> DomUniverse::doCopy(DomItem &) const
         newName = QStringLiteral(u"%1Copy%2").arg(m_name).arg(m.captured(1).toInt() + 1);
     else
         newName = m_name + QLatin1String("Copy");
-    auto res = std::shared_ptr<DomUniverse>(new DomUniverse(newName));
+    auto res = std::make_shared<DomUniverse>(newName);
     return res;
 }
 
@@ -317,8 +318,8 @@ updateEntry(DomItem &univ, std::shared_ptr<T> newItem,
                 it = map.insert(it, canonicalPath, newValue);
             }
         } else {
-            newValue = std::shared_ptr<ExternalItemPair<T>>(new ExternalItemPair<T>(
-                    (newItem->isValid() ? newItem : std::shared_ptr<T>()), newItem, now, now));
+            newValue = std::make_shared<ExternalItemPair<T>>(
+                    (newItem->isValid() ? newItem : std::shared_ptr<T>()), newItem, now, now);
             map.insert(canonicalPath, newValue);
         }
     }
@@ -415,9 +416,9 @@ void DomUniverse::execQueue()
         if (!skipParse) {
             QDateTime now(QDateTime::currentDateTimeUtc());
             if (t.kind == DomType::QmlFile) {
-                shared_ptr<QmlFile> qmlFile(new QmlFile(canonicalPath, code, contentDate));
-                shared_ptr<DomEnvironment> envPtr(new DomEnvironment(
-                        QStringList(), DomEnvironment::Option::NoDependencies, topPtr));
+                auto qmlFile = std::make_shared<QmlFile>(canonicalPath, code, contentDate);
+                auto envPtr = std::make_shared<DomEnvironment>(
+                        QStringList(), DomEnvironment::Option::NoDependencies, topPtr);
                 envPtr->addQmlFile(qmlFile);
                 DomItem env(envPtr);
                 if (qmlFile->isValid()) {
@@ -438,8 +439,8 @@ void DomUniverse::execQueue()
                 oldValue = univ.copy(change.first);
                 newValue = univ.copy(change.second);
             } else if (t.kind == DomType::QmltypesFile) {
-                shared_ptr<QmltypesFile> qmltypesFile(
-                        new QmltypesFile(canonicalPath, code, contentDate));
+                auto qmltypesFile = std::make_shared<QmltypesFile>(
+                        canonicalPath, code, contentDate);
                 QmltypesReader reader(univ.copy(qmltypesFile));
                 reader.parse();
                 auto change = updateEntry<QmltypesFile>(univ, qmltypesFile, m_qmltypesFileWithPath,
@@ -454,8 +455,8 @@ void DomUniverse::execQueue()
                 oldValue = univ.copy(change.first);
                 newValue = univ.copy(change.second);
             } else if (t.kind == DomType::QmlDirectory) {
-                shared_ptr<QmlDirectory> qmlDirectory(new QmlDirectory(
-                        canonicalPath, code.split(QLatin1Char('\n')), contentDate));
+                auto qmlDirectory = std::make_shared<QmlDirectory>(
+                        canonicalPath, code.split(QLatin1Char('\n')), contentDate);
                 auto change = updateEntry<QmlDirectory>(univ, qmlDirectory, m_qmlDirectoryWithPath,
                                                         mutex());
                 oldValue = univ.copy(change.first);
@@ -503,7 +504,7 @@ void DomUniverse::removePath(const QString &path)
 
 std::shared_ptr<OwningItem> LoadInfo::doCopy(DomItem &self) const
 {
-    std::shared_ptr<LoadInfo> res(new LoadInfo(*this));
+    auto res = std::make_shared<LoadInfo>(*this);
     if (res->status() != Status::Done) {
         res->addErrorLocal(DomEnvironment::myErrors().warning(
                 u"This is a copy of a LoadInfo still in progress, artificially ending it, if you "
@@ -886,8 +887,8 @@ DomTop::Callback envCallbackForFile(
                     newValue->setCurrentExposedAt(QDateTime::currentDateTimeUtc());
                 }
             } else {
-                newValue = std::shared_ptr<ExternalItemInfo<T>>(
-                        new ExternalItemInfo<T>(newItemPtr, QDateTime::currentDateTimeUtc()));
+                newValue = std::make_shared<ExternalItemInfo<T>>(
+                        newItemPtr, QDateTime::currentDateTimeUtc());
             }
             {
                 QMutexLocker l(envPtr->mutex());
@@ -903,7 +904,7 @@ DomTop::Callback envCallbackForFile(
         {
             auto depLoad = qScopeGuard([p, &env, envPtr, allDirectDepsCallback, endCallback] {
                 if (!(envPtr->options() & DomEnvironment::Option::NoDependencies)) {
-                    std::shared_ptr<LoadInfo> loadInfo(new LoadInfo(p));
+                    auto loadInfo = std::make_shared<LoadInfo>(p);
                     if (!p)
                         Q_ASSERT(false);
                     DomItem loadInfoObj = env.copy(loadInfo);
@@ -1183,10 +1184,10 @@ std::shared_ptr<OwningItem> DomEnvironment::doCopy(DomItem &) const
 {
     shared_ptr<DomEnvironment> res;
     if (m_base)
-        res = std::shared_ptr<DomEnvironment>(new DomEnvironment(m_base, m_loadPaths, m_options));
+        res = std::make_shared<DomEnvironment>(m_base, m_loadPaths, m_options);
     else
-        res = std::shared_ptr<DomEnvironment>(
-                new DomEnvironment(m_loadPaths, m_options, m_universe));
+        res = std::make_shared<DomEnvironment>(
+                m_loadPaths, m_options, m_universe);
     return res;
 }
 
@@ -1228,9 +1229,8 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
             if (auto v = m_base->qmlDirectoryWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
                 QDateTime now = QDateTime::currentDateTimeUtc();
-                std::shared_ptr<ExternalItemInfo<QmlDirectory>> newV(
-                        new ExternalItemInfo<QmlDirectory>(v->current, now, v->revision(),
-                                                           v->lastDataUpdateAt()));
+                auto newV = std::make_shared<ExternalItemInfo<QmlDirectory>>(
+                        v->current, now, v->revision(), v->lastDataUpdateAt());
                 newValue = newV;
                 QMutexLocker l(mutex());
                 auto it = m_qmlDirectoryWithPath.find(canonicalFilePath);
@@ -1259,8 +1259,8 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
             if (auto v = m_base->qmlFileWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
                 QDateTime now = QDateTime::currentDateTimeUtc();
-                std::shared_ptr<ExternalItemInfo<QmlFile>> newV(new ExternalItemInfo<QmlFile>(
-                        v->current, now, v->revision(), v->lastDataUpdateAt()));
+                auto newV = std::make_shared<ExternalItemInfo<QmlFile>>(
+                        v->current, now, v->revision(), v->lastDataUpdateAt());
                 newValue = newV;
                 QMutexLocker l(mutex());
                 auto it = m_qmlFileWithPath.find(canonicalFilePath);
@@ -1289,9 +1289,8 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
             if (auto v = m_base->qmltypesFileWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
                 QDateTime now = QDateTime::currentDateTimeUtc();
-                std::shared_ptr<ExternalItemInfo<QmltypesFile>> newV(
-                        new ExternalItemInfo<QmltypesFile>(v->current, now, v->revision(),
-                                                           v->lastDataUpdateAt()));
+                auto newV = std::make_shared<ExternalItemInfo<QmltypesFile>>(
+                        v->current, now, v->revision(), v->lastDataUpdateAt());
                 newValue = newV;
                 QMutexLocker l(mutex());
                 auto it = m_qmltypesFileWithPath.find(canonicalFilePath);
@@ -1320,8 +1319,8 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
             if (auto v = m_base->qmldirFileWithPath(self, canonicalFilePath, EnvLookup::Normal)) {
                 oldValue = v;
                 QDateTime now = QDateTime::currentDateTimeUtc();
-                std::shared_ptr<ExternalItemInfo<QmldirFile>> newV(new ExternalItemInfo<QmldirFile>(
-                        v->current, now, v->revision(), v->lastDataUpdateAt()));
+                auto newV = std::make_shared<ExternalItemInfo<QmldirFile>>(
+                        v->current, now, v->revision(), v->lastDataUpdateAt());
                 newValue = newV;
                 QMutexLocker l(mutex());
                 auto it = m_qmldirFileWithPath.find(canonicalFilePath);
@@ -1628,7 +1627,7 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(DomItem &self, Q
     std::shared_ptr<ModuleIndex> newModulePtr = [&, candidate = candidate](){
         // which is a completely new module in case we don't have candidate
         if (!candidate)
-            return std::shared_ptr<ModuleIndex>(new ModuleIndex(uri, majorVersion));
+            return std::make_shared<ModuleIndex>(uri, majorVersion);
         // or a copy of the candidate otherwise
         DomItem existingModObj = self.copy(candidate);
         return candidate->makeCopy(existingModObj);
@@ -1646,7 +1645,7 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(DomItem &self, Q
         modsNow.insert(majorVersion, newModulePtr);
     }
     if (p) {
-        std::shared_ptr<LoadInfo> lInfo(new LoadInfo(p));
+        auto lInfo = std::make_shared<LoadInfo>(p);
         addLoadInfo(self, lInfo);
     } else {
         myErrors()
@@ -1835,8 +1834,8 @@ DomEnvironment::ensureGlobalScopeWithName(DomItem &self, QString name, EnvLookup
             if (auto current = newVal->current) {
                 DomItem currentObj = DomItem(u).copy(current);
                 auto newScope = current->makeCopy(currentObj);
-                std::shared_ptr<ExternalItemInfo<GlobalScope>> newCopy(
-                        new ExternalItemInfo<GlobalScope>(newScope));
+                auto newCopy = std::make_shared<ExternalItemInfo<GlobalScope>>(
+                        newScope);
                 QMutexLocker l(mutex());
                 if (auto oldVal = m_globalScopeWithName.value(name))
                     return oldVal;
@@ -1969,7 +1968,7 @@ DomEnvironment::DomEnvironment(QStringList loadPaths, Options options,
 DomItem DomEnvironment::create(QStringList loadPaths, Options options, DomItem &universe)
 {
     std::shared_ptr<DomUniverse> universePtr = universe.ownerAs<DomUniverse>();
-    std::shared_ptr<DomEnvironment> envPtr(new DomEnvironment(loadPaths, options, universePtr));
+    auto envPtr = std::make_shared<DomEnvironment>(loadPaths, options, universePtr);
     return DomItem(envPtr);
 }
 
@@ -1989,8 +1988,8 @@ addExternalItem(std::shared_ptr<T> file, QString key,
 {
     if (!file)
         return {};
-    std::shared_ptr<ExternalItemInfo<T>> eInfo(
-            new ExternalItemInfo<T>(file, QDateTime::currentDateTimeUtc()));
+    auto eInfo = std::make_shared<ExternalItemInfo<T>>(
+            file, QDateTime::currentDateTimeUtc());
     {
         QMutexLocker l(mutex);
         auto it = map.find(key);

@@ -455,7 +455,7 @@ public:
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        return std::shared_ptr<OwningItem>(new ScriptExpression(*this));
+        return std::make_shared<ScriptExpression>(*this);
     }
 
     std::function<SourceLocation(SourceLocation)> locationToGlobalF(DomItem &self) const
@@ -692,9 +692,9 @@ public:
     void writeOut(DomItem &self, OutWriter &ow) const;
     void setCode(QString code)
     {
-        body = std::shared_ptr<ScriptExpression>(
-                new ScriptExpression(code, ScriptExpression::ExpressionType::FunctionBody, 0,
-                                     QLatin1String("function foo(){\n"), QLatin1String("\n}\n")));
+        body = std::make_shared<ScriptExpression>(
+                code, ScriptExpression::ExpressionType::FunctionBody, 0,
+                                     QLatin1String("function foo(){\n"), QLatin1String("\n}\n"));
     }
 
     MethodInfo() = default;

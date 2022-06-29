@@ -75,7 +75,7 @@ bool ModuleScope::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 
 std::shared_ptr<OwningItem> ModuleIndex::doCopy(DomItem &) const
 {
-    return std::shared_ptr<OwningItem>(new ModuleIndex(*this));
+    return std::make_shared<ModuleIndex>(*this);
 }
 
 ModuleIndex::ModuleIndex(const ModuleIndex &o)

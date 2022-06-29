@@ -172,7 +172,7 @@ class QMLDOM_EXPORT AstComments final : public OwningItem
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        return std::shared_ptr<OwningItem>(new AstComments(*this));
+        return std::make_shared<AstComments>(*this);
     }
 
 public:

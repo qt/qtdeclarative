@@ -1139,8 +1139,8 @@ DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks)
                | WriteOutCheck::ReparseStable)) {
             DomItem newEnv = environment().makeCopy().item();
             if (std::shared_ptr<DomEnvironment> newEnvPtr = newEnv.ownerAs<DomEnvironment>()) {
-                std::shared_ptr<QmlFile> newFilePtr(
-                        new QmlFile(canonicalFilePath(), ow.writtenStr));
+                auto newFilePtr = std::make_shared<QmlFile>(
+                        canonicalFilePath(), ow.writtenStr);
                 newEnvPtr->addQmlFile(newFilePtr, AddOption::Overwrite);
                 DomItem newFile = newEnv.copy(newFilePtr, Path());
                 if (newFilePtr->isValid()) {
@@ -1970,17 +1970,17 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option)
     DomItem env = environment();
     std::shared_ptr<DomEnvironment> newEnvPtr;
     if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
-        newEnvPtr = std::shared_ptr<DomEnvironment>(
-                new DomEnvironment(envPtr, envPtr->loadPaths(), envPtr->options()));
+        newEnvPtr = std::make_shared<DomEnvironment>(
+                envPtr, envPtr->loadPaths(), envPtr->options());
         DomBase *eBase = envPtr.get();
         if (std::holds_alternative<DomEnvironment *>(m_element) && eBase
             && std::get<DomEnvironment *>(m_element) == eBase)
             return MutableDomItem(DomItem(newEnvPtr));
     } else if (std::shared_ptr<DomUniverse> univPtr = top().ownerAs<DomUniverse>()) {
-        newEnvPtr = std::shared_ptr<DomEnvironment>(new DomEnvironment(
+        newEnvPtr = std::make_shared<DomEnvironment>(
                 QStringList(),
                 DomEnvironment::Option::SingleThreaded | DomEnvironment::Option::NoDependencies,
-                univPtr));
+                univPtr);
     } else {
         Q_ASSERT(false);
         return {};
@@ -3261,8 +3261,8 @@ MutableDomItem MutableDomItem::setCode(QString code)
     switch (it.internalKind()) {
     case DomType::Binding:
         if (Binding *b = mutableAs<Binding>()) {
-            std::shared_ptr<ScriptExpression> exp(new ScriptExpression(
-                    code, ScriptExpression::ExpressionType::BindingExpression));
+            auto exp = std::make_shared<ScriptExpression>(
+                    code, ScriptExpression::ExpressionType::BindingExpression);
             b->setValue(std::make_unique<BindingValue>(exp));
             return field(Fields::value);
         }
@@ -3271,15 +3271,15 @@ MutableDomItem MutableDomItem::setCode(QString code)
         if (MethodInfo *m = mutableAs<MethodInfo>()) {
             QString pre = m->preCode(it);
             QString post = m->preCode(it);
-            m->body = std::shared_ptr<ScriptExpression>(new ScriptExpression(
-                    code, ScriptExpression::ExpressionType::FunctionBody, 0, pre, post));
+            m->body = std::make_shared<ScriptExpression>(
+                    code, ScriptExpression::ExpressionType::FunctionBody, 0, pre, post);
             return field(Fields::body);
         }
         break;
     case DomType::MethodParameter:
         if (MethodParameter *p = mutableAs<MethodParameter>()) {
-            p->defaultValue = std::shared_ptr<ScriptExpression>(
-                    new ScriptExpression(code, ScriptExpression::ExpressionType::ArgInitializer));
+            p->defaultValue = std::make_shared<ScriptExpression>(
+                    code, ScriptExpression::ExpressionType::ArgInitializer);
             return field(Fields::defaultValue);
         }
         break;

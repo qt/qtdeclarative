@@ -65,8 +65,10 @@ ErrorGroups QmldirFile::myParsingErrors()
 std::shared_ptr<QmldirFile> QmldirFile::fromPathAndCode(QString path, QString code)
 {
     QString canonicalFilePath = QFileInfo(path).canonicalFilePath();
+
     QDateTime dataUpdate = QDateTime::currentDateTimeUtc();
-    std::shared_ptr<QmldirFile> res(new QmldirFile(canonicalFilePath, code, dataUpdate));
+    auto res = std::make_shared<QmldirFile>(canonicalFilePath, code, dataUpdate);
+
     if (canonicalFilePath.isEmpty() && !path.isEmpty())
         res->addErrorLocal(
                 myParsingErrors().error(tr("QmldirFile started from invalid path '%1'").arg(path)));
@@ -289,7 +291,7 @@ QMap<QString, QString> QmldirFile::qmlFiles() const
 
 std::shared_ptr<OwningItem> QmlFile::doCopy(DomItem &) const
 {
-    std::shared_ptr<QmlFile> res(new QmlFile(*this));
+    auto res = std::make_shared<QmlFile>(*this);
     return res;
 }
 
@@ -306,7 +308,7 @@ QmlFile::QmlFile(const QmlFile &o)
       m_importScope(o.m_importScope)
 {
     if (m_astComments)
-        m_astComments = std::shared_ptr<AstComments>(new AstComments(*m_astComments));
+        m_astComments = std::make_shared<AstComments>(*m_astComments);
 }
 
 QmlFile::QmlFile(QString filePath, QString code, QDateTime lastDataUpdateAt, int derivedFrom)
@@ -372,8 +374,8 @@ void QmlFile::writeOut(DomItem &self, OutWriter &ow) const
 
 std::shared_ptr<OwningItem> GlobalScope::doCopy(DomItem &self) const
 {
-    std::shared_ptr<GlobalScope> res(
-            new GlobalScope(canonicalFilePath(self), lastDataUpdateAt(), revision()));
+    auto res = std::make_shared<GlobalScope>(
+                canonicalFilePath(self), lastDataUpdateAt(), revision());
     return res;
 }
 

@@ -1009,9 +1009,9 @@ Binding::Binding(QString name, std::shared_ptr<ScriptExpression> value, BindingT
 
 Binding::Binding(QString name, QString scriptCode, BindingType bindingType)
     : Binding(name,
-              std::make_unique<BindingValue>(std::shared_ptr<ScriptExpression>(new ScriptExpression(
+              std::make_unique<BindingValue>(std::make_shared<ScriptExpression>(
                       scriptCode, ScriptExpression::ExpressionType::BindingExpression, 0,
-                      Binding::preCodeForName(name), Binding::postCodeForName(name)))),
+                      Binding::preCodeForName(name), Binding::postCodeForName(name))),
               bindingType)
 {
 }
@@ -1621,8 +1621,8 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
         m_localOffset.length = m_code.length();
         m_localOffset.startColumn = preChange.trailingString.length();
         m_localOffset.startLine = preChange.nNewlines;
-        m_engine = std::shared_ptr<QQmlJS::Engine>(new QQmlJS::Engine);
-        m_astComments = std::shared_ptr<AstComments>(new AstComments(m_engine));
+        m_engine = std::make_shared<QQmlJS::Engine>();
+        m_astComments = std::make_shared<AstComments>(m_engine);
         QQmlJS::Lexer lexer(m_engine.get());
         lexer.setCode(m_codeStr, /*lineno = */ 1, /*qmlMode=*/true);
         QQmlJS::Parser parser(m_engine.get());

@@ -62,7 +62,7 @@ bool MockObject::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 
 std::shared_ptr<OwningItem> MockOwner::doCopy(DomItem &) const
 {
-    return std::shared_ptr<OwningItem>(new MockOwner(*this));
+    return std::make_shared<MockOwner>(*this);
 }
 
 MockOwner::MockOwner(const MockOwner &o)

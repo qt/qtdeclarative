@@ -413,10 +413,10 @@ public:
                 SourceLocation loc = combineLocations(el->statement);
                 QStringView code = qmlFilePtr->code();
 
-                std::shared_ptr<ScriptExpression> script(new ScriptExpression(
+                auto script = std::make_shared<ScriptExpression>(
                         code.mid(loc.offset, loc.length), qmlFilePtr->engine(), el->statement,
                         qmlFilePtr->astComments(),
-                        ScriptExpression::ExpressionType::BindingExpression, loc));
+                        ScriptExpression::ExpressionType::BindingExpression, loc);
                 Binding *bPtr;
                 Path bPathFromOwner = current<QmlObject>().addBinding(
                         Binding(p.name, script, bType), AddOption::KeepExisting, &bPtr);
@@ -503,10 +503,10 @@ public:
                 QStringView preCode =
                         code.mid(methodLoc.begin(), bodyLoc.begin() - methodLoc.begin());
                 QStringView postCode = code.mid(bodyLoc.end(), methodLoc.end() - bodyLoc.end());
-                m.body = std::shared_ptr<ScriptExpression>(new ScriptExpression(
+                m.body = std::make_shared<ScriptExpression>(
                         code.mid(bodyLoc.offset, bodyLoc.length), qmlFilePtr->engine(), fDef->body,
                         qmlFilePtr->astComments(), ScriptExpression::ExpressionType::FunctionBody,
-                        bodyLoc, 0, preCode, postCode));
+                        bodyLoc, 0, preCode, postCode);
             }
             MethodInfo *mPtr;
             Path mPathFromOwner = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
@@ -538,11 +538,10 @@ public:
                 }
                 if (args->element->initializer) {
                     SourceLocation loc = combineLocations(args->element->initializer);
-                    std::shared_ptr<ScriptExpression> script =
-                            std::shared_ptr<ScriptExpression>(new ScriptExpression(
+                    auto script = std::make_shared<ScriptExpression>(
                                     code.mid(loc.offset, loc.length), qmlFilePtr->engine(),
                                     args->element->initializer, qmlFilePtr->astComments(),
-                                    ScriptExpression::ExpressionType::ArgInitializer, loc));
+                                    ScriptExpression::ExpressionType::ArgInitializer, loc);
                     param.defaultValue = script;
                 }
                 index_type idx = index_type(mInfo.parameters.size());
@@ -697,10 +696,10 @@ public:
     {
         QStringView code = qmlFilePtr->code();
         SourceLocation loc = combineLocations(el->statement);
-        std::shared_ptr<ScriptExpression> script(
-                new ScriptExpression(code.mid(loc.offset, loc.length), qmlFilePtr->engine(),
+        auto script = std::make_shared<ScriptExpression>(
+                                     code.mid(loc.offset, loc.length), qmlFilePtr->engine(),
                                      el->statement, qmlFilePtr->astComments(),
-                                     ScriptExpression::ExpressionType::BindingExpression, loc));
+                                     ScriptExpression::ExpressionType::BindingExpression, loc);
         Binding bindingV(toString(el->qualifiedId), script, BindingType::Normal);
         Binding *bindingPtr = nullptr;
         Id *idPtr = nullptr;

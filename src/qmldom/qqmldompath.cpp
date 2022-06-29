@@ -512,8 +512,8 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
 
         return Path();
     case PathEls::ParserState::End:
-        return Path(0, components.length(), std::shared_ptr<PathEls::PathData>(
-                        new PathEls::PathData(strVals, components)));
+        return Path(0, components.length(), std::make_shared<PathEls::PathData>(
+                        strVals, components));
     }
     Q_ASSERT(false && "Unexpected state in Path::fromString");
     return Path();
@@ -521,72 +521,72 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
 
 Path Path::Root(PathRoot s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Root(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Root(s)))));
 }
 
 Path Path::Root(QString s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Root(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(s), QVector<Component>(1,Component(PathEls::Root(s)))));
 }
 
 Path Path::Index(index_type i)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Index(i))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Index(i)))));
 }
 
 Path Path::Root(QStringView s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Root(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Root(s)))));
 }
 
 
 Path Path::Field(QStringView s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Field(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Field(s)))));
 }
 
 Path Path::Field(QString s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Field(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(s), QVector<Component>(1,Component(PathEls::Field(s)))));
 }
 
 Path Path::Key(QStringView s)
 {
     return Path(
             0, 1,
-            std::shared_ptr<PathEls::PathData>(new PathEls::PathData(
-                    QStringList(), QVector<Component>(1, Component(PathEls::Key(s.toString()))))));
+            std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1, Component(PathEls::Key(s.toString())))));
 }
 
 Path Path::Key(QString s)
 {
     return Path(0, 1,
-                std::shared_ptr<PathEls::PathData>(new PathEls::PathData(
-                        QStringList(), QVector<Component>(1, Component(PathEls::Key(s))))));
+                std::make_shared<PathEls::PathData>(
+                        QStringList(), QVector<Component>(1, Component(PathEls::Key(s)))));
 }
 
 Path Path::Current(PathCurrent s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Current(s)))));
 }
 
 Path Path::Current(QString s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Current(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(s), QVector<Component>(1,Component(PathEls::Current(s)))));
 }
 
 Path Path::Current(QStringView s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))))));
+    return Path(0,1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Current(s)))));
 }
 
 Path Path::Empty()
@@ -598,8 +598,8 @@ Path Path::empty() const
 {
     if (m_endOffset != 0)
         return noEndOffset().empty();
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component()), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component()), m_data));
 }
 
 Path Path::field(QString name) const
@@ -613,16 +613,16 @@ Path Path::field(QStringView name) const
 {
     if (m_endOffset != 0)
         return noEndOffset().field(name);
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Field(name))), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Field(name))), m_data));
 }
 
 Path Path::key(QString name) const
 {
     if (m_endOffset != 0)
         return noEndOffset().key(name);
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Key(name))), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Key(name))), m_data));
 }
 
 Path Path::key(QStringView name) const
@@ -634,16 +634,16 @@ Path Path::index(index_type i) const
 {
     if (m_endOffset != 0)
         return noEndOffset().index(i);
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(i)), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(i)), m_data));
 }
 
 Path Path::any() const
 {
     if (m_endOffset != 0)
         return noEndOffset().any();
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Any())), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Any())), m_data));
 }
 
 Path Path::filter(function<bool (DomItem)> filterF, QString desc) const
@@ -657,14 +657,14 @@ Path Path::filter(function<bool (DomItem)> filter, QStringView desc) const
 {
     if (m_endOffset != 0)
         return noEndOffset().filter(filter, desc);
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Filter(filter, desc))), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Filter(filter, desc))), m_data));
 }
 
 Path Path::current(PathCurrent s) const
 {
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Current(s))), m_data));
 }
 
 Path Path::current(QString s) const
@@ -678,8 +678,8 @@ Path Path::current(QStringView s) const
 {
     if (m_endOffset != 0)
         return noEndOffset().current(s);
-    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))), m_data)));
+    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
+                    QStringList(), QVector<Component>(1,Component(PathEls::Current(s))), m_data));
 }
 
 Path Path::path(Path toAdd, bool avoidToAddAsBase) const
@@ -752,8 +752,8 @@ Path Path::path(Path toAdd, bool avoidToAddAsBase) const
             }
         }
     }
-    return Path(0, m_length + toAdd.length(), std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(toAddStrs, components, ((m_endOffset == 0) ? m_data : noEndOffset().m_data))));
+    return Path(0, m_length + toAdd.length(), std::make_shared<PathEls::PathData>(
+                    toAddStrs, components, ((m_endOffset == 0) ? m_data : noEndOffset().m_data)));
 }
 
 Path Path::expandFront() const
@@ -828,8 +828,8 @@ Path Path::noEndOffset() const
     }
     if (endOffset > 0) {
         Q_ASSERT(lastData && "Internal problem, reference to non existing PathData");
-        return Path(0, m_length, std::shared_ptr<PathEls::PathData>(
-                        new PathEls::PathData(lastData->strData, lastData->components.mid(0, lastData->components.length() - endOffset), lastData->parent)));
+        return Path(0, m_length, std::make_shared<PathEls::PathData>(
+                        lastData->strData, lastData->components.mid(0, lastData->components.length() - endOffset), lastData->parent));
     }
     return Path(0, m_length, lastData);
 }
@@ -847,7 +847,7 @@ Path Path::appendComponent(const PathEls::PathComponent &c)
         newP.m_length = static_cast<quint16>(m_length + 1);
         return newP;
     }
-    std::shared_ptr<PathEls::PathData> my_data =
+    auto my_data =
             (m_data ? m_data
                     : std::make_shared<PathEls::PathData>(QStringList(),
                                                           QVector<PathEls::PathComponent>()));

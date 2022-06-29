@@ -106,7 +106,7 @@ class QMLDOM_EXPORT QmlDirectory final : public ExternalOwningItem
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        return std::shared_ptr<OwningItem>(new QmlDirectory(*this));
+        return std::make_shared<QmlDirectory>(*this);
     }
 
 public:
@@ -141,7 +141,7 @@ class QMLDOM_EXPORT QmldirFile final : public ExternalOwningItem
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        std::shared_ptr<OwningItem> copy(new QmldirFile(*this));
+        auto copy = std::make_shared<QmldirFile>(*this);
         return copy;
     }
 
@@ -209,7 +209,7 @@ class QMLDOM_EXPORT JsFile final : public ExternalOwningItem
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        std::shared_ptr<OwningItem> copy(new JsFile(*this));
+        auto copy = std::make_shared<JsFile>(*this);
         return copy;
     }
 
@@ -340,7 +340,7 @@ class QMLDOM_EXPORT QmltypesFile final : public ExternalOwningItem
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        std::shared_ptr<OwningItem> res(new QmltypesFile(*this));
+        auto res = std::make_shared<QmltypesFile>(*this);
         return res;
     }
 

@@ -134,8 +134,8 @@ DomItem OutWriter::updatedFile(DomItem &qmlFile)
         DomItem env = qmlFile.environment();
         std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
         Q_ASSERT(envPtr);
-        std::shared_ptr<DomEnvironment> newEnvPtr(
-                new DomEnvironment(envPtr, envPtr->loadPaths(), envPtr->options()));
+        auto newEnvPtr = std::make_shared<DomEnvironment>(
+                envPtr, envPtr->loadPaths(), envPtr->options());
         newEnvPtr->addQmlFile(copyPtr);
         MutableDomItem copy = MutableDomItem(DomItem(newEnvPtr).copy(copyPtr));
         FileLocations::Tree newLoc = topLocation;

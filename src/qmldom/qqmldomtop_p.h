@@ -121,7 +121,7 @@ class QMLDOM_EXPORT ExternalItemPair final : public ExternalItemPairBase
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        return std::shared_ptr<OwningItem>(new ExternalItemPair(*this));
+        return std::make_shared<ExternalItemPair>(*this);
     }
 
 public:
@@ -243,9 +243,9 @@ public:
     {
         if (auto current = globalScopeWithName(name))
             return current;
-        std::shared_ptr<GlobalScope> newScope(new GlobalScope(name));
-        std::shared_ptr<ExternalItemPair<GlobalScope>> newValue(
-                new ExternalItemPair<GlobalScope>(newScope, newScope));
+        auto newScope = std::make_shared<GlobalScope>(name);
+        auto newValue = std::make_shared<ExternalItemPair<GlobalScope>>(
+                newScope, newScope);
         QMutexLocker l(mutex());
         if (auto current = m_globalScopeWithName.value(name))
             return current;
@@ -448,7 +448,7 @@ class ExternalItemInfo final : public ExternalItemInfoBase
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
     {
-        return std::shared_ptr<ExternalItemInfo>(new ExternalItemInfo(*this));
+        return std::make_shared<ExternalItemInfo>(*this);
     }
 
 public:
