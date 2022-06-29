@@ -9478,7 +9478,9 @@ void QQuickItemLayer::updateGeometry()
 {
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
     Q_ASSERT(l);
-    QRectF bounds = m_item->boundingRect();
+    // Avoid calling QQuickImage::boundingRect() or other overrides
+    // which may not be up-to-date at this time (QTBUG-104442, 104536)
+    QRectF bounds = m_item->QQuickItem::boundingRect();
     l->setSize(bounds.size());
     l->setPosition(bounds.topLeft() + m_item->position());
 }
