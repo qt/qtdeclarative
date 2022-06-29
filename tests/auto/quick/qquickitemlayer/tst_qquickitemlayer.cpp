@@ -31,10 +31,12 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qsgrendererinterface.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <qopenglcontext.h>
 #include <qopenglfunctions.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -84,6 +86,8 @@ private slots:
 
     void textureMirroring_data();
     void textureMirroring();
+
+    void effectSourceResizeToItem();
 
 private:
     void mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb);
@@ -466,6 +470,25 @@ void tst_QQuickItemLayer::textureMirroring()
 
     // Mirroring should have visual effect on ShaderEffect item itself
     mirroringCheck(mirroring, 200, true, fb);
+}
+
+void tst_QQuickItemLayer::effectSourceResizeToItem() // QTBUG-104442
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("itemImageLayer.qml")));
+    window.setResizeMode(QQuickView::SizeRootObjectToView);
+    QQuickItem *image = window.rootObject()->findChild<QQuickItem*>("image");
+    QVERIFY(image);
+    QCOMPARE(image->size(), window.rootObject()->size());
+    QQuickItemLayer *layer = QQuickItemPrivate::get(image)->layer();
+    QVERIFY(layer);
+    auto *effectSource = layer->effectSource();
+    QVERIFY(effectSource);
+    QCOMPARE(effectSource->size(), image->size());
+
+    window.resize(200, 200); // shrink it a bit
+    QTRY_COMPARE(image->size().toSize(), QSize(200, 200)); // wait for the window system
+    QCOMPARE(effectSource->size(), image->size());
 }
 
 void tst_QQuickItemLayer::mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb)
