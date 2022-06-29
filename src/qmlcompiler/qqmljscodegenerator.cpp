@@ -139,7 +139,6 @@ QT_WARNING_POP
         const int registerIndex = registerIt.key();
 
         const bool registerIsArgument = isArgument(registerIndex);
-        const bool isReadonlyArgument = registerIsArgument && registerTypes.size() == 1;
 
         for (auto registerTypeIt = registerTypes.constBegin(), end = registerTypes.constEnd();
              registerTypeIt != end; ++registerTypeIt) {
@@ -149,24 +148,45 @@ QT_WARNING_POP
             if (generatedVariables.hasSeen(registerTypeIt.value()))
                 continue;
 
-            // We would like to make the variable a const ref if it's a readonly argument,
-            // but due to the various call interfaces accepting non-const values, we can't.
-            // We rely on those calls to still not modify their arguments in place.
-
             result.code += storedType->internalName();
 
-            if (storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+            const bool isPointer
+                    = (storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference);
+            if (isPointer)
                 result.code += u" *"_s;
             else
-                result.code += isReadonlyArgument ? u" &"_s : u" "_s;
+                result.code += u' ';
 
-            result.code += registerTypeIt.value();
             if (registerIsArgument && m_typeResolver->registerIsStoredIn(
                         argumentType(registerIndex), storedType)) {
                 const int argumentIndex = registerIndex - FirstArgument;
-                result.code += u" = " + u"*static_cast<"_s
-                        + castTargetName(m_function->argumentTypes[argumentIndex].storedType())
+                const QQmlJSScope::ConstPtr argument
+                        = m_function->argumentTypes[argumentIndex].storedType();
+                const QQmlJSScope::ConstPtr original
+                        = m_typeResolver->originalType(argument);
+
+                const bool needsConversion = argument != original;
+                if (!isPointer && registerTypes.size() == 1 && !needsConversion) {
+                    // Not a pointer, never written to, and doesn't need any initial conversion.
+                    // This is a readonly argument.
+                    //
+                    // We would like to make the variable a const ref if it's a readonly argument,
+                    // but due to the various call interfaces accepting non-const values, we can't.
+                    // We rely on those calls to still not modify their arguments in place.
+                    result.code += u'&';
+                }
+
+                result.code += registerTypeIt.value() + u" = "_s;
+
+                const QString originalValue = u"*static_cast<"_s + castTargetName(original)
                         + u"*>(argumentsPtr["_s + QString::number(argumentIndex) + u"])"_s;
+
+                if (needsConversion)
+                    result.code += conversion(original, argument, originalValue);
+                else
+                    result.code += originalValue;
+            } else {
+                result.code += registerTypeIt.value();
             }
             result.code += u";\n"_s;
         }
@@ -176,7 +196,9 @@ QT_WARNING_POP
 
     for (const QQmlJSRegisterContent &argType : qAsConst(function->argumentTypes)) {
         if (argType.isValid()) {
-            result.argumentTypes.append(argType.storedType()->augmentedInternalName());
+            result.argumentTypes.append(
+                        m_typeResolver->originalType(argType.storedType())
+                        ->augmentedInternalName());
         } else {
             result.argumentTypes.append(u"void"_s);
         }
