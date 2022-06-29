@@ -1270,6 +1270,8 @@ void tst_qmltc::componentHelloWorld()
 {
     QQmlEngine e;
     QScopedPointer<PREPEND_NAMESPACE(ComponentHelloWorld)> created(new PREPEND_NAMESPACE(ComponentHelloWorld)(&e));
+    QVERIFY(QQmlData::get(created.get())->context->componentAttacheds());
+
     QCOMPARE(created->hello(), QStringLiteral("Hello, World!"));
 
     QSignalSpy onDestroySpy(created.get(), &PREPEND_NAMESPACE(ComponentHelloWorld)::sDestroying);

@@ -90,11 +90,6 @@ private:
                               const QQmlJSScope::ConstPtr &propertyType,
                               const BindingAccessorData &accessor);
 
-    // TODO: remove this special case
-    void compileScriptBindingOfComponent(QmltcType &current, const QQmlJSScope::ConstPtr &type,
-                                         const QQmlJSMetaPropertyBinding &binding,
-                                         const QString &propertyName);
-
     /*!
         \internal
         Helper structure that acts as a key in a hash-table of

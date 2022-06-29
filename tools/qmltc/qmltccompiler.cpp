@@ -991,42 +991,53 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
         Q_ASSERT(accessor.name == u"this"_s); // doesn't have to hold, in fact
         const auto attachedType = binding.attachingType();
         Q_ASSERT(attachedType);
-        auto subbindings = attachedType->ownPropertyBindingsInQmlIROrder();
-        if (propertyName == u"Component"_s) {
-            // TODO: there's a special QQmlComponentAttached, which has to be
-            // called? c.f. qqmlobjectcreator.cpp's finalize()
-            for (const auto &b : qAsConst(subbindings)) {
-                Q_ASSERT(b.bindingType() == QQmlJSMetaPropertyBinding::Script);
-                compileScriptBindingOfComponent(current, attachedType, b, b.propertyName());
-            }
-        } else {
-            const QString attachingTypeName = propertyName; // acts as an identifier
-            auto attachingType = m_typeResolver->typeForName(attachingTypeName);
 
-            QString attachedTypeName = attachedType->baseTypeName();
-            Q_ASSERT(!attachedTypeName.isEmpty());
+        const QString attachingTypeName = propertyName; // acts as an identifier
+        auto attachingType = m_typeResolver->typeForName(attachingTypeName);
 
-            auto &attachedMemberName =
-                    m_uniques[UniqueStringId(current, propertyName)].attachedVariableName;
-            if (attachedMemberName.isEmpty()) {
-                attachedMemberName = u"m_" + attachingTypeName;
-                // add attached type as a member variable to allow noop lookup
-                current.variables.emplaceBack(attachedTypeName + u" *", attachedMemberName,
-                                              u"nullptr"_s);
-                // Note: getting attached property is fairly expensive
-                const QString getAttachedPropertyLine = u"qobject_cast<" + attachedTypeName
-                        + u" *>(qmlAttachedPropertiesObject<" + attachingType->internalName()
-                        + u">(this, /* create = */ true))";
+        QString attachedTypeName = attachedType->baseTypeName();
+        Q_ASSERT(!attachedTypeName.isEmpty());
+
+        auto &attachedMemberName =
+                m_uniques[UniqueStringId(current, propertyName)].attachedVariableName;
+        if (attachedMemberName.isEmpty()) {
+            attachedMemberName = u"m_" + attachingTypeName;
+            // add attached type as a member variable to allow noop lookup
+            current.variables.emplaceBack(attachedTypeName + u" *", attachedMemberName,
+                                          u"nullptr"_s);
+
+            if (propertyName == u"Component"_s) { // Component attached type is special
+                current.endInit.body << u"Q_ASSERT(qmlEngine(this));"_s;
                 current.endInit.body
-                        << attachedMemberName + u" = " + getAttachedPropertyLine + u";";
+                        << u"// attached Component must be added to the object's QQmlData"_s;
+                current.endInit.body
+                        << u"Q_ASSERT(!QQmlEnginePrivate::get(qmlEngine(this))->activeObjectCreator);"_s;
             }
 
-            // compile bindings of the attached property
-            partitionBindings(subbindings.begin(), subbindings.end());
-            for (const auto &b : qAsConst(subbindings)) {
-                compileBinding(current, b, attachedType,
-                               { type, attachedMemberName, propertyName, false });
+            // Note: getting attached property is fairly expensive
+            const QString getAttachedPropertyLine = u"qobject_cast<" + attachedTypeName
+                    + u" *>(qmlAttachedPropertiesObject<" + attachingType->internalName()
+                    + u">(this, /* create = */ true))";
+            current.endInit.body << attachedMemberName + u" = " + getAttachedPropertyLine + u";";
+
+            if (propertyName == u"Component"_s) {
+                // call completed/destruction signals appropriately
+                current.handleOnCompleted.body
+                        << u"Q_EMIT " + attachedMemberName + u"->completed();";
+                if (!current.dtor) {
+                    current.dtor = QmltcDtor {};
+                    current.dtor->name = u"~" + current.cppType;
+                }
+                current.dtor->body << u"Q_EMIT " + attachedMemberName + u"->destruction();";
             }
+        }
+
+        auto subbindings = attachedType->ownPropertyBindingsInQmlIROrder();
+        // compile bindings of the attached property
+        partitionBindings(subbindings.begin(), subbindings.end());
+        for (const auto &b : qAsConst(subbindings)) {
+            compileBinding(current, b, attachedType,
+                           { type, attachedMemberName, propertyName, false });
         }
         break;
     }
@@ -1326,47 +1337,6 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         recordError(binding.sourceLocation(), u"Invalid script binding found"_s);
         break;
     }
-}
-
-// TODO: should use "compileScriptBinding" instead of custom code
-void QmltcCompiler::compileScriptBindingOfComponent(QmltcType &current,
-                                                    const QQmlJSScope::ConstPtr &type,
-                                                    const QQmlJSMetaPropertyBinding &binding,
-                                                    const QString &propertyName)
-{
-    const auto signalName = QQmlJSUtils::signalName(propertyName);
-    Q_ASSERT(signalName.has_value());
-    const QList<QQmlJSMetaMethod> signalMethods = type->methods(*signalName);
-    Q_ASSERT(!signalMethods.isEmpty());
-    // Component signals do not have parameters
-    Q_ASSERT(signalMethods.at(0).parameterNames().isEmpty());
-    const QString signalReturnType = figureReturnType(signalMethods.at(0));
-    const QString slotName = newSymbol(*signalName + u"_slot");
-
-    // SignalHander specific:
-    QmltcMethod slotMethod {};
-    slotMethod.returnType = signalReturnType;
-    slotMethod.name = slotName;
-
-    // Component is special:
-    QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
-            &slotMethod.body, m_urlMethodName + u"()",
-            type->ownRuntimeFunctionIndex(binding.scriptIndex()), u"this"_s, signalReturnType);
-    slotMethod.type = QQmlJSMetaMethod::Slot;
-
-    // TODO: there's actually an attached type, which has completed/destruction
-    // signals that are typically emitted -- do we care enough about supporting
-    // that? see QQmlComponentAttached
-    if (*signalName == u"completed"_s) {
-        current.handleOnCompleted.body << slotName + u"();";
-    } else if (*signalName == u"destruction"_s) {
-        if (!current.dtor) {
-            current.dtor = QmltcDtor {};
-            current.dtor->name = u"~" + current.cppType;
-        }
-        current.dtor->body << slotName + u"();";
-    }
-    current.functions << std::move(slotMethod);
 }
 
 QT_END_NAMESPACE
