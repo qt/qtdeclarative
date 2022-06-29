@@ -27,6 +27,11 @@ filenames of the QML documents.  Only filenames beginning with an uppercase
 letter and ending with ".qml" will be exposed as types if no \c qmldir file
 is specified in the directory.
 
+Directory Imports rank below any
+\l{qtqml-modules-identifiedmodules.html}{module imports} in precedence. If the
+same name is defined in a module and in a directory that are both imported into
+the same namespace, only the module's type is made available.
+
 \section2 An Example
 
 Consider the following QML project directory structure. Under the top level directory \c myapp,
