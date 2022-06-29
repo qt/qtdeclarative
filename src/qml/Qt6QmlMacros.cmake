@@ -34,10 +34,6 @@ function(qt6_add_qml_module target)
         SKIP_TYPE_REGISTRATION
         ENABLE_TYPE_COMPILER
 
-        # Used only by _qt_internal_qml_type_registration()
-        # TODO: Remove this once qt6_extract_metatypes does not install by default.
-        __QT_INTERNAL_INSTALL_METATYPES_JSON
-
         # Used to mark modules as having static side effects (i.e. if they install an image provider)
         __QT_INTERNAL_STATIC_MODULE
         # Used to mark modules as being a system module that provides all builtins
@@ -523,9 +519,6 @@ function(qt6_add_qml_module target)
 
     if(NOT arg_NO_GENERATE_QMLTYPES)
         set(type_registration_extra_args "")
-        if(arg___QT_INTERNAL_INSTALL_METATYPES_JSON)
-            list(APPEND type_registration_extra_args __QT_INTERNAL_INSTALL_METATYPES_JSON)
-        endif()
         if(arg_NAMESPACE)
             list(APPEND type_registration_extra_args NAMESPACE ${arg_NAMESPACE})
         endif()
@@ -2296,7 +2289,7 @@ endif()
 #   generated into. (OPTIONAL)
 #
 function(_qt_internal_qml_type_registration target)
-    set(args_option __QT_INTERNAL_INSTALL_METATYPES_JSON)
+    set(args_option)
     set(args_single NAMESPACE)
     set(args_multi  MANUAL_MOC_JSON_FILES)
 
@@ -2325,12 +2318,6 @@ function(_qt_internal_qml_type_registration target)
     set(meta_types_json_args "")
     if(arg_MANUAL_MOC_JSON_FILES)
         list(APPEND meta_types_json_args "MANUAL_MOC_JSON_FILES" ${arg_MANUAL_MOC_JSON_FILES})
-    endif()
-
-    # Don't install the metatypes json files by default for user project created qml modules.
-    # Only install them for Qt provided qml modules.
-    if(NOT arg___QT_INTERNAL_INSTALL_METATYPES_JSON)
-        list(APPEND meta_types_json_args __QT_INTERNAL_NO_INSTALL)
     endif()
     qt6_extract_metatypes(${target} ${meta_types_json_args})
 
