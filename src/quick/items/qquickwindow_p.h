@@ -161,6 +161,8 @@ public:
     QPair<QQuickItem*, QQuickPointerHandler*> findCursorItemAndHandler(QQuickItem *item, const QPointF &scenePos) const;
 #endif
 
+    void clearFocusObject() override;
+
     void dirtyItem(QQuickItem *);
     void cleanup(QSGNode *);
 
