@@ -40,6 +40,7 @@ set(qml_files
     ambiguous1/Ambiguous.qml
     ambiguous2/Ambiguous.qml
     anchorsFill.qml
+    argumentConversion.qml
     array.qml
     asCast.qml
     attachedBaseEnum.qml
