@@ -20,7 +20,10 @@ inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
     // that it holds pointers though). check isList() first, as list<QtObject>
     // would be both a list and a pointer (weird).
     if (p.isList()) {
-        underlyingType = u"QQmlListProperty<" + underlyingType + u">";
+        if (p.type()->isReferenceType())
+            underlyingType = u"QQmlListProperty<" + underlyingType + u">";
+        else
+            underlyingType = u"QList<" + underlyingType + u">";
     } else if (p.type()->isReferenceType()) {
         underlyingType += u'*';
     }

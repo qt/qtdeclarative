@@ -13,8 +13,12 @@
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
-
 using namespace Qt::StringLiterals;
+
+bool qIsReferenceTypeList(const QQmlJSMetaProperty &p)
+{
+    return p.isList() && p.type()->isReferenceType();
+}
 
 Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
 
@@ -431,9 +435,9 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
     const QString underlyingType = getUnderlyingType(p);
     // only check for isList() here as it needs some special arrangements.
     // otherwise, getUnderlyingType() handles the specifics of a type in C++
-    if (p.isList()) {
+    if (qIsReferenceTypeList(p)) {
         const QString storageName = variableName + u"_storage";
-        current.variables.emplaceBack(u"QList<" + p.type()->internalName() + u" *>", storageName,
+        current.variables.emplaceBack(u"QList<" + p.type()->internalName() + u"*>", storageName,
                                       QString());
         current.baselineCtor.initializerList.emplaceBack(variableName + u"(" + underlyingType
                                                          + u"(this, std::addressof(" + storageName
@@ -451,7 +455,7 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
     // 1. add setter and getter
     // If p.isList(), it's a QQmlListProperty. Then you can write the underlying list through
     // the QQmlListProperty object retrieved with the getter. Setting it would make no sense.
-    if (p.isWritable() && !p.isList()) {
+    if (p.isWritable() && !qIsReferenceTypeList(p)) {
         QmltcMethod setter {};
         setter.returnType = u"void"_s;
         setter.name = compilationData.write;
@@ -474,7 +478,7 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
     mocPieces << u"READ"_s << getter.name;
 
     // 2. add bindable
-    if (!p.isList()) {
+    if (!qIsReferenceTypeList(p)) {
         QmltcMethod bindable {};
         bindable.returnType = u"QBindable<" + underlyingType + u">";
         bindable.name = compilationData.bindable;
@@ -821,7 +825,7 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
     QQmlJSScope::ConstPtr propertyType = p.type();
 
     const auto addObjectBinding = [&](const QString &value) {
-        if (p.isList()) {
+        if (qIsReferenceTypeList(p)) {
             const auto &listName =
                     m_uniques[UniqueStringId(current, propertyName)].qmlListVariableName;
             Q_ASSERT(!listName.isEmpty());
@@ -833,7 +837,7 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
 
     // when property is list, create a local variable (unique per-scope &&
     // per-property) that would be used to append new elements
-    if (p.isList()) {
+    if (qIsReferenceTypeList(p)) {
         auto &listName = m_uniques[UniqueStringId(current, propertyName)].qmlListVariableName;
         if (listName.isEmpty()) { // not created yet, add extra instructions
             listName = u"listref_" + propertyName;

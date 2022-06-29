@@ -90,6 +90,7 @@ set(qml_sources
     deferredProperties_group.qml
     deferredProperties_attached.qml
     deferredProperties_complex.qml
+    valueTypeListProperty.qml
 
     # support types:
     DefaultPropertySingleChild.qml

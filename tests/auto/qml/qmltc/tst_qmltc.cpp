@@ -67,6 +67,7 @@
 #include "privatepropertysubclass.h"
 #include "calqlatrbits.h"
 #include "propertychangeandsignalhandlers.h"
+#include "valuetypelistproperty.h"
 
 #include "testprivateproperty.h"
 
@@ -163,6 +164,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/PrivateProperty.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/privatePropertySubclass.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/calqlatrBits.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/valueTypeListProperty.qml"),
     };
 
     QQmlEngine e;
@@ -2128,6 +2130,51 @@ void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
 
     created.changeProperties3(22);
     QCOMPARE(created.cChangedCount3(), 22);
+}
+
+void tst_qmltc::valueTypeListProperty()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(valueTypeListProperty) created(&e);
+    QList<int> intsRef = created.arrayOfInts();
+    QCOMPARE(intsRef.count(), 4);
+    QList<int> intsGroundTruth = { 1, 0, 42, -5 };
+
+    QCOMPARE(intsRef, intsGroundTruth);
+
+    QCOMPARE(created.arrayOfInts().at(2), 42);
+    created.incrementPlease();
+    QCOMPARE(created.arrayOfInts().at(2), 43);
+
+    QList<QFont> arrayOfFonts = created.arrayOfFonts();
+    QCOMPARE(arrayOfFonts.count(), 2);
+    QCOMPARE(arrayOfFonts[0].family(), "Arial");
+    QCOMPARE(arrayOfFonts[1].family(), "Comic Sans");
+
+    QList<QColor> arrayOfColors = created.arrayOfColors();
+
+    QCOMPARE(arrayOfColors.count(), 3);
+
+    QVERIFY(arrayOfColors[0].red() > 0);
+    QCOMPARE(arrayOfColors[0].green(), 0);
+    QCOMPARE(arrayOfColors[0].blue(), 0);
+
+    QCOMPARE(arrayOfColors[1].red(), 0);
+    QVERIFY(arrayOfColors[1].green() > 0);
+    QCOMPARE(arrayOfColors[1].blue(), 0);
+
+    QCOMPARE(arrayOfColors[2].red(), 0);
+    QCOMPARE(arrayOfColors[2].green(), 0);
+    QVERIFY(arrayOfColors[2].blue() > 0);
+
+    QQmlListReference arrayOfInts2(&created, "arrayOfInts");
+    QVERIFY(!arrayOfInts2.isValid());
+
+    QQmlListReference arrayOfFonts2(&created, "arrayOfFonts");
+    QVERIFY(!arrayOfFonts2.isValid());
+
+    QQmlListReference arrayOfColors2(&created, "arrayOfColors");
+    QVERIFY(!arrayOfColors2.isValid());
 }
 
 QTEST_MAIN(tst_qmltc)
