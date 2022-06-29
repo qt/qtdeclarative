@@ -404,8 +404,9 @@ void QQuickRepeater::initItem(int index, QObject *object)
         d->deletables[index] = item;
         item->setParentItem(parentItem());
 
-        // If the item comes from an ObjectModel, it might be used as Menu's contentItem.
-        // Menu unconditionally culls items that are inserted, so account for that here.
+        // If the item comes from an ObjectModel, it might be used as
+        // ComboBox/Menu/TabBar's contentItem. These types unconditionally cull items
+        // that are inserted, so account for that here.
         if (d->dataSourceIsObject)
             QQuickItemPrivate::get(item)->setCulled(false);
         if (index > 0 && d->deletables.at(index-1)) {
