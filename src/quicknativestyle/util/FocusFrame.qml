@@ -84,8 +84,8 @@ Item {
     Rectangle {
         id: focusFrame
         z: 10
-        x: targetItem ? targetItem.x + leftOffset - frameSize : 0
-        y: targetItem ? targetItem.y + topOffset - frameSize : 0
+        x: targetItem ? targetItem.x + leftOffset - frameSize - root.x : 0
+        y: targetItem ? targetItem.y + topOffset - frameSize - root.y : 0
         width: targetItem ? targetItem.width - leftOffset - rightOffset + (frameSize * 2) : 0
         height: targetItem ? targetItem.height - topOffset - bottomOffset + (frameSize * 2) : 0
         radius: frameRadius
