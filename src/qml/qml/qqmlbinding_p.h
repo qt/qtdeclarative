@@ -99,7 +99,10 @@ public:
 
 protected:
     virtual void doUpdate(const DeleteWatcher &watcher,
-                          QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) = 0;
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope);
+
+    virtual bool write(const QV4::Value &result, bool isUndefined, QQmlPropertyData::WriteFlags flags) = 0;
+    virtual bool write(void *result, QMetaType type, bool isUndefined, QQmlPropertyData::WriteFlags flags) = 0;
 
     int getPropertyType() const;
 
