@@ -31,8 +31,6 @@ macro(qt_internal_get_internal_add_qml_module_keywords
         PLUGIN_TARGET
         TYPEINFO
         CLASS_NAME
-        CLASSNAME  # TODO: Remove once all other repos have been updated to use
-                   #       CLASS_NAME instead.
         TYPE_COMPILER_NAMESPACE
     )
     set(${multi_args}
@@ -140,18 +138,6 @@ function(qt_internal_add_qml_module target)
         set(arg_PLUGIN_TARGET ${target}plugin)
     endif()
 
-    # TODO: Support for old keyword, remove once all repos no longer use CLASSNAME
-    if(arg_CLASSNAME)
-        if(arg_CLASS_NAME AND NOT arg_CLASSNAME STREQUAL arg_CLASS_NAME)
-            message(FATAL_ERROR
-                "Both CLASSNAME and CLASS_NAME were given and were different. "
-                "Update call site to only use CLASS_NAME."
-            )
-        endif()
-        set(arg_CLASS_NAME "${arg_CLASSNAME}")
-        unset(arg_CLASSNAME)
-    endif()
-
     set(plugin_args "")
     if(arg_NO_PLUGIN OR NOT arg_PLUGIN_TARGET STREQUAL target)
         # Allow using an existing backing target.
@@ -199,7 +185,6 @@ function(qt_internal_add_qml_module target)
                 OUTPUT_DIRECTORY
                 INSTALL_DIRECTORY
                 CLASS_NAME
-                CLASSNAME
             ALL_ARGS
                 ${option_args}
                 ${single_args}

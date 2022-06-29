@@ -54,7 +54,6 @@ function(qt6_add_qml_module target)
         VERSION
         OUTPUT_DIRECTORY
         CLASS_NAME
-        CLASSNAME  # TODO: For backward compatibility, remove once all repos no longer use it
         TYPEINFO
         NAMESPACE
         # TODO: We don't handle installation, warn if callers used these with the old
@@ -339,18 +338,6 @@ function(qt6_add_qml_module target)
     endif()
     set_property(GLOBAL APPEND PROPERTY _qt_all_qml_output_dirs ${arg_OUTPUT_DIRECTORY})
     set_property(GLOBAL APPEND PROPERTY _qt_all_qml_targets     ${target})
-
-    # TODO: Support for old keyword, remove once all repos no longer use CLASSNAME
-    if(arg_CLASSNAME)
-        if(arg_CLASS_NAME AND NOT arg_CLASSNAME STREQUAL arg_CLASS_NAME)
-            message(FATAL_ERROR
-                "Both CLASSNAME and CLASS_NAME were given and were different. "
-                "Update call site to only use CLASS_NAME."
-            )
-        endif()
-        set(arg_CLASS_NAME "${arg_CLASSNAME}")
-        unset(arg_CLASSNAME)
-    endif()
 
     if(NOT arg_CLASS_NAME AND TARGET "${arg_PLUGIN_TARGET}")
         get_target_property(class_name ${arg_PLUGIN_TARGET} QT_PLUGIN_CLASS_NAME)
