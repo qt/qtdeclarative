@@ -50,7 +50,6 @@ DialogsQuickImpl.FolderBreadcrumbBar {
     upButtonSpacing: 6
 
     contentItem: ListView {
-        id: listView
         currentIndex: control.currentIndex
         model: control.contentModel
         orientation: ListView.Horizontal
