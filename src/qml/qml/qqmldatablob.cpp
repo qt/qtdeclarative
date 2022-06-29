@@ -20,6 +20,8 @@
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
 
+Q_DECLARE_LOGGING_CATEGORY(lcCycle)
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -324,7 +326,8 @@ void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
 
     // Check circular dependency
     if (m_waitingOnMe.indexOf(blob) >= 0) {
-        qWarning() << "Cyclic dependency detected between" << this->url().toString() << "and" << blob->url().toString();
+        qCWarning(lcCycle) << "Cyclic dependency detected between" << this->url().toString()
+                           << "and" << blob->url().toString();
         m_data.setStatus(Error);
     }
 }

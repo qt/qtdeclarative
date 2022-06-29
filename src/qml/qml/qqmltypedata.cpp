@@ -18,6 +18,7 @@
 #include <memory>
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
+Q_LOGGING_CATEGORY(lcCycle, "qt.qml.typeresolution.cycle")
 
 QT_BEGIN_NAMESPACE
 
@@ -812,8 +813,8 @@ void QQmlTypeData::resolveTypes()
         if (ref.type.isCompositeSingleton()) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
             if (ref.typeData->isWaiting() || m_waitingOnMe.contains(ref.typeData.data())) {
-                qWarning() << "Cyclic dependency detected between" << ref.typeData->urlString()
-                           << "and" << urlString();
+                qCWarning(lcCycle) << "Cyclic dependency detected between"
+                                   << ref.typeData->urlString() << "and" << urlString();
                 continue;
             }
             addDependency(ref.typeData.data());
