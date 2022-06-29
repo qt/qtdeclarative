@@ -78,10 +78,12 @@ worker thread (or more) that work on it exist.
 
 QQmlCodeModel::QQmlCodeModel(QObject *parent, QQmlToolingSettings *settings)
     : QObject { parent },
-      m_currentEnv(std::make_shared<DomEnvironment>(QStringList(),
-                                                    DomEnvironment::Option::SingleThreaded)),
-      m_validEnv(std::make_shared<DomEnvironment>(QStringList(),
-                                                  DomEnvironment::Option::SingleThreaded)),
+      m_currentEnv(std::make_shared<DomEnvironment>(
+                       QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
+                       DomEnvironment::Option::SingleThreaded)),
+      m_validEnv(std::make_shared<DomEnvironment>(
+                     QStringList(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)),
+                     DomEnvironment::Option::SingleThreaded)),
       m_settings(settings)
 {
 }
