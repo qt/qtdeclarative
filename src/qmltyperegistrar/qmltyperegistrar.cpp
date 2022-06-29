@@ -396,7 +396,7 @@ int main(int argc, char **argv)
 
             if (targetIsNamespace()) {
                 fprintf(output, "\n    {");
-                fprintf(output, "\n        static const auto metaType "
+                fprintf(output, "\n        Q_CONSTINIT static auto metaType "
                                 "= QQmlPrivate::metaTypeForNamespace("
                                 "[](const QtPrivate::QMetaTypeInterface *) { "
                                 "return &%s::staticMetaObject; "
