@@ -160,6 +160,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     template <typename ReversalFunctor> static ReturnedValue lookupGetterImpl(Lookup *l, ExecutionEngine *engine, const Value &object, bool useOriginalProperty, ReversalFunctor revert);
     static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
 protected:
     static bool virtualIsEqualTo(Managed *that, Managed *o);
@@ -174,7 +175,6 @@ protected:
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
     static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
     static ReturnedValue method_connect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_disconnect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

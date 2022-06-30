@@ -472,6 +472,19 @@ bool QQmlTypeWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine
     return Object::virtualResolveLookupSetter(object, engine, lookup, value);
 }
 
+OwnPropertyKeyIterator *QQmlTypeWrapper::virtualOwnPropertyKeys(const Object *m, Value *target)
+{
+    QV4::Scope scope(m->engine());
+    QV4::Scoped<QQmlTypeWrapper> typeWrapper(scope, m);
+    Q_ASSERT(typeWrapper);
+    if (QObject *object = typeWrapper->object()) {
+        QV4::Scoped<QV4::QObjectWrapper> objectWrapper(scope, QV4::QObjectWrapper::wrap(typeWrapper->engine(), object));
+        return QV4::QObjectWrapper::virtualOwnPropertyKeys(objectWrapper, target);
+    }
+
+    return Object::virtualOwnPropertyKeys(m, target);
+}
+
 ReturnedValue QQmlTypeWrapper::lookupSingletonProperty(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
     const auto revertLookup = [l, engine, &object]() {

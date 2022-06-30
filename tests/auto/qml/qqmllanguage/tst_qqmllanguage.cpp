@@ -386,6 +386,7 @@ private slots:
     void leakingAttributesQmlAttached();
     void leakingAttributesQmlSingleton();
     void leakingAttributesQmlForeign();
+    void attachedOwnProperties();
 
 private:
     QQmlEngine engine;
@@ -7369,6 +7370,25 @@ LeakingForeignerForeign {
         QVERIFY(o->property("anotherAbc").isValid());
         QVERIFY(!o->property("abc").isValid());
     }
+}
+
+void tst_qqmllanguage::attachedOwnProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QML
+        QtObject {
+            id: root
+            property list<string> props: Object.getOwnPropertyNames(root.Component)
+        }
+    )", QUrl(QStringLiteral("attachedOwn.qml")));
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    const QStringList expected {"objectName", "objectNameChanged", "completed", "destruction"};
+    QCOMPARE(o->property("props").value<QStringList>(), expected);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
