@@ -124,7 +124,6 @@ void QQuickLabsPlatformFolderDialog::setFolder(const QUrl &folder)
         return;
 
     m_folder = folder;
-    setCurrentFolder(folder);
     emit folderChanged();
 }
 
