@@ -5597,11 +5597,12 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, cons
         break;
     case CT_LineEdit:
         if (const QStyleOptionFrame *f = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
-            if (sz.isEmpty()) {
-                // Minimum size (with padding: 18x24)
-                sz.rwidth() = 10;
-                sz.rheight() = 20;
-            }
+            // Minimum size (with padding: 18x24)
+            if (sz.width() < 10)
+                sz.setWidth(10);
+            if (sz.height() < 20)
+                sz.setHeight(20);
+
             // From using pixelTool with XCode/NSTextTextField
             int leftPadding = 4;
             int rightPadding = 4;
@@ -5710,11 +5711,11 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, cons
         if (const auto *cb = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
             const int controlSize = getControlSize(opt);
 
+            // Set a sensible minimum width
+            if (sz.width() < 10)
+                sz.setWidth(10);
+
             if (!cb->editable) {
-                if (sz.width() < 10) {
-                    // minimumSize (to ensure a nice nine patch image)
-                    sz.rwidth() += 10;
-                }
                 // Same as CT_PushButton, because we have to fit the focus
                 // ring and a non-editable combo box is a NSPopUpButton.
                 sz.rwidth() += QMacStylePrivate::PushButtonLeftOffset + QMacStylePrivate::PushButtonRightOffset;
