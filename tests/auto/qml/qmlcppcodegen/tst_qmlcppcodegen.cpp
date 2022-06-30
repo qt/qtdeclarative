@@ -2346,6 +2346,14 @@ void tst_QmlCppCodegen::registerPropagation()
     int result = 0;
     QMetaObject::invokeMethod(o.data(), "test", Q_RETURN_ARG(int, result));
     QCOMPARE(result, 1);
+
+    QString undefined;
+    QMetaObject::invokeMethod(o.data(), "produceUndefined1", Q_RETURN_ARG(QString, undefined));
+    QCOMPARE(undefined, u"undefined"_s);
+
+    undefined.clear();
+    QMetaObject::invokeMethod(o.data(), "produceUndefined2", Q_RETURN_ARG(QString, undefined));
+    QCOMPARE(undefined, u"undefined"_s);
 }
 
 void tst_QmlCppCodegen::argumentConversion()

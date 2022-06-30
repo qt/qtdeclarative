@@ -97,6 +97,12 @@ void QQmlJSFunctionInitializer::populateSignature(
         }
     }
 
+    for (int i = QQmlJSCompilePass::FirstArgument + function->argumentTypes.length();
+         i < context->registerCountInFunction; ++i) {
+        function->registerTypes.append(m_typeResolver->tracked(
+                                           m_typeResolver->globalType(m_typeResolver->voidType())));
+    }
+
     function->addressableScopes = m_typeResolver->objectsById();
     function->code = context->code;
     function->sourceLocations = context->sourceLocationTable.get();

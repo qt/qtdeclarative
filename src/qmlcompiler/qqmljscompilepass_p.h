@@ -60,6 +60,7 @@ public:
     {
         QQmlJSScopesById addressableScopes;
         QList<QQmlJSRegisterContent> argumentTypes;
+        QList<QQmlJSRegisterContent> registerTypes;
         QQmlJSScope::ConstPtr returnType;
         QQmlJSScope::ConstPtr qmlScope;
         QByteArray code;
@@ -183,10 +184,12 @@ protected:
     State initialState(const Function *function)
     {
         State state;
-        for (int i = 0; i < function->argumentTypes.count(); ++i) {
+        for (int i = 0, end = function->argumentTypes.length(); i < end; ++i) {
             state.registers[FirstArgument + i] = function->argumentTypes.at(i);
             Q_ASSERT(state.registers[FirstArgument + i].isValid());
         }
+        for (int i = 0, end = function->registerTypes.length(); i != end; ++i)
+            state.registers[firstRegisterIndex() + i] = function->registerTypes[i];
         return state;
     }
 
