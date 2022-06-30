@@ -157,8 +157,14 @@ QT_WARNING_POP
             else
                 result.code += u' ';
 
-            if (registerIsArgument && m_typeResolver->registerIsStoredIn(
-                        argumentType(registerIndex), storedType)) {
+            if (!registerIsArgument && registerIndex != Accumulator
+                    && !m_typeResolver->registerIsStoredIn(
+                        function->registerTypes[registerIndex - firstRegisterIndex()],
+                        m_typeResolver->voidType())) {
+                result.code += registerTypeIt.value() + u" = "_s;
+                result.code += conversion(m_typeResolver->voidType(), storedType, QString());
+            } else if (registerIsArgument && m_typeResolver->registerIsStoredIn(
+                           argumentType(registerIndex), storedType)) {
                 const int argumentIndex = registerIndex - FirstArgument;
                 const QQmlJSScope::ConstPtr argument
                         = m_function->argumentTypes[argumentIndex].storedType();

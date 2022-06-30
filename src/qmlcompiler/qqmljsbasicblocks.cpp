@@ -42,12 +42,20 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
         const Function *function,
         const InstructionAnnotations &annotations)
 {
+    m_function = function;
     m_annotations = annotations;
 
     for (int i = 0, end = function->argumentTypes.length(); i != end; ++i) {
         InstructionAnnotation annotation;
         annotation.changedRegisterIndex = FirstArgument + i;
         annotation.changedRegister = function->argumentTypes[i];
+        m_annotations[-annotation.changedRegisterIndex] = annotation;
+    }
+
+    for (int i = 0, end = function->registerTypes.length(); i != end; ++i) {
+        InstructionAnnotation annotation;
+        annotation.changedRegisterIndex = firstRegisterIndex() + i;
+        annotation.changedRegister = function->registerTypes[i];
         m_annotations[-annotation.changedRegisterIndex] = annotation;
     }
 
