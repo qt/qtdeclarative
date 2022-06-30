@@ -131,6 +131,9 @@ extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAccessSingleton;
 
 struct Message : public QQmlJS::DiagnosticMessage
 {
+    // This doesn't need to be an owning-reference since the string is expected to outlive any
+    // Message object by virtue of coming from a LoggerWarningId.
+    QAnyStringView id;
     std::optional<FixSuggestion> fixSuggestion;
 };
 

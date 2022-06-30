@@ -244,10 +244,11 @@ void QQmlJSLogger::log(const QString &message, LoggerWarningId id,
 
     // Note: since we clamped our \a type, the output message is not printed
     // exactly like it was requested, bear with us
-    m_output.writePrefixedMessage(prefix + message, type);
+    m_output.writePrefixedMessage(u"%1%2 [%3]"_s.arg(prefix, message, id.name().toString()), type);
 
     Message diagMsg;
     diagMsg.message = message;
+    diagMsg.id = id.name();
     diagMsg.loc = srcLocation;
     diagMsg.type = type;
     diagMsg.fixSuggestion = suggestion;

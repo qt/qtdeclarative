@@ -348,7 +348,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
         json->append(result);
     });
 
-    auto addJsonWarning = [&](const QQmlJS::DiagnosticMessage &message,
+    auto addJsonWarning = [&](const QQmlJS::DiagnosticMessage &message, QAnyStringView id,
                               const std::optional<FixSuggestion> &suggestion = {}) {
         QJsonObject jsonMessage;
 
@@ -375,6 +375,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
         }
 
         jsonMessage[u"type"_s] = type;
+        jsonMessage[u"id"_s] = id.toString();
 
         if (message.loc.isValid()) {
             jsonMessage[u"line"_s] = static_cast<int>(message.loc.startLine);
@@ -415,7 +416,8 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 addJsonWarning(
                         QQmlJS::DiagnosticMessage { QStringLiteral("Failed to open file %1: %2")
                                                             .arg(filename, file.errorString()),
-                                                    QtCriticalMsg, QQmlJS::SourceLocation() });
+                                                    QtCriticalMsg, QQmlJS::SourceLocation() },
+                        qmlImport.name());
                 success = false;
             } else if (!silent) {
                 qWarning() << "Failed to open file" << filename << file.error();
@@ -449,7 +451,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             if (json) {
-                addJsonWarning(m);
+                addJsonWarning(m, qmlSyntax.name());
             } else if (!silent) {
                 qWarning().noquote() << QString::fromLatin1("%1:%2:%3: %4")
                                                 .arg(filename)
@@ -465,11 +467,11 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
         const auto processMessages = [&]() {
             if (json) {
                 for (const auto &error : m_logger->errors())
-                    addJsonWarning(error, error.fixSuggestion);
+                    addJsonWarning(error, error.id, error.fixSuggestion);
                 for (const auto &warning : m_logger->warnings())
-                    addJsonWarning(warning, warning.fixSuggestion);
+                    addJsonWarning(warning, warning.id, warning.fixSuggestion);
                 for (const auto &info : m_logger->infos())
-                    addJsonWarning(info, info.fixSuggestion);
+                    addJsonWarning(info, info.id, info.fixSuggestion);
             }
         };
 
