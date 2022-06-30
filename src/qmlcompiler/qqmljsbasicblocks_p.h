@@ -26,7 +26,6 @@ public:
     struct BasicBlock {
         QList<int> jumpOrigins;
         QList<int> readRegisters;
-        QList<int> writtenRegisters;
         QList<QQmlJSScope::ConstPtr> readTypes;
         int jumpTarget = -1;
         bool jumpIsUnconditional = false;

@@ -127,6 +127,7 @@ private slots:
     void stringArg();
     void conversionDecrement();
     void unstoredUndefined();
+    void registerPropagation();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2316,6 +2317,18 @@ void tst_QmlCppCodegen::unstoredUndefined()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QCOMPARE(o->objectName(), u"NaN"_s);
+}
+
+void tst_QmlCppCodegen::registerPropagation()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/registerPropagation.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    int result = 0;
+    QMetaObject::invokeMethod(o.data(), "test", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 1);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

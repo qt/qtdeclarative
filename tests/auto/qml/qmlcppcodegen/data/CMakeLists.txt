@@ -121,6 +121,7 @@ set(qml_files
     prefixedMetaType.qml
     pressAndHoldButton.qml
     registerelimination.qml
+    registerPropagation.qml
     revisions.qml
     scopeVsObject.qml
     script.js

@@ -50,6 +50,14 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
     if (m_hadBackJumps) {
         // We may have missed some connections between basic blocks if there were back jumps.
         // Fill them in via a second pass.
+
+        // We also need to re-calculate the jump targets then because the basic block boundaries
+        // may have shifted.
+        for (auto it = m_basicBlocks.begin(), end = m_basicBlocks.end(); it != end; ++it) {
+            it->second.jumpTarget = -1;
+            it->second.jumpIsUnconditional = false;
+        }
+
         reset();
         decode(byteCode.constData(), static_cast<uint>(byteCode.length()));
         for (auto it = m_basicBlocks.begin(), end = m_basicBlocks.end(); it != end; ++it)
@@ -66,8 +74,6 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSBasicBlocks::startInstruction(QV4::Mot
 {
     auto it = m_basicBlocks.find(currentInstructionOffset());
     if (it != m_basicBlocks.end()) {
-        if (!m_skipUntilNextLabel && it != m_basicBlocks.begin())
-            it->second.jumpOrigins.append((--it)->first);
         m_skipUntilNextLabel = false;
     } else if (m_skipUntilNextLabel && !instructionManipulatesContext(type)) {
         return SkipInstruction;
@@ -78,6 +84,11 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSBasicBlocks::startInstruction(QV4::Mot
 
 void QQmlJSBasicBlocks::endInstruction(QV4::Moth::Instr::Type)
 {
+    if (m_skipUntilNextLabel)
+        return;
+    auto it = m_basicBlocks.find(nextInstructionOffset());
+    if (it != m_basicBlocks.end())
+        it->second.jumpOrigins.append(currentInstructionOffset());
 }
 
 void QQmlJSBasicBlocks::generate_Jump(int offset)
@@ -149,6 +160,16 @@ static bool containsAny(const ContainerA &container, const ContainerB &elements)
             return true;
     }
     return false;
+}
+
+template<typename ContainerA, typename ContainerB>
+static bool containsAll(const ContainerA &container, const ContainerB &elements)
+{
+    for (const auto &element : elements) {
+        if (!container.contains(element))
+            return false;
+    }
+    return true;
 }
 
 template<class Key, class T, class Compare = std::less<Key>,
@@ -250,67 +271,75 @@ void QQmlJSBasicBlocks::populateReaderLocations()
             --blockIt;
 
         QList<PendingBlock> blocks = { { {}, blockIt->first, true } };
-        QList<int> processedBlocks;
+        QHash<int, PendingBlock> processedBlocks;
         bool isFirstBlock = true;
 
         while (!blocks.isEmpty()) {
             const PendingBlock block = blocks.takeLast();
+
+            // We can re-enter the first block from the beginning.
+            // We will then find any reads before the write we're currently examining.
+            if (!isFirstBlock)
+                processedBlocks.insert(block.start, block);
+
             auto nextBlock = m_basicBlocks.find(block.start);
             auto currentBlock = nextBlock++;
             bool registerActive = block.registerActive;
             QList<int> conversions = block.conversions;
 
-            if (isFirstBlock
-                    || containsAny(currentBlock->second.readTypes, access.trackedTypes)
-                    || currentBlock->second.readRegisters.contains(writtenRegister)) {
-                const auto blockEnd = (nextBlock == m_basicBlocks.end())
-                        ? m_annotations.end()
-                        : m_annotations.find(nextBlock->first);
+            const auto blockEnd = (nextBlock == m_basicBlocks.end())
+                    ? m_annotations.end()
+                    : m_annotations.find(nextBlock->first);
 
-                auto blockInstr = isFirstBlock
-                        ? (writeIt + 1)
-                        : m_annotations.find(currentBlock->first);
-                for (; blockInstr != blockEnd; ++blockInstr) {
-                    if (registerActive
-                            && blockInstr->second.typeConversions.contains(writtenRegister)) {
-                        conversions.append(blockInstr.key());
-                    }
+            auto blockInstr = isFirstBlock
+                    ? (writeIt + 1)
+                    : m_annotations.find(currentBlock->first);
+            for (; blockInstr != blockEnd; ++blockInstr) {
+                if (registerActive
+                        && blockInstr->second.typeConversions.contains(writtenRegister)) {
+                    conversions.append(blockInstr.key());
+                }
 
-                    for (auto readIt = blockInstr->second.readRegisters.constBegin(),
-                         end = blockInstr->second.readRegisters.constEnd();
-                         readIt != end; ++readIt) {
-                        if (!blockInstr->second.isRename && containsAny(
-                                    readIt->second.conversionOrigins(), access.trackedTypes)) {
-                            Q_ASSERT(readIt->second.isConversion());
-                            access.typeReaders[blockInstr.key()]
-                                    = readIt->second.conversionResult();
-                        }
-                        if (registerActive && readIt->first == writtenRegister)
-                            access.registerReadersAndConversions[blockInstr.key()] = conversions;
+                for (auto readIt = blockInstr->second.readRegisters.constBegin(),
+                     end = blockInstr->second.readRegisters.constEnd();
+                     readIt != end; ++readIt) {
+                    if (!blockInstr->second.isRename && containsAny(
+                                readIt->second.conversionOrigins(), access.trackedTypes)) {
+                        Q_ASSERT(readIt->second.isConversion());
+                        access.typeReaders[blockInstr.key()]
+                                = readIt->second.conversionResult();
                     }
+                    if (registerActive && readIt->first == writtenRegister)
+                        access.registerReadersAndConversions[blockInstr.key()] = conversions;
+                }
 
-                    if (blockInstr->second.changedRegisterIndex == writtenRegister) {
-                        conversions.clear();
-                        registerActive = false;
-                    }
+                if (blockInstr->second.changedRegisterIndex == writtenRegister) {
+                    conversions.clear();
+                    registerActive = false;
                 }
             }
 
-            if (!currentBlock->second.jumpIsUnconditional && nextBlock != m_basicBlocks.end()
-                    && !processedBlocks.contains(nextBlock->first)) {
-                blocks.append({conversions, nextBlock->first, registerActive});
-            }
+            auto scheduleBlock = [&](int blockStart) {
+                // If we find that an already processed block has the register activated by this jump,
+                // we need to re-evaluate it. We also need to propagate any newly found conversions.
+                const auto processed = processedBlocks.find(blockStart);
+                if (processed == processedBlocks.end())
+                    blocks.append({conversions, blockStart, registerActive});
+                else if (registerActive && !processed->registerActive)
+                    blocks.append({conversions, blockStart, registerActive});
+                else if (!containsAll(processed->conversions, conversions))
+                    blocks.append({processed->conversions + conversions, blockStart, registerActive});
+            };
+
+            if (!currentBlock->second.jumpIsUnconditional && nextBlock != m_basicBlocks.end())
+                scheduleBlock(nextBlock->first);
 
             const int jumpTarget = currentBlock->second.jumpTarget;
-            if (jumpTarget != -1 && !processedBlocks.contains(jumpTarget))
-                blocks.append({conversions, jumpTarget, registerActive});
+            if (jumpTarget != -1)
+                scheduleBlock(jumpTarget);
 
-            // We can re-enter the first block from the beginning.
-            // We will then find any reads before the write we're currently examining.
             if (isFirstBlock)
                 isFirstBlock = false;
-            else
-                processedBlocks.append(currentBlock->first);
         }
 
         if (!eraseDeadStore(writeIt))
