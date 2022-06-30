@@ -273,7 +273,7 @@ void QQuickStyleItem::updateGeometry()
 
 #ifdef QT_DEBUG
     if (m_styleItemGeometry.minimumSize.isEmpty())
-        qmlWarning(this) << "minimumSize is empty!";
+        qmlWarning(this) << "(StyleItem) minimumSize is empty!";
 #endif
 
     if (m_styleItemGeometry.implicitSize.isEmpty()) {
@@ -282,6 +282,13 @@ void QQuickStyleItem::updateGeometry()
         m_styleItemGeometry.implicitSize = m_styleItemGeometry.minimumSize;
         qqc2Info() << "implicitSize is empty, using minimumSize instead";
     }
+
+#ifdef QT_DEBUG
+    if (m_styleItemGeometry.implicitSize.width() < m_styleItemGeometry.minimumSize.width())
+        qmlWarning(this) << "(StyleItem) implicit width is smaller than minimum width!";
+    if (m_styleItemGeometry.implicitSize.height() < m_styleItemGeometry.minimumSize.height())
+        qmlWarning(this) << "(StyleItem) implicit height is smaller than minimum height!";
+#endif
 
     if (contentPadding() != oldContentPadding)
         emit contentPaddingChanged();
@@ -401,7 +408,7 @@ void QQuickStyleItem::updatePolish()
 void QQuickStyleItem::addDebugInfo()
 {
     // Example debug strings:
-    // "QQC2_NATIVESTYLE_DEBUG="myButton output contentRect"
+    // "QQC2_NATIVESTYLE_DEBUG="myButton info contentRect"
     // "QQC2_NATIVESTYLE_DEBUG="ComboBox ninepatchmargins"
     // "QQC2_NATIVESTYLE_DEBUG="All layoutrect"
 
