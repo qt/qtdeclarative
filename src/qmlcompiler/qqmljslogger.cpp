@@ -113,7 +113,7 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                 QtCriticalMsg, true },
         QQmlJSLogger::Category { qmlPlugin.name().toString(), QStringLiteral("LintPluginWarnings"),
                                  QStringLiteral("Warn if a qmllint plugin finds an issue"),
-                                 QtWarningMsg }
+                                 QtWarningMsg, true }
     };
 
     return cats;
