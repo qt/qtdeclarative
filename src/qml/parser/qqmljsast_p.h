@@ -20,6 +20,7 @@
 
 #include <private/qqmljsmemorypool_p.h>
 
+#include <QtCore/qtaggedpointer.h>
 #include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
