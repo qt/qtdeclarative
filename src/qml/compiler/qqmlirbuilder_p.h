@@ -584,9 +584,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
     QVector<int>
     generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
-    bool generateCodeForComponents(const QVector<quint32> &componentRoots);
-    bool compileComponent(int contextObject);
-    bool compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex);
+    bool generateRuntimeFunctions(QmlIR::Object *object);
 
 private:
     Document *document;
