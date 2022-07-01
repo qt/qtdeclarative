@@ -51,4 +51,17 @@ Item {
         count: -10
         property bool shouldBeVisible: true
     }
+
+    // script bindings on properties:
+
+    TypeWithExtensionDerived {
+        id: withExtensionDerivedScript
+        str: "hoo" + "ray"
+        count: -10 + 0
+    }
+
+    TypeWithExtensionNamespace {
+        id: withExtensionNamespaceScript
+        count: -10 + 0
+    }
 }

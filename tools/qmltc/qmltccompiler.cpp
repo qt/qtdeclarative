@@ -1176,17 +1176,23 @@ static std::pair<QQmlJSMetaProperty, int> getMetaPropertyIndex(const QQmlJSScope
 {
     auto owner = QQmlJSScope::ownerOfProperty(scope, propertyName).scope;
     Q_ASSERT(owner);
-    auto p = owner->ownProperty(propertyName);
+    const QQmlJSMetaProperty p = owner->ownProperty(propertyName);
     if (!p.isValid())
         return { p, -1 };
     int index = p.index();
     if (index < 0) // this property doesn't have index - comes from QML
         return { p, -1 };
-    // owner is not included in absolute index
 
-    // TODO: we also have to go over extensions here!
-    for (QQmlJSScope::ConstPtr base = owner->baseType(); base; base = base->baseType())
-        index += int(base->ownProperties().size());
+    const auto increment = [&](const QQmlJSScope::ConstPtr &type, QQmlJSScope::ExtensionKind m) {
+        // owner of property is not included in the offset calculation (relative
+        // index is already added as p.index())
+        if (type->isSameType(owner))
+            return;
+        if (m == QQmlJSScope::ExtensionNamespace) // extension namespace properties are ignored
+            return;
+        index += int(type->ownProperties().size());
+    };
+    QQmlJSUtils::traverseFollowingMetaObjectHierarchy(scope, owner, increment);
     return { p, index };
 }
 
@@ -1286,7 +1292,9 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
                 u"this"_s, // NB: always using enclosing object as a scope for the binding
                 static_cast<qsizetype>(objectType->ownRuntimeFunctionIndex(binding.scriptIndex())),
                 bindingTarget, // binding target
-                absoluteIndex, property, valueTypeIndex, accessor.name);
+                // value types are special and are bound through valueTypeIndex
+                accessor.isValueType ? QQmlJSScope::ConstPtr() : objectType, absoluteIndex,
+                property, valueTypeIndex, accessor.name);
         break;
     }
     case QQmlJSMetaPropertyBinding::Script_SignalHandler: {

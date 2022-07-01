@@ -182,8 +182,9 @@ void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
 
 void QmltcCodeGenerator::generate_createBindingOnProperty(
         QStringList *block, const QString &unitVarName, const QString &scope,
-        qsizetype functionIndex, const QString &target, int propertyIndex,
-        const QQmlJSMetaProperty &p, int valueTypeIndex, const QString &subTarget)
+        qsizetype functionIndex, const QString &target, const QQmlJSScope::ConstPtr &targetType,
+        int propertyIndex, const QQmlJSMetaProperty &p, int valueTypeIndex,
+        const QString &subTarget)
 {
     const QString propName = QQmlJSUtils::toLiteral(p.propertyName());
     if (QString bindable = p.bindable(); !bindable.isEmpty()) {
@@ -194,10 +195,19 @@ void QmltcCodeGenerator::generate_createBindingOnProperty(
                 + target + u", " + QString::number(propertyIndex) + u", "
                 + QString::number(valueTypeIndex) + u", " + propName + u")";
         const QString accessor = (valueTypeIndex == -1) ? target : subTarget;
-        *block << QmltcCodeGenerator::wrap_privateClass(accessor, p) + u"->" + bindable
-                        + u"().setBinding(" + createBindingForBindable + u");";
+
+        QStringList prologue;
+        QString value = QmltcCodeGenerator::wrap_privateClass(accessor, p);
+        QStringList epilogue;
+        if (targetType) {
+            auto [pro, v, epi] = QmltcCodeGenerator::wrap_extensionType(targetType, p, value);
+            std::tie(prologue, value, epilogue) = std::make_tuple(pro, v, epi);
+        }
+
+        *block += prologue;
+        *block << value + u"->" + bindable + u"().setBinding(" + createBindingForBindable + u");";
+        *block += epilogue;
     } else {
-        // TODO: test that bindings on private properties also work
         QString createBindingForNonBindable =
                 u"QT_PREPEND_NAMESPACE(QQmlCppBinding)::createBindingForNonBindable(" + unitVarName
                 + u", " + scope + u", " + QString::number(functionIndex) + u", " + target + u", "

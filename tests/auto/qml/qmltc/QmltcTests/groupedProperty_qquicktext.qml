@@ -8,6 +8,7 @@ Text {
 
     font.family: "Helvetica"
     font.pointSize: 4
+    font.letterSpacing: Math.max(2, 3)
 
     Text {
         anchors.topMargin: root.anchors.topMargin

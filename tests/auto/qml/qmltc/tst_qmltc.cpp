@@ -125,6 +125,12 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_attached.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_complex.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/extensionTypeBindings.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/nonStandardInclude.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/memberProperties.qml"),
+
+        QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/SubComponent.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/MainComponent.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/qtbug103956_main.qml"),
 
         QUrl("qrc:/qt/qml/QmltcTests/signalHandlers.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/javaScriptFunctions.qml"),
@@ -686,12 +692,12 @@ void tst_qmltc::extensionTypeBindings()
 
     const auto verifyExtensionType = [](QObject *root) {
         QQmlListReference data(root, "data");
-        QCOMPARE(data.count(), 7);
+        QCOMPARE(data.count(), 9);
 
         // NB: Text object is not at index 0 due to non-QQuickItem-derived types
         // added along with it. This has something to do with QQuickItem's
         // internals that we just accept here
-        auto text = qobject_cast<QQuickText *>(data.at(6));
+        auto text = qobject_cast<QQuickText *>(data.at(8));
         QVERIFY(text);
         auto withExtension = qobject_cast<TypeWithExtension *>(data.at(0));
         QVERIFY(withExtension);
@@ -709,6 +715,12 @@ void tst_qmltc::extensionTypeBindings()
         QVERIFY(qmlWithExtension);
         auto qmlWithBaseTypeExtension = qobject_cast<TypeWithBaseTypeExtension *>(data.at(5));
         QVERIFY(qmlWithBaseTypeExtension);
+
+        // script bindings:
+        auto withExtensionDerivedScript = qobject_cast<TypeWithExtensionDerived *>(data.at(6));
+        QVERIFY(withExtensionDerivedScript);
+        auto withExtensionNamespaceScript = qobject_cast<TypeWithExtensionNamespace *>(data.at(7));
+        QVERIFY(withExtensionNamespaceScript);
 
         QFont font = text->font();
         QCOMPARE(font.letterSpacing(), 13);
@@ -767,6 +779,15 @@ void tst_qmltc::extensionTypeBindings()
         QCOMPARE(qmlWithBaseTypeExtension->property("count").toInt(), -10);
         QVERIFY(qmlWithBaseTypeExtension->property("shouldBeVisibleFromBase").toBool());
         QVERIFY(qmlWithBaseTypeExtension->property("shouldBeVisible").toBool());
+
+        // script bindings:
+        QCOMPARE(withExtensionDerivedScript->getStr(), TypeWithExtensionDerived::unsetStr);
+        QCOMPARE(withExtensionDerivedScript->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(withExtensionDerivedScript->property("str").toString(), u"hooray"_s);
+        QCOMPARE(withExtensionDerivedScript->property("count").toInt(), -10);
+
+        QCOMPARE(withExtensionNamespaceScript->getCount(), -10);
+        QCOMPARE(withExtensionNamespaceScript->property("count").toInt(), -10);
     };
 
     {
@@ -1502,6 +1523,7 @@ void tst_qmltc::groupedProperty_qquicktext()
     QFont font = created.font();
     QCOMPARE(font.family(), u"Helvetica"_s);
     QCOMPARE(font.pointSize(), 4);
+    QCOMPARE(font.letterSpacing(), 3);
 
     QQmlListReference ref(&created, "data");
     QCOMPARE(ref.count(), 1);

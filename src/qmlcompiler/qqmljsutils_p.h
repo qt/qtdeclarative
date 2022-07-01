@@ -256,6 +256,80 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
         }
     }
 
+    /*! \internal
+
+        Traverses the base types and extensions of \a scope in the order aligned
+        with QMetaObjects created at run time for these types and extensions
+        (except that QQmlVMEMetaObject is ignored). \a start is the starting
+        type in the hierarchy where \a act is applied.
+
+        \note To call \a act for every type in the hierarchy, use
+        scope->extensionType().scope as \a start
+    */
+    template<typename Action>
+    static void traverseFollowingMetaObjectHierarchy(const QQmlJSScope::ConstPtr &scope,
+                                                     const QQmlJSScope::ConstPtr &start, Action act)
+    {
+        // Meta objects are arranged in the following way:
+        // * static meta objects are chained first
+        // * dynamic meta objects are added on top - they come from extensions.
+        //   QQmlVMEMetaObject ignored here
+        //
+        // Example:
+        // ```
+        //   class A : public QObject {
+        //       QML_EXTENDED(Ext)
+        //   };
+        //   class B : public A {
+        //       QML_EXTENDED(Ext2)
+        //   };
+        // ```
+        // gives: Ext2 -> Ext -> B -> A -> QObject
+        //        ^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^
+        //        ^^^^^^^^^^^    static meta objects
+        //        dynamic meta objects
+
+        using namespace Qt::StringLiterals;
+        // ignore special extensions
+        constexpr QLatin1String ignoredExtensionNames[] = {
+            // QObject extensions: (not related to C++)
+            "Object"_L1,
+            "ObjectPrototype"_L1,
+        };
+
+        QList<QQmlJSScope::AnnotatedScope> types;
+        QList<QQmlJSScope::AnnotatedScope> extensions;
+        const auto collect = [&](const QQmlJSScope::ConstPtr &type, QQmlJSScope::ExtensionKind m) {
+            if (m == QQmlJSScope::NotExtension) {
+                types.append(QQmlJSScope::AnnotatedScope { type, m });
+                return false;
+            }
+
+            for (const auto &name : ignoredExtensionNames) {
+                if (type->internalName() == name)
+                    return false;
+            }
+            extensions.append(QQmlJSScope::AnnotatedScope { type, m });
+            return false;
+        };
+        searchBaseAndExtensionTypes(scope, collect);
+
+        QList<QQmlJSScope::AnnotatedScope> all;
+        all.reserve(extensions.size() + types.size());
+        // first extensions then types
+        all.append(std::move(extensions));
+        all.append(std::move(types));
+
+        auto begin = all.cbegin();
+        // skip to start
+        while (begin != all.cend() && !begin->scope->isSameType(start))
+            ++begin;
+
+        // iterate over extensions and types starting at a specified point
+        for (; begin != all.cend(); ++begin)
+            act(begin->scope, begin->extensionSpecifier);
+    }
+
     static std::optional<FixSuggestion> didYouMean(const QString &userInput,
                                                    QStringList candidates,
                                                    QQmlJS::SourceLocation location);

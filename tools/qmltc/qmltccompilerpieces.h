@@ -72,9 +72,10 @@ struct QmltcCodeGenerator
     // TODO: 3 separate versions: bindable QML, bindable C++, non-bindable C++
     static void generate_createBindingOnProperty(QStringList *block, const QString &unitVarName,
                                                  const QString &scope, qsizetype functionIndex,
-                                                 const QString &target, int propertyIndex,
-                                                 const QQmlJSMetaProperty &p, int valueTypeIndex,
-                                                 const QString &subTarget);
+                                                 const QString &target,
+                                                 const QQmlJSScope::ConstPtr &targetType,
+                                                 int propertyIndex, const QQmlJSMetaProperty &p,
+                                                 int valueTypeIndex, const QString &subTarget);
 
     static inline void generate_getCompilationUnitFromUrl();
 
