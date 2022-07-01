@@ -36,16 +36,15 @@ ComboBox {
     delegate: ItemDelegate {
         width: control.width
         contentItem: Text {
-            text: modelData
+            text: control.textRole
+                ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole])
+                : modelData
             color: "#21be2b"
             font: control.font
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }
         highlighted: control.highlightedIndex === index
-
-        required property int index
-        required property var modelData
     }
 
     indicator: Canvas {
