@@ -8,28 +8,12 @@ import QtQuick.NativeStyle as NativeStyle
 T.SpinBox {
     id: control
 
-    property bool __nativeBackground: background instanceof NativeStyle.StyleItem
-    property bool nativeIndicators: up.indicator.hasOwnProperty("_qt_default")
-                                    && down.indicator.hasOwnProperty("_qt_default")
-
-    font.pixelSize: background.styleFont(control).pixelSize
-
-    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            90 /* minimum */ )
-    implicitHeight: Math.max(implicitBackgroundHeight, up.implicitIndicatorHeight + down.implicitIndicatorHeight)
+    implicitWidth: Math.max(implicitContentWidth + leftInset + rightInset)
+    implicitHeight: Math.max(implicitContentHeight, up.implicitIndicatorHeight + down.implicitIndicatorHeight)
                     + topInset + bottomInset
 
     spacing: 2
-
-    // Push the background right to make room for the indicators
-    rightInset: nativeIndicators ? up.implicitIndicatorWidth + spacing : 0
-
-    leftPadding: __nativeBackground ? background.contentPadding.left: 0
-    topPadding: __nativeBackground ? background.contentPadding.top: 0
-    rightPadding: (__nativeBackground ? background.contentPadding.right : 0) + rightInset
-    bottomPadding: __nativeBackground ? background.contentPadding.bottom: 0
-
-    readonly property Item __focusFrameTarget: contentItem
+    rightPadding: up.implicitIndicatorWidth + spacing
 
     validator: IntValidator {
         locale: control.locale.name
@@ -37,7 +21,7 @@ T.SpinBox {
         top: Math.max(control.from, control.to)
     }
 
-    contentItem: TextInput {
+    contentItem: TextField {
         text: control.displayText
         font: control.font
         color: control.palette.text
@@ -45,6 +29,7 @@ T.SpinBox {
         selectedTextColor: control.palette.highlightedText
         horizontalAlignment: Qt.AlignLeft
         verticalAlignment: Qt.AlignVCenter
+        implicitWidth: 100 // From IB XCode
 
         topPadding: 2
         bottomPadding: 2
@@ -54,15 +39,12 @@ T.SpinBox {
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
-
-        readonly property Item __focusFrameControl: control
     }
 
     NativeStyle.SpinBox {
         id: upAndDown
         control: control
         subControl: NativeStyle.SpinBox.Up
-        visible: nativeIndicators
         x: up.indicator.x
         y: up.indicator.y
         useNinePatchImage: false
@@ -73,7 +55,6 @@ T.SpinBox {
         y: (parent.height / 2) - height
         implicitWidth: upAndDown.width
         implicitHeight: upAndDown.height / 2
-        property bool _qt_default
     }
 
     down.indicator: Item {
@@ -81,13 +62,5 @@ T.SpinBox {
         y: up.indicator.y + upAndDown.height / 2
         implicitWidth: upAndDown.width
         implicitHeight: upAndDown.height / 2
-        property bool _qt_default
-    }
-
-    background: NativeStyle.SpinBox {
-        control: control
-        subControl: NativeStyle.SpinBox.Frame
-        contentWidth: contentItem.implicitWidth
-        contentHeight: contentItem.implicitHeight
     }
 }
