@@ -14,8 +14,8 @@ Rectangle {
     FrameAnimation {
         id: frameAnimation
         onTriggered: {
-            // Pause when we reach the frame 10
-            if (currentFrame === 10)
+            // Pause when we reach the frame 3
+            if (currentFrame === 3)
                 pause();
         }
     }

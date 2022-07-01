@@ -2200,17 +2200,16 @@ void tst_qquickanimations::frameAnimation2()
     frameAnimation->reset();
     QCOMPARE(frameAnimation->currentFrame(), 0);
 
-    // Start and wait so the animatation runs into frame 10 and pauses
+    // Start and wait so the animation runs into frame 3 and pauses
     frameAnimation->start();
-    QTest::qWait(500);
-    QVERIFY(frameAnimation->isPaused());
-    QCOMPARE(frameAnimation->currentFrame(), 10);
+    QTRY_VERIFY(frameAnimation->isPaused());
+    QVERIFY(frameAnimation->currentFrame() >= 3);
 
     // Then resume the animation
     frameAnimation->resume();
     QVERIFY(!frameAnimation->isPaused());
     QVERIFY(spy.wait(500));
-    QVERIFY(frameAnimation->currentFrame() > 10);
+    QVERIFY(frameAnimation->currentFrame() > 3);
 }
 
 QTEST_MAIN(tst_qquickanimations)
