@@ -101,8 +101,10 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption) 
         // the handle, depending on if it's hovered or not
 
         if (m_overrideState == AlwaysHovered) {
+            styleOption.state &= ~QStyle::State_Sunken;
             styleOption.activeSubControls = (styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine));
         } else if (m_overrideState == NeverHovered) {
+            styleOption.state &= ~QStyle::State_Sunken;
             styleOption.activeSubControls &= ~(styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine));
         } else if (m_overrideState  == AlwaysSunken) {
             styleOption.state |= QStyle::State_Sunken;
