@@ -23,6 +23,7 @@
 #include <private/qqmljstyperesolver_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
+#include <private/qqmlcomponent_p.h>
 
 using namespace Qt::StringLiterals;
 
@@ -107,6 +108,7 @@ private Q_SLOTS:
     void emptyBlockBinding();
     void qualifiedName();
     void resolvedNonUniqueScopes();
+    void compilationUnitsAreCompatible();
 
 public:
     tst_qqmljsscope()
@@ -762,6 +764,57 @@ void tst_qqmljsscope::resolvedNonUniqueScopes()
         QCOMPARE(onXChangedBinding.bindingType(), QQmlJSMetaPropertyBinding::Script);
         QCOMPARE(onXChangedBinding.scriptKind(), QQmlJSMetaPropertyBinding::Script_SignalHandler);
     }
+}
+
+static void
+getRuntimeInfoFromCompilationUnit(const QV4::CompiledData::Unit *unit,
+                                  QList<const QV4::CompiledData::Function *> &runtimeFunctions)
+{
+    QVERIFY(unit);
+    for (uint i = 0; i < unit->functionTableSize; ++i) {
+        const QV4::CompiledData::Function *function = unit->functionAt(i);
+        QVERIFY(function);
+        runtimeFunctions << function;
+    }
+}
+
+// Note: this test is here because we never explicitly test qCompileQmlFile()
+void tst_qqmljsscope::compilationUnitsAreCompatible()
+{
+    const QString url = u"compilationUnitsCompatibility.qml"_s;
+    QList<const QV4::CompiledData::Function *> componentFunctions;
+    QList<const QV4::CompiledData::Function *> cachegenFunctions;
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl(url));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    QQmlComponentPrivate *cPriv = QQmlComponentPrivate::get(&component);
+    QVERIFY(cPriv);
+    auto unit = cPriv->compilationUnit;
+    QVERIFY(unit);
+    QVERIFY(unit->unitData());
+    getRuntimeInfoFromCompilationUnit(unit->unitData(), componentFunctions);
+
+    if (QTest::currentTestFailed())
+        return;
+
+    QmlIR::Document document(false); // we need QmlIR information here
+    QVERIFY(run(url, &document));
+    QVERIFY(document.javaScriptCompilationUnit.unitData());
+    getRuntimeInfoFromCompilationUnit(document.javaScriptCompilationUnit.unitData(),
+                                      cachegenFunctions);
+    if (QTest::currentTestFailed())
+        return;
+
+    QCOMPARE(cachegenFunctions.size(), componentFunctions.size());
+    // name index should be fairly unique to distinguish different functions
+    // within a document. their order must be the same for both qmlcachegen and
+    // qqmltypecompiler (runtime)
+    for (qsizetype i = 0; i < cachegenFunctions.size(); ++i)
+        QCOMPARE(uint(cachegenFunctions[i]->nameIndex), uint(componentFunctions[i]->nameIndex));
 }
 
 QTEST_MAIN(tst_qqmljsscope)

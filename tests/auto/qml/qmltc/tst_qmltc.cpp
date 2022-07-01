@@ -1950,19 +1950,9 @@ void tst_qmltc::listView()
     QCOMPARE(model->count(), 0);
 
     created.appendDigit("5");
-    if (isCacheDisabled()) {
-        // TODO: doesn't work in no_disk_cache mode because
-        // QV4::Lookup::nextIndex values are different. These come from
-        // CompiledData::Lookup table of the compilation unit -- why would that
-        // change during QQmlTypeCompiler's CU generation?
-        QEXPECT_FAIL("", "Doesn't work without qmlcachegen - needs investigation", Continue);
-    }
     QCOMPARE(model->count(), 1);
 
     created.appendOperator("+");
-    if (isCacheDisabled()) { // same as above
-        QEXPECT_FAIL("", "Doesn't work without qmlcachegen - needs investigation", Continue);
-    }
     QCOMPARE(model->count(), 2);
 
     // TODO: add more testing (e.g. check that values are actually recorded)
