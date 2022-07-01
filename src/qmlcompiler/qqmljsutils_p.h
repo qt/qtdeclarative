@@ -29,6 +29,7 @@
 #include <optional>
 #include <functional>
 #include <type_traits>
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
@@ -333,6 +334,9 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     static std::optional<FixSuggestion> didYouMean(const QString &userInput,
                                                    QStringList candidates,
                                                    QQmlJS::SourceLocation location);
+
+    static std::variant<QString, QQmlJS::DiagnosticMessage>
+    sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath);
 };
 
 QT_END_NAMESPACE

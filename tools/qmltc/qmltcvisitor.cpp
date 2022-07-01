@@ -736,32 +736,17 @@ void QmltcVisitor::setRootFilePath()
     m_exportedRootScope->setFilePath(QFileInfo(*firstHeader).fileName());
 }
 
-/*! \internal
-
-    Returns a source directory path for a corresponding \a path which is either
-    a source directory path (rarely - when processing currently-compiled file)
-    or a build directory path (mostly - when importing a module/file).
-*/
 QString QmltcVisitor::sourceDirectoryPath(const QString &path)
 {
-    const QStringList resourcePaths = m_importer->resourceFileMapper()->resourcePaths(
-            QQmlJSResourceFileMapper::localFileFilter(path));
-    // path could be pointing to a source directory already
-    const QString uniquePrefix = u"/qt_qml_module_dir_mapping/"_s;
-    if (resourcePaths.size() != 1 || !resourcePaths[0].startsWith(uniquePrefix)) {
-        // found nothing or path is a source directory path already. either way
-        // return the input here and let the caller take care of it
-        const QString matchedPaths =
-                resourcePaths.isEmpty() ? u"<none>"_s : resourcePaths.join(u", ");
-        qCDebug(lcQmltcCompiler,
-                "Path %s is not a build directory path. Resource paths that matched:\n%s",
-                path.toUtf8().constData(), matchedPaths.toUtf8().constData());
-        return path;
-    }
-    QString sourceDirPath = resourcePaths[0];
-    sourceDirPath.remove(0, uniquePrefix.size());
-    Q_ASSERT(QFileInfo(sourceDirPath).exists());
-    return sourceDirPath;
+    auto result = QQmlJSUtils::sourceDirectoryPath(m_importer, path);
+    if (const QString *srcDirPath = std::get_if<QString>(&result))
+        return *srcDirPath;
+
+    const QQmlJS::DiagnosticMessage *error = std::get_if<QQmlJS::DiagnosticMessage>(&result);
+    Q_ASSERT(error);
+    qCDebug(lcQmltcCompiler, "%s", error->message.toUtf8().constData());
+    // return input as a fallback
+    return path;
 }
 
 QT_END_NAMESPACE

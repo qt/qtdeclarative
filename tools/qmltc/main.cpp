@@ -80,6 +80,12 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "resource file name")
     };
     parser.addOption(resourceOption);
+    QCommandLineOption metaResourceOption {
+        u"meta-resource"_s,
+        QCoreApplication::translate("main", "Qt meta information file (in .qrc format)"),
+        QCoreApplication::translate("main", "meta file name")
+    };
+    parser.addOption(metaResourceOption);
     QCommandLineOption namespaceOption {
         u"namespace"_s, QCoreApplication::translate("main", "Namespace of the generated C++ code"),
         QCoreApplication::translate("main", "namespace")
@@ -160,6 +166,8 @@ int main(int argc, char **argv)
 
     const QStringList resourceFiles = parser.values(resourceOption);
     QQmlJSResourceFileMapper mapper(resourceFiles);
+    const QStringList metaResourceFiles = parser.values(metaResourceOption);
+    QQmlJSResourceFileMapper metaDataMapper(metaResourceFiles);
 
     const auto firstQml = [](const QStringList &paths) {
         auto it = std::find_if(paths.cbegin(), paths.cend(),
@@ -199,6 +207,7 @@ int main(int argc, char **argv)
     }
 
     QQmlJSImporter importer { importPaths, &mapper };
+    importer.setMetaDataMapper(&metaDataMapper);
     auto createQmltcVisitor = [](const QQmlJSScope::Ptr &root, QQmlJSImporter *importer,
                                  QQmlJSLogger *logger, const QString &implicitImportDirectory,
                                  const QStringList &qmldirFiles) -> QQmlJSImportVisitor * {

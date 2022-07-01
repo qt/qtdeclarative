@@ -146,3 +146,47 @@ std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
         return {};
     }
 }
+
+/*! \internal
+
+    Returns a corresponding source directory path for \a buildDirectoryPath
+    Returns empty string on error
+*/
+std::variant<QString, QQmlJS::DiagnosticMessage>
+QQmlJSUtils::sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath)
+{
+    const auto makeError = [](const QString &msg) {
+        return QQmlJS::DiagnosticMessage { msg, QtWarningMsg, QQmlJS::SourceLocation() };
+    };
+
+    if (!importer->metaDataMapper())
+        return makeError(u"QQmlJSImporter::metaDataMapper() is nullptr"_s);
+
+    // for now, meta data contains just a single entry
+    QQmlJSResourceFileMapper::Filter matchAll { QString(), QStringList(),
+                                                QQmlJSResourceFileMapper::Directory
+                                                        | QQmlJSResourceFileMapper::Recurse };
+    QQmlJSResourceFileMapper::Entry entry = importer->metaDataMapper()->entry(matchAll);
+    if (!entry.isValid())
+        return makeError(u"Failed to find meta data entry in QQmlJSImporter::metaDataMapper()"_s);
+    if (!buildDirectoryPath.startsWith(entry.filePath)) // assume source directory path already
+        return makeError(u"The module output directory does not match the build directory path"_s);
+
+    QString qrcPath = buildDirectoryPath;
+    qrcPath.remove(0, entry.filePath.size());
+    qrcPath.prepend(entry.resourcePath);
+    qrcPath.remove(0, 1); // remove extra "/"
+
+    const QStringList sourceDirPaths = importer->resourceFileMapper()->filePaths(
+            QQmlJSResourceFileMapper::resourceFileFilter(qrcPath));
+    if (sourceDirPaths.size() != 1) {
+        const QString matchedPaths =
+                sourceDirPaths.isEmpty() ? u"<none>"_s : sourceDirPaths.join(u", ");
+        return makeError(
+                QStringLiteral("QRC path %1 (deduced from %2) has unexpected number of mappings "
+                               "(%3). File paths that matched:\n%4")
+                        .arg(qrcPath, buildDirectoryPath, QString::number(sourceDirPaths.size()),
+                             matchedPaths));
+    }
+    return sourceDirPaths[0];
+}

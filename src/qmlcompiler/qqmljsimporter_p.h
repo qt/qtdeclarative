@@ -34,8 +34,11 @@ public:
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                    bool useOptionalImports = false);
 
-    QQmlJSResourceFileMapper *resourceFileMapper() { return m_mapper; }
+    QQmlJSResourceFileMapper *resourceFileMapper() const { return m_mapper; }
     void setResourceFileMapper(QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
+
+    QQmlJSResourceFileMapper *metaDataMapper() const { return m_metaDataMapper; }
+    void setMetaDataMapper(QQmlJSResourceFileMapper *mapper) { m_metaDataMapper = mapper; }
 
     ImportedTypes importBuiltins();
     void importQmldirs(const QStringList &qmltypesFiles);
@@ -143,6 +146,7 @@ private:
     QList<QQmlJS::DiagnosticMessage> m_warnings;
     AvailableTypes m_builtins;
     QQmlJSResourceFileMapper *m_mapper = nullptr;
+    QQmlJSResourceFileMapper *m_metaDataMapper = nullptr;
     bool m_useOptionalImports;
 
     ImportVisitorCreator m_createImportVisitor = nullptr;

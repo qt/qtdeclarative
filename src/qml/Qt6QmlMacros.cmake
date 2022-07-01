@@ -609,11 +609,10 @@ function(qt6_add_qml_module target)
 
     # QML tooling might need to map build dir paths to source dir paths. Create
     # a mapping file before qt6_target_qml_sources() to be able to use it
-    if(arg_ENABLE_TYPE_COMPILER)
-        # But: for now, only enable this when dealing with qmltc
-        _qt_internal_qml_map_build_files(${target} "${arg_QML_FILES}" dir_map_qrc)
-        set_property(TARGET ${target} APPEND PROPERTY _qt_generated_qrc_files "${dir_map_qrc}")
-    endif()
+    _qt_internal_qml_map_build_files(${target} ${qt_qml_module_resource_prefix} dir_map_qrc)
+    # use different property from _qt_generated_qrc_files since this qrc is
+    # special (and is not a real resource file)
+    set_property(TARGET ${target} APPEND PROPERTY _qt_qml_meta_qrc_files "${dir_map_qrc}")
 
     set(cache_target)
     qt6_target_qml_sources(${target}
@@ -1150,7 +1149,7 @@ endfunction()
 
 # creates a QRC mapping between QML files in build directory and QML files in
 # source directory
-function(_qt_internal_qml_map_build_files target qml_files qrc_file_out_var)
+function(_qt_internal_qml_map_build_files target qml_module_prefix qrc_file_out_var)
     get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
     if(NOT output_dir)
         # TODO: we might want to support non-qml modules here (think QML
@@ -1161,14 +1160,7 @@ function(_qt_internal_qml_map_build_files target qml_files qrc_file_out_var)
     endif()
 
     set(qrcContents "")
-
-    foreach(qml_file IN LISTS qml_files)
-        get_filename_component(src_dir_path ${qml_file} ABSOLUTE)
-        # Note: follow the logic of cloning the QML file over to build dir
-        __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file})
-        set(build_dir_path "${output_dir}/${file_resource_path}")
-        string(APPEND qrcContents "    <file alias=\"${src_dir_path}\">${build_dir_path}</file>\n")
-    endforeach()
+    string(APPEND qrcContents "    <file alias=\"${qml_module_prefix}\">${output_dir}</file>\n")
 
     # dump the contents into the .qrc file
     set(template_file "${__qt_qml_macros_module_base_dir}/Qt6QmlModuleDirMappingTemplate.qrc.in")
@@ -1234,15 +1226,6 @@ function(_qt_internal_target_enable_qmltc target)
 
     if(NOT TARGET "${target}")
         message(FATAL_ERROR "\"${target}\" is not a known target")
-    endif()
-
-    get_target_property(prefix ${target} QT_QML_MODULE_RESOURCE_PREFIX)
-    if (NOT prefix)
-        message(FATAL_ERROR
-                "Target is not a QML module? QT_QML_MODULE_RESOURCE_PREFIX is unspecified")
-    endif()
-    if(NOT prefix MATCHES [[/$]])
-        string(APPEND prefix "/")
     endif()
 
     get_target_property(target_source_dir ${target} SOURCE_DIR)
@@ -1341,6 +1324,12 @@ function(_qt_internal_target_enable_qmltc target)
     _qt_internal_genex_getjoinedproperty(qrc_args ${target}
         _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
     )
+    # qmltc also needs meta data qrc files when importing types from own module
+    _qt_internal_genex_getjoinedproperty(metadata_qrc_args ${target}
+        _qt_qml_meta_qrc_files "--meta-resource$<SEMICOLON>" "$<SEMICOLON>"
+    )
+    list(APPEND qrc_args ${metadata_qrc_args})
+
     # NB: pass qml files variable as string to preserve its list nature
     # (otherwise we lose all but first element of the list inside a function)
     _qt_internal_qml_add_qmltc_file_mapping_resource(
@@ -1388,6 +1377,7 @@ function(_qt_internal_target_enable_qmltc target)
                 "${file_absolute}"
                 ${qml_module_files}
                 $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
+                $<TARGET_PROPERTY:${target},_qt_qml_meta_qrc_files>
                 ${qmltc_file_map_qrc}
             COMMENT "Compiling ${qml_file_src} with qmltc"
             VERBATIM
