@@ -670,20 +670,7 @@ QSGRhiSupport *QSGRhiSupport::instance()
 
 QString QSGRhiSupport::rhiBackendName() const
 {
-    switch (m_rhiBackend) {
-    case QRhi::Null:
-        return QLatin1String("Null");
-    case QRhi::Vulkan:
-        return QLatin1String("Vulkan");
-    case QRhi::OpenGLES2:
-        return QLatin1String("OpenGL");
-    case QRhi::D3D11:
-        return QLatin1String("D3D11");
-    case QRhi::Metal:
-        return QLatin1String("Metal");
-    default:
-        return QLatin1String("Unknown");
-    }
+    return QString::fromUtf8(QRhi::backendName(m_rhiBackend));
 }
 
 QSGRendererInterface::GraphicsApi QSGRhiSupport::graphicsApi() const
