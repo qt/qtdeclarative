@@ -1984,61 +1984,23 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     return runtimeFunctionIndices;
 }
 
-bool JSCodeGen::generateCodeForComponents(const QVector<quint32> &componentRoots)
+bool JSCodeGen::generateRuntimeFunctions(QmlIR::Object *object)
 {
-    for (int i = 0; i < componentRoots.count(); ++i) {
-        if (!compileComponent(componentRoots.at(i)))
-            return false;
-    }
-
-    return compileComponent(/*root object*/0);
-}
-
-bool JSCodeGen::compileComponent(int contextObject)
-{
-    const QmlIR::Object *obj = document->objects.at(contextObject);
-    if (obj->flags & QV4::CompiledData::Object::IsComponent && !obj->isInlineComponent) {
-        Q_ASSERT(obj->bindingCount() == 1);
-        const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
-        Q_ASSERT(componentBinding->type() == QV4::CompiledData::Binding::Type_Object);
-        contextObject = componentBinding->value.objectIndex;
-    }
-
-    return compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject);
-}
-
-bool JSCodeGen::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
-{
-    QmlIR::Object *object = document->objects.at(objectIndex);
-    if (object->flags & QV4::CompiledData::Object::IsComponent && !object->isInlineComponent)
+    if (object->functionsAndExpressions->count == 0)
         return true;
 
-    for (auto it = object->inlineComponentsBegin(); it != object->inlineComponentsEnd(); ++it)
-        compileComponent(it->objectIndex);
-
-    if (object->functionsAndExpressions->count > 0) {
-        QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
-        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
-            functionsToCompile << *foe;
-        const QVector<int> runtimeFunctionIndices = generateJSCodeForFunctionsAndBindings(functionsToCompile);
-        if (hasError())
-            return false;
-
-        object->runtimeFunctionIndices.allocate(document->jsParserEngine.pool(),
-                                                runtimeFunctionIndices);
+    QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
+    functionsToCompile.reserve(object->functionsAndExpressions->count);
+    for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe;
+         foe = foe->next) {
+        functionsToCompile << *foe;
     }
 
-    for (const QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
-        const Binding::Type bindingType = binding->type();
-        if (bindingType < QV4::CompiledData::Binding::Type_Object)
-            continue;
+    const auto runtimeFunctionIndices = generateJSCodeForFunctionsAndBindings(functionsToCompile);
+    if (hasError())
+        return false;
 
-        int target = binding->value.objectIndex;
-        int scope = bindingType == QV4::CompiledData::Binding::Type_Object ? target : scopeObjectIndex;
-
-        if (!compileJavaScriptCodeInObjectsRecursively(binding->value.objectIndex, scope))
-            return false;
-    }
-
+    object->runtimeFunctionIndices.allocate(document->jsParserEngine.pool(),
+                                            runtimeFunctionIndices);
     return true;
 }
