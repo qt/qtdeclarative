@@ -133,15 +133,6 @@ public:
             QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
             bool *typeRecursionDetected = nullptr) const;
 
-    bool resolveType(
-            QQmlImportNamespace *ns, const QHashedStringRef &type, QQmlType *type_return,
-            QTypeRevision *version_return,
-            QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType) const
-    {
-        return ns->resolveType(m_typeLoader, type, version_return, type_return, nullptr, nullptr,
-                               registrationType);
-    }
-
     QTypeRevision addImplicitImport(
             QQmlImportDatabase *importDb, QString *localQmldir, QList<QQmlError> *errors)
     {
