@@ -55,3 +55,16 @@ void Person::setThings(const QVariantList &things)
     m_things = things;
     emit thingsChanged();
 }
+
+QList<Barzle *> Person::barzles() const
+{
+    return m_barzles;
+}
+
+void Person::setBarzles(const QList<Barzle *> &barzles)
+{
+    if (m_barzles == barzles)
+        return;
+    m_barzles = barzles;
+    emit barzlesChanged();
+}

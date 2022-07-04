@@ -44,6 +44,7 @@ set(qml_files
     array.qml
     asCast.qml
     attachedBaseEnum.qml
+    badSequence.qml
     bindToValueType.qml
     blockComments.qml
     boundComponents.qml
