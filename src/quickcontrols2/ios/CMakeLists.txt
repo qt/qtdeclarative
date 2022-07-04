@@ -33,6 +33,7 @@ set(qml_files
     "TabBar.qml"
     "ToolBar.qml"
     "MenuBar.qml"
+    "Drawer.qml"
 )
 
 set_source_files_properties(Slider.qml PROPERTIES
