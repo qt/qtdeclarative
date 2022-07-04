@@ -8,6 +8,8 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 
+class Barzle : public QObject {};
+
 class Person : public QObject
 {
     Q_OBJECT
@@ -15,6 +17,7 @@ class Person : public QObject
     Q_PROPERTY(int shoeSize READ shoeSize WRITE setShoeSize NOTIFY shoeSizeChanged FINAL)
     Q_PROPERTY(int pain READ pain CONSTANT FINAL)
     Q_PROPERTY(QVariantList things READ things WRITE setThings NOTIFY thingsChanged FINAL)
+    Q_PROPERTY(QList<Barzle *> barzles READ barzles WRITE setBarzles NOTIFY barzlesChanged FINAL)
     QML_ELEMENT
 public:
     Person(QObject *parent = nullptr);
@@ -35,15 +38,29 @@ public:
     QVariantList things() const;
     void setThings(const QVariantList &things);
 
+    QList<Barzle *> barzles() const;
+    void setBarzles(const QList<Barzle *> &foozles);
+
 signals:
     void nameChanged();
     void shoeSizeChanged();
     void thingsChanged();
+    void barzlesChanged();
 
 private:
     QString m_name;
     int m_shoeSize;
     QVariantList m_things;
+    QList<Barzle *> m_barzles;
 };
+
+class FoozleListRegistration
+{
+    Q_GADGET
+    QML_FOREIGN(QList<Barzle *>)
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(Barzle *)
+};
+
 
 #endif // PERSON_H

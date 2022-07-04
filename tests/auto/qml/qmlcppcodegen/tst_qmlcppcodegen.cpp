@@ -127,6 +127,7 @@ private slots:
     void unstoredUndefined();
     void registerPropagation();
     void argumentConversion();
+    void badSequence();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2337,6 +2338,29 @@ void tst_QmlCppCodegen::argumentConversion()
     QCOMPARE(o->property("c").toDouble(), 3.0);
     QCOMPARE(o->property("d").toDouble(), -1.0);
     QCOMPARE(o->property("f").toDouble(), 10.0);
+}
+
+void tst_QmlCppCodegen::badSequence()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/badSequence.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    Person *self = qobject_cast<Person *>(o.data());
+    QVERIFY(self); QVERIFY(self->barzles().isEmpty());
+
+    Person *other = o->property("other").value<Person *>();
+    QVERIFY(other);
+
+    QVERIFY(other->barzles().isEmpty());
+
+    Barzle f1;
+    Barzle f2;
+    const QList<Barzle *> barzles { &f1, &f2 };
+
+    other->setBarzles(barzles);
+    QCOMPARE(self->barzles(), barzles);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

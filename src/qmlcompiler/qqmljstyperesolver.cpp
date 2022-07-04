@@ -679,9 +679,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
         return m_intType;
 
     if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
-        return equals(type, m_listPropertyType)
-                ? type
-                : listType(genericType(type->valueType()), UseQObjectList);
+        if (equals(type, m_listPropertyType))
+            return type;
+        if (const QQmlJSScope::ConstPtr valueType = type->valueType())
+            return listType(genericType(valueType), UseQObjectList);
     }
 
     return m_varType;
