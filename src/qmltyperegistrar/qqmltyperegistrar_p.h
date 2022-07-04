@@ -31,7 +31,7 @@ class QmlTypeRegistrar
     QTypeRevision m_moduleVersion;
     QList<quint8> m_pastMajorVersions;
     QStringList m_includes;
-    bool m_followForeignVersioning;
+    bool m_followForeignVersioning = false;
     QVector<QJsonObject> m_types;
     QVector<QJsonObject> m_foreignTypes;
     QStringList m_referencedTypes;
