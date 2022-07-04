@@ -31,8 +31,7 @@ function(_qt_internal_generate_android_qml_deployment_settings out_var target)
     # QML import paths
     if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
         # Need to prepend the default qml module output directory to take precedence
-        # over other qml import paths. By default QT_QML_OUTPUT_DIRECTORY is set to
-        # ${CMAKE_BINARY_DIR}/android-qml for Android.
+        # over other qml import paths.
         get_target_property(native_qml_import_paths "${target}" _qt_native_qml_import_paths)
         if(native_qml_import_paths)
             list(PREPEND native_qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")

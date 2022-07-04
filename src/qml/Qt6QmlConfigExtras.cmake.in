@@ -18,10 +18,3 @@ if(NOT QT_NO_CREATE_TARGETS)
     unset(__qt_qml_target)
     unset(__qt_qml_aliased_target)
 endif()
-
-if(ANDROID)
-     # Set the default staging path of qml modules when building for Android
-    if("${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
-        set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/android-qml")
-    endif()
-endif()
