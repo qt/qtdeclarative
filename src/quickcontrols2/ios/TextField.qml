@@ -17,8 +17,9 @@ T.TextField {
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
-    leftPadding: 6
-    rightPadding: 8
+    padding: 6
+    topPadding: 7
+    bottomPadding: 7
 
     color: control.palette.text
     selectionColor: control.palette.highlight
@@ -48,7 +49,7 @@ T.TextField {
         implicitWidth: 97
         radius: 4
 
-        border.width: 1
+        border.width: 0.5
         border.color: control.palette.mid
         color: control.palette.base
     }
