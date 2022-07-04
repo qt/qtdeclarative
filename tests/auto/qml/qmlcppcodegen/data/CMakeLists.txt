@@ -67,6 +67,7 @@ set(qml_files
     dialog.qml
     dynamicscene.qml
     enumInvalid.qml
+    enumLookup.qml
     enumScope.qml
     enumsInOtherObject.qml
     enumsUser.qml

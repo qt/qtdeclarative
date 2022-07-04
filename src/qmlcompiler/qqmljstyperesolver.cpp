@@ -675,11 +675,11 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
         return type;
     }
 
-    if (isNumeric(type))
-        return m_realType;
-
     if (type->scopeType() == QQmlJSScope::EnumScope)
         return m_intType;
+
+    if (isNumeric(type))
+        return m_realType;
 
     if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
         if (equals(type, m_listPropertyType))
