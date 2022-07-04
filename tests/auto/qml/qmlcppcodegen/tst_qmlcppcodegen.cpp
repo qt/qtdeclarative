@@ -128,6 +128,7 @@ private slots:
     void registerPropagation();
     void argumentConversion();
     void badSequence();
+    void enumLookup();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2361,6 +2362,16 @@ void tst_QmlCppCodegen::badSequence()
 
     other->setBarzles(barzles);
     QCOMPARE(self->barzles(), barzles);
+}
+
+void tst_QmlCppCodegen::enumLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/enumLookup.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("ready").toBool(), true);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

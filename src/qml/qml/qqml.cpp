@@ -913,6 +913,9 @@ static bool isTypeCompatible(QMetaType lookupType, QMetaType propertyType)
 
         if (!foundMetaObject)
             return false;
+    } else if (lookupType == QMetaType::fromType<int>()
+               && propertyType.flags() & QMetaType::IsEnumeration) {
+        return true;
     } else if (propertyType != lookupType) {
         return false;
     }

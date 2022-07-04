@@ -1591,15 +1591,16 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
     };
 
     const auto isIntCompatible = [this](const QQmlJSRegisterContent &content) {
-        return content.isEnumeration()
-                || m_typeResolver->registerContains(content, m_typeResolver->intType());
+        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
+        return contained->scopeType() == QQmlJSScope::EnumScope
+                || m_typeResolver->equals(contained, m_typeResolver->intType());
     };
 
     const auto accumulatorIn = m_state.accumulatorIn();
     const auto lhsRegister = m_state.registers[lhs];
 
     // If the types are primitive, we compare directly ...
-    if (m_typeResolver->isPrimitive(accumulatorIn)) {
+    if (m_typeResolver->isPrimitive(accumulatorIn) || accumulatorIn.isEnumeration()) {
         if (m_typeResolver->registerContains(
                     accumulatorIn, m_typeResolver->containedType(lhsRegister))) {
             addReadRegister(lhs, accumulatorIn);

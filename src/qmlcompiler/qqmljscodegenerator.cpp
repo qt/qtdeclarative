@@ -1848,12 +1848,19 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
     const QQmlJSScope::ConstPtr stored = content.storedType();
     if (m_typeResolver->registerContains(content, stored))
         return u'&' + var;
-    else if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType()))
+
+    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType()))
         return var + u".data()"_s;
-    else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+
+    if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
         return u'&' + var;
-    else
-        reject(u"content pointer of non-QVariant wrapper type "_s + content.descriptiveName());
+
+    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->intType())
+             && m_typeResolver->containedType(content)->scopeType() == QQmlJSScope::EnumScope) {
+        return u'&' + var;
+    }
+
+    reject(u"content pointer of non-QVariant wrapper type "_s + content.descriptiveName());
     return QString();
 }
 
@@ -1864,12 +1871,19 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
                 m_typeResolver->containedType(content));
     if (m_typeResolver->equals(contained, stored))
         return metaTypeFromType(stored);
-    else if (m_typeResolver->equals(stored, m_typeResolver->varType()))
+
+    if (m_typeResolver->equals(stored, m_typeResolver->varType()))
         return var + u".metaType()"_s; // We expect the QVariant to be initialized
-    else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+
+    if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
         return metaTypeFromName(contained);
-    else
-        reject(u"content type of non-QVariant wrapper type "_s + content.descriptiveName());
+
+    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->intType())
+             && m_typeResolver->containedType(content)->scopeType() == QQmlJSScope::EnumScope) {
+        return metaTypeFromType(m_typeResolver->intType());
+    }
+
+    reject(u"content type of non-QVariant wrapper type "_s + content.descriptiveName());
     return QString();
 }
 
