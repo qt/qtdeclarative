@@ -4,8 +4,9 @@ Rectangle {
     id: whiteRect
     width: 200
     height: 200
-    color: "white"
+    color: ma.pressed ? "lightsteelblue" : "white"
     MouseArea {
+        id: ma
         objectName: "mousearea"
         anchors.fill: parent
     }
