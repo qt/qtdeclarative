@@ -32,9 +32,14 @@ namespace QV4 {
 
 struct ScopedValue;
 
+inline bool hasExceptionOrIsInterrupted(ExecutionEngine *engine)
+{
+    return engine->hasException || engine->isInterrupted.loadRelaxed();
+}
+
 #define CHECK_EXCEPTION() \
     do { \
-        if (scope.hasException() || scope.engine->isInterrupted.loadRelaxed()) { \
+        if (hasExceptionOrIsInterrupted(scope.engine)) { \
             return QV4::Encode::undefined(); \
         } \
     } while (false)

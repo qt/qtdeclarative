@@ -547,7 +547,7 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
 {
     Scope scope(b);
     QV4::ScopedObject o(scope, thisObject);
-    if (!o || !o->isListType())
+    if (!o || !o->isV4SequenceType())
         THROW_TYPE_ERROR();
 
     if (argc >= 2)
@@ -610,7 +610,7 @@ ReturnedValue SequencePrototype::fromData(ExecutionEngine *engine, QMetaType typ
 
 QVariant SequencePrototype::toVariant(const Sequence *object)
 {
-    Q_ASSERT(object->isListType());
+    Q_ASSERT(object->isV4SequenceType());
     return object->toVariant();
 }
 

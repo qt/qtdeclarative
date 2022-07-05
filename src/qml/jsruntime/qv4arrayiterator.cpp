@@ -36,7 +36,6 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
     quint32 index = thisObject->d()->nextIndex;
     IteratorKind itemKind = thisObject->d()->iterationKind;
 
-    Scoped<TypedArray> ta(scope, a->as<TypedArray>());
     quint32 len = a->getLength();
 
     if (index >= len) {

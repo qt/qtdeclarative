@@ -587,21 +587,6 @@ void ArrayData::insert(Object *o, uint index, const Value *v, bool isAccessor)
         s->setArrayData(o->engine(), n->value + Object::SetterOffset, v[Object::SetterOffset]);
 }
 
-
-class ArrayElementLessThan
-{
-public:
-    inline ArrayElementLessThan(ExecutionEngine *engine, const Value &comparefn)
-        : m_engine(engine), m_comparefn(comparefn) {}
-
-    bool operator()(Value v1, Value v2) const;
-
-private:
-    ExecutionEngine *m_engine;
-    const Value &m_comparefn;
-};
-
-
 bool ArrayElementLessThan::operator()(Value v1, Value v2) const
 {
     Scope scope(m_engine);
@@ -633,60 +618,6 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
 
     return p1s->toQString() < p2s->toQString();
 }
-
-template <typename RandomAccessIterator, typename T, typename LessThan>
-void sortHelper(RandomAccessIterator start, RandomAccessIterator end, const T &t, LessThan lessThan)
-{
-top:
-    int span = int(end - start);
-    if (span < 2)
-        return;
-
-    --end;
-    RandomAccessIterator low = start, high = end - 1;
-    RandomAccessIterator pivot = start + span / 2;
-
-    if (lessThan(*end, *start))
-        qSwap(*end, *start);
-    if (span == 2)
-        return;
-
-    if (lessThan(*pivot, *start))
-        qSwap(*pivot, *start);
-    if (lessThan(*end, *pivot))
-        qSwap(*end, *pivot);
-    if (span == 3)
-        return;
-
-    qSwap(*pivot, *end);
-
-    while (low < high) {
-        while (low < high && lessThan(*low, *end))
-            ++low;
-
-        while (high > low && lessThan(*end, *high))
-            --high;
-
-        if (low < high) {
-            qSwap(*low, *high);
-            ++low;
-            --high;
-        } else {
-            break;
-        }
-    }
-
-    if (lessThan(*low, *end))
-        ++low;
-
-    qSwap(*end, *low);
-    sortHelper(start, low, t, lessThan);
-
-    start = low + 1;
-    ++end;
-    goto top;
-}
-
 
 void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &comparefn, uint len)
 {
@@ -778,10 +709,10 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
     }
 
 
-    ArrayElementLessThan lessThan(engine, static_cast<const FunctionObject &>(comparefn));
+    ArrayElementLessThan lessThan(engine, comparefn);
 
     Value *begin = thisObject->arrayData()->values.values;
-    sortHelper(begin, begin + len, *begin, lessThan);
+    sortHelper(begin, begin + len, lessThan);
 
 #ifdef CHECK_SPARSE_ARRAYS
     thisObject->initSparseArray();

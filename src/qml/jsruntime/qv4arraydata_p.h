@@ -231,6 +231,74 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static uint length(const Heap::ArrayData *d);
 };
 
+class ArrayElementLessThan
+{
+public:
+    inline ArrayElementLessThan(ExecutionEngine *engine, const Value &comparefn)
+        : m_engine(engine), m_comparefn(comparefn) {}
+
+    bool operator()(Value v1, Value v2) const;
+
+private:
+    ExecutionEngine *m_engine;
+    const Value &m_comparefn;
+};
+
+template <typename RandomAccessIterator, typename LessThan>
+void sortHelper(RandomAccessIterator start, RandomAccessIterator end, LessThan lessThan)
+{
+top:
+    using std::swap;
+
+    int span = int(end - start);
+    if (span < 2)
+        return;
+
+    --end;
+    RandomAccessIterator low = start, high = end - 1;
+    RandomAccessIterator pivot = start + span / 2;
+
+    if (lessThan(*end, *start))
+        swap(*end, *start);
+    if (span == 2)
+        return;
+
+    if (lessThan(*pivot, *start))
+        swap(*pivot, *start);
+    if (lessThan(*end, *pivot))
+        swap(*end, *pivot);
+    if (span == 3)
+        return;
+
+    swap(*pivot, *end);
+
+    while (low < high) {
+        while (low < high && lessThan(*low, *end))
+            ++low;
+
+        while (high > low && lessThan(*end, *high))
+            --high;
+
+        if (low < high) {
+            swap(*low, *high);
+            ++low;
+            --high;
+        } else {
+            break;
+        }
+    }
+
+    if (lessThan(*low, *end))
+        ++low;
+
+    swap(*end, *low);
+    sortHelper(start, low, lessThan);
+
+    start = low + 1;
+    ++end;
+    goto top;
+}
+
 namespace Heap {
 
 inline uint ArrayData::mappedIndex(uint index) const

@@ -696,7 +696,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<NumberPrototype *>(numberPrototype())->init(this, numberCtor());
     static_cast<BooleanPrototype *>(booleanPrototype())->init(this, booleanCtor());
     static_cast<ArrayPrototype *>(arrayPrototype())->init(this, arrayCtor());
-    static_cast<PropertyListPrototype *>(propertyListPrototype())->init(this);
+    static_cast<PropertyListPrototype *>(propertyListPrototype())->init();
     static_cast<DatePrototype *>(datePrototype())->init(this, dateCtor());
     static_cast<FunctionPrototype *>(functionPrototype())->init(this, functionCtor());
     static_cast<GeneratorPrototype *>(generatorPrototype())->init(this, generatorFunctionCtor());
