@@ -26,7 +26,7 @@ QV4::CompiledData::Location QQmlQmldirData::importLocation(QQmlTypeLoader::Blob 
 void QQmlQmldirData::setPriority(QQmlTypeLoader::Blob *blob,
                                  QQmlTypeLoader::Blob::PendingImportPtr import, int priority)
 {
-    m_imports.insert(blob, { import, priority });
+    m_imports.insert(blob, { std::move(import), priority });
 }
 
 void QQmlQmldirData::dataReceived(const SourceCodeData &data)

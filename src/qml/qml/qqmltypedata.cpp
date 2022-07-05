@@ -699,7 +699,7 @@ void QQmlTypeData::allDependenciesDone()
                 for (auto keyIt = m_unresolvedImports.constBegin(),
                           keyEnd = m_unresolvedImports.constEnd();
                      keyIt != keyEnd; ++keyIt) {
-                    PendingImportPtr import = *keyIt;
+                    const PendingImportPtr &import = *keyIt;
                     QQmlError error;
                     error.setDescription(QQmlTypeLoader::tr("module \"%1\" is not installed").arg(import->uri));
                     error.setUrl(m_importCache->baseUrl());

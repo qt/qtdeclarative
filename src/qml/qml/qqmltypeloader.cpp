@@ -486,7 +486,7 @@ bool QQmlTypeLoader::Blob::fetchQmldir(const QUrl &url, PendingImportPtr import,
     return true;
 }
 
-bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, PendingImportPtr import, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
     QString qmldirIdentifier = data->urlString();
     QString qmldirUrl = qmldirIdentifier.left(qmldirIdentifier.lastIndexOf(QLatin1Char('/')) + 1);
@@ -528,7 +528,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
     return true;
 }
 
-bool QQmlTypeLoader::Blob::addScriptImport(PendingImportPtr import)
+bool QQmlTypeLoader::Blob::addScriptImport(const QQmlTypeLoader::Blob::PendingImportPtr &import)
 {
     QUrl scriptUrl = finalUrl().resolved(QUrl(import->uri));
     QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
@@ -537,7 +537,7 @@ bool QQmlTypeLoader::Blob::addScriptImport(PendingImportPtr import)
     return true;
 }
 
-bool QQmlTypeLoader::Blob::addFileImport(PendingImportPtr import, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
     QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
     QQmlImports::ImportFlags flags;
@@ -569,7 +569,7 @@ bool QQmlTypeLoader::Blob::addFileImport(PendingImportPtr import, QList<QQmlErro
     return true;
 }
 
-bool QQmlTypeLoader::Blob::addLibraryImport(PendingImportPtr import, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
     QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
 
@@ -784,8 +784,7 @@ bool QQmlTypeLoader::Blob::loadDependentImports(
     return true;
 }
 
-bool QQmlTypeLoader::Blob::loadImportDependencies(
-        PendingImportPtr currentImport, const QString &qmldirUri, QQmlImports::ImportFlags flags,
+bool QQmlTypeLoader::Blob::loadImportDependencies(const QQmlTypeLoader::Blob::PendingImportPtr &currentImport, const QString &qmldirUri, QQmlImports::ImportFlags flags,
         QList<QQmlError> *errors)
 {
     const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirUri);

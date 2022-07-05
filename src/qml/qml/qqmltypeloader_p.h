@@ -81,12 +81,12 @@ public:
         bool addImport(PendingImportPtr import, QList<QQmlError> *errors);
 
         bool fetchQmldir(const QUrl &url, PendingImportPtr import, int priority, QList<QQmlError> *errors);
-        bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, PendingImportPtr import, QList<QQmlError> *errors);
+        bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, const PendingImportPtr &import, QList<QQmlError> *errors);
 
     private:
-        bool addScriptImport(PendingImportPtr import);
-        bool addFileImport(PendingImportPtr import, QList<QQmlError> *errors);
-        bool addLibraryImport(PendingImportPtr import, QList<QQmlError> *errors);
+        bool addScriptImport(const PendingImportPtr &import);
+        bool addFileImport(const PendingImportPtr &import, QList<QQmlError> *errors);
+        bool addLibraryImport(const PendingImportPtr &import, QList<QQmlError> *errors);
 
         virtual bool qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &, QList<QQmlError> *);
 
@@ -95,7 +95,7 @@ public:
         void dependencyComplete(QQmlDataBlob *) override;
 
         bool loadImportDependencies(
-                PendingImportPtr currentImport, const QString &qmldirUri,
+                const PendingImportPtr &currentImport, const QString &qmldirUri,
                 QQmlImports::ImportFlags flags, QList<QQmlError> *errors);
 
     protected:
