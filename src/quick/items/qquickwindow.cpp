@@ -1470,8 +1470,11 @@ bool QQuickWindow::event(QEvent *event)
         // or fix QTBUG-90851 so that the event always has points?
         bool ret = (da && da->event(event));
 
-        // failsafe: never allow any kind of grab to persist after release
-        if (pe->isEndEvent()) {
+        // failsafe: never allow any kind of grab to persist after release,
+        // unless we're waiting for a synth event from QtGui (as with most tablet events)
+        if (pe->isEndEvent() && !(QQuickDeliveryAgentPrivate::isTabletEvent(pe) &&
+                                  (qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTabletEvents) ||
+                                   QWindowSystemInterfacePrivate::TabletEvent::platformSynthesizesMouse))) {
             if (pe->isSinglePointEvent()) {
                 if (static_cast<QSinglePointEvent *>(pe)->buttons() == Qt::NoButton) {
                     auto &firstPt = pe->point(0);
