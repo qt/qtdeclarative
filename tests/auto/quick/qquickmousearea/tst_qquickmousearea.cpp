@@ -42,6 +42,7 @@
 #include <QtGui/QCursor>
 #include <QtGui/QScreen>
 #include <qpa/qwindowsysteminterface.h>
+#include <qpa/qwindowsysteminterface_p.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -159,6 +160,9 @@ private slots:
     void containsMouseAndVisibility();
     void doubleClickToHide();
     void releaseFirstTouchAfterSecond();
+#if QT_CONFIG(tabletevent)
+    void tabletStylusTap();
+#endif
 
 private:
     int startDragDistance() const {
@@ -2419,6 +2423,37 @@ void tst_QQuickMouseArea::releaseFirstTouchAfterSecond() // QTBUG-103766
     QTest::touchEvent(&window, device).release(0, {20, 20});
     QTRY_COMPARE(releaseSpy.count(), 1);
 }
+
+#if QT_CONFIG(tabletevent)
+void tst_QQuickMouseArea::tabletStylusTap()
+{
+    QVERIFY(qApp->testAttribute(Qt::AA_SynthesizeMouseForUnhandledTabletEvents)); // MouseArea depends on it
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("simple.qml")));
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+    QSignalSpy pressSpy(mouseArea, SIGNAL(pressed(QQuickMouseEvent*)));
+    QSignalSpy releaseSpy(mouseArea, &QQuickMouseArea::released);
+    QSignalSpy clickSpy(mouseArea, &QQuickMouseArea::clicked);
+    const qint64 stylusId = 1234567890;
+
+    const QPoint point(100,100);
+    QWindowSystemInterface::handleTabletEvent(&window, point, window.mapToGlobal(point),
+            int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
+            Qt::LeftButton, 0.5, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
+    if (QWindowSystemInterfacePrivate::TabletEvent::platformSynthesizesMouse)
+        QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, point); // simulate what the platform does
+    QTRY_COMPARE(pressSpy.count(), 1);
+    QWindowSystemInterface::handleTabletEvent(&window, point, window.mapToGlobal(point),
+            int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
+            Qt::NoButton, 0.5, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
+    if (QWindowSystemInterfacePrivate::TabletEvent::platformSynthesizesMouse)
+        QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, point);
+    QTRY_COMPARE(releaseSpy.count(), 1);
+    QCOMPARE(clickSpy.count(), 1);
+    QCOMPARE(pressSpy.count(), 1);
+}
+#endif
 
 QTEST_MAIN(tst_QQuickMouseArea)
 
