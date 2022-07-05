@@ -164,7 +164,7 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
 
     QJsonArray categories = pluginMetaData[u"loggingCategories"].toArray();
 
-    for (const QJsonValue &value : categories) {
+    for (const QJsonValue value : categories) {
         if (!value.isObject()) {
             qWarning() << pluginName << "has invalid loggingCategories entries, skipping";
             return false;

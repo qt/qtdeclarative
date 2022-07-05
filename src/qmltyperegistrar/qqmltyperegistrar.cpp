@@ -409,7 +409,7 @@ void QmlTypeRegistrar::write(FILE *output)
         }
     }
 
-    for (const auto &[qmlName, exportsForSameQmlName] : qmlElementInfos.asKeyValueRange()) {
+    for (const auto [qmlName, exportsForSameQmlName] : qmlElementInfos.asKeyValueRange()) {
         // needs a least two cpp classes exporting the same qml element to potentially have a
         // conflict
         if (exportsForSameQmlName.size() < 2)
