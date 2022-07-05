@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 qt_commandline_option(style-fusion TYPE boolean NAME quickcontrols2-fusion)
 qt_commandline_option(style-imagine TYPE boolean NAME quickcontrols2-imagine)
 qt_commandline_option(style-ios TYPE boolean NAME quickcontrols2-ios)

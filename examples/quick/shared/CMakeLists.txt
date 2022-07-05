@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
 set_source_files_properties(CheckBox.qml TabSet.qml TextField.qml
     PROPERTIES
         QT_QML_SOURCE_VERSIONS 2.1

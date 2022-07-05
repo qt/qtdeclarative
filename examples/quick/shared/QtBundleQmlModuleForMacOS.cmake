@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
 function(add_qml_module_to_macos_app_bundle app_target qml_plugin_target qml_module_uri)
     if(QT6_IS_SHARED_LIBS_BUILD AND APPLE)
         # The application's main.cpp adds an explicit QML import path to look for qml module plugins

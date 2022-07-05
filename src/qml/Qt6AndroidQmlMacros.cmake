@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 # The function collects qml root paths and sets the QT_QML_ROOT_PATH property to the ${target}
 # based on the provided qml source files.
 function(_qt_internal_collect_qml_root_paths target)

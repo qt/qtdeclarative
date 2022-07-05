@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 # Generated from desktopgallery.pro.
 # special case skip regeneration
 # Remove the skip, after somebody figures out if this is supposed

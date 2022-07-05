@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 set(qml_type_files builtins.qmltypes jsroot.qmltypes)
 
 qt_path_join(qml_install_dir "${QT_INSTALL_DIR}" "${INSTALL_QMLDIR}")

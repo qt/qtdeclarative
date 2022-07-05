@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 # This library exists because QuickDialogs2 and QuickDialogs2QuickImpl
 # both need QQuickNameFilter. QQuickNameFilter was originally in
 # QuickDialogs2. Since QuickDialogs2 already links to
