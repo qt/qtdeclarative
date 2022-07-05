@@ -107,7 +107,7 @@ void registerTypes()
 
     {
         // A metatype for the namespace to hold the enums
-        static const auto metaType = QQmlPrivate::metaTypeForNamespace(
+        Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(
                     [](const QtPrivate::QMetaTypeInterface *) {
             return &ValueTypeWithEnum1::staticMetaObject;
         }, "ValueTypeWithEnum1");
@@ -132,7 +132,7 @@ void registerTypes()
 
     {
         // A metatype for the namespace to hold the enums
-        static const auto metaType = QQmlPrivate::metaTypeForNamespace(
+        Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(
                     [](const QtPrivate::QMetaTypeInterface *) {
             return &ValueTypeWithEnum2::staticMetaObject;
         }, "ValueTypeWithEnum2");
