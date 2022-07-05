@@ -57,6 +57,7 @@ protected:
 
 private:
     QSharedPointer<QFontDialogOptions> m_options;
+    QFont m_selectedFont;
 };
 
 QT_END_NAMESPACE
