@@ -129,6 +129,11 @@ void QQuickFontDialogImpl::setCurrentFont(const QFont &font, bool selectInListVi
     if (!attached)
         return;
 
+    if (!attached->familyListView()->model().isValid()) {
+        const QSignalBlocker blocker(attached->sampleEdit());
+        attached->updateFamilies();
+    }
+
     attached->selectFontInListViews(font);
 }
 
@@ -728,6 +733,9 @@ void QQuickFontDialogImplAttached::_q_writingSystemChanged(int index)
 
 void QQuickFontDialogImplAttached::searchListView(const QString &s, QQuickListView *listView)
 {
+    if (s.isEmpty())
+        return;
+
     const QStringList model = listView->model().toStringList();
 
     bool redo = false;

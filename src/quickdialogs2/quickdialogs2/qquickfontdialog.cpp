@@ -115,16 +115,12 @@ QQuickFontDialog::QQuickFontDialog(QObject *parent)
 
 QFont QQuickFontDialog::currentFont() const
 {
-    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
-        return fontDialog->currentFont();
-    return QFont();
+    return selectedFont();
 }
 
 void QQuickFontDialog::setCurrentFont(const QFont &font)
 {
-    if (QPlatformFontDialogHelper *fontDialog =
-        qobject_cast<QPlatformFontDialogHelper *>(handle()))
-            fontDialog->setCurrentFont(font);
+    setSelectedFont(font);
 }
 
 /*!
@@ -145,16 +141,18 @@ void QQuickFontDialog::setCurrentFont(const QFont &font)
 
 QFont QQuickFontDialog::selectedFont() const
 {
-    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
-        return fontDialog->currentFont();
-    return QFont();
+    return m_selectedFont;
 }
 
 void QQuickFontDialog::setSelectedFont(const QFont &font)
 {
-    if (QPlatformFontDialogHelper *fontDialog =
-        qobject_cast<QPlatformFontDialogHelper *>(handle()))
-            fontDialog->setCurrentFont(font);
+    if (font == m_selectedFont)
+        return;
+
+    m_selectedFont = font;
+
+    emit selectedFontChanged();
+    emit currentFontChanged();
 }
 
 /*!
@@ -206,9 +204,9 @@ void QQuickFontDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this,
-                &QQuickFontDialog::currentFontChanged);
-        connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this,
-                &QQuickFontDialog::selectedFontChanged);
+                [this, fontDialog]() { setSelectedFont(fontDialog->currentFont()); });
+        connect(this, &QQuickFontDialog::selectedFontChanged, this,
+                [this, fontDialog]() { fontDialog->setCurrentFont(m_selectedFont); });
         fontDialog->setOptions(m_options);
     }
 }
@@ -216,8 +214,10 @@ void QQuickFontDialog::onCreate(QPlatformDialogHelper *dialog)
 void QQuickFontDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
-    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog))
+    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         fontDialog->setOptions(m_options); // setOptions only assigns a member and isn't virtual
+        fontDialog->setCurrentFont(m_selectedFont);
+    }
 
     QQuickAbstractDialog::onShow(dialog);
 }

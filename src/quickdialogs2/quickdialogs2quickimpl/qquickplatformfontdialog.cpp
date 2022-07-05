@@ -113,8 +113,11 @@ bool QQuickPlatformFontDialog::isValid() const
 
 void QQuickPlatformFontDialog::setCurrentFont(const QFont &font)
 {
-    if (m_dialog)
+    if (m_dialog) {
+        if (!m_dialog->options())
+            m_dialog->setOptions(QPlatformFontDialogHelper::options());
         m_dialog->setCurrentFont(font, true);
+    }
 }
 
 QFont QQuickPlatformFontDialog::currentFont() const
