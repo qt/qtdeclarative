@@ -97,5 +97,5 @@ _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin
                                               qtquickcontrols2iosstyleimplplugin)
 
 # Basic style is the required fallback style.
-# _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin
-#                                              qtquickcontrols2basicstyleplugin)
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin
+                                             qtquickcontrols2basicstyleplugin)
