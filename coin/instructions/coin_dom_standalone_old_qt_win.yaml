@@ -10,28 +10,28 @@ instructions:
     variableName: CONFIGURE_ENV_PREFIX
     variableValue: "{{.Env.ENV_PREFIX}}"
   - type: ExecuteCommand
-    command: "curl -s http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.1-final-released/Qt6.3.1/qtbase/qtbase-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z -o qtbase.7z"
+    command: "curl -s http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qtdesignstudio/qt_63_snapshot_to_test_qmldom_standalone/qtbase/qtbase-Windows-Windows_10_21H2-MSVC2019-Windows-Windows_10_21H2-X86_64.7z -o qtbase.7z"
     ignoreExitCode: false
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
     userMessageOnFailure: >
-      download of http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.1-final-released/Qt6.3.1/qtbase/qtbase-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z failed
+      download of http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qtdesignstudio/qt_63_snapshot_to_test_qmldom_standalone/qtbase/qtbase-Windows-Windows_10_21H2-MSVC2019-Windows-Windows_10_21H2-X86_64.7z failed
   - type: ExecuteCommand
-    command: "curl -s http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.1-final-released/Qt6.3.1/qtdeclarative/qtdeclarative-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z -o qtdeclarative.7z"
+    command: "curl -s http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qtdesignstudio/qt_63_snapshot_to_test_qmldom_standalone/qtdeclarative/qtdeclarative-Windows-Windows_10_21H2-MSVC2019-Windows-Windows_10_21H2-X86_64.7z -o qtdeclarative.7z"
     ignoreExitCode: false
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
     userMessageOnFailure: >
-     Download of http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.1-final-released/Qt6.3.1/qtdeclarative/qtdeclarative-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z failed
+     Download of http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qtdesignstudio/qt_63_snapshot_to_test_qmldom_standalone/qtdeclarative/qtdeclarative-Windows-Windows_10_21H2-MSVC2019-Windows-Windows_10_21H2-X86_64.7z failed
   - type: ExecuteCommand
-    command: "7za x  qtbase.7z"
+    command: "7z.exe x  qtbase.7z"
     ignoreExitCode: false
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
     userMessageOnFailure: >
       Uncompress of qtbase failed.
   - type: ExecuteCommand
-    command: "7za x  qtdeclarative.7z"
+    command: "7z.exe x  qtdeclarative.7z"
     ignoreExitCode: false
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
@@ -51,6 +51,9 @@ instructions:
     maxTimeBetweenOutput: 1800
     userMessageOnFailure: >
       Compilation of qmldom standalone on Qt 6.3 FAILED, see the log for details.
+  - type: PrependToEnvironmentVariable
+    variableName: PATH
+    variableValue: "{{.BuildDir}}/qt63/bin;"
   - type: ExecuteCommand
     command: "./standalone63/qmldomloadeditwrite"
     ignoreExitCode: false
@@ -66,4 +69,7 @@ enable_if:
     contains_value: X86_64
   - condition: property
     property: target.os
-    contains_value: MacOS
+    contains_value: Windows
+  - condition: property
+    property: target.compiler
+    contains_value: MSVC
