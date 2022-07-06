@@ -136,6 +136,7 @@ void QQuickFontDialog::setSelectedFont(const QFont &font)
     \value FontDialog.ProportionalFonts Show proportional fonts.
     \value FontDialog.NoButtons Don't display \uicontrol Open and \uicontrol Cancel buttons (useful
    for "live dialogs").
+    \value FontDialog.DontUseNativeDialog Forces the dialog to use a non-native quick implementation.
 */
 
 QFontDialogOptions::FontDialogOptions QQuickFontDialog::options() const

@@ -281,6 +281,7 @@ void QQuickFileDialog::setCurrentFolder(const QUrl &currentFolder)
     \value FileDialog.DontConfirmOverwrite Don't ask for confirmation if an existing file is selected. By default confirmation is requested.
     \value FileDialog.ReadOnly Indicates that the dialog doesn't allow creating directories.
     \value FileDialog.HideNameFilterDetails Indicates if the file name filter details are hidden or not.
+    \value FileDialog.DontUseNativeDialog Forces the dialog to use a non-native quick implementation.
 */
 QFileDialogOptions::FileDialogOptions QQuickFileDialog::options() const
 {

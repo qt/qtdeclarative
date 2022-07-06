@@ -101,6 +101,7 @@ void QQuickColorDialog::setSelectedColor(const QColor &color)
     \value ColorDialog.ShowAlphaChannel Show a slider and additional input fields for the alpha value.
     \value ColorDialog.NoButtons Don't display \uicontrol Open and \uicontrol Cancel buttons (useful
    for "live dialogs").
+    \value ColorDialog.DontUseNativeDialog Forces the dialog to use a non-native quick implementation.
 */
 
 QColorDialogOptions::ColorDialogOptions QQuickColorDialog::options() const

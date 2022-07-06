@@ -140,6 +140,7 @@ void QQuickFolderDialog::setSelectedFolder(const QUrl &folder)
     Available options:
     \value FolderDialog.DontResolveSymlinks Don't resolve symlinks in the folder dialog. By default symlinks are resolved.
     \value FolderDialog.ReadOnly Indicates that the dialog doesn't allow creating directories.
+    \value FolderDialog.DontUseNativeDialog Forces the dialog to use a non-native quick implementation.
 */
 QFileDialogOptions::FileDialogOptions QQuickFolderDialog::options() const
 {
