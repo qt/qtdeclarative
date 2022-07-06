@@ -86,6 +86,8 @@ private slots:
     void done();
     void setSelectedFile_data();
     void setSelectedFile();
+    void selectNewFileViaTextField_data();
+    void selectNewFileViaTextField();
 
 private:
     QTemporaryDir tempDir;
@@ -1367,6 +1369,48 @@ void tst_QQuickFileDialogImpl::setSelectedFile()
         VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), tempFile1Url, 1);
     } else {
         QTRY_COMPARE(dialogHelper.fileDialogListView->currentIndex(), -1);
+    }
+}
+
+void tst_QQuickFileDialogImpl::selectNewFileViaTextField_data()
+{
+    fileMode_data();
+}
+void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
+{
+    QFETCH(QQuickFileDialog::FileMode, fileMode);
+
+    // Open the dialog.
+    FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
+    dialogHelper.dialog->setFileMode(fileMode);
+
+    if (fileMode == QQuickFileDialog::SaveFile)
+        dialogHelper.dialog->setSelectedFile(QUrl());
+
+    OPEN_QUICK_DIALOG();
+    QQuickTest::qWaitForPolish(dialogHelper.window());
+
+    const QQuickTextField *fileNameTextField =
+            dialogHelper.quickDialog->findChild<QQuickTextField *>("fileNameTextField");
+    QVERIFY(fileNameTextField);
+
+    QVERIFY2(fileNameTextField->isVisible() == (fileMode == QQuickFileDialog::SaveFile),
+             "The TextField for file name should only be visible when the FileMode is 'SaveFile'");
+
+    if (fileMode == QQuickFileDialog::SaveFile) {
+        const QPoint textFieldCenterPos =
+                fileNameTextField->mapToScene({ fileNameTextField->width() / 2, fileNameTextField->height() / 2 }).toPoint();
+
+        QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, textFieldCenterPos);
+        QTRY_VERIFY(fileNameTextField->hasActiveFocus());
+
+        const QByteArray newFileName("foo.txt");
+        for (const auto &c : newFileName)
+            QTest::keyClick(dialogHelper.window(), c);
+        QTest::keyClick(dialogHelper.window(), Qt::Key_Enter);
+
+        QTRY_COMPARE(fileNameTextField->text(), newFileName);
+        QCOMPARE(dialogHelper.dialog->selectedFile().fileName(), newFileName);
     }
 }
 

@@ -43,6 +43,8 @@ FileDialogImpl {
     FileDialogImpl.nameFiltersComboBox: nameFiltersComboBox
     FileDialogImpl.fileDialogListView: fileDialogListView
     FileDialogImpl.breadcrumbBar: breadcrumbBar
+    FileDialogImpl.fileNameLabel: fileNameLabel
+    FileDialogImpl.fileNameTextField: fileNameTextField
 
     background: Rectangle {
         implicitWidth: 600
@@ -127,16 +129,40 @@ FileDialogImpl {
         }
     }
 
-    footer: RowLayout {
-        id: rowLayout
-        spacing: 12
+    footer: GridLayout {
+        columnSpacing: 12
+        columns: 3
+
+        Label {
+            id: fileNameLabel
+            text: qsTr("File name")
+            Layout.leftMargin: 12
+            visible: false
+        }
+
+        TextField {
+            id: fileNameTextField
+            objectName: "fileNameTextField"
+            text: control.fileName
+            visible: false
+
+            Layout.fillWidth: true
+        }
+
+        Label {
+            text: qsTr("Filter")
+            Layout.column: 0
+            Layout.row: 1
+            Layout.leftMargin: 12
+            Layout.bottomMargin: 12
+        }
+
 
         ComboBox {
             // OK to use IDs here, since users shouldn't be overriding this stuff.
             id: nameFiltersComboBox
             model: control.nameFilters
 
-            Layout.leftMargin: 12
             Layout.fillWidth: true
             Layout.bottomMargin: 12
         }
@@ -149,6 +175,10 @@ FileDialogImpl {
             verticalPadding: 0
             background: null
 
+            // TODO: make the orientation vertical
+            Layout.row: 1
+            Layout.column: 2
+            Layout.columnSpan: 1
             Layout.rightMargin: 12
             Layout.bottomMargin: 12
         }

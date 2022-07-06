@@ -18,6 +18,8 @@
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
+#include <QtQuickTemplates2/private/qquicklabel_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
 #include "qquickfiledialogimpl_p.h"
 
@@ -68,6 +70,7 @@ class QQuickFileDialogImplAttachedPrivate : public QObjectPrivate
 {
     void nameFiltersComboBoxItemActivated(int index);
     void fileDialogListViewCurrentIndexChanged();
+    void fileNameChangedByUser();
 
 public:
     Q_DECLARE_PUBLIC(QQuickFileDialogImplAttached)
@@ -76,6 +79,8 @@ public:
     QPointer<QQuickComboBox> nameFiltersComboBox;
     QPointer<QQuickListView> fileDialogListView;
     QPointer<QQuickFolderBreadcrumbBar> breadcrumbBar;
+    QPointer<QQuickLabel> fileNameLabel;
+    QPointer<QQuickTextField> fileNameTextField;
 };
 
 QT_END_NAMESPACE

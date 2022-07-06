@@ -366,6 +366,12 @@ void QQuickFileDialogImpl::setOptions(const QSharedPointer<QFileDialogOptions> &
     if (d->options) {
         d->selectedNameFilter->setOptions(options);
         d->setNameFilters(options->nameFilters());
+
+        if (auto attached = d->attachedOrWarn()) {
+            const bool isSaveMode = d->options->fileMode() == QFileDialogOptions::AnyFile;
+            attached->fileNameLabel()->setVisible(isSaveMode);
+            attached->fileNameTextField()->setVisible(isSaveMode);
+        }
     }
 }
 
@@ -449,6 +455,19 @@ void QQuickFileDialogImpl::selectNameFilter(const QString &filter)
     Q_D(QQuickFileDialogImpl);
     d->selectedNameFilter->update(filter);
     emit filterSelected(filter);
+}
+
+QString QQuickFileDialogImpl::fileName() const
+{
+    return selectedFile().fileName();
+}
+void QQuickFileDialogImpl::setFileName(const QString &fileName)
+{
+    const QString previous = selectedFile().fileName();
+    if (previous == fileName)
+        return;
+
+    setSelectedFile(QUrl(currentFolder().path() + u'/' + fileName));
 }
 
 void QQuickFileDialogImpl::componentComplete()
@@ -552,6 +571,15 @@ void QQuickFileDialogImplAttachedPrivate::fileDialogListViewCurrentIndexChanged(
         fileDialogImplPrivate->tryUpdateFileDialogListViewCurrentIndex(indexOfSelectedFileInFileDialogListView);
         fileDialogImplPrivate->setCurrentIndexToInitiallySelectedFile = false;
     }
+}
+
+void QQuickFileDialogImplAttachedPrivate::fileNameChangedByUser()
+{
+    auto fileDialogImpl = qobject_cast<QQuickFileDialogImpl *>(parent);
+    if (!fileDialogImpl)
+        return;
+
+    fileDialogImpl->setFileName(fileNameTextField->text());
 }
 
 QQuickFileDialogImplAttached::QQuickFileDialogImplAttached(QObject *parent)
@@ -681,6 +709,48 @@ void QQuickFileDialogImplAttached::setBreadcrumbBar(QQuickFolderBreadcrumbBar *b
 
     d->breadcrumbBar = breadcrumbBar;
     emit breadcrumbBarChanged();
+}
+
+QQuickLabel *QQuickFileDialogImplAttached::fileNameLabel() const
+{
+    Q_D(const QQuickFileDialogImplAttached);
+    return d->fileNameLabel;
+}
+
+void QQuickFileDialogImplAttached::setFileNameLabel(QQuickLabel *fileNameLabel)
+{
+    Q_D(QQuickFileDialogImplAttached);
+    if (fileNameLabel == d->fileNameLabel)
+        return;
+
+    d->fileNameLabel = fileNameLabel;
+
+    emit fileNameLabelChanged();
+}
+
+QQuickTextField *QQuickFileDialogImplAttached::fileNameTextField() const
+{
+    Q_D(const QQuickFileDialogImplAttached);
+    return d->fileNameTextField;
+}
+
+void QQuickFileDialogImplAttached::setFileNameTextField(QQuickTextField *fileNameTextField)
+{
+    Q_D(QQuickFileDialogImplAttached);
+    if (fileNameTextField == d->fileNameTextField)
+        return;
+
+    if (d->fileNameTextField)
+        QObjectPrivate::disconnect(d->fileNameTextField, &QQuickTextField::editingFinished,
+            d, &QQuickFileDialogImplAttachedPrivate::fileNameChangedByUser);
+
+    d->fileNameTextField = fileNameTextField;
+
+    if (d->fileNameTextField)
+        QObjectPrivate::connect(d->fileNameTextField, &QQuickTextField::editingFinished,
+            d, &QQuickFileDialogImplAttachedPrivate::fileNameChangedByUser);
+
+    emit fileNameTextFieldChanged();
 }
 
 QT_END_NAMESPACE

@@ -46,6 +46,8 @@ FileDialogImpl {
     FileDialogImpl.nameFiltersComboBox: nameFiltersComboBox
     FileDialogImpl.fileDialogListView: fileDialogListView
     FileDialogImpl.breadcrumbBar: breadcrumbBar
+    FileDialogImpl.fileNameLabel: fileNameLabel
+    FileDialogImpl.fileNameTextField: fileNameTextField
 
     background: Rectangle {
         implicitWidth: 600
@@ -110,21 +112,48 @@ FileDialogImpl {
 
     footer: Rectangle {
         color: control.palette.light
-        implicitWidth: rowLayout.implicitWidth
-        implicitHeight: rowLayout.implicitHeight
+        implicitWidth: gridLayout.implicitWidth
+        implicitHeight: gridLayout.implicitHeight + 12
 
-        RowLayout {
-            id: rowLayout
-            width: parent.width
-            height: parent.height
-            spacing: 20
+        GridLayout {
+            // OK to use IDs here, since users shouldn't be overriding this stuff.
+            id: gridLayout
+            anchors.fill: parent
+            anchors.topMargin: 6
+            anchors.bottomMargin: 6
+            columnSpacing: 20
+            columns: 3
 
-            ComboBox {
-                // OK to use IDs here, since users shouldn't be overriding this stuff.
-                id: nameFiltersComboBox
-                model: control.nameFilters
+            Label {
+                id: fileNameLabel
+                text: qsTr("File name")
+                visible: false
 
                 Layout.leftMargin: 20
+            }
+
+            TextField {
+                id: fileNameTextField
+                objectName: "fileNameTextField"
+                text: control.fileName
+                visible: false
+
+                Layout.fillWidth: true
+            }
+
+            Label {
+                text: qsTr("Filter")
+
+                Layout.row: 1
+                Layout.column: 0
+                Layout.leftMargin: 20
+            }
+
+            ComboBox {
+                id: nameFiltersComboBox
+                model: control.nameFilters
+                verticalPadding: 0
+
                 Layout.fillWidth: true
             }
 
@@ -133,9 +162,10 @@ FileDialogImpl {
                 standardButtons: control.standardButtons
                 palette.window: control.palette.light
                 spacing: 12
-                horizontalPadding: 0
-                verticalPadding: 20
+                padding: 0
 
+                Layout.row: 1
+                Layout.column: 2
                 Layout.rightMargin: 20
             }
         }
