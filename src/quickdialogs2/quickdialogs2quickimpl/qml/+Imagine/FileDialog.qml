@@ -43,6 +43,8 @@ FileDialogImpl {
     FileDialogImpl.nameFiltersComboBox: nameFiltersComboBox
     FileDialogImpl.fileDialogListView: fileDialogListView
     FileDialogImpl.breadcrumbBar: breadcrumbBar
+    FileDialogImpl.fileNameLabel: fileNameLabel
+    FileDialogImpl.fileNameTextField: fileNameTextField
 
     background: NinePatchImage {
         source: Imagine.url + "dialog-background"
@@ -116,17 +118,42 @@ FileDialogImpl {
         }
     }
 
-    footer: RowLayout {
-        id: rowLayout
-        spacing: 20
+    footer: GridLayout {
+        columnSpacing: 20
+        columns: 3
+
+        Label {
+            id: fileNameLabel
+            text: qsTr("File name")
+            visible: false
+
+            Layout.leftMargin: 16
+        }
+
+        TextField {
+            id: fileNameTextField
+            objectName: "fileNameTextField"
+            text: control.fileName
+            visible: false
+
+            Layout.fillWidth: true
+        }
+
+        Label {
+            text: qsTr("Filter")
+
+            Layout.column: 0
+            Layout.row: 1
+            Layout.leftMargin: 16
+            Layout.bottomMargin: 16
+        }
 
         ComboBox {
             id: nameFiltersComboBox
             model: control.nameFilters
 
-            Layout.leftMargin: 16
-            Layout.bottomMargin: 16
             Layout.fillWidth: true
+            Layout.bottomMargin: 16
         }
 
         DialogButtonBox {
@@ -134,6 +161,9 @@ FileDialogImpl {
             standardButtons: control.standardButtons
             spacing: 12
 
+            Layout.row: 1
+            Layout.column: 2
+            Layout.columnSpan: 1
             Layout.bottomMargin: 16
             Layout.rightMargin: 16
         }

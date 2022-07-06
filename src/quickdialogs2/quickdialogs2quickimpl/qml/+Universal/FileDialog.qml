@@ -34,6 +34,8 @@ FileDialogImpl {
     FileDialogImpl.nameFiltersComboBox: nameFiltersComboBox
     FileDialogImpl.fileDialogListView: fileDialogListView
     FileDialogImpl.breadcrumbBar: breadcrumbBar
+    FileDialogImpl.fileNameLabel: fileNameLabel
+    FileDialogImpl.fileNameTextField: fileNameTextField
 
     background: Rectangle {
         implicitWidth: 600
@@ -100,15 +102,40 @@ FileDialogImpl {
         }
     }
 
-    footer: RowLayout {
-        id: rowLayout
-        spacing: 24
+    footer: GridLayout {
+        columnSpacing: 24
+        columns: 3
+
+        Label {
+            id: fileNameLabel
+            text: qsTr("File name")
+            visible: false
+
+            Layout.leftMargin: 24
+        }
+
+        TextField {
+            id: fileNameTextField
+            objectName: "fileNameTextField"
+            text: control.fileName
+            visible: false
+
+            Layout.fillWidth: true
+        }
+
+        Label {
+            text: qsTr("Filter")
+
+            Layout.row: 1
+            Layout.column: 0
+            Layout.leftMargin: 24
+            Layout.bottomMargin: 24
+        }
 
         ComboBox {
             id: nameFiltersComboBox
             model: control.nameFilters
 
-            Layout.leftMargin: 24
             Layout.fillWidth: true
             Layout.topMargin: 6
             Layout.bottomMargin: 24
