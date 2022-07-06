@@ -94,7 +94,7 @@ void QQmlJSTypePropagator::generate_Ret()
         m_logger->log(u"Cannot assign binding of type %1 to %2"_s.arg(
                               m_typeResolver->containedTypeName(m_state.accumulatorIn(), true),
                               m_typeResolver->containedTypeName(m_returnType, true)),
-                      qmlType, getCurrentBindingSourceLocation());
+                      qmlIncompatibleType, getCurrentBindingSourceLocation());
         return;
     }
 
@@ -475,7 +475,7 @@ bool QQmlJSTypePropagator::isRestricted(const QString &propertyName) const
     if (!restrictedKind.isEmpty())
         m_logger->log(u"Type is %1. You cannot access \"%2\" from here."_s.arg(restrictedKind,
                                                                                propertyName),
-                      qmlType, getCurrentSourceLocation());
+                      qmlRestrictedType, getCurrentSourceLocation());
 
     return !restrictedKind.isEmpty();
 }
@@ -499,7 +499,7 @@ bool QQmlJSTypePropagator::isMissingPropertyType(QQmlJSScope::ConstPtr scope,
     m_logger->log(
             u"Type \"%1\" of property \"%2\" not %3. This is likely due to a missing dependency entry or a type not being exposed declaratively."_s
                     .arg(property.typeName(), propertyName, errorType),
-            qmlType, getCurrentSourceLocation());
+            qmlUnresolvedType, getCurrentSourceLocation());
 
     return true;
 }
@@ -538,7 +538,7 @@ bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const 
         errorType = u"not a method"_s;
     }
 
-    m_logger->log(u"%1 \"%2\" is %3"_s.arg(propertyType, name, errorType), qmlType,
+    m_logger->log(u"%1 \"%2\" is %3"_s.arg(propertyType, name, errorType), qmlUseProperFunction,
                   getCurrentSourceLocation(), true, true, {});
 
     return true;
@@ -598,7 +598,7 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
     if (!type.isWritable() && !m_function->qmlScope->hasOwnProperty(name)) {
         setError(u"Can't assign to read-only property %1"_s.arg(name));
 
-        m_logger->log(u"Cannot assign to read-only property %1"_s.arg(name), qmlProperty,
+        m_logger->log(u"Cannot assign to read-only property %1"_s.arg(name), qmlReadOnlyProperty,
                       getCurrentSourceLocation());
 
         return;
@@ -749,11 +749,13 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
             return;
         }
         if (m_state.accumulatorIn().isImportNamespace())
-            m_logger->log(u"Type not found in namespace"_s, qmlType, getCurrentSourceLocation());
+            m_logger->log(u"Type not found in namespace"_s, qmlUnresolvedType,
+                          getCurrentSourceLocation());
     } else if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::Singleton
                && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectModulePrefix) {
-        m_logger->log(u"Cannot load singleton as property of object"_s, qmlType,
-                      getCurrentSourceLocation());
+        m_logger->log(
+                u"Cannot access singleton as a property of an object. Did you want to access an attached object?"_s,
+                qmlAccessSingleton, getCurrentSourceLocation());
         setAccumulator(QQmlJSRegisterContent());
     }
 
@@ -802,7 +804,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         }
 
         m_logger->log(u"Property \"%1\" not found on type \"%2\""_s.arg(propertyName).arg(typeName),
-                      qmlType, getCurrentSourceLocation(), true, true, fixSuggestion);
+                      qmlMissingProperty, getCurrentSourceLocation(), true, true, fixSuggestion);
         return;
     }
 
@@ -822,7 +824,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         if (!m_state.accumulatorOut().property().type()) {
             m_logger->log(
                     QString::fromLatin1("Type of property \"%2\" not found").arg(propertyName),
-                    qmlType, getCurrentSourceLocation());
+                    qmlMissingType, getCurrentSourceLocation());
         }
     }
 
@@ -892,8 +894,8 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
     if (!property.isWritable()) {
         setError(u"Can't assign to read-only property %1"_s.arg(propertyName));
 
-        m_logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName), qmlProperty,
-                      getCurrentSourceLocation());
+        m_logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName),
+                      qmlReadOnlyProperty, getCurrentSourceLocation());
 
         return;
     }
@@ -1026,7 +1028,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 
         m_logger->log(u"Property \"%1\" not found on type \"%2\""_s.arg(
                               propertyName, m_typeResolver->containedTypeName(callBase, true)),
-                      qmlType, getCurrentSourceLocation(), true, true, fixSuggestion);
+                      qmlMissingProperty, getCurrentSourceLocation(), true, true, fixSuggestion);
         return;
     }
 

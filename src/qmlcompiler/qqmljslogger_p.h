@@ -96,15 +96,23 @@ private:
 };
 
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlRequired;
-extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAlias;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUnresolvedAlias;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAliasCycle;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlImport;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlRecursionDepthErrors;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlWith;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlInheritanceCycle;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlDeprecated;
-extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlSignal;
-extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlType;
-extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlProperty;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlSignalParameters;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlMissingType;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUnresolvedType;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlIncompatibleType;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlMissingProperty;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlRestrictedType;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlPrefixedImportType;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlNonListProperty;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlReadOnlyProperty;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlDuplicatePropertyBinding;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlDeferredPropertyId;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUnqualified;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUnusedImports;
@@ -116,6 +124,10 @@ extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlCompiler;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlControlsSanity;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAttachedPropertyReuse;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlPlugin;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlVarUsedBeforeDeclaration;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlInvalidLintDirective;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUseProperFunction;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAccessSingleton;
 
 struct Message : public QQmlJS::DiagnosticMessage
 {

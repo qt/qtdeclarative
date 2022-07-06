@@ -52,7 +52,7 @@ public:
                         .arg(name)
                         .arg(declarationLocation.startLine)
                         .arg(declarationLocation.startColumn),
-                qmlType, accessLocation);
+                qmlVarUsedBeforeDeclaration, accessLocation);
     }
 
 private:
@@ -274,7 +274,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
                 categories << category;
             else
                 logger->log(u"qmllint directive on unknown category \"%1\""_s.arg(category),
-                            qmlSyntax, loc);
+                            qmlInvalidLintDirective, loc);
         }
 
         if (categories.isEmpty()) {
@@ -301,8 +301,8 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
         } else if (command == u"enable"_s) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
-            logger->log(u"Invalid qmllint directive \"%1\" provided"_s.arg(command), qmlSyntax,
-                        loc);
+            logger->log(u"Invalid qmllint directive \"%1\" provided"_s.arg(command),
+                        qmlInvalidLintDirective, loc);
         }
     }
 

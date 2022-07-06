@@ -536,7 +536,7 @@ void QmltcVisitor::setupAliases()
                                                     QQmlJSUtils::AliasResolutionVisitor {});
             if (result.kind == QQmlJSUtils::AliasTarget_Invalid) {
                 m_logger->log(QStringLiteral("Cannot resolve alias \"%1\"").arg(p.propertyName()),
-                              qmlAlias, current->sourceLocation());
+                              qmlUnresolvedAlias, current->sourceLocation());
                 continue;
             }
             setAliasData(&p, result);

@@ -772,8 +772,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        "Cannot combine value source and binding on property \"objs\"") } } };
     QTest::newRow("NonExistentListProperty")
             << QStringLiteral("nonExistentListProperty.qml")
-            << Result { { Message {
-                       QStringLiteral("Property \"objs\" is invalid or does not exist") } } };
+            << Result { { Message { QStringLiteral("Property \"objs\" does not exist") } } };
     QTest::newRow("QtQuick.Window 2.0")
             << QStringLiteral("qtquickWindow20.qml")
             << Result { { Message { QStringLiteral(
@@ -782,8 +781,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << QStringLiteral("unresolvedAttachedType.qml")
             << Result { { Message { QStringLiteral(
                                 "unknown attached property scope UnresolvedAttachedType.") } },
-                        { Message { QStringLiteral(
-                                "Property \"property\" is invalid or does not exist") } } };
+                        { Message { QStringLiteral("Property \"property\" does not exist") } } };
     QTest::newRow("nestedInlineComponents")
             << QStringLiteral("nestedInlineComponents.qml")
             << Result { { Message {
@@ -810,11 +808,11 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("BadModulePrefix")
             << QStringLiteral("badModulePrefix.qml")
             << Result { { Message {
-                       QStringLiteral("Cannot load singleton as property of object") } } };
+                       QStringLiteral("Cannot access singleton as a property of an object") } } };
     QTest::newRow("BadModulePrefix2")
             << QStringLiteral("badModulePrefix2.qml")
-            << Result { { Message { QStringLiteral("Cannot use non-reference type QRectF as base "
-                                                   "of namespaced attached type") } } };
+            << Result { { Message { QStringLiteral(
+                       "Cannot use a non-QObject type QRectF to access prefixed import") } } };
     QTest::newRow("AssignToReadOnlyProperty")
             << QStringLiteral("assignToReadOnlyProperty.qml")
             << Result { { Message {

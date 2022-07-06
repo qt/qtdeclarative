@@ -1118,10 +1118,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
     }
     if (type.isImportNamespace()) {
         if (type.scopeType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-            m_logger->log(
-                    u"Cannot use non-reference type %1 as base of namespaced attached type"_s.arg(
-                            type.scopeType()->internalName()),
-                    qmlType, type.scopeType()->sourceLocation());
+            m_logger->log(u"Cannot use a non-QObject type %1 to access prefixed import"_s.arg(
+                                  type.scopeType()->internalName()),
+                          qmlPrefixedImportType, type.scopeType()->sourceLocation());
             return {};
         }
 

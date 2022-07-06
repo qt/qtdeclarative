@@ -22,15 +22,23 @@ QT_BEGIN_NAMESPACE
 using namespace Qt::StringLiterals;
 
 const LoggerWarningId qmlRequired { "required" };
-const LoggerWarningId qmlAlias { "alias" };
+const LoggerWarningId qmlAliasCycle { "alias-cycle" };
+const LoggerWarningId qmlUnresolvedAlias { "unresolved-alias" };
 const LoggerWarningId qmlImport { "import" };
 const LoggerWarningId qmlRecursionDepthErrors { "recursion-depth-errors" };
 const LoggerWarningId qmlWith { "with" };
 const LoggerWarningId qmlInheritanceCycle { "inheritance-cycle" };
 const LoggerWarningId qmlDeprecated { "deprecated" };
-const LoggerWarningId qmlSignal { "signal" };
-const LoggerWarningId qmlType { "type" };
-const LoggerWarningId qmlProperty { "property" };
+const LoggerWarningId qmlSignalParameters { "signal-handler-parameters" };
+const LoggerWarningId qmlMissingType { "missing-type" };
+const LoggerWarningId qmlUnresolvedType { "unresolved-type" };
+const LoggerWarningId qmlRestrictedType { "restricted-type" };
+const LoggerWarningId qmlPrefixedImportType { "prefixed-import-type" };
+const LoggerWarningId qmlIncompatibleType { "incompatible-type" };
+const LoggerWarningId qmlMissingProperty { "missing-property" };
+const LoggerWarningId qmlNonListProperty { "non-list-property" };
+const LoggerWarningId qmlReadOnlyProperty { "read-only-property" };
+const LoggerWarningId qmlDuplicatePropertyBinding { "duplicate-property-binding" };
 const LoggerWarningId qmlDeferredPropertyId { "deferred-property-id" };
 const LoggerWarningId qmlUnqualified { "unqualified" };
 const LoggerWarningId qmlUnusedImports { "unused-imports" };
@@ -42,14 +50,22 @@ const LoggerWarningId qmlCompiler { "compiler" };
 const LoggerWarningId qmlControlsSanity { "controls-sanity" };
 const LoggerWarningId qmlAttachedPropertyReuse { "attached-property-reuse" };
 const LoggerWarningId qmlPlugin { "plugin" };
+const LoggerWarningId qmlVarUsedBeforeDeclaration { "var-used-before-declaration" };
+const LoggerWarningId qmlInvalidLintDirective { "invalid-lint-directive" };
+const LoggerWarningId qmlUseProperFunction { "use-proper-function" };
+const LoggerWarningId qmlAccessSingleton { "access-singleton-via-object" };
 
 const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
 {
     static const QList<QQmlJSLogger::Category> cats = {
         QQmlJSLogger::Category { qmlRequired.name().toString(), QStringLiteral("RequiredProperty"),
                                  QStringLiteral("Warn about required properties"), QtWarningMsg },
-        QQmlJSLogger::Category { qmlAlias.name().toString(), QStringLiteral("PropertyAlias"),
-                                 QStringLiteral("Warn about alias errors"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlAliasCycle.name().toString(),
+                                 QStringLiteral("PropertyAliasCycles"),
+                                 QStringLiteral("Warn about alias cycles"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlUnresolvedAlias.name().toString(),
+                                 QStringLiteral("PropertyAliasCycles"),
+                                 QStringLiteral("Warn about unresolved aliases"), QtWarningMsg },
         QQmlJSLogger::Category {
                 qmlImport.name().toString(), QStringLiteral("ImportFailure"),
                 QStringLiteral("Warn about failing imports and deprecated qmltypes"),
@@ -69,15 +85,36 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
         QQmlJSLogger::Category { qmlDeprecated.name().toString(), QStringLiteral("Deprecated"),
                                  QStringLiteral("Warn about deprecated properties and types"),
                                  QtWarningMsg },
-        QQmlJSLogger::Category { qmlSignal.name().toString(), QStringLiteral("BadSignalHandler"),
-                                 QStringLiteral("Warn about bad signal handler parameters"),
-                                 QtWarningMsg },
         QQmlJSLogger::Category {
-                qmlType.name().toString(), QStringLiteral("TypeError"),
-                QStringLiteral("Warn about unresolvable types and type mismatches"), QtWarningMsg },
-        QQmlJSLogger::Category { qmlProperty.name().toString(), QStringLiteral("UnknownProperty"),
-                                 QStringLiteral("Warn about unknown properties"), QtWarningMsg },
-
+                qmlSignalParameters.name().toString(), QStringLiteral("BadSignalHandlerParameters"),
+                QStringLiteral("Warn about bad signal handler parameters"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlMissingType.name().toString(), QStringLiteral("MissingType"),
+                                 QStringLiteral("Warn about missing types"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlUnresolvedType.name().toString(),
+                                 QStringLiteral("UnresolvedType"),
+                                 QStringLiteral("Warn about unresolved types"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlRestrictedType.name().toString(),
+                                 QStringLiteral("RestrictedType"),
+                                 QStringLiteral("Warn about restricted types"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlPrefixedImportType.name().toString(),
+                                 QStringLiteral("PrefixedImportType"),
+                                 QStringLiteral("Warn about prefixed import types"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlIncompatibleType.name().toString(),
+                                 QStringLiteral("IncompatibleType"),
+                                 QStringLiteral("Warn about missing types"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlMissingProperty.name().toString(),
+                                 QStringLiteral("MissingProperty"),
+                                 QStringLiteral("Warn about missing properties"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlNonListProperty.name().toString(),
+                                 QStringLiteral("NonListProperty"),
+                                 QStringLiteral("Warn about non-list properties"), QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlReadOnlyProperty.name().toString(), QStringLiteral("ReadOnlyProperty"),
+                QStringLiteral("Warn about writing to read-only properties"), QtWarningMsg },
+        QQmlJSLogger::Category { qmlDuplicatePropertyBinding.name().toString(),
+                                 QStringLiteral("DuplicatePropertyBinding"),
+                                 QStringLiteral("Warn about duplicate property bindings"),
+                                 QtWarningMsg },
         QQmlJSLogger::Category {
                 qmlDeferredPropertyId.name().toString(), QStringLiteral("DeferredPropertyId"),
                 QStringLiteral(
@@ -113,7 +150,20 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                 QtCriticalMsg, true },
         QQmlJSLogger::Category { qmlPlugin.name().toString(), QStringLiteral("LintPluginWarnings"),
                                  QStringLiteral("Warn if a qmllint plugin finds an issue"),
-                                 QtWarningMsg, true }
+                                 QtWarningMsg, true },
+        QQmlJSLogger::Category { qmlVarUsedBeforeDeclaration.name().toString(),
+                                 QStringLiteral("VarUsedBeforeDeclaration"),
+                                 QStringLiteral("Warn if a variable is used before declaration"),
+                                 QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlInvalidLintDirective.name().toString(), QStringLiteral("InvalidLintDirective"),
+                QStringLiteral("Warn if an invalid qmllint comment is found"), QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlUseProperFunction.name().toString(), QStringLiteral("UseProperFunction"),
+                QStringLiteral("Warn if var is used for storing functions"), QtWarningMsg },
+        QQmlJSLogger::Category {
+                qmlAccessSingleton.name().toString(), QStringLiteral("AccessSingletonViaObject"),
+                QStringLiteral("Warn if a singleton is accessed via an object"), QtWarningMsg }
     };
 
     return cats;

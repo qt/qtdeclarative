@@ -29,8 +29,8 @@ void QQmlJSLiteralBindingCheck::run(QQmlJSImportVisitor *visitor, QQmlJSTypeReso
             // If the property is defined in the same scope where it is set,
             // we are in fact allowed to set it, even if it's not writable.
             if (!property.isWritable() && !scope->hasOwnProperty(propertyName)) {
-                logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName), qmlType,
-                            binding.sourceLocation());
+                logger->log(u"Cannot assign to read-only property %1"_s.arg(propertyName),
+                            qmlReadOnlyProperty, binding.sourceLocation());
                 continue;
             }
 
@@ -38,14 +38,14 @@ void QQmlJSLiteralBindingCheck::run(QQmlJSImportVisitor *visitor, QQmlJSTypeReso
                 logger->log(u"Cannot assign binding of type %1 to %2"_s.arg(
                                     QQmlJSScope::prettyName(binding.literalTypeName()),
                                     QQmlJSScope::prettyName(property.typeName())),
-                            qmlType, binding.sourceLocation());
+                            qmlIncompatibleType, binding.sourceLocation());
                 continue;
             }
 
             if (resolver->equals(property.type(), resolver->stringType())
                        && resolver->isNumeric(binding.literalType(resolver))) {
-                logger->log(u"Cannot assign a numeric constant to a string property"_s, qmlType,
-                            binding.sourceLocation());
+                logger->log(u"Cannot assign a numeric constant to a string property"_s,
+                            qmlIncompatibleType, binding.sourceLocation());
             }
         }
     }
