@@ -28,7 +28,7 @@
 
 import QtQuick
 import Qt.labs.qmlmodels
-import Test
+import TestQQuickListViewTwo
 
 ListView {
     width: 300; height: 300
