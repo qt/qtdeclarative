@@ -281,10 +281,27 @@ PropertyAttributes QQmlValueTypeWrapper::virtualGetOwnProperty(const Managed *m,
 {
     if (id.isString()) {
         const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
-        QQmlPropertyData result = r->dataForPropertyKey(id);
-        if (p && result.isValid())
-            p->value = getGadgetProperty(r->engine(), r->d(), result.propType(), result.coreIndex(), result.isFunction(), result.isEnum());
-        return result.isValid() ? Attr_Data : Attr_Invalid;
+        Q_ASSERT(r);
+
+        const QQmlPropertyData result = r->dataForPropertyKey(id);
+        if (!result.isValid())
+            return Attr_Invalid; // Property doesn't exist. Object shouldn't meddle with it.
+
+        if (!p)
+            return Attr_Data; // Property exists, but we're not interested in the value
+
+        const QQmlValueTypeReference *ref = r->as<const QQmlValueTypeReference>();
+        if (!ref || ref->readReferenceValue()) {
+            // Property exists, and we can retrieve it
+            p->value = getGadgetProperty(
+                        r->engine(), r->d(), result.propType(), result.coreIndex(),
+                        result.isFunction(), result.isEnum());
+        } else {
+            // Property exists, but we can't retrieve it. Make it undefined.
+            p->value = Encode::undefined();
+        }
+
+        return Attr_Data;
     }
 
     return QV4::Object::virtualGetOwnProperty(m, id, p);
