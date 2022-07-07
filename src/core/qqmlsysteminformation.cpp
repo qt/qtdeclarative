@@ -14,10 +14,23 @@ QT_BEGIN_NAMESPACE
     \brief Provides information about the system.
 
     The SystemInformation singleton type provides information about the system,
-    using the same API as \l QSysInfo.
+    using a similar API to \l QSysInfo, where each function in QSysInfo is
+    available as a property:
 
     \qml
-    property string prettyProductName: SystemInformation.prettyProductName
+    if (SystemInformation.wordSize === 64) {
+        console.log("64 bit")
+    } else {
+        console.log("32 bit")
+    }
+
+    if (SystemInformation.byteOrder === SystemInformation.Little) {
+        console.log("Little endian")
+    } else {
+        console.log("Big endian")
+    }
+
+    console.log("Currently running on " + SystemInformation.prettyProductName)
     \endqml
 
     \sa QSysInfo
