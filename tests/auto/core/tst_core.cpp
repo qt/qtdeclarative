@@ -25,6 +25,8 @@ void tst_core::systemInformation()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
 
+    QCOMPARE(object->property("wordSize").toInt(), QSysInfo::WordSize);
+    QCOMPARE(object->property("byteOrder").toInt(), QSysInfo::ByteOrder);
     QCOMPARE(object->property("buildCpuArchitecture").toString(), QSysInfo::buildCpuArchitecture());
     QCOMPARE(object->property("currentCpuArchitecture").toString(), QSysInfo::currentCpuArchitecture());
     QCOMPARE(object->property("buildAbi").toString(), QSysInfo::buildAbi());
