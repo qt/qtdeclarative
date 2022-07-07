@@ -797,7 +797,13 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
     case QEvent::TabletPress:
     case QEvent::TabletMove:
     case QEvent::TabletRelease:
-        d->deliverPointerEvent(static_cast<QPointerEvent *>(ev));
+        {
+            auto *tabletEvent = static_cast<QTabletEvent *>(ev);
+            d->deliverPointerEvent(tabletEvent); // visits HoverHandlers too (unlike the mouse event case)
+#if QT_CONFIG(cursor)
+            QQuickWindowPrivate::get(d->rootItem->window())->updateCursor(tabletEvent->scenePosition(), d->rootItem);
+#endif
+        }
         break;
 #endif
     default:
@@ -1564,9 +1570,6 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
                               event->position().x(), event->position().y());
 
-#if QT_CONFIG(cursor)
-        QQuickWindowPrivate::get(rootItem->window())->updateCursor(event->scenePosition());
-#endif
         const QPointF last = lastMousePosition.isNull() ? event->scenePosition() : lastMousePosition;
         lastMousePosition = event->scenePosition();
         qCDebug(lcHoverTrace) << q << "mouse pos" << last << "->" << lastMousePosition;
@@ -1575,6 +1578,10 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
             event->setAccepted(accepted);
         }
         deliverPointerEvent(event);
+#if QT_CONFIG(cursor)
+        // The pointer event could result in a cursor change (reaction), so update it afterwards.
+        QQuickWindowPrivate::get(rootItem->window())->updateCursor(event->scenePosition());
+#endif
         break;
     }
     default:

@@ -43,6 +43,7 @@ public:
     QPointerEvent *currentEvent = nullptr;
     QQuickItem *target = nullptr;
     qreal m_margin = 0;
+    quint64 lastEventTime = 0;
     qint16 dragThreshold = -1;   // -1 means use the platform default
     uint8_t grabPermissions : 8;
     Qt::CursorShape cursorShape : 6;
