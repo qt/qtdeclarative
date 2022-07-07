@@ -647,6 +647,7 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
     d->currentEvent = event;
     if (wants) {
         handlePointerEventImpl(event);
+        d->lastEventTime = event->timestamp();
     } else {
 #if QT_CONFIG(gestures)
         if (event->type() != QEvent::NativeGesture)

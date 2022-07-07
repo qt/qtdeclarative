@@ -53,6 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
 Q_DECLARE_LOGGING_CATEGORY(lcMouse)
 Q_DECLARE_LOGGING_CATEGORY(lcTouch)
 Q_DECLARE_LOGGING_CATEGORY(lcPtr)
@@ -1665,10 +1666,14 @@ void QQuickWindowPrivate::updateCursor(const QPointF &scenePos, QQuickItem *root
         QWindow *window = renderWindow ? renderWindow : q;
         cursorItem = cursorItemAndHandler.first;
         cursorHandler = cursorItemAndHandler.second;
-        if (cursorItem)
-            window->setCursor(QQuickItemPrivate::get(cursorItem)->effectiveCursor(cursorHandler));
-        else
+        if (cursorItem) {
+            const auto cursor = QQuickItemPrivate::get(cursorItem)->effectiveCursor(cursorHandler);
+            qCDebug(lcHoverTrace) << "setting cursor" << cursor << "from" << cursorHandler << "or" << cursorItem;
+            window->setCursor(cursor);
+        } else {
+            qCDebug(lcHoverTrace) << "unsetting cursor";
             window->unsetCursor();
+        }
     }
 }
 

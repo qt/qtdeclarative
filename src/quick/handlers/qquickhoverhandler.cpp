@@ -108,6 +108,9 @@ bool QQuickHoverHandler::wantsPointerEvent(QPointerEvent *event)
     // the hovered property to transition to false prematurely.
     // If a QQuickPointerTabletEvent caused the hovered property to become true,
     // then only another QQuickPointerTabletEvent can make it become false.
+    // But after kCursorOverrideTimeout ms, QQuickItemPrivate::effectiveCursorHandler()
+    // will ignore it, just in case there is no QQuickPointerTabletEvent to unset it.
+    // For example, a tablet proximity leave event could occur, but we don't deliver it to the window.
     if (!(m_hoveredTablet && QQuickDeliveryAgentPrivate::isMouseEvent(event)))
         setHovered(false);
 

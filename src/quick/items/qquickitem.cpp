@@ -62,6 +62,9 @@ Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 Q_LOGGING_CATEGORY(lcHandlerParent, "qt.quick.handler.parent")
 Q_LOGGING_CATEGORY(lcVP, "qt.quick.viewport")
 
+// after 100ms, a mouse/non-mouse cursor conflict is resolved in favor of the mouse handler
+static const quint64 kCursorOverrideTimeout = 100;
+
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = nullptr, int depth = 1)
 {
     if (lcFocus().isEnabled(QtDebugMsg)) {
@@ -7910,6 +7913,7 @@ void QQuickItem::setCursor(const QCursor &cursor)
     Q_D(QQuickItem);
 
     Qt::CursorShape oldShape = d->extra.isAllocated() ? d->extra->cursor.shape() : Qt::ArrowCursor;
+    qCDebug(lcHoverTrace) << oldShape << "->" << cursor.shape();
 
     if (oldShape != cursor.shape() || oldShape >= Qt::LastCursor || cursor.shape() >= Qt::LastCursor) {
         d->extra.value().cursor = cursor;
@@ -7946,6 +7950,7 @@ void QQuickItem::setCursor(const QCursor &cursor)
 void QQuickItem::unsetCursor()
 {
     Q_D(QQuickItem);
+    qCDebug(lcHoverTrace) << "clearing cursor";
     if (!d->hasCursor)
         return;
     d->hasCursor = false;
@@ -7997,27 +8002,82 @@ QCursor QQuickItemPrivate::effectiveCursor(const QQuickPointerHandler *handler) 
     Returns the Pointer Handler that is currently attempting to set the cursor shape,
     or null if there is no such handler.
 
+    If there are multiple handlers attempting to set the cursor:
+    \list
+    \li an active handler has the highest priority (e.g. a DragHandler being dragged)
+    \li any HoverHandler that is reacting to a non-mouse device has priority for
+        kCursorOverrideTimeout ms (a tablet stylus is jittery so that's enough)
+    \li otherwise a HoverHandler that is reacting to the mouse, if any
+    \endlist
+
+    Within each category, if there are multiple handlers, the last-added one wins
+    (the one that is declared at the bottom wins, because users may intuitively
+    think it's "on top" even though there is no Z-order; or, one that is added
+    in a specific use case overrides an imported component).
+
     \sa QtQuick::PointerHandler::cursor
 */
 QQuickPointerHandler *QQuickItemPrivate::effectiveCursorHandler() const
 {
     if (!hasPointerHandlers())
         return nullptr;
-    QQuickPointerHandler *retHoverHandler = nullptr;
+    QQuickPointerHandler* activeHandler = nullptr;
+    QQuickPointerHandler* mouseHandler = nullptr;
+    QQuickPointerHandler* nonMouseHandler = nullptr;
     for (QQuickPointerHandler *h : extra->pointerHandlers) {
         if (!h->isCursorShapeExplicitlySet())
             continue;
         QQuickHoverHandler *hoverHandler = qmlobject_cast<QQuickHoverHandler *>(h);
-        // For now, we don't expect multiple hover handlers in one Item, so we choose the first one found;
-        // but a future use case could be to have different cursors for different tablet stylus devices.
-        // In that case, this function needs more information: which device did the event come from.
-        // TODO Qt 6: add QPointerDevice* as argument to this function? (it doesn't exist yet in Qt 5)
-        if (!retHoverHandler && hoverHandler)
-            retHoverHandler = hoverHandler;
+        // Prioritize any HoverHandler that is reacting to a non-mouse device.
+        // Otherwise, choose the first hovered handler that is found.
+        // TODO maybe: there was an idea to add QPointerDevice* as argument to this function
+        // and check the device type, but why? HoverHandler already does that.
+        if (!activeHandler && hoverHandler && hoverHandler->isHovered()) {
+            qCDebug(lcHoverTrace) << hoverHandler << hoverHandler->acceptedDevices() << "wants to set cursor" << hoverHandler->cursorShape();
+            if (hoverHandler->acceptedDevices().testFlag(QPointingDevice::DeviceType::Mouse)) {
+                // If there's a conflict, the last-added HoverHandler wins.  Maybe the user is overriding a default...
+                if (mouseHandler && mouseHandler->cursorShape() != hoverHandler->cursorShape()) {
+                    qCDebug(lcHoverTrace) << "mouse cursor conflict:" << mouseHandler << "wants" << mouseHandler->cursorShape()
+                                          << "but" << hoverHandler << "wants" << hoverHandler->cursorShape();
+                }
+                mouseHandler = hoverHandler;
+            } else {
+                // If there's a conflict, the last-added HoverHandler wins.
+                if (nonMouseHandler && nonMouseHandler->cursorShape() != hoverHandler->cursorShape()) {
+                    qCDebug(lcHoverTrace) << "non-mouse cursor conflict:" << nonMouseHandler << "wants" << nonMouseHandler->cursorShape()
+                                          << "but" << hoverHandler << "wants" << hoverHandler->cursorShape();
+                }
+                nonMouseHandler = hoverHandler;
+            }
+        }
         if (!hoverHandler && h->active())
-            return h;
+            activeHandler = h;
     }
-    return retHoverHandler;
+    if (activeHandler) {
+        qCDebug(lcHoverTrace) << "active handler choosing cursor" << activeHandler << activeHandler->cursorShape();
+        return activeHandler;
+    }
+    // Mouse events are often synthetic; so if a HoverHandler for a non-mouse device wanted to set the cursor,
+    // let it win, unless more than kCursorOverrideTimeout ms have passed
+    // since the last time the non-mouse handler actually reacted to an event.
+    // We could miss the fact that a tablet stylus has left proximity, because we don't deliver proximity events to windows.
+    if (nonMouseHandler) {
+        if (mouseHandler) {
+            const bool beforeTimeout =
+                QQuickPointerHandlerPrivate::get(mouseHandler)->lastEventTime <
+                QQuickPointerHandlerPrivate::get(nonMouseHandler)->lastEventTime + kCursorOverrideTimeout;
+            QQuickPointerHandler *winner = (beforeTimeout ? nonMouseHandler : mouseHandler);
+            qCDebug(lcHoverTrace) << "non-mouse handler reacted last time:" << QQuickPointerHandlerPrivate::get(nonMouseHandler)->lastEventTime
+                                  << "and mouse handler reacted at time:" << QQuickPointerHandlerPrivate::get(mouseHandler)->lastEventTime
+                                  << "choosing cursor according to" << winner << winner->cursorShape();
+            return winner;
+        }
+        qCDebug(lcHoverTrace) << "non-mouse handler choosing cursor" << nonMouseHandler << nonMouseHandler->cursorShape();
+        return nonMouseHandler;
+    }
+    if (mouseHandler)
+        qCDebug(lcHoverTrace) << "mouse handler choosing cursor" << mouseHandler << mouseHandler->cursorShape();
+    return mouseHandler;
 }
 
 #endif
