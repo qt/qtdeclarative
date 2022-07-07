@@ -155,6 +155,7 @@ void QQuickFileDialogImplPrivate::updateCurrentFile(const QString &oldFolderPath
             // just set the selected file).
             QSignalBlocker blocker(attached->fileDialogListView());
             attached->fileDialogListView()->setCurrentIndex(newCurrentFileIndex);
+            attached->fileDialogListView()->positionViewAtIndex(newCurrentFileIndex, QQuickListView::Center);
         }
         if (QQuickItem *currentItem = attached->fileDialogListView()->currentItem())
             currentItem->forceActiveFocus();
