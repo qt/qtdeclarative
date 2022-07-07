@@ -5,6 +5,8 @@ import QtQml
 import QtCore
 
 QtObject {
+    property int wordSize: SystemInformation.wordSize
+    property int byteOrder: SystemInformation.byteOrder
     property string buildCpuArchitecture: SystemInformation.buildCpuArchitecture
     property string currentCpuArchitecture: SystemInformation.currentCpuArchitecture
     property string buildAbi: SystemInformation.buildAbi

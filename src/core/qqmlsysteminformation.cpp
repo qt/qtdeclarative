@@ -27,6 +27,16 @@ QQmlSystemInformation::QQmlSystemInformation(QObject *parent) : QObject(parent)
 {
 }
 
+int QQmlSystemInformation::wordSize() const
+{
+    return QSysInfo::WordSize;
+}
+
+QQmlSystemInformation::Endian QQmlSystemInformation::byteOrder() const
+{
+    return static_cast<Endian>(QSysInfo::ByteOrder);
+}
+
 QString QQmlSystemInformation::buildCpuArchitecture() const
 {
     return QSysInfo::buildCpuArchitecture();

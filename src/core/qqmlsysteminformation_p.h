@@ -27,6 +27,8 @@ class Q_QMLCORE_PRIVATE_EXPORT QQmlSystemInformation : public QObject
     QML_NAMED_ELEMENT(SystemInformation)
     QML_ADDED_IN_VERSION(6, 4)
 
+    Q_PROPERTY(int wordSize READ wordSize CONSTANT FINAL)
+    Q_PROPERTY(QQmlSystemInformation::Endian byteOrder READ byteOrder CONSTANT FINAL)
     Q_PROPERTY(QString buildCpuArchitecture READ buildCpuArchitecture CONSTANT FINAL)
     Q_PROPERTY(QString currentCpuArchitecture READ currentCpuArchitecture CONSTANT FINAL)
     Q_PROPERTY(QString buildAbi READ buildAbi CONSTANT FINAL)
@@ -40,8 +42,13 @@ class Q_QMLCORE_PRIVATE_EXPORT QQmlSystemInformation : public QObject
     Q_PROPERTY(QByteArray bootUniqueId READ bootUniqueId CONSTANT FINAL)
 
 public:
+    enum class Endian { Big, Little };
+    Q_ENUM(Endian)
+
     explicit QQmlSystemInformation(QObject *parent = nullptr);
 
+    int wordSize() const;
+    Endian byteOrder() const;
     QString buildCpuArchitecture() const;
     QString currentCpuArchitecture() const;
     QString buildAbi() const;
