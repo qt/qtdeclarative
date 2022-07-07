@@ -201,6 +201,32 @@ bool QQmlValueTypeWrapper::virtualIsEqualTo(Managed *m, Managed *other)
     return false;
 }
 
+bool QQmlValueTypeWrapper::virtualHasProperty(const Managed *m, PropertyKey id)
+{
+    if (!id.isString())
+        return Object::virtualHasProperty(m, id);
+    Q_ASSERT(m && m->as<QQmlValueTypeWrapper>());
+    auto wrapper = static_cast<const QQmlValueTypeWrapper *>(m);
+    if (auto mo = wrapper->d()->metaObject())
+        if (mo->indexOfProperty(id.toQString().toUtf8()) != -1)
+            return true;
+
+    /* we don't want to fallback to QObject::virtualHasProperty
+       as that would end up calling getOwnProperty which is wasteful,
+       as it calls our own virtualGetOwnProperty.
+       As we know that our own properties are only those found on the meta-object,
+       we can instead skip the call, and simply check whether the property exists
+       on the prototype.
+    */
+    Scope scope(m->engine());
+    ScopedObject o(scope, m);
+    o = o->getPrototypeOf();
+    if (o)
+        return o->hasProperty(id);
+
+    return false;
+}
+
 static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
                                        Heap::QQmlValueTypeWrapper *valueTypeWrapper,
                                        QMetaType metaType, quint16 coreIndex, bool isFunction, bool isEnum)
