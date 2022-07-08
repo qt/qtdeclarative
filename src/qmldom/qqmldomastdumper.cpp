@@ -238,7 +238,7 @@ public:
     void endVisit(AST::UiArrayBinding *) override { stop(u"UiArrayBinding"); }
 
     bool visit(AST::UiParameterList *el) override {
-        start(QLatin1String("UiArrayBinding name=%1 commaToken=%2 propertyTypeToken=%3 identifierToken=%4 colonToken=%5")
+        start(QLatin1String("UiParameterList name=%1 commaToken=%2 propertyTypeToken=%3 identifierToken=%4 colonToken=%5")
               .arg(quotedString(el->name), loc(el->commaToken), loc(el->propertyTypeToken), loc(el->identifierToken), loc(el->colonToken)));
         Node::accept(el->type, this);
         return true;
@@ -402,7 +402,7 @@ public:
     void endVisit(AST::RegExpLiteral *) override { stop(u"RegExpLiteral"); }
 
     bool visit(AST::ArrayPattern *el) override {
-        start(QLatin1String("ArrayPattern lbracketToken=%1, commaToken=%2, rbracketToken=%3 parseMode=%4")
+        start(QLatin1String("ArrayPattern lbracketToken=%1 commaToken=%2 rbracketToken=%3 parseMode=%4")
               .arg(loc(el->lbracketToken),loc(el->commaToken),loc(el->rbracketToken), quotedString(QString::number(el->parseMode, 16))));
         return true;
     }
