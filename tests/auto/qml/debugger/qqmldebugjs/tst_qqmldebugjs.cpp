@@ -160,11 +160,6 @@ tst_QQmlDebugJS::tst_QQmlDebugJS()
 
 void tst_QQmlDebugJS::initTestCase()
 {
-#ifdef Q_OS_MACOS
-    if (qgetenv("QTEST_ENVIRONMENT").split(' ').contains("ci")) {
-        QSKIP("Tests sometimes hang on macOS, which is observed as a crash in CI: QTBUG-102984");
-    }
-#endif
     QQmlDebugTest::initTestCase();
 }
 #include <iostream>
