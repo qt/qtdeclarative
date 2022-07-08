@@ -290,6 +290,9 @@ void QSGDistanceFieldGlyphCache::updateRhiTexture(QRhiTexture *oldTex, QRhiTextu
     }
 }
 
+QSGNodeVisitorEx::~QSGNodeVisitorEx()
+    = default;
+
 void QSGNodeVisitorEx::visitChildren(QSGNode *node)
 {
     for (QSGNode *child = node->firstChild(); child; child = child->nextSibling()) {
@@ -352,6 +355,18 @@ void QSGNodeVisitorEx::visitChildren(QSGNode *node)
     }
 }
 
+QSGVisitableNode::~QSGVisitableNode()
+    = default;
+
+QSGInternalRectangleNode::~QSGInternalRectangleNode()
+    = default;
+
+QSGInternalImageNode::~QSGInternalImageNode()
+    = default;
+
+QSGPainterNode::~QSGPainterNode()
+    = default;
+
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v)
 {
@@ -390,6 +405,28 @@ QSGLayer::QSGLayer(QSGTexturePrivate &dd)
     : QSGDynamicTexture(dd)
 {
 }
+
+QSGLayer::~QSGLayer()
+    = default;
+
+#if QT_CONFIG(quick_sprite)
+
+QSGSpriteNode::~QSGSpriteNode()
+    = default;
+
+#endif
+
+QSGGuiThreadShaderEffectManager::~QSGGuiThreadShaderEffectManager()
+    = default;
+
+QSGShaderEffectNode::~QSGShaderEffectNode()
+    = default;
+
+QSGGlyphNode::~QSGGlyphNode()
+    = default;
+
+QSGDistanceFieldGlyphConsumer::~QSGDistanceFieldGlyphConsumer()
+    = default;
 
 QT_END_NAMESPACE
 

@@ -55,7 +55,7 @@ class QRhiTexture;
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
 public:
-    virtual ~QSGNodeVisitorEx() {}
+    virtual ~QSGNodeVisitorEx();
 
     // visit(...) returns true if the children are supposed to be
     // visisted and false if they're supposed to be skipped by the visitor.
@@ -93,6 +93,7 @@ class Q_QUICK_PRIVATE_EXPORT QSGVisitableNode : public QSGGeometryNode
 {
 public:
     QSGVisitableNode() { setFlag(IsVisitableNode); }
+    ~QSGVisitableNode() override;
 
     virtual void accept(QSGNodeVisitorEx *) = 0;
 };
@@ -100,6 +101,8 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QSGInternalRectangleNode : public QSGVisitableNode
 {
 public:
+    ~QSGInternalRectangleNode() override;
+
     virtual void setRect(const QRectF &rect) = 0;
     virtual void setColor(const QColor &color) = 0;
     virtual void setPenColor(const QColor &color) = 0;
@@ -119,6 +122,8 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QSGInternalImageNode : public QSGVisitableNode
 {
 public:
+    ~QSGInternalImageNode() override;
+
     virtual void setTargetRect(const QRectF &rect) = 0;
     virtual void setInnerTargetRect(const QRectF &rect) = 0;
     virtual void setInnerSourceRect(const QRectF &rect) = 0;
@@ -142,6 +147,7 @@ public:
 class Q_QUICK_PRIVATE_EXPORT QSGPainterNode : public QSGVisitableNode
 {
 public:
+    ~QSGPainterNode() override;
 
     virtual void setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target) = 0;
     virtual void setSize(const QSize &size) = 0;
@@ -166,6 +172,8 @@ class Q_QUICK_EXPORT QSGLayer : public QSGDynamicTexture
 {
     Q_OBJECT
 public:
+    ~QSGLayer() override;
+
     enum Format {
         RGBA8 = 1,
         RGBA16F,
@@ -200,6 +208,8 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QSGSpriteNode : public QSGVisitableNode
 {
 public:
+    ~QSGSpriteNode() override;
+
     virtual void setTexture(QSGTexture *texture) = 0;
     virtual void setTime(float time) = 0;
     virtual void setSourceA(const QPoint &source) = 0;
@@ -221,6 +231,8 @@ class Q_QUICK_PRIVATE_EXPORT QSGGuiThreadShaderEffectManager : public QObject
     Q_OBJECT
 
 public:
+    ~QSGGuiThreadShaderEffectManager() override;
+
     enum Status {
         Compiled,
         Uncompiled,
@@ -280,6 +292,8 @@ class Q_QUICK_PRIVATE_EXPORT QSGShaderEffectNode : public QObject, public QSGVis
     Q_OBJECT
 
 public:
+    ~QSGShaderEffectNode() override;
+
     enum DirtyShaderFlag {
         DirtyShaders = 0x01,
         DirtyShaderConstant = 0x02,
@@ -354,6 +368,7 @@ public:
     };
 
     QSGGlyphNode() {}
+    ~QSGGlyphNode() override;
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
@@ -381,7 +396,7 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphConsumer
 {
 public:
-    virtual ~QSGDistanceFieldGlyphConsumer() {}
+    virtual ~QSGDistanceFieldGlyphConsumer();
 
     virtual void invalidateGlyphs(const QVector<quint32> &glyphs) = 0;
     QIntrusiveListNode node;

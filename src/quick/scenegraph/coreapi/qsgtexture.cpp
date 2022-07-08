@@ -657,6 +657,12 @@ QSGDynamicTexture::QSGDynamicTexture(QSGTexturePrivate &dd)
 }
 
 /*!
+    \internal
+ */
+QSGDynamicTexture::~QSGDynamicTexture()
+    = default;
+
+/*!
     \fn template <typename QNativeInterface> NativeInterface *QSGTexture::nativeInterface() const
 
     Returns a native interface of the given type for the texture.
