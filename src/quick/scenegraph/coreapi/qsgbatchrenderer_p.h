@@ -259,7 +259,7 @@ inline QDebug operator << (QDebug d, const Rect &r) {
 }
 
 struct Buffer {
-    int size;
+    quint32 size;
     // Data is only valid while preparing the upload. Exception is if we are using the
     // broken IBO workaround or we are using a visualization mode.
     char *data;
@@ -779,7 +779,7 @@ private:
     friend class RhiVisualizer;
 
     void destroyGraphicsResources();
-    void map(Buffer *buffer, int size, bool isIndexBuf = false);
+    void map(Buffer *buffer, quint32 byteSize, bool isIndexBuf = false);
     void unmap(Buffer *buffer, bool isIndexBuf = false);
 
     void buildRenderListsFromScratch();

@@ -252,7 +252,7 @@ static inline uint aligned(uint v, uint byteAlign)
     return (v + byteAlign - 1) & ~(byteAlign - 1);
 }
 
-static bool ensureBuffer(QRhi *rhi, QRhiBuffer **buf, QRhiBuffer::UsageFlags usage, int newSize)
+static bool ensureBuffer(QRhi *rhi, QRhiBuffer **buf, QRhiBuffer::UsageFlags usage, quint32 newSize)
 {
     if (!*buf) {
         *buf = rhi->newBuffer(QRhiBuffer::Dynamic, usage, newSize);

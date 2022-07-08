@@ -84,7 +84,8 @@ const uint DYNAMIC_VERTEX_INDEX_BUFFER_THRESHOLD = 4;
 const int VERTEX_BUFFER_BINDING = 0;
 const int ZORDER_BUFFER_BINDING = VERTEX_BUFFER_BINDING + 1;
 
-static inline uint aligned(uint v, uint byteAlign)
+template <class Int>
+inline Int aligned(Int v, Int byteAlign)
 {
     return (v + byteAlign - 1) & ~(byteAlign - 1);
 }
@@ -130,7 +131,7 @@ static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialShader 
     const int attrCount = geometry->attributeCount();
     QVarLengthArray<QRhiVertexInputAttribute, 8> inputAttributes;
     inputAttributes.reserve(attrCount + 1);
-    int offset = 0;
+    quint32 offset = 0;
     for (int i = 0; i < attrCount; ++i) {
         const QSGGeometry::Attribute &a = geometry->attributes()[i];
         if (!sd->vertexShader->vertexInputLocations.contains(a.position)) {
@@ -965,13 +966,13 @@ void Renderer::invalidateAndRecycleBatch(Batch *b)
     m_batchPool.add(b);
 }
 
-void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
+void Renderer::map(Buffer *buffer, quint32 byteSize, bool isIndexBuf)
 {
     if (m_visualizer->mode() == Visualizer::VisualizeNothing) {
         // Common case, use a shared memory pool for uploading vertex data to avoid
         // excessive reevaluation
         QDataBuffer<char> &pool = isIndexBuf ? m_indexUploadPool : m_vertexUploadPool;
-        if (byteSize > pool.size())
+        if (byteSize > quint32(pool.size()))
             pool.resize(byteSize);
         buffer->data = pool.data();
     } else if (buffer->size != byteSize) {
@@ -992,7 +993,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
                                        isIndexBuf ? QRhiBuffer::IndexBuffer : QRhiBuffer::VertexBuffer,
                                        buffer->size);
         if (!buffer->buf->create()) {
-            qWarning("Failed to build vertex/index buffer of size %d", buffer->size);
+            qWarning("Failed to build vertex/index buffer of size %u", buffer->size);
             delete buffer->buf;
             buffer->buf = nullptr;
         }
@@ -1011,7 +1012,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
         }
         if (needsRebuild) {
             if (!buffer->buf->create()) {
-                qWarning("Failed to (re)build vertex/index buffer of size %d", buffer->size);
+                qWarning("Failed to (re)build vertex/index buffer of size %u", buffer->size);
                 delete buffer->buf;
                 buffer->buf = nullptr;
             }
@@ -2271,10 +2272,10 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
     const QSGClipNode *clip = clipList;
 
     batch->stencilClipState.drawCalls.reset();
-    int totalVSize = 0;
-    int totalISize = 0;
-    int totalUSize = 0;
-    const int StencilClipUbufSize = 64;
+    quint32 totalVSize = 0;
+    quint32 totalISize = 0;
+    quint32 totalUSize = 0;
+    const quint32 StencilClipUbufSize = 64;
 
     while (clip) {
         QMatrix4x4 m = m_current_projection_matrix_native_ndc;
@@ -2329,11 +2330,11 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
 
             const int vertexByteSize = g->sizeOfVertex() * g->vertexCount();
             // the 4 byte alignment may not actually be needed here
-            totalVSize = aligned(totalVSize, 4) + vertexByteSize;
+            totalVSize = aligned(totalVSize, 4u) + vertexByteSize;
             if (g->indexCount()) {
                 const int indexByteSize = g->sizeOfIndex() * g->indexCount();
                 // so no need to worry about NonFourAlignedEffectiveIndexBufferOffset
-                totalISize = aligned(totalISize, 4) + indexByteSize;
+                totalISize = aligned(totalISize, 4u) + indexByteSize;
             }
             // ubuf start offsets must be aligned (typically to 256 bytes)
             totalUSize = aligned(totalUSize, m_ubufAlignment) + StencilClipUbufSize;
@@ -2411,9 +2412,9 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
             }
         }
 
-        int vOffset = 0;
-        int iOffset = 0;
-        int uOffset = 0;
+        quint32 vOffset = 0;
+        quint32 iOffset = 0;
+        quint32 uOffset = 0;
         for (const QSGClipNode *clip : stencilClipNodes) {
             const QSGGeometry *g = clip->geometry();
             const QSGGeometry::Attribute *a = g->attributes();
@@ -2434,13 +2435,13 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
             }
 #endif
 
-            drawCall.vbufOffset = aligned(vOffset, 4);
+            drawCall.vbufOffset = aligned(vOffset, 4u);
             const int vertexByteSize = g->sizeOfVertex() * g->vertexCount();
             vOffset = drawCall.vbufOffset + vertexByteSize;
 
             int indexByteSize = 0;
             if (g->indexCount()) {
-                drawCall.ibufOffset = aligned(iOffset, 4);
+                drawCall.ibufOffset = aligned(iOffset, 4u);
                 indexByteSize = g->sizeOfIndex() * g->indexCount();
                 iOffset = drawCall.ibufOffset + indexByteSize;
             }
@@ -3089,7 +3090,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     }
 
     QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->programRhi.program);
-    const int ubufSize = pd->masterUniformData.size();
+    const quint32 ubufSize = quint32(pd->masterUniformData.size());
     if (pd->ubufBinding >= 0) {
         bool ubufRebuild = false;
         if (!batch->ubuf) {
@@ -3104,7 +3105,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
         if (ubufRebuild) {
             batch->ubufDataValid = false;
             if (!batch->ubuf->create()) {
-                qWarning("Failed to build uniform buffer of size %d bytes", ubufSize);
+                qWarning("Failed to build uniform buffer of size %u bytes", ubufSize);
                 delete batch->ubuf;
                 batch->ubuf = nullptr;
                 return false;
@@ -3269,9 +3270,9 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     QMatrix4x4 rootMatrix = batch->root ? qsg_matrixForRoot(batch->root) : QMatrix4x4();
 
     QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->programRhi.program);
-    const int ubufSize = pd->masterUniformData.size();
+    const quint32 ubufSize = quint32(pd->masterUniformData.size());
     if (pd->ubufBinding >= 0) {
-        int totalUBufSize = 0;
+        quint32 totalUBufSize = 0;
         while (e) {
             totalUBufSize += aligned(ubufSize, m_ubufAlignment);
             e = e->nextInBatch;
@@ -3289,7 +3290,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         if (ubufRebuild) {
             batch->ubufDataValid = false;
             if (!batch->ubuf->create()) {
-                qWarning("Failed to build uniform buffer of size %d bytes", totalUBufSize);
+                qWarning("Failed to build uniform buffer of size %u bytes", totalUBufSize);
                 delete batch->ubuf;
                 batch->ubuf = nullptr;
                 return false;
@@ -3394,8 +3395,8 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthP
     if (batch->clipState.type & ClipState::StencilClip)
         enqueueStencilDraw(batch);
 
-    int vOffset = 0;
-    int iOffset = 0;
+    quint32 vOffset = 0;
+    quint32 iOffset = 0;
     QRhiCommandBuffer *cb = commandBuffer();
 
     while (e) {
@@ -3650,8 +3651,8 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
 
     if (Q_UNLIKELY(debug_render())) ctx->timeSorting = ctx->timer.restart();
 
-    int largestVBO = 0;
-    int largestIBO = 0;
+    quint32 largestVBO = 0;
+    quint32 largestIBO = 0;
 
     if (Q_UNLIKELY(debug_upload())) qDebug("Uploading Opaque Batches:");
     for (int i=0; i<m_opaqueBatches.size(); ++i) {
@@ -3671,9 +3672,9 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     }
     if (Q_UNLIKELY(debug_render())) ctx->timeUploadAlpha = ctx->timer.restart();
 
-    if (largestVBO * 2 < m_vertexUploadPool.size())
+    if (largestVBO * 2 < quint32(m_vertexUploadPool.size()))
         m_vertexUploadPool.resize(largestVBO * 2);
-    if (largestIBO * 2 < m_indexUploadPool.size())
+    if (largestIBO * 2 < quint32(m_indexUploadPool.size()))
         m_indexUploadPool.resize(largestIBO * 2);
 
     if (Q_UNLIKELY(debug_render())) {
