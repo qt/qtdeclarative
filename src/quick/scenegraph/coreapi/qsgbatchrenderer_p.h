@@ -1030,6 +1030,7 @@ void StencilClipState::reset()
 Q_DECLARE_TYPEINFO(QSGBatchRenderer::GraphicsState, Q_RELOCATABLE_TYPE);
 Q_DECLARE_TYPEINFO(QSGBatchRenderer::GraphicsPipelineStateKey, Q_RELOCATABLE_TYPE);
 Q_DECLARE_TYPEINFO(QSGBatchRenderer::RenderPassState, Q_RELOCATABLE_TYPE);
+Q_DECLARE_TYPEINFO(QSGBatchRenderer::DrawSet, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
 
