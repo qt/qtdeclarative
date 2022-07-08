@@ -2967,6 +2967,7 @@ void QQuickTextEdit::hoverEnterEvent(QHoverEvent *event)
     Q_D(QQuickTextEdit);
     if (d->isLinkHoveredConnected())
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
+    event->ignore();
 }
 
 void QQuickTextEdit::hoverMoveEvent(QHoverEvent *event)
@@ -2974,6 +2975,7 @@ void QQuickTextEdit::hoverMoveEvent(QHoverEvent *event)
     Q_D(QQuickTextEdit);
     if (d->isLinkHoveredConnected())
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
+    event->ignore();
 }
 
 void QQuickTextEdit::hoverLeaveEvent(QHoverEvent *event)
@@ -2981,6 +2983,7 @@ void QQuickTextEdit::hoverLeaveEvent(QHoverEvent *event)
     Q_D(QQuickTextEdit);
     if (d->isLinkHoveredConnected())
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
+    event->ignore();
 }
 
 /*!

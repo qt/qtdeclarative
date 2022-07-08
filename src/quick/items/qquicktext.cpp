@@ -2961,7 +2961,7 @@ void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
             emit q->linkHovered(extra->hoveredLink);
         }
     }
-    event->setAccepted(!link.isEmpty());
+    event->ignore();
 }
 
 void QQuickText::hoverEnterEvent(QHoverEvent *event)
