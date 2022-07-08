@@ -383,7 +383,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint form
 */
 QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount)
 {
-    return fromD3D11Texture(texture, 0, pixelSize, sampleCount);
+    return fromD3D11Texture(texture, 0 /* DXGI_FORMAT_UNKNOWN */, pixelSize, sampleCount);
 }
 #endif
 
@@ -469,7 +469,7 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uin
 */
 QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount)
 {
-    return fromMetalTexture(texture, 0, pixelSize, sampleCount);
+    return fromMetalTexture(texture, 0 /* MTLPixelFormatInvalid */, pixelSize, sampleCount);
 }
 #endif
 

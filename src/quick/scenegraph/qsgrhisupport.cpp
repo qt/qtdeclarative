@@ -257,6 +257,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format)
     case GL_RGBA:
         Q_FALLTHROUGH();
     case GL_RGBA8:
+    case 0:
         rhiFormat = QRhiTexture::RGBA8;
         break;
     case GL_BGRA:
@@ -330,6 +331,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromVulkan(uint format, QRh
         sRGB = true;
         Q_FALLTHROUGH();
     case VK_FORMAT_R8G8B8A8_UNORM:
+    case VK_FORMAT_UNDEFINED:
         rhiFormat = QRhiTexture::RGBA8;
         break;
     case VK_FORMAT_B8G8R8A8_SRGB:
@@ -540,6 +542,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromD3D11(uint format, QRhi
         sRGB = true;
         Q_FALLTHROUGH();
     case DXGI_FORMAT_R8G8B8A8_UNORM:
+    case DXGI_FORMAT_UNKNOWN:
         rhiFormat = QRhiTexture::RGBA8;
         break;
     case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:

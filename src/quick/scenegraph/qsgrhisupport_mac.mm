@@ -18,6 +18,7 @@ QRhiTexture::Format toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags 
         sRGB = true;
         Q_FALLTHROUGH();
     case MTLPixelFormatRGBA8Unorm:
+    case MTLPixelFormatInvalid:
         rhiFormat = QRhiTexture::RGBA8;
         break;
     case MTLPixelFormatBGRA8Unorm_sRGB:
