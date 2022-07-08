@@ -1021,15 +1021,14 @@ void QQuickTextArea::hoverEnterEvent(QHoverEvent *event)
     Q_D(QQuickTextArea);
     QQuickTextEdit::hoverEnterEvent(event);
     setHovered(d->hoverEnabled);
-    event->setAccepted(d->hoverEnabled);
+    event->ignore();
 }
 
 void QQuickTextArea::hoverLeaveEvent(QHoverEvent *event)
 {
-    Q_D(QQuickTextArea);
     QQuickTextEdit::hoverLeaveEvent(event);
     setHovered(false);
-    event->setAccepted(d->hoverEnabled);
+    event->ignore();
 }
 #endif
 

@@ -858,6 +858,7 @@ void QQuickSpinBox::hoverEnterEvent(QHoverEvent *event)
     Q_D(QQuickSpinBox);
     QQuickControl::hoverEnterEvent(event);
     d->updateHover(event->position());
+    event->ignore();
 }
 
 void QQuickSpinBox::hoverMoveEvent(QHoverEvent *event)
@@ -865,6 +866,7 @@ void QQuickSpinBox::hoverMoveEvent(QHoverEvent *event)
     Q_D(QQuickSpinBox);
     QQuickControl::hoverMoveEvent(event);
     d->updateHover(event->position());
+    event->ignore();
 }
 
 void QQuickSpinBox::hoverLeaveEvent(QHoverEvent *event)
@@ -873,6 +875,7 @@ void QQuickSpinBox::hoverLeaveEvent(QHoverEvent *event)
     QQuickControl::hoverLeaveEvent(event);
     d->down->setHovered(false);
     d->up->setHovered(false);
+    event->ignore();
 }
 
 void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
