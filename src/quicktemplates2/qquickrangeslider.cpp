@@ -1142,6 +1142,7 @@ void QQuickRangeSlider::hoverEnterEvent(QHoverEvent *event)
     Q_D(QQuickRangeSlider);
     QQuickControl::hoverEnterEvent(event);
     d->updateHover(event->position());
+    event->ignore();
 }
 
 void QQuickRangeSlider::hoverMoveEvent(QHoverEvent *event)
@@ -1149,6 +1150,7 @@ void QQuickRangeSlider::hoverMoveEvent(QHoverEvent *event)
     Q_D(QQuickRangeSlider);
     QQuickControl::hoverMoveEvent(event);
     d->updateHover(event->position());
+    event->ignore();
 }
 
 void QQuickRangeSlider::hoverLeaveEvent(QHoverEvent *event)
@@ -1157,6 +1159,7 @@ void QQuickRangeSlider::hoverLeaveEvent(QHoverEvent *event)
     QQuickControl::hoverLeaveEvent(event);
     d->first->setHovered(false);
     d->second->setHovered(false);
+    event->ignore();
 }
 
 void QQuickRangeSlider::keyReleaseEvent(QKeyEvent *event)
