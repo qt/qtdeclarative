@@ -34,6 +34,7 @@ set(qml_files
     "ToolBar.qml"
     "MenuBar.qml"
     "Drawer.qml"
+    "Popup.qml"
 )
 
 set_source_files_properties(Slider.qml PROPERTIES
