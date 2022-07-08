@@ -454,6 +454,9 @@ void tst_QQuickFileDialogImpl::changeFolderViaDoubleClick()
     COMPARE_URL(subDirDelegate->file(), QUrl::fromLocalFile(tempSubDir.path()));
     QVERIFY(doubleClickButton(subDirDelegate));
     // The first file in the directory should be selected, which is "sub-sub-dir".
+    const QStringList expectedVisibleFiles = { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() };
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(fileDialogListView, expectedVisibleFiles, failureMessage), qPrintable(failureMessage));
     COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
     COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempSubSubDir.path()) });
     QQuickFileDialogDelegate *subSubDirDelegate = nullptr;
@@ -534,6 +537,9 @@ void tst_QQuickFileDialogImpl::chooseFolderViaEnter()
     // Select the delegate by pressing enter.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir.path()));
+    const QStringList expectedVisibleFiles = { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() };
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(fileDialogListView, expectedVisibleFiles, failureMessage), qPrintable(failureMessage));
     // The first file in the new directory should be selected, which is "sub-sub-dir".
     COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
     // Since we only chose a folder, the dialog should still be open.
