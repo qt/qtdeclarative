@@ -673,10 +673,12 @@ bool QQuickPointerHandler::event(QEvent *e)
 
 void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
 {
+    Q_D(QQuickPointerHandler);
     bool wants = wantsPointerEvent(event);
     qCDebug(lcPointerHandlerDispatch) << metaObject()->className() << objectName()
                                       << "on" << parent()->metaObject()->className() << parent()->objectName()
                                       << (wants ? "WANTS" : "DECLINES") << event;
+    d->currentEvent = event;
     if (wants) {
         handlePointerEventImpl(event);
     } else {
@@ -692,6 +694,7 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
             }
         }
     }
+    d->currentEvent = nullptr;
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->device()).append(this);
 }
 
@@ -733,10 +736,8 @@ void QQuickPointerHandler::setActive(bool active)
     }
 }
 
-void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *event)
+void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 {
-    Q_D(QQuickPointerHandler);
-    d->currentEvent = event;
 }
 
 /*!
