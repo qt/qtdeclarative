@@ -86,6 +86,21 @@ private:
     T *o;
 };
 
+namespace QQml {
+/*!
+    \internal
+    Creates a QQmlRefPointer which takes ownership of a newly constructed T.
+    T must derive from QQmlRefCount (as we rely on an initial refcount of _1_).
+    T will be constructed by forwarding \a args to its constructor.
+ */
+template <typename T, typename ...Args>
+QQmlRefPointer<T> makeRefPointer(Args&&... args)
+{
+    static_assert(std::is_base_of_v<QQmlRefCount, T>);
+    return QQmlRefPointer<T>(new T(std::forward<Args>(args)...), QQmlRefPointer<T>::Adopt);
+}
+}
+
 template <typename T>
 Q_DECLARE_TYPEINFO_BODY(QQmlRefPointer<T>, Q_RELOCATABLE_TYPE);
 
