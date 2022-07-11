@@ -12,6 +12,7 @@
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
+using namespace Qt::StringLiterals;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
@@ -222,7 +223,7 @@ ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const 
 
     QQmlListProperty<QObject> *property = &w->d()->property();
     if (!property->append)
-        THROW_GENERIC_ERROR("List doesn't define an Append function");
+        return scope.engine->throwTypeError(u"List doesn't define an Append function"_s);
 
     QV4::ScopedObject so(scope);
     for (int i = 0, ei = argc; i < ei; ++i)
