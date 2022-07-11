@@ -196,7 +196,16 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
             }
         };
 
-        const bool isValueType = (type->accessSemantics() == QQmlJSScope::AccessSemantics::Value);
+        const bool isValueOrSequenceType = [type]() {
+            switch (type->accessSemantics()) {
+            case QQmlJSScope::AccessSemantics::Value:
+            case QQmlJSScope::AccessSemantics::Sequence:
+                return true;
+            default:
+                break;
+            }
+            return false;
+        }();
 
         QDuplicateTracker<T> seen;
         for (T scope = type; scope && !seen.hasSeen(scope);
@@ -204,8 +213,8 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
             QDuplicateTracker<T> seenExtensions;
             // Extensions override the types they extend. However, usually base
             // types of extensions are ignored. The unusual cases are when we
-            // have a value type or when we have the QObject type, in which case
-            // we also study the extension's base type hierarchy.
+            // have a value or sequence type or when we have the QObject type, in which
+            // case we also study the extension's base type hierarchy.
             const bool isQObject = scope->internalName() == QLatin1String("QObject");
             auto [extensionPtr, extensionKind] = scope->extensionType();
             auto extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extensionPtr);
@@ -216,7 +225,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
                 if (checkWrapper(extension, extensionKind))
                     return true;
                 extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType());
-            } while (isValueType || isQObject);
+            } while (isValueOrSequenceType || isQObject);
 
             if (checkWrapper(scope, QQmlJSScope::NotExtension))
                 return true;

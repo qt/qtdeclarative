@@ -1156,6 +1156,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("boundComponents") << QStringLiteral("boundComponents.qml");
     QTest::newRow("prefixedAttachedProperty") << QStringLiteral("prefixedAttachedProperty.qml");
     QTest::newRow("callLater") << QStringLiteral("callLater.qml");
+    QTest::newRow("listPropertyMethods") << QStringLiteral("listPropertyMethods.qml");
+    QTest::newRow("v4SequenceMethods") << QStringLiteral("v4SequenceMethods.qml");
 }
 
 void TestQmllint::cleanQmlCode()

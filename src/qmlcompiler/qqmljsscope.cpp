@@ -367,8 +367,19 @@ QTypeRevision QQmlJSScope::resolveType(
     if (!self->m_valueType && !self->m_valueTypeName.isEmpty())
         self->m_valueType = findType(self->m_valueTypeName, context, usedTypes).scope;
 
-    if (!self->m_extensionType && !self->m_extensionTypeName.isEmpty())
-        self->m_extensionType = findType(self->m_extensionTypeName, context, usedTypes).scope;
+    if (!self->m_extensionType) {
+        if (self->m_extensionTypeName.isEmpty()) {
+            if (self->accessSemantics() == AccessSemantics::Sequence) {
+                // All sequence types are implicitly extended by JS Array.
+                const QString array = u"Array"_s;
+                self->setExtensionTypeName(array);
+                self->m_extensionType = findType(array, context, usedTypes).scope;
+            }
+        } else {
+            self->m_extensionType = findType(self->m_extensionTypeName, context, usedTypes).scope;
+        }
+    }
+
 
     for (auto it = self->m_properties.begin(), end = self->m_properties.end(); it != end; ++it) {
         const QString typeName = it->typeName();

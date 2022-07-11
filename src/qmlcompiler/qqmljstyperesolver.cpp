@@ -40,6 +40,8 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     QQmlJSScope::Ptr emptyListType = QQmlJSScope::create();
     emptyListType->setInternalName(u"void*"_s);
     emptyListType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
+    QQmlJSScope::resolveTypes(emptyListType, builtinTypes);
+    Q_ASSERT(!emptyListType->extensionType().scope.isNull());
     m_emptyListType = emptyListType;
 
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
@@ -54,6 +56,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
     listPropertyType->setValueTypeName(u"QObject"_s);
     QQmlJSScope::resolveTypes(listPropertyType, builtinTypes);
+    Q_ASSERT(!listPropertyType->extensionType().scope.isNull());
     m_listPropertyType = listPropertyType;
 
     QQmlJSScope::Ptr metaObjectType = QQmlJSScope::create();
@@ -73,6 +76,11 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_numberPrototype = numberMethods[0].returnType()->baseType();
     Q_ASSERT(m_numberPrototype);
     Q_ASSERT(m_numberPrototype->internalName() == u"NumberPrototype"_s);
+
+    auto arrayMethods = m_jsGlobalObject->methods(u"Array"_s);
+    Q_ASSERT(arrayMethods.length() == 1);
+    m_arrayType = arrayMethods[0].returnType();
+    Q_ASSERT(m_arrayType);
 }
 
 /*!
@@ -139,7 +147,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(
         listType->setInternalName(u"QList<%1>"_s.arg(elementType->augmentedInternalName()));
         listType->setFilePath(elementType->filePath());
         const QQmlJSImportedScope element = {elementType, QTypeRevision()};
-        QQmlJSScope::resolveTypes(listType, {{elementType->internalName(), element}});
+        const QQmlJSImportedScope array = {m_arrayType, QTypeRevision()};
+        QQmlJSScope::resolveTypes(
+                    listType, {{elementType->internalName(), element}, {u"Array"_s, array}});
         Q_ASSERT(equals(listType->valueType(), elementType));
         m_typeTracker->listTypes[elementType] = listType;
         return listType;
@@ -1095,8 +1105,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
     }
     if (type.isProperty()) {
         const auto prop = type.property();
-        if (prop.isList() && name == u"length"_s)
-            return lengthProperty(true, listType(prop.type(), UseListReference));
+        if (prop.isList()) {
+            const QQmlJSScope::ConstPtr propType = listType(prop.type(), UseListReference);
+            if (name == u"length"_s)
+                return lengthProperty(true, propType);
+            return memberType(propType, name);
+        }
         return memberType(prop.type(), name);
     }
     if (type.isEnumeration()) {

@@ -171,6 +171,7 @@ protected:
     QQmlJSScope::ConstPtr m_emptyListType;
     QQmlJSScope::ConstPtr m_nullType;
     QQmlJSScope::ConstPtr m_numberPrototype;
+    QQmlJSScope::ConstPtr m_arrayType;
     QQmlJSScope::ConstPtr m_realType;
     QQmlJSScope::ConstPtr m_floatType;
     QQmlJSScope::ConstPtr m_intType;
