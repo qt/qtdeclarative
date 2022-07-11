@@ -953,45 +953,45 @@ TestCase {
         control.contentItem.implicitWidth = 10
         compare(control.implicitWidth, 10 + control.leftPadding + control.rightPadding)
         compare(control.width, control.implicitWidth)
-        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+        compare(control.contentItem.width, control.availableWidth)
 
         control.contentItem.implicitHeight = 20
         compare(control.implicitHeight, 20 + control.topPadding + control.bottomPadding)
         compare(control.height, control.implicitHeight)
-        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+        compare(control.contentItem.height, control.availableHeight)
 
         // implicit size of the popup
         control.implicitWidth = 30
         compare(control.implicitWidth, 30)
         compare(control.width, 30)
-        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+        compare(control.contentItem.width, control.availableWidth)
 
         control.implicitHeight = 40
         compare(control.implicitHeight, 40)
         compare(control.height, 40)
-        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+        compare(control.contentItem.height, control.availableHeight)
 
         // set explicit size
         control.width = 50
         compare(control.implicitWidth, 30)
         compare(control.width, 50)
-        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+        compare(control.contentItem.width, control.availableWidth)
 
         control.height = 60
         compare(control.implicitHeight, 40)
         compare(control.height, 60)
-        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+        compare(control.contentItem.height, control.availableHeight)
 
         // reset explicit size
         control.width = undefined
         compare(control.implicitWidth, 30)
         compare(control.width, 30)
-        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+        compare(control.contentItem.width, control.availableWidth)
 
         control.height = undefined
         compare(control.implicitHeight, 40)
         compare(control.height, 40)
-        compare(control.contentItem.height, control.height - control.topPadding - control.bottomPadding)
+        compare(control.contentItem.height, control.availableHeight)
     }
 
     function test_visible() {
