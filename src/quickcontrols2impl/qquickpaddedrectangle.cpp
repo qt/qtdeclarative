@@ -59,7 +59,7 @@ void QQuickPaddedRectangle::setPadding(qreal padding)
         m_padding = padding;
         update();
         emit paddingChanged();
-        if (m_hasTopPadding)
+        if (!m_hasTopPadding)
             emit topPaddingChanged();
         if (!m_hasLeftPadding)
             emit leftPaddingChanged();
