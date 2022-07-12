@@ -669,7 +669,7 @@ public:
     void deliverShortcutOverrideEvent(QKeyEvent *);
 
     bool anyPointerHandlerWants(const QPointerEvent *event, const QEventPoint &point) const;
-    virtual bool handlePointerEvent(QPointerEvent *, bool avoidExclusiveGrabber = false);
+    virtual bool handlePointerEvent(QPointerEvent *, bool avoidGrabbers = false);
 
     virtual void setVisible(bool visible);
 
