@@ -172,6 +172,7 @@ public:
     static void localizePointerEvent(QPointerEvent *ev, const QQuickItem *dest);
     QList<QObject *> exclusiveGrabbers(QPointerEvent *ev);
     static bool anyPointGrabbed(const QPointerEvent *ev);
+    static bool allPointsGrabbed(const QPointerEvent *ev);
     static bool isMouseEvent(const QPointerEvent *ev);
     static bool isHoverEvent(const QPointerEvent *ev);
     static bool isTouchEvent(const QPointerEvent *ev);

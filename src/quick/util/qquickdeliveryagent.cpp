@@ -1308,6 +1308,15 @@ bool QQuickDeliveryAgentPrivate::anyPointGrabbed(const QPointerEvent *ev)
     return false;
 }
 
+bool QQuickDeliveryAgentPrivate::allPointsGrabbed(const QPointerEvent *ev)
+{
+    for (const auto &point : ev->points()) {
+        if (!ev->exclusiveGrabber(point) && ev->passiveGrabbers(point).isEmpty())
+            return false;
+    }
+    return true;
+}
+
 bool QQuickDeliveryAgentPrivate::isMouseEvent(const QPointerEvent *ev)
 {
     switch (ev->type()) {
@@ -1906,7 +1915,7 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
         return;
 
     // If some points weren't grabbed, deliver only to non-grabber PointerHandlers in reverse paint order
-    if (!event->allPointsGrabbed()) {
+    if (!allPointsGrabbed(event)) {
         QVector<QQuickItem *> targetItems;
         for (auto &point : event->points()) {
             // Presses were delivered earlier; not the responsibility of deliverUpdatedTouchPoints.
@@ -1926,7 +1935,7 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
             QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
             localizePointerEvent(event, item);
             itemPrivate->handlePointerEvent(event, true); // avoid re-delivering to grabbers
-            if (event->allPointsGrabbed())
+            if (allPointsGrabbed(event))
                 break;
         }
     }
