@@ -25,6 +25,7 @@ private slots:
     void filterOnGroup_removeWhenCompleted();
     void contextAccessedByHandler();
     void redrawUponColumnChange();
+    void nestedDelegates();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -176,6 +177,34 @@ void tst_QQmlDelegateModel::redrawUponColumnChange()
     m1.removeColumn(0);
 
     QCOMPARE(item->property("text").toString(), "Coconut");
+}
+
+void tst_QQmlDelegateModel::nestedDelegates()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("nestedDelegates.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQuickItem *item = qobject_cast<QQuickItem *>(o.data());
+    QCOMPARE(item->childItems().length(), 2);
+    for (QQuickItem *child : item->childItems()) {
+        if (child->objectName() != QLatin1String("loader"))
+            continue;
+
+        QCOMPARE(child->childItems().length(), 1);
+        QQuickItem *timeMarks = child->childItems().at(0);
+        const QList<QQuickItem *> children = timeMarks->childItems();
+        QCOMPARE(children.length(), 2);
+
+        // One of them is the repeater, the other one is the rectangle
+        QVERIFY(children.at(0)->objectName() == QLatin1String("zap")
+                 || children.at(1)->objectName() == QLatin1String("zap"));
+        QVERIFY(children.at(0)->objectName().isEmpty() || children.at(1)->objectName().isEmpty());
+
+        return; // loader found
+    }
+    QFAIL("Loader not found");
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

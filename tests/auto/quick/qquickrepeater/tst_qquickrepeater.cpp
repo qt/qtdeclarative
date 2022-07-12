@@ -1145,7 +1145,11 @@ void tst_QQuickRepeater::contextProperties()
 
     while (!items.isEmpty()) {
         QQuickItem *item = items.dequeue();
-        QVERIFY(!QQmlContextData::get(qmlContext(item))->extraObject());
+        QQmlRefPointer<QQmlContextData> contextData = QQmlContextData::get(qmlContext(item));
+
+        // Context object and extra object should never be the same. There are ways for the extra
+        // object to exist even without required properties, though.
+        QVERIFY(contextData->contextObject() != contextData->extraObject());
         for (QQuickItem *child : item->childItems())
             items.enqueue(child);
     }

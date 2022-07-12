@@ -74,7 +74,11 @@ public:
     ~QQmlDelegateModelItem();
 
     void referenceObject() { ++objectRef; }
-    bool releaseObject() { return --objectRef == 0 && !(groups & Compositor::PersistedFlag); }
+    bool releaseObject()
+    {
+        Q_ASSERT(objectRef > 0);
+        return --objectRef == 0 && !(groups & Compositor::PersistedFlag);
+    }
     bool isObjectReferenced() const { return objectRef != 0 || (groups & Compositor::PersistedFlag); }
     void childContextObjectDestroyed(QObject *childContextObject);
 

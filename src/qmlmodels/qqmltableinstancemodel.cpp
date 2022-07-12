@@ -29,13 +29,7 @@ void QQmlTableInstanceModel::deleteModelItemLater(QQmlDelegateModelItem *modelIt
 
     delete modelItem->object;
     modelItem->object = nullptr;
-
-    if (modelItem->contextData) {
-        modelItem->contextData->invalidate();
-        Q_ASSERT(modelItem->contextData->refCount() == 1);
-        modelItem->contextData = nullptr;
-    }
-
+    modelItem->contextData.reset();
     modelItem->deleteLater();
 }
 
@@ -67,8 +61,7 @@ QQmlTableInstanceModel::~QQmlTableInstanceModel()
         if (modelItem->object) {
             delete modelItem->object;
             modelItem->object = nullptr;
-            modelItem->contextData->invalidate();
-            modelItem->contextData = nullptr;
+            modelItem->contextData.reset();
         }
     }
 
@@ -295,17 +288,31 @@ void QQmlTableInstanceModel::incubateModelItem(QQmlDelegateModelItem *modelItem,
         modelItem->incubationTask = new QQmlTableInstanceModelIncubationTask(this, modelItem, incubationMode);
 
         QQmlContext *creationContext = modelItem->delegate->creationContext();
-        QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createRefCounted(
-                    QQmlContextData::get(creationContext  ? creationContext : m_qmlContext.data()));
-        ctxt->setContextObject(modelItem);
-        modelItem->contextData = ctxt;
+        const QQmlRefPointer<QQmlContextData> componentContext
+                = QQmlContextData::get(creationContext  ? creationContext : m_qmlContext.data());
 
-        QQmlComponentPrivate::get(modelItem->delegate)->incubateObject(
-                    modelItem->incubationTask,
-                    modelItem->delegate,
-                    m_qmlContext->engine(),
-                    ctxt,
-                    QQmlContextData::get(m_qmlContext));
+        QQmlComponentPrivate *cp = QQmlComponentPrivate::get(modelItem->delegate);
+        if (cp->isBound()) {
+            modelItem->contextData = componentContext;
+            cp->incubateObject(
+                        modelItem->incubationTask,
+                        modelItem->delegate,
+                        m_qmlContext->engine(),
+                        componentContext,
+                        QQmlContextData::get(m_qmlContext));
+        } else {
+            QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createRefCounted(
+                        QQmlContextData::get(creationContext  ? creationContext : m_qmlContext.data()));
+            ctxt->setContextObject(modelItem);
+            modelItem->contextData = ctxt;
+
+            cp->incubateObject(
+                        modelItem->incubationTask,
+                        modelItem->delegate,
+                        m_qmlContext->engine(),
+                        ctxt,
+                        QQmlContextData::get(m_qmlContext));
+        }
     }
 
     // Remove the temporary guard
