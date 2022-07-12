@@ -232,8 +232,7 @@ QQmlDelegateModel::~QQmlDelegateModel()
             delete cacheItem->object;
 
             cacheItem->object = nullptr;
-            cacheItem->contextData->invalidate();
-            cacheItem->contextData = nullptr;
+            cacheItem->contextData.reset();
             cacheItem->scriptRef -= 1;
         } else if (cacheItem->incubationTask) {
             // Both the incubationTask and the object may hold a scriptRef,
@@ -907,17 +906,21 @@ static bool isDoneIncubating(QQmlIncubator::Status status)
 
 void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
 {
+    // QQmlObjectCreator produces a private internal context.
+    // We can always attach the extra object there.
+    QQmlData *d = QQmlData::get(object);
+    if (auto contextData = d ? d->context : nullptr)
+        contextData->setExtraObject(modelItemToIncubate);
+
+    Q_ASSERT(modelItemToIncubate->delegate);
+    const bool isBound = QQmlComponentPrivate::get(modelItemToIncubate->delegate)->isBound();
+
     auto incubatorPriv = QQmlIncubatorPrivate::get(this);
     if (incubatorPriv->hadTopLevelRequiredProperties()) {
-        QQmlData *d = QQmlData::get(object);
-        auto contextData = d ? d->context : nullptr;
-        if (contextData) {
-            contextData->setExtraObject(modelItemToIncubate);
-        }
-
         // If we have required properties, we clear the context object
-        // so that the model role names are not polluting the context
-        if (incubating) {
+        // so that the model role names are not polluting the context.
+        // Unless the context is bound, in which case we have never set context object.
+        if (incubating && !isBound) {
             Q_ASSERT(incubating->contextData);
             incubating->contextData->setContextObject(nullptr);
         }
@@ -977,7 +980,8 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
             }
         }
     } else {
-        modelItemToIncubate->contextData->setContextObject(modelItemToIncubate);
+        if (!isBound)
+            modelItemToIncubate->contextData->setContextObject(modelItemToIncubate);
         if (proxiedObject)
             proxyContext->setContextObject(proxiedObject);
     }
@@ -992,11 +996,7 @@ void QQDMIncubationTask::statusChanged(Status status)
         // The model was deleted from under our feet, cleanup ourselves
         delete incubating->object;
         incubating->object = nullptr;
-        if (incubating->contextData) {
-            incubating->contextData->invalidate();
-            Q_ASSERT(incubating->contextData->refCount() == 1);
-            incubating->contextData = nullptr;
-        }
+        incubating->contextData.reset();
         incubating->scriptRef = 0;
         incubating->deleteLater();
     }
@@ -1127,11 +1127,7 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
         delete cacheItem->object;
         cacheItem->object = nullptr;
         cacheItem->scriptRef -= 1;
-        if (cacheItem->contextData) {
-            cacheItem->contextData->invalidate();
-            Q_ASSERT(cacheItem->contextData->refCount() == 1);
-        }
-        cacheItem->contextData = nullptr;
+        cacheItem->contextData.reset();
 
         if (!cacheItem->isReferenced()) {
             removeCacheItem(cacheItem);
@@ -1155,6 +1151,24 @@ void QQmlDelegateModelPrivate::setInitialState(QQDMIncubationTask *incubationTas
         emitInitPackage(incubationTask, package);
     else
         emitInitItem(incubationTask, cacheItem->object);
+}
+
+static QQmlRefPointer<QQmlContextData> initProxy(QQmlDelegateModelItem *cacheItem)
+{
+    QQmlAdaptorModelProxyInterface *proxy
+            = qobject_cast<QQmlAdaptorModelProxyInterface *>(cacheItem);
+    if (!proxy)
+        return cacheItem->contextData;
+
+    QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createChild(cacheItem->contextData);
+    QObject *proxied = proxy->proxiedObject();
+    cacheItem->incubationTask->proxiedObject = proxied;
+    cacheItem->incubationTask->proxyContext = ctxt;
+    ctxt->setContextObject(cacheItem);
+    // We don't own the proxied object. We need to clear it if it goes away.
+    QObject::connect(proxied, &QObject::destroyed,
+                     cacheItem, &QQmlDelegateModelItem::childContextObjectDestroyed);
+    return ctxt;
 }
 
 QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQmlIncubator::IncubationMode incubationMode)
@@ -1224,34 +1238,40 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
         for (int i = 1; i < m_groupCount; ++i)
             cacheItem->incubationTask->index[i] = it.index[i];
 
-        QQmlRefPointer<QQmlContextData> componentContext
+        const QQmlRefPointer<QQmlContextData> componentContext
                 = QQmlContextData::get(creationContext  ? creationContext : m_context.data());
-
-        QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createRefCounted(componentContext);
-        ctxt->setContextObject(cacheItem);
-        cacheItem->contextData = ctxt;
-
-        if (m_adaptorModel.hasProxyObject()) {
-            if (QQmlAdaptorModelProxyInterface *proxy
-                    = qobject_cast<QQmlAdaptorModelProxyInterface *>(cacheItem)) {
-                ctxt = QQmlContextData::createChild(cacheItem->contextData);
-                QObject *proxied = proxy->proxiedObject();
-                cacheItem->incubationTask->proxiedObject = proxied;
-                cacheItem->incubationTask->proxyContext = ctxt;
-                ctxt->setContextObject(cacheItem);
-                // We don't own the proxied object. We need to clear it if it goes away.
-                QObject::connect(proxied, &QObject::destroyed,
-                                 cacheItem, &QQmlDelegateModelItem::childContextObjectDestroyed);
-            }
-        }
-
         QQmlComponentPrivate *cp = QQmlComponentPrivate::get(cacheItem->delegate);
-        cp->incubateObject(
-                    cacheItem->incubationTask,
-                    cacheItem->delegate,
-                    m_context->engine(),
-                    cp->isBound() ? componentContext : ctxt,
-                    QQmlContextData::get(m_context));
+
+        if (cp->isBound()) {
+            cacheItem->contextData = componentContext;
+
+            // Ignore return value of initProxy. We want to know the proxy when assigning required
+            // properties, but we don't want it to pollute our context. The context is bound.
+            if (m_adaptorModel.hasProxyObject())
+                initProxy(cacheItem);
+
+            cp->incubateObject(
+                        cacheItem->incubationTask,
+                        cacheItem->delegate,
+                        m_context->engine(),
+                        componentContext,
+                        QQmlContextData::get(m_context));
+        } else {
+            QQmlRefPointer<QQmlContextData> ctxt
+                    = QQmlContextData::createRefCounted(componentContext);
+            ctxt->setContextObject(cacheItem);
+            cacheItem->contextData = ctxt;
+
+            if (m_adaptorModel.hasProxyObject())
+                ctxt = initProxy(cacheItem);
+
+            cp->incubateObject(
+                        cacheItem->incubationTask,
+                        cacheItem->delegate,
+                        m_context->engine(),
+                        ctxt,
+                        QQmlContextData::get(m_context));
+        }
     }
 
     if (index == m_compositor.count(group) - 1)
@@ -2382,18 +2402,26 @@ void QQmlDelegateModelItem::destroyObject()
         attached = nullptr;
     }
 
-    contextData->invalidate();
-    contextData = nullptr;
+    contextData.reset();
     object = nullptr;
 }
 
 QQmlDelegateModelItem *QQmlDelegateModelItem::dataForObject(QObject *object)
 {
     QQmlData *d = QQmlData::get(object);
-    QQmlRefPointer<QQmlContextData> context = d ? d->context : nullptr;
-    if (QObject *extraObject = context ? context->extraObject() : nullptr)
+    if (!d)
+        return nullptr;
+
+    QQmlRefPointer<QQmlContextData> context = d->context;
+    if (!context || !context->isValid())
+        return nullptr;
+
+    if (QObject *extraObject = context->extraObject())
         return qobject_cast<QQmlDelegateModelItem *>(extraObject);
-    for (context = context ? context->parent() : nullptr; context; context = context->parent()) {
+
+    for (context = context->parent(); context; context = context->parent()) {
+        if (QObject *extraObject = context->extraObject())
+            return qobject_cast<QQmlDelegateModelItem *>(extraObject);
         if (QQmlDelegateModelItem *cacheItem = qobject_cast<QQmlDelegateModelItem *>(
                 context->contextObject())) {
             return cacheItem;
