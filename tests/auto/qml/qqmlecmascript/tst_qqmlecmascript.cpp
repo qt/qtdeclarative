@@ -3425,6 +3425,20 @@ void tst_qqmlecmascript::callQtInvokables()
                   {QStringLiteral("two"), QStringLiteral("bar")},
                   {QStringLiteral("three"), 0.2}
               }));
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload3(2.0, 'hello', new Date)",
+                QV4::Primitive::undefinedValue()));
+
+    QCOMPARE(o->error(), false);
+
+    /* Char matches in both overloads, and leads to max-match-score of 6
+       Hence, we'll need to consider the sum score
+       overload 38: string -> URL: 6; Date => DateTime: 0; total: 6
+       overload 39: string -> JSON: 5; Date => DateTime: 2: total: 7
+       ==> overload 38 should win
+    */
+    QCOMPARE(o->invoked(), 38);
 }
 
 void tst_qqmlecmascript::resolveClashingProperties()

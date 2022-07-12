@@ -938,6 +938,9 @@ public:
     Q_INVOKABLE void method_overload2(QString a) { invoke(36); m_actuals << a; }
     Q_INVOKABLE void method_overload2() { invoke(37); }
 
+    Q_INVOKABLE void method_overload3(char c, QUrl a, QDateTime b) { invoke(38); m_actuals << c << a << b; }
+    Q_INVOKABLE void method_overload3(char c, QJsonValue a, QTime b) { invoke(39); m_actuals << c << a << b; }
+
 private:
     friend class MyInvokableBaseObject;
     void invoke(int idx) { if (m_invoked != -1) m_invokedError = true; m_invoked = idx;}

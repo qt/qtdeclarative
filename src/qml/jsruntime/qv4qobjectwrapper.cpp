@@ -1420,6 +1420,8 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
             return 0;
         case QMetaType::QJsonValue:
             return 5;
+        case QMetaType::QUrl:
+            return 6; // we like to convert strings to URLs in QML
         default:
             return 10;
         }
