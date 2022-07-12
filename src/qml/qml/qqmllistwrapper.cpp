@@ -20,18 +20,6 @@ using namespace Qt::StringLiterals;
 
 DEFINE_OBJECT_VTABLE(QmlListWrapper);
 
-static bool isAtMostUintLimit(qsizetype length, uint limit = std::numeric_limits<uint>::max())
-{
-    // Use the type with the larger positive range to do the comparison.
-
-    Q_ASSERT(length >= 0);
-    if constexpr (sizeof(qsizetype) > sizeof(uint)) {
-        return length <= qsizetype(limit);
-    } else {
-        return uint(length) <= limit;
-    }
-}
-
 void Heap::QmlListWrapper::init()
 {
     Object::init();
@@ -249,7 +237,7 @@ ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const 
     }
 
     const qsizetype length = property->count(property);
-    if (!isAtMostUintLimit(length, std::numeric_limits<uint>::max() - argc))
+    if (!qIsAtMostUintLimit(length, std::numeric_limits<uint>::max() - argc))
         return scope.engine->throwRangeError(QString::fromLatin1("List length out of range."));
 
     for (int i = 0; i < argc; ++i) {
@@ -334,7 +322,7 @@ ReturnedValue PropertyListPrototype::method_splice(const FunctionObject *b, cons
         return scope.engine->throwTypeError();
     }
 
-    if (!isAtMostUintLimit(deleteCount, std::numeric_limits<uint>::max() - 1))
+    if (!qIsAtMostUintLimit(deleteCount, std::numeric_limits<uint>::max() - 1))
         return scope.engine->throwRangeError(QString::fromLatin1("List length out of range."));
 
     if (!property->at)
@@ -404,7 +392,7 @@ ReturnedValue PropertyListPrototype::method_unshift(const FunctionObject *b, con
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
     const qsizetype len = property->count(property);
 
-    if (std::numeric_limits<qsizetype>::max() - len < argc || !isAtMostUintLimit(len + argc))
+    if (std::numeric_limits<qsizetype>::max() - len < argc || !qIsAtMostUintLimit(len + argc))
         return scope.engine->throwRangeError(QString::fromLatin1("List length out of range."));
 
     if (!property->append)
@@ -490,7 +478,7 @@ ReturnedValue PropertyListPrototype::method_indexOf(const FunctionObject *b, con
 
         for (qsizetype i = fromIndex; i < len; ++i) {
             if (property->at(property, i) == searchValue) {
-                if (isAtMostUintLimit(i))
+                if (qIsAtMostUintLimit(i))
                     return Encode(uint(i));
                 return engine->throwRangeError(QString::fromLatin1("List length out of range."));
             }
@@ -523,7 +511,7 @@ ReturnedValue PropertyListPrototype::method_lastIndexOf(const FunctionObject *b,
 
         for (qsizetype i = fromIndex; i >= 0; --i) {
             if (property->at(property, i) == searchValue) {
-                if (isAtMostUintLimit(i))
+                if (qIsAtMostUintLimit(i))
                     return Encode(uint(i));
                 return engine->throwRangeError(QString::fromLatin1("List length out of range."));
             }
@@ -585,7 +573,7 @@ ReturnedValue PropertyListPrototype::method_get_length(const FunctionObject *b, 
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
 
     qsizetype count = property->count(property);
-    if (isAtMostUintLimit(count))
+    if (qIsAtMostUintLimit(count))
         return Encode(uint(count));
 
     return scope.engine->throwRangeError(QString::fromLatin1("List length out of range."));
@@ -618,7 +606,7 @@ ReturnedValue PropertyListPrototype::method_set_length(const FunctionObject *b, 
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
 
     qsizetype count = property->count(property);
-    if (!isAtMostUintLimit(count))
+    if (!qIsAtMostUintLimit(count))
         return scope.engine->throwRangeError(QString::fromLatin1("List length out of range."));
 
     if (newLength < uint(count)) {

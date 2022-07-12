@@ -75,26 +75,21 @@ public:
     static QV4::ReturnedValue virtualGet(
             const QV4::Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *that, PropertyKey id, const QV4::Value &value, Value *receiver);
-    static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index);
     static bool virtualDeleteProperty(QV4::Managed *that, PropertyKey id);
     static bool virtualIsEqualTo(Managed *that, Managed *other);
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
     qsizetype size() const;
-    QVariant at(int index) const;
+    QVariant at(qsizetype index) const;
     void append(const QVariant &item);
-    void replace(int index, const QVariant &item);
-    void removeLast(int num);
+    void append(qsizetype num, const QVariant &item);
+    void replace(qsizetype index, const QVariant &item);
+    void removeLast(qsizetype num);
     QVariant toVariant() const;
 
-    //  ### Qt 7 use qsizetype instead.
-    QV4::ReturnedValue containerGetIndexed(uint index, bool *hasProperty) const;
-
-    //  ### Qt 7 use qsizetype instead.
-    bool containerPutIndexed(uint index, const QV4::Value &value);
-
-    QV4::PropertyAttributes containerQueryIndexed(uint index) const;
-    bool containerDeleteIndexedProperty(uint index);
+    QV4::ReturnedValue containerGetIndexed(qsizetype index, bool *hasProperty) const;
+    bool containerPutIndexed(qsizetype index, const QV4::Value &value);
+    bool containerDeleteIndexedProperty(qsizetype index);
     bool containerIsEqualTo(Managed *other);
     bool sort(const FunctionObject *f, const Value *, const Value *argv, int argc);
     void *getRawContainerPtr() const;

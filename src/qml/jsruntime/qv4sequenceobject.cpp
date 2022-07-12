@@ -77,17 +77,24 @@ struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
             s->loadReference();
         }
 
-        if (arrayIndex < quint32(s->size())) {
-            uint index = arrayIndex;
+        const qsizetype size = s->size();
+        if (size > 0 && qIsAtMostSizetypeLimit(arrayIndex, size - 1)) {
+            const uint index = arrayIndex;
             ++arrayIndex;
             if (attrs)
                 *attrs = QV4::Attr_Data;
             if (pd)
-                pd->value = s->engine()->fromVariant(s->at(index));
+                pd->value = s->engine()->fromVariant(s->at(qsizetype(index)));
             return PropertyKey::fromArrayIndex(index);
         }
 
-        return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+        if (memberIndex == 0) {
+            ++memberIndex;
+            return o->engine()->id_length()->propertyKey();
+        }
+
+        // You cannot add any own properties via the regular JavaScript interfaces.
+        return PropertyKey::invalid();
     }
 };
 
@@ -182,7 +189,7 @@ qsizetype Sequence::size() const
     return metaSequence(p)->size(p->container);
 }
 
-QVariant Sequence::at(int index) const
+QVariant Sequence::at(qsizetype index) const
 {
     const auto *p = d();
     const QMetaType v = valueMetaType(p);
@@ -196,41 +203,50 @@ QVariant Sequence::at(int index) const
     return result;
 }
 
+
+template<typename Action>
+void convertAndDo(const QVariant &item, const QMetaType v, Action action)
+{
+    if (item.metaType() == v) {
+        action(item.constData());
+    } else if (v == QMetaType::fromType<QVariant>()) {
+        action(&item);
+    } else {
+        QVariant converted = item;
+        if (!converted.convert(v))
+            converted = QVariant(v);
+        action(converted.constData());
+    }
+}
+
 void Sequence::append(const QVariant &item)
 {
-    const auto *p = d();
-    const auto *m = metaSequence(p);
-    const QMetaType v = valueMetaType(p);
-    if (item.metaType() == v) {
-        m->addValueAtEnd(p->container, item.constData());
-    } else if (v == QMetaType::fromType<QVariant>()) {
-        m->addValueAtEnd(p->container, &item);
-    } else {
-        QVariant converted = item;
-        if (!converted.convert(v))
-            converted = QVariant(v);
-        m->addValueAtEnd(p->container, converted.constData());
-    }
+    const Heap::Sequence *p = d();
+    convertAndDo(item, valueMetaType(p), [p](const void *data) {
+        metaSequence(p)->addValueAtEnd(p->container, data);
+    });
 }
 
-void Sequence::replace(int index, const QVariant &item)
+void Sequence::append(qsizetype num, const QVariant &item)
 {
-    const auto *p = d();
-    const auto *m = metaSequence(p);
-    const QMetaType v = valueMetaType(p);
-    if (item.metaType() == v) {
-        m->setValueAtIndex(p->container, index, item.constData());
-    } else if (v == QMetaType::fromType<QVariant>()) {
-        m->setValueAtIndex(p->container, index, &item);
-    } else {
-        QVariant converted = item;
-        if (!converted.convert(v))
-            converted = QVariant(v);
-        m->setValueAtIndex(p->container, index, converted.constData());
-    }
+    const Heap::Sequence *p = d();
+    convertAndDo(item, valueMetaType(p), [p, num](const void *data) {
+        const QMetaSequence *m = metaSequence(p);
+        void *container = p->container;
+        for (qsizetype i = 0; i < num; ++i)
+            m->addValueAtEnd(container, data);
+    });
 }
 
-void Sequence::removeLast(int num)
+void Sequence::replace(qsizetype index, const QVariant &item)
+{
+    const Heap::Sequence *p = d();
+    convertAndDo(item, valueMetaType(p), [p, index](const void *data) {
+        metaSequence(p)->setValueAtIndex(p->container, index, data);
+    });
+}
+
+void Sequence::removeLast(qsizetype num)
 {
     const auto *p = d();
     const auto *m = metaSequence(p);
@@ -254,15 +270,8 @@ QVariant Sequence::toVariant() const
     return QVariant(p->typePrivate->listId, p->container);
 }
 
-ReturnedValue Sequence::containerGetIndexed(uint index, bool *hasProperty) const
+ReturnedValue Sequence::containerGetIndexed(qsizetype index, bool *hasProperty) const
 {
-    /* Qt containers have int (rather than uint) allowable indexes. */
-    if (index > INT_MAX) {
-        generateWarning(engine(), QLatin1String("Index out of range during indexed get"));
-        if (hasProperty)
-            *hasProperty = false;
-        return Encode::undefined();
-    }
     if (d()->isReference) {
         if (!d()->object) {
             if (hasProperty)
@@ -271,7 +280,7 @@ ReturnedValue Sequence::containerGetIndexed(uint index, bool *hasProperty) const
         }
         loadReference();
     }
-    if (index < quint32(size())) {
+    if (index >= 0 && index < size()) {
         if (hasProperty)
             *hasProperty = true;
         return engine()->fromVariant(at(index));
@@ -281,16 +290,10 @@ ReturnedValue Sequence::containerGetIndexed(uint index, bool *hasProperty) const
     return Encode::undefined();
 }
 
-bool Sequence::containerPutIndexed(uint index, const Value &value)
+bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
 {
     if (internalClass()->engine->hasException)
         return false;
-
-    /* Qt containers have int (rather than uint) allowable indexes. */
-    if (index > INT_MAX) {
-        generateWarning(engine(), QLatin1String("Index out of range during indexed set"));
-        return false;
-    }
 
     if (d()->isReadOnly) {
         engine()->throwTypeError(QLatin1String("Cannot insert into a readonly container"));
@@ -303,9 +306,12 @@ bool Sequence::containerPutIndexed(uint index, const Value &value)
         loadReference();
     }
 
-    quint32 count = quint32(size());
+    const qsizetype count = size();
     const QMetaType valueType = valueMetaType(d());
     const QVariant element = engine()->toVariant(value, valueType, false);
+
+    if (index < 0)
+        return false;
 
     if (index == count) {
         append(element);
@@ -314,11 +320,8 @@ bool Sequence::containerPutIndexed(uint index, const Value &value)
     } else {
         /* according to ECMA262r3 we need to insert */
         /* the value at the given index, increasing length to index+1. */
-        while (index > count++) {
-            append(valueType == QMetaType::fromType<QVariant>()
-                           ? QVariant()
-                           : QVariant(valueType));
-        }
+        append(index - count,
+               valueType == QMetaType::fromType<QVariant>() ? QVariant() : QVariant(valueType));
         append(element);
     }
 
@@ -327,32 +330,14 @@ bool Sequence::containerPutIndexed(uint index, const Value &value)
     return true;
 }
 
-PropertyAttributes Sequence::containerQueryIndexed(uint index) const
-{
-    /* Qt containers have int (rather than uint) allowable indexes. */
-    if (index > INT_MAX) {
-        generateWarning(engine(), QLatin1String("Index out of range during indexed query"));
-        return QV4::Attr_Invalid;
-    }
-    if (d()->isReference) {
-        if (!d()->object)
-            return QV4::Attr_Invalid;
-        loadReference();
-    }
-    return (index < quint32(size())) ? QV4::Attr_Data : QV4::Attr_Invalid;
-}
-
 SequenceOwnPropertyKeyIterator *containerOwnPropertyKeys(const Object *m, Value *target)
 {
     *target = *m;
     return new SequenceOwnPropertyKeyIterator;
 }
 
-bool Sequence::containerDeleteIndexedProperty(uint index)
+bool Sequence::containerDeleteIndexedProperty(qsizetype index)
 {
-    /* Qt containers have int (rather than uint) allowable indexes. */
-    if (index > INT_MAX)
-        return false;
     if (d()->isReadOnly)
         return false;
     if (d()->isReference) {
@@ -361,7 +346,7 @@ bool Sequence::containerDeleteIndexedProperty(uint index)
         loadReference();
     }
 
-    if (index >= quint32(size()))
+    if (index < 0 || index >= size())
         return false;
 
     /* according to ECMA262r3 it should be Undefined, */
@@ -433,26 +418,40 @@ void Sequence::storeReference()
 
 ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
-    if (!id.isArrayIndex())
-        return Object::virtualGet(that, id, receiver, hasProperty);
-    return static_cast<const Sequence *>(that)->containerGetIndexed(id.asArrayIndex(), hasProperty);
+    if (id.isArrayIndex()) {
+        const uint index = id.asArrayIndex();
+        if (qIsAtMostSizetypeLimit(index))
+            return static_cast<const Sequence *>(that)->containerGetIndexed(qsizetype(index), hasProperty);
+
+        generateWarning(that->engine(), QLatin1String("Index out of range during indexed get"));
+        return false;
+    }
+
+    return Object::virtualGet(that, id, receiver, hasProperty);
 }
 
 bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Value *receiver)
 {
-    if (id.isArrayIndex())
-        return static_cast<Sequence *>(that)->containerPutIndexed(id.asArrayIndex(), value);
+    if (id.isArrayIndex()) {
+        const uint index = id.asArrayIndex();
+        if (qIsAtMostSizetypeLimit(index))
+            return static_cast<Sequence *>(that)->containerPutIndexed(qsizetype(index), value);
+
+        generateWarning(that->engine(), QLatin1String("Index out of range during indexed set"));
+        return false;
+    }
     return Object::virtualPut(that, id, value, receiver);
 }
-
-PropertyAttributes Sequence::queryIndexed(const Managed *that, uint index)
-{ return static_cast<const Sequence *>(that)->containerQueryIndexed(index); }
 
 bool Sequence::virtualDeleteProperty(Managed *that, PropertyKey id)
 {
     if (id.isArrayIndex()) {
-        uint index = id.asArrayIndex();
-        return static_cast<Sequence *>(that)->containerDeleteIndexedProperty(index);
+        const uint index = id.asArrayIndex();
+        if (qIsAtMostSizetypeLimit(index))
+            return static_cast<Sequence *>(that)->containerDeleteIndexedProperty(qsizetype(index));
+
+        generateWarning(that->engine(), QLatin1String("Index out of range during indexed delete"));
+        return false;
     }
     return Object::virtualDeleteProperty(that, id);
 }
@@ -479,7 +478,12 @@ static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value
             RETURN_RESULT(Encode(0));
         This->loadReference();
     }
-    RETURN_RESULT(Encode(qint32(This->size())));
+
+    const qsizetype size = This->size();
+    if (qIsAtMostUintLimit(size))
+        RETURN_RESULT(Encode(uint(size)));
+
+    return scope.engine->throwRangeError(QLatin1String("Sequence length out of range"));
 }
 
 static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -489,9 +493,9 @@ static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value
     if (!This)
         THROW_TYPE_ERROR();
 
-    quint32 newLength = argc ? argv[0].toUInt32() : 0;
-    /* Qt containers have int (rather than uint) allowable indexes. */
-    if (newLength > INT_MAX) {
+    bool ok = false;
+    const quint32 argv0 = argc ? argv[0].asArrayLength(&ok) : 0;
+    if (!ok || !qIsAtMostSizetypeLimit(argv0)) {
         generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
         RETURN_UNDEFINED();
     }
@@ -499,15 +503,17 @@ static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value
     if (This->d()->isReadOnly)
         THROW_TYPE_ERROR();
 
+    const qsizetype newCount = qsizetype(argv0);
+
     /* Read the sequence from the QObject property if we're a reference */
     if (This->d()->isReference) {
         if (!This->d()->object)
             RETURN_UNDEFINED();
         This->loadReference();
     }
+
     /* Determine whether we need to modify the sequence */
-    quint32 newCount = static_cast<quint32>(newLength);
-    quint32 count = static_cast<quint32>(This->size());
+    const qsizetype count = This->size();
     if (newCount == count) {
         RETURN_UNDEFINED();
     } else if (newCount > count) {
@@ -515,19 +521,20 @@ static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value
         /* according to ECMA262r3 we need to insert */
         /* undefined values increasing length to newLength. */
         /* We cannot, so we insert default-values instead. */
-        while (newCount > count++)
-            This->append(QVariant(valueMetaType));
+        This->append(newCount - count, QVariant(valueMetaType));
     } else {
         /* according to ECMA262r3 we need to remove */
         /* elements until the sequence is the required length. */
-        if (newCount < count)
-            This->removeLast(count - newCount);
+        Q_ASSERT(newCount < count);
+        This->removeLast(count - newCount);
     }
+
     /* write back if required. */
     if (This->d()->isReference) {
         /* write back.  already checked that object is non-null, so skip that check here. */
         This->storeReference();
     }
+
     RETURN_UNDEFINED();
 }
 
@@ -631,9 +638,12 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
         const QMetaSequence *meta = priv->extraData.ld;
         const QMetaType containerMetaType(priv->listId);
         QVariant result(containerMetaType);
-        quint32 length = a->getLength();
+        qint64 length = a->getLength();
+        Q_ASSERT(length >= 0);
+        Q_ASSERT(length <= qint64(std::numeric_limits<quint32>::max()));
+
         QV4::ScopedValue v(scope);
-        for (quint32 i = 0; i < length; ++i) {
+        for (quint32 i = 0; i < quint32(length); ++i) {
             const QMetaType valueMetaType = priv->typeId;
             QVariant variant = scope.engine->toVariant(a->get(i), valueMetaType, false);
             if (valueMetaType == QMetaType::fromType<QVariant>()) {
