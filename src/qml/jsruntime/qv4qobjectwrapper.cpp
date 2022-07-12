@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
+Q_LOGGING_CATEGORY(lcOverloadResolution, "qt.qml.overloadresolution", QtWarningMsg)
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build
@@ -1655,6 +1656,14 @@ static const QQmlPropertyData *ResolveOverloaded(
     for (int i = 0; i < methodCount; ++i) {
         const QQmlPropertyData *attempt = methods + i;
 
+        if (lcOverloadResolution().isInfoEnabled()) {
+            const QQmlPropertyData &candidate = methods[i];
+            const QMetaMethod m = candidate.isConstructor()
+                                  ? object.metaObject()->constructor(candidate.coreIndex())
+                                  : object.metaObject()->method(candidate.coreIndex());
+            qCInfo(lcOverloadResolution) << "::: considering signature" << m.methodSignature();
+        }
+
         // QQmlV4Function overrides anything that doesn't provide the exact number of arguments
         int methodParameterScore = 1;
         // QQmlV4Function overrides the "no idea" option, which is 10
@@ -1667,23 +1676,31 @@ static const QQmlPropertyData *ResolveOverloaded(
             int methodArgumentCount = 0;
             if (attempt->hasArguments()) {
                 if (attempt->isConstructor()) {
-                    if (!object.constructorParameterTypes(attempt->coreIndex(), &storage, nullptr))
+                    if (!object.constructorParameterTypes(attempt->coreIndex(), &storage, nullptr)) {
+                        qCInfo(lcOverloadResolution, "rejected, could not get ctor argument types");
                         continue;
+                    }
                 } else {
-                    if (!object.methodParameterTypes(attempt->coreIndex(), &storage, nullptr))
+                    if (!object.methodParameterTypes(attempt->coreIndex(), &storage, nullptr)) {
+                        qCInfo(lcOverloadResolution, "rejected, could not get ctor argument types");
                         continue;
+                    }
                 }
                 methodArgumentCount = storage.size();
             }
 
-            if (methodArgumentCount > argumentCount)
+            if (methodArgumentCount > argumentCount) {
+                qCInfo(lcOverloadResolution, "rejected, insufficient arguments");
                 continue; // We don't have sufficient arguments to call this method
+            }
 
             methodParameterScore = (definedArgumentCount == methodArgumentCount)
                     ? 0
                     : (definedArgumentCount - methodArgumentCount + 1);
-            if (methodParameterScore > bestParameterScore)
+            if (methodParameterScore > bestParameterScore) {
+                qCInfo(lcOverloadResolution) << "rejected, score too bad. own" << methodParameterScore << "vs best:" << bestParameterScore;
                 continue; // We already have a better option
+            }
 
             maxMethodMatchScore = 0;
             sumMethodMatchScore = 0;
@@ -1703,10 +1720,23 @@ static const QQmlPropertyData *ResolveOverloaded(
             bestParameterScore = methodParameterScore;
             bestMaxMatchScore = maxMethodMatchScore;
             bestSumMatchScore = sumMethodMatchScore;
+            qCInfo(lcOverloadResolution) << "updated best" << "bestParameterScore" << bestParameterScore  << "\n"
+                                         << "bestMaxMatchScore" << bestMaxMatchScore  << "\n"
+                                         << "bestSumMatchScore" << bestSumMatchScore  << "\n";
+        } else {
+            qCInfo(lcOverloadResolution) << "did not update best\n"
+                                         << "bestParameterScore" << bestParameterScore << "\t"
+                                         << "methodParameterScore" << methodParameterScore << "\n"
+                                         << "bestMaxMatchScore" << bestMaxMatchScore << "\t"
+                                         << "maxMethodMatchScore" << maxMethodMatchScore << "\n"
+                                         << "bestSumMatchScore" << bestSumMatchScore << "\t"
+                                         << "sumMethodMatchScore" << sumMethodMatchScore << "\n";
         }
 
-        if (bestParameterScore == 0 && bestMaxMatchScore == 0)
+        if (bestParameterScore == 0 && bestMaxMatchScore == 0) {
+            qCInfo(lcOverloadResolution, "perfect match");
             break; // We can't get better than that
+        }
 
     };
 
