@@ -310,6 +310,13 @@ function(qt_internal_add_qml_module target)
         FOLLOW_FOREIGN_VERSIONING
     )
 
+    if(TARGET "${target}" AND NOT target STREQUAL "Qml")
+        qt_internal_add_autogen_sync_header_dependencies(${target} Qml)
+    endif()
+    if(TARGET "${arg_PLUGIN_TARGET}" AND NOT target STREQUAL arg_PLUGIN_TARGET)
+        qt_internal_add_autogen_sync_header_dependencies(${arg_PLUGIN_TARGET} Qml)
+    endif()
+
     if(output_targets)
         set(plugin_export_targets)
         set(backing_lib_export_targets)
