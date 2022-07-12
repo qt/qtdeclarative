@@ -213,6 +213,7 @@ private slots:
     void selectUsingPageUpDownKeys();
     void testDeprecatedApi();
     void alternatingRows();
+    void boundDelegateComponent();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -5267,6 +5268,59 @@ void tst_QQuickTableView::alternatingRows()
     QVERIFY(!tableView->alternatingRows());
     tableView->setAlternatingRows(true);
     QVERIFY(tableView->alternatingRows());
+}
+
+void tst_QQuickTableView::boundDelegateComponent()
+{
+    QQmlEngine engine;
+    const QUrl url(testFileUrl("boundDelegateComponent.qml"));
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg, qPrintable(QLatin1String("%1:14: ReferenceError: index is not defined")
+                                             .arg(url.toString())));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlContext *context = qmlContext(o.data());
+
+    QObject *inner = context->objectForName(QLatin1String("tableView"));
+    QVERIFY(inner != nullptr);
+    QQuickTableView *tableView = qobject_cast<QQuickTableView *>(inner);
+    QVERIFY(tableView != nullptr);
+    QObject *item = tableView->itemAtCell(0, 0);
+    QVERIFY(item);
+    QCOMPARE(item->objectName(), QLatin1String("fooouterundefined"));
+
+    QObject *inner2 = context->objectForName(QLatin1String("tableView2"));
+    QVERIFY(inner2 != nullptr);
+    QQuickTableView *tableView2 = qobject_cast<QQuickTableView *>(inner2);
+    QVERIFY(tableView2 != nullptr);
+    QObject *item2 = tableView2->itemAtCell(0, 0);
+    QVERIFY(item2);
+    QCOMPARE(item2->objectName(), QLatin1String("fooouter0"));
+
+    QQmlComponent *comp = qobject_cast<QQmlComponent *>(
+            context->objectForName(QLatin1String("outerComponent")));
+    QVERIFY(comp != nullptr);
+
+    for (int i = 0; i < 3 * 2; ++i) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(QLatin1String("%1:50:21: ReferenceError: model is not defined")
+                                   .arg(url.toString())));
+    }
+
+    QScopedPointer<QObject> outerItem(comp->create(context));
+    QVERIFY(!outerItem.isNull());
+    QQuickTableView *innerTableView = qobject_cast<QQuickTableView *>(
+            qmlContext(outerItem.data())->objectForName(QLatin1String("innerTableView")));
+    QVERIFY(innerTableView != nullptr);
+    QCOMPARE(innerTableView->rows(), 3);
+    for (int i = 0; i < 3; ++i)
+        QVERIFY(innerTableView->itemAtCell(0, i)->objectName().isEmpty());
 }
 
 QTEST_MAIN(tst_QQuickTableView)
