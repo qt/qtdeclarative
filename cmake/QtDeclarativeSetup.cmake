@@ -48,6 +48,7 @@ function(qt_declarative_write_tag_header target_name)
         message(FATAL_ERROR "QML compile hash is empty! "
                             "You need either a valid git repository or a non-empty .tag file.")
     endif()
+    target_sources(${target_name} PRIVATE "${out_file}")
 endfunction()
 
 # Generate a header file containing a regular expression jit table.
