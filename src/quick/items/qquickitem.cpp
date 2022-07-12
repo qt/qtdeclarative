@@ -5499,11 +5499,11 @@ bool QQuickItemPrivate::anyPointerHandlerWants(const QPointerEvent *event, const
     HoverHandlers if the event is a QMouseEvent (they are visited in
     QQuickDeliveryAgentPrivate::deliverHoverEventToItem()), and skip handlers
     that are in QQuickPointerHandlerPrivate::deviceDeliveryTargets().
-    If \a avoidExclusiveGrabber is true, also skip delivery to any handler that
-    is exclusively grabbing any point within \a event (because delivery to
-    exclusive grabbers is handled separately).
+    If \a avoidGrabbers is true, also skip delivery to any handler that
+    is exclusively or passively grabbing any point within \a event
+    (because delivery to grabbers is handled separately).
 */
-bool QQuickItemPrivate::handlePointerEvent(QPointerEvent *event, bool avoidExclusiveGrabber)
+bool QQuickItemPrivate::handlePointerEvent(QPointerEvent *event, bool avoidGrabbers)
 {
     bool delivered = false;
     if (extra.isAllocated()) {
@@ -5512,9 +5512,9 @@ bool QQuickItemPrivate::handlePointerEvent(QPointerEvent *event, bool avoidExclu
             if (QQuickDeliveryAgentPrivate::isMouseEvent(event) &&
                     qmlobject_cast<const QQuickHoverHandler *>(handler)) {
                 avoidThisHandler = true;
-            } else if (avoidExclusiveGrabber) {
+            } else if (avoidGrabbers) {
                 for (auto &p : event->points()) {
-                    if (event->exclusiveGrabber(p) == handler) {
+                    if (event->exclusiveGrabber(p) == handler || event->passiveGrabbers(p).contains(handler)) {
                         avoidThisHandler = true;
                         break;
                     }
