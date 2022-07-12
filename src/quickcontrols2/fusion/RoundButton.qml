@@ -73,13 +73,15 @@ T.RoundButton {
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: control.down || control.checked ? Fusion.buttonColor(control.palette, control.highlighted, control.down || control.checked, control.hovered)
-                                                       : Fusion.gradientStart(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.hovered))
+                color: control.down || control.checked
+                    ? Fusion.buttonColor(control.palette, control.highlighted, control.down || control.checked, control.enabled && control.hovered)
+                    : Fusion.gradientStart(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.enabled && control.hovered))
             }
             GradientStop {
                 position: 1
-                color: control.down || control.checked ? Fusion.buttonColor(control.palette, control.highlighted, control.down || control.checked, control.hovered)
-                                                       : Fusion.gradientStop(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.hovered))
+                color: control.down || control.checked
+                    ? Fusion.buttonColor(control.palette, control.highlighted, control.down || control.checked, control.enabled && control.hovered)
+                    : Fusion.gradientStop(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.enabled && control.hovered))
             }
         }
 
