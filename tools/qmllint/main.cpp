@@ -70,6 +70,10 @@ All warnings can be set to three levels:
                                                     "command line options into consideration"));
     parser.addOption(ignoreSettings);
 
+    QCommandLineOption moduleOption({ QStringLiteral("M"), QStringLiteral("module") },
+                                    QStringLiteral("Lint modules instead of files"));
+    parser.addOption(moduleOption);
+
     QCommandLineOption resourceOption(
                 { QStringLiteral("resource") },
                 QStringLiteral("Look for related files in the given resource file"),
@@ -349,9 +353,15 @@ All warnings can be set to three levels:
 
         const bool isFixing = parser.isSet(fixFile);
 
-        QQmlJSLinter::LintResult lintResult = linter.lintFile(
-                filename, nullptr, silent || isFixing, useJson ? &jsonFiles : nullptr,
-                qmlImportPaths, qmldirFiles, resourceFiles, categories);
+        QQmlJSLinter::LintResult lintResult;
+
+        if (parser.isSet(moduleOption)) {
+            lintResult = linter.lintModule(filename, silent, useJson ? &jsonFiles : nullptr);
+        } else {
+            lintResult = linter.lintFile(filename, nullptr, silent || isFixing,
+                                         useJson ? &jsonFiles : nullptr, qmlImportPaths,
+                                         qmldirFiles, resourceFiles, categories);
+        }
         success &= (lintResult == QQmlJSLinter::LintSuccess);
 
         if (isFixing) {

@@ -784,6 +784,14 @@ void QQmlJSImporter::setImportPaths(const QStringList &importPaths)
     // Luckily this doesn't apply to m_seenQmldirFiles
 }
 
+void QQmlJSImporter::clearCache()
+{
+    m_seenImports.clear();
+    m_cachedImportTypes.clear();
+    m_seenQmldirFiles.clear();
+    m_importedFiles.clear();
+}
+
 QQmlJSScope::ConstPtr QQmlJSImporter::jsGlobalObject() const
 {
     return m_builtins.cppNames[u"GlobalObject"_s].scope;

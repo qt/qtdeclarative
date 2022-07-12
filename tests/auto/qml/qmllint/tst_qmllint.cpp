@@ -89,6 +89,9 @@ private Q_SLOTS:
 
     void importMultipartUri();
 
+    void lintModule_data();
+    void lintModule();
+
 #if QT_CONFIG(library)
     void testPlugin();
     void quickPlugin();
@@ -101,6 +104,8 @@ private:
         DoReplacementSearch,
     };
 
+    enum LintType { LintFile, LintModule };
+
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
                        bool addImportDirs = true, bool absolutePath = true);
@@ -111,7 +116,8 @@ private:
                      QStringList importDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
                      DefaultImportOption defaultImports = UseDefaultImports,
-                     QList<QQmlJSLogger::Category> *categories = nullptr, bool autoFixable = false);
+                     QList<QQmlJSLogger::Category> *categories = nullptr, bool autoFixable = false,
+                     LintType type = LintFile);
 
     void searchWarnings(const QJsonArray &warnings, const QString &string,
                         QtMsgType type = QtWarningMsg, quint32 line = 0, quint32 column = 0,
@@ -1347,18 +1353,26 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
                               QStringList importPaths, QStringList qmldirFiles,
                               QStringList resources, DefaultImportOption defaultImports,
-                              QList<QQmlJSLogger::Category> *categories, bool autoFixable)
+                              QList<QQmlJSLogger::Category> *categories, bool autoFixable,
+                              LintType type)
 {
     QJsonArray jsonOutput;
 
     const QFileInfo info = QFileInfo(fileToLint);
     const QString lintedFile = info.isAbsolute() ? fileToLint : testFile(fileToLint);
 
-    QQmlJSLinter::LintResult lintResult = m_linter.lintFile(
-            lintedFile, nullptr, true, warnings ? &jsonOutput : nullptr,
-            defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths : importPaths,
-            qmldirFiles, resources,
-            categories != nullptr ? *categories : QQmlJSLogger::defaultCategories());
+    QQmlJSLinter::LintResult lintResult;
+
+    if (type == LintFile) {
+        lintResult = m_linter.lintFile(
+                lintedFile, nullptr, true, warnings ? &jsonOutput : nullptr,
+                defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths
+                                                    : importPaths,
+                qmldirFiles, resources,
+                categories != nullptr ? *categories : QQmlJSLogger::defaultCategories());
+    } else {
+        lintResult = m_linter.lintModule(fileToLint, true, warnings ? &jsonOutput : nullptr);
+    }
 
     bool success = lintResult == QQmlJSLinter::LintSuccess;
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
@@ -1642,6 +1656,35 @@ void TestQmllint::absolutePath()
 void TestQmllint::importMultipartUri()
 {
     runTest("here.qml", Result::clean(), {}, { testFile("Elsewhere/qmldir") });
+}
+
+void TestQmllint::lintModule_data()
+{
+    QTest::addColumn<QString>("module");
+    QTest::addColumn<Result>("result");
+
+    QTest::addRow("Things")
+            << u"Things"_s
+            << Result {
+                   { Message {
+                             u"Type \"QPalette\" not found. Used in SomethingEntirelyStrange.palette"_s,
+                     },
+                     Message {
+                             u"Type \"CustomPalette\" is not fully resolved. Used in SomethingEntirelyStrange.palette2"_s } }
+               };
+    QTest::addRow("missingQmltypes")
+            << u"Fake5Compat.GraphicalEffects.private"_s
+            << Result { { Message { u"QML types file does not exist"_s } } };
+}
+
+void TestQmllint::lintModule()
+{
+    QFETCH(QString, module);
+    QFETCH(Result, result);
+
+    QJsonArray warnings;
+    callQmllint(module, false, &warnings, {}, {}, {}, {}, nullptr, false, LintModule);
+    checkResult(warnings, result);
 }
 
 #if QT_CONFIG(library)

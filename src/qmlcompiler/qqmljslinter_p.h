@@ -113,6 +113,8 @@ public:
                         const QStringList &qmldirFiles, const QStringList &resourceFiles,
                         const QList<QQmlJSLogger::Category> &categories);
 
+    LintResult lintModule(const QString &uri, const bool silent, QJsonArray *json);
+
     FixResult applyFixes(QString *fixedCode, bool silent);
 
     const QQmlJSLogger *logger() const { return m_logger.get(); }
@@ -128,6 +130,7 @@ public:
 
 private:
     void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
+    void processMessages(QJsonArray &warnings);
 
     bool m_useAbsolutePath;
     bool m_enablePlugins;

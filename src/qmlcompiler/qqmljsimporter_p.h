@@ -69,6 +69,8 @@ public:
     QStringList importPaths() const { return m_importPaths; }
     void setImportPaths(const QStringList &importPaths);
 
+    void clearCache();
+
     QQmlJSScope::ConstPtr jsGlobalObject() const;
 
     std::unique_ptr<QQmlJSImportVisitor>
