@@ -596,7 +596,7 @@ void QObjectWrapper::setProperty(
         PROPERTY_STORE(QQmlScriptString, ss);
     } else {
         QVariant v;
-        if (property->isQList())
+        if (property->isQList() && propType.flags().testFlag(QMetaType::IsQmlList))
             v = scope.engine->toVariant(value, QMetaType::fromType<QList<QObject *> >());
         else
             v = scope.engine->toVariant(value, propType);

@@ -11,6 +11,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qscopeguard.h>
+#include <QtCore/qrandom.h>
 #include <QtGui/qevent.h>
 #include <QSignalSpy>
 #include <QFont>
@@ -382,6 +383,9 @@ private slots:
     void valueTypeList();
     void componentMix();
     void uncreatableAttached();
+    void v4SequenceMethods();
+    void v4SequenceMethodsWithParams_data();
+    void v4SequenceMethodsWithParams();
 
 private:
     QQmlEngine engine;
@@ -7158,6 +7162,165 @@ void tst_qqmllanguage::uncreatableAttached()
     QVERIFY(o.isNull());
     QVERIFY(c.errorString().contains(
                 QLatin1String("Could not create attached properties object 'ItemAttached'")));
+}
+
+static void listsEqual(QObject *object, const char *method)
+{
+    const QByteArray v4SequencePropertyName = QByteArray("v4Sequence") + method;
+    const QByteArray jsArrayPropertyName = QByteArray("jsArray") + method;
+
+    const QList<QRectF> v4SequenceProperty
+            = object->property(v4SequencePropertyName.constData()).value<QList<QRectF>>();
+    const QList<QRectF> jsArrayProperty
+            = object->property(jsArrayPropertyName.constData()).value<QList<QRectF>>();
+
+    const qsizetype v4SequenceCount = v4SequenceProperty.count();
+    QCOMPARE(v4SequenceCount, jsArrayProperty.count());
+
+    for (qsizetype i = 0; i < v4SequenceCount; ++i)
+        QCOMPARE(v4SequenceProperty.at(i), jsArrayProperty.at(i));
+}
+
+void tst_qqmllanguage::v4SequenceMethods()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("v4SequenceMethods.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("v4SequenceToString"), object->property("jsArrayToString"));
+    QCOMPARE(object->property("v4SequenceToLocaleString"), object->property("jsArrayToLocaleString"));
+
+    QVERIFY(object->property("entriesMatch").toBool());
+    QVERIFY(object->property("keysMatch").toBool());
+    QVERIFY(object->property("valuesMatch").toBool());
+
+    listsEqual(object.data(), "Concat");
+    listsEqual(object.data(), "Pop");
+    listsEqual(object.data(), "Push");
+    listsEqual(object.data(), "Reverse");
+    listsEqual(object.data(), "Shift");
+    listsEqual(object.data(), "Unshift");
+    listsEqual(object.data(), "Filter");
+    listsEqual(object.data(), "Sort1");
+    listsEqual(object.data(), "Sort2");
+
+    QCOMPARE(object->property("v4SequenceFind"), object->property("jsArrayFind"));
+    QCOMPARE(object->property("v4SequenceFind").value<QRectF>().x(), 1.0);
+
+    QCOMPARE(object->property("v4SequenceFindIndex"), object->property("jsArrayFindIndex"));
+    QCOMPARE(object->property("v4SequenceFindIndex").toInt(), 1);
+
+    QCOMPARE(object->property("v4SequenceIncludes"), object->property("jsArrayIncludes"));
+    QVERIFY(object->property("v4SequenceIncludes").toBool());
+
+    QCOMPARE(object->property("v4SequenceJoin"), object->property("jsArrayJoin"));
+    QVERIFY(object->property("v4SequenceJoin").toString().contains(QStringLiteral("1")));
+
+    QCOMPARE(object->property("v4SequencePopped"), object->property("jsArrayPopped"));
+    QVERIFY(object->property("v4SequencePopped").value<QRectF>().x() != 1.0);
+
+    QCOMPARE(object->property("v4SequencePushed"), object->property("jsArrayPushed"));
+    QCOMPARE(object->property("v4SequencePushed").toInt(), 4);
+
+    QCOMPARE(object->property("v4SequenceShifted"), object->property("jsArrayShifted"));
+    QCOMPARE(object->property("v4SequenceShifted").value<QRectF>().x(), 1.0);
+
+    QCOMPARE(object->property("v4SequenceUnshifted"), object->property("jsArrayUnshifted"));
+    QCOMPARE(object->property("v4SequenceUnshifted").toInt(), 4);
+
+    QCOMPARE(object->property("v4SequenceIndexOf"), object->property("jsArrayIndexOf"));
+    QCOMPARE(object->property("v4SequenceIndexOf").toInt(), 1);
+
+    QCOMPARE(object->property("v4SequenceLastIndexOf"), object->property("jsArrayLastIndexOf"));
+    QCOMPARE(object->property("v4SequenceLastIndexOf").toInt(), 2);
+
+    QCOMPARE(object->property("v4SequenceEvery"), object->property("jsArrayEvery"));
+    QVERIFY(object->property("v4SequenceEvery").toBool());
+
+    QCOMPARE(object->property("v4SequenceSome"), object->property("jsArrayEvery"));
+    QVERIFY(object->property("v4SequenceSome").toBool());
+
+    QCOMPARE(object->property("v4SequenceForEach"), object->property("jsArrayForEach"));
+    QCOMPARE(object->property("v4SequenceForEach").toString(), QStringLiteral("-1--5--9-"));
+
+    QCOMPARE(object->property("v4SequenceMap").toStringList(), object->property("jsArrayMap").toStringList());
+    QCOMPARE(object->property("v4SequenceReduce").toString(), object->property("jsArrayReduce").toString());
+
+    QCOMPARE(object->property("v4SequenceOwnPropertyNames").toStringList(),
+             object->property("jsArrayOwnPropertyNames").toStringList());
+}
+
+void tst_qqmllanguage::v4SequenceMethodsWithParams_data()
+{
+    QTest::addColumn<double>("i");
+    QTest::addColumn<double>("j");
+    QTest::addColumn<double>("k");
+
+    const double indices[] = {
+        double(std::numeric_limits<qsizetype>::min()),
+        double(std::numeric_limits<qsizetype>::min()) + 1,
+        double(std::numeric_limits<uint>::min()) - 1,
+        double(std::numeric_limits<uint>::min()),
+        double(std::numeric_limits<uint>::min()) + 1,
+        double(std::numeric_limits<int>::min()),
+        -10, -3, -2, -1, 0, 1, 2, 3, 10,
+        double(std::numeric_limits<int>::max()),
+        double(std::numeric_limits<uint>::max()) - 1,
+        double(std::numeric_limits<uint>::max()),
+        double(std::numeric_limits<uint>::max()) + 1,
+        double(std::numeric_limits<qsizetype>::max() - 1),
+        double(std::numeric_limits<qsizetype>::max()),
+    };
+
+    // We cannot test the full cross product. So, take a random sample instead.
+    const qsizetype numIndices = sizeof(indices) / sizeof(double);
+    qsizetype seed = QRandomGenerator::global()->generate();
+    const int numSamples = 4;
+    for (int i = 0; i < numSamples; ++i) {
+        seed = qHash(i, seed);
+        const double vi = indices[qAbs(seed) % numIndices];
+        for (int j = 0; j < numSamples; ++j) {
+            seed = qHash(j, seed);
+            const double vj = indices[qAbs(seed) % numIndices];
+            for (int k = 0; k < numSamples; ++k) {
+                seed = qHash(k, seed);
+                const double vk = indices[qAbs(seed) % numIndices];
+                const QString tag = QLatin1String("%1/%2/%3")
+                        .arg(QString::number(vi), QString::number(vj), QString::number(vk));
+                QTest::newRow(qPrintable(tag)) << vi << vj << vk;
+
+                // output all the tags so that we can find out what combination caused a test to hang.
+                qDebug().noquote() << "scheduling" << tag;
+            }
+        }
+    }
+}
+
+void tst_qqmllanguage::v4SequenceMethodsWithParams()
+{
+    QFETCH(double, i);
+    QFETCH(double, j);
+    QFETCH(double, k);
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("v4SequenceMethodsWithParams.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.createWithInitialProperties({
+            {QStringLiteral("i"), i},
+            {QStringLiteral("j"), j},
+            {QStringLiteral("k"), k}
+    }));
+    QVERIFY(!object.isNull());
+
+    listsEqual(object.data(), "CopyWithin");
+    listsEqual(object.data(), "Fill");
+    listsEqual(object.data(), "Slice");
+    listsEqual(object.data(), "Splice");
+    listsEqual(object.data(), "Spliced");
+
+    QCOMPARE(object->property("v4SequenceIndexOf"), object->property("jsArrayIndexOf"));
+    QCOMPARE(object->property("v4SequenceLastIndexOf"), object->property("jsArrayLastIndexOf"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

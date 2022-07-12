@@ -30,15 +30,19 @@ Item {
         var tooBigIndex = msco.tooBigIndex;
         var negativeIndex = msco.negativeIndex;
 
-        // shouldn't be able to set the length > maxIndex.
-        msco.intListProperty.length = tooBigIndex;
+        // We cannot test this anymore since INT_MAX + <a bit> is actually supported on 64bit.
+        // Trying to do this just wastes a lot of memory and takes forever.
+        // msco.intListProperty.length = tooBigIndex;
+
         if (msco.intListProperty.length != expectedLength)
             success = false;
         if (!verifyExpected(msco.intListProperty, 4))
             success = false;
 
-        // shouldn't be able to set any index > maxIndex.
-        msco.intListProperty[tooBigIndex] = 12;
+        // We cannot test this anymore since INT_MAX + <a bit> is actually supported on 64bit.
+        // Trying to do this just wastes a lot of memory and takes forever.
+        // msco.intListProperty[tooBigIndex] = 12;
+
         if (msco.intListProperty.length != expectedLength)
             success = false;
         if (!verifyExpected(msco.intListProperty, 4))

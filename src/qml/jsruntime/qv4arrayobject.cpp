@@ -1188,31 +1188,38 @@ ReturnedValue ArrayPrototype::method_fill(const FunctionObject *b, const Value *
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
-    int relativeStart = argc > 1 ? argv[1].toInteger() : 0;
-    int relativeEnd = len;
-    if (argc > 2 && !argv[2].isUndefined()) {
+    const qsizetype len = instance->getLength();
+    Q_ASSERT(len >= 0);
+
+    const qsizetype relativeStart = argc > 1 ? argv[1].toInteger() : 0;
+    qsizetype relativeEnd = len;
+    if (argc > 2 && !argv[2].isUndefined())
         relativeEnd = argv[2].toInteger();
-    }
-    uint k = 0;
-    uint fin = 0;
+
+    qsizetype k = 0;
+    qsizetype fin = 0;
 
     if (relativeStart < 0) {
-        k = std::max(len+relativeStart, uint(0));
+        if (relativeStart > -len)
+            k = std::max(len + relativeStart, qsizetype(0));
     } else {
-        k = std::min(uint(relativeStart), len);
+        k = std::min(relativeStart, len);
     }
+    Q_ASSERT(k >= 0);
 
     if (relativeEnd < 0) {
-        fin = std::max(len + relativeEnd, uint(0));
+        if (relativeEnd > -len)
+            fin = std::max(len + relativeEnd, qsizetype(0));
     } else {
-        fin = std::min(uint(relativeEnd), len);
+        fin = std::min(relativeEnd, len);
     }
+    Q_ASSERT(fin >= 0);
 
-    while (k < fin) {
-        instance->setIndexed(k, argv[0], QV4::Object::DoThrowOnRejection);
-        k++;
-    }
+    if (sizeof(qsizetype) > sizeof(uint) && fin > qsizetype(std::numeric_limits<uint>::max()))
+        return scope.engine->throwRangeError(QString::fromLatin1("Array length out of range."));
+
+    for (; k < fin; ++k)
+        instance->setIndexed(uint(k), argv[0], QV4::Object::DoThrowOnRejection);
 
     return instance.asReturnedValue();
 }

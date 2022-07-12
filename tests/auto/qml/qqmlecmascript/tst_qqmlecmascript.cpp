@@ -5933,17 +5933,19 @@ void tst_qqmlecmascript::sequenceConversionIndexes()
 {
     // ensure that we gracefully fail if unsupported index values are specified.
     // Qt container classes only support non-negative, signed integer index values.
+
+    // Since Qt6, on 64bit the maximum length is beyond what we can encode in a 32bit integer.
+    // Therefore we cannot test the overflow anymore.
+
     QUrl qmlFile = testFileUrl("sequenceConversion.indexes.qml");
     QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
-    QString w1 = qmlFile.toString() + QLatin1String(":34: Index out of range during length set");
-    QString w2 = qmlFile.toString() + QLatin1String(":41: Index out of range during indexed set");
-    QString w3 = qmlFile.toString() + QLatin1String(":48: Index out of range during indexed get");
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w2));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
+
+    const QString w = qmlFile.toString() + QLatin1String(":59: Index out of range during length set");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(w));
+
     QMetaObject::invokeMethod(object.data(), "indexedAccess");
     QVERIFY(object->property("success").toBool());
     QMetaObject::invokeMethod(object.data(), "indexOf");

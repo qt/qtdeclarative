@@ -829,7 +829,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                             engine, propType, a[0], &success));
                                 if (!success) {
                                     qmlWarning(object)
-                                            << "Could not create a QML sequence object for"
+                                            << "Could not create a QML sequence object for "
                                             << propType.name();
                                 }
                                 needActivate = true;
