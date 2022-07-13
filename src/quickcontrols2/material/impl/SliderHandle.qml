@@ -73,7 +73,7 @@ Item {
         y: (parent.height - height) / 2
         width: 22; height: 22
         pressed: root.handlePressed
-        active: root.handlePressed || root.handleHasFocus || root.handleHovered
+        active: root.handlePressed || root.handleHasFocus || (enabled && root.handleHovered)
         color: root.control.Material.highlightedRippleColor
     }
 }
