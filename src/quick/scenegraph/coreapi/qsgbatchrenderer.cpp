@@ -3672,10 +3672,8 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     }
     if (Q_UNLIKELY(debug_render())) ctx->timeUploadAlpha = ctx->timer.restart();
 
-    if (largestVBO * 2 < quint32(m_vertexUploadPool.size()))
-        m_vertexUploadPool.resize(largestVBO * 2);
-    if (largestIBO * 2 < quint32(m_indexUploadPool.size()))
-        m_indexUploadPool.resize(largestIBO * 2);
+    m_vertexUploadPool.resize(largestVBO);
+    m_indexUploadPool.resize(largestIBO);
 
     if (Q_UNLIKELY(debug_render())) {
         qDebug().nospace() << "Rendering:" << Qt::endl
