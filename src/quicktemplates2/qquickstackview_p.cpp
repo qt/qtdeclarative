@@ -285,7 +285,7 @@ void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQu
             // the animation timer.
             // This allows us to correctly restore all the properties affected
             // by the push/pop animations.
-            element->completeTransition(transition);
+            ACTION_IF_DELETED(element, element->completeTransition(transition), return);
         } else if (element->item) {
             // At least try to move the item to its desired place. This,
             // however, is only a partly correct solution, because a lot more
