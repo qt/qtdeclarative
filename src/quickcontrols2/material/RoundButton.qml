@@ -91,7 +91,7 @@ T.RoundButton {
             width: parent.width
             height: parent.height
             radius: control.radius
-            visible: control.hovered || control.visualFocus
+            visible: enabled && (control.hovered || control.visualFocus)
             color: control.Material.rippleColor
         }
 

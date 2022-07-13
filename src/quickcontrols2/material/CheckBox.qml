@@ -65,7 +65,7 @@ T.CheckBox {
             z: -1
             anchor: control
             pressed: control.pressed
-            active: control.down || control.visualFocus || control.hovered
+            active: enabled && (control.down || control.visualFocus || control.hovered)
             color: control.checked ? control.Material.highlightedRippleColor : control.Material.rippleColor
         }
     }
