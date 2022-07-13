@@ -22,9 +22,13 @@ Window {
             id: popup
             x: 1
             y: 1
-            padding: 1
+            topPadding: 1
+            bottomPadding: 1
+            leftPadding: 1
+            rightPadding: 1
 
             Button {
+                anchors.centerIn: parent
                 id: childButton
                 text: "Child"
             }
