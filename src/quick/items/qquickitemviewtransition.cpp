@@ -490,7 +490,8 @@ void QQuickItemViewTransitionableItem::completeTransition(QQuickTransition *quic
 
     QQuickStateOperation::ActionList actions; // not used
     QList<QQmlProperty> after; // not used
-    auto instance = quickTransition->prepare(actions, after, transition, item);
+    QScopedPointer<QQuickTransitionInstance> instance(
+                quickTransition->prepare(actions, after, transition, item));
     RETURN_IF_DELETED(instance->complete());
 
     clearCurrentScheduledTransition();
