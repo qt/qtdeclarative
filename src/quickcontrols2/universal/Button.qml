@@ -81,7 +81,7 @@ T.Button {
             width: parent.width
             height: parent.height
             color: "transparent"
-            visible: control.hovered
+            visible: enabled && control.hovered
             border.width: 2 // ButtonBorderThemeThickness
             border.color: control.Universal.baseMediumLowColor
         }

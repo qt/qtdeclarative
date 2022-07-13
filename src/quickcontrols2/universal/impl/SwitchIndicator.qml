@@ -56,7 +56,7 @@ Item {
         border.color: !indicator.control.enabled ? indicator.control.Universal.baseLowColor :
                        indicator.control.checked && !indicator.control.pressed ? indicator.control.Universal.accent :
                        indicator.control.hovered && !indicator.control.checked && !indicator.control.pressed ? indicator.control.Universal.baseHighColor : indicator.control.Universal.baseMediumColor
-        opacity: indicator.control.hovered && indicator.control.checked && !indicator.control.pressed ? (indicator.control.Universal.theme === Universal.Light ? 0.7 : 0.9) : 1.0
+        opacity: enabled && indicator.control.hovered && indicator.control.checked && !indicator.control.pressed ? (indicator.control.Universal.theme === Universal.Light ? 0.7 : 0.9) : 1.0
         border.width: 2
     }
 

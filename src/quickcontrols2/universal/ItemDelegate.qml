@@ -71,7 +71,7 @@ T.ItemDelegate {
     }
 
     background: Rectangle {
-        visible: control.down || control.highlighted || control.visualFocus || control.hovered
+        visible: enabled && (control.down || control.highlighted || control.visualFocus || control.hovered)
         color: control.down ? control.Universal.listMediumColor :
                control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
         Rectangle {

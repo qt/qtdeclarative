@@ -93,7 +93,7 @@ T.RangeSlider {
             width: control.horizontal ? parent.width : 2 // SliderBackgroundThemeHeight
             height: control.vertical ? parent.height : 2 // SliderBackgroundThemeHeight
 
-            color: control.hovered && !control.pressed ? control.Universal.baseMediumColor :
+            color: enabled && control.hovered && !control.pressed ? control.Universal.baseMediumColor :
                    control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
         }
 

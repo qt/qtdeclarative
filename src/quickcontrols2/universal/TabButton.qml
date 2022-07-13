@@ -63,7 +63,7 @@ T.TabButton {
         icon: control.icon
         text: control.text
         font: control.font
-        color: Color.transparent(control.hovered ? control.Universal.baseMediumHighColor : control.Universal.foreground,
-                                 control.checked || control.down || control.hovered ? 1.0 : 0.2)
+        color: Color.transparent(enabled && control.hovered ? control.Universal.baseMediumHighColor : control.Universal.foreground,
+                                 control.checked || control.down || (enabled && control.hovered) ? 1.0 : 0.2)
     }
 }
