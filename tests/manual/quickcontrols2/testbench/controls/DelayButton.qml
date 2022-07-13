@@ -63,10 +63,9 @@ QtObject {
     property Component component: Component {
         DelayButton {
             text: "DelayButton"
-//            enabled: !is("disabled")
+            enabled: !is("disabled")
             // Only set it if it's pressed, or the non-pressed examples will have no press effects
-//            down: is("pressed") ? true : undefined
-            onDownChanged: print("down", down)
+            down: is("pressed") ? true : undefined
         }
     }
 }
