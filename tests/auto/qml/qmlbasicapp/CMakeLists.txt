@@ -18,7 +18,7 @@ qt6_add_qml_module(tst_qmlbasicapp
 )
 
 add_subdirectory(BasicExtension)
-add_subdirectory(TimeExample)
+add_subdirectory(TimeExample2)
 
 if(QT6_IS_SHARED_LIBS_BUILD)
     # Plugins are static, but qt6_import_qml_plugins() can't be used because
@@ -26,7 +26,7 @@ if(QT6_IS_SHARED_LIBS_BUILD)
     target_sources(tst_qmlbasicapp PRIVATE manual_imports.cpp)
     target_link_libraries(tst_qmlbasicapp PRIVATE
         additional_qml_module_plugin
-        qmlqtimeexampleplugin
+        qmlqtimeexample2plugin
     )
 else()
     # For fully static builds, let qmlimportscanner take care of everything

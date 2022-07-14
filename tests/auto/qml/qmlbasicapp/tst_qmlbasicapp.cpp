@@ -48,15 +48,15 @@ void tst_basicapp::resourceFiles()
 {
     QVERIFY(QFile::exists(QStringLiteral(":/BasicApp/main.qml")));
     QVERIFY(QFile::exists(QStringLiteral(":/BasicApp/qmldir")));
-    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/Clock.qml")));
-    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/center.png")));
-    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/clock.png")));
-    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/hour.png")));
-    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/minute.png")));
-    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/qmldir")));
+    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample2/Clock.qml")));
+    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample2/center.png")));
+    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample2/clock.png")));
+    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample2/hour.png")));
+    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample2/minute.png")));
+    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample2/qmldir")));
 
     QVERIFY(!QFile::exists(QStringLiteral(":/BasicApp/tst_qmlbasicapp.qmltypes")));
-    QVERIFY(!QFile::exists(QStringLiteral(":/TimeExample/qmlqtimeexample.qmltypes")));
+    QVERIFY(!QFile::exists(QStringLiteral(":/TimeExample2/qmlqtimeexample2.qmltypes")));
 }
 
 void tst_basicapp::fileSystemFiles()
@@ -68,14 +68,14 @@ void tst_basicapp::fileSystemFiles()
     QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/main.qml")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/qmldir")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/tst_qmlbasicapp.qmltypes")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/Clock.qml")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample2/Clock.qml")));
 
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/center.png")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/clock.png")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/hour.png")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/minute.png")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/qmldir")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/qmlqtimeexample.qmltypes")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample2/center.png")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample2/clock.png")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample2/hour.png")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample2/minute.png")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample2/qmldir")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample2/qmlqtimeexample2.qmltypes")));
 }
 
 void tst_basicapp::qmldirContents()
@@ -101,18 +101,18 @@ void tst_basicapp::qmldirContents()
     }
 
     {
-        QFile qmldir(basedir + "/TimeExample/qmldir");
+        QFile qmldir(basedir + "/TimeExample2/qmldir");
         QVERIFY(qmldir.open(QIODevice::ReadOnly));
         const QByteArray contents = qmldir.readAll();
-        QVERIFY(contents.contains("module TimeExample"));
+        QVERIFY(contents.contains("module TimeExample2"));
         QVERIFY(contents.contains("optional plugin"));
         QVERIFY(contents.contains("classname"));
         QVERIFY(contents.contains("typeinfo"));
         QVERIFY(contents.contains("depends QtQml"));
-        QVERIFY(contents.contains("prefer :/TimeExample/"));
+        QVERIFY(contents.contains("prefer :/TimeExample2/"));
         QVERIFY(contents.contains("Clock 1.0 Clock.qml"));
 
-        QFile qmldirInResources(":/TimeExample/qmldir");
+        QFile qmldirInResources(":/TimeExample2/qmldir");
         QVERIFY(qmldirInResources.open(QIODevice::ReadOnly));
         QCOMPARE(qmldirInResources.readAll(), contents);
     }

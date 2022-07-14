@@ -3,5 +3,5 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-Q_IMPORT_QML_PLUGIN(TimeExamplePlugin)
+Q_IMPORT_QML_PLUGIN(TimeExample2Plugin)
 Q_IMPORT_QML_PLUGIN(BasicExtension)
