@@ -740,7 +740,8 @@ endfunction()
 function(_qt_internal_target_enable_qmllint target)
     set(lint_target ${target}_qmllint)
     set(lint_target_json ${target}_qmllint_json)
-    if(TARGET ${lint_target} OR TARGET ${target}_qmllint_json)
+    set(lint_target_module ${target}_qmllint_module)
+    if(TARGET ${lint_target} OR TARGET ${target}_qmllint_json OR TARGET ${target}_qmllint_module)
         return()
     endif()
 
@@ -821,6 +822,19 @@ function(_qt_internal_target_enable_qmllint target)
 
    set_target_properties(${lint_target_json} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
+   get_target_property(module_uri ${target} QT_QML_MODULE_URI)
+
+   add_custom_target(${lint_target_module}
+       COMMAND ${QT_TOOL_COMMAND_WRAPPER_PATH} ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${import_args} ${qrc_args} --module ${module_uri}
+       COMMAND_EXPAND_LISTS
+       DEPENDS
+           ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
+           ${qmllint_files}
+           $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
+       WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
+   )
+
+
     # Make the global linting target depend on the one we add here.
     # Note that the caller is free to change the value of QT_QMLLINT_ALL_TARGET
     # for different QML modules if they wish, which means they can implement
@@ -840,6 +854,14 @@ function(_qt_internal_target_enable_qmllint target)
         add_custom_target(${QT_QMLLINT_JSON_ALL_TARGET})
     endif()
     add_dependencies(${QT_QMLLINT_JSON_ALL_TARGET} ${lint_target_json})
+
+    if("${QT_QMLLINT_MODULE_ALL_TARGET}" STREQUAL "")
+        set(QT_QMLLINT_MODULE_ALL_TARGET all_qmllint_module)
+    endif()
+    if(NOT TARGET ${QT_QMLLINT_MODULE_ALL_TARGET})
+        add_custom_target(${QT_QMLLINT_MODULE_ALL_TARGET})
+    endif()
+    add_dependencies(${QT_QMLLINT_MODULE_ALL_TARGET} ${lint_target_module})
 
 endfunction()
 
@@ -1781,6 +1803,10 @@ function(qt6_target_qml_sources target)
     endif()
 
     if (NOT arg_QML_FILES AND NOT arg_RESOURCES)
+        if(NOT arg_NO_LINT)
+            _qt_internal_target_enable_qmllint(${target})
+        endif()
+
         if(arg_OUTPUT_TARGETS)
             set(${arg_OUTPUT_TARGETS} "" PARENT_SCOPE)
         endif()
