@@ -160,6 +160,5 @@ struct QQuickWindowQmlImplForeign
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickApplicationWindow)
-QML_DECLARE_TYPEINFO(QQuickApplicationWindow, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif // QQUICKAPPLICATIONWINDOW_P_H
