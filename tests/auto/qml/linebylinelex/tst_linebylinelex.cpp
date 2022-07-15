@@ -5,6 +5,9 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtCore/qplugin.h>
 #include <QtQml/private/qqmljslexer_p.h>
+#include <QtCore/qloggingcategory.h>
+
+Q_LOGGING_CATEGORY(lexLog, "qt.qml.lex");
 
 QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
@@ -91,7 +94,9 @@ void TestLineByLineLex::runLex(const QString &fileToLex)
     QQmlJS::Lexer::State oldState = llLexer.state();
     llLexer.setCode(line, 1, isQml, QQmlJS::Lexer::CodeContinuation::Reset);
     int iLine = 0;
+    qCDebug(lexLog) << "pre lex" << lexer;
     int tokenKind = lexer.lex();
+    qCDebug(lexLog) << tokenKind << "post lex" << lexer;
     QList<int> extraTokens({ QQmlJSGrammar::T_COMMENT, QQmlJSGrammar::T_PARTIAL_COMMENT,
                              QQmlJSGrammar::T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL,
                              QQmlJSGrammar::T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL,
@@ -104,18 +109,31 @@ void TestLineByLineLex::runLex(const QString &fileToLex)
         llLexer2.setCode(line, iLine, isQml,
                          ((iLine == 1) ? QQmlJS::Lexer::CodeContinuation::Reset
                                        : QQmlJS::Lexer::CodeContinuation::Continue));
+        qCDebug(lexLog) << "line:" << iLine << line;
+        qCDebug(lexLog) << "llpre lex" << llLexer;
         int llTokenKind = llLexer.lex();
+        qCDebug(lexLog) << llTokenKind << "llpost lex" << llLexer;
+        qCDebug(lexLog) << "ll2pre lex" << llLexer2;
         int ll2TokenKind = llLexer2.lex();
+        qCDebug(lexLog) << ll2TokenKind << "ll2post lex" << llLexer2;
+        qCDebug(lexLog) << "token" << llTokenKind << ll2TokenKind;
         QCOMPARE(llTokenKind, ll2TokenKind);
         QCOMPARE(llLexer.state(), llLexer2.state());
         while (llTokenKind != QQmlJSGrammar::T_EOL) {
             if (!extraTokens.contains(llTokenKind)) {
+                qCDebug(lexLog) << "comparing with global lexer" << llTokenKind << tokenKind;
                 QCOMPARE(llTokenKind, tokenKind);
                 QCOMPARE(llLexer.state(), lexer.state());
+                qCDebug(lexLog) << "pre lex" << lexer;
                 tokenKind = lexer.lex();
+                qCDebug(lexLog) << tokenKind << "post lex" << lexer;
             }
+            qCDebug(lexLog) << "llpre lex" << llLexer;
             llTokenKind = llLexer.lex();
+            qCDebug(lexLog) << llTokenKind << "llpost lex" << llLexer;
+            qCDebug(lexLog) << "ll2pre lex" << llLexer2;
             ll2TokenKind = llLexer2.lex();
+            qCDebug(lexLog) << ll2TokenKind << "ll2post lex" << llLexer2;
             QCOMPARE(llTokenKind, ll2TokenKind);
             QCOMPARE(llLexer.state(), llLexer2.state());
         }

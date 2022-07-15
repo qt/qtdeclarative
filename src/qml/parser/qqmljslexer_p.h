@@ -23,6 +23,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QDebug;
+
 namespace QQmlJS {
 
 class Engine;
@@ -232,6 +234,8 @@ public:
         }
 
         friend bool operator!=(State const &s1, State const &s2) { return !(s1 == s2); }
+
+        friend QML_PARSER_EXPORT QDebug operator<<(QDebug dbg, State const &s);
     };
 
     const State &state() const;
@@ -264,6 +268,8 @@ private:
     void syncProhibitAutomaticSemicolon();
     uint decodeUnicodeEscapeCharacter(bool *ok);
     QChar decodeHexEscapeCharacter(bool *ok);
+
+    friend QML_PARSER_EXPORT QDebug operator<<(QDebug dbg, const Lexer &l);
 
 private:
     Engine *_engine;

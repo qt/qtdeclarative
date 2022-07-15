@@ -17,6 +17,7 @@
 
 #include <optional>
 
+QT_BEGIN_NAMESPACE
 using namespace QQmlJS;
 
 static inline int regExpFlagFromChar(const QChar &ch)
@@ -435,6 +436,40 @@ QChar Lexer::decodeHexEscapeCharacter(bool *ok)
 
     *ok = false;
     return QChar();
+}
+
+namespace QQmlJS {
+QDebug operator<<(QDebug dbg, const Lexer &l)
+{
+    dbg << "{\n"
+        << "  engine:" << qsizetype(l._engine) << ",\n"
+        << "  lexMode:" << int(l._lexMode) << ",\n"
+        << "  code.size:" << qsizetype(l._code.unicode()) << "+" << l._code.size() << ",\n"
+        << "  endPtr: codePtr + " << (l._endPtr - l._codePtr) << ",\n"
+        << "  qmlMode:" << l._qmlMode << ",\n"
+        << "  staticIsKeyword:" << l._staticIsKeyword << ",\n"
+        << "  currentLineNumber:" << l._currentLineNumber << ",\n"
+        << "  currentColumnNumber:" << l._currentColumnNumber << ",\n"
+        << "  currentOffset:" << l._currentOffset << ",\n"
+        << "  tokenLength:" << l._tokenLength << ",\n"
+        << "  tokenLine:" << l._tokenLine << ",\n"
+        << "  tokenColumn:" << l._tokenColumn << ",\n"
+        << "  tokenText:" << l._tokenText << ",\n"
+        << "  skipLinefeed:" << l._skipLinefeed << ",\n"
+        << "  errorMessage:" << l._errorMessage << ",\n"
+        << "  tokenSpell:" << l._tokenSpell << ",\n"
+        << "  rawString:" << l._rawString << ",\n";
+    if (l._codePtr)
+        dbg << "  codePtr: code.unicode()+" << (l._codePtr - l._code.unicode()) << ",\n";
+    else
+        dbg << "  codePtr: *null*,\n";
+    if (l._tokenStartPtr)
+        dbg << "  tokenStartPtr: codePtr " << (l._tokenStartPtr - l._codePtr) << ",\n";
+    else
+        dbg << "  tokenStartPtr: *null*,\n";
+    dbg << "  state:" << l._state << "\n}";
+    return dbg;
+}
 }
 
 static inline bool isIdentifierStart(uint ch)
@@ -1766,3 +1801,32 @@ void Lexer::setState(const Lexer::State &state)
 {
     _state = state;
 }
+
+namespace QQmlJS {
+QDebug operator<<(QDebug dbg, const Lexer::State &s)
+{
+    dbg << "{\n"
+        << "   errorCode:" << int(s.errorCode) << ",\n"
+        << "   currentChar:" << s.currentChar << ",\n"
+        << "   tokenValue:" << s.tokenValue << ",\n"
+        << "   parenthesesState:" << s.parenthesesState << ",\n"
+        << "   parenthesesCount:" << s.parenthesesCount << ",\n"
+        << "   outerTemplateBraceCount:" << s.outerTemplateBraceCount << ",\n"
+        << "   bracesCount:" << s.bracesCount << ",\n"
+        << "   stackToken:" << s.stackToken << ",\n"
+        << "   patternFlags:" << s.patternFlags << ",\n"
+        << "   tokenKind:" << s.tokenKind << ",\n"
+        << "   importState:" << int(s.importState) << ",\n"
+        << "   validTokenText:" << s.validTokenText << ",\n"
+        << "   prohibitAutomaticSemicolon:" << s.prohibitAutomaticSemicolon << ",\n"
+        << "   restrictedKeyword:" << s.restrictedKeyword << ",\n"
+        << "   terminator:" << s.terminator << ",\n"
+        << "   followsClosingBrace:" << s.followsClosingBrace << ",\n"
+        << "   delimited:" << s.delimited << ",\n"
+        << "   handlingDirectives:" << s.handlingDirectives << ",\n"
+        << "   generatorLevel:" << s.generatorLevel << "\n}";
+    return dbg;
+}
+}
+
+QT_END_NAMESPACE
