@@ -2209,6 +2209,8 @@ bool QQuickWindowPrivate::deliverSinglePointEventUntilAccepted(QQuickPointerEven
         itemPrivate->handlePointerEvent(event);
         if (point->isAccepted())
             return true;
+        if (!item->window())
+            continue;
         QPointF g = item->window()->mapToGlobal(point->scenePosition().toPoint());
 #if QT_CONFIG(wheelevent)
         // Let the Item have a chance to handle it
