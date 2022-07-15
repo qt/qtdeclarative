@@ -38,7 +38,7 @@ public:
                      const QVector<QV4::Profiling::FunctionCallProperties> &,
                      const QVector<QV4::Profiling::MemoryAllocationProperties> &);
 
-signals:
+Q_SIGNALS:
     void v4ProfilingEnabled(quint64 v4Features);
     void v4ProfilingEnabledWhileWaiting(quint64 v4Features);
 

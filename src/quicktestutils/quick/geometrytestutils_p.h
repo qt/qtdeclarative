@@ -29,7 +29,7 @@ class QSizeChangeListener : public QObject, public QVector<QSize>
     Q_OBJECT
 public:
     explicit QSizeChangeListener(QQuickItem *item);
-private slots:
+private Q_SLOTS:
     void onSizeChanged();
 private:
     QQuickItem *item;

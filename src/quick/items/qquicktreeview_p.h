@@ -47,7 +47,7 @@ public:
     Q_INVOKABLE QModelIndex modelIndex(int column, int row) const override;
     Q_INVOKABLE QPoint cellAtIndex(const QModelIndex &index) const override;
 
-signals:
+Q_SIGNALS:
     void expanded(int row, int depth);
     void collapsed(int row, bool recursively);
 

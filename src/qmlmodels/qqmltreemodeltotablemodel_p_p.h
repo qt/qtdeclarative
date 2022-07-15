@@ -85,13 +85,13 @@ public:
 
     using QAbstractItemModel::hasChildren;
 
-signals:
+Q_SIGNALS:
     void modelChanged(QAbstractItemModel *model);
     void rootIndexChanged();
     void expanded(const QModelIndex &index);
     void collapsed(const QModelIndex &index);
 
-public slots:
+public Q_SLOTS:
     void expand(const QModelIndex &);
     void collapse(const QModelIndex &);
     void setModel(QAbstractItemModel *model);
@@ -105,7 +105,7 @@ public slots:
     void collapseRow(int n);
     void collapseRecursively(int row);
 
-private slots:
+private Q_SLOTS:
     void modelHasBeenDestroyed();
     void modelHasBeenReset();
     void modelDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);

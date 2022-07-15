@@ -127,7 +127,7 @@ public:
     QVariant resultExpr() const;
     bool valid() const;
 
-signals:
+Q_SIGNALS:
     void newObject(qint32 objectId);
     void valueChanged(QByteArray,QVariant);
     void result();

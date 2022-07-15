@@ -38,7 +38,7 @@ protected:
         QMutexLocker lock(&m_configMutex);
         m_waitingForConfiguration = false;
         for (QJSEngine *engine : qAsConst(m_waitingEngines))
-            emit Base::attachedToEngine(engine);
+            Q_EMIT Base::attachedToEngine(engine);
         m_waitingEngines.clear();
     }
 
@@ -64,7 +64,7 @@ protected:
         if (m_waitingForConfiguration)
             m_waitingEngines.append(engine);
         else
-            emit Base::attachedToEngine(engine);
+            Q_EMIT Base::attachedToEngine(engine);
     }
 
     QRecursiveMutex m_configMutex;

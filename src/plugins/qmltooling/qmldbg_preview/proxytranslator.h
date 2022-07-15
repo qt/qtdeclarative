@@ -42,7 +42,7 @@ public:
     static QString translationFromInformation(const TranslationBindingInformation &translationBindingInformation);
     static QString originStringFromInformation(const TranslationBindingInformation &translationBindingInformation);
     static QQmlSourceLocation sourceLocationFromInformation(const TranslationBindingInformation &translationBindingInformation);
-signals:
+Q_SIGNALS:
     void languageChanged(const QLocale &locale);
 
 private:

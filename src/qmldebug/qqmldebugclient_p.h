@@ -41,7 +41,7 @@ public:
 
     QQmlDebugConnection *connection() const;
 
-signals:
+Q_SIGNALS:
     void stateChanged(State state);
 
 protected:

@@ -195,7 +195,7 @@ public:
     void markGeometryDirty();
     void markImageDirty();
 
-signals:
+Q_SIGNALS:
     void controlChanged();
     void contentPaddingChanged();
     void layoutMarginsChanged();

@@ -45,7 +45,7 @@ public:
 
     void timerEvent(QTimerEvent *event) override;
 
-signals:
+Q_SIGNALS:
     void visibleChanged();
     void cursorPositionChanged();
     void runningChanged(bool running);

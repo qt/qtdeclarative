@@ -42,7 +42,7 @@ public:
     bool enabled() const { return m_enabled; }
     void setEnabled(bool enabled);
 
-signals:
+Q_SIGNALS:
     void minimumChanged();
     void maximumChanged();
     void enabledChanged();

@@ -46,8 +46,8 @@ public:
     virtual void stateChanged(State) {}
     virtual void messageReceived(const QByteArray &) {}
 
-    virtual void engineAboutToBeAdded(QJSEngine *engine) { emit attachedToEngine(engine); }
-    virtual void engineAboutToBeRemoved(QJSEngine *engine) { emit detachedFromEngine(engine); }
+    virtual void engineAboutToBeAdded(QJSEngine *engine) { Q_EMIT attachedToEngine(engine); }
+    virtual void engineAboutToBeRemoved(QJSEngine *engine) { Q_EMIT detachedFromEngine(engine); }
 
     virtual void engineAdded(QJSEngine *) {}
     virtual void engineRemoved(QJSEngine *) {}
@@ -59,7 +59,7 @@ public:
 protected:
     explicit QQmlDebugService(const QString &, float version, QObject *parent = nullptr);
 
-signals:
+Q_SIGNALS:
     void attachedToEngine(QJSEngine *);
     void detachedFromEngine(QJSEngine *);
 

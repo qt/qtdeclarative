@@ -50,7 +50,7 @@ public:
     float serviceVersion(const QString &serviceName) const;
     bool sendMessage(const QString &name, const QByteArray &message);
 
-signals:
+Q_SIGNALS:
     void connected();
     void disconnected();
     void socketError(QAbstractSocket::SocketError socketError);

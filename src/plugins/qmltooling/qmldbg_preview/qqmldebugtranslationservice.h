@@ -38,7 +38,7 @@ public:
     void engineAboutToBeAdded(QJSEngine *engine) override;
     void engineAboutToBeRemoved(QJSEngine *engine) override;
 
-signals:
+Q_SIGNALS:
     void language(const QUrl &context, const QLocale &locale);
     void state(const QString &stateName);
     void stateList();

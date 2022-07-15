@@ -52,7 +52,7 @@ public:
 
     virtual bool match(int row, int column, const QVariant &value) const;
 
-signals:
+Q_SIGNALS:
     void roleValueChanged();
     void rowChanged();
     void indexChanged();
@@ -91,7 +91,7 @@ public:
 
     QQmlComponent *delegate(QQmlAdaptorModel *adaptorModel, int row, int column = -1) const override;
 
-signals:
+Q_SIGNALS:
     void roleChanged();
 
 private:

@@ -61,7 +61,7 @@ public:
 
     bool canImportModule(const QString &importTestQmlSource) const;
 
-public slots:
+public Q_SLOTS:
     virtual void initTestCase();
     virtual void init();
 

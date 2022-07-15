@@ -37,7 +37,7 @@ public:
 
     virtual void messageReceived(const QByteArray &) override;
 
-signals:
+Q_SIGNALS:
     void message(QtMsgType, const QString &, const QQmlDebugContextInfo &);
 };
 

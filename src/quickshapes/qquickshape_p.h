@@ -58,7 +58,7 @@ public:
     SpreadMode spread() const;
     void setSpread(SpreadMode mode);
 
-signals:
+Q_SIGNALS:
     void spreadChanged();
 
 private:
@@ -88,7 +88,7 @@ public:
     qreal y2() const;
     void setY2(qreal v);
 
-signals:
+Q_SIGNALS:
     void x1Changed();
     void y1Changed();
     void x2Changed();
@@ -133,7 +133,7 @@ public:
     qreal focalRadius() const;
     void setFocalRadius(qreal v);
 
-signals:
+Q_SIGNALS:
     void centerXChanged();
     void centerYChanged();
     void focalXChanged();
@@ -170,7 +170,7 @@ public:
     qreal angle() const;
     void setAngle(qreal v);
 
-signals:
+Q_SIGNALS:
     void centerXChanged();
     void centerYChanged();
     void angleChanged();

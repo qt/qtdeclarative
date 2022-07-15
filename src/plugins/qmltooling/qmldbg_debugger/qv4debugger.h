@@ -102,7 +102,7 @@ public:
 
     bool pauseAtNextOpportunity() const override;
 
-signals:
+Q_SIGNALS:
     void debuggerPaused(QV4Debugger *self, QV4Debugger::PauseReason reason);
     void scheduleJob();
 

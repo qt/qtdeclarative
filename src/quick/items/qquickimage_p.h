@@ -72,7 +72,7 @@ public:
     bool mipmap() const;
     void setMipmap(bool use);
 
-    void emitAutoTransformBaseChanged() override { emit autoTransformChanged(); }
+    void emitAutoTransformBaseChanged() override { Q_EMIT autoTransformChanged(); }
 
 Q_SIGNALS:
     void fillModeChanged();

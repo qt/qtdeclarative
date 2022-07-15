@@ -56,7 +56,7 @@ public:
     // In Delay mode, each item needs one call to this function to be sent
     void sendDelayedItem();
 
-private slots:
+private Q_SLOTS:
     void newConnection();
     void disconnected();
     void readyRead();

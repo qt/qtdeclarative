@@ -62,7 +62,7 @@ public:
     void triggerRerun();
     void triggerZoom(float factor);
 
-signals:
+Q_SIGNALS:
     void request(const QString &path);
     void error(const QString &message);
     void fps(const FpsInfo &info);

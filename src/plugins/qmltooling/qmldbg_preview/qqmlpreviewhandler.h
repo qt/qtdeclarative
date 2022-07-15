@@ -61,7 +61,7 @@ public:
         quint16 totalRender;
     };
 
-signals:
+Q_SIGNALS:
     void error(const QString &message);
     void fps(const FpsInfo &info);
 

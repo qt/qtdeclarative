@@ -62,7 +62,7 @@ public:
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
 
-signals:
+Q_SIGNALS:
     void minimumScaleChanged();
     void maximumScaleChanged();
     void minimumRotationChanged();

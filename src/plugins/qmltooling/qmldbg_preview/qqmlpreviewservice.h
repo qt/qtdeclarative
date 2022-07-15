@@ -56,7 +56,7 @@ public:
 
     QQuickItem *currentRootItem();
 
-signals:
+Q_SIGNALS:
     void error(const QString &file);
     void file(const QString &file, const QByteArray &contents);
     void directory(const QString &file, const QStringList &entries);

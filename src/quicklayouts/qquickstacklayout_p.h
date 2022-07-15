@@ -53,7 +53,7 @@ public:
 
     static QQuickStackLayoutAttached *qmlAttachedProperties(QObject *object);
 
-signals:
+Q_SIGNALS:
     void currentIndexChanged();
     void countChanged();
 
@@ -108,7 +108,7 @@ public:
     QQuickStackLayout *layout() const;
     void setLayout(QQuickStackLayout *layout);
 
-signals:
+Q_SIGNALS:
     void indexChanged();
     void isCurrentItemChanged();
     void layoutChanged();

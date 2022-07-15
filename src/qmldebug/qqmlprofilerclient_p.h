@@ -52,7 +52,7 @@ protected:
     QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
     void onStateChanged(State status);
 
-signals:
+Q_SIGNALS:
     void complete(qint64 maximumTime);
     void traceFinished(qint64 timestamp, const QList<int> &engineIds);
     void traceStarted(qint64 timestamp, const QList<int> &engineIds);
