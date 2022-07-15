@@ -13,6 +13,13 @@ Item {
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
 
         // ====================================================
+        CheckBox {
+            id: enabledCB
+            text: "enabled"
+            checked: true
+        }
+
+        // ====================================================
         Rule {
             Layout.columnSpan: 3
             Layout.fillWidth: true
@@ -35,6 +42,7 @@ Item {
             TextInput {
                 id: textInput
                 anchors.fill: parent; anchors.margins: 4
+                enabled: enabledCB.checked
                 Component.onCompleted: textInputMouseSelCB.checked = selectByMouse
 
                 onTextEdited: textInputTextEditedInd.blip()
@@ -106,6 +114,7 @@ Item {
 
         TextField {
             id: textField
+            enabled: enabledCB.checked
             Layout.fillWidth: true
             Component.onCompleted: textFieldMouseSelCB.checked = selectByMouse
 
@@ -172,7 +181,7 @@ Item {
         TextField {
             id: copyFrom
             Layout.column: 1
-            Layout.row: 13
+            Layout.row: 14
             Layout.fillWidth: true
             text: "copy this"
         }
@@ -180,7 +189,7 @@ Item {
         Button {
             text: "setText"
             Layout.column: 2
-            Layout.row: 13
+            Layout.row: 14
             onClicked: {
                 Qt.inputMethod.reset()
                 textInput.text = copyFrom.text
@@ -246,6 +255,7 @@ Item {
                     textFormat: TextArea.AutoText
                     width: flick.width - 10
                     wrapMode: TextEdit.Wrap
+                    enabled: enabledCB.checked
                     readOnly: textEditReadOnly.checked
                     Component.onCompleted: textEditMouseSelCB.checked = selectByMouse
 
@@ -362,6 +372,7 @@ Item {
                  TextArea {
                      id: textArea
                      textFormat: TextArea.AutoText
+                     enabled: enabledCB.checked
                      readOnly: textAreaReadOnly.checked
                      Component.onCompleted: textAreaMouseSelCB.checked = selectByMouse
 
