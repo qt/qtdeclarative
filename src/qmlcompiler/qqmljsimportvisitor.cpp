@@ -1604,28 +1604,33 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
     leaveEnvironment();
 }
 
-// ### TODO: add warning about suspicious translation binding when returning false?
 void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView base,
                               QQmlJS::AST::ArgumentList *args)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    // #if required for standalone DOM compilation
     QStringView mainString;
+    QStringView commentString;
     auto registerMainString = [&](QStringView string) {
         mainString = string;
         return 0;
     };
-    auto discardCommentString = [](QStringView) {return -1;};
-    auto finalizeBinding = [&](QV4::CompiledData::Binding::Type type, QV4::CompiledData::TranslationData) {
+    auto registerCommentString = [&](QStringView string) {
+        commentString = string;
+        return 0;
+    };
+    auto finalizeBinding = [&](QV4::CompiledData::Binding::Type type,
+                               QV4::CompiledData::TranslationData data) {
         if (type == QV4::CompiledData::Binding::Type_Translation) {
-            binding.setTranslation(mainString);
+            binding.setTranslation(mainString, commentString, data.number);
         } else if (type == QV4::CompiledData::Binding::Type_TranslationById) {
-            binding.setTranslationId(mainString);
+            binding.setTranslationId(mainString, data.number);
         } else {
             binding.setStringLiteral(mainString);
         }
     };
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
-    // #if required for standalone DOM compilation against Qt 6.2
-    QmlIR::tryGeneratingTranslationBindingBase(base, args, registerMainString, discardCommentString, finalizeBinding);
+    QmlIR::tryGeneratingTranslationBindingBase(base, args, registerMainString,
+                                               registerCommentString, finalizeBinding);
 #endif
 }
 

@@ -45,6 +45,18 @@ struct Q_QML_PRIVATE_EXPORT QQmlCppBinding
                                             QObject *bindingTarget, int metaPropertyIndex,
                                             int valueTypePropertyIndex,
                                             const QString &propertyName);
+
+    static QUntypedPropertyBinding
+    createTranslationBindingForBindable(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                        QObject *bindingTarget, int metaPropertyIndex,
+                                        const QQmlTranslation &translationData,
+                                        const QString &propertyName);
+
+    static void createTranslationBindingForNonBindable(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+            const QQmlSourceLocation &location, const QQmlTranslation &translationData,
+            QObject *thisObject, QObject *bindingTarget, int metaPropertyIndex,
+            const QString &propertyName, int valueTypePropertyIndex);
 };
 
 QT_END_NAMESPACE

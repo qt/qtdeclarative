@@ -4,6 +4,10 @@
 #include "qqmljsmetatypes_p.h"
 #include "qqmljstyperesolver_p.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#    include "QtQml/private/qqmltranslation_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -59,6 +63,30 @@ QString QQmlJSMetaPropertyBinding::regExpValue() const
     // warn
     return {};
 }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+/*!
+ *  Extracts the information about translations from a binding.
+ *  An additional context string is needed for text based translation (e.g. with qsTr())
+ *  and can be obtained from the name of the qml file.
+ *
+ *  \sa QQmlTranslation
+ */
+QQmlTranslation QQmlJSMetaPropertyBinding::translationDataValue(QString qmlFileNameForContext) const
+{
+    if (auto translation = std::get_if<Content::TranslationById>(&m_bindingContent)) {
+        QQmlTranslation::QsTrIdData data(translation->id, translation->number);
+        return QQmlTranslation(data);
+    } else if (auto translation = std::get_if<Content::TranslationString>(&m_bindingContent)) {
+        const QString context = QQmlTranslation::contextFromQmlFilename(qmlFileNameForContext);
+        QQmlTranslation::QsTrData data(context, translation->text, translation->comment,
+                                       translation->number);
+        return QQmlTranslation(data);
+    }
+    // warn
+    return QQmlTranslation({});
+}
+#endif
 
 /*!
     \internal

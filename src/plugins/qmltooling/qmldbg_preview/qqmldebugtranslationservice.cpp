@@ -36,8 +36,8 @@ QDebug operator<<(QDebug debug, const TranslationBindingInformation &translation
 {
     QQmlError error;
     error.setUrl(translationBindingInformation.compilationUnit->url());
-    error.setLine(translationBindingInformation.compiledBinding->valueLocation.line());
-    error.setColumn(translationBindingInformation.compiledBinding->valueLocation.column());
+    error.setLine(translationBindingInformation.line);
+    error.setColumn(translationBindingInformation.column);
     error.setDescription(
         QString(QLatin1String(
             "QDebug translation binding"
@@ -147,12 +147,9 @@ public:
 
             QObject *scopeObject = information.scopeObject;
             auto compilationUnit = information.compilationUnit;
-            auto binding = information.compiledBinding;
             auto metaObject = scopeObject->metaObject();
 
-            const QString propertyName = compilationUnit->stringAt(binding->propertyNameIndex);
-
-            int textIndex = metaObject->indexOfProperty(propertyName.toLatin1());
+            int textIndex = metaObject->indexOfProperty(information.propertyName.toLatin1());
             if (textIndex >= 0) {
 
                 QmlElement qmlElement;
@@ -161,9 +158,7 @@ public:
 
                 auto textProperty = scopeObject->metaObject()->property(textIndex);
                 qmlElement.propertyName = textProperty.name();
-                qmlElement.translationId = compilationUnit->stringAt(
-                        compilationUnit->data->translations()[binding->value.translationDataIndex]
-                                .stringIndex);
+                qmlElement.translationId = information.translation.idForQmlDebug();
                 qmlElement.translatedText = textProperty.read(scopeObject).toString();
                 qmlElement.elementId = qmlContext(scopeObject)->nameForObject(scopeObject);
 
@@ -185,7 +180,7 @@ public:
                 QString warningMessage = "(QQmlDebugTranslationService can not resolve %1 - %2:"\
                                          " this should never happen)";
                 const QString id = qmlContext(scopeObject)->nameForObject(scopeObject);
-                qWarning().noquote() << warningMessage.arg(id, propertyName);
+                qWarning().noquote() << warningMessage.arg(id, information.propertyName);
             }
         }
         std::sort(qmlElements.begin(), qmlElements.end(), [](const auto &l1, const auto &l2){
@@ -263,8 +258,8 @@ private:
     {
         CodeMarker c;
         c.url = information.compilationUnit->url();
-        c.line = information.compiledBinding->valueLocation.line();
-        c.column = information.compiledBinding->valueLocation.column();
+        c.line = information.line;
+        c.column = information.column;
         return c;
     }
     QString currentStateName;

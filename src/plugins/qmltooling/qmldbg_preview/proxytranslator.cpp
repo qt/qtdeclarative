@@ -24,25 +24,16 @@ bool ProxyTranslator::hasTranslation(const TranslationBindingInformation &transl
     return translationFound();
 }
 
-QString ProxyTranslator::translationFromInformation(const TranslationBindingInformation &translationBindingInformation)
+QString ProxyTranslator::translationFromInformation(const TranslationBindingInformation &info)
 {
-    return translationBindingInformation.compilationUnit->bindingValueAsString(
-        translationBindingInformation.compiledBinding);
-}
-
-
-QString ProxyTranslator::originStringFromInformation(const TranslationBindingInformation &translationBindingInformation)
-{
-    return translationBindingInformation.compilationUnit->stringAt(
-        translationBindingInformation.compiledBinding->stringIndex);
+    return info.translation.translate();
 }
 
 QQmlSourceLocation ProxyTranslator::sourceLocationFromInformation(const TranslationBindingInformation &translationBindingInformation)
 {
-    return QQmlSourceLocation(
-            translationBindingInformation.compilationUnit->fileName(),
-            translationBindingInformation.compiledBinding->valueLocation.line(),
-            translationBindingInformation.compiledBinding->valueLocation.column());
+    return QQmlSourceLocation(translationBindingInformation.compilationUnit->fileName(),
+                              translationBindingInformation.line,
+                              translationBindingInformation.column);
 }
 
 

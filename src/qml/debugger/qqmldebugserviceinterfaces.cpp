@@ -45,6 +45,44 @@ QQmlDebugStatesDelegate *QQmlEngineDebugService::createStatesDelegate()
 #if QT_CONFIG(translation)
 QQmlDebugTranslationService::~QQmlDebugTranslationService()
     = default;
+
+const TranslationBindingInformation TranslationBindingInformation::create(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+        const QV4::CompiledData::Binding *binding, QObject *scopeObject,
+        QQmlRefPointer<QQmlContextData> ctxt)
+{
+    QQmlTranslation translation({});
+    if (binding->type() == QV4::CompiledData::Binding::Type_TranslationById) {
+        const QV4::CompiledData::TranslationData data =
+                compilationUnit->data->translations()[binding->value.translationDataIndex];
+        const QString id = compilationUnit->stringAt(data.stringIndex);
+        const int n = data.number;
+
+        translation = QQmlTranslation(QQmlTranslation::QsTrIdData(id, n));
+    } else {
+        Q_ASSERT(binding->type() == QV4::CompiledData::Binding::Type_Translation);
+
+        const QV4::CompiledData::TranslationData data =
+                compilationUnit->data->translations()[binding->value.translationDataIndex];
+        const QString context =
+                QQmlTranslation::contextFromQmlFilename(compilationUnit->fileName());
+        const QString text = compilationUnit->stringAt(data.stringIndex);
+        const QString comment = compilationUnit->stringAt(data.commentIndex);
+        const int n = data.number;
+
+        translation = QQmlTranslation(QQmlTranslation::QsTrData(context, text, comment, n));
+    }
+
+    return { compilationUnit,
+             scopeObject,
+             ctxt,
+
+             compilationUnit->stringAt(binding->propertyNameIndex),
+             translation,
+
+             binding->location.line(),
+             binding->location.column() };
+}
 #endif
 
 QT_END_NAMESPACE

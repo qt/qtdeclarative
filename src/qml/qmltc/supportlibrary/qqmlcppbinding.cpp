@@ -108,4 +108,56 @@ void QQmlCppBinding::createBindingForNonBindable(const QV4::ExecutableCompilatio
             });
 }
 
+QUntypedPropertyBinding QQmlCppBinding::createTranslationBindingForBindable(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, QObject *bindingTarget,
+        int metaPropertyIndex, const QQmlTranslation &translationData, const QString &propertyName)
+{
+    Q_UNUSED(propertyName);
+
+    if (metaPropertyIndex < 0) {
+        // TODO: align with existing logging of such
+        qCritical() << "invalid meta property index (internal error)";
+        return QUntypedPropertyBinding();
+    }
+
+    const QMetaObject *mo = bindingTarget->metaObject();
+    Q_ASSERT(mo);
+    QMetaProperty property = mo->property(metaPropertyIndex);
+    Q_ASSERT(QString::fromUtf8(property.name()) == propertyName);
+
+    return QQmlTranslationPropertyBinding::create(property.metaType(), unit, translationData);
+}
+
+void QQmlCppBinding::createTranslationBindingForNonBindable(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+        const QQmlSourceLocation &location, const QQmlTranslation &translationData,
+        QObject *thisObject, QObject *bindingTarget, int metaPropertyIndex,
+        const QString &propertyName, int valueTypePropertyIndex)
+{
+    Q_UNUSED(propertyName);
+
+    if (metaPropertyIndex < 0) {
+        // TODO: align with existing logging of such
+        qCritical() << "invalid meta property index (internal error)";
+        return;
+    }
+
+    const QMetaObject *mo = bindingTarget->metaObject();
+    Q_ASSERT(mo);
+    QMetaProperty property = mo->property(metaPropertyIndex);
+    Q_ASSERT(QString::fromUtf8(property.name()) == propertyName);
+
+    createBindingInScope(
+            thisObject,
+            [&](const QQmlRefPointer<QQmlContextData> &ctxt, QV4::ExecutionContext *) -> void {
+                QQmlBinding *binding = QQmlBinding::createTranslationBinding(
+                        unit, ctxt, propertyName, translationData, location, thisObject);
+                // almost as in qv4objectwrapper.cpp:535
+                Q_ASSERT(!property.isAlias()); // we convert aliases to (almost) real properties
+                binding->setTarget(bindingTarget, property.propertyIndex(), false,
+                                   valueTypePropertyIndex);
+                QQmlPropertyPrivate::setBinding(binding);
+            });
+}
+
 QT_END_NAMESPACE

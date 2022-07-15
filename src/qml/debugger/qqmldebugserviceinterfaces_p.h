@@ -22,6 +22,7 @@
 #endif
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qqmltranslation_p.h>
 
 #include <limits>
 
@@ -143,10 +144,20 @@ protected:
 #if QT_CONFIG(translation)
 struct TranslationBindingInformation
 {
+    static const TranslationBindingInformation
+    create(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+           const QV4::CompiledData::Binding *binding, QObject *scopeObject,
+           QQmlRefPointer<QQmlContextData> ctxt);
+
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
-    const QV4::CompiledData::Binding *compiledBinding;
     QObject *scopeObject;
     QQmlRefPointer<QQmlContextData> ctxt;
+
+    QString propertyName;
+    QQmlTranslation translation;
+
+    quint32 line;
+    quint32 column;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlDebugTranslationService : public QQmlDebugService

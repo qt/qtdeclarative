@@ -28,6 +28,7 @@
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qqmltranslation_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,6 +59,12 @@ public:
             const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
             const QV4::CompiledData::Binding *binding, QObject *obj,
             const QQmlRefPointer<QQmlContextData> &ctxt);
+
+    static QQmlBinding *
+    createTranslationBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                             const QQmlRefPointer<QQmlContextData> &ctxt,
+                             const QString &propertyName, const QQmlTranslation &translationData,
+                             const QQmlSourceLocation &location, QObject *obj);
 
     Kind kind() const final { return QQmlAbstractBinding::QmlBinding; }
 

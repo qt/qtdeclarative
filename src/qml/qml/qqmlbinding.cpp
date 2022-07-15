@@ -277,20 +277,14 @@ protected:
 
 class QQmlTranslationBinding : public GenericBinding<QMetaType::QString>, public QPropertyObserver {
 public:
-    QQmlTranslationBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
+    QQmlTranslationBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
         : QPropertyObserver(&QQmlTranslationBinding::onLanguageChange)
     {
         setCompilationUnit(compilationUnit);
-        m_binding = binding;
         setSource(QQmlEnginePrivate::get(compilationUnit->engine)->translationLanguage);
     }
 
-    QQmlSourceLocation sourceLocation() const override final
-    {
-        return QQmlSourceLocation(
-                m_compilationUnit->fileName(), m_binding->valueLocation.line(),
-                m_binding->valueLocation.column());
-    }
+    virtual QString bindingValue() const = 0;
 
     static void onLanguageChange(QPropertyObserver *observer, QUntypedPropertyData *)
     { static_cast<QQmlTranslationBinding *>(observer)->update(); }
@@ -304,7 +298,7 @@ public:
         if (!isAddedToObject() || hasError())
             return;
 
-        const QString result = m_compilationUnit->bindingValueAsString(m_binding);
+        const QString result = this->bindingValue();
 
         Q_ASSERT(targetObject());
 
@@ -321,9 +315,56 @@ public:
     }
 
     bool hasDependencies() const override final { return true; }
+};
 
-private:
+class QQmlTranslationBindingFromBinding : public QQmlTranslationBinding
+{
     const QV4::CompiledData::Binding *m_binding;
+
+public:
+    QQmlTranslationBindingFromBinding(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            const QV4::CompiledData::Binding *binding)
+        : QQmlTranslationBinding(compilationUnit), m_binding(binding)
+    {
+    }
+
+    QString bindingValue() const override
+    {
+        return this->m_compilationUnit->bindingValueAsString(m_binding);
+    }
+
+    QQmlSourceLocation sourceLocation() const override final
+    {
+        return QQmlSourceLocation(m_compilationUnit->fileName(), m_binding->valueLocation.line(),
+                                  m_binding->valueLocation.column());
+    }
+};
+
+class QQmlTranslationBindingFromTranslationInfo : public QQmlTranslationBinding
+{
+    QQmlTranslation m_translationData;
+
+    quint16 m_line;
+    quint16 m_column;
+
+public:
+    QQmlTranslationBindingFromTranslationInfo(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            const QQmlTranslation &translationData, quint16 line, quint16 column)
+        : QQmlTranslationBinding(compilationUnit),
+          m_translationData(translationData),
+          m_line(line),
+          m_column(column)
+    {
+    }
+
+    virtual QString bindingValue() const override { return m_translationData.translate(); }
+
+    QQmlSourceLocation sourceLocation() const override final
+    {
+        return QQmlSourceLocation(m_compilationUnit->fileName(), m_line, m_column);
+    }
 };
 
 QQmlBinding *QQmlBinding::createTranslationBinding(
@@ -331,7 +372,7 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
         const QV4::CompiledData::Binding *binding, QObject *obj,
         const QQmlRefPointer<QQmlContextData> &ctxt)
 {
-    QQmlTranslationBinding *b = new QQmlTranslationBinding(unit, binding);
+    QQmlTranslationBinding *b = new QQmlTranslationBindingFromBinding(unit, binding);
 
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
@@ -339,7 +380,34 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
 #if QT_CONFIG(translation) && QT_CONFIG(qml_debug)
     if (QQmlDebugTranslationService *service
                  = QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
-        service->foundTranslationBinding({unit, binding, b->scopeObject(), ctxt});
+        service->foundTranslationBinding(
+                TranslationBindingInformation::create(unit, binding, b->scopeObject(), ctxt));
+    }
+#endif
+    return b;
+}
+
+QQmlBinding *QQmlBinding::createTranslationBinding(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+        const QQmlRefPointer<QQmlContextData> &ctxt, const QString &propertyName,
+        const QQmlTranslation &translationData, const QQmlSourceLocation &location, QObject *obj)
+{
+    QQmlTranslationBinding *b = new QQmlTranslationBindingFromTranslationInfo(
+            unit, translationData, location.column, location.line);
+
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(ctxt);
+    b->setScopeObject(obj);
+
+#if QT_CONFIG(translation) && QT_CONFIG(qml_debug)
+    QString originString;
+    if (QQmlDebugTranslationService *service =
+                QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
+        service->foundTranslationBinding({ unit, b->scopeObject(), ctxt,
+
+                                           propertyName, translationData,
+
+                                           location.line, location.column });
     }
 #endif
     return b;

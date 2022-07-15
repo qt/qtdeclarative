@@ -252,6 +252,14 @@ public:
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;
 
+    struct TranslationDataIndex
+    {
+        uint index;
+        bool byId;
+    };
+
+    QString translateFrom(TranslationDataIndex index) const;
+
     static bool verifyHeader(const CompiledData::Unit *unit, QDateTime expectedSourceTimeStamp,
                              QString *errorString);
 protected:

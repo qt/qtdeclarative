@@ -849,34 +849,47 @@ bool ResolvedTypeReferenceMap::addToHash(
 
 QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Binding *binding) const
 {
-    using namespace CompiledData;
 #if QT_CONFIG(translation)
+    using namespace CompiledData;
+    bool byId = false;
     switch (binding->type()) {
-    case Binding::Type_TranslationById: {
-        const TranslationData &translation
-                = data->translations()[binding->value.translationDataIndex];
-        QByteArray id = stringAt(translation.stringIndex).toUtf8();
-        return qtTrId(id.constData(), translation.number);
-    }
+    case Binding::Type_TranslationById:
+        byId = true;
+        Q_FALLTHROUGH();
     case Binding::Type_Translation: {
-        const TranslationData &translation
-                = data->translations()[binding->value.translationDataIndex];
-        // This code must match that in the qsTr() implementation
-        const QString &path = fileName();
-        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-        QStringView context = (lastSlash > -1) ? QStringView{path}.mid(lastSlash + 1, path.length() - lastSlash - 5)
-                                              : QStringView();
-        QByteArray contextUtf8 = context.toUtf8();
-        QByteArray comment = stringAt(translation.commentIndex).toUtf8();
-        QByteArray text = stringAt(translation.stringIndex).toUtf8();
-        return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
-                                           comment.constData(), translation.number);
+        return translateFrom({ binding->value.translationDataIndex, byId });
     }
     default:
         break;
     }
 #endif
     return CompilationUnit::bindingValueAsString(binding);
+}
+
+QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) const
+{
+#if !QT_CONFIG(translation)
+    return QString();
+#else
+    const CompiledData::TranslationData &translation = data->translations()[index.index];
+
+    if (index.byId) {
+        QByteArray id = stringAt(translation.stringIndex).toUtf8();
+        return qtTrId(id.constData(), translation.number);
+    }
+
+    // This code must match that in the qsTr() implementation
+    const QString &path = fileName();
+    int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+    QStringView context = (lastSlash > -1)
+            ? QStringView{ path }.mid(lastSlash + 1, path.length() - lastSlash - 5)
+            : QStringView();
+    QByteArray contextUtf8 = context.toUtf8();
+    QByteArray comment = stringAt(translation.commentIndex).toUtf8();
+    QByteArray text = stringAt(translation.stringIndex).toUtf8();
+    return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
+                                       comment.constData(), translation.number);
+#endif
 }
 
 bool ExecutableCompilationUnit::verifyHeader(

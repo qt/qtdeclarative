@@ -164,7 +164,8 @@ private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
-    friend class QQmlTranslationBinding;
+    friend class QQmlTranslationBindingFromBinding;
+    friend class QQmlTranslationBindingFromTranslationInfo;
     friend class QQmlJavaScriptExpressionCapture;
 
     // Not refcounted as the context will clear the expressions when destructed.

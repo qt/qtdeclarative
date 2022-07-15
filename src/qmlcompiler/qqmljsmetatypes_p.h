@@ -24,6 +24,10 @@
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#    include <QtQml/private/qqmltranslation_p.h>
+#endif
+
 #include "qqmljsannotation_p.h"
 
 // MetaMethod and MetaProperty have both type names and actual QQmlJSScope types.
@@ -444,14 +448,23 @@ private:
             friend bool operator!=(Null a, Null b) { return !(a == b); }
         };
         struct TranslationString {
-            friend bool operator==(TranslationString a, TranslationString b) { return a.value == b.value; }
+            friend bool operator==(TranslationString a, TranslationString b)
+            {
+                return a.text == b.text && a.comment == b.comment && a.number == b.number;
+            }
             friend bool operator!=(TranslationString a, TranslationString b) { return !(a == b); }
-            QString value;
+            QString text;
+            QString comment;
+            int number;
         };
         struct TranslationById {
-            friend bool operator==(TranslationById a, TranslationById b) { return a.value == b.value; }
+            friend bool operator==(TranslationById a, TranslationById b)
+            {
+                return a.id == b.id && a.number == b.number;
+            }
             friend bool operator!=(TranslationById a, TranslationById b) { return !(a == b); }
-            QString value;
+            QString id;
+            int number;
         };
         struct Script {
             friend bool operator==(Script a, Script b)
@@ -633,17 +646,17 @@ public:
         m_bindingContent = Content::RegexpLiteral { value.toString() };
     }
 
-    // ### TODO: we might need comment and translation number at some point
-    void setTranslation(QStringView translation)
+    void setTranslation(QStringView text, QStringView comment, int number)
     {
         ensureSetBindingTypeOnce();
-        m_bindingContent = Content::TranslationString { translation.toString() };
+        m_bindingContent =
+                Content::TranslationString{ text.toString(), comment.toString(), number };
     }
 
-    void setTranslationId(QStringView id)
+    void setTranslationId(QStringView id, int number)
     {
         ensureSetBindingTypeOnce();
-        m_bindingContent = Content::TranslationById { id.toString() };
+        m_bindingContent = Content::TranslationById{ id.toString(), number };
     }
 
     void setObject(const QString &typeName, const QSharedPointer<const QQmlJSScope> &type)
@@ -674,6 +687,10 @@ public:
     QString stringValue() const;
 
     QString regExpValue() const;
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    QQmlTranslation translationDataValue(QString qmlFileNameForContext = QStringLiteral("")) const;
+#endif
 
     QSharedPointer<const QQmlJSScope> literalType(const QQmlJSTypeResolver *resolver) const;
 

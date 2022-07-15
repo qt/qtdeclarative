@@ -39,8 +39,8 @@ public:
     void removeEngine(QQmlEngine *engine);
 
     bool hasTranslation(const TranslationBindingInformation &translationBindingInformation) const;
-    static QString translationFromInformation(const TranslationBindingInformation &translationBindingInformation);
-    static QString originStringFromInformation(const TranslationBindingInformation &translationBindingInformation);
+    static QString
+    translationFromInformation(const TranslationBindingInformation &translationBindingInformation);
     static QQmlSourceLocation sourceLocationFromInformation(const TranslationBindingInformation &translationBindingInformation);
 Q_SIGNALS:
     void languageChanged(const QLocale &locale);
