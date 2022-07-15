@@ -88,6 +88,12 @@ public:
         }
     }
 
+    void itemDestroyed(QQuickItem *item) override
+    {
+        if (!items.removeOne(item))
+            itemCache.removeOne(item);
+    }
+
     void scheduleLayout() {
         Q_Q(QQuickPathView);
         if (!layoutScheduled) {
