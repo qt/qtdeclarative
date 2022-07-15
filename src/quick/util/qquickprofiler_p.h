@@ -299,7 +299,7 @@ public:
 
     ~QQuickProfiler() override;
 
-signals:
+Q_SIGNALS:
     void dataReady(const QVector<QQuickProfilerData> &data);
 
 protected:

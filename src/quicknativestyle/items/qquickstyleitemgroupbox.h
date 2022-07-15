@@ -21,7 +21,7 @@ public:
     QPointF labelPos() const;
     QFont styleFont(QQuickItem *control) const override;
 
-signals:
+Q_SIGNALS:
     void groupBoxPaddingChanged();
     void labelPosChanged();
 

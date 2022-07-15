@@ -52,7 +52,7 @@ public:
     void whitelist(const QUrl &url);
     bool isBlacklisted(const QString &file);
 
-signals:
+Q_SIGNALS:
     void request(const QString &file);
 
 private:

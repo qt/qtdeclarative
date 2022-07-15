@@ -107,7 +107,7 @@ protected:
         NOrientations
     };
 
-protected slots:
+protected Q_SLOTS:
     void invalidateSenderItem();
 
 private:
@@ -278,7 +278,7 @@ public:
         return false;
     }
 
-signals:
+Q_SIGNALS:
     void minimumWidthChanged();
     void minimumHeightChanged();
     void preferredWidthChanged();

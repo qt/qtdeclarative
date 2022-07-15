@@ -218,7 +218,7 @@ public:
     void reportData();
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
-signals:
+Q_SIGNALS:
     void dataReady(const QV4::Profiling::FunctionLocationHash &,
                    const QVector<QV4::Profiling::FunctionCallProperties> &,
                    const QVector<QV4::Profiling::MemoryAllocationProperties> &);

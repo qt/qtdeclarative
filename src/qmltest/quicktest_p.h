@@ -54,10 +54,10 @@ public:
 
     bool hasQuit:1;
     bool hasTestCase() const { return m_hasTestCase; }
-    void setHasTestCase(bool value) { m_hasTestCase = value; emit hasTestCaseChanged(); }
+    void setHasTestCase(bool value) { m_hasTestCase = value; Q_EMIT hasTestCaseChanged(); }
 
     bool windowShown() const { return m_windowShown; }
-    void setWindowShown(bool value) { m_windowShown = value; emit windowShownChanged(); }
+    void setWindowShown(bool value) { m_windowShown = value; Q_EMIT windowShownChanged(); }
     QQmlPropertyMap *defined() const { return m_defined; }
 
     void init() { setWindowShown(false); setHasTestCase(false); hasQuit = false; }

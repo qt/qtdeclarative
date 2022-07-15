@@ -70,7 +70,7 @@ public:
         return m_statesDelegate;
     }
 
-signals:
+Q_SIGNALS:
     void scheduleMessage(const QByteArray &);
 
 protected:

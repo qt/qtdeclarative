@@ -76,7 +76,7 @@ public:
     qreal rightMargin() const;
     void setRightMargin(qreal rightMargin);
 
-signals:
+Q_SIGNALS:
     void indicatorChanged();
     void indentationChanged();
     void isTreeNodeChanged();

@@ -37,7 +37,7 @@ class QQmlTypeLoaderNetworkReplyProxy : public QObject
 public:
     QQmlTypeLoaderNetworkReplyProxy(QQmlTypeLoader *l);
 
-public slots:
+public Q_SLOTS:
     void finished();
     void downloadProgress(qint64, qint64);
     void manualFinished(QNetworkReply*);

@@ -73,7 +73,7 @@ public:
     void setAttributeName(const QString &attributeName);
     bool isValid() const;
 
-signals:
+Q_SIGNALS:
     void nameChanged();
     void elementNameChanged();
     void attributeNameChanged();

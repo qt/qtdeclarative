@@ -43,7 +43,7 @@ public:
 
     void stopProfiling();
 
-    void reportData() { emit dataRequested(); }
+    void reportData() { Q_EMIT dataRequested(); }
 
     void stopWaiting() { waiting = false; }
     void startWaiting() { waiting = true; }
@@ -51,9 +51,9 @@ public:
     bool isRunning() const { return featuresEnabled != 0; }
     quint64 features() const { return featuresEnabled; }
 
-    void synchronize(const QElapsedTimer &t) { emit referenceTimeKnown(t); }
+    void synchronize(const QElapsedTimer &t) { Q_EMIT referenceTimeKnown(t); }
 
-signals:
+Q_SIGNALS:
     void profilingEnabled(quint64 features);
     void profilingEnabledWhileWaiting(quint64 features);
 

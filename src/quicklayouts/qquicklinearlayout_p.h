@@ -68,7 +68,7 @@ protected:
     void rearrange(const QSizeF &size) override;
     virtual void insertLayoutItems() {}
 
-signals:
+Q_SIGNALS:
     Q_REVISION(1, 1) void layoutDirectionChanged();
 
 private:
@@ -140,7 +140,7 @@ public:
 
     void insertLayoutItems() override;
 
-signals:
+Q_SIGNALS:
     void columnSpacingChanged();
     void rowSpacingChanged();
 
@@ -182,7 +182,7 @@ public:
 
     void insertLayoutItems() override;
 
-signals:
+Q_SIGNALS:
     void spacingChanged();
 private:
     Q_DECLARE_PRIVATE(QQuickLinearLayout)

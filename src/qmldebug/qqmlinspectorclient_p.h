@@ -37,7 +37,7 @@ public:
     int moveObject(int childId, int newParentId);
     int destroyObject(int objectId);
 
-signals:
+Q_SIGNALS:
     void responseReceived(int requestId, bool result);
 
 protected:

@@ -72,7 +72,7 @@ public:
 protected:
     void messageReceived(const QByteArray &data) override;
 
-signals:
+Q_SIGNALS:
     void connected();
     void interrupted();
     void result();

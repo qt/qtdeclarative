@@ -63,7 +63,7 @@ public:
 
     void modelDestroyed();
 
-signals:
+Q_SIGNALS:
     void engineChanged(QV4::ExecutionEngine *engine);
 
 protected:

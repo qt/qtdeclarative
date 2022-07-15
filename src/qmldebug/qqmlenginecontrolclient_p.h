@@ -32,7 +32,7 @@ public:
 
     QList<int> blockedEngines() const;
 
-signals:
+Q_SIGNALS:
     void engineAboutToBeAdded(int engineId, const QString &name);
     void engineAdded(int engineId, const QString &name);
     void engineAboutToBeRemoved(int engineId, const QString &name);

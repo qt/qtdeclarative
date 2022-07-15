@@ -117,7 +117,7 @@ namespace QQuickVisualTestUtils
             signalNames.clear();
         }
 
-    public slots:
+    public Q_SLOTS:
         void receive() {
             QMetaMethod m = sender()->metaObject()->method(senderSignalIndex());
             senders << sender();

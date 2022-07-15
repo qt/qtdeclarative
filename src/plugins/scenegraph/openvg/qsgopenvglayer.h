@@ -51,7 +51,7 @@ public:
     void setMirrorVertical(bool mirror) override;
     void setSamples(int) override { }
 
-public slots:
+public Q_SLOTS:
     void markDirtyTexture() override;
     void invalidated() override;
 

@@ -42,7 +42,7 @@ public:
 
     const QQuickHandlerPoint &centroid() const;
 
-signals:
+Q_SIGNALS:
     void minimumPointCountChanged();
     void maximumPointCountChanged();
     void centroidChanged();

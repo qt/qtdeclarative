@@ -33,7 +33,7 @@ class Q_QUICK_TEST_PRIVATE_EXPORT QQuickTouchEventSequence : public QObject
 
 public:
     explicit QQuickTouchEventSequence(QuickTestEvent *testEvent, QObject *item = nullptr);
-public slots:
+public Q_SLOTS:
     QObject* press(int touchId, QObject *item, qreal x, qreal y);
     QObject* move(int touchId, QObject *item, qreal x, qreal y);
     QObject* release(int touchId, QObject *item, qreal x, qreal y);

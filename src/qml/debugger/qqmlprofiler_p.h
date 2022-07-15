@@ -353,7 +353,7 @@ public:
     void reportData();
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
-signals:
+Q_SIGNALS:
     void dataReady(const QVector<QQmlProfilerData> &, const QQmlProfiler::LocationHash &);
 
 protected:

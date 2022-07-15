@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
         if (m_state.P == arg) \
             return; \
         m_state.P = arg; \
-        emit P ## Changed(arg); \
+        Q_EMIT P ## Changed(arg); \
         QAccessible::State changedState; \
         changedState.P = true; \
         QAccessibleStateChangeEvent ev(parent(), changedState); \

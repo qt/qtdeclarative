@@ -33,7 +33,7 @@ public:
     void removeWindow(QQuickWindow *window);
     void processMessage(const QByteArray &message);
 
-signals:
+Q_SIGNALS:
     void messageToClient(const QString &name, const QByteArray &data);
 
 private:

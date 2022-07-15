@@ -62,7 +62,7 @@ public:
 
     void dataReady(QQmlAbstractProfilerAdapter *profiler) override;
 
-signals:
+Q_SIGNALS:
     void startFlushTimer();
     void stopFlushTimer();
 

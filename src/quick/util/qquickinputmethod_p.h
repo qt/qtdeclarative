@@ -62,7 +62,7 @@ public:
 
     QRectF keyboardRectangle() const;
     QLocale locale() const;
-signals:
+Q_SIGNALS:
     void anchorRectangleChanged();
     void animatingChanged();
     void cursorRectangleChanged();
@@ -72,7 +72,7 @@ signals:
     void localeChanged();
     void visibleChanged();
 
-public slots:
+public Q_SLOTS:
     void commit();
     void hide();
     void invokeAction(QInputMethod::Action a, int cursorPosition);
