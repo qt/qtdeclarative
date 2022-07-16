@@ -5,6 +5,7 @@
 #include <data/objectwithmethod.h>
 
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmlpropertycachecreator_p.h>
 
 #include <QtTest>
 #include <QtQml>
@@ -1107,23 +1108,28 @@ void tst_QmlCppCodegen::accessModelMethodFromOutSide()
 void tst_QmlCppCodegen::functionArguments()
 {
     QQmlEngine engine;
+
+    // ensugre that dummy gets couter value 0, don't do that at home
+    QScopedValueRollback<QAtomicInt> rb(QQmlPropertyCacheCreatorBase::classIndexCounter, 0);
+
     QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Dummy.qml"_s));
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> object(component.create());
 
     const QMetaObject *metaObject = object->metaObject();
+    const QByteArray className = QByteArray(metaObject->className());
+    QCOMPARE(className, "Dummy_QMLTYPE_0");
 
     int result;
     int a = 1;
     bool b = false;
-    QObject *c = nullptr;
+    class Dummy_QMLTYPE_0 *c = nullptr;
     double d = -1.2;
     int e = 3;
 
-    const QByteArray className = QByteArray(metaObject->className()) + '*';
     metaObject->invokeMethod(
                 object.data(), "someFunction", Q_RETURN_ARG(int, result),
-                Q_ARG(int, a), Q_ARG(bool, b), QGenericArgument(className, &c),
+                Q_ARG(int, a), Q_ARG(bool, b), Q_ARG(Dummy_QMLTYPE_0 *, c),
                 Q_ARG(double, d), Q_ARG(int, e));
     QCOMPARE(result, 42);
 

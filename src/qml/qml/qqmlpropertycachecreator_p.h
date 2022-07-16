@@ -64,7 +64,7 @@ struct QQmlPropertyCacheCreatorBase
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyCacheCreatorBase)
 public:
-    static QAtomicInt classIndexCounter;
+    static QAtomicInt Q_AUTOTEST_EXPORT classIndexCounter;
 
     static QMetaType metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
     static QMetaType listTypeForPropertyType(QV4::CompiledData::BuiltinType type);
