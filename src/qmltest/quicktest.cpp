@@ -241,7 +241,8 @@ bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
     return spy.size();
 }
 
-void maybeInvokeSetupMethod(QObject *setupObject, const char *member, QGenericArgument val0 = QGenericArgument(nullptr))
+template <typename... Args>
+void maybeInvokeSetupMethod(QObject *setupObject, const char *member, Args &&... args)
 {
     // It's OK if it doesn't exist: since we have more than one callback that
     // can be called, it makes sense if the user only implements one of them.
@@ -252,7 +253,7 @@ void maybeInvokeSetupMethod(QObject *setupObject, const char *member, QGenericAr
     const int methodIndex = setupMetaObject->indexOfMethod(member);
     if (methodIndex != -1) {
         const QMetaMethod method = setupMetaObject->method(methodIndex);
-        method.invoke(setupObject, val0);
+        method.invoke(setupObject, std::forward<Args>(args)...);
     }
 }
 
