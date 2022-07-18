@@ -1159,6 +1159,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("listPropertyMethods") << QStringLiteral("listPropertyMethods.qml");
     QTest::newRow("v4SequenceMethods") << QStringLiteral("v4SequenceMethods.qml");
     QTest::newRow("stringToByteArray") << QStringLiteral("stringToByteArray.qml");
+    QTest::newRow("jsLibrary") << QStringLiteral("jsLibrary.qml");
 }
 
 void TestQmllint::cleanQmlCode()
