@@ -129,6 +129,7 @@ public:
     virtual void executeBackground(bool complete = false);
 
     static void hideOldItem(QQuickItem *item);
+    static void unhideOldItem(QQuickControl *control, QQuickItem *item);
 
     void updateBaselineOffset();
 
