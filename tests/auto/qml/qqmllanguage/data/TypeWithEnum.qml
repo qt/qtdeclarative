@@ -12,7 +12,8 @@ QtObject {
         OtherEnumValue2,
         OtherEnumValue3 = 24,
         OtherEnumValue4,
-        OtherEnumValue5 = 1
+        OtherEnumValue5 = 1,
+        OtherEnumValue6 = -42
     }
 
     property int enumValue: TypeWithEnum.EnumValue2
@@ -25,4 +26,5 @@ QtObject {
     property int otherEnumValue3: TypeWithEnum.OtherEnumValue3
     property int otherEnumValue4: TypeWithEnum.OtherEnumValue4
     property int otherEnumValue5: TypeWithEnum.OtherEnumValue5
+    property int otherEnumValue6: TypeWithEnum.OtherEnumValue6
 }

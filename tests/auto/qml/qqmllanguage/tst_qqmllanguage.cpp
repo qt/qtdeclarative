@@ -4310,6 +4310,7 @@ void tst_qqmllanguage::qmlEnums()
         QCOMPARE(o->property("otherEnumValue3").toInt(), 24);
         QCOMPARE(o->property("otherEnumValue4").toInt(), 25);
         QCOMPARE(o->property("otherEnumValue5").toInt(), 1);
+        QCOMPARE(o->property("otherEnumValue6").toInt(), -42);
     }
 
     {
