@@ -139,6 +139,7 @@ set(qml_files
     specificParent.qml
     stringArg.qml
     stringLength.qml
+    stringToByteArray.qml
     testlogger.js
     text.qml
     themerbad.qml

@@ -1158,6 +1158,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("callLater") << QStringLiteral("callLater.qml");
     QTest::newRow("listPropertyMethods") << QStringLiteral("listPropertyMethods.qml");
     QTest::newRow("v4SequenceMethods") << QStringLiteral("v4SequenceMethods.qml");
+    QTest::newRow("stringToByteArray") << QStringLiteral("stringToByteArray.qml");
 }
 
 void TestQmllint::cleanQmlCode()

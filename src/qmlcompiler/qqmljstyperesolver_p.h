@@ -47,6 +47,7 @@ public:
     QQmlJSScope::ConstPtr boolType() const { return m_boolType; }
     QQmlJSScope::ConstPtr stringType() const { return m_stringType; }
     QQmlJSScope::ConstPtr stringListType() const { return m_stringListType; }
+    QQmlJSScope::ConstPtr byteArrayType() const { return m_byteArrayType; }
     QQmlJSScope::ConstPtr urlType() const { return m_urlType; }
     QQmlJSScope::ConstPtr dateTimeType() const { return m_dateTimeType; }
     QQmlJSScope::ConstPtr variantListType() const { return m_variantListType; }
@@ -178,6 +179,7 @@ protected:
     QQmlJSScope::ConstPtr m_boolType;
     QQmlJSScope::ConstPtr m_stringType;
     QQmlJSScope::ConstPtr m_stringListType;
+    QQmlJSScope::ConstPtr m_byteArrayType;
     QQmlJSScope::ConstPtr m_urlType;
     QQmlJSScope::ConstPtr m_dateTimeType;
     QQmlJSScope::ConstPtr m_variantListType;

@@ -68,3 +68,20 @@ void Person::setBarzles(const QList<Barzle *> &barzles)
     m_barzles = barzles;
     emit barzlesChanged();
 }
+
+QBindable<QByteArray> Person::dataBindable()
+{
+    return QBindable<QByteArray>(&m_data);
+}
+
+void Person::setData(const QByteArray &data)
+{
+    if (data != m_data.value())
+        emit dataChanged();
+    m_data.setValue(data);
+}
+
+QByteArray Person::data() const
+{
+    return m_data;
+}

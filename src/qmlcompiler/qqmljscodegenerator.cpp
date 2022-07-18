@@ -2773,6 +2773,16 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
         return u"QUrl("_s + variable + u')';
     }
 
+    if (m_typeResolver->equals(from, m_typeResolver->byteArrayType())
+            && m_typeResolver->equals(to, m_typeResolver->stringType())) {
+        return u"QString::fromUtf8("_s + variable + u')';
+    }
+
+    if (m_typeResolver->equals(from, m_typeResolver->stringType())
+            && m_typeResolver->equals(to, m_typeResolver->byteArrayType())) {
+        return variable + u".toUtf8()"_s;
+    }
+
     const auto retrieveFromPrimitive = [&](const QQmlJSScope::ConstPtr &type)
     {
         if (m_typeResolver->equals(type, m_typeResolver->boolType()))
