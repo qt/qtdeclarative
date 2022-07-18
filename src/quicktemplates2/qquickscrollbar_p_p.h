@@ -114,6 +114,8 @@ public:
 
 class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
+    Q_DECLARE_PUBLIC(QQuickScrollBarAttached)
+
 public:
     static QQuickScrollBarAttachedPrivate *get(QQuickScrollBarAttached *attached)
     {
