@@ -129,6 +129,7 @@ private slots:
     void argumentConversion();
     void badSequence();
     void enumLookup();
+    void stringToByteArray();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2373,6 +2374,20 @@ void tst_QmlCppCodegen::enumLookup()
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("ready").toBool(), true);
+}
+
+void tst_QmlCppCodegen::stringToByteArray()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/stringToByteArray.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    Person *person = qobject_cast<Person *>(o.data());
+    QVERIFY(person);
+
+    QCOMPARE(person->dataBindable().value(), QByteArray("some data"));
+    QCOMPARE(person->name(), u"some data"_s);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

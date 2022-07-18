@@ -31,6 +31,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_boolType = builtinTypes[u"bool"_s].scope;
     m_stringType = builtinTypes[u"QString"_s].scope;
     m_stringListType = builtinTypes[u"QStringList"_s].scope;
+    m_byteArrayType = builtinTypes[u"QByteArray"_s].scope;
     m_urlType = builtinTypes[u"QUrl"_s].scope;
     m_dateTimeType = builtinTypes[u"QDateTime"_s].scope;
     m_variantListType = builtinTypes[u"QVariantList"_s].scope;
@@ -668,7 +669,8 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
     if (isPrimitive(type) || equals(type, m_jsValueType) || equals(type, m_listPropertyType)
             || equals(type, m_urlType) || equals(type, m_dateTimeType)
             || equals(type, m_variantListType) || equals(type, m_varType)
-            || equals(type, m_stringListType) || equals(type, m_emptyListType)) {
+            || equals(type, m_stringListType) || equals(type, m_emptyListType)
+            || equals(type, m_byteArrayType)) {
         return type;
     }
 
@@ -919,6 +921,12 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     // We can always convert between strings and urls.
     if ((equals(from, m_stringType) && equals(to, m_urlType))
             || (equals(from, m_urlType) && equals(to, m_stringType))) {
+        return true;
+    }
+
+    // We can always convert between strings and byte arrays.
+    if ((equals(from, m_stringType) && equals(to, m_byteArrayType))
+            || (equals(from, m_byteArrayType) && equals(to, m_stringType))) {
         return true;
     }
 

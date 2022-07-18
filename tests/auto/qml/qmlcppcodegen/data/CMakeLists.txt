@@ -135,6 +135,7 @@ set(qml_files
     signalHandler.qml
     specificParent.qml
     stringLength.qml
+    stringToByteArray.qml
     testlogger.js
     text.qml
     themerbad.qml
