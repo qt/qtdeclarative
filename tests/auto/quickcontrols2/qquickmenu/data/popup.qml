@@ -5,7 +5,7 @@ import QtQuick
 import QtQuick.Controls
 
 ApplicationWindow {
-    width: 400
+    width: 500
     height: 600
 
     property alias menu: menu

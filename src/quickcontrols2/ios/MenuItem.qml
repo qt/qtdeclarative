@@ -1,0 +1,104 @@
+// Copyright (C) 2022 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls.impl
+import QtQuick.Controls.iOS
+
+T.MenuItem {
+    id: control
+
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                            implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding,
+                             implicitIndicatorHeight + topPadding + bottomPadding)
+
+    leftPadding: 12
+    rightPadding: 18
+    spacing: 9
+
+    icon.width: 19
+    icon.height: 19
+    icon.color: control.palette.windowText
+
+    property bool isSingleItem: control.menu && control.menu.count === 1
+    property bool isFirstItem: !isSingleItem && control.menu && control.menu.itemAt(0) === control ? true : false
+    property bool isLastItem: !isSingleItem && control.menu && control.menu.itemAt(control.menu.count - 1) === control ? true : false
+    property real indicatorWidth: 12
+
+    contentItem: IconLabel {
+        readonly property real padding: control.indicatorWidth + control.spacing
+        leftPadding: !control.mirrored ? padding : 0
+        rightPadding: control.mirrored ? padding : 0
+
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        alignment: Qt.AlignLeft
+
+        icon: control.icon
+        text: control.text
+        font: control.font
+        color: control.palette.windowText
+    }
+
+    arrow: ColorImage {
+        x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        width: 7
+        height: 12
+        rotation: control.subMenu && (control.down || control.subMenu.visible) ? 90 : 0
+
+        visible: control.subMenu
+        opacity: control.enabled ? 1 : 0.5
+        mirror: control.mirrored
+        color: control.palette.windowText
+        source: control.subMenu ? "qrc:/qt-project.org/imports/QtQuick/Controls/iOS/images/arrow-indicator-light.png" : ""
+
+        Behavior on rotation { RotationAnimation { duration: 100 } }
+    }
+
+    indicator: ColorImage {
+        x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
+        y: control.topPadding + (control.availableHeight - height) / 2
+        width: control.indicatorWidth
+        height: control.indicatorWidth
+
+        visible: control.checked
+        source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls/iOS/images/radiodelegate-indicator-light.png" : ""
+        color: control.palette.windowText
+    }
+
+    background: Item {
+        implicitHeight: 44
+        implicitWidth: 250
+        NinePatchImage {
+            y: control.isLastItem ? -1 : 0
+            width: parent.width
+            height: control.isLastItem ? parent.height + 1 : parent.height
+            rotation: control.isLastItem ? 180 : 0
+            visible: !(isSingleItem && !control.down)
+            source: control.IOS.url + "menuitem-background"
+            NinePatchImageSelector on source {
+                states: [
+                    {"edge": control.isFirstItem || control.isLastItem},
+                    {"single": control.isSingleItem},
+                    {"light": control.IOS.theme === IOS.Light},
+                    {"dark": control.IOS.theme === IOS.Dark},
+                    {"pressed": control.down}
+                ]
+            }
+        }
+    }
+
+    states: [
+        State {
+            name: "submenu-opened"
+            when: control.subMenu && control.subMenu.visible
+            PropertyChanges { target: control.menu; scale: 0.9 }
+        }
+    ]
+}
+
