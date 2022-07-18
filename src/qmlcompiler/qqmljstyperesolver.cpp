@@ -1147,6 +1147,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
                             QQmlJSRegisterContent::Singleton, type.scopeType());
             }
 
+            if (result->isScript()) {
+                return QQmlJSRegisterContent::create(
+                            storedType(result), result,
+                            QQmlJSRegisterContent::Script, type.scopeType());
+            }
+
             return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
                                                  QQmlJSRegisterContent::MetaType, result);
         }

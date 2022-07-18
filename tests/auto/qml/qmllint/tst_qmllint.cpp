@@ -1156,6 +1156,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("boundComponents") << QStringLiteral("boundComponents.qml");
     QTest::newRow("prefixedAttachedProperty") << QStringLiteral("prefixedAttachedProperty.qml");
     QTest::newRow("stringToByteArray") << QStringLiteral("stringToByteArray.qml");
+    QTest::newRow("jsLibrary") << QStringLiteral("jsLibrary.qml");
 }
 
 void TestQmllint::cleanQmlCode()
