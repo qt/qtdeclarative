@@ -55,6 +55,7 @@ Item {
 
     implicitWidth: delegate.implicitWidth
     implicitHeight: delegate.implicitHeight
+    enabled: false
 
     property var controlMetaObject
     property var states

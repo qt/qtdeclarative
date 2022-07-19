@@ -77,7 +77,7 @@ T.Switch {
                 {"checked": control.checked},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
 
@@ -99,7 +99,7 @@ T.Switch {
                     {"checked": control.checked},
                     {"focused": control.visualFocus},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
 
@@ -130,7 +130,7 @@ T.Switch {
                 {"checked": control.checked},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

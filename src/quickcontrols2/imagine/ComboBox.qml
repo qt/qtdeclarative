@@ -81,7 +81,7 @@ T.ComboBox {
                 {"open": control.down},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered},
+                {"hovered": control.enabled && control.hovered},
                 {"flat": control.flat}
             ]
         }
@@ -119,7 +119,7 @@ T.ComboBox {
                 {"open": control.down},
                 {"focused": control.visualFocus || (control.editable && control.activeFocus)},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered},
+                {"hovered": control.enabled && control.hovered},
                 {"flat": control.flat}
             ]
         }
@@ -167,7 +167,7 @@ T.ComboBox {
                     {"editable": control.editable},
                     {"focused": control.visualFocus || (control.editable && control.activeFocus)},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered},
+                    {"hovered": control.enabled && control.hovered},
                     {"flat": control.flat}
                 ]
             }

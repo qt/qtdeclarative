@@ -83,7 +83,7 @@ T.SwitchDelegate {
                 {"focused": control.visualFocus},
                 {"highlighted": control.highlighted},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
 
@@ -106,7 +106,7 @@ T.SwitchDelegate {
                     {"focused": control.visualFocus},
                     {"highlighted": control.highlighted},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
 
@@ -142,7 +142,7 @@ T.SwitchDelegate {
                 {"focused": control.visualFocus},
                 {"highlighted": control.highlighted},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

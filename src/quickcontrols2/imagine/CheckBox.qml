@@ -76,7 +76,7 @@ T.CheckBox {
                 {"partially-checked": control.checkState === Qt.PartiallyChecked},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }
@@ -102,7 +102,7 @@ T.CheckBox {
                 {"partially-checked": control.checkState === Qt.PartiallyChecked},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

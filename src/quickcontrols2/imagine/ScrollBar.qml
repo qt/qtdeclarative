@@ -76,7 +76,7 @@ T.ScrollBar {
                 {"interactive": control.interactive},
                 {"pressed": control.pressed},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
         opacity: 0.0
@@ -92,7 +92,7 @@ T.ScrollBar {
                 {"interactive": control.interactive},
                 {"pressed": control.pressed},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
         opacity: 0.0
