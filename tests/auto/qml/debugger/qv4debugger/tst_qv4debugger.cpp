@@ -273,7 +273,7 @@ public:
     tst_qv4debugger();
 
 private slots:
-    void init();
+    void init() override;
     void cleanup();
 
     // breakpoints:
