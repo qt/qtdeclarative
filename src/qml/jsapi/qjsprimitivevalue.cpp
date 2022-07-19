@@ -280,5 +280,16 @@ QString QJSPrimitiveValue::toString(double d)
     return result;
 }
 
+/*!
+  \fn double QQmlPrivate::jsExponentiate(double base, double exponent)
+  \internal
+  \since 6.4
+
+  Performs JavaScript's Number::exponentiate operation on \a base and
+  \a exponent, and returns the result.
+
+  See https://tc39.es/ecma262/multipage/ecmascript-data-types-and-values.html#sec-numeric-types-number-exponentiate
+ */
+
 QT_END_NAMESPACE
 

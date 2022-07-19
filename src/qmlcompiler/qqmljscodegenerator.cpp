@@ -1223,6 +1223,7 @@ bool QQmlJSCodeGenerator::inlineMathMethod(const QString &name, int argc, int ar
     addInclude(u"limits"_s);
     addInclude(u"qalgorithms.h"_s);
     addInclude(u"qrandom.h"_s);
+    addInclude(u"qjsprimitivevalue.h"_s);
 
     // If the result is not stored, we don't need to generate any code. All the math methods are
     // conceptually pure functions.
@@ -1306,8 +1307,7 @@ bool QQmlJSCodeGenerator::inlineMathMethod(const QString &name, int argc, int ar
                 "? arg2 "
                 ": ((arg2 < arg1 || std::isnan(arg2)) ? arg2 : arg1)"_s;
     } else if (name == u"pow"_s) {
-        // TODO: complicated
-        return false;
+        expression = u"QQmlPrivate::jsExponentiate(arg1, arg2)"_s;
     } else if (name == u"random"_s && argc == 0) {
         expression = u"QRandomGenerator::global()->generateDouble()"_s;
     } else if (name == u"round"_s && argc == 1) {

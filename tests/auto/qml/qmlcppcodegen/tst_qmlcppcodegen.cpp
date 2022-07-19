@@ -1602,6 +1602,7 @@ void tst_QmlCppCodegen::jsMathObject()
         std::numeric_limits<quint32>::max(),
         std::numeric_limits<float>::max(),
         std::numeric_limits<double>::max(),
+        qInf()
     };
 
     QJSManagedValue math(engine.globalObject().property(QStringLiteral("Math")), &engine);
