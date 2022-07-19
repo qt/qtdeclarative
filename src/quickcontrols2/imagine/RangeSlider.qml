@@ -108,7 +108,7 @@ T.RangeSlider {
                 {"disabled": !control.enabled},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
 
@@ -126,7 +126,7 @@ T.RangeSlider {
                     {"disabled": !control.enabled},
                     {"focused": control.visualFocus},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
         }

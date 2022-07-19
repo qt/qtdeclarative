@@ -69,7 +69,7 @@ T.BusyIndicator {
                 {"disabled": !control.enabled},
                 {"running": control.running},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }
@@ -81,7 +81,7 @@ T.BusyIndicator {
                 {"disabled": !control.enabled},
                 {"running": control.running},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

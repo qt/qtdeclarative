@@ -70,7 +70,7 @@ T.Slider {
                 {"pressed": control.pressed},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }
@@ -87,7 +87,7 @@ T.Slider {
                 {"pressed": control.down},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
 
@@ -112,7 +112,7 @@ T.Slider {
                     {"pressed": control.down},
                     {"focused": control.visualFocus},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
         }
