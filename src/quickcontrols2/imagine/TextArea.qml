@@ -56,7 +56,7 @@ T.TextArea {
                 {"disabled": !control.enabled},
                 {"focused": control.activeFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

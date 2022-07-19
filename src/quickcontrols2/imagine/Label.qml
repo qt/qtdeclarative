@@ -23,7 +23,7 @@ T.Label {
             states: [
                 {"disabled": !control.enabled},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

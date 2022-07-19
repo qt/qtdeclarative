@@ -32,7 +32,7 @@ T.PageIndicator {
                 {"pressed": pressed},
                 {"current": index === control.currentIndex},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered} // ### TODO: context property
+                {"hovered": control.enabled && control.hovered} // ### TODO: context property
             ]
         }
     }
@@ -52,7 +52,7 @@ T.PageIndicator {
             states: [
                 {"disabled": !control.enabled},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

@@ -45,7 +45,7 @@ T.RadioDelegate {
                 {"focused": control.visualFocus},
                 {"highlighted": control.highlighted},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }
@@ -75,7 +75,7 @@ T.RadioDelegate {
                 {"focused": control.visualFocus},
                 {"highlighted": control.highlighted},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

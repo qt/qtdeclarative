@@ -53,7 +53,7 @@ T.ItemDelegate {
                 {"focused": control.visualFocus},
                 {"highlighted": control.highlighted},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }
