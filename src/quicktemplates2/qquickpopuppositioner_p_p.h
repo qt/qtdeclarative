@@ -49,13 +49,14 @@
 //
 
 #include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickPopup;
 
-class QQuickPopupPositioner : public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupPositioner : public QQuickItemChangeListener
 {
 public:
     explicit QQuickPopupPositioner(QQuickPopup *popup);
