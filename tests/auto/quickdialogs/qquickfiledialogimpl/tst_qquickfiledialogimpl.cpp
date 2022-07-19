@@ -73,7 +73,7 @@ public:
 
 private slots:
     void initTestCase() override;
-    void init();
+    void init() override;
     void cleanupTestCase();
 
     void defaults();
