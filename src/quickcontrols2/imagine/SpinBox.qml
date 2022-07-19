@@ -62,7 +62,7 @@ T.SpinBox {
                     {"disabled": !control.enabled},
                     {"focused": control.activeFocus},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
         }
@@ -112,7 +112,7 @@ T.SpinBox {
                 {"editable": control.editable},
                 {"focused": control.activeFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

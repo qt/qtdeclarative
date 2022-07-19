@@ -35,7 +35,7 @@ T.ScrollIndicator {
                 {"horizontal": control.horizontal},
                 {"disabled": !control.enabled},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
         opacity: 0.0
@@ -49,7 +49,7 @@ T.ScrollIndicator {
                 {"horizontal": control.horizontal},
                 {"disabled": !control.enabled},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
         opacity: 0.0

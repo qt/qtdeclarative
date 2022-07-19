@@ -35,7 +35,7 @@ T.Dial {
                 {"pressed": control.pressed},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
 
@@ -60,7 +60,7 @@ T.Dial {
                 {"pressed": control.pressed},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }
