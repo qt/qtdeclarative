@@ -32,7 +32,7 @@ QtObject {
     property double log2: Math.log2(a)
     property double max: Math.max(a, b)
     property double min: Math.min(a, b)
-//    property double pow: Math.pow(a, b)
+    property double pow: Math.pow(a, b)
     property double random: Math.random()
     property double round: Math.round(a)
     property double sign: Math.sign(a)

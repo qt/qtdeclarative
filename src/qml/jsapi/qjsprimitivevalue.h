@@ -783,6 +783,37 @@ private:
     QJSPrimitiveValuePrivate d;
 };
 
+namespace QQmlPrivate {
+    // TODO: Make this constexpr once std::isnan is constexpr.
+    inline double jsExponentiate(double base, double exponent)
+    {
+        constexpr double qNaN = std::numeric_limits<double>::quiet_NaN();
+        constexpr double inf = std::numeric_limits<double>::infinity();
+
+        if (qIsNull(exponent))
+            return 1.0;
+
+        if (std::isnan(exponent))
+            return qNaN;
+
+        if (QJSNumberCoercion::equals(base, 1.0) || QJSNumberCoercion::equals(base, -1.0))
+            return std::isinf(exponent) ? qNaN : std::pow(base, exponent);
+
+        if (!qIsNull(base))
+            return std::pow(base, exponent);
+
+        if (std::copysign(1.0, base) > 0.0)
+            return exponent < 0.0 ? inf : std::pow(base, exponent);
+
+        if (exponent < 0.0)
+            return QJSNumberCoercion::equals(std::fmod(-exponent, 2.0), 1.0) ? -inf : inf;
+
+        return QJSNumberCoercion::equals(std::fmod(exponent, 2.0), 1.0)
+                ? std::copysign(0, -1.0)
+                : 0.0;
+    }
+}
+
 QT_END_NAMESPACE
 
 #endif // QJSPRIMITIVEVALUE_H
