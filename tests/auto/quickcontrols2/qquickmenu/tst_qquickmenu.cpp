@@ -198,14 +198,14 @@ void tst_QQuickMenu::mouse()
     // Ensure that presses cause the current index to change,
     // so that the highlight acts as a way of illustrating press state.
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier,
-        QPoint(menu->leftPadding() + firstItem->width() / 2, menu->topPadding() + firstItem->height() / 2));
+        QPoint(menu->x() + menu->leftPadding() + firstItem->width() / 2, menu->y() + menu->topPadding() + firstItem->height() / 2));
     QVERIFY(firstItem->hasActiveFocus());
     QCOMPARE(menu->currentIndex(), 0);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
     QVERIFY(menu->isVisible());
 
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier,
-        QPoint(menu->leftPadding() + firstItem->width() / 2, menu->topPadding() + firstItem->height() / 2));
+        QPoint(menu->x() + menu->leftPadding() + firstItem->width() / 2, menu->y() + menu->topPadding() + firstItem->height() / 2));
     QCOMPARE(clickedSpy.count(), 1);
     QCOMPARE(triggeredSpy.count(), 1);
     QTRY_COMPARE(visibleSpy.count(), 1);
@@ -247,8 +247,8 @@ void tst_QQuickMenu::mouse()
         if (!hoverItem || !hoverItem->isVisible() || hoverItem == prevHoverItem)
             continue;
         QTest::mouseMove(window, QPoint(
-            menu->leftPadding() + hoverItem->x() + hoverItem->width() / 2,
-            menu->topPadding() + hoverItem->y() + hoverItem->height() / 2));
+            menu->x() + menu->leftPadding() + hoverItem->x() + hoverItem->width() / 2,
+            menu->y() + menu->topPadding() + hoverItem->y() + hoverItem->height() / 2));
         QTRY_VERIFY(hoverItem->property("highlighted").toBool());
         if (prevHoverItem)
             QVERIFY(!prevHoverItem->property("highlighted").toBool());
@@ -693,6 +693,7 @@ void tst_QQuickMenu::menuSeparator()
     QVERIFY(saveMenuItem);
     QCOMPARE(saveMenuItem->text(), QStringLiteral("Save"));
     QTRY_VERIFY(!QQuickItemPrivate::get(saveMenuItem)->culled); // QTBUG-53262
+    QTRY_VERIFY(menu->isOpened());
 
     // Clicking on items should still close the menu.
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
@@ -700,7 +701,7 @@ void tst_QQuickMenu::menuSeparator()
     QTRY_VERIFY(!menu->isVisible());
 
     menu->open();
-    QVERIFY(menu->isVisible());
+    QTRY_VERIFY(menu->isOpened());
 
     // Clicking on a separator shouldn't close the menu.
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
