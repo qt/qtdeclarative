@@ -69,6 +69,7 @@ ApplicationWindow {
         }
 
         Menu {
+            overlap: 0
             id: subMenu1
             objectName: "subMenu1"
             title: "Sub Menu 1"
@@ -78,6 +79,7 @@ ApplicationWindow {
                 objectName: "subMenuItem1"
                 text: "Sub 1"
             }
+
             MenuItem {
                 id: subMenuItem2
                 objectName: "subMenuItem2"
@@ -85,6 +87,7 @@ ApplicationWindow {
             }
 
             Menu {
+                overlap: 0
                 id: subSubMenu1
                 objectName: "subSubMenu1"
                 title: "Sub Sub Menu 1"
