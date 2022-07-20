@@ -352,8 +352,13 @@ bool QQuickStateGroupPrivate::updateAutoState()
                 QQmlAbstractBinding *abstractBinding = potentialWhenBinding.asAbstractBinding();
                 if (abstractBinding && abstractBinding->kind() == QQmlAbstractBinding::QmlBinding) {
                     QQmlBinding *binding = static_cast<QQmlBinding *>(abstractBinding);
-                    if (binding->hasValidContext())
-                        whenValue = binding->evaluate().toBool();
+                    if (binding->hasValidContext()) {
+                        QVariant evalResult = binding->evaluate();
+                        if (evalResult.metaType() == QMetaType::fromType<QJSValue>())
+                            whenValue = evalResult.value<QJSValue>().toBool();
+                        else
+                            whenValue = evalResult.toBool();
+                    }
                 }
 
                 if (whenValue) {
