@@ -16,6 +16,16 @@
 #include <iostream>
 #include <variant>
 
+// Check if QTest already has a QTEST_CHECKED macro
+#ifndef QTEST_CHECKED
+#define QTEST_CHECKED(...) \
+do { \
+    __VA_ARGS__; \
+    if (QTest::currentTestFailed()) \
+        return; \
+} while (false)
+#endif
+
 QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
@@ -233,6 +243,7 @@ void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int char
     m_protocol.requestCompletion(
             cParams,
             [clean, uri, expected, notExpected](auto res) {
+                QScopeGuard cleanup(clean);
                 const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
 
                 if (!cItems) {
@@ -303,13 +314,11 @@ void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int char
                     QVERIFY2(!labels.contains(nexp),
                              u"found unexpected completion  %1"_s.arg(nexp).toUtf8());
                 }
-
-                clean();
             },
             [clean](const ResponseError &err) {
+                QScopeGuard cleanup(clean);
                 ProtocolBase::defaultResponseErrorHandler(err);
                 QVERIFY2(false, "error computing the completion");
-                clean();
             });
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
 }
@@ -322,7 +331,7 @@ void tst_QmllsCompletions::completions()
     QFETCH(ExpectedCompletions, expected);
     QFETCH(QStringList, notExpected);
 
-    checkCompletions(uri, lineNr, character, expected, notExpected);
+    QTEST_CHECKED(checkCompletions(uri, lineNr, character, expected, notExpected));
 }
 
 void tst_QmllsCompletions::function_documentations_data()
@@ -430,13 +439,13 @@ void tst_QmllsCompletions::buildDir()
 {
     QString filePath = u"completions/fromBuildDir.qml"_s;
     QByteArray uri = testFileUrl(filePath).toString().toUtf8();
-    checkCompletions(uri, 3, 0,
+    QTEST_CHECKED(checkCompletions(uri, 3, 0,
                      ExpectedCompletions({
                              { u"property"_s, CompletionItemKind::Keyword },
                              { u"function"_s, CompletionItemKind::Keyword },
                              { u"Rectangle"_s, CompletionItemKind::Class },
                      }),
-                     QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s }));
+                     QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s })));
     Notifications::AddBuildDirsParams bDirs;
     UriToBuildDirs ub;
     ub.baseUri = uri;
@@ -452,7 +461,7 @@ void tst_QmllsCompletions::buildDir()
     change.text = file.readAll();
     didChange.contentChanges.append(change);
     m_protocol.notifyDidChangeTextDocument(didChange);
-    checkCompletions(uri, 3, 0,
+    QTEST_CHECKED(checkCompletions(uri, 3, 0,
                      ExpectedCompletions({
                              { u"BuildDirType"_s, CompletionItemKind::Class },
                              { u"Rectangle"_s, CompletionItemKind::Class },
@@ -460,7 +469,7 @@ void tst_QmllsCompletions::buildDir()
                              { u"width"_s, CompletionItemKind::Property },
                              { u"function"_s, CompletionItemKind::Keyword },
                      }),
-                     QStringList({ u"QtQuick"_s, u"vector4d"_s }));
+                     QStringList({ u"QtQuick"_s, u"vector4d"_s })));
 }
 void tst_QmllsCompletions::cleanupTestCase()
 {
