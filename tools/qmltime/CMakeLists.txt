@@ -13,7 +13,7 @@ qt_internal_add_tool(${target_name}
     TOOLS_TARGET Qml # special case
     SOURCES
         qmltime.cpp qmltime.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick

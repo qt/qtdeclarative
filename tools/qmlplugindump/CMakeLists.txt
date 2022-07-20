@@ -16,7 +16,6 @@ qt_internal_add_tool(${target_name}
         qmltypereader.cpp qmltypereader.h
     LIBRARIES
         Qt::QmlTypeRegistrarPrivate
-    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::Qml

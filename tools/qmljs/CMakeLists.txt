@@ -35,7 +35,7 @@ qt_internal_add_app(qmljs
         ../../src/3rdparty/masm/stubs/runtime
         ../../src/3rdparty/masm/stubs/wtf
         ../../src/3rdparty/masm/wtf
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
 )

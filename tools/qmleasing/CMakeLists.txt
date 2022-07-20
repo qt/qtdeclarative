@@ -16,7 +16,7 @@ qt_internal_add_app(qmleasing
         properties.ui
         segmentproperties.cpp segmentproperties.h
         splineeditor.cpp splineeditor.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick

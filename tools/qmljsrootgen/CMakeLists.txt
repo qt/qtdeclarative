@@ -8,7 +8,7 @@ qt_internal_add_tool(${target_name}
     INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
 )

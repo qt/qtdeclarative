@@ -15,7 +15,7 @@ qt_internal_add_tool(${target_name}
         main.cpp
         ../shared/qqmltoolingsettings.h
         ../shared/qqmltoolingsettings.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlCompilerPrivate
 )

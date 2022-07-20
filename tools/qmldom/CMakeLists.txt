@@ -11,7 +11,7 @@ qt_internal_add_tool(${target_name}
     TOOLS_TARGET Qml # special case
     SOURCES
         qmldomtool.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlDomPrivate
 )

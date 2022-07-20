@@ -26,7 +26,7 @@ qt_internal_add_app(qmlls
         ../shared/qqmltoolingsettings.cpp
     DEFINES
         QT_USE_QSTRINGBUILDER
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::QmlPrivate
         Qt::CorePrivate
         Qt::QmlDomPrivate

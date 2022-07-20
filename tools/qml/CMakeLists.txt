@@ -12,7 +12,7 @@ qt_internal_add_app(qml
     SOURCES
         conf.h
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
 )

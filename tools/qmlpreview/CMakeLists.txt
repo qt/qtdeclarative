@@ -13,7 +13,7 @@ qt_internal_add_app(qmlpreview
         main.cpp
         qmlpreviewapplication.cpp qmlpreviewapplication.h
         qmlpreviewfilesystemwatcher.cpp qmlpreviewfilesystemwatcher.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Network
         Qt::QmlDebugPrivate
 )

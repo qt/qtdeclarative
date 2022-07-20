@@ -11,7 +11,7 @@ qt_internal_add_app(qmlscene
         main.cpp
     DEFINES
         QML_RUNTIME_TESTING
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
