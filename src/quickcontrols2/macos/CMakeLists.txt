@@ -18,6 +18,8 @@ set(qml_files
     "ScrollBar.qml"
     "ProgressBar.qml"
     "Dial.qml"
+    "Dialog.qml"
+    "DialogButtonBox.qml"
 )
 
 if (QT_FEATURE_quick_treeview)
