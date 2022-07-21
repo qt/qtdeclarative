@@ -29,6 +29,9 @@ static char file_string[] = "file";
 #if defined(Q_OS_ANDROID)
 static char assets_string[] = "assets";
 static char content_string[] = "content";
+static char authority_externalstorage[] = "com.android.externalstorage.documents";
+static char authority_downloads_documents[] = "com.android.providers.downloads.documents";
+static char authority_media_documents[] = "com.android.providers.media.documents";
 #endif
 
 class QQmlFilePrivate;
@@ -469,6 +472,17 @@ bool QQmlFile::isSynchronous(const QString &url)
     return false;
 }
 
+#if defined(Q_OS_ANDROID)
+static bool hasLocalContentAuthority(const QUrl &url)
+{
+    const QString authority = url.authority();
+    return authority.isEmpty()
+            || authority == QLatin1String(authority_externalstorage)
+            || authority == QLatin1String(authority_downloads_documents)
+            || authority == QLatin1String(authority_media_documents);
+}
+#endif
+
 /*!
 Returns true if \a url is a local file that can be opened with QFile.
 
@@ -490,18 +504,18 @@ bool QQmlFile::isLocalFile(const QUrl &url)
         return url.authority().isEmpty();
 
 #if defined(Q_OS_ANDROID)
-    if ((scheme.length() == 6
+    if (scheme.length() == 6
          && scheme.startsWith(QLatin1String(assets_string), Qt::CaseInsensitive))
-        || (scheme.length() == 7
-            && scheme.startsWith(QLatin1String(content_string), Qt::CaseInsensitive))) {
         return url.authority().isEmpty();
-    }
+    if (scheme.length() == 7
+         && scheme.startsWith(QLatin1String(content_string), Qt::CaseInsensitive))
+        return hasLocalContentAuthority(url);
 #endif
 
     return false;
 }
 
-static bool hasSchemeAndNoAuthority(const QString &url, const char *scheme, qsizetype schemeLength)
+static bool hasScheme(const QString &url, const char *scheme, qsizetype schemeLength)
 {
     const qsizetype urlLength = url.length();
 
@@ -514,18 +528,40 @@ static bool hasSchemeAndNoAuthority(const QString &url, const char *scheme, qsiz
     if (url[schemeLength] != QLatin1Char(':'))
         return false;
 
+    return true;
+}
+
+static qsizetype authorityOffset(const QString &url, qsizetype schemeLength)
+{
+    const qsizetype urlLength = url.length();
+
     if (urlLength < schemeLength + 3)
-        return true;
+        return -1;
 
     const QLatin1Char slash('/');
     if (url[schemeLength + 1] == slash && url[schemeLength + 2] == slash) {
-        // Exactly two slashes denote an authority. We don't want that.
+        // Exactly two slashes denote an authority.
         if (urlLength < schemeLength + 4 || url[schemeLength + 3] != slash)
-            return false;
+            return schemeLength + 3;
     }
 
-    return true;
+    return -1;
 }
+
+#if defined(Q_OS_ANDROID)
+static bool hasLocalContentAuthority(const QString &url, qsizetype schemeLength)
+{
+    const qsizetype offset = authorityOffset(url, schemeLength);
+    if (offset == -1)
+        return true; // no authority is a local authority.
+
+    const QString authorityAndPath = url.sliced(offset);
+    return authorityAndPath.startsWith(QLatin1String(authority_externalstorage))
+         || authorityAndPath.startsWith(QLatin1String(authority_downloads_documents))
+         || authorityAndPath.startsWith(QLatin1String(authority_media_documents));
+}
+
+#endif
 
 /*!
 Returns true if \a url is a local file that can be opened with QFile.
@@ -553,14 +589,17 @@ bool QQmlFile::isLocalFile(const QString &url)
     }
     case 'q':
     case 'Q':
-        return hasSchemeAndNoAuthority(url, qrc_string, strlen(qrc_string));
+        return hasScheme(url, qrc_string, strlen(qrc_string))
+            && authorityOffset(url, strlen(qrc_string)) == -1;
 #if defined(Q_OS_ANDROID)
     case 'a':
     case 'A':
-        return hasSchemeAndNoAuthority(url, assets_string, strlen(assets_string));
+        return hasScheme(url, assets_string, strlen(assets_string))
+            && authorityOffset(url, strlen(assets_string)) == -1;
     case 'c':
     case 'C':
-        return hasSchemeAndNoAuthority(url, content_string, strlen(content_string));
+        return hasScheme(url, content_string, strlen(content_string))
+            && hasLocalContentAuthority(url, strlen(content_string));
 #endif
     default:
         break;
@@ -584,10 +623,12 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 #if defined(Q_OS_ANDROID)
     if (url.scheme().compare(QLatin1String("assets"), Qt::CaseInsensitive) == 0)
         return url.authority().isEmpty() ? url.toString() : QString();
-    if (url.scheme().compare(QLatin1String("content"), Qt::CaseInsensitive) == 0)
-        return url.authority().isEmpty() ? url.toString() : QString();
+    if (url.scheme().compare(QLatin1String("content"), Qt::CaseInsensitive) == 0) {
+        if (hasLocalContentAuthority(url))
+            return url.toString();
+        return QString();
+    }
 #endif
-
     return url.toLocalFile();
 }
 
@@ -646,8 +687,8 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 #if defined(Q_OS_ANDROID)
     if (url.startsWith(QLatin1String("assets:"), Qt::CaseInsensitive))
         return isDoubleSlashed(url, strlen("assets:")) ? QString() : url;
-    if (url.startsWith(QLatin1String("content:"), Qt::CaseInsensitive))
-        return isDoubleSlashed(url, strlen("content:")) ? QString() : url;
+    if (hasScheme(url, content_string, strlen(content_string)))
+        return hasLocalContentAuthority(url, strlen(content_string)) ? url : QString();
 #endif
 
     return toLocalFile(url);

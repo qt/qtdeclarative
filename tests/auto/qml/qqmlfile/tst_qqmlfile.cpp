@@ -118,6 +118,27 @@ void tst_qqmlfile::urlData()
     QTest::addRow("file:content 1 slash")   << QStringLiteral("file:content:/foo/bar") << true << QStringLiteral("content:/foo/bar");
     QTest::addRow("file:content 2 slashes") << QStringLiteral("file:content://foo/bar") << true << QStringLiteral("content://foo/bar");
     QTest::addRow("file:content 3 slashes") << QStringLiteral("file:content:///foo/bar") << true << QStringLiteral("content:///foo/bar");
+
+    const QString contentExternalstoragePath = hasAssetsAndContent ?
+                QStringLiteral("content://com.android.externalstorage.documents/foo") : invalid;
+    const QString contentDownloadsPath = hasAssetsAndContent ?
+                QStringLiteral("content://com.android.providers.downloads.documents/foo") : invalid;
+    const QString contentMediaPath = hasAssetsAndContent ?
+                QStringLiteral("content://com.android.providers.media.documents") : invalid;
+
+    QTest::addRow("content externalstorage")     << QStringLiteral("content://com.android.externalstorage.documents/foo")
+                                                 << hasAssetsAndContent << contentExternalstoragePath;
+    QTest::addRow("content downloads documents") << QStringLiteral("content://com.android.providers.downloads.documents/foo")
+                                                 << hasAssetsAndContent << contentDownloadsPath;
+    QTest::addRow("content media documents")     << QStringLiteral("content://com.android.providers.media.documents")
+                                                 << hasAssetsAndContent << contentMediaPath;
+
+    QTest::addRow("assets externalstorage")      << QStringLiteral("assets://com.android.externalstorage.documents/foo")
+                                                 << false << invalid;
+    QTest::addRow("assets downloads documents")  << QStringLiteral("assets://com.android.providers.downloads.documents/foo")
+                                                 << false << invalid;
+    QTest::addRow("assets media documents")      << QStringLiteral("assets://com.android.providers.media.documents")
+                                                 << false << invalid;
 }
 
 void tst_qqmlfile::isLocalFile_data()
