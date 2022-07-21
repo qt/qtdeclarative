@@ -53,7 +53,7 @@ QString CppStackFrame::function() const
 
 int CppStackFrame::lineNumber() const
 {
-    if (!v4Function)
+    if (!v4Function || instructionPointer <= 0)
         return -1;
 
     auto findLine = [](const CompiledData::CodeOffsetToLine &entry, uint offset) {
@@ -61,9 +61,9 @@ int CppStackFrame::lineNumber() const
     };
 
     const QV4::CompiledData::Function *cf = v4Function->compiledFunction;
-    uint offset = instructionPointer;
+    const uint offset = instructionPointer;
     const CompiledData::CodeOffsetToLine *lineNumbers = cf->lineNumberTable();
-    uint nLineNumbers = cf->nLineNumbers;
+    const uint nLineNumbers = cf->nLineNumbers;
     const CompiledData::CodeOffsetToLine *line = std::lower_bound(lineNumbers, lineNumbers + nLineNumbers, offset, findLine) - 1;
     return line->line;
 }

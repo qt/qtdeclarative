@@ -146,10 +146,12 @@ struct ScopedStackFrame {
             return;
         frame.jsFrame = reinterpret_cast<CallData *>(scope.alloc(sizeof(CallData)/sizeof(Value)));
         frame.jsFrame->context = context;
-        if (auto *parent = frame.parentFrame())
+        if (auto *parent = frame.parentFrame()) {
             frame.v4Function = parent->v4Function;
-        else
+            frame.instructionPointer = parent->instructionPointer;
+        } else {
             frame.v4Function = nullptr;
+        }
         scope.engine->currentStackFrame = &frame;
     }
     ~ScopedStackFrame() {
