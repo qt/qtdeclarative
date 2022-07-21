@@ -423,11 +423,7 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
         unusedImports.remove(import);
 
     for (const auto &import : unusedImports) {
-        m_logger->log(QString::fromLatin1("Unused import at %1:%2:%3")
-                              .arg(m_logger->fileName())
-                              .arg(import.startLine)
-                              .arg(import.startColumn),
-                      qmlUnusedImports, import);
+        m_logger->log(QString::fromLatin1("Unused import"), qmlUnusedImports, import);
     }
 
     populateRuntimeFunctionIndicesForDocument();

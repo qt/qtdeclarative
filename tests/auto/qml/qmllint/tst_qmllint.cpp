@@ -661,13 +661,13 @@ void TestQmllint::dirtyQmlCode_data()
                        "Failed to import FooBar. Are your import paths set up properly?") } } };
     QTest::newRow("Unused Import (simple)")
             << QStringLiteral("unused_simple.qml")
-            << Result { { Message { QStringLiteral("Unused import at"), 1, 1, QtInfoMsg } },
+            << Result { { Message { QStringLiteral("Unused import"), 1, 1, QtInfoMsg } },
                         {},
                         {},
                         Result::ExitsNormally };
     QTest::newRow("Unused Import (prefix)")
             << QStringLiteral("unused_prefix.qml")
-            << Result { { Message { QStringLiteral("Unused import at"), 1, 1, QtInfoMsg } },
+            << Result { { Message { QStringLiteral("Unused import"), 1, 1, QtInfoMsg } },
                         {},
                         {},
                         Result::ExitsNormally };
@@ -841,7 +841,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        "bound to a deferred property will make the assignment immediate.") } } };
     QTest::newRow("cachedDependency")
             << QStringLiteral("cachedDependency.qml")
-            << Result { { Message { QStringLiteral("Unused import at"), 1, 1, QtInfoMsg } },
+            << Result { { Message { QStringLiteral("Unused import"), 1, 1, QtInfoMsg } },
                         { Message { QStringLiteral(
                                 "Cannot assign binding of type QQuickItem to QObject") } },
                         {},
@@ -1588,7 +1588,7 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/unqualifiedSilent/unqualified.qml", true, QStringList(), false)
                     .isEmpty());
     QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
-                    .contains(QStringLiteral("Warning: %1:2:1: Unused import at %1:2:1")
+                    .contains(QStringLiteral("Warning: %1:2:1: Unused import")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
     QVERIFY(runQmllint("settings/bare/bare.qml", false, {}, false, false)
                     .contains(QStringLiteral("Failed to find the following builtins: "
