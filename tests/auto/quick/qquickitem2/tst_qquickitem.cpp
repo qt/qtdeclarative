@@ -2694,15 +2694,17 @@ void tst_QQuickItem::mapCoordinates()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QCOMPARE(result.value<QPointF>(), -QPointF(150,150) + QPointF(x, y));
 
-    QString warning1 = testFileUrl("mapCoordinates.qml").toString() + ":10:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
-    QString warning2 = testFileUrl("mapCoordinates.qml").toString() + ":10:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
+    QRegularExpression warning1 = QRegularExpression(".*Could not convert argument 0 at.*");
+    QRegularExpression warning2 = QRegularExpression(".*checkMapA.*Invalid@.*");
 
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, warning1);
+    QTest::ignoreMessage(QtWarningMsg, warning2);
     QVERIFY(QMetaObject::invokeMethod(root, "checkMapAToInvalid",
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QVERIFY(result.toBool());
 
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QTest::ignoreMessage(QtWarningMsg, warning1);
+    QTest::ignoreMessage(QtWarningMsg, warning2);
     QVERIFY(QMetaObject::invokeMethod(root, "checkMapAFromInvalid",
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QVERIFY(result.toBool());
@@ -2726,7 +2728,7 @@ void tst_QQuickItem::mapCoordinatesRect()
     QFETCH(int, width);
     QFETCH(int, height);
 
-    QQuickView *window = new QQuickView(nullptr);
+    std::unique_ptr<QQuickView> window = std::make_unique<QQuickView>();
     window->setBaseSize(QSize(300, 300));
     window->setSource(testFileUrl("mapCoordinatesRect.qml"));
     window->show();
@@ -2765,20 +2767,20 @@ void tst_QQuickItem::mapCoordinatesRect()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
     QCOMPARE(result.value<QRectF>(), qobject_cast<QQuickItem*>(a)->mapRectFromScene(QRectF(x, y, width, height)));
 
-    QString warning1 = testFileUrl("mapCoordinatesRect.qml").toString() + ":10:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
-    QString warning2 = testFileUrl("mapCoordinatesRect.qml").toString() + ":10:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
+    QRegularExpression warning1 = QRegularExpression(".*Could not convert argument 0 at.*");
+    QRegularExpression warning2 = QRegularExpression(".*checkMapA.*Invalid@.*");
 
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, warning1);
+    QTest::ignoreMessage(QtWarningMsg, warning2);
     QVERIFY(QMetaObject::invokeMethod(root, "checkMapAToInvalid",
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
     QVERIFY(result.toBool());
 
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QTest::ignoreMessage(QtWarningMsg, warning1);
+    QTest::ignoreMessage(QtWarningMsg, warning2);
     QVERIFY(QMetaObject::invokeMethod(root, "checkMapAFromInvalid",
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y), Q_ARG(QVariant, width), Q_ARG(QVariant, height)));
     QVERIFY(result.toBool());
-
-    delete window;
 }
 
 void tst_QQuickItem::mapCoordinatesRect_data()

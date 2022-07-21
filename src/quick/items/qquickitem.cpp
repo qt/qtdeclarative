@@ -4469,6 +4469,7 @@ void QQuickItem::ensurePolished()
     updatePolish();
 }
 
+#if QT_DEPRECATED_SINCE(6, 5)
 static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *itemForWarning, const QString &functionNameForWarning,
                                         QQuickItem **itemObj, qreal *x, qreal *y, qreal *w, qreal *h, bool *isRect)
 {
@@ -4551,6 +4552,7 @@ static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *
 
     return true;
 }
+#endif
 
 /*!
     \qmlmethod point QtQuick::Item::mapFromItem(Item item, real x, real y)
@@ -4569,6 +4571,8 @@ static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *
 
     The versions accepting point and rect are since Qt 5.15.
 */
+
+#if QT_DEPRECATED_SINCE(6, 5)
 /*!
     \internal
   */
@@ -4589,6 +4593,7 @@ void QQuickItem::mapFromItem(QQmlV4Function *args) const
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
     args->setReturnValue(rv.asReturnedValue());
 }
+#endif
 
 /*!
     \internal
@@ -4624,6 +4629,8 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 
     The versions accepting point and rect are since Qt 5.15.
 */
+
+#if QT_DEPRECATED_SINCE(6, 5)
 /*!
     \internal
   */
@@ -4717,6 +4724,7 @@ void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
     args->setReturnValue(rv.asReturnedValue());
 }
+#endif
 
 /*!
     \since 5.7
@@ -4727,6 +4735,8 @@ void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
 
     \input item.qdocinc mapping
 */
+
+#if QT_DEPRECATED_SINCE(6, 5)
 /*!
     \internal
   */
@@ -4744,6 +4754,7 @@ void QQuickItem::mapToGlobal(QQmlV4Function *args) const
     QV4::ScopedObject rv(scope, v4->fromVariant(result));
     args->setReturnValue(rv.asReturnedValue());
 }
+#endif
 
 /*!
     \qmlmethod QtQuick::Item::forceActiveFocus()
@@ -9568,6 +9579,38 @@ quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
 {
     return (engine->memoryManager->allocate<QQuickItemWrapper>(q_func()))->asReturnedValue();
 }
+
+//! \internal
+inline QPointF QQuickItem::mapFromItem(const QQuickItem *item, qreal x, qreal y)
+{ return mapFromItem(item, QPointF(x, y) ); }
+
+//! \internal
+inline QRectF QQuickItem::mapFromItem(const QQuickItem *item, const QRectF &rect) const
+{ return mapRectFromItem(item, rect); }
+
+//! \internal
+inline QRectF QQuickItem::mapFromItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const
+{ return mapFromItem(item, QRectF(x, y, width, height)); }
+
+//! \internal
+inline QPointF QQuickItem::mapToItem(const QQuickItem *item, qreal x, qreal y)
+{ return mapToItem(item, QPoint(x, y)); }
+
+//! \internal
+inline QRectF QQuickItem::mapToItem(const QQuickItem *item, const QRectF &rect) const
+{ return mapRectToItem(item, rect); }
+
+//! \internal
+inline QRectF QQuickItem::mapToItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const
+{ return mapToItem(item, QRectF(x, y, width, height)); }
+
+//! \internal
+QPointF QQuickItem::mapToGlobal(qreal x, qreal y) const
+{ return mapToGlobal(QPointF(x, y)); }
+
+//! \internal
+QPointF QQuickItem::mapFromGlobal(qreal x, qreal y) const
+{ return mapFromGlobal(QPointF(x, y)); }
 
 QT_END_NAMESPACE
 
