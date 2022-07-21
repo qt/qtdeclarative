@@ -140,8 +140,12 @@ struct ScopedStackFrame
     ScopedStackFrame(const Scope &scope, ExecutionContext *context)
         : engine(scope.engine)
     {
-        frame.init(engine->currentStackFrame ? engine->currentStackFrame->v4Function : nullptr,
-                   nullptr, context, nullptr, nullptr, 0);
+        if (auto currentFrame = engine->currentStackFrame) {
+            frame.init(currentFrame->v4Function, nullptr, context, nullptr, nullptr, 0);
+            frame.instructionPointer = currentFrame->instructionPointer;
+        } else {
+            frame.init(nullptr, nullptr, context, nullptr, nullptr, 0);
+        }
         frame.push(engine);
     }
 
