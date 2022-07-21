@@ -815,6 +815,13 @@ void tst_QQuickMenu::order()
 
 void tst_QQuickMenu::popup()
 {
+    // Try moving the cursor from the current position
+    // Skip if it fails since the test relies on moving the cursor
+    const QPoint point = QCursor::pos() + QPoint(1, 1);
+    QCursor::setPos(point);
+    if (!QTest::qWaitFor([point]{ return QCursor::pos() == point; }))
+        QSKIP("Setting cursor position is not supported on this platform");
+
     QQuickControlsApplicationHelper helper(this, QLatin1String("popup.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
@@ -1239,16 +1246,22 @@ void tst_QQuickMenu::subMenuDisabledMouse()
     QVERIFY(subMenu);
 
     mainMenu->open();
-    QVERIFY(mainMenu->isVisible());
+    QTRY_VERIFY(mainMenu->isOpened());
     QVERIFY(!menuItem1->isHighlighted());
     QVERIFY(!subMenu->isVisible());
 
+    // Hover-highlighting does not work on Android
+#ifndef Q_OS_ANDROID
+    // Generate a hover event to set the current index
+    QTest::mouseMove(window, menuItem1->mapToScene(QPoint(2, 2)).toPoint());
+    QTRY_VERIFY(menuItem1->isHighlighted());
+#endif
     // Open the sub-menu with a mouse click.
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, menuItem1->mapToScene(QPoint(1, 1)).toPoint());
-    // Need to use the TRY variant here when cascade is false,
-    // as e.g. Material style menus have transitions and don't close immediately.
+    // Need to use the TRY variant here,
+    // as e.g. Material, iOS style menus have transitions and don't open/close immediately.
     QTRY_COMPARE(mainMenu->isVisible(), cascade);
-    QVERIFY(subMenu->isVisible());
+    QTRY_VERIFY(subMenu->isOpened());
     QTRY_VERIFY(menuItem1->isHighlighted());
     // Now the sub-menu is open. The current behavior is that the first menu item
     // in the new menu is highlighted; make sure that we choose the next item if
