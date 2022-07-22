@@ -91,6 +91,18 @@ static OptionalReturnedValue searchContextProperties(
     return OptionalReturnedValue(v4->fromVariant(cp->propertyValue(propertyIdx)));
 }
 
+template<typename Lookup>
+bool performLookup(ScopedValue *result, bool *hasProperty, const Lookup &lookup) {
+    bool hasProp = false;
+    *result = lookup(&hasProp);
+    if (hasProp) {
+        if (hasProperty)
+            *hasProperty = hasProp;
+        return true;
+    }
+    return false;
+}
+
 ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver, bool *hasProperty, Value *base, Lookup *lookup)
 {
     if (!id.isString())
@@ -139,16 +151,19 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
 
     ScopedString name(scope, id.asStringOrSymbol());
 
-    const auto performGobalLookUp = [&result, v4, &name, hasProperty]() {
-        bool hasProp = false;
-        result = v4->globalObject->get(name, &hasProp);
-        if (hasProp) {
-            if (hasProperty)
-                *hasProperty = hasProp;
-            return true;
-        }
-        return false;
+    const auto globalLookup = [v4, &name](bool *hasProp) {
+        return v4->globalObject->get(name, hasProp);
     };
+
+    const auto jsLookup = [resource, &id, receiver](bool *hasProp) {
+        return Object::virtualGet(resource, id, receiver, hasProp);
+    };
+
+    const bool isJSContext = context->isJSContext();
+
+    // Do the generic JS lookup early in case of a JavaScript context.
+    if (isJSContext && performLookup(&result, hasProperty, jsLookup))
+        return result->asReturnedValue();
 
     // If the scope object is a QAbstractDynamicMetaObject, then QMetaObject::indexOfProperty
     // will call createProperty() on the QADMO and implicitly create the property. While that
@@ -170,7 +185,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     if (metaObjectPrivate && metaObjectPrivate->flags & DynamicMetaObject) {
         // all bets are off, so don't try to optimize any lookups
         lookup = nullptr;
-        if (performGobalLookUp())
+        if (performLookup(&result, hasProperty, globalLookup))
             return result->asReturnedValue();
     }
 
@@ -318,15 +333,10 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         lookup = nullptr;
     }
 
-    // Do the generic JS lookup late.
+    // Do the generic JS lookup late in case of a non-JavaScript context.
     // The scope, context, types etc should be able to override it.
-    bool hasProp = false;
-    result = Object::virtualGet(resource, id, receiver, &hasProp);
-    if (hasProp) {
-        if (hasProperty)
-            *hasProperty = hasProp;
+    if (!isJSContext && performLookup(&result, hasProperty, jsLookup))
         return result->asReturnedValue();
-    }
 
     // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
     // true if we access properties of the global object.
@@ -345,7 +355,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         }
         lookup->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
     } else {
-        if (performGobalLookUp())
+        if (performLookup(&result, hasProperty, globalLookup))
             return result->asReturnedValue();
     }
 
