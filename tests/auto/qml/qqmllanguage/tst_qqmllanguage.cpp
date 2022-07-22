@@ -386,6 +386,7 @@ private slots:
     void v4SequenceMethods();
     void v4SequenceMethodsWithParams_data();
     void v4SequenceMethodsWithParams();
+    void jsFunctionOverridesImport();
 
 private:
     QQmlEngine engine;
@@ -7321,6 +7322,15 @@ void tst_qqmllanguage::v4SequenceMethodsWithParams()
 
     QCOMPARE(object->property("v4SequenceIndexOf"), object->property("jsArrayIndexOf"));
     QCOMPARE(object->property("v4SequenceLastIndexOf"), object->property("jsArrayLastIndexOf"));
+}
+
+void tst_qqmllanguage::jsFunctionOverridesImport()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("jsFunctionOverridesImport.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QCOMPARE(object->objectName(), u"foo"_s);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
