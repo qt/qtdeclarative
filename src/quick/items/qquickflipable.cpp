@@ -3,7 +3,7 @@
 
 #include "qquickflipable_p.h"
 #include "qquickitem_p.h"
-
+#include "qquicktranslate_p.h"
 
 #include <QtQml/qqmlinfo.h>
 
@@ -201,9 +201,20 @@ void QQuickFlipable::updatePolish()
     d->updateSide();
 }
 
-// determination on the currently visible side of the flipable
-// has to be done on the complete scene transform to give
-// correct results.
+/*! \internal
+    Flipable must use the complete scene transform to correctly determine the
+    currently visible side.
+
+    It must also be independent of camera distance, in case the contents are
+    too wide: for rotation transforms we simply call QMatrix4x4::rotate(),
+    whereas QQuickRotation::applyTo(QMatrix4x4*) calls
+    QMatrix4x4::projectedRotate() which by default assumes the camera distance
+    is 1024 virtual pixels. So for example if contents inside Flipable are to
+    be flipped around the y axis, and are wider than 1024*2, some of the
+    rendering goes behind the "camera". That's expected for rendering (since we
+    didn't provide API to change camera distance), but not ok for deciding when
+    to flip.
+*/
 void QQuickFlipablePrivate::updateSide()
 {
     Q_Q(QQuickFlipable);
@@ -213,8 +224,39 @@ void QQuickFlipablePrivate::updateSide()
 
     sideDirty = false;
 
-    QTransform sceneTransform;
-    itemToParentTransform(sceneTransform);
+    QMatrix4x4 sceneTransform;
+
+    const qreal tx = x.value();
+    const qreal ty = y.value();
+    if (!qFuzzyIsNull(tx) || !qFuzzyIsNull(ty))
+        sceneTransform.translate(tx, ty);
+
+    for (const auto *transform : std::as_const(transforms)) {
+        if (const auto *rot = qobject_cast<const QQuickRotation *>(transform)) {
+            // rotation is a special case: we want to call rotate() instead of projectedRotate()
+            const auto angle = rot->angle();
+            const auto axis = rot->axis();
+            if (!(qFuzzyIsNull(angle) || axis.isNull())) {
+                sceneTransform.translate(rot->origin());
+                sceneTransform.rotate(angle, axis.x(), axis.y(), axis.z());
+                sceneTransform.translate(-rot->origin());
+            }
+        } else {
+            transform->applyTo(&sceneTransform);
+        }
+    }
+
+    const bool hasRotation = !qFuzzyIsNull(rotation());
+    const bool hasScale = !qFuzzyCompare(scale(), 1);
+    if (hasScale || hasRotation) {
+        QPointF tp = computeTransformOrigin();
+        sceneTransform.translate(tp.x(), tp.y());
+        if (hasScale)
+            sceneTransform.scale(scale(), scale());
+        if (hasRotation)
+            sceneTransform.rotate(rotation(), 0, 0, 1);
+        sceneTransform.translate(-tp.x(), -tp.y());
+    }
 
     QPointF p1(0, 0);
     QPointF p2(1, 0);
