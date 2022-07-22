@@ -7,7 +7,6 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/QTextStream>
-#include <QtCore/private/qvariant_p.h>
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
