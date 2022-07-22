@@ -465,6 +465,28 @@ void QmltcVisitor::postVisitResolve(
         qSwap(m_qmlTypesWithQmlBases, filteredQmlTypesWithQmlBases);
     }
 
+    // count QmlIR::Objects in the document - the amount is used to calculate
+    // object indices of implicit components
+    int qmlScopeCount = 0;
+    const auto countQmlScopes = [&](const QQmlJSScope::ConstPtr &scope) {
+        if (scope->isArrayScope()) // special kind of QQmlJSScope::QMLScope
+            return;
+        switch (scope->scopeType()) {
+        case QQmlJSScope::QMLScope:
+        case QQmlJSScope::GroupedPropertyScope:
+        case QQmlJSScope::AttachedPropertyScope: {
+            ++qmlScopeCount;
+            break;
+        }
+        default:
+            return;
+        }
+        return;
+    };
+    // order doesn't matter (so re-use QQmlJSUtils)
+    QQmlJSUtils::traverseFollowingQmlIrObjectStructure(m_exportedRootScope, countQmlScopes);
+    Q_ASSERT(qmlScopeCount >= int(m_qmlTypes.size()));
+
     // figure synthetic indices of QQmlComponent-wrapped types
     int syntheticCreationIndex = 0;
     const auto addSyntheticIndex = [&](const QQmlJSScope::ConstPtr &type) {
@@ -477,7 +499,7 @@ void QmltcVisitor::postVisitResolve(
         const auto cppBase = QQmlJSScope::nonCompositeBaseType(type);
         const bool isComponentBased = (cppBase && cppBase->internalName() == u"QQmlComponent"_s);
         if (type->isComponentRootElement() && !isComponentBased) {
-            const int index = int(m_qmlTypes.size()) + syntheticCreationIndex++;
+            const int index = int(qmlScopeCount) + syntheticCreationIndex++;
             m_syntheticTypeIndices[type] = index;
             return true;
         }
