@@ -853,6 +853,8 @@ QQmlMetaType::RegistrationResult QQmlMetaType::registerPluginTypes(
                 QQmlExtensionPluginPrivate::get(plugin)->baseUrl
                         = QQmlImports::urlFromLocalFileOrQrcOrUrl(basePath);
             }
+#else
+            Q_UNUSED(basePath)
 #endif
 
             const QByteArray bytes = uri.toUtf8();
