@@ -388,6 +388,8 @@ private slots:
     void v4SequenceMethodsWithParams();
     void jsFunctionOverridesImport();
 
+    void bindableOnly();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -7163,6 +7165,22 @@ void tst_qqmllanguage::uncreatableAttached()
     QVERIFY(o.isNull());
     QVERIFY(c.errorString().contains(
                 QLatin1String("Could not create attached properties object 'ItemAttached'")));
+}
+
+void tst_qqmllanguage::bindableOnly()
+{
+    qmlRegisterTypesAndRevisions<BindableOnly>("ABC", 1);
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine);
+    c.setData("import ABC\nBindableOnly {\n"
+              "    data: \"sc\" + \"ore\"\n"
+              "    objectName: data\n"
+              "}", QUrl(u"bindableOnly.qml"_s));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("data").value<QByteArray>(), QByteArray("score"));
+    QCOMPARE(o->objectName(), QStringLiteral("score"));
 }
 
 static void listsEqual(QObject *object, const char *method)

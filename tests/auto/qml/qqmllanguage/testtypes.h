@@ -2210,6 +2210,25 @@ private:
     QString m_name;
 };
 
+class BindableOnly : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QByteArray data READ data WRITE setData BINDABLE dataBindable FINAL)
+    QML_ELEMENT
+public:
+    BindableOnly(QObject *parent = nullptr)
+        : QObject(parent)
+    {}
+
+    QBindable<QByteArray> dataBindable() { return QBindable<QByteArray>(&m_data); }
+
+    QByteArray data() const { return m_data.value(); }
+    void setData(const QByteArray &newData) { m_data.setValue(newData); }
+
+private:
+    QProperty<QByteArray> m_data;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
