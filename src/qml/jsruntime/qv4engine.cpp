@@ -2337,6 +2337,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     case QMetaType::QByteArray:
         if (const ArrayBuffer *ab = value.as<ArrayBuffer>())
             *reinterpret_cast<QByteArray*>(data) = ab->asByteArray();
+        else if (const String *string = value.as<String>())
+            *reinterpret_cast<QByteArray*>(data) = string->toQString().toUtf8();
         else
             *reinterpret_cast<QByteArray*>(data) = QByteArray();
         return true;
