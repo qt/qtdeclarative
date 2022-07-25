@@ -96,6 +96,7 @@ set(qml_files
     layouts.qml
     library.js
     listIndices.qml
+    listPropertyAsModel.qml
     listlength.qml
     math.qml
     methods.qml

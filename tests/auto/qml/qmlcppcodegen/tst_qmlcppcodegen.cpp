@@ -133,6 +133,7 @@ private slots:
     void javaScriptArgument();
     void throwObjectName();
     void conversionDecrement();
+    void listPropertyAsModel();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2055,6 +2056,17 @@ void tst_QmlCppCodegen::conversionDecrement()
     QCOMPARE(o->property("currentPageIndex").toInt(), 4);
     o->setProperty("pages", 60);
     QCOMPARE(o->property("currentPageIndex").toInt(), 3);
+}
+
+void tst_QmlCppCodegen::listPropertyAsModel()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/listPropertyAsModel.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlListReference children(o.data(), "children");
+    QCOMPARE(children.count(), 5);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
