@@ -2192,7 +2192,7 @@ void ExecutionEngine::setQmlEngine(QQmlEngine *engine)
 
 static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
 {
-    if (object->as<QV4::QObjectWrapper>() || object->internalClass()->isFrozen)
+    if (object->as<QV4::QObjectWrapper>() || object->internalClass()->isFrozen())
         return;
 
     QV4::Scope scope(v4);
