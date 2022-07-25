@@ -430,6 +430,8 @@ private slots:
     void functionNameInFunctionScope();
     void functionAsDefaultArgument();
 
+    void internalClassParentGc();
+
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -10088,6 +10090,15 @@ void tst_qqmlecmascript::functionAsDefaultArgument()
     QScopedPointer root(component.create());
     QVERIFY(root);
     QCOMPARE(root->objectName(), "didRun");
+}
+
+void tst_qqmlecmascript::internalClassParentGc()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("internalClassParentGc.qml"));
+    QScopedPointer root(component.create());
+    QVERIFY(root);
+    QCOMPARE(root->objectName(), "3");
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
