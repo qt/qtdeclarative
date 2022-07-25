@@ -30,10 +30,12 @@ void QQmlDebuggingEnabler::enableDebugging(bool printWarning)
     QQmlEnginePrivate::qml_debugging_enabled.store(true, std::memory_order_relaxed);
 }
 
+#if QT_DEPRECATED_SINCE(6, 4)
 QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)
 {
     enableDebugging(printWarning);
 };
+#endif // QT_DEPRECATED_SINCE(6, 4)
 
 /*!
  * Retrieves the plugin keys of the debugger services provided by default. The debugger services
