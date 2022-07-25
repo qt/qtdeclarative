@@ -147,6 +147,16 @@ void QmltcVisitor::findCppIncludes()
     m_cppIncludes.remove(m_exportedRootScope->filePath());
 }
 
+static void addCleanQmlTypeName(QStringList *names, const QQmlJSScope::ConstPtr &scope)
+{
+    Q_ASSERT(scope->scopeType() == QQmlJSScope::QMLScope);
+    Q_ASSERT(!scope->isArrayScope());
+    Q_ASSERT(!scope->baseTypeName().isEmpty());
+    // the scope is guaranteed to be a new QML type, so any prefixes (separated
+    // by dots) should be import namespaces
+    names->append(scope->baseTypeName().replace(u'.', u'_'));
+}
+
 bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
 {
     const bool processingRoot = !rootScopeIsValid();
@@ -163,9 +173,8 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
     if (m_currentScope->scopeType() != QQmlJSScope::QMLScope)
         return true;
 
-    Q_ASSERT(!m_currentScope->baseTypeName().isEmpty());
     if (m_currentScope != m_exportedRootScope) // not document root
-        m_qmlTypeNames.append(m_currentScope->baseTypeName());
+        addCleanQmlTypeName(&m_qmlTypeNames, m_currentScope);
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
 
@@ -189,10 +198,8 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     if (!QQmlJSImportVisitor::visit(uiob))
         return false;
 
-    Q_ASSERT(m_currentScope->scopeType() == QQmlJSScope::QMLScope);
-    Q_ASSERT(!m_currentScope->baseTypeName().isEmpty());
     if (m_currentScope != m_exportedRootScope) // not document root
-        m_qmlTypeNames.append(m_currentScope->baseTypeName());
+        addCleanQmlTypeName(&m_qmlTypeNames, m_currentScope);
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
 
