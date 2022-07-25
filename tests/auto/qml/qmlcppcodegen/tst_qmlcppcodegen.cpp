@@ -133,6 +133,7 @@ private slots:
     void enumLookup();
     void trivialSignalHandler();
     void stringToByteArray();
+    void listPropertyAsModel();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2451,6 +2452,17 @@ void tst_QmlCppCodegen::stringToByteArray()
 
     QCOMPARE(person->dataBindable().value(), QByteArray("some data"));
     QCOMPARE(person->name(), u"some data"_s);
+}
+
+void tst_QmlCppCodegen::listPropertyAsModel()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/listPropertyAsModel.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlListReference children(o.data(), "children");
+    QCOMPARE(children.count(), 5);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
