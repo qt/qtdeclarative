@@ -16,7 +16,7 @@ set(cpp_sources
     # extension types:
     cpptypes/extensiontypes.h cpptypes/extensiontypes.cpp
 
-    cpptypes/typewithmemberproperties.h
+    cpptypes/typewithspecialproperties.h
 )
 
 set(qml_sources
@@ -37,7 +37,7 @@ set(qml_sources
     QmlTypeWithBaseTypeExtension.qml
     extensionTypeBindings.qml
     nonStandardInclude.qml
-    memberProperties.qml
+    specialProperties.qml
 
     qtbug103956/SubComponent.qml
     qtbug103956/MainComponent.qml

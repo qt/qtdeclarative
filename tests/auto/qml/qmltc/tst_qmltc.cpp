@@ -24,7 +24,7 @@
 #include "extensiontypebindings.h"
 #include "qtbug103956_main.h"
 #include "nonstandardinclude.h"
-#include "memberproperties.h"
+#include "specialproperties.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -126,7 +126,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_complex.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/extensionTypeBindings.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/nonStandardInclude.qml"),
-        QUrl("qrc:/qt/qml/QmltcTests/memberProperties.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/specialProperties.qml"),
 
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/SubComponent.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/MainComponent.qml"),
@@ -855,19 +855,23 @@ void tst_qmltc::nonStandardIncludesInsideModule()
     QVERIFY(created.good());
 }
 
-void tst_qmltc::memberProperties()
+void tst_qmltc::specialProperties()
 {
     QQmlEngine e;
-    PREPEND_NAMESPACE(memberProperties) created(&e);
+    PREPEND_NAMESPACE(specialProperties) created(&e);
     QCOMPARE(created.property("x"), 42);
     QCOMPARE(created.m_y, u"fourty two"_s);
+    QCOMPARE(created.bindableZ().value(), 3.2);
     QCOMPARE(created.xAlias(), 42);
     QCOMPARE(created.yAlias(), u"fourty two"_s);
+    QCOMPARE(created.zAlias(), 3.2);
 
     created.setXAlias(43);
     QCOMPARE(created.property("x"), 43);
     created.setYAlias(u"foo"_s);
     QCOMPARE(created.m_y, u"foo"_s);
+    created.setZAlias(4.2);
+    QCOMPARE(created.bindableZ().value(), 4.2);
 }
 
 void tst_qmltc::signalHandlers()

@@ -143,6 +143,33 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
         return base->isComposite() && base->scopeType() == QQmlJSScope::QMLScope;
     }
 
+    enum PropertyAccessor {
+        PropertyAccessor_Read,
+        PropertyAccessor_Write,
+    };
+    /*! \internal
+
+        Returns \c true if \a p is bindable and property accessor specified by
+        \a accessor is equal to "default". Returns \c false otherwise.
+
+        \note This function follows BINDABLE-only properties logic (e.g. in moc)
+    */
+    static bool bindablePropertyHasDefaultAccessor(const QQmlJSMetaProperty &p,
+                                                   PropertyAccessor accessor)
+    {
+        if (p.bindable().isEmpty())
+            return false;
+        switch (accessor) {
+        case PropertyAccessor::PropertyAccessor_Read:
+            return p.read() == QLatin1String("default");
+        case PropertyAccessor::PropertyAccessor_Write:
+            return p.write() == QLatin1String("default");
+        default:
+            break;
+        }
+        return false;
+    }
+
     enum ResolvedAliasTarget {
         AliasTarget_Invalid,
         AliasTarget_Property,

@@ -36,7 +36,7 @@ private slots:
     void extensionTypeBindings();
     void visibleAliasMethods(); // QTBUG-103956
     void nonStandardIncludesInsideModule(); // QTBUG-104094
-    void memberProperties();
+    void specialProperties();
 
     void signalHandlers();
     void jsFunctions();

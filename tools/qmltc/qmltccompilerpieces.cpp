@@ -104,7 +104,9 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         *block += prologue;
         *block << u"%1->m_%2 = %3;"_s.arg(accessor, propertyName, wrappedValue);
         *block += epilogue;
-    } else if (QString propertySetter = p.write(); !propertySetter.isEmpty()) {
+    } else if (QString propertySetter = p.write(); !propertySetter.isEmpty()
+               && !QQmlJSUtils::bindablePropertyHasDefaultAccessor(
+                       p, QQmlJSUtils::PropertyAccessor_Write)) {
         // there's a WRITE function
         auto [prologue, wrappedValue, epilogue] =
                 QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);

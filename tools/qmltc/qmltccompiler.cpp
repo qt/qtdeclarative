@@ -659,7 +659,9 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
     getter.name = compilationData.read;
     getter.body += prologue;
     if (result.kind == QQmlJSUtils::AliasTarget_Property) {
-        if (QString read = result.property.read(); !read.isEmpty()) {
+        if (QString read = result.property.read(); !read.isEmpty()
+            && !QQmlJSUtils::bindablePropertyHasDefaultAccessor(
+                    result.property, QQmlJSUtils::PropertyAccessor_Read)) {
             getter.body << u"return %1->%2();"_s.arg(latestAccessor, read);
         } else { // use QObject::property() as a fallback when read method is unknown
             getter.body << u"return qvariant_cast<%1>(%2->property(\"%3\"));"_s.arg(
@@ -698,7 +700,9 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
                        std::back_inserter(parameterNames),
                        [](const QmltcVariable &x) { return x.name; });
         QString commaSeparatedParameterNames = parameterNames.join(u", "_s);
-        if (!setName.isEmpty()) {
+        if (!setName.isEmpty()
+            && !QQmlJSUtils::bindablePropertyHasDefaultAccessor(
+                    result.property, QQmlJSUtils::PropertyAccessor_Write)) {
             setter.body << u"%1->%2(%3);"_s.arg(latestAccessor, setName,
                                                 commaSeparatedParameterNames);
         } else { // use QObject::setProperty() as fallback when write method is unknown
