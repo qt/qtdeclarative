@@ -2214,6 +2214,7 @@ class BindableOnly : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int score BINDABLE scoreBindable READ default WRITE default FINAL)
+    Q_PROPERTY(QByteArray data READ default WRITE default BINDABLE dataBindable FINAL)
     QML_ELEMENT
 public:
     BindableOnly(QObject *parent = nullptr)
@@ -2221,8 +2222,11 @@ public:
         , m_score(4)
     {}
     QBindable<int> scoreBindable() { return QBindable<int>(&m_score); }
+    QBindable<QByteArray> dataBindable() { return QBindable<QByteArray>(&m_data); }
+
 private:
     QProperty<int> m_score;
+    QProperty<QByteArray> m_data;
 };
 
 void registerTypes();

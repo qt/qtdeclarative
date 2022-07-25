@@ -7404,7 +7404,11 @@ void tst_qqmllanguage::bindableOnly()
     QQmlEngine engine;
 
     QQmlComponent c(&engine);
-    c.setData("import ABC\nBindableOnly {\nproperty int a: score\n}", QUrl(u"bindableOnly.qml"_s));
+    c.setData("import ABC\nBindableOnly {\n"
+              "    property int a: score\n"
+              "    data: \"sc\" + \"ore\"\n"
+              "    objectName: data\n"
+              "}", QUrl(u"bindableOnly.qml"_s));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     BindableOnly *bindableOnly = qobject_cast<BindableOnly *>(o.data());
@@ -7413,6 +7417,8 @@ void tst_qqmllanguage::bindableOnly()
     bindableOnly->scoreBindable().setValue(5);
     QCOMPARE(bindableOnly->scoreBindable().value(), 5);
     QCOMPARE(o->property("a").toInt(), 5);
+    QCOMPARE(o->property("data").value<QByteArray>(), QByteArray("score"));
+    QCOMPARE(o->objectName(), QStringLiteral("score"));
 }
 
 static void listsEqual(QObject *object, const char *method)
