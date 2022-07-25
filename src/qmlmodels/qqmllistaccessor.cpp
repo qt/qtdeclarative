@@ -75,6 +75,7 @@ void QQmlListAccessor::setList(const QVariant &v)
         d = d.value<QJSValue>().toVariant();
         variantsType = d.metaType();
     }
+
     if (!d.isValid()) {
         m_type = Invalid;
     } else if (variantsType == QMetaType::fromType<QStringList>()) {
@@ -85,6 +86,9 @@ void QQmlListAccessor::setList(const QVariant &v)
         m_type = VariantList;
     } else if (variantsType == QMetaType::fromType<QList<QObject *>>()) {
         m_type = ObjectList;
+    } else if (variantsType.flags() & QMetaType::IsQmlList) {
+        d = QVariant::fromValue(QQmlListReference(d));
+        m_type = ListProperty;
     } else if (variantsType == QMetaType::fromType<QQmlListReference>()) {
         m_type = ListProperty;
     } else if (variantsType.flags() & QMetaType::PointerToQObject) {
