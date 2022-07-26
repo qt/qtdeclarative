@@ -61,7 +61,7 @@ TestCase {
     name: "ScrollView"
 
     Component {
-        id: signalSpy
+        id: signalSpyComponent
         SignalSpy { }
     }
 
@@ -580,5 +580,49 @@ TestCase {
         verify(newHorizontalScrollBar)
         verify(newHorizontalScrollBar.visible)
         verify(!oldHorizontalScrollBar.visible)
+    }
+
+    Component {
+        id: mouseAreaWheelComponent
+
+        MouseArea {
+            anchors.fill: parent
+
+            property alias scrollView: scrollView
+            property alias flickable: flickable
+
+            ScrollView {
+                id: scrollView
+                anchors.fill: parent
+                wheelEnabled: false
+
+                Flickable {
+                    id: flickable
+                    contentHeight: 1000
+
+                    Text {
+                        text: "Test"
+                        width: 500
+                        height: 1000
+                    }
+                }
+            }
+        }
+    }
+
+    // If a ScrollView containing a Flickable sets wheelEnabled to false,
+    // neither item should consume wheel events.
+    function test_wheelEnabled() {
+        let mouseArea = createTemporaryObject(mouseAreaWheelComponent, testCase)
+        verify(mouseArea)
+
+        let mouseWheelSpy = signalSpyComponent.createObject(mouseArea,
+            { target: mouseArea, signalName: "wheel" })
+        verify(mouseWheelSpy.valid)
+
+        let scrollView = mouseArea.scrollView
+        mouseWheel(scrollView, scrollView.width / 2, scrollView.height / 2, 0, 120)
+        compare(mouseWheelSpy.count, 1)
+        compare(mouseArea.flickable.contentY, 0)
     }
 }
