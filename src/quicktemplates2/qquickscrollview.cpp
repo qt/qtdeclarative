@@ -495,8 +495,10 @@ bool QQuickScrollView::eventFilter(QObject *object, QEvent *event)
     Q_D(QQuickScrollView);
     if (event->type() == QEvent::Wheel) {
         d->setScrollBarsInteractive(true);
-        if (!d->wheelEnabled)
+        if (!d->wheelEnabled) {
+            event->ignore();
             return true;
+        }
     }
     return QQuickPane::eventFilter(object, event);
 }
