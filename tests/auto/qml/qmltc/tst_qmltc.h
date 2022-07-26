@@ -37,6 +37,7 @@ private slots:
     void visibleAliasMethods(); // QTBUG-103956
     void nonStandardIncludesInsideModule(); // QTBUG-104094
     void specialProperties();
+    void regexpBindings();
 
     void signalHandlers();
     void jsFunctions();

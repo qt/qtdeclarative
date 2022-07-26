@@ -52,6 +52,14 @@ QString QQmlJSMetaPropertyBinding::stringValue() const
     return {};
 }
 
+QString QQmlJSMetaPropertyBinding::regExpValue() const
+{
+    if (auto regexpLiteral = std::get_if<Content::RegexpLiteral>(&m_bindingContent))
+        return regexpLiteral->value;
+    // warn
+    return {};
+}
+
 /*!
     \internal
     Uses \a resolver to return the correct type for the stored literal

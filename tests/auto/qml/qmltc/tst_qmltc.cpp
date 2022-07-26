@@ -25,6 +25,7 @@
 #include "qtbug103956_main.h"
 #include "nonstandardinclude.h"
 #include "specialproperties.h"
+#include "regexpbindings.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -127,6 +128,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/extensionTypeBindings.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/nonStandardInclude.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/specialProperties.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/regexpBindings.qml"),
 
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/SubComponent.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/qtbug103956/MainComponent.qml"),
@@ -872,6 +874,14 @@ void tst_qmltc::specialProperties()
     QCOMPARE(created.m_y, u"foo"_s);
     created.setZAlias(4.2);
     QCOMPARE(created.bindableZ().value(), 4.2);
+}
+
+void tst_qmltc::regexpBindings()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(regexpBindings) created(&e);
+    QCOMPARE(created.regularExpression().pattern(), u"ab*c");
+    QVERIFY(created.regularExpression().match(u"abbbc"_s).hasMatch());
 }
 
 void tst_qmltc::signalHandlers()

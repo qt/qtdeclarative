@@ -669,6 +669,8 @@ public:
 
     QString stringValue() const;
 
+    QString regExpValue() const;
+
     QSharedPointer<const QQmlJSScope> literalType(const QQmlJSTypeResolver *resolver) const;
 
     QQmlJSMetaMethod::RelativeFunctionIndex scriptIndex() const
