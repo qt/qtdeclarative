@@ -192,6 +192,9 @@ struct QQuickStyleSpec
 
             qCDebug(lcQtQuickControlsStyle) << "no style (or Default) was specified;"
                 << "checking if we have an appropriate style for this platform";
+
+            // If these defaults are changed, ensure that the "Using Styles in Qt Quick Controls"
+            // section of qtquickcontrols2-styles.qdoc is updated.
 #if defined(Q_OS_MACOS)
             style = QLatin1String("macOS");
 #elif defined(Q_OS_WINDOWS)
