@@ -859,6 +859,12 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
         assignToProperty(p, QQmlJSUtils::toLiteral(binding.stringValue()));
         break;
     }
+    case QQmlJSMetaPropertyBinding::RegExpLiteral: {
+        const QString value =
+                u"QRegularExpression(%1)"_s.arg(QQmlJSUtils::toLiteral(binding.regExpValue()));
+        assignToProperty(p, value);
+        break;
+    }
     case QQmlJSMetaPropertyBinding::Null: {
         // poor check: null bindings are only supported for var and objects
         Q_ASSERT(propertyType->isSameType(m_typeResolver->varType())

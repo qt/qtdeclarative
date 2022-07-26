@@ -35,6 +35,7 @@ set(qml_sources
     extensionTypeBindings.qml
     nonStandardInclude.qml
     memberProperties.qml
+    regexpBindings.qml
 
     qtbug103956/SubComponent.qml
     qtbug103956/MainComponent.qml

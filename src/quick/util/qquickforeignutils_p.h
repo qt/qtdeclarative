@@ -4,7 +4,7 @@
 #ifndef QTQUICKFOREIGN_P_H
 #define QTQUICKFOREIGN_P_H
 
-#include <qtquickglobal_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 #include <QtGui/qstylehints.h>
 #if QT_CONFIG(im)

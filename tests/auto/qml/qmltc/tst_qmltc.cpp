@@ -25,6 +25,7 @@
 #include "qtbug103956_main.h"
 #include "nonstandardinclude.h"
 #include "memberproperties.h"
+#include "regexpbindings.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -124,6 +125,9 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/deferredProperties_attached.qml"),
         QUrl("qrc:/QmltcTests/deferredProperties_complex.qml"),
         QUrl("qrc:/QmltcTests/extensionTypeBindings.qml"),
+        QUrl("qrc:/QmltcTests/nonStandardInclude.qml"),
+        QUrl("qrc:/QmltcTests/memberProperties.qml"),
+        QUrl("qrc:/QmltcTests/regexpBindings.qml"),
 
         QUrl("qrc:/QmltcTests/signalHandlers.qml"),
         QUrl("qrc:/QmltcTests/javaScriptFunctions.qml"),
@@ -845,6 +849,14 @@ void tst_qmltc::memberProperties()
     QCOMPARE(created.property("x"), 43);
     created.setYAlias(u"foo"_s);
     QCOMPARE(created.m_y, u"foo"_s);
+}
+
+void tst_qmltc::regexpBindings()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(regexpBindings) created(&e);
+    QCOMPARE(created.regularExpression().pattern(), u"ab*c");
+    QVERIFY(created.regularExpression().match(u"abbbc"_s).hasMatch());
 }
 
 void tst_qmltc::signalHandlers()
