@@ -9,6 +9,7 @@
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 
 #include <qpa/qplatformintegration.h>
+#include <qpa/qplatformservices.h>
 #include <private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -91,7 +92,7 @@ QQuickColorDialogImplAttached *QQuickColorDialogImplPrivate::attachedOrWarn()
 
 void QQuickColorDialogImplPrivate::eyeDropperEnter()
 {
-    Q_Q(const QQuickColorDialogImpl);
+    Q_Q(QQuickColorDialogImpl);
     if (m_eyeDropperMode)
         return;
 
@@ -102,6 +103,19 @@ void QQuickColorDialogImplPrivate::eyeDropperEnter()
         }
 
         m_eyeDropperWindow = window;
+    }
+
+    if (auto *platformServices = QGuiApplicationPrivate::platformIntegration()->services();
+        platformServices && platformServices->hasCapability(QPlatformServices::Capability::ColorPicking)) {
+        if (auto *colorPickerService = platformServices->colorPicker(m_eyeDropperWindow)) {
+            q->connect(colorPickerService, &QPlatformServiceColorPicker::colorPicked, q,
+                       [q, colorPickerService](const QColor &color) {
+                           colorPickerService->deleteLater();
+                           q->setColor(color);
+                       });
+            colorPickerService->pickColor();
+            return;
+        }
     }
 
     m_eyeDropperPreviousColor = q->color();
@@ -423,10 +437,13 @@ void QQuickColorDialogImpl::setOptions(const QSharedPointer<QColorDialogOptions>
     QQuickColorDialogImplAttached *attached = d->attachedOrWarn();
 
     if (attached) {
-        const bool screenGrabbingAllowed = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ScreenWindowGrabbing);
+        const auto *integration = QGuiApplicationPrivate::platformIntegration();
+        const bool canSupportEyeDropper =
+                integration->hasCapability(QPlatformIntegration::ScreenWindowGrabbing)
+                || integration->services()->hasCapability(QPlatformServices::Capability::ColorPicking);
         const bool offscreen = qgetenv("QT_QPA_PLATFORM").compare(QLatin1String("offscreen"), Qt::CaseInsensitive) == 0;
         const bool noEyeDropperButton = (d->options && d->options->options() & QColorDialogOptions::NoEyeDropperButton);
-        attached->eyeDropperButton()->setVisible(!noEyeDropperButton && screenGrabbingAllowed && !offscreen);
+        attached->eyeDropperButton()->setVisible(!noEyeDropperButton && canSupportEyeDropper && !offscreen);
 
         if (d->options) {
             attached->buttonBox()->setVisible(
