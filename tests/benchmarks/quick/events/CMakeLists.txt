@@ -10,7 +10,7 @@
 qt_internal_add_benchmark(tst_qevents
     SOURCES
         tst_events.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

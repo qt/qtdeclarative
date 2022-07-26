@@ -10,6 +10,6 @@
 qt_internal_add_test(shadersource
     GUI
     QMLTEST
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
 )

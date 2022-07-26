@@ -13,7 +13,7 @@ qt_internal_add_manual_test(qml_httpserver_manual # special case
         main.cpp
     INCLUDE_DIRECTORIES
         ../../auto/shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Network
         Qt::Test # special case
         Qt::Qml # special case

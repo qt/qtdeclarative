@@ -11,7 +11,7 @@ qt_internal_add_test(tst_ecmascripttests
         tst_ecmascripttests.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::QmlPrivate
 )
 

@@ -19,7 +19,7 @@ qt_internal_add_manual_test(screenshots
         screenshots.cpp
     DEFINES
         SNIPPETS_DIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports/controls/doc/snippets\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::Widgets

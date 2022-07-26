@@ -14,7 +14,7 @@ qt_internal_add_test(tst_qpacketprotocol
         tst_qpacketprotocol.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickgraphicsinfo
     SOURCES
         tst_qquickgraphicsinfo.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickTestUtilsPrivate

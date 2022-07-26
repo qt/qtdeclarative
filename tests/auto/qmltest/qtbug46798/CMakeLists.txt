@@ -10,6 +10,6 @@
 qt_internal_add_test(qtbug46798
     GUI
     QMLTEST
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
 )

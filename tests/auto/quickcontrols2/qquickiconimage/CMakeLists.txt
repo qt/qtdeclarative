@@ -25,7 +25,7 @@ qt_internal_add_test(tst_qquickiconimage
     LIBRARIES
         Qt::QuickControls2ImplPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
@@ -72,7 +72,7 @@ qt_internal_add_resource(tst_qquickiconimage "resources"
 #####################################################################
 
 qt_internal_extend_target(tst_qquickiconimage CONDITION TARGET Qt::Svg
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Svg
 )
 

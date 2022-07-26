@@ -15,7 +15,7 @@ qt_internal_add_test(tst_qqmlanybinding
     SOURCES
         withbindable.h
         tst_qqmlanybinding.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

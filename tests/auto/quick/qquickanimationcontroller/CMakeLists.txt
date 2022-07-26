@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickanimationcontroller
     QMLTEST
     SOURCES
         tst_qquickanimationcontroller.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

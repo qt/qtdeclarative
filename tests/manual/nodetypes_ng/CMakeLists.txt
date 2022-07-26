@@ -11,7 +11,7 @@ qt_internal_add_manual_test(nodetypes_ng
     GUI
     SOURCES
         nodetypes_ng.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick

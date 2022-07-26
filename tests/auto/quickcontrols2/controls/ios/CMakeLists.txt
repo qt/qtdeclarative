@@ -14,7 +14,7 @@ qt_internal_add_test(tst_ios
         tst_ios.cpp
     DEFINES
         TST_CONTROLS_DATA=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../data\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QuickControls2
     TESTDATA ${test_data}

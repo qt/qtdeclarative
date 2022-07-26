@@ -15,7 +15,7 @@ qt_internal_add_test(tst_qquicktreeviewdelegate
     SOURCES
         testmodel.h testmodel.cpp
         tst_qquicktreeviewdelegate.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

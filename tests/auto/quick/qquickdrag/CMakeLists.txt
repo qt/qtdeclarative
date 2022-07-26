@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquickdrag
     SOURCES
         tst_qquickdrag.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

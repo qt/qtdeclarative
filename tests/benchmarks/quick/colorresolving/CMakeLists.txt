@@ -18,7 +18,7 @@ qt_internal_add_test(tst_colorresolving
     QMLTEST
     SOURCES
         tst_colorresolving.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
     TESTDATA ${test_data}
 )

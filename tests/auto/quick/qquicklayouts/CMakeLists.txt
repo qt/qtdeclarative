@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquicklayouts
     QMLTEST
     SOURCES
         tst_qquicklayouts.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

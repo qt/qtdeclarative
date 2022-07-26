@@ -14,7 +14,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_pointerhandlers
     SOURCES
         tst_pointerhandlers.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

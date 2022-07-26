@@ -17,7 +17,7 @@ endif()
 qt_internal_add_test(tst_qjsvalue
     SOURCES
         tst_qjsvalue.cpp tst_qjsvalue.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::Qml

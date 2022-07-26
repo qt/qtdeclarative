@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickfontloader_static
         tst_qquickfontloader_static.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

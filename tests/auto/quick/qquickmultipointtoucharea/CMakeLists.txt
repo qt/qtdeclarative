@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickmultipointtoucharea
     SOURCES
         tst_qquickmultipointtoucharea.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

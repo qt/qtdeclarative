@@ -19,7 +19,7 @@ qt_internal_add_manual_test(stylescoverflow
         styles-cover-flow.cpp
     DEFINES
         DOC_IMAGES_DIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/imports/controls/doc/images/\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2

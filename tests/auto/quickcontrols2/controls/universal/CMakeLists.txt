@@ -20,7 +20,7 @@ qt_internal_add_test(tst_universal
         tst_universal.cpp
     DEFINES
         TST_CONTROLS_DATA=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../data\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QuickControls2
     TESTDATA ${test_data}

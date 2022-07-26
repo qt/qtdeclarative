@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qqmlfile
     SOURCES
         tst_qqmlfile.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
 )

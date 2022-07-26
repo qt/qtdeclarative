@@ -12,7 +12,7 @@ qt_internal_add_cmake_library(protectedModule
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/ProtectedModule"
     SOURCES
         plugin.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::CorePrivate
         Qt::GuiPrivate

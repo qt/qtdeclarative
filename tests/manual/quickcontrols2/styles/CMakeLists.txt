@@ -17,7 +17,7 @@ qt_internal_add_manual_test(styles
     GUI
     SOURCES
         styles.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2

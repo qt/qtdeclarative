@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickmaterialstyleconf
         tst_qquickmaterialstyleconf.cpp
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

@@ -10,7 +10,7 @@
 qt_internal_add_benchmark(tst_librarymetrics_performance
     SOURCES
         tst_librarymetrics_performance.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Network
         Qt::Qml

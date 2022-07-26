@@ -10,7 +10,7 @@
 qt_internal_add_benchmark(tst_emission
     SOURCES
         tst_emission.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QuickParticlesPrivate
         Qt::Test

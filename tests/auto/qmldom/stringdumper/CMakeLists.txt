@@ -14,6 +14,6 @@ qt_internal_add_test(tst_qmldomstringdumper
         QT_DEPRECATED_WARNINGS
     INCLUDE_DIRECTORIES
         ../../../../src/qmldom
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::QmlDomPrivate
 )

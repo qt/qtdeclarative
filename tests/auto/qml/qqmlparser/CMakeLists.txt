@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qqmlparser
         tst_qqmlparser.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate

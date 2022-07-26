@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquickcolorgroup
     SOURCES
         tst_qquickcolorgroup.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate

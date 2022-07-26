@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qqmllanguage
     SOURCES
         testtypes.cpp testtypes.h
         tst_qqmllanguage.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

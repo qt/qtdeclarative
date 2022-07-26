@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qv4identifiertable
     SOURCES
         tst_qv4identifiertable.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QmlPrivate

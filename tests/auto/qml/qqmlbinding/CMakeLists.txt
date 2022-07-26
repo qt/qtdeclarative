@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qqmlbinding
     SOURCES
         tst_qqmlbinding.cpp
         WithBindableProperties.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

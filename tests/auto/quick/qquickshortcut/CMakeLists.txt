@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickshortcut
     SOURCES
         tst_qquickshortcut.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick
@@ -28,7 +28,7 @@ qt_internal_add_test(tst_qquickshortcut
 #####################################################################
 
 qt_internal_extend_target(tst_qquickshortcut CONDITION TARGET Qt::Widgets
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::QuickWidgets
 )
 

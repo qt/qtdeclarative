@@ -23,7 +23,7 @@ endif()
 qt_internal_add_test(tst_qjsengine
     SOURCES
         tst_qjsengine.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::Qml

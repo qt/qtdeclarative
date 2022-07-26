@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qqmlenginecleanup
     SOURCES
         tst_qqmlenginecleanup.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate

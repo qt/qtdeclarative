@@ -10,7 +10,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickpalette
     SOURCES
         tst_qquickpalette.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate

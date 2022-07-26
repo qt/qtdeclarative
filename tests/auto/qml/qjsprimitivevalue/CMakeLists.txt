@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qjsprimitivevalue
     SOURCES
         tst_qjsprimitivevalue.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Qml
 )
 

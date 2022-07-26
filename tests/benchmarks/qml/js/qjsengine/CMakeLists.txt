@@ -10,7 +10,7 @@
 qt_internal_add_benchmark(tst_bench_qjsengine
     SOURCES
         tst_qjsengine.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Test

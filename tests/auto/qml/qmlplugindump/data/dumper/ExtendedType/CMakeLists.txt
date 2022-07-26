@@ -13,7 +13,7 @@ qt_internal_add_cmake_library(ExtendedType
     SOURCES
         plugin.cpp plugin.h
         types.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Qml

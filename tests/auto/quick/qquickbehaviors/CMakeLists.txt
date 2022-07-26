@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qquickbehaviors
     SOURCES
         tst_qquickbehaviors.cpp
         bindable.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

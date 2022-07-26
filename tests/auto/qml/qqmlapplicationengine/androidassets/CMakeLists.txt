@@ -4,7 +4,7 @@
 qt_internal_add_test(tst_androidassets
     SOURCES
         tst_androidassets.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick

@@ -10,6 +10,6 @@
 qt_internal_add_test(image
     GUI
     QMLTEST
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
 )

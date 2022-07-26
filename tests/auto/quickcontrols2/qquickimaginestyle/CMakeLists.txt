@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickimaginestyle
     QMLTEST
     SOURCES
         tst_qquickimaginestyle.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
     TESTDATA ${test_data}
 )

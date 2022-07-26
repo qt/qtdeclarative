@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qmldiskcache
     SOURCES
         tst_qmldiskcache.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate

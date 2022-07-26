@@ -12,7 +12,7 @@ qt_internal_add_benchmark(tst_typeimports
         tst_typeimports.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Test

@@ -13,7 +13,7 @@ qt_internal_add_manual_test(listview
         main.cpp
     DEFINES
         QT_DEPRECATED_WARNINGS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
 )

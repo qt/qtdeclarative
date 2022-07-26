@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_revisions
     SOURCES
         tst_revisions.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QuickControls2

@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquicktextinput
     SOURCES
         tst_qquicktextinput.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
@@ -30,7 +30,7 @@ qt_internal_add_test(tst_qquicktextinput
 #####################################################################
 
 qt_internal_extend_target(tst_qquicktextinput CONDITION MACOS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         ${FWAppKit}
 )
 

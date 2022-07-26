@@ -13,7 +13,7 @@ qt_internal_add_cmake_library(qmlimageproviderplugin
     OUTPUT_DIRECTORY "ImageProvider"
     SOURCES
         imageprovider.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Qml

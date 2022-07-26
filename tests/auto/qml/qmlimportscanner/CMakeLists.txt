@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qmlimportscanner
     SOURCES
         tst_qmlimportscanner.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

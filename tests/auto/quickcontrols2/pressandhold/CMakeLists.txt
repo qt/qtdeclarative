@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_pressandhold
     SOURCES
         tst_pressandhold.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2

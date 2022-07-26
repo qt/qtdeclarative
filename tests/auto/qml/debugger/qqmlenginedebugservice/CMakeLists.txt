@@ -22,7 +22,7 @@ qt_internal_add_test(tst_qqmlenginedebugservice
         QT_QML_DEBUG_NO_WARNING
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QmlDebugPrivate
         Qt::QmlPrivate

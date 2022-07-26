@@ -34,7 +34,7 @@ qt_internal_add_test(tst_snippets
         tst_snippets.cpp
     DEFINES
         QQC2_SNIPPETS_PATH=${SNIPPETS_PATH}
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::Quick

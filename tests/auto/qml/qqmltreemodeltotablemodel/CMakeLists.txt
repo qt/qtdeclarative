@@ -15,7 +15,7 @@ qt_internal_add_test(tst_qqmltreemodeltotablemodel
     SOURCES
         tst_qqmltreemodeltotablemodel.cpp
         testmodel.h testmodel.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QmlPrivate

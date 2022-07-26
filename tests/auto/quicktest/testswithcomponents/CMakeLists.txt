@@ -17,7 +17,7 @@ qt_internal_add_test(tst_quicktestswithcomponents
     QMLTEST
     SOURCES
         tst_quicktestswithcomponents.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
     TESTDATA ${test_data}

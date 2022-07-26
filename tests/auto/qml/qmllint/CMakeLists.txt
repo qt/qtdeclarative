@@ -21,7 +21,7 @@ target_compile_definitions(LintPlugin PRIVATE QT_STATICPLUGIN)
 qt_internal_add_test(tst_qmllint
     SOURCES
         tst_qmllint.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QuickTestUtilsPrivate
         Qt::QmlCompilerPrivate

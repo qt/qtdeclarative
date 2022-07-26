@@ -10,7 +10,7 @@
 qt_internal_add_manual_test(tst_executableallocator
     SOURCES
         tst_executableallocator.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Test
         v4Private
 )

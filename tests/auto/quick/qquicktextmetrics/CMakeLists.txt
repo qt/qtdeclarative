@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquicktextmetrics
     SOURCES
         tst_qquicktextmetrics.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QuickPrivate

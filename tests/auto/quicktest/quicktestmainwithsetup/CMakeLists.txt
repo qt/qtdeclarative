@@ -22,7 +22,7 @@ qt_internal_add_test(tst_quicktestmainwithsetup
     QMLTEST
     SOURCES
         tst_quicktestmainwithsetup.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickTestUtilsPrivate

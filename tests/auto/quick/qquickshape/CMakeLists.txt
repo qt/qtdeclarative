@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickshape
     SOURCES
         tst_qquickshape.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
@@ -34,7 +34,7 @@ qt_internal_add_test(tst_qquickshape
 #####################################################################
 
 qt_internal_extend_target(tst_qquickshape CONDITION TARGET Qt::Widgets
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

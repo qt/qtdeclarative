@@ -12,7 +12,7 @@ qt_internal_add_cmake_library(optionalPlugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/QtQuick/Shapes"
     SOURCES
         optionalPlugin.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::Qml
 )

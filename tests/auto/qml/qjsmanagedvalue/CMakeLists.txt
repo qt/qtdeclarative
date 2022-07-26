@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qjsmanagedvalue
     SOURCES
         tst_qjsmanagedvalue.cpp tst_qjsmanagedvalue.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Qml
         Qt::QmlPrivate
     TESTDATA "dummy_imports.qml"

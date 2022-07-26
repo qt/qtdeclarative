@@ -20,7 +20,7 @@ qt_internal_add_test(tst_qqmlprofilerservice
         tst_qqmlprofilerservice.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlDebugPrivate

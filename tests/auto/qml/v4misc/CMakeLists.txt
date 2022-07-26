@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_v4misc
     SOURCES
         tst_v4misc.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate

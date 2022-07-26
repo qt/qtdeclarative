@@ -10,7 +10,7 @@
 qt_internal_add_benchmark(painting
     SOURCES
         paintbenchmark.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::OpenGL
         Qt::OpenGLWidgets

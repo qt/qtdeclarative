@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qanimationgroupjob
     SOURCES
         tst_qanimationgroupjob.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
 )

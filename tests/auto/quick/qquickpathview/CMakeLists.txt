@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickpathview
     SOURCES
         tst_qquickpathview.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
@@ -32,7 +32,7 @@ qt_internal_add_test(tst_qquickpathview
 #####################################################################
 
 qt_internal_extend_target(tst_qquickpathview CONDITION TARGET Qt::Widgets
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

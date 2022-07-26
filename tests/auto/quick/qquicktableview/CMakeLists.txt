@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qquicktableview
     SOURCES
         testmodel.h
         tst_qquicktableview.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

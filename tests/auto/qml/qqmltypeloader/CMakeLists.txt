@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qqmltypeloader
     SOURCES
         declarativetesttype.h
         tst_qqmltypeloader.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Qml
         Qt::QmlPrivate
         Qt::Quick

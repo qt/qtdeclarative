@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qquicktimeline
     SOURCES
         tst_qquicktimeline.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

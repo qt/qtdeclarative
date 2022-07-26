@@ -20,7 +20,7 @@ qt_internal_add_test(tst_qqmlenginecontrol
         tst_qqmlenginecontrol.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

@@ -21,7 +21,7 @@ qt_internal_add_test(tst_qqmldebugtranslationservice
     INCLUDE_DIRECTORIES
         ../../../../../src/plugins/qmltooling/qmldbg_preview
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Quick
         Qt::QuickPrivate
         Qt::CorePrivate

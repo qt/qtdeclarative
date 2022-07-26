@@ -12,7 +12,7 @@ qt_internal_add_test(tst_qml_toolsupport
 # special case end
     SOURCES
         tst_toolsupport.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
 )

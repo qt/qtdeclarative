@@ -12,7 +12,7 @@ qt_internal_add_test(tst_core
     QMLTEST
     SOURCES
         tst_core.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate

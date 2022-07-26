@@ -18,7 +18,7 @@ qt_internal_add_test(tst_dommerging
     DEFINES
         QT_DEPRECATED_WARNINGS
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../domdata\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate
         Qt::Test

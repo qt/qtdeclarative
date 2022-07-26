@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_softwarerenderer
     SOURCES
         tst_softwarerenderer.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickPrivate

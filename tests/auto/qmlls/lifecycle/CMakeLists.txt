@@ -14,7 +14,7 @@ qt_internal_add_test(tst_lifecycle
         ../../../../tools/qmlls
     DEFINES
         QT_DEPRECATED_WARNINGS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::LanguageServerPrivate
         Qt::Test

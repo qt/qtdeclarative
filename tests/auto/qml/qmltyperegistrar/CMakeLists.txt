@@ -29,7 +29,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         ${moc_files}
     INCLUDE_DIRECTORIES
         foreign
-    PUBLIC_LIBRARIES
+    LIBRARIES
         # Remove: Lforeign
         Qt::Qml
         foreign
@@ -37,7 +37,7 @@ qt_internal_add_test(tst_qmltyperegistrar
 )
 
 qt_internal_extend_target(tst_qmltyperegistrar CONDITION TARGET Qt::Quick
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Quick
     )
 

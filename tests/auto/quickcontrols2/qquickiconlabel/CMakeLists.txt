@@ -21,7 +21,7 @@ qt_internal_add_test(tst_qquickiconlabel
     LIBRARIES
         Qt::QuickControls2ImplPrivate
         Qt::QuickPrivate
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qqmlecmascript
     SOURCES
         testtypes.cpp testtypes.h
         tst_qqmlecmascript.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
@@ -54,7 +54,7 @@ qt_internal_add_resource(tst_qqmlecmascript "qqmlecmascript"
 #####################################################################
 
 qt_internal_extend_target(tst_qqmlecmascript CONDITION TARGET Qt::Widgets
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

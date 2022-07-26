@@ -11,7 +11,7 @@ qt_internal_add_test(tst_qquicklistview2
     SOURCES
         typerolemodel.h typerolemodel.cpp
         tst_qquicklistview2.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

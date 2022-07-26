@@ -19,7 +19,7 @@ qt_internal_add_manual_test(treeview_sidebyside
         testmodel.cpp testmodel.h
         uicallback.h
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick
@@ -28,7 +28,7 @@ qt_internal_add_manual_test(treeview_sidebyside
 )
 
 qt_internal_extend_target(treeview_sidebyside CONDITION TARGET Qt::Widgets
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

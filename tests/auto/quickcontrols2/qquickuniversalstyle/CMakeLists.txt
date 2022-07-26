@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickuniversalstyle
     QMLTEST
     SOURCES
         tst_qquickuniversalstyle.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
     TESTDATA ${test_data}
 )

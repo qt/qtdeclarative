@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qmlcachegen
     SOURCES
         tst_qmlcachegen.cpp
         scriptstringprops.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate

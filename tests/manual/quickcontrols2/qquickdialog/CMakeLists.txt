@@ -11,7 +11,7 @@ qt_internal_add_manual_test(qquickdialog
     GUI
     SOURCES
         qquickdialog.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QuickControls2

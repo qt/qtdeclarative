@@ -13,7 +13,7 @@ qt_internal_add_cmake_library(Versions
     SOURCES
         versions.cpp versions.h
         versions_plugin.cpp versions_plugin.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Qml

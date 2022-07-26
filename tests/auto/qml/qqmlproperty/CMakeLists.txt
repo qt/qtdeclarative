@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qqmlproperty
     SOURCES
         interfaces.h
         tst_qqmlproperty.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

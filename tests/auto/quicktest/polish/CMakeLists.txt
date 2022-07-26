@@ -17,7 +17,7 @@ qt_internal_add_test(tst_polish
     QMLTEST
     SOURCES
         tst_polish.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickPrivate

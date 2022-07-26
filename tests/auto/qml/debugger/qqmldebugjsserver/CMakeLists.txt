@@ -18,7 +18,7 @@ qt_internal_add_executable(qqmldebugjsserver
         QT_QML_DEBUG_NO_WARNING
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Test

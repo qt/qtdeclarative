@@ -20,7 +20,7 @@ qt_internal_add_manual_test(testbench
         clipboard.cpp clipboard.h
         directoryvalidator.cpp directoryvalidator.h
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::Qml

@@ -12,7 +12,7 @@ qt_internal_add_test(tst_qquickitemrhiintegration
         tst_qquickitemrhiintegration.cpp
         rhiitem.cpp rhiitem.h rhiitem_p.h
         testrhiitem.cpp testrhiitem.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

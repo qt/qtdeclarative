@@ -6,7 +6,7 @@ qt_internal_add_test(tst_registrationmacros
         tst_registrationmacros.cpp
         types.h
         types.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate

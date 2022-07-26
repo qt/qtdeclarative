@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickmaterialstyle
     QMLTEST
     SOURCES
         tst_qquickmaterialstyle.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
     TESTDATA ${test_data}

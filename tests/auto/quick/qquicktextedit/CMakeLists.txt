@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquicktextedit
     SOURCES
         tst_qquicktextedit.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
@@ -31,7 +31,7 @@ qt_internal_add_test(tst_qquicktextedit
 #####################################################################
 
 qt_internal_extend_target(tst_qquicktextedit CONDITION MACOS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         ${FWAppKit}
 )
 

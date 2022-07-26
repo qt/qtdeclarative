@@ -21,7 +21,7 @@ qt_internal_add_test(tst_qv4debugger
         tst_qv4debugger.cpp
     INCLUDE_DIRECTORIES
         ../../../../../src/plugins/qmltooling/qmldbg_debugger
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

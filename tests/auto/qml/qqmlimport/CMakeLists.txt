@@ -28,7 +28,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qqmlimport
     SOURCES
         tst_qqmlimport.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QmlPrivate

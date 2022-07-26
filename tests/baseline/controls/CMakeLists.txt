@@ -16,7 +16,7 @@ qt_internal_add_test(tst_baseline_controls
         tst_baseline_controls.cpp
     INCLUDE_DIRECTORIES
         ../../../../qtbase/tests/baseline/shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Network
         Qt::QuickControls2

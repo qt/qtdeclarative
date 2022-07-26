@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickpixmapcache
     SOURCES
         tst_qquickpixmapcache.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Concurrent
         Qt::CorePrivate
         Qt::Gui

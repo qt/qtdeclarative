@@ -19,7 +19,7 @@ qt_internal_add_test(tst_qqmldebugtranslationclient
     INCLUDE_DIRECTORIES
         ../../../../../src/plugins/qmltooling/qmldbg_preview
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::QuickPrivate
         Qt::CorePrivate
         Qt::Gui

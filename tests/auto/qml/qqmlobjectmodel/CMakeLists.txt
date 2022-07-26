@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qqmlobjectmodel
     SOURCES
         tst_qqmlobjectmodel.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::Qml

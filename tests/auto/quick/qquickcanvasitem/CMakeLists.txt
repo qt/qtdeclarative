@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickcanvasitem
     QMLTEST
     SOURCES
         tst_qquickcanvasitem.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qquickcolor
     QMLTEST
     SOURCES
         tst_qquickcolor.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
     TESTDATA ${test_data}
 )

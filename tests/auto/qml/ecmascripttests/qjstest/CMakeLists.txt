@@ -17,7 +17,7 @@ qt_internal_add_tool(${target_name}
         QT_DEPRECATED_WARNINGS
     INCLUDE_DIRECTORIES
         .
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QmlPrivate
 )

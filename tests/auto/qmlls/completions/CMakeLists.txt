@@ -12,7 +12,7 @@ qt_internal_add_test(tst_qmllscompletions
     DEFINES
         QT_DEPRECATED_WARNINGS
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate
         Qt::LanguageServerPrivate

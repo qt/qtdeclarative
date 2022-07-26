@@ -20,7 +20,7 @@ qt_internal_add_test(tst_qquicklistview
         randomsortmodel.cpp randomsortmodel.h
         reusemodel.h
         tst_qquicklistview.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

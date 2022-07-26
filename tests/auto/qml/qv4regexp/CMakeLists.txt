@@ -10,7 +10,7 @@
 qt_internal_add_test(tst_qv4regexp
     SOURCES
         tst_qv4regexp.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QmlPrivate

@@ -25,7 +25,7 @@ qt_internal_add_manual_test(tst_gifs
         eventcapturer.cpp eventcapturer.h
         gifrecorder.cpp gifrecorder.h
         tst_gifs.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
     TESTDATA ${test_data}

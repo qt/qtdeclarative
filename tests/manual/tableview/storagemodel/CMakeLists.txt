@@ -18,7 +18,7 @@ qt_internal_add_manual_test(tableview_storage
     SOURCES
         main.cpp
         storagemodel.cpp storagemodel.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::Quick

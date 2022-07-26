@@ -16,7 +16,7 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qv4assembler
     SOURCES
         tst_qv4assembler.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate

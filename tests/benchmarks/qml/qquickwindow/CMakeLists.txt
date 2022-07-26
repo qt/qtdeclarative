@@ -12,7 +12,7 @@ qt_internal_add_benchmark(tst_qquickwindow_bench # special case
         tst_qquickwindow.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate

@@ -14,7 +14,7 @@ qt_internal_add_manual_test(qmltypememory
         testdriver.cpp testdriver.h
     INCLUDE_DIRECTORIES
         .
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Qml
 )

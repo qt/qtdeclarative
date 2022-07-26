@@ -16,7 +16,7 @@ qt_internal_add_test(tst_signalspy
     SOURCES
         mypropertymap.cpp mypropertymap.h
         tst_signalspy.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickTestUtilsPrivate
