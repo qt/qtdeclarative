@@ -24,6 +24,7 @@ T.ProgressBar {
 
         readonly property NinePatchImage progress: NinePatchImage {
             parent: control.contentItem
+            visible: control.value
             y: (parent.height - height) / 2
             width: control.indeterminate ? control.width * 0.4 : control.position * parent.width
 
