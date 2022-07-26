@@ -28,19 +28,28 @@ static QString uniqueNameFromPieces(const QStringList &pieces, QHash<QString, in
     return possibleName;
 }
 
+static bool isExplicitComponent(const QQmlJSScope::ConstPtr &type)
+{
+    if (!type->isComposite())
+        return false;
+    auto base = type->baseType();
+    return base && base->internalName() == u"QQmlComponent";
+}
+
+static bool isImplicitComponent(const QQmlJSScope::ConstPtr &type)
+{
+    if (!type->isComposite())
+        return false;
+    const auto cppBase = QQmlJSScope::nonCompositeBaseType(type);
+    const bool isComponentBased = (cppBase && cppBase->internalName() == u"QQmlComponent");
+    return type->isComponentRootElement() && !isComponentBased;
+}
+
 static bool isOrUnderComponent(QQmlJSScope::ConstPtr type)
 {
     Q_ASSERT(type->isComposite()); // we're dealing with composite types here
     for (; type; type = type->parentScope()) {
-        if (type->isWrappedInImplicitComponent())
-            return true;
-        // for a composite type, its internalName() is guaranteed to not be a
-        // QQmlComponent. we need to detect a case with `Component {}` QML type
-        // where the *immediate* base type of the current type will be the
-        // QQmlComponent. note that non-composite base is different: if our type
-        // is not a direct child of QQmlComponent, then it is a good type that
-        // we have to compile
-        if (auto base = type->baseType(); base && base->internalName() == u"QQmlComponent")
+        if (isExplicitComponent(type) || isImplicitComponent(type))
             return true;
     }
     return false;
@@ -447,6 +456,7 @@ void QmltcVisitor::postVisitResolve(
 
     // find all "pure" QML types
     m_pureQmlTypes.reserve(m_qmlTypes.size());
+    QList<QQmlJSScope::ConstPtr> explicitComponents;
     for (qsizetype i = 0; i < m_qmlTypes.size(); ++i) {
         const QQmlJSScope::ConstPtr &type = m_qmlTypes.at(i);
 
@@ -454,12 +464,24 @@ void QmltcVisitor::postVisitResolve(
             // root is special: we compile Component roots. root is also never
             // deferred, so in case `isOrUnderDeferred(type)` returns true, we
             // always continue here
-            if (type != m_exportedRootScope)
+            if (type != m_exportedRootScope) {
+                // if a type is an explicit component, its id "leaks" into the
+                // document context
+                if (isExplicitComponent(type))
+                    explicitComponents.append(type);
                 continue;
+            }
         }
 
-        m_pureTypeIndices[type] = m_pureQmlTypes.size();
+        m_creationIndices[type] = m_pureQmlTypes.size();
         m_pureQmlTypes.append(type);
+    }
+
+    // add explicit components to the object creation indices
+    {
+        qsizetype index = 0;
+        for (const QQmlJSScope::ConstPtr &c : qAsConst(explicitComponents))
+            m_creationIndices[c] = m_pureQmlTypes.size() + index++;
     }
 
     // filter out deferred types
@@ -498,14 +520,12 @@ void QmltcVisitor::postVisitResolve(
     int syntheticCreationIndex = 0;
     const auto addSyntheticIndex = [&](const QQmlJSScope::ConstPtr &type) {
         // explicit component
-        if (auto base = type->baseType(); base && base->internalName() == u"QQmlComponent"_s) {
+        if (isExplicitComponent(type)) {
             m_syntheticTypeIndices[type] = m_qmlIrObjectIndices.value(type, -1);
             return true;
         }
         // implicit component
-        const auto cppBase = QQmlJSScope::nonCompositeBaseType(type);
-        const bool isComponentBased = (cppBase && cppBase->internalName() == u"QQmlComponent"_s);
-        if (type->isComponentRootElement() && !isComponentBased) {
+        if (isImplicitComponent(type)) {
             const int index = int(qmlScopeCount) + syntheticCreationIndex++;
             m_syntheticTypeIndices[type] = index;
             return true;

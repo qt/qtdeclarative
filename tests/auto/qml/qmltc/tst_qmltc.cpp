@@ -122,6 +122,11 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/ObjectWithId.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/documentWithIds.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/importNamespace.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/ComponentType.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/componentTypes.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/gradients.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/qjsvalueAssignments.qml"),
+
         QUrl("qrc:/qt/qml/QmltcTests/deferredProperties.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_group.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/deferredProperties_attached.qml"),
@@ -588,6 +593,11 @@ void tst_qmltc::componentTypes()
         QQuickTableView *table = qobject_cast<QQuickTableView *>(children.at(3));
         QVERIFY(table);
         QCOMPARE(ctx->objectForName(u"accessibleDelegate"_s), table->delegate());
+
+        QCOMPARE(created.accessibleNormalProgress(),
+                 children.at(1)->property("progress").toDouble());
+        QCOMPARE(created.urlClone(), QUrl("qrc:/qt/qml/QmltcTests/componentTypes.qml"));
+        QCOMPARE(created.delegateUrlClone(), QUrl("qrc:/qt/qml/QmltcTests/ComponentType.qml"));
     }
 }
 

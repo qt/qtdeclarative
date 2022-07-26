@@ -573,9 +573,11 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
 
             // doing the above allows us to lookup id object by index (fast)
             queryIdFrame.outVar = u"alias_objectById_" + aliasExprBits.front(); // unique enough
-            queryIdFrame.prologue << u"auto " + queryIdFrame.outVar + u" = static_cast<"
-                            + type->internalName() + u"*>(context->idValue(" + QString::number(id)
-                            + u"));";
+            const QString cppType = (m_visitor->qmlComponentIndex(type) == -1)
+                    ? type->internalName()
+                    : u"QQmlComponent"_s;
+            queryIdFrame.prologue << u"auto " + queryIdFrame.outVar + u" = static_cast<" + cppType
+                            + u"*>(context->idValue(" + QString::number(id) + u"));";
             queryIdFrame.prologue << u"Q_ASSERT(" + queryIdFrame.outVar + u");";
 
             frames.push(queryIdFrame);
@@ -748,10 +750,13 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         // type, not on the private one -- otherwise, you can't connect to a
         // private property signal in C++ and so it is useless (hence, use
         // public type)
+        const QString cppType = (m_visitor->qmlComponentIndex(result.owner) == -1)
+                ? result.owner->internalName()
+                : u"QQmlComponent"_s;
         const QString latestAccessorNonPrivate = notifyFrames.top().outVar;
-        current.endInit.body << u"QObject::connect(" + latestAccessorNonPrivate + u", &"
-                        + result.owner->internalName() + u"::" + notifyName + u", this, &"
-                        + current.cppType + u"::" + compilationData.notify + u");";
+        current.endInit.body << u"QObject::connect(" + latestAccessorNonPrivate + u", &" + cppType
+                        + u"::" + notifyName + u", this, &" + current.cppType + u"::"
+                        + compilationData.notify + u");";
         current.endInit.body += notifyEpilogue;
         current.endInit.body << u"}"_s;
     }
@@ -818,7 +823,7 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
             const auto &listName =
                     m_uniques[UniqueStringId(current, propertyName)].qmlListVariableName;
             Q_ASSERT(!listName.isEmpty());
-            current.endInit.body << u"%1.append(%2);"_qs.arg(listName, value);
+            current.endInit.body << u"%1.append(%2);"_s.arg(listName, value);
         } else {
             assignToProperty(p, value, /* constructFromQObject = */ true);
         }
@@ -892,38 +897,47 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
 
         // special case of implicit or explicit component:
         if (qsizetype index = m_visitor->qmlComponentIndex(object); index >= 0) {
-            // TODO: or do this in current.init? - yes, because otherwise
-            // components are not going to be id-accessible, which is bad
-
             const QString objectName = newSymbol(u"sc"_s);
-            current.endInit.body << u"{"_s;
-            current.endInit.body << QStringLiteral(
-                                            "auto thisContext = QQmlData::get(%1)->outerContext;")
-                                            .arg(qobjectParent);
-            current.endInit.body << QStringLiteral(
-                                            "auto %1 = QQmlObjectCreator::createComponent(engine, "
-                                            "%2, %3, %4, thisContext);")
-                                            .arg(objectName,
-                                                 generate_callCompilationUnit(m_urlMethodName),
-                                                 QString::number(index), qobjectParent);
-            current.endInit.body << QStringLiteral("thisContext->installContext(QQmlData::get(%1), "
-                                                   "QQmlContextData::OrdinaryObject);")
-                                            .arg(objectName);
+
+            const qsizetype creationIndex = m_visitor->creationIndex(object);
+
+            QStringList *block = (creationIndex == -1) ? &current.endInit.body : &current.init.body;
+            *block << u"{"_s;
+            *block << QStringLiteral("auto thisContext = QQmlData::get(%1)->outerContext;")
+                              .arg(qobjectParent);
+            *block << QStringLiteral("auto %1 = QQmlObjectCreator::createComponent(engine, "
+                                     "%2, %3, %4, thisContext);")
+                              .arg(objectName, generate_callCompilationUnit(m_urlMethodName),
+                                   QString::number(index), qobjectParent);
+            *block << QStringLiteral("thisContext->installContext(QQmlData::get(%1), "
+                                     "QQmlContextData::OrdinaryObject);")
+                              .arg(objectName);
 
             // objects wrapped in implicit components do not have visible ids,
             // however, explicit components can have an id and that one is going
             // to be visible in the common document context
-            if (!object->isComponentRootElement()) {
+            if (creationIndex != -1) {
+                // explicit component
+                Q_ASSERT(object->isComposite());
+                Q_ASSERT(object->baseType()->internalName() == u"QQmlComponent"_s);
+
                 if (int id = m_visitor->runtimeId(object); id >= 0) {
                     QString idString = m_visitor->addressableScopes().id(object);
                     if (idString.isEmpty())
                         idString = u"<unknown>"_s;
-                    QmltcCodeGenerator::generate_setIdValue(&current.endInit.body, u"thisContext"_s,
-                                                            id, objectName, idString);
+                    QmltcCodeGenerator::generate_setIdValue(block, u"thisContext"_s, id, objectName,
+                                                            idString);
                 }
+
+                const QString creationIndexStr = QString::number(creationIndex);
+                *block << QStringLiteral("creator->set(%1, %2);").arg(creationIndexStr, objectName);
+                Q_ASSERT(block == &current.init.body);
+                current.endInit.body
+                        << QStringLiteral("auto %1 = creator->get<%2>(%3);")
+                                   .arg(objectName, u"QQmlComponent"_s, creationIndexStr);
             }
             addObjectBinding(objectName);
-            current.endInit.body << u"}"_s;
+            *block << u"}"_s;
             break;
         }
 

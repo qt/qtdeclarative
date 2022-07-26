@@ -49,10 +49,11 @@ public:
 
     qsizetype creationIndex(const QQmlJSScope::ConstPtr &type) const
     {
-        Q_ASSERT(m_pureTypeIndices.contains(type));
         Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
-        return m_pureTypeIndices[type];
+        return m_creationIndices.value(type, -1);
     }
+
+    qsizetype typeCount() const { return m_creationIndices.size(); }
 
     qsizetype qmlComponentIndex(const QQmlJSScope::ConstPtr &type) const
     {
@@ -110,7 +111,7 @@ protected:
     QSet<QString> m_cppIncludes; // all C++ includes found from QQmlJSScope hierarchy
     QList<QQmlJSScope::ConstPtr> m_pureQmlTypes; // the ones not under QQmlComponent
 
-    QHash<QQmlJSScope::ConstPtr, qsizetype> m_pureTypeIndices;
+    QHash<QQmlJSScope::ConstPtr, qsizetype> m_creationIndices;
     QHash<QQmlJSScope::ConstPtr, qsizetype> m_syntheticTypeIndices;
     QHash<QQmlJSScope::ConstPtr, qsizetype> m_qmlIrObjectIndices;
 
