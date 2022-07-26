@@ -1,5 +1,7 @@
 import QtQuick
 Item {
+    id: root
+
     ComponentType { // normal type here
         id: normal
         property string text: "indirect component"
@@ -22,4 +24,10 @@ Item {
     TableView {
         delegate: ComponentType { id: accessibleDelegate }
     }
+
+    property alias accessibleNormalProgress: accessibleNormal.progress
+    property alias accessibleNormalUrl: accessibleNormal.url
+    property url urlClone: root.accessibleNormalUrl
+
+    property alias delegateUrlClone: accessibleDelegate.url
 }

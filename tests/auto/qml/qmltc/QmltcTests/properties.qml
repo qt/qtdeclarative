@@ -37,6 +37,7 @@ QtObject {
     default property QtObject defaultObjP
     readonly property string readonlyStringP: "foobar"
     required property real requiredRealP
+    requiredRealP: 3.2
 
     // extra:
     property Timer timerP: Timer {

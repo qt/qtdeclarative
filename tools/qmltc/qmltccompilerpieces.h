@@ -618,7 +618,8 @@ inline QString QmltcCodeGenerator::generate_typeCount(Predicate p) const
 
     // add this document's type counts minus document root
     Q_ASSERT(visitor->pureQmlTypes().size() > 0);
-    components << QString::number(visitor->pureQmlTypes().size() - 1);
+    Q_ASSERT(visitor->typeCount() >= visitor->pureQmlTypes().size());
+    components << QString::number(visitor->typeCount() - 1);
 
     // traverse types with QML base classes
     for (const QQmlJSScope::ConstPtr &t : typesWithBaseTypeCount) {
