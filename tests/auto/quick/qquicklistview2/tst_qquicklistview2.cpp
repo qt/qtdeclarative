@@ -417,7 +417,9 @@ void tst_QQuickListView2::flickDuringFlicking() // QTBUG-103832
     listView->setBoundsBehavior(boundsBehavior);
 
     flickWithTouch(&window, {100, 400}, {100, 100});
-    QTRY_VERIFY(listView->contentY() > 1000); // let it flick some distance
+    // let it flick some distance
+    QTRY_VERIFY2(listView->contentY() > 1000, qPrintable(QString::fromLatin1(
+        "Expected ListView's contentY to be greater than 1000, but it's %1").arg(listView->contentY())));
     QVERIFY(listView->isFlicking()); // we want to test the case when it's moving and then we flick again
     const qreal posBeforeSecondFlick = listView->contentY();
 
