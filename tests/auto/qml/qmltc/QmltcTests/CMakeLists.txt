@@ -36,6 +36,8 @@ set(qml_sources
     nonStandardInclude.qml
     memberProperties.qml
     regexpBindings.qml
+    AliasBase.qml
+    aliasAssignments.qml
 
     qtbug103956/SubComponent.qml
     qtbug103956/MainComponent.qml

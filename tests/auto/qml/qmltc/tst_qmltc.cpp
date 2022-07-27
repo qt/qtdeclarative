@@ -26,6 +26,7 @@
 #include "nonstandardinclude.h"
 #include "memberproperties.h"
 #include "regexpbindings.h"
+#include "aliasassignments.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -128,6 +129,8 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/nonStandardInclude.qml"),
         QUrl("qrc:/QmltcTests/memberProperties.qml"),
         QUrl("qrc:/QmltcTests/regexpBindings.qml"),
+        QUrl("qrc:/QmltcTests/AliasBase.qml"),
+        QUrl("qrc:/QmltcTests/aliasAssignments.qml"),
 
         QUrl("qrc:/QmltcTests/signalHandlers.qml"),
         QUrl("qrc:/QmltcTests/javaScriptFunctions.qml"),
@@ -857,6 +860,22 @@ void tst_qmltc::regexpBindings()
     PREPEND_NAMESPACE(regexpBindings) created(&e);
     QCOMPARE(created.regularExpression().pattern(), u"ab*c");
     QVERIFY(created.regularExpression().match(u"abbbc"_s).hasMatch());
+}
+
+void tst_qmltc::aliasAssignments()
+{
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(AliasBase) created(&e);
+        QCOMPARE(created.alias1(), 2);
+    }
+
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(aliasAssignments) created(&e);
+        QCOMPARE(created.alias1(), 4);
+        QCOMPARE(created.alias2(), 4);
+    }
 }
 
 void tst_qmltc::signalHandlers()

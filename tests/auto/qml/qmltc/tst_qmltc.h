@@ -38,6 +38,7 @@ private slots:
     void nonStandardIncludesInsideModule(); // QTBUG-104094
     void memberProperties();
     void regexpBindings();
+    void aliasAssignments();
 
     void signalHandlers();
     void jsFunctions();
