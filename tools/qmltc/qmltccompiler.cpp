@@ -244,8 +244,6 @@ void QmltcCompiler::compileType(
 
     // compilation stub:
     current.externalCtor.body << u"Q_UNUSED(engine);"_s;
-    current.endInit.body << u"Q_UNUSED(engine);"_s;
-    current.endInit.body << u"Q_UNUSED(creator);"_s;
     if (documentRoot) {
         current.externalCtor.body << u"// document root:"_s;
         // if it's document root, we want to create our QQmltcObjectCreationBase
@@ -259,8 +257,6 @@ void QmltcCompiler::compileType(
         current.externalCtor.body << current.init.name
                         + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
                           u"endInit */ true);";
-
-        current.endInit.body << u"Q_UNUSED(canFinalize);"_s;
     } else {
         current.externalCtor.body << u"// not document root:"_s;
         // just call init, we don't do any setup here otherwise
