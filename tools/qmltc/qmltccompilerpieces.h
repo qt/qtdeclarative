@@ -34,8 +34,7 @@ struct QmltcCodeGenerator
                                                           const QQmlJSScope::ConstPtr &type) const;
     inline void generate_initCodeForTopLevelComponent(QmltcType &current,
                                                       const QQmlJSScope::ConstPtr &type);
-    [[nodiscard]] inline decltype(auto)
-    generate_endInitCode(QmltcType &current, const QQmlJSScope::ConstPtr &type) const;
+    inline void generate_endInitCode(QmltcType &current, const QQmlJSScope::ConstPtr &type) const;
 
     inline void generate_interfaceCallCode(QmltcMethod *function, const QQmlJSScope::ConstPtr &type,
                                            const QString &interfaceName,
@@ -69,7 +68,6 @@ struct QmltcCodeGenerator
                                                     const QString &returnType,
                                                     const QList<QmltcVariable> &parameters = {});
 
-    // TODO: 3 separate versions: bindable QML, bindable C++, non-bindable C++
     static void generate_createBindingOnProperty(QStringList *block, const QString &unitVarName,
                                                  const QString &scope, qsizetype functionIndex,
                                                  const QString &target,
@@ -141,7 +139,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
     // another document. we need to fix it by using parentContext->parent()
 
     const auto realQmlScope = [](const QQmlJSScope::ConstPtr &scope) {
-        if (scope->isArrayScope()) // TODO: it is special for some reason
+        if (scope->isArrayScope())
             return scope->parentScope();
         return scope;
     };
@@ -318,9 +316,8 @@ QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
     initialization. Additionally, the QML document root's endInit calls endInit
     methods of all the necessary QML types within the document.
 */
-inline decltype(auto)
-QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
-                                         const QQmlJSScope::ConstPtr &type) const
+inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
+                                                     const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
 
@@ -362,22 +359,18 @@ QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
         current.endInit.body << u"}"_s;
     }
 
-    // TODO: QScopeGuard here is redundant. we should call endInit of children
-    // directly
-    const auto generateFinalLines = [&current, isDocumentRoot, this]() {
-        if (!isDocumentRoot) // document root does all the work here
-            return;
+    if (!isDocumentRoot) // document root does all the work here
+        return;
 
-        const auto types = visitor->pureQmlTypes();
-        current.endInit.body << u"// finalize children"_s;
-        for (qsizetype i = 1; i < types.size(); ++i) {
-            const auto &type = types[i];
-            Q_ASSERT(!type->isComponentRootElement());
-            current.endInit.body << u"creator->get<%1>(%2)->%3(creator, engine);"_s.arg(
-                    type->internalName(), QString::number(i), current.endInit.name);
-        }
-    };
-    return QScopeGuard(generateFinalLines);
+    const auto types = visitor->pureQmlTypes();
+    current.endInit.body << u"// finalize children"_s;
+    for (qsizetype i = 1; i < types.size(); ++i) {
+        const auto &type = types[i];
+        Q_ASSERT(!type->isComponentRootElement());
+        current.endInit.body << u"creator->get<%1>(%2)->%3(creator, engine);"_s.arg(
+                type->internalName(), QString::number(i), current.endInit.name);
+    }
+    current.endInit.body << u"// finalize self"_s;
 }
 
 /*!

@@ -16,7 +16,6 @@ struct QmltcOutput
     QString cpp;
 };
 
-// TODO: this must adhere to C++ generated code templates (once introduced)
 class QmltcOutputWrapper
 {
     QmltcOutput &m_code;

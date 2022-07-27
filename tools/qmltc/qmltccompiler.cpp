@@ -269,7 +269,7 @@ void QmltcCompiler::compileType(
     }
 
     auto postponedQmlContextSetup = generator.generate_initCode(current, type);
-    auto postponedFinalizeCode = generator.generate_endInitCode(current, type);
+    generator.generate_endInitCode(current, type);
     generator.generate_beginClassCode(current, type);
     generator.generate_completeComponentCode(current, type);
     generator.generate_finalizeComponentCode(current, type);
