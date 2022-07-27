@@ -219,24 +219,21 @@ void QmltcCompiler::compileType(
     QmltcVariable ctxtdata(u"const QQmlRefPointer<QQmlContextData>&"_s, u"parentContext"_s);
     QmltcVariable finalizeFlag(u"bool"_s, u"canFinalize"_s);
     current.baselineCtor.parameterList = { parent };
+    current.endInit.parameterList = { creator, engine };
+    current.setComplexBindings.parameterList = { creator, engine };
+    current.handleOnCompleted.parameterList = { creator };
     if (documentRoot) {
         current.externalCtor.parameterList = { engine, parent };
         current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag };
         current.beginClass.parameterList = { creator, finalizeFlag };
-        current.endInit.parameterList = { creator, engine, finalizeFlag };
-        current.setComplexBindings.parameterList = { creator, engine, finalizeFlag };
         current.completeComponent.parameterList = { creator, finalizeFlag };
         current.finalizeComponent.parameterList = { creator, finalizeFlag };
-        current.handleOnCompleted.parameterList = { creator, finalizeFlag };
     } else {
         current.externalCtor.parameterList = { creator, engine, parent };
         current.init.parameterList = { creator, engine, ctxtdata };
         current.beginClass.parameterList = { creator };
-        current.endInit.parameterList = { creator, engine };
-        current.setComplexBindings.parameterList = { creator, engine };
         current.completeComponent.parameterList = { creator };
         current.finalizeComponent.parameterList = { creator };
-        current.handleOnCompleted.parameterList = { creator };
     }
 
     current.externalCtor.initializerList = { current.baselineCtor.name + u"(" + parent.name

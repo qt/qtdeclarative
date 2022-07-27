@@ -717,7 +717,7 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
 
         const auto enumKeys = e.keys();
         for (const auto &key : enumKeys)
-            validate(key, u"Enumeration '%1' key"_qs.arg(e.name()));
+            validate(key, u"Enumeration '%1' key"_s.arg(e.name()));
     }
 
     const auto properties = type->ownProperties();
