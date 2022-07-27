@@ -96,7 +96,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
 
     const QString propertyName = p.propertyName();
 
-    if (type->hasOwnProperty(p.propertyName())) {
+    if (type->hasOwnProperty(p.propertyName()) && !p.isAlias()) {
         Q_ASSERT(!p.isPrivate());
         // this object is compiled, so just assignment should work fine
         auto [prologue, wrappedValue, epilogue] =

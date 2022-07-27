@@ -806,19 +806,8 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
 
     const auto assignToProperty = [&](const QQmlJSMetaProperty &p, const QString &value,
                                       bool constructFromQObject = false) {
-        if (p.isAlias() && QQmlJSUtils::hasCompositeBase(type)) {
-            qCDebug(lcQmltcCompiler) << u"Property '" + p.propertyName()
-                            + u"' is an alias on type '" + type->internalName()
-                            + u"' which is a QML type compiled to C++. The assignment is special"
-                            + u"in this case";
-            // TODO: attest whether we could simplify this (see why prototype
-            // did special code generation)
-            QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, type, p, value,
-                                                          accessor.name, constructFromQObject);
-        } else {
-            QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, type, p, value,
-                                                          accessor.name, constructFromQObject);
-        }
+        QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, type, p, value,
+                                                      accessor.name, constructFromQObject);
     };
 
     QQmlJSMetaProperty p = type->property(propertyName);
