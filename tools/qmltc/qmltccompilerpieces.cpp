@@ -118,7 +118,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         *block += extensionEpilogue;
 
         *block += epilogue;
-    } else { // TODO: we should remove this branch eventually
+    } else {
         // this property is weird, fallback to `setProperty`
         *block << u"{ // couldn't find property setter, so using QObject::setProperty()"_s;
         QString val = value;

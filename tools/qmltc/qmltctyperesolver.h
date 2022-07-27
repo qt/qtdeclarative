@@ -23,10 +23,6 @@ public:
 
     void init(QmltcVisitor *visitor, QQmlJS::AST::Node *program);
 
-    // TODO: this shouldn't be exposed. instead, all the custom passes on
-    // QQmlJSScope types must happen inside Visitor
-    QQmlJSScope::Ptr root() const { return m_root; }
-
     QQmlJSScope::Ptr scopeForLocation(const QV4::CompiledData::Location &location) const;
 
     // returns an import pair {url, modifiable type} for a given \a type
