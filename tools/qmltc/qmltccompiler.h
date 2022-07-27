@@ -36,6 +36,17 @@ public:
 
     ~QmltcCompiler();
 
+    /*! \internal
+
+        Returns \c true if \a binding is considered complex by the compiler
+        (requires special code generation)
+    */
+    static bool isComplexBinding(const QQmlJSMetaPropertyBinding &binding)
+    {
+        // TODO: translation bindings (once supported) are also complex?
+        return binding.bindingType() == QQmlJSMetaPropertyBinding::Script;
+    }
+
 private:
     QString m_url; // QML input file url
     QmltcTypeResolver *m_typeResolver = nullptr;

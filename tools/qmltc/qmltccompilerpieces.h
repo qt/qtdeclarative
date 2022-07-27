@@ -40,6 +40,8 @@ struct QmltcCodeGenerator
                                                   const QString &baseInstructionArgs,
                                                   const QString &childInstructionArgs) const;
     inline void generate_endInitCode(QmltcType &current, const QQmlJSScope::ConstPtr &type) const;
+    inline void generate_setComplexBindingsCode(QmltcType &current,
+                                                const QQmlJSScope::ConstPtr &type) const;
 
     inline void generate_interfaceCallCode(QmltcMethod *function, const QQmlJSScope::ConstPtr &type,
                                            const QString &interfaceName,
@@ -251,6 +253,8 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
                                          .arg(current.beginClass.name);
             current.init.body << QStringLiteral("    %1(creator, engine, /* finalize */ true);")
                                          .arg(current.endInit.name);
+            current.init.body << QStringLiteral("    %1(creator, engine, /* finalize */ true);")
+                                         .arg(current.setComplexBindings.name);
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
                                          .arg(current.completeComponent.name);
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
@@ -393,6 +397,34 @@ inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
                                              QmltcCodeGenerator::urlMethodName());
         current.endInit.body << u"}"_s;
     }
+}
+
+/*!
+    \internal
+
+    Generates \a{current.setComplexBindings}'s code. The setComplexBindings
+    method creates complex bindings (such as script bindings). Additionally, the
+    QML document root's setComplexBindings calls setComplexBindings methods of
+    all the necessary QML types within the document.
+*/
+inline void
+QmltcCodeGenerator::generate_setComplexBindingsCode(QmltcType &current,
+                                                    const QQmlJSScope::ConstPtr &type) const
+{
+    using namespace Qt::StringLiterals;
+
+    // QML_setComplexBindings()'s parameters:
+    // * QQmltcObjectCreationHelper* creator
+    // * QQmlEngine* engine
+    // * bool canFinalize [optional, when document root]
+    const bool isDocumentRoot = type == visitor->result();
+    current.setComplexBindings.body << u"Q_UNUSED(creator);"_s;
+    current.setComplexBindings.body << u"Q_UNUSED(engine);"_s;
+    if (isDocumentRoot)
+        current.setComplexBindings.body << u"Q_UNUSED(canFinalize);"_s;
+
+    generate_qmltcInstructionCallCode(&current.setComplexBindings, type,
+                                      u"engine, /* finalize */ false"_s, u"creator, engine"_s);
 }
 
 /*!

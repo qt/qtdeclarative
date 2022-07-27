@@ -108,13 +108,11 @@ struct QmltcType
     QmltcCtor externalCtor {}; // calls basicCtor, calls init
     QmltcMethod init {}; // starts object initialization (context setup), calls finalize
     QmltcMethod beginClass {}; // calls QQmlParserStatus::classBegin()
-    QmltcMethod endInit {}; // ends object initialization (with binding setup)
+    QmltcMethod endInit {}; // ends object initialization (with "simple" bindings setup)
+    QmltcMethod setComplexBindings {}; // sets up "complex" (e.g. script) bindings
     QmltcMethod completeComponent {}; // calls QQmlParserStatus::componentComplete()
     QmltcMethod finalizeComponent {}; // calls QQmlFinalizerHook::componentFinalized()
     QmltcMethod handleOnCompleted {}; // calls Component.onCompleted
-
-    // TODO: add a separate special member function to set script bindings in a
-    // separate step
 
     std::optional<QmltcDtor> dtor {};
 
