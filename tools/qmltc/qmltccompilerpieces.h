@@ -251,15 +251,15 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
             current.init.body << u"if (canFinalize) {"_s;
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
                                          .arg(current.beginClass.name);
-            current.init.body << QStringLiteral("    %1(creator, engine, /* finalize */ true);")
+            current.init.body << QStringLiteral("    %1(creator, engine);")
                                          .arg(current.endInit.name);
-            current.init.body << QStringLiteral("    %1(creator, engine, /* finalize */ true);")
+            current.init.body << QStringLiteral("    %1(creator, engine);")
                                          .arg(current.setComplexBindings.name);
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
                                          .arg(current.completeComponent.name);
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
                                          .arg(current.finalizeComponent.name);
-            current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
+            current.init.body << QStringLiteral("    %1(creator);")
                                          .arg(current.handleOnCompleted.name);
             current.init.body << u"}"_s;
         }
@@ -340,8 +340,12 @@ inline void QmltcCodeGenerator::generate_qmltcInstructionCallCode(
         function->body << u"{"_s;
         function->body << u"QQmltcObjectCreationHelper subCreator(creator, %1);"_s.arg(
                 creationOffset);
-        function->body << u"%1::%2(&subCreator, %3);"_s.arg(base->internalName(), function->name,
-                                                            baseInstructionArgs);
+        if (!baseInstructionArgs.isEmpty()) {
+            function->body << u"%1::%2(&subCreator, %3);"_s.arg(
+                    base->internalName(), function->name, baseInstructionArgs);
+        } else {
+            function->body << u"%1::%2(&subCreator);"_s.arg(base->internalName(), function->name);
+        }
         function->body << u"}"_s;
     }
 
@@ -375,15 +379,10 @@ inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
     // QML_endInit()'s parameters:
     // * QQmltcObjectCreationHelper* creator
     // * QQmlEngine* engine
-    // * bool canFinalize [optional, when document root]
-    const bool isDocumentRoot = type == visitor->result();
     current.endInit.body << u"Q_UNUSED(creator);"_s;
     current.endInit.body << u"Q_UNUSED(engine);"_s;
-    if (isDocumentRoot)
-        current.endInit.body << u"Q_UNUSED(canFinalize);"_s;
 
-    generate_qmltcInstructionCallCode(&current.endInit, type, u"engine, /* finalize */ false"_s,
-                                      u"creator, engine"_s);
+    generate_qmltcInstructionCallCode(&current.endInit, type, u"engine"_s, u"creator, engine"_s);
 
     if (visitor->hasDeferredBindings(type)) {
         current.endInit.body << u"{ // defer bindings"_s;
@@ -416,15 +415,11 @@ QmltcCodeGenerator::generate_setComplexBindingsCode(QmltcType &current,
     // QML_setComplexBindings()'s parameters:
     // * QQmltcObjectCreationHelper* creator
     // * QQmlEngine* engine
-    // * bool canFinalize [optional, when document root]
-    const bool isDocumentRoot = type == visitor->result();
     current.setComplexBindings.body << u"Q_UNUSED(creator);"_s;
     current.setComplexBindings.body << u"Q_UNUSED(engine);"_s;
-    if (isDocumentRoot)
-        current.setComplexBindings.body << u"Q_UNUSED(canFinalize);"_s;
 
-    generate_qmltcInstructionCallCode(&current.setComplexBindings, type,
-                                      u"engine, /* finalize */ false"_s, u"creator, engine"_s);
+    generate_qmltcInstructionCallCode(&current.setComplexBindings, type, u"engine"_s,
+                                      u"creator, engine"_s);
 }
 
 /*!
@@ -553,14 +548,9 @@ QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
 
     // QML_handleOnCompleted()'s parameters:
     // * QQmltcObjectCreationHelper* creator
-    // * bool canFinalize [optional, when document root]
-    const bool isDocumentRoot = type == visitor->result();
     current.handleOnCompleted.body << u"Q_UNUSED(creator);"_s;
-    if (isDocumentRoot)
-        current.handleOnCompleted.body << u"Q_UNUSED(canFinalize);"_s;
 
-    generate_qmltcInstructionCallCode(&current.handleOnCompleted, type, u"/* finalize */ false"_s,
-                                      u"creator"_s);
+    generate_qmltcInstructionCallCode(&current.handleOnCompleted, type, QString(), u"creator"_s);
 }
 
 /*!
