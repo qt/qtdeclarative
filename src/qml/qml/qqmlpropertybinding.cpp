@@ -167,7 +167,8 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
 
 void QQmlPropertyBindingJS::expressionChanged()
 {
-    if (!asBinding()->propertyDataPtr)
+    auto binding = asBinding();
+    if (!binding->propertyDataPtr)
         return;
     const auto currentTag = m_error.tag();
     if (currentTag == InEvaluationLoop) {
@@ -187,8 +188,9 @@ void QQmlPropertyBindingJS::expressionChanged()
         return;
     }
     m_error.setTag(InEvaluationLoop);
-    asBinding()->evaluateRecursive();
-    asBinding()->notifyRecursive();
+    PendingBindingObserverList bindingObservers;
+    binding->evaluateRecursive(bindingObservers);
+    binding->notifyNonRecursive(bindingObservers);
     m_error.setTag(NoTag);
 }
 

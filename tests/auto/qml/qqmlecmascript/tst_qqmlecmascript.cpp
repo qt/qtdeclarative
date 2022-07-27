@@ -315,6 +315,7 @@ private slots:
     void bindingBoundFunctions();
     void qpropertyAndQtBinding();
     void qpropertyBindingReplacement();
+    void qpropertyBindingNoQPropertyCapture();
     void deleteRootObjectInCreation();
     void onDestruction();
     void onDestructionViaGC();
@@ -7741,6 +7742,28 @@ void tst_qqmlecmascript::qpropertyBindingReplacement()
     QScopedPointer<QObject> root(c.create());
     QVERIFY(root);
     QCOMPARE(root->objectName(), u"overwritten"_qs);
+}
+
+void tst_qqmlecmascript::qpropertyBindingNoQPropertyCapture()
+{
+
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("qpropertyBindingNoQPropertyCapture.qml"));
+    std::unique_ptr<QObject> root(comp.create());
+    QVERIFY2(root, qPrintable(comp.errorString()));
+    auto redRectangle = root.get();
+
+    QQmlProperty blueRectangleWidth(redRectangle, "blueRectangleWidth", &engine);
+
+    auto toggle = [&](){
+        QMetaObject::invokeMethod(root.get(), "toggle");
+    };
+
+    QCOMPARE(blueRectangleWidth.read().toInt(), 25);
+    toggle();
+    QCOMPARE(blueRectangleWidth.read().toInt(), 600);
+    toggle();
+    QCOMPARE(blueRectangleWidth.read().toInt(), 25);
 }
 
 void tst_qqmlecmascript::deleteRootObjectInCreation()
