@@ -323,6 +323,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
             QmltcCodeWriter::write(code, type.baselineCtor);
             QmltcCodeWriter::write(code, type.init);
             QmltcCodeWriter::write(code, type.endInit);
+            QmltcCodeWriter::write(code, type.setComplexBindings);
             QmltcCodeWriter::write(code, type.beginClass);
             QmltcCodeWriter::write(code, type.completeComponent);
             QmltcCodeWriter::write(code, type.finalizeComponent);

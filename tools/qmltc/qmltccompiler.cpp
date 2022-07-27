@@ -192,6 +192,7 @@ void QmltcCompiler::compileType(
     current.init.access = QQmlJSMetaMethod::Protected;
     current.beginClass.access = QQmlJSMetaMethod::Protected;
     current.endInit.access = QQmlJSMetaMethod::Protected;
+    current.setComplexBindings.access = QQmlJSMetaMethod::Protected;
     current.completeComponent.access = QQmlJSMetaMethod::Protected;
     current.finalizeComponent.access = QQmlJSMetaMethod::Protected;
     current.handleOnCompleted.access = QQmlJSMetaMethod::Protected;
@@ -204,6 +205,8 @@ void QmltcCompiler::compileType(
     current.beginClass.returnType = u"void"_s;
     current.endInit.name = u"QML_endInit"_s;
     current.endInit.returnType = u"void"_s;
+    current.setComplexBindings.name = u"QML_setComplexBindings"_s;
+    current.setComplexBindings.returnType = u"void"_s;
     current.completeComponent.name = u"QML_completeComponent"_s;
     current.completeComponent.returnType = u"void"_s;
     current.finalizeComponent.name = u"QML_finalizeComponent"_s;
@@ -221,6 +224,7 @@ void QmltcCompiler::compileType(
         current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag };
         current.beginClass.parameterList = { creator, finalizeFlag };
         current.endInit.parameterList = { creator, engine, finalizeFlag };
+        current.setComplexBindings.parameterList = { creator, engine, finalizeFlag };
         current.completeComponent.parameterList = { creator, finalizeFlag };
         current.finalizeComponent.parameterList = { creator, finalizeFlag };
         current.handleOnCompleted.parameterList = { creator, finalizeFlag };
@@ -229,6 +233,7 @@ void QmltcCompiler::compileType(
         current.init.parameterList = { creator, engine, ctxtdata };
         current.beginClass.parameterList = { creator };
         current.endInit.parameterList = { creator, engine };
+        current.setComplexBindings.parameterList = { creator, engine };
         current.completeComponent.parameterList = { creator };
         current.finalizeComponent.parameterList = { creator };
         current.handleOnCompleted.parameterList = { creator };
@@ -270,6 +275,7 @@ void QmltcCompiler::compileType(
 
     auto postponedQmlContextSetup = generator.generate_initCode(current, type);
     generator.generate_endInitCode(current, type);
+    generator.generate_setComplexBindingsCode(current, type);
     generator.generate_beginClassCode(current, type);
     generator.generate_completeComponentCode(current, type);
     generator.generate_finalizeComponentCode(current, type);
@@ -285,9 +291,8 @@ static Iterator partitionBindings(Iterator first, Iterator last)
     // later point, so we should sort or partition the range. we do a stable
     // partition since the relative order of binding evaluation affects the UI
     return std::stable_partition(first, last, [](const QQmlJSMetaPropertyBinding &b) {
-        // we want script bindings to be at the end, so do the negation of "is
-        // script binding"
-        return b.bindingType() != QQmlJSMetaPropertyBinding::Script;
+        // we want complex bindings to be at the end, so do the negation
+        return !QmltcCompiler::isComplexBinding(b);
     });
 }
 
@@ -1255,10 +1260,10 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         slotMethod.type = QQmlJSMetaMethod::Slot;
 
         current.functions << std::move(slotMethod);
-        current.endInit.body << u"QObject::connect(" + This_signal + u", "
-                        + QmltcCodeGenerator::wrap_qOverload(slotParameters,
-                                                             u"&" + objectClassName_signal + u"::"
-                                                                     + signalName)
+        current.setComplexBindings.body
+                << u"QObject::connect(" + This_signal + u", "
+                        + QmltcCodeGenerator::wrap_qOverload(
+                                slotParameters, u"&" + objectClassName_signal + u"::" + signalName)
                         + u", " + This_slot + u", &" + objectClassName_slot + u"::" + slotName
                         + u");";
     };
@@ -1297,7 +1302,7 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         }
 
         QmltcCodeGenerator::generate_createBindingOnProperty(
-                &current.endInit.body, generate_callCompilationUnit(m_urlMethodName),
+                &current.setComplexBindings.body, generate_callCompilationUnit(m_urlMethodName),
                 u"this"_s, // NB: always using enclosing object as a scope for the binding
                 static_cast<qsizetype>(objectType->ownRuntimeFunctionIndex(binding.scriptIndex())),
                 bindingTarget, // binding target
@@ -1344,7 +1349,7 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
 
         // TODO: this could be dropped if QQmlEngine::setContextForObject() is
         // done before currently generated C++ object is constructed
-        current.endInit.body << bindingSymbolName + u".reset(new QPropertyChangeHandler<"
+        current.setComplexBindings.body << bindingSymbolName + u".reset(new QPropertyChangeHandler<"
                         + bindingFunctorName + u">("
                         + QmltcCodeGenerator::wrap_privateClass(accessor.name, *actualProperty)
                         + u"->" + bindableString + u"().onValueChanged(" + bindingFunctorName + u"("
