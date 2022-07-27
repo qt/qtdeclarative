@@ -34,6 +34,11 @@ struct QmltcCodeGenerator
                                                           const QQmlJSScope::ConstPtr &type) const;
     inline void generate_initCodeForTopLevelComponent(QmltcType &current,
                                                       const QQmlJSScope::ConstPtr &type);
+
+    inline void generate_qmltcInstructionCallCode(QmltcMethod *function,
+                                                  const QQmlJSScope::ConstPtr &type,
+                                                  const QString &baseInstructionArgs,
+                                                  const QString &childInstructionArgs) const;
     inline void generate_endInitCode(QmltcType &current, const QQmlJSScope::ConstPtr &type) const;
 
     inline void generate_interfaceCallCode(QmltcMethod *function, const QQmlJSScope::ConstPtr &type,
@@ -310,6 +315,49 @@ QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
 /*!
     \internal
 
+    A generic helper function that generates special qmltc instruction code
+    boilerplate, adding it to a passed \a function. This is a building block
+    used to generate e.g. QML_endInit code.
+*/
+inline void QmltcCodeGenerator::generate_qmltcInstructionCallCode(
+        QmltcMethod *function, const QQmlJSScope::ConstPtr &type,
+        const QString &baseInstructionArgs, const QString &childInstructionArgs) const
+{
+    using namespace Qt::StringLiterals;
+
+    const bool isDocumentRoot = type == visitor->result();
+    if (auto base = type->baseType(); base->isComposite()) {
+        function->body << u"// call base's method"_s;
+        Q_ASSERT(!isDocumentRoot || visitor->qmlTypesWithQmlBases()[0] == visitor->result());
+        const auto isCurrentType = [&](const QQmlJSScope::ConstPtr &qmlType) {
+            return qmlType == type;
+        };
+        const QString creationOffset = generate_typeCount(isCurrentType);
+        function->body << u"{"_s;
+        function->body << u"QQmltcObjectCreationHelper subCreator(creator, %1);"_s.arg(
+                creationOffset);
+        function->body << u"%1::%2(&subCreator, %3);"_s.arg(base->internalName(), function->name,
+                                                            baseInstructionArgs);
+        function->body << u"}"_s;
+    }
+
+    if (!isDocumentRoot) // document root does all the work here
+        return;
+
+    const auto types = visitor->pureQmlTypes();
+    function->body << u"// call children's methods"_s;
+    for (qsizetype i = 1; i < types.size(); ++i) {
+        const auto &type = types[i];
+        Q_ASSERT(!type->isComponentRootElement());
+        function->body << u"creator->get<%1>(%2)->%3(%4);"_s.arg(
+                type->internalName(), QString::number(i), function->name, childInstructionArgs);
+    }
+    function->body << u"// call own method code"_s;
+}
+
+/*!
+    \internal
+
     Generates \a{current.endInit}'s code. The endInit method creates bindings,
     connects signals with slots and generally performs other within-object
     initialization. Additionally, the QML document root's endInit calls endInit
@@ -330,20 +378,8 @@ inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
     if (isDocumentRoot)
         current.endInit.body << u"Q_UNUSED(canFinalize);"_s;
 
-    if (auto base = type->baseType(); base->isComposite()) {
-        current.endInit.body << u"// call base's finalize method"_s;
-        Q_ASSERT(!isDocumentRoot || visitor->qmlTypesWithQmlBases()[0] == visitor->result());
-        const auto isCurrentType = [&](const QQmlJSScope::ConstPtr &qmlType) {
-            return qmlType == type;
-        };
-        const QString creationOffset = generate_typeCount(isCurrentType);
-        current.endInit.body << u"{"_s;
-        current.endInit.body << u"QQmltcObjectCreationHelper subCreator(creator, %1);"_s.arg(
-                creationOffset);
-        current.endInit.body << u"%1::%2(&subCreator, engine, /* finalize */ false);"_s.arg(
-                base->internalName(), current.endInit.name);
-        current.endInit.body << u"}"_s;
-    }
+    generate_qmltcInstructionCallCode(&current.endInit, type, u"engine, /* finalize */ false"_s,
+                                      u"creator, engine"_s);
 
     if (visitor->hasDeferredBindings(type)) {
         current.endInit.body << u"{ // defer bindings"_s;
@@ -357,19 +393,6 @@ inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
                                              QmltcCodeGenerator::urlMethodName());
         current.endInit.body << u"}"_s;
     }
-
-    if (!isDocumentRoot) // document root does all the work here
-        return;
-
-    const auto types = visitor->pureQmlTypes();
-    current.endInit.body << u"// finalize children"_s;
-    for (qsizetype i = 1; i < types.size(); ++i) {
-        const auto &type = types[i];
-        Q_ASSERT(!type->isComponentRootElement());
-        current.endInit.body << u"creator->get<%1>(%2)->%3(creator, engine);"_s.arg(
-                type->internalName(), QString::number(i), current.endInit.name);
-    }
-    current.endInit.body << u"// finalize self"_s;
 }
 
 /*!
@@ -504,32 +527,8 @@ QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
     if (isDocumentRoot)
         current.handleOnCompleted.body << u"Q_UNUSED(canFinalize);"_s;
 
-    if (auto base = type->baseType(); base->isComposite()) {
-        current.handleOnCompleted.body << u"// call base's method"_s;
-        Q_ASSERT(!isDocumentRoot || visitor->qmlTypesWithQmlBases()[0] == visitor->result());
-        const auto isCurrentType = [&](const QQmlJSScope::ConstPtr &qmlType) {
-            return qmlType == type;
-        };
-        const QString creationOffset = generate_typeCount(isCurrentType);
-        current.handleOnCompleted.body << u"{"_s;
-        current.handleOnCompleted.body
-                << u"QQmltcObjectCreationHelper subCreator(creator, %1);"_s.arg(creationOffset);
-        current.handleOnCompleted.body << u"%1::%2(&subCreator, /* finalize */ false);"_s.arg(
-                base->internalName(), current.handleOnCompleted.name);
-        current.handleOnCompleted.body << u"}"_s;
-    }
-
-    if (!isDocumentRoot) // document root does all the work here
-        return;
-
-    const auto types = visitor->pureQmlTypes();
-    current.handleOnCompleted.body << u"// call children's methods"_s;
-    for (qsizetype i = 1; i < types.size(); ++i) {
-        const auto &type = types[i];
-        Q_ASSERT(!type->isComponentRootElement());
-        current.handleOnCompleted.body << u"creator->get<%1>(%2)->%3(creator);"_s.arg(
-                type->internalName(), QString::number(i), current.handleOnCompleted.name);
-    }
+    generate_qmltcInstructionCallCode(&current.handleOnCompleted, type, u"/* finalize */ false"_s,
+                                      u"creator"_s);
 }
 
 /*!
