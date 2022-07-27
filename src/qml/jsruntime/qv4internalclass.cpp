@@ -42,34 +42,6 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
     ++d->size;
 }
 
-int PropertyHash::removeIdentifier(PropertyKey identifier, int classSize)
-{
-    int val = -1;
-    PropertyHashData *dd = new PropertyHashData(d->numBits);
-    for (int i = 0; i < d->alloc; ++i) {
-        const Entry &e = d->entries[i];
-        if (!e.identifier.isValid() || e.index >= static_cast<unsigned>(classSize))
-            continue;
-        if (e.identifier == identifier) {
-            val = e.index;
-            continue;
-        }
-        uint idx = e.identifier.id() % dd->alloc;
-        while (dd->entries[idx].identifier.isValid()) {
-            ++idx;
-            idx %= dd->alloc;
-        }
-        dd->entries[idx] = e;
-    }
-    dd->size = classSize;
-    if (!--d->refCount)
-        delete d;
-    d = dd;
-
-    Q_ASSERT(val != -1);
-    return val;
-}
-
 void PropertyHash::detach(bool grow, int classSize)
 {
     if (d->refCount == 1 && !grow)

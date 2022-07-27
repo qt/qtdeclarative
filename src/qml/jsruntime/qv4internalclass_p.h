@@ -53,7 +53,6 @@ struct PropertyHash
 
     void addEntry(const Entry &entry, int classSize);
     Entry *lookup(PropertyKey identifier) const;
-    int removeIdentifier(PropertyKey identifier, int classSize);
     void detach(bool grow, int classSize);
 };
 
