@@ -692,6 +692,35 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
             m_logger->log(u"Attached type of \"%1\" not fully resolved"_s.arg(name),
                           qmlUnresolvedType, scope->sourceLocation());
         }
+
+        for (const auto &method : scope->ownMethods()) {
+            if (method.returnTypeName().isEmpty())
+                continue;
+            if (method.returnType().isNull()) {
+                missingTypes[method.returnTypeName()] << u"return type of "_s
+                                + scope->internalName() + u'.' + method.methodName() + u"()"_s;
+            } else if (!method.returnType()->isFullyResolved()) {
+                partiallyResolvedTypes[method.returnTypeName()] << u"return type of "_s
+                                + scope->internalName() + u'.' + method.methodName() + u"()"_s;
+            }
+
+            const auto paramTypeNames = method.parameterTypeNames();
+            const auto paramTypes = method.parameterTypes();
+            for (qsizetype i = 0; i < paramTypeNames.size(); i++) {
+                if (paramTypeNames[i].isEmpty())
+                    continue;
+                if (paramTypes[i].isNull()) {
+                    missingTypes[paramTypeNames[i]] << u"parameter %1 of "_s.arg(i + 1)
+                                    + scope->internalName() + u'.' + method.methodName() + u"()"_s;
+                    continue;
+                }
+                if (!paramTypes[i]->isFullyResolved()) {
+                    partiallyResolvedTypes[paramTypeNames[i]] << u"parameter %1 of "_s.arg(i + 1)
+                                    + scope->internalName() + u'.' + method.methodName() + u"()"_s;
+                    continue;
+                }
+            }
+        }
     }
 
     for (const auto kv : missingTypes.asKeyValueRange()) {
