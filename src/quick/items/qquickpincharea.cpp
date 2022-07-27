@@ -354,6 +354,7 @@ void QQuickPinchArea::clearPinch(QTouchEvent *event)
         }
     }
     setKeepTouchGrab(false);
+    setKeepMouseGrab(false);
 }
 
 void QQuickPinchArea::cancelPinch(QTouchEvent *event)
@@ -395,6 +396,7 @@ void QQuickPinchArea::cancelPinch(QTouchEvent *event)
             event->setExclusiveGrabber(point, nullptr);
     }
     setKeepTouchGrab(false);
+    setKeepMouseGrab(false);
 }
 
 void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
@@ -427,6 +429,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
             pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
             pe.setPoint1(mapFromScene(d->lastPoint1));
             pe.setPoint2(mapFromScene(d->lastPoint2));
+            setKeepMouseGrab(false);
             emit pinchFinished(&pe);
             d->pinchStartDist = 0;
             d->pinchActivated = false;
@@ -525,6 +528,9 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
                         event->setExclusiveGrabber(touchPoint1, this);
                         event->setExclusiveGrabber(touchPoint2, this);
                         setKeepTouchGrab(true);
+                        // So that PinchArea works in PathView, grab mouse events too.
+                        // We should be able to remove these setKeepMouseGrab calls when QTBUG-105567 is fixed.
+                        setKeepMouseGrab(true);
                         d->inPinch = true;
                         if (d->pinch && d->pinch->target()) {
                             auto targetParent = pinch()->target()->parentItem();
