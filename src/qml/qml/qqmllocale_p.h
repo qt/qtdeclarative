@@ -60,27 +60,8 @@ namespace QQmlLocale
     Q_NAMESPACE_EXPORT(Q_QML_PRIVATE_EXPORT)
     QML_NAMED_ELEMENT(Locale)
     QML_ADDED_IN_VERSION(2, 2)
+    QML_NAMESPACE_EXTENDED(QLocale)
 
-    enum MeasurementSystem {
-        MetricSystem = QLocale::MetricSystem,
-        ImperialSystem = QLocale::ImperialSystem,
-        ImperialUSSystem = QLocale::ImperialUSSystem,
-        ImperialUKSystem = QLocale::ImperialUKSystem
-    };
-    Q_ENUM_NS(MeasurementSystem)
-
-    enum FormatType {
-        LongFormat = QLocale::LongFormat,
-        ShortFormat = QLocale::ShortFormat,
-        NarrowFormat = QLocale::NarrowFormat
-    };
-    Q_ENUM_NS(FormatType)
-    enum CurrencySymbolFormat {
-        CurrencyIsoCode = QLocale::CurrencyIsoCode,
-        CurrencySymbol = QLocale::CurrencySymbol,
-        CurrencyDisplayName = QLocale::CurrencyDisplayName
-    };
-    Q_ENUM_NS(CurrencySymbolFormat)
     // Qt defines Sunday as 7, but JS Date assigns Sunday 0
     enum DayOfWeek {
         Sunday = 0,
@@ -92,25 +73,6 @@ namespace QQmlLocale
         Saturday = Qt::Saturday
     };
     Q_ENUM_NS(DayOfWeek)
-    enum NumberOptions {
-        DefaultNumberOptions = QLocale::DefaultNumberOptions,
-        OmitGroupSeparator = QLocale::OmitGroupSeparator,
-        RejectGroupSeparator = QLocale::RejectGroupSeparator,
-        OmitLeadingZeroInExponent = QLocale::OmitLeadingZeroInExponent,
-        RejectLeadingZeroInExponent = QLocale::RejectLeadingZeroInExponent,
-        IncludeTrailingZeroesAfterDot = QLocale::IncludeTrailingZeroesAfterDot,
-        RejectTrailingZeroesAfterDot = QLocale::RejectTrailingZeroesAfterDot
-    };
-    Q_ENUM_NS(NumberOptions)
-
-    enum DataSizeFormat {
-        DataSizeBase1000 = QLocale::DataSizeBase1000,
-        DataSizeSIQuantifiers = QLocale::DataSizeSIQuantifiers,
-        DataSizeIecFormat = QLocale::DataSizeIecFormat,
-        DataSizeTraditionalFormat = QLocale::DataSizeTraditionalFormat,
-        DataSizeSIFormat = QLocale::DataSizeSIFormat
-    };
-    Q_ENUM_NS(DataSizeFormat)
 
     Q_QML_PRIVATE_EXPORT QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
     Q_QML_PRIVATE_EXPORT QV4::ReturnedValue wrap(QV4::ExecutionEngine *engine, const QLocale &locale);
