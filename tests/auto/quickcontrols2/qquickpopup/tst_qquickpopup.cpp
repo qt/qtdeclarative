@@ -1147,7 +1147,7 @@ void tst_QQuickPopup::grabber()
     QCOMPARE(combo->isVisible(), false);
 
     // click a menu item to open the popup
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(menu->width() / 2, menu->height() / 2));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(menu->x() + menu->width() / 2, menu->y() + menu->height() / 2));
     QTRY_COMPARE(menu->isVisible(), false);
     QTRY_COMPARE(popup->isOpened(), true);
     QCOMPARE(combo->isVisible(), false);
@@ -1275,6 +1275,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 
     QQuickPopup *settingsDialog = window->contentItem()->findChild<QQuickPopup*>("settingsDialog");
     QVERIFY(settingsDialog);
+    QTRY_VERIFY(!optionsMenu->isVisible());
     QTRY_VERIFY(settingsDialog->isVisible());
 
     QQuickComboBox *comboBox = window->contentItem()->findChild<QQuickComboBox*>("comboBox");
