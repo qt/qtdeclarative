@@ -368,7 +368,7 @@ QUrl QQuickLoader::source() const
     return d->source;
 }
 
-void QQuickLoader::setSource(const QUrl &url)
+void QQuickLoader::setSourceWithoutResolve(const QUrl &url)
 {
     setSource(url, true); // clear previous values
 }
@@ -476,6 +476,22 @@ void QQuickLoader::loadFromSourceComponent()
         d->load();
 }
 
+
+QUrl QQuickLoader::setSourceUrlHelper(const QUrl &unresolvedUrl)
+{
+    Q_D(QQuickLoader);
+
+    // 1. If setSource is called with a valid url, clear the old component and its corresponding url
+    // 2. If setSource is called with an invalid url(e.g. empty url), clear the old component but
+    // hold the url for old one.(we will compare it with new url later and may update status of loader to Loader.Null)
+    QUrl oldUrl = d->source;
+    d->clear();
+    QUrl sourceUrl = qmlEngine(this)->handle()->callingQmlContext()->resolvedUrl(unresolvedUrl);
+    if (!sourceUrl.isValid())
+        d->source = oldUrl;
+    return sourceUrl;
+}
+
 /*!
     \qmlmethod object QtQuick::Loader::setSource(url source, object properties)
 
@@ -540,32 +556,34 @@ void QQuickLoader::loadFromSourceComponent()
 
     \sa source, active
 */
-void QQuickLoader::setSource(QQmlV4Function *args)
+void QQuickLoader::setSource(const QUrl &source, QJSValue properties)
 {
-    Q_ASSERT(args);
     Q_D(QQuickLoader);
 
-    bool ipvError = false;
-    args->setReturnValue(QV4::Encode::undefined());
-    QV4::Scope scope(args->v4engine());
-    QV4::ScopedValue ipv(scope, d->extractInitialPropertyValues(args, this, &ipvError));
-    if (ipvError)
+    if (!(properties.isArray() || properties.isObject())) {
+        qmlWarning(this) << QQuickLoader::tr("setSource: value is not an object");
         return;
+    }
 
-    // 1. If setSource is called with a valid url, clear the old component and its corresponding url
-    // 2. If setSource is called with an invalid url(e.g. empty url), clear the old component but
-    // hold the url for old one.(we will compare it with new url later and may update status of loader to Loader.Null)
-    QUrl oldUrl = d->source;
-    d->clear();
-    QUrl sourceUrl = d->resolveSourceUrl(args);
-    if (!sourceUrl.isValid())
-        d->source = oldUrl;
+    QUrl sourceUrl = setSourceUrlHelper(source);
 
     d->disposeInitialPropertyValues();
-    if (!ipv->isUndefined()) {
-        d->initialPropertyValues.set(args->v4engine(), ipv);
-    }
-    d->qmlCallingContext.set(scope.engine, scope.engine->qmlContext());
+    auto engine = qmlEngine(this)->handle();
+    d->initialPropertyValues.set(engine, QJSValuePrivate::takeManagedValue(&properties)->asReturnedValue());
+    d->qmlCallingContext.set(engine, engine->qmlContext());
+
+    setSource(sourceUrl, false); // already cleared and set ipv above.
+}
+
+void QQuickLoader::setSource(const QUrl &source)
+{
+    Q_D(QQuickLoader);
+
+    QUrl sourceUrl = setSourceUrlHelper(source);
+
+    d->disposeInitialPropertyValues();
+    auto engine = qmlEngine(this)->handle();
+    d->qmlCallingContext.set(engine, engine->qmlContext());
 
     setSource(sourceUrl, false); // already cleared and set ipv above.
 }
@@ -924,34 +942,6 @@ void QQuickLoader::geometryChange(const QRectF &newGeometry, const QRectF &oldGe
         d->_q_updateSize();
     }
     QQuickItem::geometryChange(newGeometry, oldGeometry);
-}
-
-QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
-{
-    QV4::Scope scope(args->v4engine());
-    QV4::ScopedValue v(scope, (*args)[0]);
-    if (v->isUndefined())
-        return QUrl();
-    QString arg = v->toQString();
-    return arg.isEmpty() ? QUrl() : scope.engine->callingQmlContext()->resolvedUrl(QUrl(arg));
-}
-
-QV4::ReturnedValue QQuickLoaderPrivate::extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error)
-{
-    QV4::Scope scope(args->v4engine());
-    QV4::ScopedValue valuemap(scope, QV4::Encode::undefined());
-    if (args->length() >= 2) {
-        QV4::ScopedValue v(scope, (*args)[1]);
-        if (!v->isObject() || v->as<QV4::ArrayObject>()) {
-            *error = true;
-            qmlWarning(loader) << QQuickLoader::tr("setSource: value is not an object");
-        } else {
-            *error = false;
-            valuemap = v;
-        }
-    }
-
-    return valuemap->asReturnedValue();
 }
 
 QQuickLoader::Status QQuickLoaderPrivate::computeStatus() const

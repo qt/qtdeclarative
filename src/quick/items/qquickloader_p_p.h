@@ -60,8 +60,6 @@ public:
     void incubatorStateChanged(QQmlIncubator::Status status);
     void setInitialState(QObject *o);
     void disposeInitialPropertyValues();
-    static QUrl resolveSourceUrl(QQmlV4Function *args);
-    QV4::ReturnedValue extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
     QQuickLoader::Status computeStatus() const;
     void updateStatus();
     void createComponent();

@@ -302,7 +302,7 @@ void tst_QQuickLoader::componentToUrl()
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
 
-    loader->setSource(testFileUrl("/Rect120x60.qml"));
+    loader->setSourceWithoutResolve(testFileUrl("/Rect120x60.qml"));
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
@@ -1419,7 +1419,7 @@ void tst_QQuickLoader::sourceURLKeepComponent()
                       dataDirectoryUrl());
 
     QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
-    loader->setSource(testFileUrl("/Rect120x60.qml"));
+    loader->setSourceWithoutResolve(testFileUrl("/Rect120x60.qml"));
 
     QVERIFY(loader);
     QVERIFY(loader->item());
@@ -1445,7 +1445,7 @@ void tst_QQuickLoader::sourceURLKeepComponent()
     QCOMPARE(sourceComponent.data(), loader->sourceComponent());
 
     //Ensure changing source url causes component to be recreated when inactive
-    loader->setSource(testFileUrl("/BlueRect.qml"));
+    loader->setSourceWithoutResolve(testFileUrl("/BlueRect.qml"));
 
     loader->setActive(true);
     QVERIFY(loader->item());
@@ -1455,7 +1455,7 @@ void tst_QQuickLoader::sourceURLKeepComponent()
     QVERIFY(sourceComponent.data() != newSourceComponent.data());
 
     //Ensure changing source url causes component to be recreated when active
-    loader->setSource(testFileUrl("/Rect120x60.qml"));
+    loader->setSourceWithoutResolve(testFileUrl("/Rect120x60.qml"));
     QVERIFY(loader->sourceComponent() != newSourceComponent.data());
 
 }
