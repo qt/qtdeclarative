@@ -981,7 +981,7 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
                            QQuickProfiler::SceneGraphPolishAndSyncAnimations);
 }
 
+QT_END_NAMESPACE
+
 #include "qsgsoftwarethreadedrenderloop.moc"
 #include "moc_qsgsoftwarethreadedrenderloop_p.cpp"
-
-QT_END_NAMESPACE

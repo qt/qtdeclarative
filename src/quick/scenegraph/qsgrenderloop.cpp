@@ -781,7 +781,7 @@ void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)
 
 #endif // ENABLE_DEFAULT_BACKEND
 
+QT_END_NAMESPACE
+
 #include "qsgrenderloop.moc"
 #include "moc_qsgrenderloop_p.cpp"
-
-QT_END_NAMESPACE

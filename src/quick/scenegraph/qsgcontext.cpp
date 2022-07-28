@@ -437,7 +437,7 @@ QSGTexture *QSGRenderContext::compressedTextureForFactory(const QSGCompressedTex
     return nullptr;
 }
 
+QT_END_NAMESPACE
+
 #include "qsgcontext.moc"
 #include "moc_qsgcontext_p.cpp"
-
-QT_END_NAMESPACE

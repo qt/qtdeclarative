@@ -513,7 +513,7 @@ void QQuickFramebufferObject::Renderer::update()
         ((QSGFramebufferObjectNode *) data)->scheduleRender();
 }
 
+QT_END_NAMESPACE
+
 #include "qquickframebufferobject.moc"
 #include "moc_qquickframebufferobject.cpp"
-
-QT_END_NAMESPACE

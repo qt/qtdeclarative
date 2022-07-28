@@ -885,7 +885,7 @@ int QQuickFolderListModel::indexOf(const QUrl &file) const
     return d->data.indexOf(toFind);
 }
 
-#include "moc_qquickfolderlistmodel_p.cpp"
-
 //![code]
 QT_END_NAMESPACE
+
+#include "moc_qquickfolderlistmodel_p.cpp"
