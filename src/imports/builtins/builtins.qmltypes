@@ -192,6 +192,11 @@ Module {
     }
 
     Component {
+        name: "QChar"
+        accessSemantics: "value"
+    }
+
+    Component {
         name: "QString"
         extension: "String"
         exports: ["QML/string 1.0"]
