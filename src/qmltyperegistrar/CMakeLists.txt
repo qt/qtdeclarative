@@ -17,7 +17,7 @@ qt_internal_add_module(QmlTypeRegistrarPrivate
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS

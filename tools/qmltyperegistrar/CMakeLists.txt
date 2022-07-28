@@ -15,7 +15,7 @@ qt_internal_add_tool(${target_name}
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::QmlTypeRegistrarPrivate
 )
