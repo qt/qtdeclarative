@@ -222,6 +222,16 @@ Module {
     }
 
     Component {
+        name: "QDate"
+        accessSemantics: "value"
+    }
+
+    Component {
+        name: "QTime"
+        accessSemantics: "value"
+    }
+
+    Component {
         name: "QUrl"
         extension: "Url"
         exports: ["QML/url 1.0"]
