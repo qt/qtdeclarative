@@ -129,10 +129,6 @@ private:
     int m_timer;
 };
 
-#include "qquickwindow.moc"
-#include "moc_qquickwindow_p.cpp"
-
-
 #if QT_CONFIG(accessibility)
 /*!
     Returns an accessibility interface for this window, or 0 if such an
@@ -4214,6 +4210,8 @@ QDebug operator<<(QDebug debug, const QQuickWindow *win)
 }
 #endif
 
-#include "moc_qquickwindow.cpp"
-
 QT_END_NAMESPACE
+
+#include "qquickwindow.moc"
+#include "moc_qquickwindow_p.cpp"
+#include "moc_qquickwindow.cpp"

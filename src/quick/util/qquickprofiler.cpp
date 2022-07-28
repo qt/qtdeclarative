@@ -42,9 +42,6 @@ public:
     }
 };
 
-#include "qquickprofiler.moc"
-#include "moc_qquickprofiler_p.cpp"
-
 QQuickProfiler::QQuickProfiler(QObject *parent) : QObject(parent)
 {
     // This is safe because at this point the m_instance isn't initialized, yet.
@@ -94,3 +91,6 @@ void QQuickProfiler::setTimer(const QElapsedTimer &t)
 }
 
 QT_END_NAMESPACE
+
+#include "qquickprofiler.moc"
+#include "moc_qquickprofiler_p.cpp"

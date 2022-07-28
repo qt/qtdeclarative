@@ -1714,7 +1714,7 @@ void QSGThreadedRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
         delete job;
 }
 
+QT_END_NAMESPACE
+
 #include "qsgthreadedrenderloop.moc"
 #include "moc_qsgthreadedrenderloop_p.cpp"
-
-QT_END_NAMESPACE

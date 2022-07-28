@@ -1016,6 +1016,6 @@ void QQuickLoaderPrivate::createComponent()
     qmlWarning(q) << "createComponent: Cannot find a QML engine.";
 }
 
-#include <moc_qquickloader_p.cpp>
-
 QT_END_NAMESPACE
+
+#include <moc_qquickloader_p.cpp>
