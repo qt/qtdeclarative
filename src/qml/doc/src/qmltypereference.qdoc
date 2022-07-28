@@ -66,6 +66,8 @@ provided:
 
 The \c date type refers to a date value, including the time of the day.
 
+Properties of type \c date default to an invalid value.
+
 To create a \c date value, specify it as a "YYYY-MM-DDThh:mm:ss.zzzZ" string.
 (The T is literal, YYYY is a full year number, MM and DD are month and day
 numbers, hh, mm and ss are hours, minutes and seconds, with .zzz as
@@ -73,7 +75,7 @@ milliseconds and Z as time-zone offset. The T and following time are optional.
 If they are omitted, the date is handled as the start of UTC's day, which
 falls on other dates in some time-zones. When T is included, the :ss.zzz or
 just .zzz part can be omitted. With or without those, the zone offset can be
-omitted, in which case local time is used.)  For example:
+omitted, in which case local time is used.) For example:
 
 \qml
 MyDatePicker { minDate: "2000-01-01 0:0"; maxDate: "2020-12-31 23:59" }
@@ -123,6 +125,8 @@ When integrating with C++, note that any QPoint or QPointF value
 converted into a \c point value. When a \c point value is passed to C++, it
 is automatically converted into a QPointF value.
 
+Properties of type \c point are \c {Qt.point(0, 0)} by default.
+
 \sa{QML Value Types}
 */
 
@@ -133,6 +137,8 @@ is automatically converted into a QPointF value.
 \brief a value with width and height attributes
 
 The \c size type refers to a value with has \c width and \c height attributes.
+
+Properties of type \c size have \c {Qt.size(-1, -1)} as default value.
 
 For example, to read the \c width and \c height values of the
 \l {Image::sourceSize} size-type property:
@@ -171,6 +177,9 @@ is automatically converted into a QSizeF value.
 \brief a value with x, y, width and height attributes.
 
 The \c rect type refers to a value with \c x, \c y, \c width and \c height attributes.
+
+Properties of type \c rect are \c {Qt.rect(0, 0, 0, 0)} by default. This is an
+empty rectangle at the coordinate origin.
 
 For example, to read the \c width and \c height values of the \l Item
 \l {Item::childrenRect.x}{childrenRect} rect-type property:

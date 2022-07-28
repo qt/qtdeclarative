@@ -123,6 +123,9 @@ available when you import \c QtQuick.
 
     The \c font type refers to a font value with the properties of QFont.
 
+    Properties of type \c font default to the application's default
+    \l {Application::font} {font}.
+
     The most commonly used properties are:
 
     \list
@@ -238,8 +241,12 @@ available when you import \c QtQuick.
     \brief A vector2d type has x and y attributes.
 
     A \c vector2d type has \c x and \c y attributes, otherwise
-    it is similar to the \c vector3d type.  Please see the
-    documentation about the \c vector3d type for more information.
+    it is similar to the \c vector3d type.
+
+    Properties of type \c vector2d have a zero vector as their default value.
+    This has both \c x and \c y set to \c 0.
+
+    See the documentation about the \c vector3d type for more information.
 
     To create a \c vector2d value, specify it as a "x,y" string,
     or define the components individually, or compose it with
@@ -365,6 +372,9 @@ console.log(c + " " + d); // false true
     \brief a value with x, y, and z attributes.
 
     The \c vector3d type refers to a value with \c x, \c y, and \c z attributes.
+
+    Properties of type \c vector3d have a zero vector by default. This has
+    \c x, \c y and \c z set to \c 0.
 
     To create a \c vector3d value, specify it as a "x,y,z" string:
 
@@ -537,8 +547,12 @@ console.log(c + " " + d); // false true
     \brief A vector4d type has x, y, z and w attributes.
 
     A \c vector4d type has \c x, \c y, \c z and \c w attributes,
-    otherwise it is similar to the \c vector3d type.  Please see the
-    documentation about the \c vector3d type for more information.
+    otherwise it is similar to the \c vector3d type.
+
+    Properties of type \c vector4d have a zero vector by default. This has
+    \c x, \c y ,\c z and \c w set to \c 0.
+
+    See the documentation about the \c vector3d type for more information.
 
     To create a \c vector4d value, specify it as a "x,y,z,w" string,
     or define the components individually, or compose it with
@@ -826,6 +840,9 @@ console.log(c + " " + d); // false true
             \endcode
     \endtable
 
+    Properties of type \c quaternion have \c {Qt.quaternion(1, 0, 0, 0)} as their
+    default value.
+
     This value type is provided by the QtQuick import.
 
     \sa {QML Value Types}
@@ -838,10 +855,13 @@ console.log(c + " " + d); // false true
     \brief A matrix4x4 type is a 4-row and 4-column matrix
 
     A \c matrix4x4 type has sixteen values, each accessible via the properties
-    \c m11 through \c m44 in QML (in row/column order).  Values of this type
-    can be composed with the Qt.matrix4x4() function.  Each attribute in a
-    matrix4x4 is stored as a real (single-precision on ARM, double-precision
-    on x86).
+    \c m11 through \c m44 in QML (in row/column order). Values of this type can
+    be composed with the Qt.matrix4x4() function. Each attribute in a matrix4x4
+    is stored as a real (single-precision on ARM, double-precision on x86).
+
+    A property of type \c matrix4x4 defaults to the identity matrix, whose
+    diagonal entries \c m11, \c m22, \c m33 and \c m44 are all \c 1, with all
+    other components \c 0.
 
     The matrix4x4 type has the following idempotent functions which can be
     invoked in QML:

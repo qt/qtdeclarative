@@ -139,6 +139,8 @@ property is only invoked when the property is reassigned to a different object v
 
     The \c bool type refers to a binary true/false value.
 
+    Properties of type \c bool have \c false as their default value.
+
     Example:
     \qml
     Item {
@@ -183,6 +185,8 @@ property is only invoked when the property is reassigned to a different object v
     The \c double type refers to a number with a decimal point and is stored in double precision, \l
     {http://en.wikipedia.org/wiki/IEEE_754} {IEEE floating point} format. It's the same as \c real.
 
+    Properties of type \c double have \e {0.0} as their default value.
+
     Example:
     \qml
     Item {
@@ -207,8 +211,10 @@ property is only invoked when the property is reassigned to a different object v
     Text { text: "Hello world!" }
     \endqml
 
-    Strings have a \c length attribute that holds the number of
-    characters in the string.
+    Properties of type \c string are empty by default.
+
+    Strings have a \c length attribute that holds the number of characters in the
+    string.
 
     QML extends the JavaScript String type with a \l {String::arg}{arg()} function
     to support value substitution.
@@ -284,6 +290,8 @@ property is only invoked when the property is reassigned to a different object v
     \brief a list of QML objects.
 
     The \c list type refers to a list of QML objects or values.
+
+    Properties of type \c list are empty by default.
 
     A list value can be accessed in a similar way to a JavaScript array:
 
@@ -423,6 +431,8 @@ property is only invoked when the property is reassigned to a different object v
     braces in JavaScript can denote either an expression block or an empty
     object declaration.  If you wish to initialize a \c var property to an
     empty object value, you should wrap the curly braces in parentheses.
+
+    Properties of type \c var are \c {undefined} by default.
 
     For example:
     \qml
