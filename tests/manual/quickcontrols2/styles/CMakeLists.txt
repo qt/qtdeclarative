@@ -10,7 +10,7 @@ endif()
 ## styles Binary:
 #####################################################################
 
-qt_internal_add_manual_test(styles
+qt_internal_add_manual_test(tst_manual_qqc_styles
     GUI
     SOURCES
         styles.cpp
@@ -25,7 +25,7 @@ set(qmake_immediate_resource_files
     "styles.qml"
 )
 
-qt_internal_add_resource(styles "qmake_immediate"
+qt_internal_add_resource(tst_manual_qqc_styles "qmake_immediate"
     PREFIX
         "/"
     FILES
