@@ -23,6 +23,8 @@ class tst_QmlCppCodegen : public QObject
 {
     Q_OBJECT
 private slots:
+    void initTestCase();
+
     void simpleBinding();
     void cppValueTypeList();
     void anchorsFill();
@@ -39,7 +41,6 @@ private slots:
     void excessiveParameters();
     void jsImport();
     void jsmoduleImport();
-    void runInterpreted();
     void methods();
     void math();
     void unknownParameter();
@@ -136,7 +137,15 @@ private slots:
     void stringToByteArray();
     void listPropertyAsModel();
     void notNotString();
+    void mathOperations();
 };
+
+void tst_QmlCppCodegen::initTestCase()
+{
+#ifdef QT_TEST_FORCE_INTERPRETER
+    qputenv("QV4_FORCE_INTERPRETER", "1");
+#endif
+}
 
 void tst_QmlCppCodegen::simpleBinding()
 {
@@ -1595,6 +1604,25 @@ void tst_QmlCppCodegen::listIndices()
     QCOMPARE(qvariant_cast<QObject *>(o->property("nan")), nullptr);
 }
 
+static const double numbers[] = {
+    qQNaN(), -qInf(),
+    std::numeric_limits<double>::min(),
+    std::numeric_limits<float>::min(),
+    std::numeric_limits<qint32>::min(),
+    -1000.2, -100, -2, -1.333, -1, -0.84, -0.5,
+
+    // -0 and 0 are not different on the QML side. Therefore, don't keep them adjacent.
+    // Otherwise the bindings won't get re-evaluated.
+    std::copysign(0.0, -1), 1, 0.0,
+
+    0.5, 0.77, 1.4545, 2, 199, 2002.13,
+    std::numeric_limits<qint32>::max(),
+    std::numeric_limits<quint32>::max(),
+    std::numeric_limits<float>::max(),
+    std::numeric_limits<double>::max(),
+    qInf()
+};
+
 void tst_QmlCppCodegen::jsMathObject()
 {
     QQmlEngine engine;
@@ -1603,28 +1631,13 @@ void tst_QmlCppCodegen::jsMathObject()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
 
-    const double inputs[] = {
-        qQNaN(), -qInf(),
-        std::numeric_limits<double>::min(),
-        std::numeric_limits<float>::min(),
-        std::numeric_limits<qint32>::min(),
-        -1000.2, -100, -2, -1.333, -1, -0.84, -0.5,
-        std::copysign(0.0, -1), 0.0,
-        0.5, 0.77, 1, 1.4545, 2, 199, 2002.13,
-        std::numeric_limits<qint32>::max(),
-        std::numeric_limits<quint32>::max(),
-        std::numeric_limits<float>::max(),
-        std::numeric_limits<double>::max(),
-        qInf()
-    };
-
     QJSManagedValue math(engine.globalObject().property(QStringLiteral("Math")), &engine);
 
     const QMetaObject *metaObject = o->metaObject();
 
     QString name;
-    for (double a : inputs) {
-        for (double b : inputs) {
+    for (double a : numbers) {
+        for (double b : numbers) {
             o->setProperty("a", a);
             o->setProperty("b", b);
             for (int i = 0, end = metaObject->propertyCount(); i != end; ++i) {
@@ -2484,27 +2497,199 @@ void tst_QmlCppCodegen::notNotString()
     QCOMPARE(o->property("notNotString").value<bool>(), true);
 }
 
-void tst_QmlCppCodegen::runInterpreted()
+template<typename T>
+QString toOperand(double arg);
+
+template<>
+QString toOperand<double>(double arg)
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Can't start QProcess to run a custom user binary on Android");
-#endif
+    if (qIsNull(arg))
+        return std::signbit(arg) ? QStringLiteral("(-0)") : QStringLiteral("(0)");
 
-    if (qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER"))
-        QSKIP("Already running in interpreted mode");
+    return u'(' + QJSPrimitiveValue(arg).toString() + u')';
+}
 
-#if QT_CONFIG(process)
-    QProcess process;
-    process.setProgram(QCoreApplication::applicationFilePath());
-    process.setEnvironment(QProcess::systemEnvironment()
-                           + QStringList(u"QV4_FORCE_INTERPRETER=1"_s));
-    process.start();
-    QVERIFY(process.waitForFinished());
-    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
-    QCOMPARE(process.exitCode(), 0);
-#else
-    QSKIP("Test needs QProcess");
-#endif
+template<>
+QString toOperand<int>(double arg)
+{
+    const int iArg = QJSPrimitiveValue(arg).toInteger();
+    return u'(' + QJSPrimitiveValue(iArg).toString() + u')';
+}
+
+template<>
+QString toOperand<bool>(double arg)
+{
+    const bool bArg = QJSPrimitiveValue(arg).toBoolean();
+    return u'(' + QJSPrimitiveValue(bArg).toString() + u')';
+}
+
+template<typename T1, typename T2>
+double jsEval(double arg1, double arg2, const QString &op, QJSEngine *engine)
+{
+    auto evalBinary = [&](const QString &jsOp) {
+        return engine->evaluate(toOperand<T1>(arg1) + jsOp + toOperand<T2>(arg2)).toNumber();
+    };
+
+    auto evalBinaryConst = [&](const QString &jsOp) {
+        return engine->evaluate(toOperand<T1>(arg1) + jsOp + u'9').toNumber();
+    };
+
+    auto evalUnary = [&](const QString &jsOp) {
+        return engine->evaluate(jsOp + toOperand<T1>(arg1)).toNumber();
+    };
+
+    auto evalInPlace = [&](const QString &jsOp) {
+        return engine->evaluate(
+                    u"(function() {var a = "_s + toOperand<T1>(arg1)+ u"; return "_s
+                    + jsOp + u"a;})()"_s).toNumber();
+    };
+
+    if (op == u"unot")
+        return evalUnary(u"!"_s);
+    if (op == u"uplus")
+        return evalUnary(u"+"_s);
+    if (op == u"uminus")
+        return evalUnary(u"-"_s);
+    if (op == u"ucompl")
+        return evalUnary(u"~"_s);
+
+    if (op == u"increment")
+        return evalInPlace(u"++"_s);
+    if (op == u"decrement")
+        return evalInPlace(u"--"_s);
+
+    if (op == u"add")
+        return evalBinary(u"+"_s);
+    if (op == u"sub")
+        return evalBinary(u"-"_s);
+    if (op == u"mul")
+        return evalBinary(u"*"_s);
+    if (op == u"div")
+        return evalBinary(u"/"_s);
+    if (op == u"exp")
+        return evalBinary(u"**"_s);
+    if (op == u"mod")
+        return evalBinary(u"%"_s);
+
+    if (op == u"bitAnd")
+        return evalBinary(u"&"_s);
+    if (op == u"bitOr")
+        return evalBinary(u"|"_s);
+    if (op == u"bitXor")
+        return evalBinary(u"^"_s);
+
+    if (op == u"bitAndConst")
+        return evalBinaryConst(u"&"_s);
+    if (op == u"bitOrConst")
+        return evalBinaryConst(u"|"_s);
+    if (op == u"bitXorConst")
+        return evalBinaryConst(u"^"_s);
+
+    if (op == u"ushr")
+        return evalBinary(u">>>"_s);
+    if (op == u"shr")
+        return evalBinary(u">>"_s);
+    if (op == u"shl")
+        return evalBinary(u"<<"_s);
+
+    if (op == u"ushrConst")
+        return evalBinaryConst(u">>>"_s);
+    if (op == u"shrConst")
+        return evalBinaryConst(u">>"_s);
+    if (op == u"shlConst")
+        return evalBinaryConst(u"<<"_s);
+
+    qDebug() << op;
+    Q_UNREACHABLE();
+    return 0;
+}
+
+void tst_QmlCppCodegen::mathOperations()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mathOperations.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    const QMetaObject *metaObject = o->metaObject();
+
+    char t1;
+    char t2;
+    QString name;
+    const auto guard = qScopeGuard([&]() {
+        if (QTest::currentTestFailed()) {
+            qDebug() << t1 << t2 << name << "failed on:";
+            qDebug() << "doubles" << o->property("a").toDouble() << o->property("b").toDouble();
+            qDebug() << "integers" << o->property("ia").toInt() << o->property("ib").toInt();
+            qDebug() << "booleans" << o->property("ba").toBool() << o->property("bb").toBool();
+        }
+    });
+
+    for (double a : numbers) {
+        for (double b : numbers) {
+            o->setProperty("a", a);
+            o->setProperty("b", b);
+            for (int i = 0, end = metaObject->propertyCount(); i != end; ++i) {
+                const QMetaProperty prop = metaObject->property(i);
+                const QByteArray propName = prop.name();
+
+                if (propName.length() < 3 || propName == "objectName")
+                    continue;
+
+                t1 = propName[0];
+                t2 = propName[1];
+                name = QString::fromUtf8(propName.mid(2));
+
+                double expected;
+
+                switch (t2) {
+                case 'd':
+                case '_':
+                    switch (t1) {
+                    case 'd':
+                        expected = jsEval<double, double>(a, b, name, &engine);
+                        break;
+                    case 'i':
+                        expected = jsEval<int, double>(a, b, name, &engine);
+                        break;
+                    case 'b':
+                        expected = jsEval<bool, double>(a, b, name, &engine);
+                        break;
+                    }
+                    break;
+                case 'i':
+                    switch (t1) {
+                    case 'd':
+                        expected = jsEval<double, int>(a, b, name, &engine);
+                        break;
+                    case 'i':
+                        expected = jsEval<int, int>(a, b, name, &engine);
+                        break;
+                    case 'b':
+                        expected = jsEval<bool, int>(a, b, name, &engine);
+                        break;
+                    }
+                    break;
+                case 'b':
+                    switch (t1) {
+                    case 'd':
+                        expected = jsEval<double, bool>(a, b, name, &engine);
+                        break;
+                    case 'i':
+                        expected = jsEval<int, bool>(a, b, name, &engine);
+                        break;
+                    case 'b':
+                        expected = jsEval<bool, bool>(a, b, name, &engine);
+                        break;
+                    }
+                    break;
+                }
+
+                const double result = prop.read(o.data()).toDouble();
+                QCOMPARE(result, expected);
+            }
+        }
+    }
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

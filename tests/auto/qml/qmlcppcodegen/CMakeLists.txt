@@ -12,3 +12,15 @@ qt_internal_add_test(tst_qmlcppcodegen
         codegen_test_module
         codegen_test_moduleplugin
 )
+
+qt_internal_add_test(tst_qmlcppcodegen_interpreted
+    SOURCES
+        tst_qmlcppcodegen.cpp
+    LIBRARIES
+        Qt::QmlPrivate
+        Qt::Gui
+        codegen_test_module
+        codegen_test_moduleplugin
+    DEFINES
+        QT_TEST_FORCE_INTERPRETER
+)

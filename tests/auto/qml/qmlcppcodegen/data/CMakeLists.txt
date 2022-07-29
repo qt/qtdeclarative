@@ -109,6 +109,7 @@ set(qml_files
     listPropertyAsModel.qml
     listlength.qml
     math.qml
+    mathOperations.qml
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml

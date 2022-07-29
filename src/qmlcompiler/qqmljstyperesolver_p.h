@@ -78,10 +78,9 @@ public:
                                                  const QQmlJSRegisterContent &left,
                                                  const QQmlJSRegisterContent &right) const;
 
-    enum class UnaryOperator { Plus, Minus, Increment, Decrement };
-
+    enum class UnaryOperator { Not, Plus, Minus, Increment, Decrement, Complement };
     QQmlJSRegisterContent typeForArithmeticUnaryOperation(
-            UnaryOperator oper, const QQmlJSRegisterContent &operand) const;
+            UnaryOperator op, const QQmlJSRegisterContent &operand) const;
 
     bool isPrimitive(const QQmlJSRegisterContent &type) const;
     bool isNumeric(const QQmlJSRegisterContent &type) const;
@@ -97,6 +96,7 @@ public:
     genericType(const QQmlJSScope::ConstPtr &type,
                 ComponentIsGeneric allowComponent = ComponentIsGeneric::No) const;
 
+    QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent scopedType(const QQmlJSScope::ConstPtr &scope, const QString &name) const;
     QQmlJSRegisterContent memberType(const QQmlJSRegisterContent &type, const QString &name) const;

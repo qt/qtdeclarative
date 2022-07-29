@@ -2153,7 +2153,8 @@ void QQmlJSCodeGenerator::generate_UMinus()
 
 void QQmlJSCodeGenerator::generate_UCompl()
 {
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_UCompl);
+    generateUnaryOperation(u"~"_s);
 }
 
 void QQmlJSCodeGenerator::generate_Increment()
@@ -2176,80 +2177,95 @@ void QQmlJSCodeGenerator::generate_Add(int lhs)
 
 void QQmlJSCodeGenerator::generate_BitAnd(int lhs)
 {
-    Q_UNUSED(lhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_BitAnd);
+    generateArithmeticOperation(lhs, u"&"_s);
 }
 
 void QQmlJSCodeGenerator::generate_BitOr(int lhs)
 {
-    Q_UNUSED(lhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_BitOr);
+    generateArithmeticOperation(lhs, u"|"_s);
 }
 
 void QQmlJSCodeGenerator::generate_BitXor(int lhs)
 {
-    Q_UNUSED(lhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_BitXor);
+    generateArithmeticOperation(lhs, u"^"_s);
 }
 
 void QQmlJSCodeGenerator::generate_UShr(int lhs)
 {
-    Q_UNUSED(lhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_BitUShr);
+    generateShiftOperation(lhs, u">>"_s);
 }
 
 void QQmlJSCodeGenerator::generate_Shr(int lhs)
 {
-    Q_UNUSED(lhs);
-    reject(u"Shr"_s);
+    INJECT_TRACE_INFO(generate_Shr);
+    generateShiftOperation(lhs, u">>"_s);
 }
 
 void QQmlJSCodeGenerator::generate_Shl(int lhs)
 {
-    Q_UNUSED(lhs);
-    reject(u"Shl"_s);
+    INJECT_TRACE_INFO(generate_Shl);
+    generateShiftOperation(lhs, u"<<"_s);
 }
 
 void QQmlJSCodeGenerator::generate_BitAndConst(int rhs)
 {
-    Q_UNUSED(rhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_BitAndConst);
+    generateArithmeticConstOperation(rhs, u"&"_s);
 }
 
 void QQmlJSCodeGenerator::generate_BitOrConst(int rhs)
 {
-    Q_UNUSED(rhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_BitOrConst);
+    generateArithmeticConstOperation(rhs, u"|"_s);
 }
 
 void QQmlJSCodeGenerator::generate_BitXorConst(int rhs)
 {
-    Q_UNUSED(rhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_BitXorConst);
+    generateArithmeticConstOperation(rhs, u"^"_s);
 }
 
 void QQmlJSCodeGenerator::generate_UShrConst(int rhs)
 {
-    Q_UNUSED(rhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_UShrConst);
+    generateArithmeticConstOperation(rhs & 0x1f, u">>"_s);
 }
 
-void QQmlJSCodeGenerator::generate_ShrConst(int value)
+void QQmlJSCodeGenerator::generate_ShrConst(int rhs)
 {
-    Q_UNUSED(value);
-    reject(u"ShrConst"_s);
+    INJECT_TRACE_INFO(generate_ShrConst);
+    generateArithmeticConstOperation(rhs & 0x1f, u">>"_s);
 }
 
-void QQmlJSCodeGenerator::generate_ShlConst(int value)
+void QQmlJSCodeGenerator::generate_ShlConst(int rhs)
 {
-    Q_UNUSED(value);
-    reject(u"ShlConst"_s);
+    INJECT_TRACE_INFO(generate_ShlConst);
+    generateArithmeticConstOperation(rhs & 0x1f, u"<<"_s);
 }
 
 void QQmlJSCodeGenerator::generate_Exp(int lhs)
 {
-    Q_UNUSED(lhs)
-    BYTECODE_UNIMPLEMENTED();
+    INJECT_TRACE_INFO(generate_Exp);
+
+    const QString lhsString = conversion(
+                registerType(lhs), m_state.readRegister(lhs), registerVariable(lhs));
+    const QString rhsString = conversion(
+                m_state.accumulatorIn(), m_state.readAccumulator(), m_state.accumulatorVariableIn);
+
+    Q_ASSERT(m_error->isValid() || !lhsString.isEmpty());
+    Q_ASSERT(m_error->isValid() || !rhsString.isEmpty());
+
+    const QQmlJSRegisterContent originalOut = m_typeResolver->original(m_state.accumulatorOut());
+    m_body += m_state.accumulatorVariableOut + u" = "_s;
+    m_body += conversion(
+                originalOut, m_state.accumulatorOut(),
+                u"QQmlPrivate::jsExponentiate("_s + lhsString + u", "_s + rhsString + u')');
+    m_body += u";\n"_s;
+    generateOutputVariantConversion(m_typeResolver->containedType(originalOut));
 }
 
 void QQmlJSCodeGenerator::generate_Mul(int lhs)
@@ -2473,21 +2489,46 @@ void QQmlJSCodeGenerator::generateCompareOperation(int lhs, const QString &cppOp
 
 void QQmlJSCodeGenerator::generateArithmeticOperation(int lhs, const QString &cppOperator)
 {
-    const auto lhsVar = conversion(registerType(lhs), m_state.readRegister(lhs),
-                                   registerVariable(lhs));
-    const auto rhsVar = conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
-                                   m_state.accumulatorVariableIn);
-    Q_ASSERT(m_error->isValid() || !lhsVar.isEmpty());
-    Q_ASSERT(m_error->isValid() || !rhsVar.isEmpty());
+    generateArithmeticOperation(
+                conversion(registerType(lhs), m_state.readRegister(lhs), registerVariable(lhs)),
+                conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
+                           m_state.accumulatorVariableIn),
+                cppOperator);
+}
+
+void QQmlJSCodeGenerator::generateShiftOperation(int lhs, const QString &cppOperator)
+{
+    generateArithmeticOperation(
+                conversion(registerType(lhs), m_state.readRegister(lhs), registerVariable(lhs)),
+                u'(' + conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
+                           m_state.accumulatorVariableIn) + u" & 0x1f)"_s,
+                cppOperator);
+}
+
+void QQmlJSCodeGenerator::generateArithmeticOperation(
+        const QString &lhs, const QString &rhs, const QString &cppOperator)
+{
+    Q_ASSERT(m_error->isValid() || !lhs.isEmpty());
+    Q_ASSERT(m_error->isValid() || !rhs.isEmpty());
 
     const QQmlJSRegisterContent originalOut = m_typeResolver->original(m_state.accumulatorOut());
     m_body += m_state.accumulatorVariableOut;
     m_body += u" = "_s;
     m_body += conversion(
                 originalOut, m_state.accumulatorOut(),
-                u'(' + lhsVar + u' ' + cppOperator + u' ' + rhsVar + u')');
+                u'(' + lhs + u' ' + cppOperator + u' ' + rhs + u')');
     m_body += u";\n"_s;
     generateOutputVariantConversion(m_typeResolver->containedType(originalOut));
+}
+
+void QQmlJSCodeGenerator::generateArithmeticConstOperation(int rhsConst, const QString &cppOperator)
+{
+    generateArithmeticOperation(
+                conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
+                           m_state.accumulatorVariableIn),
+                conversion(m_typeResolver->globalType(m_typeResolver->intType()),
+                           m_state.readAccumulator(), QString::number(rhsConst)),
+                cppOperator);
 }
 
 void QQmlJSCodeGenerator::generateUnaryOperation(const QString &cppOperator)

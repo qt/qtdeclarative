@@ -154,10 +154,10 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompileP
     void generate_UShr(int lhs) override;
     void generate_Shr(int lhs) override;
     void generate_Shl(int lhs) override;
-    void generate_BitAndConst(int rhs) override;
-    void generate_BitOrConst(int rhs) override;
-    void generate_BitXorConst(int rhs) override;
-    void generate_UShrConst(int rhs) override;
+    void generate_BitAndConst(int rhsConst) override;
+    void generate_BitOrConst(int rhsConst) override;
+    void generate_BitXorConst(int rhsConst) override;
+    void generate_UShrConst(int rhsConst) override;
     void generate_ShrConst(int rhs) override;
     void generate_ShlConst(int rhs) override;
     void generate_Exp(int lhs) override;
@@ -195,7 +195,13 @@ private:
     QQmlJS::SourceLocation getCurrentSourceLocation() const;
     QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
 
+    void checkConversion(const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to);
+    void generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator op);
+
     QQmlJSRegisterContent propagateBinaryOperation(QSOperator::Op op, int lhs);
+    void generateBinaryArithmeticOperation(QSOperator::Op op, int lhs);
+    void generateBinaryConstArithmeticOperation(QSOperator::Op op);
+
     void propagateCall(
             const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
             const QQmlJSScope::ConstPtr &scope);

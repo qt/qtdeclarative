@@ -251,6 +251,10 @@ private:
     void generateEqualityOperation(int lhs, const QString &function, bool invert);
     void generateCompareOperation(int lhs, const QString &cppOperator);
     void generateArithmeticOperation(int lhs, const QString &cppOperator);
+    void generateShiftOperation(int lhs, const QString &cppOperator);
+    void generateArithmeticOperation(
+            const QString &lhs, const QString &rhs, const QString &cppOperator);
+    void generateArithmeticConstOperation(int lhsConst, const QString &cppOperator);
     void generateJumpCodeWithTypeConversions(int relativeOffset);
     void generateUnaryOperation(const QString &cppOperator);
     void generateInPlaceOperation(const QString &cppOperator);

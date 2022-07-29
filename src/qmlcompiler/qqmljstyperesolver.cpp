@@ -211,40 +211,32 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
     case QSOperator::Op::BitXor:
     case QSOperator::Op::LShift:
     case QSOperator::Op::RShift:
+        return builtinType(intType());
     case QSOperator::Op::URShift:
-        return globalType(intType());
+        return builtinType(uintType());
     case QSOperator::Op::Add: {
         const auto leftContents = containedType(left);
         const auto rightContents = containedType(right);
         if (equals(leftContents, stringType()) || equals(rightContents, stringType()))
-            return QQmlJSRegisterContent::create(stringType(), stringType(),
-                                                 QQmlJSRegisterContent::Builtin);
+            return builtinType(stringType());
 
         const QQmlJSScope::ConstPtr result = merge(leftContents, rightContents);
         if (equals(result, boolType()))
-            return QQmlJSRegisterContent::create(intType(), intType(),
-                                                 QQmlJSRegisterContent::Builtin);
+            return builtinType(intType());
         if (isNumeric(result))
-            return QQmlJSRegisterContent::create(realType(), realType(),
-                                                 QQmlJSRegisterContent::Builtin);
+            return builtinType(realType());
 
-        return QQmlJSRegisterContent::create(jsPrimitiveType(), jsPrimitiveType(),
-                                             QQmlJSRegisterContent::Builtin);
+        return builtinType(jsPrimitiveType());
     }
-    case QSOperator::Op::Sub: {
-        const QQmlJSScope::ConstPtr result = merge(containedType(left), containedType(right));
-        if (equals(result, boolType()))
-            return QQmlJSRegisterContent::create(intType(), intType(),
-                                                 QQmlJSRegisterContent::Builtin);
-        return QQmlJSRegisterContent::create(realType(), realType(),
-                                             QQmlJSRegisterContent::Builtin);
-    }
+    case QSOperator::Op::Sub:
     case QSOperator::Op::Mul:
+    case QSOperator::Op::Exp: {
+        const QQmlJSScope::ConstPtr result = merge(containedType(left), containedType(right));
+        return builtinType(equals(result, boolType()) ? intType() : realType());
+    }
     case QSOperator::Op::Div:
-    case QSOperator::Op::Exp:
     case QSOperator::Op::Mod:
-        return QQmlJSRegisterContent::create(
-                realType(), realType(), QQmlJSRegisterContent::Builtin);
+        return builtinType(realType());
     case QSOperator::Op::As:
         return right;
     default:
@@ -255,14 +247,24 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::typeForArithmeticUnaryOperation(
-        UnaryOperator oper, const QQmlJSRegisterContent &operand) const
+        UnaryOperator op, const QQmlJSRegisterContent &operand) const
 {
-    // For now, we are only concerned with the unary arithmetic operators.
-    // The boolean and bitwise ones are special cased elsewhere.
-    Q_UNUSED(oper);
+    switch (op) {
+    case UnaryOperator::Not:
+        return builtinType(boolType());
+    case UnaryOperator::Complement:
+        return builtinType(intType());
+    case UnaryOperator::Plus:
+        if (isIntegral(operand))
+            return operand;
+        Q_FALLTHROUGH();
+    default:
+        if (equals(containedType(operand), boolType()))
+            return builtinType(intType());
+        break;
+    }
 
-    return QQmlJSRegisterContent::create(isNumeric(operand) ? realType() : jsPrimitiveType(),
-                                         realType(), QQmlJSRegisterContent::Builtin);
+    return builtinType(realType());
 }
 
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSRegisterContent &type) const
@@ -717,6 +719,12 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
     }
 
     return m_varType;
+}
+
+QQmlJSRegisterContent QQmlJSTypeResolver::builtinType(const QQmlJSScope::ConstPtr &type) const
+{
+    Q_ASSERT(storedType(type) == type);
+    return QQmlJSRegisterContent::create(type, type, QQmlJSRegisterContent::Builtin);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::globalType(const QQmlJSScope::ConstPtr &type) const

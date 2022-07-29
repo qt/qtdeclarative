@@ -1940,185 +1940,170 @@ void QQmlJSTypePropagator::generate_As(int lhs)
     }
 }
 
+void QQmlJSTypePropagator::checkConversion(
+        const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to)
+{
+    if (!canConvertFromTo(from, to)) {
+        setError(u"cannot convert from %1 to %2"_s
+                 .arg(from.descriptiveName(), to.descriptiveName()));
+    }
+}
+
+void QQmlJSTypePropagator::generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator op)
+{
+    const QQmlJSRegisterContent type = m_typeResolver->typeForArithmeticUnaryOperation(
+                op, m_state.accumulatorIn());
+    checkConversion(m_state.accumulatorIn(), type);
+    addReadAccumulator(type);
+    setAccumulator(type);
+}
+
 void QQmlJSTypePropagator::generate_UNot()
 {
-    if (!canConvertFromTo(m_state.accumulatorIn(),
-                          m_typeResolver->globalType(m_typeResolver->boolType()))) {
-        setError(u"cannot convert from %1 to boolean"_s
-                         .arg(m_state.accumulatorIn().descriptiveName()));
-        return;
-    }
-    const QQmlJSRegisterContent boolType = m_typeResolver->globalType(m_typeResolver->boolType());
-    addReadAccumulator(boolType);
-    setAccumulator(boolType);
+    generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator::Not);
 }
 
 void QQmlJSTypePropagator::generate_UPlus()
 {
-    const QQmlJSRegisterContent type = m_typeResolver->typeForArithmeticUnaryOperation(
-                QQmlJSTypeResolver::UnaryOperator::Plus, m_state.accumulatorIn());
-    addReadAccumulator(type);
-    setAccumulator(type);
+    generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator::Plus);
 }
 
 void QQmlJSTypePropagator::generate_UMinus()
 {
-    const QQmlJSRegisterContent type = m_typeResolver->typeForArithmeticUnaryOperation(
-                QQmlJSTypeResolver::UnaryOperator::Minus, m_state.accumulatorIn());
-    addReadAccumulator(type);
-    setAccumulator(type);
+    generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator::Minus);
 }
 
 void QQmlJSTypePropagator::generate_UCompl()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator::Complement);
 }
 
 void QQmlJSTypePropagator::generate_Increment()
 {
-    const QQmlJSRegisterContent type = m_typeResolver->typeForArithmeticUnaryOperation(
-                QQmlJSTypeResolver::UnaryOperator::Increment, m_state.accumulatorIn());
-    addReadAccumulator(type);
-    setAccumulator(type);
+    generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator::Increment);
 }
 
 void QQmlJSTypePropagator::generate_Decrement()
 {
-    const QQmlJSRegisterContent type = m_typeResolver->typeForArithmeticUnaryOperation(
-                QQmlJSTypeResolver::UnaryOperator::Decrement, m_state.accumulatorIn());
+    generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator::Decrement);
+}
+
+void QQmlJSTypePropagator::generateBinaryArithmeticOperation(QSOperator::Op op, int lhs)
+{
+    const QQmlJSRegisterContent type = propagateBinaryOperation(op, lhs);
+
+    checkConversion(checkedInputRegister(lhs), type);
+    addReadRegister(lhs, type);
+
+    checkConversion(m_state.accumulatorIn(), type);
+    addReadAccumulator(type);
+}
+
+void QQmlJSTypePropagator::generateBinaryConstArithmeticOperation(QSOperator::Op op)
+{
+    const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
+                op, m_state.accumulatorIn(),
+                m_typeResolver->builtinType(m_typeResolver->intType()));
+
+    checkConversion(m_state.accumulatorIn(), type);
     addReadAccumulator(type);
     setAccumulator(type);
 }
 
 void QQmlJSTypePropagator::generate_Add(int lhs)
 {
-    const auto type = propagateBinaryOperation(QSOperator::Op::Add, lhs);
-    addReadRegister(lhs, type);
-    addReadAccumulator(type);
+    generateBinaryArithmeticOperation(QSOperator::Op::Add, lhs);
 }
 
 void QQmlJSTypePropagator::generate_BitAnd(int lhs)
 {
-    Q_UNUSED(lhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    generateBinaryArithmeticOperation(QSOperator::Op::BitAnd, lhs);
 }
 
 void QQmlJSTypePropagator::generate_BitOr(int lhs)
 {
-    Q_UNUSED(lhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    generateBinaryArithmeticOperation(QSOperator::Op::BitOr, lhs);
 }
 
 void QQmlJSTypePropagator::generate_BitXor(int lhs)
 {
-    Q_UNUSED(lhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    generateBinaryArithmeticOperation(QSOperator::Op::BitXor, lhs);
 }
 
 void QQmlJSTypePropagator::generate_UShr(int lhs)
 {
-    Q_UNUSED(lhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    generateBinaryArithmeticOperation(QSOperator::Op::URShift, lhs);
 }
 
 void QQmlJSTypePropagator::generate_Shr(int lhs)
 {
-    auto lhsRegister = checkedInputRegister(lhs);
-    const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
-                QSOperator::Op::RShift, lhsRegister, m_state.accumulatorIn());
-    addReadRegister(lhs, type);
-    addReadAccumulator(type);
-    setAccumulator(type);
+    generateBinaryArithmeticOperation(QSOperator::Op::RShift, lhs);
 }
 
 void QQmlJSTypePropagator::generate_Shl(int lhs)
 {
-    auto lhsRegister = checkedInputRegister(lhs);
-    const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
-                QSOperator::Op::LShift, lhsRegister, m_state.accumulatorIn());
-    addReadRegister(lhs, type);
-    addReadAccumulator(type);
-    setAccumulator(type);
+    generateBinaryArithmeticOperation(QSOperator::Op::LShift, lhs);
 }
 
-void QQmlJSTypePropagator::generate_BitAndConst(int rhs)
+void QQmlJSTypePropagator::generate_BitAndConst(int rhsConst)
 {
-    Q_UNUSED(rhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    Q_UNUSED(rhsConst)
+    generateBinaryConstArithmeticOperation(QSOperator::Op::BitAnd);
 }
 
-void QQmlJSTypePropagator::generate_BitOrConst(int rhs)
+void QQmlJSTypePropagator::generate_BitOrConst(int rhsConst)
 {
-    Q_UNUSED(rhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    Q_UNUSED(rhsConst)
+    generateBinaryConstArithmeticOperation(QSOperator::Op::BitOr);
 }
 
-void QQmlJSTypePropagator::generate_BitXorConst(int rhs)
+void QQmlJSTypePropagator::generate_BitXorConst(int rhsConst)
 {
-    Q_UNUSED(rhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    Q_UNUSED(rhsConst)
+    generateBinaryConstArithmeticOperation(QSOperator::Op::BitXor);
 }
 
-void QQmlJSTypePropagator::generate_UShrConst(int rhs)
+void QQmlJSTypePropagator::generate_UShrConst(int rhsConst)
 {
-    Q_UNUSED(rhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    Q_UNUSED(rhsConst)
+    generateBinaryConstArithmeticOperation(QSOperator::Op::URShift);
 }
 
 void QQmlJSTypePropagator::generate_ShrConst(int rhsConst)
 {
     Q_UNUSED(rhsConst)
-
-    const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
-                QSOperator::Op::RShift, m_state.accumulatorIn(),
-                m_typeResolver->globalType(m_typeResolver->intType()));
-    addReadAccumulator(type);
-    setAccumulator(type);
+    generateBinaryConstArithmeticOperation(QSOperator::Op::RShift);
 }
 
 void QQmlJSTypePropagator::generate_ShlConst(int rhsConst)
 {
     Q_UNUSED(rhsConst)
-
-    const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
-                QSOperator::Op::LShift, m_state.accumulatorIn(),
-                m_typeResolver->globalType(m_typeResolver->intType()));
-    addReadAccumulator(type);
-    setAccumulator(type);
+    generateBinaryConstArithmeticOperation(QSOperator::Op::LShift);
 }
 
 void QQmlJSTypePropagator::generate_Exp(int lhs)
 {
-    Q_UNUSED(lhs)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    generateBinaryArithmeticOperation(QSOperator::Op::Exp, lhs);
 }
 
 void QQmlJSTypePropagator::generate_Mul(int lhs)
 {
-    const auto type = propagateBinaryOperation(QSOperator::Op::Mul, lhs);
-    addReadRegister(lhs, type);
-    addReadAccumulator(type);
+    generateBinaryArithmeticOperation(QSOperator::Op::Mul, lhs);
 }
 
 void QQmlJSTypePropagator::generate_Div(int lhs)
 {
-    const auto type = propagateBinaryOperation(QSOperator::Op::Div, lhs);
-    addReadRegister(lhs, type);
-    addReadAccumulator(type);
+    generateBinaryArithmeticOperation(QSOperator::Op::Div, lhs);
 }
 
 void QQmlJSTypePropagator::generate_Mod(int lhs)
 {
-    const auto type = propagateBinaryOperation(QSOperator::Op::Mod, lhs);
-    addReadRegister(lhs, type);
-    addReadAccumulator(type);
+    generateBinaryArithmeticOperation(QSOperator::Op::Mod, lhs);
 }
 
 void QQmlJSTypePropagator::generate_Sub(int lhs)
 {
-    const auto type = propagateBinaryOperation(QSOperator::Op::Sub, lhs);
-    addReadRegister(lhs, type);
-    addReadAccumulator(type);
+    generateBinaryArithmeticOperation(QSOperator::Op::Sub, lhs);
 }
 
 void QQmlJSTypePropagator::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)
