@@ -472,8 +472,8 @@ inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function
                                                                       QString::number(i));
         function->body << u"child->%1(creator);"_s.arg(function->name);
         if (type->hasInterface(interfaceName)) {
-            function->body << u"Q_ASSERT(dynamic_cast<%1 *>(child) != nullptr);"_s.arg(
-                    interfaceName);
+            function->body << u"static_assert(std::is_base_of<%1, %2>::value);"_s.arg(
+                    interfaceName, type->internalName());
             function->body << u"child->%1();"_s.arg(interfaceCall);
         }
         function->body << u"}"_s;
@@ -482,6 +482,8 @@ inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function
     if (type->hasInterface(interfaceName)) {
         function->body << u"if (canFinalize) {"_s;
         function->body << u"    // call own method"_s;
+        function->body << u"    static_assert(std::is_base_of<%1, %2>::value);"_s.arg(
+                interfaceName, type->internalName());
         function->body << u"    this->%1();"_s.arg(interfaceCall);
         function->body << u"}"_s;
     }
