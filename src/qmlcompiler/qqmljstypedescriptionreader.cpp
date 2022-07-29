@@ -351,6 +351,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setIsList(readBoolBinding(script));
         } else if (id == QLatin1String("isFinal")) {
             property.setIsFinal(readBoolBinding(script));
+        } else if (id == QLatin1String("isConstant")) {
+            property.setIsConstant(readBoolBinding(script));
         } else if (id == QLatin1String("revision")) {
             property.setRevision(readIntBinding(script));
         } else if (id == QLatin1String("bindable")) {

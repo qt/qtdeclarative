@@ -887,6 +887,13 @@ void tst_qmltc::specialProperties()
     QCOMPARE(created.m_y, u"foo"_s);
     created.setZAlias(4.2);
     QCOMPARE(created.bindableZ().value(), 4.2);
+
+    // alias attributes:
+    const QMetaObject *mo = created.metaObject();
+    QMetaProperty xxAlias = mo->property(mo->indexOfProperty("xxAlias"));
+    QVERIFY(xxAlias.isValid());
+    QVERIFY(xxAlias.isConstant());
+    QCOMPARE(created.xyAlias(), u"reset");
 }
 
 void tst_qmltc::regexpBindings()

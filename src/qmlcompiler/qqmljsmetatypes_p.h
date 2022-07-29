@@ -279,6 +279,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaProperty
     bool m_isWritable = false;
     bool m_isPointer = false;
     bool m_isFinal = false;
+    bool m_isConstant = false;
     int m_revision = 0;
     int m_index = -1; // relative property index within owning QQmlJSScope
 
@@ -331,6 +332,9 @@ public:
 
     void setIsFinal(bool isFinal) { m_isFinal = isFinal; }
     bool isFinal() const { return m_isFinal; }
+
+    void setIsConstant(bool isConstant) { m_isConstant = isConstant; }
+    bool isConstant() const { return m_isConstant; }
 
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }

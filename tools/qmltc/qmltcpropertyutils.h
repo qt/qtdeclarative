@@ -44,12 +44,14 @@ struct QmltcPropertyData
         write = u"set" + nameWithUppercase;
         bindable = u"bindable" + nameWithUppercase;
         notify = propertyName + u"Changed";
+        reset = u"reset" + nameWithUppercase;
     }
 
     QString read;
     QString write;
     QString bindable;
     QString notify;
+    QString reset;
 };
 
 QT_END_NAMESPACE

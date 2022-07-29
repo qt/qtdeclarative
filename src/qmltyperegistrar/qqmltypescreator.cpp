@@ -241,6 +241,10 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties)
         if (final != obj.constEnd() && final->toBool())
             m_qml.writeScriptBinding(QLatin1String("isFinal"), QLatin1String("true"));
 
+        const auto constant = obj.constFind(QLatin1String("constant"));
+        if (constant != obj.constEnd() && constant->toBool())
+            m_qml.writeScriptBinding(QLatin1String("isConstant"), QLatin1String("true"));
+
         const auto required = obj.constFind(QLatin1String("required"));
         if (required != obj.constEnd() && required->toBool())
             m_qml.writeScriptBinding(QLatin1String("isRequired"), QLatin1String("true"));

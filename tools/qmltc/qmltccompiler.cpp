@@ -762,6 +762,21 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         current.endInit.body += notifyEpilogue;
         current.endInit.body << u"}"_s;
     }
+    if (QString resetName = result.property.reset(); !resetName.isEmpty()) {
+        Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
+        QmltcMethod reset {};
+        reset.returnType = u"void"_s;
+        reset.name = compilationData.reset;
+        reset.body += prologue;
+        reset.body << latestAccessor + u"->" + resetName + u"()" + u";";
+        reset.body += epilogue;
+        reset.userVisible = true;
+        current.functions.emplaceBack(reset);
+        mocLines << u"RESET"_s << reset.name;
+    }
+
+    if (result.property.isConstant())
+        mocLines << u"CONSTANT"_s;
 
     // 4. add moc entry
     // Q_PROPERTY(QString text READ text WRITE setText BINDABLE bindableText NOTIFY textChanged)
