@@ -31,7 +31,7 @@ QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QQuickPointerDeviceHandle
 {
 }
 
-QPointingDevice::DeviceTypes QQuickPointerDeviceHandler::acceptedDevices() const
+QInputDevice::DeviceTypes QQuickPointerDeviceHandler::acceptedDevices() const
 {
     Q_D(const QQuickPointerDeviceHandler);
     return d->acceptedDevices;

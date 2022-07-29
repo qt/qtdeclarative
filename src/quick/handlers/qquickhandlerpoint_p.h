@@ -38,6 +38,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
     Q_PROPERTY(qreal pressure READ pressure)
     Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters)
     Q_PROPERTY(QPointingDevice *device READ device)
+    QML_ANONYMOUS
 
 public:
     QQuickHandlerPoint();
