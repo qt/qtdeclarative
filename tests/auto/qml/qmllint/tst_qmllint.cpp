@@ -562,24 +562,20 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("bad template literal (simple)")
             << QStringLiteral("badTemplateStringSimple.qml")
             << Result { { Message {
-                       QStringLiteral("Cannot assign binding of type string to int") } } };
-    QTest::newRow("bad template literal (substitution)")
-            << QStringLiteral("badTemplateStringSubstitution.qml")
-            << Result { { Message {
-                       QStringLiteral("Cannot assign binding of type QString to int") } } };
+                       QStringLiteral("Cannot assign literal of type string to int") } } };
     QTest::newRow("bad constant number to string")
             << QStringLiteral("numberToStringProperty.qml")
             << Result { { Message { QStringLiteral(
-                       "Cannot assign a numeric constant to a string property") } } };
+                       "Cannot assign literal of type double to QString") } } };
     QTest::newRow("bad unary minus to string")
             << QStringLiteral("unaryMinusToStringProperty.qml")
             << Result { { Message { QStringLiteral(
-                       "Cannot assign a numeric constant to a string property") } } };
+                       "Cannot assign literal of type double to QString") } } };
     QTest::newRow("bad tranlsation binding (qsTr)") << QStringLiteral("bad_qsTr.qml") << Result {};
     QTest::newRow("bad string binding (QT_TR_NOOP)")
             << QStringLiteral("bad_QT_TR_NOOP.qml")
             << Result { { Message {
-                       QStringLiteral("Cannot assign binding of type string to int") } } };
+                       QStringLiteral("Cannot assign literal of type string to int") } } };
     QTest::newRow("BadScriptBindingOnGroup")
             << QStringLiteral("badScriptBinding.group.qml")
             << Result { { Message {
@@ -679,7 +675,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("badAttachedPropertyTypeString")
             << QStringLiteral("badAttachedPropertyTypeString.qml")
             << Result { { Message {
-                       QStringLiteral("Cannot assign binding of type string to int") } } };
+                       QStringLiteral("Cannot assign literal of type string to int") } } };
     QTest::newRow("badAttachedPropertyTypeQtObject")
             << QStringLiteral("badAttachedPropertyTypeQtObject.qml")
             << Result { { Message { QStringLiteral(
@@ -789,18 +785,10 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("WithStatement") << QStringLiteral("WithStatement.qml")
                                    << Result { { Message { QStringLiteral(
                                               "with statements are strongly discouraged") } } };
-    QTest::newRow("BindingTypeMismatch")
-            << QStringLiteral("bindingTypeMismatch.qml")
-            << Result { { Message {
-                       QStringLiteral("Cannot assign binding of type QString to int") } } };
-    QTest::newRow("BindingTypeMismatchFunction")
-            << QStringLiteral("bindingTypeMismatchFunction.qml")
-            << Result { { Message {
-                       QStringLiteral("Cannot assign binding of type QString to int") } } };
     QTest::newRow("BadLiteralBinding")
             << QStringLiteral("badLiteralBinding.qml")
             << Result { { Message {
-                       QStringLiteral("Cannot assign binding of type string to int") } } };
+                       QStringLiteral("Cannot assign literal of type string to int") } } };
     QTest::newRow("BadLiteralBindingDate")
             << QStringLiteral("badLiteralBindingDate.qml")
             << Result { { Message {
@@ -939,11 +927,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                           { Message { QStringLiteral("Ready") } } } };
     QTest::newRow("nullBinding") << QStringLiteral("nullBinding.qml")
                                  << Result{ { Message{ QStringLiteral(
-                                            "Cannot assign binding of type null to double") } } };
-    QTest::newRow("nullBindingFunction")
-            << QStringLiteral("nullBindingFunction.qml")
-            << Result{ { Message{
-                       QStringLiteral("Cannot assign binding of type null to double") } } };
+                                            "Cannot assign literal of type null to double") } } };
     QTest::newRow("missingRequiredAlias")
             << QStringLiteral("missingRequiredAlias.qml")
             << Result { { Message {
@@ -1157,6 +1141,10 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("prefixedAttachedProperty") << QStringLiteral("prefixedAttachedProperty.qml");
     QTest::newRow("stringToByteArray") << QStringLiteral("stringToByteArray.qml");
     QTest::newRow("jsLibrary") << QStringLiteral("jsLibrary.qml");
+    QTest::newRow("nullBindingFunction") << QStringLiteral("nullBindingFunction.qml");
+    QTest::newRow("BindingTypeMismatchFunction") << QStringLiteral("bindingTypeMismatchFunction.qml");
+    QTest::newRow("BindingTypeMismatch") << QStringLiteral("bindingTypeMismatch.qml");
+    QTest::newRow("template literal (substitution)") << QStringLiteral("templateStringSubstitution.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -1691,9 +1679,9 @@ void TestQmllint::quickPlugin()
                               u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_s },
                       Message{
                               u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_s },
-                      Message { u"Cannot assign binding of type null to QQuickAnchorLine"_s, 5,
+                      Message { u"Cannot assign literal of type null to QQuickAnchorLine"_s, 5,
                                 35 },
-                      Message { u"Cannot assign binding of type null to QQuickAnchorLine"_s, 6,
+                      Message { u"Cannot assign literal of type null to QQuickAnchorLine"_s, 6,
                                 33 } } });
     runTest("pluginQuick_anchorsUndefined.qml", Result::clean());
     runTest("pluginQuick_layoutChildren.qml",

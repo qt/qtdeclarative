@@ -131,6 +131,7 @@ private slots:
     void enumLookup();
     void stringToByteArray();
     void listPropertyAsModel();
+    void notNotString();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2400,6 +2401,18 @@ void tst_QmlCppCodegen::listPropertyAsModel()
 
     QQmlListReference children(o.data(), "children");
     QCOMPARE(children.count(), 5);
+}
+
+void tst_QmlCppCodegen::notNotString()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/notNotString.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("notNotString").value<bool>(), false);
+    o->setObjectName(u"a"_s);
+    QCOMPARE(o->property("notNotString").value<bool>(), true);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

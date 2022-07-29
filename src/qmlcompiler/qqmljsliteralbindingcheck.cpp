@@ -11,6 +11,34 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
+// This makes no sense, but we want to warn about things QQmlPropertyResolver complains about.
+static bool canConvertForLiteralBinding(
+        QQmlJSTypeResolver *resolver, const QQmlJSScope::ConstPtr &from,
+        const QQmlJSScope::ConstPtr &to) {
+    if (resolver->equals(from, to))
+        return true;
+
+    if (!resolver->canConvertFromTo(from, to))
+        return false;
+
+    const bool fromIsString = resolver->equals(from, resolver->stringType());
+
+    if (resolver->equals(to, resolver->stringType())
+            || resolver->equals(to, resolver->stringListType())
+            || resolver->equals(to, resolver->byteArrayType())
+            || resolver->equals(to, resolver->urlType())) {
+        return fromIsString;
+    }
+
+    if (resolver->isNumeric(to))
+        return resolver->isNumeric(from);
+
+    if (resolver->equals(to, resolver->boolType()))
+        return resolver->equals(from, resolver->boolType());
+
+    return true;
+}
+
 void QQmlJSLiteralBindingCheck::run(QQmlJSImportVisitor *visitor, QQmlJSTypeResolver *resolver)
 {
     QQmlJSLogger *logger = visitor->logger();
@@ -34,18 +62,13 @@ void QQmlJSLiteralBindingCheck::run(QQmlJSImportVisitor *visitor, QQmlJSTypeReso
                 continue;
             }
 
-            if (!resolver->canConvertFromTo(binding.literalType(resolver), property.type())) {
-                logger->log(u"Cannot assign binding of type %1 to %2"_s.arg(
+            if (!canConvertForLiteralBinding(
+                        resolver, binding.literalType(resolver), property.type())) {
+                logger->log(u"Cannot assign literal of type %1 to %2"_s.arg(
                                     QQmlJSScope::prettyName(binding.literalTypeName()),
                                     QQmlJSScope::prettyName(property.typeName())),
                             Log_Type, binding.sourceLocation());
                 continue;
-            }
-
-            if (resolver->equals(property.type(), resolver->stringType())
-                       && resolver->isNumeric(binding.literalType(resolver))) {
-                logger->log(u"Cannot assign a numeric constant to a string property"_s,
-                            Log_Type, binding.sourceLocation());
             }
         }
     }
