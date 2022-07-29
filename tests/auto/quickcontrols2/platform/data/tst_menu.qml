@@ -51,6 +51,8 @@
 import QtQuick
 import QtTest
 import Qt.labs.platform
+import QtQuick.Controls as Controls
+import org.qtproject.Test
 
 TestCase {
     id: testCase
@@ -73,6 +75,11 @@ TestCase {
     SignalSpy {
         id: itemsSpy
         signalName: "itemsChanged"
+    }
+
+    Component {
+        id: signalSpyComponent
+        SignalSpy {}
     }
 
     function init() {
@@ -260,5 +267,69 @@ TestCase {
         subMenu.title = "Title"
         compare(subMenu.title, "Title")
         compare(subMenuItem.text, "Title")
+    }
+
+    Component {
+        id: disabledMenuItemAndActionComponent
+
+        Item {
+            property alias action: action
+            property alias menu: menu
+
+            Controls.Action {
+                id: action
+                shortcut: StandardKey.Copy
+            }
+
+            Menu {
+                id: menu
+
+                MenuItem {
+                    enabled: !action.enabled
+                    shortcut: StandardKey.Copy
+                    text: "test"
+                }
+            }
+        }
+    }
+
+    function test_shortcuts() {
+        if (!TestHelper.shortcutsSupported)
+            skip("This test requires shortcut support")
+
+        let root = createTemporaryObject(disabledMenuItemAndActionComponent, testCase)
+        verify(root)
+        let menu = root.menu
+        let menuItem = menu.items[0]
+        verify(menuItem)
+        let action = root.action
+
+        let actionTriggeredSpy = signalSpyComponent.createObject(root,
+            { target: action, signalName: "triggered" })
+        verify(actionTriggeredSpy.valid)
+        let menuItemTriggeredSpy = signalSpyComponent.createObject(root,
+            { target: menuItem, signalName: "triggered" })
+        verify(menuItemTriggeredSpy.valid)
+
+        // Perform the shortcut; the Action should be triggered since the MenuItem is disabled.
+        keySequence(StandardKey.Copy)
+        compare(actionTriggeredSpy.count, 1)
+        compare(menuItemTriggeredSpy.count, 0)
+
+        // Disable the Action, enabling the MenuItem in the process.
+        action.enabled = false
+        verify(menuItem.enabled)
+        // Perform the shortcut; the MenuItem should be triggered since the Action is disabled.
+        keySequence(StandardKey.Copy)
+        compare(actionTriggeredSpy.count, 1)
+        compare(menuItemTriggeredSpy.count, 1)
+
+        // Re-enable the Action, disabling the MenuItem in the process.
+        action.enabled = true
+        verify(!menuItem.enabled)
+        // Perform the shortcut; the Action should be triggered since the MenuItem is disabled.
+        keySequence(StandardKey.Copy)
+        compare(actionTriggeredSpy.count, 2)
+        compare(menuItemTriggeredSpy.count, 1)
     }
 }

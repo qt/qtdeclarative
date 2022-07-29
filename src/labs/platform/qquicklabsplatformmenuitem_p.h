@@ -163,6 +163,9 @@ private Q_SLOTS:
     void updateIcon();
 
 private:
+    void addShortcut();
+    void removeShortcut();
+
     bool m_complete;
     bool m_enabled;
     bool m_visible;
