@@ -40,6 +40,13 @@ struct QStyleHintsForeign
     QML_ADDED_IN_VERSION(6, 4)
 };
 
+struct QImageForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QImage)
+    QML_ANONYMOUS
+};
+
 #if QT_CONFIG(validator)
 struct QValidatorForeign
 {
