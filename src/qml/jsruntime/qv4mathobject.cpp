@@ -342,49 +342,7 @@ ReturnedValue MathObject::method_pow(const FunctionObject *, const Value *, cons
     double x = argc > 0 ? argv[0].toNumber() : qt_qnan();
     double y = argc > 1 ? argv[1].toNumber() : qt_qnan();
 
-    if (std::isnan(y))
-        RETURN_RESULT(Encode(qt_qnan()));
-
-    if (y == 0) {
-        RETURN_RESULT(Encode(1));
-    } else if (((x == 1) || (x == -1)) && std::isinf(y)) {
-        RETURN_RESULT(Encode(qt_qnan()));
-    } else if (((x == 0) && copySign(1.0, x) == 1.0) && (y < 0)) {
-        RETURN_RESULT(Encode(qInf()));
-    } else if ((x == 0) && copySign(1.0, x) == -1.0) {
-        if (y < 0) {
-            if (std::fmod(-y, 2.0) == 1.0)
-                RETURN_RESULT(Encode(-qt_inf()));
-            else
-                RETURN_RESULT(Encode(qt_inf()));
-        } else if (y > 0) {
-            if (std::fmod(y, 2.0) == 1.0)
-                RETURN_RESULT(Encode(copySign(0, -1.0)));
-            else
-                RETURN_RESULT(Encode(0));
-        }
-    }
-
-#ifdef Q_OS_AIX
-    else if (qt_is_inf(x) && copySign(1.0, x) == -1.0) {
-        if (y > 0) {
-            if (std::fmod(y, 2.0) == 1.0)
-                RETURN_RESULT(Encode(-qt_inf()));
-            else
-                RETURN_RESULT(Encode(qt_inf()));
-        } else if (y < 0) {
-            if (std::fmod(-y, 2.0) == 1.0)
-                RETURN_RESULT(Encode(copySign(0, -1.0)));
-            else
-                RETURN_RESULT(Encode(0));
-        }
-    }
-#endif
-    else {
-        RETURN_RESULT(Encode(std::pow(x, y)));
-    }
-    // ###
-    RETURN_RESULT(Encode(qt_qnan()));
+    RETURN_RESULT(Encode(QQmlPrivate::jsExponentiate(x, y)));
 }
 
 ReturnedValue MathObject::method_random(const FunctionObject *, const Value *, const Value *, int)

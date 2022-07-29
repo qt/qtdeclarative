@@ -260,6 +260,7 @@ private slots:
     void urlObject();
     void thisInConstructor();
     void forOfAndGc();
+    void jsExponentiate();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5569,6 +5570,27 @@ void tst_QJSEngine::forOfAndGc()
     QScopedPointer<QObject> o(c.create());
 
     QTRY_VERIFY(o->property("count").toInt() > 32768);
+}
+
+void tst_QJSEngine::jsExponentiate()
+{
+    const double numbers[] = {
+        std::numeric_limits<int>::min(), -10, -1, 0, 1, 10, std::numeric_limits<int>::max(),
+        -std::numeric_limits<double>::infinity(), -100.1, -1.2, -0.0, 0.0, 1.2, 100.1,
+        std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()
+    };
+
+    QJSEngine engine;
+
+    const QJSManagedValue exp(engine.evaluate("(function(a, b) { return a ** b })"), &engine);
+    const QJSManagedValue pow(engine.evaluate("Math.pow"), &engine);
+    QVERIFY(exp.isFunction());
+    QVERIFY(pow.isFunction());
+
+    for (double a : numbers) {
+        for (double b : numbers)
+            QCOMPARE(exp.call({a, b}).toNumber(), pow.call({a, b}).toNumber());
+    }
 }
 
 QTEST_MAIN(tst_QJSEngine)

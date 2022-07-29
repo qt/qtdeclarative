@@ -1372,10 +1372,7 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         const Value left = STACK_VALUE(lhs);
         double base = left.toNumber();
         double exp = ACC.toNumber();
-        if (qIsInf(exp) && (base == 1 || base == -1))
-            acc = Encode(qQNaN());
-        else
-            acc = Encode(pow(base,exp));
+        acc = Encode(QQmlPrivate::jsExponentiate(base, exp));
     MOTH_END_INSTR(Exp)
 
     MOTH_BEGIN_INSTR(Mul)
