@@ -977,6 +977,10 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
             return true;
     }
 
+    // We can convert anything that fits into QJSPrimitiveValue
+    if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
+        return true;
+
     return false;
 }
 

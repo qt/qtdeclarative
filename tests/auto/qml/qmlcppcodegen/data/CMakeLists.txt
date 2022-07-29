@@ -117,6 +117,7 @@ set(qml_files
     nonNotifyable.qml
     noscope.qml
     notEqualsInt.qml
+    notNotString.qml
     nullAccess.qml
     objectInVar.qml
     outOfBounds.qml
