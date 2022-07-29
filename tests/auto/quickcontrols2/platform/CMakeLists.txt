@@ -20,6 +20,7 @@ qt_internal_add_test(tst_platform
         tst_platform.cpp
     LIBRARIES
         Qt::Gui
+        Qt::Qml
     TESTDATA ${test_data}
 )
 
