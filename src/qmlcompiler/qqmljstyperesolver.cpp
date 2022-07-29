@@ -182,7 +182,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeForConst(QV4::ReturnedValue rv) co
         return realType();
 
     if (value.isNull())
-        return jsPrimitiveType();
+        return nullType();
 
     return {};
 }
