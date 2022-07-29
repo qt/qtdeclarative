@@ -28,6 +28,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_realType = builtinTypes[u"double"_s].scope;
     m_floatType = builtinTypes[u"float"_s].scope;
     m_intType = builtinTypes[u"int"_s].scope;
+    m_uintType = builtinTypes[u"uint"_s].scope;
     m_boolType = builtinTypes[u"bool"_s].scope;
     m_stringType = builtinTypes[u"QString"_s].scope;
     m_stringListType = builtinTypes[u"QStringList"_s].scope;
@@ -276,12 +277,13 @@ bool QQmlJSTypeResolver::isNumeric(const QQmlJSRegisterContent &type) const
 
 bool QQmlJSTypeResolver::isIntegral(const QQmlJSRegisterContent &type) const
 {
-    return equals(containedType(type), m_intType);
+    return equals(containedType(type), m_intType) || equals(containedType(type), m_uintType);
 }
 
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 {
-    return equals(type, m_intType) || equals(type, m_realType) || equals(type, m_floatType)
+    return equals(type, m_intType) || equals(type, m_uintType)
+            || equals(type, m_realType) || equals(type, m_floatType)
             || equals(type, m_boolType) || equals(type, m_voidType) || equals(type, m_nullType)
             || equals(type, m_stringType) || equals(type, m_jsPrimitiveType);
 }
@@ -607,7 +609,11 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
 
     if (canConvert(boolType(), intType()))
         return intType();
+    if (canConvert(boolType(), uintType()))
+        return uintType();
     if (canConvert(intType(), stringType()))
+        return stringType();
+    if (canConvert(uintType(), stringType()))
         return stringType();
     if (isPrimitive(a) && isPrimitive(b))
         return jsPrimitiveType();

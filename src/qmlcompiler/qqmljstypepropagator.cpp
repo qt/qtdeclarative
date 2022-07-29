@@ -651,8 +651,8 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
         return;
     }
 
-    if (m_typeResolver->registerContains(m_state.accumulatorIn(), m_typeResolver->intType()))
-        addReadAccumulator(m_state.accumulatorIn());
+    if (m_typeResolver->isIntegral(m_state.accumulatorIn()))
+        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
     else
         addReadAccumulator(m_typeResolver->globalType(m_typeResolver->realType()));
 
@@ -677,8 +677,8 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
         return;
     }
 
-    if (m_typeResolver->registerContains(indexRegister, m_typeResolver->intType()))
-        addReadRegister(index, indexRegister);
+    if (m_typeResolver->isIntegral(indexRegister))
+        addReadRegister(index, m_typeResolver->globalType(m_typeResolver->intType()));
     else
         addReadRegister(index, m_typeResolver->globalType(m_typeResolver->realType()));
 
@@ -1342,14 +1342,20 @@ void QQmlJSTypePropagator::propagateStringArgCall(int argv)
     Q_ASSERT(m_state.accumulatorOut().isValid());
 
     const QQmlJSScope::ConstPtr input = m_typeResolver->containedType(m_state.registers[argv]);
-    if (m_typeResolver->equals(input, m_typeResolver->intType()))
-        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->intType()));
-    else if (m_typeResolver->equals(input, m_typeResolver->realType()))
-        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
-    else if (m_typeResolver->equals(input, m_typeResolver->boolType()))
-        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->boolType()));
-    else
-        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->stringType()));
+    for (QQmlJSScope::ConstPtr targetType : {
+         m_typeResolver->intType(),
+         m_typeResolver->uintType(),
+         m_typeResolver->realType(),
+         m_typeResolver->floatType(),
+         m_typeResolver->boolType(),
+    }) {
+        if (m_typeResolver->equals(input, targetType)) {
+            addReadRegister(argv, m_typeResolver->globalType(targetType));
+            return;
+        }
+    }
+
+    addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->stringType()));
 }
 
 void QQmlJSTypePropagator::generate_CallPropertyLookup(int lookupIndex, int base, int argc,
@@ -1757,7 +1763,8 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
     const auto isIntCompatible = [this](const QQmlJSRegisterContent &content) {
         const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
         return contained->scopeType() == QQmlJSScope::EnumScope
-                || m_typeResolver->equals(contained, m_typeResolver->intType());
+                || m_typeResolver->equals(contained, m_typeResolver->intType())
+                || m_typeResolver->equals(contained, m_typeResolver->uintType());
     };
 
     const auto accumulatorIn = m_state.accumulatorIn();

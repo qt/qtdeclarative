@@ -1253,10 +1253,14 @@ bool QQmlJSCodeGenerator::inlineStringMethod(const QString &name, int base, int 
 
     if (m_typeResolver->registerContains(input, m_typeResolver->intType()))
         m_body += ret(arg(m_typeResolver->intType()));
+    else if (m_typeResolver->registerContains(input, m_typeResolver->uintType()))
+        m_body += ret(arg(m_typeResolver->uintType()));
     else if (m_typeResolver->registerContains(input, m_typeResolver->boolType()))
         m_body += ret(arg(m_typeResolver->boolType()));
     else if (m_typeResolver->registerContains(input, m_typeResolver->realType()))
         m_body += ret(arg(m_typeResolver->realType()));
+    else if (m_typeResolver->registerContains(input, m_typeResolver->floatType()))
+        m_body += ret(arg(m_typeResolver->floatType()));
     else
         m_body += ret(arg(m_typeResolver->stringType()));
     m_body += u";\n"_s;
@@ -1939,8 +1943,11 @@ void QQmlJSCodeGenerator::generate_CmpNeNull()
 
 QString QQmlJSCodeGenerator::eqIntExpression(int lhsConst)
 {
-    if (m_typeResolver->registerIsStoredIn(m_state.accumulatorIn(), m_typeResolver->intType()))
+    if (m_typeResolver->registerIsStoredIn(m_state.accumulatorIn(), m_typeResolver->intType())
+            || m_typeResolver->registerIsStoredIn(
+                m_state.accumulatorIn(), m_typeResolver->uintType())) {
         return QString::number(lhsConst) + u" == "_s + m_state.accumulatorVariableIn;
+    }
 
     if (m_typeResolver->registerIsStoredIn(m_state.accumulatorIn(), m_typeResolver->boolType())) {
         return QString::number(lhsConst) + u" == "_s
@@ -2651,6 +2658,8 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
             return u"false"_s;
         if (m_typeResolver->equals(to, m_typeResolver->intType()))
             return u"0"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->uintType()))
+            return u"0u"_s;
         if (m_typeResolver->equals(to, m_typeResolver->floatType()))
             return u"0.0f"_s;
         if (m_typeResolver->equals(to, m_typeResolver->realType()))
@@ -2738,8 +2747,13 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
     };
 
     if (m_typeResolver->equals(from, m_typeResolver->realType())
-            && m_typeResolver->equals(to, m_typeResolver->intType())) {
-        return u"QJSNumberCoercion::toInteger("_s + variable + u')';
+            || m_typeResolver->equals(from, m_typeResolver->floatType())) {
+        if (m_typeResolver->equals(to, m_typeResolver->intType()))
+            return u"QJSNumberCoercion::toInteger("_s + variable + u')';
+        if (m_typeResolver->equals(to, m_typeResolver->uintType()))
+            return u"uint(QJSNumberCoercion::toInteger("_s + variable + u"))"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->boolType()))
+            return u'(' + variable + u" && !std::isnan("_s + variable + u"))"_s;
     }
 
     if (isBoolOrNumber(from) && isBoolOrNumber(to))
@@ -2753,6 +2767,8 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
             return variable + u".toBoolean()"_s;
         if (m_typeResolver->equals(to, m_typeResolver->intType()))
             return variable + u".toInteger()"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->uintType()))
+            return u"uint("_s + variable + u".toInteger())"_s;
         if (m_typeResolver->equals(to, m_typeResolver->stringType()))
             return variable + u".toString()"_s;
         if (m_typeResolver->equals(to, jsValueType))
@@ -2807,29 +2823,29 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
         return variable + u".toUtf8()"_s;
     }
 
-    const auto retrieveFromPrimitive = [&](const QQmlJSScope::ConstPtr &type)
+    const auto retrieveFromPrimitive = [&](
+            const QQmlJSScope::ConstPtr &type, const QString &expression) -> QString
     {
         if (m_typeResolver->equals(type, m_typeResolver->boolType()))
-            return u".toBoolean()"_s;
+            return expression + u".toBoolean()"_s;
         if (m_typeResolver->equals(type, m_typeResolver->intType()))
-            return u".toInteger()"_s;
+            return expression + u".toInteger()"_s;
+        if (m_typeResolver->equals(type, m_typeResolver->uintType()))
+            return u"uint("_s + expression + u".toInteger())"_s;
         if (m_typeResolver->equals(type, m_typeResolver->realType()))
-            return u".toDouble()"_s;
+            return expression + u".toDouble()"_s;
+        if (m_typeResolver->equals(type, m_typeResolver->floatType()))
+            return u"float("_s + expression + u".toDouble())"_s;
         if (m_typeResolver->equals(type, m_typeResolver->stringType()))
-            return u".toString()"_s;
+            return expression + u".toString()"_s;
         return QString();
     };
 
-    const auto fitsIntoPrimitive = [&](const QQmlJSScope::ConstPtr &type)
-    {
-        return !retrieveFromPrimitive(type).isEmpty()
-                || m_typeResolver->equals(type, m_typeResolver->floatType());
-    };
-
-    if (fitsIntoPrimitive(from)) {
-        const QString retrieve = retrieveFromPrimitive(to);
+    if (!retrieveFromPrimitive(from, u"x"_s).isEmpty()) {
+        const QString retrieve = retrieveFromPrimitive(
+                    to, u"QJSPrimitiveValue("_s + variable + u')');
         if (!retrieve.isEmpty())
-            return u"QJSPrimitiveValue("_s + variable + u')' + retrieve;
+            return retrieve;
     }
 
     // TODO: add more conversions

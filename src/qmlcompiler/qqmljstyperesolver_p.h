@@ -44,6 +44,7 @@ public:
     QQmlJSScope::ConstPtr realType() const { return m_realType; }
     QQmlJSScope::ConstPtr floatType() const { return m_floatType; }
     QQmlJSScope::ConstPtr intType() const { return m_intType; }
+    QQmlJSScope::ConstPtr uintType() const { return m_uintType; }
     QQmlJSScope::ConstPtr boolType() const { return m_boolType; }
     QQmlJSScope::ConstPtr stringType() const { return m_stringType; }
     QQmlJSScope::ConstPtr stringListType() const { return m_stringListType; }
@@ -176,6 +177,7 @@ protected:
     QQmlJSScope::ConstPtr m_realType;
     QQmlJSScope::ConstPtr m_floatType;
     QQmlJSScope::ConstPtr m_intType;
+    QQmlJSScope::ConstPtr m_uintType;
     QQmlJSScope::ConstPtr m_boolType;
     QQmlJSScope::ConstPtr m_stringType;
     QQmlJSScope::ConstPtr m_stringListType;
