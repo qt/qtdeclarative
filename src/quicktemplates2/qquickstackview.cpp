@@ -747,7 +747,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
 
     \include qquickstackview.qdocinc pop-ownership
 
-    If the \a target argument is specified, all items down to the \target
+    If the \a target argument is specified, all items down to the \a target
     item will be replaced. If \a target is \c null, all items in the stack
     will be replaced. If not specified, only the top item will be replaced.
 
