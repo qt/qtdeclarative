@@ -877,16 +877,16 @@ void tst_QQuickMenu::popup()
     QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_VERIFY(qFuzzyCompare(menu->x(), 33));
-    QTRY_VERIFY(qFuzzyCompare(menu->y(), 44));
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), qMax(qreal(33), menu->leftMargin())));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), qMax(qreal(44), menu->topMargin())));
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, 66)));
     QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_VERIFY(qFuzzyCompare(menu->x(), 55));
-    QTRY_VERIFY(qFuzzyCompare(menu->y(), 66));
+    QTRY_VERIFY(qFuzzyCompare(menu->x(), qMax(qreal(55), menu->leftMargin())));
+    QTRY_VERIFY(qFuzzyCompare(menu->y(), qMax(qreal(66), menu->topMargin())));
     menu->close();
 
     menu->setParentItem(nullptr);
