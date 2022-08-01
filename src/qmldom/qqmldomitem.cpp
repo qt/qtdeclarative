@@ -1680,7 +1680,12 @@ public:
         CppTypeInfo res;
         QRegularExpression reTarget = QRegularExpression(QRegularExpression::anchoredPattern(
                 uR"(QList<(?<list>[a-zA-Z_0-9:]+) *(?<listPtr>\*?)>|QMap< *(?<mapKey>[a-zA-Z_0-9:]+) *, *(?<mapValue>[a-zA-Z_0-9:]+) *(?<mapPtr>\*?)>|(?<baseType>[a-zA-Z_0-9:]+) *(?<ptr>\*?))"));
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
         QRegularExpressionMatch m = reTarget.match(target);
+#else
+        QRegularExpressionMatch m = reTarget.matchView(target);
+#endif
         if (!m.hasMatch()) {
             DomItem::myResolveErrors()
                     .error(tr("Unexpected complex CppType %1").arg(target))

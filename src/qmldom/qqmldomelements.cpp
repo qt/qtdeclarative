@@ -203,13 +203,17 @@ Version Version::fromString(QStringView v)
         return Version(Latest, Latest);
     QRegularExpression r(
             QRegularExpression::anchoredPattern(QStringLiteral(uR"(([0-9]*)(?:\.([0-9]*))?)")));
-    auto m = r.match(v.toString());
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+    auto m = r.match(v);
+#else
+    auto m = r.matchView(v);
+#endif
     if (m.hasMatch()) {
         bool ok;
-        int majorV = m.captured(1).toInt(&ok);
+        int majorV = m.capturedView(1).toInt(&ok);
         if (!ok)
             majorV = Version::Undefined;
-        int minorV = m.captured(2).toInt(&ok);
+        int minorV = m.capturedView(2).toInt(&ok);
         if (!ok)
             minorV = Version::Undefined;
         return Version(majorV, minorV);

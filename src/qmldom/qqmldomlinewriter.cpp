@@ -137,13 +137,23 @@ QString LineWriter::eolToWrite() const
     return QStringLiteral(u"\n");
 }
 
+template<typename String, typename ...Args>
+static QRegularExpressionMatch matchHelper(QRegularExpression &re, String &&s, Args &&...args)
+{
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+    return re.match(s, args...);
+#else
+    return re.matchView(s, args...);
+#endif
+}
+
 LineWriter &LineWriter::write(QStringView v, TextAddType tAdd)
 {
     QString eol;
     // split multiple lines
     static QRegularExpression eolRe(QLatin1String(
             "(\r?\n|\r)")); // does not support split of \r and \n for windows style line endings
-    QRegularExpressionMatch m = eolRe.match(v);
+    QRegularExpressionMatch m = matchHelper(eolRe, v);
     if (m.hasMatch()) {
         // add line by line
         auto i = m.capturedStart(1);
@@ -153,11 +163,11 @@ LineWriter &LineWriter::write(QStringView v, TextAddType tAdd)
         // because we cannot have already opened or closed a PendingSourceLocation
         if (iEnd < v.size()) {
             write(v.mid(0, iEnd));
-            m = eolRe.match(v, iEnd);
+            m = matchHelper(eolRe, v, iEnd);
             while (m.hasMatch()) {
                 write(v.mid(iEnd, m.capturedEnd(1) - iEnd));
                 iEnd = m.capturedEnd(1);
-                m = eolRe.match(v, iEnd);
+                m = matchHelper(eolRe, v, iEnd);
             }
             if (iEnd < v.size())
                 write(v.mid(iEnd, v.size() - iEnd));

@@ -97,14 +97,19 @@ bool FieldFilter::operator()(DomItem &base, const PathEls::PathComponent &c, Dom
 
 bool FieldFilter::addFilter(QString fFields)
 {
+    // parses a base filter of the form <op><typeName>:<fieldName> or <op><fieldName>
+    // as described in this class documentation
+    QRegularExpression fieldRe(QRegularExpression::anchoredPattern(QStringLiteral(
+            uR"((?<op>[-+])?(?:(?<type>[a-zA-Z0-9_]*):)?(?<field>[a-zA-Z0-9_]*))")));
     for (const QString &fField : fFields.split(QLatin1Char(','))) {
-        // parses a base filter of the form <op><typeName>:<fieldName> or <op><fieldName>
-        // as described in this class documentation
-        QRegularExpression fieldRe(QRegularExpression::anchoredPattern(QStringLiteral(
-                uR"((?<op>[-+])?(?:(?<type>[a-zA-Z0-9_]*):)?(?<field>[a-zA-Z0-9_]*))")));
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
         QRegularExpressionMatch m = fieldRe.match(fField);
+#else
+        QRegularExpressionMatch m = fieldRe.matchView(fField);
+#endif
         if (m.hasMatch()) {
-            if (m.captured(u"op") == u"+") {
+            if (m.capturedView(u"op") == u"+") {
                 m_fieldFilterRemove.remove(m.captured(u"type"), m.captured(u"field"));
                 m_fieldFilterAdd.insert(m.captured(u"type"), m.captured(u"field"));
             } else {

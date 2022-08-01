@@ -724,7 +724,11 @@ public:
                 pathFromOwner = comp.addId(idVal, AddOption::KeepExisting, &idPtr);
                 QRegularExpression idRe(QRegularExpression::anchoredPattern(
                         QStringLiteral(uR"([[:lower:]][[:lower:][:upper:]0-9_]*)")));
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
                 auto m = idRe.match(iExp->name);
+#else
+                auto m = idRe.matchView(iExp->name);
+#endif
                 if (!m.hasMatch()) {
                     qmlFile.addError(
                             myParseErrors()
