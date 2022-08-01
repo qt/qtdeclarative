@@ -109,6 +109,11 @@ a file system path.
 A directory of QML files can also be imported from a remote location if the
 directory contains a directory listing \c qmldir file.
 
+\note This also holds for the implicit import of the directory a QML document
+resides in. If your QML documents are loaded from a remote location, you need
+to add qmldir files even if they don't contain any explicit directory import
+statements. Otherwise your QML documents won't see each other.
+
 For example, if the \c myapp directory in the previous example was hosted at
 "http://www.my-example-server.com", and the \c mycomponents directory
 contained a \c qmldir file defined as follows:
