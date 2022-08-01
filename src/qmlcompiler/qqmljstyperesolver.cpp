@@ -643,7 +643,8 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
         return m_metaObjectType;
 
     if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
-        for (auto base = type; base; base = base->baseType()) {
+        QString unresolvedBaseTypeName;
+        for (auto base = type; base;) {
             // QObject and QQmlComponent are the two required base types.
             // Any QML type system has to define those, or use the ones from builtins.
             // As QQmlComponent is derived from QObject, we can restrict ourselves to the latter.
@@ -655,10 +656,19 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
                        && base->internalName() == u"QQmlComponent"_s) {
                 return base;
             }
+
+            if (auto baseBase = base->baseType()) {
+                base = baseBase;
+            } else {
+                unresolvedBaseTypeName = base->baseTypeName();
+                break;
+            }
         }
 
-        m_logger->log(u"Object type %1 is not derived from QObject or QQmlComponent"_s.arg(
-                              type->internalName()),
+        m_logger->log(u"Object type %1 is not derived from QObject or QQmlComponent. "
+                      "You may need to fully qualify all names in C++ so that moc can see them. "
+                      "You may also need to add qt_extract_metatypes(<target containing %2>)."_s
+                      .arg(type->internalName(), unresolvedBaseTypeName),
                       Log_Compiler, type->sourceLocation());
 
         // Reference types that are not QObject or QQmlComponent are likely JavaScript objects.
