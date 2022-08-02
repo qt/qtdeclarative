@@ -368,6 +368,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !__has_feature(address_sanitizer)
 #ifdef Q_OS_QNX
                 maxCallDepth = 640; // QNX's stack is only 512k by default
+#elif defined(Q_OS_WIN)
+                maxCallDepth = 640; // We've seen crashes around 750.
 #else
                 maxCallDepth = 1234;
 #endif
