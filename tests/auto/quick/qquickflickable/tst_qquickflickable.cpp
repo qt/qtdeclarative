@@ -26,11 +26,13 @@
 **
 ****************************************************************************/
 #include <qtest.h>
+#include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
+#include <QtQuick/qquickview.h>
+#include <QtQuickTest/QtQuickTest>
 #include <QtGui/QStyleHints>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQuick/qquickview.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickflickable_p_p.h>
 #include <private/qquickmousearea_p.h>
@@ -241,6 +243,8 @@ private slots:
     void flickWhenRotated();
     void scrollingWithFractionalExtentSize_data();
     void scrollingWithFractionalExtentSize();
+    void setContentPositionWhileDragging_data();
+    void setContentPositionWhileDragging();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2960,6 +2964,103 @@ void tst_qquickflickable::scrollingWithFractionalExtentSize() // QTBUG-101268
         QTRY_VERIFY(!flickable->isMovingHorizontally());
         QVERIFY(atBeginning ? flickable->isAtXBeginning() : flickable->isAtXEnd());
     }
+}
+
+void tst_qquickflickable::setContentPositionWhileDragging_data()
+{
+    QTest::addColumn<bool>("isHorizontal");
+    QTest::addColumn<int>("newPos");
+    QTest::addColumn<int>("newExtent");
+    QTest::newRow("horizontal, setContentX") << true << 0 << -1;
+    QTest::newRow("vertical, setContentY") << false << 0 << -1;
+    QTest::newRow("horizontal, setContentWidth") << true << -1 << 200;
+    QTest::newRow("vertical, setContentHeight") << false << -1 << 200;
+}
+
+void tst_qquickflickable::setContentPositionWhileDragging() // QTBUG-104966
+{
+    QFETCH(bool, isHorizontal);
+    QFETCH(int, newPos);
+    QFETCH(int, newExtent);
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("contentPosWhileDragging.qml")));
+    QQuickViewTestUtils::centerOnScreen(&window);
+    QVERIFY(window.isVisible());
+    QQuickItem *rootItem = window.rootObject();
+    QVERIFY(rootItem);
+    QQuickFlickable *flickable = rootItem->findChild<QQuickFlickable *>();
+    QVERIFY(flickable);
+
+    const auto contentPos = [flickable]() -> QPoint {
+        return QPoint(flickable->contentX(), flickable->contentY());
+    };
+    const qreal threshold =
+            qApp->styleHints()->startDragDistance() * flickable->parentItem()->scale();
+    const QPoint thresholdPnt(qRound(threshold), qRound(threshold));
+    const auto flickableCenterPos = flickable->mapToScene({flickable->width() / 2, flickable->height() / 2}).toPoint();
+
+    // Drag the mouse until we have surpassed the mouse drag threshold and a drag is initiated
+    // by checking for  flickable->isDragging()
+    QPoint pos = flickableCenterPos;
+    QQuickViewTestUtils::moveAndPress(&window, pos);
+    int j = 1;
+    QVERIFY(!flickable->isDragging());
+    while (!flickable->isDragging()) {
+        pos = flickableCenterPos - QPoint(j, j);
+        QTest::mouseMove(&window, pos);
+        j++;
+    }
+
+    // Now we have entered the drag state
+    QVERIFY(flickable->isDragging());
+    QCOMPARE(flickable->contentX(), 0);
+    QCOMPARE(flickable->contentY(), 0);
+    QVERIFY(flickable->width() > 0);
+    QVERIFY(flickable->height() > 0);
+
+
+    const int moveLength = 50;
+    const QPoint unitDelta(isHorizontal ? 1 : 0, isHorizontal ? 0 : 1);
+    const QPoint moveDelta = unitDelta * moveLength;
+
+    pos -= 3*moveDelta;
+    QTest::mouseMove(&window, pos);
+    // Should be positive because we drag in the opposite direction
+    QCOMPARE(contentPos(), 3 * moveDelta);
+    QPoint expectedContentPos;
+
+    // Set the content item position back to zero *while dragging* (!!)
+    if (newPos >= 0) {
+        if (isHorizontal) {
+            flickable->setContentX(newPos);
+        } else {
+            flickable->setContentY(newPos);
+        }
+        // Continue dragging
+        pos -= moveDelta;
+        expectedContentPos = moveDelta;
+    } else if (newExtent >= 0) {
+        // ...or reduce the content size be be less than current (contentX, contentY) position
+        // This forces the content item to move.
+        expectedContentPos = moveDelta;
+        if (isHorizontal) {
+            flickable->setContentWidth(newExtent);
+        } else {
+            flickable->setContentHeight(newExtent);
+        }
+        // Assumption is that the contentItem is aligned to the bottom of the flickable
+        // We therefore cannot scroll/flick it further down. Drag it up towards the top instead
+        // (by moving mouse down).
+        pos += moveDelta;
+    }
+
+    QTest::mouseMove(&window, pos);
+
+    // Make sure that the contentItem was only dragged the delta in mouse movement since the last
+    // setContentX/Y() call.
+    QCOMPARE(contentPos(), expectedContentPos);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, pos);
+    QVERIFY(!flickable->isDragging());
 }
 
 QTEST_MAIN(tst_qquickflickable)
