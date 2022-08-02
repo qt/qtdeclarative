@@ -56,7 +56,7 @@ protected:
     { error(object->location, description); }
     void error(const QV4::CompiledData::Location &location, const QString& description);
 
-    int evaluateEnum(const QByteArray&, bool *ok) const;
+    int evaluateEnum(const QString &, bool *ok) const;
 
     const QMetaObject *resolveType(const QString&) const;
 

@@ -32,6 +32,9 @@ public:
 
     QVector<QQmlError> validate();
 
+    QQmlPropertyCache::ConstPtr rootPropertyCache() const { return propertyCaches.at(0); }
+    QUrl documentSourceUrl() const { return compilationUnit->url(); }
+
 private:
     QVector<QQmlError> validateObject(
             int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,

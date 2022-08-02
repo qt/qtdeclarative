@@ -6149,7 +6149,7 @@ void tst_qqmllanguage::qualifiedScopeInCustomParser()
                       "ListModel {\n"
                       "    ListElement { text: \"a\"; type: BACKEND.EnumTester.FIRST }\n"
                       "}\n", QUrl());
-    QVERIFY(component.isReady());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
 }
