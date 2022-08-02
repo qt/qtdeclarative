@@ -2176,6 +2176,22 @@ void tst_qqmllanguage::aliasProperties()
         QCOMPARE(subItem->property("y").toInt(), 1);
     }
 
+    // Nested property bindings on group properties that are actually aliases (QTBUG-94983)
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.15a.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subItem = qvariant_cast<QObject*>(object->property("symbol"));
+        QVERIFY(!subItem.isNull());
+
+        QPointer<QObject> subSubItem = qvariant_cast<QObject*>(subItem->property("layer"));
+
+        QCOMPARE(subSubItem->property("enabled").value<bool>(), true);
+    }
+
     // Alias to sub-object with binding (QTBUG-57041)
     {
         // This is shold *not* crash.
