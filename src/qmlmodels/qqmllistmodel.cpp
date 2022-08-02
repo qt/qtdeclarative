@@ -2881,9 +2881,8 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::ExecutableCom
     } else if (binding->type() == QV4::CompiledData::Binding::Type_Script) {
         QString scriptStr = compilationUnit->bindingValueAsScriptString(binding);
         if (!binding->isFunctionExpression() && !definesEmptyList(scriptStr)) {
-            QByteArray script = scriptStr.toUtf8();
             bool ok;
-            evaluateEnum(script, &ok);
+            evaluateEnum(scriptStr, &ok);
             if (!ok) {
                 error(binding, QQmlListModel::tr("ListElement: cannot use script for property value"));
                 return false;
@@ -2966,9 +2965,8 @@ bool QQmlListModelParser::applyProperty(
                     QJSValuePrivate::setValue(&v, result->asReturnedValue());
                 value.setValue(v);
             } else {
-                QByteArray script = scriptStr.toUtf8();
                 bool ok;
-                value = evaluateEnum(script, &ok);
+                value = evaluateEnum(scriptStr, &ok);
             }
         } else {
             Q_UNREACHABLE();
