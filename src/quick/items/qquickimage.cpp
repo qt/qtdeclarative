@@ -908,6 +908,8 @@ void QQuickImage::setMipmap(bool use)
     emit mipmapChanged(d->mipmap);
 
     d->pixmapChanged = true;
+    if (isComponentComplete())
+        load();
     update();
 }
 
