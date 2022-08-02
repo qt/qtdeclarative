@@ -37,13 +37,13 @@ struct QQuickTimeLinePrivate
 
     struct Op {
         enum Type {
-            Pause,
-            Set,
-            Move,
-            MoveBy,
-            Accel,
+            Pause, // Pauses any value updates
+            Set, // Instantly changes the value to a target value
+            Move, // Moves towards a target value over time
+            MoveBy, // Same as Move, but target value is now an offset from the starting value
+            Accel, // Moves towards a target value over time with a constant acceleration
             AccelDistance,
-            Execute
+            Execute // Calls back a function
         };
         Op() {}
         Op(Type t, int l, qreal v, qreal v2, int o,
@@ -122,9 +122,11 @@ void QQuickTimeLinePrivate::add(QQuickTimeLineObject &g, const Op &o)
     if (!iter->ops.isEmpty() &&
        o.type == Op::Pause &&
        iter->ops.constLast().type == Op::Pause) {
+        // If the last operation was a pause, and we're adding another, simply prolong it.
         iter->ops.last().length += o.length;
         iter->length += o.length;
     } else {
+        // Add to the list of operations
         iter->ops.append(o);
         iter->length += o.length;
     }
@@ -742,6 +744,7 @@ int QQuickTimeLinePrivate::advance(int t)
                     tl.base = v->value();
 
                 if ((tl.consumedOpLength + advanceTime) == op.length) {
+                    // Finishing operation, the timeline value will be the operation's target value.
                     if (op.type == Op::Execute) {
                         updates << qMakePair(op.order, Update(op.event));
                     } else {
@@ -754,6 +757,8 @@ int QQuickTimeLinePrivate::advance(int t)
                     tl.consumedOpLength = 0;
                     tl.ops.removeFirst();
                 } else {
+                    // Partially finished operation, the timeline value will be between the base
+                    // value and the target value, depending on progress and type of operation.
                     tl.consumedOpLength += advanceTime;
                     bool changed = false;
                     qreal val = value(op, tl.consumedOpLength, tl.base, &changed);
