@@ -149,15 +149,22 @@ void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(QQmlEnginePr
         if (propertyCaches->at(groupPropertyObjectIndex))
             continue;
 
-        if (pendingBinding.referencingObjectPropertyCache) {
-            if (!pendingBinding.resolveInstantiatingProperty())
-                continue;
-            auto cache = pendingBinding.instantiatingPropertyCache(enginePrivate);
-            propertyCaches->set(groupPropertyObjectIndex, cache);
-        } else {
+        if (pendingBinding.instantiatingPropertyName.isEmpty()) {
+            // Generalized group property.
             auto cache = propertyCaches->at(pendingBinding.referencingObjectIndex);
             propertyCaches->set(groupPropertyObjectIndex, cache);
+            continue;
         }
+
+        if (!pendingBinding.referencingObjectPropertyCache) {
+            pendingBinding.referencingObjectPropertyCache
+                    = propertyCaches->at(pendingBinding.referencingObjectIndex);
+        }
+
+        if (!pendingBinding.resolveInstantiatingProperty())
+            continue;
+        auto cache = pendingBinding.instantiatingPropertyCache(enginePrivate);
+        propertyCaches->set(groupPropertyObjectIndex, cache);
     }
 }
 
