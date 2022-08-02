@@ -323,6 +323,9 @@ void ExecutionEngine::initializeStaticMembers()
 #elif defined(Q_OS_ANDROID)
             // In experiments, it started crashing at 1059.
             s_maxCallDepth = 1000;
+#elif defined(Q_OS_WIN)
+            // We've seen crashes around 750.
+            s_maxCallDepth = 640;
 #else
             s_maxCallDepth = 1234;
 #endif
