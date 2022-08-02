@@ -70,6 +70,8 @@
 #include "calqlatrbits.h"
 #include "propertychangeandsignalhandlers.h"
 #include "valuetypelistproperty.h"
+#include "translations.h"
+#include "translationsbyid.h"
 
 #include "testprivateproperty.h"
 
@@ -87,6 +89,7 @@
 
 #include <QtCore/private/qobject_p.h>
 #include <QtTest/private/qemulationdetector_p.h>
+#include <QtCore/qtranslator.h>
 
 #ifndef QMLTC_TESTS_DISABLE_CACHE
 #    error "QMLTC_TESTS_DISABLE_CACHE is supposed to be defined and be equal to either 0 or 1"
@@ -2237,6 +2240,69 @@ void tst_qmltc::valueTypeListProperty()
 
     QQmlListReference arrayOfColors2(&created, "arrayOfColors");
     QVERIFY(!arrayOfColors2.isValid());
+}
+
+void tst_qmltc::translations()
+{
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(translations) created(&e);
+
+        QCOMPARE(created.alsoTranslated(), "Bye bye!");
+        QCOMPARE(created.text(), "Bye bye!");
+
+        QCOMPARE(created.hardcodedContext(), "Bye bye!");
+        QCOMPARE(created.anotherContext(), "Bye bye!");
+        QCOMPARE(created.toBeTranslatedLater(), "Bye bye!");
+        QCOMPARE(created.toBeTranslatedLaterWithHardcodedContext(), "Bye bye!");
+
+        QCOMPARE(created.translatedN(), "The solution is 42");
+        QCOMPARE(created.translatedNWithContextAndAmbiguation(), "The solution has 42 degrees");
+        QCOMPARE(created.translatedNWithContextAndAmbiguation2(), "The solution has 43 degrees");
+
+        QCOMPARE(created.combination(), "Bye bye!");
+
+        QTranslator translator;
+        QVERIFY(translator.load("translations_ge.qm", ":/i18n"));
+        QVERIFY(qApp->installTranslator(&translator));
+        e.retranslate();
+
+        QCOMPARE(created.text(), u"Tschüssi!"_s);
+        QCOMPARE(created.alsoTranslated(), u"Tschüssi!"_s);
+
+        QCOMPARE(created.hardcodedContext(), u"Tschüssi!"_s);
+        QCOMPARE(created.anotherContext(), u"Bis später!"_s);
+        QCOMPARE(created.toBeTranslatedLater(), "Bye bye!");
+        QCOMPARE(created.toBeTranslatedLaterWithHardcodedContext(), "Bye bye!");
+
+        QCOMPARE(created.translatedN(), u"Die Lösung ist 42"_s);
+        QCOMPARE(created.translatedNWithContextAndAmbiguation(),
+                 u"Die Lösung des Problems ist 42 grad."_s);
+        QCOMPARE(created.translatedNWithContextAndAmbiguation2(), u"Die Lösung ist 43 grad warm"_s);
+
+        QCOMPARE(created.combination(), u"Tschüssi!"_s);
+    }
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(translationsById) created(&e);
+
+        QCOMPARE(created.alsoTranslated(), "ID1");
+        QCOMPARE(created.text(), "ID1");
+
+        QCOMPARE(created.toBeTranslatedLater(), "ID1");
+        QCOMPARE(created.translatedN(), "ID2");
+
+        QTranslator translator;
+        QVERIFY(translator.load("translationsById_ge.qm", ":/i18n"));
+        QVERIFY(qApp->installTranslator(&translator));
+        e.retranslate();
+
+        QCOMPARE(created.text(), u"Tschüssi!"_s);
+        QCOMPARE(created.alsoTranslated(), u"Tschüssi!"_s);
+
+        QCOMPARE(created.toBeTranslatedLater(), "ID1");
+        QCOMPARE(created.translatedN(), u"Ich sehe 5 Äpfeln"_s);
+    }
 }
 
 QTEST_MAIN(tst_qmltc)

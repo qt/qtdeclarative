@@ -58,6 +58,7 @@ private:
 
 public:
     QQmlTranslation(const Data &d);
+    QQmlTranslation();
     QString translate() const;
     QString serializeForQmltc() const;
     QString idForQmlDebug() const;

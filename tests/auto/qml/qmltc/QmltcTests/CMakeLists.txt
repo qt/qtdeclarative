@@ -94,6 +94,8 @@ set(qml_sources
     deferredProperties_attached.qml
     deferredProperties_complex.qml
     valueTypeListProperty.qml
+    translations.qml
+    translationsById.qml
 
     # support types:
     DefaultPropertySingleChild.qml
@@ -133,6 +135,18 @@ qt_autogen_tools_initial_setup(qmltc_test_module)
 target_include_directories(qmltc_test_module PUBLIC cpptypes/)
 target_link_libraries(qmltc_test_module PUBLIC ${common_libraries})
 
+# Resources:
+set(qmake_immediate_resource_files
+    "translations_ge.qm"
+    "translationsById_ge.qm"
+)
+qt_internal_add_resource(qmltc_test_module "qmake_immediate"
+    PREFIX
+        "/i18n"
+    FILES
+        ${qmake_immediate_resource_files}
+)
+
 qt6_add_qml_module(qmltc_test_module
     VERSION 1.0
     URI QmltcTests
@@ -144,6 +158,8 @@ qt6_add_qml_module(qmltc_test_module
         ${js_sources}
     DEPENDENCIES
         QtQuick
+    LIBRARIES
+        qmltc_test_module_translation_by_id
     ENABLE_TYPE_COMPILER
     TYPE_COMPILER_NAMESPACE QmltcTest
 )

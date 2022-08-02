@@ -74,17 +74,15 @@ QString QQmlJSMetaPropertyBinding::regExpValue() const
  */
 QQmlTranslation QQmlJSMetaPropertyBinding::translationDataValue(QString qmlFileNameForContext) const
 {
+    QQmlTranslation::Data data;
     if (auto translation = std::get_if<Content::TranslationById>(&m_bindingContent)) {
-        QQmlTranslation::QsTrIdData data(translation->id, translation->number);
-        return QQmlTranslation(data);
+        data = QQmlTranslation::QsTrIdData(translation->id, translation->number);
     } else if (auto translation = std::get_if<Content::TranslationString>(&m_bindingContent)) {
         const QString context = QQmlTranslation::contextFromQmlFilename(qmlFileNameForContext);
-        QQmlTranslation::QsTrData data(context, translation->text, translation->comment,
-                                       translation->number);
-        return QQmlTranslation(data);
+        data = QQmlTranslation::QsTrData(context, translation->text, translation->comment,
+                                         translation->number);
     }
-    // warn
-    return QQmlTranslation({});
+    return QQmlTranslation(data);
 }
 #endif
 

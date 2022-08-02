@@ -51,7 +51,7 @@ const TranslationBindingInformation TranslationBindingInformation::create(
         const QV4::CompiledData::Binding *binding, QObject *scopeObject,
         QQmlRefPointer<QQmlContextData> ctxt)
 {
-    QQmlTranslation translation({});
+    QQmlTranslation translation;
     if (binding->type() == QV4::CompiledData::Binding::Type_TranslationById) {
         const QV4::CompiledData::TranslationData data =
                 compilationUnit->data->translations()[binding->value.translationDataIndex];

@@ -4,6 +4,7 @@
 #include "private/qqmltranslation_p.h"
 
 QQmlTranslation::QQmlTranslation(const Data &d) : data(d) { }
+QQmlTranslation::QQmlTranslation() : data(std::monostate()) { }
 
 QString QQmlTranslation::translate() const
 {

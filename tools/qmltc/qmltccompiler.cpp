@@ -794,6 +794,9 @@ static QString generate_callCompilationUnit(const QString &urlMethodName)
     return u"QQmlEnginePrivate::get(engine)->compilationUnitFromUrl(%1())"_s.arg(urlMethodName);
 }
 
+static std::pair<QQmlJSMetaProperty, int> getMetaPropertyIndex(const QQmlJSScope::ConstPtr &scope,
+                                                               const QString &propertyName);
+
 void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
                                    const QQmlJSScope::ConstPtr &type,
                                    const BindingAccessorData &accessor)
@@ -1148,6 +1151,50 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
             Q_ASSERT(it->bindingType() == QQmlJSMetaPropertyBinding::Script);
             compile(*it);
         }
+        break;
+    }
+
+    case QQmlJSMetaPropertyBinding::TranslationById:
+    case QQmlJSMetaPropertyBinding::Translation: {
+        auto [property, absoluteIndex] = getMetaPropertyIndex(type, propertyName);
+
+        if (absoluteIndex < 0) {
+            recordError(binding.sourceLocation(),
+                        u"Binding on unknown property '" + propertyName + u"'");
+            return;
+        }
+
+        QString bindingTarget = accessor.name;
+
+        int valueTypeIndex = -1;
+        if (accessor.isValueType) {
+            Q_ASSERT(accessor.scope != type);
+            bindingTarget = u"this"_s; // TODO: not necessarily "this"?
+            auto [groupProperty, groupPropertyIndex] =
+                    getMetaPropertyIndex(accessor.scope, accessor.propertyName);
+            if (groupPropertyIndex < 0) {
+                recordError(binding.sourceLocation(),
+                            u"Binding on group property '" + accessor.propertyName
+                                    + u"' of unknown type");
+                return;
+            }
+            valueTypeIndex = absoluteIndex;
+            absoluteIndex = groupPropertyIndex; // e.g. index of accessor.name
+        }
+
+        QmltcCodeGenerator::TranslationBindingInfo info;
+        info.unitVarName = generate_callCompilationUnit(m_urlMethodName);
+        info.scope = u"this"_s;
+        info.target = u"this"_s;
+        info.propertyIndex = absoluteIndex;
+        info.property = property;
+        info.data = binding.translationDataValue(m_url);
+        info.valueTypeIndex = valueTypeIndex;
+        info.line = binding.sourceLocation().startLine;
+        info.column = binding.sourceLocation().startColumn;
+
+        QmltcCodeGenerator::generate_createTranslationBindingOnProperty(&current.endInit.body,
+                                                                        info);
         break;
     }
     case QQmlJSMetaPropertyBinding::Invalid: {

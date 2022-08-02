@@ -9,6 +9,8 @@
 #include <QtCore/qfileinfo.h>
 
 #include <private/qqmljsutils_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qqmltranslation_p.h>
 
 #include "qmltcoutputir.h"
 #include "qmltcvisitor.h"
@@ -81,6 +83,27 @@ struct QmltcCodeGenerator
                                                  const QQmlJSScope::ConstPtr &targetType,
                                                  int propertyIndex, const QQmlJSMetaProperty &p,
                                                  int valueTypeIndex, const QString &subTarget);
+
+    // Used in generate_createTranslationBindingOnProperty to transport its numerous arguments.
+    struct TranslationBindingInfo
+    {
+        QString unitVarName;
+        QString scope;
+        QString target;
+        int propertyIndex;
+        QQmlJSMetaProperty property;
+
+        QQmlTranslation data;
+
+        int valueTypeIndex;
+        // For the source location of the translation binding
+        uint line;
+        // For the source location of the translation binding
+        uint column;
+    };
+
+    static void generate_createTranslationBindingOnProperty(QStringList *block,
+                                                            const TranslationBindingInfo &info);
 
     static inline void generate_getCompilationUnitFromUrl();
 

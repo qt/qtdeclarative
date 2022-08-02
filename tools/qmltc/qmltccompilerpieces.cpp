@@ -220,6 +220,46 @@ void QmltcCodeGenerator::generate_createBindingOnProperty(
     }
 }
 
+void QmltcCodeGenerator::generate_createTranslationBindingOnProperty(
+        QStringList *block, const TranslationBindingInfo &info)
+{
+    const QString propName = QQmlJSUtils::toLiteral(info.property.propertyName());
+    const QString qqmlTranslation = info.data.serializeForQmltc();
+
+    if (QString bindable = info.property.bindable(); !bindable.isEmpty()) {
+        // TODO: test that private properties are bindable
+        QString createTranslationCode = uR"(QT_PREPEND_NAMESPACE(QQmlCppBinding)
+        ::createTranslationBindingForBindable(%1, %2, %3, %4, %5))"_s
+                                                .arg(info.unitVarName, info.target)
+                                                .arg(info.propertyIndex)
+                                                .arg(qqmlTranslation, propName);
+
+        *block << QmltcCodeGenerator::wrap_privateClass(info.target, info.property) + u"->"
+                        + bindable + u"().setBinding(" + createTranslationCode + u");";
+    } else {
+        QString locationString =
+                u"QQmlSourceLocation(%1->fileName(), %2, %3)"_s.arg(info.unitVarName)
+                        .arg(info.line)
+                        .arg(info.column);
+        QString createTranslationCode = uR"(QT_PREPEND_NAMESPACE(QQmlCppBinding)
+    ::createTranslationBindingForNonBindable(
+        %1, //unit
+        %2, //location
+        %3, //translationData
+        %4, //thisObject
+        %5, //bindingTarget
+        %6, //metaPropertyIndex
+        %7, //propertyName
+        %8) //valueTypePropertyIndex
+    )"_s.arg(info.unitVarName, locationString, qqmlTranslation, info.scope, info.target)
+                                                .arg(info.propertyIndex)
+                                                .arg(propName)
+                                                .arg(info.valueTypeIndex);
+        // Note: in this version, the binding is set implicitly
+        *block << createTranslationCode + u";";
+    }
+}
+
 QmltcCodeGenerator::PreparedValue
 QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value)
 {
