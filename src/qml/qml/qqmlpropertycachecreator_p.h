@@ -315,12 +315,8 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         switch (binding->type()) {
         case QV4::CompiledData::Binding::Type_Object:
         case QV4::CompiledData::Binding::Type_GroupProperty:
-            // We can resolve object and group properties if we have a property cache.
-            if (thisCache)
-                break;
-            continue;
         case QV4::CompiledData::Binding::Type_AttachedProperty:
-            // We can always resolve attached properties.
+            // We can always resolve object, group, and attached properties.
             break;
         default:
             // Everything else is of no interest here.
