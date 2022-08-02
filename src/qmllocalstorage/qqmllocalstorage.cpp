@@ -526,7 +526,7 @@ through the data.
 */
 
 /*!
-    \qmlmodule QtQuick.LocalStorage 2.\QtMinorVersion
+    \qmlmodule QtQuick.LocalStorage
     \title Qt Quick Local Storage QML Types
     \ingroup qmlmodules
     \brief Provides a JavaScript object singleton type for accessing a local
@@ -584,10 +584,10 @@ db = Sql.openDatabaseSync(identifier, version, description, estimated_size, call
 \endqml
 
 The above code returns the database identified by \e identifier. If the database does not already
-exist, it is created, and the function \e callback is called with the database as a parameter. \e
-identifier is the name of the physical file (with or without full path) containing the database.  \e
-description and \e estimated_size are written to the INI file (described below), but are currently
-unused.
+exist, it is created, and the function \e callback is called with the database as a parameter.
+\e identifier is the name of the physical file (with or without relative path) containing the
+database. \e description and \e estimated_size are written to the INI file (described below), but
+are currently unused.
 
 May throw exception with code property SQLException.DATABASE_ERR, or SQLException.VERSION_ERR.
 
