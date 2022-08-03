@@ -260,6 +260,7 @@ private slots:
     void urlObject();
     void thisInConstructor();
     void forOfAndGc();
+    void staticInNestedClasses();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5569,6 +5570,22 @@ void tst_QJSEngine::forOfAndGc()
     QScopedPointer<QObject> o(c.create());
 
     QTRY_VERIFY(o->property("count").toInt() > 32768);
+}
+
+void tst_QJSEngine::staticInNestedClasses()
+{
+    QJSEngine engine;
+    const QString program = uR"(
+        class Tester {
+            constructor() {
+                new (class {})();
+            }
+            static get test() { return "a" }
+        }
+        Tester.test
+    )"_s;
+
+    QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
 }
 
 QTEST_MAIN(tst_QJSEngine)
