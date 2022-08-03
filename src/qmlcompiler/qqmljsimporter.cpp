@@ -636,7 +636,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 
         types->cppNames.insert(cacheEntry->cppNames);
         types->staticModules << cacheEntry->staticModules;
-        types->hasSystemModule = cacheEntry->hasSystemModule;
+        types->hasSystemModule |= cacheEntry->hasSystemModule;
 
         // No need to import qml names for dependencies
         if (!isDependency)
