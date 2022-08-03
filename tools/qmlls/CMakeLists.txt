@@ -7,7 +7,6 @@
 
 qt_internal_add_app(qmlls
     TARGET_DESCRIPTION "QML Language Server"
-    INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         lspcustomtypes.h
         qlanguageserver.h qlanguageserver_p.h qlanguageserver.cpp
