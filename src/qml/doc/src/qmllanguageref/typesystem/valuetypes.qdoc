@@ -40,7 +40,7 @@ the client to import the module which provides them.
 All of the value types listed below may be used as a \c property type in a QML
 document, with the following exceptions:
 \list
-  \li \c list must be used in conjunction with a QML object type
+  \li \c list must be used in conjunction with an object or value type as element
   \li \c enumeration cannot be used directly as the enumeration must be defined by a registered QML object type
 \endlist
 
@@ -293,17 +293,6 @@ property is only invoked when the property is reassigned to a different object v
 
     Properties of type \c list are empty by default.
 
-    A list value can be accessed in a similar way to a JavaScript array:
-
-    \list
-    \li Values are assigned using the \c[] square bracket syntax with comma-separated values
-    \li The \c length property provides the number of items in the list
-    \li Values in the list are accessed using the \c [index] syntax
-    \endlist
-
-    Values can be dynamically added to the list by using the \c push method,
-    as if it were a JavaScript Array
-
     A \c list can store QML objects or \l{QML Value Types}{value type} values.
 
     When integrating with C++, note that any QQmlListProperty value
@@ -319,7 +308,7 @@ property is only invoked when the property is reassigned to a different object v
     can be assigned to and used as follows:
 
     \qml
-    import QtQuick 2.0
+    import QtQuick
 
     Item {
         width: 100; height: 100
@@ -343,7 +332,7 @@ property is only invoked when the property is reassigned to a different object v
     If the list only contains one object, the square brackets may be omitted:
 
     \qml
-    import QtQuick 2.0
+    import QtQuick
 
     Item {
         width: 100; height: 100
@@ -351,17 +340,38 @@ property is only invoked when the property is reassigned to a different object v
     }
     \endqml
 
-    Objects and values in a list can be replaced with the \c{[]} operator, just
-    like entries of JavaScript arrays. You can also use \c{push()} to append
-    entries, or you can set the \c length property of the list to truncate or
-    extend it. You can not automatically extend the list by assigning to an
-    index currently out of range, though. Furthermore, if you insert \c null
-    values into a list of objects, those are converted to \c nullptr entries in
+    You can also declare your own list properties in QML:
+
+    \qml
+    import QtQml
+
+    QtObject {
+        property list<int> intList: [1, 2, 3, 4]
+        property list<QtObject> objectList
+    }
+    \endqml
+
+    Lists can be used much like JavaScript arrays. For example:
+
+    \list
+    \li Values are assigned using the \c[] square bracket syntax with comma-separated values
+    \li The \c length property provides the number of items in the list
+    \li Values in the list are accessed using the \c [index] syntax
+    \li You can use \c{push()} to append entries
+    \li You can set the \c length property of the list to truncate or extend it.
+    \endlist
+
+    However, you can \e{not} automatically extend the list by assigning to an
+    index currently out of range. Furthermore, if you insert \c null values
+    into a list of objects, those are converted to \c nullptr entries in
     the underlying QQmlListProperty.
 
-    A list of value types is different from a JavaScript array in one important
-    aspect: Growing it by setting its length does not produce undefined entries,
-    but rather default-constructed instances of the value type.
+    A list of value types is different from a JavaScript array in one further
+    important aspect: Growing it by setting its length does not produce undefined
+    entries, but rather default-constructed instances of the value type.
+
+    Similarly, growing a list of object types this way produces null entries,
+    rather than undefined entries.
 
     This value type is provided by the QML language.
 
@@ -468,6 +478,36 @@ property is only invoked when the property is reassigned to a different object v
     \endqml
 
     \sa {QML Value Types}
+*/
+
+/*!
+   \qmlvaluetype variant
+   \ingroup qmlvaluetypes
+   \brief a generic property type.
+
+   The \c variant type is the same as the \c var type. Use \c var instead.
+
+   \sa {QML Value Types}
+*/
+
+/*!
+   \qmlvaluetype void
+   \ingroup qmlvaluetypes
+   \brief The empty value type.
+
+   The \c void type is exclusively used to type-annotate JavaScript functions
+   returning \c undefined. For example:
+
+   \qml
+   function doThings() : void { console.log("hello") }
+   \endqml
+
+   This is to help tooling analyze calls to such functions and compile them and
+   their callers to C++.
+
+   You cannot declare \c void properties in QML.
+
+   \sa {QML Value Types}
 */
 
 /*!
