@@ -2575,4 +2575,27 @@ TestCase {
         mouseMove(control, control.width - 100, control.height / 2)
         verify(!targetHandle.SplitHandle.hovered)
     }
+
+    function test_touch() {
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        verify(control)
+
+        let touch = touchEvent(control)
+
+        let handles = findHandles(control)
+        let firstHandle = handles[0]
+        let handleCenter = control.mapFromItem(firstHandle, firstHandle.width / 2, firstHandle.height / 2)
+        touch.press(0, control, handleCenter.x, handleCenter.y).commit()
+        verify(firstHandle.SplitHandle.pressed)
+
+        touch.move(0, control, handleCenter.x + 100, handleCenter.y).commit()
+        verify(firstHandle.SplitHandle.pressed)
+        let firstItem = control.itemAt(0)
+        expectFail("", "broken, QTBUG-105312")
+        compare(firstItem.width, 125)
+
+        touch.release(0, control, handleCenter.x + 100, handleCenter.y).commit()
+        verify(!firstHandle.SplitHandle.pressed)
+        compare(firstItem.width, 125)
+    }
 }
