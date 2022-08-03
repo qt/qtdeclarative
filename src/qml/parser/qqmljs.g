@@ -376,6 +376,7 @@ protected:
     SavedToken *last_token = nullptr;
 
     int functionNestingLevel = 0;
+    int classNestingLevel = 0;
 
     enum CoverExpressionType {
         CE_Invalid,
@@ -4312,16 +4313,16 @@ ClassDeclaration_Default: ClassDeclaration;
 ClassLBrace: T_LBRACE;
 /.
     case $rule_number: {
-        lexer->setStaticIsKeyword(true);
+        if (++classNestingLevel == 1)
+            lexer->setStaticIsKeyword(true);
     } break;
 ./
 
 ClassRBrace: T_RBRACE;
-/. case $rule_number: ./
-ClassStaticQualifier: T_STATIC;
 /.
     case $rule_number: {
-        lexer->setStaticIsKeyword(false);
+        if (--classNestingLevel == 0)
+            lexer->setStaticIsKeyword(false);
     } break;
 ./
 
@@ -4376,10 +4377,9 @@ ClassElement: MethodDefinition;
     } break;
 ./
 
-ClassElement: ClassStaticQualifier MethodDefinition;
+ClassElement: T_STATIC MethodDefinition;
 /.
     case $rule_number: {
-        lexer->setStaticIsKeyword(true);
         AST::ClassElementList *node = new (pool) AST::ClassElementList(sym(2).PatternProperty, true);
         sym(1).Node = node;
     } break;

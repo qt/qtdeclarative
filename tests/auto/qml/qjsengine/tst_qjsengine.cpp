@@ -262,6 +262,7 @@ private slots:
     void forOfAndGc();
     void jsExponentiate();
     void arrayBuffer();
+    void staticInNestedClasses();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5610,6 +5611,22 @@ void tst_QJSEngine::arrayBuffer()
 
     test({});
     test("Hello");
+}
+
+void tst_QJSEngine::staticInNestedClasses()
+{
+    QJSEngine engine;
+    const QString program = uR"(
+        class Tester {
+            constructor() {
+                new (class {})();
+            }
+            static get test() { return "a" }
+        }
+        Tester.test
+    )"_s;
+
+    QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
 }
 
 QTEST_MAIN(tst_QJSEngine)
