@@ -60,8 +60,7 @@ provided:
 
 /*!
 \qmlvaluetype date
-\ingroup qtqmlvaluetypes
-\ingroup qtquickvaluetypes
+\ingroup qmlvaluetypes
 \brief a date value.
 
 The \c date type refers to a date value, including the time of the day.
