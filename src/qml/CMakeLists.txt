@@ -32,13 +32,12 @@ if(ANDROID)
 endif()
 
 qt_internal_add_qml_module(Qml
-    URI "QtQml"
+    URI "QtQml.Base"
     VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     __QT_INTERNAL_SYSTEM_MODULE
     PLUGIN_TARGET qmlplugin
     CLASS_NAME QtQmlPlugin
-    IMPORTS ${module_dynamic_qml_imports}
     PLUGIN_TYPES qmltooling
     SOURCES
         ../3rdparty/masm/assembler/ARM64Assembler.h
@@ -294,6 +293,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmllist.cpp qml/qqmllist.h qml/qqmllist_p.h
         qml/qqmllistwrapper.cpp qml/qqmllistwrapper_p.h
         qml/qqmlloggingcategory.cpp qml/qqmlloggingcategory_p.h
+        qml/qqmlmetamoduleregistration.cpp
         qml/qqmlmetaobject.cpp qml/qqmlmetaobject_p.h
         qml/qqmlmetatype.cpp qml/qqmlmetatype_p.h
         qml/qqmlmetatypedata.cpp qml/qqmlmetatypedata_p.h
@@ -417,6 +417,35 @@ qt_internal_add_qml_module(Qml
         ${extra_cmake_includes}
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
+)
+
+qt_internal_add_qml_module(QmlMeta
+    URI "QtQml"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    CLASS_NAME QtQmlMetaPlugin
+    PLUGIN_TARGET QmlMeta
+
+    # Prevent type registration
+    NO_GENERATE_QMLTYPES
+
+    PAST_MAJOR_VERSIONS 2
+    IMPORTS
+        QtQml.Base/auto
+        ${module_dynamic_qml_imports}
+)
+
+# Add the QtQml qmldir to libQtQml, too.
+# Since we also provide the (bare bones) type  registration in libQtQml,
+# this makes the complete module reside in libQtQml. There is no need to
+# load the QmlMeta plugin, then.
+# Se still provide the plugin so that static linking works.
+get_target_property(qtqml_out_dir QmlMeta QT_QML_MODULE_OUTPUT_DIRECTORY)
+qt_internal_add_resource(Qml "qmlMetaQmldir"
+    PREFIX
+        "/qt-project.org/imports/QtQml"
+    FILES
+        ${qtqml_out_dir}/qmldir
 )
 
 # Linking to the static qml plugin should also automatically link to the worker script
