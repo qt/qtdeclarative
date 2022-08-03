@@ -91,43 +91,13 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \section2 Dynamically Generating Menu Items
+    \section2 Dynamically generating menu items
 
-    It is possible to dynamically generate menu items. One of the easiest ways
-    to do so is with \l Instantiator. For example, to implement a
-    "Recent Files" submenu, where the items are based on a list of files stored
-    in settings, the following code could be used:
+    You can dynamically generate menu items with \l Instantiator. The following
+    code shows how you can implement a "Recent Files" submenu, where the items
+    come from a list of files stored in settings:
 
-    \qml
-    Menu {
-        title: qsTr("File")
-
-        Menu {
-            id: recentFilesSubMenu
-            title: qsTr("Recent Files")
-            enabled: recentFilesInstantiator.count > 0
-
-            Instantiator {
-                id: recentFilesInstantiator
-                model: settings.recentFiles
-                delegate: MenuItem {
-                    text: settings.displayableFilePath(modelData)
-                    onTriggered: loadFile(modelData)
-                }
-
-                onObjectAdded: recentFilesSubMenu.insertItem(index, object)
-                onObjectRemoved: recentFilesSubMenu.removeItem(object)
-            }
-
-            MenuSeparator {}
-
-            MenuItem {
-                text: qsTr("Clear Recent Files")
-                onTriggered: settings.clearRecentFiles()
-            }
-        }
-    }
-    \endqml
+    \snippet qtlabsplatform-menu-instantiator.qml menu
 
     \section2 Availability
 

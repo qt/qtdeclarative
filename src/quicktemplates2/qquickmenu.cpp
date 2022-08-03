@@ -148,6 +148,14 @@ static const int SUBMENU_DELAY = 225;
     menu to go outside of the window (to animate it moving into view, for
     example), set the margins property to \c -1.
 
+    \section1 Dynamically generating menu items
+
+    You can dynamically generate menu items with \l Instantiator. The following
+    code shows how you can implement a "Recent Files" submenu, where the items
+    come from a list of files stored in settings:
+
+    \snippet qtquickcontrols2-menu-instantiator.qml menu
+
     \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls}
 */
 
