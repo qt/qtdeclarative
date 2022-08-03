@@ -1154,8 +1154,12 @@ QQmlType QQmlMetaType::qmlType(const QString &qualifiedName, QTypeRevision versi
 }
 
 /*!
-    Returns the type (if any) of \a name in \a module and version specified
-    by \a version_major and \a version_minor.
+    \internal
+    Returns the type (if any) of \a name in \a module and the specified \a version.
+
+    If \a version has no major version, accept any version.
+    If \a version has no minor version, accept any minor version.
+    If \a module is empty, search in all modules and accept any version.
 */
 QQmlType QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedStringRef &module,
                                QTypeRevision version)
