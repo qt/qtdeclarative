@@ -3929,6 +3929,8 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
         opacity = opacity->parent();
     }
 
+    rd->m_rt = renderTarget();
+
     e->renderNode->prepare();
 
     renderBatch->batch = batch;
