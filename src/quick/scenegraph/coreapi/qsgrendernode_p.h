@@ -16,8 +16,8 @@
 //
 
 #include <QtQuick/private/qtquickglobal_p.h>
-#include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgrendernode.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -31,6 +31,7 @@ public:
     const QMatrix4x4 *m_matrix;
     const QSGClipNode *m_clip_list;
     qreal m_opacity;
+    QSGRenderTarget m_rt;
 };
 
 QT_END_NAMESPACE
