@@ -2366,23 +2366,28 @@
     explain the export process for each editor, and the last section explains
     how to ensure the exported images are 9-patch-conformant.
 
-    \section4 Illustrator
+    \section4 Affinity Designer
+
+    See Affinity's \l {https://affinity.help/publisher/en-US.lproj/pages/Publishing/exportSettings.html}
+    {Export Settings} documentation.
+
+    \section4 Adobe Illustrator
 
     See Adobe's
     \l {https://helpx.adobe.com/in/illustrator/using/collect-assets-export-for-screens.html#panel}
     {Asset Export panel} documentation.
+
+    \section4 Adobe Photoshop
+
+    See Adobe's
+    \l {https://helpx.adobe.com/photoshop/using/generate-assets-layers.html}
+    {Generate image assets from layers} documentation.
 
     \section4 Inkscape
 
     The \l {https://github.com/mitchcurtis/inkscape-9-patch-export}
     {Inkscape 9-Patch Export Extension} can be used to export assets with
     Inkscape.
-
-    \section4 Photoshop
-
-    See Adobe's
-    \l {https://helpx.adobe.com/photoshop/using/generate-assets-layers.html}
-    {Generate image assets from layers} documentation.
 
     \section4 Sketch
 
