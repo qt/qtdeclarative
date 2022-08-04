@@ -32,6 +32,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentAttached : public QObject
     // force an anonymous type registration here.
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
+    Q_CLASSINFO("QML.OmitFromQmlTypes", "true")
 public:
     QQmlComponentAttached(QObject *parent = nullptr);
     ~QQmlComponentAttached();
