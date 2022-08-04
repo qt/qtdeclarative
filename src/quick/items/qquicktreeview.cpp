@@ -36,7 +36,7 @@
 
     Even if TreeViewDelegate is customizable, there might be situations
     where you want to render the tree in a different way, or ensure that
-    the delegate ends up as mininal as possible, e.g for performance reasons.
+    the delegate ends up as minimal as possible, perhaps for performance reasons.
     Creating your own delegate from scratch is easy, since TreeView offers
     a set of properties that can be used to position and render each node
     in the tree correctly.
