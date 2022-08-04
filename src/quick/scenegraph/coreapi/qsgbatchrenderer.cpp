@@ -2234,7 +2234,7 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
                           QRhiGraphicsShaderStage(QRhiGraphicsShaderStage::Fragment, m_stencilClipCommon.fs) });
     ps->setVertexInputLayout(m_stencilClipCommon.inputLayout);
     ps->setShaderResourceBindings(batch->stencilClipState.srb); // use something, it just needs to be layout-compatible
-    ps->setRenderPassDescriptor(renderPassDescriptor());
+    ps->setRenderPassDescriptor(renderTarget().rpDesc);
 
     if (!ps->create()) {
         qWarning("Failed to build stencil clip pipeline");
@@ -2504,7 +2504,7 @@ void Renderer::enqueueStencilDraw(const Batch *batch)
     if (!batch->stencilClipState.updateStencilBuffer)
         return;
 
-    QRhiCommandBuffer *cb = commandBuffer();
+    QRhiCommandBuffer *cb = renderTarget().cb;
     const int count = batch->stencilClipState.drawCalls.size();
     for (int i = 0; i < count; ++i) {
         const StencilClipState::StencilDrawCall &drawCall(batch->stencilClipState.drawCalls.at(i));
@@ -2586,7 +2586,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     // for comparison we only rely on the serialized blob in order decide if the
     // render target is compatible with the pipeline.
 
-    const GraphicsPipelineStateKey k = GraphicsPipelineStateKey::create(m_gstate, sms, renderPassDescriptor(), e->srb);
+    const GraphicsPipelineStateKey k = GraphicsPipelineStateKey::create(m_gstate, sms, renderTarget().rpDesc, e->srb);
 
     // Note: dynamic state (viewport rect, scissor rect, stencil ref, blend
     // constant) is never a part of GraphicsState/QRhiGraphicsPipeline.
@@ -2606,7 +2606,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     ps->setShaderStages(sms->programRhi.shaderStages.cbegin(), sms->programRhi.shaderStages.cend());
     ps->setVertexInputLayout(sms->programRhi.inputLayout);
     ps->setShaderResourceBindings(e->srb);
-    ps->setRenderPassDescriptor(renderPassDescriptor());
+    ps->setRenderPassDescriptor(renderTarget().rpDesc);
 
     QRhiGraphicsPipeline::Flags flags;
     if (needsBlendConstant(m_gstate.srcColor) || needsBlendConstant(m_gstate.dstColor)
@@ -3200,7 +3200,7 @@ void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch, bool depthPos
     if (batch->clipState.type & ClipState::StencilClip)
         enqueueStencilDraw(batch);
 
-    QRhiCommandBuffer *cb = commandBuffer();
+    QRhiCommandBuffer *cb = renderTarget().cb;
     setGraphicsPipeline(cb, batch, e, depthPostPass);
 
     for (int i = 0, ie = batch->drawSets.size(); i != ie; ++i) {
@@ -3397,7 +3397,7 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthP
 
     quint32 vOffset = 0;
     quint32 iOffset = 0;
-    QRhiCommandBuffer *cb = commandBuffer();
+    QRhiCommandBuffer *cb = renderTarget().cb;
 
     while (e) {
         QSGGeometry *g = e->node->geometry();
@@ -3771,20 +3771,21 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     if (m_visualizer->mode() != Visualizer::VisualizeNothing)
         m_visualizer->prepareVisualize();
 
-    commandBuffer()->resourceUpdate(m_resourceUpdates);
+    renderTarget().cb->resourceUpdate(m_resourceUpdates);
     m_resourceUpdates = nullptr;
 }
 
 void Renderer::beginRenderPass(RenderPassContext *)
 {
-    commandBuffer()->beginPass(renderTarget().rt, m_pstate.clearColor, m_pstate.dsClear, nullptr,
-                               // we cannot tell if the application will have
-                               // native rendering thrown in to this pass
-                               // (QQuickWindow::beginExternalCommands()), so
-                               // we have no choice but to set the flag always
-                               // (thus triggering using secondary command
-                               // buffers with Vulkan)
-                               QRhiCommandBuffer::ExternalContent);
+    const QSGRenderTarget &rt(renderTarget());
+    rt.cb->beginPass(rt.rt, m_pstate.clearColor, m_pstate.dsClear, nullptr,
+                     // we cannot tell if the application will have
+                     // native rendering thrown in to this pass
+                     // (QQuickWindow::beginExternalCommands()), so
+                     // we have no choice but to set the flag always
+                     // (thus triggering using secondary command
+                     // buffers with Vulkan)
+                     QRhiCommandBuffer::ExternalContent);
 
     if (m_renderPassRecordingCallbacks.start)
         m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);
@@ -3805,7 +3806,7 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
 
     ctx->valid = false;
 
-    QRhiCommandBuffer *cb = commandBuffer();
+    QRhiCommandBuffer *cb = renderTarget().cb;
     cb->debugMarkBegin(QByteArrayLiteral("Qt Quick scene render"));
 
     for (int i = 0, ie = ctx->opaqueRenderBatches.count(); i != ie; ++i) {
@@ -3860,7 +3861,7 @@ void Renderer::endRenderPass(RenderPassContext *)
     if (m_visualizer->mode() != Visualizer::VisualizeNothing)
         m_visualizer->visualize();
 
-    commandBuffer()->endPass();
+    renderTarget().cb->endPass();
 }
 
 struct RenderNodeState : public QSGRenderNode::RenderState
@@ -3963,7 +3964,7 @@ void Renderer::renderRhiRenderNode(const Batch *batch)
 
     const QSGRenderNode::StateFlags changes = e->renderNode->changedStates();
 
-    QRhiCommandBuffer *cb = commandBuffer();
+    QRhiCommandBuffer *cb = renderTarget().cb;
     const bool needsExternal = !e->renderNode->flags().testFlag(QSGRenderNode::NoExternalRendering);
     if (needsExternal)
         cb->beginExternal();

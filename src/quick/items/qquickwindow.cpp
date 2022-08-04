@@ -617,11 +617,9 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             rp = rpDescForSwapchain;
             cb = swapchain->currentFrameCommandBuffer();
         }
-        sgRenderTarget.rt = rt;
-        sgRenderTarget.rpDesc = rp;
-        sgRenderTarget.cb = cb;
+        sgRenderTarget = QSGRenderTarget(rt, rp, cb);
     } else {
-        sgRenderTarget.paintDevice = redirect.rt.paintDevice;
+        sgRenderTarget = QSGRenderTarget(redirect.rt.paintDevice);
     }
 
     context->beginNextFrame(renderer,

@@ -35,12 +35,23 @@ Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
 class Q_QUICK_PRIVATE_EXPORT QSGRenderTarget
 {
 public:
-    // non-explicit ctor for compatibility with setRenderTarget(QRhiRenderTarget*) calls
-    QSGRenderTarget(QRhiRenderTarget *rt = nullptr) : rt(rt) { }
+    QSGRenderTarget() { }
+
+    QSGRenderTarget(QRhiRenderTarget *rt,
+                    QRhiRenderPassDescriptor *rpDesc,
+                    QRhiCommandBuffer *cb)
+        : rt(rt), rpDesc(rpDesc), cb(cb) { }
+
+    explicit QSGRenderTarget(QPaintDevice *paintDevice)
+        : paintDevice(paintDevice) { }
 
     QRhiRenderTarget *rt = nullptr;
+    // Store the rp descriptor obj separately, it can (even if often it won't)
+    // be different from rt->renderPassDescriptor(); e.g. one user is the 2D
+    // integration in Quick 3D which will use a different, but compatible rp.
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiCommandBuffer *cb = nullptr;
+
     QPaintDevice *paintDevice = nullptr;
 };
 
@@ -83,12 +94,6 @@ public:
 
     void setRenderTarget(const QSGRenderTarget &rt) { m_rt = rt; }
     const QSGRenderTarget &renderTarget() const { return m_rt; }
-
-    void setCommandBuffer(QRhiCommandBuffer *cb) { m_rt.cb = cb; }
-    QRhiCommandBuffer *commandBuffer() const { return m_rt.cb; }
-
-    void setRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_rt.rpDesc = rpDesc; }
-    QRhiRenderPassDescriptor *renderPassDescriptor() const { return m_rt.rpDesc; }
 
     void setRenderPassRecordingCallbacks(QSGRenderContext::RenderPassCallback start,
                                          QSGRenderContext::RenderPassCallback end,

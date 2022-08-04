@@ -62,7 +62,7 @@ void RhiVisualizer::prepareVisualize()
                     QLatin1String(":/qt-project.org/scenegraph/shaders_ng/visualization.frag.qsb"));
     }
 
-    m_fade.prepare(this, m_renderer->m_rhi, m_renderer->m_resourceUpdates, m_renderer->renderPassDescriptor());
+    m_fade.prepare(this, m_renderer->m_rhi, m_renderer->m_resourceUpdates, m_renderer->renderTarget().rpDesc);
 
     const bool forceUintIndex = m_renderer->m_uint32IndexForRhi;
 
@@ -99,7 +99,7 @@ void RhiVisualizer::visualize()
     if (m_visualizeMode == VisualizeNothing)
         return;
 
-    QRhiCommandBuffer *cb = m_renderer->commandBuffer();
+    QRhiCommandBuffer *cb = m_renderer->renderTarget().cb;
     m_fade.render(cb);
 
     switch (m_visualizeMode) {
@@ -127,7 +127,7 @@ void RhiVisualizer::recordDrawCalls(const QVector<DrawCall> &drawCalls,
                                     bool blendOneOne)
 {
     for (const DrawCall &dc : drawCalls) {
-        QRhiGraphicsPipeline *ps = m_pipelines.pipeline(this, m_renderer->m_rhi, srb, m_renderer->renderPassDescriptor(),
+        QRhiGraphicsPipeline *ps = m_pipelines.pipeline(this, m_renderer->m_rhi, srb, m_renderer->renderTarget().rpDesc,
                                                         dc.vertex.topology, dc.vertex.format, dc.vertex.stride,
                                                         blendOneOne);
         if (!ps)
@@ -801,7 +801,7 @@ void RhiVisualizer::OverdrawVis::prepare(Node *n, RhiVisualizer *visualizer,
         inputLayout.setAttributes({ { 0, 0, QRhiVertexInputAttribute::Float3, 0 } });
         box.ps->setVertexInputLayout(inputLayout);
         box.ps->setShaderResourceBindings(box.srb);
-        box.ps->setRenderPassDescriptor(visualizer->m_renderer->renderPassDescriptor());
+        box.ps->setRenderPassDescriptor(visualizer->m_renderer->renderTarget().rpDesc);
         if (!box.ps->create())
             return;
     }

@@ -384,9 +384,7 @@ void QSGRhiLayer::grab()
         matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
     m_renderer->setProjectionMatrixToRect(mirrored, matrixFlags);
     m_renderer->setClearColor(Qt::transparent);
-    m_renderer->setRenderTarget(m_rt);
-    m_renderer->setCommandBuffer(m_context->currentFrameCommandBuffer());
-    m_renderer->setRenderPassDescriptor(m_rtRp);
+    m_renderer->setRenderTarget({ m_rt, m_rtRp, m_context->currentFrameCommandBuffer() });
 
     QRhiResourceUpdateBatch *resourceUpdates = nullptr;
 
