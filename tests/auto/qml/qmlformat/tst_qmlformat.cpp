@@ -260,6 +260,8 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("arrowFunctionWithBinding")
             << "arrowFunctionWithBinding.qml"
             << "arrowFunctionWithBinding.formatted.qml" << QStringList{};
+    QTest::newRow("forWithLet") << "forWithLet.qml"
+                                << "forWithLet.formatted.qml" << QStringList {};
 }
 
 void TestQmlformat::testFormat()
