@@ -273,6 +273,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("settings") << "settings/Example1.qml"
                               << "settings/Example1.formatted_mac_cr.qml" << QStringList {}
                               << RunOption::OrigToCopy;
+    QTest::newRow("forWithLet")
+            << "forWithLet.qml"
+            << "forWithLet.formatted.qml" << QStringList {} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
