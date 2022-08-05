@@ -32,6 +32,7 @@ public:
     const QSGClipNode *m_clip_list;
     qreal m_opacity;
     QSGRenderTarget m_rt;
+    QMatrix4x4 m_projectionMatrix;
 };
 
 QT_END_NAMESPACE

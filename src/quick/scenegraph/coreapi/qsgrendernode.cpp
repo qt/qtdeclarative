@@ -324,6 +324,27 @@ QRectF QSGRenderNode::rect() const
 }
 
 /*!
+    \return pointer to the current projection matrix.
+
+    In render() this is the same matrix that is returned from
+    RenderState::projectionMatrix(). This getter exists so that prepare() also
+    has a way to query the projection matrix.
+
+    When working with a modern graphics API, or Qt's own graphics abstraction
+    layer, it is more than likely that one will want to load
+    \c{*projectionMatrix() * *matrix()} into a uniform buffer. That is however
+    something that needs to be done in prepare(), so outside the recording of a
+    render pass. That is why both matrices are queriable directly from the
+    QSGRenderNode, both in prepare() and render().
+
+    \since 6.5
+ */
+const QMatrix4x4 *QSGRenderNode::projectionMatrix() const
+{
+    return &d->m_projectionMatrix;
+}
+
+/*!
     \return pointer to the current model-view matrix.
  */
 const QMatrix4x4 *QSGRenderNode::matrix() const

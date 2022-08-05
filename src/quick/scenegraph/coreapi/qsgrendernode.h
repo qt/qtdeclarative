@@ -54,6 +54,7 @@ public:
     virtual RenderingFlags flags() const;
     virtual QRectF rect() const;
 
+    const QMatrix4x4 *projectionMatrix() const;
     const QMatrix4x4 *matrix() const;
     const QSGClipNode *clipList() const;
     qreal inheritedOpacity() const;

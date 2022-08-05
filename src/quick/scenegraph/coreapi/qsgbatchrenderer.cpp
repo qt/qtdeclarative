@@ -3932,6 +3932,12 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
 
     rd->m_rt = renderTarget();
 
+    rd->m_projectionMatrix = projectionMatrix();
+    if (useDepthBuffer()) {
+        rd->m_projectionMatrix(2, 2) = m_zRange;
+        rd->m_projectionMatrix(2, 3) = 1.0f - e->order * m_zRange;
+    }
+
     e->renderNode->prepare();
 
     renderBatch->batch = batch;
@@ -3948,14 +3954,8 @@ void Renderer::renderRhiRenderNode(const Batch *batch)
     RenderNodeElement *e = static_cast<RenderNodeElement *>(batch->first);
     QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
 
-    QMatrix4x4 pm = projectionMatrix();
-    if (useDepthBuffer()) {
-        pm(2, 2) = m_zRange;
-        pm(2, 3) = 1.0f - e->order * m_zRange;
-    }
-
     RenderNodeState state;
-    state.m_projectionMatrix = &pm;
+    state.m_projectionMatrix = &rd->m_projectionMatrix;
     const std::array<int, 4> scissor = batch->clipState.scissor.scissor();
     state.m_scissorRect = QRect(scissor[0], scissor[1], scissor[2], scissor[3]);
     state.m_stencilValue = batch->clipState.stencilRef;
