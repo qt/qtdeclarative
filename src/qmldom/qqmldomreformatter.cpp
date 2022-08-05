@@ -552,16 +552,27 @@ protected:
         return false;
     }
 
+
+    void outputScope(VariableScope scope) {
+        switch (scope) {
+        case VariableScope::Const:
+            out("const ");
+            break;
+        case VariableScope::Let:
+            out("let ");
+            break;
+        case VariableScope::Var:
+            out("var ");
+            break;
+        default:
+            break;
+        }
+    }
+
     bool visit(PatternElement *ast) override
     {
         if (ast->isForDeclaration) {
-            if (ast->scope == VariableScope::Var) {
-                out("var ");
-            } else if (ast->scope == VariableScope::Let) {
-                out("let ");
-            } else if (ast->scope == VariableScope::Const) {
-                out("const ");
-            }
+            outputScope(ast->scope);
         }
         accept(ast->bindingTarget);
         switch (ast->type) {
@@ -647,7 +658,7 @@ protected:
         if (ast->initialiser) {
             accept(ast->initialiser);
         } else if (ast->declarations) {
-            out("var ");
+            outputScope(ast->declarations->declaration->scope);
             accept(ast->declarations);
         }
         out("; "); // ast->firstSemicolonToken
