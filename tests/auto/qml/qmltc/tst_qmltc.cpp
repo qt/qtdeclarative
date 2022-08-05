@@ -74,6 +74,7 @@
 #include "translations.h"
 #include "translationsbyid.h"
 #include "defaultalias.h"
+#include "generalizedgroupedproperty.h"
 
 #include "testprivateproperty.h"
 
@@ -2513,6 +2514,54 @@ void tst_qmltc::translations()
 
         QCOMPARE(created.toBeTranslatedLater(), "ID1");
         QCOMPARE(created.translatedN(), u"Ich sehe 5 Äpfeln"_s);
+    }
+}
+
+void tst_qmltc::generalizedGroupedProperty()
+{
+    QQmlEngine e;
+    {
+        PREPEND_NAMESPACE(generalizedGroupedProperty) fromQmltc(&e);
+
+        QCOMPARE(fromQmltc.getGroup()->getCount(), 5);
+        fromQmltc.setMyInt(42);
+        QCOMPARE(fromQmltc.getGroup()->getCount(), 42);
+        fromQmltc.getGroup()->setCount(55);
+        QCOMPARE(fromQmltc.getGroup()->getCount(), 55);
+        QCOMPARE(fromQmltc.myInt(), 42);
+
+        QCOMPARE(fromQmltc.getGroup()->getFormula(), 8);
+        QCOMPARE(fromQmltc.getGroup()->getStr(), "Hello World!");
+
+        qmlExecuteDeferred(&fromQmltc);
+
+        QCOMPARE(fromQmltc.getGroup()->getCount(), 55);
+        QCOMPARE(fromQmltc.getGroup()->getFormula(), 8);
+        QCOMPARE(fromQmltc.getGroup()->getStr(), "Hello World!");
+    }
+    {
+        QQmlComponent component(&e, "qrc:/qt/qml/QmltcTests/generalizedGroupedProperty.qml");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> fromEngine(component.create());
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("count"), 5);
+        fromEngine->setProperty("myInt", 43);
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("count"), 43);
+        fromEngine->property("group").value<QObject *>()->setProperty("count", 56);
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("count"), 56);
+        QCOMPARE(fromEngine->property("myInt").value<int>(), 43);
+
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("formula").value<int>(),
+                 8);
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("str").toString(),
+                 "Hello World!");
+
+        qmlExecuteDeferred(fromEngine.data());
+
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("count"), 56);
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("formula").value<int>(),
+                 8);
+        QCOMPARE(fromEngine->property("group").value<QObject *>()->property("str").toString(),
+                 "Hello World!");
     }
 }
 

@@ -875,7 +875,10 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
     // (potentially, with all the bindings inside of it), period.
     if (type->isNameDeferred(propertyName)) {
         const auto location = binding.sourceLocation();
-        if (bindingType == QQmlJSMetaPropertyBinding::GroupProperty) {
+        // make sure group property is not generalized by checking if type really has a property
+        // called propertyName. If not, it is probably an id.
+        if (bindingType == QQmlJSMetaPropertyBinding::GroupProperty
+            && type->hasProperty(propertyName)) {
             qCWarning(lcQmltcCompiler)
                     << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
                                       "binding on a group property.")

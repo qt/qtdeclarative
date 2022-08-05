@@ -85,4 +85,5 @@ private slots:
     void trickyPropertyChangeAndSignalHandlers();
     void valueTypeListProperty();
     void translations();
+    void generalizedGroupedProperty();
 };

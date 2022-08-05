@@ -61,4 +61,28 @@ public:
     TestTypeGrouped *getGroup();
 };
 
+class QmlGeneralizedGroupPropertyTestType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("ImmediatePropertyNames", "myInt,group")
+
+    Q_PROPERTY(TestTypeGrouped *group READ getGroup)
+
+    TestTypeGrouped m_group;
+
+public:
+    QmlGeneralizedGroupPropertyTestType(QObject *parent = nullptr);
+
+    TestTypeGrouped *getGroup();
+};
+
+class MyImmediateQtObject : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_CLASSINFO("ImmediatePropertyNames", "myInt");
+};
+
 #endif // TESTGROUPEDTYPE_H
