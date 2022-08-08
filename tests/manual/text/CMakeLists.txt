@@ -4,6 +4,17 @@
 cmake_minimum_required(VERSION 3.16)
 project(text_manual_test LANGUAGES CXX)
 
+# Skip building this test in a top-level build configured with -make tests
+# to avoid configuration errors like
+#  CMake Error: AUTOMOC for target tst_template_full_path: The "moc"
+#  executable ".../qtbase/libexec/moc" does not exist.
+#
+# It happens because targets are added using non-internal API which do not call
+# qt_autogen_tools_initial_setup.
+if(QT_SUPERBUILD)
+    return()
+endif()
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
