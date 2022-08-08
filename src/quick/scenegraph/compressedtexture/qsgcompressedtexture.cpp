@@ -349,6 +349,12 @@ void QSGCompressedTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdate
         if (!rhi->isTextureFormatSupported(fmt.rhiFormat, texFlags)) {
             qCDebug(QSG_LOG_TEXTUREIO, "Compressed texture format possibly unsupported: 0x%x",
                     m_textureData.glInternalFormat());
+            // For the Metal backend, don't even try to create an unsupported texture
+            // since trying to do so is invalid.
+            if (rhi->backend() == QRhi::Metal) {
+                qWarning("Unsupported compressed texture format 0x%x", m_textureData.glInternalFormat());
+                return;
+            }
         }
 
         m_texture = rhi->newTexture(fmt.rhiFormat, m_size, 1, texFlags);
