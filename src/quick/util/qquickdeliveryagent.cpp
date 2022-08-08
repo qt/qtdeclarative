@@ -555,7 +555,7 @@ void QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(QQuickItem **items, int
 
         if (item && itemPrivate->notifiedActiveFocus != itemPrivate->activeFocus) {
             itemPrivate->notifiedActiveFocus = itemPrivate->activeFocus;
-            itemPrivate->itemChange(QQuickItem::ItemActiveFocusHasChanged, itemPrivate->activeFocus);
+            itemPrivate->itemChange(QQuickItem::ItemActiveFocusHasChanged, bool(itemPrivate->activeFocus));
             itemPrivate->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, item, reason);
             emit item->activeFocusChanged(itemPrivate->activeFocus);
         }

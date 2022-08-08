@@ -6373,7 +6373,7 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     for (int ii = 0; ii < childItems.count(); ++ii)
         childVisibilityChanged |= QQuickItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
 
-    itemChange(QQuickItem::ItemVisibleHasChanged, effectiveVisible);
+    itemChange(QQuickItem::ItemVisibleHasChanged, bool(effectiveVisible));
 #if QT_CONFIG(accessibility)
     if (isAccessible) {
         QAccessibleEvent ev(q, effectiveVisible ? QAccessible::ObjectShow : QAccessible::ObjectHide);
@@ -6432,7 +6432,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
                             QQuickDeliveryAgentPrivate::DontChangeSubFocusItem);
     }
 
-    itemChange(QQuickItem::ItemEnabledHasChanged, effectiveEnable);
+    itemChange(QQuickItem::ItemEnabledHasChanged, bool(effectiveEnable));
     emit q->enabledChanged();
 }
 
@@ -6764,7 +6764,7 @@ void QQuickItem::setAntialiasing(bool aa)
     d->antialiasing = aa;
     d->dirty(QQuickItemPrivate::Antialiasing);
 
-    d->itemChange(ItemAntialiasingHasChanged, d->antialiasing);
+    d->itemChange(ItemAntialiasingHasChanged, bool(d->antialiasing));
 
     emit antialiasingChanged(antialiasing());
 }
@@ -8217,12 +8217,13 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 bool QQuickItem::contains(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    if (d->mask) {
-        if (d->quickMask)
-            return d->quickMask->contains(point - d->quickMask->position());
+    if (d->extra.isAllocated() && d->extra->mask) {
+        if (auto quickMask = qobject_cast<QQuickItem *>(d->extra->mask))
+            return quickMask->contains(point - quickMask->position());
 
         bool res = false;
-        d->extra->maskContains.invoke(d->mask,
+        QMetaMethod maskContains = d->extra->mask->metaObject()->method(d->extra->maskContainsIndex);
+        maskContains.invoke(d->extra->mask,
                       Qt::DirectConnection,
                       Q_RETURN_ARG(bool, res),
                       Q_ARG(QPointF, point));
@@ -8300,33 +8301,44 @@ bool QQuickItem::contains(const QPointF &point) const
 QObject *QQuickItem::containmentMask() const
 {
     Q_D(const QQuickItem);
-    return d->mask.data();
+    if (!d->extra.isAllocated())
+        return nullptr;
+    return d->extra->mask.data();
 }
 
 void QQuickItem::setContainmentMask(QObject *mask)
 {
     Q_D(QQuickItem);
+    const bool extraDataExists = d->extra.isAllocated();
     // an Item can't mask itself (to prevent infinite loop in contains())
-    if (d->mask.data() == mask || mask == static_cast<QObject *>(this))
+    if (mask == static_cast<QObject *>(this))
+        return;
+    // mask is null, and we had no mask
+    if (!extraDataExists && !mask)
+        return;
+    // mask is non-null and the same
+    if (extraDataExists && d->extra->mask == mask)
         return;
 
-    QQuickItem *quickMask = qobject_cast<QQuickItem *>(d->mask);
+    QQuickItem *quickMask = d->extra.isAllocated() ? qobject_cast<QQuickItem *>(d->extra->mask)
+                                                   : nullptr;
     if (quickMask) {
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
         maskPrivate->registerAsContainmentMask(this, false); // removed from use as my mask
     }
 
+    if (!extraDataExists)
+        d->extra.value(); // ensure extra exists
     if (mask) {
         int methodIndex = mask->metaObject()->indexOfMethod(QByteArrayLiteral("contains(QPointF)"));
         if (methodIndex < 0) {
             qmlWarning(this) << QStringLiteral("QQuickItem: Object set as mask does not have an invokable contains method, ignoring it.");
             return;
         }
-        d->extra.value().maskContains = mask->metaObject()->method(methodIndex);
+        d->extra->maskContainsIndex = methodIndex;
     }
-    d->mask = mask;
+    d->extra->mask = mask;
     quickMask = qobject_cast<QQuickItem *>(mask);
-    d->quickMask = quickMask;
     if (quickMask) {
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
         maskPrivate->registerAsContainmentMask(this, true); // telling maskPrivate that "this" is using it as mask
