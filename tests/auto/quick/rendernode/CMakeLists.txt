@@ -41,3 +41,11 @@ qt_internal_extend_target(tst_rendernode CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+
+qt_internal_add_shaders(tst_rendernode "rendernode_shaders"
+    PREFIX
+        /shaders
+    FILES
+        color.vert
+        color.frag
+)

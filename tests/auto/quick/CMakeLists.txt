@@ -91,10 +91,10 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(qquickanimatedsprite)
     add_subdirectory(qquickspritesequence)
     add_subdirectory(qquickitemrhiintegration)
+    add_subdirectory(rendernode)
 
     if(QT_FEATURE_opengl)
         add_subdirectory(qquickframebufferobject)
-        add_subdirectory(rendernode)
     endif()
 
     add_subdirectory(softwarerenderer)

@@ -5,340 +5,387 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
-#include <qopenglcontext.h>
-#include <qopenglfunctions.h>
-#include <QtGui/qscreen.h>
 #include <private/qsgrendernode_p.h>
+#include <QtGui/private/qrhi_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+
+#if QT_CONFIG(opengl)
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#endif
 
 class tst_rendernode: public QQmlDataTest
 {
     Q_OBJECT
+
 public:
     tst_rendernode();
 
-    QImage runTest(const QString &fileName)
-    {
-        QQuickView view(&outerWindow);
-        view.setResizeMode(QQuickView::SizeViewToRootObject);
-        view.setSource(testFileUrl(fileName));
-        view.setVisible(true);
-        return QTest::qWaitForWindowExposed(&view) ? view.grabWindow() : QImage();
-    }
-
-    //It is important for platforms that only are able to show fullscreen windows
-    //to have a container for the window that is painted on.
-    QQuickWindow outerWindow;
-
 private slots:
-    void renderOrder();
-    void messUpState();
-    void matrix();
+    void test_data();
+    void test();
+#if QT_CONFIG(opengl)
+    void gltest_data();
+    void gltest();
+#endif
 
 private:
+    QQuickView *createView(const QString &file, QWindow *parent, int x, int y, int w, int h);
     bool isRunningOnRhi() const;
 };
 
-class ClearNode : public QSGRenderNode
+static QShader getShader(const QString &name)
 {
-public:
-    StateFlags changedStates() const override
-    {
-        return ColorState;
-    }
+    QFile f(name);
+    if (f.open(QIODevice::ReadOnly))
+        return QShader::fromSerialized(f.readAll());
 
-    void render(const RenderState *) override
-    {
-        // If clip has been set, scissoring will make sure the right area is cleared.
-        QOpenGLContext::currentContext()->functions()->glClearColor(color.redF(), color.greenF(), color.blueF(), 1.0f);
-        QOpenGLContext::currentContext()->functions()->glClear(GL_COLOR_BUFFER_BIT);
-    }
+    return QShader();
+}
 
-    QColor color;
+// *****
+// *  *
+// * *
+// *
+// assumes the top-left scenegraph coordinate system, will be scaled to the item size
+static float vertexData[] = {
+    0,  0,   0, 0, 1, // blue
+    0,  1,   0, 0, 1,
+    1,  0,   0, 0, 1
 };
 
-class ClearItem : public QQuickItem
-{
-    Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-public:
-    ClearItem() : m_color(Qt::black)
-    {
-        setFlag(ItemHasContents, true);
-    }
-
-    QColor color() const { return m_color; }
-    void setColor(const QColor &color)
-    {
-        if (color == m_color)
-            return;
-        m_color = color;
-        emit colorChanged();
-    }
-
-protected:
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override
-    {
-        ClearNode *node = static_cast<ClearNode *>(oldNode);
-        if (!node)
-            node = new ClearNode;
-        node->color = m_color;
-        return node;
-    }
-
-Q_SIGNALS:
-    void colorChanged();
-
-private:
-    QColor m_color;
-};
-
-class MessUpNode : public QSGRenderNode, protected QOpenGLFunctions
+class SimpleNode : public QSGRenderNode
 {
 public:
-    MessUpNode() {}
+    SimpleNode(QQuickWindow *window)
+        : m_window(window)
+    {
+    }
 
     StateFlags changedStates() const override
     {
-        return StateFlags(DepthState) | StencilState | ScissorState | ColorState | BlendState
-                | CullState | ViewportState | RenderTargetState;
+        return ViewportState; // nothing else matters in Qt 6
     }
 
-    void render(const RenderState *) override
+    RenderingFlags flags() const override
     {
-        if (!initialized) {
-            initializeOpenGLFunctions();
-            initialized = true;
+        // this node uses QRhi directly and is also well behaving depth-wise
+        return NoExternalRendering | DepthAwareRendering;
+    }
+
+    void prepare() override
+    {
+        QSGRendererInterface *rif = m_window->rendererInterface();
+        QRhi *rhi = static_cast<QRhi *>(rif->getResource(m_window, QSGRendererInterface::RhiResource));
+        QVERIFY(rhi);
+
+        QSGRenderNodePrivate *d = QSGRenderNodePrivate::get(this);
+        QRhiRenderTarget *rt = d->m_rt.rt;
+        QRhiCommandBuffer *cb = d->m_rt.cb;
+
+        QRhiResourceUpdateBatch *u = rhi->nextResourceUpdateBatch();
+
+        if (!m_vbuf) {
+            m_vbuf.reset(rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(vertexData)));
+            QVERIFY(m_vbuf->create());
+            u->uploadStaticBuffer(m_vbuf.data(), vertexData);
         }
-        // Don't draw anything, just mess up the state
-        glViewport(10, 10, 10, 10);
-        glDisable(GL_SCISSOR_TEST);
-        glDepthMask(true);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_EQUAL);
-        glClearDepthf(1);
-        glClearStencil(42);
-        glClearColor(1.0f, 0.5f, 1.0f, 0.0f);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        glEnable(GL_SCISSOR_TEST);
-        glScissor(190, 190, 10, 10);
-        glStencilFunc(GL_EQUAL, 28, 0xff);
-        glBlendFunc(GL_ZERO, GL_ZERO);
-        GLint frontFace;
-        glGetIntegerv(GL_FRONT_FACE, &frontFace);
-        glFrontFace(frontFace == GL_CW ? GL_CCW : GL_CW);
-        glEnable(GL_CULL_FACE);
-        GLuint fbo;
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        if (!m_ubuf) {
+            m_ubuf.reset(rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, 68));
+            QVERIFY(m_ubuf->create());
+        }
+
+        if (!m_srb) {
+            m_srb.reset(rhi->newShaderResourceBindings());
+            m_srb->setBindings({
+                                   QRhiShaderResourceBinding::uniformBuffer(0,
+                                   QRhiShaderResourceBinding::VertexStage | QRhiShaderResourceBinding::FragmentStage,
+                                   m_ubuf.get())
+                               });
+            m_srb->create();
+        }
+
+        if (!m_ps) {
+            m_ps.reset(rhi->newGraphicsPipeline());
+
+            const QShader vs = getShader(QLatin1String(":/shaders/color.vert.qsb"));
+            if (!vs.isValid())
+                qFatal("Failed to load shader pack (vertex)");
+            const QShader fs = getShader(QLatin1String(":/shaders/color.frag.qsb"));
+            if (!fs.isValid())
+                qFatal("Failed to load shader pack (fragment)");
+
+            m_ps->setShaderStages({
+                { QRhiShaderStage::Vertex, vs },
+                { QRhiShaderStage::Fragment, fs }
+            });
+
+            m_ps->setCullMode(QRhiGraphicsPipeline::Back);
+            // important to test against what's already in the depth buffer from the opaque pass
+            m_ps->setDepthTest(true);
+            m_ps->setDepthOp(QRhiGraphicsPipeline::LessOrEqual);
+            // we are in the alpha pass always so not writing out the depth
+            m_ps->setDepthWrite(false);
+
+            QRhiVertexInputLayout inputLayout;
+            inputLayout.setBindings({
+                { 5 * sizeof(float) }
+            });
+            inputLayout.setAttributes({
+                { 0, 0, QRhiVertexInputAttribute::Float2, 0 },
+                { 0, 1, QRhiVertexInputAttribute::Float3, 2 * sizeof(float) }
+            });
+
+            m_ps->setVertexInputLayout(inputLayout);
+            m_ps->setShaderResourceBindings(m_srb.data());
+            m_ps->setRenderPassDescriptor(rt->renderPassDescriptor());
+
+            QVERIFY(m_ps->create());
+        }
+
+        // follow what the scenegraph tells us, hence DepthAwareRendering from
+        // flags, the downside is that we are stuck with the scenegraph
+        // coordinate system but that's enough for this test.
+        QMatrix4x4 mvp = *projectionMatrix() * *matrix();
+
+        mvp.scale(m_itemSize.width(), m_itemSize.height());
+        u->updateDynamicBuffer(m_ubuf.data(), 0, 64, mvp.constData());
+
+        const float opacity = inheritedOpacity();
+        u->updateDynamicBuffer(m_ubuf.data(), 64, 4, &opacity);
+
+        cb->resourceUpdate(u);
     }
 
-    bool initialized = false;
+    void render(const RenderState *) override
+    {
+        QSGRenderNodePrivate *d = QSGRenderNodePrivate::get(this);
+        QRhiRenderTarget *rt = d->m_rt.rt;
+        QRhiCommandBuffer *cb = d->m_rt.cb;
+
+        cb->setGraphicsPipeline(m_ps.data());
+        cb->setViewport({ 0, 0, float(rt->pixelSize().width()), float(rt->pixelSize().height()) });
+        cb->setShaderResources();
+        const QRhiCommandBuffer::VertexInput vbufBinding(m_vbuf.get(), 0);
+        cb->setVertexInput(0, 1, &vbufBinding);
+        cb->draw(3);
+    }
+
+    QQuickWindow *m_window;
+    QScopedPointer<QRhiBuffer> m_vbuf;
+    QScopedPointer<QRhiBuffer> m_ubuf;
+    QScopedPointer<QRhiShaderResourceBindings> m_srb;
+    QScopedPointer<QRhiGraphicsPipeline> m_ps;
+    QSizeF m_itemSize;
 };
 
-class MessUpItem : public QQuickItem
+class SimpleItem : public QQuickItem
 {
     Q_OBJECT
 public:
-    MessUpItem()
+    SimpleItem()
     {
         setFlag(ItemHasContents, true);
     }
-
 protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override
     {
-        MessUpNode *node = static_cast<MessUpNode *>(oldNode);
+        if (size().isEmpty()) {
+            delete oldNode;
+            return nullptr;
+        }
+
+        SimpleNode *node = static_cast<SimpleNode *>(oldNode);
         if (!node)
-            node = new MessUpNode;
+            node = new SimpleNode(window());
+
+        node->m_itemSize = size();
+
         return node;
     }
 };
+
+#if QT_CONFIG(opengl)
+class GLNode : public QSGRenderNode
+{
+public:
+    StateFlags changedStates() const override
+    {
+        return ViewportState; // nothing else matters in Qt 6
+    }
+
+    RenderingFlags flags() const override
+    {
+        return {};
+    }
+
+    void prepare() override
+    {
+        QVERIFY(QOpenGLContext::currentContext());
+    }
+
+    void render(const RenderState *) override
+    {
+        QVERIFY(QOpenGLContext::currentContext());
+        QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+        QVERIFY(f);
+        f->glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        f->glClear(GL_COLOR_BUFFER_BIT);
+    }
+};
+
+class GLItem : public QQuickItem
+{
+    Q_OBJECT
+public:
+    GLItem()
+    {
+        setFlag(ItemHasContents, true);
+    }
+protected:
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override
+    {
+        if (size().isEmpty()) {
+            delete oldNode;
+            return nullptr;
+        }
+
+        GLNode *node = static_cast<GLNode *>(oldNode);
+        if (!node)
+            node = new GLNode;
+
+        return node;
+    }
+};
+#endif // QT_CONFIG(opengl)
 
 tst_rendernode::tst_rendernode()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
-    qmlRegisterType<ClearItem>("Test", 1, 0, "ClearItem");
-    qmlRegisterType<MessUpItem>("Test", 1, 0, "MessUpItem");
-    outerWindow.showNormal();
-    outerWindow.setGeometry(0,0,400,400);
+    qmlRegisterType<SimpleItem>("Test", 1, 0, "SimpleItem");
+#if QT_CONFIG(opengl)
+    qmlRegisterType<GLItem>("Test", 1, 0, "GLSimpleItem");
+#endif
 }
 
-static bool fuzzyCompareColor(QRgb x, QRgb y, QByteArray *errorMessage)
+void tst_rendernode::test_data()
 {
-    enum { fuzz = 4 };
-    if (qAbs(qRed(x) - qRed(y)) >= fuzz || qAbs(qGreen(x) - qGreen(y)) >= fuzz || qAbs(qBlue(x) - qBlue(y)) >= fuzz) {
-        QString s;
-        QDebug(&s).nospace() << Qt::hex << "Color mismatch 0x" << x << " 0x" << y << Qt::dec << " (fuzz=" << fuzz << ").";
-        *errorMessage = s.toLocal8Bit();
-        return false;
-    }
-    return true;
+    QTest::addColumn<QString>("file");
+
+    QTest::newRow("simple") << QStringLiteral("simple.qml");
 }
 
-static inline QByteArray msgColorMismatchAt(const QByteArray &colorMsg, int x, int y)
-{
-    return colorMsg + QByteArrayLiteral(" at ") + QByteArray::number(x) +',' + QByteArray::number(y);
-}
-
-/* The test draws four rects, each 100x100 and verifies
- * that a rendernode which calls glClear() is stacked
- * correctly. The red rectangles come under the white
- * and are obscured.
- */
-void tst_rendernode::renderOrder()
-{
-    if (QGuiApplication::primaryScreen()->depth() < 24)
-        QSKIP("This test does not work at display depths < 24");
-
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
-
-    if (isRunningOnRhi())
-        QSKIP("Render nodes not yet supported with QRhi");
-
-    QImage fb = runTest("RenderOrder.qml");
-    QVERIFY(!fb.isNull());
-
-    const qreal scaleFactor = QGuiApplication::primaryScreen()->devicePixelRatio();
-    QCOMPARE(fb.width(), qRound(200 * scaleFactor));
-    QCOMPARE(fb.height(), qRound(200 * scaleFactor));
-
-    QCOMPARE(fb.pixel(50 * scaleFactor, 50 * scaleFactor), qRgb(0xff, 0xff, 0xff));
-    QCOMPARE(fb.pixel(50 * scaleFactor, 150 * scaleFactor), qRgb(0xff, 0xff, 0xff));
-    QCOMPARE(fb.pixel(150 * scaleFactor, 50 * scaleFactor), qRgb(0x00, 0x00, 0xff));
-
-    QByteArray errorMessage;
-    const qreal coordinate = 150 * scaleFactor;
-    QVERIFY2(fuzzyCompareColor(fb.pixel(coordinate, coordinate), qRgb(0x7f, 0x7f, 0xff), &errorMessage),
-             msgColorMismatchAt(errorMessage, coordinate, coordinate).constData());
-}
-
-/* The test uses a number of nested rectangles with clipping
- * and rotation to verify that using a render node which messes
- * with the state does not break rendering that comes after it.
- */
-void tst_rendernode::messUpState()
-{
-    if (QGuiApplication::primaryScreen()->depth() < 24)
-        QSKIP("This test does not work at display depths < 24");
-
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
-
-    if (isRunningOnRhi())
-        QSKIP("Render nodes not yet supported with QRhi");
-
-    QImage fb = runTest("MessUpState.qml");
-    QVERIFY(!fb.isNull());
-    int x1 = 0;
-    int x2 = fb.width() / 2;
-    int x3 = fb.width() - 1;
-    int y1 = 0;
-    int y2 = fb.height() * 3 / 16;
-    int y3 = fb.height() / 2;
-    int y4 = fb.height() * 13 / 16;
-    int y5 = fb.height() - 1;
-
-    QCOMPARE(fb.pixel(x1, y3), qRgb(0xff, 0xff, 0xff));
-    QCOMPARE(fb.pixel(x3, y3), qRgb(0xff, 0xff, 0xff));
-
-    QCOMPARE(fb.pixel(x2, y1), qRgb(0x00, 0x00, 0x00));
-    QCOMPARE(fb.pixel(x2, y2), qRgb(0x00, 0x00, 0x00));
-    QByteArray errorMessage;
-    QVERIFY2(fuzzyCompareColor(fb.pixel(x2, y3), qRgb(0x7f, 0x00, 0x7f), &errorMessage),
-             msgColorMismatchAt(errorMessage, x2, y3).constData());
-    QCOMPARE(fb.pixel(x2, y4), qRgb(0x00, 0x00, 0x00));
-    QCOMPARE(fb.pixel(x2, y5), qRgb(0x00, 0x00, 0x00));
-}
-
-class StateRecordingRenderNode : public QSGRenderNode
-{
-public:
-    StateFlags changedStates() const override { return StateFlags(-1); }
-    void render(const RenderState *) override {
-        matrices[name] = *matrix();
-
-    }
-
-    QString name;
-    static QHash<QString, QMatrix4x4> matrices;
-};
-
-QHash<QString, QMatrix4x4> StateRecordingRenderNode::matrices;
-
-class StateRecordingRenderNodeItem : public QQuickItem
-{
-    Q_OBJECT
-public:
-    StateRecordingRenderNodeItem() { setFlag(ItemHasContents, true); }
-    QSGNode *updatePaintNode(QSGNode *r, UpdatePaintNodeData *) override
-    {
-        if (r)
-            return r;
-        StateRecordingRenderNode *rn = new StateRecordingRenderNode();
-        rn->name = objectName();
-        return rn;
-    }
-};
-
-void tst_rendernode::matrix()
+void tst_rendernode::test()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
-    if (isRunningOnRhi())
-        QSKIP("Render nodes not yet supported with QRhi");
+    if (!isRunningOnRhi())
+        QSKIP("Skipping QSGRenderNode test due to not running with QRhi");
 
-    qmlRegisterType<StateRecordingRenderNodeItem>("RenderNode", 1, 0, "StateRecorder");
-    StateRecordingRenderNode::matrices.clear();
-    QVERIFY(!runTest("matrix.qml").isNull());
+    QFETCH(QString, file);
 
-    QMatrix4x4 noRotateOffset;
-    noRotateOffset.translate(20, 20);
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("no-clip; no-rotation"));
-        QCOMPARE(result, noRotateOffset);
-    }
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("parent-clip; no-rotation"));
-        QCOMPARE(result, noRotateOffset);
-    }
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("self-clip; no-rotation"));
-        QCOMPARE(result, noRotateOffset);
+    QScopedPointer<QQuickView> view(createView(file, nullptr, 100, 100, 320, 200));
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QImage result = view->grabWindow();
+
+    const int maxFuzz = 5;
+    // red background
+    int x = 10, y = 10;
+    QVERIFY(qAbs(qRed(result.pixel(x, y)) - 255) < maxFuzz);
+    QVERIFY(qAbs(qGreen(result.pixel(x, y))) < maxFuzz);
+    QVERIFY(qAbs(qBlue(result.pixel(x, y))) < maxFuzz);
+
+    // gray rectangle in the middle
+    x = result.width() / 2;
+    y = result.height() / 2;
+    QVERIFY(qAbs(qRed(result.pixel(x, y)) - 128) < maxFuzz);
+    QVERIFY(qAbs(qGreen(result.pixel(x, y)) - 128) < maxFuzz);
+    QVERIFY(qAbs(qBlue(result.pixel(x, y)) - 128) < maxFuzz);
+
+    // check a bit up and left, this catches if the triangle is not depth
+    // tested correctly and so appears above the gray rect, not below as it should
+    x = result.width() / 2 - 5;
+    y = result.height() / 2 - 5;
+    QVERIFY(qAbs(qRed(result.pixel(x, y)) - 128) < maxFuzz);
+    QVERIFY(qAbs(qGreen(result.pixel(x, y)) - 128) < maxFuzz);
+    QVERIFY(qAbs(qBlue(result.pixel(x, y)) - 128) < maxFuzz);
+
+    // in search for blue pixels
+    int blueCount = 0;
+    for (y = 0; y < result.height(); ++y) {
+        for (x = 0; x < result.width(); ++x) {
+            if (qAbs(qRed(result.pixel(x, y))) < maxFuzz
+                    && qAbs(qGreen(result.pixel(x, y))) < maxFuzz
+                    && qAbs(qBlue(result.pixel(x, y)) - 255) < maxFuzz)
+            {
+                ++blueCount;
+            }
+        }
     }
 
-    QMatrix4x4 parentRotation;
-    parentRotation.translate(10, 10);   // parent at x/y: 10
-    parentRotation.translate(5, 5);     // rotate 90 around center (width/height: 10)
-    parentRotation.rotate(90, 0, 0, 1);
-    parentRotation.translate(-5, -5);
-    parentRotation.translate(10, 10);   // StateRecorder at: x/y: 10
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("no-clip; parent-rotation"));
-        QCOMPARE(result, parentRotation);
-    }
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("parent-clip; parent-rotation"));
-        QCOMPARE(result, parentRotation);
-    }
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("self-clip; parent-rotation"));
-        QCOMPARE(result, parentRotation);
-    }
+    // if the blue triangle is rendered by SimpleNode, there should be lots of
+    // blue pixels present
+    QVERIFY(blueCount > 5000);
+}
 
-    QMatrix4x4 selfRotation;
-    selfRotation.translate(10, 10);   // parent at x/y: 10
-    selfRotation.translate(10, 10);   // StateRecorder at: x/y: 10
-    selfRotation.rotate(90, 0, 0, 1); // rotate 90, width/height: 0
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("no-clip; self-rotation"));
-        QCOMPARE(result, selfRotation);
-    }
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("parent-clip; self-rotation"));
-        QCOMPARE(result, selfRotation);
-    }
-    {   QMatrix4x4 result = StateRecordingRenderNode::matrices.value(QStringLiteral("self-clip; self-rotation"));
-        QCOMPARE(result, selfRotation);
-    }
+#if QT_CONFIG(opengl)
+void tst_rendernode::gltest_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QTest::newRow("simple") << QStringLiteral("glsimple.qml");
+}
+
+void tst_rendernode::gltest()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+
+    if (!isRunningOnRhi())
+        QSKIP("Skipping QSGRenderNode test due to not running with QRhi");
+
+    if (QQuickWindow::graphicsApi() != QSGRendererInterface::OpenGL)
+        QSKIP("Skipping test due to not using OpenGL");
+
+    QFETCH(QString, file);
+
+    QScopedPointer<QQuickView> view(createView(file, nullptr, 100, 100, 320, 200));
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QImage result = view->grabWindow();
+
+    const int maxFuzz = 5;
+
+    // green
+    int x = 10, y = 10;
+    QVERIFY(qAbs(qRed(result.pixel(x, y))) < maxFuzz);
+    QVERIFY(qAbs(qGreen(result.pixel(x, y)) - 255) < maxFuzz);
+    QVERIFY(qAbs(qBlue(result.pixel(x, y))) < maxFuzz);
+
+    // gray rectangle in the middle
+    x = result.width() / 2;
+    y = result.height() / 2;
+    QVERIFY(qAbs(qRed(result.pixel(x, y)) - 128) < maxFuzz);
+    QVERIFY(qAbs(qGreen(result.pixel(x, y)) - 128) < maxFuzz);
+    QVERIFY(qAbs(qBlue(result.pixel(x, y)) - 128) < maxFuzz);
+}
+#endif // QT_CONFIG(opengl)
+
+QQuickView *tst_rendernode::createView(const QString &file, QWindow *parent, int x, int y, int w, int h)
+{
+    QQuickView *view = new QQuickView(parent);
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+    view->setSource(testFileUrl(file));
+    if (x >= 0 && y >= 0)
+        view->setPosition(x, y);
+    if (w >= 0 && h >= 0)
+        view->resize(w, h);
+    view->show();
+    return view;
 }
 
 bool tst_rendernode::isRunningOnRhi() const
