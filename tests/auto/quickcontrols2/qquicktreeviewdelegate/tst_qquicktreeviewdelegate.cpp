@@ -58,8 +58,11 @@ private slots:
     void checkPropertiesRoot();
     void checkPropertiesChildren();
     void checkCurrentIndex();
+    void checkClickedSignal_data();
     void checkClickedSignal();
     void clearSelectionOnClick();
+    void dragToSelect();
+    void pressAndHoldToSelect();
 };
 
 tst_qquicktreeviewdelegate::tst_qquicktreeviewdelegate()
@@ -131,32 +134,18 @@ void tst_qquicktreeviewdelegate::expandAndCollapseClickOnIndicator()
     const QPoint localPos = QPoint(indicator->width() / 2, indicator->height() / 2);
     const QPoint pos = item->window()->contentItem()->mapFromItem(indicator, localPos).toPoint();
 
-    // When treeview is interactive, we toggle expanded on pointer release
-    // to not interfere with flicking. Otherwise we expand already on press.
-    if (interactive)
-        QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    else
-        QTest::mousePress(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
 
     WAIT_UNTIL_POLISHED;
     // We now expect 5 rows, the root pluss it's 4 children
     QCOMPARE(treeViewPrivate->loadedRows.count(), 5);
 
-    if (!interactive)
-        QTest::mouseRelease(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-
     // Collapse the root again
-    if (interactive)
-        QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    else
-        QTest::mousePress(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
 
     WAIT_UNTIL_POLISHED;
     // Check that the view only has one row loaded again (the root of the tree)
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
-
-    if (!interactive)
-        QTest::mouseRelease(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
 }
 
 void tst_qquicktreeviewdelegate::pointerNavigationDisabled()
@@ -281,11 +270,23 @@ void tst_qquicktreeviewdelegate::checkCurrentIndex()
     QVERIFY(item->selected());
 }
 
+void tst_qquicktreeviewdelegate::checkClickedSignal_data()
+{
+    QTest::addColumn<bool>("pointerNavigationEnabled");
+    QTest::newRow("pointer navigation enabled") << true;
+    QTest::newRow("pointer navigation disabled") << false;
+}
+
 void tst_qquicktreeviewdelegate::checkClickedSignal()
 {
-   // Check that the delegate emits clicked when clicking on the
-   // label, but not when clicking on the indicator.
+    // Check that the delegate emits clicked when clicking on the
+    // label, but not when clicking on the indicator. This API is
+    // a part of the AbstractButton API, and should work with or
+    // without TableView.pointerNavigationEnabled set.
+    QFETCH(bool, pointerNavigationEnabled);
+
     LOAD_TREEVIEW("unmodified.qml");
+    treeView->setPointerNavigationEnabled(pointerNavigationEnabled);
 
     const auto item = treeView->itemAtCell(0, 0);
     QVERIFY(item);
@@ -297,6 +298,7 @@ void tst_qquicktreeviewdelegate::checkClickedSignal()
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
     QCOMPARE(clickedSpy.count(), 1);
+    clickedSpy.clear();
 
     // Click on the indicator
     const auto indicator = item->property("indicator").value<QQuickItem *>();
@@ -304,7 +306,7 @@ void tst_qquicktreeviewdelegate::checkClickedSignal()
     localPos = QPoint(indicator->x() + indicator->width() / 2, indicator->y() + indicator->height() / 2);
     pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(clickedSpy.count(), 1);
+    QCOMPARE(clickedSpy.count(), 0);
 }
 
 void tst_qquicktreeviewdelegate::clearSelectionOnClick()
@@ -323,6 +325,75 @@ void tst_qquicktreeviewdelegate::clearSelectionOnClick()
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
     QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 0);
+}
+
+void tst_qquicktreeviewdelegate::dragToSelect()
+{
+    // Check that the delegate is not blocking the user from
+    // being able to select cells using Drag.
+    LOAD_TREEVIEW("unmodified.qml");
+
+    // When TreeView is not interactive, SelectionRectangle
+    // will use Drag by default.
+    treeView->setInteractive(false);
+    treeView->expandRecursively();
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!treeView->selectionModel()->hasSelection());
+    QCOMPARE(treeView->selectionBehavior(), QQuickTableView::SelectRows);
+
+    // Drag on from cell 0,0 to 0,1
+    const auto item0_0 = treeView->itemAtCell(0, 0);
+    const auto item0_1 = treeView->itemAtCell(0, 1);
+    QVERIFY(item0_0);
+    QVERIFY(item0_1);
+
+    QQuickWindow *window = treeView->window();
+    QPoint localPos0_0 = QPoint(item0_0->width() / 2, item0_0->height() / 2);
+    QPoint windowPos0_0 = window->contentItem()->mapFromItem(item0_0, localPos0_0).toPoint();
+    QPoint localPos0_1 = QPoint(item0_1->width() / 2, item0_1->height() / 2);
+    QPoint windowPos0_1 = window->contentItem()->mapFromItem(item0_1, localPos0_1).toPoint();
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, windowPos0_0);
+    QTest::mouseMove(window, windowPos0_1);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowPos0_1);
+
+    // Since TreeView uses TableView.SelectRows by default, we
+    // now expect cells from 0,0 and 1,1 to be selected.
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 4);
+}
+
+void tst_qquicktreeviewdelegate::pressAndHoldToSelect()
+{
+    // Check that the delegate is not blocking the user from
+    // being able to select cells using PressAndHold
+    LOAD_TREEVIEW("unmodified.qml");
+
+    // When TreeView is interactive, SelectionRectangle
+    // will use PressAndHold by default.
+    treeView->setInteractive(true);
+    treeView->expandRecursively();
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!treeView->selectionModel()->hasSelection());
+    QCOMPARE(treeView->selectionBehavior(), QQuickTableView::SelectRows);
+
+    // PressAndHold on cell 0,0
+    const auto item0_0 = treeView->itemAtCell(0, 0);
+    QVERIFY(item0_0);
+
+    QQuickWindow *window = treeView->window();
+    QPoint localPos0_0 = QPoint(item0_0->width() / 2, item0_0->height() / 2);
+    QPoint windowPos0_0 = window->contentItem()->mapFromItem(item0_0, localPos0_0).toPoint();
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, windowPos0_0);
+    QTRY_VERIFY(treeView->selectionModel()->hasSelection());
+    // Since TreeView uses TableView.SelectRows by default, we
+    // now expect both cell 0,0 and 1,0 to be selected.
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 2);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowPos0_0);
 }
 
 QTEST_MAIN(tst_qquicktreeviewdelegate)

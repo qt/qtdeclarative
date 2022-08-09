@@ -73,23 +73,24 @@ QT_BEGIN_NAMESPACE
 
     But the ItemDelegate API does not give you information about the position of the
     click, or which modifiers are being held. If this is needed, a better approach would
-    be to use pointer handlers. To ensure that they don't interfere with the
-    existing logic in TreeViewDelegate, install them on a child item, e.g:
+    be to use pointer handlers, for example:
 
     \code
     TreeView {
         id: treeView
         delegate: TreeViewDelegate {
-            Item {
-                anchors.fill: parent
-                TapHandler {
-                    acceptedModifiers: Qt.ControlModifier
-                    onTapped: {
-                        if (treeView.isExpanded(row))
-                            treeView.collapseRecursively(row)
-                        else
-                            treeView.expandRecursively(row)
-                    }
+            TapHandler {
+                acceptedButtons: Qt.RightButton
+                onTapped: someContextMenu.open()
+            }
+
+            TapHandler {
+                acceptedModifiers: Qt.ControlModifier
+                onTapped: {
+                    if (treeView.isExpanded(row))
+                        treeView.collapseRecursively(row)
+                    else
+                        treeView.expandRecursively(row)
                 }
             }
         }
@@ -183,19 +184,21 @@ QT_BEGIN_NAMESPACE
     \sa leftMargin, indentation, {QQuickControl::}{spacing}
 */
 
+using namespace Qt::Literals::StringLiterals;
+
 class QQuickTreeViewDelegatePrivate : public QQuickItemDelegatePrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTreeViewDelegate)
 
     void updateIndicatorVisibility();
+    void updateIndicatorPointerHandlers();
+    void toggleExpanded();
     QPalette defaultPalette() const override;
-    bool posOnTopOfIndicator(const QPointF &pos);
-    void handleClickOnIndicator(QMouseEvent *event, bool isPress);
-    void setCurrentIndex(const QPointF pos);
 
 public:
     QPointer<QQuickTreeView> m_treeView;
+    QPointer<QQuickTapHandler> m_tapHandlerOnIndicator;
     qreal m_indentation = 18;
     qreal m_leftMargin = 0;
     qreal m_rightMargin = 0;
@@ -208,6 +211,39 @@ public:
     int m_depth = 0;
 };
 
+void QQuickTreeViewDelegatePrivate::toggleExpanded()
+{
+    Q_Q(QQuickTreeViewDelegate);
+
+    auto view = q->treeView();
+    if (!view)
+        return;
+    if (!view->pointerNavigationEnabled())
+        return;
+
+    const int row = qmlContext(q)->contextProperty(u"row"_s).toInt();
+    view->toggleExpanded(row);
+}
+
+void QQuickTreeViewDelegatePrivate::updateIndicatorPointerHandlers()
+{
+    Q_Q(QQuickTreeViewDelegate);
+
+    // Remove the tap handler that was installed
+    // on the previous indicator
+    delete m_tapHandlerOnIndicator.data();
+
+    auto indicator = q->indicator();
+    if (!indicator)
+        return;
+
+    m_tapHandlerOnIndicator = new QQuickTapHandler(indicator);
+    m_tapHandlerOnIndicator->setAcceptedModifiers(Qt::NoModifier);
+    // Work-around to block taps from passing through to TreeView.
+    m_tapHandlerOnIndicator->setGesturePolicy(QQuickTapHandler::ReleaseWithinBounds);
+    connect(m_tapHandlerOnIndicator, &QQuickTapHandler::tapped, this, &QQuickTreeViewDelegatePrivate::toggleExpanded);
+}
+
 void QQuickTreeViewDelegatePrivate::updateIndicatorVisibility()
 {
     Q_Q(QQuickTreeViewDelegate);
@@ -218,69 +254,36 @@ void QQuickTreeViewDelegatePrivate::updateIndicatorVisibility()
     }
 }
 
-bool QQuickTreeViewDelegatePrivate::posOnTopOfIndicator(const QPointF &pos)
-{
-    Q_Q(QQuickTreeViewDelegate);
-
-    const auto indicator = q->indicator();
-    if (!indicator || !indicator->isVisible())
-        return false;
-
-    const auto posInIndicator = q->mapToItem(indicator, pos);
-    if (!indicator->contains(posInIndicator))
-        return false;
-
-    return true;
-}
-
-void QQuickTreeViewDelegatePrivate::handleClickOnIndicator(QMouseEvent *event, bool isPress)
-{
-    Q_Q(QQuickTreeViewDelegate);
-
-    event->accept();
-
-    // To not interfere with flicking, we only toggle expanded on press
-    // if the flickable is not interactive. Otherwise we do it on release.
-    const bool interactOnRelease = q->treeView()->isInteractive();
-    if (isPress == interactOnRelease)
-        return;
-
-    auto view = q->treeView();
-    if (!view)
-        return;
-
-    const int row = qmlContext(q)->contextProperty(QStringLiteral("row")).toInt();
-    view->toggleExpanded(row);
-}
-
-void QQuickTreeViewDelegatePrivate::setCurrentIndex(const QPointF pos)
-{
-    Q_Q(QQuickTreeViewDelegate);
-
-    auto view = q->treeView();
-    if (!view)
-        return;
-
-    if (!view->pointerNavigationEnabled())
-        return;
-
-    const auto posOnContentItem = q->mapToItem(view->contentItem(), pos);
-    const QPoint cell = view->cellAtPosition(posOnContentItem);
-    if (cell.x() == -1 && cell.y() == -1)
-        return;
-
-    QItemSelectionModel *model = view->selectionModel();
-    if (!model)
-        return;
-
-    model->setCurrentIndex(view->modelIndex(cell), QItemSelectionModel::NoUpdate);
-    view->positionViewAtCell(cell, QQuickTableView::Contain);
-    view->forceActiveFocus();
-}
-
 QQuickTreeViewDelegate::QQuickTreeViewDelegate(QQuickItem *parent)
     : QQuickItemDelegate(*(new QQuickTreeViewDelegatePrivate), parent)
 {
+    Q_D(QQuickTreeViewDelegate);
+
+    auto tapHandler = new QQuickTapHandler(this);
+    tapHandler->setAcceptedModifiers(Qt::NoModifier);
+    QObjectPrivate::connect(tapHandler, &QQuickTapHandler::doubleTapped, d_func(), &QQuickTreeViewDelegatePrivate::toggleExpanded);
+    QObjectPrivate::connect(this, &QQuickAbstractButton::indicatorChanged, d, &QQuickTreeViewDelegatePrivate::updateIndicatorPointerHandlers);
+
+    // Since we override mousePressEvent to avoid QQuickAbstractButton from blocking
+    // pointer handlers, we inform the button about its pressed state from the tap
+    // handler instead. This will ensure that we emit button signals like
+    // pressed, clicked, and doubleClicked.
+    connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, d, tapHandler] {
+        auto view = treeView();
+        if (view && !view->pointerNavigationEnabled())
+            return;
+
+        const QQuickHandlerPoint p = tapHandler->point();
+        if (tapHandler->isPressed())
+            d->handlePress(p.position(), 0);
+        else if (tapHandler->tapCount() > 0)
+            d->handleRelease(p.position(), 0);
+        else
+            d->handleUngrab();
+
+        if (tapHandler->tapCount() > 1 && !tapHandler->isPressed())
+            emit doubleClicked();
+    });
 }
 
 void QQuickTreeViewDelegate::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -295,67 +298,17 @@ void QQuickTreeViewDelegate::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTreeViewDelegate);
 
-    if (d->m_treeView && !d->m_treeView->pointerNavigationEnabled()) {
-        QQuickAbstractButton::mousePressEvent(event);
+    const auto view = d->m_treeView;
+    if (view && view->pointerNavigationEnabled()) {
+        // Ignore mouse events so that we don't block our own pointer handlers, or
+        // pointer handlers in e.g TreeView, TableView, or SelectionRectangle. Instead
+        // we call out to the needed mouse handling functions in QAbstractButton directly
+        // from our pointer handlers, to ensure that continue to work as a button.
+        event->ignore();
         return;
     }
 
-    d->m_pressOnTopOfIndicator = d->posOnTopOfIndicator(event->position());
-    if (d->m_pressOnTopOfIndicator) {
-        d->handleClickOnIndicator(event, true);
-        return;
-    }
-
-    const bool interactOnPress = !treeView()->isInteractive();
-    if (interactOnPress && contains(event->position())) {
-        d->setCurrentIndex(event->position());
-        if (d->m_treeView && d->m_treeView->selectionModel())
-            d->m_treeView->selectionModel()->clearSelection();
-    }
-
-    QQuickAbstractButton::mousePressEvent(event);
-}
-
-void QQuickTreeViewDelegate::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickTreeViewDelegate);
-
-    if (d->m_pressOnTopOfIndicator) {
-        if (d->posOnTopOfIndicator(event->position()))
-            d->handleClickOnIndicator(event, false);
-        return;
-    }
-
-    const bool interactOnRelease = treeView()->isInteractive();
-    if (interactOnRelease && contains(event->position())) {
-        d->setCurrentIndex(event->position());
-        if (d->m_treeView && d->m_treeView->selectionModel())
-            d->m_treeView->selectionModel()->clearSelection();
-    }
-
-    QQuickAbstractButton::mouseReleaseEvent(event);
-}
-
-void QQuickTreeViewDelegate::mouseDoubleClickEvent(QMouseEvent *event)
-{
-    Q_D(QQuickTreeViewDelegate);
-
-    if (d->m_treeView && !d->m_treeView->pointerNavigationEnabled()) {
-        QQuickAbstractButton::mouseDoubleClickEvent(event);
-        return;
-    }
-
-    event->accept();
-
-    if (d->posOnTopOfIndicator(event->position()))
-        return;
-
-    if (auto view = treeView()) {
-        const int row = qmlContext(this)->contextProperty(QStringLiteral("row")).toInt();
-        view->toggleExpanded(row);
-    }
-
-    QQuickAbstractButton::mouseDoubleClickEvent(event);
+    QQuickItemDelegate::mousePressEvent(event);
 }
 
 QPalette QQuickTreeViewDelegatePrivate::defaultPalette() const
@@ -492,8 +445,10 @@ void QQuickTreeViewDelegate::setTreeView(QQuickTreeView *treeView)
 
 void QQuickTreeViewDelegate::componentComplete()
 {
+    Q_D(QQuickTreeViewDelegate);
     QQuickAbstractButton::componentComplete();
-    d_func()->updateIndicatorVisibility();
+    d->updateIndicatorVisibility();
+    d->updateIndicatorPointerHandlers();
 }
 
 qreal QQuickTreeViewDelegate::leftMargin() const

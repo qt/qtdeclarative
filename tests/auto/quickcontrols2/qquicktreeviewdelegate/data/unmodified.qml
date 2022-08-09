@@ -10,6 +10,7 @@ Item {
     height: 600
 
     property alias treeView: treeView
+    property alias selectionRectangle: selectionRectangle
 
     TreeView {
         id: treeView
@@ -20,5 +21,10 @@ Item {
 
         delegate: TreeViewDelegate {}
         selectionModel: ItemSelectionModel { model: treeView.model }
+    }
+
+    SelectionRectangle {
+        id: selectionRectangle
+        target: treeView
     }
 }
