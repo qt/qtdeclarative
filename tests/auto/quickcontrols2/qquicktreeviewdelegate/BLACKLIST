@@ -1,0 +1,6 @@
+# perhaps related to QTBUG-103072
+[dragToSelect]
+android
+# perhaps related to QTBUG-103064
+[pressAndHoldToSelect]
+android
