@@ -337,7 +337,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
             } else if (type.isQJSValueSingleton()) {
                 QJSValue scriptSingleton = enginePrivate->singletonInstance<QJSValue>(type);
                 if (!scriptSingleton.isUndefined()) {
-                    // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
+                    // NOTE: if used in a binding, changes will not trigger re-evaluation since non-bindable.
                     QV4::ScopedObject o(scope, QJSValuePrivate::asReturnedValue(&scriptSingleton));
                     if (!!o)
                         return o->get(name);

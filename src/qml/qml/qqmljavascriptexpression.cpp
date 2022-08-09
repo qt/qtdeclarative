@@ -405,7 +405,7 @@ void QQmlPropertyCapture::captureNonBindableProperty(QObject *o, int n, int c, b
             errorString = new QStringList;
             QString preamble = QLatin1String("QQmlExpression: Expression ") +
                     expression->expressionIdentifier() +
-                    QLatin1String(" depends on non-NOTIFYable properties:");
+                    QLatin1String(" depends on non-bindable properties:");
             errorString->append(preamble);
         }
 

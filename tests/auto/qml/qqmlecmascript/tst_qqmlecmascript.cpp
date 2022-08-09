@@ -1495,7 +1495,7 @@ void tst_qqmlecmascript::enums()
     // Non-existent enums
     {
     QUrl file = testFileUrl("enums.2.qml");
-    QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":9:5 depends on non-NOTIFYable properties:");
+    QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":9:5 depends on non-bindable properties:");
     QString w3 = QLatin1String("    MyUnregisteredEnumTypeObject::enumProperty");
     QString w4 = file.toString() + ":7:5: Unable to assign [undefined] to int";
     QString w5 = file.toString() + ":8:5: Unable to assign [undefined] to int";
@@ -7529,7 +7529,7 @@ void tst_qqmlecmascript::nonNotifyable()
 
     QString expected1 = QLatin1String("QQmlExpression: Expression ") +
                         component.url().toString() +
-                        QLatin1String(":5:5 depends on non-NOTIFYable properties:");
+                        QLatin1String(":5:5 depends on non-bindable properties:");
     QString expected2 = QLatin1String("    ") +
                         QLatin1String(object->metaObject()->className()) +
                         QLatin1String("::value");
@@ -7545,7 +7545,7 @@ void tst_qqmlecmascript::nonNotifyableConstant()
     QQmlComponent component(&engine, testFileUrl("nonNotifyableConstant.qml"));
     QQmlTestMessageHandler messageHandler;
 
-    // Shouldn't produce an error message about non-NOTIFYable properties,
+    // Shouldn't produce an error message about non-bindable properties,
     // as the property has the CONSTANT attribute.
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));

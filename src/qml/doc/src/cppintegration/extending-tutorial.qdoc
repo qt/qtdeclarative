@@ -156,7 +156,7 @@ Now we can build and run the application:
 
 \image extending-tutorial-chapter1.png
 
-\note You may see a warning \e {Expression ... depends on non-NOTIFYable properties:
+\note You may see a warning \e {Expression ... depends on non-bindable properties:
       PieChart::name}. This happens because we add a binding to the writable \c name
       property, but haven't yet defined a notify signal for it. The QML engine therefore
       cannot update the binding if the \c name value changes. This is addressed in
