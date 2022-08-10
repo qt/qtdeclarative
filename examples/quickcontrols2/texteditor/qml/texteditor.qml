@@ -168,14 +168,13 @@ ApplicationWindow {
 
     FontDialog {
         id: fontDialog
-
-        onAccepted: document.font = fontDialog.selectedFont
-        onVisibleChanged: if (visible) currentFont = document.font
+        onAccepted: document.font = selectedFont
     }
 
-    Platform.ColorDialog {
+    ColorDialog {
         id: colorDialog
-        currentColor: "black"
+        selectedColor: "black"
+        onAccepted: document.textColor = selectedColor
     }
 
     MessageDialog {
@@ -290,14 +289,20 @@ ApplicationWindow {
                     font.underline: document.underline
                     font.strikeout: document.strikeout
                     focusPolicy: Qt.TabFocus
-                    onClicked: fontDialog.open()
+                    onClicked: function () {
+                        fontDialog.selectedFont = document.font
+                        fontDialog.open()
+                    }
                 }
                 ToolButton {
                     id: textColorButton
                     text: "\uF1FC" // icon-brush
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
-                    onClicked: colorDialog.open()
+                    onClicked: function () {
+                        colorDialog.selectedColor = document.textColor
+                        colorDialog.open()
+                    }
 
                     Rectangle {
                         width: aFontMetrics.width + 3
@@ -368,7 +373,6 @@ ApplicationWindow {
         cursorPosition: textArea.cursorPosition
         selectionStart: textArea.selectionStart
         selectionEnd: textArea.selectionEnd
-        textColor: colorDialog.color
 
         property alias family: document.font.family
         property alias bold: document.font.bold
@@ -451,12 +455,18 @@ ApplicationWindow {
 
         Platform.MenuItem {
             text: qsTr("Font...")
-            onTriggered: fontDialog.open()
+            onTriggered: function () {
+                fontDialog.selectedFont = document.font
+                fontDialog.open()
+            }
         }
 
         Platform.MenuItem {
             text: qsTr("Color...")
-            onTriggered: colorDialog.open()
+            onTriggered: function () {
+                colorDialog.selectedColor = document.textColor
+                colorDialog.open()
+            }
         }
     }
 
