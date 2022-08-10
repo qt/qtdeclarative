@@ -736,6 +736,15 @@ function(_qt_internal_extend_qml_import_paths import_paths_var)
     set(${import_paths_var} ${local_var} PARENT_SCOPE)
 endfunction()
 
+function(_qt_internal_assign_to_qmllint_targets_folder target)
+    get_property(folder_name GLOBAL PROPERTY QT_QMLLINTER_TARGETS_FOLDER)
+    if("${folder_name}" STREQUAL "")
+        set(folder_name QmlLinter)
+        set_property(GLOBAL PROPERTY QT_QMLLINTER_TARGETS_FOLDER ${folder_name})
+    endif()
+    set_property(TARGET ${target} PROPERTY FOLDER "${folder_name}")
+endfunction()
+
 function(_qt_internal_target_enable_qmllint target)
     set(lint_target ${target}_qmllint)
     set(lint_target_json ${target}_qmllint_json)
@@ -808,6 +817,7 @@ function(_qt_internal_target_enable_qmllint target)
             $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
         WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
     )
+    _qt_internal_assign_to_qmllint_targets_folder(${lint_target})
 
     add_custom_target(${lint_target_json}
         COMMAND "$<${have_qmllint_files}:${cmd}>" --json ${CMAKE_BINARY_DIR}/${lint_target}.json
@@ -818,6 +828,7 @@ function(_qt_internal_target_enable_qmllint target)
             $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
         WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
     )
+    _qt_internal_assign_to_qmllint_targets_folder(${lint_target_json})
 
    set_target_properties(${lint_target_json} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
@@ -832,7 +843,7 @@ function(_qt_internal_target_enable_qmllint target)
            $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
        WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
    )
-
+    _qt_internal_assign_to_qmllint_targets_folder(${lint_target_module})
 
     # Make the global linting target depend on the one we add here.
     # Note that the caller is free to change the value of QT_QMLLINT_ALL_TARGET
@@ -851,6 +862,7 @@ function(_qt_internal_target_enable_qmllint target)
     endif()
     if(NOT TARGET ${QT_QMLLINT_JSON_ALL_TARGET})
         add_custom_target(${QT_QMLLINT_JSON_ALL_TARGET})
+        _qt_internal_assign_to_qmllint_targets_folder(${QT_QMLLINT_JSON_ALL_TARGET})
     endif()
     add_dependencies(${QT_QMLLINT_JSON_ALL_TARGET} ${lint_target_json})
 
@@ -859,6 +871,7 @@ function(_qt_internal_target_enable_qmllint target)
     endif()
     if(NOT TARGET ${QT_QMLLINT_MODULE_ALL_TARGET})
         add_custom_target(${QT_QMLLINT_MODULE_ALL_TARGET})
+        _qt_internal_assign_to_qmllint_targets_folder(${QT_QMLLINT_MODULE_ALL_TARGET})
     endif()
     add_dependencies(${QT_QMLLINT_MODULE_ALL_TARGET} ${lint_target_module})
 

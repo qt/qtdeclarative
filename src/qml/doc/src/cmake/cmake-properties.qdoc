@@ -2,6 +2,41 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
+\group cmake-global-properties-qtqml
+\title CMake Global Properties in Qt6 Qml
+
+\l{CMake Command Reference#Qt6::Qml}{CMake Commands} know about the following
+global CMake properties:
+
+\sa{CMake Property Reference}
+*/
+
+
+/*!
+\page cmake-global-property-QT_QMLLINTER_TARGETS_FOLDER.html
+1\ingroup cmake-properties-qtqml
+\ingroup cmake-global-properties-qtqml
+
+\title QT_QMLLLINTER_TARGETS_FOLDER
+\target cmake-global-property-QT_QMLLINTER_TARGETS_FOLDER
+
+\brief Sets the FOLDER property for targets that belong to the QML linter.
+
+\cmakepropertysince 6.5
+\preliminarycmakeproperty
+
+Name of the \l FOLDER for targets that are related to the QML linter.
+
+By default, this property is set to \c{QmlLinter}.
+
+This property only has an effect if CMake's \l USE_FOLDERS property is \c{ON}.
+
+You can enable folder support by calling
+\l{qt6_standard_project_setup}{qt_standard_project_setup}.
+*/
+
+
+/*!
 \group cmake-source-file-properties-qtqml
 \title CMake Source File Properties in Qt6 Qml
 
