@@ -199,6 +199,7 @@ private slots:
     void testSelectableStartPosEndPosOutsideView();
     void testSelectableScrollTowardsPos();
     void setCurrentIndexFromSelectionModel();
+    void clearSelectionOnTap();
     void moveCurrentIndexUsingArrowKeys();
     void moveCurrentIndexUsingHomeAndEndKeys();
     void moveCurrentIndexUsingPageUpDownKeys();
@@ -4441,6 +4442,29 @@ void tst_QQuickTableView::setCurrentIndexFromSelectionModel()
     WAIT_UNTIL_POLISHED;
     QVERIFY(tableView->itemAtCell(cellAtEnd));
     QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::clearSelectionOnTap()
+{
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    TestModel model(40, 40);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    // Select root item
+    const auto index = tableView->selectionModel()->model()->index(0, 0);
+    tableView->selectionModel()->select(index, QItemSelectionModel::Select);
+    QCOMPARE(tableView->selectionModel()->selectedIndexes().count(), 1);
+
+    // Click on a cell. This should remove the selection
+    const auto item = tableView->itemAtCell(0, 0);
+    QVERIFY(item);
+    QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
+    QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(tableView->selectionModel()->selectedIndexes().count(), 0);
 }
 
 void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()
