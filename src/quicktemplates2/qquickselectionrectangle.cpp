@@ -145,7 +145,6 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     });
 
     QObject::connect(m_tapHandler, &QQuickTapHandler::tapped, [this] {
-        m_selectable->clearSelection();
         updateActiveState(false);
     });
 
