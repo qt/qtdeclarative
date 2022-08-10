@@ -2227,6 +2227,7 @@ function(qt6_target_qml_sources target)
                 ${generated_sources_other_scope}
             )
         endif()
+        _qt_internal_assign_to_internal_targets_folder(${target}_tooling)
     endif()
 
     # Batch all the non-compiled qml sources into a single resource for this
@@ -2508,8 +2509,10 @@ function(_qt_internal_qml_type_registration target)
             ${type_registration_cpp_file}
             ${plugin_types_file}
     )
+    _qt_internal_assign_to_internal_targets_folder(${target}_qmltyperegistration)
     if(NOT TARGET all_qmltyperegistrations)
         add_custom_target(all_qmltyperegistrations)
+        _qt_internal_assign_to_internal_targets_folder(all_qmltyperegistrations)
     endif()
     add_dependencies(all_qmltyperegistrations ${target}_qmltyperegistration)
 
@@ -2709,6 +2712,7 @@ but this file does not exist.  Possible reasons include:
             VERBATIM
         )
         add_custom_target(${target}_qmlimportscan DEPENDS "${imports_file}")
+        _qt_internal_assign_to_internal_targets_folder(${target}_qmlimportscan)
         add_dependencies(${target} ${target}_qmlimportscan)
     else()
         message(VERBOSE "Running qmlimportscanner for ${target}.")
