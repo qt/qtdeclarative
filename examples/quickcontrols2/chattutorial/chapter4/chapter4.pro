@@ -10,7 +10,7 @@ SOURCES += main.cpp \
     sqlcontactmodel.cpp \
     sqlconversationmodel.cpp
 
-RESOURCES += \
+resources.files = \
     ContactPage.qml \
     ConversationPage.qml \
     images/Albert_Einstein.png \
@@ -25,7 +25,9 @@ RESOURCES += \
     images/Hans_Gude@2x.png \
     images/Hans_Gude@3x.png \
     images/Hans_Gude@4x.png \
-    main.qml \
+    main.qml
+resources.prefix = chapter4/
+RESOURCES += resources \
     qtquickcontrols2.conf
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/chattutorial/chapter4
