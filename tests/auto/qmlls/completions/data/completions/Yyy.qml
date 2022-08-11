@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQuick as QQ
 
 Zzz {
     id: root
@@ -21,5 +22,8 @@ Zzz {
     // returns 'Good'
     function documentedFunction(arg1, arg2 = "Qt"): string {
         return "Good"
+    }
+    QQ.Rectangle {
+        color:"red"
     }
 }

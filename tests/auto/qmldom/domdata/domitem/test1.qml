@@ -1,4 +1,5 @@
-import QtQuick 2.15
+import QtQuick
+import QtQuick as QQ
 
 Window {
     visible: true

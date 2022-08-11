@@ -1653,6 +1653,11 @@ bool DomItem::visitLookup1(QString symbolName, function_ref<bool(DomItem &)> vis
         // the prototype chain)
         DomItem importScope = fileObject().field(Fields::importScope);
         if (const ImportScope *importScopePtr = importScope.as<ImportScope>()) {
+            if (importScopePtr->subImports().contains(symbolName)) {
+                DomItem subItem = importScope.field(Fields::qualifiedImports).key(symbolName);
+                if (!visitor(subItem))
+                    return false;
+            }
             QList<DomItem> types = importScopePtr->importedItemsWithName(importScope, symbolName);
             for (DomItem &t : types) {
                 if (!visitor(t))
@@ -1745,18 +1750,18 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
                         while (!lookupToDos.isEmpty()) {
                             ResolveToDo tNow = lookupToDos.takeFirst();
                             auto vNow = qMakePair(tNow.item.id(), tNow.pathIndex);
-                            if (vNow.first != 0) {
-                                if (lookupVisited[vNow.second].contains(vNow.first))
-                                    continue;
-                                else
-                                    lookupVisited[vNow.second].insert(vNow.first);
-                            }
                             DomItem subNow = tNow.item;
                             int iSubPath = tNow.pathIndex;
                             Q_ASSERT(iSubPath < subpath.length());
                             QString subPathNow = subpath[iSubPath++];
                             DomItem scope = subNow.proceedToScope();
                             if (iSubPath < subpath.length()) {
+                                if (vNow.first != 0) {
+                                    if (lookupVisited[vNow.second].contains(vNow.first))
+                                        continue;
+                                    else
+                                        lookupVisited[vNow.second].insert(vNow.first);
+                                }
                                 if (scope.internalKind() == DomType::QmlObject)
                                     scope.visitDirectAccessibleScopes(
                                             [&lookupToDos, subPathNow, iSubPath](DomItem &el) {
@@ -2111,7 +2116,7 @@ bool DomItem::visitLocalSymbolsNamed(QString name, function_ref<bool(DomItem &)>
             return false;
         f = field(Fields::qualifiedImports);
         v = f.key(name);
-        if (!v.visitIndexes(visitor))
+        if (v && !visitor(v))
             return false;
         break;
     default:

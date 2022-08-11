@@ -134,7 +134,7 @@ void tst_QmllsCompletions::completions_data()
 
     QByteArray uri = testFileUrl("completions/Yyy.qml").toString().toUtf8();
 
-    QTest::newRow("objEmptyLine") << uri << 7 << 0
+    QTest::newRow("objEmptyLine") << uri << 8 << 0
                                   << ExpectedCompletions({
                                              { u"Rectangle"_s, CompletionItemKind::Class },
                                              { u"property"_s, CompletionItemKind::Keyword },
@@ -143,7 +143,7 @@ void tst_QmllsCompletions::completions_data()
                                      })
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s });
 
-    QTest::newRow("inBindingLabel") << uri << 4 << 9
+    QTest::newRow("inBindingLabel") << uri << 5 << 9
                                     << ExpectedCompletions({
                                                { u"Rectangle"_s, CompletionItemKind::Class },
                                                { u"property"_s, CompletionItemKind::Keyword },
@@ -151,7 +151,7 @@ void tst_QmllsCompletions::completions_data()
                                        })
                                     << QStringList({ u"QtQuick"_s, u"vector4d"_s });
 
-    QTest::newRow("afterBinding") << uri << 4 << 10
+    QTest::newRow("afterBinding") << uri << 5 << 10
                                   << ExpectedCompletions({
                                              { u"Rectangle"_s, CompletionItemKind::Field },
                                              { u"width"_s, CompletionItemKind::Field },
@@ -160,7 +160,7 @@ void tst_QmllsCompletions::completions_data()
                                   << QStringList({ u"QtQuick"_s, u"property"_s });
 
     // suppress?
-    QTest::newRow("afterId") << uri << 3 << 7
+    QTest::newRow("afterId") << uri << 4 << 7
                              << ExpectedCompletions({
                                         { u"import"_s, CompletionItemKind::Keyword },
                                 })
@@ -203,7 +203,7 @@ void tst_QmllsCompletions::completions_data()
     //            })
     //         << QStringList({ u"as"_s, u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s });
 
-    QTest::newRow("inScript") << uri << 5 << 14
+    QTest::newRow("inScript") << uri << 6 << 14
                               << ExpectedCompletions({
                                          { u"Rectangle"_s, CompletionItemKind::Field },
                                          { u"vector4d"_s, CompletionItemKind::Field },
@@ -211,23 +211,31 @@ void tst_QmllsCompletions::completions_data()
                                          { u"longfunction()"_s, CompletionItemKind::Function },
                                          { u"documentedFunction()"_s,
                                            CompletionItemKind::Function },
+                                         { u"lala()"_s, CompletionItemKind { 0 } },
                                          { u"width"_s, CompletionItemKind::Field },
                                  })
                               << QStringList({ u"import"_s });
 
-    QTest::newRow("expandBase1") << uri << 8 << 23
+    QTest::newRow("expandBase1") << uri << 9 << 23
                                  << ExpectedCompletions({
                                             { u"width"_s, CompletionItemKind::Field },
                                             { u"foo"_s, CompletionItemKind::Field },
                                     })
                                  << QStringList({ u"import"_s, u"Rectangle"_s });
 
-    QTest::newRow("expandBase2") << uri << 9 << 29
+    QTest::newRow("expandBase2") << uri << 10 << 29
                                  << ExpectedCompletions({
                                             { u"width"_s, CompletionItemKind::Field },
                                             { u"color"_s, CompletionItemKind::Field },
                                     })
                                  << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s });
+
+    QTest::newRow("asCompletions")
+            << uri << 25 << 8
+            << ExpectedCompletions({
+                       { u"Rectangle"_s, CompletionItemKind::Field },
+               })
+            << QStringList({ u"foo"_s, u"import"_s, u"lala()"_s, u"width"_s });
 }
 
 void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int character,
