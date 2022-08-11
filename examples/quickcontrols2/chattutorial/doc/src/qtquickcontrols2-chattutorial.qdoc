@@ -179,7 +179,7 @@ project.
 The \c SOURCES variable lists all of the source files that should be compiled.
 A similar variable, \c HEADERS, is available for header files.
 
-\printline RESOURCES
+\printuntil qtquickcontrols2
 
 The next line tells \c qmake that we have a collection of
 \l {The Qt Resource System}{resources} that should be built into the
