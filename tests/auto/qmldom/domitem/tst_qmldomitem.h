@@ -517,10 +517,15 @@ private slots:
                     obj1.lookup(u"Rectangle"_s, LookupType::Type, LookupOption::Normal);
             QList<DomItem> rect2 =
                     obj1.lookup(u"Rectangle"_s, LookupType::Symbol, LookupOption::Normal);
+            QList<DomItem> rectAs =
+                    obj1.lookup(u"QQ.Rectangle"_s, LookupType::Symbol, LookupOption::Normal);
+
             QVERIFY(rect.length() == 1);
             QVERIFY(rect2.length() == 1);
+            QVERIFY(rectAs.length() == 1);
             QCOMPARE(rect.first().internalKind(), DomType::Export);
             QCOMPARE(rect.first(), rect2.first());
+            QCOMPARE(rect.first(), rectAs.first());
             DomItem rect3 = rect.first().proceedToScope();
             QCOMPARE(rect3.internalKind(), DomType::QmlObject);
             QList<DomItem> rects;
