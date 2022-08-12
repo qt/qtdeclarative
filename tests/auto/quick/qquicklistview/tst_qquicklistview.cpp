@@ -9473,7 +9473,7 @@ void tst_QQuickListView::QTBUG_66163_setModelViewPortSizeChange()
 
             delegate: Rectangle {
                 color: index % 2 ? "green" : "orange"
-                width: parent.width
+                width: view.width
                 height: 50
             }
 
