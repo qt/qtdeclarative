@@ -22,12 +22,13 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
 #include <QtCore/private/qglobal_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QShortcutEvent;
 
-class QQuickShortcut : public QObject, public QQmlParserStatus
+class Q_QUICK_PRIVATE_EXPORT QQuickShortcut : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
