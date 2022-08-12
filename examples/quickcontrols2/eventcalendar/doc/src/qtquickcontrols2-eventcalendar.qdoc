@@ -32,7 +32,7 @@
     \ingroup qtquickcontrols2-examples
     \brief A simple event calendar.
 
-    \image qtquickcontrols2-gallery-menu.png
+    \image qtquickcalendar-eventcalendar.png
 
     The Event Calendar example is a simple application that shows how to use
     \l DayOfWeekRow, \l WeekNumberColumn, and \l MonthGrid to create a calendar.
