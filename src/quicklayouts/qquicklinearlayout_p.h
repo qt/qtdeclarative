@@ -169,7 +169,7 @@ public:
  **
  **/
 class QQuickLinearLayoutPrivate;
-class QQuickLinearLayout : public QQuickGridLayoutBase
+class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLinearLayout : public QQuickGridLayoutBase
 {
     Q_OBJECT
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
