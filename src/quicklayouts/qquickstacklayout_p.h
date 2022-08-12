@@ -89,7 +89,7 @@ private:
     bool explicitCurrentIndex;
 };
 
-class QQuickStackLayoutAttached : public QObject
+class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickStackLayoutAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged)
