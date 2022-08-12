@@ -290,7 +290,7 @@ void QQuickTreeViewDelegate::geometryChange(const QRectF &newGeometry, const QRe
 {
     Q_D(QQuickTreeViewDelegate);
 
-    QQuickAbstractButton::geometryChange(newGeometry, oldGeometry);
+    QQuickItemDelegate::geometryChange(newGeometry, oldGeometry);
     d->updateIndicatorVisibility();
 }
 
@@ -446,7 +446,7 @@ void QQuickTreeViewDelegate::setTreeView(QQuickTreeView *treeView)
 void QQuickTreeViewDelegate::componentComplete()
 {
     Q_D(QQuickTreeViewDelegate);
-    QQuickAbstractButton::componentComplete();
+    QQuickItemDelegate::componentComplete();
     d->updateIndicatorVisibility();
     d->updateIndicatorPointerHandlers();
 }
