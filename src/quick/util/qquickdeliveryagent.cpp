@@ -1414,6 +1414,11 @@ QQuickPointingDeviceExtra *QQuickDeliveryAgentPrivate::deviceExtra(const QInputD
 */
 bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
 {
+    // If this is a subscene agent, don't store any events, because
+    // flushFrameSynchronousEvents() is only called on the window's DA.
+    if (isSubsceneAgent)
+        return false;
+
     QEventPoint::States states = event->touchPointStates();
     if (states.testFlag(QEventPoint::State::Pressed) || states.testFlag(QEventPoint::State::Released)) {
         qCDebug(lcTouchCmprs) << "no compression" << event;
