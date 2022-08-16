@@ -38,10 +38,15 @@ function(create_test_executable target)
         Qt::QuickTestUtilsPrivate
     )
 
-    install(TARGETS ${target}
-        BUNDLE  DESTINATION .
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
+    # Skip installation on iOS, because ctest's --build-and-test only builds the Debug
+    # configuration by default, whereas installation installs both Release and Debug, and
+    # thus fails (due to missing Release libraries)
+    if(NOT IOS)
+        install(TARGETS ${target}
+            BUNDLE  DESTINATION .
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
+    endif()
 
     # Need to manually install the backing libraries on Windows because windeployqt does not do it.
     # On macOS, macdeployqt takes care of installing the backing library because it is detected
@@ -81,16 +86,27 @@ function(create_test_executable target)
     # On unsupported deployment platforms, either the install_ test will fail not finding
     # the location of the app (because we do not set a installed_app_location value)
     # or the run_deployed_ test will fail because we didn't deploy the runtime dependencies.
+    #
+    # On iOS we don't want to install nor run the application. Installing won't work due to the
+    # ctest limitation described above, and running won't work because we'd have to do it via
+    # a simulator. More importantly installing would fail with
+    #  Test command: NOT_AVAILABLE
+    # because using the add_test(NAME) signature fails to run when using ctest without a -C
+    # option.
+    # We still want to build the iOS app, to confirm that building works.
+    #
     # When support for additional platforms is added, these locations will have to be augmented.
-    add_test(install_${target} "${CMAKE_COMMAND}" --install .)
-    set_tests_properties(install_${target} PROPERTIES FIXTURES_SETUP deploy_step)
-    add_test(NAME run_deployed_${target}
-             COMMAND "${installed_app_location}"
-             # Make sure that we don't use the default working directory which is
-             # CMAKE_CURRENT_BINARY_DIR because on Windows the loader might pick up dlls
-             # from the working directory instead of the installed app dir, if the dll is
-             # missing in the app dir.
-             WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
+    if(NOT IOS)
+        add_test(install_${target} "${CMAKE_COMMAND}" --install .)
+        set_tests_properties(install_${target} PROPERTIES FIXTURES_SETUP deploy_step)
+        add_test(NAME run_deployed_${target}
+                 COMMAND "${installed_app_location}"
+                 # Make sure that we don't use the default working directory which is
+                 # CMAKE_CURRENT_BINARY_DIR because on Windows the loader might pick up dlls
+                 # from the working directory instead of the installed app dir, if the dll is
+                 # missing in the app dir.
+                 WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
+    endif()
 endfunction()
 
 # Create the backing targets before the app, so that the backing library

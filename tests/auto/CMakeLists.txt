@@ -3,6 +3,14 @@
 
 add_subdirectory(cmake)
 
+# For now, only build a subset of CMake auto tests when QT_BUILD_MINIMAL_STATIC_TEST
+# is specified and the build is targeting iOS. QT_BUILD_MINIMAL_STATIC_TEST is used in our CI.
+# Regular tests shouldn't be built because the CI will try to run them and fail due to missing
+# simulator support.
+if(IOS AND QT_BUILD_MINIMAL_STATIC_TESTS)
+    return()
+endif()
+
 if(TARGET Qt::Quick)
     add_subdirectory(qml)
     add_subdirectory(quick)
