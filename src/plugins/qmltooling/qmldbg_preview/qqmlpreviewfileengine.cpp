@@ -398,6 +398,14 @@ bool QQmlPreviewFileEngine::supportsExtension(Extension extension) const
 
 void QQmlPreviewFileEngine::load() const
 {
+    // We can get here from different threads on different instances of QQmlPreviewFileEngine.
+    // However, there is only one loader per QQmlPreviewFileEngineHandler and it is not thread-safe.
+    // Its content mutex doesn't help us here because we explicitly wait on it in load(), which
+    // causes it to be released. Therefore, lock the load mutex first.
+    // This doesn't cause any deadlocks because the only thread that wakes the loader on the content
+    // mutex never calls load(). It's the QML debug server thread that handles the debug protocol.
+    QMutexLocker loadLocker(m_loader->loadMutex());
+
     m_result = m_loader->load(m_absolute);
     switch (m_result) {
     case QQmlPreviewFileLoader::File:

@@ -740,6 +740,73 @@ console.log(c + " " + d); // false true
         \li Example
 
         \row
+        \li translate(vector3d vector)
+        \li Multiplies \c this matrix4x4 by another that translates coordinates by the components
+            of \c vector
+        \li \code
+var m = Qt.matrix4x4();
+m.translate(Qt.vector3d(1,2,3));
+console.log(m.toString());
+// QMatrix4x4(1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1)
+            \endcode
+
+        \row
+        \li rotate(real angle, vector3d axis)
+        \li Multiples \c this matrix4x4 by another that rotates coordinates through
+            \c angle degrees about \c axis
+        \li \code
+var m = Qt.matrix4x4();
+m.rotate(180,vector3d(1,0,0));
+console.log(m.toString());
+// QMatrix4x4(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1)
+            \endcode
+
+        \row
+        \li scale(real factor)
+        \li Multiplies \c this matrix4x4 by another that scales coordinates by the given \c factor
+        \li \code
+var m = Qt.matrix4x4();
+m.scale(2);
+console.log(m.toString());
+// QMatrix4x4(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1)
+            \endcode
+
+        \row
+        \li scale(real x, real y, real z)
+        \li Multiplies \c this matrix4x4 by another that scales coordinates by the components
+            \c x, \c y, and \c z
+        \li \code
+var m = Qt.matrix4x4();
+m.scale(1,2,3);
+console.log(m.toString());
+// QMatrix4x4(1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1)
+            \endcode
+
+        \row
+        \li scale(vector3d vector)
+        \li Multiplies \c this matrix4x4 by another that scales coordinates by the components
+            of \c vector
+        \li \code
+var m = Qt.matrix4x4();
+m.scale(Qt.vector3d(1,2,3));
+console.log(m.toString());
+// QMatrix4x4(1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1)
+            \endcode
+
+        \row
+        \li lookAt(vector3d eye, vector3d center, vector3d up)
+        \li Multiplies \c this matrix4x4 by a viewing matrix derived from an \c eye point.
+            The \c center vector3d indicates the center of the view that the \c eye is looking at.
+            The \c up vector3d indicates which direction should be considered up with respect to
+            the \c eye.
+        \li \code
+var m = Qt.matrix4x4();
+m.lookAt(Qt.vector3d(1,2,3),Qt.vector3d(1,2,0),Qt.vector3d(0,1,0));
+console.log(m.toString());
+// QMatrix4x4(1, 0, 0, -1, 0, 1, 0, -2, 0, 0, 1, -3, 0, 0, 0, 1)
+            \endcode
+
+        \row
         \li matrix4x4 times(matrix4x4 other)
         \li Returns the matrix4x4 result of multiplying \c this matrix4x4 with
             the \c other matrix4x4

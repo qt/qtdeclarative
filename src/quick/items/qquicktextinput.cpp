@@ -1585,7 +1585,7 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
     d->moveCursor(cursor, mark);
 
     if (d->focusOnPress && !qGuiApp->styleHints()->setFocusOnTouchRelease())
-        ensureActiveFocus();
+        ensureActiveFocus(Qt::MouseFocusReason);
 
     event->setAccepted(true);
 }
@@ -1637,7 +1637,7 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
 #endif
 
     if (d->focusOnPress && qGuiApp->styleHints()->setFocusOnTouchRelease())
-        ensureActiveFocus();
+        ensureActiveFocus(Qt::MouseFocusReason);
 
     if (!event->isAccepted())
         QQuickImplicitSizeItem::mouseReleaseEvent(event);
@@ -1872,10 +1872,10 @@ void QQuickTextInput::invalidateFontCaches()
         d->m_textLayout.engine()->resetFontEngineCache();
 }
 
-void QQuickTextInput::ensureActiveFocus()
+void QQuickTextInput::ensureActiveFocus(Qt::FocusReason reason)
 {
     bool hadActiveFocus = hasActiveFocus();
-    forceActiveFocus();
+    forceActiveFocus(reason);
 #if QT_CONFIG(im)
     Q_D(QQuickTextInput);
     // re-open input panel on press if already focused

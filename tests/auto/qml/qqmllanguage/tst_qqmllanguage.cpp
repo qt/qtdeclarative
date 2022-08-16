@@ -146,6 +146,7 @@ private slots:
     void aliasProperties();
     void aliasPropertiesAndSignals();
     void aliasPropertyChangeSignals();
+    void qtbug_89822();
     void componentCompositeType();
     void i18n();
     void i18n_data();
@@ -2230,6 +2231,12 @@ void tst_qqmllanguage::aliasPropertiesAndSignals()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o);
     QCOMPARE(o->property("test").toBool(), true);
+}
+
+void tst_qqmllanguage::qtbug_89822()
+{
+    QQmlComponent component(&engine, testFileUrl("qtbug_89822.qml"));
+    VERIFY_ERRORS("qtbug_89822.errors.txt");
 }
 
 // Test that the root element in a composite type can be a Component

@@ -894,6 +894,37 @@ CanvasTestCase {
        comparePixel(ctx, 39,0, 0,0,0,0);
   }
 
+   function test_lineDashReset(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       ctx.strokeStyle = "#ff0000";
+       ctx.lineWidth = 2;
+       var pattern = [2, 3, 5, 1, 6, 3]
+       ctx.setLineDash(pattern)
+
+       compare(ctx.getLineDash(), pattern);
+
+       pattern = []
+       ctx.setLineDash(pattern)
+       compare(ctx.getLineDash(), pattern);
+
+       ctx.beginPath();
+       ctx.moveTo(0, 0);
+       ctx.lineTo(40, 0);
+       ctx.stroke();
+
+       comparePixel(ctx, 0,0, 255,0,0,255);
+       comparePixel(ctx, 4,0, 255,0,0,255);
+       comparePixel(ctx, 5,0, 255,0,0,255);
+       comparePixel(ctx, 14,0, 255,0,0,255);
+       comparePixel(ctx, 20,0, 255,0,0,255);
+       comparePixel(ctx, 21,0, 255,0,0,255);
+       comparePixel(ctx, 22,0, 255,0,0,255);
+       comparePixel(ctx, 34,0, 255,0,0,255);
+       comparePixel(ctx, 35,0, 255,0,0,255);
+   }
+
    function test_lineDashOffset(row) {
        var canvas = createCanvasObject(row);
        var ctx = canvas.getContext('2d');

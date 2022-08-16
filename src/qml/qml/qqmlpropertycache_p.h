@@ -220,6 +220,8 @@ private:
         _hasPropertyOverrides |= isOverride;
     }
 
+    int findPropType(const QQmlPropertyData *data) const;
+
 private:
     QQmlPropertyCache *_parent;
     int propertyIndexCacheStart;
@@ -239,14 +241,18 @@ private:
     QByteArray _dynamicClassName;
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
-    QQmlPropertyCacheMethodArguments *argumentsCache;
+    QAtomicPointer<QQmlPropertyCacheMethodArguments> argumentsCache;
     int _jsFactoryMethodIndex;
     QByteArray _checksum;
 };
 
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
 {
-    if (p && Q_UNLIKELY(p->notFullyResolved()))
+    // Avoid resolve() in the common case where it's already initialized and we don't
+    // run into a data race. resolve() checks again, with an atomic operation.
+    // If there is no coreIndex, there is no point in trying to resolve anything. In that
+    // case it's a default-constructed instance that never got load()'ed or lazyLoad()'ed.
+    if (p && p->coreIndex() != -1 && Q_UNLIKELY(p->m_propTypeAndRelativePropIndex == 0))
         resolve(p);
 
     return p;

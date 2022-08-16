@@ -216,6 +216,8 @@ QAccessible::Role QAccessibleQuickItem::role() const
     if (role == QAccessible::NoRole) {
         if (qobject_cast<QQuickText*>(const_cast<QQuickItem *>(item())))
             role = QAccessible::StaticText;
+        else if (qobject_cast<QQuickTextInput*>(const_cast<QQuickItem *>(item())))
+            role = QAccessible::EditableText;
         else
             role = QAccessible::Client;
     }
@@ -232,6 +234,7 @@ QStringList QAccessibleQuickItem::actionNames() const
 {
     QStringList actions;
     switch (role()) {
+    case QAccessible::Link:
     case QAccessible::PushButton:
         actions << QAccessibleActionInterface::pressAction();
         break;

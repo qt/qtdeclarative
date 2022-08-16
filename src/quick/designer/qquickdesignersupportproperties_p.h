@@ -90,12 +90,11 @@ public:
 
     static void getPropertyCache(QObject *object, QQmlEngine *engine);
     static bool isPropertyBlackListed(const QQuickDesignerSupport::PropertyName &propertyName);
-    static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object,
-                                                                  const QQuickDesignerSupport::PropertyName &baseName = QQuickDesignerSupport::PropertyName(),
-                                                                  QObjectList *inspectedObjects = nullptr);
+    static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object);
     static QQuickDesignerSupport::PropertyNameList allPropertyNames(QObject *object,
                                              const QQuickDesignerSupport::PropertyName &baseName = QQuickDesignerSupport::PropertyName(),
-                                             QObjectList *inspectedObjects = nullptr);
+                                             QObjectList *inspectedObjects = nullptr,
+                                             int depth = 0);
     static bool hasFullImplementedListInterface(const QQmlListReference &list);
 };
 

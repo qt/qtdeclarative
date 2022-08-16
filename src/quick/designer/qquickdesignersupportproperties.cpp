@@ -126,16 +126,15 @@ void QQuickDesignerSupportProperties::getPropertyCache(QObject *object, QQmlEngi
     QQmlEnginePrivate::get(engine)->cache(object->metaObject());
 }
 
-QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propertyNameListForWritableProperties(QObject *object,
+static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object,
                                                        const QQuickDesignerSupport::PropertyName &baseName,
-                                                       QObjectList *inspectedObjects)
+                                                       QObjectList *inspectedObjects,
+                                                       int depth = 0)
 {
     QQuickDesignerSupport::PropertyNameList propertyNameList;
 
-    QObjectList localObjectList;
-
-    if (inspectedObjects == nullptr)
-        inspectedObjects = &localObjectList;
+    if (depth > 2)
+        return propertyNameList;
 
     if (!inspectedObjects->contains(object))
         inspectedObjects->append(object);
@@ -150,14 +149,16 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propert
                 if (childObject)
                     propertyNameList.append(propertyNameListForWritableProperties(childObject,
                                                                                   baseName +  QQuickDesignerSupport::PropertyName(metaProperty.name())
-                                                                                  + '.', inspectedObjects));
+                                                                                  + '.', inspectedObjects,
+                                                                                  depth + 1));
             }
         } else if (QQmlGadgetPtrWrapper *valueType
                    = QQmlGadgetPtrWrapper::instance(qmlEngine(object), metaProperty.userType())) {
             valueType->setValue(metaProperty.read(object));
             propertyNameList.append(propertyNameListForWritableProperties(valueType,
                                                                           baseName +  QQuickDesignerSupport::PropertyName(metaProperty.name())
-                                                                          + '.', inspectedObjects));
+                                                                          + '.', inspectedObjects,
+                                                                          depth + 1));
         }
 
         if (metaProperty.isReadable() && metaProperty.isWritable()) {
@@ -167,6 +168,12 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propert
     }
 
     return propertyNameList;
+}
+
+QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propertyNameListForWritableProperties(QObject *object)
+{
+    QObjectList localObjectList;
+    return ::propertyNameListForWritableProperties(object, {}, &localObjectList);
 }
 
 bool QQuickDesignerSupportProperties::isPropertyBlackListed(const QQuickDesignerSupport::PropertyName &propertyName)
@@ -182,7 +189,8 @@ bool QQuickDesignerSupportProperties::isPropertyBlackListed(const QQuickDesigner
 
 QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allPropertyNames(QObject *object,
                                   const QQuickDesignerSupport::PropertyName &baseName,
-                                  QObjectList *inspectedObjects)
+                                  QObjectList *inspectedObjects,
+                                  int depth)
 {
     QQuickDesignerSupport::PropertyNameList propertyNameList;
 
@@ -190,6 +198,9 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
 
     if (inspectedObjects == nullptr)
         inspectedObjects = &localObjectList;
+
+    if (depth > 2)
+        return propertyNameList;
 
     if (!inspectedObjects->contains(object))
         inspectedObjects->append(object);
@@ -214,7 +225,8 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
                     propertyNameList.append(allPropertyNames(childObject,
                                                              baseName
                                                              + QQuickDesignerSupport::PropertyName(metaProperty.name())
-                                                             + '.', inspectedObjects));
+                                                             + '.', inspectedObjects,
+                                                             depth + 1));
             }
         } else if (QQmlGadgetPtrWrapper *valueType
                    = QQmlGadgetPtrWrapper::instance(qmlEngine(object), metaProperty.userType())) {
@@ -223,7 +235,8 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
             propertyNameList.append(allPropertyNames(valueType,
                                                      baseName
                                                      + QQuickDesignerSupport::PropertyName(metaProperty.name())
-                                                     + '.', inspectedObjects));
+                                                     + '.', inspectedObjects,
+                                                     depth + 1));
         } else  {
             addToPropertyNameListIfNotBlackListed(&propertyNameList,
                                                   baseName + QQuickDesignerSupport::PropertyName(metaProperty.name()));

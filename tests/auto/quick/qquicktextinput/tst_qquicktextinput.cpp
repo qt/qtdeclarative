@@ -237,6 +237,8 @@ private slots:
     void QTBUG_77814_InsertRemoveNoSelection();
 
     void checkCursorDelegateWhenPaddingChanged();
+
+    void focusReason();
 private:
     void simulateKey(QWindow *, int key);
 
@@ -7082,6 +7084,84 @@ void tst_qquicktextinput::checkCursorDelegateWhenPaddingChanged()
     textInput->setLeftPadding(10);
     QCOMPARE(cursorDelegate->x(), textInput->leftPadding());
     QCOMPARE(cursorDelegate->y(), textInput->topPadding());
+}
+
+/*!
+    Verifies that TextInput items get focus in/out events with the
+    correct focus reason set.
+
+    Up and Down keys translates to Backtab and Tab focus reasons.
+
+    See QTBUG-75862.
+*/
+void tst_qquicktextinput::focusReason()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("focusReason.qml"));
+
+    QQuickTextInput *first = view.rootObject()->findChild<QQuickTextInput *>("first");
+    QQuickTextInput *second = view.rootObject()->findChild<QQuickTextInput *>("second");
+    QQuickTextInput *third = view.rootObject()->findChild<QQuickTextInput *>("third");
+    QVERIFY(first && second && third);
+
+    class FocusEventFilter : public QObject
+    {
+    public:
+        using QObject::QObject;
+
+        QHash<QObject*, Qt::FocusReason> lastFocusReason;
+    protected:
+        bool eventFilter(QObject *o, QEvent *e)
+        {
+            if (e->type() == QEvent::FocusIn || e->type() == QEvent::FocusOut) {
+                QFocusEvent *fe = static_cast<QFocusEvent*>(e);
+                lastFocusReason[o] = fe->reason();
+            }
+            return QObject::eventFilter(o, e);
+        }
+    } eventFilter;
+    first->installEventFilter(&eventFilter);
+    second->installEventFilter(&eventFilter);
+    third->installEventFilter(&eventFilter);
+
+    view.show();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QCOMPARE(qApp->focusObject(), first);
+    // on some platforms we don't get ActiveWindowFocusReason; tolerate this,
+    // it's not what we are testing in this test
+    if (eventFilter.lastFocusReason[first] != Qt::ActiveWindowFocusReason) {
+        QEXPECT_FAIL("", qPrintable(QString("No window activation event on the %1 platform")
+                                            .arg(QGuiApplication::platformName())),
+                     Continue);
+    }
+    QCOMPARE(eventFilter.lastFocusReason[first], Qt::ActiveWindowFocusReason);
+
+    QTest::mouseClick(&view, Qt::LeftButton, {},
+                      (second->boundingRect().center() + second->position()).toPoint());
+    QTRY_COMPARE(qApp->focusObject(), second);
+    QCOMPARE(eventFilter.lastFocusReason[first], Qt::MouseFocusReason);
+    QCOMPARE(eventFilter.lastFocusReason[second], Qt::MouseFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab);
+    QCOMPARE(qApp->focusObject(), third);
+    QCOMPARE(eventFilter.lastFocusReason[second], Qt::TabFocusReason);
+    QCOMPARE(eventFilter.lastFocusReason[third], Qt::TabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Backtab);
+    QCOMPARE(qApp->focusObject(), second);
+    QCOMPARE(eventFilter.lastFocusReason[third], Qt::BacktabFocusReason);
+    QCOMPARE(eventFilter.lastFocusReason[second], Qt::BacktabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Up);
+    QCOMPARE(qApp->focusObject(), first);
+    QCOMPARE(eventFilter.lastFocusReason[second], Qt::BacktabFocusReason);
+    QCOMPARE(eventFilter.lastFocusReason[first], Qt::BacktabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Down);
+    QCOMPARE(qApp->focusObject(), second);
+    QCOMPARE(eventFilter.lastFocusReason[second], Qt::TabFocusReason);
+    QCOMPARE(eventFilter.lastFocusReason[first], Qt::TabFocusReason);
 }
 
 QTEST_MAIN(tst_qquicktextinput)

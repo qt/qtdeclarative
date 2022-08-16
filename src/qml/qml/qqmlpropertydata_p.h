@@ -84,14 +84,6 @@ public:
             QVariantType         = 9  // Property is a QVariant
         };
 
-        // The _otherBits (which "pad" the Flags struct to align it nicely) are used
-        // to store the relative property index. It will only get used when said index fits. See
-        // trySetStaticMetaCallFunction for details.
-        // (Note: this padding is done here, because certain compilers have surprising behavior
-        // when an enum is declared in-between two bit fields.)
-        enum { BitsLeftInFlags = 15 };
-        unsigned otherBits       : BitsLeftInFlags; // align to 32 bits
-
         // Members of the form aORb can only be a when type is not FunctionType, and only be
         // b when type equals FunctionType. For that reason, the semantic meaning of the bit is
         // overloaded, and the accessor functions are used to get the correct value
@@ -102,25 +94,24 @@ public:
         //
         // Lastly, isDirect and isOverridden apply to both functions and non-functions
     private:
-        unsigned isConstantORisVMEFunction     : 1; // Has CONST flag OR Function was added by QML
-        unsigned isWritableORhasArguments      : 1; // Has WRITE function OR Function takes arguments
-        unsigned isResettableORisSignal        : 1; // Has RESET function OR Function is a signal
-        unsigned isAliasORisVMESignal          : 1; // Is a QML alias to another property OR Signal was added by QML
-        unsigned isFinalORisV4Function         : 1; // Has FINAL flag OR Function takes QQmlV4Function* args
-        unsigned isSignalHandler               : 1; // Function is a signal handler
-        unsigned isOverload                    : 1; // Function is an overload of another function
-        unsigned isRequiredORisCloned          : 1; // Has REQUIRED flag OR The function was marked as cloned
-        unsigned isConstructor                 : 1; // The function was marked is a constructor
-        unsigned isDirect                      : 1; // Exists on a C++ QMetaObject
-        unsigned isOverridden                  : 1; // Is overridden by a extension property
+        quint16 isConstantORisVMEFunction   : 1; // Has CONST flag OR Function was added by QML
+        quint16 isWritableORhasArguments    : 1; // Has WRITE function OR Function takes arguments
+        quint16 isResettableORisSignal      : 1; // Has RESET function OR Function is a signal
+        quint16 isAliasORisVMESignal        : 1; // Is a QML alias to another property OR Signal was added by QML
+        quint16 isFinalORisV4Function       : 1; // Has FINAL flag OR Function takes QQmlV4Function* args
+        quint16 isSignalHandler             : 1; // Function is a signal handler
+        quint16 isOverload                  : 1; // Function is an overload of another function
+        quint16 isRequiredORisCloned        : 1; // Has REQUIRED flag OR The function was marked as cloned
+        quint16 isConstructor               : 1; // The function was marked is a constructor
+        quint16 isDirect                    : 1; // Exists on a C++ QMetaObject
+        quint16 isOverridden                : 1; // Is overridden by a extension property
     public:
-        unsigned type             : 4; // stores an entry of Types
+        quint16 type                        : 4; // stores an entry of Types
 
         // Apply only to IsFunctions
 
         // Internal QQmlPropertyCache flags
-        unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
-        unsigned overrideIndexIsProperty: 1;
+        quint16 overrideIndexIsProperty: 1;
 
         inline Flags();
         inline bool operator==(const Flags &other) const;
@@ -208,16 +199,12 @@ public:
 
     };
 
+    Q_STATIC_ASSERT(sizeof(Flags) == sizeof(quint16));
 
     inline bool operator==(const QQmlPropertyData &) const;
 
     Flags flags() const { return m_flags; }
-    void setFlags(Flags f)
-    {
-        unsigned otherBits = m_flags.otherBits;
-        m_flags = f;
-        m_flags.otherBits = otherBits;
-    }
+    void setFlags(Flags f) { m_flags = f; }
 
     bool isValid() const { return coreIndex() != -1; }
 
@@ -253,14 +240,26 @@ public:
     bool hasOverride() const { return overrideIndex() >= 0; }
     bool hasRevision() const { return revision() != 0; }
 
-    bool isFullyResolved() const { return !m_flags.notFullyResolved; }
+    // This is unsafe in the general case. The property might be in the process of getting
+    // resolved. Only use it if this case has been taken into account.
+    bool isResolved() const { return m_propTypeAndRelativePropIndex != 0; }
 
-    int propType() const { Q_ASSERT(isFullyResolved()); return m_propType; }
+    int propType() const
+    {
+        const quint32 type = m_propTypeAndRelativePropIndex & PropTypeMask;
+        Q_ASSERT(type > 0); // Property has to be fully resolved.
+        return type == PropTypeUnknown ? 0 : type;
+    }
+
     void setPropType(int pt)
     {
+        // You can only directly set the property type if you own the QQmlPropertyData.
+        // It must not be exposed to other threads before setting the type!
         Q_ASSERT(pt >= 0);
-        Q_ASSERT(pt <= std::numeric_limits<qint16>::max());
-        m_propType = quint16(pt);
+        Q_ASSERT(uint(pt) < PropTypeUnknown);
+        m_propTypeAndRelativePropIndex
+                = (m_propTypeAndRelativePropIndex & RelativePropIndexMask)
+                    | (pt == 0 ? PropTypeUnknown : quint32(pt));
     }
 
     int notifyIndex() const { return m_notifyIndex; }
@@ -323,7 +322,10 @@ public:
     }
 
     QQmlPropertyCacheMethodArguments *arguments() const { return m_arguments; }
-    void setArguments(QQmlPropertyCacheMethodArguments *args) { m_arguments = args; }
+    bool setArguments(QQmlPropertyCacheMethodArguments *args)
+    {
+        return m_arguments.testAndSetRelease(nullptr, args);
+    }
 
     int metaObjectOffset() const { return m_metaObjectOffset; }
     void setMetaObjectOffset(int off)
@@ -336,12 +338,26 @@ public:
     StaticMetaCallFunction staticMetaCallFunction() const { return m_staticMetaCallFunction; }
     void trySetStaticMetaCallFunction(StaticMetaCallFunction f, unsigned relativePropertyIndex)
     {
-        if (relativePropertyIndex < (1 << Flags::BitsLeftInFlags) - 1) {
-            m_flags.otherBits = relativePropertyIndex;
+        if (relativePropertyIndex > std::numeric_limits<quint16>::max())
+            return;
+
+        const quint16 propType = m_propTypeAndRelativePropIndex & PropTypeMask;
+        if (propType > 0) {
+            // We can do this because we know that resolve() has run at this point
+            // and we don't need to synchronize anymore. If we get a 0, that means it hasn't
+            // run or is currently in progress. We don't want to interfer and just go through
+            // the meta object.
+            m_propTypeAndRelativePropIndex
+                    = propType | (relativePropertyIndex << RelativePropIndexShift);
             m_staticMetaCallFunction = f;
         }
     }
-    quint16 relativePropertyIndex() const { Q_ASSERT(hasStaticMetaCallFunction()); return m_flags.otherBits; }
+
+    quint16 relativePropertyIndex() const
+    {
+        Q_ASSERT(hasStaticMetaCallFunction());
+        return m_propTypeAndRelativePropIndex >> 16;
+    }
 
     static Flags flagsForProperty(const QMetaProperty &);
     void load(const QMetaProperty &);
@@ -401,11 +417,17 @@ private:
     friend class QQmlPropertyCache;
     void lazyLoad(const QMetaProperty &);
     void lazyLoad(const QMetaMethod &);
-    bool notFullyResolved() const { return m_flags.notFullyResolved; }
+
+    enum {
+        PropTypeMask           = 0x0000ffff,
+        RelativePropIndexMask  = 0xffff0000,
+        RelativePropIndexShift = 16,
+        PropTypeUnknown        = std::numeric_limits<quint16>::max(),
+    };
+    QAtomicInteger<quint32> m_propTypeAndRelativePropIndex;
 
     Flags m_flags;
     qint16 m_coreIndex = -1;
-    quint16 m_propType = 0;
 
     // The notify index is in the range returned by QObjectPrivate::signalIndex().
     // This is different from QMetaMethod::methodIndex().
@@ -416,7 +438,7 @@ private:
     quint8 m_typeMinorVersion = 0;
     qint16 m_metaObjectOffset = -1;
 
-    QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
+    QAtomicPointer<QQmlPropertyCacheMethodArguments> m_arguments;
     StaticMetaCallFunction m_staticMetaCallFunction = nullptr;
 };
 
@@ -436,8 +458,7 @@ bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
 }
 
 QQmlPropertyData::Flags::Flags()
-    : otherBits(0)
-    , isConstantORisVMEFunction(false)
+    : isConstantORisVMEFunction(false)
     , isWritableORhasArguments(false)
     , isResettableORisSignal(false)
     , isAliasORisVMESignal(false)
@@ -449,7 +470,6 @@ QQmlPropertyData::Flags::Flags()
     , isDirect(false)
     , isOverridden(false)
     , type(OtherType)
-    , notFullyResolved(false)
     , overrideIndexIsProperty(false)
 {}
 
@@ -465,7 +485,6 @@ bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) c
             isRequiredORisCloned == other.isRequiredORisCloned &&
             type == other.type &&
             isConstructor == other.isConstructor &&
-            notFullyResolved == other.notFullyResolved &&
             overrideIndexIsProperty == other.overrideIndexIsProperty;
 }
 

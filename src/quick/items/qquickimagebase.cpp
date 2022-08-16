@@ -56,8 +56,8 @@ QT_BEGIN_NAMESPACE
 bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio)
 {
     // QQuickImageProvider and SVG and PDF can generate a high resolution image when
-    // sourceSize is set (this function is only called if it's set).
-    // If sourceSize is not set then the provider default size will be used, as usual.
+    // sourceSize is set. If sourceSize is not set then the provider default size will
+    // be used, as usual.
     bool setDevicePixelRatio = false;
     if (url.scheme() == QLatin1String("image")) {
         setDevicePixelRatio = true;
@@ -418,10 +418,14 @@ void QQuickImageBase::itemChange(ItemChange change, const ItemChangeData &value)
     Q_D(QQuickImageBase);
     // If the screen DPI changed, reload image.
     if (change == ItemDevicePixelRatioHasChanged && value.realValue != d->devicePixelRatio) {
+        const auto oldDpr = d->devicePixelRatio;
         // ### how can we get here with !qmlEngine(this)? that implies
         // itemChange() on an item pending deletion, which seems strange.
         if (qmlEngine(this) && isComponentComplete() && d->url.isValid()) {
             load();
+            // not changed when loading (sourceSize might not be set)
+            if (d->devicePixelRatio == oldDpr)
+                d->updateDevicePixelRatio(value.realValue);
         }
     }
     QQuickItem::itemChange(change, value);

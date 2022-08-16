@@ -232,8 +232,6 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
     Q_ASSERT(!_m.isNull() && index >= 0);
 
     if (_m.isT1()) {
-        typedef QQmlPropertyCacheMethodArguments A;
-
         QQmlPropertyCache *c = _m.asT1();
         Q_ASSERT(index < c->methodIndexCacheStart + c->methodIndexCache.count());
 
@@ -242,19 +240,16 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
 
         QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&c->methodIndexCache.at(index - c->methodIndexCacheStart));
 
-        if (rv->arguments() && static_cast<A *>(rv->arguments())->argumentsValid)
-            return static_cast<A *>(rv->arguments())->arguments;
+        if (QQmlPropertyCacheMethodArguments *args = rv->arguments())
+            return args->arguments;
 
         const QMetaObject *metaObject = c->createMetaObject();
         Q_ASSERT(metaObject);
         QMetaMethod m = metaObject->method(index);
 
         int argc = m.parameterCount();
-        if (!rv->arguments()) {
-            A *args = c->createArgumentsObject(argc, m.parameterNames());
-            rv->setArguments(args);
-        }
-        A *args = static_cast<A *>(rv->arguments());
+
+        QQmlPropertyCacheMethodArguments *args = c->createArgumentsObject(argc, m.parameterNames());
 
         QList<QByteArray> argTypeNames; // Only loaded if needed
 
@@ -280,8 +275,14 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
             }
             args->arguments[ii + 1] = type;
         }
-        args->argumentsValid = true;
-        return static_cast<A *>(rv->arguments())->arguments;
+
+        // If we cannot set it, then another thread has set it in the mean time.
+        // Just return that one, then. We don't have to delete the arguments object
+        // we've created as it's tracked in a linked list.
+        if (rv->setArguments(args))
+            return args->arguments;
+        else
+            return rv->arguments()->arguments;
 
     } else {
         QMetaMethod m = _m.asT2()->method(index);

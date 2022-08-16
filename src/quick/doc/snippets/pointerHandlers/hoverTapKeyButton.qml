@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -50,37 +50,24 @@
 //![0]
 import QtQuick 2.12
 
-Item {
-    width: 200; height: 200
+Rectangle {
+    id: button
+    signal clicked
 
-    Rectangle {
-        anchors.centerIn: parent
-        width: text.implicitWidth + 20; height: text.implicitHeight + 10
-        color: "green"
-        radius: 5
+    width: 150; height: 50; radius: 3
+    color: tapHandler.pressed ? "goldenrod" : hoverHandler.hovered ? "wheat" : "beige"
+    border.color: activeFocus ? "brown" : "transparent"
+    focus: true
 
-        Drag.active: dragHandler.active
-        Drag.dragType: Drag.Automatic
-        Drag.supportedActions: Qt.CopyAction
-        Drag.mimeData: {
-            "text/plain": "Copied text"
-        }
-
-        Text {
-            id: text
-            anchors.centerIn: parent
-            text: "Drag me"
-        }
-
-        DragHandler {
-            id: dragHandler
-            onActiveChanged:
-                if (active) {
-                    parent.grabToImage(function(result) {
-                        parent.Drag.imageSource = result.url;
-                    })
-                }
-        }
+    HoverHandler {
+        id: hoverHandler
     }
+
+    TapHandler {
+        id: tapHandler
+        onTapped: button.clicked()
+    }
+
+    Keys.onEnterPressed: button.clicked()
 }
 //![0]

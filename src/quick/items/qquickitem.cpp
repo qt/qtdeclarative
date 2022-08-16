@@ -4790,14 +4790,24 @@ void QQuickItem::forceActiveFocus()
 
 void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
 {
+    Q_D(QQuickItem);
     setFocus(true, reason);
     QQuickItem *parent = parentItem();
+    QQuickItem *scope = nullptr;
     while (parent) {
         if (parent->flags() & QQuickItem::ItemIsFocusScope) {
             parent->setFocus(true, reason);
+            if (!scope)
+                scope = parent;
         }
         parent = parent->parentItem();
     }
+    // In certain reparenting scenarios, d->focus might be true and the scope
+    // might also have focus, so that setFocus() returns early without actually
+    // acquiring active focus, because it thinks it already has it. In that
+    // case, try to set the DeliveryAgent's active focus. (QTBUG-89736).
+    if (scope && !d->activeFocus && d->window)
+        QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this, Qt::OtherFocusReason);
 }
 
 /*!
@@ -7858,22 +7868,48 @@ bool QQuickItem::contains(const QPointF &point) const
     \qmlproperty QObject* QtQuick::Item::containmentMask
     \since 5.11
     This property holds an optional mask for the Item to be used in the
-    QtQuick::Item::contains method.
-    QtQuick::Item::contains main use is currently to determine whether
-    an input event has landed into the item or not.
+    QtQuick::Item::contains() method. Its main use is currently to determine
+    whether a \l {QPointerEvent}{pointer event} has landed into the item or not.
 
     By default the \l contains method will return true for any point
-    within the Item's bounding box. \c containmentMask allows for a
-    more fine-grained control. For example, the developer could
-    define and use an AnotherItem element as containmentMask,
-    which has a specialized contains method, like:
+    within the Item's bounding box. \c containmentMask allows for
+    more fine-grained control. For example, if a custom C++
+    QQuickItem subclass with a specialized contains() method
+    is used as containmentMask:
 
     \code
     Item { id: item; containmentMask: AnotherItem { id: anotherItem } }
     \endcode
 
-    \e{item}'s contains method would then return true only if
-    \e{anotherItem}'s contains implementation returns true.
+    \e{item}'s contains method would then return \c true only if
+    \e{anotherItem}'s contains() implementation returns \c true.
+
+    A \l Shape can be used in this way, to make an item react to
+    \l {QPointerEvent}{pointer events} only within a non-rectangular region,
+    as illustrated in the \l {Qt Quick Examples - Shapes}{Shapes example}
+    (see \c tapableTriangle.qml).
+*/
+/*!
+    \property QQuickItem::containmentMask
+    \since 5.11
+    This property holds an optional mask to be used in the contains() method,
+    which is mainly used for hit-testing each \l QPointerEvent.
+
+    By default, \l contains() will return \c true for any point
+    within the Item's bounding box. But any QQuickItem, or any QObject
+    that implements a function of the form
+    \code
+    Q_INVOKABLE bool contains(const QPointF &point) const;
+    \endcode
+    can be used as a mask, to defer hit-testing to that object.
+
+    \note contains() is called frequently during event delivery.
+    Deferring hit-testing to another object slows it down somewhat.
+    containmentMask() can cause performance problems if that object's
+    contains() method is not efficient. If you implement a custom
+    QQuickItem subclass, you can alternatively override contains().
+
+    \sa contains()
 */
 QObject *QQuickItem::containmentMask() const
 {

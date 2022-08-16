@@ -645,7 +645,10 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
         Q_ASSERT(valueTypeMetaObject);
         QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
         valueTypeData->setFlags(QQmlPropertyData::flagsForProperty(vtProp));
+
+        // valueTypeData is expected to be local here. It must not be shared with other threads.
         valueTypeData->setPropType(vtProp.userType());
+
         valueTypeData->setCoreIndex(m_targetIndex.valueTypeIndex());
     }
 }
@@ -748,7 +751,11 @@ QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlProper
     if (property && property->isQObject())
         return new QObjectPointerBinding(engine, property->propType());
 
-    const int type = (property && property->isFullyResolved()) ? property->propType() : QMetaType::UnknownType;
+    // If the property is not resolved at this point, you get a binding of unknown type.
+    // This has been the case for a long time and we keep it like this in Qt5 to be bug-compatible.
+    const int type = (property && property->isResolved())
+            ? property->propType()
+            : QMetaType::UnknownType;
 
     if (type == qMetaTypeId<QQmlBinding *>()) {
         return new QQmlBindingBinding;

@@ -343,9 +343,9 @@ void QQuickImage::setFillMode(FillMode mode)
 }
 
 /*!
-
     \qmlproperty real QtQuick::Image::paintedWidth
     \qmlproperty real QtQuick::Image::paintedHeight
+    \readonly
 
     These properties hold the size of the image that is actually painted.
     In most cases it is the same as \c width and \c height, but when using an
@@ -367,6 +367,7 @@ qreal QQuickImage::paintedHeight() const
 
 /*!
     \qmlproperty enumeration QtQuick::Image::status
+    \readonly
 
     This property holds the status of image loading.  It can be one of:
     \list
@@ -404,6 +405,7 @@ qreal QQuickImage::paintedHeight() const
 
 /*!
     \qmlproperty real QtQuick::Image::progress
+    \readonly
 
     This property holds the progress of image loading, from 0.0 (nothing loaded)
     to 1.0 (finished).
@@ -425,7 +427,7 @@ qreal QQuickImage::paintedHeight() const
 */
 
 /*!
-    \qmlproperty QSize QtQuick::Image::sourceSize
+    \qmlproperty size QtQuick::Image::sourceSize
 
     This property holds the scaled width and height of the full-frame image.
 

@@ -450,12 +450,13 @@ void QQuickWindow::physicalDpiChanged()
 void QQuickWindow::handleScreenChanged(QScreen *screen)
 {
     Q_D(QQuickWindow);
+    // we connected to the initial screen in QQuickWindowPrivate::init, but the screen changed
     disconnect(d->physicalDpiChangedConnection);
     if (screen) {
         physicalDpiChanged();
         // When physical DPI changes on the same screen, either the resolution or the device pixel
         // ratio changed. We must check what it is. Device pixel ratio does not have its own
-        // ...Changed() signal.
+        // ...Changed() signal. Reconnect, same as in QQuickWindowPrivate::init.
         d->physicalDpiChangedConnection = connect(screen, &QScreen::physicalDotsPerInchChanged,
                                                   this, &QQuickWindow::physicalDpiChanged);
     }
@@ -707,8 +708,13 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     Q_ASSERT(windowManager || renderControl);
 
-    if (QScreen *screen = q->screen())
-       devicePixelRatio = screen->devicePixelRatio();
+    if (QScreen *screen = q->screen()) {
+        devicePixelRatio = screen->devicePixelRatio();
+        // if the screen changes, then QQuickWindow::handleScreenChanged disconnects
+        // and connects to the new screen
+        physicalDpiChangedConnection = QObject::connect(screen, &QScreen::physicalDotsPerInchChanged,
+                                                        q, &QQuickWindow::physicalDpiChanged);
+    }
 
     QSGContext *sg;
     if (renderControl) {

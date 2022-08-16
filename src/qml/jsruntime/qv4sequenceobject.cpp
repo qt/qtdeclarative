@@ -720,13 +720,20 @@ DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealList);
 }
 
 #define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>(#SequenceType);
-void SequencePrototype::init()
+static bool registerAllSequenceTypes()
 {
     FOREACH_QML_SEQUENCE_TYPE(REGISTER_QML_SEQUENCE_METATYPE)
+    return true;
+}
+#undef REGISTER_QML_SEQUENCE_METATYPE
+
+void SequencePrototype::init()
+{
+    static const bool registered = registerAllSequenceTypes();
+    Q_UNUSED(registered);
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(engine()->id_valueOf(), method_valueOf, 0);
 }
-#undef REGISTER_QML_SEQUENCE_METATYPE
 
 ReturnedValue SequencePrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {

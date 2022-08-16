@@ -209,6 +209,8 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     If the spatial constraint is violated, \l pressed transitions immediately
     from true to false, regardless of the time held.
 
+    The \c gesturePolicy also affects grab behavior as described below.
+
     \value TapHandler.DragThreshold
            (the default value) The event point must not move significantly.
            If the mouse, finger or stylus moves past the system-wide drag
@@ -217,11 +219,13 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
            can be useful whenever TapHandler needs to cooperate with other
            input handlers (for example \l DragHandler) or event-handling Items
            (for example QtQuick Controls), because in this case TapHandler
-           will not take the exclusive grab, but merely a passive grab.
+           will not take the exclusive grab, but merely a
+           \l {QPointerEvent::addPassiveGrabber()}{passive grab}.
 
     \value TapHandler.WithinBounds
            If the event point leaves the bounds of the \c parent Item, the tap
-           gesture is canceled. The TapHandler will take the exclusive grab on
+           gesture is canceled. The TapHandler will take the
+           \l {QPointerEvent::setExclusiveGrabber}{exclusive grab} on
            press, but will release the grab as soon as the boundary constraint
            is no longer satisfied.
 
@@ -232,8 +236,9 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
            typical behavior for button widgets: you can cancel a click by
            dragging outside the button, and you can also change your mind by
            dragging back inside the button before release. Note that it's
-           necessary for TapHandler take the exclusive grab on press and retain
-           it until release in order to detect this gesture.
+           necessary for TapHandler to take the
+           \l {QPointerEvent::setExclusiveGrabber}{exclusive grab} on press
+           and retain it until release in order to detect this gesture.
 */
 void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gesturePolicy)
 {

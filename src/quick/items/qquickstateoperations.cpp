@@ -573,7 +573,7 @@ void QQuickParentChange::rewind()
     The AnchorChanges type is used to modify the anchors of an item in a \l State.
 
     AnchorChanges cannot be used to modify the margins on an item. For this, use
-    PropertyChanges intead.
+    PropertyChanges instead.
 
     In the following example we change the top and bottom anchors of an item
     using AnchorChanges, and the top and bottom anchor margins using

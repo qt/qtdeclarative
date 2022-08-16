@@ -361,7 +361,7 @@ Q_SIGNALS:
 
 private:
     void invalidateFontCaches();
-    void ensureActiveFocus();
+    void ensureActiveFocus(Qt::FocusReason reason);
 
 protected:
     QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = nullptr);
