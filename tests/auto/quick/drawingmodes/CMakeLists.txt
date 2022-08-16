@@ -16,8 +16,6 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_drawingmodes
     SOURCES
         tst_drawingmodes.cpp
-    DEFINES
-        QT_DISABLE_DEPRECATED_BEFORE=0
     LIBRARIES
         Qt::Gui
         Qt::Qml

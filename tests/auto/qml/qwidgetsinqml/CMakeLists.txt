@@ -10,8 +10,6 @@
 qt_internal_add_test(tst_qwidgetsinqml
     SOURCES
         tst_qwidgetsinqml.cpp
-    DEFINES
-        QT_DISABLE_DEPRECATED_BEFORE=0
     LIBRARIES
         Qt::Gui
         Qt::GuiPrivate

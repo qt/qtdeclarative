@@ -10,8 +10,6 @@
 qt_internal_add_benchmark(tst_qqmlchangeset
     SOURCES
         tst_qqmlchangeset.cpp
-    DEFINES
-        QT_DISABLE_DEPRECATED_BEFORE=0
     LIBRARIES
         Qt::Gui
         Qt::Qml
