@@ -2079,7 +2079,7 @@ void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, b
                         item->mouseUngrabEvent();
                         lastUngrabbed = item;
                     }
-                } else if (item->isEnabled() && item->isVisible() && point.state() != QEventPoint::State::Released) {
+                } else if (item->isEnabled() && item->isVisible() && point.state() == QEventPoint::State::Pressed) {
                     pointerEvent->setExclusiveGrabber(point, item);
                 }
                 point.setAccepted(true);
