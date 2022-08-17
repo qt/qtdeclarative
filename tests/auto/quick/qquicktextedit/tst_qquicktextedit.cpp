@@ -101,6 +101,8 @@ public:
     tst_qquicktextedit();
 
 private slots:
+    void initTestCase() override;
+
     void cleanup();
     void text();
     void width();
@@ -182,6 +184,7 @@ private slots:
     void implicitSizeBinding();
     void largeTextObservesViewport_data();
     void largeTextObservesViewport();
+    void renderingAroundSelection();
 
     void signal_editingfinished();
 
@@ -367,6 +370,56 @@ tst_qquicktextedit::tst_qquicktextedit()
                  // << "#AA0011DD"
                  // << "#00F16B11";
                  //
+}
+
+class NodeCheckerTextEdit : public QQuickTextEdit
+{
+public:
+    NodeCheckerTextEdit(QQuickItem *parent = nullptr) : QQuickTextEdit(parent) {}
+
+    void populateLinePositions(QSGNode *node)
+    {
+        linePositions.clear();
+        lastLinePosition = 0;
+        QSGNode *ch = node->firstChild();
+        while (ch != node->lastChild()) {
+            QCOMPARE(ch->type(), QSGNode::TransformNodeType);
+            QSGTransformNode *tn = static_cast<QSGTransformNode *>(ch);
+            int y = 0;
+            if (!tn->matrix().isIdentity())
+                y = tn->matrix().column(3).y();
+            if (tn->childCount() == 0) {
+                // A TransformNode with no children is a waste of memory.
+                // So far, QQuickTextEdit still creates a couple of extras.
+                qCDebug(lcTests) << "ignoring leaf TransformNode" << tn << "@ y" << y;
+            } else {
+                qCDebug(lcTests) << "child" << tn << "@ y" << y << "has children" << tn->childCount();
+                if (!linePositions.contains(y)) {
+                    linePositions.append(y);
+                    lastLinePosition = qMax(lastLinePosition, y);
+                }
+            }
+            ch = ch->nextSibling();
+        }
+        std::sort(linePositions.begin(), linePositions.end());
+    }
+
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *data) override
+    {
+       QSGNode *ret = QQuickTextEdit::updatePaintNode(node, data);
+       qCDebug(lcTests) << "updated root node" << ret;
+       populateLinePositions(ret);
+       return ret;
+    }
+
+    QList<int> linePositions;
+    int lastLinePosition;
+};
+
+void tst_qquicktextedit::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    qmlRegisterType<NodeCheckerTextEdit>("Qt.test", 1, 0, "NodeCheckerTextEdit");
 }
 
 void tst_qquicktextedit::cleanup()
@@ -3822,6 +3875,40 @@ void tst_qquicktextedit::largeTextObservesViewport()
     QVERIFY(textPriv->cursorItem);
     qCDebug(lcTests) << "cursor rect" << textItem->cursorRectangle() << "visible?" << textPriv->cursorItem->isVisible();
     QCOMPARE(textPriv->cursorItem->isVisible(), textPriv->renderedRegion.intersects(textItem->cursorRectangle()));
+}
+
+void tst_qquicktextedit::renderingAroundSelection()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("threeLines.qml")));
+    NodeCheckerTextEdit *textItem = qmlobject_cast<NodeCheckerTextEdit*>(window.rootObject());
+    QVERIFY(textItem);
+    QTRY_VERIFY(textItem->linePositions.count() > 0);
+    const auto linePositions = textItem->linePositions;
+    const int lastLinePosition = textItem->lastLinePosition;
+    QQuickTextEditPrivate *textPriv = QQuickTextEditPrivate::get(textItem);
+    QSignalSpy renderSpy(&window, &QQuickWindow::afterRendering);
+
+    if (lcTests().isDebugEnabled())
+        QTest::qWait(500); // for visual check; not needed in CI
+
+    const int renderCount = renderSpy.count();
+    QPoint p1 = textItem->mapToScene(textItem->positionToRectangle(8).center()).toPoint();
+    QPoint p2 = textItem->mapToScene(textItem->positionToRectangle(10).center()).toPoint();
+    qCDebug(lcTests) << "drag from" << p1 << "to" << p2;
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTest::mouseMove(&window, p2);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p2);
+    // ensure that QQuickTextEdit::updatePaintNode() has a chance to run
+    QTRY_VERIFY(renderSpy.count() > renderCount);
+
+    if (lcTests().isDebugEnabled())
+        QTest::qWait(500); // for visual check; not needed in CI
+
+    qCDebug(lcTests) << "TextEdit's nodes" << textPriv->textNodeMap;
+    qCDebug(lcTests) << "font" << textItem->font() << "line positions" << textItem->linePositions << "should be" << linePositions;
+    QCOMPARE(textItem->lastLinePosition, lastLinePosition);
+    QTRY_COMPARE(textItem->linePositions, linePositions);
 }
 
 void tst_qquicktextedit::signal_editingfinished()

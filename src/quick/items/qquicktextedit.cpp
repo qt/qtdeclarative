@@ -2255,11 +2255,13 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                         }
                     }
 
+                    bool createdNodeInView = false;
                     if (inView) {
                         if (!engine.hasContents()) {
                             if (node && !node->parent())
                                 d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
                             node = d->createTextNode();
+                            createdNodeInView = true;
                             updateNodeTransform(node, nodeOffset);
                             nodeStart = block.position();
                         }
@@ -2269,13 +2271,13 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
                     if ((it.atEnd()) || block.next().position() >= firstCleanNode.startPos())
                         break; // last node that needed replacing or last block of the frame
-
                     QList<int>::const_iterator lowerBound = std::lower_bound(frameBoundaries.constBegin(), frameBoundaries.constEnd(), block.next().position());
                     if (node && (currentNodeSize > nodeBreakingSize || lowerBound == frameBoundaries.constEnd() || *lowerBound > nodeStart)) {
                         currentNodeSize = 0;
                         if (!node->parent())
                             d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
-                        node = d->createTextNode();
+                        if (!createdNodeInView)
+                            node = d->createTextNode();
                         resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor);
                         nodeStart = block.next().position();
                     }
@@ -3321,6 +3323,16 @@ void QQuickTextEdit::clear()
     d->resetInputMethod();
     d->control->clear();
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, const QQuickTextEditPrivate::Node &n)
+{
+    QDebugStateSaver saver(debug);
+    debug.space();
+    debug << "Node(startPos:" << n.m_startPos << "dirty:" << n.m_dirty << n.m_node << ')';
+    return debug;
+}
+#endif
 
 QT_END_NAMESPACE
 
