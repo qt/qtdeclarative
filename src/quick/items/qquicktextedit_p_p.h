@@ -89,6 +89,10 @@ public:
         int m_startPos;
         QQuickTextNode* m_node;
         bool m_dirty;
+
+#ifndef QT_NO_DEBUG_STREAM
+        friend QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug, const Node &);
+#endif
     };
     typedef QList<Node>::iterator TextNodeIterator;
 
@@ -236,6 +240,10 @@ public:
 
     static const int largeTextSizeThreshold;
 };
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug debug, const QQuickTextEditPrivate::Node &);
+#endif
 
 QT_END_NAMESPACE
 
