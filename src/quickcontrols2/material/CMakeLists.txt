@@ -56,6 +56,7 @@ set(qml_files
     "ToolButton.qml"
     "ToolSeparator.qml"
     "ToolTip.qml"
+    "TreeViewDelegate.qml"
     "Tumbler.qml"
     "VerticalHeaderView.qml"
 )
