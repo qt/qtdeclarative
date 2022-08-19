@@ -542,10 +542,14 @@ void tst_qqmlengine::clearSingletons()
     const int cppInstance = qmlRegisterSingletonInstance(
                 "ClearSingletons", 1, 0, "CppInstance", &objectCaller1);
 
+#if QT_DEPRECATED_SINCE(6, 3)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QQmlPrivate::SingletonFunctor deprecatedSingletonFunctor;
     deprecatedSingletonFunctor.m_object = &objectCaller2;
     const int deprecatedCppInstance = qmlRegisterSingletonType<ObjectCaller>(
                 "ClearSingletons", 1, 0, "DeprecatedCppInstance", deprecatedSingletonFunctor);
+QT_WARNING_POP
+#endif // QT_DEPRECATED_SINCE(6, 3)
 
     const int cppFactory = qmlRegisterSingletonType<CppSingleton>(
                 "ClearSingletons", 1, 0, "CppFactory", &CppSingleton::create);
@@ -559,7 +563,9 @@ void tst_qqmlengine::clearSingletons()
     QQmlEngine engine;
 
     QCOMPARE(engine.singletonInstance<ObjectCaller *>(cppInstance), &objectCaller1);
+#if QT_DEPRECATED_SINCE(6, 3)
     QCOMPARE(engine.singletonInstance<ObjectCaller *>(deprecatedCppInstance), &objectCaller2);
+#endif
     const CppSingleton *oldCppSingleton = engine.singletonInstance<CppSingleton *>(cppFactory);
     QVERIFY(oldCppSingleton != nullptr);
     const uint oldCppSingletonId = oldCppSingleton->id;
@@ -577,7 +583,9 @@ void tst_qqmlengine::clearSingletons()
               "import QtQml\n"
               "QtObject {\n"
               "    property QtObject a: CppInstance\n"
+#if QT_DEPRECATED_SINCE(6, 3)
               "    property QtObject f: DeprecatedCppInstance\n"
+#endif
               "    property QtObject b: CppFactory\n"
               "    property int c: JsValue\n"
               "    property QtObject d: JsObject\n"
@@ -586,7 +594,9 @@ void tst_qqmlengine::clearSingletons()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> singletonUser(c.create());
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("a")), &objectCaller1);
+#if QT_DEPRECATED_SINCE(6, 3)
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("f")), &objectCaller2);
+#endif
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("b")), oldCppSingleton);
     QCOMPARE(singletonUser->property("c").toUInt(), 13u);
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("d")), oldJsSingleton);
@@ -597,6 +607,7 @@ void tst_qqmlengine::clearSingletons()
 
     QCOMPARE(engine.singletonInstance<ObjectCaller *>(cppInstance), &objectCaller1);
 
+#if QT_DEPRECATED_SINCE(6, 3)
     // Singleton instances created with previous versions of qmlRegisterSingletonInstance()
     // are lost and cannot be accessed anymore. We can only call their synthesized factory
     // functions once. This is not a big problem as you have to recompile in order to use
@@ -610,6 +621,7 @@ void tst_qqmlengine::clearSingletons()
                 "<Unknown File>: qmlRegisterSingletonType(): \"DeprecatedCppInstance\" is not "
                 "available because the callback function returns a null pointer.");
     QCOMPARE(engine.singletonInstance<ObjectCaller *>(deprecatedCppInstance), nullptr);
+#endif
 
     QCOMPARE(CppSingleton::instantiations, oldCppSingletonId);
     const CppSingleton *newCppSingleton = engine.singletonInstance<CppSingleton *>(cppFactory);
@@ -626,7 +638,9 @@ void tst_qqmlengine::clearSingletons()
 
     // Holding on to an old singleton instance is OK. We don't delete those.
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("a")), &objectCaller1);
+#if QT_DEPRECATED_SINCE(6, 3)
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("f")), &objectCaller2);
+#endif
 
     // Deleting the singletons created by factories has cleared their references in QML.
     // We don't renew them as the point of clearing the singletons is not having any
