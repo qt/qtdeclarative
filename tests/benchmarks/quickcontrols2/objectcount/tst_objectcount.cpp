@@ -72,7 +72,7 @@ static void initTestRows(QQmlEngine *engine)
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "imagine", "QtQuick/Controls/Imagine");
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "material", "QtQuick/Controls/Material",
         QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator"
-            << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+            << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate" << "TreeViewDelegate");
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "universal", "QtQuick/Controls/Universal",
         QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }

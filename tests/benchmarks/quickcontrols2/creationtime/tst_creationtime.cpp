@@ -125,7 +125,7 @@ void tst_CreationTime::material_data()
     QTest::addColumn<QUrl>("url");
     addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "material", "QtQuick/Controls/Material",
         QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator"
-            << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+            << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate" << "TreeViewDelegate");
 }
 
 void tst_CreationTime::universal()
