@@ -401,7 +401,12 @@ void tst_DragHandler::mouseDragThreshold()
     QTRY_VERIFY(dragHandler->active());
     QCOMPARE(translationChangedSpy.count(), dragThreshold ? 0 : 1);
     QCOMPARE(centroidChangedSpy.count(), 3);
+#if QT_DEPRECATED_SINCE(6, 2)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler->translation().x(), dragThreshold ? 0 : 2);
+QT_WARNING_POP
+#endif
+    QCOMPARE(dragHandler->activeTranslation().x(), dragThreshold ? 0 : 2);
     QPointF sceneGrabPos = dragThreshold ? p1 : p1 - QPoint(1, 0);
     QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
     p1 += QPoint(19, 0);
@@ -412,8 +417,14 @@ void tst_DragHandler::mouseDragThreshold()
     QCOMPARE(dragHandler->centroid().scenePosition(), ball->mapToScene(ballCenter));
     QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
     QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
+#if QT_DEPRECATED_SINCE(6, 2)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler->translation().x(), dragThreshold + (dragThreshold ? 20 : 21));
     QCOMPARE(dragHandler->translation().y(), 0.0);
+QT_WARNING_POP
+#endif
+    QCOMPARE(dragHandler->activeTranslation().x(), dragThreshold + (dragThreshold ? 20 : 21));
+    QCOMPARE(dragHandler->activeTranslation().y(), 0.0);
     QVERIFY(dragHandler->centroid().velocity().x() > 0);
     QCOMPARE(centroidChangedSpy.count(), 4);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
@@ -451,8 +462,14 @@ void tst_DragHandler::dragFromMargin() // QTBUG-74966
     QTRY_VERIFY(dragHandler->active());
     QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
     QCOMPARE(dragHandler->centroid().sceneGrabPosition(), p1);
+#if QT_DEPRECATED_SINCE(6, 2)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler->translation().x(), 0.0); // hmm that's odd
     QCOMPARE(dragHandler->translation().y(), 0.0);
+QT_WARNING_POP
+#endif
+    QCOMPARE(dragHandler->activeTranslation().x(), 0.0); // hmm that's odd
+    QCOMPARE(dragHandler->activeTranslation().y(), 0.0);
     QCOMPARE(draggableItem->position(), originalPos + QPointF(dragThreshold * 2, 0));
 #if QT_CONFIG(cursor)
     // The cursor doesn't change until the next event after the handler becomes active.
@@ -608,7 +625,12 @@ void tst_DragHandler::touchDragMulti()
     QTRY_VERIFY(dragHandler1->active());
     QVERIFY(dragHandler2->active());
     QCOMPARE(translationChangedSpy1.count(), 0);
+#if QT_DEPRECATED_SINCE(6, 2)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler1->translation().x(), 0.0);
+QT_WARNING_POP
+#endif
+    QCOMPARE(dragHandler1->activeTranslation().x(), 0.0);
     QPointF sceneGrabPos1 = p1;
     QPointF sceneGrabPos2 = p2;
     QCOMPARE(dragHandler1->centroid().sceneGrabPosition(), sceneGrabPos1);
@@ -617,7 +639,12 @@ void tst_DragHandler::touchDragMulti()
     p2 += QPoint(0, 19);
     QVERIFY(dragHandler2->active());
     QCOMPARE(translationChangedSpy2.count(), 0);
+#if QT_DEPRECATED_SINCE(6, 2)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler2->translation().x(), 0.0);
+QT_WARNING_POP
+#endif
+    QCOMPARE(dragHandler2->activeTranslation().x(), 0.0);
     QCOMPARE(dragHandler2->centroid().sceneGrabPosition(), sceneGrabPos2);
     touchSeq.move(1, p1, window).move(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
@@ -628,15 +655,27 @@ void tst_DragHandler::touchDragMulti()
     QCOMPARE(dragHandler1->centroid().scenePosition(), ball1->mapToScene(ball1Center));
     QCOMPARE(dragHandler1->centroid().scenePressPosition(), scenePressPos1);
     QCOMPARE(dragHandler1->centroid().sceneGrabPosition(), sceneGrabPos1);
+#if QT_DEPRECATED_SINCE(6, 2)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler1->translation().x(), dragThreshold + 20.0);
     QCOMPARE(dragHandler1->translation().y(), 0.0);
+QT_WARNING_POP
+#endif
+    QCOMPARE(dragHandler1->activeTranslation().x(), dragThreshold + 20.0);
+    QCOMPARE(dragHandler1->activeTranslation().y(), 0.0);
     QCOMPARE(dragHandler2->centroid().position(), ball2Center);
     QCOMPARE(dragHandler2->centroid().pressPosition(), ball2Center);
     QCOMPARE(dragHandler2->centroid().scenePosition(), ball2->mapToScene(ball2Center));
     QCOMPARE(dragHandler2->centroid().scenePressPosition(), scenePressPos2);
     QCOMPARE(dragHandler2->centroid().sceneGrabPosition(), sceneGrabPos2);
+#if QT_DEPRECATED_SINCE(6, 2)
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler2->translation().x(), 0.0);
     QCOMPARE(dragHandler2->translation().y(), dragThreshold + 20.0);
+QT_WARNING_POP
+#endif
+    QCOMPARE(dragHandler2->activeTranslation().x(), 0.0);
+    QCOMPARE(dragHandler2->activeTranslation().y(), dragThreshold + 20.0);
     touchSeq.release(1, p1, window).stationary(2).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!dragHandler1->active());
