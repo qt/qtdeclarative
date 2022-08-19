@@ -70,6 +70,7 @@
 
     \list
     \li Android: \l {Material Style}
+    \li iOS: \l {iOS Style}
     \li Linux: \l {Fusion Style}
     \li macOS: \l {macOS Style}
     \li Windows: \l {Windows Style}

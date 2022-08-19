@@ -170,6 +170,8 @@ struct QQuickStyleSpec
             style = QLatin1String("Material");
 #elif defined(Q_OS_LINUX)
             style = QLatin1String("Fusion");
+#elif defined(Q_OS_IOS)
+            style = QLatin1String("iOS");
 #endif
             if (!style.isEmpty())
                 qCDebug(lcQtQuickControlsStyle) << "using" << style << "as a default";
