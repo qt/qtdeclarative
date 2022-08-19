@@ -11,7 +11,7 @@ QtObject {
     property var amText: locale.amText
     property var pmText: locale.pmText
     property var nativeLanguageName: locale.nativeLanguageName
-    property var nativeCountryName: locale.nativeCountryName
+    property var nativeTerritoryName: locale.nativeTerritoryName
     property var decimalPoint: locale.decimalPoint
     property var groupSeparator: locale.groupSeparator
     property var percent: locale.percent

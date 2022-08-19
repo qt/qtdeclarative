@@ -290,7 +290,7 @@ void tst_qqmlvaluetypes::locale()
         QCOMPARE(object->property("groupSeparator").toString().at(0), locale.groupSeparator());
         QCOMPARE(object->property("measurementSystem").toInt(), int(locale.measurementSystem()));
         QCOMPARE(object->property("name").toString(), locale.name());
-        QCOMPARE(object->property("nativeCountryName").toString(), locale.nativeCountryName());
+        QCOMPARE(object->property("nativeCountryName").toString(), locale.nativeTerritoryName());
         QCOMPARE(object->property("nativeLanguageName").toString(), locale.nativeLanguageName());
         QCOMPARE(object->property("negativeSign").toString().at(0), locale.negativeSign());
         QCOMPARE(object->property("percent").toString().at(0), locale.percent());

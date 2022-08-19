@@ -154,7 +154,7 @@ void tst_qqmllocale::addPropertyData(const QString &l)
         LOCALE_PROP(QString,amText),
         LOCALE_PROP(QString,pmText),
         LOCALE_PROP(QString,nativeLanguageName),
-        LOCALE_PROP(QString,nativeCountryName),
+        LOCALE_PROP(QString,nativeTerritoryName),
         LOCALE_PROP(QString,decimalPoint),
         LOCALE_PROP(QString,groupSeparator),
         LOCALE_PROP(QString,percent),
