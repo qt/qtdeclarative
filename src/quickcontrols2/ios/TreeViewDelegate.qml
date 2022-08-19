@@ -20,6 +20,11 @@ T.TreeViewDelegate {
     topPadding: contentItem ? (height - contentItem.implicitHeight) / 2 : 0
     leftPadding: !mirrored ? leftMargin + __contentIndent : width - leftMargin - __contentIndent - implicitContentWidth
 
+    highlighted: control.selected || control.current
+               || ((control.treeView.selectionBehavior === TableView.SelectRows
+               || control.treeView.selectionBehavior === TableView.SelectionDisabled)
+               && control.row === control.treeView.currentRow)
+
     required property int row
     required property var model
     readonly property real __contentIndent: !isTreeNode ? 0 : (depth * indentation) + (indicator ? indicator.width + spacing : 0)
@@ -54,7 +59,7 @@ T.TreeViewDelegate {
         NinePatchImage {
             height: parent.height
             width: parent.width
-            source: control.IOS.url + "itemdelegate-background"
+            source: control.IOS.url + (control.highlighted ? "itemdelegate-background-pressed" : "itemdelegate-background")
             NinePatchImageSelector on source {
                 states: [
                     {"light": control.IOS.theme === IOS.Light},
