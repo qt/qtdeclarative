@@ -28,8 +28,8 @@ T.TreeViewDelegate {
         readonly property real __indicatorIndent: control.leftMargin + (control.depth * control.indentation)
         x: !control.mirrored ? __indicatorIndent : control.width - __indicatorIndent - width
         y: (control.height - height) / 2
-        implicitWidth: arrow.implicitWidth
-        implicitHeight: arrow.implicitHeight
+        implicitWidth: Math.max(arrow.implicitWidth, 20)
+        implicitHeight: background.height
 
         property Image arrow : Image {
             parent: control.indicator
