@@ -31,9 +31,18 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QScopeGuard>
 #include <QtCore/QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
+namespace {
+static constexpr auto UTC = Qt::UTC;
+}
+#else
+#include <QtCore/QTimeZone>
+namespace {
+static constexpr auto UTC = QTimeZone::UTC;
+}
+#endif
 
 QT_BEGIN_NAMESPACE
-
 
 namespace QQmlJS {
 namespace Dom {
@@ -2223,7 +2232,7 @@ QDateTime DomItem::createdAt()
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->createdAt(); }, *m_owner);
     else
-        return QDateTime::fromMSecsSinceEpoch(0, Qt::UTC);
+        return QDateTime::fromMSecsSinceEpoch(0, UTC);
 }
 
 QDateTime DomItem::frozenAt()
@@ -2231,7 +2240,7 @@ QDateTime DomItem::frozenAt()
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->frozenAt(); }, *m_owner);
     else
-        return QDateTime::fromMSecsSinceEpoch(0, Qt::UTC);
+        return QDateTime::fromMSecsSinceEpoch(0, UTC);
 }
 
 QDateTime DomItem::lastDataUpdateAt()
@@ -2239,7 +2248,7 @@ QDateTime DomItem::lastDataUpdateAt()
     if (m_owner)
         return std::visit([](auto &&ow) { return ow->lastDataUpdateAt(); }, *m_owner);
     else
-        return QDateTime::fromMSecsSinceEpoch(0, Qt::UTC);
+        return QDateTime::fromMSecsSinceEpoch(0, UTC);
 }
 
 void DomItem::addError(ErrorMessage msg)
@@ -2940,7 +2949,7 @@ OwningItem::OwningItem(int derivedFrom)
       m_revision(nextRevision()),
       m_createdAt(QDateTime::currentDateTimeUtc()),
       m_lastDataUpdateAt(m_createdAt),
-      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
+      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, UTC))
 {}
 
 OwningItem::OwningItem(int derivedFrom, QDateTime lastDataUpdateAt)
@@ -2948,7 +2957,7 @@ OwningItem::OwningItem(int derivedFrom, QDateTime lastDataUpdateAt)
       m_revision(nextRevision()),
       m_createdAt(QDateTime::currentDateTimeUtc()),
       m_lastDataUpdateAt(lastDataUpdateAt),
-      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
+      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, UTC))
 {}
 
 OwningItem::OwningItem(const OwningItem &o)
@@ -2956,7 +2965,7 @@ OwningItem::OwningItem(const OwningItem &o)
       m_revision(nextRevision()),
       m_createdAt(QDateTime::currentDateTimeUtc()),
       m_lastDataUpdateAt(o.lastDataUpdateAt()),
-      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, Qt::UTC))
+      m_frozenAt(QDateTime::fromMSecsSinceEpoch(0, UTC))
 {
     QMultiMap<Path, ErrorMessage> my_errors;
     {

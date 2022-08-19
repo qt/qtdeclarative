@@ -9,6 +9,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/private/qlocaltime_p.h>
 #include <QtCore/QStringList>
+#include <QtCore/QTimeZone>
 
 #include <wtf/MathExtras.h>
 
@@ -530,7 +531,7 @@ static inline double ParseString(const QString &s, double localTZA)
 
         for (const QString &format : formats) {
             dt = format.indexOf(QLatin1String("hh:mm")) < 0
-                    ? QDate::fromString(s, format).startOfDay(Qt::UTC)
+                    ? QDate::fromString(s, format).startOfDay(QTimeZone::UTC)
                     : QDateTime::fromString(s, format); // as local time
             if (dt.isValid())
                 break;
@@ -547,18 +548,18 @@ static inline double ParseString(const QString &s, double localTZA)
   Converts the ECMA Date value \a t (in UTC form) to QDateTime
   according to \a spec.
 */
-static inline QDateTime ToDateTime(double t, Qt::TimeSpec spec)
+static inline QDateTime ToDateTime(double t, QTimeZone zone)
 {
     if (std::isnan(t))
-        return QDateTime();
-    return QDateTime::fromMSecsSinceEpoch(t, spec);
+        return QDateTime().toTimeZone(zone);
+    return QDateTime::fromMSecsSinceEpoch(t, zone);
 }
 
 static inline QString ToString(double t, double localTZA)
 {
     if (std::isnan(t))
         return QStringLiteral("Invalid Date");
-    QString str = ToDateTime(t, Qt::LocalTime).toString() + QLatin1String(" GMT");
+    QString str = ToDateTime(t, QTimeZone::LocalTime).toString() + QLatin1String(" GMT");
     double tzoffset = localTZA + DaylightSavingTA(t, localTZA);
     if (tzoffset) {
         int hours = static_cast<int>(::fabs(tzoffset) / 1000 / 60 / 60);
@@ -578,32 +579,32 @@ static inline QString ToUTCString(double t)
 {
     if (std::isnan(t))
         return QStringLiteral("Invalid Date");
-    return ToDateTime(t, Qt::UTC).toString();
+    return ToDateTime(t, QTimeZone::UTC).toString();
 }
 
 static inline QString ToDateString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).date().toString();
+    return ToDateTime(t, QTimeZone::LocalTime).date().toString();
 }
 
 static inline QString ToTimeString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).time().toString();
+    return ToDateTime(t, QTimeZone::LocalTime).time().toString();
 }
 
 static inline QString ToLocaleString(double t)
 {
-    return QLocale().toString(ToDateTime(t, Qt::LocalTime), QLocale::ShortFormat);
+    return QLocale().toString(ToDateTime(t, QTimeZone::LocalTime), QLocale::ShortFormat);
 }
 
 static inline QString ToLocaleDateString(double t)
 {
-    return QLocale().toString(ToDateTime(t, Qt::LocalTime).date(), QLocale::ShortFormat);
+    return QLocale().toString(ToDateTime(t, QTimeZone::LocalTime).date(), QLocale::ShortFormat);
 }
 
 static inline QString ToLocaleTimeString(double t)
 {
-    return QLocale().toString(ToDateTime(t, Qt::LocalTime).time(), QLocale::ShortFormat);
+    return QLocale().toString(ToDateTime(t, QTimeZone::LocalTime).time(), QLocale::ShortFormat);
 }
 
 static double getLocalTZA()
@@ -648,7 +649,7 @@ void Heap::DateObject::init(QTime time)
 
 QDateTime DateObject::toQDateTime() const
 {
-    return ToDateTime(date(), Qt::LocalTime);
+    return ToDateTime(date(), QTimeZone::LocalTime);
 }
 
 DEFINE_OBJECT_VTABLE(DateCtor);

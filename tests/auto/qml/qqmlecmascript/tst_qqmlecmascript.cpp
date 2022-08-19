@@ -573,11 +573,13 @@ void tst_qqmlecmascript::assignDate()
     QDateTime expectedDateTime;
     QDateTime expectedDateTime2;
     if (timeOffset == -1) {
-        expectedDateTime = QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1), Qt::LocalTime);
-        expectedDateTime2 = QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59), Qt::LocalTime);
+        expectedDateTime = QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1));
+        expectedDateTime2 = QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59));
     } else {
-        expectedDateTime = QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1), Qt::OffsetFromUTC, timeOffset * 60);
-        expectedDateTime2 = QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59), Qt::OffsetFromUTC, timeOffset * 60);
+        expectedDateTime = QDateTime(QDate(2009, 5, 12), QTime(0, 0, 1),
+                                     QTimeZone::fromSecondsAheadOfUtc(timeOffset * 60));
+        expectedDateTime2 = QDateTime(QDate(2009, 5, 12), QTime(23, 59, 59),
+                                      QTimeZone::fromSecondsAheadOfUtc(timeOffset * 60));
     }
 
     QCOMPARE(object->dateProperty(), expectedDate);
@@ -613,21 +615,25 @@ void tst_qqmlecmascript::exportDate_data()
     const int offset = (11 * 60 + 30) * 60;
 
     QTest::newRow("Local time early")
-        << testFileUrl("exportDate.qml") << QDateTime(date, early, Qt::LocalTime);
+        << testFileUrl("exportDate.qml") << QDateTime(date, early);
     QTest::newRow("Local time late")
-        << testFileUrl("exportDate.2.qml") << QDateTime(date, late, Qt::LocalTime);
+        << testFileUrl("exportDate.2.qml") << QDateTime(date, late);
     QTest::newRow("UTC early")
-        << testFileUrl("exportDate.3.qml") << QDateTime(date, early, Qt::UTC);
+        << testFileUrl("exportDate.3.qml") << QDateTime(date, early, QTimeZone::UTC);
     QTest::newRow("UTC late")
-        << testFileUrl("exportDate.4.qml") << QDateTime(date, late, Qt::UTC);
+        << testFileUrl("exportDate.4.qml") << QDateTime(date, late, QTimeZone::UTC);
     QTest::newRow("+11:30 early")
-        << testFileUrl("exportDate.5.qml") << QDateTime(date, early, Qt::OffsetFromUTC, offset);
+        << testFileUrl("exportDate.5.qml")
+        << QDateTime(date, early, QTimeZone::fromSecondsAheadOfUtc(offset));
     QTest::newRow("+11:30 late")
-        << testFileUrl("exportDate.6.qml") << QDateTime(date, late, Qt::OffsetFromUTC, offset);
+        << testFileUrl("exportDate.6.qml")
+        << QDateTime(date, late, QTimeZone::fromSecondsAheadOfUtc(offset));
     QTest::newRow("-11:30 early")
-        << testFileUrl("exportDate.7.qml") << QDateTime(date, early, Qt::OffsetFromUTC, -offset);
+        << testFileUrl("exportDate.7.qml")
+        << QDateTime(date, early, QTimeZone::fromSecondsAheadOfUtc(-offset));
     QTest::newRow("-11:30 late")
-        << testFileUrl("exportDate.8.qml") << QDateTime(date, late, Qt::OffsetFromUTC, -offset);
+        << testFileUrl("exportDate.8.qml")
+        << QDateTime(date, late, QTimeZone::fromSecondsAheadOfUtc(-offset));
 }
 
 void tst_qqmlecmascript::exportDate()
@@ -694,22 +700,22 @@ void tst_qqmlecmascript::checkDateTime_data()
     // NB: JavaScript month-indices are Jan = 0 to Dec = 11; QDate's are Jan = 1 to Dec = 12.
     QTest::newRow("denormal-March")
         << testFileUrl("checkDateTime-denormal-March.qml")
-        << QDateTime(QDate(2019, 3, 1), QTime(0, 0, 0, 1), Qt::LocalTime);
+        << QDateTime(QDate(2019, 3, 1), QTime(0, 0, 0, 1));
     QTest::newRow("denormal-leap")
         << testFileUrl("checkDateTime-denormal-leap.qml")
-        << QDateTime(QDate(2020, 2, 29), QTime(23, 59, 59, 999), Qt::LocalTime);
+        << QDateTime(QDate(2020, 2, 29), QTime(23, 59, 59, 999));
     QTest::newRow("denormal-hours")
         << testFileUrl("checkDateTime-denormal-hours.qml")
-        << QDateTime(QDate(2020, 2, 29), QTime(0, 0), Qt::LocalTime);
+        << QDateTime(QDate(2020, 2, 29), QTime(0, 0));
     QTest::newRow("denormal-minutes")
         << testFileUrl("checkDateTime-denormal-minutes.qml")
-        << QDateTime(QDate(2020, 2, 29), QTime(0, 0), Qt::LocalTime);
+        << QDateTime(QDate(2020, 2, 29), QTime(0, 0));
     QTest::newRow("denormal-seconds")
         << testFileUrl("checkDateTime-denormal-seconds.qml")
-        << QDateTime(QDate(2020, 2, 29), QTime(0, 0), Qt::LocalTime);
+        << QDateTime(QDate(2020, 2, 29), QTime(0, 0));
     QTest::newRow("October")
         << testFileUrl("checkDateTime-October.qml")
-        << QDateTime(QDate(2019, 10, 3), QTime(12, 0), Qt::LocalTime);
+        << QDateTime(QDate(2019, 10, 3), QTime(12, 0));
     QTest::newRow("nonstandard-format")
         << testFileUrl("checkDateTime-nonstandardFormat.qml")
         << QDateTime::fromString("1991-08-25 20:57:08 GMT+0000", "yyyy-MM-dd hh:mm:ss t");
@@ -8204,7 +8210,7 @@ void tst_qqmlecmascript::dateParse()
     QMetaObject::invokeMethod(object.get(), "test_rfc2822_date", Q_RETURN_ARG(QVariant, q));
     QCOMPARE(q.toLongLong(), 1379512851000LL);
 
-    QDateTime val(QDate(2014, 7, 16), QTime(23, 30, 31), Qt::LocalTime);
+    QDateTime val(QDate(2014, 7, 16), QTime(23, 30, 31), QTimeZone::LocalTime);
     QMetaObject::invokeMethod(object.get(), "check_date",
                               Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
     QVERIFY(q.toBool());
@@ -8219,7 +8225,7 @@ void tst_qqmlecmascript::utcDate()
     QVERIFY2(object, qPrintable(component.errorString()));
 
     QVariant q;
-    QDateTime val(QDate(2014, 7, 16), QTime(23, 30, 31), Qt::UTC);
+    QDateTime val(QDate(2014, 7, 16), QTime(23, 30, 31), QTimeZone::UTC);
     QMetaObject::invokeMethod(object.get(), "check_utc",
                               Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
     QVERIFY(q.toBool());

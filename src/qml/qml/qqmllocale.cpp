@@ -5,6 +5,7 @@
 #include <private/qqmlcontext_p.h>
 #include <QtCore/qnumeric.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qtimezone.h>
 
 #include <private/qlocale_p.h>
 #include <private/qlocale_data_p.h>
@@ -277,7 +278,7 @@ ReturnedValue QQmlDateExtension::method_fromLocaleDateString(const QV4::Function
             QLocale locale;
             QString dateString = s->toQString();
             QDate date = locale.toDate(dateString);
-            RETURN_RESULT(engine->newDateObject(date.startOfDay(Qt::UTC)));
+            RETURN_RESULT(engine->newDateObject(date.startOfDay(QTimeZone::UTC)));
         }
     }
 
@@ -304,7 +305,7 @@ ReturnedValue QQmlDateExtension::method_fromLocaleDateString(const QV4::Function
         dt = r->d()->locale->toDate(dateString, enumFormat);
     }
 
-    RETURN_RESULT(engine->newDateObject(dt.startOfDay(Qt::UTC)));
+    RETURN_RESULT(engine->newDateObject(dt.startOfDay(QTimeZone::UTC)));
 }
 
 ReturnedValue QQmlDateExtension::method_timeZoneUpdated(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *, int argc)

@@ -33,6 +33,7 @@
 #include <QtCore/QLineF>
 #include <QtCore/QSize>
 #include <QtCore/QSizeF>
+#include <QtCore/QTimeZone>
 
 QT_BEGIN_NAMESPACE
 
@@ -317,7 +318,7 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
         return engine->newString(QChar(c));
     };
     const auto wrapDate = [engine](const QDate &date) {
-        return engine->newDateObject(date.startOfDay(Qt::UTC));
+        return engine->newDateObject(date.startOfDay(QTimeZone::UTC));
     };
     const auto wrapQObject = [engine](QObject *object) {
         return QObjectWrapper::wrap(engine, object);

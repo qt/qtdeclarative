@@ -14,6 +14,7 @@
 #if QT_CONFIG(regularexpression)
 #include <QRegularExpression>
 #endif
+#include <QtCore/QTimeZone>
 #include <QtCore/qiterable.h>
 
 #include <qv4qmlcontext_p.h>
@@ -1773,7 +1774,8 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             case QMetaType::QDateTime:
                 return QV4::Encode(newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:
-                return QV4::Encode(newDateObject(reinterpret_cast<const QDate *>(ptr)->startOfDay(Qt::UTC)));
+                return QV4::Encode(newDateObject(
+                        reinterpret_cast<const QDate *>(ptr)->startOfDay(QTimeZone::UTC)));
             case QMetaType::QTime:
                 return QV4::Encode(newDateObjectFromTime(*reinterpret_cast<const QTime *>(ptr)));
 #if QT_CONFIG(regularexpression)

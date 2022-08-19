@@ -226,7 +226,7 @@ std::shared_ptr<OwningItem> DomUniverse::doCopy(DomItem &) const
 void DomUniverse::loadFile(DomItem &self, QString filePath, QString logicalPath, Callback callback,
                            LoadOptions loadOptions, std::optional<DomType> fileType)
 {
-    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, UTC),
              callback, loadOptions, fileType);
 }
 
@@ -1176,7 +1176,7 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
                               DomTop::Callback endCallback, LoadOptions loadOptions,
                               std::optional<DomType> fileType, ErrorHandler h)
 {
-    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, Qt::UTC),
+    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, UTC),
              loadCallback, directDepsCallback, endCallback, loadOptions, fileType, h);
 }
 

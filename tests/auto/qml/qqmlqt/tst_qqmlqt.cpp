@@ -10,7 +10,9 @@
 #include <QtQuick/QQuickItem>
 
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <QDebug>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
@@ -22,6 +24,7 @@
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
+#include <QTimeZone>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <private/qglobal_p.h>
@@ -746,18 +749,18 @@ void tst_qqmlqt::dateTimeConversion()
     QTime time(14,15,38,200);
     QDateTime dateTime(date, time);
     QDateTime dateTime0(QDate(2021, 7, 1).startOfDay());
-    QDateTime dateTime0utc(QDate(2021, 7, 1).startOfDay(Qt::UTC));
+    QDateTime dateTime0utc(QDate(2021, 7, 1).startOfDay(QTimeZone::UTC));
     QDateTime dateTime1(QDate(2021, 7, 31).startOfDay());
-    QDateTime dateTime1utc(QDate(2021, 7, 31).startOfDay(Qt::UTC));
+    QDateTime dateTime1utc(QDate(2021, 7, 31).startOfDay(QTimeZone::UTC));
     QDateTime dateTime2(QDate(2852,12,31), QTime(23,59,59,500));
     QDateTime dateTime3(QDate(2000,1,1), QTime(0,0,0,0));
     QDateTime dateTime4(QDate(2001,2,2), QTime(0,0,0,0));
     QDateTime dateTime5(QDate(1999,1,1), QTime(2,3,4,0));
     QDateTime dateTime6(QDate(2008,2,24), QTime(14,15,38,200));
-    QDateTime dateTime7(QDate(1970,1,1), QTime(0,0,0,0), Qt::UTC);
-    QDateTime dateTime8(QDate(1586,2,2), QTime(0,0,0,0), Qt::UTC);
-    QDateTime dateTime9(QDate(955,1,1), QTime(0,0,0,0), Qt::UTC);
-    QDateTime dateTime10(QDate(113,2,24), QTime(14,15,38,200), Qt::UTC);
+    QDateTime dateTime7(QDate(1970, 1, 1), QTime(0, 0), QTimeZone::UTC);
+    QDateTime dateTime8(QDate(1586, 2, 2), QTime(0, 0), QTimeZone::UTC);
+    QDateTime dateTime9(QDate(955, 1, 1), QTime(0, 0), QTimeZone::UTC);
+    QDateTime dateTime10(QDate(113, 2, 24), QTime(14, 15, 38, 200), QTimeZone::UTC);
 
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("dateTimeConversion.qml"));
@@ -964,7 +967,7 @@ void tst_qqmlqt::dateTimeFormattingVariants_data()
 
     QDate date(2011,5,31);
     // V4 reads the date in UTC but DateObject::toQDateTime() gives it back in local time:
-    temporary = QDateTime(date, QTime(0, 0, 0), Qt::UTC).toLocalTime();
+    temporary = date.startOfDay(QTimeZone::UTC).toLocalTime();
     QTest::newRow("formatDate, qdate")
         << "formatDate" << QVariant::fromValue(date)
         << (QStringList()

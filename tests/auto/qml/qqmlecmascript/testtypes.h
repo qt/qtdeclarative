@@ -21,6 +21,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
 #include <QtCore/qproperty.h>
+#include <QtCore/qtimezone.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlcomponent.h>
@@ -1645,7 +1646,7 @@ public:
         case Qt::LocalTime:
             {
             QDateTime utc(m_datetime.toUTC());
-            utc.setTimeSpec(Qt::LocalTime);
+            utc.setTimeZone(QTimeZone::LocalTime);
             m_offset = m_datetime.secsTo(utc) / 60;
             m_timespec = "LocalTime";
             }

@@ -7,6 +7,7 @@
 #include <private/qjsvalue_p.h>
 
 #include <QtWidgets/QPushButton>
+#include <QtCore/qdatetime.h>
 #include <QtCore/qthread.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -1239,7 +1240,7 @@ void tst_QJSValue::toDateTime()
     QDateTime dt = eng.evaluate("new Date(0)").toDateTime();
     QVERIFY(dt.isValid());
     QCOMPARE(dt.timeSpec(), Qt::LocalTime);
-    QCOMPARE(dt.toUTC(), QDate(1970, 1, 1).startOfDay(Qt::UTC));
+    QCOMPARE(dt.toUTC(), QDate(1970, 1, 1).startOfDay(QTimeZone::UTC));
 
     QVERIFY(!eng.evaluate("[]").toDateTime().isValid());
     QVERIFY(!eng.evaluate("{}").toDateTime().isValid());
