@@ -116,7 +116,7 @@ private:
     QPlatformDialogHelper *m_handle;
 };
 
-class QPlatformDialogHelperForeign
+class QPlatformDialogHelperQuickLabsForeign
 {
     Q_GADGET
     QML_FOREIGN(QPlatformDialogHelper)
