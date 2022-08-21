@@ -31,7 +31,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-Q_LOGGING_CATEGORY(lcTextInput, "qt.quick.textInput")
+Q_LOGGING_CATEGORY(lcQuickTextInput, "qt.quick.textInput")
 
 /*!
     \qmltype TextInput
@@ -4872,7 +4872,7 @@ void QQuickTextInput::setOldSelectionDefault()
     Q_D(QQuickTextInput);
     d->selectByMouse = false;
     d->selectByTouchDrag = true;
-    qCDebug(lcTextInput, "pre-6.4 behavior chosen by import version: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
+    qCDebug(lcQuickTextInput, "pre-6.4 behavior chosen by import version: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
 }
 
 // TODO in 6.7.0: remove the note about versions prior to 6.4 in selectByMouse() documentation
