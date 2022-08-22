@@ -131,6 +131,7 @@ public:
 private slots:
     void passiveGrabberOrder();
     void passiveGrabberItems();
+    void tapHandlerDoesntOverrideSubsceneGrabber_data();
     void tapHandlerDoesntOverrideSubsceneGrabber();
     void undoDelegationWhenSubsceneFocusCleared();
     void touchCompression();
@@ -322,8 +323,25 @@ void tst_qquickdeliveryagent::passiveGrabberItems()
     QCOMPARE(pressedPoint.exclusiveGrabber, nullptr);
 }
 
+void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber_data()
+{
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("gesturePolicy");
+    QTest::addColumn<int>("expectedTaps");
+    QTest::addColumn<int>("expectedCancels");
+    // TapHandler gets passive grab => "stealth" tap, regardless of other Items
+    QTest::newRow("DragThreshold") << QQuickTapHandler::DragThreshold << 1 << 0;
+    // TapHandler gets exclusive grab => it's cancelled when the TextEdit takes the grab
+    QTest::newRow("WithinBounds") << QQuickTapHandler::WithinBounds << 0 << 2; // 2 because of QTBUG-105865
+    QTest::newRow("ReleaseWithinBounds") << QQuickTapHandler::ReleaseWithinBounds << 0 << 2;
+    QTest::newRow("DragWithinBounds") << QQuickTapHandler::DragWithinBounds << 0 << 2;
+}
+
 void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG-94012
 {
+    QFETCH(QQuickTapHandler::GesturePolicy, gesturePolicy);
+    QFETCH(int, expectedTaps);
+    QFETCH(int, expectedCancels);
+
     QQuickView window;
 #ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
     QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
@@ -340,19 +358,22 @@ void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG
 
     // add a TapHandler to it
     QQuickTapHandler tapHandler(&subscene);
+    tapHandler.setGesturePolicy(gesturePolicy);
     QSignalSpy clickSpy(&tapHandler, &QQuickTapHandler::tapped);
+    QSignalSpy cancelSpy(&tapHandler, &QQuickTapHandler::canceled);
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     int cursorPos = textEdit->property("cursorPosition").toInt();
 
     // Click on the middle of the subscene to the right (texture cloned from the left).
-    // TapHandler takes a passive grab on press; TextEdit takes the exclusive grab;
-    // and TapHandler does not emit tapped, because of the non-filtering exclusive grabber.
+    // TapHandler takes whichever type of grab on press; TextEdit takes the exclusive grab;
+    // TapHandler either gets tapped if it has passive grab, or gets its exclusive grab cancelled.
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, clickPos);
     qCDebug(lcTests) << "clicking subscene TextEdit set cursorPos to" << cursorPos;
-    QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos);
-    QCOMPARE(clickSpy.size(), 0); // doesn't tap
+    QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos); // TextEdit reacts regardless
+    QCOMPARE(clickSpy.count(), expectedTaps);
+    QCOMPARE(cancelSpy.count(), expectedCancels);
 }
 
 void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-105192
