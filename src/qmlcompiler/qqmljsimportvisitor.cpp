@@ -194,7 +194,7 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
         const auto properties = object->ownProperties();
 
         bool doRequeue = false;
-        for (auto property : properties) {
+        for (const auto &property : properties) {
             if (!property.isAlias() || !property.type().isNull())
                 continue;
 
@@ -244,25 +244,30 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                                           .arg(property.propertyName()),
                                   qmlUnresolvedAlias, object->sourceLocation());
                 }
+
+                Q_ASSERT(property.index() >= 0); // this property is already in object
+                object->addOwnProperty(property);
+
             } else {
-                property.setType(type);
+                QQmlJSMetaProperty newProperty = property;
+                newProperty.setType(type);
                 // Copy additional property information from target
-                property.setIsList(targetProperty.isList());
-                property.setIsWritable(targetProperty.isWritable());
-                property.setIsPointer(targetProperty.isPointer());
+                newProperty.setIsList(targetProperty.isList());
+                newProperty.setIsWritable(targetProperty.isWritable());
+                newProperty.setIsPointer(targetProperty.isPointer());
 
                 if (!typeScope.isNull()) {
                     object->setPropertyLocallyRequired(
-                            property.propertyName(),
+                            newProperty.propertyName(),
                             typeScope->isPropertyRequired(targetProperty.propertyName()));
                 }
 
                 if (const QString internalName = type->internalName(); !internalName.isEmpty())
-                    property.setTypeName(internalName);
-            }
-            Q_ASSERT(property.index() >= 0); // this property is already in object
+                    newProperty.setTypeName(internalName);
 
-            object->addOwnProperty(property);
+                Q_ASSERT(newProperty.index() >= 0); // this property is already in object
+                object->addOwnProperty(newProperty);
+            }
         }
 
         const auto childScopes = object->childScopes();

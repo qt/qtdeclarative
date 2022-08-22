@@ -651,7 +651,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
     const QString modulePrefix = u"$module$."_s;
     const QString internalPrefix = u"$internal$."_s;
 
-    for (const auto kv : types.asKeyValueRange()) {
+    for (const auto &kv : types.asKeyValueRange()) {
         QString name = kv.first;
         const QQmlJSScope::ConstPtr scope = kv.second.scope;
 
@@ -723,7 +723,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
         }
     }
 
-    for (const auto kv : missingTypes.asKeyValueRange()) {
+    for (const auto &kv : missingTypes.asKeyValueRange()) {
         const QString &name = kv.first;
         const QStringList uses = QStringList(kv.second.begin(), kv.second.end());
 
@@ -735,7 +735,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
         m_logger->log(message, qmlUnresolvedType, QQmlJS::SourceLocation());
     }
 
-    for (const auto kv : partiallyResolvedTypes.asKeyValueRange()) {
+    for (const auto &kv : partiallyResolvedTypes.asKeyValueRange()) {
         const QString &name = kv.first;
         const QStringList uses = QStringList(kv.second.begin(), kv.second.end());
 
