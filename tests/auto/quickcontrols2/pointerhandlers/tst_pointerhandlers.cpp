@@ -6,15 +6,21 @@
 
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 
+#include <QtGui/qguiapplication.h>
+#include <QtGui/private/qpointingdevice_p.h>
+
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
+
+Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
 using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
@@ -28,6 +34,11 @@ public:
 private slots:
     void hover_controlInsideControl();
     void hover_controlAndMouseArea();
+    void buttonTapHandler_data();
+    void buttonTapHandler();
+
+private:
+    QScopedPointer<QPointingDevice> touchscreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
 tst_pointerhandlers::tst_pointerhandlers()
@@ -152,6 +163,57 @@ void tst_pointerhandlers::hover_controlAndMouseArea()
     QCOMPARE(outerMouseArea->hovered(), false);
     QCOMPARE(buttonInTheMiddle->isHovered(), false);
     QCOMPARE(innerMouseArea->hovered(), false);
+}
+
+void tst_pointerhandlers::buttonTapHandler_data()
+{
+    QTest::addColumn<QPointingDevice::DeviceType>("deviceType");
+    QTest::addColumn<Qt::MouseButton>("mouseButton");
+
+    QTest::newRow("left mouse") << QPointingDevice::DeviceType::Mouse << Qt::LeftButton;
+    QTest::newRow("right mouse") << QPointingDevice::DeviceType::Mouse << Qt::RightButton;
+    QTest::newRow("touch") << QPointingDevice::DeviceType::TouchScreen << Qt::NoButton;
+}
+
+void tst_pointerhandlers::buttonTapHandler() // QTBUG-105609
+{
+    QFETCH(QPointingDevice::DeviceType, deviceType);
+    QFETCH(Qt::MouseButton, mouseButton);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("tapHandlerButton.qml")));
+
+    QPointer<QQuickTapHandler> handler = window.rootObject()->findChild<QQuickTapHandler*>();
+    QVERIFY(handler);
+    handler->setAcceptedButtons(mouseButton);
+    QQuickItem *target = handler->target();
+    QVERIFY(target);
+    QSignalSpy tappedSpy(handler, &QQuickTapHandler::tapped);
+    QSignalSpy clickedSpy(target, SIGNAL(clicked())); // avoid #include for this signal
+
+    const QPoint pos(10, 10);
+    switch (static_cast<QPointingDevice::DeviceType>(deviceType)) {
+    case QPointingDevice::DeviceType::Mouse:
+        // click it
+        QTest::mouseClick(&window, mouseButton, Qt::NoModifier, pos);
+        QTRY_COMPARE(clickedSpy.count(), 1); // perhaps Button should not react to right-click, but it does
+        QCOMPARE(tappedSpy.count(), 1);
+        break;
+
+    case QPointingDevice::DeviceType::TouchScreen: {
+        // tap it
+        QTest::QTouchEventSequence touch = QTest::touchEvent(&window, touchscreen.data());
+        touch.press(0, pos, &window).commit();
+        QTRY_COMPARE(target->property("pressed").toBool(), true);
+        touch.release(0, pos, &window).commit();
+        QTRY_COMPARE(clickedSpy.count(), 1);
+        QCOMPARE(tappedSpy.count(), 1);
+        break;
+    }
+    default:
+        break;
+    }
+    QCOMPARE(handler->isPressed(), false);
 }
 
 QTEST_MAIN(tst_pointerhandlers)

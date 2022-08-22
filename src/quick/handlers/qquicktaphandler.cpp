@@ -117,24 +117,14 @@ bool QQuickTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventP
 
 void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
 {
+    const bool isTouch = QQuickDeliveryAgentPrivate::isTouchEvent(event);
     switch (point.state()) {
     case QEventPoint::Pressed:
         setPressed(true, false, event, point);
         break;
     case QEventPoint::Released: {
-        // If the point has an exclusive grabber Item, then if it got the grab by filtering (like Flickable does),
-        // it's OK for DragHandler to react in spite of that.  But in other cases, if an exclusive grab
-        // still exists at the time of release, TapHandler should not react, because it would be redundant:
-        // some other item is already reacting, i.e. acting as if it has been clicked or tapped.
-        // So in that case we cancel the pressed state and do not emit tapped().
-        bool nonFilteringExclusiveGrabber = false;
-        if (auto g = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(point))) {
-            if (!g->filtersChildMouseEvents())
-                nonFilteringExclusiveGrabber = true;
-        }
-        if (QQuickDeliveryAgentPrivate::isTouchEvent(event) ||
-                (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton)
-            setPressed(false, nonFilteringExclusiveGrabber, event, point);
+        if (isTouch || (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton)
+            setPressed(false, false, event, point);
         break;
     }
     default:
@@ -142,6 +132,11 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
     }
 
     QQuickSinglePointHandler::handleEventPoint(event, point);
+
+    // If TapHandler only needs a passive grab, it should not block other items and handlers from reacting.
+    // If the point is accepted, QQuickItemPrivate::localizedTouchEvent() would skip it.
+    if (isTouch && m_gesturePolicy == DragThreshold)
+        point.setAccepted(false);
 }
 
 /*!
