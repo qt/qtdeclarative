@@ -3,6 +3,8 @@
 
 #include "qquicklabsplatformstandardpaths_p.h"
 
+#if QT_DEPRECATED_SINCE(6, 4)
+
 #include <QtQml/qqmlengine.h>
 
 QT_BEGIN_NAMESPACE
@@ -13,6 +15,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickLabsPlatformStandardPaths
     \inqmlmodule Qt.labs.platform
     \since 5.8
+    \deprecated [6.4] Use QtCore::StandardPaths instead.
     \brief Provides access to the standard system paths.
 
     The StandardPaths singleton type provides methods for querying the standard
@@ -27,7 +30,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa FileDialog, FolderDialog, QStandardPaths
+    \sa QtCore::StandardPaths, FileDialog, FolderDialog, QStandardPaths
 */
 
 static QList<QUrl> toUrlList(const QStringList &paths)
@@ -137,3 +140,5 @@ QUrl QQuickLabsPlatformStandardPaths::writableLocation(QStandardPaths::StandardL
 QT_END_NAMESPACE
 
 #include "moc_qquicklabsplatformstandardpaths_p.cpp"
+
+#endif // QT_DEPRECATED_SINCE(6, 4)
