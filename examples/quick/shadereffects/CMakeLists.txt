@@ -46,7 +46,7 @@ qt6_add_shaders(shadereffectsexample "shaders"
     PRECOMPILE
     OPTIMIZED
     PREFIX
-        "/shadereffects"
+        "/qt/qml/shadereffects"
     FILES
         "content/shaders/genie.vert"
         "content/shaders/blur.frag"
