@@ -505,17 +505,66 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
                                    compilationData.notify);
 }
 
+/*!
+ * \internal
+ *
+ * Models one step of the alias resolution. If the current alias to be resolved
+ * points to \c {x.y.z} and that \c {x.y} is already resolved, then this struct
+ * contains the information on how to obtain the \c {z} part from \c {x.y}.
+ */
 struct AliasResolutionFrame
 {
+    /*!
+     * \internal
+     *
+     * Placeholder for the current resolved state. It is replaced later with
+     * the result from previous resolutions from the \c QStack<AliasResolutionFrame>.
+     *
+     * \sa unpackFrames()
+     */
     static QString inVar;
+
+    /*!
+     * \internal
+     *
+     * Steps to access this value as a list of C++ statements, to be used in
+     * conjunction with \c {epilogue}.
+     */
     QStringList prologue;
+
+    /*!
+     * \internal
+     *
+     * Steps to finish the statements of the \c prologue (e.g. closing brackets).
+     */
     QStringList epilogue;
+
+    /*!
+     * \internal
+     *
+     * Instructions on how to write the property, after it was loaded with the
+     * instructions from \c prologue. Has to happen before \c epilogue.
+     */
     QStringList epilogueForWrite;
+
+    /*!
+     * \internal
+     *
+     * Name of the variable holding the result of this resolution step, to be
+     * used in the following resolution steps.
+     */
     QString outVar;
 };
 // special string replaced by outVar of the previous frame
 QString AliasResolutionFrame::inVar = QStringLiteral("__QMLTC_ALIAS_FRAME_INPUT_VAR__");
 
+/*!
+ * \internal
+ *
+ * Process the frames by replacing the placeholder \c invar
+ * used in \c epilogueForWrite and \c prologue with the result
+ * obtained from the previous frame.
+ */
 static void unpackFrames(QStack<AliasResolutionFrame> &frames)
 {
     if (frames.size() < 2)
