@@ -15,4 +15,14 @@ void QQuickGridLayoutEngine::setAlignment(QQuickItem *quickItem, Qt::Alignment a
     }
 }
 
+void QQuickGridLayoutEngine::setStretchFactor(QQuickItem *quickItem, int stretch,
+                                              Qt::Orientation orientation)
+{
+    Q_ASSERT(stretch >= -1);    // -1 is reset
+    if (QGridLayoutItem *item = findLayoutItem(quickItem)) {
+        item->setStretchFactor(stretch, orientation);
+        invalidate();
+    }
+}
+
 QT_END_NAMESPACE

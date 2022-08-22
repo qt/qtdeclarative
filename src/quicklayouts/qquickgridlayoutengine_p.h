@@ -119,6 +119,8 @@ public:
 
     void setAlignment(QQuickItem *quickItem, Qt::Alignment alignment);
 
+    void setStretchFactor(QQuickItem *quickItem, int stretch, Qt::Orientation orientation);
+
 };
 
 

@@ -45,6 +45,7 @@ public:
     void invalidate(QQuickItem *childItem = nullptr)  override;
     void updateLayoutItems() override { }
     void rearrange(const QSizeF &) override;
+    void setStretchFactor(QQuickItem *item, int stretchFactor, Qt::Orientation orient) override;
 
     // iterator
     Q_INVOKABLE QQuickItem *itemAt(int index) const override;

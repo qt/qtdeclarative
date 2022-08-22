@@ -901,6 +901,51 @@ Item {
             layout.destroy();
         }
 
+        function test_distribution_data()
+        {
+            return [
+                {
+                  tag: "one",
+                  layout: {
+                    type: "RowLayout",
+                    items: [
+                        {minimumWidth:  1, preferredWidth: 10, maximumWidth: 20, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth:  4, maximumWidth: 10, fillWidth: true},
+                    ]
+                  },
+                  layoutWidth:     28,
+                  expectedWidths: [20, 8]
+                },{
+                  tag: "two",
+                  layout: {
+                    type: "RowLayout",
+                    items: [
+                        {minimumWidth:  1, preferredWidth: 10, horizontalStretchFactor: 4, fillWidth: true},
+                        {minimumWidth:  1, preferredWidth: 4,  horizontalStretchFactor: 1, fillWidth: true},
+                      ]
+                  },
+                  layoutWidth:     28,
+                  expectedWidths: [22, 6]
+                }
+            ];
+        }
+
+        function test_distribution(data)
+        {
+            var layout = layout_rowLayout_Component.createObject(container)
+            layout.spacing = 0
+            buildLayout(layout, data.layout.items)
+            waitForPolish(layout)
+            layout.width = data.layoutWidth
+
+            let actualWidths = []
+            for (let i = 0; i < layout.children.length; i++) {
+                actualWidths.push(layout.children[i].width)
+            }
+            compare(actualWidths, data.expectedWidths)
+            layout.destroy();
+        }
+
         Component {
             id: layout_alignToPixelGrid_Component
             RowLayout {

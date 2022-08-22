@@ -334,6 +334,10 @@ void QQuickStackLayout::rearrange(const QSizeF &newSize)
     QQuickLayout::rearrange(newSize);
 }
 
+void QQuickStackLayout::setStretchFactor(QQuickItem * /*item*/, int /*stretchFactor*/, Qt::Orientation /*orient*/)
+{
+}
+
 void QQuickStackLayout::collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints)
 {
     QQuickLayoutAttached *info = nullptr;

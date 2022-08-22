@@ -284,6 +284,12 @@ void QQuickGridLayoutBase::setAlignment(QQuickItem *item, Qt::Alignment alignmen
     maybeSubscribeToBaseLineOffsetChanges(item);
 }
 
+void QQuickGridLayoutBase::setStretchFactor(QQuickItem *item, int stretchFactor, Qt::Orientation orient)
+{
+    Q_D(QQuickGridLayoutBase);
+    d->engine.setStretchFactor(item, stretchFactor, orient);
+}
+
 QQuickGridLayoutBase::~QQuickGridLayoutBase()
 {
     Q_D(QQuickGridLayoutBase);
@@ -642,6 +648,8 @@ void QQuickGridLayout::insertLayoutItems()
         QQuickLayoutAttached *info = attachedLayoutObject(child, false);
 
         Qt::Alignment alignment;
+        int hStretch = -1;
+        int vStretch = -1;
         int row = -1;
         int column = -1;
         int span[2] = {1,1};
@@ -681,6 +689,12 @@ void QQuickGridLayout::insertLayoutItems()
                 return;
             }
             alignment = info->alignment();
+            hStretch = info->horizontalStretchFactor();
+            if (hStretch >= 0 && !info->fillWidth())
+                qmlWarning(child) << "horizontalStretchFactor requires fillWidth to also be set to true";
+            vStretch = info->verticalStretchFactor();
+            if (vStretch >= 0 && !info->fillHeight())
+                qmlWarning(child) << "verticalStretchFactor requires fillHeight to also be set to true";
         }
 
         Q_ASSERT(columnSpan >= 1);
@@ -732,6 +746,10 @@ void QQuickGridLayout::insertLayoutItems()
         column = nextColumn;
         row = nextRow;
         QQuickGridLayoutItem *layoutItem = new QQuickGridLayoutItem(child, row, column, rowSpan, columnSpan, alignment);
+        if (hStretch >= 0)
+            layoutItem->setStretchFactor(hStretch, Qt::Horizontal);
+        if (vStretch >= 0)
+            layoutItem->setStretchFactor(vStretch, Qt::Vertical);
         d->engine.insertItem(layoutItem, -1);
     }
 }
@@ -827,8 +845,17 @@ void QQuickLinearLayout::insertLayoutItems()
         QQuickLayoutAttached *info = attachedLayoutObject(child, false);
 
         Qt::Alignment alignment;
-        if (info)
+        int hStretch = -1;
+        int vStretch = -1;
+        bool fillWidth = false;
+        bool fillHeight = false;
+        if (info) {
             alignment = info->alignment();
+            hStretch = info->horizontalStretchFactor();
+            vStretch = info->verticalStretchFactor();
+            fillWidth = info->fillWidth();
+            fillHeight = info->fillHeight();
+        }
 
         const int index = d->engine.rowCount(d->orientation);
         d->engine.insertRow(index, d->orientation);
@@ -838,6 +865,17 @@ void QQuickLinearLayout::insertLayoutItems()
         if (d->orientation == Qt::Vertical)
             qSwap(gridRow, gridColumn);
         QQuickGridLayoutItem *layoutItem = new QQuickGridLayoutItem(child, gridRow, gridColumn, 1, 1, alignment);
+
+        if (hStretch >= 0) {
+            if (!fillWidth)
+                qmlWarning(child) << "horizontalStretchFactor requires fillWidth to also be set to true";
+            layoutItem->setStretchFactor(hStretch, Qt::Horizontal);
+        }
+        if (vStretch >= 0) {
+            if (!fillHeight)
+                qmlWarning(child) << "verticalStretchFactor requires fillHeight to also be set to true";
+            layoutItem->setStretchFactor(vStretch, Qt::Vertical);
+        }
         d->engine.insertItem(layoutItem, index);
     }
 }

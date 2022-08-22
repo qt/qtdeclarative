@@ -55,6 +55,7 @@ public:
     void setLayoutDirection(Qt::LayoutDirection dir);
     Qt::LayoutDirection effectiveLayoutDirection() const;
     void setAlignment(QQuickItem *item, Qt::Alignment align) override;
+    void setStretchFactor(QQuickItem *item, int stretchFactor, Qt::Orientation orient) override;
 
     /* QQuickItemChangeListener */
     void itemDestroyed(QQuickItem *item) override;

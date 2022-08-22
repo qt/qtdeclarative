@@ -63,6 +63,8 @@ public:
     void componentComplete() override;
     virtual QSizeF sizeHint(Qt::SizeHint whichSizeHint) const = 0;
     virtual void setAlignment(QQuickItem *item, Qt::Alignment align) = 0;
+    virtual void setStretchFactor(QQuickItem *item, int stretchFactor, Qt::Orientation orient) = 0;
+
     virtual void invalidate(QQuickItem * childItem = nullptr);
     virtual void updateLayoutItems() = 0;
 
@@ -170,6 +172,8 @@ class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLayoutAttached : public QObject
     Q_PROPERTY(int rowSpan READ rowSpan WRITE setRowSpan NOTIFY rowSpanChanged)
     Q_PROPERTY(int columnSpan READ columnSpan WRITE setColumnSpan NOTIFY columnSpanChanged)
     Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment NOTIFY alignmentChanged)
+    Q_PROPERTY(int horizontalStretchFactor READ horizontalStretchFactor WRITE setHorizontalStretchFactor NOTIFY horizontalStretchFactorChanged)
+    Q_PROPERTY(int verticalStretchFactor READ verticalStretchFactor WRITE setVerticalStretchFactor NOTIFY verticalStretchFactorChanged)
 
     Q_PROPERTY(qreal margins READ margins WRITE setMargins NOTIFY marginsChanged)
     Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin RESET resetLeftMargin NOTIFY leftMarginChanged)
@@ -223,6 +227,11 @@ public:
 
     Qt::Alignment alignment() const { return m_alignment; }
     void setAlignment(Qt::Alignment align);
+
+    int horizontalStretchFactor() const { return m_horizontalStretch; }
+    void setHorizontalStretchFactor(int stretchFactor);
+    int verticalStretchFactor() const { return m_verticalStretch; }
+    void setVerticalStretchFactor(int stretchFactor);
 
     qreal margins() const { return m_defaultMargins; }
     void setMargins(qreal m);
@@ -299,6 +308,8 @@ Q_SIGNALS:
     void rowSpanChanged();
     void columnSpanChanged();
     void alignmentChanged();
+    void horizontalStretchFactorChanged();
+    void verticalStretchFactorChanged();
 
 private:
     void invalidateItem();
@@ -340,6 +351,8 @@ private:
     unsigned m_isRightMarginSet : 1;
     unsigned m_isBottomMarginSet : 1;
     Qt::Alignment m_alignment;
+    int m_horizontalStretch;
+    int m_verticalStretch;
     friend class QQuickLayout;
 };
 
