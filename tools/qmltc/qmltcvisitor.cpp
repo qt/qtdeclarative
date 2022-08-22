@@ -562,8 +562,12 @@ static void setAliasData(QQmlJSMetaProperty *alias, const QQmlJSUtils::ResolvedA
         return;
     if (origin.property.isWritable() && alias->write().isEmpty())
         alias->setWrite(compiledData.write);
-    if (!origin.property.notify().isEmpty() && alias->notify().isEmpty())
+
+    // the engine always compiles a notify for properties/aliases defined in qml code
+    // Yes, this generated notify will never be emitted.
+    if (alias->notify().isEmpty())
         alias->setNotify(compiledData.notify);
+
     if (!origin.property.bindable().isEmpty() && alias->bindable().isEmpty())
         alias->setBindable(compiledData.bindable);
 }

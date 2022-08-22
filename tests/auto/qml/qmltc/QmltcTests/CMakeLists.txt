@@ -17,6 +17,8 @@ set(cpp_sources
     cpptypes/extensiontypes.h cpptypes/extensiontypes.cpp
 
     cpptypes/typewithspecialproperties.h
+
+    cpptypes/typewithmanyproperties.h
 )
 
 set(qml_sources
@@ -50,6 +52,7 @@ set(qml_sources
     javaScriptFunctions.qml
     changingBindings.qml
     propertyAlias.qml
+    propertyAliasAttributes.qml
     propertyAlias_external.qml
     propertyChangeHandler.qml
     NestedHelloWorld.qml
@@ -58,7 +61,7 @@ set(qml_sources
     listPropertySameName.qml
     defaultProperty.qml
     defaultPropertyCorrectSelection.qml
-    # defaultAlias.qml
+    defaultAlias.qml
     propertyReturningFunction.qml
     AttachedProperty.qml
     attachedPropertyDerived.qml
@@ -99,6 +102,7 @@ set(qml_sources
 
     # support types:
     DefaultPropertySingleChild.qml
+    DefaultPropertyAliasChild.qml
     DefaultPropertyManyChildren.qml
     LocallyImported.qml
     LocalWithOnCompleted.qml

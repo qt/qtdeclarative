@@ -733,10 +733,20 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         current.functions.emplaceBack(bindable);
         mocLines << u"BINDABLE"_s << bindable.name;
     }
+
     // 3. add notify - which is pretty special
-    if (QString notifyName = result.property.notify(); !notifyName.isEmpty()) {
+    // step 1: generate the moc instructions
+    // mimic the engines behavior: do it even if the notify will never be emitted
+    if (const QString aliasNotifyName = alias.notify(); !aliasNotifyName.isEmpty()) {
+
         Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
 
+        mocLines << u"NOTIFY"_s << aliasNotifyName;
+    }
+
+    // step 2: connect the notifier to the aliased property notifier, if this latter exists
+    // otherwise, mimic the engines behavior and generate a useless notify
+    if (const QString notifyName = result.property.notify(); !notifyName.isEmpty()) {
         auto notifyFrames = frames;
         notifyFrames.pop(); // we don't need the last frame at all in this case
 
@@ -762,6 +772,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         current.endInit.body += notifyEpilogue;
         current.endInit.body << u"}"_s;
     }
+
     if (QString resetName = result.property.reset(); !resetName.isEmpty()) {
         Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
         QmltcMethod reset {};
@@ -775,8 +786,12 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         mocLines << u"RESET"_s << reset.name;
     }
 
-    if (result.property.isConstant())
-        mocLines << u"CONSTANT"_s;
+    // mimic the engines behavior: aliases are never constants
+    // mocLines << u"CONSTANT"_s;
+    // mimic the engines behavior: aliases are never stored
+    mocLines << u"STORED"_s << u"false"_s;
+    // mimic the engines behavior: aliases are never designable
+    mocLines << u"DESIGNABLE"_s << u"false"_s;
 
     // 4. add moc entry
     // Q_PROPERTY(QString text READ text WRITE setText BINDABLE bindableText NOTIFY textChanged)

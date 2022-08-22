@@ -45,6 +45,7 @@ private slots:
     void changingBindings();
     void propertyAlias();
     void propertyAlias_external();
+    void propertyAliasAttribute();
     void complexAliases();
     void propertyChangeHandler();
     void nestedHelloWorld();

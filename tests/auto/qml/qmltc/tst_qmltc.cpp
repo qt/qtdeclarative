@@ -33,6 +33,7 @@
 #include "changingbindings.h"
 #include "propertyalias.h"
 #include "propertyalias_external.h"
+#include "propertyaliasattributes.h"
 #include "complexaliases.h"
 #include "propertychangehandler.h"
 #include "nestedhelloworld.h"
@@ -72,6 +73,7 @@
 #include "valuetypelistproperty.h"
 #include "translations.h"
 #include "translationsbyid.h"
+#include "defaultalias.h"
 
 #include "testprivateproperty.h"
 
@@ -894,8 +896,19 @@ void tst_qmltc::specialProperties()
     // alias attributes:
     const QMetaObject *mo = created.metaObject();
     QMetaProperty xxAlias = mo->property(mo->indexOfProperty("xxAlias"));
+
+    QQmlComponent c(&e);
+    c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/specialProperties.qml"));
+    QScopedPointer<QObject> _fromEngine(c.create());
+    QVERIFY2(_fromEngine, qPrintable(c.errorString()));
+    QObject &fromEngine = *_fromEngine;
+    const QMetaObject *fromEngineMetaObject = fromEngine.metaObject();
+
+    QMetaProperty xxAliasFromEngine =
+            fromEngineMetaObject->property(mo->indexOfProperty("xxAlias"));
     QVERIFY(xxAlias.isValid());
-    QVERIFY(xxAlias.isConstant());
+    QVERIFY(xxAliasFromEngine.isValid());
+    QCOMPARE(xxAlias.isConstant(), xxAliasFromEngine.isConstant());
     QCOMPARE(created.xyAlias(), u"reset");
 }
 
@@ -1089,6 +1102,192 @@ void tst_qmltc::propertyAlias_external()
     QCOMPARE(created.heightAlias(), 10);
     QCOMPARE(heightChangedSpy.count(), 1);
     QCOMPARE(heightAliasChangedSpy.count(), 1);
+}
+
+void tst_qmltc::propertyAliasAttribute()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(propertyAliasAttributes) fromQmltc(&e);
+
+    QQmlComponent c(&e);
+    c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/propertyAliasAttributes.qml"));
+    QScopedPointer<QObject> _fromEngine(c.create());
+    QVERIFY2(_fromEngine, qPrintable(c.errorString()));
+    QObject &fromEngine = *_fromEngine;
+    const QMetaObject *fromEngineMetaObject = fromEngine.metaObject();
+
+    const QString stringA = u"The quick brown fox"_s;
+    const QString stringB = u"jumps over the lazy dog."_s;
+
+    QCOMPARE(fromQmltc.readOnlyAlias(), u"Hello World!"_s);
+    QCOMPARE(fromEngine.property("readOnlyAlias"), u"Hello World!"_s);
+
+    QVERIFY(!fromQmltc.setProperty("readOnlyAlias", u"Some string"_s));
+    QVERIFY(!fromEngine.setProperty("readOnlyAlias", u"Some string"_s));
+
+    // reading and writing from alias is already covered in the alias test
+    // check if it works on properties with the MEMBERS attribute
+    fromQmltc.setReadAndWriteMemberAlias(stringA);
+    fromEngine.setProperty("readAndWriteMemberAlias", stringA);
+
+    QCOMPARE(fromQmltc.property("readAndWriteMember"), stringA);
+    QCOMPARE(fromEngine.property("readAndWriteMember"), stringA);
+
+    fromQmltc.setReadAndWriteMemberAlias(stringB);
+    fromEngine.setProperty("readAndWriteMemberAlias", stringB);
+
+    QCOMPARE(fromQmltc.readAndWriteMemberAlias(), stringB);
+    QCOMPARE(fromQmltc.property("readAndWriteMember"), stringB);
+
+    QCOMPARE(fromEngine.property("readAndWriteMemberAlias"), stringB);
+    QCOMPARE(fromEngine.property("readAndWriteMember"), stringB);
+
+    // check if alias can be reset through property
+    fromQmltc.setResettableAlias(stringA);
+    fromEngine.setProperty("resettableAlias", stringB);
+    fromQmltc.resetResettable();
+    const int resettableIdx = fromEngineMetaObject->indexOfProperty("resettable");
+    QVERIFY(fromEngineMetaObject->property(resettableIdx).reset(&fromEngine));
+    QCOMPARE(fromQmltc.resettable(), u"Reset!"_s);
+    QCOMPARE(fromQmltc.resettableAlias(), u"Reset!"_s);
+    QCOMPARE(fromEngine.property("resettable"), u"Reset!"_s);
+    QCOMPARE(fromEngine.property("resettableAlias"), u"Reset!"_s);
+
+    // check if property can be reset through alias
+    fromQmltc.setResettableAlias(stringA);
+    fromEngine.setProperty("resettableAlias", stringA);
+    fromQmltc.resetResettableAlias();
+    QMetaMethod resetResettableAlias = fromEngineMetaObject->method(
+            fromEngineMetaObject->indexOfMethod("resetResettableAlias"));
+    resetResettableAlias.invoke(&fromEngine);
+    QCOMPARE(fromQmltc.resettable(), u"Reset!"_s);
+    QCOMPARE(fromQmltc.resettableAlias(), u"Reset!"_s);
+    QCOMPARE(fromEngine.property("resettable"), u"Reset!"_s);
+    QCOMPARE(fromEngine.property("resettableAlias"), u"Reset!"_s);
+
+    // check if property can be reset by assigning undefined to alias
+    fromQmltc.setResettableAlias(stringA);
+    fromEngine.setProperty("resettableAlias", stringA);
+    fromQmltc.assignUndefinedToResettableAlias();
+    QMetaMethod assignUndefinedToResettableAlias = fromEngineMetaObject->method(
+            fromEngineMetaObject->indexOfMethod("assignUndefinedToResettableAlias"));
+    assignUndefinedToResettableAlias.invoke(&fromEngine);
+    QCOMPARE(fromQmltc.resettableAlias(), u"Reset!"_s);
+    QCOMPARE(fromQmltc.resettable(), u"Reset!"_s);
+    QCOMPARE(fromEngine.property("resettableAlias"), u"Reset!"_s);
+    QCOMPARE(fromEngine.property("resettable"), u"Reset!"_s);
+
+    // check if property can be reset by assigning undefined to alias of
+    // non-resettable prop which should not happen: instead, nothing should happen
+    fromQmltc.setUnresettableAlias(stringA);
+    fromEngine.setProperty("unresettableAlias", stringA);
+    fromQmltc.assignUndefinedToUnresettableAlias();
+    QMetaMethod assignUndefinedToUnresettableAlias = fromEngineMetaObject->method(
+            fromEngineMetaObject->indexOfMethod("assignUndefinedToUnresettableAlias"));
+    assignUndefinedToUnresettableAlias.invoke(&fromEngine);
+    QCOMPARE(fromQmltc.unresettableAlias(), stringA);
+    QCOMPARE(fromQmltc.property("unresettable"), stringA);
+    QCOMPARE(fromEngine.property("unresettableAlias"), stringA);
+    QCOMPARE(fromEngine.property("unresettable"), stringA);
+
+    // check if notify arrives!
+    fromQmltc.setReadAndWrite(stringB);
+    fromEngine.setProperty("readAndWrite", stringB);
+    qsizetype calls = 0;
+    QSignalSpy spyQmltc(&fromQmltc, SIGNAL(notifiableChanged(QString)));
+    QSignalSpy spyEngine(&fromEngine, SIGNAL(notifiableChanged(QString)));
+    // write through alias
+    fromQmltc.setNotifiableAlias(stringA);
+    QVERIFY(fromEngine.setProperty("notifiableAlias", stringA));
+    QCOMPARE(spyQmltc.count(), ++calls);
+    QCOMPARE(spyEngine.count(), calls);
+    // write through property
+    fromQmltc.setReadAndWriteAndNotify(stringB);
+    QVERIFY(fromEngine.setProperty("notifiable", stringB));
+    QCOMPARE(spyQmltc.count(), ++calls);
+    QCOMPARE(spyEngine.count(), calls);
+
+    fromQmltc.setNotifiableMemberAlias(stringA);
+    QVERIFY(fromEngine.setProperty("notifiableMemberAlias", stringA));
+    QCOMPARE(spyQmltc.count(), ++calls);
+    QCOMPARE(spyEngine.count(), calls);
+    fromQmltc.setProperty("notifiableMember", stringB);
+    QVERIFY(fromEngine.setProperty("notifiableMember", stringB));
+    QCOMPARE(spyQmltc.count(), ++calls);
+    QCOMPARE(spyEngine.count(), calls);
+
+    // check that the alias to a revisioned property works
+    fromQmltc.setLatestReadAndWriteAlias(stringA);
+    QVERIFY(fromEngine.setProperty("latestReadAndWriteAlias", stringA));
+    QCOMPARE(fromQmltc.latestReadAndWriteAlias(), stringA);
+    QCOMPARE(fromQmltc.property("latestReadAndWrite"), stringA);
+    QCOMPARE(fromEngine.property("latestReadAndWriteAlias"), stringA);
+    QCOMPARE(fromEngine.property("latestReadAndWrite"), stringA);
+
+    QVERIFY(fromQmltc.setProperty("latestReadAndWrite", stringB));
+    QVERIFY(fromEngine.setProperty("latestReadAndWrite", stringB));
+    QCOMPARE(fromQmltc.latestReadAndWriteAlias(), stringB);
+    QCOMPARE(fromQmltc.property("latestReadAndWrite"), stringB);
+    QCOMPARE(fromEngine.property("latestReadAndWriteAlias"), stringB);
+    QCOMPARE(fromEngine.property("latestReadAndWrite"), stringB);
+
+    // check if metaobject of alias is correct
+    const QVector<const QMetaObject *> metaObjects = {
+        fromQmltc.metaObject(),
+        fromEngine.metaObject(),
+    };
+
+    QVERIFY(metaObjects[0]);
+    QVERIFY(metaObjects[1]);
+
+    QVector<QHash<QString, QMetaProperty>> metaProperties(2);
+    for (int j = 0; j < metaObjects.size(); j++) {
+        const QMetaObject *metaObject = metaObjects[j];
+        for (int i = metaObject->propertyOffset(); i < metaObject->propertyCount(); ++i) {
+            metaProperties[j][QString::fromLatin1(metaObject->property(i).name())] =
+                    metaObject->property(i);
+        }
+    }
+
+    {
+        QVERIFY(metaProperties[0].contains("hasAllAttributesAlias"));
+        QVERIFY(metaProperties[1].contains("hasAllAttributesAlias"));
+        QMetaProperty mpQmltc = metaProperties[0].value("hasAllAttributesAlias");
+        QMetaProperty mpEngine = metaProperties[1].value("hasAllAttributesAlias");
+        QCOMPARE(mpQmltc.isReadable(), mpEngine.isReadable());
+        QCOMPARE(mpQmltc.isWritable(), mpEngine.isWritable());
+        QCOMPARE(mpQmltc.isResettable(), mpEngine.isResettable());
+        QCOMPARE(mpQmltc.hasNotifySignal(), mpEngine.hasNotifySignal());
+        QCOMPARE(mpQmltc.revision(), mpEngine.revision());
+        QCOMPARE(mpQmltc.isDesignable(), mpEngine.isDesignable());
+        QCOMPARE(mpQmltc.isScriptable(), mpEngine.isScriptable());
+        QCOMPARE(mpQmltc.isStored(), mpEngine.isStored());
+        QCOMPARE(mpQmltc.isUser(), mpEngine.isUser());
+        QCOMPARE(mpQmltc.isBindable(), mpEngine.isBindable());
+        QCOMPARE(mpQmltc.isConstant(), mpEngine.isConstant());
+        QCOMPARE(mpQmltc.isFinal(), mpEngine.isFinal());
+        QCOMPARE(mpQmltc.isRequired(), mpEngine.isRequired());
+    }
+
+    {
+        QVERIFY(metaProperties[0].contains("hasAllAttributes2Alias"));
+        QVERIFY(metaProperties[1].contains("hasAllAttributes2Alias"));
+        QMetaProperty mpQmltc = metaProperties[0].value("hasAllAttributes2Alias");
+        QMetaProperty mpEngine = metaProperties[1].value("hasAllAttributes2Alias");
+        QCOMPARE(mpQmltc.isReadable(), mpEngine.isReadable());
+        QCOMPARE(mpQmltc.isWritable(), mpEngine.isWritable());
+        QCOMPARE(mpQmltc.isResettable(), mpEngine.isResettable());
+        QCOMPARE(mpQmltc.hasNotifySignal(), mpEngine.hasNotifySignal());
+        QCOMPARE(mpQmltc.revision(), mpEngine.revision());
+        QCOMPARE(mpQmltc.isDesignable(), mpEngine.isDesignable());
+        QCOMPARE(mpQmltc.isScriptable(), mpEngine.isScriptable());
+        QCOMPARE(mpQmltc.isStored(), mpEngine.isStored());
+        QCOMPARE(mpQmltc.isUser(), mpEngine.isUser());
+        QCOMPARE(mpQmltc.isBindable(), mpEngine.isBindable());
+        QCOMPARE(mpQmltc.isConstant(), mpEngine.isConstant());
+        QCOMPARE(mpQmltc.isFinal(), mpEngine.isFinal());
+        QCOMPARE(mpQmltc.isRequired(), mpEngine.isRequired());
+    }
 }
 
 // TODO: we need to support RESET in aliases as well? (does it make sense?)
@@ -1455,7 +1654,19 @@ void tst_qmltc::defaultPropertyCorrectSelection()
 
 void tst_qmltc::defaultAlias()
 {
-    QSKIP("Not implemented - not supported");
+    QQmlEngine e;
+    PREPEND_NAMESPACE(defaultAlias) created(&e);
+
+    QQmlComponent c(&e);
+    c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/defaultAlias.qml"));
+    QScopedPointer<QObject> fromEngine(c.create());
+    QVERIFY2(fromEngine, qPrintable(c.errorString()));
+
+    auto *child = static_cast<QmltcTest::defaultAlias_QtObject *>(created.child());
+    QVERIFY(fromEngine->property("child").canConvert<QObject *>());
+    QObject *childFromEngine = fromEngine->property("child").value<QObject *>();
+    QVERIFY(childFromEngine);
+    QCOMPARE(child->hello(), childFromEngine->property("hello"));
 }
 
 void tst_qmltc::attachedProperty()
