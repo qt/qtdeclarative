@@ -1171,8 +1171,10 @@ with multiple windows.
   \row
    \li \c QSG_RHI_DEBUG_LAYER
    \li \c 1
-   \li Where applicable (Vulkan, Direct3D), enables the graphics API implementation's debug
-   and/or validation layers, if available.
+   \li Where applicable (Vulkan, Direct3D), enables the graphics API implementation's
+   debug or validation layers, if available, either on the graphics device or the instance
+   object. For Metal on \macos, set the environment variable
+   \c{METAL_DEVICE_WRAPPER_TYPE=1} instead.
 
   \row
    \li \c QSG_RHI_PREFER_SOFTWARE_RENDERER
