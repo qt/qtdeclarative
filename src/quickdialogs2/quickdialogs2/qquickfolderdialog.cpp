@@ -30,19 +30,19 @@ Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
 
     \code
     MenuItem {
-        text: "Open..."
+        text: qsTr("Open...")
         onTriggered: folderDialog.open()
     }
 
     FolderDialog {
         id: folderDialog
-        currentFolder: viewer.folder
-        folder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
+        currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
+        selectedFolder: viewer.folder
     }
 
     MyViewer {
         id: viewer
-        folder: folderDialog.folder
+        folder: folderDialog.selectedFolder
     }
     \endcode
 
