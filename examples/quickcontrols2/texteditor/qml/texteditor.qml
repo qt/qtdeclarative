@@ -200,7 +200,7 @@ ApplicationWindow {
         selectedNameFilter.index: 1
         nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)", "Markdown files (*.md *.markdown)"]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        onAccepted: document.load(file)
+        onAccepted: document.load(selectedFile)
     }
 
     FileDialog {
