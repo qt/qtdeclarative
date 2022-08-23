@@ -1849,7 +1849,11 @@ Item {
 
     /*! \internal */
     function qtest_run() {
-        if (TestLogger.log_start_test()) {
+        if (!when || completed || running || !qtest_componentCompleted)
+            return;
+
+        verify(TestLogger.log_can_start_test(qtest_testId))
+        if (TestLogger.log_start_test(qtest_testId)) {
             qtest_results.reset()
             qtest_results.testCaseName = name
             qtest_results.startLogging()
@@ -2020,8 +2024,8 @@ Item {
     onWhenChanged: {
         if (when != qtest_prevWhen) {
             qtest_prevWhen = when
-            if (when && !completed && !running && qtest_componentCompleted)
-                qtest_run()
+            if (when)
+                TestSchedule.testCases.push(testCase)
         }
     }
 
@@ -2041,7 +2045,7 @@ Item {
         if (optional)
             TestLogger.log_optional_test(qtest_testId)
         qtest_prevWhen = when
-        if (when && !completed && !running)
-            qtest_run()
+        if (when)
+            TestSchedule.testCases.push(testCase)
     }
 }

@@ -9,7 +9,7 @@ function log_init_results()
 {
     if (!testResults) {
         testResults = {
-            reportedStart: false,
+            runningTest: -1,
             nextId: 0,
             testCases: []
         }
@@ -36,16 +36,21 @@ function log_mandatory_test(testId)
 {
     log_init_results()
     var index = testResults.testCases.indexOf(testId)
-    if (index == -1)
+    if (index === -1)
         testResults.testCases.push(testId)
 }
 
-function log_start_test()
+function log_can_start_test(testId)
+{
+    return !testResults || testResults.runningTest === -1 || testResults.runningTest === testId;
+}
+
+function log_start_test(testId)
 {
     log_init_results()
-    if (testResults.reportedStart)
+    if (testResults.runningTest === testId)
         return false
-    testResults.reportedStart = true
+    testResults.runningTest = testId
     return true
 }
 
@@ -54,5 +59,6 @@ function log_complete_test(testId)
     var index = testResults.testCases.indexOf(testId)
     if (index >= 0)
         testResults.testCases.splice(index, 1)
+    testResults.runningTest = -1
     return testResults.testCases.length > 0
 }

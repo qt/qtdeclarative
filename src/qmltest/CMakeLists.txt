@@ -9,6 +9,10 @@ set_source_files_properties(testlogger.js PROPERTIES
     QT_QML_SKIP_QMLDIR_ENTRY TRUE
 )
 
+set_source_files_properties(TestSchedule.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_internal_add_qml_module(QuickTest
     URI "QtTest"
     VERSION "${PROJECT_VERSION}"
@@ -25,8 +29,9 @@ qt_internal_add_qml_module(QuickTest
         quicktestresult.cpp quicktestresult_p.h
         quicktestutil.cpp quicktestutil_p.h
     QML_FILES
-        TestCase.qml
         SignalSpy.qml
+        TestCase.qml
+        TestSchedule.qml
         testlogger.js
     DEFINES
         QT_NO_FOREACH
