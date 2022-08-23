@@ -1,5 +1,6 @@
 import QtQml
 import TestTypes
+import TestTypes as TT2
 import Ambiguous 1.2
 
 QtObject {
@@ -35,4 +36,7 @@ QtObject {
     signal bar()
     // Cannot assign potential undefined
     onFoo: objectName = self.bar()
+
+    property int enumFromGadget1: GadgetWithEnum.CONNECTED + 1
+    property int enumFromGadget2: TT2.GadgetWithEnum.CONNECTED + 1
 }
