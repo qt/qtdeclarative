@@ -24,6 +24,8 @@ depends = qtcore qtqmlcore qtgui qtdoc qtqml qtquick qtquickcontrols qtlabsplatf
 # This module has no documented C++ types, clear the module header
 moduleheader =
 
+exampledirs += snippets
+
 headerdirs += ..
 sourcedirs += .. \
               src
