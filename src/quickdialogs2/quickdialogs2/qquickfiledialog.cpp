@@ -36,23 +36,7 @@ Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
     properties are updated only after the final selection has been made by
     accepting the dialog.
 
-    \code
-    MenuItem {
-        text: "Open..."
-        onTriggered: fileDialog.open()
-    }
-
-    FileDialog {
-        id: fileDialog
-        currentFile: document.source
-        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-    }
-
-    MyDocument {
-        id: document
-        source: fileDialog.file
-    }
-    \endcode
+    \snippet qtquickdialogs-filedialog.qml file
 
     \section2 Availability
 
