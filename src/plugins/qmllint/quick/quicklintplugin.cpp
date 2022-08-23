@@ -132,10 +132,10 @@ void AttachedPropertyTypeValidatorPass::onRead(const QQmlSA::Element &element,
                                                const QQmlSA::Element &readScope,
                                                QQmlJS::SourceLocation location)
 {
-    Q_UNUSED(readScope)
-    Q_UNUSED(propertyName)
-
-    checkWarnings(element, readScope, location);
+    // If the attachment does not have such a property or method then
+    // it's either a more general error or an enum. Enums are fine.
+    if (element->hasProperty(propertyName) || element->hasMethod(propertyName))
+        checkWarnings(element, readScope, location);
 }
 
 void AttachedPropertyTypeValidatorPass::onWrite(const QQmlSA::Element &element,
