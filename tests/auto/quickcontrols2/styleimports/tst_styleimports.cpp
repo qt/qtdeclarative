@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <QtCore/qregularexpression.h>
+#include <QtGui/qpalette.h>
 #include <QtTest/qtest.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
@@ -195,6 +196,10 @@ void tst_StyleImports::customStyleSelector()
     QCOMPARE(customComponent->objectName(), "+FileSystemStyle/CustomComponent.qml");
 }
 
+QT_BEGIN_NAMESPACE
+extern QPalette qt_fusionPalette();
+QT_END_NAMESPACE
+
 void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme_data()
 {
     QTest::addColumn<QString>("style");
@@ -202,7 +207,8 @@ void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme_data()
     QTest::addColumn<QColor>("expectedContentItemColor");
 
     QTest::addRow("style=Fusion,fallbackStyle=Material")
-        << QString::fromLatin1("Fusion") << QString::fromLatin1("Material") << QColor::fromRgb(0x252525);
+        << QString::fromLatin1("Fusion") << QString::fromLatin1("Material")
+        << qt_fusionPalette().buttonText().color();
     QTest::addRow("style=ResourceStyle,fallbackStyle=Material")
         << QString::fromLatin1("ResourceStyle") << QString::fromLatin1("Material") << QColor("salmon");
 }
