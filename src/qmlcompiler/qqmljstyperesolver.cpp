@@ -413,6 +413,64 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
     return {};
 }
 
+QQmlJSRegisterContent QQmlJSTypeResolver::referenceTypeForName(
+        const QString &name, const QQmlJSScope::ConstPtr &scopeType,
+        bool hasObjectModulePrefix) const
+{
+    QQmlJSScope::ConstPtr type = typeForName(name);
+    if (!type)
+        return QQmlJSRegisterContent();
+
+    if (type->isSingleton())
+        return QQmlJSRegisterContent::create(storedType(type), type,
+                                             QQmlJSRegisterContent::Singleton, scopeType);
+
+    if (type->isScript())
+        return QQmlJSRegisterContent::create(storedType(type), type,
+                                             QQmlJSRegisterContent::Script, scopeType);
+
+    if (const auto attached = type->attachedType()) {
+        if (!genericType(attached)) {
+            m_logger->log(u"Cannot resolve generic base of attached %1"_s.arg(
+                                  attached->internalName()),
+                          qmlCompiler, attached->sourceLocation());
+            return {};
+        } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
+            m_logger->log(u"Cannot retrieve attached object for non-reference type %1"_s.arg(
+                                  type->internalName()),
+                          qmlCompiler, type->sourceLocation());
+            return {};
+        } else {
+            // We don't know yet whether we need the attached or the plain object. In direct
+            // mode, we will figure this out using the scope type and access any enums of the
+            // plain type directly. In indirect mode, we can use enum lookups.
+            return QQmlJSRegisterContent::create(
+                        storedType(attached), attached,
+                        hasObjectModulePrefix
+                            ? QQmlJSRegisterContent::ObjectAttached
+                            : QQmlJSRegisterContent::ScopeAttached, type);
+        }
+    }
+
+    switch (type->accessSemantics()) {
+    case QQmlJSScope::AccessSemantics::None:
+    case QQmlJSScope::AccessSemantics::Reference:
+        // A plain reference to a non-singleton, non-attached type.
+        // We may still need the plain type reference for enum lookups,
+        // Store it as QMetaObject.
+        // This only works with namespaces and object types.
+        return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
+                                             QQmlJSRegisterContent::MetaType, type);
+    case QQmlJSScope::AccessSemantics::Sequence:
+    case QQmlJSScope::AccessSemantics::Value:
+        // This is not actually a type reference. You cannot get the metaobject
+        // of a value type in QML and sequences don't even have metaobjects.
+        break;
+    }
+
+    return QQmlJSRegisterContent();
+}
+
 QQmlJSRegisterContent QQmlJSTypeResolver::original(const QQmlJSRegisterContent &type) const
 {
     return transformed(type, &QQmlJSTypeResolver::originalType);
@@ -839,51 +897,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         }
     }
 
-    if (QQmlJSScope::ConstPtr type = typeForName(name)) {
-        if (type->isSingleton())
-            return QQmlJSRegisterContent::create(storedType(type), type,
-                                                 QQmlJSRegisterContent::Singleton);
-
-        if (type->isScript())
-            return QQmlJSRegisterContent::create(storedType(type), type,
-                                                 QQmlJSRegisterContent::Script);
-
-        if (const auto attached = type->attachedType()) {
-            if (!genericType(attached)) {
-                m_logger->log(u"Cannot resolve generic base of attached %1"_s.arg(
-                                      attached->internalName()),
-                              qmlCompiler, attached->sourceLocation());
-                return {};
-            } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-                m_logger->log(u"Cannot retrieve attached object for non-reference type %1"_s.arg(
-                                      type->internalName()),
-                              qmlCompiler, type->sourceLocation());
-                return {};
-            } else {
-                // We don't know yet whether we need the attached or the plain object. In direct
-                // mode, we will figure this out using the scope type and access any enums of the
-                // plain type directly. In indirect mode, we can use enum lookups.
-                return QQmlJSRegisterContent::create(storedType(attached), attached,
-                                                     QQmlJSRegisterContent::ScopeAttached, type);
-            }
-        }
-
-        switch (type->accessSemantics()) {
-        case QQmlJSScope::AccessSemantics::None:
-        case QQmlJSScope::AccessSemantics::Reference:
-            // A plain reference to a non-singleton, non-attached type.
-            // We may still need the plain type reference for enum lookups,
-            // Store it as QMetaObject.
-            // This only works with namespaces and object types.
-            return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
-                                                 QQmlJSRegisterContent::MetaType, type);
-        case QQmlJSScope::AccessSemantics::Sequence:
-        case QQmlJSScope::AccessSemantics::Value:
-            // This is not actually a type reference. You cannot get the metaobject
-            // of a value type in QML and sequences don't even have metaobjects.
-            break;
-        }
-    }
+    QQmlJSRegisterContent result = referenceTypeForName(name);
+    if (result.isValid())
+        return result;
 
     if (m_jsGlobalObject->hasProperty(name)) {
         return QQmlJSRegisterContent::create(jsValueType(), m_jsGlobalObject->property(name),
@@ -1174,34 +1190,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
             return {};
         }
 
-        if (QQmlJSScope::ConstPtr result = typeForName(name)) {
-            QQmlJSScope::ConstPtr attached = result->attachedType();
-            if (attached && genericType(attached)) {
-                return QQmlJSRegisterContent::create(
-                            storedType(attached), attached,
-                            type.variant() == QQmlJSRegisterContent::ObjectModulePrefix
-                                ? QQmlJSRegisterContent::ObjectAttached
-                                : QQmlJSRegisterContent::ScopeAttached,
-                            result);
-            }
-
-            if (result->isSingleton()) {
-                return QQmlJSRegisterContent::create(
-                            storedType(result), result,
-                            QQmlJSRegisterContent::Singleton, type.scopeType());
-            }
-
-            if (result->isScript()) {
-                return QQmlJSRegisterContent::create(
-                            storedType(result), result,
-                            QQmlJSRegisterContent::Script, type.scopeType());
-            }
-
-            return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
-                                                 QQmlJSRegisterContent::MetaType, result);
-        }
-
-        return {};
+        return referenceTypeForName(
+                    name, type.scopeType(),
+                    type.variant() == QQmlJSRegisterContent::ObjectModulePrefix);
     }
     if (type.isConversion()) {
         const auto result = memberType(type.conversionResult(), name);

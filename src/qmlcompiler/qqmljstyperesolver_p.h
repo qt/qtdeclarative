@@ -169,6 +169,11 @@ protected:
             const QQmlJSRegisterContent &origin,
             QQmlJSScope::ConstPtr (QQmlJSTypeResolver::*op)(const QQmlJSScope::ConstPtr &) const) const;
 
+    QQmlJSRegisterContent referenceTypeForName(
+            const QString &name,
+            const QQmlJSScope::ConstPtr &scopeType = QQmlJSScope::ConstPtr(),
+            bool hasObjectModuelPrefix = false) const;
+
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_emptyListType;
     QQmlJSScope::ConstPtr m_nullType;

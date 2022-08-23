@@ -6,6 +6,7 @@ set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     dynamicmeta.h
+    gadgetwithenum.h
     invisible.h
     objectwithmethod.h
     person.cpp person.h
