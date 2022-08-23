@@ -623,7 +623,6 @@ public:
                         QStringLiteral("Cannot convert circular structure to JSON"));
         }
 
-        qDebug() << stringify->v4->callDepth;
         stringify->v4->checkStackLimits();
     }
 
