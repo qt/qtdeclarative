@@ -158,6 +158,11 @@ protected:
                     QQmlJSRegisterContent *result, BaseOrExtension mode) const;
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
 
+    QQmlJSRegisterContent referenceTypeForName(
+            const QString &name,
+            const QQmlJSScope::ConstPtr &scopeType = QQmlJSScope::ConstPtr(),
+            bool hasObjectModuelPrefix = false) const;
+
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_numberPrototype;
     QQmlJSScope::ConstPtr m_realType;
