@@ -98,7 +98,7 @@ void tst_CreationTime::fusion_data()
     QTest::addColumn<QUrl>("url");
     addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "fusion", "QtQuick/Controls/Fusion",
         QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator"
-            << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+            << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator" << "TreeViewDelegate");
 }
 
 void tst_CreationTime::imagine()
