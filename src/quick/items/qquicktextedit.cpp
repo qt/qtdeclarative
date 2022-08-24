@@ -3377,7 +3377,7 @@ void QQuickTextEdit::setOldSelectionDefault()
     setKeepMouseGrab(false);
     d->control->setTextInteractionFlags(d->control->textInteractionFlags() & ~Qt::TextSelectableByMouse);
     d->control->setTouchDragSelectionEnabled(true);
-    qCDebug(lcTextEdit, "pre-6.4 behavior chosen by import version: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
+    qCDebug(lcTextEdit, "pre-6.4 behavior chosen: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
 }
 
 // TODO in 6.7.0: remove the note about versions prior to 6.4 in selectByMouse() documentation

@@ -20,7 +20,7 @@ void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
     if (Qt::LeftButton == (event->buttons() & Qt::LeftButton)) {
         timer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), control);
         delayedMousePressEvent = new QMouseEvent(event->type(), event->position().toPoint(), event->globalPosition().toPoint(),
-                                                 event->button(), event->buttons(), event->modifiers());
+                                                 event->button(), event->buttons(), event->modifiers(), event->pointingDevice());
     } else {
         timer.stop();
     }
