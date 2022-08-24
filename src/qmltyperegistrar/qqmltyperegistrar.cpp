@@ -149,10 +149,10 @@ void QmlTypeRegistrar::write(QTextStream &output)
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
 
-
-#include <QtQml/qqml.h>
-#include <QtQml/qqmlmoduleregistration.h>
 )"_s;
+
+    output << u"#include <QtQml/qqml.h>\n"_s;
+    output << u"#include <QtQml/qqmlmoduleregistration.h>\n"_s;
 
     for (const QString &include : m_includes)
         output << u"\n#include <%1>"_s.arg(include);

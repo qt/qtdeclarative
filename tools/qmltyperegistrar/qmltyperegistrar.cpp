@@ -12,15 +12,6 @@
 
 using namespace Qt::Literals;
 
-struct ScopedPointerFileCloser
-{
-    static inline void cleanup(FILE *handle)
-    {
-        if (handle)
-            fclose(handle);
-    }
-};
-
 int main(int argc, char **argv)
 {
     // Produce reliably the same output for the same input by disabling QHash's random seeding.
@@ -146,8 +137,6 @@ int main(int argc, char **argv)
                                     parser.isSet(followForeignVersioningOption));
     typeRegistrar.setTypes(processor.types(), processor.foreignTypes());
 
-    QScopedPointer<FILE, ScopedPointerFileCloser> outputFile;
-
     if (parser.isSet(outputOption)) {
         // extract does its own file handling
         QString outputName = parser.value(outputOption);
@@ -159,7 +148,7 @@ int main(int argc, char **argv)
         QTextStream output(&file);
         typeRegistrar.write(output);
     } else {
-        QTextStream output(stdin);
+        QTextStream output(stdout);
         typeRegistrar.write(output);
     }
 
