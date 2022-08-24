@@ -34,8 +34,8 @@ T.TreeViewDelegate {
         readonly property real __indicatorIndent: control.leftMargin + (control.depth * control.indentation)
         x: !control.mirrored ? __indicatorIndent : control.width - __indicatorIndent - width
         y: (control.height - height) / 2
-        width: 16
-        height: 16
+        implicitWidth: 20
+        implicitHeight: 40 // same as Button.qml
         ColorImage {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
@@ -43,11 +43,11 @@ T.TreeViewDelegate {
             source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
             color: control.palette.windowText
             defaultColor: "#353637"
-            scale: 0.5
         }
     }
 
     background: Rectangle {
+        implicitHeight: 40 // same as Button.qml
         color: control.highlighted
                ? control.palette.highlight
                : (control.treeView.alternatingRows && control.row % 2 !== 0
