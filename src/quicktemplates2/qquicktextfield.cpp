@@ -17,6 +17,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 /*!
     \qmltype TextField
     \inherits TextInput
@@ -377,6 +379,11 @@ QQuickTextField::QQuickTextField(QQuickItem *parent)
 #endif
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged, d, &QQuickTextFieldPrivate::readOnlyChanged);
     QObjectPrivate::connect(this, &QQuickTextInput::echoModeChanged, d, &QQuickTextFieldPrivate::echoModeChanged);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+qDebug() << "QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR" << qgetenv("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR");
+    if (qEnvironmentVariable("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR") == u"old"_s)
+        QQuickTextInput::setOldSelectionDefault();
+#endif
 }
 
 QQuickTextField::~QQuickTextField()
@@ -880,9 +887,12 @@ void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
             QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
             d->pressHandler.clearDelayedMouseEvent();
         }
-        const auto devType = event->device()->type();
-        if (event->buttons() != Qt::RightButton &&
-                (devType == QInputDevice::DeviceType::Mouse || devType == QInputDevice::DeviceType::TouchPad))
+        const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event)
+    #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+            || d->selectByTouchDrag
+    #endif
+        ;
+        if (event->buttons() != Qt::RightButton && isMouse)
             QQuickTextInput::mouseMoveEvent(event);
     }
 }
