@@ -1,12 +1,11 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick 2.4
-import QtQuick.Window 2.1
-import QtQuick.Layouts 1.1
-import QtQuick.Controls 1.1
-import QtQuick.Controls.Styles 1.1
-import Qt.labs.settings 1.0
+import QtCore
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Controls.Styles
 
 ApplicationWindow {
     id: window

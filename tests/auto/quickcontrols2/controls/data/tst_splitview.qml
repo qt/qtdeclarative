@@ -1,11 +1,11 @@
-// Copyright (C) 2018 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+import QtCore
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtTest
-import Qt.labs.settings
 import Qt.test.controls
 
 TestCase {

@@ -1,4 +1,4 @@
-// Copyright (C) 2018 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquicksplitview_p.h"
@@ -173,8 +173,8 @@ QT_BEGIN_NAMESPACE
     serialized using the \l saveState() and \l restoreState() functions:
 
     \qml
+    import QtCore
     import QtQuick.Controls
-    import Qt.labs.settings
 
     ApplicationWindow {
         // ...
@@ -198,8 +198,8 @@ QT_BEGIN_NAMESPACE
     functions of \l Settings can be used:
 
     \qml
+    import QtCore
     import QtQuick.Controls
-    import Qt.labs.settings
 
     ApplicationWindow {
         // ...

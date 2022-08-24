@@ -6,18 +6,18 @@
 #include <QtCore/qsysinfo.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
-class tst_core : public QQmlDataTest
+class tst_qqmlsysteminformation : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
-    explicit tst_core() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
+    explicit tst_qqmlsysteminformation() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private Q_SLOTS:
     void systemInformation();
 };
 
-void tst_core::systemInformation()
+void tst_qqmlsysteminformation::systemInformation()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("tst_systeminformation.qml"));
@@ -40,6 +40,6 @@ void tst_core::systemInformation()
     QCOMPARE(object->property("bootUniqueId").toByteArray(), QSysInfo::bootUniqueId());
 }
 
-QTEST_MAIN(tst_core)
+QTEST_MAIN(tst_qqmlsysteminformation)
 
-#include "tst_core.moc"
+#include "tst_qqmlsysteminformation.moc"

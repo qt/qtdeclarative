@@ -15,6 +15,8 @@ qt_internal_add_qml_module(QmlCore
         qqmlstandardpaths_p.h
         qqmlstandardpaths.cpp
         qqmlcoreglobal_p.h
+        qqmlsettings_p.h
+        qqmlsettings.cpp
     DEFINES
         QT_BUILD_QML_CORE_LIB
     PUBLIC_LIBRARIES
