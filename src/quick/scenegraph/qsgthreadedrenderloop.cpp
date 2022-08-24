@@ -34,6 +34,10 @@
 
 #include <qtquick_tracepoints_p.h>
 
+#ifdef Q_OS_DARWIN
+#include <QtCore/private/qcore_mac_p.h>
+#endif
+
 /*
    Overall design:
 
