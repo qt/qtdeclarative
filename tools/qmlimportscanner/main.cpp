@@ -940,8 +940,12 @@ int main(int argc, char *argv[])
                 std::cerr << qPrintable(appName) << ": No such file or directory: \""
                     << qPrintable(arg) << "\"\n";
                 return 1;
-            } else {
+            } else if (argReceiver) {
                 *argReceiver += arg;
+            } else {
+                std::cerr << qPrintable(appName) << ": Invalid argument: \""
+                    << qPrintable(arg) << "\"\n";
+                return 1;
             }
         }
     }
