@@ -1593,10 +1593,13 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
 
 void QQuickTextInput::mouseMoveEvent(QMouseEvent *event)
 {
-    if (!QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event))
-        return;
-
     Q_D(QQuickTextInput);
+    if (!QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event)
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+            && ! d->selectByTouchDrag
+#endif
+            )
+        return;
 
     if (d->selectPressed) {
         if (qAbs(int(event->position().x() - d->pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
@@ -1629,7 +1632,12 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
-    const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event);
+    const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event)
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+        || d->selectByTouchDrag
+#endif
+    ;
+
 #if QT_CONFIG(clipboard)
     if (isMouse && QGuiApplication::clipboard()->supportsSelection()) {
         if (event->button() == Qt::LeftButton) {
@@ -4872,7 +4880,7 @@ void QQuickTextInput::setOldSelectionDefault()
     Q_D(QQuickTextInput);
     d->selectByMouse = false;
     d->selectByTouchDrag = true;
-    qCDebug(lcQuickTextInput, "pre-6.4 behavior chosen by import version: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
+    qCDebug(lcQuickTextInput, "pre-6.4 behavior chosen: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
 }
 
 // TODO in 6.7.0: remove the note about versions prior to 6.4 in selectByMouse() documentation
