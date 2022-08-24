@@ -67,7 +67,8 @@ static void initTestRows(QQmlEngine *engine)
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "basic", "QtQuick/Controls/Basic",
         QStringList() << "Calendar" << "TreeViewDelegate");
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "fusion", "QtQuick/Controls/Fusion",
-        QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+        QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove"
+                             << "SliderHandle" << "SwitchIndicator" << "TreeViewDelegate");
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "imagine", "QtQuick/Controls/Imagine");
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "material", "QtQuick/Controls/Material",
         QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator"
