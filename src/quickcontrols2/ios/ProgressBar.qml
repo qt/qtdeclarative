@@ -44,8 +44,14 @@ T.ProgressBar {
                 easing.type: Easing.Linear
                 loops: Animation.Infinite
                 // TODO: workaround for QTBUG-38932; remove once that is fixed
-                onFromChanged: restart()
-                onToChanged: restart()
+                onFromChanged: {
+                    if (control.indeterminate)
+                        restart()
+                }
+                onToChanged: {
+                    if (control.indeterminate)
+                        restart()
+                }
             }
         }
     }
