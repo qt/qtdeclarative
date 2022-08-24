@@ -48,6 +48,7 @@ void QQuickDeliveryAgentPrivate::touchToMouseEvent(QEvent::Type type, const QEve
                                  (type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton),
                                  touchEvent->modifiers(), Qt::MouseEventSynthesizedByQt);
     ret.setAccepted(true); // this now causes the persistent touchpoint to be accepted too
+    ret.setTimestamp(touchEvent->timestamp());
     *mouseEvent = ret;
 }
 
