@@ -19,6 +19,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 /*!
     \qmltype TextArea
     \inherits TextEdit
@@ -509,6 +511,10 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
 
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::readOnlyChanged);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    if (qEnvironmentVariable("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR") == u"old"_s)
+        QQuickTextEdit::setOldSelectionDefault();
+#endif
 }
 
 QQuickTextArea::~QQuickTextArea()
