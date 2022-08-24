@@ -272,5 +272,56 @@ Item {
             compare(layout.item2.isCurrentItem, false)
             compare(layout.item2.layout, layout)
         }
+
+        Component {
+            id: layout_setCurrentIndex_Component
+
+            StackLayout {
+                width: 200
+                height: 200
+
+                property alias firstItem : rect
+                property alias secondItem: rowLayout
+
+                Rectangle {
+                    id: rect
+                    color: "red"
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                RowLayout {
+                    id: rowLayout
+                    spacing: 0
+                    Rectangle {
+                        color: "green"
+                        implicitWidth: 10
+                        implicitHeight: 10
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                    Rectangle {
+                        color: "blue"
+                        implicitWidth: 10
+                        implicitHeight: 10
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+            }
+        }
+
+        function test_setCurrentIndex()
+        {
+            var layout = layout_setCurrentIndex_Component.createObject(container)
+            compare(layout.firstItem.width, 200)
+
+            // Invalidate the StackLayout (and its cached size hints)
+            layout.firstItem.implicitWidth = 42
+
+            layout.currentIndex = 1
+            compare(layout.secondItem.width, 200)   // width should not be -1
+            layout.destroy()
+        }
+
     }
 }
