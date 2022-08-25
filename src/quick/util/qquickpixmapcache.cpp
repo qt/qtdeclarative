@@ -556,6 +556,7 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
         QQuickPixmapReply::ReadError error = QQuickPixmapReply::NoError;
         QString errorString;
         QSize readSize;
+        QQuickTextureFactory *factory = nullptr;
         if (reply->error()) {
             error = QQuickPixmapReply::Loading;
             errorString = reply->errorString();
@@ -563,18 +564,31 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
             QByteArray all = reply->readAll();
             QBuffer buff(&all);
             buff.open(QIODevice::ReadOnly);
-            int frameCount;
-            int const frame = job->data ? job->data->frame : 0;
-            if (!readImage(reply->url(), &buff, &image, &errorString, &readSize, &frameCount,
-                           job->requestRegion, job->requestSize, job->providerOptions, nullptr, frame))
-                error = QQuickPixmapReply::Decoding;
-            else if (job->data)
-                job->data->frameCount = frameCount;
+            QSGTextureReader texReader(&buff, reply->url().fileName());
+            if (backendSupport()->hasOpenGL && texReader.isTexture()) {
+                factory = texReader.read();
+                if (factory) {
+                    readSize = factory->textureSize();
+                } else {
+                    error = QQuickPixmapReply::Decoding;
+                    errorString = QQuickPixmap::tr("Error decoding: %1").arg(reply->url().toString());
+                }
+            } else {
+                int frameCount;
+                int const frame = job->data ? job->data->frame : 0;
+                if (!readImage(reply->url(), &buff, &image, &errorString, &readSize, &frameCount,
+                               job->requestRegion, job->requestSize, job->providerOptions, nullptr, frame))
+                    error = QQuickPixmapReply::Decoding;
+                else if (job->data)
+                    job->data->frameCount = frameCount;
+            }
         }
         // send completion event to the QQuickPixmapReply
+        if (!factory)
+            factory = QQuickTextureFactory::textureFactoryForImage(image);
         mutex.lock();
         if (!cancelled.contains(job))
-            job->postReply(error, errorString, readSize, QQuickTextureFactory::textureFactoryForImage(image));
+            job->postReply(error, errorString, readSize, factory);
         mutex.unlock();
     }
     reply->deleteLater();
