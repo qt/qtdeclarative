@@ -271,6 +271,7 @@ bool QQmlJSScope::causesImplicitComponentWrapping(const QQmlJSMetaProperty &prop
 bool QQmlJSScope::isComponentRootElement() const {
     if (m_flags.testFlag(WrappedInImplicitComponent))
         return true;
+
     auto base = nonCompositeBaseType(parentScope()); // handles null parentScope()
     if (!base)
         return false;
@@ -1005,6 +1006,31 @@ bool QQmlJSScope::isInCustomParserParent() const
     }
 
     return false;
+}
+
+/*!
+ * \internal
+ * if this->isInlineComponent(), then this getter returns the name of the inline
+ * component.
+ */
+std::optional<QString> QQmlJSScope::inlineComponentName() const
+{
+    Q_ASSERT(isInlineComponent() == m_inlineComponentName.has_value());
+    return m_inlineComponentName;
+}
+
+/*!
+ * \internal
+ * If this type is part of an inline component, return its name. Otherwise, if this type
+ * is part of the document root, return the document root name.
+ */
+QQmlJSScope::InlineComponentOrDocumentRootName QQmlJSScope::enclosingInlineComponentName() const
+{
+    for (auto *type = this; type; type = type->parentScope().get()) {
+        if (type->isInlineComponent())
+            return *type->inlineComponentName();
+    }
+    return RootDocumentNameType();
 }
 
 QT_END_NAMESPACE

@@ -240,7 +240,7 @@ void tst_qqmljsscope::componentWrappedObjects()
     QVERIFY(root);
 
     auto children = root->childScopes();
-    QCOMPARE(children.size(), 4);
+    QCOMPARE(children.size(), 6);
 
     const auto isGoodType = [](const QQmlJSScope::ConstPtr &type, const QString &propertyName,
                                bool isWrapped) {
@@ -252,6 +252,13 @@ void tst_qqmljsscope::componentWrappedObjects()
     QVERIFY(isGoodType(children[1], u"nonWrapped2"_s, false));
     QVERIFY(isGoodType(children[2], u"nonWrapped3"_s, false));
     QVERIFY(isGoodType(children[3], u"wrapped"_s, true));
+    QCOMPARE(children[4]->childScopes().size(), 3);
+    QVERIFY(isGoodType(children[4]->childScopes()[0], u"wrapped"_s, true));
+
+    QCOMPARE(children[4]->childScopes()[1]->childScopes().size(), 1);
+    QVERIFY(isGoodType(children[4]->childScopes()[1]->childScopes()[0], u"wrapped2"_s, true));
+    QCOMPARE(children[4]->childScopes()[2]->childScopes().size(), 1);
+    QVERIFY(isGoodType(children[4]->childScopes()[2]->childScopes()[0], u"wrapped3"_s, false));
 }
 
 void tst_qqmljsscope::labsQmlModelsSanity()

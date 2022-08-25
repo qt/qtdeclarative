@@ -18,6 +18,7 @@
 #include "qqmljsutils_p.h"
 
 #include <algorithm>
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
@@ -1325,9 +1326,11 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
         const QTypeRevision revision = QQmlJSScope::resolveTypes(
                     m_currentScope, m_rootScopeImports, &m_usedTypes);
         if (m_nextIsInlineComponent) {
+            Q_ASSERT(std::holds_alternative<InlineComponentNameType>(m_currentInlineComponentName));
+            const QString &name = std::get<InlineComponentNameType>(m_currentInlineComponentName);
             m_currentScope->setIsInlineComponent(true);
-            m_rootScopeImports.insert(
-                        m_inlineComponentName.toString(), { m_currentScope, revision });
+            m_currentScope->setInlineComponentName(name);
+            m_rootScopeImports.insert(name, { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
 
@@ -1358,20 +1361,20 @@ void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 
 bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
 {
-    if (!m_inlineComponentName.isNull()) {
+    if (!std::holds_alternative<RootDocumentNameType>(m_currentInlineComponentName)) {
         m_logger->log(u"Nested inline components are not supported"_s, qmlSyntax,
                       component->firstSourceLocation());
         return true;
     }
 
     m_nextIsInlineComponent = true;
-    m_inlineComponentName = component->name;
+    m_currentInlineComponentName = component->name.toString();
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(UiInlineComponent *)
 {
-    m_inlineComponentName = QStringView();
+    m_currentInlineComponentName = RootDocumentNameType();
     Q_ASSERT(!m_nextIsInlineComponent);
 }
 

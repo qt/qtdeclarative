@@ -146,7 +146,11 @@ protected:
     QQmlJSImporter *m_importer = nullptr;
     QQmlJSLogger *m_logger = nullptr;
 
-    QStringView m_inlineComponentName;
+    using RootDocumentNameType = QQmlJSScope::RootDocumentNameType;
+    using InlineComponentNameType = QQmlJSScope::InlineComponentNameType;
+    using InlineComponentOrDocumentRootName = QQmlJSScope::RootDocumentNameType;
+    QQmlJSScope::InlineComponentOrDocumentRootName m_currentInlineComponentName =
+            QQmlJSScope::RootDocumentNameType();
     bool m_nextIsInlineComponent = false;
     bool m_rootIsSingleton = false;
     QQmlJSScope::Ptr m_savedBindingOuterScope;

@@ -7,4 +7,18 @@ Item {
     property Component nonWrapped3: DelegateChooser { property int nonWrapped3 }
 
     property Component wrapped: Text { property int wrapped }
+
+    component MyInlineComponent: Item {
+        property Component wrapped: Text { property int wrapped }
+
+        TableView {
+            delegate: Text { property int wrapped2 }
+        }
+
+        TableView {
+            delegate: ComponentType { property int wrapped3 }
+        }
+    }
+
+    property var wrappedInInlineComponent: MyInlineComponent {}
 }

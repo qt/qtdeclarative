@@ -45,6 +45,14 @@ public:
     using ConstPtr = QDeferredSharedPointer<const QQmlJSScope>;
     using WeakConstPtr = QDeferredWeakPointer<const QQmlJSScope>;
 
+    using InlineComponentNameType = QString;
+    using RootDocumentNameType = std::monostate; // an empty type that has std::hash
+    /*!
+     *  A Hashable type to differentiate document roots from different inline components.
+     */
+    using InlineComponentOrDocumentRootName =
+            std::variant<InlineComponentNameType, RootDocumentNameType>;
+
     enum ScopeType
     {
         JSFunctionScope,
@@ -466,6 +474,14 @@ public:
     ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
     ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }
 
+    void setInlineComponentName(const QString &inlineComponentName)
+    {
+        Q_ASSERT(isInlineComponent());
+        m_inlineComponentName = inlineComponentName;
+    }
+    std::optional<QString> inlineComponentName() const;
+    InlineComponentOrDocumentRootName enclosingInlineComponentName() const;
+
     QVector<QQmlJSScope::Ptr> childScopes()
     {
         return m_childScopes;
@@ -651,6 +667,8 @@ private:
 
     QString m_qualifiedName;
     QString m_moduleName;
+
+    std::optional<QString> m_inlineComponentName;
 };
 Q_DECLARE_TYPEINFO(QQmlJSScope::QmlIRCompatibilityBindingData, Q_RELOCATABLE_TYPE);
 
