@@ -530,8 +530,16 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
 
 bool QQmlTypeLoader::Blob::addScriptImport(const QQmlTypeLoader::Blob::PendingImportPtr &import)
 {
-    QUrl scriptUrl = finalUrl().resolved(QUrl(import->uri));
-    QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
+    const QUrl url(import->uri);
+    const auto module = m_typeLoader->engine()->handle()->moduleForUrl(url);
+    QQmlRefPointer<QQmlScriptBlob> blob;
+    if (module.native) {
+        blob.adopt(new QQmlScriptBlob(url, m_typeLoader));
+        blob->initializeFromNative(*module.native);
+        blob->tryDone();
+    } else {
+        blob = typeLoader()->getScript(finalUrl().resolved(url));
+    }
     addDependency(blob.data());
     scriptImported(blob, import->location, import->qualifier, QString());
     return true;

@@ -714,19 +714,18 @@ public:
     QQmlRefPointer<ExecutableCompilationUnit> compileModule(
             const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
 
-    mutable QMutex moduleMutex;
-    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> modules;
+    void injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit);
+    QV4::Value *registerNativeModule(const QUrl &url, const QV4::Value &module);
 
-    // QV4::PersistentValue would be preferred, but using QHash will create copies,
-    // and QV4::PersistentValue doesn't like creating copies.
-    // Instead, we allocate a raw pointer using the same manual memory management
-    // technique in QV4::PersistentValue.
-    QHash<QUrl, QV4::Value*> nativeModules;
+    struct Module {
+        QQmlRefPointer<ExecutableCompilationUnit> compiled;
 
-    void injectModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit);
-    QQmlRefPointer<ExecutableCompilationUnit> moduleForUrl(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr) const;
-    QQmlRefPointer<ExecutableCompilationUnit> loadModule(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr);
-    void registerModule(const QString &name, const QJSValue &module);
+        // We can pass a raw value pointer here, but nowhere else. See below.
+        Value *native = nullptr;
+    };
+
+    Module moduleForUrl(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr) const;
+    Module loadModule(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr);
 
     bool diskCacheEnabled() const;
 
@@ -767,6 +766,15 @@ private:
     QHash<QString, quint32> m_consoleCount;
 
     QVector<Deletable *> m_extensionData;
+
+    mutable QMutex moduleMutex;
+    QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> modules;
+
+    // QV4::PersistentValue would be preferred, but using QHash will create copies,
+    // and QV4::PersistentValue doesn't like creating copies.
+    // Instead, we allocate a raw pointer using the same manual memory management
+    // technique in QV4::PersistentValue.
+    QHash<QUrl, Value *> nativeModules;
 };
 
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \

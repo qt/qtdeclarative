@@ -23,7 +23,7 @@ QQmlRefPointer<QQmlContextData> QQmlScriptData::qmlContextDataForContext(
 {
     Q_ASSERT(parentQmlContextData && parentQmlContextData->engine());
 
-    if (m_precompiledScript->isESModule())
+    if (!m_precompiledScript || m_precompiledScript->isESModule())
         return nullptr;
 
     QQmlRefPointer<QQmlContextData> qmlContextData = m_precompiledScript->isSharedLibrary()

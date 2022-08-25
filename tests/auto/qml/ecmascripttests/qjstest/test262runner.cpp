@@ -503,7 +503,7 @@ static TestCase::Result executeTest(const QByteArray &data, bool runAsModule = f
                 module = vm.compileModule(url.toString(), QString::fromUtf8(content.constData(), content.length()), QFileInfo(f).lastModified());
                 if (vm.hasException)
                     break;
-                vm.injectModule(module);
+                vm.injectCompiledModule(module);
             } else {
                 vm.throwError(QStringLiteral("Could not load module"));
                 break;
@@ -511,16 +511,16 @@ static TestCase::Result executeTest(const QByteArray &data, bool runAsModule = f
 
             for (const QString &request: module->moduleRequests()) {
                 const QUrl absoluteRequest = module->finalUrl().resolved(QUrl(request));
-                if (!vm.modules.contains(absoluteRequest))
+                const auto module = vm.moduleForUrl(absoluteRequest);
+                if (module.native == nullptr && module.compiled == nullptr)
                     modulesToLoad << absoluteRequest;
             }
         }
 
         if (!vm.hasException) {
-            if (auto rootModuleUnit = vm.loadModule(rootModuleUrl)) {
-                if (rootModuleUnit->instantiate(&vm))
-                    rootModuleUnit->evaluate();
-            }
+            const auto rootModule = vm.loadModule(rootModuleUrl);
+            if (rootModule.compiled && rootModule.compiled->instantiate(&vm))
+                rootModule.compiled->evaluate();
         }
     } else {
         QV4::ScopedContext ctx(scope, vm.rootContext());

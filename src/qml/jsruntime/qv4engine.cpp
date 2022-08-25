@@ -2035,7 +2035,7 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
     return ExecutableCompilationUnit::create(std::move(unit));
 }
 
-void ExecutionEngine::injectModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit)
+void ExecutionEngine::injectCompiledModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit)
 {
     // Injection can happen from the QML type loader thread for example, but instantiation and
     // evaluation must be limited to the ExecutionEngine's thread.
@@ -2043,52 +2043,59 @@ void ExecutionEngine::injectModule(const QQmlRefPointer<ExecutableCompilationUni
     modules.insert(moduleUnit->finalUrl(), moduleUnit);
 }
 
-QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::moduleForUrl(const QUrl &_url, const ExecutableCompilationUnit *referrer) const
+ExecutionEngine::Module ExecutionEngine::moduleForUrl(
+        const QUrl &url, const ExecutableCompilationUnit *referrer) const
 {
-    QUrl url = QQmlTypeLoader::normalize(_url);
-    if (referrer)
-        url = referrer->finalUrl().resolved(url);
-
     QMutexLocker moduleGuard(&moduleMutex);
-    auto existingModule = modules.find(url);
+    const auto nativeModule = nativeModules.find(url);
+    if (nativeModule != nativeModules.end())
+        return Module { nullptr, *nativeModule };
+
+    const QUrl resolved = referrer
+            ? referrer->finalUrl().resolved(QQmlTypeLoader::normalize(url))
+            : QQmlTypeLoader::normalize(url);
+    auto existingModule = modules.find(resolved);
     if (existingModule == modules.end())
-        return nullptr;
-    return *existingModule;
+        return Module { nullptr, nullptr };
+    return Module { *existingModule, nullptr };
 }
 
-QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::loadModule(const QUrl &_url, const ExecutableCompilationUnit *referrer)
+ExecutionEngine::Module ExecutionEngine::loadModule(const QUrl &url, const ExecutableCompilationUnit *referrer)
 {
-    QUrl url = QQmlTypeLoader::normalize(_url);
-    if (referrer)
-        url = referrer->finalUrl().resolved(url);
-
     QMutexLocker moduleGuard(&moduleMutex);
-    auto existingModule = modules.find(url);
+    const auto nativeModule = nativeModules.find(url);
+    if (nativeModule != nativeModules.end())
+        return Module { nullptr, *nativeModule };
+
+    const QUrl resolved = referrer
+            ? referrer->finalUrl().resolved(QQmlTypeLoader::normalize(url))
+            : QQmlTypeLoader::normalize(url);
+    auto existingModule = modules.find(resolved);
     if (existingModule != modules.end())
-        return *existingModule;
+        return Module { *existingModule, nullptr };
 
     moduleGuard.unlock();
 
-    auto newModule = compileModule(url);
+    auto newModule = compileModule(resolved);
     if (newModule) {
         moduleGuard.relock();
-        modules.insert(url, newModule);
+        modules.insert(resolved, newModule);
     }
 
-    return newModule;
+    return Module { newModule, nullptr };
 }
 
-void ExecutionEngine::registerModule(const QString &_name, const QJSValue &module)
+QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Value &module)
 {
-    const QUrl url(_name);
     QMutexLocker moduleGuard(&moduleMutex);
     const auto existingModule = nativeModules.find(url);
     if (existingModule != nativeModules.end())
-        return;
+        return nullptr;
 
-    QV4::Value* val = this->memoryManager->m_persistentValues->allocate();
-    *val = QJSValuePrivate::asReturnedValue(&module);
+    QV4::Value *val = this->memoryManager->m_persistentValues->allocate();
+    *val = module.asReturnedValue();
     nativeModules.insert(url, val);
+    return val;
 }
 
 bool ExecutionEngine::diskCacheEnabled() const

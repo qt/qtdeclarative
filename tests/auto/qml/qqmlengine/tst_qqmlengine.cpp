@@ -70,6 +70,7 @@ private slots:
     void stringToColor();
     void qobjectToString();
     void qtNamespaceInQtObject();
+    void nativeModuleImport();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1613,6 +1614,27 @@ void tst_qqmlengine::qtNamespaceInQtObject()
 
     // QObject is also there.
     QVERIFY(qtObject.hasProperty(QStringLiteral("objectName")));
+}
+
+void tst_qqmlengine::nativeModuleImport()
+{
+    QQmlEngine engine;
+
+    QJSValue name("TheName");
+    QJSValue obj = engine.newObject();
+    obj.setProperty("name", name);
+    engine.registerModule("info.mjs", obj);
+
+    QQmlComponent c(&engine, testFileUrl("nativeModuleImport.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("a").toString(), QStringLiteral("Hello World"));
+    QCOMPARE(o->property("b").toString(), QStringLiteral("TheName"));
+    QCOMPARE(o->property("c").toString(), QStringLiteral("TheName"));
+    QCOMPARE(o->property("d").toString(), QStringLiteral("TheName"));
+    QCOMPARE(o->property("e").toString(), QStringLiteral("TheName"));
 }
 
 QTEST_MAIN(tst_qqmlengine)

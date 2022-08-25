@@ -50,6 +50,7 @@ protected:
 private:
     void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
     void initializeFromCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit);
+    void initializeFromNative(const QV4::Value &value);
 
     QList<ScriptReference> m_scripts;
     QQmlRefPointer<QQmlScriptData> m_scriptData;

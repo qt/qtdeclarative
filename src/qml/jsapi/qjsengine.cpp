@@ -566,20 +566,26 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 QJSValue QJSEngine::importModule(const QString &fileName)
 {
     const QUrl url = urlForFileName(QFileInfo(fileName).canonicalFilePath());
-    auto moduleUnit = m_v4Engine->loadModule(url);
+    const auto module = m_v4Engine->loadModule(url);
     if (m_v4Engine->hasException)
         return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
 
     QV4::Scope scope(m_v4Engine);
-    QV4::Scoped<QV4::Module> moduleNamespace(scope, moduleUnit->instantiate(m_v4Engine));
-    if (m_v4Engine->hasException)
-        return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
-    moduleUnit->evaluate();
-    if (!m_v4Engine->isInterrupted.loadRelaxed())
-        return QJSValuePrivate::fromReturnedValue(moduleNamespace->asReturnedValue());
+    if (const auto compiled = module.compiled) {
+        QV4::Scoped<QV4::Module> moduleNamespace(scope, compiled->instantiate(m_v4Engine));
+        if (m_v4Engine->hasException)
+            return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
+        compiled->evaluate();
+        if (!m_v4Engine->isInterrupted.loadRelaxed())
+            return QJSValuePrivate::fromReturnedValue(moduleNamespace->asReturnedValue());
+        return QJSValuePrivate::fromReturnedValue(
+                    m_v4Engine->newErrorObject(QStringLiteral("Interrupted"))->asReturnedValue());
+    }
 
-    return QJSValuePrivate::fromReturnedValue(
-            m_v4Engine->newErrorObject(QStringLiteral("Interrupted"))->asReturnedValue());
+    // If there is neither a native nor a compiled module, we should have seen an exception
+    Q_ASSERT(module.native);
+
+    return QJSValuePrivate::fromReturnedValue(module.native->asReturnedValue());
 }
 
 /*!
@@ -609,7 +615,9 @@ QJSValue QJSEngine::importModule(const QString &fileName)
  */
 bool QJSEngine::registerModule(const QString &moduleName, const QJSValue &value)
 {
-    m_v4Engine->registerModule(moduleName, value);
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v4Value(scope, QJSValuePrivate::asReturnedValue(&value));
+    m_v4Engine->registerNativeModule(QUrl(moduleName), v4Value);
     if (m_v4Engine->hasException)
         return false;
     return true;
