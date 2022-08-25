@@ -560,7 +560,11 @@ void QQuickDeliveryAgentPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem
 
     if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1, reason);
-
+    if (isSubsceneAgent) {
+        auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
+        qCDebug(lcFocus) << "    delegating clearFocusInScope to" << da;
+        QQuickWindowPrivate::get(rootItem->window())->deliveryAgentPrivate()->clearFocusInScope(da->rootItem(), item, reason, options);
+    }
     if (oldActiveFocusItem == activeFocusItem)
         qCDebug(lcFocus) << "activeFocusItem remains" << activeFocusItem << "in" << q;
     else

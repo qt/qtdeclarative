@@ -35,6 +35,7 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickpointhandler_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
@@ -154,6 +155,7 @@ public:
 private slots:
     void passiveGrabberOrder();
     void tapHandlerDoesntOverrideSubsceneGrabber();
+    void undoDelegationWhenSubsceneFocusCleared();
     void touchCompression();
     void hoverPropagation_nested_data();
     void hoverPropagation_nested();
@@ -247,6 +249,31 @@ void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG
     qCDebug(lcTests) << "clicking subscene TextEdit set cursorPos to" << cursorPos;
     QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos);
     QCOMPARE(clickSpy.count(), 0); // doesn't tap
+}
+
+void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-105192
+{
+    QQuickView window;
+#ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
+    QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
+#endif
+    QVERIFY(QQuickTest::initView(window, testFileUrl("listViewDelegate.qml")));
+    QQuickListView *listView = window.rootObject()->findChild<QQuickListView*>();
+    QVERIFY(listView);
+
+    // put the ListView into a SubsceneRootItem
+    SubsceneRootItem subscene(listView, listView->boundingRect(), window.rootObject());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // populate a delegate in ListView
+    listView->setModel(1);
+    QQuickItem *delegate = nullptr;
+    QTRY_VERIFY(QQuickVisualTestUtils::findViewDelegateItem(listView, 0, delegate));
+    QCOMPARE(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem, delegate);
+    delete listView;
+    QVERIFY(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem != delegate);
 }
 
 void tst_qquickdeliveryagent::touchCompression()
