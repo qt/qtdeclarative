@@ -131,6 +131,7 @@ private slots:
     void passiveGrabberOrder();
     void passiveGrabberItems();
     void tapHandlerDoesntOverrideSubsceneGrabber();
+    void undoDelegationWhenSubsceneFocusCleared();
     void touchCompression();
     void hoverPropagation_nested_data();
     void hoverPropagation_nested();
@@ -351,6 +352,41 @@ void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG
     qCDebug(lcTests) << "clicking subscene TextEdit set cursorPos to" << cursorPos;
     QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos);
     QCOMPARE(clickSpy.count(), 0); // doesn't tap
+}
+
+void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-105192
+{
+    QQuickView window;
+#ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
+    QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
+#endif
+    QVERIFY(QQuickTest::initView(window, testFileUrl("listViewDelegate.qml")));
+    QQuickItem *listView = window.rootObject()->findChild<QQuickItem*>("listView");
+    QVERIFY(listView);
+
+    // put the ListView into a SubsceneRootItem
+    SubsceneRootItem subscene(listView, listView->boundingRect(), window.rootObject());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // Wait for delegate to be created
+    QTest::qWait(200);
+
+    // Find the created delegate
+    QQuickItem *delegate = nullptr;
+    QList<QQuickItem *> listViewItems = listView->property("contentItem").value<QQuickItem *>()->childItems();
+    for (QQuickItem *item : listViewItems) {
+        if (item->objectName() == "delegate") {
+            delegate = item;
+            break;
+        }
+    }
+    QVERIFY(delegate);
+
+    QVERIFY(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem == delegate);
+    delete listView;
+    QVERIFY(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem != delegate);
 }
 
 void tst_qquickdeliveryagent::touchCompression()
