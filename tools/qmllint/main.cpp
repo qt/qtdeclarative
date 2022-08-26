@@ -31,7 +31,7 @@ constexpr int JSON_LOGGING_FORMAT_REVISION = 3;
 
 int main(int argv, char *argc[])
 {
-    qSetGlobalQHashSeed(0);
+    QHashSeed::setDeterministicGlobalSeed();
     QList<QQmlJSLogger::Category> categories;
 
     QCoreApplication app(argv, argc);

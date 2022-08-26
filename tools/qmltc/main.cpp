@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 {
     // Produce reliably the same output for the same input by disabling QHash's
     // random seeding.
-    qSetGlobalQHashSeed(0);
+    QHashSeed::setDeterministicGlobalSeed();
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(u"qmltc"_s);
     QCoreApplication::setApplicationVersion(QStringLiteral(QT_VERSION_STR));

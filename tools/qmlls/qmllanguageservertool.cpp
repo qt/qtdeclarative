@@ -127,7 +127,7 @@ int main(int argv, char *argc[])
         perror("Cannot set mode for stdin");
 #endif
 
-    qSetGlobalQHashSeed(0);
+    QHashSeed::setDeterministicGlobalSeed();
     QCoreApplication app(argv, argc);
     QCoreApplication::setApplicationName("qmlls");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
