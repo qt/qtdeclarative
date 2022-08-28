@@ -34,7 +34,7 @@ class BaselineJIT final: public Moth::ByteCodeHandler
 {
 public:
     BaselineJIT(QV4::Function *);
-    virtual ~BaselineJIT() Q_DECL_OVERRIDE;
+    ~BaselineJIT() override;
 
     void generate();
 

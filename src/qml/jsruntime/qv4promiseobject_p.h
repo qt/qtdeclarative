@@ -34,7 +34,7 @@ class ReactionHandler : public QObject
 
 public:
     ReactionHandler(QObject *parent = nullptr);
-    virtual ~ReactionHandler() override;
+    ~ReactionHandler() override;
 
     void addReaction(ExecutionEngine *e, const Value *reaction, const Value *value);
     void addResolveThenable(ExecutionEngine *e, const PromiseObject *promise, const Object *thenable, const FunctionObject *then);
