@@ -43,7 +43,7 @@ public:
     {
     }
 
-    virtual ~QQmlProfilerClientPrivate() override;
+    ~QQmlProfilerClientPrivate() override;
 
     void sendRecordingStatus(int engineId);
     bool updateFeatures(ProfileFeature feature);
