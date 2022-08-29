@@ -104,8 +104,10 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
     for (const QQuickStateAction &action : qAsConst(applyList)) {
         if (action.toBinding)
             d->bindingsList << action;
-        if (action.fromBinding)
-            QQmlPropertyPrivate::removeBinding(action.property); // Disable current binding
+        if (action.fromBinding) {
+            auto property = action.property;
+            QQmlAnyBinding::removeBindingFrom(property); // Disable current binding
+        }
         if (action.event && action.event->changesBindings()) {  //### assume isReversable()?
             d->bindingsList << action;
             action.event->clearBindings();
@@ -158,8 +160,10 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
                 continue;
             }
 
-            if (action.toBinding)
-                QQmlPropertyPrivate::removeBinding(action.property); // Make sure this is disabled during the transition
+            if (action.toBinding) {
+                auto property = action.property;
+                QQmlAnyBinding::removeBindingFrom(property); // Make sure this is disabled during the transition
+            }
 
             QQmlPropertyPrivate::write(action.property, action.fromValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
         }
@@ -226,7 +230,8 @@ void QQuickTransitionManager::cancel()
 
     for (const QQuickStateAction &action : qAsConst(d->bindingsList)) {
         if (action.toBinding && action.deletableToBinding) {
-            QQmlPropertyPrivate::removeBinding(action.property);
+            auto property = action.property;
+            QQmlAnyBinding::removeBindingFrom(property);
         } else if (action.event) {
             //### what do we do here?
         }
