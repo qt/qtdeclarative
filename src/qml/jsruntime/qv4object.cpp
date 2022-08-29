@@ -17,9 +17,13 @@
 #include "qv4symbol_p.h"
 #include "qv4proxy_p.h"
 
+#include <QtCore/qloggingcategory.h>
+
 #include <stdint.h>
 
 using namespace QV4;
+
+Q_LOGGING_CATEGORY(lcJavaScriptGlobals, "qt.qml.js.globals")
 
 DEFINE_OBJECT_VTABLE(Object);
 
@@ -946,11 +950,28 @@ bool Object::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property
         return o->internalDefineOwnProperty(scope.engine, index, nullptr, p, attrs);
     }
 
-    auto memberIndex = o->internalClass()->find(id);
+    Scoped<InternalClass> ic(scope, o->internalClass());
+    auto memberIndex = ic->d()->find(id);
 
     if (!memberIndex.isValid()) {
         if (!o->isExtensible())
             return false;
+
+        // If the IC is locked, you're not allowed to shadow any unconfigurable properties.
+        if (ic->d()->isLocked()) {
+            while (Heap::Object *prototype = ic->d()->prototype) {
+                ic = prototype->internalClass;
+                const auto entry = ic->d()->find(id);
+                if (entry.isValid()) {
+                    if (entry.attributes.isConfigurable())
+                        break;
+                    qCWarning(lcJavaScriptGlobals).noquote()
+                            << QStringLiteral("You cannot shadow the locked property "
+                                              "'%1' in QML.").arg(id.toQString());
+                    return false;
+                }
+            }
+        }
 
         Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
         ScopedProperty pd(scope);
@@ -985,11 +1006,12 @@ bool Object::virtualSetPrototypeOf(Managed *m, const Object *proto)
 {
     Q_ASSERT(m->isObject());
     Object *o = static_cast<Object *>(m);
-    Heap::Object *current = o->internalClass()->prototype;
+    Heap::InternalClass *ic = o->internalClass();
+    Heap::Object *current = ic->prototype;
     Heap::Object *protod = proto ? proto->d() : nullptr;
     if (current == protod)
         return true;
-    if (!o->internalClass()->isExtensible())
+    if (!ic->isExtensible() || ic->isLocked())
         return false;
     Heap::Object *p = protod;
     while (p) {
@@ -999,7 +1021,7 @@ bool Object::virtualSetPrototypeOf(Managed *m, const Object *proto)
             break;
         p = p->prototype();
     }
-    o->setInternalClass(o->internalClass()->changePrototype(protod));
+    o->setInternalClass(ic->changePrototype(protod));
     return true;
 }
 

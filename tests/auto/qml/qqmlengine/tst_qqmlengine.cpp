@@ -71,6 +71,7 @@ private slots:
     void qobjectToString();
     void qtNamespaceInQtObject();
     void nativeModuleImport();
+    void lockedRootObject();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1635,6 +1636,27 @@ void tst_qqmlengine::nativeModuleImport()
     QCOMPARE(o->property("c").toString(), QStringLiteral("TheName"));
     QCOMPARE(o->property("d").toString(), QStringLiteral("TheName"));
     QCOMPARE(o->property("e").toString(), QStringLiteral("TheName"));
+}
+
+void tst_qqmlengine::lockedRootObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("lockedRootObject.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(
+                QtWarningMsg, "You cannot shadow the locked property 'hasOwnProperty' in QML.");
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("myErrorName").toString(), QStringLiteral("MyError1"));
+    QCOMPARE(o->property("errorName").toString(), QStringLiteral("MyError2"));
+    QCOMPARE(o->property("mathMax").toInt(), 4);
+    QCOMPARE(o->property("extendGlobal").toInt(), 32);
+    QCOMPARE(o->property("prototypeTrick").toString(), QStringLiteral("SyntaxError"));
+    QCOMPARE(o->property("shadowMethod1").toString(), QStringLiteral("not a TypeError"));
+    QCOMPARE(o->property("shadowMethod2").toBool(), false);
+    QCOMPARE(o->property("changeObjectProto1").toString(), QStringLiteral("not an Object"));
+    QCOMPARE(o->property("changeObjectProto2").toBool(), false);
+    QCOMPARE(o->property("defineProperty1").toString(), QStringLiteral("not a URIError"));
+    QCOMPARE(o->property("defineProperty2").toBool(), false);
 }
 
 QTEST_MAIN(tst_qqmlengine)

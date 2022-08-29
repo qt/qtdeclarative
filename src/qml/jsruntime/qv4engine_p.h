@@ -673,6 +673,7 @@ public:
     void createQtObject();
 
     void freezeObject(const QV4::Value &value);
+    void lockObject(const QV4::Value &value);
 
     // Return the list of illegal id names (the names of the properties on the global object)
     const QSet<QString> &illegalNames() const;

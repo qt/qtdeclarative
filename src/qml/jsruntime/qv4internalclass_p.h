@@ -282,6 +282,7 @@ struct InternalClassTransition
         ProtoClass      = StructureChange | (1 << 3),
         Sealed          = StructureChange | (1 << 4),
         Frozen          = StructureChange | (1 << 5),
+        Locked          = StructureChange | (1 << 6),
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -299,6 +300,7 @@ struct InternalClass : Base {
         Sealed        = 1 << 1,
         Frozen        = 1 << 2,
         UsedAsProto   = 1 << 3,
+        Locked        = 1 << 4,
     };
     enum { MaxRedundantTransitions = 255 };
 
@@ -324,6 +326,7 @@ struct InternalClass : Base {
     bool isSealed() const { return flags & Sealed; }
     bool isFrozen() const { return flags & Frozen; }
     bool isUsedAsProto() const { return flags & UsedAsProto; }
+    bool isLocked() const { return flags & Locked; }
 
     void init(ExecutionEngine *engine);
     void init(InternalClass *other);
@@ -331,6 +334,7 @@ struct InternalClass : Base {
 
     Q_QML_PRIVATE_EXPORT QString keyAt(uint index) const;
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
+    Q_REQUIRED_RESULT InternalClass *locked();
 
     static void addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry);
     Q_REQUIRED_RESULT InternalClass *addMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr);

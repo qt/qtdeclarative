@@ -395,6 +395,9 @@ static Heap::InternalClass *cleanInternalClass(Heap::InternalClass *orig)
         case InternalClassTransition::Frozen:
             child = child->d()->frozen();
             continue;
+        case InternalClassTransition::Locked:
+            child = child->d()->locked();
+            continue;
         default:
             Q_ASSERT(it->flags != 0);
             Q_ASSERT(it->flags < InternalClassTransition::StructureChange);
@@ -509,6 +512,24 @@ Heap::InternalClass *InternalClass::nonExtensible()
 
     Heap::InternalClass *newClass = engine->newClass(this);
     newClass->flags |= NotExtensible;
+
+    t.lookup = newClass;
+    Q_ASSERT(t.lookup);
+    return newClass;
+}
+
+InternalClass *InternalClass::locked()
+{
+    if (isLocked())
+        return this;
+
+    Transition temp = { { PropertyKey::invalid() }, nullptr, Transition::Locked};
+    Transition &t = lookupOrInsertTransition(temp);
+    if (t.lookup)
+        return t.lookup;
+
+    Heap::InternalClass *newClass = engine->newClass(this);
+    newClass->flags |= Locked;
 
     t.lookup = newClass;
     Q_ASSERT(t.lookup);

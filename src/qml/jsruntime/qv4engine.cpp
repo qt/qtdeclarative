@@ -2129,7 +2129,7 @@ QV4::ReturnedValue ExecutionEngine::callInContext(QV4::Function *function, QObje
 void ExecutionEngine::initQmlGlobalObject()
 {
     initializeGlobal();
-    freezeObject(*globalObject);
+    lockObject(*globalObject);
 }
 
 void ExecutionEngine::initializeGlobal()
@@ -2231,6 +2231,58 @@ void ExecutionEngine::freezeObject(const QV4::Value &value)
     QV4::Scope scope(this);
     QV4::ScopedObject o(scope, value);
     freeze_recursive(this, o);
+}
+
+void ExecutionEngine::lockObject(const QV4::Value &value)
+{
+    QV4::Scope scope(this);
+    ScopedObject object(scope, value);
+    if (!object)
+        return;
+
+    std::vector<Heap::Object *> stack { object->d() };
+
+    // Methods meant to be overridden
+    const PropertyKey writableMembers[] = {
+        id_toString()->propertyKey(),
+        id_toLocaleString()->propertyKey(),
+        id_valueOf()->propertyKey(),
+        id_constructor()->propertyKey()
+    };
+    const auto writableBegin = std::begin(writableMembers);
+    const auto writableEnd = std::end(writableMembers);
+
+    while (!stack.empty()) {
+        object = stack.back();
+        stack.pop_back();
+
+        if (object->as<QV4::QObjectWrapper>() || object->internalClass()->isLocked())
+            continue;
+
+        Scoped<InternalClass> locked(scope, object->internalClass()->locked());
+        QV4::ScopedObject member(scope);
+
+        // Taking this copy is cheap. It's refcounted. This avoids keeping a reference
+        // to the original IC.
+        const SharedInternalClassData<PropertyKey> nameMap = locked->d()->nameMap;
+
+        for (uint i = 0, end = locked->d()->size; i < end; ++i) {
+            const PropertyKey key = nameMap.at(i);
+            if (!key.isStringOrSymbol())
+                continue;
+            if ((member = *object->propertyData(i))) {
+                stack.push_back(member->d());
+                if (std::find(writableBegin, writableEnd, key) == writableEnd) {
+                    PropertyAttributes attributes = locked->d()->find(key).attributes;
+                    attributes.setConfigurable(false);
+                    attributes.setWritable(false);
+                    locked = locked->changeMember(key, attributes);
+                }
+            }
+        }
+
+        object->setInternalClass(locked->d());
+    }
 }
 
 void ExecutionEngine::startTimer(const QString &timerName)
