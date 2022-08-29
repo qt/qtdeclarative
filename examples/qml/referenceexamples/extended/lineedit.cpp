@@ -16,8 +16,11 @@ int LineEditExtension::leftMargin() const
 void LineEditExtension::setLeftMargin(int l)
 {
     QMargins m = m_lineedit->textMargins();
-    m.setLeft(l);
-    m_lineedit->setTextMargins(m);
+    if (m.left() != l) {
+        m.setLeft(l);
+        m_lineedit->setTextMargins(m);
+        emit marginsChanged();
+    }
 }
 
 int LineEditExtension::rightMargin() const
@@ -28,8 +31,11 @@ int LineEditExtension::rightMargin() const
 void LineEditExtension::setRightMargin(int r)
 {
     QMargins m = m_lineedit->textMargins();
-    m.setRight(r);
-    m_lineedit->setTextMargins(m);
+    if (m.right() != r) {
+        m.setRight(r);
+        m_lineedit->setTextMargins(m);
+        emit marginsChanged();
+    }
 }
 
 int LineEditExtension::topMargin() const
@@ -40,8 +46,11 @@ int LineEditExtension::topMargin() const
 void LineEditExtension::setTopMargin(int t)
 {
     QMargins m = m_lineedit->textMargins();
-    m.setTop(t);
-    m_lineedit->setTextMargins(m);
+    if (m.top() != t) {
+        m.setTop(t);
+        m_lineedit->setTextMargins(m);
+        emit marginsChanged();
+    }
 }
 
 int LineEditExtension::bottomMargin() const
@@ -52,8 +61,11 @@ int LineEditExtension::bottomMargin() const
 void LineEditExtension::setBottomMargin(int b)
 {
     QMargins m = m_lineedit->textMargins();
-    m.setBottom(b);
-    m_lineedit->setTextMargins(m);
+    if (m.bottom() != b) {
+        m.setBottom(b);
+        m_lineedit->setTextMargins(m);
+        emit marginsChanged();
+    }
 }
 
 
