@@ -68,7 +68,9 @@ void Object::setInternalClass(Heap::InternalClass *ic)
         }
     }
 
-    if (ic->isUsedAsProto())
+    // Before the engine is done initializing, we cannot have any lookups.
+    // Therefore, there is no point in updating the proto IDs.
+    if (ic->engine->isInitialized && ic->isUsedAsProto())
         ic->updateProtoUsage(p);
 
 }
@@ -734,6 +736,9 @@ ReturnedValue Object::virtualInstanceOf(const Object *typeObject, const Value &v
 
 ReturnedValue Object::virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup)
 {
+    // Otherwise we cannot trust the protoIds
+    Q_ASSERT(engine->isInitialized);
+
     Heap::Object *obj = object->d();
     PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
     if (name.isArrayIndex()) {
@@ -769,6 +774,9 @@ ReturnedValue Object::virtualResolveLookupGetter(const Object *object, Execution
 
 bool Object::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value)
 {
+    // Otherwise we cannot trust the protoIds
+    Q_ASSERT(engine->isInitialized);
+
     Scope scope(engine);
     ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
 

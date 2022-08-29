@@ -44,7 +44,8 @@ struct Q_QML_EXPORT EngineBase {
 #endif
 
     quint8 isExecutingInRegExpJIT = false;
-    quint8 padding[3];
+    quint8 isInitialized = false;
+    quint8 padding[2];
     MemoryManager *memoryManager = nullptr;
 
     qint32 callDepth = 0;

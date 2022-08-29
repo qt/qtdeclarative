@@ -867,6 +867,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     QV4::QObjectWrapper::initializeBindings(this);
 
     m_delayedCallQueue.init(this);
+    isInitialized = true;
 }
 
 ExecutionEngine::~ExecutionEngine()
@@ -2182,8 +2183,11 @@ const QSet<QString> &ExecutionEngine::illegalNames() const
 
 void ExecutionEngine::setQmlEngine(QQmlEngine *engine)
 {
+    // Second stage of initialization. We're updating some more prototypes here.
+    isInitialized = false;
     m_qmlEngine = engine;
     initQmlGlobalObject();
+    isInitialized = true;
 }
 
 static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
