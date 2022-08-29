@@ -73,7 +73,7 @@ qt_internal_add_qml_module(qtquickcontrols2iosstyleplugin
         Qt::QuickControls2ImplPrivate
 )
 
-qt_internal_extend_target(Core CONDITION APPLE AND IOS
+qt_internal_extend_target(qtquickcontrols2iosstyleplugin CONDITION APPLE AND IOS
     LIBRARIES
         ${FWUIKit}
 )
