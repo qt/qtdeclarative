@@ -122,7 +122,7 @@ struct SharedInternalClassDataPrivate<PropertyAttributes> {
         : refcount(1),
           m_alloc(0),
           m_size(0),
-          data(nullptr),
+          m_data(nullptr),
           m_engine(engine)
     { }
     SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate<PropertyAttributes> &other);
@@ -136,8 +136,8 @@ struct SharedInternalClassDataPrivate<PropertyAttributes> {
     uint size() const { return m_size; }
     void setSize(uint s) { m_size = s; }
 
-    PropertyAttributes at(uint i) const { Q_ASSERT(data && i < m_alloc); return data[i]; }
-    void set(uint i, PropertyAttributes t) { Q_ASSERT(data && i < m_alloc); data[i] = t; }
+    PropertyAttributes at(uint i) const { Q_ASSERT(i < m_alloc); return data(i); }
+    void set(uint i, PropertyAttributes t) { Q_ASSERT(i < m_alloc); setData(i, t); }
 
     void mark(MarkStack *) {}
 
@@ -145,7 +145,30 @@ struct SharedInternalClassDataPrivate<PropertyAttributes> {
 private:
     uint m_alloc;
     uint m_size;
-    PropertyAttributes *data;
+
+    enum {
+        SizeOfAttributesPointer = sizeof(PropertyAttributes *),
+        SizeOfAttributes = sizeof(PropertyAttributes),
+        NumAttributesInPointer = SizeOfAttributesPointer / SizeOfAttributes,
+    };
+
+    static_assert(NumAttributesInPointer > 0);
+
+    PropertyAttributes data(uint i) const {
+        return m_alloc > NumAttributesInPointer ? m_data[i] : m_inlineData[i];
+    }
+
+    void setData(uint i, PropertyAttributes t) {
+        if (m_alloc > NumAttributesInPointer)
+            m_data[i] = t;
+        else
+            m_inlineData[i] = t;
+    }
+
+    union {
+        PropertyAttributes *m_data;
+        PropertyAttributes m_inlineData[NumAttributesInPointer];
+    };
     ExecutionEngine *m_engine;
 };
 

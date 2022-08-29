@@ -141,11 +141,20 @@ SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPriva
       m_engine(other.m_engine)
 {
     Q_ASSERT(m_size <= m_alloc);
+    Q_ASSERT(m_alloc > 0);
+
     m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
-    data = new PropertyAttributes[m_alloc];
-    if (other.data)
-        memcpy(data, other.data, (m_size - 1) * sizeof(PropertyAttributes));
-    data[pos] = value;
+    const PropertyAttributes *source = other.m_alloc > NumAttributesInPointer
+            ? other.m_data
+            : other.m_inlineData;
+    PropertyAttributes *target;
+    if (m_alloc > NumAttributesInPointer)
+        m_data = target = new PropertyAttributes[m_alloc];
+    else
+        target = m_inlineData;
+
+    memcpy(target, source, (m_size - 1) * sizeof(PropertyAttributes));
+    target[pos] = value;
 }
 
 SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPrivate(
@@ -155,12 +164,14 @@ SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPriva
       m_size(other.m_size),
       m_engine(other.m_engine)
 {
-    if (m_alloc) {
-        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
-        data = new PropertyAttributes[m_alloc];
-        memcpy(data, other.data, m_size*sizeof(PropertyAttributes));
+    m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
+    if (m_alloc > NumAttributesInPointer) {
+        m_data = new PropertyAttributes[m_alloc];
+        memcpy(m_data, other.m_data, m_size*sizeof(PropertyAttributes));
+    } else if (m_alloc > 0) {
+        memcpy(m_inlineData, other.m_inlineData, m_alloc * sizeof(PropertyAttributes));
     } else {
-        data = nullptr;
+        m_data = nullptr;
     }
 }
 
@@ -168,13 +179,14 @@ SharedInternalClassDataPrivate<PropertyAttributes>::~SharedInternalClassDataPriv
 {
     m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
             -qptrdiff(m_alloc * sizeof(PropertyAttributes)));
-    delete [] data;
+    if (m_alloc > NumAttributesInPointer)
+        delete [] m_data;
 }
 
 void SharedInternalClassDataPrivate<PropertyAttributes>::grow() {
     uint alloc;
     if (!m_alloc) {
-        alloc = 8;
+        alloc = NumAttributesInPointer;
         m_engine->memoryManager->changeUnmanagedHeapSizeUsage(alloc * sizeof(PropertyAttributes));
     } else {
         // yes, signed. We don't want to deal with stuff > 2G
@@ -188,12 +200,16 @@ void SharedInternalClassDataPrivate<PropertyAttributes>::grow() {
                 (alloc - m_alloc) * sizeof(PropertyAttributes));
     }
 
-    auto *n = new PropertyAttributes[alloc];
-    if (data) {
-        memcpy(n, data, m_alloc*sizeof(PropertyAttributes));
-        delete [] data;
+    if (alloc > NumAttributesInPointer) {
+        auto *n = new PropertyAttributes[alloc];
+        if (m_alloc > NumAttributesInPointer) {
+            memcpy(n, m_data, m_alloc * sizeof(PropertyAttributes));
+            delete [] m_data;
+        } else if (m_alloc > 0) {
+            memcpy(n, m_inlineData, m_alloc * sizeof(PropertyAttributes));
+        }
+        m_data = n;
     }
-    data = n;
     m_alloc = alloc;
 }
 
