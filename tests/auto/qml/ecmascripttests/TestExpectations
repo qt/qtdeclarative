@@ -232,7 +232,6 @@ built-ins/SharedArrayBuffer/prototype-from-newtarget.js fails
 built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js fails
 built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js fails
 built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js fails
-built-ins/String/prototype/indexOf/position-tointeger.js fails
 built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js fails
 built-ins/String/prototype/replace/cstm-replace-get-err.js fails
 built-ins/String/prototype/replace/cstm-replace-invocation.js fails

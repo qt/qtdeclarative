@@ -333,9 +333,9 @@ ReturnedValue StringPrototype::method_charAt(const FunctionObject *b, const Valu
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    int pos = 0;
+    double pos = 0;
     if (argc > 0)
-        pos = (int) argv[0].toInteger();
+        pos = argv[0].toInteger();
 
     QString result;
     if (pos >= 0 && pos < str.length())
@@ -351,9 +351,9 @@ ReturnedValue StringPrototype::method_charCodeAt(const FunctionObject *b, const 
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    int pos = 0;
+    double pos = 0;
     if (argc > 0)
-        pos = (int) argv[0].toInteger();
+        pos = argv[0].toInteger();
 
 
     if (pos >= 0 && pos < str.length())
@@ -369,7 +369,7 @@ ReturnedValue StringPrototype::method_codePointAt(const FunctionObject *f, const
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    int index = argc ? argv[0].toInteger() : 0;
+    double index = argc ? argv[0].toInteger() : 0.0;
     if (v4->hasException)
         return QV4::Encode::undefined();
 
@@ -419,9 +419,9 @@ ReturnedValue StringPrototype::method_endsWith(const FunctionObject *b, const Va
     if (v4->hasException)
         return Encode::undefined();
 
-    int pos = value.length();
+    double pos = value.length();
     if (argc > 1)
-        pos = (int) argv[1].toInteger();
+        pos = argv[1].toInteger();
 
     if (pos == value.length())
         RETURN_RESULT(Encode(value.endsWith(searchString)));
@@ -441,13 +441,13 @@ ReturnedValue StringPrototype::method_indexOf(const FunctionObject *b, const Val
     if (v4->hasException)
         return Encode::undefined();
 
-    int pos = 0;
+    double pos = 0;
     if (argc > 1)
-        pos = (int) argv[1].toInteger();
+        pos = argv[1].toInteger();
 
     int index = -1;
-    if (! value.isEmpty())
-        index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
+    if (!value.isEmpty())
+        index = value.indexOf(searchString, qMin(qMax(pos, 0.0), double(value.length())));
 
     return Encode(index);
 }
@@ -465,10 +465,10 @@ ReturnedValue StringPrototype::method_includes(const FunctionObject *b, const Va
     if (v4->hasException)
         return Encode::undefined();
 
-    int pos = 0;
+    double pos = 0;
     if (argc > 1) {
         const Value &posArg = argv[1];
-        pos = (int) posArg.toInteger();
+        pos = posArg.toInteger();
         if (!posArg.isInteger() && posArg.isNumber() && qIsInf(posArg.toNumber()))
             pos = value.length();
     }
@@ -596,7 +596,7 @@ ReturnedValue StringPrototype::method_padEnd(const FunctionObject *f, const Valu
     if (!argc)
         return s->asReturnedValue();
 
-    int maxLen = argv[0].toInteger();
+    double maxLen = argv[0].toInteger();
     if (maxLen <= s->d()->length())
         return s->asReturnedValue();
     QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : QString::fromLatin1(" ");
@@ -635,7 +635,7 @@ ReturnedValue StringPrototype::method_padStart(const FunctionObject *f, const Va
     if (!argc)
         return s->asReturnedValue();
 
-    int maxLen = argv[0].toInteger();
+    double maxLen = argv[0].toInteger();
     if (maxLen <= s->d()->length())
         return s->asReturnedValue();
     QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : QString::fromLatin1(" ");
@@ -1007,9 +1007,9 @@ ReturnedValue StringPrototype::method_startsWith(const FunctionObject *b, const 
     if (v4->hasException)
         return Encode::undefined();
 
-    int pos = 0;
+    double pos = 0;
     if (argc > 1)
-        pos = (int) argv[1].toInteger();
+        pos = argv[1].toInteger();
 
     if (pos == 0)
         return Encode(value.startsWith(searchString));
