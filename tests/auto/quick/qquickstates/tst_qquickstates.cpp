@@ -208,6 +208,7 @@ private slots:
     void bindableProperties();
     void parentChangeInvolvingBindings();
     void rewindAnchorChange();
+    void bindingProperlyRemovedWithTransition();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1960,6 +1961,26 @@ void tst_qquickstates::rewindAnchorChange()
     QTRY_COMPARE(innerRect->y(), 0);
     QTRY_COMPARE(innerRect->width(), 200);
     QTRY_COMPARE(innerRect->height(), 200);
+}
+
+void tst_qquickstates::bindingProperlyRemovedWithTransition()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("removeBindingWithTransition.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+    QQuickItem *item = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(item);
+
+    item->setProperty("toggle", false);
+    QTRY_COMPARE(item->width(), 300);
+
+    item->setProperty("state1Width", 100);
+    QCOMPARE(item->width(), 300);
+
+    item->setProperty("toggle", true);
+    QTRY_COMPARE(item->width(), 100);
 }
 
 QTEST_MAIN(tst_qquickstates)
