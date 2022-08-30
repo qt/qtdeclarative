@@ -405,6 +405,11 @@ void QQuickTextEdit::setText(const QString &text)
 
 void QQuickTextEdit::invalidate()
 {
+    QMetaObject::invokeMethod(this, &QQuickTextEdit::q_invalidate);
+}
+
+void QQuickTextEdit::q_invalidate()
+{
     Q_D(QQuickTextEdit);
     if (isComponentComplete()) {
         if (d->document != nullptr)

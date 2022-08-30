@@ -338,6 +338,7 @@ public Q_SLOTS:
     Q_REVISION(2, 7) void clear();
 
 private Q_SLOTS:
+    void q_invalidate();
     void q_textChanged();
     void q_contentsChange(int, int, int);
     void updateSelection();
