@@ -51,9 +51,6 @@
 
     \section2 Customization
 
-    The iOS style allows customizing the \l {ios-theme-attached-prop}{theme} attribute.
-    By default it follows the system's theme.
-
     \section3 Palette
 
     The iOS style supports palette customization via the \l {Item::}{palette}
