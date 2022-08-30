@@ -14,6 +14,7 @@
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTemporaryFile>
 #include <QtCore/QUrl>
+#include <QtCore/QLibraryInfo>
 
 QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
     QCoreApplication(argc, argv),

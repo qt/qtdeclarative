@@ -11,6 +11,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTemporaryFile>
+#include <QtCore/QLibraryInfo>
 
 #include <iostream>
 
