@@ -25,7 +25,7 @@ class QQuickIOSStyle : public QQuickAttachedObject
 {
     Q_OBJECT
     Q_PROPERTY(QUrl url READ url CONSTANT)
-    Q_PROPERTY(Theme theme READ theme WRITE setTheme NOTIFY themeChanged FINAL)
+    Q_PROPERTY(Theme theme READ theme NOTIFY themeChanged FINAL)
     QML_NAMED_ELEMENT(IOS)
     QML_ATTACHED(QQuickIOSStyle)
     QML_UNCREATABLE("")
@@ -43,7 +43,6 @@ public:
     static QQuickIOSStyle *qmlAttachedProperties(QObject *object);
 
     Theme theme() const;
-    void setTheme(Theme theme);
 
     QUrl url() const;
 

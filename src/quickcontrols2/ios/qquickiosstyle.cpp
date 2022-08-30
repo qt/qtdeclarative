@@ -21,6 +21,7 @@ QQuickIOSStyle::QQuickIOSStyle(QObject *parent)
     : QQuickAttachedObject(parent)
 {
     init();
+    m_theme = qquickios_effective_theme();
 }
 
 QQuickIOSStyle *QQuickIOSStyle::qmlAttachedProperties(QObject *object)
@@ -41,21 +42,11 @@ void QQuickIOSStyle::init()
     //     globalsInitialized = true;
     // }
     QQuickAttachedObject::init(); // TODO: lazy init?
-    setTheme(qquickios_effective_theme());
 }
 
 QQuickIOSStyle::Theme QQuickIOSStyle::theme() const
 {
     return m_theme;
-}
-
-void QQuickIOSStyle::setTheme(Theme theme)
-{
-    if (m_theme == theme)
-        return;
-    m_theme = theme;
-
-    themeChanged();
 }
 
 QT_END_NAMESPACE
