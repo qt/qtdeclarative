@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtTest
 import Qt.labs.settings
+import Qt.test.controls
 
 TestCase {
     id: testCase
@@ -2527,5 +2528,44 @@ TestCase {
         // Move the mouse to the MouseArea on the right. The handle should no longer be hovered.
         mouseMove(control, control.width - 100, control.height / 2)
         verify(!targetHandle.SplitHandle.hovered)
+    }
+
+    Component {
+        id: cppHandleSplitViewComponent
+
+        SplitView {
+            anchors.fill: parent
+            handle: ComponentCreator.createComponent(`
+                import QtQuick
+
+                Rectangle {
+                    objectName: "handle"
+                    implicitWidth: 10
+                    implicitHeight: 10
+                    color: "tomato"
+                }`)
+
+            Rectangle {
+                objectName: "navajowhite"
+                color: objectName
+                implicitWidth: 100
+                implicitHeight: 100
+            }
+            Rectangle {
+                objectName: "steelblue"
+                color: objectName
+                implicitWidth: 200
+                implicitHeight: 200
+            }
+        }
+    }
+
+    function test_handleComponentCreatedInCpp() {
+        let control = createTemporaryObject(cppHandleSplitViewComponent, testCase)
+        verify(control)
+
+        let handles = findHandles(control)
+        compare(handles.length, 1)
+        compare(handles[0].color, Qt.color("tomato"))
     }
 }

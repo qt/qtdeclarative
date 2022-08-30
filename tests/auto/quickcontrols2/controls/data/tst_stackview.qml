@@ -4,6 +4,7 @@
 import QtQuick
 import QtTest
 import QtQuick.Controls
+import Qt.test.controls
 
 TestCase {
     id: testCase
@@ -1225,7 +1226,12 @@ TestCase {
 
                 Item {
                     objectName: "clearUponDestructionItem"
-                    Component.onDestruction: container.onDestructionCallback(stackView)
+                    onParentChanged: {
+                        // We don't actually do this on destruction because destruction is delayed.
+                        // Rather, we do it when we get un-parented.
+                        if (parent === null)
+                            container.onDestructionCallback(stackView)
+                    }
                 }
             }
 
@@ -1543,5 +1549,27 @@ TestCase {
         control.pop()
         tryCompare(control, "busy", true)
         tryCompare(control, "busy", false)
+    }
+
+    Component {
+        id: cppComponent
+
+        StackView {
+            id: stackView
+            anchors.fill: parent
+            initialItem: cppComponent
+
+            property Component cppComponent: ComponentCreator.createComponent("import QtQuick; Rectangle { color: \"navajowhite\" }")
+        }
+    }
+
+    // Test that a component created in C++ works with StackView.
+    function test_componentCreatedInCpp() {
+        let control = createTemporaryObject(cppComponent, testCase)
+        verify(control)
+        compare(control.currentItem.color, Qt.color("navajowhite"))
+
+        control.push(control.cppComponent, { color: "tomato" })
+        compare(control.currentItem.color, Qt.color("tomato"))
     }
 }

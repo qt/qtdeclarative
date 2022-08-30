@@ -715,11 +715,9 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
 {
     QQuickItem *item = nullptr;
     if (component) {
-        QQmlContext *creationContext = component->creationContext();
-        if (!creationContext)
-            creationContext = qmlContext(popup);
-        QQmlContext *context = new QQmlContext(creationContext, popup);
-        context->setContextObject(popup);
+        QQmlContext *context = component->creationContext();
+        if (!context)
+            context = qmlContext(popup);
         item = qobject_cast<QQuickItem*>(component->beginCreate(context));
     }
 

@@ -79,8 +79,6 @@ QQuickStackElement::~QQuickStackElement()
 
     if (attached)
         emit attached->removed();
-
-    delete context;
 }
 
 QQuickStackElement *QQuickStackElement::fromString(const QString &str, QQuickStackView *view, QString *error)
@@ -134,11 +132,9 @@ bool QQuickStackElement::load(QQuickStackView *parent)
             return true;
         }
 
-        QQmlContext *creationContext = component->creationContext();
-        if (!creationContext)
-            creationContext = qmlContext(parent);
-        context = new QQmlContext(creationContext, parent);
-        context->setContextObject(parent);
+        QQmlContext *context = component->creationContext();
+        if (!context)
+            context = qmlContext(parent);
 
         QQuickStackIncubator incubator(this);
         component->create(incubator, context);

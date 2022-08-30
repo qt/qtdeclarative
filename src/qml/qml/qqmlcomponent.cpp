@@ -490,6 +490,16 @@ bool QQmlComponent::isLoading() const
 }
 
 /*!
+    Returns true if the component was created in a QML files that specifies
+    \c{pragma ComponentBehavior: Bound}, otherwise returns false.
+ */
+bool QQmlComponent::isBound() const
+{
+    Q_D(const QQmlComponent);
+    return d->isBound();
+}
+
+/*!
     \qmlproperty real Component::progress
     The progress of loading the component, from 0.0 (nothing loaded)
     to 1.0 (finished).

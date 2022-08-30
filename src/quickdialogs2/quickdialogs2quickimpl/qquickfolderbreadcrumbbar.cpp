@@ -35,13 +35,19 @@ QQuickItem *QQuickFolderBreadcrumbBarPrivate::createDelegateItem(QQmlComponent *
     Q_Q(QQuickFolderBreadcrumbBar);
     // If we don't use the correct context, it won't be possible to refer to
     // the control's id from within the delegates.
-    QQmlContext *creationContext = component->creationContext();
+    QQmlContext *context = component->creationContext();
     // The component might not have been created in QML, in which case
     // the creation context will be null and we have to create it ourselves.
-    if (!creationContext)
-        creationContext = qmlContext(q);
-    QQmlContext *context = new QQmlContext(creationContext, q);
-    context->setContextObject(q);
+    if (!context)
+        context = qmlContext(q);
+
+    // If we have initial properties we assume that all necessary information is passed via
+    // initial properties.
+    if (!component->isBound() && initialProperties.isEmpty()) {
+        context = new QQmlContext(context, q);
+        context->setContextObject(q);
+    }
+
     QQuickItem *item = qobject_cast<QQuickItem*>(component->createWithInitialProperties(initialProperties, context));
     if (item)
         QQml_setParent_noEvent(item, q);

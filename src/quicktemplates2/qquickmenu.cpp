@@ -254,11 +254,9 @@ QQuickItem *QQuickMenuPrivate::beginCreateItem()
     if (!delegate)
         return nullptr;
 
-    QQmlContext *creationContext = delegate->creationContext();
-    if (!creationContext)
-        creationContext = qmlContext(q);
-    QQmlContext *context = new QQmlContext(creationContext, q);
-    context->setContextObject(q);
+    QQmlContext *context = delegate->creationContext();
+    if (!context)
+        context = qmlContext(q);
 
     QObject *object = delegate->beginCreate(context);
     QQuickItem *item = qobject_cast<QQuickItem *>(object);

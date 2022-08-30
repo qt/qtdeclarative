@@ -19,6 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlComponent;
 class QQmlEngine;
 class QQuickApplicationWindow;
 class QQuickAbstractButton;
@@ -53,6 +54,17 @@ namespace QQuickControlsTestUtils
     [[nodiscard]] bool verifyButtonClickable(QQuickAbstractButton *button);
     [[nodiscard]] bool clickButton(QQuickAbstractButton *button);
     [[nodiscard]] bool doubleClickButton(QQuickAbstractButton *button);
+
+    class ComponentCreator : public QObject
+    {
+        Q_OBJECT
+        QML_ELEMENT
+        QML_SINGLETON
+        Q_MOC_INCLUDE(<QtQml/qqmlcomponent.h>)
+
+    public:
+        Q_INVOKABLE QQmlComponent *createComponent(const QByteArray &data);
+    };
 }
 
 QT_END_NAMESPACE

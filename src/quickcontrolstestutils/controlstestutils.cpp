@@ -4,6 +4,7 @@
 #include "controlstestutils_p.h"
 
 #include <QtTest/qsignalspy.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
@@ -154,4 +155,17 @@ bool QQuickControlsTestUtils::doubleClickButton(QQuickAbstractButton *button)
     }
 
     return true;
+}
+
+/*!
+    Allows creating QQmlComponents in C++, which is useful for tests that need
+    to check if items created from the component have the correct QML context.
+*/
+Q_INVOKABLE QQmlComponent *QQuickControlsTestUtils::ComponentCreator::createComponent(const QByteArray &data)
+{
+    std::unique_ptr<QQmlComponent> component(new QQmlComponent(qmlEngine(this)));
+    component->setData(data, QUrl());
+    if (component->isError())
+        qmlWarning(this) << "Failed to create component from the following data:\n" << data;
+    return component.release();
 }

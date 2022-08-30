@@ -6,6 +6,7 @@ import QtTest
 import QtQuick.Controls
 import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
+import Qt.test.controls
 
 TestCase {
     id: testCase
@@ -1469,5 +1470,25 @@ TestCase {
         fuzzyCompare(popup.y, oldPos.y + 5, 1)
         mouseRelease(title, pressPoint.x, pressPoint.y)
         compare(title.pressedPosition, Qt.point(0, 0))
+    }
+
+    Component {
+        id: cppDimmerComponent
+
+        Popup {
+            dim: true
+            Overlay.modeless: ComponentCreator.createComponent(
+                "import QtQuick; Rectangle { objectName: \"rect\"; color: \"tomato\" }")
+        }
+    }
+
+    function test_dimmerComponentCreatedInCpp() {
+        let control = createTemporaryObject(cppDimmerComponent, testCase)
+        verify(control)
+
+        control.open()
+        tryCompare(control, "opened", true)
+        let rect = findChild(control.Overlay.overlay, "rect")
+        verify(rect)
     }
 }
