@@ -63,6 +63,8 @@ public:
     bool isError() const;
     bool isLoading() const;
 
+    bool isBound() const;
+
     QList<QQmlError> errors() const;
     Q_INVOKABLE QString errorString() const;
 

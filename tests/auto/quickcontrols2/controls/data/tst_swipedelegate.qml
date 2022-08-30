@@ -4,7 +4,7 @@
 import QtQuick
 import QtTest
 import QtQuick.Controls
-
+import Qt.test.controls
 
 TestCase {
     id: testCase
@@ -1725,5 +1725,24 @@ TestCase {
         compare(control.width, 200)
         compare(control.background.width, 200)
         compare(control.contentItem.width, 200 - control.leftPadding - control.rightPadding)
+    }
+
+    Component {
+        id: cppDelegateComponent
+
+        SwipeDelegate {
+            text: "SwipeDelegate"
+            width: 150
+            swipe.right: ComponentCreator.createComponent(
+                "import QtQuick; Rectangle { width: 100; height: parent.height; color: \"tomato\" }")
+        }
+    }
+
+    function test_delegateComponentCreatedInCpp() {
+        let control = createTemporaryObject(cppDelegateComponent, testCase)
+        verify(control)
+
+        swipe(control, 0, -1.0)
+        compare(control.swipe.rightItem.color, Qt.color("tomato"))
     }
 }

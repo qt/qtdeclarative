@@ -61,7 +61,6 @@ public:
     bool ownComponent = false;
     bool widthValid = false;
     bool heightValid = false;
-    QQmlContext *context = nullptr;
     QQmlComponent *component = nullptr;
     QQuickStackView *view = nullptr;
     QPointer<QQuickItem> originalParent;

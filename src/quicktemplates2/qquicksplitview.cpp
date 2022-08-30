@@ -700,13 +700,11 @@ void QQuickSplitViewPrivate::createHandleItem(int index)
 
     // If we don't use the correct context, it won't be possible to refer to
     // the control's id from within the delegate.
-    QQmlContext *creationContext = m_handle->creationContext();
+    QQmlContext *context = m_handle->creationContext();
     // The component might not have been created in QML, in which case
     // the creation context will be null and we have to create it ourselves.
-    if (!creationContext)
-        creationContext = qmlContext(q);
-    QQmlContext *context = new QQmlContext(creationContext, q);
-    context->setContextObject(q);
+    if (!context)
+        context = qmlContext(q);
     QQuickItem *handleItem = qobject_cast<QQuickItem*>(m_handle->beginCreate(context));
     if (handleItem) {
         handleItem->setParent(q);

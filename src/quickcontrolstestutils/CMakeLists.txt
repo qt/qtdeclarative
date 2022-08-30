@@ -23,3 +23,11 @@ qt_internal_add_module(QuickControlsTestUtilsPrivate
         Qt::QuickTemplates2Private
         Qt::QuickTestUtilsPrivate
 )
+
+# This is used by both C++ and QML tests, so we need it to be a library and a QML plugin,
+# hence qt_internal_add_qml_module. We use it in addition to qt_internal_add_module,
+# because otherwise syncqt complains that there is no "QtQuickControlsTestUtilsPrivate" module.
+qt_internal_add_qml_module(QuickControlsTestUtilsPrivate
+    URI "Qt.test.controls"
+    VERSION "${PROJECT_VERSION}"
+)

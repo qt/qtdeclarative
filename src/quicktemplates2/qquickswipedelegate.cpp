@@ -185,13 +185,11 @@ QQuickItem *QQuickSwipePrivate::createDelegateItem(QQmlComponent *component)
 {
     // If we don't use the correct context, it won't be possible to refer to
     // the control's id from within the delegates.
-    QQmlContext *creationContext = component->creationContext();
+    QQmlContext *context = component->creationContext();
     // The component might not have been created in QML, in which case
     // the creation context will be null and we have to create it ourselves.
-    if (!creationContext)
-        creationContext = qmlContext(control);
-    QQmlContext *context = new QQmlContext(creationContext, control);
-    context->setContextObject(control);
+    if (!context)
+        context = qmlContext(control);
     QQuickItem *item = qobject_cast<QQuickItem*>(component->beginCreate(context));
     if (item) {
         item->setParentItem(control);
