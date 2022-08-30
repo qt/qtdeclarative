@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/qt/qml/itemvariablerefreshrate">
+        <file>itemvariablerefreshrate.qml</file>
+        <file>content/qt_logo.png</file>
+    </qresource>
+</RCC>

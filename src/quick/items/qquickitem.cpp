@@ -9066,6 +9066,7 @@ QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     , m_enabled(false)
     , m_mipmap(false)
     , m_smooth(false)
+    , m_live(true)
     , m_componentComplete(true)
     , m_wrapMode(QQuickShaderEffectSource::ClampToEdge)
     , m_format(QQuickShaderEffectSource::RGBA8)
@@ -9143,6 +9144,7 @@ void QQuickItemLayer::activate()
     m_effectSource->setSourceItem(m_item);
     m_effectSource->setHideSource(true);
     m_effectSource->setSmooth(m_smooth);
+    m_effectSource->setLive(m_live);
     m_effectSource->setTextureSize(m_size);
     m_effectSource->setSourceRect(m_sourceRect);
     m_effectSource->setMipmap(m_mipmap);
@@ -9356,6 +9358,30 @@ void QQuickItemLayer::setSmooth(bool s)
         m_effectSource->setSmooth(m_smooth);
 
     emit smoothChanged(s);
+}
+
+/*!
+    \qmlproperty bool QtQuick::Item::layer.live
+    \since 6.5
+
+    When this property is true the layer texture is updated whenever the
+    item updates. Otherwise it will always be a frozen image.
+
+    By default, this property is set to \c true.
+
+    \sa {Item Layers}
+ */
+
+void QQuickItemLayer::setLive(bool live)
+{
+    if (m_live == live)
+        return;
+    m_live = live;
+
+    if (m_effectSource)
+        m_effectSource->setLive(m_live);
+
+    emit liveChanged(live);
 }
 
 /*!

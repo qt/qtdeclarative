@@ -140,6 +140,7 @@ Creator.
         \li \l{Qt Quick Examples - Accessibility}{Accessibility}
         \li \l{Qt Quick Examples - externaldraganddrop}{External Drag and Drop}
         \li \l{Qt Quick Examples - Drag and Drop}{Drag and Drop}
+        \li \l{Qt Quick Examples - Item Variable Refresh Rate}{Item Variable Refresh Rate}
         \endlist
     \enddiv
     \div {class="doc-column"}

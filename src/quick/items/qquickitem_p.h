@@ -108,6 +108,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemLayer : public QObject, public QQuickItem
     Q_PROPERTY(QRectF sourceRect READ sourceRect WRITE setSourceRect NOTIFY sourceRectChanged)
     Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
     Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged REVISION(6, 5))
     Q_PROPERTY(QQuickShaderEffectSource::WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
     Q_PROPERTY(QQuickShaderEffectSource::Format format READ format WRITE setFormat NOTIFY formatChanged)
     Q_PROPERTY(QByteArray samplerName READ name WRITE setName NOTIFY nameChanged)
@@ -132,6 +133,9 @@ public:
 
     bool smooth() const { return m_smooth; }
     void setSmooth(bool s);
+
+    bool live() const { return m_live; }
+    void setLive(bool live);
 
     QSize size() const { return m_size; }
     void setSize(const QSize &size);
@@ -178,6 +182,7 @@ Q_SIGNALS:
     void nameChanged(const QByteArray &name);
     void effectChanged(QQmlComponent *component);
     void smoothChanged(bool smooth);
+    void liveChanged(bool live);
     void formatChanged(QQuickShaderEffectSource::Format format);
     void sourceRectChanged(const QRectF &sourceRect);
     void textureMirroringChanged(QQuickShaderEffectSource::TextureMirroring mirroring);
@@ -196,6 +201,7 @@ private:
     bool m_enabled;
     bool m_mipmap;
     bool m_smooth;
+    bool m_live;
     bool m_componentComplete;
     QQuickShaderEffectSource::WrapMode m_wrapMode;
     QQuickShaderEffectSource::Format m_format;
