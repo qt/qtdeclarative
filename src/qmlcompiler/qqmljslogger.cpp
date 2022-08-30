@@ -119,7 +119,7 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                 qmlDeferredPropertyId.name().toString(), QStringLiteral("DeferredPropertyId"),
                 QStringLiteral(
                         "Warn about making deferred properties immediate by giving them an id."),
-                QtWarningMsg },
+                QtInfoMsg, true, true },
         QQmlJSLogger::Category {
                 qmlUnqualified.name().toString(), QStringLiteral("UnqualifiedAccess"),
                 QStringLiteral("Warn about unqualified identifiers and how to fix them"),

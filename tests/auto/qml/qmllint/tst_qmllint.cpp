@@ -815,18 +815,6 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << QStringLiteral("assignToReadOnlyProperty2.qml")
             << Result { { Message {
                        QStringLiteral("Cannot assign to read-only property activeFocus") } } };
-    QTest::newRow("DeferredPropertyID")
-            << QStringLiteral("deferredPropertyID.qml")
-            << Result { { Message { QStringLiteral(
-                       "Cannot defer property assignment to "
-                       "\"contentData\". Assigning an id to an object or one of its sub-objects "
-                       "bound to a deferred property will make the assignment immediate.") } } };
-    QTest::newRow("DeferredPropertyNestedID")
-            << QStringLiteral("deferredPropertyNestedID.qml")
-            << Result { { Message { QStringLiteral(
-                       "Cannot defer property assignment to "
-                       "\"contentData\". Assigning an id to an object or one of its sub-objects "
-                       "bound to a deferred property will make the assignment immediate.") } } };
     QTest::newRow("cachedDependency")
             << QStringLiteral("cachedDependency.qml")
             << Result { { Message { QStringLiteral("Unused import"), 1, 1, QtInfoMsg } },
