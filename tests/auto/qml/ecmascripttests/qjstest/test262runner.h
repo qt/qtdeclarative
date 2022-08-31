@@ -13,17 +13,38 @@ struct TestCase {
     TestCase() = default;
     TestCase(const QString &test)
         : test(test) {}
-    enum Result {
-        Skipped,
-        Passes,
-        Fails,
-        Crashes
+
+    enum State { Skipped, Passes, Fails, Crashes };
+
+    struct Result
+    {
+        State state;
+        QString errorMessage;
+
+        Result(State state, QString errorMessage = "")
+            : state(state), errorMessage(errorMessage) { }
+
+        void negateResult()
+        {
+            switch (state) {
+            case TestCase::Passes:
+                state = TestCase::Fails;
+                break;
+            case TestCase::Fails:
+                state = TestCase::Passes;
+                break;
+            case TestCase::Skipped:
+            case TestCase::Crashes:
+                break;
+            }
+        }
     };
+
     bool skipTestCase = false;
-    Result strictExpectation = Passes;
-    Result sloppyExpectation = Passes;
-    Result strictResult = Skipped;
-    Result sloppyResult = Skipped;
+    Result strictExpectation = Result(Passes);
+    Result sloppyExpectation = Result(Passes);
+    Result strictResult = Result(Skipped);
+    Result sloppyResult = Result(Skipped);
 
     QString test;
 };
