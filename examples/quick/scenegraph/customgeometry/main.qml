@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //! [1]
-import QtQuick 2.0
-import CustomGeometry 1.0
+import QtQuick
+import CustomGeometry
 //! [1] //! [2]
 Item {
     width: 300

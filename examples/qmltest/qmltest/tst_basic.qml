@@ -1,8 +1,8 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick 2.4
-import QtTest 1.1
+import QtQuick
+import QtTest
 
 TestCase {
     name: "BasicTests"

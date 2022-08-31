@@ -1,12 +1,12 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQml 2.12
-import QtQuick 2.12
-import QtQuick.Window 2.3
-import QtQuick.Controls 2.2
-import QtQuick.Layouts 1.3
-import GameOfLifeModel 1.0
+import QtQml
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls
+import QtQuick.Layouts
+import GameOfLifeModel
 
 ApplicationWindow {
     id: root

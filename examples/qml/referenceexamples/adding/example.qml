@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 // ![0]
-import People 1.0
+import People
 
 Person {
     name: "Bob Jones"

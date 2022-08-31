@@ -1,10 +1,10 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick 2.12
-import QtQml.Models 2.12
-import QtQuick.Layouts 1.12
-import Qt.labs.qmlmodels 1.0
+import QtQuick
+import QtQml.Models
+import QtQuick.Layouts
+import Qt.labs.qmlmodels
 import shared
 
 Rectangle {
