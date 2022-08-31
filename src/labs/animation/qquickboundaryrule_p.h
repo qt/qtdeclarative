@@ -106,6 +106,7 @@ Q_SIGNALS:
     void overshootFilterChanged();
     void easingChanged();
     void returnDurationChanged();
+    void returnedToBounds();
 };
 
 QT_END_NAMESPACE

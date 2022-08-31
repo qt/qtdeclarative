@@ -41,6 +41,7 @@ void tst_qquickboundaryrule::dragHandler()
     QObject *boundaryRule = target->findChild<QObject *>(QLatin1String("boundaryRule"));
     QVERIFY(boundaryRule);
     QSignalSpy overshootChangedSpy(boundaryRule, SIGNAL(currentOvershootChanged()));
+    QSignalSpy returnedSpy(boundaryRule, SIGNAL(returnedToBounds()));
 
     QPoint p1(10, 10);
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
@@ -72,7 +73,8 @@ void tst_qquickboundaryrule::dragHandler()
     // release and let it return to bounds
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_COMPARE(dragHandler->active(), false);
-    QTRY_COMPARE(overshootChangedSpy.count(), 3);
+    QTRY_COMPARE(returnedSpy.count(), 1);
+    QCOMPARE(overshootChangedSpy.count(), 3);
     QCOMPARE(boundaryRule->property("currentOvershoot").toReal(&ok), 0);
     QVERIFY(ok);
     QCOMPARE(boundaryRule->property("peakOvershoot").toReal(&ok), 0);

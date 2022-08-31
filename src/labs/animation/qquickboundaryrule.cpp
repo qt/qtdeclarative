@@ -42,6 +42,7 @@ public:
 
     qreal easedOvershoot(qreal overshootingValue);
     void resetOvershoot();
+    void onAnimationEnded();
 };
 
 class QQuickBoundaryReturnJob : public QAbstractAnimationJob
@@ -85,8 +86,7 @@ void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState,
     if (newState == QAbstractAnimationJob::Stopped) {
         qCDebug(lcBR) << "return animation done";
         boundaryRule->resetOvershoot();
-        boundaryRule->returnAnimationJob = nullptr;
-        delete this;
+        boundaryRule->onAnimationEnded();
     }
 }
 
@@ -352,6 +352,8 @@ void QQuickBoundaryRule::setOvershootFilter(OvershootFilter overshootFilter)
 
     Returns true if the value needed to be adjusted, or false if it was already
     within bounds.
+
+    \sa returnedToBounds
 */
 bool QQuickBoundaryRule::returnToBounds()
 {
@@ -374,14 +376,27 @@ bool QQuickBoundaryRule::returnToBounds()
         return false;
     }
     if (d->returnAnimationJob) {
-        qCDebug(lcBR) << "animating from" << d->returnAnimationJob->fromValue << "to" << d->returnAnimationJob->toValue;
+        qCDebug(lcBR) << d->property.name() << "on" << d->property.object()
+                      << ": animating from" << d->returnAnimationJob->fromValue << "to" << d->returnAnimationJob->toValue;
         d->returnAnimationJob->start();
     } else {
         d->resetOvershoot();
-        qCDebug(lcBR) << "returned to" << d->property.read();
+        qCDebug(lcBR) << d->property.name() << "on" << d->property.object() << ": returned to" << d->property.read();
+        emit returnedToBounds();
     }
     return true;
 }
+
+/*!
+    \qmlsignal QtQuick::BoundaryRule::returnedToBounds()
+
+    This signal is emitted when \l currentOvershoot returns to \c 0 again,
+    after the \l maximum or \l minimum constraint has been violated.
+    If the return is animated, the signal is emitted when the animation
+    completes.
+
+    \sa returnDuration, returnToBounds()
+*/
 
 /*!
     \qmlproperty qreal QtQuick::BoundaryRule::easing
@@ -530,6 +545,14 @@ void QQuickBoundaryRulePrivate::resetOvershoot()
         currentOvershoot = 0;
         emit q->currentOvershootChanged();
     }
+}
+
+void QQuickBoundaryRulePrivate::onAnimationEnded()
+{
+    Q_Q(QQuickBoundaryRule);
+    delete returnAnimationJob;
+    returnAnimationJob = nullptr;
+    emit q->returnedToBounds();
 }
 
 QT_END_NAMESPACE
