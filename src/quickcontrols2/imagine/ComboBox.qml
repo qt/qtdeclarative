@@ -11,10 +11,10 @@ T.ComboBox {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            contentItem.implicitWidth + background ? (background.leftPadding + background.rightPadding) : 0)
+                            implicitContentWidth + (background ? background.leftPadding + background.rightPadding : 0))
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              Math.max(implicitContentHeight,
-                                      implicitIndicatorHeight) + background ? (background.topPadding + background.bottomPadding) : 0)
+                                      implicitIndicatorHeight) + (background ? background.topPadding + background.bottomPadding : 0))
 
     leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
