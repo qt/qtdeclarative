@@ -651,9 +651,9 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
     const QString modulePrefix = u"$module$."_s;
     const QString internalPrefix = u"$internal$."_s;
 
-    for (const auto &kv : types.asKeyValueRange()) {
-        QString name = kv.first;
-        const QQmlJSScope::ConstPtr scope = kv.second.scope;
+    for (auto &&[typeName, importedScope] : types.asKeyValueRange()) {
+        QString name = typeName;
+        const QQmlJSScope::ConstPtr scope = importedScope.scope;
 
         if (name.startsWith(modulePrefix))
             continue;
@@ -723,26 +723,24 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
         }
     }
 
-    for (const auto &kv : missingTypes.asKeyValueRange()) {
-        const QString &name = kv.first;
-        const QStringList uses = QStringList(kv.second.begin(), kv.second.end());
-
+    for (auto &&[name, uses] :  missingTypes.asKeyValueRange()) {
         QString message = u"Type \"%1\" not found"_s.arg(name);
 
-        if (!uses.isEmpty())
-            message += u". Used in %1"_s.arg(uses.join(u", "_s));
+        if (!uses.isEmpty()) {
+            const QStringList usesList = QStringList(uses.begin(), uses.end());
+            message += u". Used in %1"_s.arg(usesList.join(u", "_s));
+        }
 
         m_logger->log(message, qmlUnresolvedType, QQmlJS::SourceLocation());
     }
 
-    for (const auto &kv : partiallyResolvedTypes.asKeyValueRange()) {
-        const QString &name = kv.first;
-        const QStringList uses = QStringList(kv.second.begin(), kv.second.end());
-
+    for (auto &&[name, uses] : partiallyResolvedTypes.asKeyValueRange()) {
         QString message = u"Type \"%1\" is not fully resolved"_s.arg(name);
 
-        if (!uses.isEmpty())
-            message += u". Used in %1"_s.arg(uses.join(u", "_s));
+        if (!uses.isEmpty()) {
+            const QStringList usesList = QStringList(uses.begin(), uses.end());
+            message += u". Used in %1"_s.arg(usesList.join(u", "_s));
+        }
 
         m_logger->log(message, qmlUnresolvedType, QQmlJS::SourceLocation());
     }
