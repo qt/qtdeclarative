@@ -4,8 +4,8 @@
 // This example demonstrates placing items in a view using
 // an ObjectModel
 
-import QtQuick 2.0
-import QtQml.Models 2.1
+import QtQuick
+import QtQml.Models
 
 Rectangle {
     id: root

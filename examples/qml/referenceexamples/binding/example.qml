@@ -1,8 +1,8 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import People 1.0
-import QtQuick 2.0  // For QColor
+import People
+import QtQuick  // For QColor
 
 // ![0]
 BirthdayParty {

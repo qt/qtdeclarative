@@ -5,7 +5,7 @@
 // that uses a SpringAnimation to provide custom movement when the
 // highlight bar is moved between items.
 
-import QtQuick 2.0
+import QtQuick
 import "content"
 
 Rectangle {

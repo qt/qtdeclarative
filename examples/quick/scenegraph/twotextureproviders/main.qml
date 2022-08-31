@@ -1,8 +1,8 @@
 // Copyright (C) 2014 Gunnar Sletta <gunnar@sletta.org>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-import QtQuick 2.2
-import SceneGraphRendering 1.0
+import QtQuick
+import SceneGraphRendering
 
 Item {
     id: root

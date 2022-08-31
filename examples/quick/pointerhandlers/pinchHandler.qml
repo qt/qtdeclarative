@@ -133,7 +133,7 @@ Rectangle {
                     onGrabChanged: function (transition, point) {
                         if (transition === 0x10) { // GrabExclusive
                             console.log(point.id, "grabbed @", point.position)
-                            Qt.createQmlObject("import QtQuick 2.0; Rectangle { opacity: 0.5; border.color: 'red'; radius: 8; width: radius * 2; height: radius * 2; " +
+                            Qt.createQmlObject("import QtQuick; Rectangle { opacity: 0.5; border.color: 'red'; radius: 8; width: radius * 2; height: radius * 2; " +
                                                "x: " + (point.position.x - 8) + "; y: " + (point.position.y - 8) + "}",
                                                rect3, "touchpoint" + point.id);
                         }

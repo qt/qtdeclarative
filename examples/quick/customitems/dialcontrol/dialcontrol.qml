@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //! [imports]
-import QtQuick 2.2
-import QtQuick.Window 2.1
+import QtQuick
+import QtQuick.Window
 //! [imports]
 
 //! [0]
