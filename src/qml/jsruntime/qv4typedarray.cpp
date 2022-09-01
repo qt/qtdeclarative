@@ -260,17 +260,20 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
 
     if (!argc || !argv[0].isObject()) {
         // ECMA 6 22.2.1.1
-        qint64 l = argc ? argv[0].toIndex() : 0;
+        const double l = argc ? argv[0].toInteger() : 0;
         if (scope.hasException())
             return Encode::undefined();
-        // ### lift UINT_MAX restriction
-        if (l < 0 || l > UINT_MAX)
+        if (l < 0 || l > std::numeric_limits<int>::max())
             return scope.engine->throwRangeError(QLatin1String("Index out of range."));
-        uint len = (uint)l;
-        if (l != len)
-            scope.engine->throwRangeError(QStringLiteral("Non integer length for typed array."));
-        uint byteLength = len * operations[that->d()->type].bytesPerElement;
-        Scoped<ArrayBuffer> buffer(scope, scope.engine->newArrayBuffer(byteLength));
+
+        const double byteLength = l * operations[that->d()->type].bytesPerElement;
+
+        // TODO: This is an artificial restriction due to the fact that we store the byteLength in
+        //       uint below. We should allow up to INT_MAX elements of any size.
+        if (byteLength > std::numeric_limits<uint>::max())
+            return scope.engine->throwRangeError(QLatin1String("Index out of range."));
+
+        Scoped<ArrayBuffer> buffer(scope, scope.engine->newArrayBuffer(size_t(byteLength)));
         if (scope.hasException())
             return Encode::undefined();
 
