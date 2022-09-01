@@ -380,7 +380,6 @@ QQuickTextField::QQuickTextField(QQuickItem *parent)
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged, d, &QQuickTextFieldPrivate::readOnlyChanged);
     QObjectPrivate::connect(this, &QQuickTextInput::echoModeChanged, d, &QQuickTextFieldPrivate::echoModeChanged);
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
-qDebug() << "QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR" << qgetenv("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR");
     if (qEnvironmentVariable("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR") == u"old"_s)
         QQuickTextInput::setOldSelectionDefault();
 #endif
