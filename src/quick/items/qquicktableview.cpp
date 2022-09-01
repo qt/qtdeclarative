@@ -4634,14 +4634,22 @@ void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal 
 
 void QQuickTableView::positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset, const QRectF &subRect)
 {
-    positionViewAtRow(cell.y(), mode, offset.y(), subRect);
-    positionViewAtColumn(cell.x(), mode, offset.x(), subRect);
+    positionViewAtCell(cell.x(), cell.y(), mode, offset, subRect);
 }
 
 void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset, const QRectF &subRect)
 {
-    positionViewAtRow(row, mode, offset.y(), subRect);
-    positionViewAtColumn(column, mode, offset.x(), subRect);
+    PositionMode horizontalMode = mode & ~(AlignTop | AlignBottom | AlignVCenter);
+    PositionMode verticalMode = mode & ~(AlignLeft | AlignRight | AlignHCenter);
+    if (!horizontalMode && !verticalMode) {
+        qmlWarning(this) << "Unsupported mode:" << int(mode);
+        return;
+    }
+
+    if (horizontalMode)
+        positionViewAtColumn(column, horizontalMode, offset.x(), subRect);
+    if (verticalMode)
+        positionViewAtRow(row, verticalMode, offset.y(), subRect);
 }
 
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
