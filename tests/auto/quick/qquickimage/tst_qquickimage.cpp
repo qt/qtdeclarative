@@ -180,18 +180,6 @@ void tst_qquickimage::imageSource()
     QFETCH(bool, cache);
     QFETCH(QString, error);
 
-
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
-    if (qstrcmp(QTest::currentDataTag(), "remote") == 0
-        || qstrcmp(QTest::currentDataTag(), "remote redirected") == 0
-        || qstrcmp(QTest::currentDataTag(), "remote svg") == 0
-        || qstrcmp(QTest::currentDataTag(), "remote svgz") == 0
-        || qstrcmp(QTest::currentDataTag(), "remote not found") == 0
-       ) {
-        QSKIP("Remote tests cause occasional hangs in the CI system -- QTBUG-45655");
-    }
-#endif
-
     TestHTTPServer server;
     if (remote) {
         QVERIFY2(server.listen(), qPrintable(server.errorString()));
