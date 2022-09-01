@@ -29,6 +29,7 @@ private slots:
     void restoreBindingJSValue();
     void restoreBindingWithLoop();
     void restoreBindingWithoutCrash();
+    void restoreBindingWhenDestroyed();
     void deletedObject();
     void warningOnUnknownProperty();
     void warningOnReadOnlyProperty();
@@ -304,6 +305,25 @@ void tst_qqmlbinding::restoreBindingWithoutCrash()
     //original binding restored
     myItem->setY(49);
     QCOMPARE(myItem->x(), qreal(100-49));
+}
+
+void tst_qqmlbinding::restoreBindingWhenDestroyed()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("bindingRestoredWhenDestroyed.qml"));
+    QScopedPointer<QObject> root {c.create()};
+    QVERIFY2(root, qUtf8Printable(c.errorString()));
+    QCOMPARE(root->property("text").toString(), u"original");
+    QCOMPARE(root->property("i").toInt(), 42);
+
+    root->setProperty("toggle", true);
+    // QTRY_COMPARE as loader is async
+    QTRY_COMPARE(root->property("text").toString(), u"changed");
+    QCOMPARE(root->property("i").toInt(), 100);
+
+    root->setProperty("toggle", false);
+    QTRY_COMPARE(root->property("text").toString(), u"original");
+    QCOMPARE(root->property("i").toInt(), 100);
 }
 
 //QTBUG-20692

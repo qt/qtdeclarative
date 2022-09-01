@@ -391,6 +391,23 @@ QQmlBind::QQmlBind(QObject *parent)
 {
 }
 
+QQmlBind::~QQmlBind()
+{
+    Q_D(QQmlBind);
+    // restore state when dynamic Binding is destroyed
+    if (!(d->when && d->componentComplete && restoreMode() != RestoreNone))
+        return;
+    // isDeletingChildren is supposed to happen later; we couldn't use declarativeData
+    // if isDeletingChildren were set
+    Q_ASSERT(!d->isDeletingChildren);
+    // We can't use qmlEngine (or QQmlData::get), as that checks for scheduled deletion
+    if (auto ddata = static_cast<QQmlData *>(d->declarativeData);
+        ddata && ddata->context &&  QQmlData::wasDeleted(ddata->context->engine()))
+        return; // whole engine is going away; don't bother resetting
+    d->when = false; // internal only change, no signal emission
+    eval();
+}
+
 /*!
     \qmlproperty bool QtQml::Binding::when
 
@@ -1016,6 +1033,8 @@ void QQmlBind::eval()
     for (QQmlBindEntry &entry : d->entries) {
         if (!entry.prop.isValid() || (entry.currentKind == QQmlBindEntryKind::None))
             continue;
+        if (!entry.prop.object())
+            continue; // if the target is already gone, we can't do anything
 
         if (!d->when) {
             //restore any previous binding
