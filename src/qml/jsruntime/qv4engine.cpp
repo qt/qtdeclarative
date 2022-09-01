@@ -1855,16 +1855,10 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             a->setArrayLengthUnchecked(list.count());
             return a.asReturnedValue();
         } else if (auto flags = metaType.flags(); flags & QMetaType::PointerToQObject) {
-            QV4::ReturnedValue ret = QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
-            if (!flags.testFlag(QMetaType::IsConst))
-                return ret;
-            QV4::ScopedValue v(scope, ret);
-            if (auto obj = v->as<Object>()) {
-                obj->setInternalClass(obj->internalClass()->cryopreserved());
-                return obj->asReturnedValue();
-            } else {
-                return ret;
-            }
+            if (flags.testFlag(QMetaType::IsConst))
+                return QV4::QObjectWrapper::wrapConst(this, *reinterpret_cast<QObject* const *>(ptr));
+            else
+                return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
         }
 
         bool succeeded = false;
