@@ -39,25 +39,28 @@
 #ifndef UNICODE_H
 #define UNICODE_H
 
-#include <QChar>
+#include <QtCore/private/qunicodetables_p.h>
+#include <QtCore/qchar.h>
 
 typedef unsigned char LChar;
 typedef unsigned short UChar;
 typedef int32_t UChar32;
 
 namespace Unicode {
-    inline UChar toLower(UChar ch) {
-        return QChar::toLower(ch);
+    // u_tolower applies only Simple_Lowercase_Mapping. This is in contrast to QChar::toLower.
+    inline UChar32 u_tolower(UChar32 ch) {
+        if (ch > QChar::LastValidCodePoint)
+            return ch;
+        const auto fold = QUnicodeTables::properties(char32_t(ch))->cases[QUnicodeTables::LowerCase];
+        return fold.special ? ch : (ch + fold.diff);
     }
 
-    inline UChar toUpper(UChar ch) {
-        return QChar::toUpper(ch);
-    }
-    inline UChar32 u_tolower(UChar32 ch) {
-        return QChar::toLower(ch);
-    }
+    // u_toupper applies only Simple_Uppercase_Mapping. This is in contrast to QChar::toUpper.
     inline UChar32 u_toupper(UChar32 ch) {
-        return QChar::toUpper(ch);
+        if (ch > QChar::LastValidCodePoint)
+            return ch;
+        const auto fold = QUnicodeTables::properties(char32_t(ch))->cases[QUnicodeTables::UpperCase];
+        return fold.special ? ch : (ch + fold.diff);
     }
 }
 
