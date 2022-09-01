@@ -591,6 +591,8 @@ QQuickRenderTarget QQuickRenderTarget::fromRhiRenderTarget(QRhiRenderTarget *ren
     \note The QQuickRenderTarget does not take ownship of \a device, it is the
     caller's responsibility to ensure the object exists as long as necessary.
 
+    \since 6.4
+
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
 QQuickRenderTarget QQuickRenderTarget::fromPaintDevice(QPaintDevice *device)
