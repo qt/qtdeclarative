@@ -99,15 +99,10 @@ static ReturnedValue loadProperty(ExecutionEngine *v4, QObject *object,
     if (property.isQObject()) {
         QObject *rv = nullptr;
         property.readProperty(object, &rv);
-        ReturnedValue ret = QObjectWrapper::wrap(v4, rv);
-        if (propMetaType.flags().testFlag(QMetaType::IsConst)) {
-            ScopedValue v(scope, ret);
-            if (auto obj = v->as<Object>()) {
-                obj->setInternalClass(obj->internalClass()->cryopreserved());
-                return obj->asReturnedValue();
-            }
-        }
-        return ret;
+        if (propMetaType.flags().testFlag(QMetaType::IsConst))
+            return QObjectWrapper::wrapConst(v4, rv);
+        else
+            return QObjectWrapper::wrap(v4, rv);
     }
 
     if (property.isQList() && propMetaType.flags().testFlag(QMetaType::IsQmlList))
@@ -669,6 +664,29 @@ ReturnedValue QObjectWrapper::wrap_slowPath(ExecutionEngine *engine, QObject *ob
     }
 }
 
+ReturnedValue QObjectWrapper::wrapConst_slowPath(ExecutionEngine *engine, QObject *object)
+{
+    const QObject *constObject = object;
+
+    QQmlData *ddata = QQmlData::get(object, true);
+
+    Scope scope(engine);
+    ScopedObject constWrapper(scope);
+    if (engine->m_multiplyWrappedQObjects && ddata->hasConstWrapper)
+        constWrapper = engine->m_multiplyWrappedQObjects->value(constObject);
+
+    if (!constWrapper) {
+        constWrapper = create(engine, object);
+        constWrapper->setInternalClass(constWrapper->internalClass()->cryopreserved());
+        if (!engine->m_multiplyWrappedQObjects)
+            engine->m_multiplyWrappedQObjects = new MultiplyWrappedQObjectMap;
+        engine->m_multiplyWrappedQObjects->insert(constObject, constWrapper->d());
+        ddata->hasConstWrapper = true;
+    }
+
+    return constWrapper.asReturnedValue();
+}
+
 void QObjectWrapper::markWrapper(QObject *object, MarkStack *markStack)
 {
     if (QQmlData::wasDeleted(object))
@@ -683,6 +701,8 @@ void QObjectWrapper::markWrapper(QObject *object, MarkStack *markStack)
         ddata->jsWrapper.markOnce(markStack);
     else if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
         engine->m_multiplyWrappedQObjects->mark(object, markStack);
+    if (ddata->hasConstWrapper)
+        engine->m_multiplyWrappedQObjects->mark(static_cast<const QObject *>(object), markStack);
 }
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value)
@@ -710,14 +730,13 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int p
 bool QObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 {
     Q_ASSERT(a->as<QObjectWrapper>());
-    QObjectWrapper *qobjectWrapper = static_cast<QObjectWrapper *>(a);
-    Object *o = b->as<Object>();
-    if (o) {
-        if (QQmlTypeWrapper *qmlTypeWrapper = o->as<QQmlTypeWrapper>())
-            return qmlTypeWrapper->toVariant().value<QObject*>() == qobjectWrapper->object();
-    }
+    const QObjectWrapper *aobjectWrapper = static_cast<QObjectWrapper *>(a);
+    if (const QQmlTypeWrapper *qmlTypeWrapper = b->as<QQmlTypeWrapper>())
+        return qmlTypeWrapper->object() == aobjectWrapper->object();
 
-    return false;
+    // We can have a const and a non-const wrapper for the same object.
+    const QObjectWrapper *bobjectWrapper = b->as<QObjectWrapper>();
+    return bobjectWrapper && aobjectWrapper->object() == bobjectWrapper->object();
 }
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
@@ -2431,39 +2450,20 @@ void QmlSignalHandler::initProto(ExecutionEngine *engine)
     engine->jsObjects[ExecutionEngine::SignalHandlerProto] = o->d();
 }
 
-void MultiplyWrappedQObjectMap::insert(QObject *key, Heap::Object *value)
+
+MultiplyWrappedQObjectMap::Iterator MultiplyWrappedQObjectMap::erase(
+        MultiplyWrappedQObjectMap::Iterator it)
 {
-    QHash<QObject*, WeakValue>::operator[](key).set(value->internalClass->engine, value);
-    connect(key, SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
-}
-
-
-
-MultiplyWrappedQObjectMap::Iterator MultiplyWrappedQObjectMap::erase(MultiplyWrappedQObjectMap::Iterator it)
-{
-    disconnect(it.key(), SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
-    return QHash<QObject*, WeakValue>::erase(it);
-}
-
-void MultiplyWrappedQObjectMap::remove(QObject *key)
-{
-    Iterator it = find(key);
-    if (it == end())
-        return;
-    erase(it);
-}
-
-void MultiplyWrappedQObjectMap::mark(QObject *key, MarkStack *markStack)
-{
-    Iterator it = find(key);
-    if (it == end())
-        return;
-    it->markOnce(markStack);
+    const QObjectBiPointer key = it.key();
+    const QObject *obj = key.isT1() ? key.asT1() : key.asT2();
+    disconnect(obj, &QObject::destroyed, this, &MultiplyWrappedQObjectMap::removeDestroyedObject);
+    return QHash<QObjectBiPointer, WeakValue>::erase(it);
 }
 
 void MultiplyWrappedQObjectMap::removeDestroyedObject(QObject *object)
 {
-    QHash<QObject*, WeakValue>::remove(object);
+    QHash<QObjectBiPointer, WeakValue>::remove(object);
+    QHash<QObjectBiPointer, WeakValue>::remove(static_cast<const QObject *>(object));
 }
 
 } // namespace QV4

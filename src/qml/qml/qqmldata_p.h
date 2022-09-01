@@ -103,7 +103,9 @@ public:
     // set when at least one of the object's properties is intercepted
     quint32 hasInterceptorMetaObject:1;
     quint32 hasVMEMetaObject:1;
-    quint32 dummy:8;
+    // If we have another wrapper for a const QObject * in the multiply wrapped QObjects.
+    quint32 hasConstWrapper: 1;
+    quint32 dummy:7;
 
     // When bindingBitsSize < sizeof(ptr), we store the binding bit flags inside
     // bindingBitsValue. When we need more than sizeof(ptr) bits, we allocated

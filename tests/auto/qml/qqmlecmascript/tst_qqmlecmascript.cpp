@@ -9879,14 +9879,65 @@ void tst_qqmlecmascript::cmpInThrows()
     QCOMPARE(stacktrace.at(0), QStringLiteral("%entry:14:-1:file:foo.js"));
 }
 
+class FrozenFoo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString name MEMBER m_name NOTIFY nameChanged)
+
+public:
+    FrozenFoo(QObject *parent = nullptr) : QObject(parent) {}
+    QString name() const { return m_name; }
+
+signals:
+    void nameChanged();
+
+private:
+    QString m_name{ "Foo" };
+};
+
+class FrozenObjects : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(FrozenFoo *fooMember READ fooMember CONSTANT);
+    Q_PROPERTY(const FrozenFoo *fooMemberConst READ fooMemberConst CONSTANT);
+    Q_PROPERTY(FrozenFoo *fooMember2 READ fooMember2 CONSTANT);
+
+public:
+    FrozenObjects(QObject *parent = nullptr) : QObject(parent) {}
+
+    Q_INVOKABLE void triggerSignal() { emit fooMember2Emitted(&m_fooMember2); }
+
+    FrozenFoo *fooMember() { return &m_fooMember; }
+    FrozenFoo *fooMember2() { return &m_fooMember2; }
+
+signals:
+    void fooMember2Emitted(const FrozenFoo *fooMember2);
+
+private:
+    const FrozenFoo *fooMemberConst() const { return &m_fooMember; }
+
+    FrozenFoo m_fooMember;
+    FrozenFoo m_fooMember2;
+};
+
 void tst_qqmlecmascript::frozenQObject()
 {
+    qmlRegisterType<FrozenObjects>("test", 1, 0, "FrozenObjects");
+
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("frozenQObject.qml"));
-    QScopedPointer<QObject> root(component.create());
-    QVERIFY2(root, qPrintable(component.errorString()));
-    QVERIFY(root->property("caughtException").toBool());
-    QVERIFY(root->property("nameCorrect").toBool());
+    QQmlComponent component1(&engine, testFileUrl("frozenQObject.qml"));
+    QScopedPointer<QObject> root1(component1.create());
+    QVERIFY2(root1, qPrintable(component1.errorString()));
+    QVERIFY(root1->property("caughtException").toBool());
+    QVERIFY(root1->property("nameCorrect").toBool());
+
+    QQmlComponent component2(&engine, testFileUrl("frozenQObject2.qml"));
+    QScopedPointer<QObject> root2(component2.create());
+    FrozenObjects *frozenObjects = qobject_cast<FrozenObjects *>(root2.data());
+    QVERIFY2(frozenObjects, qPrintable(component2.errorString()));
+    QVERIFY(frozenObjects->property("caughtSignal").toBool());
+    QCOMPARE(frozenObjects->fooMember()->name(), QStringLiteral("Jane"));
+    QCOMPARE(frozenObjects->fooMember2()->name(), QStringLiteral("Jane"));
 }
 
 struct ConstPointer : QObject

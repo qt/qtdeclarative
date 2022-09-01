@@ -140,6 +140,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
     static ReturnedValue wrap(ExecutionEngine *engine, QObject *object);
+    static ReturnedValue wrapConst(ExecutionEngine *engine, QObject *object);
     static void markWrapper(QObject *object, MarkStack *markStack);
 
     using Object::get;
@@ -181,6 +182,7 @@ protected:
 
 private:
     Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);
+    Q_NEVER_INLINE static ReturnedValue wrapConst_slowPath(ExecutionEngine *engine, QObject *object);
 };
 
 inline ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *object)
@@ -195,6 +197,15 @@ inline ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *obje
     }
 
     return wrap_slowPath(engine, object);
+}
+
+// Unfortunately we still need a non-const QObject* here because QQmlData needs to register itself in QObjectPrivate.
+inline ReturnedValue QObjectWrapper::wrapConst(ExecutionEngine *engine, QObject *object)
+{
+    if (Q_UNLIKELY(QQmlData::wasDeleted(object)))
+        return QV4::Encode::null();
+
+    return wrapConst_slowPath(engine, object);
 }
 
 template <typename ReversalFunctor>
@@ -292,23 +303,32 @@ struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object
     static void initProto(ExecutionEngine *v4);
 };
 
+using QObjectBiPointer = QBiPointer<QObject, const QObject>;
+
 class MultiplyWrappedQObjectMap : public QObject,
-                                  private QHash<QObject*, QV4::WeakValue>
+                                  private QHash<QObjectBiPointer, QV4::WeakValue>
 {
     Q_OBJECT
 public:
-    typedef QHash<QObject*, QV4::WeakValue>::ConstIterator ConstIterator;
-    typedef QHash<QObject*, QV4::WeakValue>::Iterator Iterator;
+    typedef QHash<QObjectBiPointer, QV4::WeakValue>::ConstIterator ConstIterator;
+    typedef QHash<QObjectBiPointer, QV4::WeakValue>::Iterator Iterator;
 
-    using value_type = QHash<QObject*, QV4::WeakValue>::value_type;
+    using value_type = QHash<QObjectBiPointer, QV4::WeakValue>::value_type;
 
-    ConstIterator begin() const { return QHash<QObject*, QV4::WeakValue>::constBegin(); }
-    Iterator begin() { return QHash<QObject*, QV4::WeakValue>::begin(); }
-    ConstIterator end() const { return QHash<QObject*, QV4::WeakValue>::constEnd(); }
-    Iterator end() { return QHash<QObject*, QV4::WeakValue>::end(); }
+    ConstIterator begin() const { return QHash<QObjectBiPointer, QV4::WeakValue>::constBegin(); }
+    Iterator begin() { return QHash<QObjectBiPointer, QV4::WeakValue>::begin(); }
+    ConstIterator end() const { return QHash<QObjectBiPointer, QV4::WeakValue>::constEnd(); }
+    Iterator end() { return QHash<QObjectBiPointer, QV4::WeakValue>::end(); }
 
-    void insert(QObject *key, Heap::Object *value);
-    ReturnedValue value(QObject *key) const
+    template<typename Pointer>
+    void insert(Pointer key, Heap::Object *value)
+    {
+        QHash<QObjectBiPointer, WeakValue>::operator[](key).set(value->internalClass->engine, value);
+        connect(key, SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
+    }
+
+    template<typename Pointer>
+    ReturnedValue value(Pointer key) const
     {
         ConstIterator it = find(key);
         return it == end()
@@ -317,8 +337,24 @@ public:
     }
 
     Iterator erase(Iterator it);
-    void remove(QObject *key);
-    void mark(QObject *key, MarkStack *markStack);
+
+    template<typename Pointer>
+    void remove(Pointer key)
+    {
+        Iterator it = find(key);
+        if (it == end())
+            return;
+        erase(it);
+    }
+
+    template<typename Pointer>
+    void mark(Pointer key, MarkStack *markStack)
+    {
+        Iterator it = find(key);
+        if (it == end())
+            return;
+        it->markOnce(markStack);
+    }
 
 private Q_SLOTS:
     void removeDestroyedObject(QObject*);

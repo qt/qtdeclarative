@@ -87,6 +87,11 @@ public:
     inline T *asT1() const;
     inline T2 *asT2() const;
 
+    friend size_t qHash(const QBiPointer<T, T2> &ptr, size_t seed = 0)
+    {
+        return qHash(ptr.isNull() ? quintptr(0) : ptr.ptr_value, seed);
+    }
+
 private:
     quintptr ptr_value = 0;
 
