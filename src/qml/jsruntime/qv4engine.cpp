@@ -393,12 +393,15 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
         }
     }
 
+    // We allocate guard pages around our stacks.
+    const size_t guardPages = 2 * WTF::pageSize();
+
     memoryManager = new QV4::MemoryManager(this);
     // reserve space for the JS stack
     // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.
     *jsStack = WTF::PageAllocation::allocate(
-                s_maxJSStackSize + 256*1024, WTF::OSAllocator::JSVMStackPages,
+                s_maxJSStackSize + 256*1024 + guardPages, WTF::OSAllocator::JSVMStackPages,
                 /* writable */ true, /* executable */ false, /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
 #ifdef V4_USE_VALGRIND
@@ -407,9 +410,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     jsStackTop = jsStackBase;
 
-    *gcStack = WTF::PageAllocation::allocate(s_maxGCStackSize, WTF::OSAllocator::JSVMStackPages,
-                                             /* writable */ true, /* executable */ false,
-                                             /* includesGuardPages */ true);
+    *gcStack = WTF::PageAllocation::allocate(
+                s_maxGCStackSize + guardPages, WTF::OSAllocator::JSVMStackPages,
+                /* writable */ true, /* executable */ false, /* includesGuardPages */ true);
 
     exceptionValue = jsAlloca(1);
     *exceptionValue = Encode::undefined();
