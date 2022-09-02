@@ -3075,6 +3075,26 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->actuals().count(), 1);
     QCOMPARE(o->actuals().at(0), QVariant::fromValue((QObject *)nullptr));
 
+    {
+        o->reset();
+        QQmlComponent comp(&qmlengine, testFileUrl("qmlTypeWrapperArgs.qml"));
+        QScopedPointer<QObject> root {comp.createWithInitialProperties({{"invokableObject", QVariant::fromValue(o)}}) };
+        QVERIFY(root);
+        QCOMPARE(o->error(), false);
+        QCOMPARE(o->invoked(), 13);
+        QCOMPARE(o->actuals().count(), 1);
+        QCOMPARE(o->actuals().at(0).value<QObject *>()->metaObject()->className(), "QQmlComponentAttached");
+    }
+
+    {
+        o->reset();
+        QQmlComponent comp(&qmlengine, testFileUrl("qmlTypeWrapperArgs2.qml"));
+        QScopedPointer<QObject> root {comp.createWithInitialProperties({{"invokableObject", QVariant::fromValue(o)}}) };
+        QVERIFY(root);
+        QCOMPARE(o->error(), false);
+        QCOMPARE(o->invoked(), -1); // no function got called due to incompatible arguments
+    }
+
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);

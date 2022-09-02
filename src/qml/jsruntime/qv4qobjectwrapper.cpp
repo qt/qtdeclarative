@@ -1889,12 +1889,24 @@ bool CallArgument::fromValue(QMetaType metaType, QV4::ExecutionEngine *engine, c
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = nullptr;
         type = callType;
-        if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
+        if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>()) {
             qobjectPtr = qobjectWrapper->object();
-        else if (const QV4::QQmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QQmlTypeWrapper>())
-            queryEngine = qmlTypeWrapper->isSingleton();
-        else if (!value.isNull() && !value.isUndefined()) // null and undefined are nullptr
+        } else if (const QV4::QQmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QQmlTypeWrapper>()) {
+            if (qmlTypeWrapper->isSingleton()) {
+                queryEngine = true;
+            } else if (QObject *obj = qmlTypeWrapper->object()) {
+                // attached object case
+                qobjectPtr = obj;
+                return true;
+            } else {
+                // If this is a plain type wrapper without an instance,
+                // then we got a namespace, and that's a type error
+                type = QMetaType::UnknownType;
+                return false;
+            }
+        } else if (!value.isNull() && !value.isUndefined()) { // null and undefined are nullptr
             return false;
+        }
     } else if (callType == qMetaTypeId<QVariant>()) {
         qvariantPtr = new (&allocData) QVariant(scope.engine->toVariant(value, QMetaType {}));
         type = callType;
