@@ -1114,11 +1114,31 @@ void tst_QmlCppCodegen::accessModelMethodFromOutSide()
     QCOMPARE(object->property("name2").toString(), u"Banana"_s);
 }
 
+// QML-generated types have no C++ names, but we want to call a method that
+// expects a pointer to a QML-generated type as argument.
+//
+// We force the QML engine to assign a specific name to our type and declare
+// an incomplete dummy class of the same name here. The dummy class does not
+// have a proper metatype by itself. Therefore, when we want to pass a (null)
+// pointer of it to invokeMethod(), usually invokeMethod() would complain that
+// the metatype of the argument we pass does not match the metatype of the
+// argument the method expects. In order to work around it, we specialize
+// qMetaTypeInterfaceForType() and produce a "correct" metatype this way.
+class Dummy_QMLTYPE_0;
+
+// We set this to the actual value retrieved from an actual instance of the QML
+// type before retrieving the metatype interface for the first time.
+static const QtPrivate::QMetaTypeInterface *dummyMetaTypeInterface = nullptr;
+template<>
+const QtPrivate::QMetaTypeInterface *QtPrivate::qMetaTypeInterfaceForType<Dummy_QMLTYPE_0 *>() {
+    return dummyMetaTypeInterface;
+}
+
 void tst_QmlCppCodegen::functionArguments()
 {
     QQmlEngine engine;
 
-    // ensugre that dummy gets couter value 0, don't do that at home
+    // Ensure that Dummy gets counter value 0. Don't do that at home
     QScopedValueRollback<QAtomicInt> rb(QQmlPropertyCacheCreatorBase::classIndexCounter, 0);
 
     QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Dummy.qml"_s));
@@ -1126,13 +1146,14 @@ void tst_QmlCppCodegen::functionArguments()
     QScopedPointer<QObject> object(component.create());
 
     const QMetaObject *metaObject = object->metaObject();
+    dummyMetaTypeInterface = metaObject->metaType().iface();
     const QByteArray className = QByteArray(metaObject->className());
     QCOMPARE(className, "Dummy_QMLTYPE_0");
 
     int result;
     int a = 1;
     bool b = false;
-    class Dummy_QMLTYPE_0 *c = nullptr;
+    Dummy_QMLTYPE_0 *c = nullptr;
     double d = -1.2;
     int e = 3;
 
