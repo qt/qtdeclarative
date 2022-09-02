@@ -730,6 +730,18 @@ void QQuickLayout::componentComplete()
     d->m_isReady = true;
 }
 
+void QQuickLayout::maybeSubscribeToBaseLineOffsetChanges(QQuickItem *item)
+{
+    QQuickLayoutAttached *info = attachedLayoutObject(item, false);
+    if (info) {
+        if (info->alignment() == Qt::AlignBaseline && static_cast<QQuickLayout*>(item->parentItem()) == this) {
+            qmlobject_connect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        } else {
+            qmlobject_disconnect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        }
+    }
+}
+
 void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
 {
     Q_D(QQuickLayout);
@@ -811,7 +823,7 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
     if (change == ItemChildAddedChange) {
         Q_D(QQuickLayout);
         QQuickItem *item = value.item;
-        qmlobject_connect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        maybeSubscribeToBaseLineOffsetChanges(item);
         QQuickItemPrivate::get(item)->addItemChangeListener(this, changeTypes);
         d->m_hasItemChangeListeners = true;
         qCDebug(lcQuickLayouts) << "ChildAdded" << item;
@@ -819,7 +831,7 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
             invalidate();
     } else if (change == ItemChildRemovedChange) {
         QQuickItem *item = value.item;
-        qmlobject_disconnect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
+        maybeSubscribeToBaseLineOffsetChanges(item);
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, changeTypes);
         qCDebug(lcQuickLayouts) << "ChildRemoved" << item;
         if (isReady())

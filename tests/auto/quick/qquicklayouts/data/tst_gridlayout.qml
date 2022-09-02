@@ -539,6 +539,56 @@ Item {
             tryCompare(layout.children[4], "y", 60);
         }
 
+        Component {
+            id: layout_alignBaseline_Component
+            GridLayout {
+                columns: 2
+                columnSpacing: 0
+                rowSpacing: 0
+                TextInput {
+                    property var itemRect: [x, y, width, height]
+                    text: "red"
+                    baselineOffset: 7
+                    color: "red"
+                    verticalAlignment: TextInput.AlignVCenter
+                    Layout.preferredWidth: 50
+                    Layout.preferredHeight: 10
+                    Layout.fillHeight: true
+                }
+                TextInput {
+                    property var itemRect: [x, y, width, height]
+                    text: "green"
+                    baselineOffset: 7
+                    color: "green"
+                    verticalAlignment: TextInput.AlignVCenter
+                    Layout.preferredWidth: 50
+                    Layout.preferredHeight: 10
+                    Layout.fillHeight: true
+                }
+
+            }
+        }
+
+        function test_alignBaseline_dont_always_invalidate()
+        {
+            var layout = createTemporaryObject(layout_alignBaseline_Component, container);
+            waitForItemPolished(layout)
+            layout.height = 20
+            // Adjusting height on an item that uses Qt.AlignBaseline might adjust the baseline
+            // Test if we don't get excessive number of polish() events because of baseline changes
+            // (In this case, we don't want to align by the baseline)
+            compare(isPolishScheduled(layout), false)
+            waitForItemPolished(layout)
+            var c0 = layout.children[0]
+            c0.Layout.alignment = Qt.AlignBaseline
+            var c1 = layout.children[1]
+            c1.Layout.alignment = Qt.AlignBaseline
+
+            // We want to align by baseline => expect a polish event
+            compare(isPolishScheduled(layout), true)
+            waitForItemPolished(layout)
+        }
+
 
         Component {
             id: layout_rightToLeft_Component

@@ -281,6 +281,7 @@ void QQuickGridLayoutBase::setAlignment(QQuickItem *item, Qt::Alignment alignmen
 {
     Q_D(QQuickGridLayoutBase);
     d->engine.setAlignment(item, alignment);
+    maybeSubscribeToBaseLineOffsetChanges(item);
 }
 
 QQuickGridLayoutBase::~QQuickGridLayoutBase()
