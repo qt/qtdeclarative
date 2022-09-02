@@ -5,15 +5,41 @@
 ## tst_ecmascripttests Test:
 #####################################################################
 
+# Collect test data
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    test262/*)
+list(APPEND test_data ${test_data_glob})
+
 qt_internal_add_test(tst_ecmascripttests
     SOURCES
         qjstest/test262runner.cpp qjstest/test262runner.h
         tst_ecmascripttests.cpp
-    DEFINES
-        SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
     LIBRARIES
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
+    TESTDATA
+        ${test_data}
 )
+
+if(ANDROID OR IOS)
+    qt_add_resources(tst_ecmascripttests "testExpectations"
+        PREFIX
+            "/"
+        FILES
+            "TestExpectations"
+    )
+
+    qt_internal_extend_target(tst_ecmascripttests
+        DEFINES
+            QT_QMLTEST_DATADIR=\\\":/test262\\\"
+    )
+else()
+    qt_internal_extend_target(tst_ecmascripttests
+        DEFINES
+            QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/test262\\\"
+    )
+endif()
 
 set_property(TEST tst_ecmascripttests APPEND PROPERTY ENVIRONMENT "QTEST_FUNCTION_TIMEOUT=900000")
 if(NOT CMAKE_CROSSCOMPILING)

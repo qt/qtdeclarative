@@ -70,7 +70,7 @@ struct TestData : TestCase {
 class Test262Runner
 {
 public:
-    Test262Runner(const QString &command, const QString &testDir);
+    Test262Runner(const QString &command, const QString &testDir, const QString &expectationsFile);
     ~Test262Runner();
 
     enum Mode {
@@ -113,6 +113,7 @@ private:
 
     QString command;
     QString testDir;
+    QString expectationsFile;
     int flags = 0;
 
     QMutex mutex;

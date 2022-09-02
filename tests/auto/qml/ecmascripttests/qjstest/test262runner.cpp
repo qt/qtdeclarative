@@ -90,8 +90,8 @@ QT_END_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcJsTest);
 Q_LOGGING_CATEGORY(lcJsTest, "qt.v4.ecma262.tests", QtWarningMsg);
 
-Test262Runner::Test262Runner(const QString &command, const QString &dir)
-    : command(command), testDir(dir)
+Test262Runner::Test262Runner(const QString &command, const QString &dir, const QString &expectationsFile)
+    : command(command), testDir(dir), expectationsFile(expectationsFile)
 {
     if (testDir.endsWith(QLatin1Char('/')))
         testDir = testDir.chopped(1);
@@ -371,9 +371,9 @@ TestExpectationLine::State TestExpectationLine::stateFromTestCase(const TestCase
 
 void Test262Runner::loadTestExpectations()
 {
-    QFile file("TestExpectations");
+    QFile file(expectationsFile);
     if (!file.open(QFile::ReadOnly)) {
-        qWarning() << "Could not open TestExpectations file.";
+        qWarning() << "Could not open TestExpectations file at" << expectationsFile;
         return;
     }
 
@@ -415,9 +415,9 @@ void Test262Runner::loadTestExpectations()
 
 void Test262Runner::updateTestExpectations()
 {
-    QFile file("TestExpectations");
+    QFile file(expectationsFile);
     if (!file.open(QFile::ReadOnly)) {
-        qWarning() << "Could not open TestExpectations file.";
+        qWarning() << "Could not open TestExpectations file at" << expectationsFile;
         return;
     }
 
@@ -449,15 +449,17 @@ void Test262Runner::updateTestExpectations()
     }
     file.close();
     updatedExpectations.close();
-    file.remove();
-    qDebug() << updatedExpectations.fileName() << file.fileName();
-    updatedExpectations.copy(file.fileName());
-    qDebug() << "Updated TestExpectations file written!";
+    if (!file.remove())
+        qWarning() << "Could not remove old TestExpectations file at" << expectationsFile;
+    if (updatedExpectations.copy(file.fileName()))
+        qDebug() << "Updated TestExpectations file written!";
+    else
+        qWarning() << "Could not write new TestExpectations file at" << expectationsFile;
 }
 
 void Test262Runner::writeTestExpectations()
 {
-    QFile file("TestExpectations");
+    QFile file(expectationsFile);
 
     QTemporaryFile expectations;
     expectations.open();
@@ -468,12 +470,12 @@ void Test262Runner::writeTestExpectations()
     }
 
     expectations.close();
-    if (file.exists())
-        file.remove();
-    qDebug() << expectations.fileName() << file.fileName();
-    expectations.copy(file.fileName());
-    qDebug() << "new TestExpectations file written!";
-
+    if (file.exists() && !file.remove())
+        qWarning() << "Could not remove old TestExpectations file at" << expectationsFile;
+    if (expectations.copy(file.fileName()))
+        qDebug() << "new TestExpectations file written!";
+    else
+        qWarning() << "Could not write new TestExpectations file at" << expectationsFile;
 }
 
 static TestCase::Result executeTest(const QByteArray &data, bool runAsModule = false,

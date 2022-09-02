@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 
     parser.process(app);
 
-    Test262Runner testRunner(parser.value(commandOption), parser.value(testDir));
+    Test262Runner testRunner(parser.value(commandOption), parser.value(testDir), QStringLiteral("TestExpectations"));
 
     QStringList otherArgs = parser.positionalArguments();
     if (otherArgs.size() > 1) {
