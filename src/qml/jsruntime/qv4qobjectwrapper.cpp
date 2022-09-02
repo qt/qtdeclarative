@@ -1935,14 +1935,16 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
                 // Convert via QVariant below.
                 // TODO: Can't we just do qobjectPtr = qmlTypeWrapper->object() instead?
                 break;
+            } else if (QObject *obj = qmlTypeWrapper->object()) {
+                // attached object case
+                qobjectPtr = obj;
+                return true;
             }
 
             // If this is a plain type wrapper without an instance,
-            // then indeed it's an undefined parameter.
-            // (although we might interpret that as const QMetaObject *).
-            // TODO: But what if it's an attached object?
+            // then we got a namespace, and that's a type error
             type = QMetaType::UnknownType;
-            return true;
+            return false;
         }
 
         qobjectPtr = nullptr;
