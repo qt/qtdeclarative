@@ -579,7 +579,7 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
     QPoint p1(20,100);
     QPoint p2(40,100);
 
-    // moving one point vertically
+    // moving one point vertically: flickable gets the grab
     QTest::touchEvent(window.data(), device).press(0, p1);
     QQuickTouchUtils::flush(window.data());
 
@@ -603,7 +603,8 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
 
     QTRY_VERIFY(!flickable->isMoving());
 
-    // moving two points vertically
+    // moving two points vertically: MPTAs handle them, Flickable ignores multi-touch.
+    // The stray mouse events simulate OS-level synth-from-touch, and should not interfere.
     p1 = QPoint(20,100);
     QTest::touchEvent(window.data(), device).press(0, p1).press(1, p2);
     QWindowSystemInterface::handleMouseEvent(window.data(), device, p1, window->mapToGlobal(p1),
@@ -631,11 +632,11 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
                 i, p1.x(), p1.y(), p2.x(), p2.y(), flickable->contentY());
     }
 
-    QVERIFY(flickable->contentY() < 0);
-    QCOMPARE(point11->pressed(), false);
-    QCOMPARE(point12->pressed(), false);
-    QCOMPARE(window->rootObject()->property("cancelCount").toInt(), 2);
-    QCOMPARE(window->rootObject()->property("touchCount").toInt(), 0);
+    QCOMPARE(flickable->contentY(), 0);
+    QCOMPARE(point11->pressed(), true);
+    QCOMPARE(point12->pressed(), true);
+    QCOMPARE(window->rootObject()->property("cancelCount").toInt(), 0);
+    QCOMPARE(window->rootObject()->property("touchCount").toInt(), 2);
 
     QTest::touchEvent(window.data(), device).release(0, p1).release(1, p2);
     QWindowSystemInterface::handleMouseEvent(window.data(), device, p1, window->mapToGlobal(p1),
@@ -681,10 +682,8 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
                 i, p1.x(), p1.y(), p2.x(), p2.y(), flickable->contentY());
     }
 
-    QEXPECT_FAIL("", "currently flickable does grab the actual mouse", Continue);
     QCOMPARE(flickable->contentY(), qreal(0));
     QCOMPARE(point11->pressed(), true);
-    QEXPECT_FAIL("", "currently flickable does grab the actual mouse", Continue);
     QCOMPARE(point12->pressed(), true);
 
     QTest::touchEvent(window.data(), device).release(0, p1).release(1, p2);
