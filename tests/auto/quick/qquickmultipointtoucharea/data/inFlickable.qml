@@ -43,8 +43,8 @@ Rectangle {
                 TouchPoint { id: point2; objectName: "point2" }
             ]
 
-            onCanceled: root.cancelCount = touchPoints.length
-            onTouchUpdated: root.touchCount = touchPoints.length
+            onCanceled: (touchPoints) => root.cancelCount = touchPoints.length
+            onTouchUpdated: (touchPoints) => root.touchCount = touchPoints.length
 
             Text {
                 text: "①"
