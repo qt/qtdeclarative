@@ -12,18 +12,19 @@ QT_BEGIN_NAMESPACE
 
 QQmlDataTest *QQmlDataTest::m_instance = nullptr;
 
-QQmlDataTest::QQmlDataTest(const char *qmlTestDataDir, FailOnWarningsPolicy failOnWarningsPolicy) :
-    m_qmlTestDataDir(qmlTestDataDir),
+QQmlDataTest::QQmlDataTest(
+        const char *qmlTestDataDir, FailOnWarningsPolicy failOnWarningsPolicy,
+        const char *dataSubDir)
+    : m_qmlTestDataDir(qmlTestDataDir)
 #ifdef QT_TESTCASE_BUILDDIR
-    m_dataDirectory(QTest::qFindTestData("data", m_qmlTestDataDir, 0, QT_TESTCASE_BUILDDIR)),
+    , m_dataDirectory(QTest::qFindTestData(dataSubDir, m_qmlTestDataDir, 0, QT_TESTCASE_BUILDDIR))
 #else
-    m_dataDirectory(QTest::qFindTestData("data", m_qmlTestDataDir, 0)),
+    , m_dataDirectory(QTest::qFindTestData(dataSubDir, m_qmlTestDataDir, 0))
 #endif
-
-    m_dataDirectoryUrl(m_dataDirectory.startsWith(QLatin1Char(':'))
-        ? QUrl(QLatin1String("qrc") + m_dataDirectory + QLatin1Char('/'))
-        : QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/'))),
-    m_failOnWarningsPolicy(failOnWarningsPolicy)
+    , m_dataDirectoryUrl(m_dataDirectory.startsWith(QLatin1Char(':'))
+                         ? QUrl(QLatin1String("qrc") + m_dataDirectory + QLatin1Char('/'))
+                         : QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/')))
+    , m_failOnWarningsPolicy(failOnWarningsPolicy)
 {
     m_instance = this;
     if (m_cacheDir.isValid() && !qEnvironmentVariableIsSet("QML_DISK_CACHE_PATH")) {
@@ -41,8 +42,10 @@ QQmlDataTest::~QQmlDataTest()
 
 void QQmlDataTest::initTestCase()
 {
-    QVERIFY2(!m_dataDirectory.isEmpty(), qPrintable(QLatin1String(
-        "'data' directory not found in ") + QFileInfo(QString::fromUtf8(m_qmlTestDataDir)).absolutePath()));
+    QVERIFY2(!m_dataDirectory.isEmpty(), qPrintable(
+                 QLatin1String("'%1' directory not found in %2").arg(
+                     QString::fromUtf8(m_dataSubDir),
+                     QFileInfo(QString::fromUtf8(m_qmlTestDataDir)).absolutePath())));
     m_directory = QFileInfo(m_dataDirectory).absolutePath();
     if (m_dataDirectoryUrl.scheme() != QLatin1String("qrc"))
         QVERIFY2(QDir::setCurrent(m_directory), qPrintable(QLatin1String("Could not chdir to ") + m_directory));

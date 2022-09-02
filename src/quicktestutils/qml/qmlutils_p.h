@@ -36,8 +36,10 @@ public:
         FailOnWarnings
     };
 
-    QQmlDataTest(const char *qmlTestDataDir,
-        FailOnWarningsPolicy failOnWarningsPolicy = FailOnWarningsPolicy::DoNotFailOnWarnings);
+    QQmlDataTest(
+            const char *qmlTestDataDir,
+            FailOnWarningsPolicy failOnWarningsPolicy = FailOnWarningsPolicy::DoNotFailOnWarnings,
+            const char *dataSubdir = "data");
     virtual ~QQmlDataTest();
 
     QString testFile(const QString &fileName) const;
@@ -68,9 +70,11 @@ public Q_SLOTS:
 private:
     static QQmlDataTest *m_instance;
 
-    // The directory in which to search for the "data" directory.
+    // The directory in which to search for m_dataSubDir.
     const char *m_qmlTestDataDir = nullptr;
-    // The path to the "data" directory, if found.
+    // The subdirectory containing the actual data. Typically "data"
+    const char *m_dataSubDir = nullptr;
+    // The path to m_dataSubDir, if found.
     const QString m_dataDirectory;
     const QUrl m_dataDirectoryUrl;
     QTemporaryDir m_cacheDir;
