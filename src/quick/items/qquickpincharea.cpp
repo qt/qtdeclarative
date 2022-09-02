@@ -406,6 +406,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
     if (d->touchPoints.count() < 2) {
         // A pinch gesture is not occurring, so stealing the grab is permitted.
         setKeepTouchGrab(false);
+        setKeepMouseGrab(false);
         // During filtering, there's no need to hold a grab for one point,
         // because filtering happens for every event anyway.
         // But if we receive the event via direct delivery, and give up the grab,
@@ -429,6 +430,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
             pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
             pe.setPoint1(mapFromScene(d->lastPoint1));
             pe.setPoint2(mapFromScene(d->lastPoint2));
+            setKeepTouchGrab(false);
             setKeepMouseGrab(false);
             emit pinchFinished(&pe);
             d->pinchStartDist = 0;
@@ -466,6 +468,8 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
         d->initPinch = true;
         event->setExclusiveGrabber(touchPoint1, this);
         event->setExclusiveGrabber(touchPoint2, this);
+        setKeepTouchGrab(true);
+        setKeepMouseGrab(true);
     }
     if (d->pinchActivated && !d->pinchRejected) {
         const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
