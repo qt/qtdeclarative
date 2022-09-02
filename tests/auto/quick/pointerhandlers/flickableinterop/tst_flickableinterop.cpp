@@ -80,6 +80,7 @@ private slots:
     void touchDragSliderAndFlickable();
     void touchAndDragHandlerOnFlickable_data();
     void touchAndDragHandlerOnFlickable();
+    void pinchHandlerOnFlickable();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -805,6 +806,77 @@ void tst_FlickableInterop::touchAndDragHandlerOnFlickable()
     if (buttonTapHandler)
         QCOMPARE(buttonTapHandler->isPressed(), false);
     touchSeq.release(1, p1, window).commit();
+}
+
+void tst_FlickableInterop::pinchHandlerOnFlickable()
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pinchOnFlickable.qml")));
+    QQuickFlickable *flickable = qmlobject_cast<QQuickFlickable*>(window.rootObject());
+    QVERIFY(flickable);
+    QQuickPointerHandler *pinchHandler = flickable->findChild<QQuickPointerHandler*>();
+    QVERIFY(pinchHandler);
+    QQuickItem *pinchable = pinchHandler->target();
+    QVERIFY(pinchable);
+
+    QSignalSpy flickMoveSpy(flickable, &QQuickFlickable::movementStarted);
+    QSignalSpy grabChangedSpy(touchDevice, &QPointingDevice::grabChanged);
+
+    QObject *grabber = nullptr;
+    connect(touchDevice, &QPointingDevice::grabChanged,
+            [&grabber](QObject *g, QPointingDevice::GrabTransition transition, const QPointerEvent *, const QEventPoint &) {
+        if (transition == QPointingDevice::GrabTransition::GrabExclusive)
+            grabber = g;
+    });
+
+    QPoint p0 = pinchable->mapToScene({50, 100}).toPoint();
+    QPoint p1 = pinchable->mapToScene({150, 100}).toPoint();
+    QTest::QTouchEventSequence touch = QTest::touchEvent(&window, touchDevice);
+
+    touch.press(0, p0, &window).press(1, p1, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    int activeStep = -1;
+    int grabTransitionCount = 0;
+    // drag two fingers down: PinchHandler moves the item; Flickable doesn't grab, because there are 2 points
+    for (int i = 0; i < 4; ++i) {
+        p0 += QPoint(0, dragThreshold);
+        p1 += QPoint(0, dragThreshold);
+        touch.move(0, p0, &window).move(1, p1, &window).commit();
+        QQuickTouchUtils::flush(&window);
+        if (pinchHandler->active() && activeStep < 0) {
+            qCDebug(lcPointerTests) << "pinch began at step" << i;
+            activeStep = i;
+            QCOMPARE(grabber, pinchHandler);
+            grabTransitionCount = grabChangedSpy.count();
+        }
+    }
+    QVERIFY(pinchHandler->active());
+    QCOMPARE(grabChangedSpy.count(), grabTransitionCount);
+    QCOMPARE(grabber, pinchHandler);
+    qreal scale = pinchable->scale();
+    QCOMPARE(scale, 1);
+    qreal rot = pinchable->rotation();
+    QCOMPARE(rot, 0);
+    // start expanding and rotating
+    for (int i = 0; i < 4; ++i) {
+        p0 += QPoint(-5, 10);
+        p1 += QPoint(5, -10);
+        touch.move(0, p0, &window).move(1, p1, &window).commit();
+        QQuickTouchUtils::flush(&window);
+        QVERIFY(pinchHandler->active());
+        // PinchHandler keeps grab: no more transitions
+        QCOMPARE(grabChangedSpy.count(), grabTransitionCount);
+        QCOMPARE(grabber, pinchHandler);
+        QVERIFY(pinchable->scale() > scale);
+        scale = pinchable->scale();
+        QVERIFY(pinchable->rotation() < rot);
+        rot = pinchable->rotation();
+    }
+    touch.release(0, p0, &window).release(1, p1, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE(pinchHandler->active(), false);
+    QCOMPARE(flickMoveSpy.count(), 0); // Flickable never moved
 }
 
 QTEST_MAIN(tst_FlickableInterop)

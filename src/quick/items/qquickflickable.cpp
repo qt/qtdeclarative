@@ -1393,10 +1393,14 @@ void QQuickFlickablePrivate::handleMoveEvent(QPointerEvent *event)
     const QVector2D velocity = firstPointLocalVelocity(event);
     bool overThreshold = false;
 
-    if (q->yflick())
-        overThreshold |= QQuickDeliveryAgentPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, firstPoint);
-    if (q->xflick())
-        overThreshold |= QQuickDeliveryAgentPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, firstPoint);
+    if (event->pointCount() == 1) {
+        if (q->yflick())
+            overThreshold |= QQuickDeliveryAgentPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, firstPoint);
+        if (q->xflick())
+            overThreshold |= QQuickDeliveryAgentPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, firstPoint);
+    } else {
+        qCDebug(lcFilter) << q->objectName() << "ignoring multi-touch" << event;
+    }
 
     drag(currentTimestamp, event->type(), pos, deltas, overThreshold, false, false, velocity);
 }
@@ -2567,11 +2571,17 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
           QQuickDeliveryAgentPrivate::isTabletEvent(event)))
         return false; // don't filter hover events or wheel events, for example
     Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
-    qCDebug(lcFilter) << objectName() << "filtering" << event << "for" << receiver;
     Q_D(QQuickFlickable);
     // If a touch event contains a new press point, don't steal right away: watch the movements for a while
     if (isTouch && static_cast<QTouchEvent *>(event)->touchPointStates().testFlag(QEventPoint::State::Pressed))
         d->stealMouse = false;
+    // If multiple touchpoints are within bounds, don't grab: it's probably meant for multi-touch interaction in some child
+    if (event->pointCount() > 1) {
+        qCDebug(lcFilter) << objectName() << "ignoring multi-touch" << event << "for" << receiver;
+        d->stealMouse = false;
+    } else {
+        qCDebug(lcFilter) << objectName() << "filtering" << event << "for" << receiver;
+    }
     const auto &firstPoint = event->points().first();
 
     if (event->pointCount() == 1 && event->exclusiveGrabber(firstPoint) == this) {
