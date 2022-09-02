@@ -9653,27 +9653,27 @@ quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
 }
 
 //! \internal
-inline QPointF QQuickItem::mapFromItem(const QQuickItem *item, qreal x, qreal y)
+QPointF QQuickItem::mapFromItem(const QQuickItem *item, qreal x, qreal y)
 { return mapFromItem(item, QPointF(x, y) ); }
 
 //! \internal
-inline QRectF QQuickItem::mapFromItem(const QQuickItem *item, const QRectF &rect) const
+QRectF QQuickItem::mapFromItem(const QQuickItem *item, const QRectF &rect) const
 { return mapRectFromItem(item, rect); }
 
 //! \internal
-inline QRectF QQuickItem::mapFromItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const
+QRectF QQuickItem::mapFromItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const
 { return mapFromItem(item, QRectF(x, y, width, height)); }
 
 //! \internal
-inline QPointF QQuickItem::mapToItem(const QQuickItem *item, qreal x, qreal y)
+QPointF QQuickItem::mapToItem(const QQuickItem *item, qreal x, qreal y)
 { return mapToItem(item, QPoint(x, y)); }
 
 //! \internal
-inline QRectF QQuickItem::mapToItem(const QQuickItem *item, const QRectF &rect) const
+QRectF QQuickItem::mapToItem(const QQuickItem *item, const QRectF &rect) const
 { return mapRectToItem(item, rect); }
 
 //! \internal
-inline QRectF QQuickItem::mapToItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const
+QRectF QQuickItem::mapToItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const
 { return mapToItem(item, QRectF(x, y, width, height)); }
 
 //! \internal
