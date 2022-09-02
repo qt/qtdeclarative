@@ -33,6 +33,7 @@ private slots:
     void dragTransformedPinchArea_data();
     void dragTransformedPinchArea();
     void pinchAreaKeepsDragInView();
+    void pinchInPathView();
 
 private:
     QQuickView *createView();
@@ -702,6 +703,61 @@ void tst_QQuickPinchArea::pinchAreaKeepsDragInView()
 
     // Release pinch.
     pinchSequence.release(1, point1End, &view).release(2, point2End, &view).commit();
+    QQuickTouchUtils::flush(&view);
+    QCOMPARE(pinchArea->pinch()->active(), false);
+    QCOMPARE(pathView->offset(), 0);
+}
+
+void tst_QQuickPinchArea::pinchInPathView()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("pinchAreaInPathView.qml"));
+    QVERIFY(view.rootObject());
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickPathView *pathView = qobject_cast<QQuickPathView*>(view.rootObject());
+    QVERIFY(pathView);
+    QCOMPARE(pathView->count(), 3);
+
+    const QQuickItem *pinchDelegateItem = pathView->itemAtIndex(0);
+    QQuickPinchArea *pinchArea = pinchDelegateItem->property("pinchArea").value<QQuickPinchArea*>();
+    QVERIFY(pinchArea);
+
+    // press
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(&view, device);
+    QPoint point1Start = { 10, 10 };
+    QPoint point2Start = { 100, 100 };
+    const int dragThreshold = qApp->styleHints()->startDragDistance();
+    pinchSequence.press(0, point1Start, &view)
+                 .press(1, point2Start, &view)
+                 .commit();
+    QQuickTouchUtils::flush(&view);
+    QTest::qWait(20);
+
+    // move
+    QPoint moveDistance = QPoint(dragThreshold * 3, dragThreshold * 3);
+    QPoint point2End = point2Start + moveDistance;
+    pinchSequence.stationary(0)
+                 .move(1, point2End, &view)
+                 .commit();
+    QQuickTouchUtils::flush(&view);
+    QTest::qWait(20);
+
+    point2End += moveDistance;
+    pinchSequence.stationary(0)
+                 .move(1, point2End, &view)
+                 .commit();
+    QQuickTouchUtils::flush(&view);
+    QTest::qWait(20);
+
+    QCOMPARE(pinchArea->pinch()->active(), true);
+    QVERIFY2(pinchDelegateItem->scale() > 1.0, qPrintable(QString::number(pinchDelegateItem->scale())));
+    // PathView shouldn't have moved.
+    QCOMPARE(pathView->offset(), 0);
+
+    // release pinch.
+    pinchSequence.release(0, point1Start, &view).release(1, point2End, &view).commit();
     QQuickTouchUtils::flush(&view);
     QCOMPARE(pinchArea->pinch()->active(), false);
     QCOMPARE(pathView->offset(), 0);
