@@ -98,4 +98,5 @@ qt_internal_add_resource(tst_qmltyperegistrar "resources"
         "/"
     FILES
         duplicatedExports.json
+        missingTypes.json
 )

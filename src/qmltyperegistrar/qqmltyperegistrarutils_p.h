@@ -20,6 +20,7 @@
 QT_BEGIN_NAMESPACE
 
 QTypeRevision handleInMinorVersion(QTypeRevision revision, int majorVersion);
+QAnyStringView interfaceName(const QCborValue &iface);
 
 QDebug warning(const QCborMap &classDef);
 QDebug warning(QAnyStringView fileName, int lineNumber = 0);

@@ -785,6 +785,7 @@ private slots:
 
     void javaScriptExtension();
 
+    void consistencyWarnings();
 private:
     QByteArray qmltypesData;
 };

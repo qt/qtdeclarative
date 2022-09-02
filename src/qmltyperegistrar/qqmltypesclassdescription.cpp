@@ -159,11 +159,9 @@ void QmlTypesClassDescription::collectSuperClasses(
 void QmlTypesClassDescription::collectInterfaces(const QCborMap &classDef)
 {
     if (classDef.contains(S_INTERFACES)) {
-        const QCborArray array = classDef.value(S_INTERFACES).toArray();
-        for (const QCborValue &value : array) {
-            auto object = value.toArray()[0].toMap();
-            implementsInterfaces << toStringView(object, S_CLASS_NAME);
-        }
+        const QCborArray ifaces = classDef.value(S_INTERFACES).toArray();
+        for (const QCborValue &iface : ifaces)
+            implementsInterfaces << interfaceName(iface);
     }
 }
 

@@ -424,6 +424,54 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
 }
 
+void tst_qmltyperegistrar::consistencyWarnings()
+{
+    QmlTypeRegistrar r;
+    r.setModuleVersions(QTypeRevision::fromVersion(1, 1), {}, false);
+    QString moduleName = "tstmodule";
+    QString targetNamespace = "tstnamespace";
+    r.setModuleNameAndNamespace(moduleName, targetNamespace);
+
+    MetaTypesJsonProcessor processor(true);
+
+    QVERIFY(processor.processTypes({ ":/missingTypes.json" }));
+    processor.postProcessTypes();
+
+    const auto expectWarning = [](const char *message) {
+        QTest::ignoreMessage(QtWarningMsg, message);
+    };
+
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQObject is used but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQObject is used but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: Invisible is declared as foreign type, "
+                  "but cannot be found.");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: NotQByteArray is used but cannot be found.");
+
+    processor.postProcessForeignTypes();
+
+    QVector<QCborMap> types = processor.types();
+    QVector<QCborMap> typesforeign = processor.foreignTypes();
+    r.setTypes(types, typesforeign);
+
+    QString outputData;
+    QTextStream output(&outputData, QIODeviceBase::ReadWrite);
+
+    expectWarning("Warning: tst_qmltyperegistrar.h:: AddedInLateVersion is trying to register "
+                  "property revisioned with future version 1.4 when module version is only 1.1");
+    expectWarning("Warning: tst_qmltyperegistrar.h:: ExcessiveVersion is trying to register "
+                  "property palette with future version 6.0 when module version is only 1.1");
+
+    r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
+
+    QTemporaryFile pluginTypes;
+    pluginTypes.open();
+
+    expectWarning("Warning: tst_qmltyperegistrar.h:: Refusing to generate non-lowercase name "
+                  "Invisible for unknown foreign type");
+
+    r.generatePluginTypes(pluginTypes.fileName());
+}
+
 void tst_qmltyperegistrar::clonedSignal()
 {
     QVERIFY(qmltypesData.contains(R"(Signal {

@@ -5,6 +5,7 @@
 
 #include "qanystringviewutils_p.h"
 #include "qqmltyperegistrarconstants_p.h"
+#include "qqmltyperegistrarutils_p.h"
 #include "qqmltypesclassdescription_p.h"
 #include "qqmltyperegistrarutils_p.h"
 
@@ -252,6 +253,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 {
     QSet<QAnyStringView> processedRelatedNativeNames;
     QSet<QAnyStringView> processedRelatedJavaScriptNames;
+    QSet<QAnyStringView> unresolvedForeignNames;
     QQueue<QCborMap> typeQueue;
     typeQueue.append(m_types);
 
@@ -269,6 +271,10 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 processedRelatedNativeNames.insert(
                         toStringView(related.native, S_QUALIFIED_CLASS_NAME));
             }
+
+            return true;
+        } else {
+            return false;
         }
     };
 
@@ -287,7 +293,9 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         for (const QCborValue &classInfo : classInfos) {
             const QCborMap obj = classInfo.toMap();
             if (obj.value(S_NAME) == S_FOREIGN) {
-                addRelatedName(toStringView(obj, S_VALUE), namespaces(type));
+                const QAnyStringView foreign = toStringView(obj, S_VALUE);
+                if (!addRelatedName(foreign, namespaces(type)))
+                    unresolvedForeignNames.insert(foreign);
                 break;
             }
         }
@@ -306,7 +314,9 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 seenQmlPrefix = true;
             }
             if (name == S_FOREIGN) {
-                addRelatedName(toStringView(obj, S_VALUE), namespaces(foreignType));
+                const QAnyStringView foreign = toStringView(obj, S_VALUE);
+                if (!addRelatedName(foreign, namespaces(foreignType)))
+                    unresolvedForeignNames.insert(foreign);
                 break;
             }
         }
@@ -347,13 +357,38 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         }
     };
 
-    const auto addType = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces) {
+    const auto addInterfaceOrSelfExtension
+            = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces) {
+        if (const FoundType other = QmlTypesClassDescription::findType(
+                    m_types, m_foreignTypes, typeName, namespaces)) {
+            if (!other.native.isEmpty()) {
+                addReference(other.native, &processedRelatedNativeNames, other.nativeOrigin);
+                return true;
+            }
+        } else {
+            // Do not warn about unresolved interfaces.
+            // They don't have to have Q_OBJECT or Q_GADGET.
+            unresolvedForeignNames.insert(typeName);
+        }
+
+        processedRelatedNativeNames.insert(typeName);
+        return false;
+    };
+
+    const auto addType = [&](const QCborMap &context, QAnyStringView typeName,
+                             const QList<QAnyStringView> &namespaces) {
         if (const FoundType other = QmlTypesClassDescription::findType(
                     m_types, m_foreignTypes, typeName, namespaces)) {
             addReference(other.native, &processedRelatedNativeNames, other.nativeOrigin);
             addReference(other.javaScript, &processedRelatedJavaScriptNames, other.javaScriptOrigin);
             return true;
         }
+
+        // If we've detected this type as unresolved foreign and it actually belongs to this module,
+        // we'll get to it again when we process it as foreign type. In that case we'll look at the
+        // special cases for sequences and extensions.
+        if (!unresolvedForeignNames.contains(typeName))
+            warning(context) << typeName << "is used but cannot be found.";
 
         processedRelatedNativeNames.insert(typeName);
         processedRelatedJavaScriptNames.insert(typeName);
@@ -363,6 +398,15 @@ void MetaTypesJsonProcessor::addRelatedTypes()
     // Then recursively iterate the super types and attached types, marking the
     // ones we are interested in as related.
     while (!typeQueue.isEmpty()) {
+        QAnyStringView unresolvedForeign;
+
+        // We don't need to resolve the foreign part of sequence registrations.
+        bool isSequence = false;
+        // We don't need to resolve the foreign part of self-extending value types.
+        bool isSelfExtendingValueType = false;
+        // We don't want to deal with builtins that have JavaScript extensions. Consider them found.
+        bool hasJavaScriptExtension = false;
+
         const QCborMap classDef = typeQueue.dequeue();
         const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
 
@@ -370,21 +414,55 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         for (const QCborValue &classInfo : classInfos) {
             const QCborMap obj = classInfo.toMap();
             const QAnyStringView objNameValue = toStringView(obj, S_NAME);
-            if (objNameValue == S_ATTACHED || objNameValue == S_SEQUENCE
-                    || objNameValue == S_EXTENDED) {
-                addType(toStringView(obj, S_VALUE), namespaces);
+            if (objNameValue == S_ATTACHED) {
+                addType(classDef, toStringView(obj, S_VALUE), namespaces);
+            } else if (objNameValue == S_SEQUENCE) {
+                isSequence = true;
+                QAnyStringView value = toStringView(obj, S_VALUE);
+
+                if (!value.isEmpty() && value.back() == '*'_L1) {
+                    // Pointers as sequence values include the '*'
+                    QAnyStringView chopped = value.chopped(1);
+                    while (!chopped.isEmpty() && chopped.back() == ' '_L1)
+                        chopped = chopped.chopped(1);
+                    addType(classDef, chopped, namespaces);
+                } else {
+                    addType(classDef, value, namespaces);
+                }
+            } else if (objNameValue == S_EXTENDED) {
+                const QAnyStringView value = toStringView(obj, S_VALUE);
+                if (value == toStringView(classDef, S_QUALIFIED_CLASS_NAME)
+                        && classDef.value(S_GADGET).toBool()) {
+                    isSelfExtendingValueType = true;
+                    addInterfaceOrSelfExtension(value, namespaces);
+                } else {
+                    addType(classDef, value, namespaces);
+                }
+            } else if (objNameValue == S_EXTENSION_IS_JAVA_SCRIPT) {
+                hasJavaScriptExtension = true;
             } else if (objNameValue == S_FOREIGN) {
                 const QAnyStringView foreignClassName = toStringView(obj, S_VALUE);
-                if (const FoundType found = QmlTypesClassDescription::findType(
-                            m_foreignTypes, {}, foreignClassName, namespaces)) {
+
+                // A type declared as QML_FOREIGN will usually be a foreign type, but it can
+                // actually be an additional registration of a local type, too.
+                const FoundType found = QmlTypesClassDescription::findType(
+                        m_foreignTypes, {}, foreignClassName, namespaces);
+                if (!found) {
+                    if (!QmlTypesClassDescription::findType(
+                                m_types, {}, foreignClassName, namespaces)) {
+                        unresolvedForeign = foreignClassName;
+                    }
+                } else {
                     const QCborMap other = found.select(classDef, "Foreign");
                     const auto otherSupers = other.value(S_SUPER_CLASSES).toArray();
                     const QList<QAnyStringView> otherNamespaces
                             = MetaTypesJsonProcessor::namespaces(other);
                     if (!otherSupers.isEmpty()) {
                         const QCborMap otherSuperObject = otherSupers.first().toMap();
-                        if (otherSuperObject.value(S_ACCESS) == S_PUBLIC)
-                            addType(toStringView(otherSuperObject, S_NAME), otherNamespaces);
+                        if (otherSuperObject.value(S_ACCESS) == S_PUBLIC) {
+                            addType(classDef, toStringView(otherSuperObject, S_NAME),
+                                    otherNamespaces);
+                        }
                     }
 
                     const auto otherClassInfos = other.value(S_CLASS_INFOS).toArray();
@@ -393,7 +471,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                         const QAnyStringView objNameValue = toStringView(obj, S_NAME);
                         if (objNameValue == S_ATTACHED || objNameValue == S_SEQUENCE
                                 || objNameValue == S_EXTENDED) {
-                            addType(toStringView(obj, S_VALUE), otherNamespaces);
+                            addType(classDef, toStringView(obj, S_VALUE), otherNamespaces);
                             break;
                         }
                         // No, you cannot chain S_FOREIGN declarations. Sorry.
@@ -402,11 +480,22 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             }
         }
 
+        if (!isSequence && !isSelfExtendingValueType && !hasJavaScriptExtension
+                && !unresolvedForeign.isEmpty()) {
+            warning(classDef)
+                    << unresolvedForeign
+                    << "is declared as foreign type, but cannot be found.";
+        }
+
+        const auto interfaces = classDef.value(S_INTERFACES).toArray();
+        for (const QCborValue &iface : interfaces)
+            addInterfaceOrSelfExtension(interfaceName(iface), namespaces);
+
         const auto supers = classDef.value(S_SUPER_CLASSES).toArray();
         for (const QCborValue &super : supers) {
             const QCborMap superObject = super.toMap();
             if (superObject.value(S_ACCESS) == S_PUBLIC)
-                addType(toStringView(superObject, S_NAME), namespaces);
+                addType(classDef, toStringView(superObject, S_NAME), namespaces);
         }
     }
 }
