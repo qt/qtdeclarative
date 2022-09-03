@@ -13,6 +13,7 @@ qt6_add_qml_module(qualified_names_test_module
     PAST_MAJOR_VERSIONS
         1 5
     URI QualifiedNamesTests
+    RESOURCE_PREFIX "/"
     SOURCES
         testtypes.h
     RESOURCE_PREFIX "/"
