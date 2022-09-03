@@ -17,11 +17,19 @@ QQuickControlsTestUtils::QQuickControlsApplicationHelper::QQuickControlsApplicat
         appWindow = qobject_cast<QQuickApplicationWindow*>(cleanup.data());
 }
 
+/*!
+    \internal
+
+    If \a style is different from the current style, this function will
+    recreate the QML engine, clear type registrations and set the new style.
+
+    Returns \c true if successful or if \c style is already set.
+*/
 bool QQuickControlsTestUtils::QQuickStyleHelper::updateStyle(const QString &style)
 {
     // If it's not the first time a style has been set and the new style is not different, do nothing.
     if (!currentStyle.isEmpty() && style == currentStyle)
-        return false;
+        return true;
 
     engine.reset();
     currentStyle = style;
@@ -31,8 +39,9 @@ bool QQuickControlsTestUtils::QQuickStyleHelper::updateStyle(const QString &styl
 
     QQmlComponent component(engine.data());
     component.setData(QString::fromUtf8("import QtQuick\nimport QtQuick.Controls\n Control { }").toUtf8(), QUrl());
-
-    return true;
+    if (!component.isReady())
+        qWarning() << "Failed to load component:" << component.errorString();
+    return component.isReady();
 }
 
 void QQuickControlsTestUtils::forEachControl(QQmlEngine *engine, const QString &qqc2ImportPath,

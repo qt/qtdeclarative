@@ -57,7 +57,7 @@ static void doBenchmark(QQuickStyleHelper &styleHelper, const QUrl &url)
     QCOMPARE(styleAndFileName.size(), 2);
     QString style = styleAndFileName.first();
     style[0] = style.at(0).toUpper();
-    styleHelper.updateStyle(style);
+    QVERIFY(styleHelper.updateStyle(style));
 
     QQmlComponent component(styleHelper.engine.data());
     component.loadUrl(url);
