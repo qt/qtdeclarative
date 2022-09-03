@@ -129,7 +129,7 @@ is automatically converted into a QPointF value.
 \qmlvaluetype size
 \ingroup qtqmlvaluetypes
 \ingroup qtquickvaluetypes
-\brief a value with width and height attributes
+\brief a value with width and height attributes.
 
 The \c size type refers to a value with has \c width and \c height attributes.
 

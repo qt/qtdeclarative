@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-page-wireframe.png
 
-    By default, Dialogs have \l focus.
+    By default, Dialogs have \l {QQuickItem::}{focus}.
 
     \section1 Dialog Title and Buttons
 

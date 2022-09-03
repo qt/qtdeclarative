@@ -835,7 +835,7 @@ console.log(c + " " + d); // false true
     \qmlvaluetype matrix4x4
     \ingroup qtquickvaluetypes
 
-    \brief A matrix4x4 type is a 4-row and 4-column matrix
+    \brief A matrix4x4 type is a 4-row and 4-column matrix.
 
     A \c matrix4x4 type has sixteen values, each accessible via the properties
     \c m11 through \c m44 in QML (in row/column order).  Values of this type
