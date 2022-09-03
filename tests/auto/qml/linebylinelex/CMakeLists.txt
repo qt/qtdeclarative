@@ -15,7 +15,7 @@ list(APPEND test_data ${test_data_glob} ${test_data_glob2})
 qt_internal_add_test(tst_linebylinelex
     SOURCES
         tst_linebylinelex.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Qml
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
