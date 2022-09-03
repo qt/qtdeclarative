@@ -133,7 +133,7 @@ Properties of type \c point are \c {Qt.point(0, 0)} by default.
 \qmlvaluetype size
 \ingroup qtqmlvaluetypes
 \ingroup qtquickvaluetypes
-\brief a value with width and height attributes
+\brief a value with width and height attributes.
 
 The \c size type refers to a value with has \c width and \c height attributes.
 

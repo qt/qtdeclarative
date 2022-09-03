@@ -192,7 +192,7 @@
 
     In order to support keyboard navigation, you need to assign an \l ItemSelectionModel
     to the \l selectionModel property. TableView will then use this model to manipulate
-    the model's \l {QQuickItemSelectionModel::currentIndex()}{currentIndex}. You can
+    the model's \l {ItemSelectionModel::currentIndex}{currentIndex}. You can
     disable keyboard navigation fully (in case you want to implement your own key
     handlers) by setting \l keyNavigationEnabled to \c false.
 */
