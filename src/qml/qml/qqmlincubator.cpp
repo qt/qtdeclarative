@@ -227,7 +227,7 @@ void QQmlIncubatorPrivate::forceCompletion(QQmlInstantiationInterrupt &i)
 {
     while (QQmlIncubator::Loading == status) {
         while (QQmlIncubator::Loading == status && !waitingFor.isEmpty())
-            static_cast<QQmlIncubatorPrivate *>(waitingFor.first())->forceCompletion(i);
+            waitingFor.first()->forceCompletion(i);
         if (QQmlIncubator::Loading == status)
             incubate(i);
     }

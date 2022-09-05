@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 class RequiredProperties;
 
 class QQmlIncubator;
-class Q_QML_PRIVATE_EXPORT QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator
+class Q_QML_PRIVATE_EXPORT QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator, public QSharedData
 {
 public:
     QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m);
@@ -36,6 +36,7 @@ public:
 
     inline static QQmlIncubatorPrivate *get(QQmlIncubator *incubator) { return incubator->d; }
 
+    int subComponentToCreate;
     QQmlIncubator *q;
 
     QQmlIncubator::Status calculateStatus() const;
@@ -44,23 +45,23 @@ public:
 
     QQmlIncubator::IncubationMode mode;
     bool isAsynchronous;
+    enum Progress : char { Execute, Completing, Completed };
+    Progress progress;
 
     QList<QQmlError> errors;
 
-    enum Progress { Execute, Completing, Completed };
-    Progress progress;
 
     QPointer<QObject> result;
     QQmlGuardedContextData rootContext;
     QQmlEnginePrivate *enginePriv;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
     QScopedPointer<QQmlObjectCreator> creator;
-    int subComponentToCreate;
     QQmlVMEGuard vmeGuard;
 
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> waitingOnMe;
     typedef QQmlEnginePrivate::Incubator QIPBase;
-    QIntrusiveList<QIPBase, &QIPBase::nextWaitingFor> waitingFor;
+    QIntrusiveListNode nextWaitingFor;
+    QIntrusiveList<QQmlIncubatorPrivate, &QQmlIncubatorPrivate::nextWaitingFor> waitingFor;
 
     QRecursionNode recursion;
     QVariantMap initialProperties;

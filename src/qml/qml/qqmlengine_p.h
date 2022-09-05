@@ -161,10 +161,8 @@ public:
 
     // Unfortunate workaround to avoid a circular dependency between
     // qqmlengine_p.h and qqmlincubator_p.h
-    struct Incubator : public QSharedData {
+    struct Incubator {
         QIntrusiveListNode next;
-        // Unfortunate workaround for MSVC
-        QIntrusiveListNode nextWaitingFor;
     };
     QIntrusiveList<Incubator, &Incubator::next> incubatorList;
     unsigned int incubatorCount = 0;
