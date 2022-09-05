@@ -903,6 +903,7 @@ void QQuickScrollBarAttachedPrivate::setFlickable(QQuickFlickable *item)
         // The latter doesn't remove the listener but only resets its types. Thus, it leaves behind a dangling
         // pointer on destruction.
         QQuickItemPrivate::get(flickable)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+        QQuickItemPrivate::get(flickable)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
         if (horizontal)
             cleanupHorizontal();
         if (vertical)
@@ -912,7 +913,10 @@ void QQuickScrollBarAttachedPrivate::setFlickable(QQuickFlickable *item)
     flickable = item;
 
     if (item) {
+        // Don't know how to combine these calls into one, and as long as they're separate calls,
+        // the remove* calls above need to be separate too, otherwise they will have no effect.
         QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(this, QQuickGeometryChange::Size);
+        QQuickItemPrivate::get(item)->updateOrAddItemChangeListener(this, QQuickItemPrivate::Destroyed);
         if (horizontal)
             initHorizontal();
         if (vertical)
@@ -1126,6 +1130,8 @@ void QQuickScrollBarAttachedPrivate::itemImplicitHeightChanged(QQuickItem *item)
 
 void QQuickScrollBarAttachedPrivate::itemDestroyed(QQuickItem *item)
 {
+    if (item == flickable)
+        flickable = nullptr;
     if (item == horizontal)
         horizontal = nullptr;
     if (item == vertical)

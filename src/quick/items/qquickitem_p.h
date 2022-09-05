@@ -323,6 +323,11 @@ public:
         QQuickItemChangeListener *listener;
         ChangeTypes types;
         QQuickGeometryChange gTypes;  //NOTE: not used for ==
+
+#ifndef QT_NO_DEBUG_STREAM
+    private:
+        friend QDebug operator<<(QDebug debug, const QQuickItemPrivate::ChangeListener &listener);
+#endif // QT_NO_DEBUG_STREAM
     };
 
     // call QQuickItemChangeListener PMF
