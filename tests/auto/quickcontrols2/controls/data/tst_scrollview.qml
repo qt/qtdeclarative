@@ -625,4 +625,41 @@ TestCase {
         verify(verticalScrollBar.active)
         verify(horizontalScrollBar.active)
     }
+
+    Component {
+        id: contentItemAssignedImperatively
+
+        Item {
+            width: 100
+            height: 100
+
+            property alias scrollView: scrollView
+
+            ListView {
+                id: listView
+                model: 20
+                delegate: Text {
+                    text: modelData
+                }
+            }
+
+            Component.onCompleted: scrollView.contentItem = listView
+
+            ScrollView {
+                id: scrollView
+                anchors.fill: parent
+
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            }
+        }
+    }
+
+    // Tests that a ListView declared before the ScrollView (as the QObject destruction order
+    // is relevant for the bug) and assigned imperatively to ScrollView does not cause a crash
+    // on exit.
+    function test_contentItemAssignedImperatively() {
+        let root = createTemporaryObject(contentItemAssignedImperatively, testCase)
+        verify(root)
+        // Shouldn't crash.
+    }
 }
