@@ -47,7 +47,11 @@ endif()
 add_subdirectory(qqmlmetatype)
 if(TARGET Qt::Quick)
     add_subdirectory(qmltc_manual)
-    add_subdirectory(qmltc)
+    # QML Type Compiler tests cannot be run on webOS due to missing support for multiple
+    # consecutive window creation from a single QtWayland client
+    if(NOT WEBOS)
+        add_subdirectory(qmltc)
+    endif()
     # This test always creates static plugins. To avoid linker command line
     # ordering issues, we need at least CMake 3.21 and we cannot include the
     # test if qmlimportscanner is being built as part of the main project.
