@@ -189,6 +189,7 @@ ColorDialogImpl {
 
             color: control.color
 
+            Layout.fillWidth: true
             Layout.leftMargin: 12
             Layout.rightMargin: 12
             Layout.bottomMargin: 12

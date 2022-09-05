@@ -78,147 +78,181 @@ ColorInputsImpl {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
-                TextField {
-                    id: rgbRed
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: root.red
-                    maximumLength: 3
-                    validator: IntValidator {
-                        bottom: 0
-                        top: 999
+            // TODO: QTBUG-106246
+            // Using RowLayout as the root type should work here, but doesn't:
+            // when ShowAlphaChannel is true, switching from hex to rgba causes a
+            // jump in the StackLayout's implicitWidth.
+            Item {
+                implicitWidth: rgbRed.implicitWidth + rgbGreen.implicitWidth + rgbBlue.implicitWidth + rgbAlpha.implicitWidth
+                implicitHeight: Math.max(rgbRed.implicitHeight, rgbGreen.implicitHeight, rgbBlue.implicitHeight, rgbAlpha.implicitHeight)
+
+                RowLayout {
+                    width: parent.implicitWidth
+                    TextField {
+                        id: rgbRed
+                        objectName: "rgbRed"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: root.red
+                        maximumLength: 3
+                        validator: IntValidator {
+                            bottom: 0
+                            top: 999
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: rgbGreen
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: root.green
-                    maximumLength: 3
-                    validator: IntValidator {
-                        bottom: 0
-                        top: 999
+                    TextField {
+                        id: rgbGreen
+                        objectName: "rgbGreen"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: root.green
+                        maximumLength: 3
+                        validator: IntValidator {
+                            bottom: 0
+                            top: 999
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: rgbBlue
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: root.blue
-                    maximumLength: 3
-                    validator: IntValidator {
-                        bottom: 0
-                        top: 999
+                    TextField {
+                        id: rgbBlue
+                        objectName: "rgbBlue"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: root.blue
+                        maximumLength: 3
+                        validator: IntValidator {
+                            bottom: 0
+                            top: 999
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: rgbAlpha
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.alpha * 100).toString() + "%"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}%?$/
+                    TextField {
+                        id: rgbAlpha
+                        objectName: "rgbAlpha"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.alpha * 100).toString() + "%"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}%?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
                 }
             }
 
-            RowLayout {
-                TextField {
-                    id: hsvHue
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.hue * 360).toString() + "°"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}°?$/
+            Item {
+                implicitWidth: hsvHue.implicitWidth + hsvSaturation.implicitWidth + hsvValue.implicitWidth + hsvAlpha.implicitWidth
+                implicitHeight: Math.max(hsvHue.implicitHeight, hsvSaturation.implicitHeight, hsvValue.implicitHeight, hsvAlpha.implicitHeight)
+
+                RowLayout {
+                    width: parent.implicitWidth
+                    TextField {
+                        id: hsvHue
+                        objectName: "hsvHue"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.hue * 360).toString() + "°"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}°?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: hsvSaturation
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.hsvSaturation * 100).toString() + "%"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}%?$/
+                    TextField {
+                        id: hsvSaturation
+                        objectName: "hsvSaturation"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.hsvSaturation * 100).toString() + "%"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}%?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: hsvValue
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.value * 100).toString() + "%"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}%?$/
+                    TextField {
+                        id: hsvValue
+                        objectName: "hsvValue"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.value * 100).toString() + "%"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}%?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: hsvAlpha
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.alpha * 100).toString() + "%"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}%?$/
+                    TextField {
+                        id: hsvAlpha
+                        objectName: "hsvAlpha"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.alpha * 100).toString() + "%"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}%?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
                 }
             }
+            Item {
+                implicitWidth: hslHue.implicitWidth + hsvSaturation.implicitWidth + hslLightness.implicitWidth + hslAlpha.implicitWidth
+                implicitHeight: Math.max(hslHue.implicitHeight, hsvSaturation.implicitHeight, hslLightness.implicitHeight, hslAlpha.implicitHeight)
 
-            RowLayout {
-                TextField {
-                    id: hslHue
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.hue * 360).toString() + "°"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}°?$/
+                RowLayout {
+                    width: parent.implicitWidth
+
+                    TextField {
+                        id: hslHue
+                        objectName: "hslHue"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.hue * 360).toString() + "°"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}°?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: hslSaturation
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.hslSaturation * 100).toString() + "%"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}%?$/
+                    TextField {
+                        id: hslSaturation
+                        objectName: "hslSaturation"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.hslSaturation * 100).toString() + "%"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}%?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: hslLightness
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.lightness * 100).toString() + "%"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}%?$/
+                    TextField {
+                        id: hslLightness
+                        objectName: "hslLightness"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.lightness * 100).toString() + "%"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}%?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
-                }
-                TextField {
-                    id: hslAlpha
-                    horizontalAlignment: Qt.AlignHCenter
-                    text: Math.round(root.alpha * 100).toString() + "%"
-                    maximumLength: 4
-                    validator: RegularExpressionValidator {
-                        regularExpression: /^[0-9]{0,3}%?$/
+                    TextField {
+                        id: hslAlpha
+                        objectName: "hslAlpha"
+                        horizontalAlignment: Qt.AlignHCenter
+                        text: Math.round(root.alpha * 100).toString() + "%"
+                        maximumLength: 4
+                        validator: RegularExpressionValidator {
+                            regularExpression: /^[0-9]{0,3}%?$/
+                        }
+                        implicitWidth: fourM.width + leftPadding + rightPadding
+                        Layout.fillWidth: true
                     }
-                    implicitWidth: fourM.width + leftPadding + rightPadding
-                    Layout.fillWidth: true
                 }
             }
         }

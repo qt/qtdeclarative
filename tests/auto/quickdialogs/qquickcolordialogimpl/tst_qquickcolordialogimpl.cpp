@@ -345,31 +345,29 @@ enum class ColorSpec {
 
 void tst_QQuickColorDialogImpl::changeColorFromTextFields_data()
 {
-    QTest::addColumn<int>("idx");
     QTest::addColumn<ColorSpec>("spec");
     QTest::addColumn<QString>("expectedDefaultValue");
     QTest::addColumn<QString>("newValue");
     QTest::addColumn<QColor>("expectedNewColor");
 
-    QTest::newRow("rgbRed") << 0 << ColorSpec::Rgb << "255" << "100" << QColor(100, 255, 255);
-    QTest::newRow("rgbGreen") << 1 << ColorSpec::Rgb << "255" << "0" << QColorConstants::Magenta;
-    QTest::newRow("rgbBlue") << 2 << ColorSpec::Rgb << "255" << "200" << QColor(255, 255, 200);
-    QTest::newRow("rgbAlpha") << 3 << ColorSpec::Rgb << "100%" << "50%" << QColor::fromRgbF(1.0, 1.0, 1.0, 0.5);
+    QTest::newRow("rgbRed") << ColorSpec::Rgb << "255" << "100" << QColor(100, 255, 255);
+    QTest::newRow("rgbGreen") << ColorSpec::Rgb << "255" << "0" << QColorConstants::Magenta;
+    QTest::newRow("rgbBlue") << ColorSpec::Rgb << "255" << "200" << QColor(255, 255, 200);
+    QTest::newRow("rgbAlpha") << ColorSpec::Rgb << "100%" << "50%" << QColor::fromRgbF(1.0, 1.0, 1.0, 0.5);
 
-    QTest::newRow("hsvHue") << 0 << ColorSpec::Hsv << "0°" << "60°" << QColor::fromHsvF(.2, 0.0, 1.0);
-    QTest::newRow("hsvSaturation") << 1 << ColorSpec::Hsv << "0%" << "50%" << QColor::fromHsvF(0.0, 0.5, 1.0);
-    QTest::newRow("hsvValue") << 2 << ColorSpec::Hsv << "100%" << "90%" << QColor::fromHsvF(0.0, 0.0, 0.9, 1.0);
-    QTest::newRow("hsvAlpha") << 3 << ColorSpec::Hsv << "100%" << "40%" << QColor::fromHsvF(0.0, 0.0, 1.0, 0.4);
+    QTest::newRow("hsvHue") << ColorSpec::Hsv << "0°" << "60°" << QColor::fromHsvF(.2, 0.0, 1.0);
+    QTest::newRow("hsvSaturation") << ColorSpec::Hsv << "0%" << "50%" << QColor::fromHsvF(0.0, 0.5, 1.0);
+    QTest::newRow("hsvValue") << ColorSpec::Hsv << "100%" << "90%" << QColor::fromHsvF(0.0, 0.0, 0.9, 1.0);
+    QTest::newRow("hsvAlpha") << ColorSpec::Hsv << "100%" << "40%" << QColor::fromHsvF(0.0, 0.0, 1.0, 0.4);
 
-    QTest::newRow("hslHue") << 0 << ColorSpec::Hsl << "0°" << "90°" << QColor::fromHslF(.25, 1.0, 1.0);
-    QTest::newRow("hslSaturation") << 1 << ColorSpec::Hsl << "0%" << "40%" << QColor::fromHslF(0.0, 0.4, 1.0);
-    QTest::newRow("hslLightness") << 2 << ColorSpec::Hsl << "100%" << "80%" << QColor::fromHslF(0.0, 0.0, 0.8, 1.0);
-    QTest::newRow("hslAlpha") << 3 << ColorSpec::Hsl << "100%" << "60%" << QColor::fromHslF(0.0, 0.0, 1.0, 0.6);
+    QTest::newRow("hslHue") << ColorSpec::Hsl << "0°" << "90°" << QColor::fromHslF(.25, 1.0, 1.0);
+    QTest::newRow("hslSaturation") << ColorSpec::Hsl << "0%" << "40%" << QColor::fromHslF(0.0, 0.4, 1.0);
+    QTest::newRow("hslLightness") << ColorSpec::Hsl << "100%" << "80%" << QColor::fromHslF(0.0, 0.0, 0.8, 1.0);
+    QTest::newRow("hslAlpha") << ColorSpec::Hsl << "100%" << "60%" << QColor::fromHslF(0.0, 0.0, 1.0, 0.6);
 }
 
 void tst_QQuickColorDialogImpl::changeColorFromTextFields()
 {
-    QFETCH(int, idx);
     QFETCH(ColorSpec, spec);
     QFETCH(QString, expectedDefaultValue);
     QFETCH(QString, newValue);
@@ -403,13 +401,7 @@ void tst_QQuickColorDialogImpl::changeColorFromTextFields()
     QVERIFY(clickButton(delegate));
     QTRY_VERIFY(!colorSystemComboBox->popup()->isVisible());
 
-    QQuickItem *stackLayout = dialogHelper.quickDialog->findChild<QQuickItem *>("colorParameters");
-    QVERIFY(stackLayout);
-
-    QObject *nestedLayout = stackLayout->children().at(static_cast<int>(spec));
-    QVERIFY(nestedLayout);
-
-    auto textField = qobject_cast<QQuickTextField *>(nestedLayout->children().at(idx));
+    auto textField = dialogHelper.quickDialog->findChild<QQuickTextField *>(QTest::currentDataTag());
     QVERIFY(textField);
     QCOMPARE(textField->text(), expectedDefaultValue);
 
