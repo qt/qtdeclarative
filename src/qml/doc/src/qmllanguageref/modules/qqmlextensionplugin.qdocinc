@@ -38,6 +38,14 @@ plugins. Library plugins should limit themselves to registering types, as
 any manipulation of the engine's root context may cause conflicts or other
 issues in the library user's code.
 
+\note When using the CMake \l qt_add_qml_module API, a plugin will be generated
+automatically for you. It will take care of type registration.
+You only need to write a custom plugin if you have special
+requirements, such as registering custom image
+providers. In that case, pass
+\l{NO_GENERATE_PLUGIN_SOURCE} to the \c qt_add_qml_module
+call to disable the generation of the default plugin.
+
 The linker might erroneously remove the generated type registration
 function as an optimization. You can prevent that by declaring a synthetic
 volatile pointer to the function somewhere in your code. If your module is
