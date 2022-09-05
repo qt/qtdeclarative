@@ -1701,17 +1701,19 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
     }
 
     if (currentEventDeliveryAgent == q && event && event->device()) {
-        auto epd = QPointingDevicePrivate::get(const_cast<QPointingDevice*>(event->pointingDevice()))->queryPointById(point.id());
-        Q_ASSERT(epd);
         switch (transition) {
         case QPointingDevice::GrabPassive: {
+            auto epd = QPointingDevicePrivate::get(const_cast<QPointingDevice*>(event->pointingDevice()))->queryPointById(point.id());
+            Q_ASSERT(epd);
             QPointingDevicePrivate::setPassiveGrabberContext(epd, grabber, q);
             qCDebug(lcPtr) << "remembering that" << q << "handles point" << point.id() << "after" << transition;
         } break;
-        case QPointingDevice::GrabExclusive:
+        case QPointingDevice::GrabExclusive: {
+            auto epd = QPointingDevicePrivate::get(const_cast<QPointingDevice*>(event->pointingDevice()))->queryPointById(point.id());
+            Q_ASSERT(epd);
             epd->exclusiveGrabberContext = q;
             qCDebug(lcPtr) << "remembering that" << q << "handles point" << point.id() << "after" << transition;
-            break;
+        } break;
         case QPointingDevice::CancelGrabExclusive:
         case QPointingDevice::UngrabExclusive:
             // taken care of in QPointingDevicePrivate::setExclusiveGrabber(,,nullptr), removeExclusiveGrabber()
