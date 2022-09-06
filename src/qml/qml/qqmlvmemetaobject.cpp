@@ -203,13 +203,10 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             if (!target)
                 return;
 
-            QQmlData *targetDData = QQmlData::get(target, /*create*/false);
-            if (!targetDData)
-                return;
             QQmlPropertyIndex encodedIndex = QQmlPropertyIndex::fromEncoded(aliasData->encodedMetaPropertyIndex);
             int coreIndex = encodedIndex.coreIndex();
             int valueTypeIndex = encodedIndex.valueTypeIndex();
-            const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
+            const QQmlPropertyData *pd = QQmlData::ensurePropertyCache(target)->property(coreIndex);
             if (pd && valueTypeIndex != -1 && !QQmlMetaType::valueType(pd->propType())) {
                 // deep alias
                 const QQmlPropertyCache::ConstPtr newPropertyCache
