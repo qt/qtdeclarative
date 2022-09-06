@@ -340,6 +340,7 @@ private slots:
 
     void ambiguousContainingType();
     void staticConstexprMembers();
+    void bindingAliasToComponentUrl();
 
 private:
     QQmlEngine engine;
@@ -5918,6 +5919,25 @@ void tst_qqmllanguage::ambiguousContainingType()
      Q_UNUSED(f6);
      Q_UNUSED(f7);
  }
+
+void tst_qqmllanguage::bindingAliasToComponentUrl()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalUrl"), object->property("urlClone"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl2.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalProgress"), QVariant(1.0));
+    }
+}
 
 QTEST_MAIN(tst_qqmllanguage)
 
