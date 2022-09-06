@@ -657,6 +657,10 @@ public:
             data.realTypes.m_bitNumber = bitNumber;
             data.realTypes.m_compareRegister = compareRegister;
         }
+        LinkRecord(const LinkRecord& other)
+        {
+            *this = other;
+        }
         void operator=(const LinkRecord& other)
         {
             data.realTypes = other.data.realTypes;
