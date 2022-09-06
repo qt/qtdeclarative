@@ -1385,12 +1385,12 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     The \a properties argument is specified as a map of property-value items. For example, the code
     below creates an object with initial \c x and \c y values of 100 and 100, respectively:
 
-    \js
+    \qml
         const component = Qt.createComponent("Button.qml");
         if (component.status === Component.Ready) {
             component.createObject(parent, { x: 100, y: 100 });
         }
-    \endjs
+    \endqml
 
     Dynamically created instances can be deleted with the \c destroy() method.
     See \l {Dynamic QML Object Creation from JavaScript} for more information.
@@ -1640,7 +1640,7 @@ QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &propert
 
     The following example demonstrates how to use an incubator:
 
-    \js
+    \qml
         const component = Qt.createComponent("Button.qml");
 
         const incubator = component.incubateObject(parent, { x: 10, y: 10 });
@@ -1653,7 +1653,7 @@ QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &propert
         } else {
             print("Object", incubator.object, "is ready immediately!");
         }
-    \endjs
+    \endqml
 
     Dynamically created instances can be deleted with the \c destroy() method.
     See \l {Dynamic QML Object Creation from JavaScript} for more information.
