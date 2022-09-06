@@ -145,6 +145,8 @@ QQuickItem *QQuickScrollViewPrivate::getContentItem()
 {
     if (!contentItem)
         executeContentItem();
+    // This function is called by QQuickControl::contentItem() to lazily create
+    // a contentItem, so we don't need to try to set it again.
     return ensureFlickable(false);
 }
 
@@ -154,6 +156,7 @@ QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable(bool content)
     if (!flickable) {
         flickableHasExplicitContentWidth = false;
         flickableHasExplicitContentHeight = false;
+        // Pass ourselves as the Flickable's parent item.
         auto flickable = new QQuickFlickable(q);
         // We almost always want to clip the flickable so that flickable
         // contents doesn't show up outside the scrollview. The only time
@@ -305,11 +308,14 @@ void QQuickScrollViewPrivate::setScrollBarsInteractive(bool interactive)
 void QQuickScrollViewPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
 {
     QQuickScrollViewPrivate *p = static_cast<QQuickScrollViewPrivate *>(prop->data);
+    // If we don't yet have a flickable assigned, and this object is a Flickable,
+    // make it our contentItem.
     if (!p->flickable && p->setFlickable(qobject_cast<QQuickFlickable *>(obj), true))
         return;
 
     QQuickFlickable *flickable = p->ensureFlickable(true);
     Q_ASSERT(flickable);
+    // Add the object that was declared as a child of us as a child object of the Flickable.
     QQmlListProperty<QObject> data = flickable->flickableData();
     data.append(&data, obj);
 }
@@ -352,6 +358,7 @@ void QQuickScrollViewPrivate::contentChildren_append(QQmlListProperty<QQuickItem
 
     QQuickFlickable *flickable = p->ensureFlickable(true);
     Q_ASSERT(flickable);
+    // Add the item that was declared as a child of us as a child item of the Flickable's contentItem.
     QQmlListProperty<QQuickItem> children = flickable->flickableChildren();
     children.append(&children, item);
 }
@@ -557,7 +564,25 @@ void QQuickScrollView::contentItemChange(QQuickItem *newItem, QQuickItem *oldIte
         auto newItemAsFlickable = qobject_cast<QQuickFlickable *>(newItem);
         if (newItem && !newItemAsFlickable)
             qmlWarning(this) << "ScrollView only supports Flickable types as its contentItem";
+        // This is called by QQuickControlPrivate::setContentItem_helper, so no need to
+        // try to set it as the contentItem.
         d->setFlickable(newItemAsFlickable, false);
+        // We do, however, need to set us as its parent item, as setContentItem_helper will only
+        // do so if the item doesn't already have a parent. If newItem wasn't declared as our
+        // child and was instead imperatively assigned, it may already have a parent item,
+        // which we'll need to override.
+        if (newItem) {
+            newItem->setParentItem(this);
+
+            // Make sure that the scroll bars are stacked in front of the flickable,
+            // otherwise events won't get through to them.
+            QQuickScrollBar *verticalBar = d->verticalScrollBar();
+            if (verticalBar)
+                verticalBar->stackAfter(newItem);
+            QQuickScrollBar *horizontalBar = d->horizontalScrollBar();
+            if (horizontalBar)
+                horizontalBar->stackAfter(newItem);
+        }
     }
     QQuickPane::contentItemChange(newItem, oldItem);
 }
