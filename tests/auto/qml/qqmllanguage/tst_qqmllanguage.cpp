@@ -387,6 +387,7 @@ private slots:
     void v4SequenceMethodsWithParams_data();
     void v4SequenceMethodsWithParams();
     void jsFunctionOverridesImport();
+    void bindingAliasToComponentUrl();
 
     void bindableOnly();
 
@@ -7365,6 +7366,25 @@ void tst_qqmllanguage::jsFunctionOverridesImport()
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> object(component.create());
     QCOMPARE(object->objectName(), u"foo"_s);
+}
+
+void tst_qqmllanguage::bindingAliasToComponentUrl()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalUrl"), object->property("urlClone"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl2.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalProgress"), QVariant(1.0));
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)
