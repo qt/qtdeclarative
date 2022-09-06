@@ -326,6 +326,7 @@ void MetaTypesJsonProcessor::processTypes(const QJsonObject &types)
             if (!include.endsWith(QLatin1String(".h"))
                     && !include.endsWith(QLatin1String(".hpp"))
                     && !include.endsWith(QLatin1String(".hxx"))
+                    && !include.endsWith(QLatin1String(".hh"))
                     && !include.endsWith(u".py")
                     && include.contains(QLatin1Char('.'))) {
                 fprintf(stderr,
