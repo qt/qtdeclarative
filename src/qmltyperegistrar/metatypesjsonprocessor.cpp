@@ -296,6 +296,7 @@ void MetaTypesJsonProcessor::processTypes(const QJsonObject &types)
             if (!include.endsWith(QLatin1String(".h"))
                     && !include.endsWith(QLatin1String(".hpp"))
                     && !include.endsWith(QLatin1String(".hxx"))
+                    && !include.endsWith(QLatin1String(".hh"))
                     && include.contains(QLatin1Char('.'))) {
                 fprintf(stderr,
                         "Class %s is declared in %s, which appears not to be a header.\n"
