@@ -240,13 +240,14 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             if (!target)
                 return;
 
-            QQmlData *targetDData = QQmlData::get(target, /*create*/false);
-            if (!targetDData)
-                return;
             QQmlPropertyIndex encodedIndex = QQmlPropertyIndex::fromEncoded(aliasData->encodedMetaPropertyIndex);
             int coreIndex = encodedIndex.coreIndex();
             int valueTypeIndex = encodedIndex.valueTypeIndex();
-            const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
+            QJSEngine *engine = qjsEngine(target);
+            if (!engine)
+                return; // dont crash
+            const QQmlPropertyData *pd =
+                    QQmlData::ensurePropertyCache(engine, target)->property(coreIndex);
             if (pd && valueTypeIndex != -1 && !QQmlMetaType::valueType(pd->propType())) {
                 // deep alias
                 QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(metaObject->compilationUnit->engine->qmlEngine());

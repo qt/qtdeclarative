@@ -385,6 +385,7 @@ private slots:
 
     void bindableOnly();
     void badGroupedProperty();
+    void bindingAliasToComponentUrl();
 
 private:
     QQmlEngine engine;
@@ -6614,6 +6615,25 @@ void tst_qqmllanguage::badGroupedProperty()
     QCOMPARE(c.errorString(),
              QStringLiteral("%1:6 Cannot assign to non-existent property \"onComplete\"\n")
              .arg(url.toString()));
+}
+
+void tst_qqmllanguage::bindingAliasToComponentUrl()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalUrl"), object->property("urlClone"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("bindingAliasToComponentUrl2.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        QCOMPARE(object->property("accessibleNormalProgress"), QVariant(1.0));
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)
