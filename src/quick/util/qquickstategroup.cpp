@@ -257,14 +257,14 @@ void QQuickStateGroupPrivate::clear_transitions(QQmlListProperty<QQuickTransitio
   This property is often used in scripts to change between states. For
   example:
 
-  \js
+  \qml
   function toggle() {
       if (button.state == 'On')
           button.state = 'Off';
       else
           button.state = 'On';
   }
-  \endjs
+  \endqml
 
   If the state group is in its base state (i.e. no explicit state has been
   set), \c state will be a blank string. Likewise, you can return a
