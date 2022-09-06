@@ -41,7 +41,7 @@ public:
     enum FillGradientType { NoGradient = 0, LinearGradient, RadialGradient, ConicalGradient };
     struct GradientDesc { // can fully describe a linear/radial/conical gradient
         QGradientStops stops;
-        QQuickShapeGradient::SpreadMode spread;
+        QQuickShapeGradient::SpreadMode spread = QQuickShapeGradient::PadSpread;
         QPointF a; // start (L) or center point (R/C)
         QPointF b; // end (L) or focal point (R)
         qreal v0; // center radius (R) or start angle (C)
@@ -127,6 +127,7 @@ public:
     QQuickShapePrivate();
     ~QQuickShapePrivate();
 
+    QQuickShape::RendererType selectRendererType();
     void createRenderer();
     QSGNode *createNode();
     void sync();
@@ -146,8 +147,10 @@ public:
     int syncTimeCounter = 0;
     QQuickShape::Status status = QQuickShape::Null;
     QQuickShape::RendererType rendererType = QQuickShape::UnknownRenderer;
+    QQuickShape::RendererType preferredType = QQuickShape::UnknownRenderer;
     QQuickShape::ContainsMode containsMode = QQuickShape::BoundingRectContains;
     bool spChanged = false;
+    bool rendererChanged = false;
     bool async = false;
     bool enableVendorExts = false;
     bool syncTimingActive = false;

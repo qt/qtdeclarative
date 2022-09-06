@@ -288,8 +288,12 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShape : public QQuickItem
     Q_PROPERTY(RendererType rendererType READ rendererType NOTIFY rendererChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(bool vendorExtensionsEnabled READ vendorExtensionsEnabled WRITE setVendorExtensionsEnabled NOTIFY vendorExtensionsEnabledChanged)
+    Q_PROPERTY(RendererType preferredRendererType READ preferredRendererType
+               WRITE setPreferredRendererType NOTIFY preferredRendererTypeChanged REVISION(6, 6))
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(ContainsMode containsMode READ containsMode WRITE setContainsMode NOTIFY containsModeChanged REVISION(1, 11))
+    Q_PROPERTY(QRectF boundingRect READ boundingRect NOTIFY boundingRectChanged REVISION(6, 6))
+
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(Shape)
@@ -300,7 +304,8 @@ public:
         UnknownRenderer,
         GeometryRenderer,
         NvprRenderer,
-        SoftwareRenderer
+        SoftwareRenderer,
+        CurveRenderer
     };
     Q_ENUM(RendererType)
 
@@ -324,6 +329,11 @@ public:
 
     bool asynchronous() const;
     void setAsynchronous(bool async);
+
+    Q_REVISION(6, 6) RendererType preferredRendererType() const;
+    Q_REVISION(6, 6) void setPreferredRendererType(RendererType preferredType);
+
+    Q_REVISION(6, 6) QRectF boundingRect() const override;
 
     bool vendorExtensionsEnabled() const;
     void setVendorExtensionsEnabled(bool enable);
@@ -349,6 +359,8 @@ Q_SIGNALS:
     void asynchronousChanged();
     void vendorExtensionsEnabledChanged();
     void statusChanged();
+    Q_REVISION(6, 6) void preferredRendererTypeChanged();
+    Q_REVISION(6, 6) void boundingRectChanged();
     Q_REVISION(1, 11) void containsModeChanged();
 
 private:
