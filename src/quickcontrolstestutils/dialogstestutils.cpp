@@ -40,9 +40,17 @@ bool QQuickDialogTestUtils::verifyFileDialogDelegates(QQuickListView *fileDialog
     }
 
     if (actualFiles != expectedFiles) {
+        QString expectedFilesStr = QDebug::toString(expectedFiles);
+        QString actualFilesStr = QDebug::toString(actualFiles);
         failureMessage = QString::fromLatin1("Mismatch in actual vs expected "
-            "delegates in fileDialogListView:\n    expected: %1\n      actual: %2")
-            .arg(QDebug::toString(expectedFiles), QDebug::toString(actualFiles));
+            "delegates in fileDialogListView:\n    expected: %1\n      actual: %2");
+        if (failureMessage.size() + expectedFilesStr.size() + actualFilesStr.size() > 1024) {
+            // If we've exceeded QTest's character limit for failure messages,
+            // just show the number of files.
+            expectedFilesStr = QString::number(expectedFiles.size());
+            actualFilesStr = QString::number(actualFiles.size());
+        }
+        failureMessage = failureMessage.arg(expectedFilesStr, actualFilesStr);
         return false;
     }
 
