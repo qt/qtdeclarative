@@ -195,6 +195,67 @@
     the model's \l {ItemSelectionModel::currentIndex}{currentIndex}. You can
     disable keyboard navigation fully (in case you want to implement your own key
     handlers) by setting \l keyNavigationEnabled to \c false.
+
+    \section1 Copy and paste
+
+    Implementing copy and paste operations for a TableView usually also includes using
+    a QUndoStack (or some other undo/redo framework). The QUndoStack can be used to
+    store the different operations done on the model, like adding or removing rows, or
+    pasting data from the clipboard, with a way to undo it again later. However, an
+    accompanying QUndoStack that describes the possible operations, and how to undo them,
+    should be designed according to the needs of the model and the application.
+    As such, TableView doesn't offer a built-in API for handling copy and paste.
+
+    The following snippet can be used as a reference for how to add copy and paste support
+    to your model and TableView. It uses the existing mime data API in QAbstractItemModel,
+    together with QClipboard. The snippet will work as it is, but can also be extended to
+    use a QUndoStack.
+
+    \code
+    // Inside your C++ QAbstractTableModel subclass:
+
+    Q_INVOKABLE void copyToClipboard(const QModelIndexList &indexes) const
+    {
+        QGuiApplication::clipboard()->setMimeData(mimeData(indexes));
+    }
+
+    Q_INVOKABLE bool pasteFromClipboard(const QModelIndex &targetIndex)
+    {
+        const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData();
+        // Consider using a QUndoCommand for the following call. It should store
+        // the (mime) data for the model items that are about to be overwritten, so
+        // that a later call to undo can revert it.
+        return dropMimeData(mimeData, Qt::CopyAction, -1, -1, targetIndex);
+    }
+    \endcode
+
+    The two functions can, for example, be used from QML like this:
+
+    \code
+    TableView {
+        id: tableView
+        model: tableModel
+        selectionModel: ItemSelectionModel {}
+
+        Shortcut {
+           sequence: StandardKey.Copy
+           onActivated: {
+               let indexes = tableView.selectionModel.selectedIndexes
+               tableView.model.copyToClipboard(indexes)
+           }
+        }
+
+        Shortcut {
+           sequence: StandardKey.Paste
+           onActivated: {
+               let targetIndex = tableView.selectionModel.currentIndex
+               tableView.model.pasteFromClipboard(targetIndex)
+           }
+        }
+    }
+    \endcode
+
+    \sa mimeData(), dropMimeData(), QUndoStack, QUndoCommand, QClipboard
 */
 
 /*!
