@@ -1,5 +1,11 @@
 # Generated from creationtime.pro.
 
+if (NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
+    cmake_minimum_required(VERSION 3.16)
+    project(tst_creationtime LANGUAGES C CXX ASM)
+    find_package(Qt6BuildInternals COMPONENTS STANDALONE_TEST)
+endif()
+
 #####################################################################
 ## tst_creationtime Test:
 #####################################################################
