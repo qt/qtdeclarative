@@ -41,7 +41,6 @@ else()
     )
 endif()
 
-set_property(TEST tst_ecmascripttests APPEND PROPERTY ENVIRONMENT "QTEST_FUNCTION_TIMEOUT=900000")
 if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(qjstest)
 endif()

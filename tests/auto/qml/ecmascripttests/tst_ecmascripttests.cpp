@@ -13,7 +13,10 @@ class tst_EcmaScriptTests : public QQmlDataTest
 public:
     tst_EcmaScriptTests()
         : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings, "test262")
-    {}
+    {
+        if (qgetenv("QTEST_FUNCTION_TIMEOUT").isEmpty())
+            qputenv("QTEST_FUNCTION_TIMEOUT", "900000");
+    }
 
 private slots:
     void initTestCase() final;
