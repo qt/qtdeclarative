@@ -2495,7 +2495,12 @@ void QQuickPopup::keyPressEvent(QKeyEvent *event)
         return;
 
 #if QT_CONFIG(shortcut)
-    if (d->closePolicy.testFlag(QQuickPopup::CloseOnEscape) && event->matches(QKeySequence::Cancel)) {
+    if (d->closePolicy.testFlag(QQuickPopup::CloseOnEscape)
+        && (event->matches(QKeySequence::Cancel)
+#if defined(Q_OS_ANDROID)
+        || event->key() == Qt::Key_Back
+#endif
+        )) {
         event->accept();
         if (d->interactive)
             d->closeOrReject();
