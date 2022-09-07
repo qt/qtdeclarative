@@ -103,14 +103,17 @@ if(TARGET Qt::Quick)
         # Need to explicitly specify a writable install prefix.
         BUILD_OPTIONS
             -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/test_qml_app_deployment_installed
+        NO_RUN_ENVIRONMENT_PLUGIN_PATH
     )
 
-    # For now, the test should only pass on Windows and macOS shared and static builds and fail on
-    # other platforms, because there is no support for runtime dependency deployment
-    # on those platforms.
+    # For now, the test should only pass on Windows, macOS and desktop Linux shared and static
+    # builds and fail on other platforms, because there is no support for runtime dependency
+    # deployment on those platforms.
     # With static builds the runtime dependencies are just skipped, but the test should
     # still pass.
-    if((WIN32 OR (APPLE AND NOT IOS)))
+    if(WIN32
+            OR (APPLE AND NOT IOS)
+            OR (UNIX AND NOT APPLE AND NOT ANDROID AND NOT CMAKE_CROSSCOMPILING))
         _qt_internal_test_expect_pass(${deploy_args})
     else()
         _qt_internal_test_expect_fail(${deploy_args})

@@ -188,11 +188,35 @@ function(_qt_internal_deploy_qml_imports_for_target)
             file(INSTALL ${files} DESTINATION "${dest_plugin}" USE_SOURCE_PERMISSIONS)
 
             get_filename_component(dest_plugin_abs "${dest_plugin}" ABSOLUTE)
-            file(RELATIVE_PATH rel_path "${install_prefix_abs}" "${dest_plugin_abs}")
-            foreach(file IN LISTS files)
-                get_filename_component(filename "${file}" NAME)
-                list(APPEND plugins_found "${rel_path}/${filename}")
-            endforeach()
+            if(__QT_DEPLOY_TOOL STREQUAL "GRD")
+                # Use the full plugin path for deployment. This is necessary for file(GRD) to
+                # resolve the dependencies of the plugins.
+                list(APPEND plugins_found ${files})
+            else()
+                # Use relative paths for the plugins. If we used full paths here, macdeployqt would
+                # modify the RPATHS of plugins in the Qt installation.
+                file(RELATIVE_PATH rel_path "${install_prefix_abs}" "${dest_plugin_abs}")
+                foreach(file IN LISTS files)
+                    get_filename_component(filename "${file}" NAME)
+                    list(APPEND plugins_found "${rel_path}/${filename}")
+                endforeach()
+            endif()
+
+            if(__QT_DEPLOY_TOOL STREQUAL "GRD" AND __QT_DEPLOY_MUST_ADJUST_PLUGINS_RPATH)
+                # The RPATHs of the installed plugins do not match Qt's original lib directory.
+                # We must set the RPATH to point to QT_DEPLOY_LIBDIR.
+                _qt_internal_get_rpath_origin(rpath_origin)
+                foreach(file_path IN LISTS files)
+                    get_filename_component(file_name ${file_path} NAME)
+                    file(RELATIVE_PATH rel_lib_dir "${dest_plugin}"
+                        "${QT_DEPLOY_PREFIX}/${QT_DEPLOY_LIB_DIR}"
+                    )
+                    _qt_internal_set_rpath(
+                        FILE "${dest_plugin}/${file_name}"
+                        NEW_RPATH "${rpath_origin}/${rel_lib_dir}"
+                    )
+                endforeach()
+            endif()
 
             if(arg_BUNDLE)
                 # Actual plugin binaries will be in PlugIns, but qmldir files
