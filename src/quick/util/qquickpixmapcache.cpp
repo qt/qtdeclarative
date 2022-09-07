@@ -1747,8 +1747,7 @@ void QQuickPixmap::loadImageFromDevice(QQmlEngine *engine, QIODevice *device, co
         QQuickPixmapReader::readerMutex.lock();
         d->reply = QQuickPixmapReader::instance(engine)->getImage(d);
         if (oldD) {
-            QObject::connect(d->reply, &QQuickPixmapReply::finished, [oldD, this]() {
-                oldD->declarativePixmaps.remove(this);
+            QObject::connect(d->reply, &QQuickPixmapReply::finished, [oldD]() {
                 oldD->release();
             });
         }
