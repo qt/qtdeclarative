@@ -441,6 +441,11 @@ public:
 
     bool isSingleton() const { return m_flags & Singleton; }
     bool isCreatable() const { return m_flags & Creatable; }
+    /*!
+     * \internal
+     *
+     * Returns true for objects defined from Qml, and false for objects declared from C++.
+     */
     bool isComposite() const { return m_flags & Composite; }
     bool isScript() const { return m_flags & Script; }
     bool hasCustomParser() const { return m_flags & CustomParser; }
