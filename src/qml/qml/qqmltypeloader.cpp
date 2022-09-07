@@ -599,8 +599,23 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
                     (import->flags & QQmlImports::ImportImplicit)
                         ? QQmlImports::ImportImplicit
                         : QQmlImports::ImportLowPrecedence,
-                    errors))
+                    errors)) {
+            QQmlError error;
+            if (import->version.hasMajorVersion()) {
+                error.setDescription(QQmlImportDatabase::tr(
+                                         "module \"%1\" version %2.%3 cannot be imported because\n%4")
+                                     .arg(import->uri).arg(import->version.majorVersion())
+                                     .arg(import->version.hasMinorVersion()
+                                          ? QString::number(import->version.minorVersion())
+                                          : QLatin1String("x"))
+                                     .arg(errors->front().description()));
+            } else {
+                error.setDescription(QQmlImportDatabase::tr("module \"%1\" cannot be imported because\n%2")
+                                     .arg(import->uri, errors->front().description()));
+            }
+            errors->prepend(error);
             return false;
+        }
 
         const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirFilePath);
         if (!import->qualifier.isEmpty()) {
