@@ -122,6 +122,7 @@ private:
     QScopedPointer<QFile> tempSubFile2;
 
     QTemporaryDir largeTempDir;
+    QStringList largeTempDirPaths;
     QDir largeTempDirLargeSubDir;
     const int largeTempDirLargeSubDirIndex = 80;
 
@@ -193,22 +194,21 @@ void tst_QQuickFileDialogImpl::initTestCase()
     */
     QVERIFY(largeTempDir.isValid());
     const static int largeFileCount = 100;
+    const QDir largeTempDirectory(largeTempDir.path());
     for (int i = 0; i < largeFileCount; ++i) {
-        QDir newDir(largeTempDir.path());
-        QVERIFY(newDir.exists());
         // Pad with zeroes so that the directories are ordered as we expect.
-        QVERIFY(newDir.mkdir(QString::fromLatin1("dir%1").arg(i, 3, 10, QLatin1Char('0'))));
+        const QString dirName = QString::fromLatin1("dir%1").arg(i, 3, 10, QLatin1Char('0'));
+        QVERIFY(largeTempDirectory.mkdir(dirName));
+        largeTempDirPaths.append(largeTempDirectory.filePath(dirName));
     }
 
     // ... and within one of those folders, more folders.
     largeTempDirLargeSubDir = QDir(largeTempDir.path() + "/dir"
         + QString::fromLatin1("%1").arg(largeTempDirLargeSubDirIndex, 3, 10, QLatin1Char('0')));
     QVERIFY(largeTempDirLargeSubDir.exists());
-    for (int i = 0; i < largeFileCount; ++i) {
-        QDir newDir(largeTempDirLargeSubDir.path());
-        QVERIFY(newDir.exists());
-        QVERIFY(newDir.mkdir(QString::fromLatin1("sub-dir%1").arg(i, 3, 10, QLatin1Char('0'))));
-    }
+    const QDir largeTempSubDirectory = QDir(largeTempDirLargeSubDir.path());
+    for (int i = 0; i < largeFileCount; ++i)
+        QVERIFY(largeTempSubDirectory.mkdir(QString::fromLatin1("sub-dir%1").arg(i, 3, 10, QLatin1Char('0'))));
 
     // Ensure that each test starts off in the temporary directory.
     oldCurrentDir = QDir::current();
@@ -832,6 +832,9 @@ void tst_QQuickFileDialogImpl::goUpIntoLargeFolder()
 
     // Go up a directory via the keyboard shortcut.
     QTest::keySequence(dialogHelper.window(), goUpKeySequence);
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        largeTempDirPaths, failureMessage), qPrintable(failureMessage));
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(largeTempDir.path()),
         QUrl::fromLocalFile(largeTempDirLargeSubDir.path()), largeTempDirLargeSubDirIndex);
 }
