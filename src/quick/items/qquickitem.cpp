@@ -8956,8 +8956,8 @@ void QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, bool isFil
                 // So hopefully if we start from one passive grabber and go up the parent chain from there,
                 // we will find any filtering parent items that exist.
                 auto handler = qmlobject_cast<QQuickPointerHandler *>(pg.first());
-                Q_ASSERT(handler);
-                pointGrabber = handler->parentItem();
+                if (handler)
+                    pointGrabber = handler->parentItem();
             }
         }
 
