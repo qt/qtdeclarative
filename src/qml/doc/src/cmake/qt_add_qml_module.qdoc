@@ -209,7 +209,7 @@ current source directory (\c CMAKE_CURRENT_SOURCE_DIR). This resource path is
 appended to a prefix formed by concatenating the \l{RESOURCE_PREFIX} and
 the target path (but see \l NO_RESOURCE_TARGET_PATH for an exception to this).
 
-Since Qt 6.4, you can specify \l{AUTO_RESOURCE_PREFIX}. If
+Since Qt 6.5, you can specify \l{AUTO_RESOURCE_PREFIX}. If
 \l{AUTO_RESOURCE_PREFIX} is specified, \l{RESOURCE_PREFIX} is set to
 \c{/qt/qml}. This way, your modules are automatically
 placed in the default import path of the QML engine. If you don't do this, you

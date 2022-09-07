@@ -208,7 +208,7 @@ file system, you can deploy the application as a single binary.
 
 Generally, you should pass the \c AUTO_RESOURCE_PREFIX without arguments to
 \l{qt_add_qml_module}. This way, your modules are placed in
-\c{:/qt/qml/} in the resource file system. Since Qt 6.4,
+\c{:/qt/qml/} in the resource file system. Since Qt 6.5,
 this is part of the default \l{QML Import Path}, but not used by Qt itself. For
 modules to be used within your application, this is the right place.
 
