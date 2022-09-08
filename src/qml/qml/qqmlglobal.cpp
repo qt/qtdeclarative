@@ -12,14 +12,6 @@
 
 QT_BEGIN_NAMESPACE
 
-bool QQmlValueTypeProvider::initValueType(QMetaType metaType, QVariant &dst)
-{
-    if (!metaType.isValid())
-        return false;
-    dst = QVariant(metaType);
-    return true;
-}
-
 bool QQmlValueTypeProvider::createValueType(QMetaType metaType, const QJSValue &s, QVariant &data)
 {
     const QQmlType qmlType = QQmlMetaType::qmlType(metaType);
@@ -32,44 +24,6 @@ bool QQmlValueTypeProvider::createValueType(QMetaType metaType, const QJSValue &
     }
 
     return false;
-}
-
-bool QQmlValueTypeProvider::equalValueType(QMetaType metaType, const void *lhs, const QVariant &rhs)
-{
-    Q_ASSERT(lhs);
-    return metaType.equals(lhs, rhs.constData());
-}
-
-bool QQmlValueTypeProvider::readValueType(QMetaType metaType, const QVariant  &src, void *dst)
-{
-    Q_ASSERT(dst);
-    if (!metaType.isValid()
-            || (src.metaType() == metaType && metaType.equals(src.constData(), dst))) {
-        return false;
-    }
-
-    metaType.destruct(dst);
-    metaType.construct(dst, src.metaType() == metaType ? src.constData() : nullptr);
-    return true;
-}
-
-bool QQmlValueTypeProvider::writeValueType(QMetaType metaType, const void *src, QVariant &dst)
-{
-    Q_ASSERT(src);
-    if (!metaType.isValid()
-            || (dst.metaType() == metaType && metaType.equals(src, dst.constData()))) {
-        return false;
-    }
-
-    dst = QVariant(metaType, src);
-    return true;
-}
-
-Q_GLOBAL_STATIC(QQmlValueTypeProvider, valueTypeProvider)
-
-Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider()
-{
-    return valueTypeProvider();
 }
 
 QQmlColorProvider::~QQmlColorProvider() {}

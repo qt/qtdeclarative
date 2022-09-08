@@ -425,7 +425,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::QColor: {
         QVariant data;
-        if (QQml_valueTypeProvider()->createValueType(
+        if (QQmlValueTypeProvider::createValueType(
                     propertyType, compilationUnit->bindingValueAsString(binding), data)) {
             property->writeProperty(_qobject, data.data(), propertyWriteFlags);
         }
@@ -508,7 +508,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QMetaType::QVector4D:
     case QMetaType::QQuaternion: {
         QVariant result;
-        bool ok = QQml_valueTypeProvider()->createValueType(
+        bool ok = QQmlValueTypeProvider::createValueType(
                     propertyType, compilationUnit->bindingValueAsString(binding), result);
         assertOrNull(ok);
         Q_UNUSED(ok);

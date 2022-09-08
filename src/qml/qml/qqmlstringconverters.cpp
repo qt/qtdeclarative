@@ -41,7 +41,7 @@ QVariant QQmlStringConverters::variantFromString(const QString &s, QMetaType pre
         return QVariant::fromValue(rectFFromString(s, ok).toRect());
     default: {
         QVariant ret;
-        bool success = QQml_valueTypeProvider()->createValueType(preferredType, QJSValue(s), ret);
+        bool success = QQmlValueTypeProvider::createValueType(preferredType, QJSValue(s), ret);
         if (ok)
             *ok = success;
         return ret;

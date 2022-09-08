@@ -2572,7 +2572,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         return true;
     } else if (!isPointer) {
         QVariant val;
-        if (QQml_valueTypeProvider()->createValueType(
+        if (QQmlValueTypeProvider::createValueType(
                     metaType, QJSValuePrivate::fromReturnedValue(value.asReturnedValue()), val)) {
             Q_ASSERT(val.metaType() == metaType);
             metaType.destruct(data);

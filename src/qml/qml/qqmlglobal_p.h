@@ -182,17 +182,11 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
     d_ptr->sendChildEvents = sce;
 }
 
-class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
+class QQmlValueTypeProvider
 {
 public:
-    bool initValueType(QMetaType, QVariant &);
-    bool createValueType(QMetaType, const QJSValue &, QVariant &);
-    bool equalValueType(QMetaType, const void *, const QVariant &);
-    bool readValueType(QMetaType, const QVariant &, void *);
-    bool writeValueType(QMetaType, const void *, QVariant &);
+    static bool createValueType(QMetaType, const QJSValue &, QVariant &);
 };
-
-Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider();
 
 class Q_QML_PRIVATE_EXPORT QQmlColorProvider
 {
