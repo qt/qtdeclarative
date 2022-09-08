@@ -66,6 +66,8 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addVersionOption();
 
+    QCommandLineOption bareOption(QStringLiteral("bare"), QCoreApplication::translate("main", "Do not include default import directories. This may be used to run qmlcachegen on a project using a different Qt version."));
+    parser.addOption(bareOption);
     QCommandLineOption filterResourceFileOption(QStringLiteral("filter-resource-file"), QCoreApplication::translate("main", "Filter out QML/JS files from a resource file that can be cached ahead of time instead"));
     parser.addOption(filterResourceFileOption);
     QCommandLineOption resourceFileMappingOption(QStringLiteral("resource-file-mapping"), QCoreApplication::translate("main", "Path from original resource file to new one"), QCoreApplication::translate("main", "old-name=new-name"));
@@ -234,7 +236,8 @@ int main(int argc, char **argv)
             if (parser.isSet(importPathOption))
                 importPaths = parser.values(importPathOption);
 
-            importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+            if (!parser.isSet(bareOption))
+                importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
 
             QQmlJSImporter importer(
                         importPaths, parser.isSet(resourceOption) ? &fileMapper : nullptr);
