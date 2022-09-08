@@ -24,6 +24,7 @@ qt_generate_deploy_qml_app_script(
     TARGET target
     FILENAME_VARIABLE var_name
     [NO_UNSUPPORTED_PLATFORM_ERROR]
+    [NO_TRANSLATIONS]
     [DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM]
     [MACOS_BUNDLE_POST_BUILD]
 )
@@ -85,6 +86,11 @@ application to run directly from the build directory (essentially just the
 \c{qmldir} files and symlinks to plugins). This is usually desirable to support
 development of the application. \c{MACOS_BUNDLE_POST_BUILD} is ignored for all
 other platforms.
+
+On platforms other than macOS, Qt translations are automatically deployed. To
+inhibit this behavior, specify \c{NO_TRANSLATIONS}. Use
+\l{qt6_deploy_translations}{qt_deploy_translations} to deploy translations in a
+customized way.
 
 For deploying a non-QML application, use
 \l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}

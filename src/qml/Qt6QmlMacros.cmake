@@ -3001,6 +3001,7 @@ function(qt6_generate_deploy_qml_app_script)
     # for imported QML modules).
     set(no_value_options
         NO_UNSUPPORTED_PLATFORM_ERROR
+        NO_TRANSLATIONS
         MACOS_BUNDLE_POST_BUILD
         DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
     )
@@ -3048,6 +3049,11 @@ function(qt6_generate_deploy_qml_app_script)
         set(qt_build_type_string "static Qt libs")
     endif()
 
+    set(common_deploy_args "")
+    if(arg_NO_TRANSLATIONS)
+        string(APPEND common_deploy_args "    NO_TRANSLATIONS\n")
+    endif()
+
     if(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD)
         # TODO: Handle non-bundle applications if possible.
         get_target_property(is_bundle ${arg_TARGET} MACOSX_BUNDLE)
@@ -3068,7 +3074,7 @@ if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
     qt_deploy_runtime_dependencies(
         EXECUTABLE $<TARGET_FILE_NAME:${arg_TARGET}>.app
         ADDITIONAL_MODULES \${plugins_found}
-    )
+    ${common_deploy_args})
 endif()")
         if(arg_MACOS_BUNDLE_POST_BUILD)
             # We must not deploy the runtime dependencies, otherwise we interfere
@@ -3097,7 +3103,7 @@ qt_deploy_runtime_dependencies(
     EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
-)")
+${common_deploy_args})")
     elseif(UNIX AND NOT APPLE AND NOT ANDROID AND NOT CMAKE_CROSSCOMPILING
             AND QT6_IS_SHARED_LIBS_BUILD)
         qt6_generate_deploy_script(
@@ -3110,7 +3116,7 @@ qt_deploy_runtime_dependencies(
     EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
-)")
+${common_deploy_args})")
     elseif((arg_NO_UNSUPPORTED_PLATFORM_ERROR OR
             QT_INTERNAL_NO_UNSUPPORTED_PLATFORM_ERROR)
         AND (arg_DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
