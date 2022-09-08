@@ -384,6 +384,7 @@ private slots:
     void uncreatableAttached();
 
     void bindableOnly();
+    void badGroupedProperty();
 
 private:
     QQmlEngine engine;
@@ -6602,6 +6603,17 @@ void tst_qqmllanguage::bindableOnly()
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("data").value<QByteArray>(), QByteArray("score"));
     QCOMPARE(o->objectName(), QStringLiteral("score"));
+}
+
+void tst_qqmllanguage::badGroupedProperty()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("badGroupedProperty.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY(c.isError());
+    QCOMPARE(c.errorString(),
+             QStringLiteral("%1:6 Cannot assign to non-existent property \"onComplete\"\n")
+             .arg(url.toString()));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
