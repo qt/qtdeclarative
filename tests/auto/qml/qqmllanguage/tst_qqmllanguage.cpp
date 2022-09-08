@@ -341,6 +341,7 @@ private slots:
     void ambiguousContainingType();
     void staticConstexprMembers();
     void bindingAliasToComponentUrl();
+    void badGroupedProperty();
 
 private:
     QQmlEngine engine;
@@ -5937,6 +5938,17 @@ void tst_qqmllanguage::bindingAliasToComponentUrl()
         QVERIFY(object);
         QCOMPARE(object->property("accessibleNormalProgress"), QVariant(1.0));
     }
+}
+
+void tst_qqmllanguage::badGroupedProperty()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("badGroupedProperty.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY(c.isError());
+    QCOMPARE(c.errorString(),
+             QStringLiteral("%1:6 Cannot assign to non-existent property \"onComplete\"\n")
+             .arg(url.toString()));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
