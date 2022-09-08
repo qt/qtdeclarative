@@ -722,16 +722,18 @@ macro(_qt_internal_genex_getoption var target property)
     set(${var} "$<BOOL:$<TARGET_PROPERTY:${target},${property}>>")
 endmacro()
 
+# Gets the Qt import paths, prepends -I, appends the values to the given import_paths_var output
+# variable.
 function(_qt_internal_extend_qml_import_paths import_paths_var)
     set(local_var ${${import_paths_var}})
 
-    # prepend extra import path which is a current module's build dir: we need
-    # this to ensure correct importing of QML modules when having a prefix-build
-    # with QLibraryInfo::path(QLibraryInfo::QmlImportsPath) pointing to the
-    # install location
-    if(QT_BUILDING_QT AND QT_WILL_INSTALL)
-        list(PREPEND local_var -I "${QT_BUILD_DIR}/${INSTALL_QMLDIR}")
-    endif()
+    _qt_internal_get_main_qt_qml_import_paths(qt_import_paths)
+
+    # Append the paths instead of prepending them, to ensure Qt import paths are searched after
+    # any target or build dir specific import paths.
+    foreach(import_path IN LISTS qt_import_paths)
+        list(APPEND local_var -I "${import_path}")
+    endforeach()
 
     set(${import_paths_var} ${local_var} PARENT_SCOPE)
 endfunction()
@@ -2584,6 +2586,48 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
+# Get Qt provided QML import paths.
+# The appending order is important. Build dirs are preferred over install dirs.
+function(_qt_internal_get_main_qt_qml_import_paths out_var)
+    set(qml_import_paths "")
+
+    # When building a qml module as part of a prefix Qt build that is not yet installed, add an
+    # extra import path which is the current module's build dir: we need
+    # this to ensure correct importing of QML modules when having a prefix-build
+    # with QLibraryInfo::path(QLibraryInfo::QmlImportsPath) pointing to the
+    # install location.
+    if(QT_BUILDING_QT AND QT_WILL_INSTALL)
+        set(build_dir_import_path "${QT_BUILD_DIR}/${INSTALL_QMLDIR}")
+        if(IS_DIRECTORY "${build_dir_import_path}")
+            list(APPEND qml_import_paths "${build_dir_import_path}")
+        endif()
+    endif()
+
+    # We could have multiple additional installation prefixes: one per Qt repository (conan).
+    # Or just extra ones, that might be needed during cross-compilation or example building.
+    # Add those that have a "qml" subdirectory.
+    # The additional prefixes have priority over the main Qt prefix, so they come first.
+    if(NOT "${_qt_additional_packages_prefix_paths}" STREQUAL "")
+        __qt_internal_prefix_paths_to_roots(
+            additional_root_paths "${_qt_additional_packages_prefix_paths}")
+        foreach(root IN ITEMS ${additional_root_paths})
+            set(candidate "${root}/${QT6_INSTALL_QML}")
+            if(IS_DIRECTORY "${candidate}")
+                list(APPEND qml_import_paths "${candidate}")
+            endif()
+        endforeach()
+    endif()
+
+    # Add the main Qt "<prefix>/qml" import path.
+    if(QT6_INSTALL_PREFIX)
+        set(main_import_path "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_QML}")
+        if(IS_DIRECTORY "${main_import_path}")
+            list(APPEND qml_import_paths "${main_import_path}")
+        endif()
+    endif()
+
+    set(${out_var} "${qml_import_paths}" PARENT_SCOPE)
+endfunction()
 
 function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     if(NOT "${ARGN}" STREQUAL "")
@@ -2621,26 +2665,6 @@ but this file does not exist.  Possible reasons include:
 ")
     endif()
 
-    # Find Qt provided QML import paths.
-    if("${_qt_additional_packages_prefix_paths}" STREQUAL "")
-        # We have one installation prefix for all Qt modules. Add the "<prefix>/qml" directory.
-        set(qml_import_paths "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_QML}")
-    else()
-        # We have multiple installation prefixes: one per Qt repository (conan). Add those that have
-        # a "qml" subdirectory.
-        set(qml_import_paths)
-        __qt_internal_prefix_paths_to_roots(
-            additional_root_paths "${_qt_additional_packages_prefix_paths}")
-        foreach(root IN ITEMS ${QT6_INSTALL_PREFIX} ${additional_root_paths})
-            set(candidate "${root}/${QT6_INSTALL_QML}")
-            if(IS_DIRECTORY "${candidate}")
-                list(APPEND qml_import_paths "${candidate}")
-            endif()
-        endforeach()
-    endif()
-
-
-    # Run qmlimportscanner to generate the cmake file that records the import entries
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     get_target_property(target_binary_dir ${target} BINARY_DIR)
     set(out_dir "${target_binary_dir}/.qt_plugins")
@@ -2653,9 +2677,11 @@ but this file does not exist.  Possible reasons include:
         -cmake-output
         -output-file "${imports_file}"
     )
-    get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
 
-    if (qml_import_path)
+    set(qml_import_paths "")
+    # Get custom import paths provided during qt_add_qml_module call.
+    get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
+    if(qml_import_path)
         list(APPEND cmd_args ${qml_import_path})
     endif()
 
@@ -2673,6 +2699,10 @@ but this file does not exist.  Possible reasons include:
     else()
         list(APPEND qml_import_paths "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
+
+    # Add the Qt import paths last.
+    _qt_internal_get_main_qt_qml_import_paths(qt_import_paths)
+    list(APPEND qml_import_paths ${qt_import_paths})
 
     # Construct the -importPath arguments.
     set(import_path_arguments)
@@ -2703,6 +2733,7 @@ but this file does not exist.  Possible reasons include:
 
     set(import_scanner_args ${QT_TOOL_COMMAND_WRAPPER_PATH} ${tool_path} ${cmd_args})
 
+    # Run qmlimportscanner to generate the cmake file that records the import entries
     if(scan_at_build_time)
         add_custom_command(
             OUTPUT "${imports_file}"
