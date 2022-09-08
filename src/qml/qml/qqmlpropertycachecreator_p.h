@@ -945,10 +945,16 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         }
 
         const auto referencedType = typeRef->type();
-        if (referencedType.isValid())
+        if (referencedType.isValid()) {
             *type = referencedType.typeId();
-        else
+            if (!type->isValid() && referencedType.isInlineComponentType()) {
+                int objectId = referencedType.inlineComponentId();
+                *type = objectContainer->typeIdsForComponent(objectId).id;
+                Q_ASSERT(type->isValid());
+            }
+        } else {
             *type = typeRef->compilationUnit()->typeIds.id;
+        }
 
         *version = typeRef->version();
 
