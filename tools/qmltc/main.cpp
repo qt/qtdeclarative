@@ -58,6 +58,14 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addVersionOption();
 
+    QCommandLineOption bareOption {
+        u"bare"_s,
+        QCoreApplication::translate(
+                "main", "Do not include default import directories. This may be used to run "
+                        "qmltc on a project using a different Qt version.")
+    };
+    parser.addOption(bareOption);
+
     QCommandLineOption importPathOption {
         u"I"_s, QCoreApplication::translate("main", "Look for QML modules in specified directory"),
         QCoreApplication::translate("main", "import directory")
@@ -123,7 +131,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
 
     QStringList importPaths = parser.values(importPathOption);
-    importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+    if (!parser.isSet(bareOption))
+        importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
     QStringList qmldirFiles = parser.values(qmldirOption);
 
     QString outputCppFile;
