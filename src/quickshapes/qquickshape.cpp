@@ -500,8 +500,7 @@ void QQuickShapePath::resetFillGradient()
     \brief Renders a path.
     \since 5.10
 
-    Renders a path either by generating geometry via QPainterPath and manual
-    triangulation or by using a GPU vendor extension.
+    Renders a path by triangulating geometry from a QPainterPath.
 
     This approach is different from rendering shapes via QQuickPaintedItem or
     the 2D Canvas because the path never gets rasterized in software.
@@ -557,10 +556,9 @@ void QQuickShapePath::resetFillGradient()
 
     \list
 
-    \li When running with the OpenGL backend of Qt Quick, only the generic,
-    triangulation-based approach is available. When OpenGL is not used directly
-    by the scene graph, for example because it is using the graphics abstraction layer
-    (QRhi), only the generic shape renderer is available.
+    \li When Qt Quick is running with the default, hardware-accelerated backend (RHI),
+    the generic shape renderer will be used. This converts the shapes into triangles
+    which are passed to the renderer.
 
     \li The \c software backend is fully supported. The path is rendered via
     QPainter::strokePath() and QPainter::fillPath() in this case.
