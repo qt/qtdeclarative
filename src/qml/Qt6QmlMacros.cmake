@@ -2585,7 +2585,9 @@ but this file does not exist.  Possible reasons include:
         # We have multiple installation prefixes: one per Qt repository (conan). Add those that have
         # a "qml" subdirectory.
         set(qml_import_paths)
-        foreach(root IN ITEMS ${QT6_INSTALL_PREFIX} ${_qt_additional_packages_prefix_paths})
+        __qt_internal_prefix_paths_to_roots(
+            additional_root_paths "${_qt_additional_packages_prefix_paths}")
+        foreach(root IN ITEMS ${QT6_INSTALL_PREFIX} ${additional_root_paths})
             set(candidate "${root}/${QT6_INSTALL_QML}")
             if(IS_DIRECTORY "${candidate}")
                 list(APPEND qml_import_paths "${candidate}")
