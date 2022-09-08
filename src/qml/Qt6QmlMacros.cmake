@@ -2000,7 +2000,7 @@ but this file does not exist.  Possible reasons include:
 ")
     endif()
 
-    # Find QML import paths.
+    # Find Qt provided QML import paths.
     if("${_qt_additional_packages_prefix_paths}" STREQUAL "")
         # We have one installation prefix for all Qt modules. Add the "<prefix>/qml" directory.
         set(qml_import_paths "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_QML}")
@@ -2016,11 +2016,6 @@ but this file does not exist.  Possible reasons include:
         endforeach()
     endif()
 
-    # Construct the -importPath arguments.
-    set(import_path_arguments)
-    foreach(path IN LISTS qml_import_paths)
-        list(APPEND import_path_arguments -importPath ${path})
-    endforeach()
 
     # Small macro to avoid duplicating code in two different loops.
     macro(_qt6_QmlImportScanner_parse_entry)
@@ -2044,7 +2039,6 @@ but this file does not exist.  Possible reasons include:
     set(cmd_args
         -rootPath "${arg_PATH_TO_SCAN}"
         -cmake-output
-        ${import_path_arguments}
     )
     get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
 
@@ -2055,17 +2049,25 @@ but this file does not exist.  Possible reasons include:
     # Facilitate self-import so we can find the qmldir file
     get_target_property(module_out_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
     if(module_out_dir)
-        list(APPEND cmd_args "${module_out_dir}")
+        list(APPEND qml_import_paths "${module_out_dir}")
     endif()
 
     # Find qmldir files we copied to the build directory
     if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
         if(EXISTS "${QT_QML_OUTPUT_DIRECTORY}")
-            list(APPEND cmd_args "${QT_QML_OUTPUT_DIRECTORY}")
+            list(APPEND qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
         endif()
     else()
-        list(APPEND cmd_args "${CMAKE_CURRENT_BINARY_DIR}")
+        list(APPEND qml_import_paths "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
+
+    # Construct the -importPath arguments.
+    set(import_path_arguments)
+    foreach(path IN LISTS qml_import_paths)
+        list(APPEND import_path_arguments -importPath ${path})
+    endforeach()
+
+    list(APPEND cmd_args ${import_path_arguments})
 
     # All of the module's .qml files will be listed in one of the generated
     # .qrc files, so there's no need to list the files individually. We provide
