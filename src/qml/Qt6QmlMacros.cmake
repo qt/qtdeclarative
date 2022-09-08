@@ -785,6 +785,7 @@ function(_qt_internal_target_enable_qmllint target)
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
         ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
+        --bare
         ${import_args}
         ${qrc_args}
         ${qmllint_files}
@@ -1350,6 +1351,7 @@ function(_qt_internal_target_enable_qmltc target)
             COMMAND
                 ${QT_TOOL_COMMAND_WRAPPER_PATH}
                 ${qmltc_executable}
+                --bare
                 --header "${compiled_header}"
                 --impl "${compiled_cpp}"
                 ${common_args}
@@ -2103,6 +2105,7 @@ function(qt6_target_qml_sources target)
                 COMMAND
                     ${QT_TOOL_COMMAND_WRAPPER_PATH}
                     ${qmlcachegen_cmd}
+                    --bare
                     --resource-path "${file_resource_path}"
                     ${cachegen_args}
                     -o "${compiled_file}"
