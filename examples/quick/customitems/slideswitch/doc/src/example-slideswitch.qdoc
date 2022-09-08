@@ -3,7 +3,7 @@
 
 
 /*!
-\page qmlexampletoggleswitch.html tutorial
+\page qmlexampletoggleswitch.html
 \title Qt Quick Examples - Toggle Switch
 \brief A reusable switch component made in QML
  \ingroup qtquickexamples
