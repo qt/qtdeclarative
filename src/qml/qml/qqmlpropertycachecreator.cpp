@@ -94,8 +94,10 @@ bool QQmlBindingInstantiationContext::resolveInstantiatingProperty()
         return true;
     }
 
+    if (!referencingObjectPropertyCache)
+        return false;
+
     Q_ASSERT(referencingObjectIndex >= 0);
-    Q_ASSERT(referencingObjectPropertyCache);
     Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
 
     bool notInRevision = false;
