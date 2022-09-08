@@ -1580,7 +1580,13 @@ static QVariant toVariant(
                 QV4::ScopedValue arrayValue(scope);
                 for (qint64 i = 0; i < length; ++i) {
                     arrayValue = a->get(i);
-                    QVariant asVariant;
+                    QVariant asVariant(valueMetaType);
+                    if (QQmlValueTypeProvider::createValueType(
+                                arrayValue, valueMetaType, asVariant.data())) {
+                        retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
+                        continue;
+                    }
+
                     if (QMetaType::canConvert(QMetaType::fromType<QJSValue>(), valueMetaType)) {
                         // before attempting a conversion from the concrete types,
                         // check if there exists a conversion from QJSValue -> out type
@@ -1600,10 +1606,12 @@ static QVariant toVariant(
                         auto originalType = asVariant.metaType();
                         bool couldConvert = asVariant.convert(valueMetaType);
                         if (!couldConvert) {
-                            qWarning() << QLatin1String("Could not convert array value at position %1 from %2 to %3")
-                                                        .arg(QString::number(i),
-                                                             QString::fromUtf8(originalType.name()),
-                                                             QString::fromUtf8(valueMetaType.name()));
+                            qWarning().noquote()
+                                    << QLatin1String("Could not convert array value "
+                                                     "at position %1 from %2 to %3")
+                                       .arg(QString::number(i),
+                                            QString::fromUtf8(originalType.name()),
+                                            QString::fromUtf8(valueMetaType.name()));
                             // create default constructed value
                             asVariant = QVariant(valueMetaType, nullptr);
                         }
@@ -1661,6 +1669,12 @@ static QVariant toVariant(
     if (QV4::RegExpObject *re = o->as<QV4::RegExpObject>())
         return re->toQRegularExpression();
 #endif
+
+    if (metaType.isValid() && !(metaType.flags() & QMetaType::PointerToQObject)) {
+        QVariant result(metaType);
+        if (QQmlValueTypeProvider::createValueType(value, metaType, result.data()))
+            return result;
+    }
 
     if (createJSValueForObjects)
         return QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
@@ -2504,8 +2518,17 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         }
         break;
     }
+#if QT_CONFIG(qml_locale)
+    case QMetaType::QLocale: {
+        if (const QV4::QQmlLocaleData *l = value.as<QQmlLocaleData>()) {
+            *reinterpret_cast<QLocale *>(data) = *l->d()->locale;
+            return true;
+        }
+        break;
+    }
+#endif
     default:
-    ;
+        break;
     }
 
     if (metaType.flags() & QMetaType::IsEnumeration) {
@@ -2579,14 +2602,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         QJSValuePrivate::setValue(reinterpret_cast<QJSValue*>(data), value.asReturnedValue());
         return true;
     } else if (!isPointer) {
-        QVariant val;
-        if (QQmlValueTypeProvider::createValueType(
-                    metaType, QJSValuePrivate::fromReturnedValue(value.asReturnedValue()), val)) {
-            Q_ASSERT(val.metaType() == metaType);
-            metaType.destruct(data);
-            metaType.construct(data, val.constData());
+        if (QQmlValueTypeProvider::createValueType(value, metaType, data))
             return true;
-        }
     }
 
     if (const QV4::Sequence *sequence = value.as<Sequence>()) {

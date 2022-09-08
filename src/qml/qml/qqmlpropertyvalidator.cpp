@@ -568,10 +568,10 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
             default: return QString();
             }
         };
-        QVariant result;
+        QVariant result(property->propType());
         if (!QQmlValueTypeProvider::createValueType(
-                    property->propType(),
-                    compilationUnit->bindingValueAsString(binding), result)) {
+                    compilationUnit->bindingValueAsString(binding),
+                    result.metaType(), result.data())) {
             return warnOrError(tr("Invalid property assignment: %1 expected")
                                .arg(typeName()));
         }
@@ -617,6 +617,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
             break;
         } else if (property->isQObject()
                    && bindingType == QV4::CompiledData::Binding::Type_Null) {
+            break;
+        } else if (QQmlMetaType::qmlType(property->propType()).canConstructValueType()) {
             break;
         }
 

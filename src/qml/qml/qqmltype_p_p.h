@@ -92,6 +92,8 @@ public:
         int finalizerCast;
         bool registerEnumClassesUnscoped;
         bool registerEnumsFromRelatedTypes;
+        bool constructValueType;
+        bool populateValueType;
     };
 
     struct QQmlSingletonTypeData

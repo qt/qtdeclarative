@@ -1220,7 +1220,7 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
         return false;
 
     QVariant v = value;
-    if (prop.isEnumType()) {
+    if (prop.isEnumType() && v.metaType() != prop.metaType()) {
         QMetaEnum menum = prop.enumerator();
         if (v.userType() == QMetaType::QString) {
             bool ok;
@@ -1360,6 +1360,80 @@ private:
     QUntypedPropertyBinding untypedBinding;
 };
 
+struct ConvertAndAssignResult {
+    bool couldConvert = false;
+    bool couldWrite = false;
+
+    operator bool() const { return couldConvert; }
+};
+
+static ConvertAndAssignResult tryConvertAndAssign(
+        QObject *object, const QQmlPropertyData &property, const QVariant &value,
+        QQmlPropertyData::WriteFlags flags, QMetaType propertyMetaType, QMetaType variantMetaType,
+        bool isUrl) {
+
+    if (isUrl
+            || variantMetaType == QMetaType::fromType<QString>()
+            || propertyMetaType == QMetaType::fromType<QList<QUrl>>()
+            || property.isQList()) {
+        return {false, false};
+    }
+
+    // common cases:
+    switch (propertyMetaType.id()) {
+    case QMetaType::Bool:
+        if (value.canConvert(propertyMetaType)) {
+            bool b = value.toBool();
+            return {true, property.writeProperty(object, &b, flags)};
+        }
+        return {false, false};
+    case QMetaType::Int: {
+        bool ok = false;
+        int i = value.toInt(&ok);
+        return {ok, ok && property.writeProperty(object, &i, flags)};
+    }
+    case QMetaType::UInt: {
+        bool ok = false;
+        uint u = value.toUInt(&ok);
+        return {ok, ok && property.writeProperty(object, &u, flags)};
+    }
+    case QMetaType::Double: {
+        bool ok = false;
+        double d = value.toDouble(&ok);
+        return {ok, ok && property.writeProperty(object, &d, flags)};
+    }
+    case QMetaType::Float: {
+        bool ok = false;
+        float f = value.toFloat(&ok);
+        return {ok, ok && property.writeProperty(object, &f, flags)};
+    }
+    case QMetaType::QString:
+        if (value.canConvert(propertyMetaType)) {
+            QString s = value.toString();
+            return {true, property.writeProperty(object, &s, flags)};
+        }
+        return {false, false};
+    case QMetaType::QVariantMap:
+        if (value.canConvert(propertyMetaType)) {
+            QVariantMap m = value.toMap();
+            return {true, property.writeProperty(object, &m, flags)};
+        }
+        return {false, false};
+    default: {
+        break;
+    }
+    }
+
+    QVariant converted(propertyMetaType);
+    if (QQmlValueTypeProvider::createValueType(value, propertyMetaType, converted.data())
+            || QMetaType::convert(value.metaType(), value.constData(),
+                                  propertyMetaType, converted.data()))  {
+        return {true, property.writeProperty(object, converted.data(), flags)};
+    }
+
+    return {false, false};
+};
+
 bool QQmlPropertyPrivate::write(
         QObject *object, const QQmlPropertyData &property, const QVariant &value,
         const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags)
@@ -1419,37 +1493,9 @@ bool QQmlPropertyPrivate::write(
         } else {
             return false;
         }
-    } else if (value.canConvert(propertyMetaType)
-               && !isUrl && variantMetaType != QMetaType::fromType<QString>()
-               && propertyMetaType != QMetaType::fromType<QList<QUrl>>() && !property.isQList()) {
-        // common cases:
-        switch (propertyMetaType.id()) {
-        case QMetaType::Bool: {
-            bool b = value.toBool();
-            return property.writeProperty(object, &b, flags);
-        }
-        case QMetaType::Int: {
-            int i = value.toInt();
-            return property.writeProperty(object, &i, flags);
-        }
-        case QMetaType::Double: {
-            double d = value.toDouble();
-            return property.writeProperty(object, &d, flags);
-        }
-        case QMetaType::Float: {
-            float f = value.toFloat();
-            return property.writeProperty(object, &f, flags);
-        }
-        case QMetaType::QString: {
-            QString s = value.toString();
-            return property.writeProperty(object, &s, flags);
-        }
-        default: { // "fallback":
-            QVariant v = value;
-            v.convert(propertyMetaType);
-            return property.writeProperty(object, const_cast<void *>(v.constData()), flags);
-        }
-        }
+    } else if (ConvertAndAssignResult result = tryConvertAndAssign(
+                   object, property, value, flags, propertyMetaType, variantMetaType, isUrl)) {
+        return result.couldWrite;
     } else if (propertyMetaType == QMetaType::fromType<QVariant>()) {
         return property.writeProperty(object, const_cast<QVariant *>(&value), flags);
     } else if (isUrl) {

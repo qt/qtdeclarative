@@ -49,10 +49,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickColorValueType
     QML_FOREIGN(QColor)
     QML_VALUE_TYPE(color)
     QML_EXTENDED(QQuickColorValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &params);
 
+    Q_INVOKABLE QQuickColorValueType(const QString &string);
     Q_INVOKABLE QString toString() const;
 
     Q_INVOKABLE QVariant alpha(qreal value) const;
@@ -93,6 +95,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickVector2DValueType
     QML_FOREIGN(QVector2D)
     QML_VALUE_TYPE(vector2d)
     QML_EXTENDED(QQuickVector2DValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &params);
@@ -128,6 +131,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickVector3DValueType
     QML_FOREIGN(QVector3D)
     QML_VALUE_TYPE(vector3d)
     QML_EXTENDED(QQuickVector3DValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &params);
@@ -168,6 +172,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickVector4DValueType
     QML_FOREIGN(QVector4D)
     QML_VALUE_TYPE(vector4d)
     QML_EXTENDED(QQuickVector4DValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &params);
@@ -209,6 +214,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickQuaternionValueType
     QML_FOREIGN(QQuaternion)
     QML_VALUE_TYPE(quaternion)
     QML_EXTENDED(QQuickQuaternionValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &params);
@@ -267,6 +273,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4ValueType
     QML_FOREIGN(QMatrix4x4)
     QML_VALUE_TYPE(matrix4x4)
     QML_EXTENDED(QQuickMatrix4x4ValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &params);
@@ -390,6 +397,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFontValueType
     QML_FOREIGN(QFont)
     QML_ADDED_IN_VERSION(2, 0)
     QML_EXTENDED(QQuickFontValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &value);
@@ -494,6 +502,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickColorSpaceValueType
     QML_FOREIGN(QColorSpace)
     QML_ADDED_IN_VERSION(2, 15)
     QML_EXTENDED(QQuickColorSpaceValueType)
+    QML_STRUCTURED_VALUE
 
 public:
     static QVariant create(const QJSValue &params);

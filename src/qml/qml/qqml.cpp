@@ -166,7 +166,8 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
 
         nullptr,
         QTypeRevision::zero(),
-        -1
+        -1,
+        QQmlPrivate::ValueTypeCreationMethod::None
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -464,11 +465,19 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 && boolClassInfo(type.classInfoMetaObject, "QML.Creatable", true);
 
         QString noCreateReason;
+        ValueTypeCreationMethod creationMethod = ValueTypeCreationMethod::None;
 
         if (!creatable) {
-            noCreateReason = QString::fromUtf8(classInfo(type.classInfoMetaObject, "QML.UncreatableReason"));
+            noCreateReason = QString::fromUtf8(
+                        classInfo(type.classInfoMetaObject, "QML.UncreatableReason"));
             if (noCreateReason.isEmpty())
                 noCreateReason = QLatin1String("Type cannot be created in QML.");
+        } else if (!(type.typeId.flags() & QMetaType::PointerToQObject)) {
+            const char *method = classInfo(type.classInfoMetaObject, "QML.CreationMethod");
+            if (qstrcmp(method, "structured") == 0)
+                creationMethod = ValueTypeCreationMethod::Structured;
+            else if (qstrcmp(method, "construct") == 0)
+                creationMethod = ValueTypeCreationMethod::Construct;
         }
 
         RegisterType typeRevision = {
@@ -493,7 +502,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             type.extensionMetaObject,
             nullptr,
             QTypeRevision(),
-            type.structVersion > 0 ? type.finalizerCast : -1
+            type.structVersion > 0 ? type.finalizerCast : -1,
+            creationMethod
         };
 
         QQmlPrivate::RegisterSequentialContainer sequenceRevision = {

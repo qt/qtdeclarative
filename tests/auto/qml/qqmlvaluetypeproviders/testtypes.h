@@ -19,6 +19,61 @@
 #include <QColor>
 #include <qqml.h>
 
+struct ConstructibleValueType
+{
+    Q_GADGET
+    Q_PROPERTY(int foo MEMBER m_foo CONSTANT)
+
+    QML_VALUE_TYPE(constructible)
+    QML_CONSTRUCTIBLE_VALUE
+
+public:
+    ConstructibleValueType() = default;
+    Q_INVOKABLE ConstructibleValueType(int foo) : m_foo(foo) {}
+
+    int foo() const { return m_foo; }
+
+private:
+    friend bool operator==(const ConstructibleValueType &a, const ConstructibleValueType &b)
+    {
+        return a.m_foo == b.m_foo;
+    }
+
+    int m_foo = 0;
+};
+
+struct StructuredValueType
+{
+    Q_GADGET
+    Q_PROPERTY(int i READ i WRITE setI)
+    Q_PROPERTY(ConstructibleValueType c READ c WRITE setC)
+    Q_PROPERTY(QPointF p READ p WRITE setP)
+
+    QML_VALUE_TYPE(structured)
+    QML_STRUCTURED_VALUE
+
+public:
+    int i() const { return m_i; }
+    void setI(int newI) { m_i = newI; }
+
+    const ConstructibleValueType &c() const { return m_c; }
+    void setC(const ConstructibleValueType &newC) { m_c = newC; }
+
+    QPointF p() const { return m_p; }
+    void setP(QPointF newP) { m_p = newP; }
+
+private:
+
+    friend bool operator==(const StructuredValueType &a, const StructuredValueType &b)
+    {
+        return a.m_i == b.m_i && a.m_c == b.m_c && a.m_p == b.m_p;
+    }
+
+    int m_i = 0;
+    ConstructibleValueType m_c;
+    QPointF m_p;
+};
+
 class MyTypeObject : public QObject
 {
     Q_OBJECT
@@ -41,6 +96,8 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY changed)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY changed)
     Q_PROPERTY(QVariant variant READ variant NOTIFY changed)
+    Q_PROPERTY(ConstructibleValueType constructible READ constructible WRITE setConstructible NOTIFY constructibleChanged)
+    Q_PROPERTY(StructuredValueType structured READ structured WRITE setStructured NOTIFY structuredChanged)
 
 public:
     MyTypeObject() :
@@ -144,12 +201,36 @@ public:
 
     void emitRunScript() { emit runScript(); }
 
+    const ConstructibleValueType &constructible() const { return m_constructible; }
+    void setConstructible(const ConstructibleValueType &newConstructible)
+    {
+        if (m_constructible == newConstructible)
+            return;
+        m_constructible = newConstructible;
+        emit constructibleChanged();
+    }
+
+    const StructuredValueType &structured() const { return m_structured; }
+    void setStructured(const StructuredValueType &newStructured)
+    {
+        if (m_structured == newStructured)
+            return;
+        m_structured = newStructured;
+        emit structuredChanged();
+    }
+
 signals:
     void changed();
     void runScript();
 
+    void constructibleChanged();
+    void structuredChanged();
+
 public slots:
     QSize method() { return QSize(13, 14); }
+private:
+    ConstructibleValueType m_constructible;
+    StructuredValueType m_structured;
 };
 
 void registerTypes();

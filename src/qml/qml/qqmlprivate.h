@@ -427,11 +427,14 @@ namespace QQmlPrivate
     enum AutoParentResult { Parented, IncompatibleObject, IncompatibleParent };
     typedef AutoParentResult (*AutoParentFunction)(QObject *object, QObject *parent);
 
+    enum class ValueTypeCreationMethod { None, Construct, Structured };
+
     struct RegisterType {
         enum StructVersion: int {
             Base = 0,
             FinalizerCast = 1,
-            CurrentVersion = FinalizerCast,
+            CreationMethod = 2,
+            CurrentVersion = CreationMethod,
         };
 
         bool has(StructVersion v) const { return structVersion >= int(v); }
@@ -446,6 +449,7 @@ namespace QQmlPrivate
         void *userdata;
         QString noCreationReason;
 
+        // ### Qt7: Get rid of this. It can be covered by creationMethod below.
         QVariant (*createValueType)(const QJSValue &);
 
         const char *uri;
@@ -467,6 +471,8 @@ namespace QQmlPrivate
 
         QTypeRevision revision;
         int finalizerCast;
+
+        ValueTypeCreationMethod creationMethod;
         // If this is extended ensure "version" is bumped!!!
     };
 

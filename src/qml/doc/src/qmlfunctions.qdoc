@@ -1302,3 +1302,98 @@
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT, QML_SINGLETON, qmlRegisterType(), qmlRegisterSingletonType()
 */
+
+/*!
+  \macro QML_VALUE_TYPE(name)
+  \relates QQmlEngine
+
+  Declares the enclosing type or namespace to be available in QML, using \a name
+  as the name. The type has to be a value type and the name has to be lower case.
+
+  \code
+  class MyValueType
+  {
+      Q_GADGET
+      QML_VALUE_TYPE(myValueType)
+
+      // ...
+  };
+  \endcode
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_NAMED_ELEMENT
+*/
+
+/*!
+  \macro QML_CONSTRUCTIBLE_VALUE
+  \internal
+  \relates QQmlEngine
+
+  Marks the surrounding value type as constructible. That is, any \l Q_INVOKABLE
+  constructors of the type that take exactly one argument can be used when
+  assigning a JavaScript value to a property of this type.
+
+  You can declare a constructible value type as follows:
+
+  \code
+  class MyValueType
+  {
+      Q_GADGET
+      QML_VALUE_TYPE(myValueType)
+      QML_CONSTRUCTIBLE_VALUE
+      Q_INVOKABLE MyValueType(double d);
+
+      // ...
+  };
+  \endcode
+
+  With the above type, the following QML code will produce a \c MyValueType
+  value using the given constructor and assign it to the property.
+
+  \qml
+  QtObject {
+      property myValueType v: 5.4
+  }
+  \endqml
+
+  \sa QML_VALUE_TYPE
+*/
+
+/*!
+  \macro QML_STRUCTURED_VALUE
+  \internal
+  \relates QQmlEngine
+
+  Marks the surrounding value type as structured. Structured value types can
+  and will preferably be constructed property-by-property from a JavaScript
+  object. A structured value type, however is always \l QML_CONSTRUCTIBLE_VALUE,
+  too. This means, you can still provide \l Q_INVOKABLE constructors in order to
+  handle construction from primitive types.
+
+  You can declare a structured value type as follows:
+
+  \code
+  class MyValueType
+  {
+      Q_GADGET
+      QML_VALUE_TYPE(myValueType)
+      QML_STRUCTURED_VALUE
+      Q_PROPERTY(double d READ d WRITE setD)
+      Q_PROPERTY(string e READ e WRITE setE)
+
+      // ...
+  };
+  \endcode
+
+  Then you can populate a property of this type as follows:
+
+  \qml
+  QtObject {
+      property myValueType v: ({d: 4.4, e: "a string"})
+  }
+  \endqml
+
+  The extra parentheses are necessary to disambiguate the JavaScript object
+  from what might be interpreted as a JavaScript code block.
+
+  \sa QML_VALUE_TYPE QML_CONSTRUCTIBLE_VALUE
+*/

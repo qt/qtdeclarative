@@ -527,6 +527,20 @@ QQmlType::CreateValueTypeFunc QQmlType::createValueTypeFunction() const
     return d->extraData.cd->createValueTypeFunc;
 }
 
+bool QQmlType::canConstructValueType() const
+{
+    if (!d || d->regType != CppType)
+        return false;
+    return d->extraData.cd->constructValueType;
+}
+
+bool QQmlType::canPopulateValueType() const
+{
+    if (!d || d->regType != CppType)
+        return false;
+    return d->extraData.cd->populateValueType;
+}
+
 QQmlType::CreateFunc QQmlType::createFunction() const
 {
     if (!d || d->regType != CppType)

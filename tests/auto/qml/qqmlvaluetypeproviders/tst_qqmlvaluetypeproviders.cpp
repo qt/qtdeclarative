@@ -38,6 +38,7 @@ private slots:
     void invokableFunctions();
     void userType();
     void changedSignal();
+    void structured();
 };
 
 void tst_qqmlvaluetypeproviders::initTestCase()
@@ -243,6 +244,95 @@ void tst_qqmlvaluetypeproviders::changedSignal()
     QVERIFY(object != nullptr);
     QVERIFY(object->property("complete").toBool());
     QVERIFY(object->property("success").toBool());
+}
+
+void tst_qqmlvaluetypeproviders::structured()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("structuredValueTypes.qml");
+    QQmlComponent component(&e, url);
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+
+    const char *warnings[] = {
+        "Could not find any constructor for value type ConstructibleValueType to call"
+            " with value [object Object]",
+        "Could not find any constructor for value type ConstructibleValueType to call"
+            " with value QVariant(QJSValue, )",
+        "Could not convert [object Object] to double for property y",
+        "Could not find any constructor for value type ConstructibleValueType to call"
+            " with value [object Object]",
+        "Could not find any constructor for value type ConstructibleValueType to call"
+            " with value QVariant(QVariantMap, QMap())",
+        "Could not convert array value at position 5 from QVariantMap to ConstructibleValueType",
+        "Could not find any constructor for value type ConstructibleValueType to call"
+            " with value [object Object]",
+        "Could not find any constructor for value type ConstructibleValueType to call"
+            " with value QVariant(QJSValue, )"
+    };
+
+    for (const auto warning : warnings)
+        QTest::ignoreMessage(QtWarningMsg, warning);
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(
+                             url.toString()  + QStringLiteral(":36: Error: Cannot assign QJSValue "
+                                                              "to ConstructibleValueType")));
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(
+                             url.toString()  + QStringLiteral(":14:5: Unable to assign QJSValue "
+                                                              "to ConstructibleValueType")));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+    QCOMPARE(o->property("p").value<QPointF>(), QPointF(7, 77));
+    QCOMPARE(o->property("s").value<QSizeF>(), QSizeF(7, 77));
+    QCOMPARE(o->property("r").value<QRectF>(), QRectF(5, 55, 7, 77));
+
+    QCOMPARE(o->property("p2").value<QPointF>(), QPointF(4, 5));
+    QCOMPARE(o->property("s2").value<QSizeF>(), QSizeF(7, 8));
+    QCOMPARE(o->property("r2").value<QRectF>(), QRectF(9, 10, 11, 12));
+
+    QCOMPARE(o->property("c1").value<ConstructibleValueType>(), ConstructibleValueType(5));
+    QCOMPARE(o->property("c2").value<ConstructibleValueType>(), ConstructibleValueType(0));
+    QCOMPARE(o->property("c3").value<ConstructibleValueType>(), ConstructibleValueType(99));
+    QCOMPARE(o->property("c4").value<ConstructibleValueType>(), ConstructibleValueType(0));
+
+    QCOMPARE(o->property("ps").value<QList<QPointF>>(),
+             QList<QPointF>({QPointF(1, 2), QPointF(3, 4), QPointF(55, 0)}));
+    QCOMPARE(o->property("ss").value<QList<QSizeF>>(),
+             QList<QSizeF>({QSizeF(5, 6), QSizeF(7, 8), QSizeF(-1, 99)}));
+    QCOMPARE(o->property("cs").value<QList<ConstructibleValueType>>(),
+             QList<ConstructibleValueType>({1, 2, 3, 4, 5, 0}));
+
+    StructuredValueType b1;
+    b1.setI(10);
+    b1.setC(14);
+    b1.setP(QPointF(1, 44));
+    QCOMPARE(o->property("b1").value<StructuredValueType>(), b1);
+
+    StructuredValueType b2;
+    b2.setI(11);
+    b2.setC(15);
+    b2.setP(QPointF(4, 0));
+    QCOMPARE(o->property("b2").value<StructuredValueType>(), b2);
+
+
+    QList<StructuredValueType> bb(3);
+    bb[0].setI(21);
+    bb[1].setC(22);
+    bb[2].setP(QPointF(199, 222));
+    QCOMPARE(o->property("bb").value<QList<StructuredValueType>>(), bb);
+
+    MyTypeObject *t = qobject_cast<MyTypeObject *>(o.data());
+    QVERIFY(t);
+
+    QCOMPARE(t->constructible(), ConstructibleValueType(47));
+
+    StructuredValueType structured;
+    structured.setI(11);
+    structured.setC(12);
+    structured.setP(QPointF(7, 8));
+    QCOMPARE(t->structured(), structured);
 }
 
 QTEST_MAIN(tst_qqmlvaluetypeproviders)

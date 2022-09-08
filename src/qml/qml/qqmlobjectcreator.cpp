@@ -425,9 +425,9 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
     case QMetaType::QColor: {
-        QVariant data;
+        QVariant data(propertyType);
         if (QQmlValueTypeProvider::createValueType(
-                    propertyType, compilationUnit->bindingValueAsString(binding), data)) {
+                    compilationUnit->bindingValueAsString(binding), propertyType, data.data())) {
             property->writeProperty(_qobject, data.data(), propertyWriteFlags);
         }
     }
@@ -508,9 +508,10 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QMetaType::QVector3D:
     case QMetaType::QVector4D:
     case QMetaType::QQuaternion: {
-        QVariant result;
+        QVariant result(propertyType);
         bool ok = QQmlValueTypeProvider::createValueType(
-                    propertyType, compilationUnit->bindingValueAsString(binding), result);
+                    compilationUnit->bindingValueAsString(binding),
+                    result.metaType(), result.data());
         assertOrNull(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, result.data(), propertyWriteFlags);
@@ -576,6 +577,35 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             }
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
+        } else {
+            QVariant source;
+            switch (binding->type()) {
+            case QV4::CompiledData::Binding::Type_Boolean:
+                source = binding->valueAsBoolean();
+                break;
+            case QV4::CompiledData::Binding::Type_Number: {
+                const double n = compilationUnit->bindingValueAsNumber(binding);
+                if (double(int(n)) == n)
+                    source = int(n);
+                else
+                    source = n;
+                break;
+            }
+            case QV4::CompiledData::Binding::Type_Null:
+                source = QVariant::fromValue<std::nullptr_t>(nullptr);
+                break;
+            case QV4::CompiledData::Binding::Type_Invalid:
+                break;
+            default:
+                source = compilationUnit->bindingValueAsString(binding);
+                break;
+            }
+
+            QVariant target(propertyType);
+            if (QQmlValueTypeProvider::createValueType(source, propertyType, target.data())) {
+                property->writeProperty(_qobject, target.data(), propertyWriteFlags);
+                break;
+            }
         }
 
         // string converters are not exposed, so ending up here indicates an error

@@ -40,11 +40,15 @@ QVariant QQmlStringConverters::variantFromString(const QString &s, QMetaType pre
     case QMetaType::QRect:
         return QVariant::fromValue(rectFFromString(s, ok).toRect());
     default: {
-        QVariant ret;
-        bool success = QQmlValueTypeProvider::createValueType(preferredType, QJSValue(s), ret);
+        QVariant ret(preferredType);
+        if (QQmlValueTypeProvider::createValueType(s, preferredType, ret.data())) {
+            if (ok)
+                *ok = true;
+            return ret;
+        }
         if (ok)
-            *ok = success;
-        return ret;
+            *ok = false;
+        return QVariant();
     }
     }
 }

@@ -10,6 +10,11 @@
 
 QT_BEGIN_NAMESPACE
 
+QQuickColorValueType::QQuickColorValueType(const QString &string)
+    : v(QColor::fromString(string))
+{
+}
+
 QVariant QQuickColorValueType::create(const QJSValue &params)
 {
     return params.isString() ? QColor::fromString(params.toString()) : QVariant();

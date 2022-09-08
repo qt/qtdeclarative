@@ -152,6 +152,10 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.cd->customParser = reinterpret_cast<QQmlCustomParser *>(type.customParser);
     d->extraData.cd->registerEnumClassesUnscoped = true;
     d->extraData.cd->registerEnumsFromRelatedTypes = true;
+    d->extraData.cd->constructValueType = type.has(QQmlPrivate::RegisterType::CreationMethod)
+            && type.creationMethod != QQmlPrivate::ValueTypeCreationMethod::None;
+    d->extraData.cd->populateValueType = type.has(QQmlPrivate::RegisterType::CreationMethod)
+            && type.creationMethod == QQmlPrivate::ValueTypeCreationMethod::Structured;
 
     if (type.extensionMetaObject)
         d->extraData.cd->extMetaObject = type.extensionMetaObject;
@@ -1707,23 +1711,8 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
     // call QObject pointers value types. Explicitly registered types also override
     // the implicit use of gadgets.
     if (!(metaType.flags() & QMetaType::PointerToQObject)) {
-        const QQmlType qmlType = QQmlMetaType::qmlType(metaType);
-
-        // Prefer the extension meta object, if any.
-        // Extensions allow registration of non-gadget value types.
-        if (const QMetaObject *extensionMetaObject = qmlType.extensionMetaObject()) {
-            // This may be a namespace even if the original metaType isn't.
-            // You can do such things with QML_FOREIGN declarations.
-            if (extensionMetaObject->metaType().flags() & QMetaType::IsGadget)
-                return extensionMetaObject;
-        }
-
-        if (const QMetaObject *qmlTypeMetaObject = qmlType.metaObject()) {
-            // This may be a namespace even if the original metaType isn't.
-            // You can do such things with QML_FOREIGN declarations.
-            if (qmlTypeMetaObject->metaType().flags() & QMetaType::IsGadget)
-                return qmlTypeMetaObject;
-        }
+        if (const QMetaObject *mo = metaObjectForValueType(QQmlMetaType::qmlType(metaType)))
+            return mo;
     }
 
     // If it _is_ a gadget, we can just use it.

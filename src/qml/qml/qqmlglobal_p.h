@@ -185,7 +185,12 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 class QQmlValueTypeProvider
 {
 public:
-    static bool createValueType(QMetaType, const QJSValue &, QVariant &);
+    static bool constructFromJSValue(const QJSValue &, QMetaType, void *);
+
+    static bool createValueType(const QString &, QMetaType, void *);
+    static bool createValueType(const QJSValue &, QMetaType, void *);
+    static bool createValueType(const QV4::Value &, QMetaType, void *);
+    static bool createValueType(const QVariant &, QMetaType, void *);
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlColorProvider

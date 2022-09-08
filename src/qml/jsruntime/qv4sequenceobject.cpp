@@ -648,12 +648,20 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
                 meta->addValueAtEnd(result.data(), &variant);
             } else {
                 const QMetaType originalType = variant.metaType();
-                if (originalType != valueMetaType && !variant.convert(valueMetaType)) {
-                    qWarning() << QLatin1String(
-                                      "Could not convert array value at position %1 from %2 to %3")
-                                  .arg(QString::number(i), QString::fromUtf8(originalType.name()),
-                                       QString::fromUtf8(valueMetaType.name()));
-                    variant = QVariant(valueMetaType);
+                if (originalType != valueMetaType) {
+                    QVariant converted(valueMetaType);
+                    if (QQmlValueTypeProvider::createValueType(
+                                variant, valueMetaType, converted.data())) {
+                        variant = converted;
+                    } else if (!variant.convert(valueMetaType)) {
+                        qWarning().noquote()
+                                << QLatin1String("Could not convert array value "
+                                                 "at position %1 from %2 to %3")
+                                   .arg(QString::number(i),
+                                        QString::fromUtf8(originalType.name()),
+                                        QString::fromUtf8(valueMetaType.name()));
+                        variant = converted;
+                    }
                 }
                 meta->addValueAtEnd(result.data(), variant.constData());
             }

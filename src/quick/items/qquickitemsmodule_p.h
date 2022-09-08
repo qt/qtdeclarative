@@ -52,6 +52,7 @@ struct QPointingDeviceUniqueIdForeign
     QML_FOREIGN(QPointingDeviceUniqueId)
     QML_VALUE_TYPE(pointingDeviceUniqueId)
     QML_ADDED_IN_VERSION(2, 9)
+    QML_UNCREATABLE("pointingDeviceUniqueId cannot be created in QML.")
 };
 
 #if !QT_CONFIG(quick_animatedimage)

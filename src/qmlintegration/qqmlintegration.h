@@ -48,8 +48,15 @@ QT_END_NAMESPACE
     Q_CLASSINFO("QML.UncreatableReason", REASON)
 
 #define QML_VALUE_TYPE(NAME) \
-    Q_CLASSINFO("QML.Element", #NAME) \
-    QML_UNCREATABLE("Value types cannot be created.")
+    Q_CLASSINFO("QML.Element", #NAME)
+
+#define QML_CONSTRUCTIBLE_VALUE \
+    Q_CLASSINFO("QML.Creatable", "true") \
+    Q_CLASSINFO("QML.CreationMethod", "construct")
+
+#define QML_STRUCTURED_VALUE \
+    Q_CLASSINFO("QML.Creatable", "true") \
+    Q_CLASSINFO("QML.CreationMethod", "structured")
 
 #define QML_SINGLETON \
     Q_CLASSINFO("QML.Singleton", "true") \
