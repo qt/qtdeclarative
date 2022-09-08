@@ -106,7 +106,7 @@ qt_deploy_qml_imports(
 # Deploy application runtime dependencies and runtime dependencies
 # of the found QML module plugins.
 qt_deploy_runtime_dependencies(
-    EXECUTABLE \${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:MyApp>
+    EXECUTABLE $<TARGET_FILE:MyApp>
     ADDITIONAL_MODULES \${plugins_found}
 )
 ")
