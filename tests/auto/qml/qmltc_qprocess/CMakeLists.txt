@@ -13,12 +13,28 @@ qt6_add_qml_module(tst_qmltc_qprocess
     VERSION 1.0
     URI QmltcQProcessTests
     AUTO_RESOURCE_PREFIX
+    SOURCES
+        cpptypes/testtype.h
     QML_FILES
         data/dummy.qml
         data/inlineComponent.qml
         data/SingletonThing.qml
         data/erroneousFile.qml
+        data/invalidAliasRevision.qml
 )
+
+set(common_libraries
+    Qt::Core
+    Qt::QmlPrivate
+    Qt::QuickPrivate
+    Qt::TestPrivate
+    Qt::Gui # QColor, QMatrix4x4, ...
+)
+
+# use PUBLIC everywhere to simplify the build of the test binary
+target_include_directories(tst_qmltc_qprocess PUBLIC cpptypes/)
+target_link_libraries(tst_qmltc_qprocess PUBLIC ${common_libraries})
+
 # special setup for singleton files:
 set_source_files_properties(SingletonThing.qml PROPERTIES QT_QML_SINGLETON_TYPE true)
 

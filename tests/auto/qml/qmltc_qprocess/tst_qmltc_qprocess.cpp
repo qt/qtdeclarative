@@ -47,6 +47,7 @@ private slots:
     void inlineComponent();
     void singleton();
     void warningsAsErrors();
+    void invalidAliasRevision();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -190,6 +191,12 @@ void tst_qmltc_qprocess::warningsAsErrors()
 {
     const auto errors = runQmltc(u"erroneousFile.qml"_s, false);
     QVERIFY2(errors.contains(u"Error:"_s), qPrintable(errors)); // Note: not a warning!
+}
+
+void tst_qmltc_qprocess::invalidAliasRevision()
+{
+    const auto errors = runQmltc(u"invalidAliasRevision.qml"_s, false);
+    QVERIFY(errors.contains(u"Cannot resolve alias \"unexistingProperty\" [unresolved-alias]"_s));
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)
