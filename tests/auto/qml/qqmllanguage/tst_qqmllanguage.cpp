@@ -28,6 +28,7 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlprivate.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qfile.h>
@@ -338,6 +339,7 @@ private slots:
     void hangOnWarning();
 
     void ambiguousContainingType();
+    void staticConstexprMembers();
 
 private:
     QQmlEngine engine;
@@ -5891,6 +5893,31 @@ void tst_qqmllanguage::ambiguousContainingType()
         QVERIFY(!o.isNull());
     }
 }
+ void tst_qqmllanguage::staticConstexprMembers() {
+     // this tests if the symbols are correclty defined for c++11 (gcc 11 and 12), and should
+     // not have any linker errors
+     using T = QObject;
+     using T2 = QObject;
+
+     auto f1 = QQmlPrivate::Constructors<T, true>::createSingletonInstance;
+     auto f2 = QQmlPrivate::Constructors<T, false>::createSingletonInstance;
+     auto f3 = QQmlPrivate::Constructors<T, true>::createInto;
+
+     auto f4 = QQmlPrivate::ExtendedType<T, true>::createParent;
+     auto f5 = QQmlPrivate::ExtendedType<T, false>::createParent;
+     auto f6 = QQmlPrivate::ExtendedType<T, true>::staticMetaObject;
+
+     auto f7 = QQmlPrivate::QmlSingleton<T, T2>::Value;
+
+     Q_UNUSED(f1);
+     Q_UNUSED(f2);
+     Q_UNUSED(f3);
+     Q_UNUSED(f3);
+     Q_UNUSED(f4);
+     Q_UNUSED(f5);
+     Q_UNUSED(f6);
+     Q_UNUSED(f7);
+ }
 
 QTEST_MAIN(tst_qqmllanguage)
 

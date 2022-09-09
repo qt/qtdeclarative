@@ -187,12 +187,35 @@ namespace QQmlPrivate
                 = QQmlPrivate::createSingletonInstance<T>;
     };
 
+    // from https://en.cppreference.com/w/cpp/language/static:
+    // If a const non-inline (since C++17) static data member or a constexpr
+    // static data member (since C++11)(until C++17) is odr-used, a definition
+    // at namespace scope is still required, but it cannot have an initializer.
+    //
+    // If a static data member is declared constexpr, it is implicitly inline
+    // and does not need to be redeclared at namespace scope. This redeclaration
+    // without an initializer (formerly required as shown above) is still
+    // permitted, but is deprecated.
+    //
+    // TL;DR: redundant definitions for static constexpr are required in c++11
+    // but deprecated in c++17.
+    template<typename T>
+    constexpr CreateIntoFunction Constructors<T, true>::createInto;
+    template<typename T>
+    constexpr CreateSingletonFunction Constructors<T, true>::createSingletonInstance;
+
     template<typename T>
     struct Constructors<T, false>
     {
         static constexpr CreateIntoFunction createInto = nullptr;
         static constexpr CreateSingletonFunction createSingletonInstance = nullptr;
     };
+
+    // see comment above over the Constructors<T, true> definitions.
+    template<typename T>
+    constexpr CreateIntoFunction Constructors<T, false>::createInto;
+    template<typename T>
+    constexpr CreateSingletonFunction Constructors<T, false>::createSingletonInstance;
 
     template<typename T, bool IsVoid = std::is_void<T>::value>
     struct ExtendedType;
@@ -205,6 +228,12 @@ namespace QQmlPrivate
         static constexpr const QMetaObject *staticMetaObject = nullptr;
     };
 
+    // see comment above over the Constructors<T, true> definitions.
+    template<typename T>
+    constexpr const CreateParentFunction ExtendedType<T, true>::createParent;
+    template<typename T>
+    constexpr const QMetaObject* ExtendedType<T, true>::staticMetaObject;
+
     // If it's not void, we actually want an error if the ctor or the metaobject is missing.
     template<typename T>
     struct ExtendedType<T, false>
@@ -212,6 +241,12 @@ namespace QQmlPrivate
         static constexpr const CreateParentFunction createParent = QQmlPrivate::createParent<T>;
         static constexpr const QMetaObject *staticMetaObject = &T::staticMetaObject;
     };
+
+    // see comment above over the Constructors<T, true> definitions.
+    template<typename T>
+    constexpr const CreateParentFunction ExtendedType<T, false>::createParent;
+    template<typename T>
+    constexpr const QMetaObject* ExtendedType<T, false>::staticMetaObject;
 
     template<class From, class To, int N>
     struct StaticCastSelectorClass
@@ -576,6 +611,10 @@ namespace QQmlPrivate
     {
         static constexpr bool Value = false;
     };
+
+    // see comment above over the Constructors<T, true> definitions.
+    template<typename T, class C>
+    constexpr bool QmlSingleton<T, C>::Value;
 
     template<class T>
     struct QmlSingleton<T, QmlVoidT<typename T::QmlIsSingleton>>
