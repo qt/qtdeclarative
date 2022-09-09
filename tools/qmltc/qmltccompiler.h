@@ -29,6 +29,10 @@ struct QmltcCompilerInfo
 
 class QmltcCompiler
 {
+    using InlineComponentOrDocumentRootName = QQmlJSScope::InlineComponentOrDocumentRootName;
+    using InlineComponentNameType = QQmlJSScope::InlineComponentNameType;
+    using RootDocumentNameType = QQmlJSScope::RootDocumentNameType;
+
 public:
     QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
                   QQmlJSLogger *logger);

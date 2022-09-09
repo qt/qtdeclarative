@@ -62,8 +62,6 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
 
     // Note: we only compile "pure" QML types. any component-wrapped type is
     // expected to appear through a binding
-    auto pureTypes = m_visitor->pureQmlTypes();
-    Q_ASSERT(m_visitor->result() == pureTypes.at(0));
 
     const auto isComponent = [](const QQmlJSScope::ConstPtr &type) {
         auto base = type->baseType();
@@ -76,28 +74,64 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     compileUrlMethod(urlMethod, generator.urlMethodName());
     m_urlMethodName = urlMethod.name;
 
-    QQmlJSScope::ConstPtr root = pureTypes.at(0);
+    // sort inline components to compile them in the right order
+    // a inherits b => b needs to be defined in the cpp file before a!
+    // r is the root => r needs to be compiled at the end!
+    // otherwise => sort them by inline component names to have consistent output
+    auto sortedInlineComponentNames = m_visitor->inlineComponentNames();
+    std::sort(sortedInlineComponentNames.begin(), sortedInlineComponentNames.end(),
+              [&](const InlineComponentOrDocumentRootName &a,
+                  const InlineComponentOrDocumentRootName &b) {
+                  const auto *inlineComponentAName = std::get_if<InlineComponentNameType>(&a);
+                  const auto *inlineComponentBName = std::get_if<InlineComponentNameType>(&b);
+
+                  // the root comes at last, so (a < b) == true when b is the root and a is not
+                  if (inlineComponentAName && !inlineComponentBName)
+                      return true;
+
+                  // b requires a to be declared before b when b inherits from a, therefore (a < b)
+                  // == true
+                  if (inlineComponentAName && inlineComponentBName) {
+                      QQmlJSScope::ConstPtr inlineComponentA = m_visitor->inlineComponent(a);
+                      QQmlJSScope::ConstPtr inlineComponentB = m_visitor->inlineComponent(b);
+                      if (inlineComponentB->inherits(inlineComponentA)) {
+                          return true;
+                      } else if (inlineComponentA->inherits(inlineComponentB)) {
+                          return false;
+                      } else {
+                          // fallback to default sorting based on names
+                          return *inlineComponentAName < *inlineComponentBName;
+                      }
+                  }
+                  Q_ASSERT(!inlineComponentAName || !inlineComponentBName);
+                  // a is the root or both a and b are the root
+                  return false;
+              });
 
     QList<QmltcType> compiledTypes;
-    if (isComponent(root)) {
-        compiledTypes.reserve(1);
-        compiledTypes.emplaceBack(); // create empty type
-        const auto compile = [&](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
-            generator.generate_initCodeForTopLevelComponent(current, type);
-        };
-        compileType(compiledTypes.back(), root, compile);
-    } else {
-        const auto compile = [this](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
-            compileTypeElements(current, type);
-        };
-
-        compiledTypes.reserve(pureTypes.size());
-        for (const auto &type : pureTypes) {
-            Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+    for (const auto &inlineComponent : sortedInlineComponentNames) {
+        const QList<QQmlJSScope::ConstPtr> &pureTypes = m_visitor->pureQmlTypes(inlineComponent);
+        Q_ASSERT(!pureTypes.empty());
+        const QQmlJSScope::ConstPtr &root = pureTypes.front();
+        if (isComponent(root)) {
             compiledTypes.emplaceBack(); // create empty type
-            compileType(compiledTypes.back(), type, compile);
+            const auto compile = [&](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
+                generator.generate_initCodeForTopLevelComponent(current, type);
+            };
+            compileType(compiledTypes.back(), root, compile);
+        } else {
+            const auto compile = [this](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
+                compileTypeElements(current, type);
+            };
+
+            for (const auto &type : pureTypes) {
+                Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+                compiledTypes.emplaceBack(); // create empty type
+                compileType(compiledTypes.back(), type, compile);
+            }
         }
     }
+
     if (hasErrors())
         return;
 
@@ -140,7 +174,11 @@ void QmltcCompiler::compileType(
     const QString baseClass = type->baseType()->internalName();
 
     const auto rootType = m_visitor->result();
+    const InlineComponentOrDocumentRootName name = type->enclosingInlineComponentName();
+    QQmlJSScope::ConstPtr inlineComponentType = m_visitor->inlineComponent(name);
+    Q_ASSERT(inlineComponentType);
     const bool documentRoot = (type == rootType);
+    const bool inlineComponent = type->isInlineComponent();
     const bool isAnonymous = !documentRoot || type->internalName().at(0).isLower();
 
     QmltcCodeGenerator generator { m_url, m_visitor };
@@ -148,9 +186,26 @@ void QmltcCompiler::compileType(
     current.baseClasses = { baseClass };
     if (!documentRoot) {
         // make document root a friend to allow it to access init and endInit
-        current.otherCode << u"friend class %1;"_s.arg(rootType->internalName());
-
-        // additionally make an immediate parent a friend since that parent
+        const QString rootInternalName =
+                m_visitor->inlineComponent(type->enclosingInlineComponentName())->internalName();
+        current.otherCode << u"friend class %1;"_s.arg(rootInternalName);
+    }
+    if (documentRoot || inlineComponent) {
+        auto name = type->inlineComponentName()
+                ? InlineComponentOrDocumentRootName(*type->inlineComponentName())
+                : InlineComponentOrDocumentRootName(RootDocumentNameType());
+        // make QQmltcObjectCreationBase<DocumentRoot> a friend to allow it to
+        // be created for the root object
+        current.otherCode << u"friend class QQmltcObjectCreationBase<%1>;"_s.arg(
+                inlineComponentType->internalName());
+        // generate typeCount for all components (root + inlineComponents)
+        QmltcMethod typeCountMethod;
+        typeCountMethod.name = QmltcCodeGenerator::typeCountName;
+        typeCountMethod.returnType = u"uint"_s;
+        typeCountMethod.body << u"return " + generator.generate_typeCount(name) + u";";
+        current.typeCount = typeCountMethod;
+    } else {
+        // make an immediate parent a friend since that parent
         // would create the object through a non-public constructor
         const auto realQmlScope = [](const QQmlJSScope::ConstPtr &scope) {
             if (scope->isArrayScope())
@@ -159,17 +214,6 @@ void QmltcCompiler::compileType(
         };
         current.otherCode << u"friend class %1;"_s.arg(
                 realQmlScope(type->parentScope())->internalName());
-    } else {
-        // make QQmltcObjectCreationBase<DocumentRoot> a friend to allow it to
-        // be created for the root object
-        current.otherCode << u"friend class QQmltcObjectCreationBase<%1>;"_s.arg(
-                rootType->internalName());
-
-        QmltcMethod typeCountMethod;
-        typeCountMethod.name = QmltcCodeGenerator::typeCountName;
-        typeCountMethod.returnType = u"uint"_s;
-        typeCountMethod.body << u"return " + generator.generate_typeCount() + u";";
-        current.typeCount = typeCountMethod;
     }
 
     // make QQmltcObjectCreationHelper a friend of every type since it provides
@@ -179,12 +223,13 @@ void QmltcCompiler::compileType(
     current.mocCode = {
         u"Q_OBJECT"_s,
         // Note: isAnonymous holds for non-root types in the document as well
-        isAnonymous ? u"QML_ANONYMOUS"_s : u"QML_ELEMENT"_s,
+        type->isInlineComponent() ? (u"QML_NAMED_ELEMENT(%1)"_s.arg(*type->inlineComponentName()))
+                                  : (isAnonymous ? u"QML_ANONYMOUS"_s : u"QML_ELEMENT"_s),
     };
 
     // add special member functions
     current.baselineCtor.access = QQmlJSMetaMethod::Protected;
-    if (documentRoot) {
+    if (documentRoot || inlineComponent) {
         current.externalCtor.access = QQmlJSMetaMethod::Public;
     } else {
         current.externalCtor.access = QQmlJSMetaMethod::Protected;
@@ -222,7 +267,8 @@ void QmltcCompiler::compileType(
     current.endInit.parameterList = { creator, engine };
     current.setComplexBindings.parameterList = { creator, engine };
     current.handleOnCompleted.parameterList = { creator };
-    if (documentRoot) {
+
+    if (documentRoot || inlineComponent) {
         current.externalCtor.parameterList = { engine, parent };
         current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag };
         current.beginClass.parameterList = { creator, finalizeFlag };
@@ -250,7 +296,7 @@ void QmltcCompiler::compileType(
 
     // compilation stub:
     current.externalCtor.body << u"Q_UNUSED(engine);"_s;
-    if (documentRoot) {
+    if (documentRoot || inlineComponent) {
         current.externalCtor.body << u"// document root:"_s;
         // if it's document root, we want to create our QQmltcObjectCreationBase
         // that would store all the created objects

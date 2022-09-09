@@ -168,6 +168,8 @@ void QmltcCodeGenerator::generate_setIdValue(QStringList *block, const QString &
                                              const QString &idString)
 {
     Q_ASSERT(index >= 0);
+    *block << u"Q_ASSERT(%1 < %2->numIdValues()); // make sure Id is in bounds"_s.arg(index).arg(
+            context);
     *block << u"%1->setIdValue(%2 /* id: %3 */, %4);"_s.arg(context, QString::number(index),
                                                              idString, accessor);
 }

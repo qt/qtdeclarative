@@ -74,6 +74,7 @@
 #include "defaultalias.h"
 #include "generalizedgroupedproperty.h"
 #include "appendtoqqmllistproperty.h"
+#include "inlinecomponents.h"
 
 #include "testprivateproperty.h"
 
@@ -2578,6 +2579,322 @@ void tst_qmltc::appendToQQmlListProperty()
     QVERIFY(extendedFromEngine.isValid());
     QCOMPARE(extendedFromQmltc.size(), 3);
     QCOMPARE(extendedFromEngine.size(), 3);
+}
+
+// test classes to access protected member typecount
+class myInlineComponentA : public QmltcTest::inlineComponents_A
+{
+    friend class tst_qmltc;
+};
+class myInlineComponentB : public QmltcTest::inlineComponents_B
+{
+    friend class tst_qmltc;
+};
+class myInlineComponentMyComponent : public QmltcTest::inlineComponents_MyComponent
+{
+    friend class tst_qmltc;
+};
+class myInlineComponentAPlus : public QmltcTest::inlineComponents_APlus
+{
+    friend class tst_qmltc;
+};
+class myInlineComponentAPlusPlus : public QmltcTest::inlineComponents_APlusPlus
+{
+    friend class tst_qmltc;
+};
+
+void tst_qmltc::inlineComponents()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(inlineComponents) createdByQmltc(&e);
+
+    QQmlComponent component(&e);
+    component.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/inlineComponents.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> createdByComponent(component.create());
+
+    const QString testData = u"Major"_s;
+    const QString testData2 = u"Tom"_s;
+
+    // check typecounts of inline components
+    QCOMPARE(myInlineComponentA::q_qmltc_typeCount(), 1u);
+    QCOMPARE(myInlineComponentB::q_qmltc_typeCount(), 1u);
+    QCOMPARE(myInlineComponentAPlus::q_qmltc_typeCount(), 2u);
+    QCOMPARE(myInlineComponentAPlusPlus::q_qmltc_typeCount(), 3u);
+    QCOMPARE(myInlineComponentMyComponent::q_qmltc_typeCount(), 2u);
+
+    // test properties with component types, see if they are generated
+    // and if they contain one of the properties of the component
+    {
+        auto firstFromQmltc = createdByQmltc.myMyComponent();
+        auto secondFromQmltc = createdByQmltc.myMyComponentAsQtObject();
+
+        QVERIFY(firstFromQmltc);
+        QVERIFY(secondFromQmltc);
+        QCOMPARE(firstFromQmltc->myX(), u"SharedX"_s);
+        QCOMPARE(secondFromQmltc->property("myX"), u"SharedX"_s);
+        QCOMPARE(createdByQmltc.signalTriggered(), 0);
+        emit createdByQmltc.myMyComponentSignal(firstFromQmltc);
+        QCOMPARE(createdByQmltc.signalTriggered(), 123);
+
+        auto firstFromComponent = createdByComponent->property("myMyComponent").value<QObject *>();
+        auto secondFromComponent =
+                createdByComponent->property("myMyComponentAsQtObject").value<QObject *>();
+
+        QVERIFY(firstFromComponent);
+        QVERIFY(secondFromComponent);
+        QCOMPARE(firstFromComponent->property("myX"), u"SharedX"_s);
+        QCOMPARE(secondFromComponent->property("myX"), u"SharedX"_s);
+        QCOMPARE(createdByComponent->property("signalTriggered"), 0);
+        const QMetaObject *createdByComponentMetaObject = createdByComponent->metaObject();
+        QVERIFY(createdByComponentMetaObject);
+        const int indexOfMethod =
+                createdByComponentMetaObject->indexOfMethod("myMyComponentSignal(QObject*)");
+        QVERIFY(indexOfMethod != -1);
+        auto method = createdByComponentMetaObject->method(indexOfMethod);
+        QVERIFY(method.isValid());
+        QVERIFY(method.invoke(createdByComponent.get(), Q_ARG(QObject *, firstFromComponent)));
+        QCOMPARE(createdByComponent->property("signalTriggered"), 123);
+    }
+
+    // test if nonrecursive components behave well
+    {
+        auto *myMyComponentFromQmltc = (QmltcTest::inlineComponents_MyComponent_3 *)
+                                               createdByQmltc.myMyComponentComponent();
+        auto *myMyComponentFromQmltc2 = (QmltcTest::inlineComponents_MyComponent_4 *)
+                                                createdByQmltc.myMyComponentComponent2();
+        QVERIFY(myMyComponentFromQmltc);
+        QVERIFY(myMyComponentFromQmltc2);
+        auto *myMyComponentFromComponent =
+                createdByComponent->property("myMyComponentComponent").value<QObject *>();
+        // second MyComponent
+        auto *myMyComponentFromComponent2 =
+                createdByComponent->property("myMyComponentComponent2").value<QObject *>();
+        QVERIFY(myMyComponentFromComponent);
+        QVERIFY(myMyComponentFromComponent2);
+
+        // test writing and reading own properties on myMyComponentComponent
+        QCOMPARE(myMyComponentFromQmltc->myY(), u"NotSharedY1"_s);
+        myMyComponentFromQmltc->setMyY(testData);
+        QCOMPARE(myMyComponentFromQmltc->myY(), testData);
+
+        QCOMPARE(myMyComponentFromComponent->property("myY"), u"NotSharedY1"_s);
+        QVERIFY(myMyComponentFromComponent->setProperty("myY", testData));
+        QCOMPARE(myMyComponentFromComponent->property("myY"), testData);
+
+        // test writing and reading own properties on myMyComponentComponent2
+        QCOMPARE(myMyComponentFromQmltc2->myY2(), u"NotSharedY2"_s);
+        myMyComponentFromQmltc2->setMyY2(testData2);
+        QCOMPARE(myMyComponentFromQmltc2->myY2(), testData2);
+
+        QCOMPARE(myMyComponentFromComponent2->property("myY2"), u"NotSharedY2"_s);
+        QVERIFY(myMyComponentFromComponent2->setProperty("myY2", testData2));
+        QCOMPARE(myMyComponentFromComponent2->property("myY2"), testData2);
+
+        // test writing and reading inline component properties on myMyComponentComponent
+        QCOMPARE(myMyComponentFromQmltc->myX(), u"MyComponent1"_s);
+        myMyComponentFromQmltc->setMyX(testData);
+        QCOMPARE(myMyComponentFromQmltc->myX(), testData);
+
+        QCOMPARE(myMyComponentFromComponent->property("myX"), u"MyComponent1"_s);
+        QVERIFY(myMyComponentFromComponent->setProperty("myX", testData));
+        QCOMPARE(myMyComponentFromComponent->property("myX"), testData);
+
+        // test writing and reading inline component properties on myMyComponentComponent2
+        QCOMPARE(myMyComponentFromQmltc2->myX(), u"MyComponent2"_s);
+        myMyComponentFromQmltc2->setMyX(testData2);
+        QCOMPARE(myMyComponentFromQmltc2->myX(), testData2);
+        // check that the other x property was not overridden
+        QCOMPARE(myMyComponentFromQmltc->myX(), testData);
+
+        QCOMPARE(myMyComponentFromComponent2->property("myX"), u"MyComponent2"_s);
+        QVERIFY(myMyComponentFromComponent2->setProperty("myX", testData2));
+        QCOMPARE(myMyComponentFromComponent2->property("myX"), testData2);
+        // check that the other x property was not overridden
+        QCOMPARE(myMyComponentFromComponent->property("myX"), testData);
+
+        // check if the literal binding is working on myProperty
+        QCOMPARE(myMyComponentFromQmltc->myProperty(), u"check literal binding"_s);
+        QCOMPARE(myMyComponentFromQmltc2->myProperty(), u"check literal binding"_s);
+
+        QCOMPARE(myMyComponentFromComponent->property("myProperty"), u"check literal binding"_s);
+        QCOMPARE(myMyComponentFromComponent2->property("myProperty"), u"check literal binding"_s);
+
+        // check the Item in the MyComponent component
+        QCOMPARE(myMyComponentFromQmltc->children().size(), 1);
+        QCOMPARE(myMyComponentFromQmltc2->children().size(), 1);
+        auto *childFromQmltc =
+                (QmltcTest::inlineComponents_MyComponent_Item *)myMyComponentFromQmltc->children()
+                        .front();
+        auto *childFromQmltc2 =
+                (QmltcTest::inlineComponents_MyComponent_Item *)myMyComponentFromQmltc2->children()
+                        .front();
+
+        QVERIFY(childFromQmltc);
+        QVERIFY(childFromQmltc2);
+
+        QCOMPARE(myMyComponentFromComponent->children().size(), 1);
+        QCOMPARE(myMyComponentFromComponent2->children().size(), 1);
+        auto *childFromComponent = myMyComponentFromComponent->children().front();
+        auto *childFromComponent2 = myMyComponentFromComponent2->children().front();
+
+        QVERIFY(childFromComponent);
+        QVERIFY(childFromComponent2);
+
+        // test writing and reading inline components childrens
+        // .. also tests at the same time if the literal bindings inside inline components are
+        // set correctly
+        QCOMPARE(childFromQmltc->myZ(), "SharedZ");
+        QCOMPARE(childFromQmltc2->myZ(), "SharedZ");
+        childFromQmltc->setMyZ(testData);
+        childFromQmltc2->setMyZ(testData2);
+        QCOMPARE(childFromQmltc->myZ(), testData);
+        QCOMPARE(childFromQmltc2->myZ(), testData2);
+
+        QCOMPARE(childFromComponent->property("myZ"), "SharedZ");
+        QCOMPARE(childFromComponent2->property("myZ"), "SharedZ");
+        QVERIFY(childFromComponent->setProperty("myZ", testData));
+        QVERIFY(childFromComponent2->setProperty("myZ", testData2));
+        QCOMPARE(childFromComponent->property("myZ"), testData);
+        QCOMPARE(childFromComponent2->property("myZ"), testData2);
+
+        // verify aliases inside of inline components:
+        childFromQmltc->setAliasToMyX(testData);
+        childFromQmltc2->setAliasToMyX(testData2);
+        QCOMPARE(myMyComponentFromQmltc->myX(), testData);
+        QCOMPARE(childFromQmltc->aliasToMyX(), testData);
+
+        QCOMPARE(myMyComponentFromQmltc2->myX(), testData2);
+        QCOMPARE(childFromQmltc2->aliasToMyX(), testData2);
+        childFromQmltc2->setAliasToMyX(testData2);
+        QCOMPARE(myMyComponentFromQmltc2->myX(), testData2);
+        QCOMPARE(childFromQmltc2->aliasToMyX(), testData2);
+
+        QVERIFY(childFromComponent->setProperty("aliasToMyX", testData));
+        QVERIFY(childFromComponent2->setProperty("aliasToMyX", testData2));
+        QCOMPARE(myMyComponentFromComponent->property("myX"), testData);
+        QCOMPARE(childFromComponent->property("aliasToMyX"), testData);
+
+        QCOMPARE(myMyComponentFromComponent2->property("myX"), testData2);
+        QCOMPARE(childFromComponent2->property("aliasToMyX"), testData2);
+        QVERIFY(childFromComponent2->setProperty("aliasToMyX", testData2));
+        QCOMPARE(myMyComponentFromComponent2->property("myX"), testData2);
+        QCOMPARE(childFromComponent2->property("aliasToMyX"), testData2);
+    }
+
+    // test if recursive components are behaving well
+    {
+        auto *myAFromQmltc = (QmltcTest::inlineComponents_A_1 *)createdByQmltc.myAComponent();
+        auto *innerBFromQmltc = (QmltcTest::inlineComponents_A_B *)myAFromQmltc->b();
+        QVERIFY(innerBFromQmltc);
+        auto *innerAFromQmltc = (QmltcTest::inlineComponents_A_B_A *)innerBFromQmltc->a();
+        QVERIFY(innerAFromQmltc);
+        constexpr bool typeNotCompiledAsQQmlComponent =
+                std::is_same_v<decltype(myAFromQmltc->b()), QmltcTest::inlineComponents_B *>;
+        constexpr bool typeNotCompiledAsQQmlComponent2 =
+                std::is_same_v<decltype(innerBFromQmltc->a()), QmltcTest::inlineComponents_A *>;
+        QVERIFY(typeNotCompiledAsQQmlComponent);
+        QVERIFY(typeNotCompiledAsQQmlComponent2);
+
+        auto *myAFromComponent = createdByComponent->property("myAComponent").value<QObject *>();
+        auto *innerBFromComponent = myAFromComponent->property("b").value<QObject *>();
+        QVERIFY(innerBFromComponent);
+        auto *innerAFromComponent = innerBFromComponent->property("a").value<QObject *>();
+        QVERIFY(innerAFromComponent);
+
+        QCOMPARE(myAFromComponent->property("data"), u"Hello From Outside!"_s);
+        QCOMPARE(innerAFromComponent->property("data"), u"Hello From Inside!"_s);
+    }
+
+    // test if ids in inlineComponents are not getting mixed up with those from the root component
+    {
+        auto *conflictingComponentTomFromQmltc =
+                createdByQmltc.tom().value<QmltcTest::inlineComponents_ConflictingComponent_1 *>();
+        auto *conflictingComponentJerryFromQmltc =
+                createdByQmltc.jerry()
+                        .value<QmltcTest::inlineComponents_ConflictingComponent_2 *>();
+
+        auto *conflictingComponentTomFromComponent =
+                createdByComponent->property("tom").value<QObject *>();
+        auto *conflictingComponentJerryFromComponent =
+                createdByComponent->property("jerry").value<QObject *>();
+
+        QCOMPARE(conflictingComponentTomFromQmltc->output(), "Tom: outer");
+        QCOMPARE(conflictingComponentJerryFromQmltc->output(), "Jerry: outer");
+        QCOMPARE(createdByQmltc.output(), "inner");
+
+        QCOMPARE(conflictingComponentTomFromComponent->property("output"), "Tom: outer");
+        QCOMPARE(conflictingComponentJerryFromComponent->property("output"), "Jerry: outer");
+        QCOMPARE(createdByComponent->property("output"), "inner");
+
+        QVERIFY(conflictingComponentTomFromQmltc->children()[0]->setProperty("conflicting",
+                                                                             u"Tomtom"_s));
+        QCOMPARE(conflictingComponentTomFromQmltc->output(), "Tom: Tomtom");
+        QCOMPARE(conflictingComponentJerryFromQmltc->output(), "Jerry: outer");
+        QCOMPARE(createdByQmltc.output(), "inner");
+
+        QVERIFY(conflictingComponentTomFromComponent->children()[0]->setProperty("conflicting",
+                                                                                 u"Tomtom"_s));
+        QCOMPARE(conflictingComponentTomFromComponent->property("output"), "Tom: Tomtom");
+        QCOMPARE(conflictingComponentJerryFromComponent->property("output"), "Jerry: outer");
+        QCOMPARE(createdByComponent->property("output"), "inner");
+
+        QVERIFY(createdByQmltc.setProperty("conflicting", u"Rootroot"_s));
+        QCOMPARE(conflictingComponentTomFromQmltc->output(), "Tom: Tomtom");
+        QCOMPARE(conflictingComponentJerryFromQmltc->output(), "Jerry: outer");
+        QCOMPARE(createdByQmltc.output(), "Rootroot");
+
+        QVERIFY(createdByComponent->setProperty("conflicting", u"Rootroot"_s));
+        QCOMPARE(conflictingComponentTomFromComponent->property("output"), "Tom: Tomtom");
+        QCOMPARE(conflictingComponentJerryFromComponent->property("output"), "Jerry: outer");
+        QCOMPARE(createdByComponent->property("output"), "Rootroot");
+    }
+
+    // check 'empty' components that just get stuff through inheritance
+    QCOMPARE(createdByQmltc.property("empty").value<QObject *>()->property("objectName"),
+             u"EmptyComponentObject"_s);
+    QCOMPARE(createdByComponent->property("empty").value<QObject *>()->property("objectName"),
+             u"EmptyComponentObject"_s);
+
+    // check that inline components can "hide" other imports
+    auto myRectangleFromQmltc =
+            createdByQmltc.property("inlineComponentFoundBeforeOtherImports").value<QObject *>();
+    QVERIFY(myRectangleFromQmltc);
+    QCOMPARE(myRectangleFromQmltc->property("myData"), u"Not from QtQuick.Rectangle"_s);
+
+    auto myRectangleFromComponent =
+            createdByComponent->property("inlineComponentFoundBeforeOtherImports")
+                    .value<QObject *>();
+    QVERIFY(myRectangleFromComponent);
+    QCOMPARE(myRectangleFromComponent->property("myData"), u"Not from QtQuick.Rectangle"_s);
+
+    // check that inline components are resolved in the correct order
+    {
+        auto componentFromQmltc =
+                createdByQmltc.inlineComponentOrder().value<QmltcTest::inlineComponents_IC2_1 *>();
+        auto componentFromComponent =
+                createdByComponent->property("inlineComponentOrder").value<QObject *>();
+
+        QCOMPARE(componentFromQmltc->color(), QColorConstants::Blue);
+        QCOMPARE(componentFromComponent->property("color"), QColorConstants::Blue);
+    }
+
+    // check that inline components can be used in lists
+    {
+        QQmlListReference childrenFromQmltc(&createdByQmltc, "componentList");
+        QQmlListReference childrenFromComponent(createdByComponent.data(), "componentList");
+        QQmlListReference testList(&createdByQmltc, "testList");
+
+        QCOMPARE(testList.size(), 3);
+        QCOMPARE(childrenFromComponent.size(), 2);
+        QCOMPARE(childrenFromQmltc.size(), 2);
+
+        QCOMPARE(childrenFromQmltc.at(0)->property("age"), 65);
+        QCOMPARE(childrenFromComponent.at(0)->property("age"), 65);
+
+        QCOMPARE(childrenFromQmltc.at(1)->property("age"), 62);
+        QCOMPARE(childrenFromComponent.at(1)->property("age"), 62);
+    }
 }
 
 QTEST_MAIN(tst_qmltc)

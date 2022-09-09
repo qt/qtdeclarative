@@ -17,7 +17,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
         cpptypes/testtype.h
     QML_FILES
         data/dummy.qml
-        data/inlineComponent.qml
+        data/inlineComponentInvalidAlias.qml
         data/SingletonThing.qml
         data/erroneousFile.qml
         data/invalidAliasRevision.qml

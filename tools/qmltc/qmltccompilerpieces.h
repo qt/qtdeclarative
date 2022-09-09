@@ -32,6 +32,9 @@ struct QmltcCodeGenerator
     QString documentUrl;
     QmltcVisitor *visitor = nullptr;
 
+    using InlineComponentOrDocumentRootName = QQmlJSScope::InlineComponentOrDocumentRootName;
+    using RootDocumentNameType = QQmlJSScope::RootDocumentNameType;
+
     [[nodiscard]] inline decltype(auto) generate_initCode(QmltcType &current,
                                                           const QQmlJSScope::ConstPtr &type) const;
     inline void generate_initCodeForTopLevelComponent(QmltcType &current,
@@ -69,12 +72,22 @@ struct QmltcCodeGenerator
     static void generate_setIdValue(QStringList *block, const QString &context, qsizetype index,
                                     const QString &accessor, const QString &idString);
 
-    inline QString generate_typeCount() const
+    inline QString
+    generate_typeCount(const InlineComponentOrDocumentRootName &inlinedComponent) const
     {
-        return generate_typeCount([](const QQmlJSScope::ConstPtr &) { return false; });
+        return generate_typeCount([](const QQmlJSScope::ConstPtr &) { return false; },
+                                  inlinedComponent);
     }
+
+    /*!
+     * \internal
+     * Generate the constexpr typeCount expression for given inlinedComponent. Leave
+     * inlinedComponent empty to generate the expression for the main component.
+     */
     template<typename Predicate>
-    inline QString generate_typeCount(Predicate p) const;
+    inline QString
+    generate_typeCount(Predicate p,
+                       const InlineComponentOrDocumentRootName &inlinedComponent) const;
 
     static void generate_callExecuteRuntimeFunction(QStringList *block, const QString &url,
                                                     QQmlJSMetaMethod::AbsoluteFunctionIndex index,
@@ -164,6 +177,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
     // * const QQmlRefPointer<QQmlContextData>& parentContext
     // * bool canFinalize [optional, when document root]
     const bool isDocumentRoot = type == visitor->result();
+    const bool isInlineComponent = type->isInlineComponent();
 
     current.init.body << u"Q_UNUSED(creator);"_s; // can happen sometimes
 
@@ -190,15 +204,15 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
         QString lhs;
         // init creates new context. for document root, it's going to be a real
         // parent context, so store it temporarily in `context` variable
-        if (isDocumentRoot)
+        if (isDocumentRoot || isInlineComponent)
             lhs = u"context = "_s;
         current.init.body << u"// 0. call base's init method"_s;
 
-        Q_ASSERT(!isDocumentRoot || visitor->qmlTypesWithQmlBases()[0] == visitor->result());
         const auto isCurrentType = [&](const QQmlJSScope::ConstPtr &qmlType) {
             return qmlType == type;
         };
-        const QString creationOffset = generate_typeCount(isCurrentType);
+        const QString creationOffset =
+                generate_typeCount(isCurrentType, type->enclosingInlineComponentName());
 
         current.init.body << u"{"_s;
         current.init.body << u"QQmltcObjectCreationHelper subCreator(creator, %1);"_s.arg(
@@ -213,31 +227,29 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
             << QStringLiteral("auto %1 = QQmlEnginePrivate::get(engine);").arg(privateEngineName);
     current.init.body << QStringLiteral("Q_UNUSED(%1);").arg(privateEngineName); // precaution
 
-    // when generating root, we need to create a new (document-level) context.
+    // when generating root or inlineComponents, we need to create a new (document-level) context.
     // otherwise, just use existing context as is
-    if (isDocumentRoot) {
+    if (isDocumentRoot || isInlineComponent) {
         current.init.body << u"// 1. create new QML context for this document"_s;
-        // TODO: the last 2 parameters are {0, true} because we deal with
-        // document root only here. in reality, there are inline components
-        // which need { index, true } instead
         current.init.body
                 << QStringLiteral(
                            "context = %1->createInternalContext(%1->compilationUnitFromUrl(%2()), "
-                           "context, 0, true);")
-                           .arg(privateEngineName, urlMethodName());
+                           "context, %3, true);")
+                           .arg(privateEngineName, urlMethodName())
+                           .arg(this->visitor->creationIndex(type));
     } else {
         current.init.body << u"// 1. use current context as this object's context"_s;
         current.init.body << u"// context = context;"_s;
     }
 
-    if (!type->baseType()->isComposite() || isDocumentRoot) {
+    if (!type->baseType()->isComposite() || isDocumentRoot || isInlineComponent) {
         current.init.body << u"// 2. set context for this object"_s;
         current.init.body << QStringLiteral(
                                      "%1->setInternalContext(this, context, QQmlContextData::%2);")
                                      .arg(privateEngineName,
                                           (isDocumentRoot ? u"DocumentRoot"_s
                                                           : u"OrdinaryObject"_s));
-        if (isDocumentRoot)
+        if (isDocumentRoot || isInlineComponent)
             current.init.body << u"context->setContextObject(this);"_s;
     }
 
@@ -274,8 +286,8 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
         current.init.body << u"}"_s;
     }
 
-    const auto generateFinalLines = [&current, isDocumentRoot]() {
-        if (isDocumentRoot) {
+    const auto generateFinalLines = [&current, isDocumentRoot, isInlineComponent]() {
+        if (isDocumentRoot || isInlineComponent) {
             current.init.body << u"// 4. finish the document root creation"_s;
             current.init.body << u"if (canFinalize) {"_s;
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
@@ -358,14 +370,13 @@ inline void QmltcCodeGenerator::generate_qmltcInstructionCallCode(
 {
     using namespace Qt::StringLiterals;
 
-    const bool isDocumentRoot = type == visitor->result();
     if (auto base = type->baseType(); base->isComposite()) {
         function->body << u"// call base's method"_s;
-        Q_ASSERT(!isDocumentRoot || visitor->qmlTypesWithQmlBases()[0] == visitor->result());
         const auto isCurrentType = [&](const QQmlJSScope::ConstPtr &qmlType) {
             return qmlType == type;
         };
-        const QString creationOffset = generate_typeCount(isCurrentType);
+        const QString creationOffset =
+                generate_typeCount(isCurrentType, type->enclosingInlineComponentName());
         function->body << u"{"_s;
         function->body << u"QQmltcObjectCreationHelper subCreator(creator, %1);"_s.arg(
                 creationOffset);
@@ -378,10 +389,16 @@ inline void QmltcCodeGenerator::generate_qmltcInstructionCallCode(
         function->body << u"}"_s;
     }
 
-    if (!isDocumentRoot) // document root does all the work here
-        return;
+    const bool isDocumentRoot = type == visitor->result();
+    const bool isInlineComponent = type->isInlineComponent();
 
-    const auto types = visitor->pureQmlTypes();
+    if (!(isDocumentRoot
+          || isInlineComponent)) // document/inline component root does all the work here
+        return;
+    auto name = isInlineComponent
+            ? InlineComponentOrDocumentRootName(*type->inlineComponentName())
+            : InlineComponentOrDocumentRootName(QQmlJSScope::RootDocumentNameType());
+    const auto types = visitor->pureQmlTypes(name);
     function->body << u"// call children's methods"_s;
     for (qsizetype i = 1; i < types.size(); ++i) {
         const auto &type = types[i];
@@ -467,19 +484,20 @@ inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function
 
     // function's parameters:
     // * QQmltcObjectCreationHelper* creator
-    // * bool canFinalize [optional, when document root]
+    // * bool canFinalize [optional, when document root or inline component root]
     const bool isDocumentRoot = type == visitor->result();
+    const bool isInlineComponent = type->isInlineComponent();
     function->body << u"Q_UNUSED(creator);"_s;
-    if (isDocumentRoot)
+    if (isDocumentRoot || isInlineComponent)
         function->body << u"Q_UNUSED(canFinalize);"_s;
 
     if (auto base = type->baseType(); base->isComposite()) {
         function->body << u"// call base's method"_s;
-        Q_ASSERT(!isDocumentRoot || visitor->qmlTypesWithQmlBases()[0] == visitor->result());
         const auto isCurrentType = [&](const QQmlJSScope::ConstPtr &qmlType) {
             return qmlType == type;
         };
-        const QString creationOffset = generate_typeCount(isCurrentType);
+        const QString creationOffset =
+                generate_typeCount(isCurrentType, type->enclosingInlineComponentName());
         function->body << u"{"_s;
         function->body << u"QQmltcObjectCreationHelper subCreator(creator, %1);"_s.arg(
                 creationOffset);
@@ -488,10 +506,14 @@ inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function
         function->body << u"}"_s;
     }
 
-    if (!isDocumentRoot)
+    if (!(isDocumentRoot || isInlineComponent))
         return;
 
-    const auto types = visitor->pureQmlTypes();
+    auto name = isInlineComponent
+            ? InlineComponentOrDocumentRootName(*type->inlineComponentName())
+            : InlineComponentOrDocumentRootName(QQmlJSScope::RootDocumentNameType());
+
+    const auto types = visitor->pureQmlTypes(name);
     function->body << u"// call children's methods"_s;
     for (qsizetype i = 1; i < types.size(); ++i) {
         const auto &type = types[i];
@@ -639,18 +661,25 @@ QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
     For the object lookup logic itself, see QQmltcObjectCreationHelper
 */
 template<typename Predicate>
-inline QString QmltcCodeGenerator::generate_typeCount(Predicate p) const
+inline QString QmltcCodeGenerator::generate_typeCount(
+        Predicate p, const InlineComponentOrDocumentRootName &inlinedComponent) const
 {
     using namespace Qt::StringLiterals;
 
-    const QList<QQmlJSScope::ConstPtr> typesWithBaseTypeCount = visitor->qmlTypesWithQmlBases();
+    const QList<QQmlJSScope::ConstPtr> typesWithBaseTypeCount =
+            visitor->qmlTypesWithQmlBases(inlinedComponent);
     QStringList components;
     components.reserve(1 + typesWithBaseTypeCount.size());
 
-    // add this document's type counts minus document root
-    Q_ASSERT(visitor->pureQmlTypes().size() > 0);
-    Q_ASSERT(visitor->typeCount() >= visitor->pureQmlTypes().size());
-    components << QString::number(visitor->typeCount() - 1);
+    Q_ASSERT(visitor->pureQmlTypes(inlinedComponent).size() > 0);
+    Q_ASSERT(visitor->typeCount(inlinedComponent)
+             >= visitor->pureQmlTypes(inlinedComponent).size());
+    qsizetype typeCount = visitor->typeCount(inlinedComponent);
+
+    // add this document's type counts minus document root (if not an inline component)
+    if (std::holds_alternative<RootDocumentNameType>(inlinedComponent))
+        typeCount--;
+    components << QString::number(typeCount);
 
     // traverse types with QML base classes
     for (const QQmlJSScope::ConstPtr &t : typesWithBaseTypeCount) {
@@ -659,6 +688,10 @@ inline QString QmltcCodeGenerator::generate_typeCount(Predicate p) const
         QString typeCountTemplate = u"QQmltcObjectCreationHelper::typeCount<%1>()"_s;
         if (t == visitor->result()) { // t is this document's root
             components << typeCountTemplate.arg(t->baseTypeName());
+        } else if (t->isInlineComponent()) {
+            // inline components always have a base class, by definition
+            Q_ASSERT(t->baseType());
+            components << typeCountTemplate.arg(t->baseType()->internalName());
         } else {
             components << typeCountTemplate.arg(t->internalName());
         }

@@ -99,6 +99,7 @@ set(qml_sources
     translationsById.qml
     generalizedGroupedProperty.qml
     appendToQQmlListProperty.qml
+    inlineComponents.qml
 
     # support types:
     DefaultPropertySingleChild.qml

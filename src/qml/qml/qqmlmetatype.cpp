@@ -1044,14 +1044,16 @@ QMetaType QQmlMetaType::listValueType(QMetaType metaType)
 {
     if (isList(metaType)) {
         const auto iface = metaType.iface();
-        if (iface->metaObjectFn == &dynamicQmlListMarker)
+        if (iface && iface->metaObjectFn == &dynamicQmlListMarker)
             return QMetaType(static_cast<const QQmlListMetaTypeInterface *>(iface)->valueType);
     } else if (metaType.flags() & QMetaType::PointerToQObject) {
         return QMetaType();
     }
 
     QQmlMetaTypeDataPtr data;
+    Q_ASSERT(data);
     QQmlTypePrivate *type = data->idToType.value(metaType.id());
+
     if (type && type->listId == metaType)
         return type->typeId;
     else

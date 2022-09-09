@@ -176,9 +176,8 @@ void tst_qmltc_qprocess::noQtQml()
 
 void tst_qmltc_qprocess::inlineComponent()
 {
-    const auto errors = runQmltc(u"inlineComponent.qml"_s, false);
-    QEXPECT_FAIL("", "qmltc does not support inline components at the moment", Continue);
-    QVERIFY(!errors.contains(u"Inline components are not supported"_s));
+    const auto errors = runQmltc(u"inlineComponentInvalidAlias.qml"_s, false);
+    QVERIFY(errors.contains(u"Cannot resolve alias \"myHello\" [unresolved-alias]"_s));
 }
 
 void tst_qmltc_qprocess::singleton()
