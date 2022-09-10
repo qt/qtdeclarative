@@ -265,10 +265,11 @@ QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefau
 
 void Object::appendFunction(QmlIR::Function *f)
 {
-    Object *target = declarationsOverride;
-    if (!target)
-        target = this;
-    target->functions->append(f);
+    // Unlike properties, a function definition inside a grouped property does not go into
+    // the surrounding object. It's been broken since the Qt 5 era, and the semantics
+    // seems super confusing, so it wouldn't make sense to support that.
+    Q_ASSERT(!declarationsOverride);
+    functions->append(f);
 }
 
 void Object::appendInlineComponent(InlineComponent *ic)
@@ -1011,6 +1012,14 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
 {
     if (QQmlJS::AST::FunctionExpression *funDecl = node->sourceElement->asFunctionDefinition()) {
+        if (_object->declarationsOverride) {
+            // See Object::appendFunction() for why.
+            recordError(node->firstSourceLocation(),
+                        QCoreApplication::translate(
+                                "QQmlParser", "Function declaration inside grouped property"));
+            return false;
+        }
+
         CompiledFunctionOrExpression *foe = New<CompiledFunctionOrExpression>();
         foe->node = funDecl;
         foe->parentNode = funDecl;

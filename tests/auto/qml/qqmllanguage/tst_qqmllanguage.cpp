@@ -396,6 +396,7 @@ private slots:
     void jsFunctionOverridesImport();
     void bindingAliasToComponentUrl();
     void badGroupedProperty();
+    void functionInGroupedProperty();
 
 private:
     QQmlEngine engine;
@@ -7636,6 +7637,17 @@ void tst_qqmllanguage::badGroupedProperty()
     QCOMPARE(c.errorString(),
              QStringLiteral("%1:6 Cannot assign to non-existent property \"onComplete\"\n")
              .arg(url.toString()));
+}
+
+void tst_qqmllanguage::functionInGroupedProperty()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("functionInGroupedProperty.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY(c.isError());
+    QCOMPARE(c.errorString(),
+             QStringLiteral("%1:6 Function declaration inside grouped property\n")
+                     .arg(url.toString()));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
