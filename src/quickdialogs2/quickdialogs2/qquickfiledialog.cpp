@@ -163,7 +163,7 @@ void QQuickFileDialog::setSelectedFiles(const QList<QUrl> &selectedFiles)
 
     if (m_fileMode != SaveFile) {
         for (const auto &selectedFile : selectedFiles) {
-            const QString selectedFilePath = selectedFile.toLocalFile();
+            const QString selectedFilePath = QQmlFile::urlToLocalFileOrQrc(selectedFile);
             if (!QFileInfo::exists(selectedFilePath)) {
                 qmlWarning(this) << "Cannot set " << selectedFilePath
                     << " as a selected file because it doesn't exist";
