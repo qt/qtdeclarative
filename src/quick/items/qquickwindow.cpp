@@ -2330,8 +2330,6 @@ bool QQuickWindow::isSceneGraphInitialized() const
     Notification that a window is about to be closed by the windowing system
     (e.g. the user clicked the title bar close button). The CloseEvent contains
     an accepted property which can be set to false to abort closing the window.
-
-    \sa QQuickWindow::closing()
 */
 
 /*!
@@ -2342,6 +2340,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 */
 
 /*!
+    \internal
     \fn void QQuickWindow::closing(QQuickCloseEvent *close)
     \since 5.1
 
