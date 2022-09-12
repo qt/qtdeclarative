@@ -15,7 +15,6 @@
 //
 
 #include "qv4global_p.h"
-#include "qv4managed_p.h"
 #include "qv4context_p.h"
 #include "qv4stackframe_p.h"
 #include <private/qintrusivelist_p.h>

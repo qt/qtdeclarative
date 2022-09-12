@@ -18,7 +18,6 @@
 
 #include "qv4object_p.h"
 #include "qv4iterator_p.h"
-#include "qv4arraydata_p.h"
 
 QT_BEGIN_NAMESPACE
 

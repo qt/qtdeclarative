@@ -6,12 +6,9 @@
 #include "qv4value_p.h"
 #include "qv4context_p.h"
 #include "qv4function_p.h"
-#include "qv4debugging_p.h"
-#include "qv4profiling_p.h"
 #include "qv4script_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4string_p.h"
-#include "qv4jscall_p.h"
 
 #include <private/qv4codegen_p.h>
 #include <private/qv4alloca_p.h>

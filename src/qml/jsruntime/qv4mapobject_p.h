@@ -16,9 +16,7 @@
 //
 
 #include "qv4object_p.h"
-#include "qv4objectproto_p.h"
 #include "qv4functionobject_p.h"
-#include "qv4string_p.h"
 
 QT_BEGIN_NAMESPACE
 

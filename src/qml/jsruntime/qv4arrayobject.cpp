@@ -3,17 +3,12 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qv4arrayobject_p.h"
-#include "qv4objectiterator_p.h"
 #include "qv4arrayiterator_p.h"
-#include "qv4sparsearray_p.h"
 #include "qv4objectproto_p.h"
-#include "qv4jscall_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4runtime_p.h"
-#include "qv4string_p.h"
 #include "qv4symbol_p.h"
 #include <QtCore/qscopedvaluerollback.h>
-#include "qv4proxy_p.h"
 
 using namespace QV4;
 

@@ -56,7 +56,6 @@
 #include "qv4stackframe_p.h"
 #include "qv4atomics_p.h"
 #include "qv4urlobject_p.h"
-#include "qv4jscall_p.h"
 #include "qv4variantobject_p.h"
 #include "qv4sequenceobject_p.h"
 #include "qv4qobjectwrapper_p.h"

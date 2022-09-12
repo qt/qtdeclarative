@@ -4,7 +4,6 @@
 #ifndef QQMLJSAST_FWD_P_H
 #define QQMLJSAST_FWD_P_H
 
-#include "qqmljsglobal_p.h"
 #include <private/qqmljssourcelocation_p.h>
 
 #include <QtCore/qglobal.h>

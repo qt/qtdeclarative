@@ -4,7 +4,6 @@
 #include "qml/qqmlprivate.h"
 #include "qv4engine_p.h"
 #include "qv4executablecompilationunit_p.h"
-#include "qv4stackframe_p.h"
 
 #include <private/qv4engine_p.h>
 #include <private/qv4regexp_p.h>

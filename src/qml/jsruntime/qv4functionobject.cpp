@@ -2,13 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qv4object_p.h"
-#include "qv4objectproto_p.h"
-#include "qv4stringobject_p.h"
 #include "qv4function_p.h"
 #include "qv4symbol_p.h"
 #include <private/qv4mm_p.h>
 
-#include "qv4arrayobject_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4argumentsobject_p.h"
 
@@ -27,7 +24,6 @@
 
 #include <QtCore/QDebug>
 #include <algorithm>
-#include "qv4profiling_p.h"
 
 using namespace QV4;
 

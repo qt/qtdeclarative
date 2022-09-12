@@ -3,7 +3,6 @@
 
 #include "qv4engine_p.h"
 #include "qv4object_p.h"
-#include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
 #include "qv4qobjectwrapper_p.h"
 #include "qv4identifiertable_p.h"
@@ -14,8 +13,6 @@
 #include <qqmlengine.h>
 #include "PageReservation.h"
 #include "PageAllocation.h"
-#include "PageAllocationAligned.h"
-#include "StdLibExtras.h"
 
 #include <QElapsedTimer>
 #include <QMap>

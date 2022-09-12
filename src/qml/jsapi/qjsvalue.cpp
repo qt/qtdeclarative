@@ -4,7 +4,6 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qdatetime.h>
-#include "qjsengine.h"
 #include "qjsvalue.h"
 #include "qjsprimitivevalue.h"
 #include "qjsmanagedvalue.h"

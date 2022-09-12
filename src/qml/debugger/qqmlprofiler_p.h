@@ -22,7 +22,6 @@
 #include <private/qv4function_p.h>
 
 #if QT_CONFIG(qml_debug)
-#include "qqmlabstractprofileradapter_p.h"
 #include "qqmlprofilerdefinitions_p.h"
 #endif
 

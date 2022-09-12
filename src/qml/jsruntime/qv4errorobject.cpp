@@ -9,7 +9,6 @@
 #include <QtCore/QStringList>
 #include <QtCore/QDebug>
 
-#include "qv4string_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4codegen_p.h>
 

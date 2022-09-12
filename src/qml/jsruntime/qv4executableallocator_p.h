@@ -15,13 +15,13 @@
 // We mean it.
 //
 
-#include "qv4global_p.h"
-
 #include <QMultiMap>
 #include <QHash>
 #include <QVector>
 #include <QByteArray>
 #include <QMutex>
+
+#include <QtQml/private/qtqmlglobal_p.h>
 
 namespace WTF {
 class PageAllocation;

@@ -14,7 +14,7 @@
 // We mean it.
 //
 
-#include "qv4global_p.h"
+#include <QtQml/private/qqmlglobal_p.h>
 #include "qv4functionobject_p.h"
 
 QT_BEGIN_NAMESPACE

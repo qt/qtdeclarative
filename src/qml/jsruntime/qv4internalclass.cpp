@@ -6,7 +6,6 @@
 #include <qv4engine_p.h>
 #include <qv4identifierhash_p.h>
 #include "qv4object_p.h"
-#include "qv4identifiertable_p.h"
 #include "qv4value_p.h"
 #include "qv4mm_p.h"
 #include <private/qprimefornumbits_p.h>

@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include "qv4global_p.h"
+#include <QtQml/private/qqmlglobal_p.h>
 
 namespace JSC {
 class MacroAssemblerCodeRef;
