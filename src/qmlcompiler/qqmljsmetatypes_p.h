@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlJSTypeResolver;
 class QQmlJSScope;
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaEnum
+class QQmlJSMetaEnum
 {
     QStringList m_keys;
     QList<int> m_values; // empty if values unknown.
@@ -98,7 +98,7 @@ public:
     }
 };
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaMethod
+class QQmlJSMetaMethod
 {
 public:
     enum Type {
@@ -262,7 +262,7 @@ private:
     bool m_isImplicitQmlPropertyChangeSignal = false;
 };
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaProperty
+class QQmlJSMetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
