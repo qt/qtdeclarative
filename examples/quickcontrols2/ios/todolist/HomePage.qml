@@ -127,6 +127,11 @@ Page {
                 Layout.fillWidth: true
                 Layout.leftMargin: 10
                 Layout.rightMargin: 10
+
+                Keys.onReturnPressed: {
+                    if (createProjectButton.enabled)
+                        createProjectButton.clicked()
+                }
             }
 
             Button {
