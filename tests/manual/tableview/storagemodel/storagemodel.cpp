@@ -64,17 +64,20 @@ StorageModel::StorageModel(QObject *parent) :
 }
 
 QHash<int, QByteArray> StorageModel::roleNames() const {
-    static auto roles = QHash<int, QByteArray> {
-        { int(Role::Type), "type" },
-        { int(Role::Heading), "heading" },
-        { int(Role::Value), "value" },
-        { int(Role::ValueMax), "valueMax" },
-        { int(Role::ValueDisplay), "valueDisplay" },
-        { int(Role::ValueMaxDisplay), "valueMaxDisplay" },
-        { Qt::CheckStateRole, "checkState" },
-    };
-    static auto ret = roles.unite(QAbstractTableModel::roleNames());;
-    return ret;
+    static auto roles = [this]() {
+        auto roles = QHash<int, QByteArray> {
+            { int(Role::Type), "type" },
+            { int(Role::Heading), "heading" },
+            { int(Role::Value), "value" },
+            { int(Role::ValueMax), "valueMax" },
+            { int(Role::ValueDisplay), "valueDisplay" },
+            { int(Role::ValueMaxDisplay), "valueMaxDisplay" },
+            { Qt::CheckStateRole, "checkState" }
+        };
+        roles.insert(QAbstractTableModel::roleNames());
+        return roles;
+    }();
+    return roles;
 }
 
 void StorageModel::refresh()

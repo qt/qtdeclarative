@@ -82,11 +82,11 @@ QQmlContextPrivate::QQmlContextPrivate()
     context->setContextProperty("myModel", &modelData);
 
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0\nListView { model: myModel }", QUrl());
+    component.setData("import QtQuick 2.0; ListView { model: myModel }", QUrl());
     QObject *window = component.create(context);
     \endcode
 
-    Note it is the responsibility of the creator to delete any QQmlContext it
+    \note It is the responsibility of the creator to delete any QQmlContext it
     constructs. If the \c context object in the example is no longer needed when the
     \c window component instance is destroyed, the \c context must be destroyed explicitly.
     The simplest way to ensure this is to set \c window as the parent of \c context.
@@ -102,10 +102,10 @@ QQmlContextPrivate::QQmlContextPrivate()
     object.
 
     \code
-    class MyDataSet : ... {
-        ...
+    class MyDataSet : public QObject {
+        // ...
         Q_PROPERTY(QAbstractItemModel *myModel READ model NOTIFY modelChanged)
-        ...
+        // ...
     };
 
     MyDataSet myDataSet;
@@ -114,7 +114,7 @@ QQmlContextPrivate::QQmlContextPrivate()
     context->setContextObject(&myDataSet);
 
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0\nListView { model: myModel }", QUrl());
+    component.setData("import QtQuick 2.0; ListView { model: myModel }", QUrl());
     component.create(context);
     \endcode
 
@@ -138,10 +138,10 @@ QQmlContextPrivate::QQmlContextPrivate()
     QQmlContext *context1 = new QQmlContext(engine.rootContext());
     QQmlContext *context2 = new QQmlContext(context1);
 
-    context1->setContextProperty("a", 12);
-    context1->setContextProperty("b", 12);
+    context1->setContextProperty("a", 9001);
+    context1->setContextProperty("b", 9001);
 
-    context2->setContextProperty("b", 15);
+    context2->setContextProperty("b", 42);
     \endcode
 
     While QML objects instantiated in a context are not strictly owned by that
@@ -235,7 +235,7 @@ bool QQmlContext::isValid() const
 }
 
 /*!
-    Return the context's QQmlEngine, or 0 if the context has no QQmlEngine or the
+    Return the context's QQmlEngine, or \nullptr if the context has no QQmlEngine or the
     QQmlEngine was destroyed.
 */
 QQmlEngine *QQmlContext::engine() const
@@ -245,7 +245,7 @@ QQmlEngine *QQmlContext::engine() const
 }
 
 /*!
-    Return the context's parent QQmlContext, or 0 if this context has no
+    Return the context's parent QQmlContext, or \nullptr if this context has no
     parent or if the parent has been destroyed.
 */
 QQmlContext *QQmlContext::parentContext() const
@@ -255,7 +255,7 @@ QQmlContext *QQmlContext::parentContext() const
 }
 
 /*!
-    Return the context object, or 0 if there is no context object.
+    Return the context object, or \nullptr if there is no context object.
 */
 QObject *QQmlContext::contextObject() const
 {

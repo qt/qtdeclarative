@@ -2445,7 +2445,20 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
-    if (!isVisible() || !isEnabled() || !isInteractive() || !d->wantsPointerEvent(e)) {
+    auto wantsPointerEvent_helper = [=]() {
+        bool wants = true;
+        if (e->type() >= QEvent::MouseButtonPress && e->type() <= QEvent::MouseMove) {
+            QMouseEvent *me = static_cast<QMouseEvent*>(e);
+            QPointF itemLocalPos = me->localPos();
+            me->setLocalPos(mapFromItem(i, itemLocalPos));
+            wants = d->wantsPointerEvent(e);
+            // re-localize event back to \a i before returning
+            me->setLocalPos(itemLocalPos);
+        }
+        return wants;
+    };
+
+    if (!isVisible() || !isEnabled() || !isInteractive() || !wantsPointerEvent_helper()) {
         d->cancelInteraction();
         return QQuickItem::childMouseEventFilter(i, e);
     }

@@ -4042,12 +4042,14 @@ void Renderer::renderBatches()
         if (Q_LIKELY(renderAlpha)) {
             for (int i=0; i<m_alphaBatches.size(); ++i) {
                 Batch *b = m_alphaBatches.at(i);
-                if (b->merged)
+                if (b->merged) {
                     renderMergedBatch(b);
-                else if (b->isRenderNode)
+                } else if (b->isRenderNode) {
+                    m_current_projection_matrix = projectionMatrix();
                     renderRenderNode(b);
-                else
+                } else {
                     renderUnmergedBatch(b);
+                }
             }
         }
 

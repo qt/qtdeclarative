@@ -37,6 +37,7 @@
 #include <QLoggingCategory>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlscriptdata_p.h>
+#include <private/qv4compileddata_p.h>
 #include <qtranslator.h>
 
 #include "../../shared/util.h"
@@ -78,6 +79,8 @@ private slots:
     void parameterAdjustment();
     void inlineComponent();
     void posthocRequired();
+
+    void saveableUnitPointer();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -711,6 +714,18 @@ void tst_qmlcachegen::posthocRequired()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj.isNull() && component.isError());
     QVERIFY(component.errorString().contains(QStringLiteral("Required property x was not initialized")));
+}
+
+void tst_qmlcachegen::saveableUnitPointer()
+{
+    QV4::CompiledData::Unit unit;
+    unit.flags = QV4::CompiledData::Unit::StaticData | QV4::CompiledData::Unit::IsJavascript;
+    const auto flags = unit.flags;
+
+    QV4::CompiledData::SaveableUnitPointer pointer(&unit);
+
+    QVERIFY(pointer.saveToDisk<char>([](const char *, quint32) { return true; }));
+    QCOMPARE(unit.flags, flags);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

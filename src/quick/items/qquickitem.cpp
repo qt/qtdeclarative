@@ -905,7 +905,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
-    \qmlproperty list<Object> QtQuick::Keys::forwardTo
+    \qmlproperty list<Item> QtQuick::Keys::forwardTo
 
     This property provides a way to forward key presses, key releases, and keyboard input
     coming from input methods to other items. This can be useful when you want
@@ -3717,6 +3717,9 @@ QList<QQuickItem *> QQuickItem::childItems() const
 
   If clipping is enabled, an item will clip its own painting, as well
   as the painting of its children, to its bounding rectangle.
+
+  \note Clipping can affect rendering performance. See \l {Clipping} for more
+  information.
 */
 /*!
   \property QQuickItem::clip
