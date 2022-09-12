@@ -130,6 +130,10 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::newRow("tag mix") << "<f6>ds<b></img><pro>gfh</b><w><w>ghj</stron><ql><sl><pl>dfg</j6><img><bol><r><prp>dfg<bkj></b><up><string>ewrq</al><bl>jklhj<zl>" << "dsgfhghjdfgdfgewrqjklhj" << (FormatList() << Format(Format::Bold, 2, 3)) << false;
     QTest::newRow("named html entities") << "&gt; &lt; &amp; &quot; &nbsp;" << QLatin1String("> < & \" ") + QChar(QChar::Nbsp) << FormatList() << false;
     QTest::newRow("invalid html entities") << "a &hello & a &goodbye;" << "a &hello & a " << FormatList() << false;
+    QTest::newRow("upper case tags 1") << "<B><I><S><U>text</U></S></I></B>" << "text" << (FormatList() << Format(Format::Bold|Format::Italic|Format::StrikeOut|Format::Underline, 0, 4)) << false;
+    QTest::newRow("upper case tags 2") << "<STRONG><DEL>text</DEL></STRONG>" << "text" << (FormatList() << Format(Format::Bold|Format::StrikeOut, 0, 4)) << false;
+    QTest::newRow("upper case font") << "<FONT COLOR=\"red\" SIZE=\"1\">text</FONT>" << "text" << (FormatList() << Format(0, 0, 4)) << true;
+    QTest::newRow("upper case entities") << "&LT;b&GT;&QUOT;this&QUOT; &AMP; that&LT;/b&GT;" << "<b>\"this\" & that</b>" << FormatList() << false;
 }
 
 void tst_qquickstyledtext::textOutput()
