@@ -1552,7 +1552,7 @@ void tst_qqmlengine::stringToColor()
 
     const QMetaType metaType(QMetaType::QColor);
     QVariant color(metaType);
-    QVERIFY(engine.handle()->metaTypeFromJS(
+    QVERIFY(QV4::ExecutionEngine::metaTypeFromJS(
                 engine.handle()->newString(QStringLiteral("#abcdef"))->asReturnedValue(),
                 metaType, color.data()));
     QVERIFY(color.isValid());

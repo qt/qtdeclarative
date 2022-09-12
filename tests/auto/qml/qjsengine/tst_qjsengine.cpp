@@ -5473,13 +5473,14 @@ void tst_QJSEngine::urlObject()
     QVERIFY(urlValue->isObject());
 
     QUrl result1;
-    QVERIFY(scope.engine->metaTypeFromJS(urlValue, QMetaType::fromType<QUrl>(), &result1));
+    QVERIFY(QV4::ExecutionEngine::metaTypeFromJS(urlValue, QMetaType::fromType<QUrl>(), &result1));
     QCOMPARE(result1, url);
 
     QV4::ScopedValue urlVariantValue(scope, scope.engine->newVariantObject(urlVariant));
     QVERIFY(urlVariantValue->isObject());
     QUrl result2;
-    QVERIFY(scope.engine->metaTypeFromJS(urlVariantValue, QMetaType::fromType<QUrl>(), &result2));
+    QVERIFY(QV4::ExecutionEngine::metaTypeFromJS(urlVariantValue, QMetaType::fromType<QUrl>(),
+                                                 &result2));
     QCOMPARE(result2, url);
 }
 

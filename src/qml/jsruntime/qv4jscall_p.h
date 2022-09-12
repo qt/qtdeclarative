@@ -139,7 +139,7 @@ ReturnedValue convertAndCall(
             Q_ALLOCA_VAR(void, argument, argumentSize);
             argumentType.construct(argument);
             if (i < argc)
-                engine->metaTypeFromJS(argv[i], argumentType, argument);
+                ExecutionEngine::metaTypeFromJS(argv[i], argumentType, argument);
             values[i + 1] = argument;
         } else {
             values[i + 1] = nullptr;
@@ -210,7 +210,7 @@ bool convertAndCall(ExecutionEngine *engine, QObject *thisObject,
             new (result) QVariant(scope.engine->toVariant(jsResult, QMetaType {}));
         } else {
             resultType.construct(result);
-            scope.engine->metaTypeFromJS(jsResult, resultType, result);
+            ExecutionEngine::metaTypeFromJS(jsResult, resultType, result);
         }
     }
     return !jsResult->isUndefined();

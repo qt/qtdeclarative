@@ -1362,9 +1362,8 @@ void AOTCompiledContext::initCallGlobalLookup(uint index) const
 bool AOTCompiledContext::loadGlobalLookup(uint index, void *target, QMetaType type) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    QV4::ExecutionEngine *v4 = engine->handle();
-    if (!v4->metaTypeFromJS(l->globalGetter(l, engine->handle()), type, target)) {
-        v4->throwTypeError();
+    if (!QV4::ExecutionEngine::metaTypeFromJS(l->globalGetter(l, engine->handle()), type, target)) {
+        engine->handle()->throwTypeError();
         return false;
     }
     return true;
