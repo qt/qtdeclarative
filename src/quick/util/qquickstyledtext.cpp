@@ -127,6 +127,13 @@ const QChar QQuickStyledTextPrivate::square(0x25a1);
 const QChar QQuickStyledTextPrivate::lineFeed(QLatin1Char('\n'));
 const QChar QQuickStyledTextPrivate::space(QLatin1Char(' '));
 
+namespace {
+bool is_equal_ignoring_case(QStringView s1, QLatin1StringView s2) noexcept
+{
+    return s1.compare(s2, Qt::CaseInsensitive) == 0;
+}
+}
+
 QQuickStyledText::QQuickStyledText(const QString &string, QTextLayout &layout,
                                                QList<QQuickStyledTextImgTag*> &imgTags,
                                                const QUrl &baseUrl,
@@ -296,12 +303,12 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
             if (tagLength == 0)
                 return false;
             auto tag = QStringView(textIn).mid(tagStart, tagLength);
-            const QChar char0 = tag.at(0);
+            const QChar char0 = tag.at(0).toLower();
             if (char0 == QLatin1Char('b')) {
                 if (tagLength == 1) {
                     format.setFontWeight(QFont::Bold);
                     return true;
-                } else if (tagLength == 2 && tag.at(1) == QLatin1Char('r')) {
+                } else if (tagLength == 2 && tag.at(1).toLower() == QLatin1Char('r')) {
                     textOut.append(QChar(QChar::LineSeparator));
                     hasSpace = true;
                     prependSpace = false;
@@ -318,7 +325,7 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
                         textOut.append(QChar::LineSeparator);
                     hasSpace = true;
                     prependSpace = false;
-                } else if (tag == QLatin1String("pre")) {
+                } else if (is_equal_ignoring_case(tag, QLatin1String("pre"))) {
                     preFormat = true;
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
@@ -330,7 +337,7 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
                 if (tagLength == 1) {
                     format.setFontUnderline(true);
                     return true;
-                } else if (tag == QLatin1String("ul")) {
+                } else if (is_equal_ignoring_case(tag, QLatin1String("ul"))) {
                     List listItem;
                     listItem.level = 0;
                     listItem.type = Unordered;
@@ -352,20 +359,20 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
                 if (tagLength == 1) {
                     format.setFontStrikeOut(true);
                     return true;
-                } else if (tag == QLatin1String("strong")) {
+                } else if (is_equal_ignoring_case(tag, QLatin1String("strong"))) {
                     format.setFontWeight(QFont::Bold);
                     return true;
                 }
-            } else if (tag == QLatin1String("del")) {
+            } else if (is_equal_ignoring_case(tag, QLatin1String("del"))) {
                 format.setFontStrikeOut(true);
                 return true;
-            } else if (tag == QLatin1String("ol")) {
+            } else if (is_equal_ignoring_case(tag, QLatin1String("ol"))) {
                 List listItem;
                 listItem.level = 0;
                 listItem.type = Ordered;
                 listItem.format = Decimal;
                 listStack.push(listItem);
-            } else if (tag == QLatin1String("li")) {
+            } else if (is_equal_ignoring_case(tag, QLatin1String("li"))) {
                 if (!hasNewLine)
                     textOut.append(QChar(QChar::LineSeparator));
                 if (!listStack.isEmpty()) {
@@ -405,20 +412,20 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
         } else if (ch->isSpace()) {
             // may have params.
             auto tag = QStringView(textIn).mid(tagStart, tagLength);
-            if (tag == QLatin1String("font"))
+            if (is_equal_ignoring_case(tag, QLatin1String("font")))
                 return parseFontAttributes(ch, textIn, format);
-            if (tag == QLatin1String("ol")) {
+            if (is_equal_ignoring_case(tag, QLatin1String("ol"))) {
                 parseOrderedListAttributes(ch, textIn);
                 return false; // doesn't modify format
             }
-            if (tag == QLatin1String("ul")) {
+            if (is_equal_ignoring_case(tag, QLatin1String("ul"))) {
                 parseUnorderedListAttributes(ch, textIn);
                 return false; // doesn't modify format
             }
-            if (tag == QLatin1String("a")) {
+            if (is_equal_ignoring_case(tag, QLatin1String("a"))) {
                 return parseAnchorAttributes(ch, textIn, format);
             }
-            if (tag == QLatin1String("img")) {
+            if (is_equal_ignoring_case(tag, QLatin1String("img"))) {
                 parseImageAttributes(ch, textIn, textOut);
                 return false;
             }
@@ -443,12 +450,12 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
             if (tagLength == 0)
                 return false;
             auto tag = QStringView(textIn).mid(tagStart, tagLength);
-            const QChar char0 = tag.at(0);
+            const QChar char0 = tag.at(0).toLower();
             hasNewLine = false;
             if (char0 == QLatin1Char('b')) {
                 if (tagLength == 1)
                     return true;
-                else if (tag.at(1) == QLatin1Char('r') && tagLength == 2)
+                else if (tag.at(1).toLower() == QLatin1Char('r') && tagLength == 2)
                     return false;
             } else if (char0 == QLatin1Char('i')) {
                 if (tagLength == 1)
@@ -462,7 +469,7 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
                     hasNewLine = true;
                     hasSpace = true;
                     return false;
-                } else if (tag == QLatin1String("pre")) {
+                } else if (is_equal_ignoring_case(tag, QLatin1String("pre"))) {
                     preFormat = false;
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
@@ -473,7 +480,7 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
             } else if (char0 == QLatin1Char('u')) {
                 if (tagLength == 1)
                     return true;
-                else if (tag == QLatin1String("ul")) {
+                else if (is_equal_ignoring_case(tag, QLatin1String("ul"))) {
                     if (!listStack.isEmpty()) {
                         listStack.pop();
                         if (!listStack.count())
@@ -486,24 +493,24 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
                 hasNewLine = true;
                 hasSpace = true;
                 return true;
-            } else if (tag == QLatin1String("font")) {
+            } else if (is_equal_ignoring_case(tag, QLatin1String("font"))) {
                 return true;
             } else if (char0 == QLatin1Char('s')) {
                 if (tagLength == 1) {
                     return true;
-                } else if (tag == QLatin1String("strong")) {
+                } else if (is_equal_ignoring_case(tag, QLatin1String("strong"))) {
                     return true;
                 }
-            } else if (tag == QLatin1String("del")) {
+            } else if (is_equal_ignoring_case(tag, QLatin1String("del"))) {
                 return true;
-            } else if (tag == QLatin1String("ol")) {
+            } else if (is_equal_ignoring_case(tag, QLatin1String("ol"))) {
                 if (!listStack.isEmpty()) {
                     listStack.pop();
                     if (!listStack.count())
                         textOut.append(QChar::LineSeparator);
                 }
                 return false;
-            } else if (tag == QLatin1String("li")) {
+            } else if (is_equal_ignoring_case(tag, QLatin1String("li"))) {
                 return false;
             }
             return false;
@@ -545,10 +552,10 @@ bool QQuickStyledTextPrivate::parseFontAttributes(const QChar *&ch, const QStrin
     QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
-        if (attr.first == QLatin1String("color")) {
+        if (is_equal_ignoring_case(attr.first, QLatin1String("color"))) {
             valid = true;
             format.setForeground(QColor::fromString(attr.second));
-        } else if (attr.first == QLatin1String("size")) {
+        } else if (is_equal_ignoring_case(attr.first, QLatin1String("size"))) {
             valid = true;
             int size = attr.second.toInt();
             if (attr.second.at(0) == QLatin1Char('-') || attr.second.at(0) == QLatin1Char('+'))
@@ -573,7 +580,7 @@ bool QQuickStyledTextPrivate::parseOrderedListAttributes(const QChar *&ch, const
     QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
-        if (attr.first == QLatin1String("type")) {
+        if (is_equal_ignoring_case(attr.first, QLatin1String("type"))) {
             valid = true;
             if (attr.second == QLatin1String("a"))
                 listItem.format = LowerAlpha;
@@ -602,11 +609,11 @@ bool QQuickStyledTextPrivate::parseUnorderedListAttributes(const QChar *&ch, con
     QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
-        if (attr.first == QLatin1String("type")) {
+        if (is_equal_ignoring_case(attr.first, QLatin1String("type"))) {
             valid = true;
-            if (attr.second == QLatin1String("disc"))
+            if (is_equal_ignoring_case(attr.second, QLatin1String("disc")))
                 listItem.format = Disc;
-            else if (attr.second == QLatin1String("square"))
+            else if (is_equal_ignoring_case(attr.second, QLatin1String("square")))
                 listItem.format = Square;
         }
     } while (!ch->isNull() && !attr.first.isEmpty());
@@ -622,7 +629,7 @@ bool QQuickStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, const QStr
     QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
-        if (attr.first == QLatin1String("href")) {
+        if (is_equal_ignoring_case(attr.first, QLatin1String("href"))) {
             format.setAnchorHref(attr.second.toString());
             format.setAnchor(true);
             format.setFontUnderline(true);
@@ -647,16 +654,16 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         QPair<QStringView,QStringView> attr;
         do {
             attr = parseAttribute(ch, textIn);
-            if (attr.first == QLatin1String("src")) {
+            if (is_equal_ignoring_case(attr.first, QLatin1String("src"))) {
                 image->url =  QUrl(attr.second.toString());
-            } else if (attr.first == QLatin1String("width")) {
+            } else if (is_equal_ignoring_case(attr.first, QLatin1String("width"))) {
                 image->size.setWidth(attr.second.toString().toInt());
-            } else if (attr.first == QLatin1String("height")) {
+            } else if (is_equal_ignoring_case(attr.first, QLatin1String("height"))) {
                 image->size.setHeight(attr.second.toString().toInt());
-            } else if (attr.first == QLatin1String("align")) {
-                if (attr.second.toString() == QLatin1String("top")) {
+            } else if (is_equal_ignoring_case(attr.first, QLatin1String("align"))) {
+                if (is_equal_ignoring_case(attr.second, QLatin1String("top"))) {
                     image->align = QQuickStyledTextImgTag::Top;
-                } else if (attr.second.toString() == QLatin1String("middle")) {
+                } else if (is_equal_ignoring_case(attr.second, QLatin1String("middle"))) {
                     image->align = QQuickStyledTextImgTag::Middle;
                 }
             }
