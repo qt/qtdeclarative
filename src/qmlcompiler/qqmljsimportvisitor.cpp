@@ -1398,9 +1398,15 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QString aliasExpr;
         const bool isAlias = (typeName == u"alias"_s);
         if (isAlias) {
+            auto tryParseAlias = [&]() {
             typeName.clear(); // type name is useless for alias here, so keep it empty
+            if (!publicMember->statement) {
+                m_logger->log(QStringLiteral("Invalid alias expression – an initalizer is needed."),
+                              qmlSyntax, publicMember->memberType->firstSourceLocation()); // TODO: extend warning to cover until endSourceLocation
+                return;
+            }
             const auto expression = cast<ExpressionStatement *>(publicMember->statement);
-            auto node = expression->expression;
+            auto node = expression ? expression->expression : nullptr;
             auto fex = cast<FieldMemberExpression *>(node);
             while (fex) {
                 node = fex->base;
@@ -1415,6 +1421,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
                                              "member expressions can be aliased."),
                               qmlSyntax, expression->firstSourceLocation());
             }
+            };
+            tryParseAlias();
         } else {
             const QString name = buildName(publicMember->memberType);
             if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].scope.isNull()) {
