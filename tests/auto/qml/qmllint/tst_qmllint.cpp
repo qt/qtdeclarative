@@ -449,6 +449,18 @@ void TestQmllint::dirtyQmlCode_data()
                                  << Result { { Message {
                                             QStringLiteral("Alias \"a\" is part of an alias cycle"),
                                             3, 1 } } };
+    QTest::newRow("invalidAliasTarget1") << QStringLiteral("invalidAliasTarget.qml")
+                                         << Result { { Message {
+                                            QStringLiteral("Invalid alias expression – an initalizer is needed."),
+                                            6, 18 } } };
+    QTest::newRow("invalidAliasTarget2") << QStringLiteral("invalidAliasTarget.qml")
+                                         << Result { { Message {
+                                            QStringLiteral("Invalid alias expression. Only IDs and field member expressions can be aliased"),
+                                            7, 30 } } };
+    QTest::newRow("invalidAliasTarget3") << QStringLiteral("invalidAliasTarget.qml")
+                                         << Result { { Message {
+                                            QStringLiteral("Invalid alias expression. Only IDs and field member expressions can be aliased"),
+                                            9, 34 } } };
     QTest::newRow("badParent")
             << QStringLiteral("badParent.qml")
             << Result { { Message { QStringLiteral("Property \"rrr\" not found on type \"Item\""),
