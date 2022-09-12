@@ -63,13 +63,14 @@ Page {
         TextArea {
             id: textArea
             leftPadding: 15
-            rightPadding: 15
+            rightPadding: doneButton.width
             bottomPadding: 10
             topPadding: 10
             font.pointSize: AppSettings.fontSize
             placeholderText: qsTr("Write a note...")
             text: root.projectNote
             wrapMode: TextArea.Wrap
+            clip: true
 
             Layout.fillWidth: true
             Layout.preferredHeight: 80
@@ -78,6 +79,16 @@ Page {
             onEditingFinished: {
                 Database.updateProjectNote(root.projectId, text)
                 projectsModel.setProperty(projectIndex, "projectNote", textArea.text)
+            }
+
+            Button {
+                id: doneButton
+                text: qsTr("Done")
+                flat: true
+                visible: textArea.focus
+                onClicked: textArea.editingFinished()
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
             }
         }
 
@@ -186,6 +197,11 @@ Page {
                     placeholderText: qsTr("Enter task name")
                     font.pointSize: AppSettings.fontSize
 
+                    Keys.onReturnPressed: {
+                        if (addTaskButton.enabled)
+                            addTaskButton.clicked()
+                    }
+
                     Layout.fillWidth: true
                     Layout.leftMargin: 10
                     Layout.rightMargin: 10
@@ -193,6 +209,7 @@ Page {
                 }
 
                 Button {
+                    id: addTaskButton
                     text: qsTr("Add task")
                     flat: true
                     font.pointSize: AppSettings.fontSize
