@@ -1833,10 +1833,10 @@ void tst_QQuickMenu::disableWhenTriggered()
         QVERIFY(subMenuItem);
 
         // First, open the sub-menu.
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) and !defined(Q_OS_WEBOS)
         QTest::mouseMove(window, menuItem->mapToScene(QPoint(1, 1)).toPoint());
 #else
-        // On Android mouseHover does not open sub-menu, so just click on it
+        // On Android and webOS mouseHover does not open sub-menu, so just click on it
         QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
             menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
 #endif
