@@ -54,6 +54,7 @@ const LoggerWarningId qmlVarUsedBeforeDeclaration { "var-used-before-declaration
 const LoggerWarningId qmlInvalidLintDirective { "invalid-lint-directive" };
 const LoggerWarningId qmlUseProperFunction { "use-proper-function" };
 const LoggerWarningId qmlAccessSingleton { "access-singleton-via-object" };
+const LoggerWarningId qmlTopLevelComponent { "top-level-component" };
 
 const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
 {
@@ -163,7 +164,10 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                 QStringLiteral("Warn if var is used for storing functions"), QtWarningMsg },
         QQmlJSLogger::Category {
                 qmlAccessSingleton.name().toString(), QStringLiteral("AccessSingletonViaObject"),
-                QStringLiteral("Warn if a singleton is accessed via an object"), QtWarningMsg }
+                QStringLiteral("Warn if a singleton is accessed via an object"), QtWarningMsg },
+        QQmlJSLogger::Category {
+            qmlTopLevelComponent.name().toString(), QStringLiteral("TopLevelComponent"),
+            QStringLiteral("Fail when a top level Component are encountered"), QtWarningMsg }
     };
 
     return cats;

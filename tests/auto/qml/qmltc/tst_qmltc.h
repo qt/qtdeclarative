@@ -29,7 +29,6 @@ private slots:
     void properties();
     void ids();
     void importNamespace();
-    void componentTypes();
     void deferredProperties();
     void gradients(); // QTBUG-102560
     void jsvalueAssignments();

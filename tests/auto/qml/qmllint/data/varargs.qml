@@ -1,6 +1,7 @@
 import QtQml
+import TestTypes
 
-Component {
+MyComponent {
     id: self
-    onStatusChanged: createObject({a : 12}, self, 1, 2, 3)
+    Component.onCompleted: createObject({a : 12}, self, 1, 2, 3)
 }

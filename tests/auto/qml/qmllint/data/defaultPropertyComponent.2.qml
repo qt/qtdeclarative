@@ -1,5 +1,7 @@
 import QtQuick 2.0
 
-Component {
-    Rectangle {}
+Item {
+    Component {
+        Rectangle {}
+    }
 }

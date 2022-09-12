@@ -168,4 +168,14 @@ Module {
         }
         Signal { name: "byteArrayChanged" }
     }
+
+    Component {
+        file: "somefile.h"
+        name: "someType"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["TestTypes/MyComponent 1.0"]
+        exportMetaObjectRevisions: [256]
+        Method { name: "createObject"; isJavaScriptFunction: true }
+    }
 }

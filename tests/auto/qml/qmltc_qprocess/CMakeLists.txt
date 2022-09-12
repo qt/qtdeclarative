@@ -21,6 +21,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/SingletonThing.qml
         data/erroneousFile.qml
         data/invalidAliasRevision.qml
+        data/ComponentType.qml
 )
 
 set(common_libraries

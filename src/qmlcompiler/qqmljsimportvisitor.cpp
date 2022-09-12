@@ -1314,9 +1314,10 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
     const QString superType = buildName(definition->qualifiedTypeNameId);
 
+    const bool isRoot = !rootScopeIsValid();
     Q_ASSERT(!superType.isEmpty());
     if (superType.front().isUpper()) {
-        if (rootScopeIsValid()) {
+        if (!isRoot) {
             enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
         } else {
             enterRootScope(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
@@ -1325,6 +1326,14 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
         const QTypeRevision revision = QQmlJSScope::resolveTypes(
                     m_currentScope, m_rootScopeImports, &m_usedTypes);
+        if (isRoot) {
+            if (auto base = m_currentScope->baseType();
+                base && base->internalName() == u"QQmlComponent") {
+                m_logger->log(u"Qml top level type cannot be 'Component'."_s, qmlTopLevelComponent,
+                              definition->qualifiedTypeNameId->identifierToken, true, true);
+                return false;
+            }
+        }
         if (m_nextIsInlineComponent) {
             Q_ASSERT(std::holds_alternative<InlineComponentNameType>(m_currentInlineComponentName));
             const QString &name = std::get<InlineComponentNameType>(m_currentInlineComponentName);

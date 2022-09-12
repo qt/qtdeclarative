@@ -13,8 +13,6 @@
 #include "objectwithid.h"
 #include "documentwithids.h"
 #include "importnamespace.h"
-#include "componenttype.h"
-#include "componenttypes.h"
 #include "deferredproperties.h"
 #include "deferredproperties_group.h"
 #include "deferredproperties_attached.h"
@@ -128,8 +126,6 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/ObjectWithId.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/documentWithIds.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/importNamespace.qml"),
-        QUrl("qrc:/qt/qml/QmltcTests/ComponentType.qml"),
-        QUrl("qrc:/qt/qml/QmltcTests/componentTypes.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/gradients.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/qjsvalueAssignments.qml"),
 
@@ -550,61 +546,6 @@ void tst_qmltc::importNamespace()
     QQmlEngine e;
     PREPEND_NAMESPACE(importNamespace) created(&e); // compilation of this type shouldn't crash
     QCOMPARE(created.text(), u"hello, world"_s);
-}
-
-void tst_qmltc::componentTypes()
-{
-    {
-        QQmlEngine e;
-        PREPEND_NAMESPACE(ComponentType) created(&e);
-        QQmlContext *ctx = e.contextForObject(&created);
-        QCOMPARE(ctx->objectForName("componentRoot"), &created);
-
-        QScopedPointer<QObject> enclosed(created.create());
-        QVERIFY(enclosed);
-        QCOMPARE(enclosed->objectName(), u"enclosed"_s);
-    }
-
-    {
-        QQmlEngine e;
-        PREPEND_NAMESPACE(componentTypes) created(&e);
-        QQmlContext *ctx = e.contextForObject(&created);
-
-        QObject *normal = ctx->objectForName(u"normal"_s);
-        QVERIFY(normal);
-        QCOMPARE(normal->property("text").toString(), u"indirect component"_s);
-
-        QVERIFY(ctx->objectForName(u"accessibleNormal"_s));
-        QVERIFY(!ctx->objectForName(u"inaccessibleNormal"_s));
-        QVERIFY(ctx->objectForName(u"accessible"_s));
-        QVERIFY(!ctx->objectForName(u"inaccessible"_s));
-        QVERIFY(ctx->objectForName(u"accessibleDelegate"_s));
-        QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_s));
-
-        QCOMPARE(created.p2()->property("text").toString(), u"foo"_s);
-        QVERIFY(created.p3()->property("text").toString().isEmpty());
-
-        // ComponentType still subclasses QQmlComponent, so create() works:
-        QQmlComponent *normalComponent = qobject_cast<QQmlComponent *>(normal);
-        QVERIFY(normalComponent);
-        QScopedPointer<QObject> enclosed(normalComponent->create());
-        QVERIFY(enclosed);
-        QCOMPARE(enclosed->objectName(), u"enclosed"_s);
-
-        QQmlListReference children(&created, "data");
-        QCOMPARE(children.size(), 4);
-        QCOMPARE(ctx->objectForName(u"normal"_s), children.at(0));
-        QCOMPARE(ctx->objectForName(u"accessibleNormal"_s), children.at(1));
-        QCOMPARE(ctx->objectForName(u"accessible"_s), created.p2());
-        QQuickTableView *table = qobject_cast<QQuickTableView *>(children.at(3));
-        QVERIFY(table);
-        QCOMPARE(ctx->objectForName(u"accessibleDelegate"_s), table->delegate());
-
-        QCOMPARE(created.accessibleNormalProgress(),
-                 children.at(1)->property("progress").toDouble());
-        QCOMPARE(created.urlClone(), QUrl("qrc:/qt/qml/QmltcTests/componentTypes.qml"));
-        QCOMPARE(created.delegateUrlClone(), QUrl("qrc:/qt/qml/QmltcTests/ComponentType.qml"));
-    }
 }
 
 void tst_qmltc::deferredProperties()

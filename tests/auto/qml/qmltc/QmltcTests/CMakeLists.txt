@@ -31,8 +31,6 @@ set(qml_sources
     ObjectWithId.qml
     documentWithIds.qml
     importNamespace.qml
-    ComponentType.qml
-    componentTypes.qml
     gradients.qml
     qjsvalueAssignments.qml
     QmlTypeWithExtension.qml

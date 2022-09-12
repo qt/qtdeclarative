@@ -48,6 +48,7 @@ private slots:
     void singleton();
     void warningsAsErrors();
     void invalidAliasRevision();
+    void topLevelComponent();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -197,6 +198,15 @@ void tst_qmltc_qprocess::invalidAliasRevision()
 {
     const auto errors = runQmltc(u"invalidAliasRevision.qml"_s, false);
     QVERIFY(errors.contains(u"Cannot resolve alias \"unexistingProperty\" [unresolved-alias]"_s));
+}
+
+void tst_qmltc_qprocess::topLevelComponent()
+{
+    {
+        const auto errors = runQmltc(u"ComponentType.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"ComponentType.qml:2:1: Qml top level type cannot be 'Component'. [top-level-component]"_s));
+    }
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)
