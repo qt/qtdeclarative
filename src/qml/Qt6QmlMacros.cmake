@@ -782,9 +782,10 @@ function(_qt_internal_target_enable_qmllint target)
 
     _qt_internal_extend_qml_import_paths(import_args)
 
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     set(cmd
-        ${QT_TOOL_COMMAND_WRAPPER_PATH}
-        ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
+        ${tool_wrapper}
+        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
         --bare
         ${import_args}
         ${qrc_args}
@@ -921,8 +922,10 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
     if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
         set(qmlcachegen "$<COMMAND_CONFIG:${qmlcachegen}>")
     endif()
+
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     set(cmd
-        ${QT_TOOL_COMMAND_WRAPPER_PATH}
+        ${tool_wrapper}
         ${qmlcachegen}
         --resource-name "${qmlcache_resource_name}"
         ${qrc_resource_args}
@@ -1345,11 +1348,12 @@ function(_qt_internal_target_enable_qmltc target)
         set(compiled_cpp "${target_binary_dir}/.qmltc/${target}/${file_name}.cpp")
         get_filename_component(out_dir ${compiled_header} DIRECTORY)
 
+        _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
         add_custom_command(
             OUTPUT ${compiled_header} ${compiled_cpp}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
             COMMAND
-                ${QT_TOOL_COMMAND_WRAPPER_PATH}
+                ${tool_wrapper}
                 ${qmltc_executable}
                 --bare
                 --header "${compiled_header}"
@@ -2099,11 +2103,13 @@ function(qt6_target_qml_sources target)
             else()
                 set(qmlcachegen_cmd "${qmlcachegen}")
             endif()
+
+            _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
             add_custom_command(
                 OUTPUT ${compiled_file}
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
                 COMMAND
-                    ${QT_TOOL_COMMAND_WRAPPER_PATH}
+                    ${tool_wrapper}
                     ${qmlcachegen_cmd}
                     --bare
                     --resource-path "${file_resource_path}"
@@ -2234,6 +2240,7 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
     set(registration_files_base ${source_target}_${destination_qml_target})
     set(additional_sources ${registration_files_base}.cpp ${registration_files_base}.h)
 
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     add_custom_command(
         OUTPUT
             ${additional_sources}
@@ -2242,7 +2249,7 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
             ${target_metatypes_json_file}
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
         COMMAND
-            ${QT_TOOL_COMMAND_WRAPPER_PATH}
+            ${tool_wrapper}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
             "--extract"
             -o ${registration_files_base}
@@ -2438,6 +2445,7 @@ function(_qt_internal_qml_type_registration target)
         )
     endif()
 
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     add_custom_command(
         OUTPUT
             ${type_registration_cpp_file}
@@ -2448,7 +2456,7 @@ function(_qt_internal_qml_type_registration target)
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
             "$<$<BOOL:${genex_list}>:${genex_list}>"
         COMMAND
-            ${QT_TOOL_COMMAND_WRAPPER_PATH}
+            ${tool_wrapper}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
             ${cmd_args}
             -o ${type_registration_cpp_file}
@@ -2695,7 +2703,8 @@ but this file does not exist.  Possible reasons include:
         set(cmd_args "@${rsp_file}")
     endif()
 
-    set(import_scanner_args ${QT_TOOL_COMMAND_WRAPPER_PATH} ${tool_path} ${cmd_args})
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
+    set(import_scanner_args ${tool_wrapper} ${tool_path} ${cmd_args})
 
     # Run qmlimportscanner to generate the cmake file that records the import entries
     if(scan_at_build_time)
