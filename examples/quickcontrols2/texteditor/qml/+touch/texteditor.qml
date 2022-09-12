@@ -102,9 +102,6 @@ ApplicationWindow {
     footer: ToolBar {
         visible: !textArea.readOnly && textArea.activeFocus
 
-        Material.primary: "#E0E0E0"
-        Material.elevation: 0
-
         Flickable {
             anchors.fill: parent
             contentWidth: toolRow.implicitWidth
