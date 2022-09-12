@@ -1266,7 +1266,16 @@ QPlatformBackingStoreRhiConfig QQuickWidgetPrivate::rhiConfig() const
         return {};
 
     QPlatformBackingStoreRhiConfig config(graphicsApiToBackingStoreRhiApi(QQuickWindow::graphicsApi()));
-    config.setDebugLayer(QSGRhiSupport::instance()->isDebugLayerRequested());
+
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(offscreenWindow);
+    // This is only here to support some of the env.vars. (such as
+    // QSG_RHI_DEBUG_LAYER). There is currently no way to set a
+    // QQuickGraphicsConfiguration for a QQuickWidget, which means things like
+    // the pipeline cache are just not available. That is something to support
+    // on the widget/backingstore level since that's where the QRhi is
+    // controlled in this case.
+    const bool debugLayerRequested = wd->graphicsConfig.isDebugLayerEnabled();
+    config.setDebugLayer(debugLayerRequested);
     return config;
 }
 

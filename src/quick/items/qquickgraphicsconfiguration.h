@@ -5,7 +5,8 @@
 #define QQUICKGRAPHICSCONFIGURATION_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtCore/QByteArrayList>
+#include <QtCore/qbytearraylist.h>
+#include <QtCore/qiodevice.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -26,6 +27,24 @@ public:
 
     void setDepthBufferFor2D(bool enable);
     bool isDepthBufferEnabledFor2D() const;
+
+    void setDebugLayer(bool enable);
+    bool isDebugLayerEnabled() const;
+
+    void setDebugMarkers(bool enable);
+    bool isDebugMarkersEnabled() const;
+
+    void setPreferSoftwareDevice(bool enable);
+    bool prefersSoftwareDevice() const;
+
+    void setAutomaticPipelineCache(bool enable);
+    bool isAutomaticPipelineCacheEnabled() const;
+
+    void setPipelineCacheSaveFile(const QString &filename);
+    QString pipelineCacheSaveFile() const;
+
+    void setPipelineCacheLoadFile(const QString &filename);
+    QString pipelineCacheLoadFile() const;
 
 private:
     void detach();

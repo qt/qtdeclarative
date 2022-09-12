@@ -336,7 +336,7 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
         rc->invalidate();
         d->rhi = nullptr;
         if (ownRhi)
-            QSGRhiSupport::instance()->destroyRhi(rhi);
+            QSGRhiSupport::instance()->destroyRhi(rhi, d->graphicsConfig);
         rhi = nullptr;
         delete offscreenSurface;
         offscreenSurface = nullptr;
@@ -363,7 +363,7 @@ void QSGGuiThreadRenderLoop::handleDeviceLoss()
     }
 
     if (ownRhi)
-        QSGRhiSupport::instance()->destroyRhi(rhi);
+        QSGRhiSupport::instance()->destroyRhi(rhi, {});
     rhi = nullptr;
 }
 

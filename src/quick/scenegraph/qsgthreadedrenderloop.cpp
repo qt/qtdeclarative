@@ -507,7 +507,7 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
             }
         }
         if (ownRhi)
-            QSGRhiSupport::instance()->destroyRhi(rhi);
+            QSGRhiSupport::instance()->destroyRhi(rhi, dd->graphicsConfig);
         rhi = nullptr;
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- QRhi destroyed");
     } else {
@@ -584,12 +584,13 @@ void QSGRenderThread::handleDeviceLoss()
         return;
 
     qWarning("Graphics device lost, cleaning up scenegraph and releasing RHI");
-    QQuickWindowPrivate::get(window)->cleanupNodesOnShutdown();
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    wd->cleanupNodesOnShutdown();
     sgrc->invalidate();
     wm->releaseSwapchain(window);
     rhiDeviceLost = true;
     if (ownRhi)
-        QSGRhiSupport::instance()->destroyRhi(rhi);
+        QSGRhiSupport::instance()->destroyRhi(rhi, {});
     rhi = nullptr;
 }
 

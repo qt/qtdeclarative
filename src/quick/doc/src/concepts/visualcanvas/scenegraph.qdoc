@@ -1204,4 +1204,11 @@ with multiple windows.
   backend-specific variable, such as, \c{QT_D3D_ADAPTER_INDEX} or
   \c{QT_VK_PHYSICAL_DEVICE_INDEX}. No further adapter configurability is
   provided at this time.
+
+  Starting with Qt 6.5, some of the settings that were previously only exposed
+  as environment variables are available as C++ APIs in
+  QQuickGraphicsConfiguration. For example, setting \c QSG_RHI_DEBUG_LAYER and
+  calling
+  \l{QQuickGraphicsConfiguration::setDebugLayerEnabled()}{setDebugLayerEnabled(true)}
+  are equivalent.
  */

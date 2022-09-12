@@ -29,10 +29,23 @@ public:
     QQuickGraphicsConfigurationPrivate();
     QQuickGraphicsConfigurationPrivate(const QQuickGraphicsConfigurationPrivate *other);
 
+    enum Flag {
+        UseDepthBufferFor2D,
+        EnableDebugLayer,
+        EnableDebugMarkers,
+        PreferSoftwareDevice,
+        AutoPipelineCache
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+
     QAtomicInt ref;
     QByteArrayList deviceExtensions;
-    bool useDepthBufferFor2D;
+    Flags flags;
+    QString pipelineCacheSaveFile;
+    QString pipelineCacheLoadFile;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickGraphicsConfigurationPrivate::Flags)
 
 QT_END_NAMESPACE
 

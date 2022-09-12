@@ -42,6 +42,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
 class QOffscreenSurface;
+class QQuickGraphicsConfiguration;
 
 // Opting in/out of QRhi and choosing the default/requested backend is managed
 // by this singleton. This is because this information may be needed before
@@ -83,11 +84,6 @@ public:
     QString rhiBackendName() const;
     QSGRendererInterface::GraphicsApi graphicsApi() const;
 
-    bool isDebugLayerRequested() const { return m_debugLayer; }
-    bool isProfilingRequested() const { return m_profile; }
-    bool isShaderEffectDebuggingRequested() const { return m_shaderEffectDebug; }
-    bool isSoftwareRendererRequested() const { return m_preferSoftwareRenderer; }
-
     QSurface::SurfaceType windowSurfaceType() const;
 
     const void *rifResource(QSGRendererInterface::Resource res,
@@ -100,7 +96,7 @@ public:
         bool own;
     };
     RhiCreateResult createRhi(QQuickWindow *window, QSurface *offscreenSurface);
-    void destroyRhi(QRhi *rhi);
+    void destroyRhi(QRhi *rhi, const QQuickGraphicsConfiguration &config);
     void prepareWindowForRhi(QQuickWindow *window);
 
     QImage grabOffscreen(QQuickWindow *window);
@@ -117,21 +113,16 @@ private:
     QSGRhiSupport();
     void applySettings();
     void adjustToPlatformQuirks();
-    void preparePipelineCache(QRhi *rhi);
+    void preparePipelineCache(QRhi *rhi, const QQuickGraphicsConfiguration &config);
+    void finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfiguration &config);
     struct {
         bool valid = false;
         QSGRendererInterface::GraphicsApi api;
     } m_requested;
+    bool m_settingsApplied = false;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
     int m_killDeviceFrameCount;
-    QString m_pipelineCacheSave;
-    QString m_pipelineCacheLoad;
     QRhiSwapChain::Format m_swapChainFormat = QRhiSwapChain::SDR;
-    uint m_settingsApplied : 1;
-    uint m_debugLayer : 1;
-    uint m_profile : 1;
-    uint m_shaderEffectDebug : 1;
-    uint m_preferSoftwareRenderer : 1;
 };
 
 QT_END_NAMESPACE

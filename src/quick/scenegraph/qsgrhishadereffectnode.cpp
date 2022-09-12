@@ -32,6 +32,7 @@ void QSGRhiShaderLinker::reset(const QShader &vs, const QShader &fs)
 void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices)
 {
     Q_ASSERT(shader.shaderInfo.variables.count() == shader.varData.count());
+    static bool shaderEffectDebug = qEnvironmentVariableIntValue("QSG_RHI_SHADEREFFECT_DEBUG");
     if (!dirtyIndices) {
         m_constantBufferSize = qMax(m_constantBufferSize, shader.shaderInfo.constantDataSize);
         for (int i = 0; i < shader.shaderInfo.variables.count(); ++i) {
@@ -43,7 +44,7 @@ void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &sh
                 c.specialType = vd.specialType;
                 if (c.specialType != QSGShaderEffectNode::VariableData::SubRect) {
                     c.value = vd.value;
-                    if (QSGRhiSupport::instance()->isShaderEffectDebuggingRequested()) {
+                    if (shaderEffectDebug) {
                         if (c.specialType == QSGShaderEffectNode::VariableData::None) {
                             qDebug() << "cbuf prepare" << shader.shaderInfo.name << var.name
                                      << "offset" << var.offset << "value" << c.value;
@@ -64,7 +65,7 @@ void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &sh
             const int offset = shader.shaderInfo.variables.at(idx).offset;
             const QVariant value = shader.varData.at(idx).value;
             m_constants[offset].value = value;
-            if (QSGRhiSupport::instance()->isShaderEffectDebuggingRequested()) {
+            if (shaderEffectDebug) {
                 qDebug() << "cbuf update" << shader.shaderInfo.name
                          << "offset" << offset << "value" << value;
             }
