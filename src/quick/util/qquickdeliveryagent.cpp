@@ -1025,10 +1025,11 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     accepted, recursion stops. Returns \c true in that case, or \c false if the
     event is rejected.
 
-    All items that have hover enabled (either explicitly, from
-    setAcceptHoverEvents(), or implicitly by having HoverHandlers) will have
-    the QQuickItemPrivate::hoverEnabled flag set. And all their anchestors will
-    have the QQuickItemPrivate::subtreeHoverEnabledset. This function will
+    Each item that has hover enabled (from setAcceptHoverEvents()) has the
+    QQuickItemPrivate::hoverEnabled flag set. This only controls whether we
+    should send hover events to the item itself. (HoverHandlers no longer set
+    this flag.) When an item has hoverEnabled set, all its ancestors have the
+    QQuickItemPrivate::subtreeHoverEnabled set. This function will
     follow the subtrees that have subtreeHoverEnabled by recursing into each
     child with that flag set. And for each child (in addition to the item
     itself) that also has hoverEnabled set, we call deliverHoverEventToItem()
@@ -1040,10 +1041,19 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     of an item that is stacked underneath, will not. Note that since siblings
     can overlap, there can be more than one leaf item under the mouse.
 
+    Note that HoverHandler doesn't set the hoverEnabled flag on the parent item.
+    But still, adding a HoverHandler to an item will set its subtreeHoverEnabled flag.
+    So all the propagation logic described above will otherwise be the same.
+    But the hoverEnabled flag can be used to resolve if subtreeHoverEnabled is on
+    because the application explicitly requested it (setAcceptHoverEvents()), or
+    indirectly, because the item has HoverHandlers.
+
     For legacy reasons (Qt 6.1), as soon as we find a leaf item that has hover
     enabled, and therefore receives the event, we stop recursing into the remaining
     siblings (even if the event was ignored). This means that we only allow hover
     events to propagate up the direct parent-child hierarchy, and not to siblings.
+    However, if the first candidate HoverHandler is disabled, delivery continues
+    to the next one, which may be a sibling (QTBUG-106548).
 */
 bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
         QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
@@ -1081,8 +1091,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
 
     // All decendants have been visited.
     // Now deliver the event to the item
-    if (itemPrivate->hoverEnabled)
-        return deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, false);
+    return deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, false);
 
     // Continue propagation / recursion
     return false;
@@ -1109,14 +1118,17 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
     qCDebug(lcHoverTrace) << "item:" << item << "scene pos:" << scenePos << "localPos:" << localPos
                           << "wasHovering:" << wasHovering << "isHovering:" << isHovering;
 
-    if (isHovering)
-        hoveredLeafItemFound = true;
-
-    // Send enter/move/leave event to the item
     bool accepted = false;
-    if (isHovering && !clearHover) {
+
+    // Start by sending out enter/move/leave events to the item.
+    // Note that hoverEnabled only controls if we should send out hover events to the
+    // item itself. HoverHandlers are not included, and are dealt with separately below.
+    if (itemPrivate->hoverEnabled && isHovering && !clearHover) {
         // Add the item to the list of hovered items (if it doesn't exist there
         // from before), and update hoverId to mark that it's (still) hovered.
+        // Also set hoveredLeafItemFound, so that only propagate in a straight
+        // line towards the root from now on.
+        hoveredLeafItemFound = true;
         hoverItems[item] = currentHoverId;
         if (wasHovering)
             accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp);
@@ -1131,6 +1143,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
     if (!itemPrivate->hasPointerHandlers())
         return accepted;
 
+    // Next, send out hover events to the hover handlers.
     // If the item didn't accept the hover event, 'accepted' is now false.
     // Otherwise it's true, and then it should stay the way regardless of
     // whether or not the hoverhandlers themselves are hovered.
@@ -1144,6 +1157,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
 
         for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers) {
             if (QQuickHoverHandler *hh = qmlobject_cast<QQuickHoverHandler *>(h)) {
+                if (!hh->isHovered())
+                    continue;
                 hoverEvent.setAccepted(true);
                 QCoreApplication::sendEvent(hh, &hoverEvent);
             }
@@ -1154,11 +1169,14 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
 
         for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers) {
             if (QQuickHoverHandler *hh = qmlobject_cast<QQuickHoverHandler *>(h)) {
+                if (!hh->enabled())
+                    continue;
                 hoverEvent.setAccepted(true);
                 hh->handlePointerEvent(&hoverEvent);
                 if (hh->isHovered()) {
                     // Mark the whole item as updated, even if only the handler is
                     // actually in a hovered state (because of HoverHandler.margins)
+                    hoveredLeafItemFound = true;
                     hoverItems[item] = currentHoverId;
                     if (hh->isBlocking()) {
                         qCDebug(lcHoverTrace) << "skipping rest of hover delivery due to blocking" << hh;
