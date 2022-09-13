@@ -428,6 +428,14 @@ namespace QQmlPrivate
     typedef AutoParentResult (*AutoParentFunction)(QObject *object, QObject *parent);
 
     struct RegisterType {
+        enum StructVersion: int {
+            Base = 0,
+            FinalizerCast = 1,
+            CurrentVersion = FinalizerCast,
+        };
+
+        bool has(StructVersion v) const { return structVersion >= int(v); }
+
         int structVersion;
 
         QMetaType typeId;

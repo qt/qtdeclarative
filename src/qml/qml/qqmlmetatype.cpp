@@ -145,7 +145,9 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.cd->parserStatusCast = type.parserStatusCast;
     d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
     d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
-    d->extraData.cd->finalizerCast = (type.structVersion > 0) ? type.finalizerCast : -1;
+    d->extraData.cd->finalizerCast = type.has(QQmlPrivate::RegisterType::FinalizerCast)
+            ? type.finalizerCast
+            : -1;
     d->extraData.cd->extFunc = type.extensionObjectCreate;
     d->extraData.cd->customParser = reinterpret_cast<QQmlCustomParser *>(type.customParser);
     d->extraData.cd->registerEnumClassesUnscoped = true;
@@ -459,7 +461,7 @@ static void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 
 QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
 {
-    if (type.structVersion > 1)
+    if (type.structVersion > int(QQmlPrivate::RegisterType::CurrentVersion))
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;

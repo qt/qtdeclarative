@@ -144,7 +144,7 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
                                      const QString& reason)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        QQmlPrivate::RegisterType::CurrentVersion,
         QMetaType(),
         QMetaType(),
         0,
@@ -472,7 +472,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         }
 
         RegisterType typeRevision = {
-            1,
+            QQmlPrivate::RegisterType::CurrentVersion,
             type.typeId,
             type.listId,
             creatable ? type.objectSize : 0,
