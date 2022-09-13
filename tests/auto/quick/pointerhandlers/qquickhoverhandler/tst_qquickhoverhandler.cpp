@@ -61,6 +61,7 @@ private slots:
     void hoverHandlerAndUnderlyingHoverHandler();
     void mouseAreaAndUnderlyingHoverHandler();
     void hoverHandlerAndUnderlyingMouseArea();
+    void disabledHoverHandlerAndUnderlyingMouseArea();
     void movingItemWithHoverHandler();
     void margin();
     void window();
@@ -283,6 +284,52 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingMouseArea()
 #if QT_CONFIG(cursor)
     QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
 #endif
+}
+
+void tst_HoverHandler::disabledHoverHandlerAndUnderlyingMouseArea()
+{
+    // Check that if a disabled HoverHandler is installed on an item, it
+    // will not participate in hover event delivery, and as such, also
+    // not block propagation to siblings.
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "lesHoverables.qml");
+    QQuickView * window = windowPtr.data();
+    QQuickItem * bottomSidebar = window->rootObject()->findChild<QQuickItem *>("bottomSidebar");
+    QVERIFY(bottomSidebar);
+    QQuickMouseArea *bottomSidebarMA = bottomSidebar->findChild<QQuickMouseArea *>("bottomSidebarMA");
+    QVERIFY(bottomSidebarMA);
+    QQuickItem * button = bottomSidebar->findChild<QQuickItem *>("buttonWithHH");
+    QVERIFY(button);
+    QQuickHoverHandler *buttonHH = button->findChild<QQuickHoverHandler *>("buttonHH");
+    QVERIFY(buttonHH);
+
+    // By disabling the HoverHandler, it should no longer
+    // block the sibling MouseArea underneath from receiving hover events.
+    buttonHH->setEnabled(false);
+
+    QPoint buttonCenter(button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint());
+    QPoint rightOfButton(button->mapToScene(QPointF(button->width() + 2, button->height() / 2)).toPoint());
+    QPoint outOfSidebar(bottomSidebar->mapToScene(QPointF(bottomSidebar->width() + 2, bottomSidebar->height() / 2)).toPoint());
+    QSignalSpy sidebarHoveredSpy(bottomSidebarMA, SIGNAL(hoveredChanged()));
+    QSignalSpy buttonHoveredSpy(buttonHH, SIGNAL(hoveredChanged()));
+
+    QTest::mouseMove(window, outOfSidebar);
+    QCOMPARE(bottomSidebarMA->hovered(), false);
+    QCOMPARE(sidebarHoveredSpy.count(), 0);
+    QCOMPARE(buttonHH->isHovered(), false);
+    QCOMPARE(buttonHoveredSpy.count(), 0);
+
+    QTest::mouseMove(window, buttonCenter);
+    QCOMPARE(bottomSidebarMA->hovered(), true);
+    QCOMPARE(sidebarHoveredSpy.count(), 1);
+    QCOMPARE(buttonHH->isHovered(), false);
+    QCOMPARE(buttonHoveredSpy.count(), 0);
+
+    QTest::mouseMove(window, rightOfButton);
+    QCOMPARE(bottomSidebarMA->hovered(), true);
+    QCOMPARE(sidebarHoveredSpy.count(), 1);
+    QCOMPARE(buttonHH->isHovered(), false);
+    QCOMPARE(buttonHoveredSpy.count(), 0);
 }
 
 void tst_HoverHandler::movingItemWithHoverHandler()
