@@ -30,17 +30,16 @@ for more details.
 \target scene-graph-related-classes
 \section1 Scene Graph-Related Classes
 
-Qt Quick 2 makes use of a dedicated scene graph based on OpenGL ES 2.0 or OpenGL 2.0
-for its rendering. Using a scene graph for graphics rather than the traditional imperative
-painting systems (QPainter and similar), means the scene to be rendered can be retained
-between frames and the complete set of primitives to render is known before rendering
-starts. This opens up for a number of optimizations, such as batching the OpenGL draw calls
-to minimize state changes or discarding obscured primitives.
-
+Qt Quick 2 makes use of a dedicated scene graph based on graphics APIs such as
+OpenGL ES, OpenGL, Vulkan, Metal, or Direct 3D for its rendering. Using a scene
+graph for graphics rather than the traditional imperative painting systems
+(QPainter and similar), means the scene to be rendered can be retained between
+frames and the complete set of primitives to render is known before rendering
+starts. This opens up for a number of optimizations, such as batching the
+OpenGL draw calls to minimize state changes or discarding obscured primitives.
 The \l {Qt Quick C++ Classes}{Qt Quick C++ API} provides various classes to
-enable custom nodes to be created in C++.
-
-See the \l {Qt Quick Scene Graph} documentation for details.
+enable custom nodes to be created in C++. See the \l {Qt Quick Scene Graph}
+documentation for details.
 
 \target pixmap-and-threaded-image-support
 \section1 Pixmap and Threaded Image Support
