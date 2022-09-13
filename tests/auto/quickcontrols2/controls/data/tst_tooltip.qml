@@ -249,7 +249,13 @@ TestCase {
     function test_activateShortcutWhileToolTipVisible() {
         if ((Qt.platform.pluginName === "offscreen")
             || (Qt.platform.pluginName === "minimal"))
-            skip("Mouse hoovering not functional on offscreen/minimal platforms")
+            skip("Mouse hovering not functional on offscreen/minimal platforms")
+
+        // Window shortcuts (the default context for Shortcut) require the window to have focus.
+        var window = testCase.Window.window
+        verify(window)
+        window.requestActivate()
+        tryCompare(window, "active", true)
 
         var root = createTemporaryObject(buttonAndShortcutComponent, testCase)
         verify(root)
