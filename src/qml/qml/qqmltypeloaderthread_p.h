@@ -32,6 +32,10 @@ class QQmlTypeLoader;
 class QQmlEngineExtensionInterface;
 class QQmlExtensionInterface;
 
+namespace QQmlPrivate {
+struct CachedQmlUnit;
+}
+
 class QQmlTypeLoaderThread : public QQmlThread
 {
     typedef QQmlTypeLoaderThread This;
