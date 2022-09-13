@@ -8,10 +8,13 @@
 #include "qquickmenu_p_p.h"
 #include "qquickpopup_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qguiapplication.h>
 #include <QtQuick/qquickrendercontrol.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcContextMatcher, "qt.quick.controls.shortcutcontext.matcher")
 
 static bool isBlockedByPopup(QQuickItem *item)
 {
@@ -64,6 +67,8 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
         }
         if (QWindow *renderWindow = QQuickRenderControl::renderWindowFor(qobject_cast<QQuickWindow *>(obj)))
             obj = renderWindow;
+        qCDebug(lcContextMatcher) << "obj" << obj << "focusWindow" << QGuiApplication::focusWindow()
+            << "!isBlockedByPopup(item)" << !isBlockedByPopup(item);
         return obj && obj == QGuiApplication::focusWindow() && !isBlockedByPopup(item);
     default:
         return false;
