@@ -38,6 +38,8 @@ public:
     bool dragOverThreshold(QVector2D delta) const;
     bool dragOverThreshold(const QEventPoint &point) const;
 
+    virtual void onEnabledChanged() {}
+
     static QVector<QObject *> &deviceDeliveryTargets(const QInputDevice *device);
 
     QPointerEvent *currentEvent = nullptr;

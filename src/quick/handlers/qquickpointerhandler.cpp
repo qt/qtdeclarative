@@ -555,6 +555,8 @@ void QQuickPointerHandler::setEnabled(bool enabled)
         return;
 
     d->enabled = enabled;
+    d->onEnabledChanged();
+
     emit enabledChanged();
 }
 
