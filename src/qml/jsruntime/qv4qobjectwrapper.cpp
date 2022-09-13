@@ -593,9 +593,9 @@ void QObjectWrapper::setProperty(
     } else {
         QVariant v;
         if (property->isQList() && propType.flags().testFlag(QMetaType::IsQmlList))
-            v = scope.engine->toVariant(value, QMetaType::fromType<QList<QObject *> >());
+            v = ExecutionEngine::toVariant(value, QMetaType::fromType<QList<QObject *> >());
         else
-            v = scope.engine->toVariant(value, propType);
+            v = ExecutionEngine::toVariant(value, propType);
 
         QQmlRefPointer<QQmlContextData> callingQmlContext = scope.engine->callingQmlContext();
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
@@ -1514,7 +1514,7 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
         if (obj->as<VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
-            if (obj->engine()->toVariant(actual, QMetaType {}).metaType() == conversionMetaType)
+            if (ExecutionEngine::toVariant(actual, QMetaType {}).metaType() == conversionMetaType)
                 return 0;
             else
                 return 10;
@@ -1537,7 +1537,7 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
         }
 
         if (obj->as<QQmlValueTypeWrapper>()) {
-            const QVariant v = obj->engine()->toVariant(actual, QMetaType {});
+            const QVariant v = ExecutionEngine::toVariant(actual, QMetaType {});
             if (v.userType() == conversionType)
                 return 0;
             else if (v.canConvert(conversionMetaType))
@@ -1969,7 +1969,7 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
         qobjectPtr = nullptr;
         return value.isNullOrUndefined(); // null and undefined are nullptr
     case QMetaType::QVariant:
-        qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, QMetaType {}));
+        qvariantPtr = new (&allocData) QVariant(ExecutionEngine::toVariant(value, QMetaType {}));
         return true;
     case QMetaType::QJsonArray: {
         Scope scope(engine);
@@ -2064,7 +2064,7 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
     qvariantPtr = new (&allocData) QVariant();
     type = QVariantWrappedType;
 
-    QVariant v = engine->toVariant(value, metaType);
+    QVariant v = ExecutionEngine::toVariant(value, metaType);
 
     if (v.metaType() == metaType) {
         *qvariantPtr = std::move(v);

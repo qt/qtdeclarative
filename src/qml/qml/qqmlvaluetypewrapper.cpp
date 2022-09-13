@@ -662,7 +662,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
     QMetaProperty property = metaObject->property(pd.coreIndex());
     Q_ASSERT(property.isValid());
 
-    QVariant v = v4->toVariant(value, property.metaType());
+    QVariant v = QV4::ExecutionEngine::toVariant(value, property.metaType());
 
     if (property.isEnumType() && (QMetaType::Type)v.userType() == QMetaType::Double)
         v = v.toInt();

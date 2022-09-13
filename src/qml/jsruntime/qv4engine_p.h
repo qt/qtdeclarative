@@ -637,10 +637,11 @@ public:
     QQmlError catchExceptionAsQmlError();
 
     // variant conversions
-    QVariant toVariant(const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjects = true);
+    static QVariant toVariant(
+            const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjects = true);
     QV4::ReturnedValue fromVariant(const QVariant &);
 
-    QVariantMap variantMapFromJS(const QV4::Object *o);
+    static QVariantMap variantMapFromJS(const QV4::Object *o);
 
     static bool metaTypeFromJS(const Value &value, QMetaType type, void *data);
     QV4::ReturnedValue metaTypeToJS(QMetaType type, const void *data);

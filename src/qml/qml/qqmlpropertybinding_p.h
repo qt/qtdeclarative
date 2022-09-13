@@ -398,7 +398,7 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
         break;
     }
 
-    QVariant resultVariant(scope.engine->toVariant(result, metaType));
+    QVariant resultVariant(QV4::ExecutionEngine::toVariant(result, metaType));
     resultVariant.convert(metaType);
     const bool hasChanged = !metaType.equals(resultVariant.constData(), dataPtr);
     metaType.destruct(dataPtr);

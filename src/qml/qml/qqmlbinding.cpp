@@ -466,9 +466,6 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                                            const QV4::Value &result,
                                            bool isUndefined, QQmlPropertyData::WriteFlags flags)
 {
-    QQmlEngine *qmlEngine = engine();
-    QV4::ExecutionEngine *v4engine = qmlEngine->handle();
-
     const QMetaType metaType = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
     const int type = metaType.id();
 
@@ -480,19 +477,19 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     if (isUndefined) {
     } else if (core.isQList()) {
         if (core.propType().flags() & QMetaType::IsQmlList)
-            value = v4engine->toVariant(result, QMetaType::fromType<QList<QObject *> >());
+            value = QV4::ExecutionEngine::toVariant(result, QMetaType::fromType<QList<QObject*>>());
         else
-            value = v4engine->toVariant(result, core.propType());
+            value = QV4::ExecutionEngine::toVariant(result, core.propType());
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)nullptr);
     } else if (core.propType() == QMetaType::fromType<QList<QUrl>>()) {
         const QVariant resultVariant
-                = v4engine->toVariant(result, QMetaType::fromType<QList<QUrl>>());
+                = QV4::ExecutionEngine::toVariant(result, QMetaType::fromType<QList<QUrl>>());
         value = QVariant::fromValue(QQmlPropertyPrivate::resolveUrlsOnAssignment()
                                     ? QQmlPropertyPrivate::urlSequence(resultVariant, context())
                                     : QQmlPropertyPrivate::urlSequence(resultVariant));
     } else if (!isVarProperty && metaType != QMetaType::fromType<QJSValue>()) {
-        value = v4engine->toVariant(result, metaType);
+        value = QV4::ExecutionEngine::toVariant(result, metaType);
     }
 
     if (hasError()) {
@@ -595,7 +592,7 @@ QVariant QQmlBinding::evaluate()
 
     ep->dereferenceScarceResources();
 
-    return scope.engine->toVariant(result, QMetaType::fromType<QList<QObject*> >());
+    return QV4::ExecutionEngine::toVariant(result, QMetaType::fromType<QList<QObject*> >());
 }
 
 void QQmlBinding::expressionChanged()

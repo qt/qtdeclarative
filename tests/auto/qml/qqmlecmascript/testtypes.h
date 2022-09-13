@@ -924,7 +924,7 @@ public:
         QV4::Scope scope(v->v4engine());
         for (int i = 0, end = v->length(); i != end; ++i) {
             QV4::ScopedValue v4Value(scope, (*v)[i]);
-            m_actuals.append(v->v4engine()->toVariant(v4Value, QMetaType()));
+            m_actuals.append(QV4::ExecutionEngine::toVariant(v4Value, QMetaType()));
         }
     }
     Q_INVOKABLE void method_overload2(const QVariantList &list)

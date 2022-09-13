@@ -598,8 +598,10 @@ QVariant QJSValue::toVariant(QJSValue::ObjectConversionBehavior behavior) const
 
     if (val.isString())
         return QVariant(val.toQString());
-    if (QV4::Managed *m = val.as<QV4::Managed>())
-        return m->engine()->toVariant(val, /*typeHint*/ QMetaType{}, behavior == RetainJSObjects);
+    if (val.as<QV4::Managed>()) {
+        return QV4::ExecutionEngine::toVariant(
+                    val, /*typeHint*/ QMetaType{}, behavior == RetainJSObjects);
+    }
 
     Q_ASSERT(false);
     return QVariant();
