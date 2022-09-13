@@ -3,9 +3,7 @@
 
 #include "qqmlbinding_p.h"
 
-#include "qqml.h"
 #include "qqmlcontext.h"
-#include "qqmlinfo.h"
 #include "qqmldata_p.h"
 
 #include <private/qqmldebugserviceinterfaces_p.h>

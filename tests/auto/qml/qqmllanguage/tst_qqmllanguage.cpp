@@ -29,6 +29,7 @@
 #include <private/qqmltype_p_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qqmlcomponentattached_p.h>
+#include <QtQml/private/qqmlexpression_p.h>
 
 #include "testtypes.h"
 #include <QtQuickTestUtils/private/qmlutils_p.h>

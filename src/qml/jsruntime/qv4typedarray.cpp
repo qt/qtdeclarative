@@ -4,8 +4,6 @@
 #include "qv4typedarray_p.h"
 #include "qv4arrayiterator_p.h"
 #include "qv4arraybuffer_p.h"
-#include "qv4string_p.h"
-#include "qv4jscall_p.h"
 #include "qv4symbol_p.h"
 #include "qv4runtime_p.h"
 #include <QtCore/qatomic.h>

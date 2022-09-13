@@ -4,9 +4,7 @@
 #include "qqmlexpression.h"
 #include "qqmlexpression_p.h"
 
-#include "qqmlglobal_p.h"
 #include "qqmlengine_p.h"
-#include "qqmlcontext_p.h"
 #include "qqmlscriptstring_p.h"
 #include "qqmlbinding_p.h"
 #include <private/qqmlsourcecoordinate_p.h>

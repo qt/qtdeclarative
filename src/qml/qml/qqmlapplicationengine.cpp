@@ -7,7 +7,7 @@
 #include <QQmlComponent>
 #include "qqmlapplicationengine.h"
 #include "qqmlapplicationengine_p.h"
-#include "qqmlfileselector.h"
+#include <QtQml/private/qqmlfileselector_p.h>
 
 #include <memory>
 

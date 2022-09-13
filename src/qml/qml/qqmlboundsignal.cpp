@@ -6,10 +6,6 @@
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include "qqmlengine_p.h"
-#include "qqmlexpression_p.h"
-#include "qqmlcontext_p.h"
-#include "qqml.h"
-#include "qqmlcontext.h"
 #include "qqmlglobal_p.h"
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmldebugconnector_p.h>

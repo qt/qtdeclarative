@@ -2,16 +2,12 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qv4object_p.h"
-#include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4argumentsobject_p.h"
 #include <private/qv4mm_p.h>
 #include "qv4lookup_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4memberdata_p.h"
-#include "qv4objectiterator_p.h"
-#include "qv4identifierhash_p.h"
-#include "qv4string_p.h"
 #include "qv4identifiertable_p.h"
 #include "qv4jscall_p.h"
 #include "qv4symbol_p.h"

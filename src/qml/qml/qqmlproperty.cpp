@@ -4,25 +4,22 @@
 #include "qqmlproperty.h"
 #include "qqmlproperty_p.h"
 
-#include "qqml.h"
-#include "qqmlbinding_p.h"
 #include "qqmlboundsignal_p.h"
 #include "qqmlcontext.h"
-#include "qqmlcontext_p.h"
 #include "qqmlboundsignal_p.h"
 #include "qqmlengine.h"
 #include "qqmlengine_p.h"
 #include "qqmldata_p.h"
 #include "qqmlstringconverters_p.h"
-#include "qqmllist_p.h"
+
 #include "qqmlvmemetaobject_p.h"
-#include "qqmlexpression_p.h"
 #include "qqmlvaluetypeproxybinding_p.h"
 #include <private/qjsvalue_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <QtQml/private/qqmllist_p.h>
 
 #include <QStringList>
 #include <QVector>

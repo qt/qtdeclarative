@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include "qv4global_p.h"
+#include <QtQml/private/qv4global_p.h>
 #include "qv4engine_p.h"
 #include "qv4function_p.h"
 

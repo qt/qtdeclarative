@@ -10,8 +10,6 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4jscall_p.h>
-#include "qv4runtime_p.h"
-#include "qv4objectiterator_p.h"
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmltype_p_p.h>
 

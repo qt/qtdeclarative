@@ -5,7 +5,6 @@
 #include "qv4stringobject_p.h"
 #include "qv4regexp_p.h"
 #include "qv4regexpobject_p.h"
-#include "qv4objectproto_p.h"
 #include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
 #include "qv4symbol_p.h"
@@ -15,6 +14,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QDebug>
 #include <QtCore/QStringList>
+#include <QtQml/private/qv4runtime_p.h>
 
 #include <cassert>
 

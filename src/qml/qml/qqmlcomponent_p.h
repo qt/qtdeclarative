@@ -18,10 +18,7 @@
 #include "qqmlcomponent.h"
 
 #include "qqmlengine_p.h"
-#include "qqmltypeloader_p.h"
-#include "qqmlvme_p.h"
 #include "qqmlerror.h"
-#include "qqml.h"
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmltypedata_p.h>
 #include <private/qqmlguardedcontextdata_p.h>

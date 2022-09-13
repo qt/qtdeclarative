@@ -5,7 +5,6 @@
 #include "qqmlcomponent.h"
 #include "qqmlincubator_p.h"
 
-#include "qqmlexpression_p.h"
 #include "qqmlobjectcreator_p.h"
 #include <private/qqmlcomponent_p.h>
 

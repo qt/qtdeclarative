@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qv4reflect_p.h"
-#include "qv4symbol_p.h"
 #include "qv4runtimeapi_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4propertykey_p.h"

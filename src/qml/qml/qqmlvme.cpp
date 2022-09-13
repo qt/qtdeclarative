@@ -3,29 +3,10 @@
 
 #include "qqmlvme_p.h"
 
-#include "qqmlboundsignal_p.h"
-#include "qqmlstringconverters_p.h"
 #include <private/qmetaobjectbuilder_p.h>
-#include "qqmldata_p.h"
-#include "qqml.h"
-#include "qqmlinfo.h"
-#include "qqmlcustomparser_p.h"
 #include "qqmlengine.h"
-#include "qqmlcontext.h"
-#include "qqmlcomponent.h"
-#include "qqmlcomponentattached_p.h"
-#include "qqmlbinding_p.h"
-#include "qqmlengine_p.h"
-#include "qqmlcomponent_p.h"
-#include "qqmlvmemetaobject_p.h"
-#include "qqmlcontext_p.h"
-#include "qqmlglobal_p.h"
 #include <private/qfinitestack_p.h>
-#include "qqmlscriptstring.h"
-#include "qqmlscriptstring_p.h"
-#include "qqmlpropertyvalueinterceptor_p.h"
-#include "qqmlvaluetypeproxybinding_p.h"
-#include "qqmlexpression_p.h"
+#include <QtQml/private/qqmlcomponent_p.h>
 
 #include <QStack>
 #include <QPointF>

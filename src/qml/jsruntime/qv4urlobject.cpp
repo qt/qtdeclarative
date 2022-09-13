@@ -3,7 +3,6 @@
 
 #include "qv4arrayiterator_p.h"
 #include "qv4urlobject_p.h"
-#include "qv4stringobject_p.h"
 
 #include <QtCore/QUrl>
 

@@ -3,7 +3,6 @@
 
 #include "qqmlerror.h"
 #include "qqmlfile.h"
-#include "qqmlsourcecoordinate_p.h"
 #include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/qdebug.h>

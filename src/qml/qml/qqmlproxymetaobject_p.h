@@ -17,7 +17,6 @@
 
 #include <private/qtqmlglobal_p.h>
 #include <private/qmetaobjectbuilder_p.h>
-#include "qqml.h"
 
 #include <QtCore/QMetaObject>
 #include <QtCore/QObject>

@@ -15,7 +15,6 @@
 // We mean it.
 //
 
-#include "qqmlerror.h"
 #include <private/qrecursionwatcher_p.h>
 
 #include <QtCore/QStack>

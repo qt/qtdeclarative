@@ -3,8 +3,7 @@
 
 #include "qqmllist.h"
 #include "qqmllist_p.h"
-#include "qqmlengine_p.h"
-#include "qqmlproperty_p.h"
+#include <QtQml/private/qqmlproperty_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -24,6 +24,7 @@
 #include <private/qv4alloca_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qv4qmlcontext_p.h>
+#include <QtQml/private/qv4runtime_p.h>
 #include <iostream>
 
 #if QT_CONFIG(qml_jit)

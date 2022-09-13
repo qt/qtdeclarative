@@ -2,10 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qv4sparsearray_p.h"
-#include "qv4runtime_p.h"
-#include "qv4object_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4scopedvalue_p.h"
 #include <stdlib.h>
 
 #ifdef QT_QMAP_DEBUG

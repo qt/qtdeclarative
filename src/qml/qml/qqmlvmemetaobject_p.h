@@ -16,8 +16,6 @@
 // We mean it.
 //
 
-#include "qqml.h"
-
 #include <QtCore/QMetaObject>
 #include <QtCore/QBitArray>
 #include <QtCore/QPair>

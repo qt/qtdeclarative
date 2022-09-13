@@ -5,15 +5,10 @@
 #include "qv4runtime_p.h"
 #include "qv4engine_p.h"
 #include "qv4object_p.h"
-#include "qv4objectproto_p.h"
 #include "qv4globalobject_p.h"
-#include "qv4stringobject_p.h"
 #include "qv4argumentsobject_p.h"
-#include "qv4objectiterator_p.h"
-#include "qv4dateobject_p.h"
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
-#include "qv4numberobject_p.h"
 #include "qv4regexp_p.h"
 #include "qv4regexpobject_p.h"
 #include "private/qlocale_tools_p.h"
@@ -28,6 +23,7 @@
 #include "qv4qobjectwrapper_p.h"
 #include "qv4symbol_p.h"
 #include "qv4generatorobject_p.h"
+#include <QtQml/private/qv4math_p.h>
 
 #include <QtCore/QDebug>
 #include <cassert>

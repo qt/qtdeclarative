@@ -14,14 +14,10 @@
 // We mean it.
 //
 
-#include "qv4runtime_p.h"
 #include "qv4engine_p.h"
 #include "qv4context_p.h"
 #include "qv4functionobject_p.h"
-#include "qv4string_p.h"
 #include "qv4managed_p.h"
-#include "qv4property_p.h"
-#include "qv4objectiterator_p.h"
 #include "qv4regexp_p.h"
 
 #include <QtCore/QString>

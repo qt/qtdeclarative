@@ -15,12 +15,8 @@
 // We mean it.
 //
 
-#include "qqml.h"
-#include "qqmlpropertyvaluesource.h"
-#include "qqmlexpression.h"
 #include "qqmlproperty.h"
 #include "qqmlscriptstring.h"
-#include "qqmlproperty_p.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QMetaProperty>

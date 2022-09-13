@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmllocale_p.h"
-#include "qqmlengine_p.h"
 #include <private/qqmlcontext_p.h>
 #include <QtCore/qnumeric.h>
 #include <QtCore/qdatetime.h>

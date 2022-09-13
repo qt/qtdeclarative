@@ -4,8 +4,6 @@
 #include "qqmlinfo.h"
 
 #include "qqmldata_p.h"
-#include "qqmlcontext.h"
-#include "qqmlcontext_p.h"
 #include "qqmlmetatype_p.h"
 #include "qqmlengine_p.h"
 #include "qqmlsourcecoordinate_p.h"

@@ -3,8 +3,6 @@
 
 #include "qqmltypenamecache_p.h"
 
-#include "qqmlengine_p.h"
-
 QT_BEGIN_NAMESPACE
 
 void QQmlTypeNameCache::add(const QHashedString &name, const QUrl &url, const QHashedString &nameSpace)

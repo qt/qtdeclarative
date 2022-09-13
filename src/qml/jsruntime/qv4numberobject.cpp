@@ -3,7 +3,6 @@
 
 #include "qv4numberobject_p.h"
 #include "qv4runtime_p.h"
-#include "qv4string_p.h"
 
 #include <QtCore/qnumeric.h>
 #include <QtCore/qmath.h>

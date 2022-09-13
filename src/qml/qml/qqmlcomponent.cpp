@@ -5,12 +5,10 @@
 #include "qqmlcomponent_p.h"
 #include "qqmlcomponentattached_p.h"
 
-#include "qqmlcontext_p.h"
 #include "qqmlengine_p.h"
 #include "qqmlvme_p.h"
 #include "qqml.h"
 #include "qqmlengine.h"
-#include "qqmlbinding_p.h"
 #include "qqmlincubator.h"
 #include "qqmlincubator_p.h"
 #include <private/qqmljavascriptexpression_p.h>

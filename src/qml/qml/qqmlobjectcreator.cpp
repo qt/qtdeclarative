@@ -25,6 +25,7 @@
 #include <private/qv4generatorobject_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 #include <private/qqmlpropertybinding_p.h>
+#include <QtQml/private/qqmlvme_p.h>
 
 #include <QScopedValueRollback>
 

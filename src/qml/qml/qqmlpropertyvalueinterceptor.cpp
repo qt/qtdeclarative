@@ -3,8 +3,6 @@
 
 #include "qqmlpropertyvalueinterceptor_p.h"
 
-#include "qqml.h"
-
 QT_BEGIN_NAMESPACE
 
 /*!

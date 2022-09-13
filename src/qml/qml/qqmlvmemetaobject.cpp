@@ -4,13 +4,7 @@
 
 #include "qqmlvmemetaobject_p.h"
 
-
-#include "qqml.h"
 #include <private/qqmlrefcount_p.h>
-#include "qqmlexpression.h"
-#include "qqmlexpression_p.h"
-#include "qqmlcontext_p.h"
-#include "qqmlbinding_p.h"
 #include "qqmlpropertyvalueinterceptor_p.h"
 #include <qqmlinfo.h>
 

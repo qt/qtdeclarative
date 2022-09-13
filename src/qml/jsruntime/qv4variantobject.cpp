@@ -3,7 +3,6 @@
 
 #include "qv4variantobject_p.h"
 #include "qv4functionobject_p.h"
-#include "qv4objectproto_p.h"
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 

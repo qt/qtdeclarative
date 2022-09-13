@@ -15,9 +15,7 @@
 // We mean it.
 //
 
-#include "qqml.h"
-#include "qqmlproperty.h"
-#include "qqmlproperty_p.h"
+#include <QtQml/private/qqmlproperty_p.h>
 
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qmetatype_p.h>

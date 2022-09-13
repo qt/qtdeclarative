@@ -5,8 +5,7 @@
 #include "qv4value_p.h"
 #include "qv4identifiertable_p.h"
 #include "qv4runtime_p.h"
-#include "qv4objectproto_p.h"
-#include "qv4stringobject_p.h"
+#include <QtQml/private/qv4mm_p.h>
 #include <QtCore/QHash>
 #include <QtCore/private/qnumeric_p.h>
 
