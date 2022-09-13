@@ -11,6 +11,8 @@
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qcoreapplication.h>
 
+#include <QtCore/private/qthread_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlThreadPrivate : public QThread
@@ -259,7 +261,7 @@ void QQmlThread::wait()
 
 bool QQmlThread::isThisThread() const
 {
-    return QThread::currentThread() == d;
+    return QThread::currentThreadId() == static_cast<QThreadPrivate *>(QObjectPrivate::get(d))->threadData.loadRelaxed()->threadId.loadRelaxed();
 }
 
 QThread *QQmlThread::thread() const
