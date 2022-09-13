@@ -40,7 +40,6 @@ public:
     void lock();
     void unlock();
     void wakeOne();
-    void wakeAll();
     void wait();
 
     QThread *thread() const;

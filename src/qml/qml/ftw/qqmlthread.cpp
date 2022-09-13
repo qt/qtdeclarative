@@ -26,7 +26,6 @@ public:
     inline void unlock() { _mutex.unlock(); }
     inline void wait() { _wait.wait(&_mutex); }
     inline void wakeOne() { _wait.wakeOne(); }
-    inline void wakeAll() { _wait.wakeAll(); }
 
     quint32 m_threadProcessing:1; // Set when the thread is processing messages
     quint32 m_mainProcessing:1; // Set when the main thread is processing messages
@@ -251,11 +250,6 @@ void QQmlThread::unlock()
 void QQmlThread::wakeOne()
 {
     d->wakeOne();
-}
-
-void QQmlThread::wakeAll()
-{
-    d->wakeAll();
 }
 
 void QQmlThread::wait()
