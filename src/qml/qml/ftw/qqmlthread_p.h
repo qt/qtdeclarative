@@ -81,10 +81,6 @@ public:
 
     void waitForNextMessage();
 
-protected:
-    virtual void startupThread();
-    virtual void shutdownThread();
-
 private:
     friend class QQmlThreadPrivate;
 

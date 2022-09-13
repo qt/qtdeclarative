@@ -116,9 +116,7 @@ void QQmlThreadPrivate::run()
 
     unlock();
 
-    q->startupThread();
     exec();
-    q->shutdownThread();
 }
 
 void QQmlThreadPrivate::mainEvent()
@@ -267,16 +265,6 @@ bool QQmlThread::isThisThread() const
 QThread *QQmlThread::thread() const
 {
     return const_cast<QThread *>(static_cast<const QThread *>(d));
-}
-
-// Called when the thread starts.  Do startup stuff in here.
-void QQmlThread::startupThread()
-{
-}
-
-// Called when the thread shuts down.  Do cleanup in here.
-void QQmlThread::shutdownThread()
-{
 }
 
 void QQmlThread::internalCallMethodInThread(Message *message)

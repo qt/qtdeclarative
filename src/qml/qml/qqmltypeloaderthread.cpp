@@ -110,10 +110,6 @@ void QQmlTypeLoaderThread::initializeEngine(QQmlEngineExtensionInterface *iface,
     callMethodInMain(&This::initializeEngineExtensionMain, iface, uri);
 }
 
-void QQmlTypeLoaderThread::shutdownThread()
-{
-}
-
 void QQmlTypeLoaderThread::loadThread(QQmlDataBlob *b)
 {
     m_loader->loadThread(b);

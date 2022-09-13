@@ -57,9 +57,6 @@ public:
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void initializeEngine(QQmlEngineExtensionInterface *, const char *);
 
-protected:
-    void shutdownThread() override;
-
 private:
     void loadThread(QQmlDataBlob *b);
     void loadWithStaticDataThread(QQmlDataBlob *b, const QByteArray &);
