@@ -22,6 +22,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickHoverHandlerPrivate;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickHoverHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
@@ -49,6 +51,8 @@ protected:
     void componentComplete() override;
     bool wantsPointerEvent(QPointerEvent *event) override;
     void handleEventPoint(QPointerEvent *ev, QEventPoint &point) override;
+
+    Q_DECLARE_PRIVATE(QQuickHoverHandler)
 
 private:
     void setHovered(bool hovered);

@@ -34,8 +34,26 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
     \sa MouseArea, PointHandler
 */
 
+class QQuickHoverHandlerPrivate : public QQuickSinglePointHandlerPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickHoverHandler)
+
+public:
+    void onEnabledChanged() override;
+};
+
+void QQuickHoverHandlerPrivate::onEnabledChanged()
+{
+    Q_Q(QQuickHoverHandler);
+
+    if (auto parent = q->parentItem())
+        QQuickItemPrivate::get(parent)->setHasHoverInChild(enabled);
+    if (!enabled)
+        q->setHovered(false);
+}
+
 QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
-    : QQuickSinglePointHandler(parent)
+    : QQuickSinglePointHandler(*(new QQuickHoverHandlerPrivate), parent)
 {
     // Tell QQuickPointerDeviceHandler::wantsPointerEvent() to ignore button state
     d_func()->acceptedButtons = Qt::NoButton;
