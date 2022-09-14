@@ -71,8 +71,8 @@ private:
 
     QQmlTypeLoader *m_loader;
 #if QT_CONFIG(qml_network)
-    mutable QNetworkAccessManager *m_networkAccessManager;
-    mutable QQmlTypeLoaderNetworkReplyProxy *m_networkReplyProxy;
+    mutable QNetworkAccessManager *m_networkAccessManager = nullptr;
+    mutable QQmlTypeLoaderNetworkReplyProxy *m_networkReplyProxy = nullptr;
 #endif // qml_network
 };
 

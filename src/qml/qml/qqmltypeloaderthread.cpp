@@ -13,9 +13,6 @@ QT_BEGIN_NAMESPACE
 
 QQmlTypeLoaderThread::QQmlTypeLoaderThread(QQmlTypeLoader *loader)
     : m_loader(loader)
-#if QT_CONFIG(qml_network)
-      , m_networkAccessManager(nullptr), m_networkReplyProxy(nullptr)
-#endif // qml_network
 {
     // Do that after initializing all the members.
     startup();
@@ -27,7 +24,9 @@ QNetworkAccessManager *QQmlTypeLoaderThread::networkAccessManager() const
     Q_ASSERT(isThisThread());
     if (!m_networkAccessManager) {
         m_networkAccessManager = QQmlEnginePrivate::get(m_loader->engine())->createNetworkAccessManager(nullptr);
+        QObject::connect(thread(), &QThread::finished, m_networkAccessManager, &QObject::deleteLater);
         m_networkReplyProxy = new QQmlTypeLoaderNetworkReplyProxy(m_loader);
+        QObject::connect(thread(), &QThread::finished, m_networkReplyProxy, &QObject::deleteLater);
     }
 
     return m_networkAccessManager;
@@ -113,12 +112,6 @@ void QQmlTypeLoaderThread::initializeEngine(QQmlEngineExtensionInterface *iface,
 
 void QQmlTypeLoaderThread::shutdownThread()
 {
-#if QT_CONFIG(qml_network)
-    delete m_networkAccessManager;
-    m_networkAccessManager = nullptr;
-    delete m_networkReplyProxy;
-    m_networkReplyProxy = nullptr;
-#endif // qml_network
 }
 
 void QQmlTypeLoaderThread::loadThread(QQmlDataBlob *b)
