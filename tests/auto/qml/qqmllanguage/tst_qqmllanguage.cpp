@@ -386,6 +386,7 @@ private slots:
     void bindableOnly();
     void badGroupedProperty();
     void bindingAliasToComponentUrl();
+    void signalInlineComponentArg();
 
 private:
     QQmlEngine engine;
@@ -6633,6 +6634,28 @@ void tst_qqmllanguage::bindingAliasToComponentUrl()
         QScopedPointer<QObject> object(component.create());
         QVERIFY(object);
         QCOMPARE(object->property("accessibleNormalProgress"), QVariant(1.0));
+    }
+}
+
+void tst_qqmllanguage::signalInlineComponentArg()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("SignalInlineComponentArg.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+
+        QCOMPARE(object->property("success"), QStringLiteral("Signal was called"));
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("signalInlineComponentArg1.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+
+        QCOMPARE(object->property("successFromOwnSignal"),
+                 QStringLiteral("Own signal was called with component from another file"));
+        QCOMPARE(object->property("successFromSignalFromFile"),
+                 QStringLiteral("Signal was called from another file"));
     }
 }
 
