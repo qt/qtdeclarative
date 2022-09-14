@@ -15,6 +15,7 @@ qt6_add_qml_module(qualified_names_test_module
     URI QualifiedNamesTests
     SOURCES
         testtypes.h
+    RESOURCE_PREFIX "/"
 )
 
 qt_autogen_tools_initial_setup(qualified_names_test_moduleplugin)

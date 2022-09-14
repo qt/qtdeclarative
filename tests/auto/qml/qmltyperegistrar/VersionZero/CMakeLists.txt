@@ -10,6 +10,7 @@ qt_add_qml_module(tst_qmltyperegistrar_major_version_zero
     VERSION 0.1
     SOURCES
         version_zero_type.h
+    RESOURCE_PREFIX "/"
 )
 qt_autogen_tools_initial_setup(tst_qmltyperegistrar_major_version_zeroplugin)
 
