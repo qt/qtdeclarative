@@ -3630,6 +3630,30 @@ void tst_qquicktext::fontSizeMode()
 
     myText->setElideMode(QQuickText::ElideNone);
     QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+
+    // Growing height needs to update the baselineOffset when AlignBottom is used
+    // and text is NOT wrapped
+    myText->setVAlign(QQuickText::AlignBottom);
+    myText->setFontSizeMode(QQuickText::Fit);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+
+    int baselineOffset = myText->baselineOffset();
+    myText->setHeight(myText->height() * 2);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(myText->baselineOffset() > baselineOffset);
+
+    // Growing height needs to update the baselineOffset when AlignBottom is used
+    // and the text is wrapped
+    myText->setVAlign(QQuickText::AlignBottom);
+    myText->setFontSizeMode(QQuickText::Fit);
+    myText->setWrapMode(QQuickText::NoWrap);
+    myText->resetMaximumLineCount();
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+
+    baselineOffset = myText->baselineOffset();
+    myText->setHeight(myText->height() * 2);
+    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(myText->baselineOffset() > baselineOffset);
 }
 
 void tst_qquicktext::fontSizeModeMultiline_data()

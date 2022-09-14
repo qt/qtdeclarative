@@ -2445,7 +2445,7 @@ void QQuickText::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
         goto geomChangeDone;
 
     if (!(widthChanged || widthMaximum) && !d->isLineLaidOutConnected()) { // only height has changed
-        if (newGeometry.height() > oldGeometry.height()) {
+        if (!verticalPositionChanged && newGeometry.height() > oldGeometry.height()) {
             if (!d->heightExceeded && !qFuzzyIsNull(oldGeometry.height())) {
                 // Height is adequate and growing, and it wasn't 0 previously.
                 goto geomChangeDone;
