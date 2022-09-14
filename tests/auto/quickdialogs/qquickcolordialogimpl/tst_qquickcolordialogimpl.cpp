@@ -51,7 +51,6 @@ private slots:
     void changeHex();
     void changeColorFromTextFields_data();
     void changeColorFromTextFields();
-    void eyeDropper();
     void windowTitle_data();
     void windowTitle();
 
@@ -428,53 +427,6 @@ void tst_QQuickColorDialogImpl::changeColorFromTextFields()
     QCOMPARE(textField->text(), newValue);
     QCOMPARE(dialogHelper.quickDialog->color().rgba(), expectedNewColor.rgba());
     QCOMPARE(dialogHelper.dialog->selectedColor().rgba(), expectedNewColor.rgba());
-
-    CLOSE_DIALOG("Ok");
-}
-
-void tst_QQuickColorDialogImpl::eyeDropper()
-{
-#ifdef Q_OS_QNX
-    QSKIP("Skipping the test for the QNX platform!");
-#endif
-
-    DialogTestHelper<QQuickColorDialog, QQuickColorDialogImpl> dialogHelper(this, "colorDialog.qml");
-    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
-    QVERIFY(dialogHelper.waitForWindowActive());
-
-    // Open the dialog.
-    QVERIFY(dialogHelper.openDialog());
-    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
-
-    QQuickAbstractButton *eyeDropperButton = dialogHelper.quickDialog->findChild<QQuickAbstractButton *>("eyeDropperButton");
-    QVERIFY(eyeDropperButton);
-
-    // Only test on platforms that support grabbing of external windows.
-    const bool wayland = QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive) == 0;
-    const bool offscreen = qgetenv("QT_QPA_PLATFORM").compare(QLatin1String("offscreen"), Qt::CaseInsensitive) == 0;
-    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ScreenWindowGrabbing) && !wayland && !offscreen)
-    {
-        QVERIFY(eyeDropperButton->isVisible());
-
-        // Enable the eyeDropper.
-        QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, eyeDropperButton->mapToScene({eyeDropperButton->width() / 2, eyeDropperButton->height() / 2}).toPoint());
-        QTest::qWait(500); // Flaky
-
-        // Pick the new color from the screen somewhere.
-        const auto p = dialogHelper.quickDialog->popupItem()->mapToScene({-10, 0}).toPoint();
-        QTest::mouseMove(dialogHelper.window(), p);
-        QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, p);
-
-        // The color should be equal to the ApplicationWindows background color
-        const unsigned int yellow = QColorConstants::Yellow.rgba();
-        if (dialogHelper.quickDialog->color().rgba() != yellow)
-            QFAIL(qPrintable(QStringLiteral("The picked color was %1, when yellow was expected. Window size: %2x%3").arg(dialogHelper.quickDialog->color().name()).arg(dialogHelper.window()->width()).arg(dialogHelper.window()->height())));
-    }
-    else
-    {
-        // Feature should be hidden on unsupported platforms.
-        QVERIFY(!eyeDropperButton->isVisible());
-    }
 
     CLOSE_DIALOG("Ok");
 }
