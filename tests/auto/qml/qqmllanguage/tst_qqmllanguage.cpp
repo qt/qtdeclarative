@@ -397,6 +397,7 @@ private slots:
     void bindingAliasToComponentUrl();
     void badGroupedProperty();
     void functionInGroupedProperty();
+    void signalInlineComponentArg();
 
 private:
     QQmlEngine engine;
@@ -7648,6 +7649,28 @@ void tst_qqmllanguage::functionInGroupedProperty()
     QCOMPARE(c.errorString(),
              QStringLiteral("%1:6 Function declaration inside grouped property\n")
                      .arg(url.toString()));
+}
+
+void tst_qqmllanguage::signalInlineComponentArg()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("SignalInlineComponentArg.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+
+        QCOMPARE(object->property("success"), u"Signal was called"_s);
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("signalInlineComponentArg1.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+
+        QCOMPARE(object->property("successFromOwnSignal"),
+                 u"Own signal was called with component from another file"_s);
+        QCOMPARE(object->property("successFromSignalFromFile"),
+                 u"Signal was called from another file"_s);
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)
