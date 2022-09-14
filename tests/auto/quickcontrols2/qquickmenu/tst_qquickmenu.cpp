@@ -24,6 +24,7 @@
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuseparator_p.h>
@@ -69,6 +70,7 @@ private slots:
     void subMenuDisabledKeyboard();
     void subMenuPosition_data();
     void subMenuPosition();
+    void subMenuWithIcon();
     void addRemoveSubMenus();
     void scrollable_data();
     void scrollable();
@@ -1683,6 +1685,39 @@ void tst_QQuickMenu::subMenuPosition()
 }
 
 #undef FLOAT_EQ
+
+void tst_QQuickMenu::subMenuWithIcon()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+
+    QQuickMenu *subMenu = window->property("subMenu1").value<QQuickMenu *>();
+    QVERIFY(subMenu);
+
+    const int iconWidth = 14;
+    const int iconHeight = 20;
+    const QUrl iconSource("qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png");
+
+    QQuickIcon icon;
+    icon.setSource(iconSource);
+    icon.setWidth(iconWidth);
+    icon.setHeight(iconHeight);
+
+    subMenu->setIcon(icon);
+    QCOMPARE(subMenu->icon().source(), iconSource);
+    QCOMPARE(subMenu->icon().width(), iconWidth);
+    QCOMPARE(subMenu->icon().height(), iconHeight);
+
+    QQuickMenuItem *subMenuItem = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
+    QVERIFY(subMenuItem);
+    QCOMPARE(subMenuItem->icon().source(), iconSource);
+    QCOMPARE(subMenuItem->icon().width(), iconWidth);
+    QCOMPARE(subMenuItem->icon().height(), iconHeight);
+}
 
 void tst_QQuickMenu::addRemoveSubMenus()
 {

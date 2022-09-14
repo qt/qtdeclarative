@@ -66,6 +66,19 @@ QtObject {
             }
 
             Menu {
+                title: "Submenu with icon"
+                icon {
+                    width: 14
+                    height: 14
+                    source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/double-arrow.png"
+                }
+
+                MenuItem {
+                    text: "Submenu item"
+                }
+            }
+
+            Menu {
                 title: "Disabled Submenu"
                 enabled: false
             }

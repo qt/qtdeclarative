@@ -104,6 +104,7 @@ public:
     QQmlObjectModel *contentModel;
     QQmlComponent *delegate = nullptr;
     QString title;
+    QQuickIcon icon;
 };
 
 QT_END_NAMESPACE

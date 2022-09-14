@@ -74,13 +74,16 @@ void QQuickMenuItemPrivate::setSubMenu(QQuickMenu *newSubMenu)
 
     if (subMenu) {
         QObject::disconnect(subMenu, &QQuickMenu::titleChanged, q, &QQuickAbstractButton::setText);
+        QObject::disconnect(subMenu, &QQuickMenu::iconChanged, q, &QQuickAbstractButton::setIcon);
         QObjectPrivate::disconnect(subMenu, &QQuickPopup::enabledChanged, this, &QQuickMenuItemPrivate::updateEnabled);
     }
 
     if (newSubMenu) {
         QObject::connect(newSubMenu, &QQuickMenu::titleChanged, q, &QQuickAbstractButton::setText);
+        QObject::connect(newSubMenu, &QQuickMenu::iconChanged, q, &QQuickAbstractButton::setIcon);
         QObjectPrivate::connect(newSubMenu, &QQuickPopup::enabledChanged, this, &QQuickMenuItemPrivate::updateEnabled);
         q->setText(newSubMenu->title());
+        q->setIcon(newSubMenu->icon());
     }
 
     subMenu = newSubMenu;

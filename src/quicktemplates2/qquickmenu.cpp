@@ -1082,6 +1082,37 @@ void QQuickMenu::setTitle(QString &title)
 }
 
 /*!
+    \qmlproperty string QtQuick.Controls::Menu::icon.name
+    \qmlproperty url QtQuick.Controls::Menu::icon.source
+    \qmlproperty int QtQuick.Controls::Menu::icon.width
+    \qmlproperty int QtQuick.Controls::Menu::icon.height
+    \qmlproperty color QtQuick.Controls::Menu::icon.color
+    \qmlproperty bool QtQuick.Controls::Menu::icon.cache
+
+    This property group was added in QtQuick.Controls 6.5.
+
+    \include qquickicon.qdocinc grouped-properties
+
+    \sa text, display, {Icons in Qt Quick Controls}
+*/
+
+QQuickIcon QQuickMenu::icon() const
+{
+    Q_D(const QQuickMenu);
+    return d->icon;
+}
+
+void QQuickMenu::setIcon(const QQuickIcon &icon)
+{
+    Q_D(QQuickMenu);
+    if (icon == d->icon)
+        return;
+    d->icon = icon;
+    d->icon.ensureRelativeSourceResolved(this);
+    emit iconChanged(icon);
+}
+
+/*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty bool QtQuick.Controls::Menu::cascade
 
