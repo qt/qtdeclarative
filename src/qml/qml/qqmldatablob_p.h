@@ -38,6 +38,8 @@ class QQmlTypeLoader;
 class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCount
 {
 public:
+    using Ptr = QQmlRefPointer<QQmlDataBlob>;
+
     enum Status {
         Null,                    // Prior to QQmlTypeLoader::load()
         Loading,                 // Prior to data being received and dataReceived() being called

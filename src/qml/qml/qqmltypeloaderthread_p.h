@@ -17,6 +17,7 @@
 
 #include <private/qqmlthread_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qqmldatablob_p.h>
 
 #include <QtQml/qtqmlglobal.h>
 
@@ -27,7 +28,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlDataBlob;
 class QQmlTypeLoader;
 class QQmlEngineExtensionInterface;
 class QQmlExtensionInterface;
@@ -46,23 +46,23 @@ public:
     QNetworkAccessManager *networkAccessManager() const;
     QQmlTypeLoaderNetworkReplyProxy *networkReplyProxy() const;
 #endif // qml_network
-    void load(QQmlDataBlob *b);
-    void loadAsync(QQmlDataBlob *b);
-    void loadWithStaticData(QQmlDataBlob *b, const QByteArray &);
-    void loadWithStaticDataAsync(QQmlDataBlob *b, const QByteArray &);
-    void loadWithCachedUnit(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
-    void loadWithCachedUnitAsync(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
-    void callCompleted(QQmlDataBlob *b);
-    void callDownloadProgressChanged(QQmlDataBlob *b, qreal p);
+    void load(const QQmlDataBlob::Ptr &b);
+    void loadAsync(const QQmlDataBlob::Ptr &b);
+    void loadWithStaticData(const QQmlDataBlob::Ptr &b, const QByteArray &);
+    void loadWithStaticDataAsync(const QQmlDataBlob::Ptr &b, const QByteArray &);
+    void loadWithCachedUnit(const QQmlDataBlob::Ptr &b, const QQmlPrivate::CachedQmlUnit *unit);
+    void loadWithCachedUnitAsync(const QQmlDataBlob::Ptr &b, const QQmlPrivate::CachedQmlUnit *unit);
+    void callCompleted(const QQmlDataBlob::Ptr &b);
+    void callDownloadProgressChanged(const QQmlDataBlob::Ptr &b, qreal p);
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void initializeEngine(QQmlEngineExtensionInterface *, const char *);
 
 private:
-    void loadThread(QQmlDataBlob *b);
-    void loadWithStaticDataThread(QQmlDataBlob *b, const QByteArray &);
-    void loadWithCachedUnitThread(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
-    void callCompletedMain(QQmlDataBlob *b);
-    void callDownloadProgressChangedMain(QQmlDataBlob *b, qreal p);
+    void loadThread(const QQmlDataBlob::Ptr &b);
+    void loadWithStaticDataThread(const QQmlDataBlob::Ptr &b, const QByteArray &);
+    void loadWithCachedUnitThread(const QQmlDataBlob::Ptr &b, const QQmlPrivate::CachedQmlUnit *unit);
+    void callCompletedMain(const QQmlDataBlob::Ptr &b);
+    void callDownloadProgressChangedMain(const QQmlDataBlob::Ptr &b, qreal p);
     void initializeExtensionMain(QQmlExtensionInterface *iface, const char *uri);
     void initializeEngineExtensionMain(QQmlEngineExtensionInterface *iface, const char *uri);
 

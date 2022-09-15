@@ -88,8 +88,6 @@ void QQmlTypeLoader::invalidate()
     // Need to delete the network replies after
     // the loader thread is shutdown as it could be
     // getting new replies while we clear them
-    for (NetworkReplies::Iterator iter = m_networkReplies.begin(); iter != m_networkReplies.end(); ++iter)
-        (*iter)->release();
     m_networkReplies.clear();
 #endif // qml_network
 }
@@ -214,21 +212,21 @@ void QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::C
     doLoad(CachedLoader(unit), blob, mode);
 }
 
-void QQmlTypeLoader::loadWithStaticDataThread(QQmlDataBlob *blob, const QByteArray &data)
+void QQmlTypeLoader::loadWithStaticDataThread(const QQmlDataBlob::Ptr &blob, const QByteArray &data)
 {
     ASSERT_LOADTHREAD();
 
     setData(blob, data);
 }
 
-void QQmlTypeLoader::loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeLoader::loadWithCachedUnitThread(const QQmlDataBlob::Ptr &blob, const QQmlPrivate::CachedQmlUnit *unit)
 {
     ASSERT_LOADTHREAD();
 
     setCachedUnit(blob, unit);
 }
 
-void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
+void QQmlTypeLoader::loadThread(const QQmlDataBlob::Ptr &blob)
 {
     ASSERT_LOADTHREAD();
 
@@ -264,7 +262,6 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
 #if QT_CONFIG(qml_network)
         QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(blob->m_url));
         QQmlTypeLoaderNetworkReplyProxy *nrp = m_thread->networkReplyProxy();
-        blob->addref();
         m_networkReplies.insert(reply, blob);
 
         if (reply->isFinished()) {
@@ -296,7 +293,7 @@ void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
 
     reply->deleteLater();
 
-    QQmlDataBlob *blob = m_networkReplies.take(reply);
+    QQmlRefPointer<QQmlDataBlob> blob = m_networkReplies.take(reply);
 
     Q_ASSERT(blob);
 
@@ -312,7 +309,7 @@ void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
             QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(url));
             QObject *nrp = m_thread->networkReplyProxy();
             QObject::connect(reply, SIGNAL(finished()), nrp, SLOT(finished()));
-            m_networkReplies.insert(reply, blob);
+            m_networkReplies.insert(reply, std::move(blob));
 #ifdef DATABLOB_DEBUG
             qWarning("QQmlDataBlob: redirected to %s", qPrintable(blob->finalUrlString()));
 #endif
@@ -326,8 +323,6 @@ void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
         QByteArray data = reply->readAll();
         setData(blob, data);
     }
-
-    blob->release();
 }
 
 void QQmlTypeLoader::networkReplyProgress(QNetworkReply *reply,
@@ -335,7 +330,7 @@ void QQmlTypeLoader::networkReplyProgress(QNetworkReply *reply,
 {
     Q_ASSERT(m_thread->isThisThread());
 
-    QQmlDataBlob *blob = m_networkReplies.value(reply);
+    const QQmlRefPointer<QQmlDataBlob> blob = m_networkReplies.value(reply);
 
     Q_ASSERT(blob);
 
@@ -384,7 +379,7 @@ void QQmlTypeLoader::initializeEngine(QQmlExtensionInterface *iface, const char 
     doInitializeEngine(iface, m_thread, engine(), uri);
 }
 
-void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
+void QQmlTypeLoader::setData(const QQmlDataBlob::Ptr &blob, const QByteArray &data)
 {
     QQmlDataBlob::SourceCodeData d;
     d.inlineSourceCode = QString::fromUtf8(data);
@@ -392,17 +387,17 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
     setData(blob, d);
 }
 
-void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
+void QQmlTypeLoader::setData(const QQmlDataBlob::Ptr &blob, const QString &fileName)
 {
     QQmlDataBlob::SourceCodeData d;
     d.fileInfo = QFileInfo(fileName);
     setData(blob, d);
 }
 
-void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
+void QQmlTypeLoader::setData(const QQmlDataBlob::Ptr &blob, const QQmlDataBlob::SourceCodeData &d)
 {
     Q_TRACE_SCOPE(QQmlCompiling, blob->url());
-    QQmlCompilingProfiler prof(profiler(), blob);
+    QQmlCompilingProfiler prof(profiler(), blob.data());
 
     blob->m_inCallback = true;
 
@@ -419,10 +414,10 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeD
     blob->tryDone();
 }
 
-void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeLoader::setCachedUnit(const QQmlDataBlob::Ptr &blob, const QQmlPrivate::CachedQmlUnit *unit)
 {
     Q_TRACE_SCOPE(QQmlCompiling, blob->url());
-    QQmlCompilingProfiler prof(profiler(), blob);
+    QQmlCompilingProfiler prof(profiler(), blob.data());
 
     blob->m_inCallback = true;
 

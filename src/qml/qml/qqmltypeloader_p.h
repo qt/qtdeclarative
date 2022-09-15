@@ -171,20 +171,20 @@ private:
 
     void shutdownThread();
 
-    void loadThread(QQmlDataBlob *);
-    void loadWithStaticDataThread(QQmlDataBlob *, const QByteArray &);
-    void loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
+    void loadThread(const QQmlDataBlob::Ptr &);
+    void loadWithStaticDataThread(const QQmlDataBlob::Ptr &, const QByteArray &);
+    void loadWithCachedUnitThread(const QQmlDataBlob::Ptr &blob, const QQmlPrivate::CachedQmlUnit *unit);
 #if QT_CONFIG(qml_network)
     void networkReplyFinished(QNetworkReply *);
     void networkReplyProgress(QNetworkReply *, qint64, qint64);
 
-    typedef QHash<QNetworkReply *, QQmlDataBlob *> NetworkReplies;
+    typedef QHash<QNetworkReply *, QQmlDataBlob::Ptr> NetworkReplies;
 #endif
 
-    void setData(QQmlDataBlob *, const QByteArray &);
-    void setData(QQmlDataBlob *, const QString &fileName);
-    void setData(QQmlDataBlob *, const QQmlDataBlob::SourceCodeData &);
-    void setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
+    void setData(const QQmlDataBlob::Ptr &, const QByteArray &);
+    void setData(const QQmlDataBlob::Ptr &, const QString &fileName);
+    void setData(const QQmlDataBlob::Ptr &, const QQmlDataBlob::SourceCodeData &);
+    void setCachedUnit(const QQmlDataBlob::Ptr &blob, const QQmlPrivate::CachedQmlUnit *unit);
 
     typedef QHash<QUrl, QQmlTypeData *> TypeCache;
     typedef QHash<QUrl, QQmlScriptBlob *> ScriptCache;
