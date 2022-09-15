@@ -25,3 +25,7 @@ android
 # QTBUG-100991
 [selectionOnFocusOut]
 android
+
+# QTBUG-106646
+[pasteHtmlIntoMarkdown]
+android
