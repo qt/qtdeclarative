@@ -40,6 +40,7 @@ private slots:
     void mouseAreaAndUnderlyingHoverHandler();
     void hoverHandlerAndUnderlyingMouseArea();
     void disabledHoverHandlerAndUnderlyingMouseArea();
+    void hoverHandlerOnDisabledItem();
     void movingItemWithHoverHandler();
     void margin();
     void window();
@@ -323,6 +324,41 @@ void tst_HoverHandler::disabledHoverHandlerAndUnderlyingMouseArea()
     QCOMPARE(sidebarHoveredSpy.count(), 1);
     QCOMPARE(buttonHH->isHovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 0);
+}
+
+void tst_HoverHandler::hoverHandlerOnDisabledItem()
+{
+    // Check that if HoverHandler on a disabled item will
+    // continue to receive hover events (QTBUG-30801)
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "lesHoverables.qml");
+    QQuickView * window = windowPtr.data();
+    QQuickItem * bottomSidebar = window->rootObject()->findChild<QQuickItem *>("bottomSidebar");
+    QVERIFY(bottomSidebar);
+    QQuickItem * button = bottomSidebar->findChild<QQuickItem *>("buttonWithHH");
+    QVERIFY(button);
+    QQuickHoverHandler *buttonHH = button->findChild<QQuickHoverHandler *>("buttonHH");
+    QVERIFY(buttonHH);
+
+    // Disable the button/rectangle item. This should not
+    // block its HoverHandler from being hovered
+    button->setEnabled(false);
+
+    QPoint buttonCenter(button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint());
+    QPoint rightOfButton(button->mapToScene(QPointF(button->width() + 2, button->height() / 2)).toPoint());
+    QSignalSpy buttonHoveredSpy(buttonHH, SIGNAL(hoveredChanged()));
+
+    QTest::mouseMove(window, rightOfButton);
+    QCOMPARE(buttonHH->isHovered(), false);
+    QCOMPARE(buttonHoveredSpy.count(), 0);
+
+    QTest::mouseMove(window, buttonCenter);
+    QCOMPARE(buttonHH->isHovered(), true);
+    QCOMPARE(buttonHoveredSpy.count(), 1);
+
+    QTest::mouseMove(window, rightOfButton);
+    QCOMPARE(buttonHH->isHovered(), false);
+    QCOMPARE(buttonHoveredSpy.count(), 2);
 }
 
 void tst_HoverHandler::movingItemWithHoverHandler()

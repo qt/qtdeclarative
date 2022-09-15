@@ -6308,6 +6308,15 @@ void QQuickItem::setVisible(bool v)
     Setting this property to \c false automatically causes \l activeFocus to be
     set to \c false, and this item will longer receive keyboard events.
 
+    \note Hover events are enabled separately by \l setAcceptHoverEvents().
+    Thus, a disabled item can continue to receive hover events, even when this
+    property is \c false. This makes it possible to show informational feedback
+    (such as \l ToolTip) even when an interactive item is disabled.
+    The same is also true for any \l {HoverHandlers}{QQuickHoverHandler}
+    added as children of the item. A HoverHandler can, however, be
+    \l{disabled}{QQuickHoverHandler::enabled} explicitly, or for example
+    be bound to the \c enabled state of the item.
+
     \sa visible
 */
 bool QQuickItem::isEnabled() const
