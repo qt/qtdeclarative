@@ -4,10 +4,11 @@
 #ifndef QQMLABSTRACTURLINTERCEPTOR_H
 #define QQMLABSTRACTURLINTERCEPTOR_H
 
-#include <QtCore/qurl.h>
 #include <QtQml/qtqmlglobal.h>
 
 QT_BEGIN_NAMESPACE
+
+class QUrl;
 
 class Q_QML_EXPORT QQmlAbstractUrlInterceptor
 {
