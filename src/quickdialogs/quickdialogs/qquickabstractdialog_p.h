@@ -37,7 +37,7 @@ class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickAbstractDialog : public QObject, publ
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQmlListProperty<QObject> data READ data FINAL)
-    Q_PROPERTY(QWindow *parentWindow READ parentWindow WRITE setParentWindow NOTIFY parentWindowChanged FINAL)
+    Q_PROPERTY(QWindow *parentWindow READ parentWindow WRITE setParentWindow NOTIFY parentWindowChanged RESET resetParentWindow FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(Qt::WindowFlags flags READ flags WRITE setFlags NOTIFY flagsChanged FINAL)
     Q_PROPERTY(Qt::WindowModality modality READ modality WRITE setModality NOTIFY modalityChanged FINAL)
@@ -58,6 +58,7 @@ public:
 
     QWindow *parentWindow() const;
     void setParentWindow(QWindow *window);
+    void resetParentWindow();
 
     QString title() const;
     void setTitle(const QString &title);
@@ -106,12 +107,10 @@ protected:
     virtual void onShow(QPlatformDialogHelper *dialog);
     virtual void onHide(QPlatformDialogHelper *dialog);
 
-    QWindow *findParentWindow() const;
+    QQuickItem *findParentItem() const;
+    QWindow *windowForOpen() const;
+    void deferredOpen(QWindow *window);
 
-    bool m_visibleRequested = false;
-    bool m_visible = false;
-    bool m_complete = false;
-    bool m_firstShow = true;
     StandardCode m_result = Rejected;
     QWindow *m_parentWindow = nullptr;
     QString m_title;
@@ -120,6 +119,11 @@ protected:
     QQuickDialogType m_type = QQuickDialogType::FileDialog;
     QList<QObject *> m_data;
     std::unique_ptr<QPlatformDialogHelper> m_handle;
+    bool m_visibleRequested = false;
+    bool m_visible = false;
+    bool m_complete = false;
+    bool m_parentWindowExplicitlySet = false;
+    bool m_firstShow = true;
 };
 
 QT_END_NAMESPACE

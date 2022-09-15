@@ -150,10 +150,23 @@ QWindow *QQuickAbstractDialog::parentWindow() const
 void QQuickAbstractDialog::setParentWindow(QWindow *window)
 {
     qCDebug(lcDialogs) << "set parent window to" << window;
+    m_parentWindowExplicitlySet = bool(window);
+
     if (m_parentWindow == window)
         return;
 
     m_parentWindow = window;
+    emit parentWindowChanged();
+}
+
+void QQuickAbstractDialog::resetParentWindow()
+{
+    m_parentWindowExplicitlySet = false;
+
+    if (!m_parentWindow)
+        return;
+
+    m_parentWindow = nullptr;
     emit parentWindowChanged();
 }
 
@@ -287,7 +300,8 @@ void QQuickAbstractDialog::open()
         return;
 
     onShow(m_handle.get());
-    m_visible = m_handle->show(m_flags, m_modality, m_parentWindow);
+
+    m_visible = m_handle->show(m_flags, m_modality, windowForOpen());
     if (m_visible) {
         m_result = Rejected; // in case an accepted dialog gets re-opened, then closed
         emit visibleChanged();
@@ -310,6 +324,8 @@ void QQuickAbstractDialog::close()
     onHide(m_handle.get());
     m_handle->hide();
     m_visible = false;
+    if (!m_parentWindowExplicitlySet)
+        m_parentWindow = nullptr;
     emit visibleChanged();
 
     if (m_result == Accepted)
@@ -364,16 +380,22 @@ void QQuickAbstractDialog::componentComplete()
     qCDebug(lcDialogs) << "componentComplete";
     m_complete = true;
 
-    if (!m_parentWindow) {
-        qCDebug(lcDialogs) << "- no parent window; searching for one";
-        setParentWindow(findParentWindow());
+    if (!m_visibleRequested)
+        return;
+
+    m_visibleRequested = false;
+
+    if (windowForOpen()) {
+        open();
+        return;
     }
 
-    if (m_visibleRequested) {
-        qCDebug(lcDialogs) << "visible was bound to true before component completion; opening dialog";
-        open();
-        m_visibleRequested = false;
-    }
+    // Since visible were set to true by the user, we want the dialog to be open by default.
+    // There is no guarantee that the dialog will work when it exists in a object tree that lacks a window,
+    // and since qml components are sometimes instantiated before they're given a window
+    // (which is the case when using QQuickView), we want to delay the call to open(), until the window is provided.
+    if (const auto parentItem = findParentItem())
+        connect(parentItem, &QQuickItem::windowChanged, this, &QQuickAbstractDialog::deferredOpen, Qt::SingleShotConnection);
 }
 
 static const char *qmlTypeName(const QObject *object)
@@ -461,19 +483,31 @@ void QQuickAbstractDialog::onHide(QPlatformDialogHelper *dialog)
     Q_UNUSED(dialog);
 }
 
-QWindow *QQuickAbstractDialog::findParentWindow() const
+QQuickItem *QQuickAbstractDialog::findParentItem() const
 {
     QObject *obj = parent();
     while (obj) {
-        QWindow *window = qobject_cast<QWindow *>(obj);
-        if (window)
-            return window;
         QQuickItem *item = qobject_cast<QQuickItem *>(obj);
-        if (item && item->window())
-            return item->window();
+        if (item)
+            return item;
         obj = obj->parent();
     }
     return nullptr;
+}
+
+QWindow *QQuickAbstractDialog::windowForOpen() const
+{
+    if (m_parentWindowExplicitlySet)
+        return m_parentWindow;
+    else if (auto parentItem = findParentItem())
+        return parentItem->window();
+    return m_parentWindow;
+}
+
+void QQuickAbstractDialog::deferredOpen(QWindow *window)
+{
+    m_parentWindow = window;
+    open();
 }
 
 QT_END_NAMESPACE
