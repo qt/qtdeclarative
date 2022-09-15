@@ -4,6 +4,7 @@
 #include <QtTest/qtest.h>
 #include <QtQuickTest/quicktest.h>
 #include <QtTest/qsignalspy.h>
+#include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/dialogstestutils_p.h>
@@ -53,6 +54,9 @@ private slots:
     void changeColorFromTextFields();
     void windowTitle_data();
     void windowTitle();
+    void workingInsideQQuickViewer_data();
+    void workingInsideQQuickViewer();
+    void dialogCanMoveBetweenWindows();
 
 private:
     bool closePopup(DialogTestHelper<QQuickColorDialog, QQuickColorDialogImpl> *dialogHelper,
@@ -452,6 +456,60 @@ void tst_QQuickColorDialogImpl::windowTitle()
 
     // verify that the title was set correctly.
     QCOMPARE(titleText->text(), title);
+
+    CLOSE_DIALOG("Ok");
+}
+
+void tst_QQuickColorDialogImpl::workingInsideQQuickViewer_data()
+{
+    QTest::addColumn<bool>("initialVisible");
+    QTest::addColumn<QString>("urlToQmlFile");
+    QTest::newRow("visible: false") << false << "colorDialogWithoutWindow.qml";
+    QTest::newRow("visible: true") << true << "colorDialogWithoutWindowVisibleTrue.qml";
+}
+
+void tst_QQuickColorDialogImpl::workingInsideQQuickViewer() // QTBUG-106598
+{
+    QFETCH(bool, initialVisible);
+    QFETCH(QString, urlToQmlFile);
+
+    QQuickView dialogView;
+    dialogView.setSource(testFileUrl(urlToQmlFile));
+    dialogView.show();
+
+    auto dialog = dialogView.findChild<QQuickColorDialog *>("ColorDialog");
+    QVERIFY(dialog);
+    QCOMPARE(dialog->isVisible(), initialVisible);
+
+    dialog->open();
+    QVERIFY(dialog->isVisible());
+}
+
+void tst_QQuickColorDialogImpl::dialogCanMoveBetweenWindows()
+{
+    DialogTestHelper<QQuickColorDialog, QQuickColorDialogImpl> dialogHelper(this, "windowSwapping.qml");
+    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
+    QVERIFY(dialogHelper.waitForWindowActive());
+
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    QCOMPARE(dialogHelper.quickDialog->parent(), dialogHelper.window());
+    QVariant subWindow1;
+    QVariant subWindow2;
+
+    QMetaObject::invokeMethod(dialogHelper.window(), "getSubWindow1", Q_RETURN_ARG(QVariant, subWindow1));
+    QMetaObject::invokeMethod(dialogHelper.window(), "getSubWindow2", Q_RETURN_ARG(QVariant, subWindow2));
+
+    // Confirm that the dialog can swap to different windows
+    QMetaObject::invokeMethod(dialogHelper.window(), "goToSubWindow1");
+    QCOMPARE(dialogHelper.dialog->parentWindow(), qvariant_cast<QQuickWindow *>(subWindow1));
+
+    QMetaObject::invokeMethod(dialogHelper.window(), "goToSubWindow2");
+    QCOMPARE(dialogHelper.dialog->parentWindow(), qvariant_cast<QQuickWindow *>(subWindow2));
+
+    QMetaObject::invokeMethod(dialogHelper.window(), "resetParentWindow");
+    QCOMPARE(dialogHelper.quickDialog->parent(), dialogHelper.window());
 
     CLOSE_DIALOG("Ok");
 }
