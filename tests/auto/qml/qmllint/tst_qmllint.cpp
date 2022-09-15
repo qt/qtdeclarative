@@ -92,6 +92,8 @@ private Q_SLOTS:
     void lintModule_data();
     void lintModule();
 
+    void testLineEndings();
+
 #if QT_CONFIG(library)
     void testPlugin();
     void quickPlugin();
@@ -1674,6 +1676,36 @@ void TestQmllint::lintModule()
     QJsonArray warnings;
     callQmllint(module, false, &warnings, {}, {}, {}, {}, nullptr, false, LintModule);
     checkResult(warnings, result);
+}
+
+void TestQmllint::testLineEndings()
+{
+    {
+        const auto textWithLF = QString::fromUtf16(u"import QtQuick 2.0\nimport QtTest 2.0 // qmllint disable unused-imports\n"
+            "import QtTest 2.0 // qmllint disable\n\nItem {\n    @Deprecated {}\n    property string deprecated\n\n    "
+            "property string a: root.a // qmllint disable unqualifi77777777777777777777777777777777777777777777777777777"
+            "777777777777777777777777777777777777ed\n    property string b: root.a // qmllint di000000000000000000000000"
+            "000000000000000000inyyyyyyyyg c: root.a\n    property string d: root.a\n    // qmllint enable unqualified\n\n    "
+            "//qmllint d       4isable\n    property string e: root.a\n    Component.onCompleted: {\n        console.log"
+            "(deprecated);\n    }\n    // qmllint enable\n\n}\n");
+
+        const auto lintResult = m_linter.lintFile( {}, &textWithLF, true, nullptr, {}, {}, {}, {});
+
+        QCOMPARE(lintResult, QQmlJSLinter::LintResult::HasWarnings);
+    }
+    {
+        const auto textWithCRLF = QString::fromUtf16(u"import QtQuick 2.0\nimport QtTest 2.0 // qmllint disable unused-imports\n"
+        "import QtTest 2.0 // qmllint disable\n\nItem {\n    @Deprecated {}\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r"
+        "\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\r\n    property string deprecated\n\n    property string a: root.a "
+        "// qmllint disable unqualifi77777777777777777777777777777777777777777777777777777777777777777777777777777777777777777ed\n    "
+        "property string b: root.a // qmllint di000000000000000000000000000000000000000000inyyyyyyyyg c: root.a\n    property string d: "
+        "root.a\n    // qmllint enable unqualified\n\n    //qmllint d       4isable\n    property string e: root.a\n    Component.onCompleted: "
+        "{\n        console.log(deprecated);\n    }\n    // qmllint enable\n\n}\n");
+
+        const auto lintResult = m_linter.lintFile( {}, &textWithCRLF, true, nullptr, {}, {}, {}, {});
+
+        QCOMPARE(lintResult, QQmlJSLinter::LintResult::HasWarnings);
+    }
 }
 
 #if QT_CONFIG(library)

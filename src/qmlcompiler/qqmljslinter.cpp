@@ -250,22 +250,20 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
 
     const QString code = logger->code();
     const QStringList lines = code.split(u'\n');
+    const auto loggerCategories = logger->categories();
 
     for (const auto &loc : comments) {
         const QString comment = code.mid(loc.offset, loc.length);
         if (!comment.startsWith(u" qmllint ") && !comment.startsWith(u"qmllint "))
             continue;
 
-        QStringList words = comment.split(u' ');
-        if (words.constFirst().isEmpty())
-            words.removeFirst();
-
-        const QString command = words.at(1);
+        QStringList words = comment.split(u' ', Qt::SkipEmptyParts);
+        if (words.size() < 2)
+            continue;
 
         QSet<QString> categories;
         for (qsizetype i = 2; i < words.size(); i++) {
             const QString category = words.at(i);
-            const auto loggerCategories = logger->categories();
             const auto categoryExists = std::any_of(
                     loggerCategories.cbegin(), loggerCategories.cend(),
                     [&](const QQmlJSLogger::Category &cat) { return cat.id().name() == category; });
@@ -282,22 +280,25 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
                 categories << option.id().name().toString();
         }
 
+        const QString command = words.at(1);
         if (command == u"disable"_s) {
-            const QString line = lines[loc.startLine - 1];
-            const QString preComment = line.left(line.indexOf(comment) - 2);
+            if (const qsizetype lineIndex = loc.startLine - 1; lineIndex < lines.size()) {
+                const QString line = lines[lineIndex];
+                const QString preComment = line.left(line.indexOf(comment) - 2);
 
-            bool lineHasContent = false;
-            for (qsizetype i = 0; i < preComment.size(); i++) {
-                if (!preComment[i].isSpace()) {
-                    lineHasContent = true;
-                    break;
+                bool lineHasContent = false;
+                for (qsizetype i = 0; i < preComment.size(); i++) {
+                    if (!preComment[i].isSpace()) {
+                        lineHasContent = true;
+                        break;
+                    }
                 }
-            }
 
-            if (lineHasContent)
-                oneLineDisablesPerLine[loc.startLine] |= categories;
-            else
-                disablesPerLine[loc.startLine] |= categories;
+                if (lineHasContent)
+                    oneLineDisablesPerLine[loc.startLine] |= categories;
+                else
+                    disablesPerLine[loc.startLine] |= categories;
+            }
         } else if (command == u"enable"_s) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
