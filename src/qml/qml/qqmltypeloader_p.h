@@ -186,22 +186,6 @@ private:
     void setData(QQmlDataBlob *, const QQmlDataBlob::SourceCodeData &);
     void setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit);
 
-    template<typename T>
-    struct TypedCallback
-    {
-        TypedCallback(T *object, void (T::*func)(QQmlTypeData *)) : o(object), mf(func) {}
-
-        static void redirect(void *arg, QQmlTypeData *type)
-        {
-            TypedCallback<T> *self = reinterpret_cast<TypedCallback<T> *>(arg);
-            ((self->o)->*(self->mf))(type);
-        }
-
-    private:
-        T *o;
-        void (T::*mf)(QQmlTypeData *);
-    };
-
     typedef QHash<QUrl, QQmlTypeData *> TypeCache;
     typedef QHash<QUrl, QQmlScriptBlob *> ScriptCache;
     typedef QHash<QUrl, QQmlQmldirData *> QmldirCache;
