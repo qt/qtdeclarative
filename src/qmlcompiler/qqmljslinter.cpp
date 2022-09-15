@@ -223,9 +223,9 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
         if (!comment.startsWith(u" qmllint ") && !comment.startsWith(u"qmllint "))
             continue;
 
-        QStringList words = comment.split(u' ');
-        if (words.constFirst().isEmpty())
-            words.removeFirst();
+        QStringList words = comment.split(u' ', Qt::SkipEmptyParts);
+        if (words.size() < 2)
+            continue;
 
         const QString command = words.at(1);
 
@@ -246,21 +246,23 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
         }
 
         if (command == u"disable"_s) {
-            const QString line = lines[loc.startLine - 1];
-            const QString preComment = line.left(line.indexOf(comment) - 2);
+            if (const qsizetype lineIndex = loc.startLine - 1; lineIndex < lines.size()) {
+                const QString line = lines[loc.startLine - 1];
+                const QString preComment = line.left(line.indexOf(comment) - 2);
 
-            bool lineHasContent = false;
-            for (qsizetype i = 0; i < preComment.size(); i++) {
-                if (!preComment[i].isSpace()) {
-                    lineHasContent = true;
-                    break;
+                bool lineHasContent = false;
+                for (qsizetype i = 0; i < preComment.size(); i++) {
+                    if (!preComment[i].isSpace()) {
+                        lineHasContent = true;
+                        break;
+                    }
                 }
-            }
 
-            if (lineHasContent)
-                oneLineDisablesPerLine[loc.startLine] |= categories;
-            else
-                disablesPerLine[loc.startLine] |= categories;
+                if (lineHasContent)
+                    oneLineDisablesPerLine[loc.startLine] |= categories;
+                else
+                    disablesPerLine[loc.startLine] |= categories;
+            }
         } else if (command == u"enable"_s) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
