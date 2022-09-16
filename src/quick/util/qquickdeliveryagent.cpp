@@ -962,9 +962,6 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
         const QPointF &scenePos, const QPointF &lastScenePos,
         Qt::KeyboardModifiers modifiers, ulong timestamp)
 {
-    if (!QQuickItemPrivate::get(rootItem)->subtreeHoverEnabled)
-        return false;
-
     // The first time this function is called, hoverItems is empty.
     // We then call deliverHoverEventRecursive from the rootItem, and
     // populate the list with all the children and grandchildren that
@@ -980,11 +977,19 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     // visit will still have an old hoverId. We can therefore go through the
     // list at the end of this function and look for items with an old hoverId,
     // remove them from the list, and update their state accordingly.
-    currentHoverId++;
-    hoveredLeafItemFound = false;
 
+    const bool subtreeHoverEnabled = QQuickItemPrivate::get(rootItem)->subtreeHoverEnabled;
     const bool itemsWasHovered = !hoverItems.isEmpty();
-    deliverHoverEventRecursive(rootItem, scenePos, lastScenePos, modifiers, timestamp);
+
+    if (!subtreeHoverEnabled && !itemsWasHovered)
+        return false;
+
+    currentHoverId++;
+
+    if (subtreeHoverEnabled) {
+        hoveredLeafItemFound = false;
+        deliverHoverEventRecursive(rootItem, scenePos, lastScenePos, modifiers, timestamp);
+    }
 
     // Prune the list for items that are no longer hovered
     for (auto it = hoverItems.begin(); it != hoverItems.end();) {
