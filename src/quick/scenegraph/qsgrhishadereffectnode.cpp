@@ -27,6 +27,10 @@ void QSGRhiShaderLinker::reset(const QShader &vs, const QShader &fs)
     m_samplers.clear();
     m_samplerNameMap.clear();
     m_subRectBindings.clear();
+
+    m_constants.reserve(8);
+    m_samplers.reserve(4);
+    m_samplerNameMap.reserve(4);
 }
 
 void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices)
