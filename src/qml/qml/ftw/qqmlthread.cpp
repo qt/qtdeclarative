@@ -21,8 +21,6 @@ public:
     QQmlThreadPrivate(QQmlThread *);
     QQmlThread *q;
 
-    void run() override;
-
     inline QMutex &mutex() { return _mutex; }
     inline void lock() { _mutex.lock(); }
     inline void unlock() { _mutex.unlock(); }
@@ -108,17 +106,6 @@ bool QQmlThreadPrivate::event(QEvent *e)
     return QThread::event(e);
 }
 
-void QQmlThreadPrivate::run()
-{
-    lock();
-
-    wakeOne();
-
-    unlock();
-
-    exec();
-}
-
 void QQmlThreadPrivate::mainEvent()
 {
     lock();
@@ -197,10 +184,7 @@ QQmlThread::~QQmlThread()
  */
 void QQmlThread::startup()
 {
-    d->lock();
     d->start();
-    d->wait();
-    d->unlock();
     d->moveToThread(d);
 }
 
