@@ -21,10 +21,10 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 
 #include <QtQuick/qquickitem.h>
 #include <private/qtquickglobal_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShaderEffectImpl;
 class QQuickShaderEffectPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
@@ -81,7 +81,6 @@ public:
     Status status() const;
 
     bool isComponentComplete() const;
-    QString parseLog();
 
     bool updateUniformValue(const QByteArray &name, const QVariant &value);
 
@@ -103,8 +102,6 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
-    QQuickShaderEffectImpl *m_impl;
-
     Q_DECLARE_PRIVATE(QQuickShaderEffect)
 };
 

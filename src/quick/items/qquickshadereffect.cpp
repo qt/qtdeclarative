@@ -1,14 +1,10 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include <private/qquickshadereffect_p.h>
+#include <private/qquickshadereffect_p_p.h>
 #include <private/qsgcontextplugin_p.h>
-#include <private/qquickitem_p.h>
 #include <private/qsgrhisupport_p.h>
-
 #include <private/qquickwindow_p.h>
-#include <private/qquickitem_p.h>
-#include "qquickshadereffectmesh_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -532,118 +528,16 @@ private:
 };
 } // namespace QtPrivate
 
-class QQuickShaderEffectImpl : public QObject
-{
-    Q_OBJECT
-
-public:
-    QQuickShaderEffectImpl(QQuickShaderEffect *item);
-    ~QQuickShaderEffectImpl();
-
-    QUrl fragmentShader() const { return m_fragShader; }
-    void setFragmentShader(const QUrl &fileUrl);
-
-    QUrl vertexShader() const { return m_vertShader; }
-    void setVertexShader(const QUrl &fileUrl);
-
-    bool blending() const { return m_blending; }
-    void setBlending(bool enable);
-
-    QVariant mesh() const;
-    void setMesh(const QVariant &mesh);
-
-    QQuickShaderEffect::CullMode cullMode() const { return m_cullMode; }
-    void setCullMode(QQuickShaderEffect::CullMode face);
-
-    QString log() const;
-    QQuickShaderEffect::Status status() const;
-
-    bool supportsAtlasTextures() const { return m_supportsAtlasTextures; }
-    void setSupportsAtlasTextures(bool supports);
-
-    QString parseLog();
-
-    void handleEvent(QEvent *);
-    void handleGeometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
-    QSGNode *handleUpdatePaintNode(QSGNode *, QQuickItem::UpdatePaintNodeData *);
-    void handleComponentComplete();
-    void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
-    void maybeUpdateShaders();
-    bool updateUniformValue(const QByteArray &name, const QVariant &value,
-                            QSGShaderEffectNode *node);
-
-private slots:
-    void propertyChanged(int mappedId);
-    void sourceDestroyed(QObject *object);
-    void markGeometryDirtyAndUpdate();
-    void markGeometryDirtyAndUpdateIfSupportsAtlas();
-    void shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
-                            const QUrl &loadUrl, QSGGuiThreadShaderEffectManager::ShaderInfo *result);
-
-private:
-    QSGGuiThreadShaderEffectManager *shaderEffectManager() const;
-
-    enum Shader {
-        Vertex,
-        Fragment,
-
-        NShader
-    };
-    bool updateShader(Shader shaderType, const QUrl &fileUrl);
-    void updateShaderVars(Shader shaderType);
-    void disconnectSignals(Shader shaderType);
-    void clearMappers(Shader shaderType);
-    bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
-    std::optional<int> findMappedShaderVariableId(const QByteArray &name) const;
-
-    QQuickShaderEffect *m_item;
-    const QMetaObject *m_itemMetaObject = nullptr;
-    QSize m_meshResolution;
-    QQuickShaderEffectMesh *m_mesh;
-    QQuickGridMesh m_defaultMesh;
-    QQuickShaderEffect::CullMode m_cullMode;
-    bool m_blending;
-    bool m_supportsAtlasTextures;
-    mutable QSGGuiThreadShaderEffectManager *m_mgr;
-    QUrl m_fragShader;
-    bool m_fragNeedsUpdate;
-    QUrl m_vertShader;
-    bool m_vertNeedsUpdate;
-
-    QSGShaderEffectNode::ShaderData m_shaders[NShader];
-    QSGShaderEffectNode::DirtyShaderFlags m_dirty;
-    QSet<int> m_dirtyConstants[NShader];
-    QSet<int> m_dirtyTextures[NShader];
-    QSGGuiThreadShaderEffectManager::ShaderInfo *m_inProgress[NShader];
-
-    QVector<QtPrivate::EffectSlotMapper*> m_mappers[NShader];
-};
-
-
-class QQuickShaderEffectPrivate : public QQuickItemPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickShaderEffect)
-
-public:
-    void updatePolish() override;
-};
-
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
-    : QQuickItem(*new QQuickShaderEffectPrivate, parent),
-      m_impl(nullptr)
+    : QQuickItem(*new QQuickShaderEffectPrivate, parent)
 {
     setFlag(QQuickItem::ItemHasContents);
-
-    m_impl = new QQuickShaderEffectImpl(this);
 }
 
 QQuickShaderEffect::~QQuickShaderEffect()
 {
-    // Delete the implementations now, while they still have have
-    // valid references back to us.
-    auto *impl = m_impl;
-    m_impl = nullptr;
-    delete impl;
+    Q_D(QQuickShaderEffect);
+    d->inDestructor = true;
 }
 
 /*!
@@ -661,12 +555,14 @@ QQuickShaderEffect::~QQuickShaderEffect()
 
 QUrl QQuickShaderEffect::fragmentShader() const
 {
-    return m_impl->fragmentShader();
+    Q_D(const QQuickShaderEffect);
+    return d->fragmentShader();
 }
 
 void QQuickShaderEffect::setFragmentShader(const QUrl &fileUrl)
 {
-    m_impl->setFragmentShader(fileUrl);
+    Q_D(QQuickShaderEffect);
+    d->setFragmentShader(fileUrl);
 }
 
 /*!
@@ -684,12 +580,14 @@ void QQuickShaderEffect::setFragmentShader(const QUrl &fileUrl)
 
 QUrl QQuickShaderEffect::vertexShader() const
 {
-    return m_impl->vertexShader();
+    Q_D(const QQuickShaderEffect);
+    return d->vertexShader();
 }
 
 void QQuickShaderEffect::setVertexShader(const QUrl &fileUrl)
 {
-    m_impl->setVertexShader(fileUrl);
+    Q_D(QQuickShaderEffect);
+    d->setVertexShader(fileUrl);
 }
 
 /*!
@@ -703,12 +601,14 @@ void QQuickShaderEffect::setVertexShader(const QUrl &fileUrl)
 
 bool QQuickShaderEffect::blending() const
 {
-    return m_impl->blending();
+    Q_D(const QQuickShaderEffect);
+    return d->blending();
 }
 
 void QQuickShaderEffect::setBlending(bool enable)
 {
-    m_impl->setBlending(enable);
+    Q_D(QQuickShaderEffect);
+    d->setBlending(enable);
 }
 
 /*!
@@ -726,12 +626,14 @@ void QQuickShaderEffect::setBlending(bool enable)
 
 QVariant QQuickShaderEffect::mesh() const
 {
-    return m_impl->mesh();
+    Q_D(const QQuickShaderEffect);
+    return d->mesh();
 }
 
 void QQuickShaderEffect::setMesh(const QVariant &mesh)
 {
-    m_impl->setMesh(mesh);
+    Q_D(QQuickShaderEffect);
+    d->setMesh(mesh);
 }
 
 /*!
@@ -750,12 +652,14 @@ void QQuickShaderEffect::setMesh(const QVariant &mesh)
 
 QQuickShaderEffect::CullMode QQuickShaderEffect::cullMode() const
 {
-    return m_impl->cullMode();
+    Q_D(const QQuickShaderEffect);
+    return d->cullMode();
 }
 
 void QQuickShaderEffect::setCullMode(CullMode face)
 {
-    return m_impl->setCullMode(face);
+    Q_D(QQuickShaderEffect);
+    return d->setCullMode(face);
 }
 
 /*!
@@ -781,12 +685,14 @@ void QQuickShaderEffect::setCullMode(CullMode face)
 
 bool QQuickShaderEffect::supportsAtlasTextures() const
 {
-    return m_impl->supportsAtlasTextures();
+    Q_D(const QQuickShaderEffect);
+    return d->supportsAtlasTextures();
 }
 
 void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 {
-    m_impl->setSupportsAtlasTextures(supports);
+    Q_D(QQuickShaderEffect);
+    d->setSupportsAtlasTextures(supports);
 }
 
 /*!
@@ -834,45 +740,47 @@ void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 
 QString QQuickShaderEffect::log() const
 {
-    return m_impl->log();
+    Q_D(const QQuickShaderEffect);
+    return d->log();
 }
 
 QQuickShaderEffect::Status QQuickShaderEffect::status() const
 {
-    return m_impl->status();
+    Q_D(const QQuickShaderEffect);
+    return d->status();
 }
 
 bool QQuickShaderEffect::event(QEvent *e)
 {
-    if (m_impl)
-        m_impl->handleEvent(e);
+    Q_D(QQuickShaderEffect);
+    d->handleEvent(e);
     return QQuickItem::event(e);
 }
 
 void QQuickShaderEffect::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    m_impl->handleGeometryChanged(newGeometry, oldGeometry);
+    Q_D(QQuickShaderEffect);
+    d->handleGeometryChanged(newGeometry, oldGeometry);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
-    return m_impl->handleUpdatePaintNode(oldNode, updatePaintNodeData);
+    Q_D(QQuickShaderEffect);
+    return d->handleUpdatePaintNode(oldNode, updatePaintNodeData);
 }
 
 void QQuickShaderEffect::componentComplete()
 {
-    m_impl->maybeUpdateShaders();
+    Q_D(QQuickShaderEffect);
+    d->maybeUpdateShaders();
     QQuickItem::componentComplete();
 }
 
 void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    // It's possible for itemChange to be called during destruction when deleting
-    // the QQuickShaderEffectImpl. We nullify m_impl before deleting it via another pointer
-    // to it, so we must check that it's not null before trying to use it here.
-    if (m_impl)
-        m_impl->handleItemChange(change, value);
+    Q_D(QQuickShaderEffect);
+    d->handleItemChange(change, value);
     QQuickItem::itemChange(change, value);
 }
 
@@ -881,18 +789,14 @@ bool QQuickShaderEffect::isComponentComplete() const
     return QQuickItem::isComponentComplete();
 }
 
-QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
-{
-    return m_impl->parseLog();
-}
-
 bool QQuickShaderEffect::updateUniformValue(const QByteArray &name, const QVariant &value)
 {
     auto node = static_cast<QSGShaderEffectNode *>(QQuickItemPrivate::get(this)->paintNode);
     if (!node)
         return false;
 
-    return m_impl->updateUniformValue(name, value, node);
+    Q_D(QQuickShaderEffect);
+    return d->updateUniformValue(name, value, node);
 }
 
 void QQuickShaderEffectPrivate::updatePolish()
@@ -900,7 +804,7 @@ void QQuickShaderEffectPrivate::updatePolish()
     Q_Q(QQuickShaderEffect);
     if (!qmlEngine(q))
         return;
-    q->m_impl->maybeUpdateShaders();
+    maybeUpdateShaders();
 }
 
 constexpr int indexToMappedId(const int shaderType, const int idx)
@@ -918,10 +822,8 @@ constexpr int mappedIdToShaderType(const int mappedId)
     return mappedId >> 16;
 }
 
-QQuickShaderEffectImpl::QQuickShaderEffectImpl(QQuickShaderEffect *item)
-    : QObject(item)
-    , m_item(item)
-    , m_meshResolution(1, 1)
+QQuickShaderEffectPrivate::QQuickShaderEffectPrivate()
+    : m_meshResolution(1, 1)
     , m_mesh(nullptr)
     , m_cullMode(QQuickShaderEffect::NoCulling)
     , m_blending(true)
@@ -935,7 +837,7 @@ QQuickShaderEffectImpl::QQuickShaderEffectImpl(QQuickShaderEffect *item)
         m_inProgress[i] = nullptr;
 }
 
-QQuickShaderEffectImpl::~QQuickShaderEffectImpl()
+QQuickShaderEffectPrivate::~QQuickShaderEffectPrivate()
 {
     for (int i = 0; i < NShader; ++i) {
         disconnectSignals(Shader(i));
@@ -945,63 +847,68 @@ QQuickShaderEffectImpl::~QQuickShaderEffectImpl()
     delete m_mgr;
 }
 
-void QQuickShaderEffectImpl::setFragmentShader(const QUrl &fileUrl)
+void QQuickShaderEffectPrivate::setFragmentShader(const QUrl &fileUrl)
 {
+    Q_Q(QQuickShaderEffect);
     if (m_fragShader == fileUrl)
         return;
 
     m_fragShader = fileUrl;
 
     m_fragNeedsUpdate = true;
-    if (m_item->isComponentComplete())
+    if (q->isComponentComplete())
         maybeUpdateShaders();
 
-    emit m_item->fragmentShaderChanged();
+    emit q->fragmentShaderChanged();
 }
 
-void QQuickShaderEffectImpl::setVertexShader(const QUrl &fileUrl)
+void QQuickShaderEffectPrivate::setVertexShader(const QUrl &fileUrl)
 {
+    Q_Q(QQuickShaderEffect);
     if (m_vertShader == fileUrl)
         return;
 
     m_vertShader = fileUrl;
 
     m_vertNeedsUpdate = true;
-    if (m_item->isComponentComplete())
+    if (q->isComponentComplete())
         maybeUpdateShaders();
 
-    emit m_item->vertexShaderChanged();
+    emit q->vertexShaderChanged();
 }
 
-void QQuickShaderEffectImpl::setBlending(bool enable)
+void QQuickShaderEffectPrivate::setBlending(bool enable)
 {
+    Q_Q(QQuickShaderEffect);
     if (m_blending == enable)
         return;
 
     m_blending = enable;
-    m_item->update();
-    emit m_item->blendingChanged();
+    q->update();
+    emit q->blendingChanged();
 }
 
-QVariant QQuickShaderEffectImpl::mesh() const
+QVariant QQuickShaderEffectPrivate::mesh() const
 {
     return m_mesh ? QVariant::fromValue(static_cast<QObject *>(m_mesh))
                   : QVariant::fromValue(m_meshResolution);
 }
 
-void QQuickShaderEffectImpl::setMesh(const QVariant &mesh)
+void QQuickShaderEffectPrivate::setMesh(const QVariant &mesh)
 {
+    Q_Q(QQuickShaderEffect);
     QQuickShaderEffectMesh *newMesh = qobject_cast<QQuickShaderEffectMesh *>(qvariant_cast<QObject *>(mesh));
     if (newMesh && newMesh == m_mesh)
         return;
 
     if (m_mesh)
-        disconnect(m_mesh, SIGNAL(geometryChanged()), this, nullptr);
+        QObject::disconnect(m_meshConnection);
 
     m_mesh = newMesh;
 
     if (m_mesh) {
-        connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(markGeometryDirtyAndUpdate()));
+        m_meshConnection = QObject::connect(m_mesh, &QQuickShaderEffectMesh::geometryChanged, q,
+                                            [this] { markGeometryDirtyAndUpdate(); });
     } else {
         if (mesh.canConvert<QSize>()) {
             m_meshResolution = mesh.toSize();
@@ -1023,38 +930,40 @@ void QQuickShaderEffectImpl::setMesh(const QVariant &mesh)
     }
 
     m_dirty |= QSGShaderEffectNode::DirtyShaderMesh;
-    m_item->update();
+    q->update();
 
-    emit m_item->meshChanged();
+    emit q->meshChanged();
 }
 
-void QQuickShaderEffectImpl::setCullMode(QQuickShaderEffect::CullMode face)
+void QQuickShaderEffectPrivate::setCullMode(QQuickShaderEffect::CullMode face)
 {
+    Q_Q(QQuickShaderEffect);
     if (m_cullMode == face)
         return;
 
     m_cullMode = face;
-    m_item->update();
-    emit m_item->cullModeChanged();
+    q->update();
+    emit q->cullModeChanged();
 }
 
-void QQuickShaderEffectImpl::setSupportsAtlasTextures(bool supports)
+void QQuickShaderEffectPrivate::setSupportsAtlasTextures(bool supports)
 {
+    Q_Q(QQuickShaderEffect);
     if (m_supportsAtlasTextures == supports)
         return;
 
     m_supportsAtlasTextures = supports;
     markGeometryDirtyAndUpdate();
-    emit m_item->supportsAtlasTexturesChanged();
+    emit q->supportsAtlasTexturesChanged();
 }
 
-QString QQuickShaderEffectImpl::parseLog()
+QString QQuickShaderEffectPrivate::parseLog()
 {
     maybeUpdateShaders();
     return log();
 }
 
-QString QQuickShaderEffectImpl::log() const
+QString QQuickShaderEffectPrivate::log() const
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
@@ -1063,7 +972,7 @@ QString QQuickShaderEffectImpl::log() const
     return mgr->log();
 }
 
-QQuickShaderEffect::Status QQuickShaderEffectImpl::status() const
+QQuickShaderEffect::Status QQuickShaderEffectPrivate::status() const
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
@@ -1072,7 +981,7 @@ QQuickShaderEffect::Status QQuickShaderEffectImpl::status() const
     return QQuickShaderEffect::Status(mgr->status());
 }
 
-void QQuickShaderEffectImpl::handleEvent(QEvent *event)
+void QQuickShaderEffectPrivate::handleEvent(QEvent *event)
 {
     if (event->type() == QEvent::DynamicPropertyChange) {
         const auto propertyName = static_cast<QDynamicPropertyChangeEvent *>(event)->propertyName();
@@ -1082,16 +991,17 @@ void QQuickShaderEffectImpl::handleEvent(QEvent *event)
     }
 }
 
-void QQuickShaderEffectImpl::handleGeometryChanged(const QRectF &, const QRectF &)
+void QQuickShaderEffectPrivate::handleGeometryChanged(const QRectF &, const QRectF &)
 {
     m_dirty |= QSGShaderEffectNode::DirtyShaderGeometry;
 }
 
-QSGNode *QQuickShaderEffectImpl::handleUpdatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
+QSGNode *QQuickShaderEffectPrivate::handleUpdatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
 {
+    Q_Q(QQuickShaderEffect);
     QSGShaderEffectNode *node = static_cast<QSGShaderEffectNode *>(oldNode);
 
-    if (m_item->width() <= 0 || m_item->height() <= 0) {
+    if (q->width() <= 0 || q->height() <= 0) {
         delete node;
         return nullptr;
     }
@@ -1108,15 +1018,14 @@ QSGNode *QQuickShaderEffectImpl::handleUpdatePaintNode(QSGNode *oldNode, QQuickI
     }
 
     if (!node) {
-        QSGRenderContext *rc = QQuickWindowPrivate::get(m_item->window())->context;
+        QSGRenderContext *rc = QQuickWindowPrivate::get(q->window())->context;
         node = rc->sceneGraphContext()->createShaderEffectNode(rc);
         if (!node) {
             qWarning("No shader effect node");
             return nullptr;
         }
         m_dirty = QSGShaderEffectNode::DirtyShaderAll;
-        connect(node, &QSGShaderEffectNode::textureChanged,
-                this, &QQuickShaderEffectImpl::markGeometryDirtyAndUpdateIfSupportsAtlas);
+        QObject::connect(node, &QSGShaderEffectNode::textureChanged, q, [this] { markGeometryDirtyAndUpdateIfSupportsAtlas(); });
     }
 
     QSGShaderEffectNode::SyncData sd;
@@ -1138,7 +1047,7 @@ QSGNode *QQuickShaderEffectImpl::handleUpdatePaintNode(QSGNode *oldNode, QQuickI
     }
 
     if (m_dirty & QSGShaderEffectNode::DirtyShaderGeometry) {
-        const QRectF rect(0, 0, m_item->width(), m_item->height());
+        const QRectF rect(0, 0, q->width(), q->height());
         QQuickShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
         QSGGeometry *geometry = node->geometry();
 
@@ -1161,8 +1070,9 @@ QSGNode *QQuickShaderEffectImpl::handleUpdatePaintNode(QSGNode *oldNode, QQuickI
     return node;
 }
 
-void QQuickShaderEffectImpl::maybeUpdateShaders()
+void QQuickShaderEffectPrivate::maybeUpdateShaders()
 {
+    Q_Q(QQuickShaderEffect);
     if (m_vertNeedsUpdate)
         m_vertNeedsUpdate = !updateShader(Vertex, m_vertShader);
     if (m_fragNeedsUpdate)
@@ -1174,12 +1084,12 @@ void QQuickShaderEffectImpl::maybeUpdateShaders()
         // scenegraph ready. Schedule the polish to try again later. In case #2
         // the backend probably does not have shadereffect support so there is
         // nothing to do for us here.
-        if (!m_item->window() || !m_item->window()->isSceneGraphInitialized())
-            m_item->polish();
+        if (!q->window() || !q->window()->isSceneGraphInitialized())
+            q->polish();
     }
 }
 
-bool QQuickShaderEffectImpl::updateUniformValue(const QByteArray &name, const QVariant &value,
+bool QQuickShaderEffectPrivate::updateUniformValue(const QByteArray &name, const QVariant &value,
                                                 QSGShaderEffectNode *node)
 {
     const auto mappedId = findMappedShaderVariableId(name);
@@ -1213,8 +1123,11 @@ bool QQuickShaderEffectImpl::updateUniformValue(const QByteArray &name, const QV
     return true;
 }
 
-void QQuickShaderEffectImpl::handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+void QQuickShaderEffectPrivate::handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
 {
+    if (inDestructor)
+        return;
+
     // Move the window ref.
     if (change == QQuickItem::ItemSceneChange) {
         for (int shaderType = 0; shaderType < NShader; ++shaderType) {
@@ -1233,46 +1146,47 @@ void QQuickShaderEffectImpl::handleItemChange(QQuickItem::ItemChange change, con
     }
 }
 
-QSGGuiThreadShaderEffectManager *QQuickShaderEffectImpl::shaderEffectManager() const
+QSGGuiThreadShaderEffectManager *QQuickShaderEffectPrivate::shaderEffectManager() const
 {
+    Q_Q(const QQuickShaderEffect);
     if (!m_mgr) {
         // return null if this is not the gui thread and not already created
-        if (QThread::currentThread() != m_item->thread())
+        if (QThread::currentThread() != q->thread())
             return m_mgr;
-        QQuickWindow *w = m_item->window();
+        QQuickWindow *w = q->window();
         if (w) { // note: just the window, don't care about isSceneGraphInitialized() here
             m_mgr = QQuickWindowPrivate::get(w)->context->sceneGraphContext()->createGuiThreadShaderEffectManager();
             if (m_mgr) {
-                connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(logChanged()));
-                connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(statusChanged()));
-                connect(m_mgr, &QSGGuiThreadShaderEffectManager::shaderCodePrepared, this, &QQuickShaderEffectImpl::shaderCodePrepared);
+                QObject::connect(m_mgr, &QSGGuiThreadShaderEffectManager::logAndStatusChanged, q, &QQuickShaderEffect::logChanged);
+                QObject::connect(m_mgr, &QSGGuiThreadShaderEffectManager::logAndStatusChanged, q, &QQuickShaderEffect::statusChanged);
+                QObject::connect(m_mgr, &QSGGuiThreadShaderEffectManager::shaderCodePrepared, q,
+                                 [this](bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
+                                 const QUrl &loadUrl, QSGGuiThreadShaderEffectManager::ShaderInfo *result)
+                { const_cast<QQuickShaderEffectPrivate *>(this)->shaderCodePrepared(ok, typeHint, loadUrl, result); });
             }
         }
     }
-
     return m_mgr;
 }
 
-void QQuickShaderEffectImpl::disconnectSignals(Shader shaderType)
+void QQuickShaderEffectPrivate::disconnectSignals(Shader shaderType)
 {
+    Q_Q(QQuickShaderEffect);
     for (auto *mapper : m_mappers[shaderType]) {
         void *a = mapper;
         if (mapper)
-            QObjectPrivate::disconnect(m_item, mapper->signalIndex(), &a);
+            QObjectPrivate::disconnect(q, mapper->signalIndex(), &a);
     }
     for (const auto &vd : qAsConst(m_shaders[shaderType].varData)) {
         if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
-            if (source) {
-                if (m_item->window())
-                    QQuickItemPrivate::get(source)->derefWindow();
-                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
-            }
+            if (source && q->window())
+                QQuickItemPrivate::get(source)->derefWindow();
         }
     }
 }
 
-void QQuickShaderEffectImpl::clearMappers(QQuickShaderEffectImpl::Shader shaderType)
+void QQuickShaderEffectPrivate::clearMappers(QQuickShaderEffectPrivate::Shader shaderType)
 {
     for (auto *mapper : qAsConst(m_mappers[shaderType])) {
         if (mapper)
@@ -1301,8 +1215,9 @@ void qtquick_shadereffect_purge_gui_thread_shader_cache()
     shaderInfoCache()->clear();
 }
 
-bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl)
+bool QQuickShaderEffectPrivate::updateShader(Shader shaderType, const QUrl &fileUrl)
 {
+    Q_Q(QQuickShaderEffect);
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
         return false;
@@ -1315,7 +1230,7 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl
     m_shaders[shaderType].varData.clear();
 
     if (!fileUrl.isEmpty()) {
-        const QQmlContext *context = qmlContext(m_item);
+        const QQmlContext *context = qmlContext(q);
         const QUrl loadUrl = context ? context->resolvedUrl(fileUrl) : fileUrl;
         auto it = shaderInfoCache()->constFind(loadUrl);
         if (it != shaderInfoCache()->cend()) {
@@ -1357,13 +1272,14 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl
 
     updateShaderVars(shaderType);
     m_dirty |= QSGShaderEffectNode::DirtyShaders;
-    m_item->update();
+    q->update();
     return true;
 }
 
-void QQuickShaderEffectImpl::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
+void QQuickShaderEffectPrivate::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
                                                 const QUrl &loadUrl, QSGGuiThreadShaderEffectManager::ShaderInfo *result)
 {
+    Q_Q(QQuickShaderEffect);
     const Shader shaderType = typeHint == QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex ? Vertex : Fragment;
 
     // If another call was made to updateShader() for the same shader type in
@@ -1388,11 +1304,12 @@ void QQuickShaderEffectImpl::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffec
     shaderInfoCache()->insert(loadUrl, m_shaders[shaderType].shaderInfo);
     updateShaderVars(shaderType);
     m_dirty |= QSGShaderEffectNode::DirtyShaders;
-    m_item->update();
+    q->update();
 }
 
-void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
+void QQuickShaderEffectPrivate::updateShaderVars(Shader shaderType)
 {
+    Q_Q(QQuickShaderEffect);
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
         return;
@@ -1405,10 +1322,10 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
     // Recreate signal mappers when the shader has changed.
     clearMappers(shaderType);
 
-    QQmlPropertyCache::ConstPtr propCache = QQmlData::ensurePropertyCache(m_item);
+    QQmlPropertyCache::ConstPtr propCache = QQmlData::ensurePropertyCache(q);
 
     if (!m_itemMetaObject)
-        m_itemMetaObject = m_item->metaObject();
+        m_itemMetaObject = q->metaObject();
 
     // Hook up the signals to get notified about changes for properties that
     // correspond to variables in the shader. Store also the values.
@@ -1464,50 +1381,36 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
                     });
                     m_mappers[shaderType].append(mapper);
                     mapper->setSignalIndex(m_itemMetaObject->property(propIdx).notifySignal().methodIndex());
-                    Q_ASSERT(m_item->metaObject() == m_itemMetaObject);
-                    bool ok = QObjectPrivate::connectImpl(m_item, pd->notifyIndex(), m_item, nullptr, mapper,
+                    Q_ASSERT(q->metaObject() == m_itemMetaObject);
+                    bool ok = QObjectPrivate::connectImpl(q, pd->notifyIndex(), q, nullptr, mapper,
                                                           Qt::AutoConnection, nullptr, m_itemMetaObject);
                     if (!ok)
                         qWarning() << "Failed to connect to property" << m_itemMetaObject->property(propIdx).name()
                                    << "(" << propIdx << ", signal index" << pd->notifyIndex()
-                                   << ") of item" << m_item;
+                                   << ") of item" << q;
                 }
             }
         } else {
             // Do not warn for dynamic properties.
-            if (!m_item->property(v.name.constData()).isValid())
+            if (!q->property(v.name.constData()).isValid())
                 qWarning("ShaderEffect: '%s' does not have a matching property", v.name.constData());
         }
 
 
         vd.propertyIndex = propIdx;
-        vd.value = getValueFromProperty(m_item, m_itemMetaObject, v.name, vd.propertyIndex);
+        vd.value = getValueFromProperty(q, m_itemMetaObject, v.name, vd.propertyIndex);
         if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
             if (source) {
-                if (m_item->window())
-                    QQuickItemPrivate::get(source)->refWindow(m_item->window());
-                QObject::connect(source, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
+                if (q->window())
+                    QQuickItemPrivate::get(source)->refWindow(q->window());
+                QObject::connect(source, &QObject::destroyed, q, [this](QObject *obj) { sourceDestroyed(obj); });
             }
         }
     }
 }
 
-bool QQuickShaderEffectImpl::sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const
-{
-    for (int shaderType = 0; shaderType < NShader; ++shaderType) {
-        for (int idx = 0; idx < m_shaders[shaderType].varData.count(); ++idx) {
-            if (shaderType != typeToSkip || idx != indexToSkip) {
-                const auto &vd(m_shaders[shaderType].varData[idx]);
-                if (vd.specialType == QSGShaderEffectNode::VariableData::Source && qvariant_cast<QObject *>(vd.value) == source)
-                    return false;
-            }
-        }
-    }
-    return true;
-}
-
-std::optional<int> QQuickShaderEffectImpl::findMappedShaderVariableId(const QByteArray &name) const
+std::optional<int> QQuickShaderEffectPrivate::findMappedShaderVariableId(const QByteArray &name) const
 {
     for (int shaderType = 0; shaderType < NShader; ++shaderType) {
         const auto &vars = m_shaders[shaderType].shaderInfo.variables;
@@ -1520,27 +1423,21 @@ std::optional<int> QQuickShaderEffectImpl::findMappedShaderVariableId(const QByt
     return {};
 }
 
-void QQuickShaderEffectImpl::propertyChanged(int mappedId)
+void QQuickShaderEffectPrivate::propertyChanged(int mappedId)
 {
+    Q_Q(QQuickShaderEffect);
     const Shader type = Shader(mappedIdToShaderType(mappedId));
     const int idx = mappedIdToIndex(mappedId);
     const auto &v(m_shaders[type].shaderInfo.variables[idx]);
     auto &vd(m_shaders[type].varData[idx]);
 
-    vd.value = getValueFromProperty(m_item, m_itemMetaObject, v.name, vd.propertyIndex);
+    QVariant oldValue = vd.value;
+    vd.value = getValueFromProperty(q, m_itemMetaObject, v.name, vd.propertyIndex);
 
     if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
-        QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
-        if (source) {
-            if (m_item->window())
-                QQuickItemPrivate::get(source)->derefWindow();
-            // QObject::disconnect() will disconnect all matching connections.
-            // If the same source has been attached to two separate
-            // textures/samplers, then changing one of them would trigger both
-            // to be disconnected. So check first.
-            if (sourceIsUnique(source, type, idx))
-                QObject::disconnect(source, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
-        }
+        QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(oldValue));
+        if (source && q->window())
+            QQuickItemPrivate::get(source)->derefWindow();
 
         source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
         if (source) {
@@ -1548,9 +1445,9 @@ void QQuickShaderEffectImpl::propertyChanged(int mappedId)
             // parent, but if the source item is "inline" rather than a reference -- i.e.
             // "property variant source: Image { }" instead of "property variant source: foo" -- it
             // will not get a parent. In those cases, 'source' should get the window from 'item'.
-            if (m_item->window())
-                QQuickItemPrivate::get(source)->refWindow(m_item->window());
-            QObject::connect(source, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
+            if (q->window())
+                QQuickItemPrivate::get(source)->refWindow(q->window());
+            QObject::connect(source, &QObject::destroyed, q, [this](QObject *obj) { sourceDestroyed(obj); });
         }
 
         m_dirty |= QSGShaderEffectNode::DirtyShaderTexture;
@@ -1561,10 +1458,10 @@ void QQuickShaderEffectImpl::propertyChanged(int mappedId)
         m_dirtyConstants[type].insert(idx);
     }
 
-    m_item->update();
+    q->update();
 }
 
-void QQuickShaderEffectImpl::sourceDestroyed(QObject *object)
+void QQuickShaderEffectPrivate::sourceDestroyed(QObject *object)
 {
     for (int shaderType = 0; shaderType < NShader; ++shaderType) {
         for (auto &vd : m_shaders[shaderType].varData) {
@@ -1576,21 +1473,19 @@ void QQuickShaderEffectImpl::sourceDestroyed(QObject *object)
     }
 }
 
-void QQuickShaderEffectImpl::markGeometryDirtyAndUpdate()
+void QQuickShaderEffectPrivate::markGeometryDirtyAndUpdate()
 {
+    Q_Q(QQuickShaderEffect);
     m_dirty |= QSGShaderEffectNode::DirtyShaderGeometry;
-    m_item->update();
+    q->update();
 }
 
-void QQuickShaderEffectImpl::markGeometryDirtyAndUpdateIfSupportsAtlas()
+void QQuickShaderEffectPrivate::markGeometryDirtyAndUpdateIfSupportsAtlas()
 {
     if (m_supportsAtlasTextures)
         markGeometryDirtyAndUpdate();
 }
 
-
-
 QT_END_NAMESPACE
 
 #include "moc_qquickshadereffect_p.cpp"
-#include "qquickshadereffect.moc"
