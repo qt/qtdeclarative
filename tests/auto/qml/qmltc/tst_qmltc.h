@@ -85,4 +85,5 @@ private slots:
     void valueTypeListProperty();
     void translations();
     void generalizedGroupedProperty();
+    void appendToQQmlListProperty();
 };

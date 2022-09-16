@@ -14,9 +14,11 @@ class Extension : public QObject
     QML_ANONYMOUS
     Q_PROPERTY(int count READ getCount WRITE setCount BINDABLE bindableCount)
     Q_PROPERTY(double foo READ getFoo WRITE setFoo BINDABLE bindableFoo)
+    Q_PROPERTY(QQmlListProperty<QObject> myList READ getMyList)
 
     QProperty<int> m_extCount { 0 };
     QProperty<double> m_foo { 0 };
+    QList<QObject *> m_myList;
 
 public:
     Extension(QObject *parent = nullptr);
@@ -27,6 +29,8 @@ public:
     double getFoo() const;
     void setFoo(double v);
     QBindable<double> bindableFoo();
+
+    QQmlListProperty<QObject> getMyList();
 };
 
 class IndirectExtension : public Extension

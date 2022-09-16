@@ -100,3 +100,8 @@ QBindable<int> TypeWithExtensionNamespace::bindableCount()
 {
     return QBindable<int>(&m_count);
 }
+
+QQmlListProperty<QObject> Extension::getMyList()
+{
+    return QQmlListProperty<QObject>(this, &m_myList);
+}

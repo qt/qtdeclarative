@@ -92,17 +92,21 @@ void QmltcCodeGenerator::generate_assignToListProperty(
     const bool populateLocalListProperty = qmlListVarName.isEmpty();
 
     if (populateLocalListProperty) {
-        qmlListVarName = u"listref_%1"_s.arg(p.propertyName());
-        *block << u"QQmlListReference %1(%2, %3);"_s.arg(
-                qmlListVarName, accessor,
-                QQmlJSUtils::toLiteral(p.propertyName(), u"QByteArrayLiteral"));
-        *block << QStringLiteral("Q_ASSERT(%1.canAppend());").arg(qmlListVarName);
+        auto [extensionPrologue, extensionAccessor, extensionEpilogue] =
+                QmltcCodeGenerator::wrap_extensionType(
+                        type, p, QmltcCodeGenerator::wrap_privateClass(accessor, p));
+
+        qmlListVarName = u"listprop_%1"_s.arg(p.propertyName());
+        *block << u"QQmlListProperty<%1> %2;"_s.arg(p.type()->internalName(), qmlListVarName);
+        *block << extensionPrologue;
+        *block << u"%1 = %2->%3();"_s.arg(qmlListVarName, extensionAccessor, p.read());
+        *block << extensionEpilogue;
     }
     for (const QString &value : values) {
         auto [prologue, wrappedValue, epilogue] =
                 QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
         *block << prologue;
-        *block << u"%1.append(%2);"_s.arg(qmlListVarName, wrappedValue);
+        *block << u"%1.append(std::addressof(%1), %2);"_s.arg(qmlListVarName, wrappedValue);
         *block << epilogue;
     }
 }

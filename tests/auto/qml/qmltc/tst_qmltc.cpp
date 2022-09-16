@@ -73,6 +73,7 @@
 #include "translationsbyid.h"
 #include "defaultalias.h"
 #include "generalizedgroupedproperty.h"
+#include "appendtoqqmllistproperty.h"
 
 #include "testprivateproperty.h"
 
@@ -183,6 +184,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/qt/qml/QmltcTests/privatePropertySubclass.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/calqlatrBits.qml"),
         QUrl("qrc:/qt/qml/QmltcTests/valueTypeListProperty.qml"),
+        QUrl("qrc:/qt/qml/QmltcTests/appendToQQmlListProperty.qml"),
     };
 
     QQmlEngine e;
@@ -2504,6 +2506,78 @@ void tst_qmltc::generalizedGroupedProperty()
         QCOMPARE(fromEngine->property("group").value<QObject *>()->property("str").toString(),
                  "Hello World!");
     }
+}
+
+void tst_qmltc::appendToQQmlListProperty()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(appendToQQmlListProperty) fromQmltc(&e);
+    QQmlComponent component(&e, "qrc:/qt/qml/QmltcTests/appendToQQmlListProperty.qml");
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> fromEngine(component.create());
+
+    auto itemFromEngine = fromEngine->property("myItem").value<QQuickItem *>();
+    auto itemFromQmltc = fromQmltc.myItem();
+
+    QCOMPARE(itemFromEngine->children().size(), 3);
+    QCOMPARE(itemFromQmltc->children().size(), 3);
+
+    QCOMPARE(itemFromEngine->children().at(0)->property("hello"), u"hello1"_s);
+    QCOMPARE(itemFromEngine->children().at(1)->property("hello"), u"hello2"_s);
+    QCOMPARE(itemFromEngine->children().at(2)->property("hello"), u"I am a Rectangle."_s);
+
+    QCOMPARE(itemFromQmltc->children().at(0)->property("hello"), u"hello1"_s);
+    QCOMPARE(itemFromQmltc->children().at(1)->property("hello"), u"hello2"_s);
+    QCOMPARE(itemFromQmltc->children().at(2)->property("hello"), u"I am a Rectangle."_s);
+
+    QVariantList referenceComponentList = { QVariant(u"Hello"_s), QVariant(42), QVariant(4.0) };
+    QCOMPARE(fromQmltc.myComponentList().toList(), referenceComponentList);
+    QCOMPARE(fromEngine->property("myComponentList").toList(), referenceComponentList);
+
+    QList<int> referenceValueTypeList = { 12489, 10, 42 };
+    QVariantList referenceValueTypeList2 = { 12489, 10, 42 };
+    QCOMPARE(fromQmltc.myValueTypeList().toList(), referenceValueTypeList);
+    QCOMPARE(fromEngine->property("myValueTypeList").toList(), referenceValueTypeList2);
+
+    QQmlListReference qtObjectsFromQmltc(&fromQmltc, "myQtObjectList");
+    QVERIFY(qtObjectsFromQmltc.isValid());
+    QQmlListReference qtObjectsFromEngine(fromEngine.data(), "myQtObjectList");
+    QVERIFY(qtObjectsFromEngine.isValid());
+
+    QCOMPARE(qtObjectsFromQmltc.size(), 3);
+    QCOMPARE(qtObjectsFromEngine.size(), 3);
+
+    QCOMPARE(qtObjectsFromQmltc.at(0)->property("hello"), u"Guten Morgen!"_s);
+    QCOMPARE(qtObjectsFromQmltc.at(1)->property("hello"), u"I am a Rectangle."_s);
+    QCOMPARE(qtObjectsFromQmltc.at(2)->property("hello"), u"Moin!"_s);
+
+    QCOMPARE(qtObjectsFromEngine.at(0)->property("hello"), u"Guten Morgen!"_s);
+    QCOMPARE(qtObjectsFromEngine.at(1)->property("hello"), u"I am a Rectangle."_s);
+    QCOMPARE(qtObjectsFromEngine.at(2)->property("hello"), u"Moin!"_s);
+
+    QQmlListReference qtHWFromQmltc(&fromQmltc, "myHelloWorldList");
+    QQmlListReference qtHWFromEngine(fromEngine.data(), "myHelloWorldList");
+
+    QCOMPARE(qtHWFromQmltc.size(), 3);
+    QCOMPARE(qtHWFromEngine.size(), 3);
+
+    QCOMPARE(qtHWFromQmltc.at(0)->property("hello"), u"Good morning1"_s);
+    QCOMPARE(qtHWFromQmltc.at(1)->property("hello"), u"Good morning2"_s);
+    QCOMPARE(qtHWFromQmltc.at(2)->property("hello"), u"Good morning3"_s);
+
+    QCOMPARE(qtHWFromEngine.at(0)->property("hello"), u"Good morning1"_s);
+    QCOMPARE(qtHWFromEngine.at(1)->property("hello"), u"Good morning2"_s);
+    QCOMPARE(qtHWFromEngine.at(2)->property("hello"), u"Good morning3"_s);
+
+    // make sure that extensions are handled correctly, as they require a slightly different code
+    // path to be generated
+    QQmlListReference extendedFromQmltc(fromQmltc.extended().value<QObject *>(), "myList");
+    QVERIFY(extendedFromQmltc.isValid());
+    QQmlListReference extendedFromEngine(fromEngine->property("extended").value<QObject *>(),
+                                         "myList");
+    QVERIFY(extendedFromEngine.isValid());
+    QCOMPARE(extendedFromQmltc.size(), 3);
+    QCOMPARE(extendedFromEngine.size(), 3);
 }
 
 QTEST_MAIN(tst_qmltc)

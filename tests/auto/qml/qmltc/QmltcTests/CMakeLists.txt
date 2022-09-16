@@ -98,6 +98,7 @@ set(qml_sources
     translations.qml
     translationsById.qml
     generalizedGroupedProperty.qml
+    appendToQQmlListProperty.qml
 
     # support types:
     DefaultPropertySingleChild.qml
