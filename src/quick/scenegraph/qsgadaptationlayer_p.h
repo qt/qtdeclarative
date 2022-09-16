@@ -256,7 +256,6 @@ public:
             Texture // for APIs with separate texture and sampler objects
         };
         struct Variable {
-            Variable() {}
             VariableType type = Constant;
             QByteArray name;
             uint offset = 0; // for cbuffer members

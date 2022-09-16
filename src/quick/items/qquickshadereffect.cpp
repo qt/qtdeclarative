@@ -1311,7 +1311,7 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl
 
     disconnectSignals(shaderType);
 
-    m_shaders[shaderType].shaderInfo = QSGGuiThreadShaderEffectManager::ShaderInfo();
+    m_shaders[shaderType].shaderInfo.variables.clear();
     m_shaders[shaderType].varData.clear();
 
     if (!fileUrl.isEmpty()) {
