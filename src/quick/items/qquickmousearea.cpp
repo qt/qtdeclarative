@@ -24,7 +24,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
 
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
-: enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
+: enabled(true), hoverEnabled(false), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
   propagateComposedEvents(false), overThreshold(false),
   pressAndHoldInterval(-1)
@@ -453,6 +453,7 @@ void QQuickMouseArea::setEnabled(bool a)
     Q_D(QQuickMouseArea);
     if (a != d->enabled) {
         d->enabled = a;
+        setAcceptHoverEvents(a && d->hoverEnabled);
         emit enabledChanged();
     }
 }
@@ -767,7 +768,7 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
                 d->drag->setActive(false);
 #endif
             // If we don't accept hover, we need to reset containsMouse.
-            if (!acceptHoverEvents())
+            if (!hoverEnabled())
                 setHovered(false);
             QQuickWindow *w = window();
             if (w && w->mouseGrabberItem() == this)
@@ -802,6 +803,14 @@ void QQuickMouseArea::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickMouseArea);
     if (!d->enabled && !d->pressed) {
+        // Note: The fact that MouseArea doesn't update 'containsMouse' when it's disabled, is a
+        // legacy behavior that is different from how hover events are supposed to work; Hover
+        // events are always delivered to both enabled and disabled items (when they explicitly
+        // subscribe for them), to open up for hover effects, like showing tooltips. Because of
+        // this difference, you cannot use a MouseArea to e.g trigger a tooltop on a parent that
+        // is disabled. But since MouseArea has always worked this way, it should (probably) stay
+        // that way to avoid regressions. HoverHandlers do not suffer from this limitation, and
+        // can therefore be used as a replacement to solve such cases.
         QQuickItem::hoverEnterEvent(event);
     } else {
         d->lastPos = event->position();
@@ -843,7 +852,7 @@ void QQuickMouseArea::hoverMoveEvent(QHoverEvent *event)
 void QQuickMouseArea::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickMouseArea);
-    if (!d->enabled && !d->pressed)
+    if (!d->enabled && !d->pressed && !d->hovered)
         QQuickItem::hoverLeaveEvent(event);
     else
         setHovered(false);
@@ -1030,7 +1039,7 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
     Q_D(QQuickMouseArea);
     switch (change) {
     case ItemVisibleHasChanged:
-        if (d->effectiveEnable && d->enabled && acceptHoverEvents() && d->hovered != (isVisible() && isUnderMouse())) {
+        if (d->effectiveEnable && d->enabled && hoverEnabled() && d->hovered != (isVisible() && isUnderMouse())) {
             if (!d->hovered) {
                 QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
                 d->lastScenePos = d->window->mapFromGlobal(cursorPos.toPoint());
@@ -1065,15 +1074,18 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
 */
 bool QQuickMouseArea::hoverEnabled() const
 {
-    return acceptHoverEvents();
+    return d_func()->hoverEnabled;
 }
 
 void QQuickMouseArea::setHoverEnabled(bool h)
 {
-    if (h == acceptHoverEvents())
+    Q_D(QQuickMouseArea);
+    if (h == d->hoverEnabled)
         return;
 
-    setAcceptHoverEvents(h);
+    d->hoverEnabled = h;
+    setAcceptHoverEvents(h && d->enabled);
+
     emit hoverEnabledChanged();
 }
 

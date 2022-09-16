@@ -108,6 +108,7 @@ private slots:
     void hoverVisible();
     void hoverAfterPress();
     void subtreeHoverEnabled();
+    void hoverWhenDisabled();
     void disableAfterPress();
     void onWheel();
     void transformedMouseArea_data();
@@ -1397,6 +1398,37 @@ void tst_QQuickMouseArea::subtreeHoverEnabled()
     QCOMPARE(mouseArea->hovered(), true);
     QTest::mouseMove(&window, QPoint(160, 10));
     QCOMPARE(mouseArea->hovered(), false);
+}
+
+void tst_QQuickMouseArea::hoverWhenDisabled()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("hoverVisible.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+
+    QQuickMouseArea *mouseArea = root->findChild<QQuickMouseArea*>();
+    QVERIFY(mouseArea);
+    mouseArea->setVisible(true);
+
+    QTest::mouseMove(&window, QPoint(50, 50));
+    QVERIFY(mouseArea->hovered());
+
+    mouseArea->setEnabled(false);
+    QTest::mouseMove(&window, QPoint(51, 50));
+    QVERIFY(!mouseArea->hovered());
+
+    mouseArea->setEnabled(true);
+    QTest::mouseMove(&window, QPoint(50, 50));
+    QVERIFY(mouseArea->hovered());
+
+    mouseArea->setHoverEnabled(false);
+    QTest::mouseMove(&window, QPoint(51, 50));
+    QVERIFY(!mouseArea->hovered());
+
+    mouseArea->setHoverEnabled(true);
+    QTest::mouseMove(&window, QPoint(50, 50));
+    QVERIFY(mouseArea->hovered());
 }
 
 void tst_QQuickMouseArea::disableAfterPress()
