@@ -181,7 +181,7 @@ private:
     QObject *eventLoopQuitHack;
 
     QMutex mutex;
-    QQuickPixmapReaderThreadObject *threadObject;
+    std::unique_ptr<QQuickPixmapReaderThreadObject> threadObject;
 
 #if QT_CONFIG(qml_network)
     QNetworkAccessManager *networkAccessManager();
@@ -342,7 +342,7 @@ QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
 {
     if (!accessManager) {
         Q_ASSERT(threadObject);
-        accessManager = QQmlEnginePrivate::get(engine)->createNetworkAccessManager(threadObject);
+        accessManager = QQmlEnginePrivate::get(engine)->createNetworkAccessManager(threadObject.get());
     }
     return accessManager;
 }
@@ -476,7 +476,7 @@ static QString existingImageFileForPath(const QString &localFile)
 }
 
 QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
-: QThread(eng), engine(eng), threadObject(nullptr)
+: QThread(eng), engine(eng)
 #if QT_CONFIG(qml_network)
 , accessManager(nullptr)
 #endif
@@ -545,7 +545,7 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
                 reply = networkAccessManager()->get(req);
 
                 QMetaObject::connect(reply, replyDownloadProgress, job, downloadProgress);
-                QMetaObject::connect(reply, replyFinished, threadObject, threadNetworkRequestDone);
+                QMetaObject::connect(reply, replyFinished, threadObject.get(), threadNetworkRequestDone);
 
                 networkJobs.insert(reply, job);
                 return;
@@ -848,7 +848,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 }
 
                 {
-                    QObject::connect(response, SIGNAL(finished()), threadObject, SLOT(asyncResponseFinished()));
+                    QObject::connect(response, SIGNAL(finished()), threadObject.get(), SLOT(asyncResponseFinished()));
                     // as the response object can outlive the provider QSharedPointer, we have to extend the pointee's lifetime by that of the response
                     // we do this by capturing a copy of the QSharedPointer in a lambda, and dropping it once the lambda has been called
                     auto provider_copy = provider; // capturing provider would capture it as a const reference, and copy capture with initializer is only available in C++14
@@ -861,7 +861,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 //
                 // loadAcquire() synchronizes-with storeRelease() in QQuickImageResponsePrivate::_q_finished():
                 if (static_cast<QQuickImageResponsePrivate*>(QObjectPrivate::get(response))->finished.loadAcquire()) {
-                    QMetaObject::invokeMethod(threadObject, "asyncResponseFinished",
+                    QMetaObject::invokeMethod(threadObject.get(), "asyncResponseFinished",
                                               Qt::QueuedConnection, Q_ARG(QQuickImageResponse*, response));
                 }
 
@@ -937,7 +937,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QNetworkReply *reply = networkAccessManager()->get(req);
 
             QMetaObject::connect(reply, replyDownloadProgress, runningJob, downloadProgress);
-            QMetaObject::connect(reply, replyFinished, threadObject, threadNetworkRequestDone);
+            QMetaObject::connect(reply, replyFinished, threadObject.get(), threadNetworkRequestDone);
 
             networkJobs.insert(reply, runningJob);
 #else
@@ -1009,17 +1009,12 @@ void QQuickPixmapReader::run()
     }
 
     mutex.lock();
-    threadObject = new QQuickPixmapReaderThreadObject(this);
+    threadObject = std::make_unique<QQuickPixmapReaderThreadObject>(this);
     mutex.unlock();
 
     processJobs();
     exec();
 
-#if QT_CONFIG(thread)
-    // nothread exec is empty and returns
-    delete threadObject;
-    threadObject = nullptr;
-#endif
 }
 
 class QQuickPixmapKey
