@@ -70,6 +70,8 @@ private:
 };
 
 struct Q_QML_COMPILER_PRIVATE_EXPORT JSUnitGenerator {
+    enum LookupMode { LookupForStorage, LookupForCall };
+
     static void generateUnitChecksum(CompiledData::Unit *unit);
 
     struct MemberInfo {
@@ -83,12 +85,12 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT JSUnitGenerator {
     int getStringId(const QString &string) const { return stringTable.getStringId(string); }
     QString stringForIndex(int index) const { return stringTable.stringForIndex(index); }
 
-    int registerGetterLookup(const QString &name);
-    int registerGetterLookup(int nameIndex);
+    int registerGetterLookup(const QString &name, LookupMode mode);
+    int registerGetterLookup(int nameIndex, LookupMode mode);
     int registerSetterLookup(const QString &name);
     int registerSetterLookup(int nameIndex);
-    int registerGlobalGetterLookup(int nameIndex);
-    int registerQmlContextPropertyGetterLookup(int nameIndex);
+    int registerGlobalGetterLookup(int nameIndex, LookupMode mode);
+    int registerQmlContextPropertyGetterLookup(int nameIndex, LookupMode mode);
     int lookupNameIndex(int index) const { return lookups[index].nameIndex(); }
     QString lookupName(int index) const { return stringForIndex(lookupNameIndex(index)); }
 

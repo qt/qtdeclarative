@@ -151,6 +151,8 @@ struct QQmlValueTypeReference : public QQmlValueTypeWrapper
     V4_OBJECT2(QQmlValueTypeReference, QQmlValueTypeWrapper)
     V4_NEEDS_DESTROY
 
+    static ReturnedValue create(ExecutionEngine *engine, Heap::QQmlValueTypeReference *cloneFrom, QObject *object);
+
     bool readReferenceValue() const;
 };
 

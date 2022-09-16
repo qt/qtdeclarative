@@ -81,6 +81,7 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
     static ReturnedValue lookupSingletonProperty(Lookup *l, ExecutionEngine *engine, const Value &base);
+    static ReturnedValue lookupSingletonMethod(Lookup *l, ExecutionEngine *engine, const Value &base);
     static ReturnedValue lookupEnumValue(Lookup *l, ExecutionEngine *engine, const Value &base);
     static ReturnedValue lookupScopedEnum(Lookup *l, ExecutionEngine *engine, const Value &base);
 

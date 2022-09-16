@@ -506,11 +506,26 @@ public:
     int registerString(const QString &name) {
         return jsUnitGenerator->registerString(name);
     }
-    int registerConstant(QV4::ReturnedValue v) { return jsUnitGenerator->registerConstant(v); }
-    int registerGetterLookup(int nameIndex) { return jsUnitGenerator->registerGetterLookup(nameIndex); }
-    int registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
-    int registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
-    int registerQmlContextPropertyGetterLookup(int nameIndex) { return jsUnitGenerator->registerQmlContextPropertyGetterLookup(nameIndex); }
+    int registerConstant(QV4::ReturnedValue v)
+    {
+        return jsUnitGenerator->registerConstant(v);
+    }
+    int registerGetterLookup(int nameIndex, JSUnitGenerator::LookupMode mode)
+    {
+        return jsUnitGenerator->registerGetterLookup(nameIndex, mode);
+    }
+    int registerSetterLookup(int nameIndex)
+    {
+        return jsUnitGenerator->registerSetterLookup(nameIndex);
+    }
+    int registerGlobalGetterLookup(int nameIndex, JSUnitGenerator::LookupMode mode)
+    {
+        return jsUnitGenerator->registerGlobalGetterLookup(nameIndex, mode);
+    }
+    int registerQmlContextPropertyGetterLookup(int nameIndex, JSUnitGenerator::LookupMode mode)
+    {
+        return jsUnitGenerator->registerQmlContextPropertyGetterLookup(nameIndex, mode);
+    }
 
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, QQmlJS::AST::Node *ast,

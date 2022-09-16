@@ -24,6 +24,10 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Heap {
+    struct QObjectMethod;
+}
+
 // Note: We cannot hide the copy ctor and assignment operator of this class because it needs to
 //       be trivially copyable. But you should never ever copy it. There are refcounted members
 //       in there.
@@ -92,6 +96,12 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             const QQmlPropertyData *propertyData;
         } qobjectLookup;
         struct {
+            Heap::InternalClass *ic;
+            Heap::QObjectMethod *method;
+            const QQmlPropertyCache *propertyCache;
+            const QQmlPropertyData *propertyData;
+        } qobjectMethodLookup;
+        struct {
             quintptr isConstant; // This is a bool, encoded as 0 or 1. Both values are ignored by gc
             quintptr metaObject; // a (const QMetaObject* & 1) or nullptr
             int coreIndex;
@@ -141,7 +151,10 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             Heap::Object *qmlScopedEnumWrapper;
         } qmlScopedEnumWrapperLookup;
     };
-    uint nameIndex;
+
+    uint nameIndex: 28; // Same number of bits we store in the compilation unit for name indices
+    uint forCall: 1;    // Whether we are looking up a value in order to call it right away
+    uint reserved: 3;
 
     ReturnedValue resolveGetter(ExecutionEngine *engine, const Object *object);
     ReturnedValue resolvePrimitiveGetter(ExecutionEngine *engine, const Value &object);
@@ -164,6 +177,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
     static ReturnedValue getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterIndexed(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterQObject(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObjectMethod(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -204,6 +218,12 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
                 || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
             if (const QQmlPropertyCache *pc = qobjectLookup.propertyCache)
                 pc->release();
+        } else if (getter == getterQObjectMethod
+                   || getter == QQmlTypeWrapper::lookupSingletonMethod
+                   || qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectMethod
+                   || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectMethod) {
+            if (const QQmlPropertyCache *pc = qobjectMethodLookup.propertyCache)
+                pc->release();
         }
     }
 };
@@ -227,8 +247,8 @@ inline void setupQObjectLookup(
         Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
         const Object *self)
 {
-    lookup->qobjectLookup.ic = self->internalClass();
     setupQObjectLookup(lookup, ddata, propertyData);
+    lookup->qobjectLookup.ic = self->internalClass();
 }
 
 
@@ -236,8 +256,29 @@ inline void setupQObjectLookup(
         Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
         const Object *self, const Object *qmlType)
 {
-    lookup->qobjectLookup.qmlTypeIc = qmlType->internalClass();
     setupQObjectLookup(lookup, ddata, propertyData, self);
+    lookup->qobjectLookup.qmlTypeIc = qmlType->internalClass();
+}
+
+inline void setupQObjectMethodLookup(
+        Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
+        const Object *self, Heap::QObjectMethod *method)
+{
+    lookup->releasePropertyCache();
+    Q_ASSERT(!ddata->propertyCache.isNull());
+    lookup->qobjectMethodLookup.method = method;
+    lookup->qobjectMethodLookup.ic = self->internalClass();
+    lookup->qobjectMethodLookup.propertyCache = ddata->propertyCache.data();
+    lookup->qobjectMethodLookup.propertyCache->addref();
+    lookup->qobjectMethodLookup.propertyData = propertyData;
+}
+
+inline bool qualifiesForMethodLookup(const QQmlPropertyData *propertyData)
+{
+    return propertyData->isFunction()
+            && !propertyData->isSignalHandler() // TODO: Optimize SignalHandler, too
+            && !propertyData->isVMEFunction() // Handled by QObjectLookup
+            && !propertyData->isVarProperty();
 }
 
 }

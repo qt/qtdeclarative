@@ -190,7 +190,9 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
 
                     // check for property.
                     bool ok;
-                    const ReturnedValue result = QV4::QObjectWrapper::getQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, &ok);
+                    const ReturnedValue result = QV4::QObjectWrapper::getQmlProperty(
+                                v4, context, qobjectSingleton, name,
+                                QV4::QObjectWrapper::AttachMethods, &ok);
                     if (hasProperty)
                         *hasProperty = ok;
 
@@ -232,7 +234,9 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                         object,
                         type.attachedPropertiesFunction(QQmlEnginePrivate::get(v4->qmlEngine())));
                 if (ao)
-                    return QV4::QObjectWrapper::getQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, hasProperty);
+                    return QV4::QObjectWrapper::getQmlProperty(
+                                v4, context, ao, name, QV4::QObjectWrapper::AttachMethods,
+                                hasProperty);
 
                 // Fall through to base implementation
             }
@@ -297,13 +301,16 @@ bool QQmlTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value,
         QObject *ao = qmlAttachedPropertiesObject(
                 object, type.attachedPropertiesFunction(QQmlEnginePrivate::get(e)));
         if (ao)
-            return QV4::QObjectWrapper::setQmlProperty(scope.engine, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            return QV4::QObjectWrapper::setQmlProperty(
+                        scope.engine, context, ao, name, QV4::QObjectWrapper::NoFlag, value);
         return false;
     } else if (type.isSingleton()) {
         QQmlEnginePrivate *e = QQmlEnginePrivate::get(scope.engine->qmlEngine());
         if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
             if (QObject *qobjectSingleton = e->singletonInstance<QObject*>(type))
-                return QV4::QObjectWrapper::setQmlProperty(scope.engine, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
+                return QV4::QObjectWrapper::setQmlProperty(
+                            scope.engine, context, qobjectSingleton, name,
+                            QV4::QObjectWrapper::NoFlag, value);
 
         } else {
             QJSValue scriptSingleton = e->singletonInstance<QJSValue>(type);
@@ -419,9 +426,15 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
                             const QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobjectSingleton, qmlContext);
                             if (property) {
                                 ScopedValue val(scope, Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, qobjectSingleton)));
-                                setupQObjectLookup(lookup, ddata, property,
-                                                   val->objectValue(), This);
-                                lookup->getter = QQmlTypeWrapper::lookupSingletonProperty;
+                                if (qualifiesForMethodLookup(property)) {
+                                    setupQObjectMethodLookup(
+                                                lookup, ddata, property, val->objectValue(), nullptr);
+                                    lookup->getter = QQmlTypeWrapper::lookupSingletonMethod;
+                                } else {
+                                    setupQObjectLookup(
+                                                lookup, ddata, property, val->objectValue(), This);
+                                    lookup->getter = QQmlTypeWrapper::lookupSingletonProperty;
+                                }
                                 return lookup->getter(lookup, engine, *object);
                             }
                             // Fall through to base implementation
@@ -497,6 +510,16 @@ ReturnedValue QQmlTypeWrapper::lookupSingletonProperty(Lookup *l, ExecutionEngin
     // we can safely cast to a QV4::Object here. If object is something else,
     // the internal class won't match
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+
+    // The qmlTypeIc check is not strictly necessary.
+    // If we have different ways to get to the same QObject type
+    // we can use the same lookup to get its properties, no matter
+    // how we've found the object. Most of the few times this check
+    // fails, we will, of course have different object types. So
+    // this check provides an early exit for the error case.
+    //
+    // So, if we ever need more bits in qobjectLookup, qmlTypeIc is the
+    // member to be replaced.
     if (!o || o->internalClass != l->qobjectLookup.qmlTypeIc)
         return revertLookup();
 
@@ -515,7 +538,42 @@ ReturnedValue QQmlTypeWrapper::lookupSingletonProperty(Lookup *l, ExecutionEngin
 
     Scope scope(engine);
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, qobjectSingleton));
-    return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
+    const QObjectWrapper::Flags flags = l->forCall
+            ? QObjectWrapper::AllowOverride
+            : (QObjectWrapper::AttachMethods | QObjectWrapper::AllowOverride);
+    return QObjectWrapper::lookupPropertyGetterImpl(l, engine, obj, flags, revertLookup);
+}
+
+ReturnedValue QQmlTypeWrapper::lookupSingletonMethod(Lookup *l, ExecutionEngine *engine, const Value &object)
+{
+    const auto revertLookup = [l, engine, &object]() {
+        l->qobjectMethodLookup.propertyCache->release();
+        l->qobjectMethodLookup.propertyCache = nullptr;
+        l->getter = Lookup::getterGeneric;
+        return Lookup::getterGeneric(l, engine, object);
+    };
+
+    // We cannot safely cast here as we don't explicitly check the IC. Therefore as().
+    const QQmlTypeWrapper *This = object.as<QQmlTypeWrapper>();
+    if (!This)
+        return revertLookup();
+
+    QQmlType type = This->d()->type();
+    if (!type.isValid())
+        return revertLookup();
+
+    if (!type.isQObjectSingleton() && !type.isCompositeSingleton())
+        return revertLookup();
+
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(engine->qmlEngine());
+    QObject *qobjectSingleton = e->singletonInstance<QObject *>(type);
+    Q_ASSERT(qobjectSingleton);
+
+    Scope scope(engine);
+    ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, qobjectSingleton));
+    return QObjectWrapper::lookupMethodGetterImpl(
+                l, engine, obj, l->forCall ? QObjectWrapper::NoFlag : QObjectWrapper::AttachMethods,
+                revertLookup);
 }
 
 ReturnedValue QQmlTypeWrapper::lookupEnumValue(Lookup *l, ExecutionEngine *engine, const Value &base)

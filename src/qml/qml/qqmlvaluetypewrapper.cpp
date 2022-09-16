@@ -63,6 +63,21 @@ QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 }
 
 
+ReturnedValue QQmlValueTypeReference::create(
+        ExecutionEngine *engine, Heap::QQmlValueTypeReference *cloneFrom, QObject *object)
+{
+    Scope scope(engine);
+    initProto(engine);
+
+    Scoped<QQmlValueTypeReference> r(scope, engine->memoryManager->allocate<QQmlValueTypeReference>());
+    r->d()->object = object;
+    r->d()->property = cloneFrom->property;
+    r->d()->setMetaObject(cloneFrom->metaObject());
+    r->d()->setValueType(cloneFrom->valueType());
+    r->d()->setGadgetPtr(nullptr);
+    return r->asReturnedValue();
+}
+
 bool QQmlValueTypeReference::readReferenceValue() const
 {
     if (!d()->object)

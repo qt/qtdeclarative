@@ -208,9 +208,15 @@ struct QV4QPointer {
         init(o);
         return *this;
     }
+
     bool isNull() const noexcept
     {
-        return d == nullptr || qObject == nullptr || d->strongref.loadRelaxed() == 0;
+        return !isValid() || d->strongref.loadRelaxed() == 0;
+    }
+
+    bool isValid() const noexcept
+    {
+        return d != nullptr && qObject != nullptr;
     }
 
 private:

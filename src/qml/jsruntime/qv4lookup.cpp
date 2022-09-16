@@ -148,6 +148,7 @@ ReturnedValue Lookup::getterTwoClasses(Lookup *l, ExecutionEngine *engine, const
         Lookup second;
         memset(&second, 0, sizeof(Lookup));
         second.nameIndex = l->nameIndex;
+        second.forCall = l->forCall;
         second.getter = getterGeneric;
         const ReturnedValue result = second.resolveGetter(engine, o);
 
@@ -393,8 +394,27 @@ ReturnedValue Lookup::getterQObject(Lookup *lookup, ExecutionEngine *engine, con
         return Lookup::getterGeneric(lookup, engine, object);
     };
 
-    return QObjectWrapper::lookupGetterImpl(
-                lookup, engine, object, /*useOriginalProperty*/ false, revertLookup);
+    const QObjectWrapper::Flags flags = lookup->forCall
+            ? QObjectWrapper::AllowOverride
+            : (QObjectWrapper::AllowOverride | QObjectWrapper::AttachMethods);
+
+    return QObjectWrapper::lookupPropertyGetterImpl(lookup, engine, object, flags, revertLookup);
+}
+
+ReturnedValue Lookup::getterQObjectMethod(Lookup *lookup, ExecutionEngine *engine, const Value &object)
+{
+    const auto revertLookup = [lookup, engine, &object]() {
+        lookup->qobjectMethodLookup.propertyCache->release();
+        lookup->qobjectMethodLookup.propertyCache = nullptr;
+        lookup->getter = Lookup::getterGeneric;
+        return Lookup::getterGeneric(lookup, engine, object);
+    };
+
+    const QObjectWrapper::Flags flags = lookup->forCall
+            ? QObjectWrapper::AllowOverride
+            : (QObjectWrapper::AllowOverride | QObjectWrapper::AttachMethods);
+
+    return QObjectWrapper::lookupMethodGetterImpl(lookup, engine, object, flags, revertLookup);
 }
 
 ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object)

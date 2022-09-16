@@ -2045,7 +2045,8 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         if (!disable_lookups && useFastLookups) {
             Instruction::CallPropertyLookup call;
             call.base = base.propertyBase.stackSlot();
-            call.lookupIndex = registerGetterLookup(base.propertyNameIndex);
+            call.lookupIndex = registerGetterLookup(
+                        base.propertyNameIndex, JSUnitGenerator::LookupForCall);
             call.argc = calldata.argc;
             call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
@@ -2073,13 +2074,15 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         } else if (!disable_lookups && useFastLookups && base.global) {
             if (base.qmlGlobal) {
                 Instruction::CallQmlContextPropertyLookup call;
-                call.index = registerQmlContextPropertyGetterLookup(base.nameAsIndex());
+                call.index = registerQmlContextPropertyGetterLookup(
+                            base.nameAsIndex(), JSUnitGenerator::LookupForCall);
                 call.argc = calldata.argc;
                 call.argv = calldata.argv;
                 bytecodeGenerator->addInstruction(call);
             } else {
                 Instruction::CallGlobalLookup call;
-                call.index = registerGlobalGetterLookup(base.nameAsIndex());
+                call.index = registerGlobalGetterLookup(
+                            base.nameAsIndex(), JSUnitGenerator::LookupForCall);
                 call.argc = calldata.argc;
                 call.argv = calldata.argv;
                 bytecodeGenerator->addInstruction(call);
@@ -4647,11 +4650,13 @@ QT_WARNING_POP
         if (!disable_lookups && global) {
             if (qmlGlobal) {
                 Instruction::LoadQmlContextPropertyLookup load;
-                load.index = codegen->registerQmlContextPropertyGetterLookup(nameAsIndex());
+                load.index = codegen->registerQmlContextPropertyGetterLookup(
+                            nameAsIndex(), JSUnitGenerator::LookupForStorage);
                 codegen->bytecodeGenerator->addInstruction(load);
             } else {
                 Instruction::LoadGlobalLookup load;
-                load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
+                load.index = codegen->registerGlobalGetterLookup(
+                            nameAsIndex(), JSUnitGenerator::LookupForStorage);
                 codegen->bytecodeGenerator->addInstruction(load);
             }
         } else {
@@ -4668,12 +4673,16 @@ QT_WARNING_POP
             codegen->bytecodeGenerator->setLocation(sourceLocation);
 
         if (!disable_lookups && codegen->useFastLookups) {
-            if (optionalChainJumpLabel->isValid()) { // If we got a valid jump label, this means it's an optional lookup
-                auto jump = codegen->bytecodeGenerator->jumpOptionalLookup(codegen->registerGetterLookup(propertyNameIndex));
+            if (optionalChainJumpLabel->isValid()) {
+                // If we got a valid jump label, this means it's an optional lookup
+                auto jump = codegen->bytecodeGenerator->jumpOptionalLookup(
+                            codegen->registerGetterLookup(
+                                propertyNameIndex, JSUnitGenerator::LookupForStorage));
                 jump.link(*optionalChainJumpLabel.get());
             } else {
                 Instruction::GetLookup load;
-                load.index = codegen->registerGetterLookup(propertyNameIndex);
+                load.index = codegen->registerGetterLookup(
+                            propertyNameIndex, JSUnitGenerator::LookupForStorage);
                 codegen->bytecodeGenerator->addInstruction(load);
             }
         } else {

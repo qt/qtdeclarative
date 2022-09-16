@@ -139,7 +139,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
             QV4::Lookup *l = runtimeLookups + i;
 
             CompiledData::Lookup::Type type
-                    = CompiledData::Lookup::Type(uint(compiledLookups[i].typeAndFlags()));
+                    = CompiledData::Lookup::Type(uint(compiledLookups[i].type()));
             if (type == CompiledData::Lookup::Type_Getter)
                 l->getter = QV4::Lookup::getterGeneric;
             else if (type == CompiledData::Lookup::Type_Setter)
@@ -148,6 +148,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
             else if (type == CompiledData::Lookup::Type_QmlContextPropertyGetter)
                 l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
+            l->forCall = compiledLookups[i].mode() == CompiledData::Lookup::Mode_ForCall;
             l->nameIndex = compiledLookups[i].nameIndex();
         }
     }

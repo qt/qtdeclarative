@@ -111,14 +111,22 @@ QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::Compiler::Module *module)
     registerString(QString());
 }
 
-int QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
+int QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name, LookupMode mode)
 {
-    return registerGetterLookup(registerString(name));
+    return registerGetterLookup(registerString(name), mode);
 }
 
-int QV4::Compiler::JSUnitGenerator::registerGetterLookup(int nameIndex)
+static QV4::CompiledData::Lookup::Mode lookupMode(QV4::Compiler::JSUnitGenerator::LookupMode mode)
 {
-    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_Getter, nameIndex);
+    return mode == QV4::Compiler::JSUnitGenerator::LookupForCall
+            ? QV4::CompiledData::Lookup::Mode_ForCall
+            : QV4::CompiledData::Lookup::Mode_ForStorage;
+}
+
+int QV4::Compiler::JSUnitGenerator::registerGetterLookup(int nameIndex, LookupMode mode)
+{
+    lookups << CompiledData::Lookup(
+                   CompiledData::Lookup::Type_Getter, lookupMode(mode), nameIndex);
     return lookups.size() - 1;
 }
 
@@ -129,19 +137,25 @@ int QV4::Compiler::JSUnitGenerator::registerSetterLookup(const QString &name)
 
 int QV4::Compiler::JSUnitGenerator::registerSetterLookup(int nameIndex)
 {
-    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_Setter, nameIndex);
+    lookups << CompiledData::Lookup(
+                   CompiledData::Lookup::Type_Setter,
+                   CompiledData::Lookup::Mode_ForStorage, nameIndex);
     return lookups.size() - 1;
 }
 
-int QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(int nameIndex)
+int QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(int nameIndex, LookupMode mode)
 {
-    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_GlobalGetter, nameIndex);
+    lookups << CompiledData::Lookup(
+                   CompiledData::Lookup::Type_GlobalGetter, lookupMode(mode), nameIndex);
     return lookups.size() - 1;
 }
 
-int QV4::Compiler::JSUnitGenerator::registerQmlContextPropertyGetterLookup(int nameIndex)
+int QV4::Compiler::JSUnitGenerator::registerQmlContextPropertyGetterLookup(
+        int nameIndex, LookupMode mode)
 {
-    lookups << CompiledData::Lookup(CompiledData::Lookup::Type_QmlContextPropertyGetter, nameIndex);
+    lookups << CompiledData::Lookup(
+                   CompiledData::Lookup::Type_QmlContextPropertyGetter, lookupMode(mode),
+                   nameIndex);
     return lookups.size() - 1;
 }
 

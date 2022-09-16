@@ -1168,6 +1168,7 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     QV4::Lookup l;
     l.clear();
     l.nameIndex = nameIndex;
+    l.forCall = false;
     ObjectPropertyResult storeResult = ObjectPropertyResult::NeedsInit;
     switch (initObjectLookup(this, &l, qmlScopeObject, QMetaType())) {
     case ObjectLookupResult::Object: {
@@ -1242,7 +1243,7 @@ bool AOTCompiledContext::callQmlContextPropertyLookup(
         return false;
     }
 
-    function->call(nullptr, args, types, argc);
+    function->call(qmlScopeObject, args, types, argc);
     return !scope.hasException();
 }
 
