@@ -191,6 +191,10 @@ QQmlThread::~QQmlThread()
     delete d;
 }
 
+/*!
+    \internal
+    Starts the actual worker thread.
+ */
 void QQmlThread::startup()
 {
     d->lock();
@@ -304,6 +308,13 @@ void QQmlThread::internalCallMethodInThread(Message *message)
     d->unlock();
 }
 
+/*!
+    \internal
+    \note This method needs to run in the worker/QQmlThread
+
+    This runs \a message in the main thread, and blocks the
+    worker thread until the call has completed
+ */
 void QQmlThread::internalCallMethodInMain(Message *message)
 {
 #if !QT_CONFIG(thread)
@@ -367,6 +378,16 @@ void QQmlThread::internalPostMethodToMain(Message *message)
     d->unlock();
 }
 
+/*!
+    \internal
+    \note This method must be called in the main thread
+
+    A call to this method will either:
+    - run a message requested to run synchronously on the main thread if there is one
+      (and return afterrwards),
+    - wait for the worker thread to notify it if the worker thread has pending work,
+    - or simply return if neither of the conditions above hold
+ */
 void QQmlThread::waitForNextMessage()
 {
 #if QT_CONFIG(thread)
