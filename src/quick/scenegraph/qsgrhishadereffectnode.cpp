@@ -143,11 +143,18 @@ struct QSGRhiShaderMaterialTypeCache
     void reset() { qDeleteAll(m_types); m_types.clear(); }
 
     struct Key {
-        QShader blob[2];
-        Key() { }
-        Key(const QShader &vs, const QShader &fs) { blob[0] = vs; blob[1] = fs; }
+        QShader vs;
+        QShader fs;
+        size_t hash;
+        Key(const QShader &vs, const QShader &fs)
+            : vs(vs),
+              fs(fs)
+        {
+            QtPrivate::QHashCombine hashGen;
+            hash = hashGen(hashGen(0, vs), fs);
+        }
         bool operator==(const Key &other) const {
-            return blob[0] == other.blob[0] && blob[1] == other.blob[1];
+            return vs == other.vs && fs == other.fs;
         }
     };
     QHash<Key, QSGMaterialType *> m_types;
@@ -155,10 +162,7 @@ struct QSGRhiShaderMaterialTypeCache
 
 size_t qHash(const QSGRhiShaderMaterialTypeCache::Key &key, size_t seed = 0)
 {
-    size_t hash = seed;
-    for (int i = 0; i < 2; ++i)
-        hash = hash * 31337 + qHash(key.blob[i]);
-    return hash;
+    return seed ^ key.hash;
 }
 
 QSGMaterialType *QSGRhiShaderMaterialTypeCache::get(const QShader &vs, const QShader &fs)
