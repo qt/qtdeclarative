@@ -123,7 +123,7 @@ void tst_QQuickFileDialogImpl::initTestCase()
 
     qputenv("QT_QUICK_DIALOGS_PRESELECT_FIRST_FILE", "1");
 
-    QVERIFY(tempDir.isValid());
+    QVERIFY2(tempDir.isValid(), qPrintable(tempDir.errorString()));
     // QTEST_QUICKCONTROLS_MAIN constructs the test case object once,
     // and then calls qRun() for each style, and qRun() calls initTestCase().
     // So, we need to check if we've already made the temporary directory.
@@ -169,7 +169,7 @@ void tst_QQuickFileDialogImpl::initTestCase()
     /*
         Create another temporary directory that contains a large amount of folders.
     */
-    QVERIFY(largeTempDir.isValid());
+    QVERIFY2(largeTempDir.isValid(), qPrintable(largeTempDir.errorString()));
     const static int largeFileCount = 100;
     const QDir largeTempDirectory(largeTempDir.path());
     for (int i = 0; i < largeFileCount; ++i) {
