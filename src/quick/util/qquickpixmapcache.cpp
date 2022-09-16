@@ -41,6 +41,12 @@
 
 #define PIXMAP_PROFILE(Code) Q_QUICK_PROFILE(QQuickProfiler::ProfilePixmapCache, Code)
 
+#if QT_CONFIG(thread) && !defined(Q_OS_WASM)
+#  define USE_THREADED_DOWNLOAD 1
+#else
+#  define USE_THREADED_DOWNLOAD 0
+#endif
+
 QT_BEGIN_NAMESPACE
 
 const QLatin1String QQuickPixmap::itemGrabberScheme = QLatin1String("itemgrabber");
@@ -483,11 +489,11 @@ QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
 {
     eventLoopQuitHack = new QObject;
     eventLoopQuitHack->moveToThread(this);
-    connect(eventLoopQuitHack, SIGNAL(destroyed(QObject*)), SLOT(quit()), Qt::DirectConnection);
+    connect(eventLoopQuitHack, SIGNAL(destroyed(QObject *)), SLOT(quit()), Qt::DirectConnection);
+#if USE_THREADED_DOWNLOAD
     start(QThread::LowestPriority);
-#if !QT_CONFIG(thread)
-    // call nonblocking run ourself, as nothread qthread does not
-    run();
+#else
+    run(); // Call nonblocking run for ourselves.
 #endif
 }
 
@@ -1013,8 +1019,9 @@ void QQuickPixmapReader::run()
     mutex.unlock();
 
     processJobs();
+#if USE_THREADED_DOWNLOAD
     exec();
-
+#endif
 }
 
 class QQuickPixmapKey
