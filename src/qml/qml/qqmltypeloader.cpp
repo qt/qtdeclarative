@@ -179,9 +179,7 @@ void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
         } else {
             Q_ASSERT(mode == Synchronous);
             while (!blob->isCompleteOrError()) {
-                unlock();
                 m_thread->waitForNextMessage();
-                lock();
             }
         }
     }
@@ -908,9 +906,7 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
             // when recursively called on the QML thread via resolveTypes()
 
             while (!typeData->isCompleteOrError()) {
-                unlock();
                 m_thread->waitForNextMessage();
-                lock();
             }
         }
     }

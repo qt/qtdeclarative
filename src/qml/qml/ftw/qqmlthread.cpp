@@ -365,6 +365,7 @@ void QQmlThread::internalPostMethodToMain(Message *message)
 /*!
     \internal
     \note This method must be called in the main thread
+    \warning This method requires that the lock is held!
 
     A call to this method will either:
     - run a message requested to run synchronously on the main thread if there is one
@@ -377,7 +378,6 @@ void QQmlThread::waitForNextMessage()
 #if QT_CONFIG(thread)
     Q_ASSERT(!isThisThread());
 #endif
-    d->lock();
     Q_ASSERT(d->m_mainThreadWaiting == false);
 
     d->m_mainThreadWaiting = true;
@@ -397,7 +397,6 @@ void QQmlThread::waitForNextMessage()
     }
 
     d->m_mainThreadWaiting = false;
-    d->unlock();
 }
 
 
