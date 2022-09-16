@@ -1377,8 +1377,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
             }
         }
         if (needParent)
-            qWarning("QQmlComponent: Created graphical object was not "
-                     "placed in the graphics scene.");
+            qmlWarning(me) << "Created graphical object was not placed in the graphics scene.";
     }
 }
 
