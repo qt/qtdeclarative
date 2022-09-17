@@ -25,6 +25,7 @@
 #include <private/qv4generatorobject_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 #include <private/qqmlpropertybinding_p.h>
+#include <private/qqmlanybinding_p.h>
 #include <QtQml/private/qqmlvme_p.h>
 
 #include <QScopedValueRollback>
@@ -849,8 +850,18 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 void *argv[1] = { &groupObject };
                 QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, bindingProperty->coreIndex(), argv);
                 if (!groupObject) {
-                    recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
-                    return false;
+                    QQmlPropertyIndex index(bindingProperty->coreIndex());
+                    auto anyBinding = QQmlAnyBinding::ofProperty(_qobject, index);
+                    if (anyBinding) {
+                        // if there is a binding, try to force-evaluate it now
+                        // this might instantiate a necessary part of a grouped property
+                        anyBinding.refresh();
+                        QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, bindingProperty->coreIndex(), argv);
+                    }
+                    if (!groupObject) {
+                        recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
+                        return false;
+                    }
                 }
 
                 bindingTarget = groupObject;

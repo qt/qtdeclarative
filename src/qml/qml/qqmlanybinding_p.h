@@ -19,6 +19,8 @@
 #include <private/qqmlpropertybinding_p.h>
 #include <private/qqmlbinding_p.h>
 
+QT_BEGIN_NAMESPACE
+
 // Fully inline so that subsequent prop.isBindable check might get ellided.
 
 /*!
@@ -58,6 +60,28 @@ public:
             binding = bindable.binding();
         } else {
             binding = QQmlPropertyPrivate::binding(prop);
+        }
+        return binding;
+    }
+
+    /*!
+        \overload
+
+        \a object must be non-null
+     */
+    static QQmlAnyBinding ofProperty(QObject *object, QQmlPropertyIndex index)
+    {
+        QQmlAnyBinding binding;
+        Q_ASSERT(object);
+        QQmlData *data = QQmlData::get(object, true);
+        auto coreIndex = index.coreIndex();
+        // we don't support bindable properties on value types so far
+        if (!index.hasValueTypeIndex() && data->propertyCache->property(coreIndex)->isBindable()) {
+            auto metaProp = object->metaObject()->property(coreIndex);
+            QUntypedBindable bindable = metaProp.bindable(object);
+            binding = bindable.binding();
+        } else {
+            binding = QQmlPropertyPrivate::binding(object, index);
         }
         return binding;
     }
@@ -302,6 +326,28 @@ public:
 
     /*!
         \internal
+        Reevaluates the binding. If the binding was disabled,
+        it gets enabled.
+    */
+    void refresh()
+    {
+        if (d.isNull())
+            return;
+        if (d.isT1()) {
+            auto binding = static_cast<QQmlBinding *>(d.asT1());
+            binding->setEnabledFlag(true);
+            binding->refresh();
+        } else {
+            auto bindingPriv = d.asT2();
+            PendingBindingObserverList bindingObservers;
+            bindingPriv->evaluateRecursive(bindingObservers);
+            bindingPriv->notifyNonRecursive(bindingObservers);
+        }
+
+    }
+
+    /*!
+        \internal
         Stores \a binding and keeps a reference to it.
      */
     QQmlAnyBinding &operator=(QQmlAbstractBinding *binding)
@@ -421,6 +467,8 @@ private:
     }
     QBiPointer<QQmlAbstractBinding, QPropertyBindingPrivate> d;
 };
+
+QT_END_NAMESPACE
 
 
 #endif // QQMLANYBINDINGPTR_P_H
