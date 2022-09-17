@@ -94,6 +94,7 @@ private slots:
     void valueTypeFunctions();
     void constantsOverrideBindings();
     void outerBindingOverridesInnerBinding();
+    void groupPropertyBindingOrder();
     void aliasPropertyAndBinding();
     void aliasPropertyReset();
     void aliasPropertyToIC();
@@ -1666,6 +1667,18 @@ void tst_qqmlecmascript::outerBindingOverridesInnerBinding()
     QCOMPARE(object->property("c1").toInt(), 9);
     QCOMPARE(object->property("c2").toInt(), 8);
     QCOMPARE(object->property("c3").toInt(), 8);
+}
+
+/*
+ Tests that group property bindings work to objects
+ of a base element
+ */
+void tst_qqmlecmascript::groupPropertyBindingOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("groupPropertyInstantiationOrder.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj, qPrintable(component.errorString()));
 }
 
 /*
