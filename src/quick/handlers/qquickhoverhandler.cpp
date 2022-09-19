@@ -46,8 +46,14 @@ void QQuickHoverHandlerPrivate::onEnabledChanged()
 {
     Q_Q(QQuickHoverHandler);
 
-    if (auto parent = q->parentItem())
-        QQuickItemPrivate::get(parent)->setHasHoverInChild(enabled);
+    if (auto parent = q->parentItem()) {
+        QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parent);
+        itemPriv->setHasHoverInChild(enabled);
+        // The DA needs to resolve which items and handlers should now be hovered or unhovered.
+        // Marking the parent item dirty ensures that flushFrameSynchronousEvents() will be called from the render loop,
+        // even if this change is not in response to a mouse event and no item has already marked itself dirty.
+        itemPriv->dirty(QQuickItemPrivate::Content);
+    }
     if (!enabled)
         q->setHovered(false);
 }
