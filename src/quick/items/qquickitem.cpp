@@ -7800,6 +7800,10 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
     Q_D(QQuickItem);
     d->hoverEnabled = enabled;
     d->setHasHoverInChild(enabled);
+    // The DA needs to resolve which items and handlers should now be hovered or unhovered.
+    // Marking this item dirty ensures that flushFrameSynchronousEvents() will be called from the render loop,
+    // even if this change is not in response to a mouse event and no item has already marked itself dirty.
+    d->dirty(QQuickItemPrivate::Content);
 }
 
 /*!
