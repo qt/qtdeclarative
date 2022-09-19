@@ -718,10 +718,13 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
         if (!d->rootItem)
             return false;
         QEnterEvent *enter = static_cast<QEnterEvent*>(ev);
-        bool accepted = d->deliverHoverEvent(enter->scenePosition(),
+        const auto scenePos = enter->scenePosition();
+        bool accepted = d->deliverHoverEvent(scenePos,
                                               enter->points().first().sceneLastPosition(),
                                               enter->modifiers(), enter->timestamp());
-        d->lastMousePosition = enter->scenePosition();
+        d->lastMousePosition = scenePos;
+        // deliverHoverEvent() constructs QHoverEvents: check that EPD didn't end up with corrupted scenePos
+        Q_ASSERT(enter->scenePosition() == scenePos);
         enter->setAccepted(accepted);
 #if QT_CONFIG(cursor)
         QQuickWindowPrivate::get(d->rootItem->window())->updateCursor(enter->scenePosition(), d->rootItem);
@@ -933,11 +936,11 @@ bool QQuickDeliveryAgentPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *i
     const auto transform = itemPrivate->windowToItemTransform();
     const auto transformToGlobal = itemPrivate->windowToGlobalTransform();
     auto globalPos = transformToGlobal.map(scenePos);
-    QHoverEvent hoverEvent(type, transform.map(scenePos), globalPos, transform.map(lastScenePos), modifiers);
+    QHoverEvent hoverEvent(type, scenePos, globalPos, transform.map(lastScenePos), modifiers);
     hoverEvent.setTimestamp(timestamp);
     hoverEvent.setAccepted(true);
     QEventPoint &point = hoverEvent.point(0);
-    QMutableEventPoint::setScenePosition(point, scenePos);
+    QMutableEventPoint::setPosition(point, transform.map(scenePos));
     QMutableEventPoint::setGlobalLastPosition(point, transformToGlobal.map(lastScenePos));
 
     hasFiltered.clear();
