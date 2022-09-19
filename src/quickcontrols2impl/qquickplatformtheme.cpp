@@ -33,9 +33,10 @@ QVariant QQuickPlatformTheme::getThemeHint(QPlatformTheme::ThemeHint themeHint)
     // Allow tests to force some theme hint values, otherwise they get very messy and difficult to understand.
     switch (themeHint) {
     case QPlatformTheme::ShowDirectoriesFirst: {
-        const QVariant showDirsFirst = qEnvironmentVariable("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST");
-        if (showDirsFirst.isValid() && showDirsFirst.canConvert<bool>())
-            return showDirsFirst.toBool();
+        bool isInt = false;
+        const int showDirsFirst = qEnvironmentVariableIntValue("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST", &isInt);
+        if (isInt)
+            return showDirsFirst != 0;
         break;
     }
     default:

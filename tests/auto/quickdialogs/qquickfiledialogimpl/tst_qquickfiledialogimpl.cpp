@@ -492,7 +492,7 @@ void tst_QQuickFileDialogImpl::changeFolderViaDoubleClick()
 {
     QFETCH(bool, showDirsFirst);
 
-    qputenv("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST", showDirsFirst ? "true" : "false");
+    qputenv("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST", showDirsFirst ? "1" : "0");
 
     // Open the dialog.
     FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
