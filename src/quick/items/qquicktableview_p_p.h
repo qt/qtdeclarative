@@ -42,24 +42,6 @@ static const int kEdgeIndexAtEnd = -3;
 class FxTableItem;
 class QQuickTableSectionSizeProviderPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableSectionSizeProvider : public QObject {
-    Q_OBJECT
-
-public:
-    QQuickTableSectionSizeProvider(QObject *parent=nullptr);
-    void setSize(int section, qreal size);
-    qreal size(int section) const;
-    bool resetSize(int section);
-    void resetAll();
-
-Q_SIGNALS:
-    void sizeChanged();
-
-private:
-    Q_DISABLE_COPY(QQuickTableSectionSizeProvider)
-    Q_DECLARE_PRIVATE(QQuickTableSectionSizeProvider)
-};
-
 class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
 public:
@@ -264,8 +246,6 @@ public:
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
-    QQuickTableSectionSizeProvider rowHeights;
-    QQuickTableSectionSizeProvider columnWidths;
 
     mutable EdgeRange cachedNextVisibleEdgeIndex[4];
     mutable EdgeRange cachedColumnWidth;

@@ -991,10 +991,6 @@ bool QQuickTableViewPrivate::EdgeRange::containsIndex(Qt::Edge edge, int index)
 QQuickTableViewPrivate::QQuickTableViewPrivate()
     : QQuickFlickablePrivate()
 {
-    QObject::connect(&columnWidths, &QQuickTableSectionSizeProvider::sizeChanged,
-                            [this] { this->forceLayout();});
-    QObject::connect(&rowHeights, &QQuickTableSectionSizeProvider::sizeChanged,
-                            [this] { this->forceLayout();});
 }
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
@@ -2339,10 +2335,6 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
     if (syncHorizontally)
         return syncView->d_func()->getColumnWidth(column);
 
-    auto cw = columnWidths.size(column);
-    if (cw >= 0)
-        return cw;
-
     if (columnWidthProvider.isUndefined())
         return noExplicitColumnWidth;
 
@@ -2379,10 +2371,6 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
 
     if (syncVertically)
         return syncView->d_func()->getRowHeight(row);
-
-    auto rh = rowHeights.size(row);
-    if (rh >= 0)
-        return rh;
 
     if (rowHeightProvider.isUndefined())
         return noExplicitRowHeight;
@@ -5135,72 +5123,6 @@ void QQuickTableView::setSelectionBehavior(SelectionBehavior selectionBehavior)
 
     d->selectionBehavior = selectionBehavior;
     emit selectionBehaviorChanged();
-}
-
-class QObjectPrivate;
-class QQuickTableSectionSizeProviderPrivate : public QObjectPrivate {
-public:
-    QQuickTableSectionSizeProviderPrivate();
-    ~QQuickTableSectionSizeProviderPrivate();
-    QHash<int, qreal> hash;
-};
-
-QQuickTableSectionSizeProvider::QQuickTableSectionSizeProvider(QObject *parent)
-    : QObject (*(new QQuickTableSectionSizeProviderPrivate), parent)
-{
-}
-
-void QQuickTableSectionSizeProvider::setSize(int section, qreal size)
-{
-    Q_D(QQuickTableSectionSizeProvider);
-    if (section < 0 || size < 0) {
-        qmlWarning(this) << "setSize: section or size less than zero";
-        return;
-    }
-    if (qFuzzyCompare(QQuickTableSectionSizeProvider::size(section), size))
-        return;
-    d->hash.insert(section, size);
-    emit sizeChanged();
-}
-
-// return -1.0 if no valid explicit size retrieved
-qreal QQuickTableSectionSizeProvider::size(int section) const
-{
-    Q_D(const QQuickTableSectionSizeProvider);
-    auto it = d->hash.find(section);
-    if (it != d->hash.end())
-        return *it;
-    return -1.0;
-}
-
-// return true if section is valid
-bool QQuickTableSectionSizeProvider::resetSize(int section)
-{
-    Q_D(QQuickTableSectionSizeProvider);
-    if (d->hash.empty())
-        return false;
-
-    auto ret = d->hash.remove(section);
-    if (ret)
-        emit sizeChanged();
-    return ret;
-}
-
-void QQuickTableSectionSizeProvider::resetAll()
-{
-    Q_D(QQuickTableSectionSizeProvider);
-    d->hash.clear();
-    emit sizeChanged();
-}
-
-QQuickTableSectionSizeProviderPrivate::QQuickTableSectionSizeProviderPrivate()
-    : QObjectPrivate()
-{
-}
-
-QQuickTableSectionSizeProviderPrivate::~QQuickTableSectionSizeProviderPrivate()
-{
-
 }
 
 QT_END_NAMESPACE
