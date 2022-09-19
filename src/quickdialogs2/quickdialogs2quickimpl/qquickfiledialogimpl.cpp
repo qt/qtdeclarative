@@ -103,10 +103,9 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
                 return;
             }
 
-            const QFileInfoList dirs = newFolderDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, fileListSortFlags());
+            const QFileInfoList filesInNewDir = fileList(newFolderDir);
             const QFileInfo newSelectedFileInfo(newSelectedFilePath);
-            // The directory can contain files, but since we put dirs first, that should never affect the indices.
-            newSelectedFileIndex = dirs.indexOf(newSelectedFileInfo);
+            newSelectedFileIndex = filesInNewDir.indexOf(newSelectedFileInfo);
         }
     }
 
@@ -135,7 +134,8 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
     }
 
     const QUrl newSelectedFileUrl = QUrl::fromLocalFile(newSelectedFilePath);
-    qCDebug(lcUpdateSelectedFile) << "updateSelectedFile is setting selectedFile to" << newSelectedFileUrl;
+    qCDebug(lcUpdateSelectedFile).nospace() << "updateSelectedFile is setting selectedFile to " << newSelectedFileUrl
+        << ", newSelectedFileIndex is " << newSelectedFileIndex;
     q->setSelectedFile(newSelectedFileUrl);
     // If the index is -1, there are no files in the directory, and so fileDialogListView's
     // currentIndex will already be -1.

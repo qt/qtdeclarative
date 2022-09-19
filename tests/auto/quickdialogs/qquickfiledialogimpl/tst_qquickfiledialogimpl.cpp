@@ -66,6 +66,7 @@ private slots:
     void chooseFileAndThenFolderViaTextEdit();
     void cancelDialogWhileTextEditHasFocus();
     void closingDialogCancels();
+    void goUp_data();
     void goUp();
     void goUpWhileTextEditHasFocus();
     void goIntoLargeFolder();
@@ -696,8 +697,20 @@ void tst_QQuickFileDialogImpl::closingDialogCancels()
     QCOMPARE(rejected.size(), 1);
 }
 
+void tst_QQuickFileDialogImpl::goUp_data()
+{
+    QTest::addColumn<bool>("showDirsFirst");
+
+    QTest::newRow("showDirsFirst=true") << true;
+    QTest::newRow("showDirsFirst=false") << false;
+}
+
 void tst_QQuickFileDialogImpl::goUp()
 {
+    QFETCH(bool, showDirsFirst);
+
+    qputenv("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST", showDirsFirst ? "1" : "0");
+
     // Open the dialog. Start off in "sub-dir".
     FileDialogTestHelper dialogHelper(this, "bindCurrentFolder.qml", {},
         {{ "initialFolder", QUrl::fromLocalFile(tempSubDir.path()) }});
@@ -714,7 +727,8 @@ void tst_QQuickFileDialogImpl::goUp()
         QVERIFY(QQuickTest::qWaitForPolish(barListView));
     QVERIFY(clickButton(breadcrumbBar->upButton()));
     // The previous directory that we were in should now be selected (matches e.g. Windows and Ubuntu).
-    VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), 0);
+    int expectedCurrentIndex = showDirsFirst ? 0 : 2;
+    VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), expectedCurrentIndex);
 
     // Go up a directory via the keyboard shortcut.
     QDir tempParentDir(tempDir.path());
@@ -724,7 +738,7 @@ void tst_QQuickFileDialogImpl::goUp()
     QTest::keySequence(dialogHelper.window(), goUpKeySequence);
     // Ubuntu on QEMU arm shows no files in /tmp even if there are.
     if (!filesInTempParentDir.isEmpty()) {
-        const int expectedCurrentIndex = filesInTempParentDir.indexOf(QFileInfo(tempDir.path()));
+        expectedCurrentIndex = filesInTempParentDir.indexOf(QFileInfo(tempDir.path()));
         QVERIFY(expectedCurrentIndex != -1);
         VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempParentDir.path()), QUrl::fromLocalFile(tempDir.path()), expectedCurrentIndex);
     }
