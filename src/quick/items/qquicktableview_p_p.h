@@ -351,7 +351,7 @@ public:
     void updateAverageColumnWidth();
     void updateAverageRowHeight();
     RebuildOptions checkForVisibilityChanges();
-    void forceLayout();
+    void forceLayout(bool immediate);
 
     void updateExtents();
     void syncLoadedTableRectFromLoadedTable();

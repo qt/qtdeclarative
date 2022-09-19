@@ -1884,7 +1884,7 @@ QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilit
     return rebuildOptions;
 }
 
-void QQuickTableViewPrivate::forceLayout()
+void QQuickTableViewPrivate::forceLayout(bool immediate)
 {
     clearEdgeSizeCache();
     RebuildOptions rebuildOptions = RebuildOption::None;
@@ -1908,11 +1908,13 @@ void QQuickTableViewPrivate::forceLayout()
 
     scheduleRebuildTable(rebuildOptions);
 
-    auto rootView = rootSyncView();
-    const bool updated = rootView->d_func()->updateTableRecursive();
-    if (!updated) {
-        qWarning() << "TableView::forceLayout(): Cannot do an immediate re-layout during an ongoing layout!";
-        rootView->polish();
+    if (immediate) {
+        auto rootView = rootSyncView();
+        const bool updated = rootView->d_func()->updateTableRecursive();
+        if (!updated) {
+            qWarning() << "TableView::forceLayout(): Cannot do an immediate re-layout during an ongoing layout!";
+            rootView->polish();
+        }
     }
 }
 
@@ -4888,7 +4890,7 @@ int QQuickTableView::columnAtIndex(const QModelIndex &index) const
 
 void QQuickTableView::forceLayout()
 {
-    d_func()->forceLayout();
+    d_func()->forceLayout(true);
 }
 
 QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
