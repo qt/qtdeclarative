@@ -948,19 +948,34 @@ static inline QString automaticPipelineCacheFileName(QRhi *rhi)
     return QString();
 }
 
+static inline bool isAutomaticPipelineCacheLoadSkippedForWindow(Qt::WindowFlags wflags)
+{
+    return wflags.testFlag(Qt::ToolTip) || wflags.testFlag(Qt::SplashScreen);
+}
+
+static inline bool isAutomaticPipelineCacheSaveSkippedForWindow(Qt::WindowFlags wflags)
+{
+    // this catches Tool, ToolTip, SplashScreen as well
+    return wflags.testFlag(Qt::Dialog) || wflags.testFlag(Qt::Popup);
+}
+
 static inline QString pipelineCacheLockFileName(const QString &name)
 {
     return name + QLatin1String(".lck");
 }
 
-void QSGRhiSupport::preparePipelineCache(QRhi *rhi, const QQuickGraphicsConfiguration &config)
+void QSGRhiSupport::preparePipelineCache(QRhi *rhi, QQuickWindow *window)
 {
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+
     // the explicitly set filename always takes priority as per docs
-    QString pipelineCacheLoad = config.pipelineCacheLoadFile();
+    QString pipelineCacheLoad = wd->graphicsConfig.pipelineCacheLoadFile();
     bool isAutomatic = false;
-    if (pipelineCacheLoad.isEmpty() && config.isAutomaticPipelineCacheEnabled()) {
-        pipelineCacheLoad = automaticPipelineCacheFileName(rhi);
-        isAutomatic = true;
+    if (pipelineCacheLoad.isEmpty() && wd->graphicsConfig.isAutomaticPipelineCacheEnabled()) {
+        if (!isAutomaticPipelineCacheLoadSkippedForWindow(window->flags())) {
+            pipelineCacheLoad = automaticPipelineCacheFileName(rhi);
+            isAutomatic = true;
+        }
     }
 
     if (pipelineCacheLoad.isEmpty())
@@ -982,17 +997,19 @@ void QSGRhiSupport::preparePipelineCache(QRhi *rhi, const QQuickGraphicsConfigur
         return;
     }
 
-    qCDebug(QSG_LOG_INFO, "Attempting to seed pipeline cache from '%s'",
-            qPrintable(pipelineCacheLoad));
-
-    rhi->setPipelineCacheData(f.readAll());
+    const QByteArray buf = f.readAll();
+    if (!buf.isEmpty()) {
+        qCDebug(QSG_LOG_INFO, "Attempting to seed pipeline cache for QRhi %p from '%s'",
+                rhi, qPrintable(pipelineCacheLoad));
+        rhi->setPipelineCacheData(buf);
+    }
 }
 
 void QSGRhiSupport::finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfiguration &config)
 {
     // output the rhi statistics about pipelines, as promised by the documentation
-    qCDebug(QSG_LOG_INFO, "Total time spent on pipeline creation during the lifetime of the QRhi was %lld ms",
-            rhi->statistics().totalPipelineCreationTime);
+    qCDebug(QSG_LOG_INFO, "Total time spent on pipeline creation during the lifetime of the QRhi %p was %lld ms",
+            rhi, rhi->statistics().totalPipelineCreationTime);
 
     // the explicitly set filename always takes priority as per docs
     QString pipelineCacheSave = config.pipelineCacheSaveFile();
@@ -1003,6 +1020,13 @@ void QSGRhiSupport::finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfigu
     }
 
     if (pipelineCacheSave.isEmpty())
+        return;
+
+    const QByteArray buf = rhi->pipelineCacheData();
+
+    // If empty, do nothing. This is exactly what will happen if the rhi was
+    // created without QRhi::EnablePipelineCacheDataSave set.
+    if (buf.isEmpty())
         return;
 
     QLockFile lock(pipelineCacheLockFileName(pipelineCacheSave));
@@ -1026,9 +1050,8 @@ void QSGRhiSupport::finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfigu
         return;
     }
 
-    const QByteArray buf = rhi->pipelineCacheData();
-    qCDebug(QSG_LOG_INFO, "Writing pipeline cache contents (%d bytes) to '%s'",
-            int(buf.size()), qPrintable(pipelineCacheSave));
+    qCDebug(QSG_LOG_INFO, "Writing pipeline cache contents (%d bytes) for QRhi %p to '%s'",
+            int(buf.size()), rhi, qPrintable(pipelineCacheSave));
 
     if (f.write(buf) != buf.size()
 #if QT_CONFIG(temporaryfile)
@@ -1053,7 +1076,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
     if (customDevD->type == QQuickGraphicsDevicePrivate::Type::Rhi) {
         rhi = customDevD->u.rhi;
         if (rhi) {
-            preparePipelineCache(rhi, wd->graphicsConfig);
+            preparePipelineCache(rhi, window);
             return { rhi, false };
         }
     }
@@ -1061,17 +1084,18 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
     const bool debugLayer = wd->graphicsConfig.isDebugLayerEnabled();
     const bool debugMarkers = wd->graphicsConfig.isDebugMarkersEnabled();
     const bool preferSoftware = wd->graphicsConfig.prefersSoftwareDevice();
-    const bool pipelineCacheSave = wd->graphicsConfig.isAutomaticPipelineCacheEnabled()
-            || !wd->graphicsConfig.pipelineCacheSaveFile().isEmpty();
+    const bool pipelineCacheSave = !wd->graphicsConfig.pipelineCacheSaveFile().isEmpty()
+            || (wd->graphicsConfig.isAutomaticPipelineCacheEnabled()
+                && !isAutomaticPipelineCacheSaveSkippedForWindow(window->flags()));
 
     const QString backendName = rhiBackendName();
     qCDebug(QSG_LOG_INFO,
-            "Creating QRhi with backend %s for window %p\n"
+            "Creating QRhi with backend %s for window %p (wflags 0x%X)\n"
             "  Graphics API debug/validation layers: %d\n"
             "  Debug markers: %d\n"
             "  Prefer software device: %d\n"
             "  Shader/pipeline cache collection: %d",
-            qPrintable(backendName), window, debugLayer, debugMarkers, preferSoftware, pipelineCacheSave);
+            qPrintable(backendName), window, int(window->flags()), debugLayer, debugMarkers, preferSoftware, pipelineCacheSave);
 
     QRhi::Flags flags;
     if (debugMarkers)
@@ -1191,10 +1215,12 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
     }
 #endif
 
-    if (rhi)
-        preparePipelineCache(rhi, wd->graphicsConfig);
-    else
+    if (rhi) {
+        qCDebug(QSG_LOG_INFO, "Created QRhi %p for window %p", rhi, window);
+        preparePipelineCache(rhi, window);
+    } else {
         qWarning("Failed to create RHI (backend %d)", backend);
+    }
 
     return { rhi, true };
 }

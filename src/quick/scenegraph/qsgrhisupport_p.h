@@ -113,7 +113,7 @@ private:
     QSGRhiSupport();
     void applySettings();
     void adjustToPlatformQuirks();
-    void preparePipelineCache(QRhi *rhi, const QQuickGraphicsConfiguration &config);
+    void preparePipelineCache(QRhi *rhi, QQuickWindow *window);
     void finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfiguration &config);
     struct {
         bool valid = false;
