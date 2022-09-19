@@ -29,8 +29,14 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 8
         spacing: 8
+        function toggleMAEnabled() { maButtonCB.checked = !maButtonCB.checked }
         function toggleMAHover() { maButtonHoverCB.checked = !maButtonHoverCB.checked }
         function toggleHHEnabled() { hhButtonHoverCB.checked = !hhButtonHoverCB.checked }
+
+        CheckBox {
+            id: maButtonCB
+            label: "enabled"
+        }
 
         CheckBox {
             id: maButtonHoverCB
@@ -47,6 +53,7 @@ Rectangle {
             MouseArea {
                 id: buttonMA
                 objectName: "buttonMA"
+                enabled: maButtonCB.checked
                 hoverEnabled: maButtonHoverCB.checked
                 cursorShape: Qt.UpArrowCursor
                 anchors.fill: parent
@@ -143,6 +150,10 @@ Rectangle {
             id: tbs
             objectName: "topSidebarContents"
             anchors.fill: parent
+            Shortcut {
+                sequence: "Ctrl+E"
+                onActivated: tbs.toggleMAEnabled()
+            }
             Shortcut {
                 sequence: "Ctrl+M"
                 onActivated: tbs.toggleMAHover()
