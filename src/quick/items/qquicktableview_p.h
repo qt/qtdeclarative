@@ -178,6 +178,14 @@ public:
     Q_REVISION(6, 4) Q_INVOKABLE int rowAtIndex(const QModelIndex &index) const;
     Q_REVISION(6, 4) Q_INVOKABLE int columnAtIndex(const QModelIndex &index) const;
 
+    Q_REVISION(6, 5) Q_INVOKABLE void setColumnWidth(int column, qreal size);
+    Q_REVISION(6, 5) Q_INVOKABLE void clearColumnWidths();
+    Q_REVISION(6, 5) Q_INVOKABLE qreal explicitColumnWidth(int column) const;
+
+    Q_REVISION(6, 5) Q_INVOKABLE void setRowHeight(int row, qreal size);
+    Q_REVISION(6, 5) Q_INVOKABLE void clearRowHeights();
+    Q_REVISION(6, 5) Q_INVOKABLE qreal explicitRowHeight(int row) const;
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:

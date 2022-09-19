@@ -98,26 +98,37 @@
     \section1 Row heights and column widths
 
     When a new column is flicked into view, TableView will determine its width
-    by calling the \l columnWidthProvider function. TableView does not store
-    row height or column width, as it's designed to support large models
-    containing any number of rows and columns. Instead, it will ask the
-    application whenever it needs to know.
+    by calling the \l columnWidthProvider. If set, this function will alone decide
+    the width of the column. Otherwise, it will check if an explicit width has
+    been set with \l setColumnWidth(). If not, \l implicitColumnWidth() will be used.
+    The implicit width of a column is the same as the largest
+    \l {implicit width}{QQuickItem::implicitWidth()} found among the currently loaded
+    delegate items in that column. Trying to set an explicit \c width directly on
+    a delegate has no effect, and will be ignored and overwritten. The same logic also
+    applies to row heights.
 
-    TableView uses the largest \c implicitWidth among the items as the column
-    width, unless the \l columnWidthProvider property is explicitly set. Once
-    the column width is found, all other items in the same column are resized
-    to this width, even if new items that are flicked in later have larger
-    \c implicitWidth. Setting an explicit \c width on an item is ignored and
-    overwritten.
+    An implementation of a columnWidthProvider that is equivalent to the default
+    logic would be:
 
-    \note The calculated width of a column is discarded when it is flicked out
-    of the viewport, and is recalculated if the column is flicked back in. The
-    calculation is always based on the items that are visible when the column
-    is flicked in. This means that column width can be different each time,
-    depending on which row you're at when the column enters. You should
-    therefore have the same \c implicitWidth for all items in a column, or set
-    \l columnWidthProvider. The same logic applies for the row height
-    calculation.
+    \code
+    columnWidthProvider: function(column) {
+        let w = explicitColumnWidth(column)
+        if (w >= 0)
+            return w;
+        return implicitColumnWidth(column)
+    }
+    \endcode
+
+    Once the column width is resolved, all other items in the same column are resized
+    to this width, including any items that are flicked into the view at a later point.
+
+    \note The resolved width of a column is discarded when the whole column is flicked out
+    of the view, and is recalculated again if it's flicked back in. This means that if the
+    width depends on the \l implicitColumnWidth(), the calculation can be different each time,
+    depending on which row you're at when the column enters (since \l implicitColumnWidth()
+    only considers the delegate items that are currently \l {loaded}{isColumnLoaded()}).
+    To avoid this, you should use a \l columnWidthProvider, or ensure that all the delegate
+    items in the same column have the same \c implicitWidth.
 
     If you change the values that a \l rowHeightProvider or a
     \l columnWidthProvider return for rows and columns inside the viewport, you
@@ -848,6 +859,138 @@
     into account.
 
     \sa rowHeightProvider, rowHeight(), isRowLoaded(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::setColumnWidth(int column, real size)
+
+    Sets the explicit column width of column \a column to \a size.
+
+    If you want to read back the values you set with this function, you
+    should use \l explicitColumnWidth(). \l columnWidth() will return
+    the actual size of the column, which can be different if a
+    \l columnWidthProvider is set.
+
+    When TableView needs to resolve the width of \a column, it will first try
+    to call the \l columnWidthProvider. Only if a provider is not set, will
+    the widths set with this function be used by default. You can, however, call
+    \l explicitColumnWidth() from within the provider, and if needed, moderate
+    the values to e.g always be within a certain interval.
+    The following snippet shows an example on how to do that:
+
+    \code
+    columnWidthProvider: function(column) {
+        let w = explicitColumnWidth(column)
+        if (w >= 0)
+            return Math.max(100, w);
+        return implicitColumnWidth(column)
+    }
+    \endcode
+
+    If \a size is equal to \c 0, the column will be hidden. If \a size is
+    equal to \c -1, the column will be reset back to use \l implicitColumnWidth().
+    You are allowed to specify column sizes for columns that are outside the
+    size of the model.
+
+    \note The sizes you set will not be cleared if you change the \l model.
+    To clear the sizes, you need to call \l clearColumnWidths() explicitly.
+
+    \note For models with \e lots of columns, using \l setColumnWidth() to set the widths for
+    all the columns at start-up, can be suboptimal. This will consume start-up time and
+    memory (for storing all the widths). A more scalable approach is to use a
+    \l columnWidthProvider instead, or rely on the implicit width of the delegate.
+    A \c columnWidthProvider will only be called on an as-needed basis, and will not
+    be affected by the size of the model.
+
+    \sa explicitColumnWidth(), setRowHeight(), clearColumnWidths(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::clearColumnWidths()
+
+    Clears all the column widths set with \l setColumnWidth().
+
+    \sa setColumnWidth(), clearRowHeights(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod qreal QtQuick::TableView::explicitColumnWidth(int column)
+
+    Returns the width of the \a column set with \l setColumnWidth(). This width might
+    differ from the actual width of the column, if a \l columnWidthProvider()
+    is in use. To get the actual width of a column, use \l columnWidth().
+
+    A return value equal to \c 0 means that the column has been told to hide.
+    A return value equal to \c -1 means that no explicit width has been set
+    for the column.
+
+    \sa setColumnWidth(), columnWidth(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::setRowHeight(int row, real size)
+
+    Sets the explicit row height of row \a row to \a size.
+
+    If you want to read back the values you set with this function, you
+    should use \l explicitRowHeight(). \l rowHeight() will return
+    the actual height of the row, which can be different if a
+    \l rowHeightProvider is set.
+
+    When TableView needs to resolve the height of \a row, it will first try
+    to call the \l rowHeightProvider. Only if a provider is not set, will
+    the heights set with this function be used by default. You can, however, call
+    \l explicitRowHeight() from within the provider, and if needed, moderate
+    the values to e.g always be within a certain interval.
+    The following snippet shows an example on how to do that:
+
+    \code
+    rowHeightProvider: function(row) {
+        let h = explicitRowHeight(row)
+        if (h >= 0)
+            return Math.max(100, h);
+        return implicitRowHeight(row)
+    }
+    \endcode
+
+    If \a size is equal to \c 0, the row will be hidden. If \a size is
+    equal to \c -1, the row will be reset back to use \l implicitRowHeight().
+    You are allowed to specify row sizes for rows that are outside the
+    size of the model.
+
+    \note The sizes you set will not be cleared if you change the \l model.
+    To clear the sizes, you need to call \l clearRowHeights() explicitly.
+
+    \note For models with \e lots of rows, using \l setRowHeight() to set the heights for
+    all the rows at start-up, can be suboptimal. This will consume start-up time and
+    memory (for storing all the heights). A more scalable approach is to use a
+    \l rowHeightProvider instead, or rely on the implicit height of the delegate.
+    A \c rowHeightProvider will only be called on an as-needed basis, and will not
+    be affected by the size of the model.
+
+    \sa explicitRowHeight(), setColumnWidth(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::clearRowHeights()
+
+    Clears all the row heights set with \l setRowHeight().
+
+    \sa setRowHeight(), clearColumnWidths(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod qreal QtQuick::TableView::explicitRowHeight(int row)
+
+    Returns the height of the \a row set with \l setRowHeight(). This height might
+    differ from the actual height of the column, if a \l rowHeightProvider()
+    is in use. To get the actual height of a row, use \l rowHeight().
+
+    A return value equal to \c 0 means that the row has been told to hide.
+    A return value equal to \c -1 means that no explicit height has been set
+    for the row.
+
+    \sa setRowHeight(), rowHeight(), {Row heights and column widths}
 */
 
 /*!
@@ -2329,6 +2472,8 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
     // is hidden, and -1 if the width is not set (which means that the width should
     // instead be calculated from the implicit size of the delegate items. This function
     // can be overridden by e.g HeaderView to provide the column widths by other means.
+    Q_Q(const QQuickTableView);
+
     const int noExplicitColumnWidth = -1;
 
     if (cachedColumnWidth.startIndex == column)
@@ -2337,8 +2482,15 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
     if (syncHorizontally)
         return syncView->d_func()->getColumnWidth(column);
 
-    if (columnWidthProvider.isUndefined())
+    if (columnWidthProvider.isUndefined()) {
+        // We only respect explicit column widths when no columnWidthProvider
+        // is set. Otherwise it's the responsibility of the provider to e.g
+        // call explicitColumnWidth() (and implicitColumnWidth()), if needed.
+        qreal explicitColumnWidth = q->explicitColumnWidth(column);
+        if (explicitColumnWidth >= 0)
+            return explicitColumnWidth;
         return noExplicitColumnWidth;
+    }
 
     qreal columnWidth = noExplicitColumnWidth;
 
@@ -2366,6 +2518,8 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
     // is hidden, and -1 if the height is not set (which means that the height should
     // instead be calculated from the implicit size of the delegate items. This function
     // can be overridden by e.g HeaderView to provide the row heights by other means.
+    Q_Q(const QQuickTableView);
+
     const int noExplicitRowHeight = -1;
 
     if (cachedRowHeight.startIndex == row)
@@ -2374,8 +2528,15 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
     if (syncVertically)
         return syncView->d_func()->getRowHeight(row);
 
-    if (rowHeightProvider.isUndefined())
+    if (rowHeightProvider.isUndefined()) {
+        // We only resepect explicit row heights when no rowHeightProvider
+        // is set. Otherwise it's the responsibility of the provider to e.g
+        // call explicitRowHeight() (and implicitRowHeight()), if needed.
+        qreal explicitRowHeight = q->explicitRowHeight(row);
+        if (explicitRowHeight >= 0)
+            return explicitRowHeight;
         return noExplicitRowHeight;
+    }
 
     qreal rowHeight = noExplicitRowHeight;
 
@@ -4851,6 +5012,88 @@ qreal QQuickTableView::implicitRowHeight(int row) const
         return -1;
 
     return d->sizeHintForRow(row);
+}
+
+void QQuickTableView::setColumnWidth(int column, qreal size)
+{
+    Q_D(QQuickTableView);
+    if (column < 0) {
+        qmlWarning(this) << "column must be greather than, or equal to, zero";
+        return;
+    }
+
+    if (qFuzzyCompare(explicitColumnWidth(column), size))
+        return;
+
+    if (size < 0)
+        d->explicitColumnWidths.remove(column);
+    else
+        d->explicitColumnWidths.insert(column, size);
+
+    const bool allColumnsLoaded = d->atTableEnd(Qt::LeftEdge) && d->atTableEnd(Qt::RightEdge);
+    if (column >= leftColumn() || column <= rightColumn() || allColumnsLoaded)
+        d->forceLayout(false);
+}
+
+void QQuickTableView::clearColumnWidths()
+{
+    Q_D(QQuickTableView);
+
+    if (d->explicitColumnWidths.isEmpty())
+        return;
+
+    d->explicitColumnWidths.clear();
+    d->forceLayout(false);
+}
+
+qreal QQuickTableView::explicitColumnWidth(int column) const
+{
+    Q_D(const QQuickTableView);
+    const auto it = d->explicitColumnWidths.constFind(column);
+    if (it != d->explicitColumnWidths.constEnd())
+        return *it;
+    return -1;
+}
+
+void QQuickTableView::setRowHeight(int row, qreal size)
+{
+    Q_D(QQuickTableView);
+    if (row < 0) {
+        qmlWarning(this) << "row must be greather than, or equal to, zero";
+        return;
+    }
+
+    if (qFuzzyCompare(explicitRowHeight(row), size))
+        return;
+
+    if (size < 0)
+        d->explicitRowHeights.remove(row);
+    else
+        d->explicitRowHeights.insert(row, size);
+
+    const bool allRowsLoaded = d->atTableEnd(Qt::TopEdge) && d->atTableEnd(Qt::BottomEdge);
+    if (row >= topRow() || row <= bottomRow() || allRowsLoaded)
+        d->forceLayout(false);
+}
+
+void QQuickTableView::clearRowHeights()
+{
+    Q_D(QQuickTableView);
+
+    if (d->explicitRowHeights.isEmpty())
+        return;
+
+    d->explicitRowHeights.clear();
+    d->forceLayout(false);
+}
+
+qreal QQuickTableView::explicitRowHeight(int row) const
+{
+    Q_D(const QQuickTableView);
+    const auto it = d->explicitRowHeights.constFind(row);
+    if (it != d->explicitRowHeights.constEnd())
+        return *it;
+    return -1;
 }
 
 QModelIndex QQuickTableView::modelIndex(const QPoint &cell) const

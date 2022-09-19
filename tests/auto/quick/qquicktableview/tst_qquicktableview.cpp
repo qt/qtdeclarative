@@ -215,6 +215,18 @@ private slots:
     void testDeprecatedApi();
     void alternatingRows();
     void boundDelegateComponent();
+    void setColumnWidth_data();
+    void setColumnWidth();
+    void setColumnWidthWhenProviderIsSet();
+    void setColumnWidthForInvalidColumn();
+    void resetColumnWidth();
+    void clearColumnWidths();
+    void setRowHeight_data();
+    void setRowHeight();
+    void setRowHeightWhenProviderIsSet();
+    void setRowHeightForInvalidRow();
+    void resetRowHeight();
+    void clearRowHeights();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -5345,6 +5357,277 @@ void tst_QQuickTableView::boundDelegateComponent()
     QCOMPARE(innerTableView->rows(), 3);
     for (int i = 0; i < 3; ++i)
         QVERIFY(innerTableView->itemAtCell(0, i)->objectName().isEmpty());
+}
+
+void tst_QQuickTableView::setColumnWidth_data()
+{
+    QTest::addColumn<int>("columnCount");
+    QTest::addColumn<int>("column");
+    QTest::addColumn<qreal>("size");
+
+    QTest::newRow("first column") << 5 << 0 << 10.;
+    QTest::newRow("second column") << 5 << 2 << 10.;
+    QTest::newRow("a hidden column") << 20 << 19 << 10.;
+    QTest::newRow("a column outside model") << 1 << 5 << 10.;
+}
+
+void tst_QQuickTableView::setColumnWidth()
+{
+    // Test that you can set the width of a column explicitly
+    QFETCH(int, columnCount);
+    QFETCH(int, column);
+    QFETCH(qreal, size);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(2, columnCount);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setColumnWidth(column, size);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(column), size);
+    if (tableView->isColumnLoaded(column))
+        QCOMPARE(tableView->columnWidth(column), size);
+    else
+        QCOMPARE(tableView->columnWidth(column), -1);
+}
+
+
+void tst_QQuickTableView::setColumnWidthWhenProviderIsSet()
+{
+    // Test that explicitly set column widths will be
+    // ignored if a columnWidthProvider is set
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setColumnWidth(1, 100);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(1), 100);
+    QCOMPARE(tableView->columnWidth(1), 11);
+}
+
+void tst_QQuickTableView::setColumnWidthForInvalidColumn()
+{
+    // Check that you cannot set a column width for
+    // a negative column index.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*column must be greather than, or equal to, zero"));
+    tableView->setColumnWidth(-1, 10);
+
+    QCOMPARE(tableView->explicitColumnWidth(-1), -1);
+    QCOMPARE(tableView->columnWidth(-1), -1);
+}
+
+void tst_QQuickTableView::resetColumnWidth()
+{
+    // Check that you can reset a column width
+    // by setting its width to -1
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    const int column = 1;
+    const qreal size = 10.;
+    const qreal defaultSize = 100.;
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setColumnWidth(column, size);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(column), size);
+    QCOMPARE(tableView->columnWidth(column), size);
+
+    tableView->setColumnWidth(column, -1);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(column), -1);
+    QCOMPARE(tableView->columnWidth(column), defaultSize);
+}
+
+void tst_QQuickTableView::clearColumnWidths()
+{
+    // Check that clearColumnWidths() works as documented
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    const qreal defaultSize = 100.;
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setColumnWidth(0, 10);
+    tableView->setColumnWidth(1, 20);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(0), 10);
+    QCOMPARE(tableView->columnWidth(0), 10);
+    QCOMPARE(tableView->explicitColumnWidth(1), 20);
+    QCOMPARE(tableView->columnWidth(1), 20);
+
+    tableView->clearColumnWidths();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(0), -1);
+    QCOMPARE(tableView->columnWidth(0), defaultSize);
+    QCOMPARE(tableView->explicitColumnWidth(1), -1);
+    QCOMPARE(tableView->columnWidth(1), defaultSize);
+}
+
+void tst_QQuickTableView::setRowHeight_data()
+{
+    QTest::addColumn<int>("rowCount");
+    QTest::addColumn<int>("row");
+    QTest::addColumn<qreal>("size");
+
+    QTest::newRow("first row") << 5 << 0 << 10.;
+    QTest::newRow("second row") << 5 << 2 << 10.;
+    QTest::newRow("a hidden row") << 20 << 19 << 10.;
+    QTest::newRow("a row outside model") << 1 << 5 << 10.;
+}
+
+void tst_QQuickTableView::setRowHeight()
+{
+    // Test that you can set the height of a row explicitly
+    QFETCH(int, rowCount);
+    QFETCH(int, row);
+    QFETCH(qreal, size);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(rowCount, 2);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setRowHeight(row, size);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitRowHeight(row), size);
+    if (tableView->isRowLoaded(row))
+        QCOMPARE(tableView->rowHeight(row), size);
+    else
+        QCOMPARE(tableView->rowHeight(row), -1);
+}
+
+void tst_QQuickTableView::setRowHeightWhenProviderIsSet()
+{
+    // Test that explicitly set row heights will be
+    // ignored if a rowHeightProvider is set
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setRowHeight(1, 100);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitRowHeight(1), 100);
+    QCOMPARE(tableView->rowHeight(1), 11);
+}
+
+void tst_QQuickTableView::setRowHeightForInvalidRow()
+{
+    // Check that you cannot set a row height for
+    // a negative row index.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*row must be greather than, or equal to, zero"));
+    tableView->setRowHeight(-1, 10);
+
+    QCOMPARE(tableView->explicitRowHeight(-1), -1);
+    QCOMPARE(tableView->rowHeight(-1), -1);
+}
+
+void tst_QQuickTableView::resetRowHeight()
+{
+    // Check that you can reset a row height
+    // by setting its width to -1
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    const int row = 1;
+    const qreal size = 10.;
+    const qreal defaultSize = 50.;
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setRowHeight(row, size);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitRowHeight(row), size);
+    QCOMPARE(tableView->rowHeight(row), size);
+
+    tableView->setRowHeight(row, -1);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+    QCOMPARE(tableView->rowHeight(row), defaultSize);
+}
+
+void tst_QQuickTableView::clearRowHeights()
+{
+    // Check that clearRowHeights() works as documented
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(5, 5);
+    tableView->setModel(model);
+
+    const qreal defaultSize = 50.;
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setRowHeight(0, 10);
+    tableView->setRowHeight(1, 20);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitRowHeight(0), 10);
+    QCOMPARE(tableView->rowHeight(0), 10);
+    QCOMPARE(tableView->explicitRowHeight(1), 20);
+    QCOMPARE(tableView->rowHeight(1), 20);
+
+    tableView->clearRowHeights();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitRowHeight(0), -1);
+    QCOMPARE(tableView->rowHeight(0), defaultSize);
+    QCOMPARE(tableView->explicitRowHeight(1), -1);
+    QCOMPARE(tableView->rowHeight(1), defaultSize);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

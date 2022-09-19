@@ -297,6 +297,9 @@ public:
     int currentRow = -1;
     int currentColumn = -1;
 
+    QHash<int, qreal> explicitColumnWidths;
+    QHash<int, qreal> explicitRowHeights;
+
 #ifdef QT_DEBUG
     QString forcedIncubationMode = qEnvironmentVariable("QT_TABLEVIEW_INCUBATION_MODE");
 #endif
