@@ -92,7 +92,14 @@ private:
         bool isValueType = false;
     };
 
-    void compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+    QStringList unprocessedListBindings;
+    QQmlJSMetaProperty unprocessedListProperty;
+
+    void processLastListBindings(QmltcType &current, const QQmlJSScope::ConstPtr &type,
+                                 const BindingAccessorData &accessor);
+
+    void compileBinding(QmltcType &current, QList<QQmlJSMetaPropertyBinding>::iterator bindingStart,
+                        QList<QQmlJSMetaPropertyBinding>::iterator bindingEnd,
                         const QQmlJSScope::ConstPtr &type, const BindingAccessorData &accessor);
 
     void compileBindingByType(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,

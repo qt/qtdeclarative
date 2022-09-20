@@ -61,6 +61,11 @@ struct QmltcCodeGenerator
                                           const QQmlJSMetaProperty &p, const QString &value,
                                           const QString &accessor,
                                           bool constructFromQObject = false);
+
+    static void generate_assignToListProperty(QStringList *block, const QQmlJSScope::ConstPtr &type,
+                                              const QQmlJSMetaProperty &p, const QStringList &value,
+                                              const QString &accessor, QString &qmlListVarName);
+
     static void generate_setIdValue(QStringList *block, const QString &context, qsizetype index,
                                     const QString &accessor, const QString &idString);
 

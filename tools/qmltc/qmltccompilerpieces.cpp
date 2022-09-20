@@ -84,6 +84,29 @@ QmltcCodeGenerator::wrap_extensionType(const QQmlJSScope::ConstPtr &type,
     return { prologue, value, epilogue };
 }
 
+void QmltcCodeGenerator::generate_assignToListProperty(
+        QStringList *block, const QQmlJSScope::ConstPtr &type, const QQmlJSMetaProperty &p,
+        const QStringList &values, const QString &accessor, QString &qmlListVarName)
+{
+    Q_UNUSED(type); // might be needed
+    const bool populateLocalListProperty = qmlListVarName.isEmpty();
+
+    if (populateLocalListProperty) {
+        qmlListVarName = u"listref_%1"_s.arg(p.propertyName());
+        *block << u"QQmlListReference %1(%2, %3);"_s.arg(
+                qmlListVarName, accessor,
+                QQmlJSUtils::toLiteral(p.propertyName(), u"QByteArrayLiteral"));
+        *block << QStringLiteral("Q_ASSERT(%1.canAppend());").arg(qmlListVarName);
+    }
+    for (const QString &value : values) {
+        auto [prologue, wrappedValue, epilogue] =
+                QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
+        *block << prologue;
+        *block << u"%1.append(%2);"_s.arg(qmlListVarName, wrappedValue);
+        *block << epilogue;
+    }
+}
+
 void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
                                                    const QQmlJSScope::ConstPtr &type,
                                                    const QQmlJSMetaProperty &p,

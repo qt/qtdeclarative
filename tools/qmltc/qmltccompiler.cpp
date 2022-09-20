@@ -335,8 +335,7 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
     auto bindings = type->ownPropertyBindingsInQmlIROrder();
     partitionBindings(bindings.begin(), bindings.end());
 
-    for (auto it = bindings.begin(); it != bindings.end(); ++it)
-        compileBinding(current, *it, type, { type });
+    compileBinding(current, bindings.begin(), bindings.end(), type, { type });
 }
 
 void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
@@ -892,10 +891,9 @@ void QmltcCompiler::compileObjectBinding(QmltcType &current,
 
     const auto addObjectBinding = [&](const QString &value) {
         if (qIsReferenceTypeList(property)) {
-            const auto &listName =
-                    m_uniques[UniqueStringId(current, propertyName)].qmlListVariableName;
-            Q_ASSERT(!listName.isEmpty());
-            current.endInit.body << u"%1.append(%2);"_s.arg(listName, value);
+            Q_ASSERT(unprocessedListProperty == property || unprocessedListBindings.empty());
+            unprocessedListBindings.append(value);
+            unprocessedListProperty = property;
         } else {
             QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, type, property,
                                                           value, accessor.name, true);
@@ -1077,9 +1075,8 @@ void QmltcCompiler::compileAttachedPropertyBinding(QmltcType &current,
     auto subbindings = attachedType->ownPropertyBindingsInQmlIROrder();
     // compile bindings of the attached property
     partitionBindings(subbindings.begin(), subbindings.end());
-    for (const auto &b : qAsConst(subbindings)) {
-        compileBinding(current, b, attachedType, { type, attachedMemberName, propertyName, false });
-    }
+    compileBinding(current, subbindings.begin(), subbindings.end(), attachedType,
+                   { type, attachedMemberName, propertyName, false });
 }
 
 /*!
@@ -1141,15 +1138,17 @@ void QmltcCompiler::compileGroupPropertyBinding(QmltcType &current,
     }
 
     // compile bindings of the grouped property
-    const auto compile = [&](const QQmlJSMetaPropertyBinding &b) {
-        compileBinding(current, b, groupType, { type, groupAccessor, propertyName, isValueType });
+    const auto compile = [&](const auto &bStart, const auto &bEnd) {
+        compileBinding(current, bStart, bEnd, groupType,
+                       { type, groupAccessor, propertyName, isValueType });
     };
 
     auto it = subbindings.begin();
-    for (; it != firstScript; ++it) {
-        Q_ASSERT(it->bindingType() != QQmlJSMetaPropertyBinding::Script);
-        compile(*it);
-    }
+    Q_ASSERT(std::all_of(it, firstScript, [](const auto &x) {
+        return x.bindingType() != QQmlJSMetaPropertyBinding::Script;
+    }));
+    compile(it, firstScript);
+    it = firstScript;
 
     // NB: script bindings are special on group properties. if our group is
     // a value type, the binding would be installed on the *object* that
@@ -1166,10 +1165,10 @@ void QmltcCompiler::compileGroupPropertyBinding(QmltcType &current,
     }
 
     // once the value is written back, process the script bindings
-    for (; it != subbindings.end(); ++it) {
-        Q_ASSERT(it->bindingType() == QQmlJSMetaPropertyBinding::Script);
-        compile(*it);
-    }
+    Q_ASSERT(std::all_of(it, subbindings.end(), [](const auto &x) {
+        return x.bindingType() == QQmlJSMetaPropertyBinding::Script;
+    }));
+    compile(it, subbindings.end());
 }
 
 /*!
@@ -1226,57 +1225,69 @@ void QmltcCompiler::compileTranslationBinding(QmltcType &current,
     QmltcCodeGenerator::generate_createTranslationBindingOnProperty(&current.endInit.body, info);
 }
 
-void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+void QmltcCompiler::processLastListBindings(QmltcType &current, const QQmlJSScope::ConstPtr &type,
+                                            const BindingAccessorData &accessor)
+{
+    if (unprocessedListBindings.empty())
+        return;
+
+    QmltcCodeGenerator::generate_assignToListProperty(
+            &current.endInit.body, type, unprocessedListProperty, unprocessedListBindings,
+            accessor.name,
+            m_uniques[UniqueStringId(current, unprocessedListProperty.propertyName())]
+                    .qmlListVariableName);
+
+    unprocessedListBindings.clear();
+}
+
+void QmltcCompiler::compileBinding(QmltcType &current,
+                                   QList<QQmlJSMetaPropertyBinding>::iterator bindingStart,
+                                   QList<QQmlJSMetaPropertyBinding>::iterator bindingEnd,
                                    const QQmlJSScope::ConstPtr &type,
                                    const BindingAccessorData &accessor)
 {
-    const QString &propertyName = binding.propertyName();
-    Q_ASSERT(!propertyName.isEmpty());
+    for (auto it = bindingStart; it != bindingEnd; it++) {
+        const QQmlJSMetaPropertyBinding &binding = *it;
+        const QString &propertyName = binding.propertyName();
+        Q_ASSERT(!propertyName.isEmpty());
 
-    // Note: unlike QQmlObjectCreator, we don't have to do a complicated
-    // deferral logic for bindings: if a binding is deferred, it is not compiled
-    // (potentially, with all the bindings inside of it), period.
-    if (type->isNameDeferred(propertyName)) {
-        const auto location = binding.sourceLocation();
-        // make sure group property is not generalized by checking if type really has a property
-        // called propertyName. If not, it is probably an id.
-        if (binding.bindingType() == QQmlJSMetaPropertyBinding::GroupProperty
-            && type->hasProperty(propertyName)) {
-            qCWarning(lcQmltcCompiler)
-                    << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
-                                      "binding on a group property.")
-                               .arg(QString::number(location.startLine),
-                                    QString::number(location.startColumn));
-            // we do not support PropertyChanges and other types with similar
-            // behavior yet, so this binding is compiled
-        } else {
-            qCDebug(lcQmltcCompiler)
-                    << QStringLiteral(
-                               "Binding at line %1 column %2 is deferred and thus not compiled")
-                               .arg(QString::number(location.startLine),
-                                    QString::number(location.startColumn));
-            return;
+        // Note: unlike QQmlObjectCreator, we don't have to do a complicated
+        // deferral logic for bindings: if a binding is deferred, it is not compiled
+        // (potentially, with all the bindings inside of it), period.
+        if (type->isNameDeferred(propertyName)) {
+            const auto location = binding.sourceLocation();
+            // make sure group property is not generalized by checking if type really has a property
+            // called propertyName. If not, it is probably an id.
+            if (binding.bindingType() == QQmlJSMetaPropertyBinding::GroupProperty
+                && type->hasProperty(propertyName)) {
+                qCWarning(lcQmltcCompiler)
+                        << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
+                                          "binding on a group property.")
+                                   .arg(QString::number(location.startLine),
+                                        QString::number(location.startColumn));
+                // we do not support PropertyChanges and other types with similar
+                // behavior yet, so this binding is compiled
+            } else {
+                qCDebug(lcQmltcCompiler)
+                        << QStringLiteral(
+                                   "Binding at line %1 column %2 is deferred and thus not compiled")
+                                   .arg(QString::number(location.startLine),
+                                        QString::number(location.startColumn));
+                continue;
+            }
         }
+
+        const QQmlJSMetaProperty metaProperty = type->property(propertyName);
+        const QQmlJSScope::ConstPtr propertyType = metaProperty.type();
+
+        if (!(qIsReferenceTypeList(metaProperty) && unprocessedListProperty == metaProperty)) {
+            processLastListBindings(current, type, accessor);
+        }
+
+        compileBindingByType(current, binding, type, accessor);
     }
 
-    const QQmlJSMetaProperty metaProperty = type->property(propertyName);
-    const QQmlJSScope::ConstPtr propertyType = metaProperty.type();
-
-    // when property is list, create a local variable (unique per-scope &&
-    // per-property) that would be used to append new elements
-    if (qIsReferenceTypeList(metaProperty)) {
-        auto &listName = m_uniques[UniqueStringId(current, propertyName)].qmlListVariableName;
-        if (listName.isEmpty()) { // not created yet, add extra instructions
-            listName = u"listref_" + propertyName;
-            current.endInit.body << QStringLiteral("QQmlListReference %1(%2, %3);")
-                                            .arg(listName, accessor.name,
-                                                 QQmlJSUtils::toLiteral(propertyName,
-                                                                        u"QByteArrayLiteral"));
-            current.endInit.body << QStringLiteral("Q_ASSERT(%1.canAppend());").arg(listName);
-        }
-    }
-
-    compileBindingByType(current, binding, type, accessor);
+    processLastListBindings(current, type, accessor);
 }
 
 void QmltcCompiler::compileBindingByType(QmltcType &current,
