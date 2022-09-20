@@ -91,8 +91,35 @@ private:
         QString propertyName = QString();
         bool isValueType = false;
     };
+
     void compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
                         const QQmlJSScope::ConstPtr &type, const BindingAccessorData &accessor);
+
+    void compileBindingByType(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+                              const QQmlJSScope::ConstPtr &type,
+                              const BindingAccessorData &accessor);
+
+    void compileObjectBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+                              const QQmlJSScope::ConstPtr &type,
+                              const BindingAccessorData &accessor);
+
+    void compileValueSourceOrInterceptorBinding(QmltcType &current,
+                                                const QQmlJSMetaPropertyBinding &binding,
+                                                const QQmlJSScope::ConstPtr &type,
+                                                const BindingAccessorData &accessor);
+
+    void compileAttachedPropertyBinding(QmltcType &current,
+                                        const QQmlJSMetaPropertyBinding &binding,
+                                        const QQmlJSScope::ConstPtr &type,
+                                        const BindingAccessorData &accessor);
+
+    void compileGroupPropertyBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+                                     const QQmlJSScope::ConstPtr &type,
+                                     const BindingAccessorData &accessor);
+
+    void compileTranslationBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+                                   const QQmlJSScope::ConstPtr &type,
+                                   const BindingAccessorData &accessor);
 
     // special case (for simplicity)
     void compileScriptBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
