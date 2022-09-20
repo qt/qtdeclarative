@@ -1950,7 +1950,7 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
                 if (context.isEmpty() && fileName.startsWith(QLatin1String(":/")))
                     context = fileName;
             }
-            context = QFileInfo(context).baseName();
+            context = QFileInfo(context).completeBaseName();
         }
         frame = frame->parentFrame();
     }

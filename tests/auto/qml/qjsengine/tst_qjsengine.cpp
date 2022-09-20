@@ -169,6 +169,7 @@ private slots:
     void translateFromBuiltinCallback();
     void translationFilePath_data();
     void translationFilePath();
+    void translationFileName();
 
     void installConsoleFunctions();
     void logging();
@@ -4068,7 +4069,7 @@ void tst_QJSEngine::translationContext_data()
     QTest::newRow("foo/translatable.js")  << "foo/translatable.js" << "One" << "En";
     QTest::newRow("file:///home/qt/translatable.js")  << "file:///home/qt/translatable.js" << "One" << "En";
     QTest::newRow(":/resources/translatable.js")  << ":/resources/translatable.js" << "One" << "En";
-    QTest::newRow("/translatable.js.foo")  << "/translatable.js.foo" << "One" << "En";
+    QTest::newRow("/translatable.1.0.js")  << "/translatable.1.0.js" << "One" << "En";
     QTest::newRow("/translatable.txt")  << "/translatable.txt" << "One" << "En";
     QTest::newRow("translatable")  << "translatable" << "One" << "En";
     QTest::newRow("foo/translatable")  << "foo/translatable" << "One" << "En";
@@ -4293,6 +4294,22 @@ void tst_QJSEngine::translationFilePath()
     engine.installExtensions(QJSEngine::TranslationExtension);
     QJSValue result = engine.evaluate(scriptContent, filename);
     QCOMPARE(translator.context(), QByteArray("script"));
+
+    QCoreApplication::removeTranslator(&translator);
+}
+
+void tst_QJSEngine::translationFileName()
+{
+    const auto filename = QStringLiteral("multiple.dots.1.0.qml");
+
+    DummyTranslator translator("some text");
+    QCoreApplication::installTranslator(&translator);
+    QByteArray scriptContent = QByteArray("qsTr('%1')").replace("%1", translator.sourceText());
+
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::TranslationExtension);
+    QJSValue result = engine.evaluate(scriptContent, filename);
+    QCOMPARE(translator.context(), QByteArray("multiple.dots.1.0"));
 
     QCoreApplication::removeTranslator(&translator);
 }

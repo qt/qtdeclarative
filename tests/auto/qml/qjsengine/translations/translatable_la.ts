@@ -85,4 +85,12 @@
         <translation>Tre andre</translation>
     </message>
 </context>
+<context>
+    <name>translatable.1.0</name>
+    <message>
+        <location filename="translatable.1.0.js" line="1"/>
+        <source>One</source>
+        <translation>En</translation>
+    </message>
+</context>
 </TS>
