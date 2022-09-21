@@ -255,7 +255,6 @@ Item {
 
         function test_addAndRemoveItems()
         {
-            skip("There is a bug with the internal StackLayout cache that causes this to fail")
             var stack = emtpy_StackLayout_Component.createObject(container)
             stack.currentIndex = 2
             compare(stack.implicitWidth, 0)
