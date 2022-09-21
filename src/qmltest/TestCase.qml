@@ -1173,23 +1173,36 @@ Item {
         \qmlmethod TestCase::failOnWarning(message)
         \since 6.3
 
-        Fails the test if a warning \a message appears during the test run.
-        Similar to \c{QTest::failOnWarning(message)} in C++.
+        Appends a test failure to the test log for each warning that matches
+        \a message. The test function will continue execution when a failure
+        is added.
 
         \a message can be either a string, or a regular expression providing a
-        pattern of messages. In the latter case, the first encountered message
-        would fail the test.
+        pattern of messages. In the latter case, for each warning encountered,
+        the first pattern that matches will cause a failure, and the remaining
+        patterns will be ignored.
 
-        For example, the following snippet will fail a test if a warning is
-        produced:
+        All patterns are cleared at the end of each test function.
+
+        For example, the following snippet will fail a test if a warning with
+        the text "Something bad happened" is produced:
         \qml
         failOnWarning("Something bad happened")
         \endqml
 
-        And the following snippet will fail a test if any warning matching a
-        pattern is encountered:
+        The following snippet will fail a test if any warning matching the
+        given pattern is encountered:
         \qml
-        failOnWarning(new RegExp("[0-9]+ bad things happened"))
+        failOnWarning(/[0-9]+ bad things happened/)
+        \endqml
+
+        To fail every test that triggers a given warning, pass a suitable regular
+        expression to this function in \l init():
+
+        \qml
+        function init() {
+            failOnWarning(/.?/)
+        }
         \endqml
 
         \note Despite being a JavaScript RegExp object, it will not be
@@ -1200,7 +1213,7 @@ Item {
         warnings that match a pattern given to both \c ignoreMessage() and \c
         failOnWarning() will be ignored.
 
-        \sa warn()
+        \sa QTest::failOnWarning(), warn()
     */
     function failOnWarning(msg) {
         if (msg === undefined)
