@@ -1694,7 +1694,7 @@ function(qt6_add_qml_plugin target)
             string(APPEND qt_qml_plugin_outro "} // namespace ${arg_NAMESPACE}")
         endif()
 
-        string(APPEND qt_qml_plugin_intro "extern void ${register_types_function_name}();\nQ_GHS_KEEP_REFERENCE(${register_types_function_name});")
+        string(APPEND qt_qml_plugin_intro "extern void ${register_types_function_name}();\nQ_GHS_KEEP_REFERENCE(${register_types_function_name})")
 
         # Indenting here is deliberately different so as to make the generated
         # file have sensible indenting
