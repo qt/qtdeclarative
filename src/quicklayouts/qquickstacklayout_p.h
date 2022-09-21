@@ -74,7 +74,7 @@ private:
         QSizeF array[Qt::NSizeHints];
     };
 
-    mutable QVector<SizeHints> m_cachedItemSizeHints;
+    mutable QHash<QQuickItem*, SizeHints> m_cachedItemSizeHints;
     mutable QSizeF m_cachedSizeHints[Qt::NSizeHints];
     SizeHints &cachedItemSizeHints(int index) const;
 };
