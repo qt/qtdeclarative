@@ -33,6 +33,7 @@
 #endif
 #if QT_CONFIG(vulkan)
 #include <QVulkanInstance>
+#include <QtGui/private/qrhivulkan_p.h>
 #endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
@@ -426,6 +427,7 @@ public:
     }
 
 private slots:
+    void initTestCase();
     void cleanup();
     void aboutToStopSignal();
 
@@ -538,6 +540,8 @@ private slots:
     void rendererInterfaceWithRenderControl_data();
     void rendererInterfaceWithRenderControl();
 
+    void graphicsConfiguration();
+
 private:
     QPointingDevice *touchDevice;
     QPointingDevice *touchDeviceWithVelocity;
@@ -546,6 +550,21 @@ private:
 #if QT_CONFIG(opengl)
 Q_DECLARE_METATYPE(QOpenGLContext *);
 #endif
+
+void tst_qquickwindow::initTestCase()
+{
+    // for the graphicsConfiguration test
+    qunsetenv("QSG_NO_DEPTH_BUFFER");
+    qunsetenv("QSG_RHI_DEBUG_LAYER");
+    qunsetenv("QSG_RHI_PROFILE");
+    qunsetenv("QSG_RHI_PREFER_SOFTWARE_RENDERER");
+    qunsetenv("QT_DISABLE_SHADER_DISK_CACHE");
+    qunsetenv("QSG_RHI_DISABLE_DISK_CACHE");
+    qunsetenv("QSG_RHI_PIPELINE_CACHE_SAVE");
+    qunsetenv("QSG_RHI_PIPELINE_CACHE_LOAD");
+
+    QQmlDataTest::initTestCase();
+}
 
 void tst_qquickwindow::cleanup()
 {
@@ -3997,6 +4016,41 @@ void tst_qquickwindow::rendererInterfaceWithRenderControl()
     // Now that everything is torn down, go back to the default unspecified-api
     // state, to prevent conflicting with tests that come afterwards.
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Unknown);
+}
+
+void tst_qquickwindow::graphicsConfiguration()
+{
+    QQuickGraphicsConfiguration config;
+    qDebug() << config;
+    QVERIFY(config.isDepthBufferEnabledFor2D());
+    QVERIFY(!config.isDebugLayerEnabled());
+    QVERIFY(!config.isDebugMarkersEnabled());
+    QVERIFY(!config.prefersSoftwareDevice());
+    QVERIFY(config.isAutomaticPipelineCacheEnabled());
+    QVERIFY(config.pipelineCacheSaveFile().isEmpty());
+    QVERIFY(config.pipelineCacheLoadFile().isEmpty());
+
+    QQuickGraphicsConfiguration config2 = config;
+    config.setDebugLayer(true);
+    config.setDepthBufferFor2D(false);
+    QVERIFY(config.isDebugLayerEnabled());
+    QVERIFY(!config2.isDebugLayerEnabled());
+
+    config2 = config;
+    QVERIFY(config2.isDebugLayerEnabled());
+    QVERIFY(!config2.isDepthBufferEnabledFor2D());
+
+    config.setAutomaticPipelineCache(false);
+    config.setPipelineCacheSaveFile(QLatin1String("save"));
+    config.setPipelineCacheLoadFile(QLatin1String("load"));
+    config2 = config;
+    QVERIFY(!config2.isAutomaticPipelineCacheEnabled());
+    QCOMPARE(config2.pipelineCacheSaveFile(), QLatin1String("save"));
+    QCOMPARE(config2.pipelineCacheLoadFile(), QLatin1String("load"));
+
+#if QT_CONFIG(vulkan)
+    QQuickGraphicsConfiguration::preferredInstanceExtensions() == QRhiVulkanInitParams::preferredInstanceExtensions();
+#endif
 }
 
 QTEST_MAIN(tst_qquickwindow)

@@ -30,11 +30,11 @@ public:
     QQuickGraphicsConfigurationPrivate(const QQuickGraphicsConfigurationPrivate *other);
 
     enum Flag {
-        UseDepthBufferFor2D,
-        EnableDebugLayer,
-        EnableDebugMarkers,
-        PreferSoftwareDevice,
-        AutoPipelineCache
+        UseDepthBufferFor2D = 0x01,
+        EnableDebugLayer = 0x02,
+        EnableDebugMarkers = 0x04,
+        PreferSoftwareDevice = 0x08,
+        AutoPipelineCache = 0x10
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

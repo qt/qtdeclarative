@@ -453,7 +453,7 @@ void QQuickGraphicsConfiguration::setDepthBufferFor2D(bool enable)
 {
     if (d->flags.testFlag(QQuickGraphicsConfigurationPrivate::UseDepthBufferFor2D) != enable) {
         detach();
-        d->flags |= QQuickGraphicsConfigurationPrivate::UseDepthBufferFor2D;
+        d->flags.setFlag(QQuickGraphicsConfigurationPrivate::UseDepthBufferFor2D, enable);
     }
 }
 
@@ -505,7 +505,7 @@ void QQuickGraphicsConfiguration::setDebugLayer(bool enable)
 {
     if (d->flags.testFlag(QQuickGraphicsConfigurationPrivate::EnableDebugLayer) != enable) {
         detach();
-        d->flags |= QQuickGraphicsConfigurationPrivate::EnableDebugLayer;
+        d->flags.setFlag(QQuickGraphicsConfigurationPrivate::EnableDebugLayer, enable);
     }
 }
 
@@ -551,7 +551,7 @@ void QQuickGraphicsConfiguration::setDebugMarkers(bool enable)
 {
     if (d->flags.testFlag(QQuickGraphicsConfigurationPrivate::EnableDebugMarkers) != enable) {
         detach();
-        d->flags |= QQuickGraphicsConfigurationPrivate::EnableDebugMarkers;
+        d->flags.setFlag(QQuickGraphicsConfigurationPrivate::EnableDebugMarkers, enable);
     }
 }
 
@@ -595,7 +595,7 @@ void QQuickGraphicsConfiguration::setPreferSoftwareDevice(bool enable)
 {
     if (d->flags.testFlag(QQuickGraphicsConfigurationPrivate::PreferSoftwareDevice) != enable) {
         detach();
-        d->flags |= QQuickGraphicsConfigurationPrivate::PreferSoftwareDevice;
+        d->flags.setFlag(QQuickGraphicsConfigurationPrivate::PreferSoftwareDevice, enable);
     }
 }
 
@@ -626,7 +626,7 @@ void QQuickGraphicsConfiguration::setAutomaticPipelineCache(bool enable)
 {
     if (d->flags.testFlag(QQuickGraphicsConfigurationPrivate::AutoPipelineCache) != enable) {
         detach();
-        d->flags |= QQuickGraphicsConfigurationPrivate::AutoPipelineCache;
+        d->flags.setFlag(QQuickGraphicsConfigurationPrivate::AutoPipelineCache, enable);
     }
 }
 
@@ -815,5 +815,25 @@ QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate(const QQu
       pipelineCacheLoadFile(other->pipelineCacheLoadFile)
 {
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug dbg, const QQuickGraphicsConfiguration &config)
+{
+    QDebugStateSaver saver(dbg);
+    const QQuickGraphicsConfigurationPrivate *cd = QQuickGraphicsConfigurationPrivate::get(&config);
+    dbg.nospace() << "QQuickGraphicsConfiguration("
+                  << "flags=0x" << Qt::hex << cd->flags << Qt::dec
+                  << " flag-isDepthBufferEnabledFor2D=" << config.isDepthBufferEnabledFor2D()
+                  << " flag-isDebugLayerEnabled=" << config.isDebugLayerEnabled()
+                  << " flag-isDebugMarkersEnabled=" << config.isDebugMarkersEnabled()
+                  << " flag-prefersSoftwareDevice=" << config.prefersSoftwareDevice()
+                  << " flag-isAutomaticPipelineCacheEnabled=" << config.isAutomaticPipelineCacheEnabled()
+                  << " pipelineCacheSaveFile=" << cd->pipelineCacheSaveFile
+                  << " piplineCacheLoadFile=" << cd->pipelineCacheLoadFile
+                  << " extra-device-extension-requests=" << cd->deviceExtensions
+                  << ')';
+    return dbg;
+}
+#endif // QT_NO_DEBUG_STREAM
 
 QT_END_NAMESPACE

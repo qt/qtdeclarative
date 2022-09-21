@@ -6,7 +6,7 @@
 
 #include <QtQuick/qtquickglobal.h>
 #include <QtCore/qbytearraylist.h>
-#include <QtCore/qiodevice.h>
+#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,6 +51,10 @@ private:
     QQuickGraphicsConfigurationPrivate *d;
     friend class QQuickGraphicsConfigurationPrivate;
 };
+
+#ifndef QT_NO_DEBUG_STREAM
+Q_QUICK_EXPORT QDebug operator<<(QDebug dbg, const QQuickGraphicsConfiguration &config);
+#endif
 
 QT_END_NAMESPACE
 
