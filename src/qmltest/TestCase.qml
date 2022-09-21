@@ -631,6 +631,9 @@ Item {
             throw new Error("QtQuickTest::fail");
         }
 
+        if (parent === undefined)
+            parent = null
+
         var object = component.createObject(parent, properties ? properties : ({}));
         qtest_temporaryObjects.push(object);
         return object;
