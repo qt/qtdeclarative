@@ -25,6 +25,8 @@ TestCase {
     }
 
     function init() {
+        failOnWarning(/.?/)
+
         // The items are destroyed after cleanup(), so we check here after every test,
         // and once for the last test in cleanupTestCase().
         verifyNoChildren();
@@ -125,7 +127,8 @@ TestCase {
             { tag: "omit", expectedParent: null },
             { tag: "undefined", parent: undefined, expectedParent: null },
             { tag: "null", parent: null, expectedParent: null },
-            { tag: "1", parent: 1, expectedParent: null },
+            { tag: "1", parent: 1, expectedParent: null,
+                ignoreWarning: /.*Unsuitable arguments passed to createObject.*/ },
             { tag: "testCase", parent: testCase, expectedParent: testCase }
         ];
     }
@@ -133,6 +136,10 @@ TestCase {
     // Tests that an invalid or missing parent argument results in a parentless object.
     // This is the same behavior as displayed by component.createObject().
     function test_fromComponentParent(data) {
+        // ignoreWarning takes precedence over failOnWarning (which we call in init()).
+        if (data.hasOwnProperty("ignoreWarning"))
+            ignoreWarning(data.ignoreWarning)
+
         var object = data.hasOwnProperty("parent")
             ? createTemporaryObject(itemComponent, data.parent)
             : createTemporaryObject(itemComponent);
