@@ -205,6 +205,7 @@ void QQuickStackLayout::itemChange(QQuickItem::ItemChange change, const QQuickIt
             stackLayoutAttached->setIndex(-1);
             stackLayoutAttached->setIsCurrentItem(false);
         }
+        m_cachedItemSizeHints.remove(item);
         invalidate();
     } else if (change == ItemChildAddedChange) {
         invalidate();
@@ -293,11 +294,12 @@ void QQuickStackLayout::setAlignment(QQuickItem * /*item*/, Qt::Alignment /*alig
 
 void QQuickStackLayout::invalidate(QQuickItem *childItem)
 {
-    const int indexOfChild = indexOf(childItem);
-    if (indexOfChild >= 0 && indexOfChild < m_cachedItemSizeHints.count()) {
-        m_cachedItemSizeHints[indexOfChild].min() = QSizeF();
-        m_cachedItemSizeHints[indexOfChild].pref() = QSizeF();
-        m_cachedItemSizeHints[indexOfChild].max() = QSizeF();
+    ensureLayoutItemsUpdated();
+    if (childItem) {
+        SizeHints &hints = m_cachedItemSizeHints[childItem];
+        hints.min() = QSizeF();
+        hints.pref() = QSizeF();
+        hints.max() = QSizeF();
     }
 
     for (int i = 0; i < Qt::NSizeHints; ++i)
@@ -322,7 +324,6 @@ void QQuickStackLayout::updateLayoutItems()
     if (count != d->count) {
         d->count = count;
         emit countChanged();
-        m_cachedItemSizeHints.resize(count);
     }
     for (int i = 0; i < count; ++i) {
         QQuickItem *child = itemAt(i);
@@ -338,10 +339,13 @@ void QQuickStackLayout::updateLayoutItems()
     }
 }
 
-QQuickStackLayout::SizeHints &QQuickStackLayout::cachedItemSizeHints(int index) const {
-    SizeHints &hints = m_cachedItemSizeHints[index];
+QQuickStackLayout::SizeHints &QQuickStackLayout::cachedItemSizeHints(int index) const
+{
+    QQuickItem *item = itemAt(index);
+    Q_ASSERT(item);
+    SizeHints &hints = m_cachedItemSizeHints[item];     // will create an entry if it doesn't exist
     if (!hints.min().isValid())
-        QQuickStackLayout::collectItemSizeHints(itemAt(index), hints.array);
+        QQuickStackLayout::collectItemSizeHints(item, hints.array);
     return hints;
 }
 
