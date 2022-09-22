@@ -843,7 +843,7 @@ bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
                                                            QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
-    QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(newMaterial);
+    QQuickShapeRadialGradientMaterial *m = static_cast<QQuickShapeRadialGradientMaterial *>(newMaterial);
     bool changed = false;
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 92);
@@ -903,7 +903,7 @@ void QQuickShapeRadialGradientRhiShader::updateSampledImage(RenderState &state, 
     if (binding != 1)
         return;
 
-    QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(newMaterial);
+    QQuickShapeRadialGradientMaterial *m = static_cast<QQuickShapeRadialGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
     const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
     QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
@@ -977,7 +977,7 @@ bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
                                                             QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
-    QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(newMaterial);
+    QQuickShapeConicalGradientMaterial *m = static_cast<QQuickShapeConicalGradientMaterial *>(newMaterial);
     bool changed = false;
     QByteArray *buf = state.uniformData();
     Q_ASSERT(buf->size() >= 80);
@@ -1021,7 +1021,7 @@ void QQuickShapeConicalGradientRhiShader::updateSampledImage(RenderState &state,
     if (binding != 1)
         return;
 
-    QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(newMaterial);
+    QQuickShapeConicalGradientMaterial *m = static_cast<QQuickShapeConicalGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
     const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
     QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
