@@ -11,48 +11,45 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/texteditor")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 OPTIONAL_COMPONENTS Widgets)
 
-qt_add_executable(texteditor WIN32 MACOSX_BUNDLE
+qt_add_executable(texteditorexample WIN32 MACOSX_BUNDLE
     documenthandler.cpp
     texteditor.cpp
 )
 
-target_link_libraries(texteditor PUBLIC
+qt_add_qml_module(texteditorexample
+    URI texteditor
+    VERSION 1.0
+    NO_RESOURCE_TARGET_PATH
+    QML_FILES
+        "qml/+touch/texteditor.qml"
+        "qml/texteditor.qml"
+    RESOURCES
+        "texteditor.html"
+        "+touch/texteditor.html"
+        "fonts/fontello.ttf"
+        "images/qt-logo.png"
+)
+
+target_link_libraries(texteditorexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
     Qt::QuickControls2
 )
 
-# Resources:
-set(texteditor_resource_files
-    "+touch/texteditor.html"
-    "fonts/fontello.ttf"
-    "images/qt-logo.png"
-    "qml/+touch/texteditor.qml"
-    "qml/texteditor.qml"
-    "texteditor.html"
-)
-
-qt6_add_resources(texteditor "texteditor"
-    PREFIX
-        "/"
-    FILES
-        ${texteditor_resource_files}
-)
-
 if(TARGET Qt::Widgets)
-    target_link_libraries(texteditor PUBLIC
+    target_link_libraries(texteditorexample PUBLIC
         Qt::Widgets
     )
 endif()
 
 if(CMAKE_CROSSCOMPILING)
-    target_compile_definitions(texteditor PUBLIC
+    target_compile_definitions(texteditorexample PUBLIC
         QT_EXTRA_FILE_SELECTOR="touch"
     )
 endif()
 
-install(TARGETS texteditor
+install(TARGETS texteditorexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
