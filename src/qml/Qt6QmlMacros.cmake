@@ -2446,6 +2446,11 @@ function(_qt_internal_qml_type_registration target)
 
     if (TARGET ${target}Private)
         list(APPEND cmd_args --private-includes)
+    else()
+        string(REGEX MATCH "Private$" privateSuffix ${target})
+        if (privateSuffix)
+            list(APPEND cmd_args --private-includes)
+        endif()
     endif()
 
     get_target_property(target_metatypes_json_file ${target} INTERFACE_QT_META_TYPES_BUILD_FILE)
