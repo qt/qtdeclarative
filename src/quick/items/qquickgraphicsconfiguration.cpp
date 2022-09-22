@@ -252,9 +252,7 @@ QT_BEGIN_NAMESPACE
 
     This gives an approximate idea of how much time was spent in graphics and
     compute pipeline creation (which may include various stages of shader
-    compilation) during the lifetime of the window. (NB! this works best with
-    the \c threaded render loop where there is a dedicted QRhi for each
-    QQuickWindow; the \c basic loop may give misleading results)
+    compilation) during the lifetime of the window.
 
     When loading from a pipeline cache file is enabled, this is confirmed with
     a message:
@@ -495,7 +493,13 @@ bool QQuickGraphicsConfiguration::isDepthBufferEnabledFor2D() const
    even though each QQuickWindow has their own QQuickGraphicsConfiguration.
    With Vulkan in particular, the instance object (VkInstance) is only created
    once and then used by all windows in the application. Therefore, enabling
-   the validation layer is something that affects all windows.
+   the validation layer is something that affects all windows. This also means
+   that attempting to enable validation via a window that only gets shown after
+   some other windows have already started rendering has no effect with Vulkan.
+   Other APIs, such as D3D11, expose the debug layer concept as a per-device
+   (ID3D11Device) setting, and so it is controlled on a true per-window basis
+   (assuming the scenegraph render loop uses a dedicated graphics
+   device/context for each QQuickWindow).
 
    \since 6.5
 
@@ -675,16 +679,6 @@ bool QQuickGraphicsConfiguration::isAutomaticPipelineCacheEnabled() const
     QQuickView instances can therefore store and later reload the cache contents
     via files dedicated to each window. The environment variable does not allow
     this.
-
-    \note Some render loops may choose to use the same RHI instance (meaning
-    the same OpenGL context, Vulkan device and pipeline cache, etc.) for all
-    the windows in the application. While this does not apply to the \c
-    threaded render loop that is the default on most platforms, it is the case
-    for the \c basic render loop. This means that there is a single pipeline
-    cache for all the windows, and the values set by setPipelineCacheSaveFile()
-    and setPipelineCacheLoadFile() are only taken into account from the last to
-    close and first to open window, respectively, when the \c basic render loop
-    is in use.
 
     \since 6.5
 
