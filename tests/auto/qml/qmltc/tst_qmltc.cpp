@@ -77,6 +77,8 @@
 #include "inlinecomponents.h"
 #include "repeatercrash.h"
 #include "aliases.h"
+#include "inlinecomponentsfromdifferentfiles.h"
+
 #include "testprivateproperty.h"
 
 // Qt:
@@ -2995,4 +2997,73 @@ void tst_qmltc::aliases()
     QCOMPARE(fromComponent->property("aliasToOtherFile"), testString);
 }
 
+void tst_qmltc::inlineComponentsFromDifferentFiles()
+{
+    // check that inline components can be imported from different files
+    QQmlEngine e;
+    PREPEND_NAMESPACE(inlineComponentsFromDifferentFiles) createdByQmltc(&e);
+
+    QQmlComponent component(&e);
+    component.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/inlineComponentsFromDifferentFiles.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> createdByComponent(component.create());
+
+    QCOMPARE(createdByQmltc.fromModule1()->objName(), u"IC1"_s);
+    QCOMPARE(createdByComponent->property("fromModule1")
+                     .value<QObject *>()
+                     ->property("objName")
+                     .toString(),
+             u"IC1"_s);
+
+    QCOMPARE(createdByQmltc.fromModule2().value<QObject *>()->property("objName").toString(),
+             u"IC1"_s);
+    QCOMPARE(createdByComponent->property("fromModule2")
+                     .value<QObject *>()
+                     ->property("objName")
+                     .toString(),
+             u"IC1"_s);
+
+    QCOMPARE(createdByQmltc.fromOtherFile1()->objName(), u"IC1"_s);
+    QCOMPARE(createdByComponent->property("fromOtherFile1")
+                     .value<QObject *>()
+                     ->property("objName")
+                     .toString(),
+             u"IC1"_s);
+
+    QCOMPARE(createdByQmltc.fromOtherFile2()->objName(), u"IC2"_s);
+    QCOMPARE(createdByComponent->property("fromOtherFile2")
+                     .value<QObject *>()
+                     ->property("objName")
+                     .toString(),
+             u"IC2"_s);
+
+    QCOMPARE(createdByQmltc.fromOtherFile3()->objName(), u"IC3"_s);
+    QCOMPARE(createdByComponent->property("fromOtherFile3")
+                     .value<QObject *>()
+                     ->property("objName")
+                     .toString(),
+             u"IC3"_s);
+
+    QCOMPARE(createdByQmltc.reExported()->objName(), u"IC100"_s);
+    QCOMPARE(createdByComponent->property("reExported")
+                     .value<QObject *>()
+                     ->property("objName")
+                     .toString(),
+             u"IC100"_s);
+
+    // test how good/bad inline components mix up with enums (they have very similar syntax)
+    // hard code enum values for better test readability
+    const int dog = 4;
+
+    QCOMPARE(createdByQmltc.looksLikeEnumIsEnum(), dog);
+    QCOMPARE(
+            createdByQmltc.looksLikeEnumIsInlineComponent().value<QObject *>()->property("objName"),
+            u"IC1"_s);
+
+    QCOMPARE(createdByComponent->property("looksLikeEnumIsEnum"), dog);
+    QCOMPARE(createdByComponent->property("looksLikeEnumIsInlineComponent")
+                     .value<QObject *>()
+                     ->property("objName"),
+             u"IC1"_s);
+}
 QTEST_MAIN(tst_qmltc)

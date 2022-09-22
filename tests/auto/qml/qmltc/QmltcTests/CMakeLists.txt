@@ -102,6 +102,7 @@ set(qml_sources
     inlineComponents.qml
     repeaterCrash.qml
     aliases.qml
+    inlineComponentsFromDifferentFiles.qml
 
     # support types:
     DefaultPropertySingleChild.qml
@@ -114,6 +115,8 @@ set(qml_sources
     ComponentWithAlias1.qml
     ComponentWithAlias2.qml
     ComponentWithAlias3.qml
+    InlineComponentProvider.qml
+    InlineComponentReexporter.qml
 
     badFile.qml
 )

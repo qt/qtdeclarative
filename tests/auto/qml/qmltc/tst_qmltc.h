@@ -89,4 +89,5 @@ private slots:
     void appendToQQmlListProperty();
     void inlineComponents();
     void aliases();
+    void inlineComponentsFromDifferentFiles();
 };

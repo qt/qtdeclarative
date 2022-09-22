@@ -614,7 +614,7 @@ public:
      *  If a type is found, then its name is inserted into usedTypes (when provided).
      *  If contextualTypes has mode INTERNAl, then namespace resolution for enums is
      *  done (eg for Qt::Alignment).
-     *  TODO: If contextualTypes has mode QML, then inline component resolution is done
+     *  If contextualTypes has mode QML, then inline component resolution is done
      *  ("qmlFileName.IC" is correctly resolved from qmlFileName).
      */
     static ImportedScope<QQmlJSScope::ConstPtr> findType(const QString &name,
@@ -625,7 +625,6 @@ private:
     QQmlJSScope() = default;
     QQmlJSScope(const QQmlJSScope &) = default;
     QQmlJSScope &operator=(const QQmlJSScope &) = default;
-
     static QTypeRevision resolveType(
             const QQmlJSScope::Ptr &self, const ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes);

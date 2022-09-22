@@ -188,7 +188,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
     if (!QQmlJSImportVisitor::visit(object))
         return false;
 
-    if (processingRoot) {
+    if (processingRoot || m_currentScope->isInlineComponent()) {
         Q_ASSERT(rootScopeIsValid());
         setRootFilePath();
     }
@@ -796,9 +796,12 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
     // this information in QQmlJSMetaPropertyBinding currently
 }
 
+/*! \internal
+ *  Sets the file paths for the document and the inline components roots.
+ */
 void QmltcVisitor::setRootFilePath()
 {
-    const QString filePath = m_exportedRootScope->filePath();
+    const QString filePath = m_currentScope->filePath();
     if (filePath.endsWith(u".h")) // assume the correct path is set
         return;
     Q_ASSERT(filePath.endsWith(u".qml"_s));
@@ -816,7 +819,7 @@ void QmltcVisitor::setRootFilePath()
         return;
     }
     // NB: get the file name to avoid prefixes
-    m_exportedRootScope->setFilePath(QFileInfo(*firstHeader).fileName());
+    m_currentScope->setFilePath(QFileInfo(*firstHeader).fileName());
 }
 
 QString QmltcVisitor::sourceDirectoryPath(const QString &path)

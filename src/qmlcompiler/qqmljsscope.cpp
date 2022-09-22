@@ -326,6 +326,43 @@ QQmlJSScope::findJSIdentifier(const QString &id) const
     return std::optional<JavaScriptIdentifier>{};
 }
 
+static QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr>
+qFindInlineComponents(QStringView typeName, const QQmlJSScope::ContextualTypes &contextualTypes)
+{
+    const int separatorIndex = typeName.lastIndexOf(u'.');
+    // do not crash in typeName.sliced() when it starts or ends with an '.'.
+    if (separatorIndex < 1 || separatorIndex >= typeName.size() - 1)
+        return {};
+
+    const auto parentIt = contextualTypes.types.constFind(typeName.first(separatorIndex).toString());
+    if (parentIt == contextualTypes.types.constEnd())
+        return {};
+
+    auto inlineComponentParent = *parentIt;
+
+    // find the inline components using BFS, as inline components defined in childrens are also
+    // accessible from other qml documents. Same for inline components defined in a base class of
+    // the parent. Use BFS over DFS as the inline components are probably not deeply-nested.
+
+    QStringView inlineComponentName = typeName.sliced(separatorIndex + 1);
+    QQueue<QQmlJSScope::ConstPtr> candidatesForInlineComponents;
+    candidatesForInlineComponents.enqueue(inlineComponentParent.scope);
+    while (candidatesForInlineComponents.size()) {
+        QQmlJSScope::ConstPtr current = candidatesForInlineComponents.dequeue();
+        if (!current) // if some type was not resolved, ignore it instead of crashing
+            continue;
+        if (current->isInlineComponent() && current->inlineComponentName() == inlineComponentName) {
+            return { current, inlineComponentParent.revision };
+        }
+        // check alternatively the inline components at layer 1 in current and basetype, then at
+        // layer 2, etc...
+        candidatesForInlineComponents.append(current->childScopes());
+        if (const auto base = current->baseType())
+            candidatesForInlineComponents.enqueue(base);
+    }
+    return {};
+}
+
 QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
         const QString &name, const QQmlJSScope::ContextualTypes &contextualTypes,
         QSet<QString> *usedTypes)
@@ -364,11 +401,15 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
         break;
     }
     case ContextualTypes::QML: {
-        // TODO look for inline components with qmlFileName.InlineComponentName syntax
+        // look after inline components
+        const auto inlineComponent = qFindInlineComponents(name, contextualTypes);
+        if (inlineComponent.scope) {
+            useType();
+            return inlineComponent;
+        }
         break;
     }
     }
-
     return {};
 }
 

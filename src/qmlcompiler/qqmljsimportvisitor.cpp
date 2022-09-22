@@ -604,7 +604,8 @@ void QQmlJSImportVisitor::processPropertyTypes()
 
         auto property = type.scope->ownProperty(type.name);
 
-        if (auto propertyType = QQmlJSScope::findType(property.typeName(), m_rootScopeImports).scope) {
+        if (const auto propertyType =
+                    QQmlJSScope::findType(property.typeName(), m_rootScopeImports).scope) {
             property.setType(propertyType);
             type.scope->addOwnProperty(property);
         } else {
