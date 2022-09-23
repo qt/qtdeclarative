@@ -48,7 +48,6 @@ struct Q_QML_EXPORT Function : public FunctionData {
 protected:
     Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
              const CompiledData::Function *function, const QQmlPrivate::AOTCompiledFunction *aotFunction);
-    Function(ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction);
     ~Function();
 
 public:
@@ -86,8 +85,6 @@ public:
 
     static Function *create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                             const CompiledData::Function *function,
-                            const QQmlPrivate::AOTCompiledFunction *aotFunction);
-    static Function *create(ExecutionEngine *engine,
                             const QQmlPrivate::AOTCompiledFunction *aotFunction);
     void destroy();
 

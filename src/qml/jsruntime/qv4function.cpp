@@ -100,18 +100,6 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
     nFormals = compiledFunction->nFormals;
 }
 
-Function::Function(ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction)
-    : FunctionData(nullptr)
-    , compiledFunction(nullptr)
-    , codeData(nullptr)
-    , jittedCode(nullptr)
-    , codeRef(nullptr)
-    , aotFunction(aotFunction)
-{
-    internalClass = engine->internalClasses(EngineBase::Class_CallContext);
-    nFormals = aotFunction->argumentTypes.length();
-}
-
 Function::~Function()
 {
     if (codeRef) {
