@@ -802,6 +802,11 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << QStringLiteral("nestedInlineComponents.qml")
             << Result { { Message {
                        QStringLiteral("Nested inline components are not supported") } } };
+    QTest::newRow("inlineComponentNoComponent")
+            << QStringLiteral("inlineComponentNoComponent.qml")
+            << Result { { Message {
+                          QStringLiteral("Inline component declaration must be followed by a typename"),
+                         3, 2 } } };
     QTest::newRow("WithStatement") << QStringLiteral("WithStatement.qml")
                                    << Result { { Message { QStringLiteral(
                                               "with statements are strongly discouraged") } } };
