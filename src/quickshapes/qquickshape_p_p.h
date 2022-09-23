@@ -22,8 +22,9 @@
 #include <QColor>
 #include <QBrush>
 #include <QElapsedTimer>
-#include <private/qopenglcontext_p.h>
-
+#if QT_CONFIG(opengl)
+# include <private/qopenglcontext_p.h>
+#endif
 QT_BEGIN_NAMESPACE
 
 class QSGPlainTexture;
