@@ -1775,6 +1775,11 @@ bool QQmlJSImportVisitor::isImportPrefix(QString prefix) const
 void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding)
 {
     const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
+    if (!statement) {
+        m_logger->log(u"id must be followed by an identifier"_s, qmlSyntax,
+                      scriptBinding->statement->firstSourceLocation());
+        return;
+    }
     const QString name = [&]() {
         if (const auto *idExpression = cast<IdentifierExpression *>(statement->expression))
             return idExpression->name.toString();

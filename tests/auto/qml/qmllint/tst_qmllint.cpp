@@ -735,9 +735,12 @@ void TestQmllint::dirtyQmlCode_data()
                         } },
                         {},
                         { Message { QStringLiteral("stringy.") } } };
-    QTest::newRow("Invalid id (expression)")
+    QTest::newRow("Invalid_id_expression")
             << QStringLiteral("invalidId1.qml")
             << Result { { Message { QStringLiteral("Failed to parse id") } } };
+    QTest::newRow("Invalid_id_blockstatement")
+            << QStringLiteral("invalidId2.qml")
+            << Result { { Message { QStringLiteral("id must be followed by an identifier") } } };
     QTest::newRow("multilineString")
             << QStringLiteral("multilineString.qml")
             << Result { { Message { QStringLiteral("String contains unescaped line terminator "
