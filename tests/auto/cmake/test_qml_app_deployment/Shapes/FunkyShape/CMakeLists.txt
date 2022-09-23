@@ -6,6 +6,7 @@ qt_add_qml_module(FunkyShape
     VERSION 1.0
     QML_FILES FunkyItemQml.qml
     SOURCES funkyitem.cpp funkyitem.h
+    RESOURCE_PREFIX /
 )
 target_link_libraries(FunkyShape
     PRIVATE
