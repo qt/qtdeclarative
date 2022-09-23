@@ -1369,10 +1369,14 @@ bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
     return true;
 }
 
-void QQmlJSImportVisitor::endVisit(UiInlineComponent *)
+void QQmlJSImportVisitor::endVisit(UiInlineComponent *component)
 {
     m_inlineComponentName = QStringView();
-    Q_ASSERT(!m_nextIsInlineComponent);
+    if (m_nextIsInlineComponent) {
+        m_logger->log(u"Inline component declaration must be followed by a typename"_s,
+                      Log_Syntax, component->firstSourceLocation());
+    }
+    m_nextIsInlineComponent = false; // might have missed an inline component if file contains invalid QML
 }
 
 bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
