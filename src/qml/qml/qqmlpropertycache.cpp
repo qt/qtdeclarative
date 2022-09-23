@@ -743,13 +743,17 @@ QString QQmlPropertyCache::signalParameterStringForJS(QV4::ExecutionEngine *engi
     const QSet<QString> &illegalNames = engine->illegalNames();
     QString parameters;
 
-    for (int i = 0; i < parameterNameList.count(); ++i) {
+    const qsizetype count = parameterNameList.count();
+    if (count > std::numeric_limits<quint16>::max())
+        *errorString = QCoreApplication::translate("QQmlRewrite", "Signal has an excessive number of parameters: %1").arg(count);
+
+    for (qsizetype i = 0; i < count; ++i) {
         if (i > 0)
             parameters += QLatin1Char(',');
         const QByteArray &param = parameterNameList.at(i);
-        if (param.isEmpty())
+        if (param.isEmpty()) {
             unnamedParameter = true;
-        else if (unnamedParameter) {
+        } else if (unnamedParameter) {
             if (errorString)
                 *errorString = QCoreApplication::translate("QQmlRewrite", "Signal uses unnamed parameter followed by named parameter.");
             return QString();

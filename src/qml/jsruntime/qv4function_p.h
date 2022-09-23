@@ -78,8 +78,8 @@ public:
 
     // first nArguments names in internalClass are the actual arguments
     Heap::InternalClass *internalClass;
-    uint nFormals;
     int interpreterCallCount = 0;
+    quint16 nFormals;
     bool isEval = false;
     bool detectedInjectedParameters = false;
 
