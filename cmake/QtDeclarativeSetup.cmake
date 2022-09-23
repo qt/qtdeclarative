@@ -49,6 +49,7 @@ function(qt_declarative_write_tag_header target_name)
                             "You need either a valid git repository or a non-empty .tag file.")
     endif()
     target_sources(${target_name} PRIVATE "${out_file}")
+    set_source_files_properties("${out_file}" PROPERTIES GENERATED TRUE)
 endfunction()
 
 # Generate a header file containing a regular expression jit table.
@@ -71,4 +72,5 @@ function(qt_declarative_generate_reg_exp_jit_tables consuming_target)
     )
     target_sources(${consuming_target} PRIVATE ${output_file})
     target_include_directories(${consuming_target} PRIVATE $<BUILD_INTERFACE:${generate_dir}>)
+    set_source_files_properties(${output_file} PROPERTIES GENERATED TRUE)
 endfunction()
