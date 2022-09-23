@@ -32,10 +32,10 @@ Objects Reference} sections are browser specific (and thus not applicable to QML
 
 \section1 Type annotations and assertions
 
-Function declarations can, and should, contain type annotations. Type
-annotations are appended to the declaration of arguments and to the function
-itself, for annotating the return type. The following function takes an \c int
-and a \c string parameter, and returns a \c QtObject:
+Function declarations in QML documents can, and should, contain type
+annotations. Type annotations are appended to the declaration of arguments and
+to the function itself, for annotating the return type. The following function
+takes an \c int and a \c string parameter, and returns a \c QtObject:
 
 \qml
 function doThings(a: int, b: string) : QtObject { ... }
@@ -46,6 +46,31 @@ of the code and provide better diagnostics. Moreover, they make functions easier
 to use from C++. See
 \l {qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}
 for more information.
+
+By default, type annotations are ignored by the interpreter and the JIT
+compiler, but enforced by \l{qmlcachegen} and \l{qmlsc} when compiling to C++.
+This can lead to differences in behavior if you either pass values that
+are not actually of the declared type or if you modify instances of
+\l{QML Value Types} passed as typed arguments. Value types are passed by
+reference by the interpreter and JIT, but by value when compiled to C++.
+
+You can eliminate those differences by either forcing the interpreter and JIT
+to also respect type annotations or by having \l{qmlcachegen} and \l{qmlsc}
+ignore type annotations. The former has a performance cost when using the
+interpreter or JIT, the latter makes the compilation to C++ avoid any JavaScript
+functions, and any bindings and signal handlers that call JavaScript functions.
+Therefore less code will be compiled to C++.
+
+In order to always enforce type annotations, add the following to your QML
+document:
+\qml
+pragma FunctionSignatureBehavior: Enforced
+\endqml
+
+In order to always ignore type annotations, add the following instead:
+\qml
+pragma FunctionSignatureBehavior: Ignored
+\endqml
 
 Type assertions (sometimes called \e as-casts) can also be used in order to cast an object to a
 different object type. If the object is actually of the given type, then the type assertion returns

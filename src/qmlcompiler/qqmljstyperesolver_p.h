@@ -140,6 +140,8 @@ public:
     QQmlJSScope::ConstPtr comparableType(const QQmlJSScope::ConstPtr &type) const;
 
     const QQmlJSScopesById &objectsById() const { return m_objectsById; }
+    bool canCallJSFunctions() const { return m_objectsById.signaturesAreEnforced(); }
+
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
     {
         return m_signalHandlers;

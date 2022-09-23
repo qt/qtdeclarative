@@ -140,6 +140,7 @@ private slots:
     void mathOperations();
     void inaccessibleProperty();
     void typePropagationLoop();
+    void signatureIgnored();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2735,6 +2736,19 @@ void tst_QmlCppCodegen::typePropagationLoop()
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("j").toInt(), 3);
+}
+
+void tst_QmlCppCodegen::signatureIgnored()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c1(&engine, QUrl(u"qrc:/qt/qml/TestTypes/signatureIgnored.qml"_s));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> ignored(c1.create());
+    QCOMPARE(ignored->property("l").toInt(), 5);
+    QCOMPARE(ignored->property("m").toInt(), 77);
+    QCOMPARE(ignored->property("n").toInt(), 67);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

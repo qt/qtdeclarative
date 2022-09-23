@@ -1548,9 +1548,12 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
             m_pendingMethodAnnotations.clear();
         }
 
-        bool formalsFullyTyped = true;
+        // If signatures are explicitly ignored, we don't parse the types
+        const bool parseTypes = m_scopesById.signaturesAreEnforced();
+
+        bool formalsFullyTyped = parseTypes;
         bool anyFormalTyped = false;
-        if (const auto *formals = fexpr->formals) {
+        if (const auto *formals = parseTypes ? fexpr->formals : nullptr) {
             const auto parameters = formals->formals();
             for (const auto &parameter : parameters) {
                 const QString type = parameter.typeName();
@@ -1571,7 +1574,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         // Methods with only untyped arguments return an untyped value.
         // Methods with at least one typed argument but no explicit return type return void.
         // In order to make a function without arguments return void, you have to specify that.
-        if (fexpr->typeAnnotation)
+        if (parseTypes && fexpr->typeAnnotation)
             method.setReturnTypeName(fexpr->typeAnnotation->type->toString());
         else if (anyFormalTyped)
             method.setReturnTypeName(QStringLiteral("void"));
@@ -2177,6 +2180,19 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
         } else {
             m_logger->log(
                     u"Unkonwn argument \"%s\" to pragma ComponentBehavior"_s.arg(pragma->value),
+                    qmlSyntax, pragma->firstSourceLocation());
+        }
+    }
+
+    if (pragma->name == u"FunctionSignatureBehavior") {
+        if (pragma->value == u"Enforced") {
+            m_scopesById.setSignaturesAreEnforced(true);
+        } else if (pragma->value == u"Ignored") {
+            m_scopesById.setSignaturesAreEnforced(false);
+        } else {
+            m_logger->log(
+                    u"Unkonwn argument \"%s\" to pragma FunctionSignatureBehavior"_s
+                        .arg(pragma->value),
                     qmlSyntax, pragma->firstSourceLocation());
         }
     }

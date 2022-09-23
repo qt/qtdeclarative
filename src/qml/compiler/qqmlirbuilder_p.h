@@ -381,7 +381,8 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         Singleton,
         Strict,
         ListPropertyAssignBehavior,
-        ComponentBehavior
+        ComponentBehavior,
+        FunctionSignatureBehavior,
     };
 
     enum ListPropertyAssignBehaviorValue
@@ -397,11 +398,18 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         Bound
     };
 
+    enum FunctionSignatureBehaviorValue
+    {
+        Ignored,
+        Enforced
+    };
+
     PragmaType type;
 
     union {
         ListPropertyAssignBehaviorValue listPropertyAssignBehavior;
         ComponentBehaviorValue componentBehavior;
+        FunctionSignatureBehaviorValue functionSignatureBehavior;
     };
 
     QV4::CompiledData::Location location;

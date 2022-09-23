@@ -398,6 +398,7 @@ private slots:
     void badGroupedProperty();
     void functionInGroupedProperty();
     void signalInlineComponentArg();
+    void functionSignatureEnforcement();
 
 private:
     QQmlEngine engine;
@@ -7679,6 +7680,28 @@ void tst_qqmllanguage::signalInlineComponentArg()
         QCOMPARE(object->property("successFromSignalFromFile"),
                  u"Signal was called from another file"_s);
     }
+}
+
+void tst_qqmllanguage::functionSignatureEnforcement()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c1(&engine, testFileUrl("signatureIgnored.qml"));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> ignored(c1.create());
+    QCOMPARE(ignored->property("l").toInt(), 5);
+    QCOMPARE(ignored->property("m").toInt(), 77);
+    QCOMPARE(ignored->property("n").toInt(), 67);
+
+    QQmlComponent c2(&engine, testFileUrl("signatureEnforced.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+
+    QScopedPointer<QObject> enforced(c2.create());
+    QCOMPARE(enforced->property("l").toInt(), 2); // strlen("no")
+    QCOMPARE(enforced->property("m").toInt(), 12);
+    QCOMPARE(enforced->property("n").toInt(), 99);
+    QCOMPARE(enforced->property("o").toInt(), 77);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -27,6 +27,9 @@ class QQmlJSScopesById
 public:
     void setComponentsAreBound(bool bound) { m_componentsAreBound = bound; }
 
+    void setSignaturesAreEnforced(bool enforced) { m_signaturesAreEnforced = enforced; }
+    bool signaturesAreEnforced() const { return m_signaturesAreEnforced; }
+
     QString id(const QQmlJSScope::ConstPtr &scope) const
     {
         for (auto it = m_scopesById.begin(), end = m_scopesById.end(); it != end; ++it) {
@@ -103,6 +106,7 @@ private:
 
     QMultiHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
     bool m_componentsAreBound = false;
+    bool m_signaturesAreEnforced = true;
 };
 
 QT_END_NAMESPACE

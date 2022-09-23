@@ -314,4 +314,22 @@ ListView {
 You can nest components in a QML file. The pragma holds for all components in
 the file, no matter how deeply nested.
 
+
+\section2 FunctionSignatureBehavior
+
+With this pragma you can change the way type annotations on functions are
+handled. By default the interpreter and JIT ignore type annotations, but
+\l{qmlcachegen} and \l{qmlsc} enforce them when compiling to C++.
+
+Specifying \c{Enforce} as value makes sure the type annotations are always
+enforced. The resulting type coercions increase the overhead of calling
+typed JavaScript functions.
+
+Specifying \c{Ignore} as value makes \l{qmlsc} and \l{qmlcachegen} ignore
+any JavaScript functions when compiling the document to C++. This means less
+code is compiled to C++ ahead of time, and more code has to be interpreted or
+JIT-compiled.
+
+\sa {Type annotations and assertions}
+
 */

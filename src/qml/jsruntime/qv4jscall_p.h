@@ -216,7 +216,46 @@ bool convertAndCall(ExecutionEngine *engine, QObject *thisObject,
     return !jsResult->isUndefined();
 }
 
+template<typename Callable>
+ReturnedValue coerceAndCall(
+        ExecutionEngine *engine, const QQmlPrivate::TypedFunction *typedFunction,
+        const Value *thisObject, const Value *argv, int argc, Callable call)
+{
+    Scope scope(engine);
+    QV4::JSCallArguments jsCallData(scope, argc);
+
+    const qsizetype numFunctionArguments = typedFunction->argumentTypes.size();
+    for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+        const QMetaType argumentType = typedFunction->argumentTypes[i];
+        if (const qsizetype argumentSize = argumentType.sizeOf()) {
+            Q_ALLOCA_VAR(void, argument, argumentSize);
+            argumentType.construct(argument);
+            if (i < argc)
+                ExecutionEngine::metaTypeFromJS(argv[i], argumentType, argument);
+            jsCallData.args[i] = engine->metaTypeToJS(argumentType, argument);
+        } else {
+            jsCallData.args[i] = argv[i];
+        }
+    }
+
+    ScopedValue result(scope, call(thisObject, jsCallData.args, argc));
+    const QMetaType returnType = typedFunction->returnType;
+    if (const qsizetype returnSize = returnType.sizeOf()) {
+        Q_ALLOCA_VAR(void, returnValue, returnSize);
+        if (scope.hasException()) {
+            returnType.construct(returnValue);
+        } else if (returnType == QMetaType::fromType<QVariant>()) {
+            new (returnValue) QVariant(ExecutionEngine::toVariant(result, QMetaType {}));
+        } else {
+            returnType.construct(returnValue);
+            ExecutionEngine::metaTypeFromJS(result, returnType, returnValue);
+        }
+        return engine->metaTypeToJS(returnType, returnValue);
+    }
+    return result->asReturnedValue();
 }
+
+} // namespace QV4
 
 QT_END_NAMESPACE
 

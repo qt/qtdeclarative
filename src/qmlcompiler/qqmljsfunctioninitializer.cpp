@@ -61,6 +61,12 @@ void QQmlJSFunctionInitializer::populateSignature(
         error->message = message;
     };
 
+    if (!m_typeResolver->canCallJSFunctions()) {
+        signatureError(u"Ignoring type annotations as requested "
+                       "by pragma FunctionSignatureBehavior"_s);
+        return;
+    }
+
     QQmlJS::AST::BoundNames arguments;
     if (ast->formals)
         arguments = ast->formals->formals();

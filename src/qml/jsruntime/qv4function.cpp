@@ -14,10 +14,11 @@
 #include <private/qv4vme_moth_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qv4jscall_p.h>
+#include <private/qqmlpropertycachecreator_p.h>
 
 QT_BEGIN_NAMESPACE
 
-using namespace QV4;
+namespace QV4 {
 
 bool Function::call(QObject *thisObject, void **a, const QMetaType *types, int argc,
                     ExecutionContext *context)
@@ -39,20 +40,13 @@ bool Function::call(QObject *thisObject, void **a, const QMetaType *types, int a
     return !frame.isReturnValueUndefined();
 }
 
-ReturnedValue Function::call(
-        const Value *thisObject, const Value *argv, int argc, ExecutionContext *context) {
-    if (kind == AotCompiled) {
-        return QV4::convertAndCall(
-                    context->engine(), typedFunction, thisObject, argv, argc,
-                    [this, context](QObject *thisObject,
-                                    void **a, const QMetaType *types, int argc) {
-            call(thisObject, a, types, argc, context);
-        });
-    }
-
+static ReturnedValue doCall(
+        Function *self, const Value *thisObject, const Value *argv, int argc,
+        ExecutionContext *context)
+{
     ExecutionEngine *engine = context->engine();
     JSTypesStackFrame frame;
-    frame.init(this, argv, argc);
+    frame.init(self, argv, argc);
     frame.setupJSFrame(engine->jsStackTop, Value::undefinedValue(), context->d(),
                        thisObject ? *thisObject : Value::undefinedValue());
     engine->jsStackTop += frame.requiredJSStackFrameSize();
@@ -60,6 +54,29 @@ ReturnedValue Function::call(
     ReturnedValue result = Moth::VME::exec(&frame, engine);
     frame.pop(engine);
     return result;
+}
+
+ReturnedValue Function::call(
+        const Value *thisObject, const Value *argv, int argc, ExecutionContext *context) {
+    switch (kind) {
+    case AotCompiled:
+        return QV4::convertAndCall(
+                    context->engine(), typedFunction, thisObject, argv, argc,
+                    [this, context](
+                        QObject *thisObject, void **a, const QMetaType *types, int argc) {
+            call(thisObject, a, types, argc, context);
+        });
+    case JsTyped:
+        return QV4::coerceAndCall(
+                    context->engine(), typedFunction, thisObject, argv, argc,
+                    [this, context](const Value *thisObject, const Value *argv, int argc) {
+            return doCall(this, thisObject, argv, argc, context);
+        });
+    default:
+        break;
+    }
+
+    return doCall(this, thisObject, argv, argc, context);
 }
 
 Function *Function::create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
@@ -94,11 +111,67 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     const CompiledData::Parameter *formalsIndices = compiledFunction->formalsTable();
-    for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
+    const bool enforcesSignature = !aotFunction && unit->enforcesFunctionSignature();
+    bool hasTypes = false;
+    for (quint32 i = 0; i < compiledFunction->nFormals; ++i) {
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i].nameIndex]), Attr_NotConfigurable);
+        if (enforcesSignature
+                && !hasTypes
+                && formalsIndices[i].type.typeNameIndexOrBuiltinType()
+                    != quint32(QV4::CompiledData::BuiltinType::InvalidBuiltin)) {
+            hasTypes = true;
+        }
+    }
     internalClass = ic->d();
 
     nFormals = compiledFunction->nFormals;
+
+    if (!enforcesSignature)
+        return;
+
+    if (!hasTypes
+            && compiledFunction->returnType.typeNameIndexOrBuiltinType()
+                == quint32(QV4::CompiledData::BuiltinType::InvalidBuiltin)) {
+        return;
+    }
+
+    QQmlPrivate::TypedFunction *synthesized = new QQmlPrivate::TypedFunction;
+    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine->qmlEngine());
+
+    auto findMetaType = [&](const CompiledData::ParameterType &param) {
+        if (param.indexIsBuiltinType()) {
+            return QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(
+                        QV4::CompiledData::BuiltinType(param.typeNameIndexOrBuiltinType()));
+        }
+
+        const quint32 type = param.typeNameIndexOrBuiltinType();
+        if (type == 0)
+            return QMetaType();
+
+        const QQmlType qmltype = unit->typeNameCache->query(unit->stringAt(type)).type;
+        if (!qmltype.isValid())
+            return QMetaType();
+
+        const QMetaType metaType = qmltype.typeId();
+        if (metaType.isValid())
+            return metaType;
+
+        if (!qmltype.isComposite()) {
+            return qmltype.isInlineComponentType()
+                    ? unit->typeIdsForComponent(qmltype.inlineComponentId()).id
+                    : QMetaType();
+        }
+
+        return enginePrivate->typeLoader.getType(
+                    qmltype.sourceUrl())->compilationUnit()->typeIds.id;
+    };
+
+    for (quint16 i = 0; i < nFormals; ++i)
+        synthesized->argumentTypes.append(findMetaType(formalsIndices[i].type));
+
+    synthesized->returnType = findMetaType(compiledFunction->returnType);
+    typedFunction = synthesized;
+    kind = JsTyped;
 }
 
 Function::~Function()
@@ -107,6 +180,8 @@ Function::~Function()
         destroyFunctionTable(this, codeRef);
         delete codeRef;
     }
+    if (kind == JsTyped)
+        delete typedFunction;
 }
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
@@ -172,5 +247,7 @@ QQmlSourceLocation Function::sourceLocation() const
     return QQmlSourceLocation(
             sourceFile(), compiledFunction->location.line(), compiledFunction->location.column());
 }
+
+} // namespace QV4
 
 QT_END_NAMESPACE

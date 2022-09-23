@@ -166,6 +166,11 @@ public:
         return ListPropertyAssignBehavior::Append;
     }
 
+    bool enforcesFunctionSignature() const
+    {
+        return data->flags & CompiledData::Unit::FunctionSignaturesEnforced;
+    }
+
     int objectCount() const { return qmlData->nObjects; }
     const CompiledObject *objectAt(int index) const
     {

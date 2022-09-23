@@ -13,6 +13,7 @@ set(cpp_sources
     state.h
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
+    withlength.h
 )
 
 set(qml_files
@@ -140,6 +141,7 @@ set(qml_files
     shifts.qml
     signal.qml
     signalHandler.qml
+    signatureIgnored.qml
     specificParent.qml
     stringArg.qml
     stringLength.qml

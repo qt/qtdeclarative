@@ -43,16 +43,27 @@ void QQmlIRLoader::load()
         createPragma(type)->componentBehavior = value;
     };
 
+    const auto createFunctionSignaturePragma = [&](
+            Pragma::PragmaType type,
+            Pragma::FunctionSignatureBehaviorValue value) {
+        createPragma(type)->functionSignatureBehavior = value;
+    };
+
     if (unit->flags & QV4::CompiledData::Unit::IsSingleton)
         createPragma(Pragma::Singleton);
     if (unit->flags & QV4::CompiledData::Unit::IsStrict)
         createPragma(Pragma::Strict);
+
     if (unit->flags & QV4::CompiledData::Unit::ListPropertyAssignReplace)
         createListPragma(Pragma::ListPropertyAssignBehavior, Pragma::Replace);
     else if (unit->flags & QV4::CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
         createListPragma(Pragma::ListPropertyAssignBehavior, Pragma::ReplaceIfNotDefault);
+
     if (unit->flags & QV4::CompiledData::Unit::ComponentsBound)
         createComponentPragma(Pragma::ComponentBehavior, Pragma::Bound);
+
+    if (unit->flags & QV4::CompiledData::Unit::FunctionSignaturesEnforced)
+        createFunctionSignaturePragma(Pragma::FunctionSignatureBehavior, Pragma::Enforced);
 
     for (uint i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *serializedObject = qmlUnit->objectAt(i);

@@ -507,17 +507,8 @@ void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, QObject *
     frame.pop(scope.engine);
 }
 
-ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+static ReturnedValue doCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
-    Function *function = fo->function();
-    if (function->kind == Function::AotCompiled) {
-        return QV4::convertAndCall(
-                    fo->engine(), function->typedFunction, thisObject, argv, argc,
-                    [fo](QObject *thisObject, void **a, const QMetaType *types, int argc) {
-            ArrowFunction::virtualCallWithMetaTypes(fo, thisObject, a, types, argc);
-        });
-    }
-
     ExecutionEngine *engine = fo->engine();
     JSTypesStackFrame frame;
     frame.init(fo->function(), argv, argc, true);
@@ -538,6 +529,29 @@ ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *
     frame.pop(engine);
 
     return result;
+}
+
+ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+{
+    Function *function = fo->function();
+    switch (function->kind) {
+    case Function::AotCompiled:
+        return QV4::convertAndCall(
+                    fo->engine(), function->typedFunction, thisObject, argv, argc,
+                    [fo](QObject *thisObject, void **a, const QMetaType *types, int argc) {
+            ArrowFunction::virtualCallWithMetaTypes(fo, thisObject, a, types, argc);
+        });
+    case Function::JsTyped:
+        return QV4::coerceAndCall(
+                    fo->engine(), function->typedFunction, thisObject, argv, argc,
+                    [fo](const Value *thisObject, const Value *argv, int argc) {
+            return doCall(fo, thisObject, argv, argc);
+        });
+    default:
+        break;
+    }
+
+    return doCall(fo, thisObject, argv, argc);
 }
 
 void Heap::ArrowFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)

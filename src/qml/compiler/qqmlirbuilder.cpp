@@ -799,6 +799,8 @@ private:
             return Pragma::ComponentBehavior;
         } else if constexpr (std::is_same_v<Argument, Pragma::ListPropertyAssignBehaviorValue>) {
             return Pragma::ListPropertyAssignBehavior;
+        } else if constexpr (std::is_same_v<Argument, Pragma::FunctionSignatureBehaviorValue>) {
+            return Pragma::FunctionSignatureBehavior;
         }
 
         Q_UNREACHABLE();
@@ -832,6 +834,15 @@ private:
                 pragma->listPropertyAssignBehavior = Pragma::ReplaceIfNotDefault;
                 return true;
             }
+        } else if constexpr (std::is_same_v<Argument, Pragma::FunctionSignatureBehaviorValue>) {
+            if (value == "Ignored"_L1) {
+                pragma->functionSignatureBehavior = Pragma::Ignored;
+                return true;
+            }
+            if (value == "Enforced"_L1) {
+                pragma->functionSignatureBehavior = Pragma::Enforced;
+                return true;
+            }
         }
 
         return false;
@@ -853,6 +864,8 @@ private:
             return "list property assign behavior"_L1;
         case Pragma::ComponentBehavior:
             return "component behavior"_L1;
+        case Pragma::FunctionSignatureBehavior:
+            return "function signature behavior"_L1;
         default:
             break;
         }
@@ -875,6 +888,9 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
                 return false;
         } else if (node->name == QStringLiteral("ListPropertyAssignBehavior")) {
             if (!PragmaParser<Pragma::ListPropertyAssignBehaviorValue>::run(this, node, pragma))
+                return false;
+        } else if (node->name == QStringLiteral("FunctionSignatureBehavior")) {
+            if (!PragmaParser<Pragma::FunctionSignatureBehaviorValue>::run(this, node, pragma))
                 return false;
         } else {
             recordError(node->pragmaToken, QCoreApplication::translate(
@@ -1626,6 +1642,16 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                     break;
                 case Pragma::Append:
                     // this is the default
+                    break;
+                }
+                break;
+            case Pragma::FunctionSignatureBehavior:
+                switch (p->functionSignatureBehavior) {
+                case Pragma::Enforced:
+                    createdUnit->flags |= Unit::FunctionSignaturesEnforced;
+                    break;
+                case Pragma::Ignored:
+                    //this is the default;
                     break;
                 }
                 break;
