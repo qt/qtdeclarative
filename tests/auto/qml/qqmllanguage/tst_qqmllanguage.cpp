@@ -1370,16 +1370,24 @@ void tst_qqmllanguage::rootAsQmlComponent()
 
 void tst_qqmllanguage::rootItemIsComponent()
 {
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            QRegularExpression(
+                    ".*/rootItemIsComponent\\.qml:3:1: Using a Component as the root of "
+                    "a qmldocument is deprecated: types defined in qml documents are automatically "
+                    "wrapped into Components when needed\\."));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            QRegularExpression(
+                    ".*/EvilComponentType\\.qml:3:1: Using a Component as the root of a "
+                    "qmldocument is deprecated: types defined in qml documents are automatically "
+                    "wrapped into Components when needed\\."));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            QRegularExpression(".*/rootItemIsComponent\\.qml:7:36: Using a Component as the root "
+                               "of an inline component is deprecated: inline components are "
+                               "automatically wrapped into Components when needed\\."));
     QQmlComponent component(&engine, testFileUrl("rootItemIsComponent.qml"));
-    VERIFY_ERRORS(0);
-    QScopedPointer<QObject> root(component.create());
-    QVERIFY(qobject_cast<QQmlComponent*>(root.data()));
-    QScopedPointer<QObject> other(qobject_cast<QQmlComponent*>(root.data())->create());
-    QVERIFY(!other.isNull());
-    QQmlContext *context = qmlContext(other.data());
-    QVERIFY(context);
-    QCOMPARE(context->nameForObject(other.data()), QStringLiteral("blah"));
-    QCOMPARE(context->objectForName(QStringLiteral("blah")), other.data());
 }
 
 // Tests that components can be specified inline

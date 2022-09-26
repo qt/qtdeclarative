@@ -1,6 +1,8 @@
 import QtQuick 2.0
 
-Component {
-    QtObject {}
-    QtObject {}
+Item {
+    Component {
+        QtObject {}
+        QtObject {}
+    }
 }

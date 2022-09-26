@@ -1,6 +1,15 @@
-import QtQml 2.0
+import QtQuick 2.0
+
 Component {
-    QtObject {
-        id: blah
+    id: evilTopLevelComponent
+
+    Item {
+        component EvilICComponent: Component {}
+
+        EvilComponentType {
+            id: evilTopLevelComponentFromAnotherFile
+
+            Item {}
+        }
     }
 }

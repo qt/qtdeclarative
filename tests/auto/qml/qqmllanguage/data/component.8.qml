@@ -1,7 +1,9 @@
 import QtQuick 2.0
 
-Component {
-    signal a
-    QtObject {}
+Item {
+    Component {
+        signal a
+        QtObject {}
+    }
 }
 

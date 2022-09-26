@@ -1,0 +1,2 @@
+3:1:Using a Component as the root of a qmldocument is deprecated: inline components are automatically wrapped into Components when needed.
+7:36:Using a Component as the root of an inline component is deprecated: inline components are automatically wrapped into Components when needed.
