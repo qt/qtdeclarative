@@ -23,16 +23,16 @@ DEFINE_OBJECT_VTABLE(Sequence);
 
 static const QMetaSequence *metaSequence(const Heap::Sequence *p)
 {
-    return p->typePrivate->extraData.ld;
+    return p->typePrivate()->extraData.ld;
 }
 
 template<typename Compare>
 void sortSequence(Sequence *sequence, const Compare &compare)
 {
-    const auto *p = sequence->d();
+    auto *p = sequence->d();
     const auto *m = metaSequence(p);
 
-    QSequentialIterable iterable(*m, p->typePrivate->listId, p->container);
+    QSequentialIterable iterable(*m, p->typePrivate()->listId, p->storagePointer());
     if (iterable.canRandomAccessIterate()) {
         std::sort(QSequentialIterable::RandomAccessIterator(iterable.mutableBegin()),
                   QSequentialIterable::RandomAccessIterator(iterable.mutableEnd()),
@@ -69,8 +69,8 @@ struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
     {
         const Sequence *s = static_cast<const Sequence *>(o);
 
-        if (s->d()->isReference) {
-            if (!s->d()->object)
+        if (s->d()->isReference()) {
+            if (!s->d()->object())
                 return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
             s->loadReference();
         }
@@ -132,17 +132,15 @@ struct SequenceDefaultCompareFunctor
 
 void Heap::Sequence::init(const QQmlType &qmlType, const void *container)
 {
-    Object::init();
+    ReferenceObject::init();
 
     Q_ASSERT(qmlType.isSequentialContainer());
-    typePrivate = qmlType.priv();
-    QQmlType::refHandle(typePrivate);
+    m_typePrivate = qmlType.priv();
+    QQmlType::refHandle(m_typePrivate);
 
-    this->container = typePrivate->listId.create(container);
-    propertyIndex = -1;
-    isReference = false;
-    isReadOnly = false;
-    object.init();
+    m_container = m_typePrivate->listId.create(container);
+    setProperty(-1);
+    m_isReadOnly = false;
 
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::Sequence> o(scope, this);
@@ -152,16 +150,15 @@ void Heap::Sequence::init(const QQmlType &qmlType, const void *container)
 void Heap::Sequence::init(
         QObject *object, int propertyIndex, const QQmlType &qmlType, bool readOnly)
 {
-    Object::init();
+    ReferenceObject::init();
 
     Q_ASSERT(qmlType.isSequentialContainer());
-    typePrivate = qmlType.priv();
-    QQmlType::refHandle(typePrivate);
-    container = QMetaType(typePrivate->listId).create();
-    this->propertyIndex = propertyIndex;
-    isReference = true;
-    this->isReadOnly = readOnly;
-    this->object.init(object);
+    m_typePrivate = qmlType.priv();
+    QQmlType::refHandle(m_typePrivate);
+    m_container = QMetaType(m_typePrivate->listId).create();
+    setProperty(propertyIndex);
+    m_isReadOnly = readOnly;
+    setObject(object);
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::Sequence> o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
@@ -170,21 +167,49 @@ void Heap::Sequence::init(
 
 void Heap::Sequence::destroy()
 {
-    typePrivate->listId.destroy(container);
-    QQmlType::derefHandle(typePrivate);
-    object.destroy();
-    Object::destroy();
+    m_typePrivate->listId.destroy(m_container);
+    QQmlType::derefHandle(m_typePrivate);
+    ReferenceObject::destroy();
+}
+
+bool Heap::Sequence::setVariant(const QVariant &variant)
+{
+    const QMetaType variantReferenceType = variant.metaType();
+    if (variantReferenceType != m_typePrivate->listId) {
+        // This is a stale reference. That is, the property has been
+        // overwritten with a different type in the meantime.
+        // We need to modify this reference to the updated type, if
+        // possible, or return false if it is not a sequence.
+        const QQmlType newType = QQmlMetaType::qmlListType(variantReferenceType);
+        if (newType.isSequentialContainer()) {
+            m_typePrivate->listId.destroy(m_container);
+            QQmlType::derefHandle(m_typePrivate);
+            m_typePrivate = newType.priv();
+            QQmlType::refHandle(m_typePrivate);
+            m_container = m_typePrivate->listId.create(variant.constData());
+            return true;
+        } else {
+            return false;
+        }
+    }
+    variantReferenceType.destruct(m_container);
+    variantReferenceType.construct(m_container, variant.constData());
+    return true;
+}
+QVariant Heap::Sequence::toVariant() const
+{
+    return QVariant(m_typePrivate->listId, m_container);
 }
 
 const QMetaType Sequence::valueMetaType(const Heap::Sequence *p)
 {
-    return p->typePrivate->typeId;
+    return p->typePrivate()->typeId;
 }
 
 qsizetype Sequence::size() const
 {
     const auto *p = d();
-    return metaSequence(p)->size(p->container);
+    return metaSequence(p)->size(p->storagePointer());
 }
 
 QVariant Sequence::at(qsizetype index) const
@@ -193,10 +218,10 @@ QVariant Sequence::at(qsizetype index) const
     const QMetaType v = valueMetaType(p);
     QVariant result;
     if (v == QMetaType::fromType<QVariant>()) {
-        metaSequence(p)->valueAtIndex(p->container, index, &result);
+        metaSequence(p)->valueAtIndex(p->storagePointer(), index, &result);
     } else {
         result = QVariant(v);
-        metaSequence(p)->valueAtIndex(p->container, index, result.data());
+        metaSequence(p)->valueAtIndex(p->storagePointer(), index, result.data());
     }
     return result;
 }
@@ -219,18 +244,18 @@ void convertAndDo(const QVariant &item, const QMetaType v, Action action)
 
 void Sequence::append(const QVariant &item)
 {
-    const Heap::Sequence *p = d();
+    Heap::Sequence *p = d();
     convertAndDo(item, valueMetaType(p), [p](const void *data) {
-        metaSequence(p)->addValueAtEnd(p->container, data);
+        metaSequence(p)->addValueAtEnd(p->storagePointer(), data);
     });
 }
 
 void Sequence::append(qsizetype num, const QVariant &item)
 {
-    const Heap::Sequence *p = d();
+    Heap::Sequence *p = d();
     convertAndDo(item, valueMetaType(p), [p, num](const void *data) {
         const QMetaSequence *m = metaSequence(p);
-        void *container = p->container;
+        void *container = p->storagePointer();
         for (qsizetype i = 0; i < num; ++i)
             m->addValueAtEnd(container, data);
     });
@@ -238,40 +263,40 @@ void Sequence::append(qsizetype num, const QVariant &item)
 
 void Sequence::replace(qsizetype index, const QVariant &item)
 {
-    const Heap::Sequence *p = d();
+    Heap::Sequence *p = d();
     convertAndDo(item, valueMetaType(p), [p, index](const void *data) {
-        metaSequence(p)->setValueAtIndex(p->container, index, data);
+        metaSequence(p)->setValueAtIndex(p->storagePointer(), index, data);
     });
 }
 
 void Sequence::removeLast(qsizetype num)
 {
-    const auto *p = d();
+    auto *p = d();
     const auto *m = metaSequence(p);
 
     if (m->canEraseRangeAtIterator() && m->hasRandomAccessIterator() && num > 1) {
-        void *i = m->end(p->container);
+        void *i = m->end(p->storagePointer());
         m->advanceIterator(i, -num);
-        void *j = m->end(p->container);
-        m->eraseRangeAtIterator(p->container, i, j);
+        void *j = m->end(p->storagePointer());
+        m->eraseRangeAtIterator(p->storagePointer(), i, j);
         m->destroyIterator(i);
         m->destroyIterator(j);
     } else {
         for (int i = 0; i < num; ++i)
-            m->removeValueAtEnd(p->container);
+            m->removeValueAtEnd(p->storagePointer());
     }
 }
 
 QVariant Sequence::toVariant() const
 {
     const auto *p = d();
-    return QVariant(p->typePrivate->listId, p->container);
+    return QVariant(p->typePrivate()->listId, p->storagePointer());
 }
 
 ReturnedValue Sequence::containerGetIndexed(qsizetype index, bool *hasProperty) const
 {
-    if (d()->isReference) {
-        if (!d()->object) {
+    if (d()->isReference()) {
+        if (!d()->object()) {
             if (hasProperty)
                 *hasProperty = false;
             return Encode::undefined();
@@ -293,13 +318,13 @@ bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
     if (internalClass()->engine->hasException)
         return false;
 
-    if (d()->isReadOnly) {
+    if (d()->isReadOnly()) {
         engine()->throwTypeError(QLatin1String("Cannot insert into a readonly container"));
         return false;
     }
 
-    if (d()->isReference) {
-        if (!d()->object)
+    if (d()->isReference()) {
+        if (!d()->object())
             return false;
         loadReference();
     }
@@ -323,7 +348,7 @@ bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
         append(element);
     }
 
-    if (d()->isReference)
+    if (d()->isReference())
         storeReference();
     return true;
 }
@@ -336,10 +361,10 @@ SequenceOwnPropertyKeyIterator *containerOwnPropertyKeys(const Object *m, Value 
 
 bool Sequence::containerDeleteIndexedProperty(qsizetype index)
 {
-    if (d()->isReadOnly)
+    if (d()->isReadOnly())
         return false;
-    if (d()->isReference) {
-        if (!d()->object)
+    if (d()->isReference()) {
+        if (!d()->object())
             return false;
         loadReference();
     }
@@ -351,7 +376,7 @@ bool Sequence::containerDeleteIndexedProperty(qsizetype index)
     /* but we cannot, so we insert a default-value instead. */
     replace(index, QVariant());
 
-    if (d()->isReference)
+    if (d()->isReference())
         storeReference();
 
     return true;
@@ -364,9 +389,10 @@ bool Sequence::containerIsEqualTo(Managed *other)
     Sequence *otherSequence = other->as<Sequence>();
     if (!otherSequence)
         return false;
-    if (d()->isReference && otherSequence->d()->isReference) {
-        return d()->object == otherSequence->d()->object && d()->propertyIndex == otherSequence->d()->propertyIndex;
-    } else if (!d()->isReference && !otherSequence->d()->isReference) {
+    if (d()->isReference() && otherSequence->d()->isReference()) {
+        return d()->object() == otherSequence->d()->object()
+                && d()->property() == otherSequence->d()->property();
+    } else if (!d()->isReference() && !otherSequence->d()->isReference()) {
         return this == otherSequence;
     }
     return false;
@@ -374,10 +400,10 @@ bool Sequence::containerIsEqualTo(Managed *other)
 
 bool Sequence::sort(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    if (d()->isReadOnly)
+    if (d()->isReadOnly())
         return false;
-    if (d()->isReference) {
-        if (!d()->object)
+    if (d()->isReference()) {
+        if (!d()->object())
             return false;
         loadReference();
     }
@@ -387,31 +413,27 @@ bool Sequence::sort(const FunctionObject *f, const Value *, const Value *argv, i
     else
         sortSequence(this, SequenceDefaultCompareFunctor());
 
-    if (d()->isReference)
+    if (d()->isReference())
         storeReference();
 
     return true;
 }
 
 void *Sequence::getRawContainerPtr() const
-{ return d()->container; }
+{ return d()->storagePointer(); }
 
 void Sequence::loadReference() const
 {
-    Q_ASSERT(d()->object);
-    Q_ASSERT(d()->isReference);
-    void *a[] = { d()->container, nullptr };
-    QMetaObject::metacall(d()->object, QMetaObject::ReadProperty, d()->propertyIndex, a);
+    Q_ASSERT(d()->object());
+    Q_ASSERT(d()->isReference());
+    QV4::ReferenceObject::readReference(d());
 }
 
 void Sequence::storeReference()
 {
-    Q_ASSERT(d()->object);
-    Q_ASSERT(d()->isReference);
-    int status = -1;
-    QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding;
-    void *a[] = { d()->container, nullptr, &status, &flags };
-    QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
+    Q_ASSERT(d()->object());
+    Q_ASSERT(d()->isReference());
+    QV4::ReferenceObject::writeBack(d());
 }
 
 ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)
@@ -471,8 +493,8 @@ static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value
     if (!This)
         THROW_TYPE_ERROR();
 
-    if (This->d()->isReference) {
-        if (!This->d()->object)
+    if (This->d()->isReference()) {
+        if (!This->d()->object())
             RETURN_RESULT(Encode(0));
         This->loadReference();
     }
@@ -498,14 +520,14 @@ static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value
         RETURN_UNDEFINED();
     }
 
-    if (This->d()->isReadOnly)
+    if (This->d()->isReadOnly())
         THROW_TYPE_ERROR();
 
     const qsizetype newCount = qsizetype(argv0);
 
     /* Read the sequence from the QObject property if we're a reference */
-    if (This->d()->isReference) {
-        if (!This->d()->object)
+    if (This->d()->isReference()) {
+        if (!This->d()->object())
             RETURN_UNDEFINED();
         This->loadReference();
     }
@@ -528,7 +550,7 @@ static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value
     }
 
     /* write back if required. */
-    if (This->d()->isReference) {
+    if (This->d()->isReference()) {
         /* write back.  already checked that object is non-null, so skip that check here. */
         This->storeReference();
     }
@@ -666,14 +688,14 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
 
 void *SequencePrototype::getRawContainerPtr(const Sequence *object, QMetaType typeHint)
 {
-    if (object->d()->typePrivate->listId == typeHint)
+    if (object->d()->typePrivate()->listId == typeHint)
         return object->getRawContainerPtr();
     return nullptr;
 }
 
 QMetaType SequencePrototype::metaTypeForSequence(const Sequence *object)
 {
-    return object->d()->typePrivate->listId;
+    return object->d()->typePrivate()->listId;
 }
 
 } // namespace QV4

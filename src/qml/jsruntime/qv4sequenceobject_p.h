@@ -19,10 +19,9 @@
 #include <QtCore/qvariant.h>
 #include <QtQml/qqml.h>
 
-#include "qv4value_p.h"
-#include "qv4object_p.h"
-#include "qv4context_p.h"
-#include "qv4string_p.h"
+#include <private/qv4referenceobject_p.h>
+#include <private/qv4value_p.h>
+#include <private/qv4object_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,24 +48,32 @@ struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
 
 namespace Heap {
 
-struct Sequence : Object {
+struct Sequence : ReferenceObject
+{
     void init(const QQmlType &qmlType, const void *container);
     void init(QObject *object, int propertyIndex, const QQmlType &qmlType, bool readOnly);
     void destroy();
 
-    mutable void *container;
-    const QQmlTypePrivate *typePrivate;
-    QV4QPointer<QObject> object;
-    int propertyIndex;
-    bool isReference : 1;
-    bool isReadOnly : 1;
+    void *storagePointer() { return m_container; }
+    const void *storagePointer() const { return m_container; }
+
+    bool setVariant(const QVariant &variant);
+    QVariant toVariant() const;
+
+    const QQmlTypePrivate *typePrivate() const { return m_typePrivate; }
+    bool isReadOnly() const { return m_isReadOnly; }
+
+private:
+    void *m_container;
+    const QQmlTypePrivate *m_typePrivate;
+    bool m_isReadOnly;
 };
 
 }
 
-struct Q_QML_PRIVATE_EXPORT Sequence : public QV4::Object
+struct Q_QML_PRIVATE_EXPORT Sequence : public QV4::ReferenceObject
 {
-    V4_OBJECT2(Sequence, QV4::Object)
+    V4_OBJECT2(Sequence, QV4::ReferenceObject)
     Q_MANAGED_TYPE(V4Sequence)
     V4_PROTOTYPE(sequencePrototype)
     V4_NEEDS_DESTROY

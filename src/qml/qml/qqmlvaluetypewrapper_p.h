@@ -20,6 +20,7 @@
 
 #include <private/qv4value_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4referenceobject_p.h>
 #include <private/qqmlpropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -30,8 +31,11 @@ namespace QV4 {
 
 namespace Heap {
 
-struct QQmlValueTypeWrapper : Object {
-    void init() { Object::init(); }
+#define QQmlValueTypeWrapperMembers(class, Member)
+
+DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
+    DECLARE_MARKOBJECTS(QQmlValueTypeWrapper);
+
     void destroy();
 
     void setValueType(QQmlValueType *valueType)
@@ -69,56 +73,30 @@ struct QQmlValueTypeWrapper : Object {
     void setValue(const QVariant &value) const;
     QVariant toVariant() const;
 
+    void *storagePointer();
+    bool setVariant(const QVariant &variant);
+
+    bool readReference();
+    bool writeBack();
+
 private:
     mutable void *m_gadgetPtr;
     QQmlValueType *m_valueType;
     const QMetaObject *m_metaObject;
 };
 
-struct QQmlValueTypeReference : QQmlValueTypeWrapper
-{
-    void init() {
-        QQmlValueTypeWrapper::init();
-        object.init();
-    }
-    void destroy() {
-        object.destroy();
-        QQmlValueTypeWrapper::destroy();
-    }
-
-    void writeBack() {
-        const QMetaProperty writebackProperty = object->metaObject()->property(property);
-        if (!writebackProperty.isWritable())
-            return;
-
-        int flags = 0;
-        int status = -1;
-        if (writebackProperty.metaType() == QMetaType::fromType<QVariant>()) {
-            QVariant variantReferenceValue = toVariant();
-            void *a[] = { &variantReferenceValue, nullptr, &status, &flags };
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, property, a);
-        } else {
-            void *a[] = { gadgetPtr(), nullptr, &status, &flags };
-            QMetaObject::metacall(object, QMetaObject::WriteProperty, property, a);
-        }
-    }
-
-    QV4QPointer<QObject> object;
-    int property;
-};
-
 }
 
-struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
+struct Q_QML_EXPORT QQmlValueTypeWrapper : public ReferenceObject
 {
-    V4_OBJECT2(QQmlValueTypeWrapper, Object)
+    V4_OBJECT2(QQmlValueTypeWrapper, ReferenceObject)
     V4_PROTOTYPE(valueTypeWrapperPrototype)
     V4_NEEDS_DESTROY
 
 public:
 
     static ReturnedValue create(ExecutionEngine *engine, QObject *, int, const QMetaObject *metaObject, QMetaType type);
-    static ReturnedValue create(ExecutionEngine *engine, const QVariant &, const QMetaObject *metaObject, QMetaType type);
+    static ReturnedValue create(ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *cloneFrom, QObject *object);
     static ReturnedValue create(ExecutionEngine *engine, const void *, const QMetaObject *metaObject, QMetaType type);
 
     QVariant toVariant() const;
@@ -127,6 +105,7 @@ public:
     int typeId() const;
     QMetaType type() const;
     bool write(QObject *target, int propertyIndex) const;
+    bool readReferenceValue() const { return d()->readReference(); }
 
     QQmlPropertyData dataForPropertyKey(PropertyKey id) const;
 
@@ -144,16 +123,6 @@ public:
                              QV4::Value &object, const QV4::Value &value);
 
     static void initProto(ExecutionEngine *v4);
-};
-
-struct QQmlValueTypeReference : public QQmlValueTypeWrapper
-{
-    V4_OBJECT2(QQmlValueTypeReference, QQmlValueTypeWrapper)
-    V4_NEEDS_DESTROY
-
-    static ReturnedValue create(ExecutionEngine *engine, Heap::QQmlValueTypeReference *cloneFrom, QObject *object);
-
-    bool readReferenceValue() const;
 };
 
 }

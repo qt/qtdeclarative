@@ -229,6 +229,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4vme_moth.cpp jsruntime/qv4vme_moth_p.h
         jsruntime/qv4sequenceobject.cpp jsruntime/qv4sequenceobject_p.h
         jsruntime/qv4vtable_p.h
+        jsruntime/qv4referenceobject.cpp jsruntime/qv4referenceobject_p.h
         memory/qv4heap_p.h
         memory/qv4mm.cpp memory/qv4mm_p.h
         memory/qv4mmdefs_p.h

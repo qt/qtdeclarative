@@ -2218,9 +2218,9 @@ ReturnedValue QObjectMethod::create(
 
     Scoped<QQmlValueTypeWrapper> valueTypeWrapper(valueScope);
     if (cloneFrom->valueTypeWrapper) {
-        Scoped<QQmlValueTypeReference> ref(valueScope, cloneFrom->valueTypeWrapper);
+        Scoped<QQmlValueTypeWrapper> ref(valueScope, cloneFrom->valueTypeWrapper);
         if (ref) {
-            valueTypeWrapper = QQmlValueTypeReference::create(engine, ref->d(), object);
+            valueTypeWrapper = QQmlValueTypeWrapper::create(engine, ref->d(), object);
         } else {
             // We cannot re-attach a plain QQmlValueTypeWrapper because don't we know what
             // value we should operate on. Without knowledge of the property the value
@@ -2271,14 +2271,8 @@ bool Heap::QObjectMethod::isDetached() const
     if (qObj.isValid())
         return false;
 
-    if (Heap::QQmlValueTypeWrapper *wrapper = valueTypeWrapper.get()) {
-        const VTable *vt = wrapper->internalClass->vtable;
-        while (vt && vt != QV4::QQmlValueTypeWrapper::staticVTable()) {
-            if (vt == QV4::QQmlValueTypeReference::staticVTable())
-                return static_cast<Heap::QQmlValueTypeReference *>(wrapper)->object.isNull();
-            vt = vt->parent;
-        }
-    }
+    if (Heap::QQmlValueTypeWrapper *wrapper = valueTypeWrapper.get())
+        return wrapper->object() == nullptr;
 
     return true;
 }
@@ -2288,17 +2282,8 @@ bool Heap::QObjectMethod::isAttachedTo(QObject *o) const
     if (qObj.isValid() && qObj != o)
         return false;
 
-    if (Heap::QQmlValueTypeWrapper *wrapper = valueTypeWrapper.get()) {
-        const VTable *vt = wrapper->internalClass->vtable;
-        while (vt && vt != QV4::QQmlValueTypeWrapper::staticVTable()) {
-            if (vt == QV4::QQmlValueTypeReference::staticVTable()) {
-                if (static_cast<Heap::QQmlValueTypeReference *>(wrapper)->object != o)
-                    return false;
-                break;
-            }
-            vt = vt->parent;
-        }
-    }
+    if (Heap::QQmlValueTypeWrapper *wrapper = valueTypeWrapper.get())
+        return wrapper->object() == o;
 
     return true;
 }
@@ -2455,10 +2440,9 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     // The method might change the value.
     const auto doCall = [&](const auto &call) {
         if (!method->isConstant()) {
-            Scoped<QQmlValueTypeReference> ref(scope, d()->valueTypeWrapper);
-            if (ref) {
+            if (d()->valueTypeWrapper && d()->valueTypeWrapper->isReference()) {
                 ScopedValue rv(scope, call());
-                ref->d()->writeBack();
+                d()->valueTypeWrapper->writeBack();
                 return rv->asReturnedValue();
             }
         }
