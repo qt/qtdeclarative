@@ -763,6 +763,104 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
     return false;
 }
 
+
+template<typename Argument>
+struct PragmaParser
+{
+    static bool run(IRBuilder *builder, QQmlJS::AST::UiPragma *node, Pragma *pragma)
+    {
+        Q_ASSERT(builder);
+        Q_ASSERT(node);
+        Q_ASSERT(pragma);
+
+        if (!isUnique(builder)) {
+            builder->recordError(
+                        node->pragmaToken, QCoreApplication::translate(
+                            "QQmlParser", "Multiple %1 pragmas found").arg(name()));
+            return false;
+        }
+
+        pragma->type = type();
+
+        if (!assign(pragma, node->value)) {
+            builder->recordError(
+                        node->pragmaToken, QCoreApplication::translate(
+                            "QQmlParser", "Unknown %1 '%2' in pragma").arg(name(), node->value));
+            return false;
+        }
+
+        return true;
+    }
+
+private:
+    static constexpr Pragma::PragmaType type()
+    {
+        if constexpr (std::is_same_v<Argument, Pragma::ComponentBehaviorValue>) {
+            return Pragma::ComponentBehavior;
+        } else if constexpr (std::is_same_v<Argument, Pragma::ListPropertyAssignBehaviorValue>) {
+            return Pragma::ListPropertyAssignBehavior;
+        }
+
+        Q_UNREACHABLE();
+        return Pragma::PragmaType(-1);
+    }
+
+    static bool assign(Pragma *pragma, QStringView value)
+    {
+        // We could use QMetaEnum here to make the code more compact,
+        // but it's probably more expensive.
+
+        if constexpr (std::is_same_v<Argument, Pragma::ComponentBehaviorValue>) {
+            if (value == "Unbound"_L1) {
+                pragma->componentBehavior = Pragma::Unbound;
+                return true;
+            }
+            if (value == "Bound"_L1) {
+                pragma->componentBehavior = Pragma::Bound;
+                return true;
+            }
+        } else if constexpr (std::is_same_v<Argument, Pragma::ListPropertyAssignBehaviorValue>) {
+            if (value == "Append"_L1) {
+                pragma->listPropertyAssignBehavior = Pragma::Append;
+                return true;
+            }
+            if (value == "Replace"_L1) {
+                pragma->listPropertyAssignBehavior = Pragma::Replace;
+                return true;
+            }
+            if (value == "ReplaceIfNotDefault"_L1) {
+                pragma->listPropertyAssignBehavior = Pragma::ReplaceIfNotDefault;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    static bool isUnique(IRBuilder *builder)
+    {
+        for (const Pragma *prev : builder->_pragmas) {
+            if (prev->type == type())
+                return false;
+        }
+        return true;
+    };
+
+    static QLatin1StringView name()
+    {
+        switch (type()) {
+        case Pragma::ListPropertyAssignBehavior:
+            return "list property assign behavior"_L1;
+        case Pragma::ComponentBehavior:
+            return "component behavior"_L1;
+        default:
+            break;
+        }
+        Q_UNREACHABLE();
+        return QLatin1StringView();
+    }
+};
+
 bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
 {
     Pragma *pragma = New<Pragma>();
@@ -773,51 +871,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
         } else if (node->name == QStringLiteral("Strict")) {
             pragma->type = Pragma::Strict;
         } else if (node->name == QStringLiteral("ComponentBehavior")) {
-            for (const Pragma *prev : _pragmas) {
-                if (prev->type != Pragma::ComponentBehavior)
-                    continue;
-                recordError(node->pragmaToken,
-                            QCoreApplication::translate(
-                                    "QQmlParser", "Multiple component behavior pragmas found"));
+            if (!PragmaParser<Pragma::ComponentBehaviorValue>::run(this, node, pragma))
                 return false;
-            }
-
-            pragma->type = Pragma::ComponentBehavior;
-            if (node->value == QLatin1String("Bound")) {
-                pragma->componentBehavior = Pragma::Bound;
-            } else if (node->value == QLatin1String("Unbound")) {
-                pragma->componentBehavior = Pragma::Unbound;
-            } else {
-                recordError(node->pragmaToken,
-                            QCoreApplication::translate(
-                                    "QQmlParser", "Unknown component behavior '%1' in pragma")
-                                    .arg(node->value));
-                return false;
-            }
         } else if (node->name == QStringLiteral("ListPropertyAssignBehavior")) {
-            for (const Pragma *prev : _pragmas) {
-                if (prev->type != Pragma::ListPropertyAssignBehavior)
-                    continue;
-                recordError(node->pragmaToken, QCoreApplication::translate(
-                                "QQmlParser",
-                                "Multiple list property assign behavior pragmas found"));
+            if (!PragmaParser<Pragma::ListPropertyAssignBehaviorValue>::run(this, node, pragma))
                 return false;
-            }
-
-            pragma->type = Pragma::ListPropertyAssignBehavior;
-            if (node->value == QStringLiteral("Replace")) {
-                pragma->listPropertyAssignBehavior = Pragma::Replace;
-            } else if (node->value == QStringLiteral("ReplaceIfNotDefault")) {
-                pragma->listPropertyAssignBehavior = Pragma::ReplaceIfNotDefault;
-            } else if (node->value == QStringLiteral("Append")) {
-                pragma->listPropertyAssignBehavior = Pragma::Append;
-            } else {
-                recordError(node->pragmaToken, QCoreApplication::translate(
-                                "QQmlParser",
-                                "Unknown list property assign behavior '%1' in pragma")
-                            .arg(node->value));
-                return false;
-            }
         } else {
             recordError(node->pragmaToken, QCoreApplication::translate(
                             "QQmlParser", "Unknown pragma '%1'").arg(node->name));
