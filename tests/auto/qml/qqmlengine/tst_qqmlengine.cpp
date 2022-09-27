@@ -315,7 +315,9 @@ void tst_qqmlengine::offlineStoragePath()
 
     QCOMPARE(QDir::fromNativeSeparators(engine.offlineStoragePath()), dir.path());
 
+    QSignalSpy offlineStoragePathSpy(&engine, &QQmlEngine::offlineStoragePathChanged);
     engine.setOfflineStoragePath(QDir::homePath());
+    QCOMPARE(offlineStoragePathSpy.count(), 1);
     QCOMPARE(engine.offlineStoragePath(), QDir::homePath());
 }
 

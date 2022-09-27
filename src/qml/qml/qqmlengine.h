@@ -55,7 +55,7 @@ class QQmlNetworkAccessManagerFactory;
 class QQmlIncubationController;
 class Q_QML_EXPORT QQmlEngine : public QJSEngine
 {
-    Q_PROPERTY(QString offlineStoragePath READ offlineStoragePath WRITE setOfflineStoragePath)
+    Q_PROPERTY(QString offlineStoragePath READ offlineStoragePath WRITE setOfflineStoragePath NOTIFY offlineStoragePathChanged)
     Q_OBJECT
 public:
     explicit QQmlEngine(QObject *p = nullptr);
@@ -130,6 +130,9 @@ public:
 
 public Q_SLOTS:
     void retranslate();
+
+Q_SIGNALS:
+    void offlineStoragePathChanged();
 
 public:
     static QQmlContext *contextForObject(const QObject *);

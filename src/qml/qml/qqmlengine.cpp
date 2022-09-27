@@ -1626,7 +1626,10 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
 void QQmlEngine::setOfflineStoragePath(const QString& dir)
 {
     Q_D(QQmlEngine);
+    if (dir == d->offlineStoragePath)
+        return;
     d->offlineStoragePath = dir;
+    Q_EMIT offlineStoragePathChanged();
 }
 
 QString QQmlEngine::offlineStoragePath() const
@@ -1636,10 +1639,12 @@ QString QQmlEngine::offlineStoragePath() const
     if (d->offlineStoragePath.isEmpty()) {
         QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         QQmlEnginePrivate *e = const_cast<QQmlEnginePrivate *>(d);
-        if (!dataLocation.isEmpty())
+        if (!dataLocation.isEmpty()) {
             e->offlineStoragePath = dataLocation.replace(QLatin1Char('/'), QDir::separator())
                                   + QDir::separator() + QLatin1String("QML")
                                   + QDir::separator() + QLatin1String("OfflineStorage");
+            Q_EMIT e->q_func()->offlineStoragePathChanged();
+        }
     }
 
     return d->offlineStoragePath;
