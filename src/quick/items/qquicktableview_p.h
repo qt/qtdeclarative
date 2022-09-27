@@ -60,6 +60,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(int currentColumn READ currentColumn NOTIFY currentColumnChanged REVISION(6, 4) FINAL)
     Q_PROPERTY(bool alternatingRows READ alternatingRows WRITE setAlternatingRows NOTIFY alternatingRowsChanged REVISION(6, 4) FINAL)
     Q_PROPERTY(SelectionBehavior selectionBehavior READ selectionBehavior WRITE setSelectionBehavior NOTIFY selectionBehaviorChanged REVISION(6, 4) FINAL)
+    Q_PROPERTY(bool resizableColumns READ resizableColumns WRITE setResizableColumns NOTIFY resizableColumnsChanged REVISION(6, 5) FINAL)
+    Q_PROPERTY(bool resizableRows READ resizableRows WRITE setResizableRows NOTIFY resizableRowsChanged REVISION(6, 5) FINAL)
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -148,6 +150,12 @@ public:
     SelectionBehavior selectionBehavior() const;
     void setSelectionBehavior(SelectionBehavior selectionBehavior);
 
+    bool resizableColumns() const;
+    void setResizableColumns(bool enabled);
+
+    bool resizableRows() const;
+    void setResizableRows(bool enabled);
+
     Q_INVOKABLE void forceLayout();
     Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
     Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
@@ -212,6 +220,8 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void currentColumnChanged();
     Q_REVISION(6, 4) void alternatingRowsChanged();
     Q_REVISION(6, 4) void selectionBehaviorChanged();
+    Q_REVISION(6, 5) void resizableColumnsChanged();
+    Q_REVISION(6, 5) void resizableRowsChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;

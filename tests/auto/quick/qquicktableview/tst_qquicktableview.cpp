@@ -8,6 +8,7 @@
 #include <QtQuick/private/qquicktableview_p.h>
 #include <QtQuick/private/qquicktableview_p_p.h>
 #include <QtQuick/private/qquickloader_p.h>
+#include <QtQuick/private/qquickdraghandler_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -231,6 +232,17 @@ private slots:
     void resetRowHeight();
     void clearRowHeights();
     void deletedDelegate();
+    void columnResizing_data();
+    void columnResizing();
+    void rowResizing_data();
+    void rowResizing();
+    void rowAndColumnResizing_data();
+    void rowAndColumnResizing();
+    void columnResizingDisabled();
+    void rowResizingDisabled();
+    void dragFromCellCenter();
+    void tapOnResizeArea_data();
+    void tapOnResizeArea();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -5780,6 +5792,332 @@ void tst_QQuickTableView::deletedDelegate()
     // we need one event loop iteration for the deferred delete to trigger
     // thus the QTRY_VERIFY
     QTRY_COMPARE(tv->delegate(), nullptr);
+}
+
+void tst_QQuickTableView::columnResizing_data()
+{
+    QTest::addColumn<int>("column");
+    QTest::addColumn<bool>("pointerNavigationEnabled");
+
+    QTest::newRow("first") << 0 << true;
+    QTest::newRow("middle") << 1 << true;
+    QTest::newRow("middle") << 1 << false;
+    QTest::newRow("last") << 2 << true;
+}
+
+void tst_QQuickTableView::columnResizing()
+{
+    // Check that the user can drag on the horizontal
+    // end of a cell to resize the whole column.
+    QFETCH(int, column);
+    QFETCH(bool, pointerNavigationEnabled);
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableView->setResizableColumns(true);
+    // Resizing column should not be affected by pointerNavigationEnabled
+    // (since it is controller by its own property).
+    tableView->setPointerNavigationEnabled(pointerNavigationEnabled);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(column), -1);
+
+    // A resize shouldn't also change the current index or start a selection.
+    QSignalSpy currentIndexSpy(tableView->selectionModel(), &QItemSelectionModel::currentChanged);
+    QSignalSpy selectionSpy(tableView->selectionModel(), &QItemSelectionModel::selectionChanged);
+
+    const auto item = tableView->itemAtCell(column, 0);
+    QQuickWindow *window = item->window();
+
+    const qreal columnStartWidth = tableView->columnWidth(column);
+    const QPoint localPos = QPoint(item->width(), item->height() / 2);
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(qApp->styleHints()->startDragDistance() + 1, 0);
+    const QPoint dragLength(100, 0);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    const qreal newColumnWidth = columnStartWidth + dragLength.x() - startDragDist.x();
+    QCOMPARE(tableView->explicitColumnWidth(column), newColumnWidth);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->columnWidth(column), newColumnWidth);
+
+    QCOMPARE(currentIndexSpy.count(), 0);
+    QCOMPARE(selectionSpy.count(), 0);
+}
+
+void tst_QQuickTableView::rowResizing_data()
+{
+    QTest::addColumn<int>("row");
+
+    QTest::newRow("first") << 0;
+    QTest::newRow("middle") << 1;
+    QTest::newRow("last") << 2;
+}
+
+void tst_QQuickTableView::rowResizing()
+{
+    // Check that the user can drag on the vertical
+    // end of a cell to resize the whole row.
+    QFETCH(int, row);
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableView->setResizableRows(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+
+    // A resize shouldn't also change the current index or start a selection.
+    QSignalSpy currentIndexSpy(tableView->selectionModel(), &QItemSelectionModel::currentChanged);
+    QSignalSpy selectionSpy(tableView->selectionModel(), &QItemSelectionModel::selectionChanged);
+
+    const auto item = tableView->itemAtCell(0, row);
+    QQuickWindow *window = item->window();
+
+    const qreal rowStartHeight = tableView->rowHeight(row);
+    const QPoint localPos = QPoint(item->width() / 2, item->height());
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(0, qApp->styleHints()->startDragDistance() + 1);
+    const QPoint dragLength(0, 100);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    const qreal newRowHeight = rowStartHeight + dragLength.y() - startDragDist.y();
+    QCOMPARE(tableView->explicitRowHeight(row), newRowHeight);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rowHeight(row), newRowHeight);
+
+    QCOMPARE(currentIndexSpy.count(), 0);
+    QCOMPARE(selectionSpy.count(), 0);
+}
+
+void tst_QQuickTableView::rowAndColumnResizing_data()
+{
+    QTest::addColumn<int>("rowAndColumn");
+    QTest::addColumn<bool>("addDelegateDragHandler");
+
+    QTest::newRow("first") << 0 << false;
+    QTest::newRow("middle") << 1 << false;
+    QTest::newRow("last") << 2 << false;
+
+    QTest::newRow("first, addDelegateDragHandler") << 0 << true;
+}
+
+void tst_QQuickTableView::rowAndColumnResizing()
+{
+    // Check that the user can drag in the corner of a cell
+    // to resize both the row and the column at the same time.
+    QFETCH(int, rowAndColumn);
+    QFETCH(bool, addDelegateDragHandler);
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableView->setResizableColumns(true);
+    tableView->setResizableRows(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->explicitColumnWidth(rowAndColumn), -1);
+    QCOMPARE(tableView->explicitRowHeight(rowAndColumn), -1);
+
+    const auto item = tableView->itemAtCell(rowAndColumn, rowAndColumn);
+    QVERIFY(item);
+
+    if (addDelegateDragHandler) {
+        // Check that the grab permissions set on the resize handler
+        // allows you to add an ordinary drag handler to a delegate
+        // without blocking the resize handler.
+        new QQuickDragHandler(item);
+    }
+
+    QQuickWindow *window = item->window();
+
+    const qreal columnStartWidth = tableView->columnWidth(rowAndColumn);
+    const qreal rowStartHeight = tableView->rowHeight(rowAndColumn);
+
+    const QPoint localPos = QPoint(item->width(), item->height());
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const qreal startDist = qApp->styleHints()->startDragDistance();
+    const QPoint startDragDist = QPoint(startDist + 1, startDist + 1);
+    const QPoint dragLength(100, 100);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    const qreal newColumnWidth = columnStartWidth + dragLength.x() - startDragDist.x();
+    const qreal newRowHeight = rowStartHeight + dragLength.y() - startDragDist.y();
+    QCOMPARE(tableView->explicitColumnWidth(rowAndColumn), newColumnWidth);
+    QCOMPARE(tableView->explicitRowHeight(rowAndColumn), newRowHeight);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->columnWidth(rowAndColumn), newColumnWidth);
+    QCOMPARE(tableView->rowHeight(rowAndColumn), newRowHeight);
+
+    // A resize shouldn't also change the current index
+    QVERIFY(!tableView->selectionModel()->currentIndex().isValid());
+}
+
+void tst_QQuickTableView::columnResizingDisabled()
+{
+    // Check that the user cannot drag on the horizontal end of a cell
+    // to resize a column if not resizableColumns is enabled.
+    // In that case, a drag should drag the flickable instead.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentY(), 0);
+
+    const int row = 1;
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+
+    const auto item = tableView->itemAtCell(0, row);
+    QQuickWindow *window = item->window();
+
+    const QPoint localPos = QPoint(item->width() / 2, item->height());
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(0, qApp->styleHints()->startDragDistance() + 1);
+    const QPoint dragLength(0, 100);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseMove(window, startPos + (dragLength * 2));
+    QVERIFY(tableView->contentY() < 0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    QVERIFY(!QQuickTest::qIsPolishScheduled(item));
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+    QCOMPARE(tableView->rowHeight(row), 50);
+}
+
+void tst_QQuickTableView::rowResizingDisabled()
+{
+    // Check that the user cannot drag on the vertical end of a cell to
+    // resize a row if not resizableRows is enabled.
+    // In that case, a drag should drag the flickable instead.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentY(), 0);
+
+    const int row = 1;
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+
+    const auto item = tableView->itemAtCell(0, row);
+    QQuickWindow *window = item->window();
+
+    const QPoint localPos = QPoint(item->width() / 2, item->height());
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(0, qApp->styleHints()->startDragDistance() + 1);
+    const QPoint dragLength(0, 100);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseMove(window, startPos + (dragLength * 2));
+    QVERIFY(tableView->contentY() < 0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    QVERIFY(!QQuickTest::qIsPolishScheduled(item));
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+    QCOMPARE(tableView->rowHeight(row), 50);
+}
+
+void tst_QQuickTableView::dragFromCellCenter()
+{
+    // Check that the user cannot resize a row (or column) by dragging
+    // from the center of a cell. In that case, a drag should
+    // drag the flickable instead.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableView->setResizableRows(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentY(), 0);
+
+    const int row = 1;
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+
+    const auto item = tableView->itemAtCell(0, row);
+    QQuickWindow *window = item->window();
+
+    const QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(0, qApp->styleHints()->startDragDistance() + 1);
+    const QPoint dragLength(0, 100);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseMove(window, startPos + (dragLength * 2));
+    QVERIFY(tableView->contentY() < 0);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    QVERIFY(!QQuickTest::qIsPolishScheduled(item));
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+    QCOMPARE(tableView->rowHeight(row), 50);
+}
+
+void tst_QQuickTableView::tapOnResizeArea_data()
+{
+    QTest::addColumn<bool>("pointerNavigationEnabled");
+    QTest::newRow("pointer naviagation enabled") << true;
+    QTest::newRow("pointer naviagation disabled") << false;
+}
+
+void tst_QQuickTableView::tapOnResizeArea()
+{
+    // Check that the user can tap close to the edge of a cell, on the resize area, and
+    // as such, change the current index (unless pointer navigation is disabled).
+    QFETCH(bool, pointerNavigationEnabled);
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModel(3, 3);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setResizableColumns(true);
+    tableView->setResizableRows(true);
+    tableView->setPointerNavigationEnabled(pointerNavigationEnabled);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell(1, 1);
+    const auto item = tableView->itemAtCell(cell);
+    QQuickWindow *window = item->window();
+
+    const QPoint localPos = QPoint(item->width() - 1, item->height() - 1);
+    const QPoint tapPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+
+    if (pointerNavigationEnabled)
+        QCOMPARE(tableView->selectionModel()->currentIndex(), model.index(1, 1));
+    else
+        QVERIFY(!tableView->selectionModel()->currentIndex().isValid());
 }
 
 QTEST_MAIN(tst_QQuickTableView)

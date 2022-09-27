@@ -6,207 +6,486 @@ import QtQuick.Window
 import QtQml.Models
 import TestTableModel
 import QtQuick.Controls
+import QtQuick.Layouts
 import Qt.labs.qmlmodels
 
 ApplicationWindow {
     id: window
-    width: 640
-    height: 480
+    width: 1000
+    height: 800
     visible: true
 
-    property int selectedX: -1
-    property int selectedY: -1
+    readonly property var currentIndex: tableView.selectionModel.currentIndex
+    readonly property point positionOffset: useOffset.checked ? Qt.point(10, 10) : Qt.point(0, 0)
+    readonly property rect positionSubRect: useSubRect.checked ? Qt.rect(10, 10, 10, 10) : Qt.rect(0, 0, 0, 0)
+    property int hiddenColumn: -1
+
+    ScrollView {
+        id: menu
+        height: window.height
+        width: 230
+
+        readonly property real menuMargin: 10
+
+        ColumnLayout {
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
+                Layout.topMargin: menu.menuMargin
+                ColumnLayout {
+                    CheckBox {
+                        text: "Use Syncview"
+                        checkable: true
+                        checked: true
+                        onCheckedChanged: {
+                            if (checked) {
+                                leftHeader.syncView = tableView
+                                topHeader.syncView = tableView
+                            } else {
+                                leftHeader.syncView = null
+                                topHeader.syncView = null
+                            }
+                        }
+                    }
+
+                    CheckBox {
+                        id: flickingMode
+                        checkable: true
+                        checked: true
+                        text: "Enable flicking"
+                    }
+
+                    CheckBox {
+                        id: indexNavigation
+                        checkable: true
+                        checked: true
+                        text: "Enable navigation"
+                    }
+
+                    CheckBox {
+                        id: resizableRowsEnabled
+                        checkable: true
+                        checked: false
+                        text: "Resizable rows"
+                    }
+
+                    CheckBox {
+                        id: resizableColumnsEnabled
+                        checkable: true
+                        checked: false
+                        text: "Resizable columns"
+                    }
+
+                    CheckBox {
+                        id: enableAnimation
+                        checkable: true
+                        checked: true
+                        text: "Enable animation"
+                    }
+
+                    CheckBox {
+                        id: drawText
+                        checkable: true
+                        checked: true
+                        text: "Draw text"
+                    }
+
+                    CheckBox {
+                        id: useRandomColor
+                        checkable: true
+                        checked: false
+                        text: "Use colors"
+                    }
+
+                    CheckBox {
+                        id: useLargeCells
+                        checkable: true
+                        checked: false
+                        text: "Use large cells"
+                        onCheckedChanged: Qt.callLater(tableView.forceLayout)
+                    }
+
+                    CheckBox {
+                        id: useSubRect
+                        checkable: true
+                        checked: false
+                        text: "Use subRect"
+                    }
+
+                    CheckBox {
+                        id: useOffset
+                        checkable: true
+                        checked: false
+                        text: "Use offset"
+                    }
+
+                    CheckBox {
+                        id: highlightCurrentRow
+                        checkable: true
+                        checked: false
+                        text: "Highlight row/col"
+                    }
+                }
+            }
+
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
+                GridLayout {
+                    columns: 2
+                    Label { text: "Model size:" }
+                    SpinBox {
+                        id: modelSize
+                        from: 0
+                        to: 1000
+                        value: 200
+                        editable: true
+                    }
+                    Label { text: "Spacing:" }
+                    SpinBox {
+                        id: spaceSpinBox
+                        from: -100
+                        to: 100
+                        value: 1
+                        editable: true
+                    }
+                    Label { text: "Margins:" }
+                    SpinBox {
+                        id: marginsSpinBox
+                        from: 0
+                        to: 100
+                        value: 1
+                        editable: true
+                    }
+                }
+            }
+
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
+                RowLayout {
+                    id: positionRow
+                    Button {
+                        text: "<<"
+                        onClicked: {
+                            tableView.positionViewAtRow(0, Qt.AlignTop, -tableView.topMargin)
+                            tableView.positionViewAtColumn(0, Qt.AlignLeft, -tableView.leftMargin)
+                        }
+                    }
+
+                    Button {
+                        text: ">>"
+                        onClicked: {
+                            tableView.positionViewAtRow(tableView.rows - 1, Qt.AlignBottom, tableView.bottomMargin)
+                            tableView.positionViewAtColumn(tableView.columns - 1, Qt.AlignRight, tableView.rightMargin)
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
+                ColumnLayout {
+                    Button {
+                        text: "Add row"
+                        enabled: currentIndex.valid
+                        onClicked: tableView.model.insertRows(currentIndex.row, 1)
+                    }
+
+                    Button {
+                        text: "Remove row"
+                        enabled: currentIndex.valid
+                        onClicked: tableView.model.removeRows(currentIndex.row, 1)
+                    }
+
+                    Button {
+                        text: "Add column"
+                        enabled: currentIndex.valid
+                        onClicked: tableView.model.insertColumns(currentIndex.column, 1)
+                    }
+
+                    Button {
+                        text: "Remove column"
+                        enabled: currentIndex.valid
+                        onClicked: tableView.model.removeColumns(currentIndex.column, 1)
+                    }
+
+                    Button {
+                        text: "Hide column"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            hiddenColumn = currentIndex.column
+                            tableView.forceLayout()
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
+                ColumnLayout {
+                    RadioButton {
+                        id: selectionDisabled
+                        text: "SelectionDisabled"
+                    }
+                    RadioButton {
+                        id: selectCells
+                        text: "SelectCells"
+                        checked: true
+                    }
+                    RadioButton {
+                        id: selectRows
+                        text: "SelectRows"
+                    }
+                    RadioButton {
+                        id: selectColumns
+                        text: "SelectColumns"
+                    }
+                    Label {
+                        width: parent.width
+                        font.pixelSize: 10
+                        text: "(SelectionMode: " + (tableView.interactive ? "PressAndHold)" : "Drag)")
+                    }
+                }
+            }
+
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
+                ColumnLayout {
+                    Button {
+                        text: "Current to top-left"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            let cell = Qt.point(currentIndex.column, currentIndex.row)
+                            tableView.positionViewAtCell(cell, Qt.AlignTop | Qt.AlignLeft, positionOffset, positionSubRect)
+                        }
+                    }
+
+                    Button {
+                        text: "Current to center"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            let cell = Qt.point(currentIndex.column, currentIndex.row)
+                            tableView.positionViewAtCell(cell, Qt.AlignCenter, positionOffset, positionSubRect)
+                        }
+                    }
+
+                    Button {
+                        text: "Current to bottom-right"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            let cell = Qt.point(currentIndex.column, currentIndex.row)
+                            tableView.positionViewAtCell(cell, Qt.AlignBottom | Qt.AlignRight, positionOffset, positionSubRect)
+                        }
+                    }
+
+                    Button {
+                        text: "Current to Visible"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            let cell = Qt.point(currentIndex.column, currentIndex.row)
+                            tableView.positionViewAtCell(cell, TableView.Visible, positionOffset, positionSubRect)
+                        }
+                    }
+
+                    Button {
+                        text: "Current to Contain"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            let cell = Qt.point(currentIndex.column, currentIndex.row)
+                            tableView.positionViewAtCell(cell, TableView.Contain, positionOffset, positionSubRect)
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
+                Layout.bottomMargin: menu.menuMargin
+                ColumnLayout {
+                    Button {
+                        text: "Fast-flick table"
+                        onClicked: {
+                            tableView.contentX += tableView.width * 1.2
+                        }
+                    }
+
+                    Button {
+                        text: "Fast-flick headers"
+                        onClicked: {
+                            topHeader.contentX += tableView.width * 1.2
+                            leftHeader.contentY += tableView.height * 1.2
+                        }
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillHeight: true
+            }
+        }
+    }
+
+    TableView {
+        id: topHeader
+        objectName: "topHeader"
+        anchors.left: centerScrollView.left
+        anchors.right: centerScrollView.right
+        anchors.top: menu.top
+        height: 30
+        clip: true
+
+        model: TestTableModel {
+            rowCount: 1
+            columnCount: modelSize.value
+        }
+
+        delegate: Rectangle {
+            implicitHeight: topHeader.height
+            implicitWidth: 20
+            color: "lightgray"
+            Text {
+                anchors.centerIn: parent
+                visible: drawText.checked
+                text: column
+                font.pointSize: 8
+            }
+        }
+
+        columnSpacing: 1
+        rowSpacing: 1
+
+        syncView: tableView
+        syncDirection: Qt.Horizontal
+        resizableColumns: resizableColumnsEnabled.checked
+    }
+
+    TableView {
+        id: leftHeader
+        objectName: "leftHeader"
+        anchors.left: menu.right
+        anchors.top: centerScrollView.top
+        anchors.bottom: centerScrollView.bottom
+        width: 30
+        clip: true
+
+        model: TestTableModel {
+            rowCount: modelSize.value
+            columnCount: 1
+        }
+
+        delegate: Rectangle {
+            implicitHeight: 50
+            implicitWidth: leftHeader.width
+            color: "lightgray"
+            Text {
+                anchors.centerIn: parent
+                visible: drawText.checked
+                text: row
+                font.pointSize: 8
+            }
+        }
+
+        columnSpacing: 1
+        rowSpacing: 1
+
+        syncView: tableView
+        syncDirection: Qt.Vertical
+        resizableRows: resizableRowsEnabled.checked
+    }
 
     Item {
-        anchors.fill: parent
-
-        Column {
-            id: menu
-            x: 2
-            y: 2
-
-            Row {
-                spacing: 1
-                Button {
-                    text: "Add row"
-                    onClicked: tableView.model.insertRows(selectedY, 1)
-                }
-                Button {
-                    text: "Remove row"
-                    onClicked: tableView.model.removeRows(selectedY, 1)
-                }
-                Button {
-                    text: "Add column"
-                    onClicked: tableView.model.insertColumns(selectedX, 1)
-                }
-                Button {
-                    text: "Remove column"
-                    onClicked: tableView.model.removeColumns(selectedX, 1)
-                }
-                SpinBox {
-                    id: spaceSpinBox
-                    from: -100
-                    to: 100
-                    value: 0
-                }
-            }
-
-            Row {
-                spacing: 1
-                Button {
-                    text: "fast-flick<br>center table"
-                    onClicked: {
-                        tableView.contentX += tableView.width * 1.2
-                    }
-                }
-                Button {
-                    text: "flick to end<br>center table"
-                    onClicked: {
-                        tableView.contentX = tableView.contentWidth - tableView.width
-                    }
-                }
-                Button {
-                    text: "fast-flick<br>headers"
-                    onClicked: {
-                        leftHeader.contentY += 1000
-                        topHeader.contentX += 1000
-                    }
-                }
-                Button {
-                    text: "set/unset<br>master bindings"
-                    onClicked: {
-                        leftHeader.syncView = leftHeader.syncView ? null : tableView
-                        topHeader.syncView = topHeader.syncView ? null : tableView
-                    }
-                }
-                Button {
-                    id: flickingMode
-                    checkable: true
-                    text: checked ? "Flickable" : "Scrollable"
-                }
-            }
-            Text {
-                text: "Selected: x:" + selectedX + ", y:" + selectedY
-            }
-        }
-
-        TableView {
-            id: topHeader
-            objectName: "topHeader"
-            anchors.left: tableView.left
-            width: tableView.width
-            anchors.top: menu.bottom
-            height: 30
-            clip: true
-            ScrollBar.horizontal: ScrollBar {}
-
-            model: TestTableModel {
-                rowCount: 1
-                columnCount: 200
-            }
-
-            delegate: Rectangle {
-                implicitHeight: topHeader.height
-                implicitWidth: 20
-                color: "lightgray"
-                Text { text: column }
-            }
-
-            columnSpacing: 1
-            rowSpacing: 1
-
-            syncView: tableView
-            syncDirection: Qt.Horizontal
-        }
-
-        TableView {
-            id: leftHeader
-            objectName: "leftHeader"
-            anchors.left: parent.left
-            anchors.top: tableView.top
-            height: tableView.height
-            width: 30
-            clip: true
-            ScrollBar.vertical: ScrollBar {}
-
-            model: TestTableModel {
-                rowCount: 200
-                columnCount: 1
-            }
-
-            delegate: Rectangle {
-                implicitHeight: 50
-                implicitWidth: leftHeader.width
-                color: "lightgray"
-                Text { text: row }
-            }
-
-            columnSpacing: 1
-            rowSpacing: 1
-
-            syncView: tableView
-            syncDirection: Qt.Vertical
-        }
+        id: centerScrollView
+        anchors.left: leftHeader.right
+        anchors.right: parent.right
+        anchors.top: topHeader.bottom
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 10
+        anchors.bottomMargin: 10
 
         TableView {
             id: tableView
+            anchors.fill: parent
             objectName: "tableview"
-            anchors.left: leftHeader.right
-            anchors.right: parent.right
-            anchors.top: topHeader.bottom
-            anchors.bottom: parent.bottom
-            width: 200
             clip: true
             delegate: tableViewDelegate
             columnSpacing: spaceSpinBox.value
             rowSpacing: spaceSpinBox.value
             interactive: flickingMode.checked
+            keyNavigationEnabled: indexNavigation.checked
+            pointerNavigationEnabled: indexNavigation.checked
+            resizableRows: resizableRowsEnabled.checked
+            resizableColumns: resizableColumnsEnabled.checked
+            animate: enableAnimation.checked
+            selectionBehavior: selectCells.checked ? TableView.SelectCells
+                                                   : selectColumns.checked ? TableView.SelectColumns
+                                                   : selectRows.checked ? TableView.SelectRows
+                                                   : TableView.SelectionDisabled
+            leftMargin: marginsSpinBox.value
+            topMargin: marginsSpinBox.value
+            rightMargin: marginsSpinBox.value
+            bottomMargin: marginsSpinBox.value
 
-            columnWidthProvider: function(c) {
-                if (c > 30)
-                    return 100
-            }
-
-            ScrollBar.horizontal: ScrollBar {}
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.horizontal: ScrollBar { visible: !flickingMode.checked }
+            ScrollBar.vertical: ScrollBar { visible: !flickingMode.checked }
 
             model: TestTableModel {
-                rowCount: 200
-                columnCount: 60
+                rowCount: modelSize.value
+                columnCount: modelSize.value
             }
 
             selectionModel: ItemSelectionModel {}
         }
+    }
 
-        SelectionRectangle {
-            target: tableView
-        }
+    SelectionRectangle {
+        target: tableView
+    }
 
-        Component {
-            id: tableViewDelegate
+    Component {
+        id: tableViewDelegate
+        Rectangle {
+            id: delegate
+            implicitWidth: useLargeCells.checked ? 1000 : 50
+            implicitHeight: useLargeCells.checked ? 1000 : 30
+            border.width: current ? 2 : 0
+            border.color: "darkgreen"
+            property var randomColor: Qt.rgba(0.6 + (0.4 * Math.random()), 0.6 + (0.4 * Math.random()), 0.6 + (0.4 * Math.random()), 1)
+            color: selected ? "lightgreen"
+                            : (highlightCurrentRow.checked && (row === tableView.currentRow || column === tableView.currentColumn)) ? "lightgray"
+                            : useRandomColor.checked ? randomColor
+                            : model.display === "added" ? "lightblue"
+                            : "white"
+
+            required property bool selected
+            required property bool current
+
             Rectangle {
-                id: delegate
-                implicitWidth: 50
-                implicitHeight: 30
-                border.width: row === selectedY && column == selectedX ? 2 : 0
-                border.color: "darkgreen"
-                color: selected ? "lightgreen" : "white"
-                required property bool selected
+                x: positionSubRect.x
+                y: positionSubRect.y
+                width: positionSubRect.width
+                height: positionSubRect.height
+                border.color: "red"
+                visible: useSubRect.checked
+            }
 
-                TapHandler {
-                    onTapped: {
-                        selectedX = column
-                        selectedY = row
-                    }
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: column + ", " + row
-                }
+            Text {
+                anchors.centerIn: parent
+                visible: drawText.checked
+                text: model.display
             }
         }
-
     }
 
 }

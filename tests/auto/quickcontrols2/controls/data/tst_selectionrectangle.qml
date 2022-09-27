@@ -140,11 +140,23 @@ TestCase {
         compare(selectionRectangle.bottomRightHandle, handleComp)
     }
 
-    function test_drag() {
+    function test_drag_data() {
+        return [
+            { tag: "resize enabled", resizeEnabled: true },
+            { tag: "resize disabled", resizeEnabled: false },
+        ]
+    }
+
+    function test_drag(data) {
         let tableView = createTemporaryObject(tableviewComp, testCase)
         verify(tableView)
         let selectionRectangle = tableView.selectionRectangle
         verify(selectionRectangle)
+
+        // Check that we can start a selection from the middle of a cell, even
+        // if a drag or tap on the edge of the cell would resize it.
+        tableView.resizableRows = data.resizeEnabled
+        tableView.resizableColumns = data.resizeEnabled
 
         selectionRectangle.selectionMode = SelectionRectangle.Drag
 
@@ -175,11 +187,23 @@ TestCase {
         verify(!tableView.selectionModel.hasSelection)
     }
 
-    function test_pressAndHold() {
+    function test_pressAndHold_data() {
+        return [
+            { tag: "resize enabled", resizeEnabled: true },
+            { tag: "resize disabled", resizeEnabled: false },
+        ]
+    }
+
+    function test_pressAndHold(data) {
         let tableView = createTemporaryObject(tableviewComp, testCase)
         verify(tableView)
         let selectionRectangle = tableView.selectionRectangle
         verify(selectionRectangle)
+
+        // Check that we can start a selection from the middle of a cell, even
+        // if a drag or tap on the edge of the cell would resize it.
+        tableView.resizableRows = data.resizeEnabled
+        tableView.resizableColumns = data.resizeEnabled
 
         selectionRectangle.selectionMode = SelectionRectangle.PressAndHold
 

@@ -29,6 +29,8 @@
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquickselectable_p.h>
+#include <QtQuick/private/qquicksinglepointhandler_p.h>
+#include <QtQuick/private/qquickhoverhandler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -41,6 +43,70 @@ static const int kEdgeIndexAtEnd = -3;
 
 class FxTableItem;
 class QQuickTableSectionSizeProviderPrivate;
+
+/*! \internal
+ *  TableView uses QQuickTableViewHoverHandler to track where the pointer is
+ *  on top of the table, and change the cursor at the places where a drag
+ *  would start a resize of a row or a column.
+ */
+class QQuickTableViewHoverHandler : public QQuickHoverHandler
+{
+    Q_OBJECT
+
+public:
+    QQuickTableViewHoverHandler(QQuickTableView *view);
+    inline bool isHoveringGrid() const { return m_row != -1 || m_column != -1; };
+
+    int m_row = -1;
+    int m_column = -1;
+
+    friend class QQuickTableViewPrivate;
+
+protected:
+    void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
+};
+
+/*! \internal
+ *  TableView uses QQuickTableViewResizeHandler to enable the user to resize
+ *  rows and columns. By using a custom pointer handler, we can get away with
+ *  using a single pointer handler for the whole content item, rather than
+ *  e.g having to split it up into multiple items with drag handlers placed
+ *  between the cells.
+ */
+class QQuickTableViewResizeHandler : public QQuickSinglePointHandler
+{
+public:
+    enum State {
+        Listening, // the pointer is not being pressed between the cells
+        Tracking, // the pointer is being pressed between the cells
+        DraggingStarted, // dragging started
+        Dragging, // a drag is ongoing
+        DraggingFinished // dragging was finished
+    };
+
+    QQuickTableViewResizeHandler(QQuickTableView *view);
+    State state() { return m_state; }
+    void updateState(QEventPoint &point);
+    void updateDrag(QPointerEvent *event, QEventPoint &point);
+
+    State m_state = Listening;
+
+    int m_row = -1;
+    qreal m_rowStartY = -1;
+    qreal m_rowStartHeight = -1;
+
+    int m_column = -1;
+    qreal m_columnStartX = -1;
+    qreal m_columnStartWidth = -1;
+
+    friend class QQuickTableViewPrivate;
+
+protected:
+    bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point) override;
+    void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition,
+                       QPointerEvent *ev, QEventPoint &point) override;
+};
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
@@ -237,6 +303,9 @@ public:
     bool keyNavigationEnabled = true;
     bool pointerNavigationEnabled = true;
     bool alternatingRows = true;
+    bool resizableColumns = false;
+    bool resizableRows = false;
+    bool m_cursorSet = false;
 
     // isTransposed is currently only used by HeaderView.
     // Consider making it public.
@@ -299,6 +368,9 @@ public:
 
     QHash<int, qreal> explicitColumnWidths;
     QHash<int, qreal> explicitRowHeights;
+
+    QQuickTableViewHoverHandler *hoverHandler = nullptr;
+    QQuickTableViewResizeHandler *resizeHandler = nullptr;
 
 #ifdef QT_DEBUG
     QString forcedIncubationMode = qEnvironmentVariable("QT_TABLEVIEW_INCUBATION_MODE");
@@ -401,6 +473,8 @@ public:
     void cancelOvershootAfterLayout();
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
+
+    void updateCursor();
 
     QTypeRevision resolveImportVersion();
     void createWrapperModel();

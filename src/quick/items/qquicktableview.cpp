@@ -617,6 +617,22 @@
 */
 
 /*!
+    \qmlproperty bool QtQuick::TableView::resizableColumns
+    \since 6.5
+
+    This property holds whether the user is allowed to resize columns
+    by dragging between the cells. The default value is \c false.
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TableView::resizableRows
+    \since 6.5
+
+    This property holds whether the user is allowed to resize rows
+    by dragging between the cells. The default value is \c false.
+*/
+
+/*!
     \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, PositionMode mode, point offset, rect subRect)
 
     Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
@@ -1244,7 +1260,8 @@ QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
 bool QQuickTableViewPrivate::canStartSelection(const QPointF &pos)
 {
     Q_UNUSED(pos);
-    return true;
+    // Only allow a selection if it doesn't conflict with resizing
+    return resizeHandler->state() == QQuickTableViewResizeHandler::Listening;
 }
 
 void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
@@ -4283,8 +4300,23 @@ void QQuickTableViewPrivate::init()
     positionYAnimation.setEasing(QEasingCurve::OutQuart);
 
     auto tapHandler = new QQuickTapHandler(q->contentItem());
+    tapHandler->setExclusiveSignals(QQuickTapHandler::SingleTap | QQuickTapHandler::DoubleTap);
+
+    hoverHandler = new QQuickTableViewHoverHandler(q);
+    resizeHandler = new QQuickTableViewResizeHandler(q);
+    hoverHandler->setEnabled(resizableRows || resizableColumns);
+    resizeHandler->setEnabled(resizableRows || resizableColumns);
+
+    // To allow for a more snappy UX, we try to change the current index already upon
+    // receiving a pointer press. But we should only do that if the view is not interactive
+    // (so that it doesn't interfere with flicking), and if the resizeHandler is not
+    // being hovered/dragged. For those cases, we fall back to setting the current index
+    // on tap instead. A double tap on a resize area should also revert the section size
+    // back to its implicit size.
+    static bool currentIndexChangedOnPress = false;
 
     QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, q, tapHandler] {
+        currentIndexChangedOnPress = false;
         if (!pointerNavigationEnabled || !tapHandler->isPressed())
             return;
         positionXAnimation.stop();
@@ -4293,17 +4325,30 @@ void QQuickTableViewPrivate::init()
             q->forceActiveFocus(Qt::MouseFocusReason);
         if (q->isInteractive())
             return;
+        if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
+            return;
+
         clearSelection();
         setCurrentIndexFromTap(tapHandler->point().pressPosition());
+        currentIndexChangedOnPress = true;
     });
 
     QObject::connect(tapHandler, &QQuickTapHandler::tapped, [this, q, tapHandler] {
-        if (!pointerNavigationEnabled)
+        if (currentIndexChangedOnPress)
             return;
-        if (!q->isInteractive())
-            return;
-        clearSelection();
-        setCurrentIndexFromTap(tapHandler->point().pressPosition());
+        if (tapHandler->tapCount() == 1) {
+            if (pointerNavigationEnabled) {
+                clearSelection();
+                setCurrentIndexFromTap(tapHandler->point().pressPosition());
+            }
+        } else if (tapHandler->tapCount() == 2) {
+            if (hoverHandler->isHoveringGrid()) {
+                if (hoverHandler->m_row != -1)
+                    q->setRowHeight(hoverHandler->m_row, -1);
+                if (hoverHandler->m_column != -1)
+                    q->setColumnWidth(hoverHandler->m_column, -1);
+            }
+        }
     });
 }
 
@@ -4353,6 +4398,41 @@ void QQuickTableViewPrivate::setCurrentIndex(const QPoint &cell)
 
     const auto index = q_func()->modelIndex(cell);
     selectionModel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+}
+
+void QQuickTableViewPrivate::updateCursor()
+{
+    int row = resizableRows ? hoverHandler->m_row : -1;
+    int column = resizableColumns ? hoverHandler->m_column : -1;
+
+    const auto resizeState = resizeHandler->state();
+    if (resizeState == QQuickTableViewResizeHandler::DraggingStarted
+            || resizeState == QQuickTableViewResizeHandler::Dragging) {
+        // Don't change the cursor while resizing, even if
+        // the pointer is not actually hovering the grid.
+        row = resizeHandler->m_row;
+        column = resizeHandler->m_column;
+    }
+
+    if (row != -1 || column != -1) {
+        Qt::CursorShape shape;
+        if (row != -1 && column != -1)
+            shape = Qt::SizeFDiagCursor;
+        else if (row != -1)
+            shape = Qt::SplitVCursor;
+        else
+            shape = Qt::SplitHCursor;
+
+        if (m_cursorSet)
+            qApp->changeOverrideCursor(shape);
+        else
+            qApp->setOverrideCursor(shape);
+
+        m_cursorSet = true;
+    } else if (m_cursorSet) {
+        qApp->restoreOverrideCursor();
+        m_cursorSet = false;
+    }
 }
 
 QQuickTableView::QQuickTableView(QQuickItem *parent)
@@ -5442,6 +5522,217 @@ void QQuickTableView::setSelectionBehavior(SelectionBehavior selectionBehavior)
 
     d->selectionBehavior = selectionBehavior;
     emit selectionBehaviorChanged();
+}
+
+bool QQuickTableView::resizableColumns() const
+{
+    return d_func()->resizableColumns;
+}
+
+void QQuickTableView::setResizableColumns(bool enabled)
+{
+    Q_D(QQuickTableView);
+    if (d->resizableColumns == enabled)
+        return;
+
+    d->resizableColumns = enabled;
+    d->resizeHandler->setEnabled(d->resizableRows || d->resizableColumns);
+    d->hoverHandler->setEnabled(d->resizableRows || d->resizableColumns);
+
+    emit resizableColumnsChanged();
+}
+
+bool QQuickTableView::resizableRows() const
+{
+    return d_func()->resizableRows;
+}
+
+void QQuickTableView::setResizableRows(bool enabled)
+{
+    Q_D(QQuickTableView);
+    if (d->resizableRows == enabled)
+        return;
+
+    d->resizableRows = enabled;
+    d->resizeHandler->setEnabled(d->resizableRows || d->resizableColumns);
+    d->hoverHandler->setEnabled(d->resizableRows || d->resizableColumns);
+
+    emit resizableRowsChanged();
+}
+
+// ----------------------------------------------
+
+QQuickTableViewHoverHandler::QQuickTableViewHoverHandler(QQuickTableView *view)
+    : QQuickHoverHandler(view->contentItem())
+{
+    setMargin(5);
+
+    connect(this, &QQuickHoverHandler::hoveredChanged, [this] {
+        if (!isHoveringGrid())
+            return;
+        m_row = -1;
+        m_column = -1;
+        auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+        tableViewPrivate->updateCursor();
+    });
+}
+
+void QQuickTableViewHoverHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
+{
+    QQuickHoverHandler::handleEventPoint(event, point);
+
+    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+
+    const QPoint cell = tableView->cellAtPosition(point.position(), true);
+    const auto item = tableView->itemAtCell(cell);
+    if (!item) {
+        m_row = -1;
+        m_column = -1;
+        tableViewPrivate->updateCursor();
+        return;
+    }
+
+    const QPointF itemPos = item->mapFromItem(tableView->contentItem(), point.position());
+    const bool hoveringRow = (itemPos.y() < margin() || itemPos.y() > item->height() - margin());
+    const bool hoveringColumn = (itemPos.x() < margin() || itemPos.x() > item->width() - margin());
+    m_row = hoveringRow ? itemPos.y() < margin() ? cell.y() - 1 : cell.y() : -1;
+    m_column = hoveringColumn ? itemPos.x() < margin() ? cell.x() - 1 : cell.x() : -1;
+    tableViewPrivate->updateCursor();
+}
+
+// ----------------------------------------------
+
+QQuickTableViewResizeHandler::QQuickTableViewResizeHandler(QQuickTableView *view)
+    : QQuickSinglePointHandler(view->contentItem())
+{
+    setMargin(5);
+    // Set a grab permission that stops the flickable, as well as
+    // any drag handler inside the delegate, from stealing the drag.
+    setGrabPermissions(QQuickPointerHandler::CanTakeOverFromAnything);
+}
+
+void QQuickTableViewResizeHandler::onGrabChanged(QQuickPointerHandler *grabber
+                                     , QPointingDevice::GrabTransition transition
+                                     , QPointerEvent *ev
+                                     , QEventPoint &point)
+{
+    QQuickSinglePointHandler::onGrabChanged(grabber, transition, ev, point);
+
+    switch (transition) {
+    case QPointingDevice::GrabPassive:
+    case QPointingDevice::GrabExclusive:
+        break;
+    case QPointingDevice::UngrabPassive:
+    case QPointingDevice::UngrabExclusive:
+    case QPointingDevice::CancelGrabPassive:
+    case QPointingDevice::CancelGrabExclusive:
+    case QPointingDevice::OverrideGrabPassive:
+        if (m_state == DraggingStarted || m_state == Dragging) {
+            m_state = DraggingFinished;
+            updateDrag(ev, point);
+        }
+        break;
+    }
+}
+
+bool QQuickTableViewResizeHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
+{
+    Q_UNUSED(event);
+    Q_UNUSED(point);
+    // When the user is flicking, we disable resizing, so that
+    // he doesn't start to resize by accident.
+    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    return !tableView->isMoving();
+}
+
+void QQuickTableViewResizeHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
+{
+    // Resolve which state we're in first...
+    updateState(point);
+    // ...and act on it next
+    updateDrag(event, point);
+}
+
+void QQuickTableViewResizeHandler::updateState(QEventPoint &point)
+{
+    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+
+    if (m_state == DraggingFinished)
+        m_state = Listening;
+
+    if (point.state() == QEventPoint::Pressed) {
+        m_row = tableViewPrivate->resizableRows ? tableViewPrivate->hoverHandler->m_row : -1;
+        m_column = tableViewPrivate->resizableColumns ? tableViewPrivate->hoverHandler->m_column : -1;
+        if (m_row != -1 || m_column != -1)
+            m_state = Tracking;
+    } else if (point.state() == QEventPoint::Released) {
+        if (m_state == DraggingStarted || m_state == Dragging)
+            m_state = DraggingFinished;
+        else
+            m_state = Listening;
+    } else if (point.state() == QEventPoint::Updated) {
+        switch (m_state) {
+        case Listening:
+            break;
+        case Tracking: {
+            const qreal distX = m_column != -1 ? point.position().x() - point.pressPosition().x() : 0;
+            const qreal distY = m_row != -1 ? point.position().y() - point.pressPosition().y() : 0;
+            const qreal dragDist = qSqrt(distX * distX + distY * distY);
+            if (dragDist > qApp->styleHints()->startDragDistance())
+                m_state = DraggingStarted;
+            break;}
+        case DraggingStarted:
+            m_state = Dragging;
+            break;
+        case Dragging:
+            break;
+        case DraggingFinished:
+            // Handled at the top of the function
+            Q_UNREACHABLE();
+            break;
+        }
+    }
+}
+
+void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint &point)
+{
+    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+
+    switch (m_state) {
+    case Listening:
+        break;
+    case Tracking:
+        setPassiveGrab(event, point, true);
+        // Disable flicking while dragging. TableView uses filtering instead of
+        // pointer handlers to do flicking, so setting an exclusive grab (together
+        // with grab permissions) doens't work ATM.
+        tableView->setFiltersChildMouseEvents(false);
+        break;
+    case DraggingStarted:
+        setExclusiveGrab(event, point, true);
+        m_columnStartX = point.position().x();
+        m_columnStartWidth = tableView->columnWidth(m_column);
+        m_rowStartY = point.position().y();
+        m_rowStartHeight = tableView->rowHeight(m_row);
+        tableViewPrivate->updateCursor();
+        // fallthrough
+    case Dragging: {
+        const qreal distX = point.position().x() - m_columnStartX;
+        const qreal distY = point.position().y() - m_rowStartY;
+        if (m_column != -1)
+            tableView->setColumnWidth(m_column, qMax(0.001, m_columnStartWidth + distX));
+        if (m_row != -1)
+            tableView->setRowHeight(m_row, qMax(0.001, m_rowStartHeight + distY));
+        break; }
+    case DraggingFinished: {
+        tableView->setFiltersChildMouseEvents(true);
+        tableViewPrivate->updateCursor();
+        break; }
+    }
 }
 
 QT_END_NAMESPACE
