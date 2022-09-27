@@ -141,9 +141,9 @@ TestCase {
             { target: testCase.Window.window, signalName: "afterRendering" })
         verify(afterRenderingSpy.valid)
 
-        afterRenderingSpy.wait(100)
+        afterRenderingSpy.wait(1000)
         container.ninePatchImage.source = ""
         // Shouldn't result in a crash.
-        afterRenderingSpy.wait(100)
+        afterRenderingSpy.wait(1000)
     }
 }
