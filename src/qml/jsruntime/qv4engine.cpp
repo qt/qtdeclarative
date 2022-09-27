@@ -1793,6 +1793,8 @@ QV4::ReturnedValue ExecutionEngine::fromData(
                 return QV4::Encode((int)*reinterpret_cast<const char*>(ptr));
             case QMetaType::UChar:
                 return QV4::Encode((int)*reinterpret_cast<const unsigned char*>(ptr));
+            case QMetaType::SChar:
+                return QV4::Encode((int)*reinterpret_cast<const signed char*>(ptr));
             case QMetaType::QChar:
                 return newString(*reinterpret_cast<const QChar *>(ptr))->asReturnedValue();
             case QMetaType::Char16:

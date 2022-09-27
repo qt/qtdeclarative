@@ -17,7 +17,17 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4arraybuffer_p.h>
+#include <private/qv4dateobject_p.h>
+#include <private/qv4jsonobject_p.h>
+#if QT_CONFIG(regularexpression)
+#include <private/qv4regexpobject_p.h>
+#endif
+#if QT_CONFIG(qml_locale)
+#include <private/qqmllocale_p.h>
+#endif
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qdatetime.h>
 #include <QtCore/QLine>
 #include <QtCore/QLineF>
 #include <QtCore/QSize>
@@ -30,7 +40,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeWrapper);
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeReference);
 
-using namespace QV4;
+namespace QV4 {
 
 void Heap::QQmlValueTypeWrapper::destroy()
 {
@@ -250,8 +260,31 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
         // calling a Q_INVOKABLE function of a value type
         return QV4::QObjectMethod::create(engine->rootContext(), valueTypeWrapper, coreIndex);
     }
+    const auto wrapChar16 = [engine](char16_t c) {
+        return engine->newString(QChar(c));
+    };
+    const auto wrapDate = [engine](const QDate &date) {
+        return engine->newDateObject(date.startOfDay(Qt::UTC));
+    };
+    const auto wrapQObject = [engine](QObject *object) {
+        return QObjectWrapper::wrap(engine, object);
+    };
+    const auto wrapJsonValue = [engine](const QJsonValue &value) {
+        return JsonObject::fromJsonValue(engine, value);
+    };
+    const auto wrapJsonObject = [engine](const QJsonObject &object) {
+        return JsonObject::fromJsonObject(engine, object);
+    };
+    const auto wrapJsonArray = [engine](const QJsonArray &array) {
+        return JsonObject::fromJsonArray(engine, array);
+    };
+#if QT_CONFIG(qml_locale)
+    const auto wrapLocale = [engine](const QLocale &locale) {
+        return QQmlLocale::wrap(engine, locale);
+    };
+#endif
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
-    if (metaTypeId == metatype) { \
+    case metatype: { \
         cpptype v; \
         void *args[] = { &v, nullptr }; \
         metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()), \
@@ -261,13 +294,60 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     const QMetaObject *metaObject = valueTypeWrapper->metaObject();
     int index = coreIndex;
     QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::ReadProperty, &metaObject, &index);
-    // These four types are the most common used by the value type wrappers
-    int metaTypeId = metaType.id();
-    VALUE_TYPE_LOAD(QMetaType::Double, double, double);
-    VALUE_TYPE_LOAD(QMetaType::Float, float, float);
-    VALUE_TYPE_LOAD(QMetaType::Int || isEnum, int, int);
-    VALUE_TYPE_LOAD(QMetaType::QString, QString, engine->newString);
+
+    const int metaTypeId = isEnum
+            ? QMetaType::Int
+            : (metaType.flags() & QMetaType::PointerToQObject)
+              ? QMetaType::QObjectStar
+              : metaType.id();
+
+    switch (metaTypeId) {
+    case QMetaType::UnknownType:
+    case QMetaType::Void:
+        return Encode::undefined();
+    case QMetaType::Nullptr:
+    case QMetaType::VoidStar:
+        return Encode::null();
     VALUE_TYPE_LOAD(QMetaType::Bool, bool, bool);
+    VALUE_TYPE_LOAD(QMetaType::Int, int, int);
+    VALUE_TYPE_LOAD(QMetaType::UInt, uint, uint);
+    VALUE_TYPE_LOAD(QMetaType::LongLong, qlonglong, double);
+    VALUE_TYPE_LOAD(QMetaType::ULongLong, qulonglong, double);
+    VALUE_TYPE_LOAD(QMetaType::Double, double, double);
+    VALUE_TYPE_LOAD(QMetaType::QString, QString, engine->newString);
+    VALUE_TYPE_LOAD(QMetaType::QByteArray, QByteArray, engine->newArrayBuffer);
+    VALUE_TYPE_LOAD(QMetaType::Float, float, float);
+    VALUE_TYPE_LOAD(QMetaType::Short, short, int);
+    VALUE_TYPE_LOAD(QMetaType::UShort, unsigned short, int);
+    VALUE_TYPE_LOAD(QMetaType::Char, char, int);
+    VALUE_TYPE_LOAD(QMetaType::UChar, unsigned char, int);
+    VALUE_TYPE_LOAD(QMetaType::SChar, signed char, int);
+    VALUE_TYPE_LOAD(QMetaType::QChar, QChar, engine->newString);
+    VALUE_TYPE_LOAD(QMetaType::Char16, char16_t, wrapChar16);
+    VALUE_TYPE_LOAD(QMetaType::QDateTime, QDateTime, engine->newDateObject);
+    VALUE_TYPE_LOAD(QMetaType::QDate, QDate, wrapDate);
+    VALUE_TYPE_LOAD(QMetaType::QTime, QTime, engine->newDateObjectFromTime);
+#if QT_CONFIG(regularexpression)
+    VALUE_TYPE_LOAD(QMetaType::QRegularExpression, QRegularExpression, engine->newRegExpObject);
+#endif
+    VALUE_TYPE_LOAD(QMetaType::QObjectStar, QObject*, wrapQObject);
+    VALUE_TYPE_LOAD(QMetaType::QJsonValue, QJsonValue, wrapJsonValue);
+    VALUE_TYPE_LOAD(QMetaType::QJsonObject, QJsonObject, wrapJsonObject);
+    VALUE_TYPE_LOAD(QMetaType::QJsonArray, QJsonArray, wrapJsonArray);
+#if QT_CONFIG(qml_locale)
+    VALUE_TYPE_LOAD(QMetaType::QLocale, QLocale, wrapLocale);
+#endif
+    case QMetaType::QPixmap:
+    case QMetaType::QImage: {
+        QVariant v(metaType);
+        void *args[] = { v.data(), nullptr };
+        metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()),
+                                      QMetaObject::ReadProperty, index, args);
+        return Encode(engine->newVariantObject(v));
+    }
+    default:
+        break;
+    }
     QVariant v;
     void *args[] = { nullptr, nullptr };
     if (metaType == QMetaType::fromType<QVariant>()) {
@@ -690,5 +770,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
 
     return true;
 }
+
+} // namespace QV4
 
 QT_END_NAMESPACE
