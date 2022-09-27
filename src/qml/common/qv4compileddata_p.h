@@ -51,7 +51,7 @@ class QQmlType;
 class QQmlEngine;
 
 namespace QQmlPrivate {
-struct AOTCompiledFunction;
+struct TypedFunction;
 }
 
 namespace QmlIR {
@@ -1396,7 +1396,7 @@ struct CompilationUnit : public CompilationUnitBase
     const Unit *data = nullptr;
     const QmlUnit *qmlData = nullptr;
     QStringList dynamicStrings;
-    const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions = nullptr;
+    const QQmlPrivate::TypedFunction *aotCompiledFunctions = nullptr;
 public:
     using CompiledObject = CompiledData::Object;
 
@@ -1406,7 +1406,7 @@ public:
         setUnitData(unitData, nullptr, fileName, finalUrlString);
     }
 
-    explicit CompilationUnit(const Unit *unitData, const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
+    explicit CompilationUnit(const Unit *unitData, const QQmlPrivate::TypedFunction *aotCompiledFunctions,
                              const QString &fileName = QString(), const QString &finalUrlString = QString())
         : CompilationUnit(unitData, fileName, finalUrlString)
     {

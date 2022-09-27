@@ -125,7 +125,7 @@ private:
 
 template<typename Callable>
 ReturnedValue convertAndCall(
-        ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction,
+        ExecutionEngine *engine, const QQmlPrivate::TypedFunction *aotFunction,
         const Value *thisObject, const Value *argv, int argc, Callable call)
 {
     const qsizetype numFunctionArguments = aotFunction->argumentTypes.size();

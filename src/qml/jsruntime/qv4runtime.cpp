@@ -1039,7 +1039,7 @@ static Object *getSuperBase(Scope &scope)
             if (CallContext *c = ctx->asCallContext()) {
                 f = c->d()->function;
                 QV4::Function *fn = f->function();
-                if (fn && !fn->isArrowFunction() && !fn->isEval)
+                if (fn && !fn->isArrowFunction() && fn->kind != Function::Eval)
                     break;
             }
             ctx = ctx->d()->outer;

@@ -813,7 +813,7 @@ void tst_QmlCppCodegen::onAssignment()
 
 namespace QmlCacheGeneratedCode {
 namespace _qt_qml_TestTypes_failures_qml {
-extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];
+extern const QQmlPrivate::TypedFunction aotBuiltFunctions[];
 }
 }
 

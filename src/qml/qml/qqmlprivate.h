@@ -699,16 +699,21 @@ namespace QQmlPrivate
         void initSetValueLookup(uint index, const QMetaObject *metaObject, QMetaType type) const;
     };
 
-    struct AOTCompiledFunction {
+    struct TypedFunction {
         qintptr extraData;
         QMetaType returnType;
         QList<QMetaType> argumentTypes;
         void (*functionPtr)(const AOTCompiledContext *context, void *resultPtr, void **arguments);
     };
 
+#if QT_DEPRECATED_SINCE(6, 5)
+    QT_DEPRECATED_VERSION_X(6, 5, "Use TypedFunction instead")
+    typedef TypedFunction AOTCompiledFunction;
+#endif
+
     struct CachedQmlUnit {
         const QV4::CompiledData::Unit *qmlData;
-        const AOTCompiledFunction *aotCompiledFunctions;
+        const TypedFunction *aotCompiledFunctions;
         void *unused2;
     };
 

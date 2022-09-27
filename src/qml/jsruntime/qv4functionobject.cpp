@@ -495,7 +495,7 @@ DEFINE_OBJECT_VTABLE(ArrowFunction);
 void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, QObject *thisObject,
                                              void **a, const QMetaType *types, int argc)
 {
-    if (!fo->function()->aotFunction) {
+    if (fo->function()->kind != Function::AotCompiled) {
         QV4::convertAndCall(fo->engine(), thisObject, a, types, argc,
                             [fo](const Value *thisObject, const Value *argv, int argc) {
             return ArrowFunction::virtualCall(fo, thisObject, argv, argc);
@@ -514,9 +514,10 @@ void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, QObject *
 
 ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
-    if (const auto *aotFunction = fo->function()->aotFunction) {
+    Function *function = fo->function();
+    if (function->kind == Function::AotCompiled) {
         return QV4::convertAndCall(
-                    fo->engine(), aotFunction, thisObject, argv, argc,
+                    fo->engine(), function->typedFunction, thisObject, argv, argc,
                     [fo](QObject *thisObject, void **a, const QMetaType *types, int argc) {
             ArrowFunction::virtualCallWithMetaTypes(fo, thisObject, a, types, argc);
         });

@@ -657,7 +657,8 @@ public:
         if (!m_canAllocateExecutableMemory)
             return false;
         if (f) {
-            return !f->aotFunction && !f->isGenerator()
+            return f->kind != Function::AotCompiled
+                    && !f->isGenerator()
                     && f->interpreterCallCount >= s_jitCallCountThreshold;
         }
         return true;

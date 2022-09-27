@@ -669,8 +669,8 @@ void QQmlBinding::doUpdate(const DeleteWatcher &watcher, QQmlPropertyData::Write
     bool error = false;
     auto canWrite = [&]() { return !watcher.wasDeleted() && isAddedToObject() && !hasError(); };
     const QV4::Function *v4Function = function();
-    if (v4Function && v4Function->aotFunction && !hasBoundFunction()) {
-        const auto returnType = v4Function->aotFunction->returnType;
+    if (v4Function && v4Function->kind == QV4::Function::AotCompiled && !hasBoundFunction()) {
+        const auto returnType = v4Function->typedFunction->returnType;
         if (returnType == QMetaType::fromType<QVariant>()) {
             // It expects uninitialized memory
             Q_ALLOCA_VAR(QVariant, result, sizeof(QVariant));

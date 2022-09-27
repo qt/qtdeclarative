@@ -110,7 +110,7 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
             const QString ns = qQmlJSSymbolNamespaceForPath(compiledFile);
             stream << "namespace " << ns << " { \n";
             stream << "    extern const unsigned char qmlData[];\n";
-            stream << "    extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n";
+            stream << "    extern const QQmlPrivate::TypedFunction aotBuiltFunctions[];\n";
             stream << "    const QQmlPrivate::CachedQmlUnit unit = {\n";
             stream << "        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0], nullptr\n";
             stream << "    };\n";

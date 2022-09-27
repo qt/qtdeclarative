@@ -22,7 +22,7 @@ using namespace QV4;
 bool Function::call(QObject *thisObject, void **a, const QMetaType *types, int argc,
                     ExecutionContext *context)
 {
-    if (!aotFunction) {
+    if (kind != AotCompiled) {
         return QV4::convertAndCall(
                     context->engine(), thisObject, a, types, argc,
                     [this, context](const Value *thisObject, const Value *argv, int argc) {
@@ -41,9 +41,9 @@ bool Function::call(QObject *thisObject, void **a, const QMetaType *types, int a
 
 ReturnedValue Function::call(
         const Value *thisObject, const Value *argv, int argc, ExecutionContext *context) {
-    if (aotFunction) {
+    if (kind == AotCompiled) {
         return QV4::convertAndCall(
-                    context->engine(), aotFunction, thisObject, argv, argc,
+                    context->engine(), typedFunction, thisObject, argv, argc,
                     [this, context](QObject *thisObject,
                                     void **a, const QMetaType *types, int argc) {
             call(thisObject, a, types, argc, context);
@@ -64,7 +64,7 @@ ReturnedValue Function::call(
 
 Function *Function::create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                            const CompiledData::Function *function,
-                           const QQmlPrivate::AOTCompiledFunction *aotFunction)
+                           const QQmlPrivate::TypedFunction *aotFunction)
 {
     return new Function(engine, unit, function, aotFunction);
 }
@@ -76,13 +76,14 @@ void Function::destroy()
 
 Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                    const CompiledData::Function *function,
-                   const QQmlPrivate::AOTCompiledFunction *aotFunction)
+                   const QQmlPrivate::TypedFunction *aotFunction)
     : FunctionData(unit)
     , compiledFunction(function)
     , codeData(function->code())
     , jittedCode(nullptr)
     , codeRef(nullptr)
-    , aotFunction(aotFunction)
+    , typedFunction(aotFunction)
+    , kind(aotFunction ? AotCompiled : JsUntyped)
 {
     Scope scope(engine);
     Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));
