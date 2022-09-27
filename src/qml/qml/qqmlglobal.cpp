@@ -292,7 +292,7 @@ bool QQmlValueTypeProvider::createValueType(
         }
     }
 
-    return constructFromJSValue(s, metaType, data);
+    return fromJSValue(type, s, metaType, data);
 }
 
 bool QQmlValueTypeProvider::createValueType(
@@ -313,8 +313,8 @@ bool QQmlValueTypeProvider::createValueType(
         }
     }
 
-    return constructFromJSValue(
-                QJSValuePrivate::fromReturnedValue(s.asReturnedValue()), metaType, data);
+    return fromJSValue(
+                type, QJSValuePrivate::fromReturnedValue(s.asReturnedValue()), metaType, data);
 
 }
 
