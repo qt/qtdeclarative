@@ -508,7 +508,8 @@ public:
     }
 
     bool isSingleton() const { return m_flags & Singleton; }
-    bool isCreatable() const { return m_flags & Creatable; }
+    bool isCreatable() const;
+    bool hasCreatableFlag() const { return m_flags & Creatable; }
     /*!
      * \internal
      *
@@ -522,7 +523,7 @@ public:
     bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
     bool extensionIsNamespace() const { return m_flags & HasExtensionNamespace; }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
-    void setIsCreatable(bool v) { m_flags.setFlag(Creatable, v); }
+    void setCreatableFlag(bool v) { m_flags.setFlag(Creatable, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
     void setIsScript(bool v) { m_flags.setFlag(Script, v); }
     void setHasCustomParser(bool v)
@@ -758,7 +759,7 @@ private:
     QString m_extensionTypeName;
     QQmlJSScope::WeakConstPtr m_extensionType;
 
-    Flags m_flags;
+    Flags m_flags = Creatable; // all types are marked as creatable by default.
     AccessSemantics m_semantics = AccessSemantics::Reference;
 
     QQmlJS::SourceLocation m_sourceLocation;

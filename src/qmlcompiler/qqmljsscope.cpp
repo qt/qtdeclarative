@@ -1196,4 +1196,38 @@ QQmlJSScope::InlineComponentOrDocumentRootName QQmlJSScope::enclosingInlineCompo
     return RootDocumentNameType();
 }
 
+/*!
+   \internal
+   Returns true if the current type is creatable by checking all the required base classes.
+   "Uncreatability" is only inherited from base types for composite types (in qml) and not for non-composite types (c++).
+
+   For the exact definition:
+   A type is uncreatable if and only if one of its composite base type or its first non-composite base type matches
+   following criteria:
+   \list
+   \li the base type is a singleton, or
+   \li the base type is an attached type, or
+   \li the base type is a C++ type with the QML_UNCREATABLE or QML_ANONYMOUS macro, or
+   \li the base type is a type without default constructor (in that case, it really needs QML_UNCREATABLE or QML_ANONYMOUS)
+   \endlist
+ */
+bool QQmlJSScope::isCreatable() const
+{
+    auto isCreatableNonRecursive = [](const QQmlJSScope *scope) {
+        return scope->hasCreatableFlag() && !scope->isSingleton() && scope->scopeType() == QMLScope;
+    };
+
+    for (const QQmlJSScope* scope = this; scope; scope = scope->baseType().get()) {
+        if (!scope->isComposite()) {
+            // just check the first nonComposite (c++) base for isCreatableNonRecursive() and then stop
+            return isCreatableNonRecursive(scope);
+        } else {
+            // check all composite (qml) bases for isCreatableNonRecursive().
+            if (isCreatableNonRecursive(scope))
+                return true;
+        }
+    }
+    // no uncreatable bases found
+    return false;
+}
 QT_END_NAMESPACE

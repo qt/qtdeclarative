@@ -189,9 +189,25 @@ void tst_qmltc_qprocess::inlineComponent()
 
 void tst_qmltc_qprocess::singleton()
 {
-    const auto errors = runQmltc(u"SingletonThing.qml"_s, false);
-    QEXPECT_FAIL("", "qmltc does not support singletons at the moment", Continue);
-    QVERIFY(!errors.contains(u"Singleton types are not supported"_s));
+    {
+        const auto errors = runQmltc(u"singletonUncreatable.qml"_s, false);
+        QVERIFY(errors.contains("singletonUncreatable.qml:3:1: Type UncreatableType is not "
+                                "creatable. [uncreatable-type]"));
+    }
+    {
+        const auto errors = runQmltc(u"uncreatable.qml"_s, false);
+        QVERIFY(errors.contains(
+                "uncreatable.qml:5:5: Type UncreatableType is not creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:6:5: Singleton Type SingletonThing is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:7:5: Singleton Type SingletonType is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:9:18: Singleton Type SingletonThing is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:14:18: Singleton Type SingletonType is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(!errors.contains("NotSingletonType"));
+    }
 }
 
 void tst_qmltc_qprocess::warningsAsErrors()

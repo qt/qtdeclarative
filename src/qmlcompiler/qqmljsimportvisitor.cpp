@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsimportvisitor_p.h"
+#include "qqmljsmetatypes_p.h"
 #include "qqmljsresourcefilemapper_p.h"
 
 #include <QtCore/qfileinfo.h>
@@ -1339,12 +1340,23 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
         const QTypeRevision revision = QQmlJSScope::resolveTypes(
                     m_currentScope, m_rootScopeImports, &m_usedTypes);
-        if (isRoot) {
-            if (auto base = m_currentScope->baseType();
-                base && base->internalName() == u"QQmlComponent") {
+        if (auto base = m_currentScope->baseType(); base) {
+            if (isRoot && base->internalName() == u"QQmlComponent") {
                 m_logger->log(u"Qml top level type cannot be 'Component'."_s, qmlTopLevelComponent,
                               definition->qualifiedTypeNameId->identifierToken, true, true);
                 return false;
+            }
+            if (base->isSingleton() && m_currentScope->isComposite()) {
+                m_logger->log(u"Singleton Type %1 is not creatable."_s.arg(
+                                      m_currentScope->baseTypeName()),
+                              qmlUncreatableType, definition->qualifiedTypeNameId->identifierToken,
+                              true, true);
+
+            } else if (!base->isCreatable()) {
+                // composite type m_currentScope is allowed to be uncreatable, but it cannot be the base of anything else
+                m_logger->log(u"Type %1 is not creatable."_s.arg(m_currentScope->baseTypeName()),
+                              qmlUncreatableType, definition->qualifiedTypeNameId->identifierToken,
+                              true, true);
             }
         }
         if (m_nextIsInlineComponent) {

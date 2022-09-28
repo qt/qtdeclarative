@@ -3,12 +3,15 @@
 
 #ifndef TESTTYPE_H
 #define TESTTYPE_H
+
+#include <QtQmlIntegration/qqmlintegration.h>
 #include <QtCore/qobject.h>
 #include <QtQml/qqmlregistration.h>
 
 class TypeWithVersionedAlias : public QObject
 {
     Q_OBJECT
+    QML_UNCREATABLE("")
     QML_ELEMENT
     QString m_readAndWrite;
 
@@ -17,4 +20,53 @@ public:
     Q_PROPERTY(QString notExisting MEMBER m_readAndWrite REVISION(6, 0));
     Q_PROPERTY(QString existing MEMBER m_readAndWrite REVISION(1, 0));
 };
+
+class UncreatableType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("")
+};
+
+class NoDefaultConstructorType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    NoDefaultConstructorType() = delete;
+};
+
+class SingletonType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+};
+
+class NotSingletonType : public SingletonType
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
+class NormalTypeAttached : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+public:
+    NormalTypeAttached(QObject* parent): QObject(parent) {}
+};
+
+class NormalType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ATTACHED(NormalTypeAttached)
+
+    static NormalTypeAttached *qmlAttachedProperties(QObject *object) {
+        return new NormalTypeAttached(object);
+    }
+};
+
+
+
 #endif // TESTTYPE_H

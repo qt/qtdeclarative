@@ -103,7 +103,10 @@ void QmltcVisitor::findCppIncludes()
 
         // look in type's base type
         auto base = type->baseType();
-        Q_ASSERT(base || !type->isComposite());
+        if (!base && type->isComposite())
+            // in this case, qqmljsimportvisitor would have already print an error message
+            // about the missing type, so just return silently without crashing
+            return;
         if (!base || visitType(base))
             return;
         addCppInclude(base);

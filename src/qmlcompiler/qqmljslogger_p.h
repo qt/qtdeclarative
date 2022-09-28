@@ -130,6 +130,7 @@ extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlInvalidLintDirectiv
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUseProperFunction;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAccessSingleton;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlTopLevelComponent;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUncreatableType;
 
 struct Message : public QQmlJS::DiagnosticMessage
 {
