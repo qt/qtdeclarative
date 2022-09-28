@@ -49,6 +49,7 @@ static QString getFunctionCategory(const QmltcMethod &method)
         category += u" Q_SLOTS"_s;
         break;
     case QQmlJSMetaMethod::Method:
+    case QQmlJSMetaMethod::StaticMethod:
         break;
     }
     return category;
@@ -287,6 +288,8 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
             // TODO: ignoreInit must be eliminated
 
             QmltcCodeWriter::write(code, type.externalCtor);
+            if (type.staticCreate)
+                QmltcCodeWriter::write(code, *type.staticCreate);
         }
 
         // dtor
@@ -384,7 +387,10 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
 {
     const auto [hSignature, cppSignature] = functionSignatures(method);
     // Note: augment return type with preambles in declaration
-    code.rawAppendToHeader(functionReturnType(method) + u" " + hSignature + u";");
+    code.rawAppendToHeader((method.type == QQmlJSMetaMethod::StaticMethod
+                                    ? u"static " + functionReturnType(method)
+                                    : functionReturnType(method))
+                           + u" " + hSignature + u";");
 
     // do not generate method implementation if it is a signal
     const auto methodType = method.type;

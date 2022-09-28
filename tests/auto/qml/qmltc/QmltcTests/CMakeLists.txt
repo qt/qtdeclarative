@@ -19,6 +19,7 @@ set(cpp_sources
     cpptypes/typewithspecialproperties.h
 
     cpptypes/typewithmanyproperties.h
+    cpptypes/singletontype.h cpptypes/singletontype.cpp
 )
 
 set(qml_sources
@@ -103,6 +104,7 @@ set(qml_sources
     repeaterCrash.qml
     aliases.qml
     inlineComponentsFromDifferentFiles.qml
+    singletons.qml
 
     # support types:
     DefaultPropertySingleChild.qml
@@ -111,10 +113,10 @@ set(qml_sources
     LocallyImported.qml
     LocalWithOnCompleted.qml
     LocallyImported_context.qml
-#   SingletonThing.qml
     ComponentWithAlias1.qml
     ComponentWithAlias2.qml
     ComponentWithAlias3.qml
+    SingletonThing.qml
     InlineComponentProvider.qml
     InlineComponentReexporter.qml
 
@@ -138,8 +140,8 @@ set_source_files_properties(NameConflict.qml PROPERTIES
 
 set_source_files_properties(badFile.qml PROPERTIES QT_QML_SKIP_TYPE_COMPILER TRUE)
 
-# set_source_files_properties(SingletonThing.qml PROPERTIES
-#    QT_QML_SINGLETON_TYPE true)
+set_source_files_properties(SingletonThing.qml PROPERTIES
+   QT_QML_SINGLETON_TYPE true)
 
 qt_add_library(qmltc_test_module STATIC)
 qt_autogen_tools_initial_setup(qmltc_test_module)

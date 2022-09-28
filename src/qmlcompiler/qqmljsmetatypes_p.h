@@ -109,11 +109,7 @@ public:
 class QQmlJSMetaMethod
 {
 public:
-    enum Type {
-        Signal,
-        Slot,
-        Method
-    };
+    enum Type { Signal, Slot, Method, StaticMethod };
 
     enum Access {
         Private,

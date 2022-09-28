@@ -165,11 +165,6 @@ void QmltcCompiler::compileType(
         QmltcType &current, const QQmlJSScope::ConstPtr &type,
         std::function<void(QmltcType &, const QQmlJSScope::ConstPtr &)> compileElements)
 {
-    if (type->isSingleton()) {
-        recordError(type->sourceLocation(), u"Singleton types are not supported"_s);
-        return;
-    }
-
     Q_ASSERT(!type->internalName().isEmpty());
     current.cppType = type->internalName();
     Q_ASSERT(!type->baseType()->internalName().isEmpty());
@@ -182,6 +177,7 @@ void QmltcCompiler::compileType(
     const bool documentRoot = (type == rootType);
     const bool inlineComponent = type->isInlineComponent();
     const bool isAnonymous = !documentRoot || type->internalName().at(0).isLower();
+    const bool isSingleton = type->isSingleton();
 
     QmltcCodeGenerator generator { m_url, m_visitor };
 
@@ -231,7 +227,7 @@ void QmltcCompiler::compileType(
 
     // add special member functions
     current.baselineCtor.access = QQmlJSMetaMethod::Protected;
-    if (documentRoot || inlineComponent) {
+    if (documentRoot || inlineComponent || isSingleton) {
         current.externalCtor.access = QQmlJSMetaMethod::Public;
     } else {
         current.externalCtor.access = QQmlJSMetaMethod::Protected;
@@ -318,6 +314,23 @@ void QmltcCompiler::compileType(
                         + u"(creator, engine, QQmlData::get(parent)->outerContext);";
     }
 
+    if (isSingleton) {
+        // see https://doc.qt.io/qt-6/qqmlengine.html#QML_SINGLETON for context
+        current.mocCode.append(u"QML_SINGLETON"_s);
+        auto &staticCreate = current.staticCreate.emplace();
+        staticCreate.comments
+                << u"Used by the engine for singleton creation."_s
+                << u"See also \\l {https://doc.qt.io/qt-6/qqmlengine.html#QML_SINGLETON}."_s;
+        staticCreate.type = QQmlJSMetaMethod::StaticMethod;
+        staticCreate.access = QQmlJSMetaMethod::Public;
+        staticCreate.name = u"create"_s;
+        staticCreate.returnType = u"%1 *"_s.arg(current.cppType);
+        QmltcVariable jsEngine(u"QJSEngine*"_s, u"jsEngine"_s);
+        staticCreate.parameterList = { engine, jsEngine };
+        staticCreate.body << u"Q_UNUSED(jsEngine);"_s
+                          << u"%1 *result = new %1(engine, nullptr);"_s.arg(current.cppType)
+                          << u"return result;"_s;
+    }
     auto postponedQmlContextSetup = generator.generate_initCode(current, type);
     generator.generate_endInitCode(current, type);
     generator.generate_setComplexBindingsCode(current, type);
