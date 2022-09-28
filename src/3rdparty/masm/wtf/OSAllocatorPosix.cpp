@@ -36,7 +36,16 @@
 #include <wtf/Assertions.h>
 #include <wtf/UnusedParam.h>
 
-#if OS(LINUX)
+// Android does not really behave like linux here.
+// For example, madvise() randomly fails if we pass MADV_WILLNEED or MADV_DONTNEED.
+// Treat it as generic Posix.
+#if OS(LINUX) && !defined(__ANDROID__)
+#define NON_ANDROID_LINUX 1
+#else
+#define NON_ANDROID_LINUX 0
+#endif
+
+#if NON_ANDROID_LINUX
 #include <sys/syscall.h>
 #ifndef MFD_CLOEXEC
 #define MFD_CLOEXEC         0x0001U
@@ -85,7 +94,7 @@ static int memfdForUsage(size_t bytes, OSAllocator::Usage usage)
     close(fd);
     return -1;
 }
-#elif OS(LINUX)
+#elif NON_ANDROID_LINUX
 static int memfdForUsage(size_t bytes, OSAllocator::Usage usage)
 {
     UNUSED_PARAM(bytes);
@@ -104,7 +113,7 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     void* result = mmap(0, bytes, PROT_NONE, MAP_LAZY | MAP_PRIVATE | MAP_ANON, -1, 0);
     if (result == MAP_FAILED)
         CRASH();
-#elif OS(LINUX)
+#elif NON_ANDROID_LINUX
     UNUSED_PARAM(writable);
     UNUSED_PARAM(executable);
     int fd = memfdForUsage(bytes, usage);
@@ -150,7 +159,7 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
 
 #if OS(DARWIN)
     int fd = usage;
-#elif OS(LINUX)
+#elif NON_ANDROID_LINUX
     int fd = memfdForUsage(bytes, usage);
     if (fd != -1)
         flags &= ~MAP_ANON;
@@ -198,7 +207,7 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
         mmap(static_cast<char*>(result) + bytes - pageSize(), pageSize(), PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, fd, 0);
     }
 
-#if OS(LINUX)
+#if NON_ANDROID_LINUX
     if (fd != -1)
         close(fd);
 #endif
@@ -216,7 +225,7 @@ void OSAllocator::commit(void* address, size_t bytes, bool writable, bool execut
         protection |= PROT_EXEC;
     if (MAP_FAILED == mmap(address, bytes, protection, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0))
         CRASH();
-#elif OS(LINUX)
+#elif NON_ANDROID_LINUX
     int protection = PROT_READ;
     if (writable)
         protection |= PROT_WRITE;
@@ -248,7 +257,7 @@ void OSAllocator::decommit(void* address, size_t bytes)
 #if OS(QNX)
     // Use PROT_NONE and MAP_LAZY to decommit the pages.
     mmap(address, bytes, PROT_NONE, MAP_FIXED | MAP_LAZY | MAP_PRIVATE | MAP_ANON, -1, 0);
-#elif OS(LINUX)
+#elif NON_ANDROID_LINUX
     while (madvise(address, bytes, MADV_DONTNEED)) {
         if (errno != EAGAIN)
             CRASH();
