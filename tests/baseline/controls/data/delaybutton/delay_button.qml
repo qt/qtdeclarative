@@ -6,8 +6,8 @@ ColumnLayout {
     height: 200
 
     RowLayout {
-        spacing: 2
-        width: 300
+        Layout.margins: 20
+        spacing: 3
 
         DelayButton {
             text: "Delay 3000"
@@ -17,7 +17,7 @@ ColumnLayout {
 
         DelayButton {
             text: "Delay null"
-            delay: null
+            delay: 0
             progress: 0
         }
 
@@ -27,8 +27,8 @@ ColumnLayout {
     }
 
     RowLayout {
+        Layout.margins: 20
         spacing: 2
-        width: 300
 
         DelayButton {
             text: "Delay 0"
