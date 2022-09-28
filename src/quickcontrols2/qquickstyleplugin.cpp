@@ -7,6 +7,8 @@
 
 #include <QtCore/private/qfileselector_p.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtGui/qstylehints.h>
+#include <QtGui/qguiapplication.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQml/private/qqmlmetatype_p.h>
@@ -60,6 +62,8 @@ void QQuickStylePlugin::registerTypes(const char *uri)
 
     qCDebug(lcStylePlugin) << "theme has not yet been initialized; calling initializeTheme()";
     initializeTheme(theme);
+    connect(QGuiApplication::styleHints(), &QStyleHints::appearanceChanged,
+                                     this, &QQuickStylePlugin::updateTheme);
 
     if (!styleName.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << styleName);
@@ -70,6 +74,9 @@ void QQuickStylePlugin::unregisterTypes()
     qCDebug(lcStylePlugin) << "unregisterTypes called; plugin name is" << name();
     if (!QQuickThemePrivate::instance)
         return;
+
+    disconnect(QGuiApplication::styleHints(), &QStyleHints::appearanceChanged,
+                                        this, &QQuickStylePlugin::updateTheme);
 
     // Not every style has a plugin - some styles are QML-only. So, we clean this
     // stuff up when the first style plugin is unregistered rather than when the

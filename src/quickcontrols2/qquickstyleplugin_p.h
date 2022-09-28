@@ -33,6 +33,7 @@ public:
 
     virtual QString name() const = 0;
     virtual void initializeTheme(QQuickTheme *theme) = 0;
+    virtual void updateTheme() {}
 
     void registerTypes(const char *uri) override;
     void unregisterTypes() override;
