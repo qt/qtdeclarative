@@ -7,8 +7,9 @@
 #include <QtQuick/private/qquickstate_p.h>
 #include <QtQuick/private/qquickpropertychanges_p.h>
 #include <QtQuick/private/qquickitemsmodule_p.h>
-#include <QtQuick/private/qquickaccessiblefactory_p.h>
-
+#if QT_CONFIG(accessibility)
+#  include <QtQuick/private/qquickaccessiblefactory_p.h>
+#endif
 #include <QtGui/QGuiApplication>
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qfontdatabase.h>
