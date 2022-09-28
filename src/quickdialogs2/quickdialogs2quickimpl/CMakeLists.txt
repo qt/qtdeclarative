@@ -208,4 +208,5 @@ qt_internal_add_shaders(QuickDialogs2QuickImpl "QuickDialogs2QuickImplShaders"
         "/qt-project.org/imports/QtQuick/Dialogs/quickimpl"
     FILES
         "shaders/SaturationLightness.frag"
+    SILENT
 )
