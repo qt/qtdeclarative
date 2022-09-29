@@ -491,7 +491,7 @@ Item {
         \l {QQuickItem::}{updatePolish()} has not been called on it since the
         last call to \l {QQuickItem::}{polish()}, otherwise returns \c false.
 
-        Since Qt 6.4, if \a itemOrWindow is a \l Window, this function returns
+        Since Qt 6.5, if \a itemOrWindow is a \l Window, this function returns
         \c true if \l {QQuickItem::}{updatePolish()} has not been called on any
         item it manages since the last call to \l {QQuickItem::}{polish()} on
         those items, otherwise returns \c false.
@@ -528,7 +528,7 @@ Item {
 
     /*!
         \since 5.13
-        \deprecated [6.4] Use \l qWaitForPolish() instead.
+        \deprecated [6.5] Use \l waitForPolish() instead.
         \qmlmethod bool waitForItemPolished(object item, int timeout = 5000)
 
         Waits for \a timeout milliseconds or until
@@ -544,7 +544,7 @@ Item {
     }
 
     /*!
-        \since 6.4
+        \since 6.5
         \qmlmethod bool waitForPolish(object windowOrItem, int timeout = 5000)
 
         If \a windowOrItem is an Item, this functions waits for \a timeout
