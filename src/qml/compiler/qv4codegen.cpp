@@ -1971,14 +1971,12 @@ bool Codegen::visit(CallExpression *ast)
 
         auto jumpLabel = ast->isOptional ? m_optionalChainLabels.take(ast) : *base.optionalChainJumpLabel.get();
 
-        auto acc = Reference::fromAccumulator(this).storeOnStack();
         base.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
         auto jumpFalse = bytecodeGenerator->jumpFalse();
         bytecodeGenerator->addInstruction(Instruction::LoadUndefined());
         bytecodeGenerator->jump().link(jumpLabel);
         jumpFalse.link();
-        acc.loadInAccumulator();
     }
 
     auto calldata = pushArgs(ast->arguments);
