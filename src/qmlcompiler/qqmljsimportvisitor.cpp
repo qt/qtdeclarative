@@ -2026,6 +2026,10 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
+    if (m_currentScope->inlineComponentName()) {
+        m_logger->log(u"Enums declared inside of inline component are ignored."_s, qmlSyntax,
+                      uied->firstSourceLocation());
+    }
     QQmlJSMetaEnum qmlEnum(uied->name.toString());
     for (const auto *member = uied->members; member; member = member->next) {
         qmlEnum.addKey(member->member.toString());
