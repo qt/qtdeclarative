@@ -2897,15 +2897,15 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
 
 int QQmlJSCodeGenerator::nextJSLine(uint line) const
 {
-    auto findLine = [](uint line, const QV4::CompiledData::CodeOffsetToLine &entry) {
+    auto findLine = [](int line, const QV4::CompiledData::CodeOffsetToLineAndStatement &entry) {
         return entry.line > line;
     };
     const auto codeToLine
-        = std::upper_bound(m_context->lineNumberMapping.constBegin(),
-                           m_context->lineNumberMapping.constEnd(),
+        = std::upper_bound(m_context->lineAndStatementNumberMapping.constBegin(),
+                           m_context->lineAndStatementNumberMapping.constEnd(),
                            line,
                            findLine);
-    bool bNoNextLine = m_context->lineNumberMapping.constEnd() == codeToLine;
+    bool bNoNextLine = m_context->lineAndStatementNumberMapping.constEnd() == codeToLine;
 
     return static_cast<int>(bNoNextLine ? -1 : codeToLine->line);
 }

@@ -17,21 +17,37 @@ QString CppStackFrame::function() const
     return v4Function ? v4Function->name()->toQString() : QString();
 }
 
-int CppStackFrame::lineNumber() const
+static const CompiledData::CodeOffsetToLineAndStatement *lineAndStatement(const CppStackFrame *frame)
 {
-    if (!v4Function || instructionPointer <= 0)
-        return -1;
+    if (!frame->v4Function || frame->instructionPointer <= 0)
+        return nullptr;
 
-    auto findLine = [](const CompiledData::CodeOffsetToLine &entry, uint offset) {
+    auto findLine = [](const CompiledData::CodeOffsetToLineAndStatement &entry, uint offset) {
         return entry.codeOffset < offset;
     };
 
-    const QV4::CompiledData::Function *cf = v4Function->compiledFunction;
-    const uint offset = instructionPointer;
-    const CompiledData::CodeOffsetToLine *lineNumbers = cf->lineNumberTable();
-    const uint nLineNumbers = cf->nLineNumbers;
-    const CompiledData::CodeOffsetToLine *line = std::lower_bound(lineNumbers, lineNumbers + nLineNumbers, offset, findLine) - 1;
-    return line->line;
+    const QV4::CompiledData::Function *cf = frame->v4Function->compiledFunction;
+    const uint offset = frame->instructionPointer;
+    const CompiledData::CodeOffsetToLineAndStatement *lineAndStatementNumbers
+            = cf->lineAndStatementNumberTable();
+    const uint nLineAndStatementNumbers = cf->nLineAndStatementNumbers;
+    return std::lower_bound(
+                lineAndStatementNumbers, lineAndStatementNumbers + nLineAndStatementNumbers,
+                offset, findLine) - 1;
+}
+
+int CppStackFrame::lineNumber() const
+{
+    if (auto *line = lineAndStatement(this))
+        return line->line;
+    return -1;
+}
+
+int CppStackFrame::statementNumber() const
+{
+    if (auto *statement = lineAndStatement(this))
+        return statement->statement;
+    return -1;
 }
 
 ReturnedValue QV4::CppStackFrame::thisObject() const

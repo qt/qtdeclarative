@@ -229,6 +229,7 @@ QT_WARNING_POP
 
 
     void setLocation(const QQmlJS::SourceLocation &loc);
+    void incrementStatement();
 
     ExceptionHandler *exceptionHandler() const {
         return currentExceptionHandler;
@@ -279,6 +280,7 @@ private:
         short size;
         uint position;
         int line;
+        int statement;
         int offsetForJump;
         int linkedLabel;
         unsigned char packed[sizeof(Instr) + 2]; // 2 for instruction type
@@ -297,6 +299,7 @@ public:
 private:
     int startLine = 0;
     int currentLine = 0;
+    int currentStatement = 0;
     QQmlJS::SourceLocation currentSourceLocation;
     std::unique_ptr<QV4::Compiler::Context::SourceLocationTable> m_sourceLocationTable;
     bool debugMode = false;

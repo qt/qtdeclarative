@@ -15,6 +15,11 @@ void BytecodeGenerator::setLocation(const QQmlJS::SourceLocation &loc)
     currentSourceLocation = loc;
 }
 
+void BytecodeGenerator::incrementStatement()
+{
+    ++currentStatement;
+}
+
 int BytecodeGenerator::newRegister()
 {
     int t = currentReg++;
@@ -129,17 +134,21 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 
     // collect content and line numbers
     QByteArray code;
-    QVector<CompiledData::CodeOffsetToLine> lineNumbers;
+    QVector<CompiledData::CodeOffsetToLineAndStatement> lineAndStatementNumbers;
 
     currentLine = -1;
+    currentStatement = -1;
+
     Q_UNUSED(startLine);
     for (qsizetype i = 0; i < instructions.size(); i++) {
-        if (instructions[i].line != currentLine) {
+        if (instructions[i].line != currentLine || instructions[i].statement != currentStatement) {
             currentLine = instructions[i].line;
-            CompiledData::CodeOffsetToLine entry;
+            currentStatement = instructions[i].statement;
+            CompiledData::CodeOffsetToLineAndStatement entry;
             entry.codeOffset = code.size();
             entry.line = currentLine;
-            lineNumbers.append(entry);
+            entry.statement = currentStatement;
+            lineAndStatementNumbers.append(entry);
         }
 
         if (m_sourceLocationTable)
@@ -149,7 +158,7 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
     }
 
     context->code = code;
-    context->lineNumberMapping = lineNumbers;
+    context->lineAndStatementNumberMapping = lineAndStatementNumbers;
     context->sourceLocationTable = std::move(m_sourceLocationTable);
 
     context->labelInfo.reserve(context->labelInfo.size() + _labelInfos.size());
@@ -197,7 +206,16 @@ QT_WARNING_POP
     int s = argCount*sizeof(int);
     if (offsetOfOffset != -1)
         offsetOfOffset += Instr::encodedLength(type);
-    I instr{type, static_cast<short>(s + Instr::encodedLength(type)), 0, currentLine, offsetOfOffset, -1, "\0\0" };
+    I instr {
+        type,
+        static_cast<short>(s + Instr::encodedLength(type)),
+        0,
+        currentLine,
+        currentStatement,
+        offsetOfOffset,
+        -1,
+        "\0\0"
+    };
     uchar *code = instr.packed;
     code = Instr::pack(code, Instr::wideInstructionType(type));
 

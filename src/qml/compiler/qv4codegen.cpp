@@ -373,6 +373,7 @@ void Codegen::statement(Statement *ast)
 {
     RegisterScope scope(this);
 
+    bytecodeGenerator->incrementStatement();
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
 
     VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
@@ -388,6 +389,7 @@ void Codegen::statement(ExpressionNode *ast)
     } else {
         RegisterScope scope(this);
 
+        bytecodeGenerator->incrementStatement();
         pushExpr(Result(nx));
         VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
         qSwap(_volatileMemoryLocations, vLocs);
@@ -3382,7 +3384,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
             qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
                      << "register count" << _context->registerCountInFunction << "implicit return" << requiresReturnValue;
             QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
-                                    _context->line, _context->lineNumberMapping);
+                                    _context->line, _context->lineAndStatementNumberMapping);
             qDebug();
         }
     }

@@ -184,7 +184,7 @@ struct Context {
 
     ControlFlow *controlFlow = nullptr;
     QByteArray code;
-    QVector<CompiledData::CodeOffsetToLine> lineNumberMapping;
+    QVector<CompiledData::CodeOffsetToLineAndStatement> lineAndStatementNumberMapping;
     std::unique_ptr<SourceLocationTable> sourceLocationTable;
     std::vector<unsigned> labelInfo;
 

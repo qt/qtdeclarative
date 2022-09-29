@@ -106,11 +106,13 @@ QString dumpArguments(int argc, int argv, int nFormals)
     return QStringLiteral("(") + dumpRegister(argv, nFormals) + QStringLiteral(", ") + QString::number(argc) + QStringLiteral(")");
 }
 
-void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*startLine*/, const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping)
+void dumpBytecode(
+        const char *code, int len, int nLocals, int nFormals, int /*startLine*/,
+        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping)
 {
     MOTH_JUMP_TABLE;
 
-    auto findLine = [](const CompiledData::CodeOffsetToLine &entry, uint offset) {
+    auto findLine = [](const CompiledData::CodeOffsetToLineAndStatement &entry, uint offset) {
         return entry.codeOffset < offset;
     };
 
@@ -118,7 +120,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
     const char *start = code;
     const char *end = code + len;
     while (code < end) {
-        const auto codeToLine = std::lower_bound(lineNumberMapping.constBegin(), lineNumberMapping.constEnd(), static_cast<uint>(code - start) + 1, findLine) - 1;
+        const auto codeToLine = std::lower_bound(
+                    lineAndStatementNumberMapping.constBegin(),
+                    lineAndStatementNumberMapping.constEnd(),
+                    static_cast<uint>(code - start) + 1, findLine) - 1;
         int line = int(codeToLine->line);
         if (line != lastLine)
             lastLine = line;

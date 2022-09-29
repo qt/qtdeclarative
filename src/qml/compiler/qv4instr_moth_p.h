@@ -474,7 +474,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 namespace CompiledData {
-struct CodeOffsetToLine;
+struct CodeOffsetToLineAndStatement;
 }
 
 namespace Moth {
@@ -500,10 +500,13 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
 void dumpBytecode(const char *bytecode, int len, int nLocals, int nFormals, int startLine = 1,
-                  const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping = QVector<CompiledData::CodeOffsetToLine>());
+                  const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping
+                        = QVector<CompiledData::CodeOffsetToLineAndStatement>());
 inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals, int startLine = 1,
-                         const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping = QVector<CompiledData::CodeOffsetToLine>()) {
-    dumpBytecode(bytecode.constData(), bytecode.size(), nLocals, nFormals, startLine, lineNumberMapping);
+                         const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping
+                            = QVector<CompiledData::CodeOffsetToLineAndStatement>()) {
+    dumpBytecode(bytecode.constData(), bytecode.size(), nLocals, nFormals, startLine,
+                 lineAndStatementNumberMapping);
 }
 
 union Instr

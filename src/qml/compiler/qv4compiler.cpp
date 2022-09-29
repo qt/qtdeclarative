@@ -424,9 +424,11 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->localsOffset = currentOffset;
     currentOffset += function->nLocals * sizeof(quint32);
 
-    function->nLineNumbers = irFunction->lineNumberMapping.size();
-    Q_ASSERT(function->lineNumberOffset() == currentOffset);
-    currentOffset += function->nLineNumbers * sizeof(CompiledData::CodeOffsetToLine);
+    function->nLineAndStatementNumbers
+            = irFunction->lineAndStatementNumberMapping.size();
+    Q_ASSERT(function->lineAndStatementNumberOffset() == currentOffset);
+    currentOffset += function->nLineAndStatementNumbers
+            * sizeof(CompiledData::CodeOffsetToLineAndStatement);
 
     function->nRegisters = irFunction->registerCountInFunction;
 
@@ -453,8 +455,11 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(irFunction->locals.at(i));
 
-    // write line numbers
-    memcpy(f + function->lineNumberOffset(), irFunction->lineNumberMapping.constData(), irFunction->lineNumberMapping.size()*sizeof(CompiledData::CodeOffsetToLine));
+    // write line and statement numbers
+    memcpy(f + function->lineAndStatementNumberOffset(),
+           irFunction->lineAndStatementNumberMapping.constData(),
+           irFunction->lineAndStatementNumberMapping.size()
+                * sizeof(CompiledData::CodeOffsetToLineAndStatement));
 
     quint32_le *labels = (quint32_le *)(f + function->labelInfosOffset());
     for (unsigned u : irFunction->labelInfo) {
@@ -658,8 +663,9 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
         Context *f = module->functions.at(i);
         blockAndFunctionOffsets[i] = nextOffset;
 
-        quint32 size = QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(),
-                                                                  int(f->labelInfo.size()), f->code.size());
+        quint32 size = QV4::CompiledData::Function::calculateSize(
+                    f->arguments.size(), f->locals.size(), f->lineAndStatementNumberMapping.size(),
+                    f->nestedContexts.size(), int(f->labelInfo.size()), f->code.size());
         functionSize += size - f->code.size();
         nextOffset += size;
     }
