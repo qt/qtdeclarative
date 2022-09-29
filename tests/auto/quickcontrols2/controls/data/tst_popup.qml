@@ -1406,6 +1406,16 @@ TestCase {
 
             property alias popup: popup
             property alias popupTitle: popupTitle
+            property alias popupContent: popupContent
+            property bool gotMouseEvent: false
+
+            MouseArea {
+                id: windowMouseArea
+                enabled: true
+                anchors.fill: parent
+                onPressed: gotMouseEvent = true
+            }
+
 
             Popup {
                 id: popup
@@ -1413,6 +1423,7 @@ TestCase {
                 height: 200
 
                 background: Rectangle {
+                    id: popupContent
                     color: "#505050"
                     Rectangle {
                         id: popupTitle
@@ -1457,6 +1468,11 @@ TestCase {
 
         let popup = window.popup
         popup.open()
+
+        // mouse clicks into the popup must not propagate to the parent
+        mouseClick(window)
+        compare(window.gotMouseEvent, false)
+
         let title = window.popupTitle
         verify(title)
 
@@ -1470,6 +1486,7 @@ TestCase {
         fuzzyCompare(popup.y, oldPos.y + 5, 1)
         mouseRelease(title, pressPoint.x, pressPoint.y)
         compare(title.pressedPosition, Qt.point(0, 0))
+
     }
 
     Component {
