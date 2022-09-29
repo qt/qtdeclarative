@@ -235,14 +235,6 @@ public:
             r.stackSlotIsLocalOrArgument = isLocal;
             return r;
         }
-        static Reference fromArgument(Codegen *cg, int index, bool isVolatile) {
-            Reference r(cg, StackSlot);
-            r.theStackSlot = Moth::StackSlot::createRegister(
-                    index + sizeof(CallData) / sizeof(StaticValue) - 1);
-            r.stackSlotIsLocalOrArgument = true;
-            r.isVolatile = isVolatile;
-            return r;
-        }
         static Reference fromScopedLocal(Codegen *cg, int index, int scope) {
             Reference r(cg, ScopedLocal);
             r.index = index;
