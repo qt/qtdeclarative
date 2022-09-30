@@ -191,7 +191,14 @@ private:
     void checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name, bool isMethod) const;
     bool isRestricted(const QString &propertyName) const;
     bool isCallingProperty(QQmlJSScope::ConstPtr scope, const QString &name) const;
-    bool isMissingPropertyType(QQmlJSScope::ConstPtr scope, const QString &type) const;
+
+    enum PropertyResolution {
+        PropertyMissing,
+        PropertyTypeUnresolved,
+        PropertyFullyResolved
+    };
+
+    PropertyResolution propertyResolution(QQmlJSScope::ConstPtr scope, const QString &type) const;
     QQmlJS::SourceLocation getCurrentSourceLocation() const;
     QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
 

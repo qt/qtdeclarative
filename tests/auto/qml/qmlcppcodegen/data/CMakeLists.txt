@@ -163,6 +163,7 @@ set(qml_files
     valueTypeLists.qml
     valueTypeProperty.qml
     variantlist.qml
+    versionmismatch.qml
     voidfunction.qml
 )
 
@@ -184,7 +185,7 @@ set_target_properties(codegen_test_module PROPERTIES
 )
 
 qt6_add_qml_module(codegen_test_module
-    VERSION 1.0
+    VERSION 1.5
     URI TestTypes
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
     AUTO_RESOURCE_PREFIX

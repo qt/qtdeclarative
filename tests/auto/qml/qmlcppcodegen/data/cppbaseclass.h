@@ -15,6 +15,8 @@ class CppBaseClass : public QObject
     Q_PROPERTY(int cppProp2 MEMBER cppProp2 BINDABLE cppProp2Bindable FINAL)
     Q_PROPERTY(QList<int> boo MEMBER boo FINAL CONSTANT)
     Q_PROPERTY(QList<qreal> hoo MEMBER hoo FINAL CONSTANT)
+    Q_PROPERTY(int inaccessible READ inaccessible FINAL CONSTANT REVISION(1, 5))
+    QML_ADDED_IN_VERSION(1, 0)
     QML_ELEMENT
 public:
     CppBaseClass(QObject *parent = nullptr)
@@ -35,6 +37,7 @@ public:
 
     Q_INVOKABLE void doCall(QObject *foo);
 
+    int inaccessible() const { return 7; }
 private:
     QList<int> boo;
     QList<qreal> hoo;
