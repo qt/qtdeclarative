@@ -47,6 +47,8 @@ public:
     \note It important to understand the performance implications such items
     can incur. See QQuickPaintedItem::RenderTarget and
     QQuickPaintedItem::renderTarget.
+
+    \sa {Scene Graph - Painted Item}, {Writing QML Extensions with C++}
 */
 
 /*!
