@@ -815,10 +815,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                     needActivate = true;
                                 }
                             } else {
-                                bool success = false;
-                                md->set(engine, id, QV4::SequencePrototype::fromData(
-                                            engine, propType, a[0], &success));
-                                if (!success) {
+                                QV4::ScopedValue sequence(scope, QV4::SequencePrototype::fromData(
+                                                              engine, propType, a[0]));
+                                md->set(engine, id, sequence);
+                                if (sequence->isUndefined()) {
                                     qmlWarning(object)
                                             << "Could not create a QML sequence object for "
                                             << propType.name();

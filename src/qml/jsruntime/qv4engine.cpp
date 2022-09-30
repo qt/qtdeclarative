@@ -1565,10 +1565,8 @@ static QVariant toVariant(
             return QVariant::fromValue(QV4::JsonObject::toJsonArray(a));
         }
 
-        QVariant retn;
-        bool succeeded = false;
-        retn = QV4::SequencePrototype::toVariant(value, metaType, &succeeded);
-        if (succeeded)
+        QVariant retn = QV4::SequencePrototype::toVariant(value, metaType);
+        if (retn.isValid())
             return retn;
 
         if (metaType.isValid()) {
@@ -1809,11 +1807,9 @@ QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr
                 return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
             case QMetaType::QStringList:
                 {
-                bool succeeded = false;
                 QV4::Scope scope(this);
-                QV4::ScopedValue retn(
-                            scope, QV4::SequencePrototype::fromData(this, metaType, ptr, &succeeded));
-                if (succeeded)
+                QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromData(this, metaType, ptr));
+                if (!retn->isUndefined())
                     return retn->asReturnedValue();
                 return QV4::Encode(newArrayObject(*reinterpret_cast<const QStringList *>(ptr)));
                 }
@@ -1879,9 +1875,8 @@ QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr
                 return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
         }
 
-        bool succeeded = false;
-        QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromData(this, metaType, ptr, &succeeded));
-        if (succeeded)
+        QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromData(this, metaType, ptr));
+        if (!retn->isUndefined())
             return retn->asReturnedValue();
 
         if (QMetaType::canConvert(metaType, QMetaType::fromType<QSequentialIterable>())) {

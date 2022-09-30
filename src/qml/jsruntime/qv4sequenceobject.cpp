@@ -568,7 +568,7 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
 
 ReturnedValue SequencePrototype::newSequence(
         QV4::ExecutionEngine *engine, QMetaType sequenceType, QObject *object,
-        int propertyIndex,  bool readOnly, bool *succeeded)
+        int propertyIndex,  bool readOnly)
 {
     QV4::Scope scope(engine);
     // This function is called when the property is a QObject Q_PROPERTY of
@@ -578,23 +578,20 @@ ReturnedValue SequencePrototype::newSequence(
 
     const QQmlType qmlType = QQmlMetaType::qmlListType(sequenceType);
     if (qmlType.isSequentialContainer()) {
-        *succeeded = true;
         QV4::ScopedObject obj(scope, engine->memoryManager->allocate<Sequence>(
                                   object, propertyIndex, qmlType, readOnly));
         return obj.asReturnedValue();
     }
 
-    *succeeded = false;
     return Encode::undefined();
 }
 
-ReturnedValue SequencePrototype::fromVariant(
-        QV4::ExecutionEngine *engine, const QVariant &v, bool *succeeded)
+ReturnedValue SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const QVariant &v)
 {
-    return fromData(engine, v.metaType(), v.constData(), succeeded);
+    return fromData(engine, v.metaType(), v.constData());
 }
 
-ReturnedValue SequencePrototype::fromData(ExecutionEngine *engine, QMetaType type, const void *data, bool *succeeded)
+ReturnedValue SequencePrototype::fromData(ExecutionEngine *engine, QMetaType type, const void *data)
 {
     QV4::Scope scope(engine);
     // This function is called when assigning a sequence value to a normal JS var
@@ -604,12 +601,10 @@ ReturnedValue SequencePrototype::fromData(ExecutionEngine *engine, QMetaType typ
 
     const QQmlType qmlType = QQmlMetaType::qmlListType(type);
     if (qmlType.isSequentialContainer()) {
-        *succeeded = true;
         QV4::ScopedObject obj(scope, engine->memoryManager->allocate<Sequence>(qmlType, data));
         return obj.asReturnedValue();
     }
 
-    *succeeded = false;
     return Encode::undefined();
 }
 
@@ -619,14 +614,11 @@ QVariant SequencePrototype::toVariant(const Sequence *object)
     return object->toVariant();
 }
 
-QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHint, bool *succeeded)
+QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHint)
 {
-    *succeeded = true;
-
-    if (!array.as<ArrayObject>()) {
-        *succeeded = false;
+    if (!array.as<ArrayObject>())
         return QVariant();
-    }
+
     QV4::Scope scope(array.as<Object>()->engine());
     QV4::ScopedArrayObject a(scope, array);
 
@@ -669,7 +661,6 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
         return result;
     }
 
-    *succeeded = false;
     return QVariant();
 }
 

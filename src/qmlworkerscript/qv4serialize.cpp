@@ -384,7 +384,6 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerSequence:
     {
         ScopedValue value(scope);
-        bool succeeded = false;
         quint32 length = headersize(header);
         quint32 seqLength = length - 1;
         value = deserialize(data, engine);
@@ -396,8 +395,8 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
             array->arrayPut(ii, value);
         }
         array->setArrayLengthUnchecked(seqLength);
-        QVariant seqVariant = QV4::SequencePrototype::toVariant(array, QMetaType(sequenceType), &succeeded);
-        return QV4::SequencePrototype::fromVariant(engine, seqVariant, &succeeded);
+        QVariant seqVariant = QV4::SequencePrototype::toVariant(array, QMetaType(sequenceType));
+        return QV4::SequencePrototype::fromVariant(engine, seqVariant);
     }
     }
     Q_ASSERT(!"Unreachable");

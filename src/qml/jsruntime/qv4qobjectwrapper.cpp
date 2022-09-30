@@ -168,11 +168,10 @@ static ReturnedValue loadProperty(ExecutionEngine *v4, QObject *object,
     }
 
     // see if it's a sequence type
-    bool succeeded = false;
     QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(
                               v4, propMetaType, object, property.coreIndex(),
-                              !property.isWritable(), &succeeded));
-    if (succeeded)
+                              !property.isWritable()));
+    if (!retn->isUndefined())
         return retn->asReturnedValue();
 
     if (!propMetaType.isValid()) {
