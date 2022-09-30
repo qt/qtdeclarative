@@ -183,7 +183,7 @@ public:
     void fixupPosition() override;
     void fixup(AxisData &data, qreal minExtent, qreal maxExtent) override;
     bool flick(QQuickItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-               QQuickTimeLineCallback::Callback fixupCallback, qreal velocity) override;
+               QQuickTimeLineCallback::Callback fixupCallback, QEvent::Type eventType, qreal velocity) override;
 
     QQuickGridView::Flow flow;
     qreal cellWidth;
@@ -1008,13 +1008,13 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
 }
 
 bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity)
+                                  QQuickTimeLineCallback::Callback fixupCallback, QEvent::Type eventType, qreal velocity)
 {
     data.fixingUp = false;
     moveReason = Mouse;
     if ((!haveHighlightRange || highlightRange != QQuickGridView::StrictlyEnforceRange)
         && snapMode == QQuickGridView::NoSnap) {
-        return QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, velocity);
+        return QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, eventType, velocity);
     }
     qreal maxDistance = 0;
     qreal dataValue = isContentFlowReversed() ? -data.move.value()+size() : data.move.value();
@@ -1064,7 +1064,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             else
                 v = maxVelocity;
         }
-        qreal accel = deceleration;
+        qreal accel = eventType == QEvent::Wheel ? wheelDeceleration : deceleration;
         qreal v2 = v * v;
         qreal overshootDist = 0.0;
         if ((maxDistance > 0.0 && v2 / (2.0f * maxDistance) < accel) || snapMode == QQuickGridView::SnapOneRow) {

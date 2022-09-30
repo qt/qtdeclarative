@@ -57,6 +57,8 @@ public:
         QQuickFlickablePrivate *parent;
     };
 
+    enum MovementReason { Other, SetIndex, Mouse };
+
     struct AxisData {
         AxisData(QQuickFlickablePrivate *fp, void (QQuickFlickablePrivate::*func)(qreal))
             : move(fp, func)
@@ -137,10 +139,11 @@ public:
         uint unused : 17;
     };
 
-    bool flickX(qreal velocity);
-    bool flickY(qreal velocity);
+    bool flickX(QEvent::Type eventType, qreal velocity);
+    bool flickY(QEvent::Type eventType, qreal velocity);
     virtual bool flick(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                        QQuickTimeLineCallback::Callback fixupCallback, qreal velocity);
+                       QQuickTimeLineCallback::Callback fixupCallback,
+                       QEvent::Type eventType, qreal velocity);
     void flickingStarted(bool flickingH, bool flickingV);
 
     void fixupX();
@@ -181,6 +184,8 @@ public:
     AxisData hData;
     AxisData vData;
 
+    MovementReason moveReason = Other;
+
     QQuickTimeLine timeline;
     bool hMoved : 1;
     bool vMoved : 1;
@@ -198,6 +203,7 @@ public:
     QPointF pressPos;
     QVector2D accumulatedWheelPixelDelta;
     qreal deceleration;
+    qreal wheelDeceleration;
     qreal maxVelocity;
     QPointerEvent *delayedPressEvent;
     QBasicTimer delayedPressTimer;
