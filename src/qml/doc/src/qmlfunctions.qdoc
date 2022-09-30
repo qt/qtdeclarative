@@ -260,7 +260,7 @@
 
       // Initialize this using myObject where you would previously
       // call qmlRegisterSingletonInstance().
-      static MySingleton *s_singletonInstance = nullptr;
+      inline static MySingleton *s_singletonInstance = nullptr;
 
       static MySingleton *create(QQmlEngine *, QJSEngine *engine)
       {
@@ -284,7 +284,7 @@
       }
 
   private:
-      static QJSEngine *s_engine = nullptr;
+      inline static QJSEngine *s_engine = nullptr;
   };
   \endcode
 
