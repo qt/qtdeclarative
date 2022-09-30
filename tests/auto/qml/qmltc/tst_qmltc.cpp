@@ -75,6 +75,7 @@
 #include "generalizedgroupedproperty.h"
 #include "appendtoqqmllistproperty.h"
 #include "inlinecomponents.h"
+#include "repeatercrash.h"
 
 #include "testprivateproperty.h"
 
@@ -2458,6 +2459,38 @@ void tst_qmltc::translations()
 
         QCOMPARE(created.toBeTranslatedLater(), "ID1");
         QCOMPARE(created.translatedN(), u"Ich sehe 5 Äpfeln"_s);
+    }
+}
+
+void tst_qmltc::repeaterCrash()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(repeaterCrash) fromQmltc(&e);
+
+    QQmlComponent component(&e, "qrc:/qt/qml/QmltcTests/repeaterCrash.qml");
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QQuickItem> fromEngine(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY(fromEngine);
+
+    const int size = 7;
+
+    const auto listFromEngine = fromEngine->childItems();
+    const auto listFromQmltc = fromQmltc.childItems();
+
+    QCOMPARE(listFromEngine.size(), size);
+    QCOMPARE(listFromQmltc.size(), size);
+
+    for (int i = 0; i < size; i++) {
+        // the repeater itself has no objName property
+        if (i == 5)
+            continue;
+
+        const QVariant nameFromEngine = listFromEngine.at(i)->property("objName");
+        const QVariant nameFromQmltc = listFromQmltc.at(i)->property("objName");
+
+        QVERIFY(nameFromEngine.isValid());
+        QVERIFY(nameFromQmltc.isValid());
+        QCOMPARE(nameFromQmltc.toString(), nameFromEngine.toString());
     }
 }
 

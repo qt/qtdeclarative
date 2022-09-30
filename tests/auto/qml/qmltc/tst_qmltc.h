@@ -84,6 +84,7 @@ private slots:
     void trickyPropertyChangeAndSignalHandlers();
     void valueTypeListProperty();
     void translations();
+    void repeaterCrash();
     void generalizedGroupedProperty();
     void appendToQQmlListProperty();
     void inlineComponents();

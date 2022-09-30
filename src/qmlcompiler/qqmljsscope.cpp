@@ -267,6 +267,9 @@ bool QQmlJSScope::causesImplicitComponentWrapping(const QQmlJSMetaProperty &prop
     Either because it has been implicitly wrapped, e.g. due to an assignment to
     a Component property, or because it is the first (and only) child of a
     Component.
+    For visitors: This method should only be called after implicit components
+    are detected, that is, after QQmlJSImportVisitor::endVisit(UiProgram *)
+    was called.
  */
 bool QQmlJSScope::isComponentRootElement() const {
     if (m_flags.testFlag(WrappedInImplicitComponent))

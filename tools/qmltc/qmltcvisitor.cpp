@@ -36,6 +36,12 @@ static bool isExplicitComponent(const QQmlJSScope::ConstPtr &type)
     return base && base->internalName() == u"QQmlComponent";
 }
 
+/*! \internal
+    Returns if type is an implicit component.
+    This method should only be called after implicit components
+    are detected, that is, after QQmlJSImportVisitor::endVisit(UiProgram *)
+    was called.
+ */
 static bool isImplicitComponent(const QQmlJSScope::ConstPtr &type)
 {
     if (!type->isComposite())
@@ -45,6 +51,12 @@ static bool isImplicitComponent(const QQmlJSScope::ConstPtr &type)
     return type->isComponentRootElement() && !isComponentBased;
 }
 
+/*! \internal
+    Checks if type is inside or a (implicit or explicit) component.
+    This method should only be called after implicit components
+    are detected, that is, after QQmlJSImportVisitor::endVisit(UiProgram *)
+    was called.
+ */
 static bool isOrUnderComponent(QQmlJSScope::ConstPtr type)
 {
     Q_ASSERT(type->isComposite()); // we're dealing with composite types here
@@ -194,10 +206,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
         addCleanQmlTypeName(&m_qmlTypeNames, m_currentScope);
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
-    const QQmlJSScope::ConstPtr base = m_currentScope->baseType();
-    if (base && base->isComposite() && !isOrUnderComponent(m_currentScope)) {
-        m_qmlTypesWithQmlBases[m_currentInlineComponentName].append(m_currentScope);
-    }
+    m_qmlTypesWithQmlBases[m_currentInlineComponentName].append(m_currentScope);
 
     return true;
 }
@@ -219,11 +228,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
 
-    const QQmlJSScope::ConstPtr base = m_currentScope->baseType();
-    if (base && base->isComposite() && !isOrUnderComponent(m_currentScope)) {
-        m_qmlTypesWithQmlBases[m_currentInlineComponentName].append(m_currentScope);
-    }
-
+    m_qmlTypesWithQmlBases[m_currentInlineComponentName].append(m_currentScope);
     return true;
 }
 
@@ -412,13 +417,15 @@ void iterateBindings(
     }
 }
 
+/*! \internal
+    This is a special function that must be called after
+    QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiProgram *). It is used to
+    resolve things that couldn't be resolved during the AST traversal, such
+    as anything that is dependent on implicit or explicit components
+*/
 void QmltcVisitor::postVisitResolve(
         const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> &qmlIrOrderedBindings)
 {
-    // This is a special function that must be called after
-    // QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiProgram *). It is used to
-    // resolve things that couldn't be resolved during the AST traversal, such
-    // as anything that is dependent on implicit or explicit components
 
     // add the document root (that is not an inline component), as we usually
     // want to iterate on all inline components, followed by the document root
@@ -508,7 +515,16 @@ void QmltcVisitor::postVisitResolve(
         }
     }
 
-    // filter out deferred types
+    // m_qmlTypesWithQmlBases should contain the types to be compiled.
+    // Some types should not be compiled and are therefore filtered out:
+    //  * deferred types
+    //  * types inside of capital-c-Components (implicit and explicit)
+    //  * non-composite types (that is, types not defined in qml)
+    //
+    // This can not be done earlier as implicitly wrapped Components are
+    // only known after visitation is over!
+
+    // filter step:
     for (const auto &inlineComponent : m_inlineComponentNames) {
         QList<QQmlJSScope::ConstPtr> filteredQmlTypesWithQmlBases;
         QList<QQmlJSScope::ConstPtr> &unfilteredQmlTypesWithQmlBases =
@@ -516,7 +532,11 @@ void QmltcVisitor::postVisitResolve(
         filteredQmlTypesWithQmlBases.reserve(unfilteredQmlTypesWithQmlBases.size());
         std::copy_if(unfilteredQmlTypesWithQmlBases.cbegin(), unfilteredQmlTypesWithQmlBases.cend(),
                      std::back_inserter(filteredQmlTypesWithQmlBases),
-                     [&](const QQmlJSScope::ConstPtr &type) { return !isOrUnderDeferred(type); });
+                     [&](const QQmlJSScope::ConstPtr &type) {
+                         auto base = type->baseType();
+                         return base && base->isComposite() && !isOrUnderComponent(type)
+                                 && !isOrUnderDeferred(type);
+                     });
         qSwap(unfilteredQmlTypesWithQmlBases, filteredQmlTypesWithQmlBases);
     }
 

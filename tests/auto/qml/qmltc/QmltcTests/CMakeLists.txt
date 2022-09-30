@@ -100,6 +100,7 @@ set(qml_sources
     generalizedGroupedProperty.qml
     appendToQQmlListProperty.qml
     inlineComponents.qml
+    repeaterCrash.qml
 
     # support types:
     DefaultPropertySingleChild.qml
