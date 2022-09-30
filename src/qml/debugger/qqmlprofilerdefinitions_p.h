@@ -99,9 +99,10 @@ struct QQmlProfilerDefinitions {
         Quick3DGenerateShader,
         Quick3DLoadShader,
         Quick3DParticleUpdate,  // GUI Thread
+        Quick3DRenderCall,      // Render Thread
+        Quick3DRenderPass,      // Render Thread
+        Quick3DEventData,       // N/A
         MaximumQuick3DFrameType,
-        NumQuick3DRenderThreadFrameTypes = Quick3DParticleUpdate,
-        NumQuick3DGUIThreadFrameTypes = MaximumQuick3DFrameType - NumQuick3DRenderThreadFrameTypes,
     };
 
     enum ProfileFeature {
