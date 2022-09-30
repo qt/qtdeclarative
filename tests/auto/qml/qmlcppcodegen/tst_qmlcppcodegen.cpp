@@ -132,6 +132,7 @@ private slots:
     void stringToByteArray();
     void listPropertyAsModel();
     void notNotString();
+    void inaccessibleProperty();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2436,6 +2437,17 @@ void tst_QmlCppCodegen::runInterpreted()
 #else
     QSKIP("Test needs QProcess");
 #endif
+}
+
+void tst_QmlCppCodegen::inaccessibleProperty()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/versionmismatch.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("c").toInt(), 5);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

@@ -287,7 +287,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
     if (isMethod) {
         if (isCallingProperty(m_function->qmlScope, name))
             return;
-    } else if (isMissingPropertyType(m_function->qmlScope, name)) {
+    } else if (propertyResolution(m_function->qmlScope, name) != PropertyMissing) {
         return;
     }
 
@@ -481,18 +481,20 @@ bool QQmlJSTypePropagator::isRestricted(const QString &propertyName) const
 }
 
 // Only to be called once a lookup has already failed
-bool QQmlJSTypePropagator::isMissingPropertyType(QQmlJSScope::ConstPtr scope,
-                                                 const QString &propertyName) const
+QQmlJSTypePropagator::PropertyResolution QQmlJSTypePropagator::propertyResolution(
+        QQmlJSScope::ConstPtr scope, const QString &propertyName) const
 {
     auto property = scope->property(propertyName);
     if (!property.isValid())
-        return false;
+        return PropertyMissing;
 
     QString errorType;
     if (property.type().isNull())
         errorType = u"found"_s;
     else if (!property.type()->isFullyResolved())
         errorType = u"fully resolved"_s;
+    else
+        return PropertyFullyResolved;
 
     Q_ASSERT(!errorType.isEmpty());
 
@@ -501,7 +503,7 @@ bool QQmlJSTypePropagator::isMissingPropertyType(QQmlJSScope::ConstPtr scope,
                     .arg(property.typeName(), propertyName, errorType),
             Log_Type, getCurrentSourceLocation());
 
-    return true;
+    return PropertyTypeUnresolved;
 }
 
 bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const QString &name) const
@@ -777,7 +779,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         auto baseType = m_typeResolver->containedType(m_state.accumulatorIn());
         // Warn separately when a property is only not found because of a missing type
 
-        if (isMissingPropertyType(baseType, propertyName))
+        if (propertyResolution(baseType, propertyName) != PropertyMissing)
             return;
 
         std::optional<FixSuggestion> fixSuggestion;
