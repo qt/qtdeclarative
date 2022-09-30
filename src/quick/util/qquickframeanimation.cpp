@@ -263,10 +263,11 @@ int QQuickFrameAnimation::currentFrame() const
     \code
     Rectangle {
         id: rect
-        property real speed: 360
+        property real speed: 90
         width: 100
         height: 100
         color: "red"
+        anchors.centerIn: parent
     }
 
     FrameAnimation {
@@ -274,7 +275,7 @@ int QQuickFrameAnimation::currentFrame() const
         running: true
         onTriggered: {
             // Rotate the item speed-degrees / second.
-            rect.rotation = rect.speed * frameTime
+            rect.rotation += rect.speed * frameTime
         }
     }
     \endcode
