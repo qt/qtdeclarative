@@ -601,7 +601,8 @@ and deploy all QML modules used by an executable target.
 
 \target ENABLE_TYPE_COMPILER
 \c ENABLE_TYPE_COMPILER can be used to compile \c{.qml} files to C++ source code
-with \l{QML Type Compiler}{qmltc}.
+with \l{QML Type Compiler}{qmltc}. Files with the source property
+\c{QT_QML_SKIP_TYPE_COMPILER} are not compiled to C++.
 
 \c TYPE_COMPILER_NAMESPACE argument defines a namespace, in which the generated
 C++ code resides. By default, no namespace is specified for user projects. The
