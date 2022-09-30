@@ -111,8 +111,7 @@ Similarly, for the registration to take effect when using CMake, use the
 
 The class implementation in \c piechart.cpp simply sets and returns the
 \c m_name and \c m_color values as appropriate, and implements \c paint() to
-draw a simple pie chart. It also turns off the QGraphicsItem::ItemHasNoContents
-flag to enable painting:
+draw a simple pie chart:
 
 \snippet tutorials/extending-qml/chapter1-basics/piechart.cpp 0
 \dots 0
