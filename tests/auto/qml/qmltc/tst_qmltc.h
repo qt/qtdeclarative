@@ -82,4 +82,5 @@ private slots:
     void privateProperties();
     void calqlatrBits(); // corner cases from calqlatr demo
     void trickyPropertyChangeAndSignalHandlers();
+    void repeaterCrash();
 };

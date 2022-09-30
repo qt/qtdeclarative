@@ -69,6 +69,7 @@
 #include "privatepropertysubclass.h"
 #include "calqlatrbits.h"
 #include "propertychangeandsignalhandlers.h"
+#include "repeatercrash.h"
 
 #include "testprivateproperty.h"
 
@@ -2159,6 +2160,38 @@ void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
 
     created.changeProperties3(22);
     QCOMPARE(created.cChangedCount3(), 22);
+}
+
+void tst_qmltc::repeaterCrash()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(repeaterCrash) fromQmltc(&e);
+
+    QQmlComponent component(&e, "qrc:/QmltcTests/repeaterCrash.qml");
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QQuickItem> fromEngine(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY(fromEngine);
+
+    const int size = 7;
+
+    const auto listFromEngine = fromEngine->childItems();
+    const auto listFromQmltc = fromQmltc.childItems();
+
+    QCOMPARE(listFromEngine.size(), size);
+    QCOMPARE(listFromQmltc.size(), size);
+
+    for (int i = 0; i < size; i++) {
+        // the repeater itself has no objName property
+        if (i == 5)
+            continue;
+
+        const QVariant nameFromEngine = listFromEngine.at(i)->property("objName");
+        const QVariant nameFromQmltc = listFromQmltc.at(i)->property("objName");
+
+        QVERIFY(nameFromEngine.isValid());
+        QVERIFY(nameFromQmltc.isValid());
+        QCOMPARE(nameFromQmltc.toString(), nameFromEngine.toString());
+    }
 }
 
 QTEST_MAIN(tst_qmltc)
