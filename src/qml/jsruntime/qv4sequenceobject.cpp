@@ -162,6 +162,8 @@ void Heap::Sequence::init(
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::Sequence> o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
+    if (CppStackFrame *frame = scope.engine->currentStackFrame)
+        setLocation(frame->v4Function, frame->statementNumber());
     o->loadReference();
 }
 
@@ -422,18 +424,19 @@ bool Sequence::sort(const FunctionObject *f, const Value *, const Value *argv, i
 void *Sequence::getRawContainerPtr() const
 { return d()->storagePointer(); }
 
-void Sequence::loadReference() const
+bool Sequence::loadReference() const
 {
     Q_ASSERT(d()->object());
     Q_ASSERT(d()->isReference());
-    QV4::ReferenceObject::readReference(d());
+    // If locations are enforced we only read once
+    return d()->enforcesLocation() || QV4::ReferenceObject::readReference(d());
 }
 
-void Sequence::storeReference()
+bool Sequence::storeReference()
 {
     Q_ASSERT(d()->object());
     Q_ASSERT(d()->isReference());
-    QV4::ReferenceObject::writeBack(d());
+    return d()->isAttachedToProperty() && QV4::ReferenceObject::writeBack(d());
 }
 
 ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)

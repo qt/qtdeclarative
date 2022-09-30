@@ -109,12 +109,13 @@ void *Heap::QQmlValueTypeWrapper::storagePointer()
 
 bool Heap::QQmlValueTypeWrapper::readReference()
 {
-    return QV4::ReferenceObject::readReference(this);
+    // If locations are enforced we only read once
+    return enforcesLocation() || QV4::ReferenceObject::readReference(this);
 }
 
 bool Heap::QQmlValueTypeWrapper::writeBack()
 {
-    return QV4::ReferenceObject::writeBack(this);
+    return isAttachedToProperty() && QV4::ReferenceObject::writeBack(this);
 }
 
 ReturnedValue QQmlValueTypeWrapper::create(
@@ -130,6 +131,7 @@ ReturnedValue QQmlValueTypeWrapper::create(
     r->d()->setMetaObject(cloneFrom->metaObject());
     r->d()->setValueType(cloneFrom->valueType());
     r->d()->setGadgetPtr(nullptr);
+    r->d()->setLocation(cloneFrom->function(), cloneFrom->statementIndex());
     return r->asReturnedValue();
 }
 
@@ -160,6 +162,8 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     }
     r->d()->setValueType(valueType);
     r->d()->setGadgetPtr(nullptr);
+    if (CppStackFrame *frame = engine->currentStackFrame)
+        r->d()->setLocation(frame->v4Function, frame->statementNumber());
     return r->asReturnedValue();
 }
 

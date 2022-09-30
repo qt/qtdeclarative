@@ -100,8 +100,8 @@ public:
     bool containerIsEqualTo(Managed *other);
     bool sort(const FunctionObject *f, const Value *, const Value *argv, int argc);
     void *getRawContainerPtr() const;
-    void loadReference() const;
-    void storeReference();
+    bool loadReference() const;
+    bool storeReference();
 };
 
 }

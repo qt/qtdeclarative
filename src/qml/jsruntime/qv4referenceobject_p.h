@@ -32,6 +32,7 @@ DECLARE_HEAP_OBJECT(ReferenceObject, Object) {
         NoFlag           = 0,
         CanWriteBack     = 1 << 0,
         IsVariant        = 1 << 1,
+        EnforcesLocation = 1 << 2,
     };
     Q_DECLARE_FLAGS(Flags, Flag);
 
@@ -59,6 +60,33 @@ DECLARE_HEAP_OBJECT(ReferenceObject, Object) {
     void setIsVariant(bool isVariant) { setFlag(IsVariant, isVariant); }
     bool isVariant() const { return hasFlag(IsVariant); }
 
+
+    void setEnforcesLocation(bool enforces) { setFlag(EnforcesLocation, enforces); }
+    bool enforcesLocation() const { return hasFlag(EnforcesLocation); }
+
+    void setLocation(const Function *function, quint16 statement)
+    {
+        m_function = function;
+        m_statementIndex = statement;
+    }
+
+    const Function *function() const { return m_function; }
+    quint16 statementIndex() const { return m_statementIndex; }
+
+    bool isAttachedToProperty() const
+    {
+        if (enforcesLocation()) {
+            if (CppStackFrame *frame = internalClass->engine->currentStackFrame) {
+                if (frame->v4Function != function() || frame->statementNumber() != statementIndex())
+                    return false;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     bool isReference() const { return m_property >= 0; }
 
 private:
@@ -74,7 +102,9 @@ private:
     }
 
     QV4QPointer<QObject> m_object;
+    const Function *m_function;
     int m_property;
+    quint16 m_statementIndex;
     quint8 m_flags;
 };
 
