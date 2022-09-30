@@ -9,3 +9,7 @@
 # QTBUG-101488
 [goUpIntoLargeFolder]
 *
+
+QTBUG-101488
+[goUp]
+macos
