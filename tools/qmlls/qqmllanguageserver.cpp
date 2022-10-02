@@ -88,7 +88,7 @@ void QQmlLanguageServer::setupCapabilities(const QLspSpecification::InitializePa
 {
     Q_UNUSED(clientInfo);
     QJsonObject expCap;
-    if (serverInfo.capabilities.experimental->isObject())
+    if (serverInfo.capabilities.experimental.has_value() && serverInfo.capabilities.experimental->isObject())
         expCap = serverInfo.capabilities.experimental->toObject();
     expCap.insert(u"addBuildDirs"_s, QJsonObject({ { u"supported"_s, true } }));
     serverInfo.capabilities.experimental = expCap;
