@@ -2690,7 +2690,7 @@ but this file does not exist.  Possible reasons include:
     # Get custom import paths provided during qt_add_qml_module call.
     get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
     if(qml_import_path)
-        list(APPEND cmd_args ${qml_import_path})
+        list(APPEND qml_import_paths ${qml_import_path})
     endif()
 
     # Facilitate self-import so we can find the qmldir file
