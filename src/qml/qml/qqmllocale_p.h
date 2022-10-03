@@ -118,6 +118,7 @@ struct QQmlLocaleData : public QV4::Object
     static QV4::ReturnedValue method_standaloneMonthName(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_dayName(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_standaloneDayName(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue method_toString(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
     static QV4::ReturnedValue method_get_firstDayOfWeek(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_get_measurementSystem(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);

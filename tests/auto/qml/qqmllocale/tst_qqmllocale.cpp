@@ -9,6 +9,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtCore/QDateTime>
+#include <QtCore/qtimezone.h>
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qscopedpointer.h>
 #include <qcolor.h>
@@ -66,6 +67,8 @@ private slots:
     void dayName();
     void standaloneDayName_data();
     void standaloneDayName();
+    void toString_data();
+    void toString();
     void firstDayOfWeek_data();
     void firstDayOfWeek();
     void weekDays_data();
@@ -126,6 +129,8 @@ private:
     void addDateFormatData(const QString &l);
     void addTimeFormatData(const QString &l);
     void addFormattedDataSizeDataForLocale(const QString &l);
+    void testFunctionCall();
+    void addTestFunctionCallDataColumns();
     QQmlEngine engine;
 };
 
@@ -421,6 +426,66 @@ void tst_qqmllocale::standaloneDayName()
     }
 }
 
+void tst_qqmllocale::toString_data()
+{
+    addTestFunctionCallDataColumns();
+
+    // Test general error conditions which aren't overload or locale-specific.
+    QString functionCallScript = "locale.toString()";
+    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript
+        << "QLocale(English, Latin, Australia)" << QString();
+
+    functionCallScript = "locale.toString(1, 2, 3, 4)";
+    QString errorMessage = ".*Locale: toString\\(\\): Expected 1-3 arguments, but received 4";
+    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript << QString() << errorMessage;
+
+    // Test toString(int).
+    functionCallScript = "locale.toString(123)";
+    QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "123" << QString();
+
+    // Test toString(double[, char][, int]).
+    functionCallScript = "locale.toString(123.456)";
+    QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "123,456" << QString();
+
+    functionCallScript = "locale.toString(123.456, 'e')";
+    QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "1,234560E+02" << QString();
+
+    functionCallScript = "locale.toString(123.456, 'e', 1)";
+    QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "1,2E+02" << QString();
+
+    // Test toString(Date, string) and toString(Date[, FormatType]).
+    const QDateTime midnight2000(QDate(2000, 1, 1), QTime(0, 0));
+    // 12 AM might not exist in this timezone (some timezones have transitions at midnight).
+    if (midnight2000.isValid()) {
+        functionCallScript = "locale.toString(new Date(2000, 1, 1))";
+        QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript
+            << QLatin1String("Tuesday, 1 February 2000 12:00:00 AM ") + midnight2000.timeZoneAbbreviation() << QString();
+    }
+
+    functionCallScript = "locale.toString(new Date(2022, 7, 16), [])";
+    errorMessage = ".*Locale: the second argument to the toString overloads whose "
+        "first argument is a Date should be a string or FormatType";
+    QTest::newRow(qPrintable(functionCallScript)) << "ar" << functionCallScript << QString() << errorMessage;
+
+    functionCallScript = "locale.toString([], 'd')";
+    errorMessage = ".*Locale: toString\\(\\) expects either an int, double, or Date as its first argument";
+    QTest::newRow(qPrintable(functionCallScript)) << "ar" << functionCallScript << QString() << errorMessage;
+
+    functionCallScript = "locale.toString(new Date(2022, 7, 16), 'd')";
+    QTest::newRow(qPrintable(functionCallScript)) << "ar" << functionCallScript << "١٦" << QString();
+
+    functionCallScript = "locale.toString(new Date(2022, 7, 16), Locale.ShortFormat)";
+    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript << "16/8/22 12:00 AM" << QString();
+
+    functionCallScript = "locale.toString(new Date(2022, 7, 16, 1, 23, 4), Locale.ShortFormat)";
+    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript << "16/8/22 1:23 AM" << QString();
+}
+
+void tst_qqmllocale::toString()
+{
+    testFunctionCall();
+}
+
 void tst_qqmllocale::firstDayOfWeek_data()
 {
     QTest::addColumn<QString>("locale");
@@ -658,12 +723,72 @@ void tst_qqmllocale::addFormattedDataSizeDataForLocale(const QString &localeStr)
     QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
 }
 
-void tst_qqmllocale::formattedDataSize_data()
+#define STOP_ON_FAILURE \
+    if (QTest::currentTestFailed()) \
+        return;
+
+/*!
+    To simplify the tests, this function calls a function and checks the
+    return value (a string). If it's expected that it fails, it checks
+    that the expected error message was printed.
+*/
+void tst_qqmllocale::testFunctionCall()
+{
+    QFETCH(QString, localeStr);
+    QFETCH(QString, functionCallScript);
+    QFETCH(QString, expectedResult);
+    QFETCH(QString, expectedErrorMessagePattern);
+
+    QQmlComponent component(&engine, testFileUrl("functions.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    STOP_ON_FAILURE
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+    STOP_ON_FAILURE
+
+    QLocale locale(localeStr);
+    QVariant returnValue;
+
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "setLocale", Qt::DirectConnection,
+        Q_ARG(QVariant, QVariant(localeStr))));
+    STOP_ON_FAILURE
+
+    // Make sure that we use the object's context rather than the root context,
+    // so that e.g. enums from the Locale type are available (QTBUG-91747).
+    QQmlExpression qmlExpression(qmlContext(object.data()), object.data(), functionCallScript);
+    const QVariant evaluationResult = qmlExpression.evaluate();
+    if (expectedErrorMessagePattern.isEmpty()) {
+        QVERIFY2(!qmlExpression.hasError(), qPrintable(qmlExpression.error().toString()));
+        STOP_ON_FAILURE
+        QVERIFY(evaluationResult.canConvert<QString>());
+        STOP_ON_FAILURE
+        QCOMPARE(evaluationResult.toString(), expectedResult);
+        STOP_ON_FAILURE
+    } else {
+        QVERIFY(qmlExpression.hasError());
+        STOP_ON_FAILURE
+        QRegularExpression errorRegex(expectedErrorMessagePattern);
+        QVERIFY(errorRegex.isValid());
+        STOP_ON_FAILURE
+        QVERIFY2(errorRegex.match(qmlExpression.error().toString()).hasMatch(),
+            qPrintable(QString::fromLatin1("Mismatch in actual vs expected error message:\n   Actual: %1\n Expected: %2")
+                .arg(qmlExpression.error().toString()).arg(expectedErrorMessagePattern)));
+        STOP_ON_FAILURE
+    }
+}
+
+void tst_qqmllocale::addTestFunctionCallDataColumns()
 {
     QTest::addColumn<QString>("localeStr");
     QTest::addColumn<QString>("functionCallScript");
     QTest::addColumn<QString>("expectedResult");
     QTest::addColumn<QString>("expectedErrorMessagePattern");
+}
+
+void tst_qqmllocale::formattedDataSize_data()
+{
+    addTestFunctionCallDataColumns();
 
     addFormattedDataSizeDataForLocale("en_US");
     addFormattedDataSizeDataForLocale("de_DE");
@@ -692,39 +817,7 @@ void tst_qqmllocale::formattedDataSize_data()
 
 void tst_qqmllocale::formattedDataSize()
 {
-    QFETCH(QString, localeStr);
-    QFETCH(QString, functionCallScript);
-    QFETCH(QString, expectedResult);
-    QFETCH(QString, expectedErrorMessagePattern);
-
-    QQmlComponent component(&engine, testFileUrl("functions.qml"));
-    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(object);
-
-    QLocale locale(localeStr);
-    QVariant returnValue;
-
-    QVERIFY(QMetaObject::invokeMethod(object.data(), "setLocale", Qt::DirectConnection,
-        Q_ARG(QVariant, QVariant(localeStr))));
-
-    // Make sure that we use the object's context rather than the root context,
-    // so that e.g. enums from the Locale type are available (QTBUG-91747).
-    QQmlExpression qmlExpression(qmlContext(object.data()), object.data(), functionCallScript);
-    const QVariant evaluationResult = qmlExpression.evaluate();
-    if (expectedErrorMessagePattern.isEmpty()) {
-        QVERIFY2(!qmlExpression.hasError(), qPrintable(qmlExpression.error().toString()));
-        QVERIFY(evaluationResult.canConvert<QString>());
-        QCOMPARE(evaluationResult.toString(), expectedResult);
-    } else {
-        QVERIFY(qmlExpression.hasError());
-        QRegularExpression errorRegex(expectedErrorMessagePattern);
-        QVERIFY(errorRegex.isValid());
-        QVERIFY2(errorRegex.match(qmlExpression.error().toString()).hasMatch(),
-            qPrintable(QString::fromLatin1("Mismatch in actual vs expected error message:\n   Actual: %1\n Expected: %2")
-                .arg(qmlExpression.error().toString()).arg(expectedErrorMessagePattern)));
-    }
+    testFunctionCall();
 }
 
 void tst_qqmllocale::dateToLocaleString_data()

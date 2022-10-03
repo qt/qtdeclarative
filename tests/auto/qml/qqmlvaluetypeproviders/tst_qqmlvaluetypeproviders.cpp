@@ -252,7 +252,7 @@ void tst_qqmlvaluetypeproviders::structured()
             " with value [object Object]",
         "Could not find any constructor for value type ConstructibleValueType to call"
             " with value QVariant(QJSValue, )",
-        "Could not convert [object Object] to double for property y",
+        "Could not convert QLocale(English, Latin, Australia) to double for property y",
         "Could not find any constructor for value type ConstructibleValueType to call"
             " with value [object Object]",
         "Could not find any constructor for value type ConstructibleValueType to call"
