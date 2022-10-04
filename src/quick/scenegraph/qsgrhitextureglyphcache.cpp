@@ -197,7 +197,10 @@ void QSGRhiTextureGlyphCache::endFillTexture()
 
 int QSGRhiTextureGlyphCache::glyphPadding() const
 {
-    return 1;
+    if (m_format == QFontEngine::Format_Mono)
+        return 8;
+    else
+        return 1;
 }
 
 int QSGRhiTextureGlyphCache::maxTextureWidth() const
