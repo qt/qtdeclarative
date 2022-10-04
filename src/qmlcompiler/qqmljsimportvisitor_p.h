@@ -149,7 +149,7 @@ protected:
     using RootDocumentNameType = QQmlJSScope::RootDocumentNameType;
     using InlineComponentNameType = QQmlJSScope::InlineComponentNameType;
     using InlineComponentOrDocumentRootName = QQmlJSScope::RootDocumentNameType;
-    QQmlJSScope::InlineComponentOrDocumentRootName m_currentInlineComponentName =
+    QQmlJSScope::InlineComponentOrDocumentRootName m_currentRootName =
             QQmlJSScope::RootDocumentNameType();
     bool m_nextIsInlineComponent = false;
     bool m_rootIsSingleton = false;

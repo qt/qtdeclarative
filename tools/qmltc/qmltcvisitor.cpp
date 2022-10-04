@@ -198,15 +198,15 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
         return true;
 
     if (m_currentScope->isInlineComponent()) {
-        m_inlineComponentNames.append(m_currentInlineComponentName);
-        m_inlineComponents[m_currentInlineComponentName] = m_currentScope;
+        m_inlineComponentNames.append(m_currentRootName);
+        m_inlineComponents[m_currentRootName] = m_currentScope;
     }
 
     if (m_currentScope != m_exportedRootScope) // not document root
         addCleanQmlTypeName(&m_qmlTypeNames, m_currentScope);
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
-    m_qmlTypesWithQmlBases[m_currentInlineComponentName].append(m_currentScope);
+    m_qmlTypesWithQmlBases[m_currentRootName].append(m_currentScope);
 
     return true;
 }
@@ -228,7 +228,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
 
-    m_qmlTypesWithQmlBases[m_currentInlineComponentName].append(m_currentScope);
+    m_qmlTypesWithQmlBases[m_currentRootName].append(m_currentScope);
     return true;
 }
 
