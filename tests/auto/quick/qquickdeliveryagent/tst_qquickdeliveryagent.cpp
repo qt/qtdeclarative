@@ -11,6 +11,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickpointhandler_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
@@ -361,7 +362,7 @@ void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-
     QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
 #endif
     QVERIFY(QQuickTest::initView(window, testFileUrl("listViewDelegate.qml")));
-    QQuickItem *listView = window.rootObject()->findChild<QQuickItem*>("listView");
+    QQuickListView *listView = window.rootObject()->findChild<QQuickListView*>();
     QVERIFY(listView);
 
     // put the ListView into a SubsceneRootItem
@@ -370,23 +371,13 @@ void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
 
-    // Wait for delegate to be created
-    QTest::qWait(200);
-
-    // Find the created delegate
+    // populate a delegate in ListView
+    listView->setModel(1);
     QQuickItem *delegate = nullptr;
-    QList<QQuickItem *> listViewItems = listView->property("contentItem").value<QQuickItem *>()->childItems();
-    for (QQuickItem *item : listViewItems) {
-        if (item->objectName() == "delegate") {
-            delegate = item;
-            break;
-        }
-    }
-    QVERIFY(delegate);
-
-    QVERIFY(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem == delegate);
+    QTRY_VERIFY(QQuickVisualTestUtils::findViewDelegateItem(listView, 0, delegate));
+    QCOMPARE(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem, delegate);
     delete listView;
-    QVERIFY(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem != delegate);
+    QCOMPARE_NE(QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->activeFocusItem, delegate);
 }
 
 void tst_qquickdeliveryagent::touchCompression()
