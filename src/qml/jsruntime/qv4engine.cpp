@@ -1186,9 +1186,9 @@ Heap::Object *ExecutionEngine::newEvalErrorObject(const QString &message)
     return ErrorObject::create<EvalErrorObject>(this, message);
 }
 
-Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
+Heap::Object *ExecutionEngine::newVariantObject(const QMetaType type, const void *data)
 {
-    return memoryManager->allocate<VariantObject>(v);
+    return memoryManager->allocate<VariantObject>(type, data);
 }
 
 Heap::Object *ExecutionEngine::newForInIteratorObject(Object *o)
@@ -1750,13 +1750,9 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
 /*!
   \internal
 
-  Transform the given \a metaType and \a ptr into a JavaScript representation. You can pass an
-  optional \a variant in order to avoid the construction of a new QVariant in case the value
-  has to be stored as a variant object. In that case, the contents of \a variant have to be
-  exactly the same as \a metaType and \a ptr.
+  Transform the given \a metaType and \a ptr into a JavaScript representation.
  */
-QV4::ReturnedValue ExecutionEngine::fromData(
-        QMetaType metaType, const void *ptr, const QVariant *variant)
+QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr)
 {
     const int type = metaType.id();
     if (type < QMetaType::User) {
@@ -1838,7 +1834,7 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             case QMetaType::QPixmap:
             case QMetaType::QImage:
                 // Scarce value types
-                return QV4::Encode(newVariantObject(variant ? *variant : QVariant(metaType, ptr)));
+                return QV4::Encode(newVariantObject(metaType, ptr));
             default:
                 break;
         }
@@ -1906,12 +1902,12 @@ QV4::ReturnedValue ExecutionEngine::fromData(
     if (metaType.flags() & QMetaType::IsEnumeration)
         return QV4::Encode(*reinterpret_cast<const int *>(ptr));
 
-    return QV4::Encode(newVariantObject(variant ? *variant : QVariant(metaType, ptr)));
+    return QV4::Encode(newVariantObject(metaType, ptr));
 }
 
 QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
 {
-    return fromData(variant.metaType(), variant.constData(), &variant);
+    return fromData(variant.metaType(), variant.constData());
 }
 
 QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)

@@ -187,8 +187,9 @@ public:
         QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
         if (md) {
             QV4::Scope scope(engine);
-            QV4::Scoped<QV4::MemberData>(scope, md)->set(engine, id, engine->newVariantObject(
-                                                             QVariant::fromValue(v)));
+            QV4::Scoped<QV4::MemberData>(scope, md)->set(
+                        engine, id, engine->newVariantObject(
+                            QMetaType::fromType<VariantCompatible>(), &v));
         }
     }
 

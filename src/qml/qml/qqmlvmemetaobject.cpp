@@ -614,8 +614,8 @@ QVector<QQmlGuard<QObject>> *QQmlVMEMetaObject::readPropertyAsList(int id) const
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
     if (!v || v->d()->data().metaType() != QMetaType::fromType<QVector<QQmlGuard<QObject>>>()) {
-        QVariant variant(QVariant::fromValue(QVector<QQmlGuard<QObject>>()));
-        v = engine->newVariantObject(variant);
+        const QVector<QQmlGuard<QObject>> guards;
+        v = engine->newVariantObject(QMetaType::fromType<QVector<QQmlGuard<QObject>>>(), &guards);
         md->set(engine, id, v);
     }
     return static_cast<QVector<QQmlGuard<QObject>> *>(v->d()->data().data());
@@ -909,7 +909,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                     } else {
                                         needActivate = true;
                                         md->set(engine, id, engine->newVariantObject(
-                                                    QVariant(propType, a[0])));
+                                                    propType, a[0]));
                                     }
                                 }
                             } else {
@@ -1196,7 +1196,7 @@ void QQmlVMEMetaObject::writeProperty(int id, const QVariant &value)
                                  v->d()->data() != value);
                 if (v)
                     v->removeVmePropertyReference();
-                md->set(engine, id, engine->newVariantObject(value));
+                md->set(engine, id, engine->newVariantObject(value.metaType(), value.constData()));
                 v = static_cast<const QV4::VariantObject *>(md->data() + id);
                 v->addVmePropertyReference();
             }

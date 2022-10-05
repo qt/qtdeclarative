@@ -18,10 +18,10 @@ void Heap::VariantObject::init()
     scarceData = new ExecutionEngine::ScarceResourceData;
 }
 
-void Heap::VariantObject::init(const QVariant &value)
+void Heap::VariantObject::init(const QMetaType type, const void *data)
 {
     Object::init();
-    scarceData = new ExecutionEngine::ScarceResourceData(value);
+    scarceData = new ExecutionEngine::ScarceResourceData(type, data);
     if (isScarce())
         removeVmePropertyReference();
 }

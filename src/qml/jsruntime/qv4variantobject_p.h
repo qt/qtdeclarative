@@ -31,7 +31,7 @@ namespace Heap {
 struct VariantObject : Object
 {
     void init();
-    void init(const QVariant &value);
+    void init(const QMetaType type, const void *data);
     void destroy() {
         Q_ASSERT(scarceData);
         if (isScarce())

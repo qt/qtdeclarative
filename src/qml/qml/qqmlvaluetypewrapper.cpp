@@ -72,7 +72,6 @@ QVariant Heap::QQmlValueTypeWrapper::toVariant() const
     return QVariant(valueType()->metaType, gadgetPtr());
 }
 
-
 ReturnedValue QQmlValueTypeReference::create(
         ExecutionEngine *engine, Heap::QQmlValueTypeReference *cloneFrom, QObject *object)
 {
@@ -343,7 +342,7 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
         void *args[] = { v.data(), nullptr };
         metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()),
                                       QMetaObject::ReadProperty, index, args);
-        return Encode(engine->newVariantObject(v));
+        return Encode(engine->newVariantObject(metaType, v.constData()));
     }
     default:
         break;

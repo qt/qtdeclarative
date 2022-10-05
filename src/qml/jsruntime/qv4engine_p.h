@@ -486,7 +486,8 @@ public:
     // calling preserve() on the object which removes it from this scarceResource list.
     class ScarceResourceData {
     public:
-        ScarceResourceData(const QVariant &data = QVariant()) : data(data) {}
+        ScarceResourceData() = default;
+        ScarceResourceData(const QMetaType type, const void *data) : data(type, data) {}
         QVariant data;
         QIntrusiveListNode node;
     };
@@ -575,7 +576,7 @@ public:
     Heap::Object *newPromiseObject(const QV4::FunctionObject *thisObject, const QV4::PromiseCapability *capability);
     Promise::ReactionHandler *getPromiseReactionHandler();
 
-    Heap::Object *newVariantObject(const QVariant &v);
+    Heap::Object *newVariantObject(const QMetaType type, const void *data);
 
     Heap::Object *newForInIteratorObject(Object *o);
     Heap::Object *newSetIteratorObject(Object *o);
@@ -737,7 +738,7 @@ public:
                                      QV4::ExecutionContext *ctxt, int argc, const QV4::Value *argv);
 
 private:
-    QV4::ReturnedValue fromData(QMetaType type, const void *ptr, const QVariant *variant = nullptr);
+    QV4::ReturnedValue fromData(QMetaType type, const void *ptr);
     static void initializeStaticMembers();
 
     static int s_maxCallDepth;
