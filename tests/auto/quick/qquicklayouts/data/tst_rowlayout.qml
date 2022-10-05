@@ -32,6 +32,18 @@ Item {
         }
 
         Component {
+            id: layout_rowLayout_Component
+            RowLayout {
+            }
+        }
+
+        Component {
+            id: layout_columnLayout_Component
+            ColumnLayout {
+            }
+        }
+
+        Component {
             id: itemsWithAnchorsLayout_Component
             RowLayout {
                 spacing: 2
@@ -495,6 +507,102 @@ Item {
             layout.destroy();
         }
 
+
+        function buildLayout(layout, arrLayoutData) {
+            for (let i = 0; i < arrLayoutData.length; i++) {
+                let layoutItemDesc = arrLayoutData[i]
+                let rect = layoutItem_Component.createObject(layout)
+                for (let keyName in layoutItemDesc) {
+                    rect.Layout[keyName] = layoutItemDesc[keyName]
+                }
+            }
+        }
+
+        function test_dynamicAlignment_data()
+        {
+            return [
+            {
+                tag: "simple",
+
+                layout: {
+                    type: "RowLayout",
+                    items: [
+                        {preferredWidth: 30, preferredHeight: 20, fillHeight: true},
+                        {preferredWidth: 30, preferredHeight: 20},
+                    ]
+                },
+                expectedGeometries: [
+                    [ 0,  0, 30, 60],
+                    [30, 20, 30, 20]
+                ]
+            },{
+                tag: "valign",
+                layout: {
+                    type: "RowLayout",
+                    items: [
+                        {preferredWidth: 12, preferredHeight: 20, fillHeight: true},
+                        {preferredWidth: 12, preferredHeight: 20},
+                        {preferredWidth: 12, preferredHeight: 20, alignment: Qt.AlignTop},
+                        {preferredWidth: 12, preferredHeight: 20, alignment: Qt.AlignVCenter},
+                        {preferredWidth: 12, preferredHeight: 20, alignment: Qt.AlignBottom}
+                    ]
+                },
+                expectedGeometries: [
+                    [ 0,  0, 12, 60],
+                    [12, 20, 12, 20],
+                    [24,  0, 12, 20],
+                    [36, 20, 12, 20],
+                    [48, 40, 12, 20]
+                ]
+            },{
+                tag: "halign",
+                layout: {
+                    type: "ColumnLayout",
+                    items: [
+                        {preferredWidth: 20, preferredHeight: 12, fillWidth: true},
+                        {preferredWidth: 20, preferredHeight: 12},
+                        {preferredWidth: 20, preferredHeight: 12, alignment: Qt.AlignLeft},
+                        {preferredWidth: 20, preferredHeight: 12, alignment: Qt.AlignHCenter},
+                        {preferredWidth: 20, preferredHeight: 12, alignment: Qt.AlignRight}
+                    ]
+                },
+                expectedGeometries: [
+                    [ 0,  0, 60, 12],
+                    [ 0, 12, 20, 12],
+                    [ 0, 24, 20, 12],
+                    [20, 36, 20, 12],
+                    [40, 48, 20, 12]
+                ]
+            }
+            ]
+        }
+
+        function test_dynamicAlignment(data)
+        {
+            let layout
+            switch (data.layout.type) {
+            case "RowLayout":
+                layout = createTemporaryObject(layout_rowLayout_Component, container)
+                break
+            case "ColumnLayout":
+                layout = createTemporaryObject(layout_columnLayout_Component, container)
+                break
+            default:
+                console.log("data.layout.type not recognized(" + data.layout.type + ")")
+            }
+            layout.spacing = 0
+            buildLayout(layout, data.layout.items)
+            layout.width = 60
+            layout.height = 60      // divides in 1/2/3/4/5/6
+            waitForItemPolished(layout)
+
+            for (let i = 0; i < layout.children.length; ++i) {
+                let itm = layout.children[i]
+                compare(itemRect(itm), data.expectedGeometries[i])
+            }
+        }
+
+
         Component {
             id: layout_sizeHintNormalization_Component
             GridLayout {
@@ -749,13 +857,6 @@ Item {
             compare(layout.implicitHeight, 30)
 
             layout.destroy();
-        }
-
-
-        Component {
-            id: layout_rowLayout_Component
-            RowLayout {
-            }
         }
 
         function test_stretchItem_data()
