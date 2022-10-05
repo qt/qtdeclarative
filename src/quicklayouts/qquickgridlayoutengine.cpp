@@ -15,11 +15,4 @@ void QQuickGridLayoutEngine::setAlignment(QQuickItem *quickItem, Qt::Alignment a
     }
 }
 
-Qt::Alignment QQuickGridLayoutEngine::alignment(QQuickItem *quickItem) const
-{
-    if (QGridLayoutItem *item = findLayoutItem(quickItem))
-        return item->alignment();
-    return {};
-}
-
 QT_END_NAMESPACE
