@@ -277,14 +277,16 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             bool hasProp = false;
 
             const QQmlPropertyData *propertyData = nullptr;
+
+            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, scopeObject));
             QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(
-                                        v4, context, scopeObject, name, getQmlPropertyFlags(lookup),
-                                        &hasProp, &propertyData));
+                                        v4, context, wrapper->d(), scopeObject, name,
+                                        getQmlPropertyFlags(lookup), &hasProp, &propertyData));
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
                 if (base)
-                    *base = QV4::QObjectWrapper::wrap(v4, scopeObject);
+                    *base = wrapper;
 
                 if (lookup && propertyData) {
                     QQmlData *ddata = QQmlData::get(scopeObject, false);
@@ -318,14 +320,15 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         if (QObject *contextObject = context->contextObject()) {
             bool hasProp = false;
             const QQmlPropertyData *propertyData = nullptr;
+            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, contextObject));
             result = QV4::QObjectWrapper::getQmlProperty(
-                        v4, context, contextObject, name, getQmlPropertyFlags(lookup),
+                        v4, context, wrapper->d(), contextObject, name, getQmlPropertyFlags(lookup),
                         &hasProp, &propertyData);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
                 if (base)
-                    *base = QV4::QObjectWrapper::wrap(v4, contextObject);
+                    *base = wrapper;
 
                 if (propertyData) {
                     if (lookup) {
@@ -750,11 +753,13 @@ ReturnedValue QQmlContextWrapper::lookupInParentContextHierarchy(Lookup *l, Exec
         // Search context object
         if (QObject *contextObject = context->contextObject()) {
             bool hasProp = false;
+            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(engine, contextObject));
             result = QV4::QObjectWrapper::getQmlProperty(
-                        engine, context, contextObject, name, getQmlPropertyFlags(l), &hasProp);
+                        engine, context, wrapper->d(), contextObject, name, getQmlPropertyFlags(l),
+                        &hasProp);
             if (hasProp) {
                 if (base)
-                    *base = QV4::QObjectWrapper::wrap(engine, contextObject);
+                    *base = wrapper;
 
                 return result->asReturnedValue();
             }

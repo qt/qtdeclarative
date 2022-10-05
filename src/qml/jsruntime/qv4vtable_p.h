@@ -15,6 +15,7 @@
 //
 
 #include "qv4global_p.h"
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,6 +56,8 @@ struct VTable
     typedef ReturnedValue (*ResolveLookupGetter)(const Object *, ExecutionEngine *, Lookup *);
     typedef bool (*ResolveLookupSetter)(Object *, ExecutionEngine *, Lookup *, const Value &);
 
+    typedef int (*Metacall)(Object *, QMetaObject::Call, int, void **);
+
     const VTable * const parent;
     quint16 inlinePropertyOffset;
     quint16 nInlineProperties;
@@ -93,6 +96,8 @@ struct VTable
 
     ResolveLookupGetter resolveLookupGetter;
     ResolveLookupSetter resolveLookupSetter;
+
+    Metacall metacall;
 };
 
 template<VTable::CallWithMetaTypes call>
@@ -173,6 +178,8 @@ protected:
     static constexpr VTable::ResolveLookupGetter virtualResolveLookupGetter = nullptr;
     static constexpr VTable::ResolveLookupSetter virtualResolveLookupSetter = nullptr;
 
+    static constexpr VTable::Metacall virtualMetacall = nullptr;
+
     template<class Class>
     friend constexpr VTable::CallWithMetaTypes vtableMetaTypesCallEntry();
 
@@ -220,7 +227,8 @@ protected:
     QV4::vtableMetaTypesCallEntry<classname>(), \
     \
     classname::virtualResolveLookupGetter,  \
-    classname::virtualResolveLookupSetter   \
+    classname::virtualResolveLookupSetter,  \
+    classname::virtualMetacall              \
 }
 
 #define DEFINE_MANAGED_VTABLE(classname) \

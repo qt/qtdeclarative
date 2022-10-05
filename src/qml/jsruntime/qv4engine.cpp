@@ -1750,7 +1750,9 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
 
   Transform the given \a metaType and \a ptr into a JavaScript representation.
  */
-QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr)
+QV4::ReturnedValue ExecutionEngine::fromData(
+        QMetaType metaType, const void *ptr,
+        QV4::Heap::Object *container, int property, uint flags)
 {
     const int type = metaType.id();
     if (type < QMetaType::User) {
@@ -1835,8 +1837,16 @@ QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr
                 break;
         }
 
-        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(metaType))
-            return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
+        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(metaType)) {
+            if (container) {
+                return QV4::QQmlValueTypeWrapper::create(
+                            this, ptr, vtmo, metaType,
+                            container, property, Heap::ReferenceObject::Flags(flags));
+            } else {
+                return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
+            }
+        }
+
     } else {
         QV4::Scope scope(this);
         if (metaType == QMetaType::fromType<QQmlListReference>()) {
@@ -1875,9 +1885,16 @@ QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr
                 return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
         }
 
-        QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromData(this, metaType, ptr));
-        if (!retn->isUndefined())
-            return retn->asReturnedValue();
+        QV4::Scoped<Sequence> sequence(scope);
+        if (container) {
+            sequence = QV4::SequencePrototype::newSequence(
+                        this, metaType, ptr,
+                        container, property, Heap::ReferenceObject::Flags(flags));
+        } else {
+            sequence = QV4::SequencePrototype::fromData(this, metaType, ptr);
+        }
+        if (!sequence->isUndefined())
+            return sequence->asReturnedValue();
 
         if (QMetaType::canConvert(metaType, QMetaType::fromType<QSequentialIterable>())) {
             QSequentialIterable lst;
@@ -1885,8 +1902,15 @@ QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr
             return sequentialIterableToJS(this, lst);
         }
 
-        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(metaType))
-            return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
+        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(metaType)) {
+            if (container) {
+                return QV4::QQmlValueTypeWrapper::create(
+                            this, ptr, vtmo, metaType,
+                            container, property, Heap::ReferenceObject::Flags(flags));
+            } else {
+                return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
+            }
+        }
     }
 
     // XXX TODO: To be compatible, we still need to handle:
@@ -1903,6 +1927,12 @@ QV4::ReturnedValue ExecutionEngine::fromData(QMetaType metaType, const void *ptr
 QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
 {
     return fromData(variant.metaType(), variant.constData());
+}
+
+ReturnedValue ExecutionEngine::fromVariant(
+        const QVariant &variant, Heap::Object *parent, int property, uint flags)
+{
+    return fromData(variant.metaType(), variant.constData(), parent, property, flags);
 }
 
 QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)

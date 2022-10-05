@@ -829,6 +829,31 @@ bool Object::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine,
     return true;
 }
 
+/*!
+ * \internal
+ *
+ * This method is modeled after \l{QMetaObject::metacall}. It takes a JavaScript
+ * \a object and performs \a call on it, using \a index as identifier for the
+ * property/method/etc to be used and \a a as arguments. Like
+ * \l{QMetaObject::metacall} this method is overly generic in order to reduce the
+ * API surface. On a plain Object it does nothing and returns 0. Specific
+ * objects can override it and do some meaningful work. If the metacall succeeds
+ * they should return a non-0 value. Otherwise they should return 0.
+ *
+ * Most prominently, \l QMetaObject::ReadProperty and \l QMetaObject::WriteProperty
+ * calls can be used to manipulate properties of QObjects and Q_GADGETs wrapped
+ * by QV4::QObjectWrapper, QV4::QQmlTypeWrapper and QV4::QQmlValueTypeWrapper.
+ * They can also be used to manipulate elements in QV4::Sequence.
+ */
+int Object::virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a)
+{
+    Q_UNUSED(object);
+    Q_UNUSED(call);
+    Q_UNUSED(index);
+    Q_UNUSED(a);
+    return 0;
+}
+
 ReturnedValue Object::checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *f, const Value &var)
 {
     Scope scope(engine);

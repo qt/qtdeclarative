@@ -36,7 +36,9 @@ struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
     static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, QMetaType sequenceType, QObject *object, int propertyIndex, bool readOnly);
+    static ReturnedValue newSequence(
+            QV4::ExecutionEngine *engine, QMetaType sequenceType, const void *data,
+            Heap::Object *object, int propertyIndex, Heap::ReferenceObject::Flags flags);
     static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant &vd);
     static ReturnedValue fromData(QV4::ExecutionEngine *engine, QMetaType type, const void *data);
 
@@ -51,22 +53,26 @@ namespace Heap {
 struct Sequence : ReferenceObject
 {
     void init(const QQmlType &qmlType, const void *container);
-    void init(QObject *object, int propertyIndex, const QQmlType &qmlType, bool readOnly);
+    void init(const QQmlType &qmlType, const void *container,
+              Object *object, int propertyIndex, Heap::ReferenceObject::Flags flags);
+
+    Sequence *detached() const;
     void destroy();
 
-    void *storagePointer() { return m_container; }
+    bool hasData() const { return m_container != nullptr; }
+    void *storagePointer();
     const void *storagePointer() const { return m_container; }
+
+    bool isReadOnly() const { return m_object && !canWriteBack(); }
 
     bool setVariant(const QVariant &variant);
     QVariant toVariant() const;
 
     const QQmlTypePrivate *typePrivate() const { return m_typePrivate; }
-    bool isReadOnly() const { return m_isReadOnly; }
 
 private:
     void *m_container;
     const QQmlTypePrivate *m_typePrivate;
-    bool m_isReadOnly;
 };
 
 }
@@ -85,6 +91,7 @@ public:
     static bool virtualDeleteProperty(QV4::Managed *that, PropertyKey id);
     static bool virtualIsEqualTo(Managed *that, Managed *other);
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
+    static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
 
     qsizetype size() const;
     QVariant at(qsizetype index) const;
@@ -92,7 +99,6 @@ public:
     void append(qsizetype num, const QVariant &item);
     void replace(qsizetype index, const QVariant &item);
     void removeLast(qsizetype num);
-    QVariant toVariant() const;
 
     QV4::ReturnedValue containerGetIndexed(qsizetype index, bool *hasProperty) const;
     bool containerPutIndexed(qsizetype index, const QV4::Value &value);

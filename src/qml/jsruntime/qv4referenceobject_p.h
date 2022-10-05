@@ -23,7 +23,8 @@ namespace QV4 {
 namespace Heap {
 
 
-#define ReferenceObjectMembers(class, Member)
+#define ReferenceObjectMembers(class, Member) \
+    Member(class, Pointer, Object *, m_object)
 
 DECLARE_HEAP_OBJECT(ReferenceObject, Object) {
     DECLARE_MARKOBJECTS(ReferenceObject);
@@ -36,32 +37,23 @@ DECLARE_HEAP_OBJECT(ReferenceObject, Object) {
     };
     Q_DECLARE_FLAGS(Flags, Flag);
 
-    void init()
+    void init(Object *object, int property, Flags flags)
     {
+        setObject(object);
+        m_property = property;
+        m_flags = flags;
         Object::init();
-        m_object.init();
     }
 
-    void destroy()
-    {
-        m_object.destroy();
-        Object::destroy();
-    }
+    Flags flags() const { return Flags(m_flags); }
 
-    void setObject(QObject *object) { m_object = object; }
-    QObject *object() const { return m_object; }
+    Object *object() const { return m_object.get(); }
+    void setObject(Object *object) { m_object.set(internalClass->engine, object); }
 
-    void setProperty(int property) { m_property = property; }
     int property() const { return m_property; }
 
-    void setCanWriteBack(bool canWriteBack) { setFlag(CanWriteBack, canWriteBack); }
     bool canWriteBack() const { return hasFlag(CanWriteBack); }
-
-    void setIsVariant(bool isVariant) { setFlag(IsVariant, isVariant); }
     bool isVariant() const { return hasFlag(IsVariant); }
-
-
-    void setEnforcesLocation(bool enforces) { setFlag(EnforcesLocation, enforces); }
     bool enforcesLocation() const { return hasFlag(EnforcesLocation); }
 
     void setLocation(const Function *function, quint16 statement)
@@ -87,7 +79,7 @@ DECLARE_HEAP_OBJECT(ReferenceObject, Object) {
         return true;
     }
 
-    bool isReference() const { return m_property >= 0; }
+    bool isReference() const { return m_object; }
 
 private:
 
@@ -101,12 +93,13 @@ private:
         m_flags = set ? (m_flags | quint8(flag)) : (m_flags & ~quint8(flag));
     }
 
-    QV4QPointer<QObject> m_object;
     const Function *m_function;
     int m_property;
     quint16 m_statementIndex;
     quint8 m_flags;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(ReferenceObject::Flags)
 
 } // namespace Heap
 
@@ -116,92 +109,55 @@ struct ReferenceObject : public Object
     V4_OBJECT2(ReferenceObject, Object)
     V4_NEEDS_DESTROY
 
-private:
-    static bool doRead(QObject *o, int property, void **a)
-    {
-        return QMetaObject::metacall(o, QMetaObject::ReadProperty, property, a);
-    }
-
+public:
     template<typename HeapObject>
-    static bool doReadReference(const QMetaObject *metaObject, QObject *object, HeapObject *ref)
+    static bool readReference(HeapObject *ref)
     {
-        // A reference resource may be either a "true" reference (eg, to a QVector3D property)
-        // or a "variant" reference (eg, to a QVariant property which happens to contain
-        // a value-type).
-        QMetaProperty referenceProperty = metaObject->property(ref->property());
-        ref->setCanWriteBack(referenceProperty.isWritable());
-
-        if (referenceProperty.userType() == QMetaType::QVariant) {
-            // variant-containing-value-type reference
-            QVariant variantReferenceValue;
-
-            void *a[] = { &variantReferenceValue, nullptr };
-            if (doRead(object, ref->property(), a)
-                    && ref->setVariant(variantReferenceValue)) {
-                ref->setIsVariant(true);
-                return true;
-            }
+        if (!ref->object())
             return false;
+
+        QV4::Scope scope(ref->internalClass->engine);
+        QV4::ScopedObject object(scope, ref->object());
+
+        if (ref->isVariant()) {
+            QVariant variant;
+            void *a[] = { &variant };
+            return object->metacall(QMetaObject::ReadProperty, ref->property(), a)
+                    && ref->setVariant(variant);
         }
 
-        // value-type reference
-        void *args[] = { ref->storagePointer(), nullptr };
-        return doRead(object, ref->property(), args);
+        void *a[] = { ref->storagePointer() };
+        return object->metacall(QMetaObject::ReadProperty, ref->property(), a);
     }
 
     template<typename HeapObject>
-    static bool readObjectProperty(HeapObject *ref, QObject *object)
+    static bool writeBack(HeapObject *ref)
     {
-        return doReadReference(object->metaObject(), object, ref);
-    }
+        if (!ref->object() || !ref->canWriteBack())
+            return false;
 
-    static bool doWrite(QObject *o, int property, void **a)
-    {
-        return QMetaObject::metacall(o, QMetaObject::WriteProperty, property, a);
-    }
-
-    template<typename HeapObject>
-    static bool doWriteBack(const QMetaObject *metaObject, QObject *object, HeapObject *ref)
-    {
-        const QMetaProperty writebackProperty = metaObject->property(ref->property());
-        Q_ASSERT(writebackProperty.isWritable());
+        QV4::Scope scope(ref->internalClass->engine);
+        QV4::ScopedObject object(scope, ref->object());
 
         int flags = 0;
         int status = -1;
-        if (writebackProperty.metaType() == QMetaType::fromType<QVariant>()) {
-            QVariant variantReferenceValue = ref->toVariant();
-            void *a[] = { &variantReferenceValue, nullptr, &status, &flags };
-            return doWrite(object, ref->property(), a);
+        if (ref->isVariant()) {
+            QVariant variant = ref->toVariant();
+            void *a[] = { &variant, nullptr, &status, &flags };
+            return object->metacall(QMetaObject::WriteProperty, ref->property(), a);
         }
 
         void *a[] = { ref->storagePointer(), nullptr, &status, &flags };
-        return doWrite(object, ref->property(), a);
+        return object->metacall(QMetaObject::WriteProperty, ref->property(), a);
     }
 
     template<typename HeapObject>
-    static bool writeBackObjectProperty(HeapObject *ref, QObject *object)
+    static HeapObject *detached(HeapObject *ref)
     {
-        return doWriteBack(object->metaObject(), object, ref);
-    }
+        if (ref->object() && !ref->enforcesLocation() && !readReference(ref))
+            return ref; // It's dead. No point in detaching it anymore
 
-public:
-
-    template<typename HeapObject>
-    static bool readReference(HeapObject *self)
-    {
-        if (!self->object())
-            return false;
-
-        return readObjectProperty(self, self->object());
-    }
-
-    template<typename HeapObject>
-    static bool writeBack(HeapObject *self)
-    {
-        if (!self->object() || !self->canWriteBack())
-            return false;
-
-        return writeBackObjectProperty(self, self->object());
+        return ref->detached();
     }
 };
 

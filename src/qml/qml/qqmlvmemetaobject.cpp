@@ -19,6 +19,7 @@
 #include <private/qv4sequenceobject_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertycachemethodarguments_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 
 #include <climits> // for CHAR_BIT
 
@@ -1136,6 +1137,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
     // automatically released by the engine until no other references to it exist.
     if (QV4::VariantObject *v = const_cast<QV4::VariantObject*>(value.as<QV4::VariantObject>())) {
         v->addVmePropertyReference();
+        md->set(engine, id, value);
     } else if (QV4::QObjectWrapper *wrapper = const_cast<QV4::QObjectWrapper*>(value.as<QV4::QObjectWrapper>())) {
         // We need to track this QObject to signal its deletion
         valueObject = wrapper->object();
@@ -1145,13 +1147,33 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
             guard = new QQmlVMEVariantQObjectPtr();
             varObjectGuards.append(guard);
         }
+        md->set(engine, id, value);
+    } else if (const QV4::Sequence *sequence = value.as<QV4::Sequence>()) {
+        QV4::Heap::Sequence *p = sequence->d();
+        if (p->enforcesLocation()) {
+            // If the sequence enforces its location, we don't want it to be updated anymore after
+            // being written to a property.
+            md->set(engine, id, QV4::ReferenceObject::detached(p));
+        } else {
+            // Otherwise, make sure the reference carries some value so that we can still call
+            // toVariant() on it (see note in QV4::SequencePrototype::toVariant).
+            if (!p->hasData())
+                QV4::ReferenceObject::readReference(p);
+            md->set(engine, id, p);
+        }
+    } else if (const QV4::QQmlValueTypeWrapper *wrapper = value.as<QV4::QQmlValueTypeWrapper>()) {
+        // If the value type enforces its location, we don't want it to be updated anymore after
+        // being written to a property.
+        QV4::Heap::QQmlValueTypeWrapper *p = wrapper->d();
+        md->set(engine, id, p->enforcesLocation() ? QV4::ReferenceObject::detached(p) : p);
+    } else {
+        md->set(engine, id, value);
     }
 
     if (guard)
         guard->setGuardedValue(valueObject, this, id);
 
-    // Write the value and emit change signal as appropriate.
-    md->set(engine, id, value);
+    // Emit change signal as appropriate.
     activate(object, methodOffset() + id, nullptr);
 }
 

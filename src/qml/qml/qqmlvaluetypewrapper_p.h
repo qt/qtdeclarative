@@ -18,10 +18,15 @@
 #include <QtCore/qglobal.h>
 #include <private/qtqmlglobal_p.h>
 
-#include <private/qv4value_p.h>
-#include <private/qv4object_p.h>
 #include <private/qv4referenceobject_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include <private/qqmltype_p_p.h>
+#include <private/qqmltypewrapper_p.h>
+#include <private/qv4object_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4sequenceobject_p.h>
+#include <private/qv4value_p.h>
+#include <private/qv4referenceobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -36,13 +41,19 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
     DECLARE_MARKOBJECTS(QQmlValueTypeWrapper);
 
-    void destroy();
-
-    void setValueType(QQmlValueType *valueType)
+    void init(const void *data, QQmlValueType *valueType, const QMetaObject *metaObject,
+              Object *object, int property, Flags flags)
     {
-        Q_ASSERT(valueType != nullptr);
-        m_valueType = valueType;
+        ReferenceObject::init(object, property, flags);
+        setValueType(valueType);
+        setMetaObject(metaObject);
+        if (data)
+            setData(data);
     }
+
+    QQmlValueTypeWrapper *detached() const;
+
+    void destroy();
 
     QQmlValueType *valueType() const
     {
@@ -50,27 +61,12 @@ DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
         return m_valueType;
     }
 
-    void setGadgetPtr(void *gadgetPtr) const
-    {
-        m_gadgetPtr = gadgetPtr;
-    }
+    void setGadgetPtr(void *gadgetPtr) { m_gadgetPtr = gadgetPtr; }
+    void *gadgetPtr() const { return m_gadgetPtr; }
 
-    void *gadgetPtr() const
-    {
-        return m_gadgetPtr;
-    }
+    const QMetaObject *metaObject() const { return m_metaObject; }
 
-    void setMetaObject(const QMetaObject *metaObject)
-    {
-        m_metaObject = metaObject;
-    }
-    const QMetaObject *metaObject() const
-    {
-        return m_metaObject;
-    }
-
-    void setData(const void *data) const;
-    void setValue(const QVariant &value) const;
+    void setData(const void *data);
     QVariant toVariant() const;
 
     void *storagePointer();
@@ -80,7 +76,14 @@ DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
     bool writeBack();
 
 private:
-    mutable void *m_gadgetPtr;
+    void setMetaObject(const QMetaObject *metaObject) { m_metaObject = metaObject; }
+    void setValueType(QQmlValueType *valueType)
+    {
+        Q_ASSERT(valueType != nullptr);
+        m_valueType = valueType;
+    }
+
+    void *m_gadgetPtr;
     QQmlValueType *m_valueType;
     const QMetaObject *m_metaObject;
 };
@@ -95,9 +98,13 @@ struct Q_QML_EXPORT QQmlValueTypeWrapper : public ReferenceObject
 
 public:
 
-    static ReturnedValue create(ExecutionEngine *engine, QObject *, int, const QMetaObject *metaObject, QMetaType type);
-    static ReturnedValue create(ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *cloneFrom, QObject *object);
-    static ReturnedValue create(ExecutionEngine *engine, const void *, const QMetaObject *metaObject, QMetaType type);
+    static ReturnedValue create(
+            ExecutionEngine *engine, const void *data, const QMetaObject *metaObject,
+            QMetaType type, Heap::Object *object, int property, Heap::ReferenceObject::Flags flags);
+    static ReturnedValue create(
+            ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *cloneFrom, Heap::Object *object);
+    static ReturnedValue create(
+            ExecutionEngine *engine, const void *, const QMetaObject *metaObject, QMetaType type);
 
     QVariant toVariant() const;
     bool toGadget(void *data) const;
@@ -123,6 +130,7 @@ public:
                              QV4::Value &object, const QV4::Value &value);
 
     static void initProto(ExecutionEngine *v4);
+    static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
 };
 
 }

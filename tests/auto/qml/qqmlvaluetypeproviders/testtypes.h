@@ -48,6 +48,7 @@ struct StructuredValueType
     Q_PROPERTY(int i READ i WRITE setI)
     Q_PROPERTY(ConstructibleValueType c READ c WRITE setC)
     Q_PROPERTY(QPointF p READ p WRITE setP)
+    Q_PROPERTY(QList<QSizeF> sizes READ sizes WRITE setSizes)
 
     QML_VALUE_TYPE(structured)
     QML_STRUCTURED_VALUE
@@ -62,16 +63,20 @@ public:
     QPointF p() const { return m_p; }
     void setP(QPointF newP) { m_p = newP; }
 
+    const QList<QSizeF> &sizes() const { return m_sizes; }
+    void setSizes(const QList<QSizeF> &sizes) { m_sizes = sizes; }
+
 private:
 
     friend bool operator==(const StructuredValueType &a, const StructuredValueType &b)
     {
-        return a.m_i == b.m_i && a.m_c == b.m_c && a.m_p == b.m_p;
+        return a.m_i == b.m_i && a.m_c == b.m_c && a.m_p == b.m_p && a.m_sizes == b.m_sizes;
     }
 
     int m_i = 0;
     ConstructibleValueType m_c;
     QPointF m_p;
+    QList<QSizeF> m_sizes = { QSizeF(1, 1), QSizeF(2, 2) };
 };
 
 class MyTypeObject : public QObject

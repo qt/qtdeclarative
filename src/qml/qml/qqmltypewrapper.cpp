@@ -7,6 +7,7 @@
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlmetaobject_p.h>
 #include <private/qqmltypedata_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 
 #include <private/qjsvalue_p.h>
 #include <private/qv4functionobject_p.h>
@@ -191,7 +192,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                     // check for property.
                     bool ok;
                     const ReturnedValue result = QV4::QObjectWrapper::getQmlProperty(
-                                v4, context, qobjectSingleton, name,
+                                v4, context, w->d(), qobjectSingleton, name,
                                 QV4::QObjectWrapper::AttachMethods, &ok);
                     if (hasProperty)
                         *hasProperty = ok;
@@ -235,7 +236,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                         type.attachedPropertiesFunction(QQmlEnginePrivate::get(v4->qmlEngine())));
                 if (ao)
                     return QV4::QObjectWrapper::getQmlProperty(
-                                v4, context, ao, name, QV4::QObjectWrapper::AttachMethods,
+                                v4, context, w->d(), ao, name, QV4::QObjectWrapper::AttachMethods,
                                 hasProperty);
 
                 // Fall through to base implementation
@@ -496,6 +497,17 @@ OwnPropertyKeyIterator *QQmlTypeWrapper::virtualOwnPropertyKeys(const Object *m,
     }
 
     return Object::virtualOwnPropertyKeys(m, target);
+}
+
+int QQmlTypeWrapper::virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a)
+{
+    QQmlTypeWrapper *wrapper = object->as<QQmlTypeWrapper>();
+    Q_ASSERT(wrapper);
+
+    if (QObject *qObject = wrapper->object())
+        return QMetaObject::metacall(qObject, call, index, a);
+
+    return 0;
 }
 
 ReturnedValue QQmlTypeWrapper::lookupSingletonProperty(Lookup *l, ExecutionEngine *engine, const Value &object)

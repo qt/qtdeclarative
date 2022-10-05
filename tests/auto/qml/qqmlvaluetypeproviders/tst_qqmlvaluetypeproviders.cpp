@@ -39,6 +39,7 @@ private slots:
     void userType();
     void changedSignal();
     void structured();
+    void recursive();
 };
 
 void tst_qqmlvaluetypeproviders::initTestCase()
@@ -326,6 +327,26 @@ void tst_qqmlvaluetypeproviders::structured()
     structured.setC(12);
     structured.setP(QPointF(7, 8));
     QCOMPARE(t->structured(), structured);
+}
+
+void tst_qqmlvaluetypeproviders::recursive()
+{
+    QQmlEngine e;
+    const QUrl url = testFileUrl("recursiveWriteBack.qml");
+    QQmlComponent component(&e, url);
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    const QList<StructuredValueType> l = o->property("l").value<QList<StructuredValueType>>();
+    QCOMPARE(l.length(), 3);
+    QCOMPARE(l[2].i(), 4);
+    QCOMPARE(l[1].p().x(), 88);
+    QCOMPARE(l[0].sizes()[1].width(), 19);
+
+    MyTypeObject *m = qobject_cast<MyTypeObject *>(o.data());
+    QCOMPARE(m->structured().p().x(), 76);
 }
 
 QTEST_MAIN(tst_qqmlvaluetypeproviders)

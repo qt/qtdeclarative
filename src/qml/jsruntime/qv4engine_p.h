@@ -641,6 +641,8 @@ public:
     static QVariant toVariant(
             const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjects = true);
     QV4::ReturnedValue fromVariant(const QVariant &);
+    QV4::ReturnedValue fromVariant(
+            const QVariant &variant, Heap::Object *parent, int property, uint flags);
 
     static QVariantMap variantMapFromJS(const QV4::Object *o);
 
@@ -739,7 +741,9 @@ public:
                                      QV4::ExecutionContext *ctxt, int argc, const QV4::Value *argv);
 
 private:
-    QV4::ReturnedValue fromData(QMetaType type, const void *ptr);
+    QV4::ReturnedValue fromData(
+            QMetaType type, const void *ptr,
+            Heap::Object *parent = nullptr, int property = -1, uint flags = 0);
     static void initializeStaticMembers();
 
     static int s_maxCallDepth;

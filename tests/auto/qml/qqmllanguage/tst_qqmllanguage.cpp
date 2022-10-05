@@ -7151,20 +7151,22 @@ void tst_qqmllanguage::valueTypeList()
 
     o->setObjectName(QStringLiteral("foo"));
     {
-        // See QTBUG-99766
-        QEXPECT_FAIL("", "Write-back for value types is still incomplete", Abort);
         QCOMPARE(qvariant_cast<QPointF>(o->property("d")), QPointF(12, 4));
-        QCOMPARE(qvariant_cast<DerivedValueType>(o->property("y")).content(), 30);
+
+        // x is an actual value type list. We don't store references to y in there, but actual copies.
+        QCOMPARE(qvariant_cast<DerivedValueType>(o->property("y")).content(), 29);
+
         const QList<DerivedValueType> x = qvariant_cast<QList<DerivedValueType>>(o->property("x"));
         QCOMPARE(x.size(), 3);
-        for (const DerivedValueType &d : x)
-            QCOMPARE(d.content(), 30);
+        QCOMPARE(x[0].content(), 29);
+        QCOMPARE(x[1].content(), 30);
+        QCOMPARE(x[2].content(), 29);
 
         const QList<BaseValueType> baseList
                 = qvariant_cast<QList<BaseValueType>>(o->property("baseList"));
         QCOMPARE(baseList.size(), 3);
         for (const BaseValueType &b : baseList)
-            QCOMPARE(b.content(), 30);
+            QCOMPARE(b.content(), 29);
     }
 }
 

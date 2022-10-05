@@ -17,6 +17,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4sequenceobject_p.h>
 #include <private/qv4arraybuffer_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4jsonobject_p.h>
@@ -41,6 +42,12 @@ DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeWrapper);
 
 namespace QV4 {
 
+Heap::QQmlValueTypeWrapper *Heap::QQmlValueTypeWrapper::detached() const
+{
+    return internalClass->engine->memoryManager->allocate<QV4::QQmlValueTypeWrapper>(
+                m_gadgetPtr, m_valueType, m_metaObject, nullptr, -1, NoFlag);
+}
+
 void Heap::QQmlValueTypeWrapper::destroy()
 {
     if (m_gadgetPtr) {
@@ -50,19 +57,13 @@ void Heap::QQmlValueTypeWrapper::destroy()
     ReferenceObject::destroy();
 }
 
-void Heap::QQmlValueTypeWrapper::setData(const void *data) const
+void Heap::QQmlValueTypeWrapper::setData(const void *data)
 {
     if (auto *gadget = gadgetPtr())
         valueType()->metaType.destruct(gadget);
     if (!gadgetPtr())
         setGadgetPtr(::operator new(valueType()->metaType.sizeOf()));
     valueType()->metaType.construct(gadgetPtr(), data);
-}
-
-void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
-{
-    Q_ASSERT(valueType()->metaType.id() == value.userType());
-    setData(value.constData());
 }
 
 QVariant Heap::QQmlValueTypeWrapper::toVariant() const
@@ -73,6 +74,8 @@ QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 
 bool Heap::QQmlValueTypeWrapper::setVariant(const QVariant &variant)
 {
+    Q_ASSERT(isVariant());
+
     const QMetaType variantReferenceType = variant.metaType();
     if (variantReferenceType != valueType()->metaType) {
         // This is a stale VariantReference.  That is, the variant has been
@@ -94,7 +97,8 @@ bool Heap::QQmlValueTypeWrapper::setVariant(const QVariant &variant)
             return false;
         }
     }
-    setValue(variant);
+
+    setData(variant.constData());
     return true;
 }
 
@@ -119,19 +123,19 @@ bool Heap::QQmlValueTypeWrapper::writeBack()
 }
 
 ReturnedValue QQmlValueTypeWrapper::create(
-        ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *cloneFrom, QObject *object)
+        ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *cloneFrom, Heap::Object *object)
 {
-    Scope scope(engine);
+    QV4::Scope scope(engine);
     initProto(engine);
 
-    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>());
-    r->d()->setObject(object);
-    r->d()->setProperty(cloneFrom->property());
-    r->d()->setCanWriteBack(cloneFrom->canWriteBack());
-    r->d()->setMetaObject(cloneFrom->metaObject());
-    r->d()->setValueType(cloneFrom->valueType());
-    r->d()->setGadgetPtr(nullptr);
+    // Either we're enforcing the location, then we have to read right away.
+    // Or we don't then we lazy-load. In neither case we pass any data.
+    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>(
+                                       nullptr, cloneFrom->valueType(), cloneFrom->metaObject(),
+                                       object, cloneFrom->property(), cloneFrom->flags()));
     r->d()->setLocation(cloneFrom->function(), cloneFrom->statementIndex());
+    if (cloneFrom->enforcesLocation())
+        QV4::ReferenceObject::readReference(r->d());
     return r->asReturnedValue();
 }
 
@@ -146,24 +150,67 @@ void QQmlValueTypeWrapper::initProto(ExecutionEngine *v4)
     v4->jsObjects[QV4::ExecutionEngine::ValueTypeProto] = o->d();
 }
 
-ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *object, int property, const QMetaObject *metaObject, QMetaType type)
+int QQmlValueTypeWrapper::virtualMetacall(
+        Object *object, QMetaObject::Call call, int index, void **a)
+{
+    QQmlValueTypeWrapper *wrapper = object->as<QQmlValueTypeWrapper>();
+    Q_ASSERT(wrapper);
+
+    switch (call) {
+    case QMetaObject::InvokeMetaMethod:
+    case QMetaObject::ReadProperty:
+    case QMetaObject::BindableProperty:
+    case QMetaObject::CustomCall:
+        if (wrapper->d()->object())
+            wrapper->d()->readReference();
+        break;
+    default:
+        break;
+    }
+
+    const QMetaObject *mo = wrapper->d()->metaObject();
+    if (!mo->d.static_metacall)
+        return 0;
+
+    mo->d.static_metacall(static_cast<QObject *>(wrapper->d()->gadgetPtr()), call, index, a);
+
+    switch (call) {
+    case QMetaObject::ReadProperty:
+        break;
+    case QMetaObject::InvokeMetaMethod:
+    case QMetaObject::WriteProperty:
+    case QMetaObject::ResetProperty:
+    case QMetaObject::CustomCall:
+        if (wrapper->d()->object())
+            wrapper->d()->writeBack();
+        break;
+    default:
+        break;
+    }
+
+    return -1;
+}
+
+ReturnedValue QQmlValueTypeWrapper::create(
+        ExecutionEngine *engine, const void *data, const QMetaObject *metaObject, QMetaType type,
+        Heap::Object *object, int property, Heap::ReferenceObject::Flags flags)
 {
     Scope scope(engine);
     initProto(engine);
 
-    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>());
-    r->d()->setObject(object);
-    r->d()->setProperty(property);
-    r->d()->setMetaObject(metaObject);
     auto valueType = QQmlMetaType::valueType(type);
     if (!valueType) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
                                       .arg(QString::fromUtf8(type.name())));
     }
-    r->d()->setValueType(valueType);
-    r->d()->setGadgetPtr(nullptr);
+
+    // If data is given explicitly, we assume it has just been read from the property
+    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>(
+                                       data, valueType, metaObject, object, property, flags));
     if (CppStackFrame *frame = engine->currentStackFrame)
         r->d()->setLocation(frame->v4Function, frame->statementNumber());
+    if (!data && r->d()->enforcesLocation())
+        QV4::ReferenceObject::readReference(r->d());
     return r->asReturnedValue();
 }
 
@@ -173,17 +220,15 @@ ReturnedValue QQmlValueTypeWrapper::create(
     Scope scope(engine);
     initProto(engine);
 
-    Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>());
-    r->d()->setMetaObject(metaObject);
     auto valueType = QQmlMetaType::valueType(type);
     if (!valueType) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
                                       .arg(QString::fromUtf8(type.name())));
     }
-    r->d()->setProperty(-1);
-    r->d()->setValueType(valueType);
-    r->d()->setGadgetPtr(nullptr);
-    r->d()->setData(data);
+
+    Scoped<QQmlValueTypeWrapper> r(
+                scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>(
+                    data, valueType, metaObject, nullptr,  -1, Heap::ReferenceObject::NoFlag));
     return r->asReturnedValue();
 }
 
@@ -244,6 +289,22 @@ bool QQmlValueTypeWrapper::virtualHasProperty(const Managed *m, PropertyKey id)
     return false;
 }
 
+static Heap::ReferenceObject::Flags referenceFlags(const QMetaObject *metaObject, int index)
+{
+    return metaObject->property(index).isWritable()
+            ? (Heap::ReferenceObject::CanWriteBack | Heap::ReferenceObject::EnforcesLocation)
+            : Heap::ReferenceObject::EnforcesLocation;
+}
+
+static void doStaticReadCall(
+        const QMetaObject *metaObject, Heap::QQmlValueTypeWrapper *valueTypeWrapper,
+        int index, void **args)
+{
+    metaObject->d.static_metacall(
+                reinterpret_cast<QObject*>(
+                    valueTypeWrapper->gadgetPtr()), QMetaObject::ReadProperty, index, args);
+}
+
 static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
                                        Heap::QQmlValueTypeWrapper *valueTypeWrapper,
                                        QMetaType metaType, quint16 coreIndex, bool isFunction, bool isEnum)
@@ -279,13 +340,14 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     case metatype: { \
         cpptype v; \
         void *args[] = { &v, nullptr }; \
-        metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()), \
-                                      QMetaObject::ReadProperty, index, args); \
+        doStaticReadCall(metaObject, valueTypeWrapper, index, args); \
         return QV4::Encode(constructor(v)); \
     }
+
     const QMetaObject *metaObject = valueTypeWrapper->metaObject();
     int index = coreIndex;
-    QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::ReadProperty, &metaObject, &index);
+    QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(
+                QMetaObject::ReadProperty, &metaObject, &index);
 
     const int metaTypeId = isEnum
             ? QMetaType::Int
@@ -333,24 +395,25 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     case QMetaType::QImage: {
         QVariant v(metaType);
         void *args[] = { v.data(), nullptr };
-        metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()),
-                                      QMetaObject::ReadProperty, index, args);
-        return Encode(engine->newVariantObject(metaType, v.constData()));
+        doStaticReadCall(metaObject, valueTypeWrapper, index, args);
+        return Encode(engine->newVariantObject(metaType, v.data()));
+    }
+    case QMetaType::QVariant: {
+        QVariant v;
+        void *args[] = { &v, nullptr };
+        doStaticReadCall(metaObject, valueTypeWrapper, index, args);
+        return engine->fromVariant(
+                    v, valueTypeWrapper, index,
+                    referenceFlags(metaObject, index) | Heap::ReferenceObject::IsVariant);
     }
     default:
         break;
     }
-    QVariant v;
-    void *args[] = { nullptr, nullptr };
-    if (metaType == QMetaType::fromType<QVariant>()) {
-        args[0] = &v;
-    } else {
-        v = QVariant(metaType, static_cast<void *>(nullptr));
-        args[0] = v.data();
-    }
-    metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()), QMetaObject::ReadProperty,
-                                  index, args);
-    return engine->fromVariant(v);
+
+    QVariant v(metaType);
+    void *args[] = { v.data(), nullptr };
+    doStaticReadCall(metaObject, valueTypeWrapper, index, args);
+    return engine->fromVariant(v, valueTypeWrapper, index, referenceFlags(metaObject, index));
 #undef VALUE_TYPE_LOAD
 }
 
@@ -611,10 +674,13 @@ ReturnedValue QQmlValueTypeWrapper::lookupGetter(Lookup *lookup, ExecutionEngine
     if (valueTypeWrapper->metaObject() != reinterpret_cast<const QMetaObject *>(lookup->qgadgetLookup.metaObject - 1))
         return revertLookup();
 
-    if (valueTypeWrapper->isReference())
-        valueTypeWrapper->readReference();
+    if (valueTypeWrapper->isReference() && !valueTypeWrapper->readReference())
+        return Encode::undefined();
 
-    return getGadgetProperty(engine, valueTypeWrapper, QMetaType(lookup->qgadgetLookup.metaType), lookup->qgadgetLookup.coreIndex, lookup->qgadgetLookup.isFunction, lookup->qgadgetLookup.isEnum);
+    return getGadgetProperty(
+                engine, valueTypeWrapper, QMetaType(lookup->qgadgetLookup.metaType),
+                lookup->qgadgetLookup.coreIndex, lookup->qgadgetLookup.isFunction,
+                lookup->qgadgetLookup.isEnum);
 }
 
 bool QQmlValueTypeWrapper::lookupSetter(
@@ -665,9 +731,9 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
         return false;
 
     Scoped<QQmlValueTypeWrapper> r(scope, static_cast<QQmlValueTypeWrapper *>(m));
-    QObject *referenceObject = nullptr;
+    Heap::Object *heapObject = nullptr;
     if (r->d()->isReference()) {
-        referenceObject = r->d()->object();
+        heapObject = r->d()->object();
         if (!r->readReferenceValue() || !r->d()->canWriteBack())
             return false;
     }
@@ -677,14 +743,30 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
     if (!pd.isValid())
         return false;
 
-    if (referenceObject) {
+    if (heapObject) {
+        QObject *referenceObject = nullptr;
         QV4::ScopedFunctionObject f(scope, value);
         const int referencePropertyIndex = r->d()->property();
+        QV4::Scoped<QV4::QObjectWrapper> o(scope, heapObject);
+        if (o) {
+            referenceObject = o->object();
+        } else {
+            QV4::Scoped<QV4::QQmlTypeWrapper> t(scope, heapObject);
+            if (t)
+                referenceObject = t->object();
+        }
 
         if (f) {
             if (!f->isBinding()) {
                 // assigning a JS function to a non-var-property is not allowed.
                 QString error = QStringLiteral("Cannot assign JavaScript function to value-type property");
+                ScopedString e(scope, v4->newString(error));
+                v4->throwError(e);
+                return false;
+            }
+
+            if (!referenceObject) {
+                QString error = QStringLiteral("Cannot create binding on nested value type property");
                 ScopedString e(scope, v4->newString(error));
                 v4->throwError(e);
                 return false;
@@ -713,7 +795,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
             newBinding->setTarget(referenceObject, cacheData, &pd);
             QQmlPropertyPrivate::setBinding(newBinding);
             return true;
-        } else {
+        } else if (referenceObject) {
             if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
                 if (auto binding = QQmlPropertyPrivate::binding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd.coreIndex()))) {
                     Q_ASSERT(binding->kind() == QQmlAbstractBinding::QmlBinding);
@@ -742,7 +824,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
     void *gadget = r->d()->gadgetPtr();
     property.writeOnGadget(gadget, v);
 
-    if (referenceObject)
+    if (heapObject)
         r->d()->writeBack();
 
     return true;

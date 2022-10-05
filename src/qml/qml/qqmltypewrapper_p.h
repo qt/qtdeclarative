@@ -79,6 +79,7 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
     static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
+    static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
 
     static ReturnedValue lookupSingletonProperty(Lookup *l, ExecutionEngine *engine, const Value &base);
     static ReturnedValue lookupSingletonMethod(Lookup *l, ExecutionEngine *engine, const Value &base);
