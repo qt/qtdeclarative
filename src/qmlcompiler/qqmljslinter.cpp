@@ -652,7 +652,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
     const QString modulePrefix = u"$module$."_s;
     const QString internalPrefix = u"$internal$."_s;
 
-    for (auto &&[typeName, importedScope] : types.asKeyValueRange()) {
+    for (auto &&[typeName, importedScope] : types.types.asKeyValueRange()) {
         QString name = typeName;
         const QQmlJSScope::ConstPtr scope = importedScope.scope;
 

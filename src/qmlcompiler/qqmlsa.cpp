@@ -41,7 +41,7 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
 {
     auto typeImporter = d->manager->m_visitor->importer();
     auto module = typeImporter->importModule(moduleName.toString());
-    return module[typeName.toString()].scope;
+    return module.types[typeName.toString()].scope;
 }
 
 Element GenericPass::resolveLiteralType(const QQmlJSMetaPropertyBinding &binding)
@@ -89,7 +89,7 @@ bool PassManager::registerPropertyPass(std::shared_ptr<PropertyPass> pass,
     if (!moduleName.isEmpty() && !typeName.isEmpty()) {
         auto typeImporter = m_visitor->importer();
         auto module = typeImporter->importModule(moduleName.toString());
-        auto element = module[typeName.toString()].scope;
+        auto element = module.types[typeName.toString()].scope;
 
         if (element.isNull())
             return false;
@@ -190,7 +190,7 @@ void PassManager::analyzeBinding(const Element &element, const QQmlSA::Element &
 
 bool PassManager::hasImportedModule(QAnyStringView module) const
 {
-    return m_visitor->imports().contains(u"$module$." + module.toString());
+    return m_visitor->imports().types.contains(u"$module$." + module.toString());
 }
 
 QSet<PropertyPass *> PassManager::findPropertyUsePasses(const QQmlSA::Element &element,

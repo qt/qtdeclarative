@@ -29,7 +29,7 @@ class QQmlJSLogger;
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImporter
 {
 public:
-    using ImportedTypes = QHash<QString, QQmlJSImportedScope>;
+    using ImportedTypes = QQmlJSScope::ContextualTypes;
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                    bool useOptionalImports = false);
@@ -92,7 +92,10 @@ private:
     {
         AvailableTypes(ImportedTypes builtins)
             : cppNames(std::move(builtins))
-        {}
+        {
+            cppNames.context = QQmlJSScope::ContextualTypes::INTERNAL;
+            qmlNames.context = QQmlJSScope::ContextualTypes::QML;
+        }
 
         // C++ names used in qmltypes files for non-composite types
         ImportedTypes cppNames;

@@ -204,7 +204,17 @@ public:
         QTypeRevision revision;
     };
 
-    using ContextualTypes = QHash<QString, ImportedScope<ConstPtr>>;
+    /*! \internal
+     *  Maps type names to types and the compile context of the types. The context can be
+     *  INTERNAl (for c++ and synthetic jsrootgen types) or QML (for qml types).
+     */
+    struct ContextualTypes
+    {
+        enum CompileContext { INTERNAL, QML };
+
+        QHash<QString, ImportedScope<ConstPtr>> types;
+        CompileContext context;
+    };
 
     struct JavaScriptIdentifier
     {
@@ -599,14 +609,23 @@ public:
         quint32 sourceLocationOffset = 0; // binding's source location offset
     };
 
+    /*! \internal
+     *  Finds a type in contextualTypes with given name.
+     *  If a type is found, then its name is inserted into usedTypes (when provided).
+     *  If contextualTypes has mode INTERNAl, then namespace resolution for enums is
+     *  done (eg for Qt::Alignment).
+     *  TODO: If contextualTypes has mode QML, then inline component resolution is done
+     *  ("qmlFileName.IC" is correctly resolved from qmlFileName).
+     */
+    static ImportedScope<QQmlJSScope::ConstPtr> findType(const QString &name,
+                                                         const ContextualTypes &contextualTypes,
+                                                         QSet<QString> *usedTypes = nullptr);
+
 private:
     QQmlJSScope() = default;
     QQmlJSScope(const QQmlJSScope &) = default;
     QQmlJSScope &operator=(const QQmlJSScope &) = default;
 
-    static ImportedScope<QQmlJSScope::ConstPtr> findType(
-            const QString &name, const ContextualTypes &contextualTypes,
-            QSet<QString> *usedTypes = nullptr);
     static QTypeRevision resolveType(
             const QQmlJSScope::Ptr &self, const ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes);
@@ -651,17 +670,28 @@ private:
 
     QString m_defaultPropertyName;
     QString m_parentPropertyName;
+    /*! \internal
+     *  The attached type name.
+     *  This is an internal name, from a c++ type or a synthetic jsrootgen.
+     */
     QString m_attachedTypeName;
     QStringList m_requiredPropertyNames;
     QQmlJSScope::WeakConstPtr m_attachedType;
 
+    /*! \internal
+     *  The Value type name.
+     *  This is an internal name, from a c++ type or a synthetic jsrootgen.
+     */
     QString m_valueTypeName;
     QQmlJSScope::WeakConstPtr m_valueType;
 
-    // extension is provided as either a type (QML_{NAMESPACE_}EXTENDED) or as a
-    // namespace (QML_EXTENDED_NAMESPACE). in case of namespace, we have a more
-    // limited lookup capabilities. HasExtensionNamespace serves as a boolean to
-    // differentiate the two cases
+    /*!
+       The extension is provided as either a type (QML_{NAMESPACE_}EXTENDED) or as a
+       namespace (QML_EXTENDED_NAMESPACE).
+       The bool HasExtensionNamespace helps differentiating both cases, as namespaces
+       have a more limited lookup capaility.
+       This is an internal name, from a c++ type or a synthetic jsrootgen.
+    */
     QString m_extensionTypeName;
     QQmlJSScope::WeakConstPtr m_extensionType;
 

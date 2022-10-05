@@ -66,12 +66,15 @@ public:
 
     bool isPrefix(const QString &name) const
     {
-        return m_imports.contains(name) && !m_imports[name].scope;
+        return m_imports.types.contains(name) && !m_imports.types[name].scope;
     }
 
     enum ListMode { UseListReference, UseQObjectList };
     QQmlJSScope::ConstPtr listType(const QQmlJSScope::ConstPtr &elementType, ListMode mode) const;
-    QQmlJSScope::ConstPtr typeForName(const QString &name) const { return m_imports[name].scope; }
+    QQmlJSScope::ConstPtr typeForName(const QString &name) const
+    {
+        return m_imports.types[name].scope;
+    }
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForConst(QV4::ReturnedValue rv) const;
     QQmlJSRegisterContent typeForBinaryOperation(QSOperator::Op oper,

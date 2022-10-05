@@ -330,27 +330,43 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
         const QString &name, const QQmlJSScope::ContextualTypes &contextualTypes,
         QSet<QString> *usedTypes)
 {
-    auto type = contextualTypes.constFind(name);
-
-    if (type != contextualTypes.constEnd()) {
+    const auto useType = [&]() {
         if (usedTypes != nullptr)
             usedTypes->insert(name);
+    };
+
+    auto type = contextualTypes.types.constFind(name);
+
+    if (type != contextualTypes.types.constEnd()) {
+        useType();
         return *type;
     }
 
-    const auto colonColon = name.lastIndexOf(QStringLiteral("::"));
-    if (colonColon > 0) {
+    switch (contextualTypes.context) {
+    case ContextualTypes::INTERNAL: {
+        // look for c++ namescoped enums!
+        const auto colonColon = name.lastIndexOf(QStringLiteral("::"));
+        if (colonColon == -1)
+            break;
+
         const QString outerTypeName = name.left(colonColon);
-        const auto outerType = contextualTypes.constFind(outerTypeName);
-        if (outerType != contextualTypes.constEnd()) {
-            for (const auto &innerType : std::as_const(outerType->scope->m_childScopes)) {
-                if (innerType->m_internalName == name) {
-                    if (usedTypes != nullptr)
-                        usedTypes->insert(name);
-                    return { innerType, outerType->revision };
-                }
+        const auto outerType = contextualTypes.types.constFind(outerTypeName);
+        if (outerType == contextualTypes.types.constEnd())
+            break;
+
+        for (const auto &innerType : qAsConst(outerType->scope->m_childScopes)) {
+            if (innerType->m_internalName == name) {
+                useType();
+                return { innerType, outerType->revision };
             }
         }
+
+        break;
+    }
+    case ContextualTypes::QML: {
+        // TODO look for inline components with qmlFileName.InlineComponentName syntax
+        break;
+    }
     }
 
     return {};
@@ -946,7 +962,8 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
     typeReader(scope);
     m_importer->m_globalWarnings.append(typeReader.errors());
     scope->setInternalName(internalName());
-    QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames().value(u"int"_s).scope);
+    QQmlJSScope::resolveEnums(scope,
+                              m_importer->builtinInternalNames().types.value(u"int"_s).scope);
 
     if (m_isSingleton && !scope->isSingleton()) {
         m_importer->m_globalWarnings.append(

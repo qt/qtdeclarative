@@ -329,8 +329,8 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
             if (!bestExport.isValid() || valExport.version() > bestExport.version())
                 bestExport = valExport;
 
-            const auto it = types->qmlNames.find(qmlName);
-            if (it != types->qmlNames.end()) {
+            const auto it = types->qmlNames.types.find(qmlName);
+            if (it != types->qmlNames.types.end()) {
 
                 // The same set of exports can declare the same name multiple times for different
                 // versions. That's the common thing and we would just continue here when we hit
@@ -378,27 +378,29 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                 }
             }
 
-            types->qmlNames.insert(qmlName, { val.scope, valExport.version() });
+            types->qmlNames.types.insert(qmlName, { val.scope, valExport.version() });
             seenExports[qmlName].append(valExport);
         }
 
         const QTypeRevision bestRevision = bestExport.isValid()
                 ? bestExport.revision()
                 : QTypeRevision::zero();
-        types->cppNames.insert(cppName, { val.scope, bestRevision });
+        types->cppNames.types.insert(cppName, { val.scope, bestRevision });
 
         const QTypeRevision bestVersion = bestExport.isValid()
                 ? bestExport.version()
                 : QTypeRevision::zero();
-        types->qmlNames.insert(prefixedName(internalPrefix, cppName), { val.scope, bestVersion });
+        types->qmlNames.types.insert(prefixedName(internalPrefix, cppName),
+                                     { val.scope, bestVersion });
     };
 
     if (!importDescription.prefix().isEmpty())
-        types->qmlNames.insert(importDescription.prefix(), {}); // Empty type means "this is the prefix"
+        types->qmlNames.types.insert(importDescription.prefix(),
+                                     {}); // Empty type means "this is the prefix"
 
     // Add a marker to show that this module has been imported
     if (!importDescription.isDependency())
-        types->qmlNames.insert(prefixedName(modulePrefix, importDescription.name()), {});
+        types->qmlNames.types.insert(prefixedName(modulePrefix, importDescription.name()), {});
 
     if (!importDescription.isDependency()) {
         if (import.isStaticModule)
@@ -424,9 +426,9 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
 
         if (val.exports.isEmpty()) {
             // Insert an unresolvable dummy name
-            types->qmlNames.insert(
-                        prefixedName(internalPrefix, cppName), { val.scope, QTypeRevision() });
-            types->cppNames.insert(cppName, { val.scope, QTypeRevision() });
+            types->qmlNames.types.insert(prefixedName(internalPrefix, cppName),
+                                         { val.scope, QTypeRevision() });
+            types->cppNames.types.insert(cppName, { val.scope, QTypeRevision() });
         } else {
             insertExports(val, cppName);
         }
@@ -454,14 +456,14 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     */
 
     QQmlJSImporter::AvailableTypes tempTypes(builtinImportHelper().cppNames);
-    tempTypes.cppNames.insert(types->cppNames);
+    tempTypes.cppNames.types.insert(types->cppNames.types);
 
     // At present, there are corner cases that couldn't be resolved in a single
     // pass of resolveTypes() (e.g. QQmlEasingEnums::Type). However, such cases
     // only happen when enumerations are involved, thus the strategy is to
     // resolve enumerations (which can potentially create new child scopes)
     // before resolving the type fully
-    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.value(u"int"_s).scope;
+    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.types.value(u"int"_s).scope;
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         if (!it->scope.factory())
             QQmlJSScope::resolveEnums(it->scope, intType);
@@ -501,7 +503,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
 
 QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 {
-    if (!m_builtins.qmlNames.isEmpty() || !m_builtins.cppNames.isEmpty())
+    if (!m_builtins.qmlNames.types.isEmpty() || !m_builtins.cppNames.types.isEmpty())
         return m_builtins;
 
     Import result;
@@ -601,8 +603,11 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(const QString &module
 
     // If we imported a system module add all builtin QML types
     if (result.hasSystemModule) {
-        for (const QString &name : builtins.qmlNames.keys())
-            result.qmlNames.insert(prefixedName(prefix, name), builtins.qmlNames[name]);
+        for (auto nameIt = builtins.qmlNames.types.keyBegin(),
+                  end = builtins.qmlNames.types.keyEnd();
+             nameIt != end; ++nameIt)
+            result.qmlNames.types.insert(prefixedName(prefix, *nameIt),
+                                         builtins.qmlNames.types[*nameIt]);
     }
 
     if (staticModuleList)
@@ -634,13 +639,13 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 
         const auto &cacheEntry = m_cachedImportTypes[cacheKey];
 
-        types->cppNames.insert(cacheEntry->cppNames);
+        types->cppNames.types.insert(cacheEntry->cppNames.types);
         types->staticModules << cacheEntry->staticModules;
         types->hasSystemModule |= cacheEntry->hasSystemModule;
 
         // No need to import qml names for dependencies
         if (!isDependency)
-            types->qmlNames.insert(cacheEntry->qmlNames);
+            types->qmlNames.types.insert(cacheEntry->qmlNames.types);
 
         return true;
     };
@@ -794,7 +799,7 @@ void QQmlJSImporter::clearCache()
 
 QQmlJSScope::ConstPtr QQmlJSImporter::jsGlobalObject() const
 {
-    return m_builtins.cppNames[u"GlobalObject"_s].scope;
+    return m_builtins.cppNames.types[u"GlobalObject"_s].scope;
 }
 
 void QQmlJSImporter::setQualifiedNamesOn(const Import &import)
