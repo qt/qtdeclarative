@@ -297,7 +297,7 @@ void QmltcCompiler::compileType(
     }
 
     // compilation stub:
-    current.externalCtor.body << u"Q_UNUSED(engine);"_s;
+    current.externalCtor.body << u"Q_UNUSED(engine)"_s;
     if (documentRoot || inlineComponent) {
         current.externalCtor.body << u"// document root:"_s;
         // if it's document root, we want to create our QQmltcObjectCreationBase
