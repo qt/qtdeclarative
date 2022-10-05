@@ -154,7 +154,6 @@ public:
     }
 
     void setAlignment(QQuickItem *quickItem, Qt::Alignment alignment);
-    Qt::Alignment alignment(QQuickItem *quickItem) const;
 
 };
 
