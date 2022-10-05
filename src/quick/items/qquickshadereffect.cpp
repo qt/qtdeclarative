@@ -1316,7 +1316,7 @@ void QQuickShaderEffectPrivate::updateShaderVars(Shader shaderType)
 
     const bool texturesSeparate = mgr->hasSeparateSamplerAndTextureObjects();
 
-    const int varCount = m_shaders[shaderType].shaderInfo.variables.count();
+    const int varCount = m_shaders[shaderType].shaderInfo.variables.size();
     m_shaders[shaderType].varData.resize(varCount);
 
     // Recreate signal mappers when the shader has changed.
@@ -1414,7 +1414,7 @@ std::optional<int> QQuickShaderEffectPrivate::findMappedShaderVariableId(const Q
 {
     for (int shaderType = 0; shaderType < NShader; ++shaderType) {
         const auto &vars = m_shaders[shaderType].shaderInfo.variables;
-        for (int idx = 0; idx < vars.count(); ++idx) {
+        for (int idx = 0; idx < vars.size(); ++idx) {
             if (vars[idx].name == name)
                 return indexToMappedId(shaderType, idx);
         }

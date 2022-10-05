@@ -324,7 +324,7 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
 void QQuickPinchArea::clearPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
-    qCDebug(lcPA, "clear: %" PRIdQSIZETYPE " touchpoints", d->touchPoints.count());
+    qCDebug(lcPA, "clear: %" PRIdQSIZETYPE " touchpoints", d->touchPoints.size());
     d->touchPoints.clear();
     if (d->inPinch) {
         d->inPinch = false;
@@ -360,7 +360,7 @@ void QQuickPinchArea::clearPinch(QTouchEvent *event)
 void QQuickPinchArea::cancelPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
-    qCDebug(lcPA, "cancel: %" PRIdQSIZETYPE " touchpoints", d->touchPoints.count());
+    qCDebug(lcPA, "cancel: %" PRIdQSIZETYPE " touchpoints", d->touchPoints.size());
     d->touchPoints.clear();
     if (d->inPinch) {
         d->inPinch = false;
@@ -403,7 +403,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
 {
     Q_D(QQuickPinchArea);
 
-    if (d->touchPoints.count() < 2) {
+    if (d->touchPoints.size() < 2) {
         // A pinch gesture is not occurring, so stealing the grab is permitted.
         setKeepTouchGrab(false);
         setKeepMouseGrab(false);
@@ -417,7 +417,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
             event->setExclusiveGrabber(d->touchPoints.first(), nullptr);
     }
 
-    if (d->touchPoints.count() == 0) {
+    if (d->touchPoints.size() == 0) {
         if (d->inPinch) {
             d->inPinch = false;
             QPointF pinchCenter = mapFromScene(d->sceneLastCenter);
@@ -444,7 +444,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
     }
 
     QEventPoint touchPoint1 = d->touchPoints.at(0);
-    QEventPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
+    QEventPoint touchPoint2 = d->touchPoints.at(d->touchPoints.size() >= 2 ? 1 : 0);
 
     if (touchPoint1.state() == QEventPoint::State::Pressed)
         d->sceneStartPoint1 = touchPoint1.scenePosition();
@@ -458,7 +458,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
     // Pinch is not started unless there are exactly two touch points
     // AND one or more of the points has just now been pressed (wasn't pressed already)
     // AND both points are inside the bounds.
-    if (d->touchPoints.count() == 2
+    if (d->touchPoints.size() == 2
             && (touchPoint1.state() == QEventPoint::State::Pressed || touchPoint2.state() == QEventPoint::State::Pressed) &&
             bounds.contains(touchPoint1.position()) && bounds.contains(touchPoint2.position())) {
         d->id1 = touchPoint1.id();
@@ -480,7 +480,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
         qreal dist = qSqrt(dx*dx + dy*dy);
         QPointF sceneCenter = (p1 + p2)/2;
         qreal angle = QLineF(p1, p2).angle();
-        if (d->touchPoints.count() == 1) {
+        if (d->touchPoints.size() == 1) {
             // If we only have one point then just move the center
             if (d->id1 == touchPoint1.id())
                 sceneCenter = d->sceneLastCenter + touchPoint1.scenePosition() - d->lastPoint1;
@@ -494,7 +494,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
         qCDebug(lcPA, "pinch \u2316 %.1lf,%.1lf \u21e4%.1lf\u21e5 \u2220 %.1lf",
                 sceneCenter.x(), sceneCenter.y(), dist, angle);
         if (!d->inPinch || d->initPinch) {
-            if (d->touchPoints.count() >= 2) {
+            if (d->touchPoints.size() >= 2) {
                 if (d->initPinch) {
                     if (!d->inPinch)
                         d->pinchStartDist = dist;
@@ -525,7 +525,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
                     pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
                     pe.setPoint1(mapFromScene(d->lastPoint1));
                     pe.setPoint2(mapFromScene(d->lastPoint2));
-                    pe.setPointCount(d->touchPoints.count());
+                    pe.setPointCount(d->touchPoints.size());
                     emit pinchStarted(&pe);
                     if (pe.accepted()) {
                         d->inPinch = true;
@@ -568,7 +568,7 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
             pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
             pe.setPoint1(touchPoint1.position());
             pe.setPoint2(touchPoint2.position());
-            pe.setPointCount(d->touchPoints.count());
+            pe.setPointCount(d->touchPoints.size());
             d->pinchLastScale = scale;
             d->sceneLastCenter = sceneCenter;
             d->pinchLastAngle = angle;

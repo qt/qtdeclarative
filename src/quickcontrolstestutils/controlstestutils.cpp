@@ -137,7 +137,7 @@ bool QQuickControlsTestUtils::clickButton(QQuickAbstractButton *button)
 
     const QPoint buttonCenter = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
     QTest::mouseClick(button->window(), Qt::LeftButton, Qt::NoModifier, buttonCenter);
-    if (spy.count() != 1) {
+    if (spy.size() != 1) {
         qWarning() << "clicked signal of button" << button << "was not emitted after clicking";
         return false;
     }
@@ -158,7 +158,7 @@ bool QQuickControlsTestUtils::doubleClickButton(QQuickAbstractButton *button)
 
     const QPoint buttonCenter = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
     QTest::mouseDClick(button->window(), Qt::LeftButton, Qt::NoModifier, buttonCenter);
-    if (spy.count() != 1) {
+    if (spy.size() != 1) {
         qWarning() << "doubleClicked signal of button" << button << "was not emitted after double-clicking";
         return false;
     }

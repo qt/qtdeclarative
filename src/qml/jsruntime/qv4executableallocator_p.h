@@ -79,8 +79,8 @@ public:
     };
 
     // for debugging / unit-testing
-    int freeAllocationCount() const { return freeAllocations.count(); }
-    int chunkCount() const { return chunks.count(); }
+    int freeAllocationCount() const { return freeAllocations.size(); }
+    int chunkCount() const { return chunks.size(); }
 
     struct ChunkOfPages
     {

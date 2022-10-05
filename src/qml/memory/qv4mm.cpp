@@ -940,7 +940,7 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
     }
 
     // Now it is time to free QV4::QObjectWrapper Value, we must check the Value's tag to make sure its object has been destroyed
-    const int pendingCount = m_pendingFreedObjectWrapperValue.count();
+    const int pendingCount = m_pendingFreedObjectWrapperValue.size();
     if (pendingCount) {
         QVector<Value *> remainingWeakQObjectWrappers;
         remainingWeakQObjectWrappers.reserve(pendingCount);

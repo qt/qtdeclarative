@@ -74,7 +74,7 @@ public:
         Node *n = (Node*)parent.internalPointer();
         if (!n)
             n = tree;
-        return n->children.count();
+        return n->children.size();
     }
 
     int columnCount(const QModelIndex& parent = QModelIndex()) const override {
@@ -97,7 +97,7 @@ public:
         Node *pn = (Node*)parent.internalPointer();
         if (!pn)
             pn = tree;
-        if (row >= pn->children.count())
+        if (row >= pn->children.size())
             return QModelIndex();
 
         Node *n = pn->children.at(row);
@@ -130,7 +130,7 @@ public:
         if (pn != tree)
             pn = pn->parent;
         if (idx.row() < 0 || idx.column() < 0 || idx.column() >= cols
-            || idx.row() >= pn->children.count()) {
+            || idx.row() >= pn->children.size()) {
             wrongIndex = true;
             qWarning("Invalid modelIndex [%d,%d,%p]", idx.row(), idx.column(),
                      idx.internalPointer());
@@ -268,15 +268,15 @@ public:
         void addRows(int row, int count)
         {
             if (count > 0) {
-                children.reserve(children.count() + count);
+                children.reserve(children.size() + count);
                 children.insert(row, count, (Node *)0);
             }
         }
 
         void removeRows(int row, int count, bool keepAlive = false)
         {
-            int newCount = qMax(children.count() - count, 0);
-            int effectiveCountDiff = children.count() - newCount;
+            int newCount = qMax(children.size() - count, 0);
+            int effectiveCountDiff = children.size() - newCount;
             if (effectiveCountDiff > 0) {
                 if (!keepAlive)
                     for (int i = 0; i < effectiveCountDiff; i++)

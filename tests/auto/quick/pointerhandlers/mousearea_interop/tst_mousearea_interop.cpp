@@ -178,11 +178,11 @@ void tst_MouseAreaInterop::hoverHandlerDoesntHoverOnPress() // QTBUG-72843
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p);
     QTRY_COMPARE(ma->pressed(), true);
     QCOMPARE(handler->isHovered(), true);
-    QCOMPARE(hoveredChangedSpy.count(), 0);
+    QCOMPARE(hoveredChangedSpy.size(), 0);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p);
     QTRY_COMPARE(ma->pressed(), false);
     QCOMPARE(handler->isHovered(), true);
-    QCOMPARE(hoveredChangedSpy.count(), 0);
+    QCOMPARE(hoveredChangedSpy.size(), 0);
 }
 
 void tst_MouseAreaInterop::doubleClickInMouseAreaWithDragHandlerInGrandparent()
@@ -199,8 +199,8 @@ void tst_MouseAreaInterop::doubleClickInMouseAreaWithDragHandlerInGrandparent()
     QPoint p = ma->mapToScene(ma->boundingRect().center()).toPoint();
 
     QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, p);
-    QCOMPARE(dClickSpy.count(), 1);
-    QCOMPARE(dragActiveSpy.count(), 0);
+    QCOMPARE(dClickSpy.size(), 1);
+    QCOMPARE(dragActiveSpy.size(), 0);
 }
 
 QTEST_MAIN(tst_MouseAreaInterop)

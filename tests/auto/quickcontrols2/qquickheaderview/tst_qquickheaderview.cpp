@@ -329,16 +329,16 @@ void tst_QQuickHeaderView::testModel()
     QVERIFY(modelChangedSpy.isValid());
 
     hhv->setModel(QVariant::fromValue(thm));
-    QCOMPARE(modelChangedSpy.count(), 0);
+    QCOMPARE(modelChangedSpy.size(), 0);
 
     hhv->setModel(QVariant::fromValue(pm));
-    QCOMPARE(modelChangedSpy.count(), 1);
+    QCOMPARE(modelChangedSpy.size(), 1);
 
     TestTableModel ttm2;
     ttm2.setRowCount(100);
     ttm2.setColumnCount(30);
     hhv->setModel(QVariant::fromValue(&ttm2));
-    QCOMPARE(modelChangedSpy.count(), 2);
+    QCOMPARE(modelChangedSpy.size(), 2);
 }
 
 void tst_QQuickHeaderView::listModel()

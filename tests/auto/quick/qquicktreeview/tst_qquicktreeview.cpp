@@ -136,7 +136,7 @@ void tst_qquicktreeview::expandAndCollapseRoot()
     // Expand the root
     treeView->expand(0);
 
-    QCOMPARE(expandedSpy.count(), 1);
+    QCOMPARE(expandedSpy.size(), 1);
     auto signalArgs = expandedSpy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == 0);
     QVERIFY(signalArgs.at(1).toInt() == 1);
@@ -186,7 +186,7 @@ void tst_qquicktreeview::expandAndCollapseChildren()
 
         treeView->expand(nodeToExpand);
 
-        QCOMPARE(expandedSpy.count(), 1);
+        QCOMPARE(expandedSpy.size(), 1);
         auto signalArgs = expandedSpy.takeFirst();
         QVERIFY(signalArgs.at(0).toInt() == nodeToExpand);
         QVERIFY(signalArgs.at(1).toInt() == 1);
@@ -310,7 +310,7 @@ void tst_qquicktreeview::emptyModel()
     treeView->setModel(QVariant());
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(treeViewPrivate->loadedItems.count(), 0);
+    QCOMPARE(treeViewPrivate->loadedItems.size(), 0);
     QCOMPARE(treeView->rows(), 0);
     QCOMPARE(treeView->columns(), 0);
 
@@ -431,10 +431,10 @@ void tst_qquicktreeview::expandRecursivelyRoot()
     treeView->expandRecursively(rowToExpand, depth);
 
     if (depth == 0) {
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(spy.size(), 0);
     } else {
 
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
         const auto signalArgs = spy.takeFirst();
         QVERIFY(signalArgs.at(0).toInt() == rowToExpand);
         QVERIFY(signalArgs.at(1).toInt() == depth);
@@ -487,7 +487,7 @@ void tst_qquicktreeview::expandRecursivelyChild()
 
     treeView->expand(0);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == 0);
     QVERIFY(signalArgs.at(1).toInt() == 1);
@@ -495,9 +495,9 @@ void tst_qquicktreeview::expandRecursivelyChild()
     treeView->expandRecursively(rowToExpand, depth);
 
     if (depth == 0) {
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(spy.size(), 0);
     } else {
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
         signalArgs = spy.takeFirst();
         QVERIFY(signalArgs.at(0).toInt() == rowToExpand);
         QVERIFY(signalArgs.at(1).toInt() == depth);
@@ -538,7 +538,7 @@ void tst_qquicktreeview::expandRecursivelyWholeTree()
     QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
     treeView->expandRecursively(-1, -1);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == -1);
     QVERIFY(signalArgs.at(1).toInt() == -1);
@@ -570,7 +570,7 @@ void tst_qquicktreeview::collapseRecursivelyRoot()
     // Collapse the whole tree again. This time, only the root should end up visible
     treeView->collapseRecursively();
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     const auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == -1);
     QVERIFY(signalArgs.at(1).toBool() == true);
@@ -617,7 +617,7 @@ void tst_qquicktreeview::collapseRecursivelyChild()
     QCOMPARE(model->data(treeView->modelIndex(0, rowToCollapse), Qt::DisplayRole), QStringLiteral("3, 0"));
     treeView->collapseRecursively(rowToCollapse);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     const auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == rowToCollapse);
     QVERIFY(signalArgs.at(1).toBool() == true);
@@ -653,7 +653,7 @@ void tst_qquicktreeview::collapseRecursivelyWholeTree()
     treeView->expandRecursively();
     treeView->collapseRecursively();
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == -1);
     QVERIFY(signalArgs.at(1).toBool() == true);
@@ -689,7 +689,7 @@ void tst_qquicktreeview::expandToIndex()
     QVERIFY(treeView->isExpanded(treeView->rowAtIndex(child1)));
     QVERIFY(treeView->isExpanded(treeView->rowAtIndex(child2)));
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == 0);
     QVERIFY(signalArgs.at(1).toInt() == 3);

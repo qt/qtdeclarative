@@ -1328,7 +1328,7 @@ void tst_qquickstates::illegalObjectCreation()
 
     QQmlComponent component(&engine, testFileUrl("illegalObj.qml"));
     QList<QQmlError> errors = component.errors();
-    QCOMPARE(errors.count(), 1);
+    QCOMPARE(errors.size(), 1);
     const QQmlError &error = errors.at(0);
     QCOMPARE(error.line(), 9);
     QCOMPARE(error.column(), 23);
@@ -1884,10 +1884,10 @@ void tst_qquickstates::parentChangeInvolvingBindings()
    QCOMPARE(root->property("childRotation").toInt(), 100);
 
    // First change to 40 via reverse(), then to 20 via binding.
-   QCOMPARE(xSpy.count(), 2);
+   QCOMPARE(xSpy.size(), 2);
 
    // First change to 400 via reverse(), then to 200 via binding.
-   QCOMPARE(widthSpy.count(), 2);
+   QCOMPARE(widthSpy.size(), 2);
 
    QCOMPARE(root->property("childX").toInt(), 20);
    QCOMPARE(root->property("childWidth").toInt(), 200);

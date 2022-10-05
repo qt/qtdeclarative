@@ -1148,7 +1148,7 @@ void FormatPartialStatus::recalculateWithIndent(int indent)
     if (indent >= 0) {
         indentOffset = 0;
         int i = 0;
-        while (i < line.length() && line.at(i).isSpace())
+        while (i < line.size() && line.at(i).isSpace())
             ++i;
         indentOffset = indent - column(i);
     }

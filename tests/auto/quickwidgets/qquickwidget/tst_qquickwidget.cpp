@@ -340,7 +340,7 @@ void tst_qquickwidget::errors()
     QQmlTestMessageHandler messageHandler;
     view->setSource(testFileUrl("error1.qml"));
     QCOMPARE(view->status(), QQuickWidget::Error);
-    QCOMPARE(view->errors().count(), 1);
+    QCOMPARE(view->errors().size(), 1);
 }
 
 void tst_qquickwidget::engine()
@@ -613,9 +613,9 @@ void tst_qquickwidget::synthMouseFromTouch()
     QTest::touchEvent(&window, device).move(0, p2, &window);
     QTest::touchEvent(&window, device).release(0, p2, &window);
 
-    QCOMPARE(item->m_touchEvents.count(), synthMouse ? 0 : (acceptTouch ? 3 : 1));
-    QCOMPARE(item->m_mouseEvents.count(), synthMouse ? 3 : 0);
-    QCOMPARE(childView->m_mouseEvents.count(), 0);
+    QCOMPARE(item->m_touchEvents.size(), synthMouse ? 0 : (acceptTouch ? 3 : 1));
+    QCOMPARE(item->m_mouseEvents.size(), synthMouse ? 3 : 0);
+    QCOMPARE(childView->m_mouseEvents.size(), 0);
     for (const auto &ev : item->m_mouseEvents)
         QCOMPARE(ev, Qt::MouseEventSynthesizedByQt);
 }

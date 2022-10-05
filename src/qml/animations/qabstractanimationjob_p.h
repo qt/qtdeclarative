@@ -193,7 +193,7 @@ public:
     void updateAnimationsTime(qint64 timeStep) override;
 
     //useful for profiling/debugging
-    int runningAnimationCount() override { return animations.count(); }
+    int runningAnimationCount() override { return animations.size(); }
 
     bool hasStartAnimationPending() const { return startAnimationPending; }
 

@@ -407,7 +407,7 @@ public:
             for (void *p : pList)
                 m_pList.append(p);
         } else if (options == ListOptions::Reverse) {
-            for (qsizetype i = pList.length(); i-- != 0;)
+            for (qsizetype i = pList.size(); i-- != 0;)
                 // probably writing in reverse and reading sequentially would be better
                 m_pList.append(pList.at(i));
         } else {
@@ -1204,21 +1204,21 @@ List List::fromQList(
         std::function<DomItem(DomItem &, const PathEls::PathComponent &, T &)> elWrapper,
         ListOptions options)
 {
-    index_type len = list.length();
+    index_type len = list.size();
     if (options == ListOptions::Reverse) {
         return List(
                 pathFromOwner,
                 [list, elWrapper](DomItem &self, index_type i) mutable {
-                    if (i < 0 || i >= list.length())
+                    if (i < 0 || i >= list.size())
                         return DomItem();
-                    return elWrapper(self, PathEls::Index(i), list[list.length() - i - 1]);
+                    return elWrapper(self, PathEls::Index(i), list[list.size() - i - 1]);
                 },
                 [len](DomItem &) { return len; }, nullptr, QLatin1String(typeid(T).name()));
     } else {
         return List(
                 pathFromOwner,
                 [list, elWrapper](DomItem &self, index_type i) mutable {
-                    if (i < 0 || i >= list.length())
+                    if (i < 0 || i >= list.size())
                         return DomItem();
                     return elWrapper(self, PathEls::Index(i), list[i]);
                 },
@@ -1236,21 +1236,21 @@ List List::fromQListRef(
         return List(
                 pathFromOwner,
                 [&list, elWrapper](DomItem &self, index_type i) {
-                    if (i < 0 || i >= list.length())
+                    if (i < 0 || i >= list.size())
                         return DomItem();
-                    return elWrapper(self, PathEls::Index(i), list[list.length() - i - 1]);
+                    return elWrapper(self, PathEls::Index(i), list[list.size() - i - 1]);
                 },
-                [&list](DomItem &) { return list.length(); }, nullptr,
+                [&list](DomItem &) { return list.size(); }, nullptr,
                 QLatin1String(typeid(T).name()));
     } else {
         return List(
                 pathFromOwner,
                 [&list, elWrapper](DomItem &self, index_type i) {
-                    if (i < 0 || i >= list.length())
+                    if (i < 0 || i >= list.size())
                         return DomItem();
                     return elWrapper(self, PathEls::Index(i), list[i]);
                 },
-                [&list](DomItem &) { return list.length(); }, nullptr,
+                [&list](DomItem &) { return list.size(); }, nullptr,
                 QLatin1String(typeid(T).name()));
     }
 }
@@ -1635,7 +1635,7 @@ template<typename T>
 Path appendUpdatableElementInQList(Path listPathFromOwner, QList<T> &list, const T &value,
                                    T **vPtr = nullptr)
 {
-    int idx = list.length();
+    int idx = list.size();
     list.append(value);
     Path newPath = listPathFromOwner.index(idx);
     T &targetV = list[idx];
@@ -1946,7 +1946,7 @@ bool ListPT<T>::iterateDirectSubpaths(DomItem &self, DirectVisitor v)
 template<typename T>
 DomItem ListPT<T>::index(DomItem &self, index_type index) const
 {
-    if (index >= 0 && index < m_pList.length())
+    if (index >= 0 && index < m_pList.size())
         return self.wrap(PathEls::Index(index), *reinterpret_cast<T *>(m_pList.value(index)));
     return DomItem();
 }

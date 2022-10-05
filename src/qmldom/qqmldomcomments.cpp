@@ -68,12 +68,12 @@ CommentInfo gets such a raw comment string and makes the various pieces availabl
 CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
 {
     commentBegin = 0;
-    while (commentBegin < quint32(rawComment.length()) && rawComment.at(commentBegin).isSpace()) {
+    while (commentBegin < quint32(rawComment.size()) && rawComment.at(commentBegin).isSpace()) {
         if (rawComment.at(commentBegin) == QLatin1Char('\n'))
             hasStartNewline = true;
         ++commentBegin;
     }
-    if (commentBegin < quint32(rawComment.length())) {
+    if (commentBegin < quint32(rawComment.size())) {
         QString expectedEnd;
         switch (rawComment.at(commentBegin).unicode()) {
         case '/':
@@ -98,7 +98,7 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
             break;
         }
         commentEnd = commentBegin + commentStartStr.size();
-        quint32 rawEnd = quint32(rawComment.length());
+        quint32 rawEnd = quint32(rawComment.size());
         while (commentEnd < rawEnd && rawComment.at(commentEnd).isSpace())
             ++commentEnd;
         commentContentEnd = commentContentBegin = commentEnd;
@@ -106,9 +106,9 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
         while (commentEnd < rawEnd) {
             QChar c = rawComment.at(commentEnd);
             if (c == e1) {
-                if (expectedEnd.length() > 1) {
+                if (expectedEnd.size() > 1) {
                     if (++commentEnd < rawEnd && rawComment.at(commentEnd) == expectedEnd.at(1)) {
-                        Q_ASSERT(expectedEnd.length() == 2);
+                        Q_ASSERT(expectedEnd.size() == 2);
                         commentEndStr = rawComment.mid(++commentEnd - 2, 2);
                         break;
                     } else {

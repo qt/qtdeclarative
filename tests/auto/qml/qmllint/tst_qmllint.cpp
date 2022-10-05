@@ -307,7 +307,7 @@ void TestQmllint::qmltypes_data()
     QDirIterator it(importsPath, { "*.qmltypes" },
                     QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext())
-        QTest::addRow("%s", qPrintable(it.next().mid(importsPath.length()))) << it.filePath();
+        QTest::addRow("%s", qPrintable(it.next().mid(importsPath.size()))) << it.filePath();
 }
 
 void TestQmllint::qmltypes()
@@ -374,9 +374,9 @@ void TestQmllint::verifyJsRoot()
     QStringList currentLines = currentJsRootContent.split(QLatin1Char('\n'));
     QStringList generatedLines = generatedJsRootContent.split(QLatin1Char('\n'));
 
-    QCOMPARE(currentLines.count(), generatedLines.count());
+    QCOMPARE(currentLines.size(), generatedLines.size());
 
-    for (qsizetype i = 0; i < currentLines.count(); i++) {
+    for (qsizetype i = 0; i < currentLines.size(); i++) {
         QCOMPARE(currentLines[i], generatedLines[i]);
     }
 }

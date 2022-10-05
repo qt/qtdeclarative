@@ -46,7 +46,7 @@ void tst_QQuickColorGroup::checkColorProperty()
              qvariant_cast<QColor>(property.read(&defaultGroup)));
 
     constexpr int expectedNotificationsCount = 2; // One from write + one from reset
-    QCOMPARE(sp.count(), expectedNotificationsCount);
+    QCOMPARE(sp.size(), expectedNotificationsCount);
 }
 
 void tst_QQuickColorGroup::checkColorProperty_data()
@@ -73,7 +73,7 @@ void tst_QQuickColorGroup::colorGroupChangedWhenColorChanged()
 
     group.setMid(Qt::blue);
 
-    QCOMPARE(sp.count(), 1);
+    QCOMPARE(sp.size(), 1);
 }
 
 QTEST_MAIN(tst_QQuickColorGroup)

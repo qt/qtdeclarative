@@ -413,8 +413,8 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 {
     QString scheme = url.scheme();
 
-    if ((scheme.length() == 4 && 0 == scheme.compare(QLatin1String(file_string), Qt::CaseInsensitive)) ||
-        (scheme.length() == 3 && 0 == scheme.compare(QLatin1String(qrc_string), Qt::CaseInsensitive))) {
+    if ((scheme.size() == 4 && 0 == scheme.compare(QLatin1String(file_string), Qt::CaseInsensitive)) ||
+        (scheme.size() == 3 && 0 == scheme.compare(QLatin1String(qrc_string), Qt::CaseInsensitive))) {
         return true;
 
 #if defined(Q_OS_ANDROID)
@@ -438,20 +438,20 @@ Synchronous urls have a qrc:/ or file:// scheme.
 */
 bool QQmlFile::isSynchronous(const QString &url)
 {
-    if (url.length() < 5 /* qrc:/ */)
+    if (url.size() < 5 /* qrc:/ */)
         return false;
 
     QChar f = url[0];
 
     if (f == QLatin1Char('f') || f == QLatin1Char('F')) {
 
-        return url.length() >= 7 /* file:// */ &&
+        return url.size() >= 7 /* file:// */ &&
                url.startsWith(QLatin1String(file_string), Qt::CaseInsensitive) &&
                url[4] == QLatin1Char(':') && url[5] == QLatin1Char('/') && url[6] == QLatin1Char('/');
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 
-        return url.length() >= 5 /* qrc:/ */ &&
+        return url.size() >= 5 /* qrc:/ */ &&
                url.startsWith(QLatin1String(qrc_string), Qt::CaseInsensitive) &&
                url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
@@ -497,10 +497,10 @@ bool QQmlFile::isLocalFile(const QUrl &url)
     // file: URLs with two slashes following the scheme can be interpreted as local files
     // where the slashes are part of the path. Therefore, disregard the authority.
     // See QUrl::toLocalFile().
-    if (scheme.length() == 4 && scheme.startsWith(QLatin1String(file_string), Qt::CaseInsensitive))
+    if (scheme.size() == 4 && scheme.startsWith(QLatin1String(file_string), Qt::CaseInsensitive))
         return true;
 
-    if (scheme.length() == 3 && scheme.startsWith(QLatin1String(qrc_string), Qt::CaseInsensitive))
+    if (scheme.size() == 3 && scheme.startsWith(QLatin1String(qrc_string), Qt::CaseInsensitive))
         return url.authority().isEmpty();
 
 #if defined(Q_OS_ANDROID)
@@ -517,7 +517,7 @@ bool QQmlFile::isLocalFile(const QUrl &url)
 
 static bool hasScheme(const QString &url, const char *scheme, qsizetype schemeLength)
 {
-    const qsizetype urlLength = url.length();
+    const qsizetype urlLength = url.size();
 
     if (urlLength < schemeLength + 1)
         return false;
@@ -533,7 +533,7 @@ static bool hasScheme(const QString &url, const char *scheme, qsizetype schemeLe
 
 static qsizetype authorityOffset(const QString &url, qsizetype schemeLength)
 {
-    const qsizetype urlLength = url.length();
+    const qsizetype urlLength = url.size();
 
     if (urlLength < schemeLength + 3)
         return -1;
@@ -572,7 +572,7 @@ Local file urls have either a qrc: or file: scheme.
 */
 bool QQmlFile::isLocalFile(const QString &url)
 {
-    if (url.length() < 4 /* qrc: */)
+    if (url.size() < 4 /* qrc: */)
         return false;
 
     switch (url[0].toLatin1()) {
@@ -584,7 +584,7 @@ bool QQmlFile::isLocalFile(const QString &url)
         const qsizetype fileLength = strlen(file_string);
         return url.startsWith(QLatin1String(file_string, file_string + fileLength),
                               Qt::CaseInsensitive)
-                && url.length() > fileLength
+                && url.size() > fileLength
                 && url[fileLength] == QLatin1Char(':');
     }
     case 'q':
@@ -646,7 +646,7 @@ static QString toLocalFile(const QString &url)
 
 static bool isDoubleSlashed(const QString &url, qsizetype offset)
 {
-    const qsizetype urlLength = url.length();
+    const qsizetype urlLength = url.size();
     if (urlLength < offset + 2)
         return false;
 
@@ -669,7 +669,7 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
     if (url.startsWith(QLatin1String("qrc://"), Qt::CaseInsensitive)) {
         // Exactly two slashes are bad because that's a URL authority.
         // One slash is fine and >= 3 slashes are file.
-        if (url.length() == 6 || url[6] != QLatin1Char('/')) {
+        if (url.size() == 6 || url[6] != QLatin1Char('/')) {
             Q_ASSERT(isDoubleSlashed(url, strlen("qrc:")));
             return QString();
         }
@@ -679,7 +679,7 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 
     if (url.startsWith(QLatin1String("qrc:"), Qt::CaseInsensitive)) {
         Q_ASSERT(!isDoubleSlashed(url, strlen("qrc:")));
-        if (url.length() > 4)
+        if (url.size() > 4)
             return QLatin1Char(':') + QStringView{url}.mid(4);
         return QStringLiteral(":");
     }

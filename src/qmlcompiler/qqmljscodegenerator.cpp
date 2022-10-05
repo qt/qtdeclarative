@@ -103,7 +103,7 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
             auto &currentRegisterNames = registerNames[registerIndex];
             QString &name = currentRegisterNames[m_typeResolver->comparableType(seenType)];
             if (name.isEmpty())
-                name = u"r%1_%2"_s.arg(registerIndex).arg(currentRegisterNames.count());
+                name = u"r%1_%2"_s.arg(registerIndex).arg(currentRegisterNames.size());
             typesForRegisters[seenType] = name;
         }
     };
@@ -123,7 +123,7 @@ QT_WARNING_POP
 
     // ensure we have m_labels for loops
     for (const auto loopLabel : m_context->labelInfo)
-        m_labels.insert(loopLabel, u"label_%1"_s.arg(m_labels.count()));
+        m_labels.insert(loopLabel, u"label_%1"_s.arg(m_labels.size()));
 
     // Initialize the first instruction's state to hold the arguments.
     // After this, the arguments (or whatever becomes of them) are carried
@@ -131,7 +131,7 @@ QT_WARNING_POP
     m_state.State::operator=(initialState(m_function));
 
     const QByteArray byteCode = function->code;
-    decode(byteCode.constData(), static_cast<uint>(byteCode.length()));
+    decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
 
     QQmlJSAotFunction result;
     result.includes.swap(m_includes);
@@ -2646,7 +2646,7 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
     if (relativeOffset) {
         auto labelIt = m_labels.find(absoluteOffset);
         if (labelIt == m_labels.end())
-            labelIt = m_labels.insert(absoluteOffset, u"label_%1"_s.arg(m_labels.count()));
+            labelIt = m_labels.insert(absoluteOffset, u"label_%1"_s.arg(m_labels.size()));
         conversionCode += u"    goto "_s + *labelIt + u";\n"_s;
     }
 

@@ -304,7 +304,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
                     // otherwise we keep looking if we can find the module again (with a qmldir this time)
                 }
             } else {
-                for (int index = parts.count() - 1; index >= 0; --index) {
+                for (int index = parts.size() - 1; index >= 0; --index) {
                     QString relativePath = parts.mid(0, index + 1).join(slash)
                         + dot + ver + slash + parts.mid(index + 1).join(slash);
                     if (relativePath.endsWith(slash))
@@ -449,7 +449,7 @@ QVariantMap dependencyStringToImport(const QString &line) {
     QVariantMap depImport;
     depImport[typeLiteral()] = moduleLiteral();
     depImport[nameLiteral()] = name;
-    if (dep.length() > 1)
+    if (dep.size() > 1)
         depImport[versionLiteral()] = dep[1].toString();
     return depImport;
 }
@@ -772,8 +772,8 @@ QVariantList findQmlImportsRecursively(const QStringList &qmlDirs,
 {
     QVariantList ret;
 
-    qCDebug(lcImportScanner) << "Scanning" << qmlDirs.count() << "root directories and"
-                             << scanFiles.count() << "files.";
+    qCDebug(lcImportScanner) << "Scanning" << qmlDirs.size() << "root directories and"
+                             << scanFiles.size() << "files.";
 
     // Scan all app root qml directories for imports
     for (const QString &qmlDir : qmlDirs) {
@@ -891,26 +891,26 @@ int main(int argc, char *argv[])
     QString outputFile;
 
     int i = 1;
-    while (i < args.count()) {
+    while (i < args.size()) {
         const QString &arg = args.at(i);
         ++i;
         QStringList *argReceiver = nullptr;
         if (!arg.startsWith(QLatin1Char('-')) || arg == QLatin1String("-")) {
             qmlRootPaths += arg;
         } else if (arg == QLatin1String("-rootPath")) {
-            if (i >= args.count())
+            if (i >= args.size())
                 std::cerr << "-rootPath requires an argument\n";
             argReceiver = &qmlRootPaths;
         } else if (arg == QLatin1String("-qmlFiles")) {
-            if (i >= args.count())
+            if (i >= args.size())
                 std::cerr << "-qmlFiles requires an argument\n";
             argReceiver = &scanFiles;
         } else if (arg == QLatin1String("-jsFiles")) {
-            if (i >= args.count())
+            if (i >= args.size())
                 std::cerr << "-jsFiles requires an argument\n";
             argReceiver = &scanFiles;
         } else if (arg == QLatin1String("-importPath")) {
-            if (i >= args.count())
+            if (i >= args.size())
                 std::cerr << "-importPath requires an argument\n";
             argReceiver = &qmlImportPaths;
         } else if (arg == QLatin1String("-cmake-output")) {
@@ -918,7 +918,7 @@ int main(int argc, char *argv[])
         } else if (arg == QLatin1String("-qrcFiles")) {
             argReceiver = &qrcFiles;
         } else if (arg == QLatin1String("-output-file")) {
-            if (i >= args.count()) {
+            if (i >= args.size()) {
                 std::cerr << "-output-file requires an argument\n";
                 return 1;
             }
@@ -931,7 +931,7 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        while (i < args.count()) {
+        while (i < args.size()) {
             const QString arg = args.at(i);
             if (arg.startsWith(QLatin1Char('-')) && arg != QLatin1String("-"))
                 break;

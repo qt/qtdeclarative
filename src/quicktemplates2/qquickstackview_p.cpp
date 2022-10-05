@@ -165,7 +165,7 @@ bool QQuickStackViewPrivate::pushElements(const QList<QQuickStackElement *> &ele
     Q_Q(QQuickStackView);
     if (!elems.isEmpty()) {
         for (QQuickStackElement *e : elems) {
-            e->setIndex(elements.count());
+            e->setIndex(elements.size());
             elements += e;
         }
         return elements.top()->load(q);
@@ -183,7 +183,7 @@ bool QQuickStackViewPrivate::pushElement(QQuickStackElement *element)
 bool QQuickStackViewPrivate::popElements(QQuickStackElement *element)
 {
     Q_Q(QQuickStackView);
-    while (elements.count() > 1 && elements.top() != element) {
+    while (elements.size() > 1 && elements.top() != element) {
         delete elements.pop();
         if (!element)
             break;

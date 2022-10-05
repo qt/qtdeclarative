@@ -41,7 +41,7 @@ void tst_AndroidAssets::loadsFromAssetsPath()
 
     // load QML file from assets, by path:
     engine.load(pathPrefix() + QStringLiteral("/qml/main.qml"));
-    QTRY_VERIFY(engine.rootObjects().length() == 1);
+    QTRY_VERIFY(engine.rootObjects().size() == 1);
     QVERIFY(failureSpy.isEmpty());
 }
 
@@ -52,7 +52,7 @@ void tst_AndroidAssets::loadsFromAssetsUrl()
 
     // load QML file from assets, by URL:
     engine.load(QUrl(urlPrefix() + QStringLiteral("/qml/main.qml")));
-    QTRY_VERIFY(engine.rootObjects().length() == 1);
+    QTRY_VERIFY(engine.rootObjects().size() == 1);
     QVERIFY(failureSpy.isEmpty());
 }
 

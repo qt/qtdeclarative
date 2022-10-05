@@ -1159,7 +1159,7 @@ QString QQuickTableViewPrivate::tableLayoutToString() const
     return QString(QLatin1String("table cells: (%1,%2) -> (%3,%4), item count: %5, table rect: %6,%7 x %8,%9"))
             .arg(leftColumn()).arg(topRow())
             .arg(rightColumn()).arg(bottomRow())
-            .arg(loadedItems.count())
+            .arg(loadedItems.size())
             .arg(loadedTableOuterRect.x())
             .arg(loadedTableOuterRect.y())
             .arg(loadedTableOuterRect.width())
@@ -1174,7 +1174,7 @@ void QQuickTableViewPrivate::dumpTable() const
         { return lhs->index < rhs->index; });
 
     qWarning() << QStringLiteral("******* TABLE DUMP *******");
-    for (int i = 0; i < listCopy.count(); ++i)
+    for (int i = 0; i < listCopy.size(); ++i)
         qWarning() << static_cast<FxTableItem *>(listCopy.at(i))->cell;
     qWarning() << tableLayoutToString();
 

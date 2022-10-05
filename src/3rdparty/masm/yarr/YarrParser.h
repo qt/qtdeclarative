@@ -215,7 +215,7 @@ private:
         : m_delegate(delegate)
         , m_backReferenceLimit(backReferenceLimit)
         , m_data(pattern.characters<CharType>())
-        , m_size(pattern.length())
+        , m_size(pattern.size())
         , m_isUnicode(isUnicode)
     {
     }

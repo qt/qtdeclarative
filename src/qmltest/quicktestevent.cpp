@@ -57,7 +57,7 @@ bool QuickTestEvent::keyClick(int key, int modifiers, int delay)
 
 bool QuickTestEvent::keyPressChar(const QString &character, int modifiers, int delay)
 {
-    QTEST_ASSERT(character.length() == 1);
+    QTEST_ASSERT(character.size() == 1);
     QWindow *window = activeWindow();
     if (!window)
         return false;
@@ -67,7 +67,7 @@ bool QuickTestEvent::keyPressChar(const QString &character, int modifiers, int d
 
 bool QuickTestEvent::keyReleaseChar(const QString &character, int modifiers, int delay)
 {
-    QTEST_ASSERT(character.length() == 1);
+    QTEST_ASSERT(character.size() == 1);
     QWindow *window = activeWindow();
     if (!window)
         return false;
@@ -77,7 +77,7 @@ bool QuickTestEvent::keyReleaseChar(const QString &character, int modifiers, int
 
 bool QuickTestEvent::keyClickChar(const QString &character, int modifiers, int delay)
 {
-    QTEST_ASSERT(character.length() == 1);
+    QTEST_ASSERT(character.size() == 1);
     QWindow *window = activeWindow();
     if (!window)
         return false;

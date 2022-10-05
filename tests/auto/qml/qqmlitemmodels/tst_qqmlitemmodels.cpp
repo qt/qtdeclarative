@@ -163,7 +163,7 @@ void tst_qqmlitemmodels::itemSelection()
         QCOMPARE(isVariant.userType(), qMetaTypeId<QItemSelection>());
 
         const QItemSelection &sel = isVariant.value<QItemSelection>();
-        QCOMPARE(sel.count(), object->itemSelection().count());
+        QCOMPARE(sel.size(), object->itemSelection().size());
         QCOMPARE(sel, object->itemSelection());
     }
 }

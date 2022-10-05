@@ -247,7 +247,7 @@ void tst_QmlCppCodegen::idAccess()
 static QByteArray arg1()
 {
     const QStringList args = QCoreApplication::instance()->arguments();
-    return args.length() > 1 ? args[1].toUtf8() : QByteArray("undefined");
+    return args.size() > 1 ? args[1].toUtf8() : QByteArray("undefined");
 }
 
 void tst_QmlCppCodegen::globals()
@@ -299,7 +299,7 @@ void tst_QmlCppCodegen::multiLookup()
     QSignalSpy quitSpy(&engine, &QQmlEngine::quit);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
-    QCOMPARE(quitSpy.count(), 1);
+    QCOMPARE(quitSpy.size(), 1);
 }
 
 void tst_QmlCppCodegen::enums()
@@ -393,7 +393,7 @@ void tst_QmlCppCodegen::compositeTypeMethod()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QSignalSpy spy(object.data(), SIGNAL(foo()));
-    QTRY_VERIFY(spy.count() > 0);
+    QTRY_VERIFY(spy.size() > 0);
 }
 
 void tst_QmlCppCodegen::excessiveParameters()
@@ -404,7 +404,7 @@ void tst_QmlCppCodegen::excessiveParameters()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QSignalSpy spy(object.data(), SIGNAL(foo()));
-    QTRY_VERIFY(spy.count() > 0);
+    QTRY_VERIFY(spy.size() > 0);
 }
 
 void tst_QmlCppCodegen::jsImport()
@@ -1010,7 +1010,7 @@ void tst_QmlCppCodegen::lotsOfRegisters()
     };
 
     for (int i = 0; i < 100; ++i) {
-        QVERIFY(object->setProperty(props[i % props.length()], (i * 17) % 512));
+        QVERIFY(object->setProperty(props[i % props.size()], (i * 17) % 512));
         compare();
     }
 }
@@ -2655,7 +2655,7 @@ void tst_QmlCppCodegen::mathOperations()
                 const QMetaProperty prop = metaObject->property(i);
                 const QByteArray propName = prop.name();
 
-                if (propName.length() < 3 || propName == "objectName")
+                if (propName.size() < 3 || propName == "objectName")
                     continue;
 
                 t1 = propName[0];

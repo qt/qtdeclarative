@@ -87,7 +87,7 @@ void QQmlJSFunctionInitializer::populateSignature(
             }
         }
     } else {
-        for (qsizetype i = 0, end = arguments.length(); i != end; ++i) {
+        for (qsizetype i = 0, end = arguments.size(); i != end; ++i) {
             const QQmlJS::AST::BoundName &argument = arguments[i];
             if (argument.typeAnnotation) {
                 if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
@@ -111,7 +111,7 @@ void QQmlJSFunctionInitializer::populateSignature(
         }
     }
 
-    for (int i = QQmlJSCompilePass::FirstArgument + function->argumentTypes.length();
+    for (int i = QQmlJSCompilePass::FirstArgument + function->argumentTypes.size();
          i < context->registerCountInFunction; ++i) {
         function->registerTypes.append(m_typeResolver->tracked(
                                            m_typeResolver->globalType(m_typeResolver->voidType())));
@@ -166,7 +166,7 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
                 if (method.methodType() == QQmlJSMetaMethod::Signal) {
                     function.isSignalHandler = true;
                     const auto argumentTypes = method.parameterTypes();
-                    for (qsizetype i = 0, end = argumentTypes.length(); i < end; ++i) {
+                    for (qsizetype i = 0, end = argumentTypes.size(); i < end; ++i) {
                         const auto &type = argumentTypes[i];
                         if (type.isNull()) {
                             diagnose(u"Cannot resolve the argument type %1."_s

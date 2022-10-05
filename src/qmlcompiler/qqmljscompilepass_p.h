@@ -166,7 +166,7 @@ protected:
 
     int firstRegisterIndex() const
     {
-        return FirstArgument + m_function->argumentTypes.count();
+        return FirstArgument + m_function->argumentTypes.size();
     }
 
     bool isArgument(int registerIndex) const
@@ -184,11 +184,11 @@ protected:
     State initialState(const Function *function)
     {
         State state;
-        for (int i = 0, end = function->argumentTypes.length(); i < end; ++i) {
+        for (int i = 0, end = function->argumentTypes.size(); i < end; ++i) {
             state.registers[FirstArgument + i] = function->argumentTypes.at(i);
             Q_ASSERT(state.registers[FirstArgument + i].isValid());
         }
-        for (int i = 0, end = function->registerTypes.length(); i != end; ++i)
+        for (int i = 0, end = function->registerTypes.size(); i != end; ++i)
             state.registers[firstRegisterIndex() + i] = function->registerTypes[i];
         return state;
     }

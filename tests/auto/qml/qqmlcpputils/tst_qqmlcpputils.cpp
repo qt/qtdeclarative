@@ -58,7 +58,7 @@ void tst_qqmlcpputils::fastConnect()
         qmlobject_connect(obj, MyObject, SIGNAL(signal1()), obj, MyObject, SIGNAL(signal2()));
 
         obj->signal1();
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         delete obj;
     }

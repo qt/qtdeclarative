@@ -44,7 +44,7 @@ const QQmlPropertyData *QQmlPropertyResolver::signal(const QString &name, bool *
     }
 
     if (name.endsWith(QLatin1String("Changed"))) {
-        QString propName = name.mid(0, name.length() - static_cast<int>(strlen("Changed")));
+        QString propName = name.mid(0, name.size() - static_cast<int>(strlen("Changed")));
 
         d = property(propName, notInRevision);
         if (d)

@@ -292,7 +292,7 @@ private slots:
         QVERIFY(didAdd2);
         RefCacheEntry e2 = RefCacheEntry::forPath(env, refPath);
         QCOMPARE(e2.cached, RefCacheEntry::Cached::First);
-        QCOMPARE(e2.canonicalPaths.length(), 1);
+        QCOMPARE(e2.canonicalPaths.size(), 1);
         QCOMPARE(e2.canonicalPaths.first().toString(), env.canonicalPath().toString());
         bool didAdd3 = RefCacheEntry::addForPath(
                 env, refPath,
@@ -302,7 +302,7 @@ private slots:
         QVERIFY(didAdd3);
         RefCacheEntry e3 = RefCacheEntry::forPath(env, refPath);
         QCOMPARE(e3.cached, RefCacheEntry::Cached::All);
-        QCOMPARE(e3.canonicalPaths.length(), 2);
+        QCOMPARE(e3.canonicalPaths.size(), 2);
         QCOMPARE(e3.canonicalPaths.first().toString(), env.canonicalPath().toString());
         QCOMPARE(e3.canonicalPaths.last().toString(), tOwner.canonicalPath().toString());
     }
@@ -457,18 +457,18 @@ private slots:
             const PropertyInfo *p1 =
                     reinterpret_cast<const PropertyInfo *>(wrappedPInfoPtr->m_value.data());
             PropertyInfo p2 = wrappedPInfoPtr->m_value.value<PropertyInfo>();
-            QCOMPARE(mPInfo.bindings.length(), 1);
-            QCOMPARE(mPInfo.propertyDefs.length(), 1);
+            QCOMPARE(mPInfo.bindings.size(), 1);
+            QCOMPARE(mPInfo.propertyDefs.size(), 1);
             QCOMPARE(mPInfo.bindings.first().toString(), mPInfo.bindings.first().toString());
             QCOMPARE(mPInfo.propertyDefs.first().toString(),
                      mPInfo.propertyDefs.first().toString());
 
-            QCOMPARE(p2.bindings.length(), 1);
-            QCOMPARE(p2.propertyDefs.length(), 1);
+            QCOMPARE(p2.bindings.size(), 1);
+            QCOMPARE(p2.propertyDefs.size(), 1);
             QCOMPARE(p2.bindings.first().toString(), mPInfo.bindings.first().toString());
             QCOMPARE(p2.propertyDefs.first().toString(), mPInfo.propertyDefs.first().toString());
-            QCOMPARE(p1->bindings.length(), 1);
-            QCOMPARE(p1->propertyDefs.length(), 1);
+            QCOMPARE(p1->bindings.size(), 1);
+            QCOMPARE(p1->propertyDefs.size(), 1);
             QCOMPARE(p1->bindings.first().toString(), mPInfo.bindings.first().toString());
             QCOMPARE(p1->propertyDefs.first().toString(), mPInfo.propertyDefs.first().toString());
         }
@@ -520,9 +520,9 @@ private slots:
             QList<DomItem> rectAs =
                     obj1.lookup(u"QQ.Rectangle"_s, LookupType::Symbol, LookupOption::Normal);
 
-            QVERIFY(rect.length() == 1);
-            QVERIFY(rect2.length() == 1);
-            QVERIFY(rectAs.length() == 1);
+            QVERIFY(rect.size() == 1);
+            QVERIFY(rect2.size() == 1);
+            QVERIFY(rectAs.size() == 1);
             QCOMPARE(rect.first().internalKind(), DomType::Export);
             QCOMPARE(rect.first(), rect2.first());
             QCOMPARE(rect.first(), rectAs.first());
@@ -536,7 +536,7 @@ private slots:
                         return true;
                     },
                     {});
-            QVERIFY(rects.length() == 1);
+            QVERIFY(rects.size() == 1);
             for (DomItem &el : rects) {
                 QCOMPARE(rect.first(), el);
             }

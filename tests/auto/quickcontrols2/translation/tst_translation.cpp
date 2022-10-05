@@ -157,7 +157,7 @@ void tst_translation::stackView()
     QVERIFY(button);
     // Shouldn't crash when calling retranslate.
     QVERIFY(clickButton(button));
-    QTRY_COMPARE(calledTranslateSpy.count(), 1);
+    QTRY_COMPARE(calledTranslateSpy.size(), 1);
 }
 
 QTEST_MAIN(tst_translation)

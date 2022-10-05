@@ -582,7 +582,7 @@ void tst_qquickwindow::aboutToStopSignal()
 
     window.hide();
 
-    QTRY_VERIFY(spy.count() > 0);
+    QTRY_VERIFY(spy.size() > 0);
 }
 
 //If the item calls update inside updatePaintNode, it should schedule another sync pass
@@ -598,8 +598,8 @@ void tst_qquickwindow::constantUpdates()
     QSignalSpy afterSpy(&window, SIGNAL(afterSynchronizing()));
 
     QTRY_VERIFY(item.iterations > 10);
-    QTRY_VERIFY(beforeSpy.count() > 10);
-    QTRY_VERIFY(afterSpy.count() > 10);
+    QTRY_VERIFY(beforeSpy.size() > 10);
+    QTRY_VERIFY(afterSpy.size() > 10);
 }
 
 void tst_qquickwindow::constantUpdatesOnWindow_data()
@@ -700,7 +700,7 @@ void tst_qquickwindow::touchEvent_basic()
     // press single point
     touchSeq.press(0, topItem->mapToScene(pos).toPoint(),window).commit();
     QQuickTouchUtils::flush(window);
-    QTRY_COMPARE(topItem->lastEvent.touchPoints.count(), 1);
+    QTRY_COMPARE(topItem->lastEvent.touchPoints.size(), 1);
 
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
@@ -714,9 +714,9 @@ void tst_qquickwindow::touchEvent_basic()
     touchSeq.press(0, topItem->mapToScene(pos).toPoint(), window)
             .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(topItem->lastEvent.touchPoints.size(), 1);
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
-    QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(bottomItem->lastEvent.touchPoints.size(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed, makeTouchPoint(topItem, pos)));
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed, makeTouchPoint(bottomItem, pos)));
     topItem->reset();
@@ -728,7 +728,7 @@ void tst_qquickwindow::touchEvent_basic()
     QQuickTouchUtils::flush(window);
     touchSeq.move(0, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(topItem->lastEvent.touchPoints.size(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, QEventPoint::State::Updated,
             makeTouchPoint(topItem, topItem->mapFromItem(bottomItem, pos), pos)));
     topItem->reset();
@@ -739,7 +739,7 @@ void tst_qquickwindow::touchEvent_basic()
     QQuickTouchUtils::flush(window);
     touchSeq.move(0, topItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(bottomItem->lastEvent.touchPoints.size(), 1);
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, QEventPoint::State::Updated,
             makeTouchPoint(bottomItem, bottomItem->mapFromItem(topItem, pos), pos)));
     bottomItem->reset();
@@ -751,9 +751,9 @@ void tst_qquickwindow::touchEvent_basic()
     touchSeq.stationary(0)
             .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);    // received press and then stationary
+    QCOMPARE(topItem->lastEvent.touchPoints.size(), 1);    // received press and then stationary
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
-    QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(bottomItem->lastEvent.touchPoints.size(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, QEventPoint::State::Stationary, makeTouchPoint(topItem, pos)));
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed, makeTouchPoint(bottomItem, pos)));
     topItem->reset();
@@ -769,7 +769,7 @@ void tst_qquickwindow::touchEvent_basic()
     QQuickTouchUtils::flush(window);
     touchSeq.release(0, bottomItem->mapToScene(pos).toPoint(),window).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(topItem->lastEvent.touchPoints.size(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchEnd, window, QEventPoint::State::Released,
             makeTouchPoint(topItem, topItem->mapFromItem(bottomItem, pos), pos)));
     topItem->reset();
@@ -783,9 +783,9 @@ void tst_qquickwindow::touchEvent_basic()
     touchSeq.release(0, bottomItem->mapToScene(pos).toPoint(), window)
                              .stationary(1).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(topItem->lastEvent.touchPoints.size(), 1);
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
-    QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(bottomItem->lastEvent.touchPoints.size(), 1);
     // Since qtbase 2692237bb1b0c0f50b7cc5d920eb8ab065063d47, if the point didn't have a different position on release,
     // then lastPosition is not changed.  So in this case, it still holds the press position.  I.e. on release,
     // it's the last position that was actually different.
@@ -846,7 +846,7 @@ void tst_qquickwindow::touchEvent_propagation()
 
     // single touch to top item, should be received by middle item
     QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window);
-    QTRY_COMPARE(middleItem->lastEvent.touchPoints.count(), 1);
+    QTRY_COMPARE(middleItem->lastEvent.touchPoints.size(), 1);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
     COMPARE_TOUCH_DATA(middleItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
@@ -856,7 +856,7 @@ void tst_qquickwindow::touchEvent_propagation()
     // touch top and middle items, middle item should get both events
     QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window)
             .press(1, pointInMiddleItem, window);
-    QTRY_COMPARE(middleItem->lastEvent.touchPoints.count(), 2);
+    QTRY_COMPARE(middleItem->lastEvent.touchPoints.size(), 2);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
     COMPARE_TOUCH_DATA(middleItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
@@ -875,7 +875,7 @@ void tst_qquickwindow::touchEvent_propagation()
     // touch top and middle items, bottom item should get all events
     QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window)
             .press(1, pointInMiddleItem, window);
-    QTRY_COMPARE(bottomItem->lastEvent.touchPoints.count(), 2);
+    QTRY_COMPARE(bottomItem->lastEvent.touchPoints.size(), 2);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
@@ -915,12 +915,12 @@ void tst_qquickwindow::touchEvent_propagation()
         // middle item is disabled or has 0 opacity, bottom item receives the event
         QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
         QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
-        QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
+        QCOMPARE(bottomItem->lastEvent.touchPoints.size(), 1);
         COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
                 makeTouchPoint(bottomItem, bottomItem->mapFromItem(topItem, pos))));
     } else {
         // middle item ignores event, sends it to the top item (top-most child)
-        QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
+        QCOMPARE(topItem->lastEvent.touchPoints.size(), 1);
         QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
         QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
         COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
@@ -966,7 +966,7 @@ void tst_qquickwindow::touchEvent_cancel()
     QTest::touchEvent(window, touchDevice).press(0, item->mapToScene(pos).toPoint(), window);
     QCoreApplication::processEvents();
 
-    QTRY_COMPARE(item->lastEvent.touchPoints.count(), 1);
+    QTRY_COMPARE(item->lastEvent.touchPoints.size(), 1);
     TouchEventData d = makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed, makeTouchPoint(item, pos));
     COMPARE_TOUCH_DATA(item->lastEvent, d);
     item->reset();
@@ -1091,7 +1091,7 @@ void tst_qquickwindow::touchEvent_velocity()
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
     QCOMPARE(item->touchEventCount, 2);
-    QCOMPARE(item->lastEvent.touchPoints.count(), 1);
+    QCOMPARE(item->lastEvent.touchPoints.size(), 1);
     QCOMPARE(item->lastVelocity, velocity);
 
     // Now have a transformation on the item and check if position is transformed accordingly.
@@ -1306,9 +1306,9 @@ void tst_qquickwindow::synthMouseFromTouch()
     QTest::touchEvent(window.data(), touchDevice).release(0, p2, window.data());
     QQuickTouchUtils::flush(window.data());
 
-    QCOMPARE(item->m_touchEvents.count(), acceptTouch ? 3 : 0);
-    QCOMPARE(item->m_mouseEvents.count(), (acceptTouch || !synthMouse) ? 0 : 3);
-    QCOMPARE(window->m_mouseEvents.count(), 0);
+    QCOMPARE(item->m_touchEvents.size(), acceptTouch ? 3 : 0);
+    QCOMPARE(item->m_mouseEvents.size(), (acceptTouch || !synthMouse) ? 0 : 3);
+    QCOMPARE(window->m_mouseEvents.size(), 0);
     for (const auto &ev : item->m_mouseEvents)
         QCOMPARE(ev.source, Qt::MouseEventSynthesizedByQt);
 }
@@ -1353,7 +1353,7 @@ void tst_qquickwindow::synthMouseDoubleClickFromTouch()
     QTest::touchEvent(window.data(), touchDevice).move(1, p2 + movement, window.data());
     QTest::touchEvent(window.data(), touchDevice).release(1, p2 + movement, window.data());
 
-    const int eventCount = item->m_mouseEvents.count();
+    const int eventCount = item->m_mouseEvents.size();
     QVERIFY(eventCount >= 2);
 
     const int nDoubleClicks = std::count_if(item->m_mouseEvents.constBegin(), item->m_mouseEvents.constEnd(),
@@ -1629,7 +1629,7 @@ void tst_qquickwindow::earlyGrab()
 
     Grabber *grabber = qobject_cast<Grabber *>(window->findChild<QObject *>("grabber"));
     QVERIFY(grabber);
-    QCOMPARE(grabber->images.count(), 1);
+    QCOMPARE(grabber->images.size(), 1);
     QVERIFY(!grabber->images[0].isNull());
     QCOMPARE(grabber->images[0].convertToFormat(QImage::Format_RGBX8888).pixel(10, 20), QColor(Qt::red).rgb());
 }
@@ -1797,19 +1797,19 @@ void tst_qquickwindow::focusObject()
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QCOMPARE(window->contentItem(), window->focusObject());
-    QCOMPARE(focusObjectSpy.count(), 1);
+    QCOMPARE(focusObjectSpy.size(), 1);
 
     QQuickItem *item1 = window->findChild<QQuickItem*>("item1");
     QVERIFY(item1);
     item1->setFocus(true);
     QCOMPARE(item1, window->focusObject());
-    QCOMPARE(focusObjectSpy.count(), 2);
+    QCOMPARE(focusObjectSpy.size(), 2);
 
     QQuickItem *item2 = window->findChild<QQuickItem*>("item2");
     QVERIFY(item2);
     item2->setFocus(true);
     QCOMPARE(item2, window->focusObject());
-    QCOMPARE(focusObjectSpy.count(), 3);
+    QCOMPARE(focusObjectSpy.size(), 3);
 
     // set focus for item in non-focused focus scope and
     // ensure focusObject does not change and signal is not emitted
@@ -1817,7 +1817,7 @@ void tst_qquickwindow::focusObject()
     QVERIFY(item3);
     item3->setFocus(true);
     QCOMPARE(item2, window->focusObject());
-    QCOMPARE(focusObjectSpy.count(), 3);
+    QCOMPARE(focusObjectSpy.size(), 3);
 }
 
 void tst_qquickwindow::focusReason()
@@ -2379,7 +2379,7 @@ void tst_qquickwindow::qobjectEventFilter_touch()
     // press single point
     QTest::touchEvent(&window, touchDevice).press(0, item->mapToScene(pos).toPoint(), &window);
 
-    QCOMPARE(eventFilter.events.count(), 1);
+    QCOMPARE(eventFilter.events.size(), 1);
     QCOMPARE(eventFilter.events.first(), (int)QEvent::TouchBegin);
 }
 
@@ -2450,7 +2450,7 @@ void tst_qquickwindow::animatingSignal()
     window.show();
     QTRY_VERIFY(window.isExposed());
 
-    QTRY_VERIFY(spy.count() > 1);
+    QTRY_VERIFY(spy.size() > 1);
 }
 
 void tst_qquickwindow::frameSignals()
@@ -2467,9 +2467,9 @@ void tst_qquickwindow::frameSignals()
     QSGRendererInterface *rif = window.rendererInterface();
     QVERIFY(rif);
 
-    QTRY_VERIFY(beforeSpy.count() > 1);
-    QTRY_VERIFY(afterSpy.count() > 1);
-    QTRY_COMPARE(beforeSpy.count(), afterSpy.count());
+    QTRY_VERIFY(beforeSpy.size() > 1);
+    QTRY_VERIFY(afterSpy.size() > 1);
+    QTRY_COMPARE(beforeSpy.size(), afterSpy.size());
 }
 
 // QTBUG-36938
@@ -2928,15 +2928,15 @@ void tst_qquickwindow::test_circleMapItem()
     QPoint pos(50, 50);
     QTest::mouseClick(&window, Qt::LeftButton, Qt::KeyboardModifiers(), pos);
 
-    QCOMPARE(topSpy.count(), 1);
-    QCOMPARE(bottomSpy.count(), 0);
+    QCOMPARE(topSpy.size(), 1);
+    QCOMPARE(bottomSpy.size(), 0);
 
     // Outside the "Circles" "input area", but on top of the bottomItem rectangle
     pos = QPoint(66, 66);
     QTest::mouseClick(&window, Qt::LeftButton, Qt::KeyboardModifiers(), pos);
 
-    QCOMPARE(bottomSpy.count(), 1);
-    QCOMPARE(topSpy.count(), 1);
+    QCOMPARE(bottomSpy.size(), 1);
+    QCOMPARE(topSpy.size(), 1);
 }
 
 void tst_qquickwindow::grabContentItemToImage()
@@ -3652,14 +3652,14 @@ void tst_qquickwindow::subclassWithPointerEventVirtualOverrides() // QTBUG-97859
     switch (static_cast<QPointingDevice::DeviceType>(deviceType)) {
     case QPointingDevice::DeviceType::Mouse:
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, pos);
-        QTRY_COMPARE(window.m_mouseEvents.count(), 3); // separate move before press
-        QCOMPARE(window.m_events.count(), 3);
+        QTRY_COMPARE(window.m_mouseEvents.size(), 3); // separate move before press
+        QCOMPARE(window.m_events.size(), 3);
         break;
     case QPointingDevice::DeviceType::TouchScreen:
         QTest::touchEvent(&window, touchDevice).press(0, pos, &window);
         QTest::touchEvent(&window, touchDevice).release(0, pos, &window);
-        QTRY_COMPARE(window.m_touchEvents.count(), 2);
-        QCOMPARE(window.m_events.count(), 2);
+        QTRY_COMPARE(window.m_touchEvents.size(), 2);
+        QCOMPARE(window.m_events.size(), 2);
         break;
     case QPointingDevice::DeviceType::Stylus:
         // press (pressure is 0.8)
@@ -3670,8 +3670,8 @@ void tst_qquickwindow::subclassWithPointerEventVirtualOverrides() // QTBUG-97859
         QWindowSystemInterface::handleTabletEvent(&window, pos, window.mapToGlobal(pos),
             int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
             Qt::NoButton, 0, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
-        QTRY_COMPARE(window.m_tabletEvents.count(), 2);
-        QVERIFY(window.m_events.count() >= window.m_tabletEvents.count()); // tablet + synth-mouse events
+        QTRY_COMPARE(window.m_tabletEvents.size(), 2);
+        QVERIFY(window.m_events.size() >= window.m_tabletEvents.size()); // tablet + synth-mouse events
         break;
     default:
         break;

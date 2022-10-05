@@ -63,7 +63,7 @@ void tst_qquickanimatedsprite::test_properties()
     sprite->setRunning(false);
     QVERIFY(!sprite->running());
     // The finished() signal shouldn't be emitted when running is manually set to false.
-    QCOMPARE(finishedSpy.count(), 0);
+    QCOMPARE(finishedSpy.size(), 0);
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
 }
@@ -87,11 +87,11 @@ void tst_qquickanimatedsprite::test_runningChangedSignal()
     QVERIFY(finishedSpy.isValid());
 
     sprite->setRunning(true);
-    QTRY_COMPARE(runningChangedSpy.count(), 1);
-    QCOMPARE(finishedSpy.count(), 0);
+    QTRY_COMPARE(runningChangedSpy.size(), 1);
+    QCOMPARE(finishedSpy.size(), 0);
     QTRY_VERIFY(!sprite->running());
-    QTRY_COMPARE(runningChangedSpy.count(), 2);
-    QCOMPARE(finishedSpy.count(), 1);
+    QTRY_COMPARE(runningChangedSpy.size(), 2);
+    QCOMPARE(finishedSpy.size(), 1);
 }
 
 void tst_qquickanimatedsprite::test_startStop()
@@ -114,12 +114,12 @@ void tst_qquickanimatedsprite::test_startStop()
 
     sprite->start();
     QVERIFY(sprite->running());
-    QTRY_COMPARE(runningChangedSpy.count(), 1);
-    QCOMPARE(finishedSpy.count(), 0);
+    QTRY_COMPARE(runningChangedSpy.size(), 1);
+    QCOMPARE(finishedSpy.size(), 0);
     sprite->stop();
     QVERIFY(!sprite->running());
-    QTRY_COMPARE(runningChangedSpy.count(), 2);
-    QCOMPARE(finishedSpy.count(), 0);
+    QTRY_COMPARE(runningChangedSpy.size(), 2);
+    QCOMPARE(finishedSpy.size(), 0);
 
     sprite->setCurrentFrame(2);
     sprite->start();
@@ -154,12 +154,12 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
     QVERIFY(!sprite->paused());
     QCOMPARE(sprite->loops(), 3);
     QCOMPARE(sprite->frameCount(), 6);
-    QCOMPARE(frameChangedSpy.count(), 0);
+    QCOMPARE(frameChangedSpy.size(), 0);
 
     frameChangedSpy.clear();
     sprite->setRunning(true);
     QTRY_VERIFY(!sprite->running());
-    QCOMPARE(frameChangedSpy.count(), 3*6 + 1);
+    QCOMPARE(frameChangedSpy.size(), 3*6 + 1);
 
     int prevFrame = -1;
     int loopCounter = 0;
@@ -257,7 +257,7 @@ void tst_qquickanimatedsprite::test_largeAnimation()
     sprite->setRunning(true);
     QTRY_VERIFY_WITH_TIMEOUT(!sprite->running(), 100000 /* make sure we wait until its done*/ );
     if (frameSync)
-        QVERIFY(isWithinRange(3*40, int(frameChangedSpy.count()), 3*40 + 1));
+        QVERIFY(isWithinRange(3*40, int(frameChangedSpy.size()), 3*40 + 1));
     int prevFrame = -1;
     int loopCounter = 0;
     int maxFrame = 0;
@@ -375,8 +375,8 @@ void tst_qquickanimatedsprite::test_implicitSize()
     QVERIFY(frameImplicitWidthChangedSpy.isValid());
 
     sprite->setFrameWidth(20);
-    QCOMPARE(frameWidthChangedSpy.count(), 1);
-    QCOMPARE(frameImplicitWidthChangedSpy.count(), 1);
+    QCOMPARE(frameWidthChangedSpy.size(), 1);
+    QCOMPARE(frameImplicitWidthChangedSpy.size(), 1);
 
     // Ensure that implicitHeight matches frameHeight.
     QSignalSpy frameHeightChangedSpy(sprite, SIGNAL(frameHeightChanged(int)));
@@ -386,8 +386,8 @@ void tst_qquickanimatedsprite::test_implicitSize()
     QVERIFY(frameImplicitHeightChangedSpy.isValid());
 
     sprite->setFrameHeight(20);
-    QCOMPARE(frameHeightChangedSpy.count(), 1);
-    QCOMPARE(frameImplicitHeightChangedSpy.count(), 1);
+    QCOMPARE(frameHeightChangedSpy.size(), 1);
+    QCOMPARE(frameImplicitHeightChangedSpy.size(), 1);
 }
 
 void tst_qquickanimatedsprite::test_infiniteLoops()
@@ -409,7 +409,7 @@ void tst_qquickanimatedsprite::test_infiniteLoops()
     // The finished() signal shouldn't be emitted for infinite animations.
     const int previousFrame = sprite->currentFrame();
     QTRY_VERIFY(sprite->currentFrame() != previousFrame);
-    QCOMPARE(finishedSpy.count(), 0);
+    QCOMPARE(finishedSpy.size(), 0);
 }
 
 void tst_qquickanimatedsprite::test_finishBehavior()

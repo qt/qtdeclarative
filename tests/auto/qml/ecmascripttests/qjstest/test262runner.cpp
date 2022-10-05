@@ -209,7 +209,7 @@ bool Test262Runner::loadTests()
     QString harness = "harness";
     QString intl402 = "intl402";
 
-    int pathlen = dir.path().length() + 1;
+    int pathlen = dir.path().size() + 1;
     QDirIterator it(dir, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QString file = it.next().mid(pathlen);
@@ -502,7 +502,7 @@ static TestCase::Result executeTest(const QByteArray &data, bool runAsModule = f
             QFile f(url.toLocalFile());
             if (f.open(QIODevice::ReadOnly)) {
                 QByteArray content = harnessForModules + f.readAll();
-                module = vm.compileModule(url.toString(), QString::fromUtf8(content.constData(), content.length()), QFileInfo(f).lastModified());
+                module = vm.compileModule(url.toString(), QString::fromUtf8(content.constData(), content.size()), QFileInfo(f).lastModified());
                 if (vm.hasException)
                     break;
                 vm.injectCompiledModule(module);
@@ -743,7 +743,7 @@ YamlSection::YamlSection(const QByteArray &yaml, const char *sectionName)
     start += static_cast<int>(strlen(sectionName));
     int end = yaml.indexOf('\n', start + 1);
     if (end < 0)
-        end = yaml.length();
+        end = yaml.size();
 
     int s = yaml.indexOf('[', start);
     if (s > 0 && s < end) {

@@ -388,7 +388,7 @@ double RuntimeHelpers::stringToNumber(const QString &string)
     // libdoubleconversion sources. The same maximum value would be represented by roughly 3.5 times
     // as many binary digits.
     const int excessiveLength = 16 * 1024;
-    if (string.length() > excessiveLength)
+    if (string.size() > excessiveLength)
         return qQNaN();
 
     const QStringView s = QStringView(string).trimmed();
@@ -638,7 +638,7 @@ static Q_NEVER_INLINE ReturnedValue getElementIntFallback(ExecutionEngine *engin
     ScopedObject o(scope, object);
     if (!o) {
         if (const String *str = object.as<String>()) {
-            if (idx >= (uint)str->toQString().length()) {
+            if (idx >= (uint)str->toQString().size()) {
                 return Encode::undefined();
             }
             const QString s = str->toQString().mid(idx, 1);

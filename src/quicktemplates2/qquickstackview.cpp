@@ -387,7 +387,7 @@ bool QQuickStackView::isBusy() const
 int QQuickStackView::depth() const
 {
     Q_D(const QQuickStackView);
-    return d->elements.count();
+    return d->elements.size();
 }
 
 /*!
@@ -448,7 +448,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     if (!engine || !func.isCallable()) // TODO: warning?
         return nullptr;
 
-    for (int i = d->elements.count() - 1; i >= 0; --i) {
+    for (int i = d->elements.size() - 1; i >= 0; --i) {
         QQuickStackElement *element = d->elements.at(i);
         if (behavior == ForceLoad)
             element->load(this);
@@ -574,9 +574,9 @@ void QQuickStackView::push(QQmlV4Function *args)
     if (!d->elements.isEmpty())
         exit = d->elements.top();
 
-    int oldDepth = d->elements.count();
+    int oldDepth = d->elements.size();
     if (d->pushElements(elements)) {
-        d->depthChange(d->elements.count(), oldDepth);
+        d->depthChange(d->elements.size(), oldDepth);
         QQuickStackElement *enter = d->elements.top();
         d->startTransition(QQuickStackTransition::pushEnter(operation, enter, this),
                            QQuickStackTransition::pushExit(operation, exit, this),
@@ -640,14 +640,14 @@ void QQuickStackView::pop(QQmlV4Function *args)
     QScopedValueRollback<bool> modifyingElements(d->modifyingElements, true);
     QScopedValueRollback<QString> operationNameRollback(d->operation, operationName);
     int argc = args->length();
-    if (d->elements.count() <= 1 || argc > 2) {
+    if (d->elements.size() <= 1 || argc > 2) {
         if (argc > 2)
             d->warn(QStringLiteral("too many arguments"));
         args->setReturnValue(QV4::Encode::null());
         return;
     }
 
-    int oldDepth = d->elements.count();
+    int oldDepth = d->elements.size();
     QQuickStackElement *exit = d->elements.pop();
     QQuickStackElement *enter = d->elements.top();
 
@@ -686,7 +686,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
             d->removing.insert(exit);
             previousItem = exit->item;
         }
-        d->depthChange(d->elements.count(), oldDepth);
+        d->depthChange(d->elements.size(), oldDepth);
         d->startTransition(QQuickStackTransition::popExit(operation, exit, this),
                            QQuickStackTransition::popEnter(operation, enter, this),
                            operation == Immediate);
@@ -837,13 +837,13 @@ void QQuickStackView::replace(QQmlV4Function *args)
         return;
     }
 
-    int oldDepth = d->elements.count();
+    int oldDepth = d->elements.size();
     QQuickStackElement* exit = nullptr;
     if (!d->elements.isEmpty())
         exit = d->elements.pop();
 
     if (exit != target ? d->replaceElements(target, elements) : d->pushElements(elements)) {
-        d->depthChange(d->elements.count(), oldDepth);
+        d->depthChange(d->elements.size(), oldDepth);
         if (exit) {
             exit->removal = true;
             d->removing.insert(exit);
@@ -914,7 +914,7 @@ void QQuickStackView::clear(Operation operation)
                            QQuickStackTransition::popEnter(operation, nullptr, this), false);
     }
 
-    int oldDepth = d->elements.count();
+    int oldDepth = d->elements.size();
     d->setCurrentItem(nullptr);
     qDeleteAll(d->elements);
     d->elements.clear();
@@ -1115,7 +1115,7 @@ void QQuickStackView::componentComplete()
     QScopedValueRollback<QString> operationNameRollback(d->operation, QStringLiteral("initialItem"));
     QQuickStackElement *element = nullptr;
     QString error;
-    int oldDepth = d->elements.count();
+    int oldDepth = d->elements.size();
     if (QObject *o = d->initialItem.toQObject())
         element = QQuickStackElement::fromObject(o, this, &error);
     else if (d->initialItem.isString())
@@ -1124,7 +1124,7 @@ void QQuickStackView::componentComplete()
         d->warn(error);
         delete element;
     } else if (d->pushElement(element)) {
-        d->depthChange(d->elements.count(), oldDepth);
+        d->depthChange(d->elements.size(), oldDepth);
         d->setCurrentItem(element);
         element->setStatus(QQuickStackView::Active);
     }

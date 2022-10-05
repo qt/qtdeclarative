@@ -45,14 +45,14 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
     m_function = function;
     m_annotations = annotations;
 
-    for (int i = 0, end = function->argumentTypes.length(); i != end; ++i) {
+    for (int i = 0, end = function->argumentTypes.size(); i != end; ++i) {
         InstructionAnnotation annotation;
         annotation.changedRegisterIndex = FirstArgument + i;
         annotation.changedRegister = function->argumentTypes[i];
         m_annotations[-annotation.changedRegisterIndex] = annotation;
     }
 
-    for (int i = 0, end = function->registerTypes.length(); i != end; ++i) {
+    for (int i = 0, end = function->registerTypes.size(); i != end; ++i) {
         InstructionAnnotation annotation;
         annotation.changedRegisterIndex = firstRegisterIndex() + i;
         annotation.changedRegister = function->registerTypes[i];
@@ -62,7 +62,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
     m_basicBlocks.insert_or_assign(m_annotations.begin().key(), BasicBlock());
 
     const QByteArray byteCode = function->code;
-    decode(byteCode.constData(), static_cast<uint>(byteCode.length()));
+    decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
     if (m_hadBackJumps) {
         // We may have missed some connections between basic blocks if there were back jumps.
         // Fill them in via a second pass.
@@ -75,7 +75,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
         }
 
         reset();
-        decode(byteCode.constData(), static_cast<uint>(byteCode.length()));
+        decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
         for (auto it = m_basicBlocks.begin(), end = m_basicBlocks.end(); it != end; ++it)
             deduplicate(it->second.jumpOrigins);
     }
@@ -415,7 +415,7 @@ void QQmlJSBasicBlocks::adjustTypes()
 
         const InstructionAnnotation &annotation = m_annotations[instructionOffset];
 
-        Q_ASSERT(it->trackedTypes.length() == 1);
+        Q_ASSERT(it->trackedTypes.size() == 1);
         Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
         Q_ASSERT(!annotation.readRegisters.isEmpty());
 
@@ -446,7 +446,7 @@ void QQmlJSBasicBlocks::adjustTypes()
 
         // There is always one first occurrence of any tracked type. Conversions don't change
         // the type.
-        if (it->trackedTypes.length() != 1)
+        if (it->trackedTypes.size() != 1)
             continue;
 
         m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values());

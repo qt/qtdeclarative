@@ -271,7 +271,7 @@ qsizetype QQuickPath::pathElements_count(QQmlListProperty<QQuickPathElement> *pr
 {
     QQuickPathPrivate *d = privatePath(property->object);
 
-    return d->_pathElements.count();
+    return d->_pathElements.size();
 }
 
 void QQuickPath::pathElements_clear(QQmlListProperty<QQuickPathElement> *property)
@@ -327,10 +327,10 @@ void QQuickPath::endpoint(const QString &name)
     Q_D(QQuickPath);
     const AttributePoint &first = d->_attributePoints.first();
     qreal val = first.values.value(name);
-    for (int ii = d->_attributePoints.count() - 1; ii >= 0; ii--) {
+    for (int ii = d->_attributePoints.size() - 1; ii >= 0; ii--) {
         const AttributePoint &point = d->_attributePoints.at(ii);
         if (point.values.contains(name)) {
-            for (int jj = ii + 1; jj < d->_attributePoints.count(); ++jj) {
+            for (int jj = ii + 1; jj < d->_attributePoints.size(); ++jj) {
                 AttributePoint &setPoint = d->_attributePoints[jj];
                 setPoint.values.insert(name, val);
             }
@@ -343,10 +343,10 @@ void QQuickPath::endpoint(QList<AttributePoint> &attributePoints, const QString 
 {
     const AttributePoint &first = attributePoints.first();
     qreal val = first.values.value(name);
-    for (int ii = attributePoints.count() - 1; ii >= 0; ii--) {
+    for (int ii = attributePoints.size() - 1; ii >= 0; ii--) {
         const AttributePoint &point = attributePoints.at(ii);
         if (point.values.contains(name)) {
-            for (int jj = ii + 1; jj < attributePoints.count(); ++jj) {
+            for (int jj = ii + 1; jj < attributePoints.size(); ++jj) {
                 AttributePoint &setPoint = attributePoints[jj];
                 setPoint.values.insert(name, val);
             }
@@ -401,7 +401,7 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
     QPainterPath path;
 
     AttributePoint first;
-    for (int ii = 0; ii < attributes.count(); ++ii)
+    for (int ii = 0; ii < attributes.size(); ++ii)
         first.values[attributes.at(ii)] = 0;
     attributePoints << first;
 
@@ -427,11 +427,11 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
         } else if (QQuickPathAttribute *attribute = qobject_cast<QQuickPathAttribute *>(pathElement)) {
             AttributePoint &point = attributePoints.last();
             point.values[attribute->name()] = attribute->value();
-            interpolate(attributePoints, attributePoints.count() - 1, attribute->name(), attribute->value());
+            interpolate(attributePoints, attributePoints.size() - 1, attribute->name(), attribute->value());
         } else if (QQuickPathPercent *percent = qobject_cast<QQuickPathPercent *>(pathElement)) {
             AttributePoint &point = attributePoints.last();
             point.values[percentString] = percent->value();
-            interpolate(attributePoints, attributePoints.count() - 1, percentString, percent->value());
+            interpolate(attributePoints, attributePoints.size() - 1, percentString, percent->value());
             usesPercent = true;
         } else if (QQuickPathText *text = qobject_cast<QQuickPathText *>(pathElement)) {
             text->addToPath(path);
@@ -440,13 +440,13 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
 
     // Fixup end points
     const AttributePoint &last = attributePoints.constLast();
-    for (int ii = 0; ii < attributes.count(); ++ii) {
+    for (int ii = 0; ii < attributes.size(); ++ii) {
         if (!last.values.contains(attributes.at(ii)))
             endpoint(attributePoints, attributes.at(ii));
     }
     if (usesPercent && !last.values.contains(percentString)) {
         d->_attributePoints.last().values[percentString] = 1;
-        interpolate(d->_attributePoints.count() - 1, percentString, 1);
+        interpolate(d->_attributePoints.size() - 1, percentString, 1);
     }
     scalePath(path, d->scale);
 
@@ -454,7 +454,7 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
     qreal length = path.length();
     qreal prevpercent = 0;
     qreal prevorigpercent = 0;
-    for (int ii = 0; ii < attributePoints.count(); ++ii) {
+    for (int ii = 0; ii < attributePoints.size(); ++ii) {
         const AttributePoint &point = attributePoints.at(ii);
         if (point.values.contains(percentString)) { //special string for QQuickPathPercent
             if ( ii > 0) {
@@ -676,10 +676,10 @@ void QQuickPath::createPointCache() const
         //find which set we are in
         qreal prevPercent = 0;
         qreal prevOrigPercent = 0;
-        for (int ii = 0; ii < d->_attributePoints.count(); ++ii) {
+        for (int ii = 0; ii < d->_attributePoints.size(); ++ii) {
             qreal percent = qreal(i)/segments;
             const AttributePoint &point = d->_attributePoints.at(ii);
-            if (percent < point.percent || ii == d->_attributePoints.count() - 1) { //### || is special case for very last item
+            if (percent < point.percent || ii == d->_attributePoints.size() - 1) { //### || is special case for very last item
                 qreal elementPercent = (percent - prevPercent);
 
                 qreal spc = prevOrigPercent + elementPercent * point.scale;
@@ -773,10 +773,10 @@ QPointF QQuickPath::forwardsPointAt(const QPainterPath &path, const qreal &pathL
     //find which set we are in
     qreal prevPercent = 0;
     qreal prevOrigPercent = 0;
-    for (int ii = 0; ii < attributePoints.count(); ++ii) {
+    for (int ii = 0; ii < attributePoints.size(); ++ii) {
         qreal percent = p;
         const AttributePoint &point = attributePoints.at(ii);
-        if (percent < point.percent || ii == attributePoints.count() - 1) {
+        if (percent < point.percent || ii == attributePoints.size() - 1) {
             qreal elementPercent = (percent - prevPercent);
 
             qreal spc = prevOrigPercent + elementPercent * point.scale;
@@ -827,7 +827,7 @@ QPointF QQuickPath::backwardsPointAt(const QPainterPath &path, const qreal &path
     qreal prevLength = currLength - bezLength;
     qreal epc = prevLength / pathLength;
 
-    for (int ii = attributePoints.count() - 1; ii > 0; --ii) {
+    for (int ii = attributePoints.size() - 1; ii > 0; --ii) {
         qreal percent = p;
         const AttributePoint &point = attributePoints.at(ii);
         const AttributePoint &prevPoint = attributePoints.at(ii-1);
@@ -928,7 +928,7 @@ qreal QQuickPath::attributeAt(const QString &name, qreal percent) const
     if (percent < 0 || percent > 1)
         return 0;
 
-    for (int ii = 0; ii < d->_attributePoints.count(); ++ii) {
+    for (int ii = 0; ii < d->_attributePoints.size(); ++ii) {
         const AttributePoint &point = d->_attributePoints.at(ii);
 
         if (point.percent == percent) {
@@ -1711,17 +1711,17 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     } else {
         prev = path.currentPosition();
         bool prevFarSet = false;
-        if (index == -1 && data.curves.count() > 1) {
-            if (qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(data.curves.count()-1))) {
+        if (index == -1 && data.curves.size() > 1) {
+            if (qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(data.curves.size()-1))) {
                 //TODO: profile and optimize
                 QPointF pos = prev;
                 QQuickPathData loopData;
                 loopData.endPoint = data.endPoint;
                 loopData.curves = data.curves;
-                for (int i = data.index; i < data.curves.count(); ++i) {
+                for (int i = data.index; i < data.curves.size(); ++i) {
                     loopData.index = i;
                     pos = positionForCurve(loopData, pos);
-                    if (i == data.curves.count()-2)
+                    if (i == data.curves.size()-2)
                         prevFar = pos;
                 }
                 if (pos == QPointF(path.elementAt(0))) {
@@ -1740,7 +1740,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
 
     //get next point
     index = data.index + 1;
-    if (index < data.curves.count() && qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(index))) {
+    if (index < data.curves.size() && qobject_cast<QQuickPathCatmullRomCurve*>(data.curves.at(index))) {
         QQuickPathData nextData;
         nextData.index = index;
         nextData.endPoint = data.endPoint;

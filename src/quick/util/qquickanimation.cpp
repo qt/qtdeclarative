@@ -965,7 +965,7 @@ void QQuickScriptActionPrivate::debugAction(QDebug d, int indentLevel) const
         QString exprStr = expr.expression();
         int endOfFirstLine = exprStr.indexOf(u'\n');
         d << "\n" << ind.constData() << QStringView{exprStr}.left(endOfFirstLine);
-        if (endOfFirstLine != -1 && endOfFirstLine < exprStr.length())
+        if (endOfFirstLine != -1 && endOfFirstLine < exprStr.size())
             d << "...";
     }
 }
@@ -1194,7 +1194,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
     };
 
     QStringList props = d->properties.isEmpty() ? QStringList() : d->properties.split(QLatin1Char(','));
-    for (int ii = 0; ii < props.count(); ++ii)
+    for (int ii = 0; ii < props.size(); ++ii)
         props[ii] = props.at(ii).trimmed();
     if (!d->propertyName.isEmpty())
         props << d->propertyName;
@@ -1218,8 +1218,8 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
     bool hasExplicit = false;
     //an explicit animation has been specified
     if (d->value.isValid()) {
-        for (int i = 0; i < props.count(); ++i) {
-            for (int j = 0; j < targets.count(); ++j) {
+        for (int i = 0; i < props.size(); ++i) {
+            for (int j = 0; j < targets.size(); ++j) {
                 QQuickStateAction myAction;
                 myAction.property = d->createProperty(targets.at(j), props.at(i), this);
                 if (myAction.property.isValid()) {
@@ -1688,7 +1688,7 @@ QQuickAbstractAnimation *QQuickAnimationGroupPrivate::at_animation(QQmlListPrope
 qsizetype QQuickAnimationGroupPrivate::count_animation(QQmlListProperty<QQuickAbstractAnimation> *list)
 {
     if (auto q = qmlobject_cast<QQuickAnimationGroup *>(list->object))
-        return q->d_func()->animations.count();
+        return q->d_func()->animations.size();
     return 0;
 }
 
@@ -1696,7 +1696,7 @@ void QQuickAnimationGroupPrivate::clear_animation(QQmlListProperty<QQuickAbstrac
 {
     QQuickAnimationGroup *q = qobject_cast<QQuickAnimationGroup *>(list->object);
     if (q) {
-        while (q->d_func()->animations.count()) {
+        while (q->d_func()->animations.size()) {
             QQuickAbstractAnimation *firstAnim = q->d_func()->animations.at(0);
             firstAnim->setGroup(nullptr);
         }
@@ -1723,7 +1723,7 @@ void QQuickAnimationGroupPrivate::removeLast_animation(QQmlListProperty<QQuickAb
 QQuickAnimationGroup::~QQuickAnimationGroup()
 {
     Q_D(QQuickAnimationGroup);
-    for (int i = 0; i < d->animations.count(); ++i)
+    for (int i = 0; i < d->animations.size(); ++i)
         d->animations.at(i)->d_func()->group = nullptr;
     d->animations.clear();
 }
@@ -1812,14 +1812,14 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
     int from = 0;
     if (direction == Backward) {
         inc = -1;
-        from = d->animations.count() - 1;
+        from = d->animations.size() - 1;
     }
 
     ThreadingModel execution = threadingModel();
 
     bool valid = d->defaultProperty.isValid();
     QAbstractAnimationJob* anim;
-    for (int ii = from; ii < d->animations.count() && ii >= 0; ii += inc) {
+    for (int ii = from; ii < d->animations.size() && ii >= 0; ii += inc) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
@@ -1902,7 +1902,7 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
 
     bool valid = d->defaultProperty.isValid();
     QAbstractAnimationJob* anim;
-    for (int ii = 0; ii < d->animations.count(); ++ii) {
+    for (int ii = 0; ii < d->animations.size(); ++ii) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
@@ -2641,7 +2641,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
     QQuickStateActions newActions;
 
     QStringList props = d->properties.isEmpty() ? QStringList() : d->properties.split(QLatin1Char(','));
-    for (int ii = 0; ii < props.count(); ++ii)
+    for (int ii = 0; ii < props.size(); ++ii)
         props[ii] = props.at(ii).trimmed();
     if (!d->propertyName.isEmpty())
         props << d->propertyName;
@@ -2673,8 +2673,8 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
         QVector<QString> errorMessages;
         bool successfullyCreatedDefaultProperty = false;
 
-        for (int i = 0; i < props.count(); ++i) {
-            for (int j = 0; j < targets.count(); ++j) {
+        for (int i = 0; i < props.size(); ++i) {
+            for (int j = 0; j < targets.size(); ++j) {
                 QQuickStateAction myAction;
                 QString errorMessage;
                 const QString &propertyName = props.at(i);

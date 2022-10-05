@@ -115,7 +115,7 @@ public:
         // one. when an item is released, we'll reset m_freePage anyway.
         if (!p) {
             p = new AllocatorPage<Type, PageSize>();
-            m_freePage = pages.count();
+            m_freePage = pages.size();
             pages.push_back(p);
         }
         uint pos = p->blocks[PageSize - p->available];

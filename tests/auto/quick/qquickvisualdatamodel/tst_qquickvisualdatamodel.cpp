@@ -61,7 +61,7 @@ public:
         Branch(Branch *parent = nullptr) : parent(parent) {}
         ~Branch() { foreach (const Node &child, children) delete child.branch; }
         int indexOf(Branch *branch) const {
-            for (int i = 0; i < children.count(); ++i) {
+            for (int i = 0; i < children.size(); ++i) {
                 if (children.at(i).branch == branch)
                     return i;
             }
@@ -109,7 +109,7 @@ public:
         if (row < 0 || column != 0)
             return QModelIndex();
         Branch * const branch = branchForIndex(parent);
-        return branch && row < branch->children.count()
+        return branch && row < branch->children.size()
                 ? createIndex(row, column, branch)
                 : QModelIndex();
     }
@@ -123,7 +123,7 @@ public:
 
     int rowCount(const QModelIndex &parent) const override {
         Branch * const branch = branchForIndex(parent);
-        return branch ? branch->children.count() : 0;
+        return branch ? branch->children.size() : 0;
     }
 
     int columnCount(const QModelIndex &parent) const override {
@@ -138,9 +138,9 @@ public:
     }
 
     void insert(const QModelIndex &parent, int index, const QStringList &data) {
-        beginInsertRows(parent, index, index + data.count() - 1);
+        beginInsertRows(parent, index, index + data.size() - 1);
         Branch * const branch = createBranchForIndex(parent);
-        for (int i = 0; i < data.count(); ++i)
+        for (int i = 0; i < data.size(); ++i)
             branch->children.insert(index + i, Node(data.at(i)));
         endInsertRows();
     }
@@ -188,14 +188,14 @@ public:
     }
 
     void setList(const QStringList &l) {
-        if (trunk.children.count() > 0) {
-            beginRemoveRows(QModelIndex(), 0, trunk.children.count() - 1);
+        if (trunk.children.size() > 0) {
+            beginRemoveRows(QModelIndex(), 0, trunk.children.size() - 1);
             foreach (const Node &child, trunk.children) delete child.branch;
             trunk.children.clear();
             endRemoveRows();
         }
-        if (l.count() > 0) {
-            beginInsertRows(QModelIndex(), 0, l.count() -1);
+        if (l.size() > 0) {
+            beginInsertRows(QModelIndex(), 0, l.size() -1);
             foreach (const QString &string, l)
                 trunk.children.append(Node(string));
             endInsertRows();
@@ -1040,14 +1040,14 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
 
     QSignalSpy spy(obj, SIGNAL(modelUpdated(QQmlChangeSet,bool)));
     model.emitMove(sourceFirst, sourceLast, destinationChild);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
-    QCOMPARE(spy[0].count(), 2);
+    QCOMPARE(spy[0].size(), 2);
     QQmlChangeSet changeSet = spy[0][0].value<QQmlChangeSet>();
-    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().size(), 1);
     QCOMPARE(changeSet.removes().at(0).index, expectFrom);
     QCOMPARE(changeSet.removes().at(0).count, expectCount);
-    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.inserts().size(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, expectTo);
     QCOMPARE(changeSet.inserts().at(0).count, expectCount);
     QCOMPARE(changeSet.removes().at(0).moveId, changeSet.inserts().at(0).moveId);
@@ -1109,33 +1109,33 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     // Move items from the current root index to a sub tree.
     model.move(QModelIndex(), 1, model.index(0, 0), 3, 2);
     QCOMPARE(vdm->count(), 2);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
-    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().size(), 1);
     QCOMPARE(changeSet.removes().at(0).index, 1);
     QCOMPARE(changeSet.removes().at(0).count, 2);
-    QCOMPARE(changeSet.inserts().count(), 0);
+    QCOMPARE(changeSet.inserts().size(), 0);
 
     // Move items from a sub tree to the current root index.
     model.move(model.index(0, 0), 4, QModelIndex(), 2, 1);
     QCOMPARE(vdm->count(), 3);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
-    QCOMPARE(changeSet.removes().count(), 0);
-    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.removes().size(), 0);
+    QCOMPARE(changeSet.inserts().size(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, 2);
     QCOMPARE(changeSet.inserts().at(0).count, 1);
 
     vdm->setRootIndex(QVariant::fromValue(model.index(2, 0)));
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(2, 0));
     QCOMPARE(vdm->count(), 3);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
     changeSet = spy.at(2).at(0).value<QQmlChangeSet>();
-    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().size(), 1);
     QCOMPARE(changeSet.removes().at(0).index, 0);
     QCOMPARE(changeSet.removes().at(0).count, 3);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
-    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.inserts().size(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, 0);
     QCOMPARE(changeSet.inserts().at(0).count, 3);
 
@@ -1143,41 +1143,41 @@ void tst_qquickvisualdatamodel::subtreeRowsMoved()
     model.move(QModelIndex(), 2, QModelIndex(), 0, 1);
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(0, 0));
     QCOMPARE(vdm->count(), 3);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     // Move the current root index, changing its parent.
     model.move(QModelIndex(), 0, model.index(1, 0), 0, 1);
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(0, 0, model.index(0, 0)));
     QCOMPARE(vdm->count(), 3);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     model.insert(model.index(0, 0), 0, QStringList() << "new1" << "new2");
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(2, 0, model.index(0, 0)));
     QCOMPARE(vdm->count(), 3);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     model.remove(model.index(0, 0), 1, 1);
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), model.index(1, 0, model.index(0, 0)));
     QCOMPARE(vdm->count(), 3);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     model.remove(model.index(0, 0), 1, 1);
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), QModelIndex());
     QCOMPARE(vdm->count(), 0);
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
-    QCOMPARE(changeSet.removes().count(), 1);
+    QCOMPARE(changeSet.removes().size(), 1);
     QCOMPARE(changeSet.removes().at(0).index, 0);
     QCOMPARE(changeSet.removes().at(0).count, 3);
-    QCOMPARE(changeSet.inserts().count(), 0);
+    QCOMPARE(changeSet.inserts().size(), 0);
 
     vdm->setRootIndex(QVariant::fromValue(QModelIndex()));
     QCOMPARE(vdm->rootIndex().value<QModelIndex>(), QModelIndex());
     QCOMPARE(vdm->count(), 2);
-    QCOMPARE(spy.count(), 6);
+    QCOMPARE(spy.size(), 6);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
-    QCOMPARE(changeSet.removes().count(), 0);
-    QCOMPARE(changeSet.inserts().count(), 1);
+    QCOMPARE(changeSet.removes().size(), 0);
+    QCOMPARE(changeSet.inserts().size(), 1);
     QCOMPARE(changeSet.inserts().at(0).index, 0);
     QCOMPARE(changeSet.inserts().at(0).count, 2);
 }
@@ -1209,44 +1209,44 @@ void tst_qquickvisualdatamodel::watchedRoles()
     QCOMPARE(vdm->count(), 30);
 
     emit model.dataChanged(model.index(0), model.index(4));
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     emit model.dataChanged(model.index(0), model.index(4), QVector<int>() << QaimModel::Name);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     emit model.dataChanged(model.index(0), model.index(4), QVector<int>() << QaimModel::Number);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     vdm->setWatchedRoles(QList<QByteArray>() << "name" << "dummy");
 
     emit model.dataChanged(model.index(0), model.index(4));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
     emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 1);
     QCOMPARE(changeSet.changes().at(0).count, 6);
 
     emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     vdm->setWatchedRoles(QList<QByteArray>() << "number" << "dummy");
 
     emit model.dataChanged(model.index(0), model.index(4));
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
     emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 8);
     QCOMPARE(changeSet.changes().at(0).count, 1);
@@ -1254,19 +1254,19 @@ void tst_qquickvisualdatamodel::watchedRoles()
     vdm->setWatchedRoles(QList<QByteArray>() << "number" << "name");
 
     emit model.dataChanged(model.index(0), model.index(4));
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
     emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
-    QCOMPARE(spy.count(), 6);
+    QCOMPARE(spy.size(), 6);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 1);
     QCOMPARE(changeSet.changes().at(0).count, 6);
 
     emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
-    QCOMPARE(spy.count(), 7);
+    QCOMPARE(spy.size(), 7);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 8);
     QCOMPARE(changeSet.changes().at(0).count, 1);
@@ -2427,24 +2427,24 @@ void tst_qquickvisualdatamodel::incompleteModel()
     QSignalSpy persistedItemsSpy(model->items(), SIGNAL(countChanged()));
 
     evaluate<void>(model, "items.removeGroups(0, items.count, \"items\")");
-    QCOMPARE(itemsSpy.count(), 0);
-    QCOMPARE(persistedItemsSpy.count(), 0);
+    QCOMPARE(itemsSpy.size(), 0);
+    QCOMPARE(persistedItemsSpy.size(), 0);
 
     evaluate<void>(model, "items.setGroups(0, items.count, \"persistedItems\")");
-    QCOMPARE(itemsSpy.count(), 0);
-    QCOMPARE(persistedItemsSpy.count(), 0);
+    QCOMPARE(itemsSpy.size(), 0);
+    QCOMPARE(persistedItemsSpy.size(), 0);
 
     evaluate<void>(model, "items.addGroups(0, items.count, \"persistedItems\")");
-    QCOMPARE(itemsSpy.count(), 0);
-    QCOMPARE(persistedItemsSpy.count(), 0);
+    QCOMPARE(itemsSpy.size(), 0);
+    QCOMPARE(persistedItemsSpy.size(), 0);
 
     evaluate<void>(model, "items.remove(0, items.count)");
-    QCOMPARE(itemsSpy.count(), 0);
-    QCOMPARE(persistedItemsSpy.count(), 0);
+    QCOMPARE(itemsSpy.size(), 0);
+    QCOMPARE(persistedItemsSpy.size(), 0);
 
     evaluate<void>(model, "items.insert([ \"color\": \"blue\" ])");
-    QCOMPARE(itemsSpy.count(), 0);
-    QCOMPARE(persistedItemsSpy.count(), 0);
+    QCOMPARE(itemsSpy.size(), 0);
+    QCOMPARE(persistedItemsSpy.size(), 0);
 
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*get: index out of range"));
     QVERIFY(evaluate<bool>(model, "items.get(0) === undefined"));
@@ -3070,7 +3070,7 @@ void tst_qquickvisualdatamodel::insert()
     QCOMPARE(evaluate<int>(visualModel, "visibleItems.count"), visible ? visualCount : modelCount);
     QCOMPARE(evaluate<int>(visualModel, "selectedItems.count"), selected ? 1 : 0);
 
-    QCOMPARE(propertyData.count(), visualCount);
+    QCOMPARE(propertyData.size(), visualCount);
     for (int i = 0; i < visualCount; ++i) {
         int modelIndex = i;
         if (modelIndex > index)
@@ -3538,7 +3538,7 @@ void tst_qquickvisualdatamodel::resolve()
     QCOMPARE(evaluate<int>(visualModel, "visibleItems.count"), visible ? visualCount : modelCount);
     QCOMPARE(evaluate<int>(visualModel, "selectedItems.count"), selected ? 1 : 0);
 
-    QCOMPARE(propertyData.count(), visualCount);
+    QCOMPARE(propertyData.size(), visualCount);
     for (int i = 0; i < visualCount; ++i) {
         int modelIndex = i;
 
@@ -3939,7 +3939,7 @@ void tst_qquickvisualdatamodel::invalidAttachment()
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object);
-    QCOMPARE(component.errors().count(), 0);
+    QCOMPARE(component.errors().size(), 0);
 
     QVariant property = object->property("invalidVdm");
     QCOMPARE(property.userType(), qMetaTypeId<QQmlDelegateModel *>());
@@ -4268,7 +4268,7 @@ public:
     static qsizetype listLength(QQmlListProperty<QObject> *property)
     {
         auto objectsProvider = qobject_cast<ObjectsProvider*>(property->object);
-        return objectsProvider ? objectsProvider->m_objects.length() : 0;
+        return objectsProvider ? objectsProvider->m_objects.size() : 0;
     }
 
     static QObject* listAt(QQmlListProperty<QObject> *property, qsizetype index)

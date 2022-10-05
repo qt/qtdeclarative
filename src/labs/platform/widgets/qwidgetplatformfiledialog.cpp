@@ -21,7 +21,7 @@ QWidgetPlatformFileDialog::QWidgetPlatformFileDialog(QObject *parent)
     });
     connect(m_dialog.data(), &QFileDialog::filesSelected, [this](const QList<QString> &files) {
         QList<QUrl> urls;
-        urls.reserve(files.count());
+        urls.reserve(files.size());
         for (const QString &file : files)
             urls += QUrl::fromLocalFile(file);
         emit filesSelected(urls);

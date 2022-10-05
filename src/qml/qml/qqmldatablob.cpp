@@ -256,7 +256,7 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
     Q_ASSERT(m_errors.isEmpty());
 
     // m_errors must be set before the m_data fence
-    m_errors.reserve(errors.count());
+    m_errors.reserve(errors.size());
     for (const QQmlError &error : errors) {
         if (error.url().isEmpty()) {
             QQmlError mutableError = error;
@@ -271,7 +271,7 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
 
     if (dumpErrors()) {
         qWarning().nospace() << "Errors for " << urlString();
-        for (int ii = 0; ii < errors.count(); ++ii)
+        for (int ii = 0; ii < errors.size(); ++ii)
             qWarning().nospace() << "    " << qPrintable(errors.at(ii).toString());
     }
     cancelAllWaitingFor();
@@ -506,7 +506,7 @@ void QQmlDataBlob::tryDone()
 
 void QQmlDataBlob::cancelAllWaitingFor()
 {
-    while (m_waitingFor.count()) {
+    while (m_waitingFor.size()) {
         QQmlRefPointer<QQmlDataBlob> blob = m_waitingFor.takeLast();
 
         Q_ASSERT(blob->m_waitingOnMe.contains(this));
@@ -517,7 +517,7 @@ void QQmlDataBlob::cancelAllWaitingFor()
 
 void QQmlDataBlob::notifyAllWaitingOnMe()
 {
-    while (m_waitingOnMe.count()) {
+    while (m_waitingOnMe.size()) {
         QQmlDataBlob *blob = m_waitingOnMe.takeLast();
 
         Q_ASSERT(std::any_of(blob->m_waitingFor.constBegin(), blob->m_waitingFor.constEnd(),
@@ -536,7 +536,7 @@ void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
     m_inCallback = true;
 
     QQmlRefPointer<QQmlDataBlob> blobRef;
-    for (int i = 0; i < m_waitingFor.count(); ++i) {
+    for (int i = 0; i < m_waitingFor.size(); ++i) {
         if (m_waitingFor.at(i).data() == blob) {
             blobRef = m_waitingFor.takeAt(i);
             break;
@@ -579,7 +579,7 @@ QString QQmlDataBlob::SourceCodeData::readAll(QString *error) const
     }
 
     QByteArray data(fileSize, Qt::Uninitialized);
-    if (f.read(data.data(), data.length()) != data.length()) {
+    if (f.read(data.data(), data.size()) != data.size()) {
         *error = f.errorString();
         return QString();
     }

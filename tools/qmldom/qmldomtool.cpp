@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
             hadFailures = hadFailures || !bool(res);
         }
     } else if (parser.isSet(dumpAstOption)) {
-        if (pathsToDump.length() > 1) {
+        if (pathsToDump.size() > 1) {
             qWarning() << "--dump-ast can only be used with a single file";
             return 1;
         }

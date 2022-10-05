@@ -28,7 +28,7 @@ int ProxyTestInnerModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    return m_values.count();
+    return m_values.size();
 }
 
 int ProxyTestInnerModel::columnCount(const QModelIndex &parent) const
@@ -49,7 +49,7 @@ QVariant ProxyTestInnerModel::data(const QModelIndex &index, int role) const
 
 void ProxyTestInnerModel::append(const QString &s)
 {
-    beginInsertRows(QModelIndex(), m_values.count(), m_values.count());
+    beginInsertRows(QModelIndex(), m_values.size(), m_values.size());
     m_values << s;
     endInsertRows();
 }

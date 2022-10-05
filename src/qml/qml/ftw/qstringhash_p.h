@@ -38,7 +38,7 @@ public:
     }
 
     QStringHashNode(const QHashedString &key)
-    : length(key.length()), hash(key.hash()), symbolId(0)
+    : length(key.size()), hash(key.hash()), symbolId(0)
     , arrayData(mutableStringData(key).d_ptr())
     , strData(mutableStringData(key).data())
     {
@@ -491,7 +491,7 @@ int QStringHash<T>::numBuckets() const
 template<class T>
 void QStringHash<T>::initializeNode(Node *node, const QHashedString &key)
 {
-    node->length = key.length();
+    node->length = key.size();
     node->hash = key.hash();
     node->arrayData = mutableStringData(key).d_ptr();
     node->strData = mutableStringData(key).data();

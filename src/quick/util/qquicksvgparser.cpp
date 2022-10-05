@@ -249,7 +249,7 @@ bool QQuickSvgParser::parsePathDataFast(const QString &dataStr, QPainterPath &pa
         if (pathElem == QLatin1Char('z') || pathElem == QLatin1Char('Z'))
             arg.append(0);//dummy
         const qreal *num = arg.constData();
-        int count = arg.count();
+        int count = arg.size();
         while (count > 0) {
             qreal offsetX = x;        // correction offsets
             qreal offsetY = y;        // for relative commands

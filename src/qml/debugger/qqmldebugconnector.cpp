@@ -95,7 +95,7 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
 
             int connectorEnd = params->arguments.indexOf(QLatin1Char(','), connectorBegin);
             if (connectorEnd == -1)
-                connectorEnd = params->arguments.length();
+                connectorEnd = params->arguments.size();
 
             params->instance = loadQQmlDebugConnector(params->arguments.mid(
                                                           connectorBegin,

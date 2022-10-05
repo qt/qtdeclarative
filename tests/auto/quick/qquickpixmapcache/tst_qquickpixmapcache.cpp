@@ -203,7 +203,7 @@ void tst_qquickpixmapcache::parallel()
     QList<bool> pending;
     QList<Slotter*> getters;
 
-    for (int i=0; i<targets.count(); ++i) {
+    for (int i=0; i<targets.size(); ++i) {
         QUrl target = targets.at(i);
         QQuickPixmap *pixmap = new QQuickPixmap;
 
@@ -223,9 +223,9 @@ void tst_qquickpixmapcache::parallel()
         }
     }
 
-    if (incache + slotters != targets.count())
+    if (incache + slotters != targets.size())
         QFAIL(QString::fromLatin1("pixmap counts don't add up: %1 incache, %2 slotters, %3 total")
-              .arg(incache).arg(slotters).arg(targets.count()).toLatin1().constData());
+              .arg(incache).arg(slotters).arg(targets.size()).toLatin1().constData());
 
     if (cancel >= 0) {
         pixmaps.at(cancel)->clear(getters[cancel]);
@@ -237,7 +237,7 @@ void tst_qquickpixmapcache::parallel()
         QVERIFY(!QTestEventLoop::instance().timeout());
     }
 
-    for (int i=0; i<targets.count(); ++i) {
+    for (int i=0; i<targets.size(); ++i) {
         QQuickPixmap *pixmap = pixmaps[i];
 
         if (i == cancel) {

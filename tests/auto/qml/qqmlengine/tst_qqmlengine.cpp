@@ -716,7 +716,7 @@ void tst_qqmlengine::outputWarningsToStandardError()
     QVERIFY(o != nullptr);
     o.reset();
 
-    QCOMPARE(messageHandler.messages().count(), 1);
+    QCOMPARE(messageHandler.messages().size(), 1);
     QCOMPARE(messageHandler.messages().at(0), QLatin1String("<Unknown File>:1:32: Unable to assign [undefined] to int"));
     messageHandler.clear();
 
@@ -778,7 +778,7 @@ void tst_qqmlengine::objectOwnership()
                         c.createWithInitialProperties({{"test", QVariant::fromValue(this)}}));
             QVERIFY(o != nullptr);
         }
-        QTRY_VERIFY(spy.count());
+        QTRY_VERIFY(spy.size());
     }
     {
         QObject *ptr = new QObject();
@@ -795,7 +795,7 @@ void tst_qqmlengine::objectOwnership()
             QQmlProperty testProp(o.data(), "test");
             testProp.write(QVariant::fromValue<QObject*>(nullptr));
         }
-        QTRY_VERIFY(spy.count());
+        QTRY_VERIFY(spy.size());
     }
 }
 

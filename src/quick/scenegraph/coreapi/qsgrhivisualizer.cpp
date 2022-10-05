@@ -275,7 +275,7 @@ QRhiGraphicsPipeline *RhiVisualizer::PipelineCache::pipeline(RhiVisualizer *visu
                                                              quint32 vertexStride,
                                                              bool blendOneOne)
 {
-    for (int i = 0, ie = pipelines.count(); i != ie; ++i) {
+    for (int i = 0, ie = pipelines.size(); i != ie; ++i) {
         const Pipeline &p(pipelines.at(i));
         if (p.topology == topology && p.format == vertexFormat && p.stride == vertexStride)
             return p.ps;
@@ -316,7 +316,7 @@ QRhiGraphicsPipeline *RhiVisualizer::PipelineCache::pipeline(RhiVisualizer *visu
 
 void RhiVisualizer::PipelineCache::releaseResources()
 {
-    for (int i = 0, ie = pipelines.count(); i != ie; ++i)
+    for (int i = 0, ie = pipelines.size(); i != ie; ++i)
         delete pipelines.at(i).ps;
 
     pipelines.clear();

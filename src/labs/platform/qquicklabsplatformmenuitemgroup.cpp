@@ -339,7 +339,7 @@ void QQuickLabsPlatformMenuItemGroup::items_append(QQmlListProperty<QQuickLabsPl
 qsizetype QQuickLabsPlatformMenuItemGroup::items_count(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop)
 {
     QQuickLabsPlatformMenuItemGroup *group = static_cast<QQuickLabsPlatformMenuItemGroup *>(prop->object);
-    return group->m_items.count();
+    return group->m_items.size();
 }
 
 QQuickLabsPlatformMenuItem *QQuickLabsPlatformMenuItemGroup::items_at(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop, qsizetype index)

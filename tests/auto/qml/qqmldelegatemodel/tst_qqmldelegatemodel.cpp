@@ -56,7 +56,7 @@ public:
         if (parent.isValid())
             return 0;
 
-        return mValues.count();
+        return mValues.size();
     }
 
     int columnCount(const QModelIndex &parent) const override
@@ -187,15 +187,15 @@ void tst_QQmlDelegateModel::nestedDelegates()
     QScopedPointer<QObject> o(c.create());
 
     QQuickItem *item = qobject_cast<QQuickItem *>(o.data());
-    QCOMPARE(item->childItems().length(), 2);
+    QCOMPARE(item->childItems().size(), 2);
     for (QQuickItem *child : item->childItems()) {
         if (child->objectName() != QLatin1String("loader"))
             continue;
 
-        QCOMPARE(child->childItems().length(), 1);
+        QCOMPARE(child->childItems().size(), 1);
         QQuickItem *timeMarks = child->childItems().at(0);
         const QList<QQuickItem *> children = timeMarks->childItems();
-        QCOMPARE(children.length(), 2);
+        QCOMPARE(children.size(), 2);
 
         // One of them is the repeater, the other one is the rectangle
         QVERIFY(children.at(0)->objectName() == QLatin1String("zap")

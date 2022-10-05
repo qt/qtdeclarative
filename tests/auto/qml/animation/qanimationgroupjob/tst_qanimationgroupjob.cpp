@@ -81,7 +81,7 @@ public:
 
     int count()
     {
-        return states.count();
+        return states.size();
     }
 
     QList<QAbstractAnimationJob::State> states;

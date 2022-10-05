@@ -280,7 +280,7 @@ struct PolishLoopDetector
      **/
     bool check(QQuickItem *item, int itemsRemainingBeforeUpdatePolish)
     {
-        if (itemsToPolish.count() > itemsRemainingBeforeUpdatePolish) {
+        if (itemsToPolish.size() > itemsRemainingBeforeUpdatePolish) {
             // Detected potential polish loop.
             ++numPolishLoopsInSequence;
             if (numPolishLoopsInSequence >= 1000) {
@@ -339,7 +339,7 @@ void QQuickWindowPrivate::polishItems()
         QQuickItem *item = itemsToPolish.takeLast();
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         itemPrivate->polishScheduled = false;
-        const int itemsRemaining = itemsToPolish.count();
+        const int itemsRemaining = itemsToPolish.size();
         itemPrivate->updatePolish();
         item->updatePolish();
         if (polishLoopDetector.check(item, itemsRemaining) == true)
@@ -1684,7 +1684,7 @@ QPair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorItemAnd
 
     if (itemPrivate->subtreeCursorEnabled) {
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-        for (int ii = children.count() - 1; ii >= 0; --ii) {
+        for (int ii = children.size() - 1; ii >= 0; --ii) {
             QQuickItem *child = children.at(ii);
             if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
                 continue;
@@ -1807,7 +1807,7 @@ void QQuickWindowPrivate::rhiCreationFailureMessage(const QString &backendName,
 
 void QQuickWindowPrivate::cleanupNodes()
 {
-    for (int ii = 0; ii < cleanupNodeList.count(); ++ii)
+    for (int ii = 0; ii < cleanupNodeList.size(); ++ii)
         delete cleanupNodeList.at(ii);
     cleanupNodeList.clear();
 }
@@ -1842,7 +1842,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
         }
     }
 
-    for (int ii = 0; ii < p->childItems.count(); ++ii)
+    for (int ii = 0; ii < p->childItems.size(); ++ii)
         cleanupNodesOnShutdown(p->childItems.at(ii));
 }
 
@@ -1897,7 +1897,7 @@ static QSGNode *fetchNextNode(QQuickItemPrivate *itemPriv, int &ii, bool &return
 {
     QList<QQuickItem *> orderedChildren = itemPriv->paintOrderChildItems();
 
-    for (; ii < orderedChildren.count() && orderedChildren.at(ii)->z() < 0; ++ii) {
+    for (; ii < orderedChildren.size() && orderedChildren.at(ii)->z() < 0; ++ii) {
         QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
         if (!childPrivate->explicitVisible &&
             (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
@@ -1912,7 +1912,7 @@ static QSGNode *fetchNextNode(QQuickItemPrivate *itemPriv, int &ii, bool &return
         return itemPriv->paintNode;
     }
 
-    for (; ii < orderedChildren.count(); ++ii) {
+    for (; ii < orderedChildren.size(); ++ii) {
         QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(orderedChildren.at(ii));
         if (!childPrivate->explicitVisible &&
             (!childPrivate->extra.isAllocated() || !childPrivate->extra->effectRefCount))
@@ -1940,7 +1940,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         if (itemPriv->x != 0. || itemPriv->y != 0.)
             matrix.translate(itemPriv->x, itemPriv->y);
 
-        for (int ii = itemPriv->transforms.count() - 1; ii >= 0; --ii)
+        for (int ii = itemPriv->transforms.size() - 1; ii >= 0; --ii)
             itemPriv->transforms.at(ii)->applyTo(&matrix);
 
         if (itemPriv->scale() != 1. || itemPriv->rotation() != 0.) {

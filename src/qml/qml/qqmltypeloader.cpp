@@ -1033,7 +1033,7 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
         return QString();
 
     QString absoluteFilePath;
-    QString fileName(path.mid(lastSlash+1, path.length()-lastSlash-1));
+    QString fileName(path.mid(lastSlash+1, path.size()-lastSlash-1));
 
     bool *value = fileSet->object(fileName);
     if (value) {
@@ -1046,7 +1046,7 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
             absoluteFilePath = path;
     }
 
-    if (absoluteFilePath.length() > 2 && absoluteFilePath.at(0) != QLatin1Char('/') && absoluteFilePath.at(1) != QLatin1Char(':'))
+    if (absoluteFilePath.size() > 2 && absoluteFilePath.at(0) != QLatin1Char('/') && absoluteFilePath.at(1) != QLatin1Char(':'))
         absoluteFilePath = QFileInfo(absoluteFilePath).absoluteFilePath();
 
     return absoluteFilePath;
@@ -1132,7 +1132,7 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
         return fileInfo.exists() && fileInfo.isDir();
     }
 
-    int length = path.length();
+    int length = path.size();
     if (path.endsWith(QLatin1Char('/')))
         --length;
     QString dirPath(path.left(length));
@@ -1169,7 +1169,7 @@ const QQmlTypeLoaderQmldirContent QQmlTypeLoader::qmldirContent(const QString &f
     // Yet, this heuristic is the best we can do until we pass more structured information here,
     // for example a QUrl also for local files.
     QUrl url(filePathIn);
-    if (url.scheme().length() < 2) {
+    if (url.scheme().size() < 2) {
         filePath = filePathIn;
     } else {
         filePath = QQmlFile::urlToLocalFileOrQrc(url);

@@ -127,20 +127,20 @@ void tst_QQuickMenu::count()
 
     menu->addItem(new QQuickItem);
     QCOMPARE(menu->count(), 1);
-    QCOMPARE(countSpy.count(), 1);
+    QCOMPARE(countSpy.size(), 1);
 
     menu->insertItem(0, new QQuickItem);
     QCOMPARE(menu->count(), 2);
-    QCOMPARE(countSpy.count(), 2);
+    QCOMPARE(countSpy.size(), 2);
 
     menu->removeItem(menu->itemAt(1));
     QCOMPARE(menu->count(), 1);
-    QCOMPARE(countSpy.count(), 3);
+    QCOMPARE(countSpy.size(), 3);
 
     QScopedPointer<QQuickItem> item(menu->takeItem(0));
     QVERIFY(item);
     QCOMPARE(menu->count(), 0);
-    QCOMPARE(countSpy.count(), 4);
+    QCOMPARE(countSpy.size(), 4);
 }
 
 void tst_QQuickMenu::mouse()
@@ -186,16 +186,16 @@ void tst_QQuickMenu::mouse()
 
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier,
         QPoint(menu->x() + menu->leftPadding() + firstItem->width() / 2, menu->y() + menu->topPadding() + firstItem->height() / 2));
-    QCOMPARE(clickedSpy.count(), 1);
-    QCOMPARE(triggeredSpy.count(), 1);
-    QTRY_COMPARE(visibleSpy.count(), 1);
+    QCOMPARE(clickedSpy.size(), 1);
+    QCOMPARE(triggeredSpy.size(), 1);
+    QTRY_COMPARE(visibleSpy.size(), 1);
     QVERIFY(!menu->isVisible());
     QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
-    QCOMPARE(visibleSpy.count(), 2);
+    QCOMPARE(visibleSpy.size(), 2);
     QVERIFY(menu->isVisible());
     QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
@@ -206,12 +206,12 @@ void tst_QQuickMenu::mouse()
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
                       QPoint(menu->contentItem()->x() + menu->contentItem()->width() + 1,
                              menu->contentItem()->y() + menu->contentItem()->height() + 1));
-    QTRY_COMPARE(visibleSpy.count(), 3);
+    QTRY_COMPARE(visibleSpy.size(), 3);
     QVERIFY(!menu->isVisible());
     QVERIFY(!overlay->childItems().contains(menu->contentItem()->parentItem()));
 
     menu->open();
-    QCOMPARE(visibleSpy.count(), 4);
+    QCOMPARE(visibleSpy.size(), 4);
     QVERIFY(menu->isVisible());
     QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
@@ -304,7 +304,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
 
     QVERIFY(menu->hasFocus());
     menu->open();
-    QCOMPARE(visibleSpy.count(), 1);
+    QCOMPARE(visibleSpy.size(), 1);
     QVERIFY(menu->isVisible());
     QVERIFY(menu->hasActiveFocus());
     QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
@@ -339,8 +339,8 @@ void tst_QQuickMenu::contextMenuKeyboard()
 
     QSignalSpy secondTriggeredSpy(secondItem, SIGNAL(triggered()));
     QTest::keyClick(window, Qt::Key_Space);
-    QCOMPARE(secondTriggeredSpy.count(), 1);
-    QTRY_COMPARE(visibleSpy.count(), 2);
+    QCOMPARE(secondTriggeredSpy.size(), 1);
+    QTRY_COMPARE(visibleSpy.size(), 2);
     QVERIFY(!menu->isVisible());
     QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
@@ -355,7 +355,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     // Enter/return should also work.
     // Open the menu.
     menu->open();
-    QCOMPARE(visibleSpy.count(), 3);
+    QCOMPARE(visibleSpy.size(), 3);
     QVERIFY(menu->isVisible());
     QTRY_VERIFY(menu->isOpened());
     // Give the first item focus.
@@ -369,8 +369,8 @@ void tst_QQuickMenu::contextMenuKeyboard()
     // Press enter.
     QSignalSpy firstTriggeredSpy(firstItem, SIGNAL(triggered()));
     QTest::keyClick(window, Qt::Key_Return);
-    QCOMPARE(firstTriggeredSpy.count(), 1);
-    QTRY_COMPARE(visibleSpy.count(), 4);
+    QCOMPARE(firstTriggeredSpy.size(), 1);
+    QTRY_COMPARE(visibleSpy.size(), 4);
     QVERIFY(!menu->isVisible());
     QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
@@ -383,7 +383,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
-    QCOMPARE(visibleSpy.count(), 5);
+    QCOMPARE(visibleSpy.size(), 5);
     QVERIFY(menu->isVisible());
     QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
@@ -460,7 +460,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QVERIFY(!thirdItem->isHighlighted());
 
     QTest::keyClick(window, Qt::Key_Escape);
-    QTRY_COMPARE(visibleSpy.count(), 6);
+    QTRY_COMPARE(visibleSpy.size(), 6);
     QVERIFY(!menu->isVisible());
 }
 
@@ -565,7 +565,7 @@ void tst_QQuickMenu::mnemonics()
     QSignalSpy actionSpy(action, &QQuickAction::triggered);
     QVERIFY(actionSpy.isValid());
     keySim.click(Qt::Key_A); // "&Action"
-    QCOMPARE(actionSpy.count(), 1);
+    QCOMPARE(actionSpy.size(), 1);
 
     menu->open();
     QTRY_VERIFY(menu->isOpened());
@@ -574,7 +574,7 @@ void tst_QQuickMenu::mnemonics()
     QVERIFY(menuItemSpy.isValid());
     keySim.click(Qt::Key_I); // "Menu &Item"
     keySim.release(Qt::Key_Alt);
-    QCOMPARE(menuItemSpy.count(), 1);
+    QCOMPARE(menuItemSpy.size(), 1);
 
     keySim.press(Qt::Key_Alt);
     menu->open();
@@ -587,7 +587,7 @@ void tst_QQuickMenu::mnemonics()
     QVERIFY(subMenuItemSpy.isValid());
     keySim.click(Qt::Key_S); // "&Sub Menu Item"
     keySim.release(Qt::Key_Alt);
-    QCOMPARE(subMenuItemSpy.count(), 1);
+    QCOMPARE(subMenuItemSpy.size(), 1);
 }
 
 void tst_QQuickMenu::menuButton()
@@ -614,7 +614,7 @@ void tst_QQuickMenu::menuButton()
     menuButton->setVisible(true);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         menuButton->mapToScene(QPointF(menuButton->width() / 2, menuButton->height() / 2)).toPoint());
-    QCOMPARE(visibleSpy.count(), 1);
+    QCOMPARE(visibleSpy.size(), 1);
     QVERIFY(menu->isVisible());
     QTRY_VERIFY(menu->isOpened());
 
@@ -787,7 +787,7 @@ void tst_QQuickMenu::order()
 
     const QStringList texts = {"dynamic_0", "static_1", "repeated_2", "repeated_3", "static_4", "dynamic_5", "dynamic_6"};
 
-    for (int i = 0; i < texts.count(); ++i) {
+    for (int i = 0; i < texts.size(); ++i) {
         QQuickItem *item = menu->itemAt(i);
         QVERIFY(item);
         QCOMPARE(item->property("text").toString(), texts.at(i));
@@ -1056,7 +1056,7 @@ void tst_QQuickMenu::actionShortcuts()
     QVERIFY(action1TriggeredSpy.isValid());
 
     QTest::keyClick(window, Qt::Key_A);
-    QCOMPARE(action1TriggeredSpy.count(), 1);
+    QCOMPARE(action1TriggeredSpy.size(), 1);
 
     // Try the sub-menu.
     QQuickMenu *subMenu = window->property("subMenu").value<QQuickMenu *>();
@@ -1069,7 +1069,7 @@ void tst_QQuickMenu::actionShortcuts()
     QVERIFY(subMenuAction1TriggeredSpy.isValid());
 
     QTest::keyClick(window, Qt::Key_B);
-    QCOMPARE(subMenuAction1TriggeredSpy.count(), 1);
+    QCOMPARE(subMenuAction1TriggeredSpy.size(), 1);
 
     // Try the button menu.
     QQuickMenu *buttonMenu = window->property("buttonMenu").value<QQuickMenu *>();
@@ -1082,7 +1082,7 @@ void tst_QQuickMenu::actionShortcuts()
     QVERIFY(buttonMenuAction1TriggeredSpy.isValid());
 
     QTest::keyClick(window, Qt::Key_C);
-    QCOMPARE(buttonMenuAction1TriggeredSpy.count(), 1);
+    QCOMPARE(buttonMenuAction1TriggeredSpy.size(), 1);
 }
 #endif
 
@@ -2067,7 +2067,7 @@ void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
     QVERIFY(clickedSpy.isValid());
 
     QTest::keyClick(window, Qt::Key_Return);
-    QCOMPARE(clickedSpy.count(), 1);
+    QCOMPARE(clickedSpy.size(), 1);
 
     // The menu should still be open.
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();

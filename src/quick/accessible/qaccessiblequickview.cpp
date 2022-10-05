@@ -28,7 +28,7 @@ QList<QQuickItem *> QAccessibleQuickWindow::rootItems() const
 
 int QAccessibleQuickWindow::childCount() const
 {
-    return rootItems().count();
+    return rootItems().size();
 }
 
 QAccessibleInterface *QAccessibleQuickWindow::parent() const
@@ -40,7 +40,7 @@ QAccessibleInterface *QAccessibleQuickWindow::parent() const
 QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
 {
     const QList<QQuickItem*> &kids = rootItems();
-    if (index >= 0 && index < kids.count())
+    if (index >= 0 && index < kids.size())
         return QAccessible::queryAccessibleInterface(kids.at(index));
     return nullptr;
 }
@@ -109,7 +109,7 @@ int QAccessibleQuickWindow::indexOfChild(const QAccessibleInterface *iface) cons
     int i = -1;
     if (iface) {
         const QList<QQuickItem *> &roots = rootItems();
-        i = roots.count() - 1;
+        i = roots.size() - 1;
         while (i >= 0) {
             if (iface->object() == roots.at(i))
                 break;

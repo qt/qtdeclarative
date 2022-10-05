@@ -1742,7 +1742,7 @@ void tst_QJSManagedValue::stringByIndex()
     const QString testString = QStringLiteral("foobar");
     QJSManagedValue str(testString, &engine);
 
-    for (uint i = 0; i < testString.length(); ++i) {
+    for (uint i = 0; i < testString.size(); ++i) {
         QVERIFY(str.hasOwnProperty(i));
         QVERIFY(str.hasProperty(i));
 

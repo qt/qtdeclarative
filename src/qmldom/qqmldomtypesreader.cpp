@@ -161,7 +161,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
     comp.setFileName(jsScope->filePath());
     comp.setName(jsScope->internalName());
     m_currentPath = m_currentPath.key(comp.name())
-                            .index(qmltypesFilePtr()->components().values(comp.name()).length());
+                            .index(qmltypesFilePtr()->components().values(comp.name()).size());
     incrementedPath = true;
     prototype = jsScope->baseTypeName();
     defaultPropertyName = jsScope->ownDefaultPropertyName();
@@ -188,7 +188,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
                             .canonicalPath()
                             .field(Fields::components)
                             .key(comp.name())
-                            .index(qmltypesFilePtr()->components().values(comp.name()).length());
+                            .index(qmltypesFilePtr()->components().values(comp.name()).size());
 
     // emit & map objs
     while (it != begin) {

@@ -205,7 +205,7 @@ public:
         int lastNewline = found.lastIndexOf(QLatin1Char('\n'));
         if (lastNewline < 0)
             lastNewline = -int(combined.startColumn);
-        QCOMPARE(cEnd.startColumn, found.length() - lastNewline);
+        QCOMPARE(cEnd.startColumn, found.size() - lastNewline);
     }
 private:
     QString m_codeStr;
@@ -235,7 +235,7 @@ void tst_qqmlparser::initTestCase()
 
 QStringList tst_qqmlparser::findFiles(const QDir &d)
 {
-    for (int ii = 0; ii < excludedDirs.count(); ++ii) {
+    for (int ii = 0; ii < excludedDirs.size(); ++ii) {
         QString s = excludedDirs.at(ii);
         if (d.absolutePath().endsWith(s))
             return QStringList();
@@ -681,7 +681,7 @@ void tst_qqmlparser::annotations_data()
 
     for (const QString &file: qAsConst(files)) {
         auto fileNameStart = file.lastIndexOf(QDir::separator());
-        auto fileName = QStringView(file).mid(fileNameStart, file.length()-fileNameStart);
+        auto fileName = QStringView(file).mid(fileNameStart, file.size()-fileNameStart);
         auto ref=std::find_if(refFiles.constBegin(),refFiles.constEnd(), [fileName](const QString &s){ return s.endsWith(fileName); });
         if (ref != refFiles.constEnd())
             QTest::newRow(qPrintable(file)) << file << *ref;

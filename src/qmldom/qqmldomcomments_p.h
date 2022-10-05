@@ -145,7 +145,7 @@ public:
     Path addPreComment(const Comment &comment, QString regionName)
     {
         auto &preList = regionComments[regionName].preComments;
-        index_type idx = preList.length();
+        index_type idx = preList.size();
         preList.append(comment);
         return Path::Field(Fields::regionComments)
                 .key(regionName)
@@ -156,7 +156,7 @@ public:
     Path addPostComment(const Comment &comment, QString regionName)
     {
         auto &postList = regionComments[regionName].postComments;
-        index_type idx = postList.length();
+        index_type idx = postList.size();
         postList.append(comment);
         return Path::Field(Fields::regionComments)
                 .key(regionName)

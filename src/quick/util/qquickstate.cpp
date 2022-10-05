@@ -243,7 +243,7 @@ QQmlListProperty<QQuickStateOperation> QQuickState::changes()
 int QQuickState::operationCount() const
 {
     Q_D(const QQuickState);
-    return d->operations.count();
+    return d->operations.size();
 }
 
 QQuickStateOperation *QQuickState::operationAt(int index) const
@@ -263,7 +263,7 @@ void QQuickStatePrivate::complete()
 {
     Q_Q(QQuickState);
 
-    for (int ii = 0; ii < reverting.count(); ++ii) {
+    for (int ii = 0; ii < reverting.size(); ++ii) {
         for (int jj = 0; jj < revertList.count(); ++jj) {
             const QQuickRevertAction &revert = reverting.at(ii);
             const QQuickSimpleAction &simple = revertList.at(jj);
@@ -295,7 +295,7 @@ QQuickStatePrivate::generateActionList() const
 
     if (!extends.isEmpty()) {
         QList<QQuickState *> states = group ? group->states() : QList<QQuickState *>();
-        for (int ii = 0; ii < states.count(); ++ii)
+        for (int ii = 0; ii < states.size(); ++ii)
             if (states.at(ii)->name() == extends) {
                 qmlExecuteDeferred(states.at(ii));
                 applyList = static_cast<QQuickStatePrivate*>(states.at(ii)->d_func())->generateActionList();
@@ -447,7 +447,7 @@ void QQuickState::addEntriesToRevertList(const QList<QQuickStateAction> &actionL
     Q_D(QQuickState);
     if (isStateActive()) {
         QList<QQuickSimpleAction> simpleActionList;
-        simpleActionList.reserve(actionList.count());
+        simpleActionList.reserve(actionList.size());
 
         for (const QQuickStateAction &action : actionList) {
             QQuickSimpleAction simpleAction(action);

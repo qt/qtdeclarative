@@ -38,14 +38,14 @@ qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &m
     // Make it const, so that we cannot accidentally detach it.
     const QVector<QV4::Profiling::MemoryAllocationProperties> &memoryData = m_memoryData;
 
-    while (memoryData.length() > m_memoryPos && memoryData[m_memoryPos].timestamp <= until) {
+    while (memoryData.size() > m_memoryPos && memoryData[m_memoryPos].timestamp <= until) {
         const QV4::Profiling::MemoryAllocationProperties &props = memoryData[m_memoryPos];
         d << props.timestamp << int(MemoryAllocation) << int(props.type) << props.size;
         ++m_memoryPos;
         messages.append(d.squeezedData());
         d.clear();
     }
-    return memoryData.length() == m_memoryPos ? -1 : memoryData[m_memoryPos].timestamp;
+    return memoryData.size() == m_memoryPos ? -1 : memoryData[m_memoryPos].timestamp;
 }
 
 qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &messages,
@@ -80,9 +80,9 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
 
     while (true) {
         while (!m_stack.isEmpty() &&
-               (m_functionCallPos == functionCallData.length() ||
+               (m_functionCallPos == functionCallData.size() ||
                 m_stack.top() <= functionCallData[m_functionCallPos].start)) {
-            if (m_stack.top() > until || messages.length() > s_numMessagesPerBatch)
+            if (m_stack.top() > until || messages.size() > s_numMessagesPerBatch)
                 return finalizeMessages(until, messages, m_stack.top(), d);
 
             appendMemoryEvents(m_stack.top(), messages, d);
@@ -90,11 +90,11 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
             messages.append(d.squeezedData());
             d.clear();
         }
-        while (m_functionCallPos != functionCallData.length() &&
+        while (m_functionCallPos != functionCallData.size() &&
                (m_stack.empty() || functionCallData[m_functionCallPos].start < m_stack.top())) {
             const QV4::Profiling::FunctionCallProperties &props =
                     functionCallData[m_functionCallPos];
-            if (props.start > until || messages.length() > s_numMessagesPerBatch)
+            if (props.start > until || messages.size() > s_numMessagesPerBatch)
                 return finalizeMessages(until, messages, props.start, d);
 
             appendMemoryEvents(props.start, messages, d);
@@ -117,7 +117,7 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
             m_stack.push(props.end);
             ++m_functionCallPos;
         }
-        if (m_stack.empty() && m_functionCallPos == functionCallData.length())
+        if (m_stack.empty() && m_functionCallPos == functionCallData.size())
             return finalizeMessages(until, messages, -1, d);
     }
 }

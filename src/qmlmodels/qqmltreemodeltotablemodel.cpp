@@ -133,7 +133,7 @@ int QQmlTreeModelToTableModel::rowCount(const QModelIndex &) const
 {
     if (!m_model)
         return 0;
-    return m_items.count();
+    return m_items.size();
 }
 
 int QQmlTreeModelToTableModel::columnCount(const QModelIndex &parent) const
@@ -166,7 +166,7 @@ QVariant QQmlTreeModelToTableModel::headerData(int section, Qt::Orientation orie
 
 int QQmlTreeModelToTableModel::depthAtRow(int row) const
 {
-    if (row < 0 || row >= m_items.count())
+    if (row < 0 || row >= m_items.size())
         return 0;
     return m_items.at(row).depth;
 }
@@ -177,7 +177,7 @@ int QQmlTreeModelToTableModel::itemIndex(const QModelIndex &index) const
     if (!index.isValid() || index == m_rootIndex || m_items.isEmpty())
         return -1;
 
-    const int totalCount = m_items.count();
+    const int totalCount = m_items.size();
 
     // We start nearest to the lastViewedItem
     int localCount = qMin(m_lastItemIndex - 1, totalCount - m_lastItemIndex);
@@ -232,7 +232,7 @@ QModelIndex QQmlTreeModelToTableModel::mapToModel(const QModelIndex &index) cons
         return QModelIndex();
 
     const int row = index.row();
-    if (row < 0 || row > m_items.count() - 1)
+    if (row < 0 || row > m_items.size() - 1)
         return QModelIndex();
 
     const QModelIndex sourceIndex = m_items.at(row).index;
@@ -245,7 +245,7 @@ QModelIndex QQmlTreeModelToTableModel::mapFromModel(const QModelIndex &index) co
         return QModelIndex();
 
     int row = -1;
-    for (int i = 0; i < m_items.count(); ++i) {
+    for (int i = 0; i < m_items.size(); ++i) {
         const QModelIndex proxyIndex = m_items[i].index;
         if (proxyIndex.row() == index.row() && proxyIndex.parent() == index.parent()) {
             row = i;
@@ -261,7 +261,7 @@ QModelIndex QQmlTreeModelToTableModel::mapFromModel(const QModelIndex &index) co
 
 QModelIndex QQmlTreeModelToTableModel::mapToModel(int row) const
 {
-    if (row < 0 || row >= m_items.count())
+    if (row < 0 || row >= m_items.size())
         return QModelIndex();
     return m_items.at(row).index;
 }
@@ -368,7 +368,7 @@ void QQmlTreeModelToTableModel::showModelChildItems(const TreeItem &parentItem, 
     int rowDepth = rowIdx == 0 ? 0 : parentItem.depth + 1;
     if (doInsertRows)
         beginInsertRows(QModelIndex(), startIdx, startIdx + insertCount - 1);
-    m_items.reserve(m_items.count() + insertCount);
+    m_items.reserve(m_items.size() + insertCount);
 
     for (int i = 0; i < insertCount; i++) {
         const QModelIndex &cmi = m_model->index(start + i, 0, parentIndex);
@@ -446,14 +446,14 @@ bool QQmlTreeModelToTableModel::isExpanded(const QModelIndex &index) const
 
 bool QQmlTreeModelToTableModel::isExpanded(int row) const
 {
-    if (row < 0 || row >= m_items.count())
+    if (row < 0 || row >= m_items.size())
         return false;
     return m_items.at(row).expanded;
 }
 
 bool QQmlTreeModelToTableModel::hasChildren(int row) const
 {
-    if (row < 0 || row >= m_items.count())
+    if (row < 0 || row >= m_items.size())
         return false;
     return m_model->hasChildren(m_items[row].index);
 }
@@ -591,7 +591,7 @@ int QQmlTreeModelToTableModel::lastChildIndex(const QModelIndex &index) const
         parent = parent.parent();
     }
 
-    int firstIndex = nextSiblingIndex.isValid() ? itemIndex(nextSiblingIndex) : m_items.count();
+    int firstIndex = nextSiblingIndex.isValid() ? itemIndex(nextSiblingIndex) : m_items.size();
     return firstIndex - 1;
 }
 
@@ -607,7 +607,7 @@ void QQmlTreeModelToTableModel::removeVisibleRows(int startIndex, int endIndex, 
         endRemoveRows();
 
         /* We need to update the model index for all the items below the removed ones */
-        int lastIndex = m_items.count() - 1;
+        int lastIndex = m_items.size() - 1;
         if (startIndex <= lastIndex) {
             const QModelIndex &topLeft = index(startIndex, 0, QModelIndex());
             const QModelIndex &bottomRight = index(lastIndex, 0, QModelIndex());
@@ -647,7 +647,7 @@ void QQmlTreeModelToTableModel::modelDataChanged(const QModelIndex &topLeft, con
     for (int i = topLeft.row(); i <= bottomRight.row(); i++) {
         // Group items with same parent to minize the number of 'dataChanged()' emits
         int bottomIndex = topIndex;
-        while (bottomIndex < m_items.count()) {
+        while (bottomIndex < m_items.size()) {
             const QModelIndex &idx = m_items.at(bottomIndex).index;
             if (idx.parent() != parent) {
                 --bottomIndex;
@@ -663,7 +663,7 @@ void QQmlTreeModelToTableModel::modelDataChanged(const QModelIndex &topLeft, con
         if (i == bottomRight.row())
             break;
         topIndex = bottomIndex + 1;
-        while (topIndex < m_items.count()
+        while (topIndex < m_items.size()
                && m_items.at(topIndex).index.parent() != parent)
             topIndex++;
     }
@@ -687,7 +687,7 @@ void QQmlTreeModelToTableModel::modelLayoutChanged(const QList<QPersistentModelI
         showModelTopLevelItems(false /*doInsertRows*/);
         const QModelIndex &mi = m_model->index(0, 0);
         const int columnCount = m_model->columnCount(mi);
-        emit dataChanged(index(0, 0), index(m_items.count() - 1, columnCount - 1));
+        emit dataChanged(index(0, 0), index(m_items.size() - 1, columnCount - 1));
         emit layoutChanged();
         return;
     }
@@ -864,7 +864,7 @@ void QQmlTreeModelToTableModel::modelRowsAboutToBeMoved(const QModelIndex & sour
             }
             bufferCopyOffset = destIndex;
         }
-        for (int i = 0; i < buffer.length(); i++) {
+        for (int i = 0; i < buffer.size(); i++) {
             TreeItem item = buffer.at(i);
             item.depth += depthDifference;
             m_items.replace(bufferCopyOffset + i, item);
@@ -933,7 +933,7 @@ void QQmlTreeModelToTableModel::dump() const
 {
     if (!m_model)
         return;
-    int count = m_items.count();
+    int count = m_items.size();
     if (count == 0)
         return;
     int countWidth = floor(log10(double(count))) + 1;
@@ -965,7 +965,7 @@ bool QQmlTreeModelToTableModel::testConsistency(bool dumpOnFail) const
     QModelIndex parent = m_rootIndex;
     QStack<QModelIndex> ancestors;
     QModelIndex idx = m_model->index(0, 0, parent);
-    for (int i = 0; i < m_items.count(); i++) {
+    for (int i = 0; i < m_items.size(); i++) {
         bool isConsistent = true;
         const TreeItem &item = m_items.at(i);
         if (item.index != idx) {
@@ -978,9 +978,9 @@ bool QQmlTreeModelToTableModel::testConsistency(bool dumpOnFail) const
             qWarning() << "    stored index parent" << item.index.parent() << "model parent" << parent;
             isConsistent = false;
         }
-        if (item.depth != ancestors.count()) {
+        if (item.depth != ancestors.size()) {
             qWarning() << "Depth inconsistency" << i << item.index;
-            qWarning() << "    item depth" << item.depth << "ancestors stack" << ancestors.count();
+            qWarning() << "    item depth" << item.depth << "ancestors stack" << ancestors.size();
             isConsistent = false;
         }
         if (item.expanded && !m_expandedItems.contains(item.index)) {

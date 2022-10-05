@@ -100,7 +100,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
 Heap::String *IdentifierTable::insertString(const QString &s)
 {
     uint subtype;
-    uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    uint hash = String::createHashValue(s.constData(), s.size(), &subtype);
     if (subtype == Heap::String::StringType_ArrayIndex) {
         Heap::String *str = engine->newString(s);
         str->stringHash = hash;
@@ -133,7 +133,7 @@ Heap::Symbol *IdentifierTable::insertSymbol(const QString &s)
     Q_ASSERT(s.at(0) == QLatin1Char('@'));
 
     uint subtype;
-    uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    uint hash = String::createHashValue(s.constData(), s.size(), &subtype);
     uint idx = hash % alloc;
     while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
         if (e->stringHash == hash && e->toQString() == s)
@@ -252,7 +252,7 @@ void IdentifierTable::sweep()
 PropertyKey IdentifierTable::asPropertyKey(const QString &s)
 {
     uint subtype;
-    const uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    const uint hash = String::createHashValue(s.constData(), s.size(), &subtype);
     if (subtype == Heap::String::StringType_ArrayIndex)
         return PropertyKey::fromArrayIndex(hash);
     return resolveStringEntry(s, hash, subtype)->identifier;

@@ -503,7 +503,7 @@ ReturnedValue NodePrototype::method_get_previousSibling(const FunctionObject *b,
     if (!r->d()->d->parent)
         RETURN_RESULT(Encode::null());
 
-    for (int ii = 0; ii < r->d()->d->parent->children.count(); ++ii) {
+    for (int ii = 0; ii < r->d()->d->parent->children.size(); ++ii) {
         if (r->d()->d->parent->children.at(ii) == r->d()->d) {
             if (ii == 0)
                 return Encode::null();
@@ -525,9 +525,9 @@ ReturnedValue NodePrototype::method_get_nextSibling(const FunctionObject *b, con
     if (!r->d()->d->parent)
         RETURN_RESULT(Encode::null());
 
-    for (int ii = 0; ii < r->d()->d->parent->children.count(); ++ii) {
+    for (int ii = 0; ii < r->d()->d->parent->children.size(); ++ii) {
         if (r->d()->d->parent->children.at(ii) == r->d()->d) {
-            if ((ii + 1) == r->d()->d->parent->children.count())
+            if ((ii + 1) == r->d()->d->parent->children.size())
                 return Encode::null();
             else
                 return Node::create(scope.engine, r->d()->d->parent->children.at(ii + 1));
@@ -665,7 +665,7 @@ ReturnedValue CharacterData::method_length(const FunctionObject *b, const Value 
     if (!r)
         RETURN_UNDEFINED();
 
-    return Encode(int(r->d()->d->data.length()));
+    return Encode(int(r->d()->d->data.size()));
 }
 
 ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
@@ -858,7 +858,7 @@ ReturnedValue NamedNodeMap::virtualGet(const Managed *m, PropertyKey id, const V
     if (id.isArrayIndex()) {
         uint index = id.asArrayIndex();
 
-        if ((int)index < r->d()->list().count()) {
+        if ((int)index < r->d()->list().size()) {
             if (hasProperty)
                 *hasProperty = true;
             return Node::create(v4, r->d()->list().at(index));
@@ -872,10 +872,10 @@ ReturnedValue NamedNodeMap::virtualGet(const Managed *m, PropertyKey id, const V
         return Object::virtualGet(m, id, receiver, hasProperty);
 
     if (id == v4->id_length()->propertyKey())
-        return Value::fromInt32(r->d()->list().count()).asReturnedValue();
+        return Value::fromInt32(r->d()->list().size()).asReturnedValue();
 
     QString str = id.toQString();
-    for (int ii = 0; ii < r->d()->list().count(); ++ii) {
+    for (int ii = 0; ii < r->d()->list().size(); ++ii) {
         if (r->d()->list().at(ii)->name == str) {
             if (hasProperty)
                 *hasProperty = true;
@@ -901,7 +901,7 @@ ReturnedValue NodeList::virtualGet(const Managed *m, PropertyKey id, const Value
 
     if (id.isArrayIndex()) {
         uint index = id.asArrayIndex();
-        if ((int)index < r->d()->d->children.count()) {
+        if ((int)index < r->d()->d->children.size()) {
             if (hasProperty)
                 *hasProperty = true;
             return Node::create(v4, r->d()->d->children.at(index));
@@ -912,7 +912,7 @@ ReturnedValue NodeList::virtualGet(const Managed *m, PropertyKey id, const Value
     }
 
     if (id == v4->id_length()->propertyKey())
-        return Value::fromInt32(r->d()->d->children.count()).asReturnedValue();
+        return Value::fromInt32(r->d()->d->children.size()).asReturnedValue();
     return Object::virtualGet(m, id, receiver, hasProperty);
 }
 
@@ -1137,7 +1137,7 @@ QString QQmlXMLHttpRequest::headers() const
     QString ret;
 
     for (const HeaderPair &header : m_headersList) {
-        if (ret.length())
+        if (ret.size())
             ret.append(QLatin1String("\r\n"));
         ret += QString::fromUtf8(header.first) + QLatin1String(": ")
              + QString::fromUtf8(header.second);
@@ -1201,7 +1201,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
                 int n = 0;
                 int semiColon = str.indexOf(QLatin1Char(';'), charsetIdx);
                 if (semiColon == -1) {
-                    n = str.length() - charsetIdx;
+                    n = str.size() - charsetIdx;
                 } else {
                     n = semiColon - charsetIdx;
                 }
@@ -1446,7 +1446,7 @@ void QQmlXMLHttpRequest::readEncoding()
                 if (charsetIdx != -1) {
                     charsetIdx += 8;
                     separatorIdx = header.second.indexOf(';', charsetIdx);
-                    m_charset = header.second.mid(charsetIdx, separatorIdx >= 0 ? separatorIdx : header.second.length());
+                    m_charset = header.second.mid(charsetIdx, separatorIdx >= 0 ? separatorIdx : header.second.size());
                 }
             }
             break;
@@ -1479,7 +1479,7 @@ QV4::ReturnedValue QQmlXMLHttpRequest::jsonResponseBody(QV4::ExecutionEngine* en
 
         QJsonParseError error;
         const QString& jtext = responseBody();
-        JsonParser parser(scope.engine, jtext.constData(), jtext.length());
+        JsonParser parser(scope.engine, jtext.constData(), jtext.size());
         ScopedValue jsonObject(scope, parser.parse(&error));
         if (error.error != QJsonParseError::NoError)
             return engine->throwSyntaxError(QStringLiteral("JSON.parse: Parse error"));

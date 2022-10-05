@@ -154,7 +154,7 @@ Otherwise returns a null QString.
 QString QQmlScriptString::stringLiteral() const
 {
     if (d->isStringLiteral)
-        return d->script.mid(1, d->script.length()-2);
+        return d->script.mid(1, d->script.size()-2);
     return QString();
 }
 

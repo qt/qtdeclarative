@@ -311,7 +311,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
         return;
 
     QSet<QString> currentlyDisabled;
-    for (qsizetype i = 1; i <= lines.length(); i++) {
+    for (qsizetype i = 1; i <= lines.size(); i++) {
         currentlyDisabled.unite(disablesPerLine[i]).subtract(enablesPerLine[i]);
 
         currentlyDisabled.unite(oneLineDisablesPerLine[i]);
@@ -825,7 +825,7 @@ QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent
         QString after = code.mid(cutLocation + fix.cutLocation.length);
 
         code = before + fix.replacementString + after;
-        offsetChange += fix.replacementString.length() - fix.cutLocation.length;
+        offsetChange += fix.replacementString.size() - fix.cutLocation.length;
     }
 
     QQmlJS::Engine engine;

@@ -349,7 +349,7 @@ bool QQmlComponentPrivate::setInitialProperty(
         QV4::ScopedObject object(scope, QV4::QObjectWrapper::wrap(scope.engine, base));
         QV4::ScopedString segment(scope);
 
-        for (int i = 0; i < properties.length() - 1; ++i) {
+        for (int i = 0; i < properties.size() - 1; ++i) {
             segment = scope.engine->newString(properties.at(i));
             object = object->get(segment);
             if (scope.engine->hasException)
@@ -1367,7 +1367,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
         QList<APF> functions = QQmlMetaType::parentFunctions();
 
         bool needParent = false;
-        for (int ii = 0; ii < functions.count(); ++ii) {
+        for (int ii = 0; ii < functions.size(); ++ii) {
             QQmlPrivate::AutoParentResult res = functions.at(ii)(me, parent);
             if (res == QQmlPrivate::Parented) {
                 needParent = false;
@@ -1445,7 +1445,7 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
         object = o;
         const QStringList properties = name->toQString().split(QLatin1Char('.'));
         bool isTopLevelProperty = properties.size() == 1;
-        for (int i = 0; i < properties.length() - 1; ++i) {
+        for (int i = 0; i < properties.size() - 1; ++i) {
             name = engine->newString(properties.at(i));
             object = object->get(name);
             if (engine->hasException || !object) {

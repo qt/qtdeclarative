@@ -306,12 +306,12 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 
         auto ev = std::make_unique<QMetaCallEvent>(m.methodIndex(), 0, nullptr,
                                                    object, index,
-                                                   parameterTypes.count() + 1);
+                                                   parameterTypes.size() + 1);
 
         void **args = ev->args();
         QMetaType *types = ev->types();
 
-        for (int ii = 0; ii < parameterTypes.count(); ++ii) {
+        for (int ii = 0; ii < parameterTypes.size(); ++ii) {
             const QByteArray &typeName = parameterTypes.at(ii);
             if (typeName.endsWith('*'))
                 types[ii + 1] = QMetaType(QMetaType::VoidStar);
@@ -1385,7 +1385,7 @@ static void dumpwarning(const QQmlError &error)
 
 static void dumpwarning(const QList<QQmlError> &errors)
 {
-    for (int ii = 0; ii < errors.count(); ++ii)
+    for (int ii = 0; ii < errors.size(); ++ii)
         dumpwarning(errors.at(ii));
 }
 
@@ -1764,7 +1764,7 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationU
                                                int argc, void **args, QMetaType *types)
 {
     Q_ASSERT(unit);
-    Q_ASSERT((functionIndex >= 0) && (functionIndex < unit->runtimeFunctions.length()));
+    Q_ASSERT((functionIndex >= 0) && (functionIndex < unit->runtimeFunctions.size()));
     Q_ASSERT(thisObject);
 
     QQmlData *ddata = QQmlData::get(thisObject);
@@ -1831,15 +1831,15 @@ QQmlEnginePrivate::createInternalContext(const QQmlRefPointer<QV4::ExecutableCom
     context->setImports(unit->typeNameCache);
     context->initFromTypeCompilationUnit(unit, subComponentIndex);
 
-    if (isComponentRoot && unit->dependentScripts.count()) {
+    if (isComponentRoot && unit->dependentScripts.size()) {
         QV4::ExecutionEngine *v4 = v4engine();
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
 
-        QV4::ScopedObject scripts(scope, v4->newArrayObject(unit->dependentScripts.count()));
+        QV4::ScopedObject scripts(scope, v4->newArrayObject(unit->dependentScripts.size()));
         context->setImportedScripts(QV4::PersistentValue(v4, scripts.asReturnedValue()));
         QV4::ScopedValue v(scope);
-        for (int i = 0; i < unit->dependentScripts.count(); ++i) {
+        for (int i = 0; i < unit->dependentScripts.size(); ++i) {
             QQmlRefPointer<QQmlScriptData> s = unit->dependentScripts.at(i);
             scripts->put(i, (v = s->scriptValueForContext(context)));
         }

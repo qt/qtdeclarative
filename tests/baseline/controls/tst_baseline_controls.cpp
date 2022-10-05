@@ -183,8 +183,8 @@ void tst_Baseline_Controls::setupTestSuite()
         QSKIP("No .qml test files found in " + testSuitePath.toLatin1());
 
     for (const auto &filePath : qAsConst(testFiles)) {
-        QString itemName = filePath.sliced(testSuitePath.length() + 1);
-        itemName = itemName.left(itemName.length() - qmlExt.length());
+        QString itemName = filePath.sliced(testSuitePath.size() + 1);
+        itemName = itemName.left(itemName.size() - qmlExt.size());
         QBaselineTest::newRow(itemName.toLatin1()) << filePath;
     }
 }

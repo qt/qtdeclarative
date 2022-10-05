@@ -275,8 +275,8 @@ public:
 
     qint64 readData(char *data, qint64 maxlen) override
     {
-        if (m_buffer.length() < maxlen)
-            maxlen = m_buffer.length();
+        if (m_buffer.size() < maxlen)
+            maxlen = m_buffer.size();
         std::memcpy(data, m_buffer.data(), maxlen);
         m_buffer.remove(0, maxlen);
         return maxlen;
@@ -351,9 +351,9 @@ public:
                 segments.removeFirst();
             }
             if (segments.startsWith("plugin")) {
-                if (segments.length() == 2) {
+                if (segments.size() == 2) {
                     segments.append(path);
-                } else if (segments.length() == 3) {
+                } else if (segments.size() == 3) {
                     if (!segments[2].startsWith('/'))
                         segments[2] = path + segments[2];
                 } else {
@@ -446,7 +446,7 @@ void tst_QQMLTypeLoader::intercept()
     QTRY_COMPARE(o->property("created").toInt(), 2);
     QTRY_COMPARE(o->property("loaded").toInt(), 2);
 
-    QVERIFY(factory.loadedFiles.length() >= 6);
+    QVERIFY(factory.loadedFiles.size() >= 6);
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/test_intercept.qml"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Intercept.qml"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/qmldir"));

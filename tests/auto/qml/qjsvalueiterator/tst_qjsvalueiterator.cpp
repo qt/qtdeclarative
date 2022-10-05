@@ -95,7 +95,7 @@ void tst_QJSValueIterator::iterateForward()
     QCOMPARE(it.hasNext(), false);
 
     it = object;
-    for (int i = 0; i < lst.count(); ++i) {
+    for (int i = 0; i < lst.size(); ++i) {
         QCOMPARE(it.hasNext(), true);
         it.next();
         QCOMPARE(it.name(), lst.at(i));

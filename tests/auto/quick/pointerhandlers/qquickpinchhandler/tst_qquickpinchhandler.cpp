@@ -74,9 +74,9 @@ void tst_QQuickPinchHandler::pinchProperties()
     QVERIFY(rootItem != nullptr);
     QSignalSpy targetSpy(pinchHandler, SIGNAL(targetChanged()));
     pinchHandler->setTarget(rootItem);
-    QCOMPARE(targetSpy.count(),1);
+    QCOMPARE(targetSpy.size(),1);
     pinchHandler->setTarget(rootItem);
-    QCOMPARE(targetSpy.count(),1);
+    QCOMPARE(targetSpy.size(),1);
 
     // axis
     /*
@@ -138,14 +138,14 @@ void tst_QQuickPinchHandler::pinchProperties()
     QCOMPARE(pinchHandler->minimumScale(), 0.25);
     QCOMPARE(pinchHandler->maximumScale(), 1.5);
 
-    QCOMPARE(scaleMinSpy.count(),1);
-    QCOMPARE(scaleMaxSpy.count(),1);
+    QCOMPARE(scaleMinSpy.size(),1);
+    QCOMPARE(scaleMaxSpy.size(),1);
 
     pinchHandler->setMinimumScale(0.25);
     pinchHandler->setMaximumScale(1.5);
 
-    QCOMPARE(scaleMinSpy.count(),1);
-    QCOMPARE(scaleMaxSpy.count(),1);
+    QCOMPARE(scaleMinSpy.size(),1);
+    QCOMPARE(scaleMaxSpy.size(),1);
 
     // minimum and maximum rotation properties
     QSignalSpy rotMinSpy(pinchHandler, SIGNAL(minimumRotationChanged()));
@@ -160,14 +160,14 @@ void tst_QQuickPinchHandler::pinchProperties()
     QCOMPARE(pinchHandler->minimumRotation(), -90.0);
     QCOMPARE(pinchHandler->maximumRotation(), 45.0);
 
-    QCOMPARE(rotMinSpy.count(),1);
-    QCOMPARE(rotMaxSpy.count(),1);
+    QCOMPARE(rotMinSpy.size(),1);
+    QCOMPARE(rotMaxSpy.size(),1);
 
     pinchHandler->setMinimumRotation(-90.0);
     pinchHandler->setMaximumRotation(45.0);
 
-    QCOMPARE(rotMinSpy.count(),1);
-    QCOMPARE(rotMaxSpy.count(),1);
+    QCOMPARE(rotMinSpy.size(),1);
+    QCOMPARE(rotMaxSpy.size(),1);
 }
 
 QEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
@@ -213,7 +213,7 @@ void tst_QQuickPinchHandler::scale()
         // it is outside its bounds.
         pinchSequence.stationary(0).press(1, p1, window).commit();
         QQuickTouchUtils::flush(window);
-        QTRY_COMPARE(grabChangedSpy.count(), 1); // passive grab
+        QTRY_COMPARE(grabChangedSpy.size(), 1); // passive grab
 
         QPoint pd(10, 10);
         // move one point until PinchHandler activates
@@ -229,7 +229,7 @@ void tst_QQuickPinchHandler::scale()
         QCOMPARE(pinchHandler->firstPoint().sceneGrabPosition(), pinchHandler->firstPoint().scenePosition());
         QCOMPARE(pinchHandler->lastPoint().sceneGrabPosition(), pinchHandler->lastPoint().scenePosition());
         // first point got a passive grab; both points got exclusive grabs
-        QCOMPARE(grabChangedSpy.count(), 3);
+        QCOMPARE(grabChangedSpy.size(), 3);
         QLineF line(p0, p1);
         const qreal startLength = line.length();
 

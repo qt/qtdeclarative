@@ -76,7 +76,7 @@ void tst_QV4Assembler::perfMapFile()
         const QByteArray contents = file.readLine();
         QVERIFY(contents.endsWith('\n'));
         QList<QByteArray> fields = contents.split(' ');
-        QCOMPARE(fields.length(), 3);
+        QCOMPARE(fields.size(), 3);
         bool ok = false;
         const qulonglong address = fields[0].toULongLong(&ok, 16);
         QVERIFY(ok);

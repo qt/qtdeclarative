@@ -55,14 +55,14 @@ QQmlRefPointer<QQmlContextData> QQmlScriptData::qmlContextDataForContext(
     QV4::Scope scope(v4);
     QV4::ScopedObject scriptsArray(scope);
     if (qmlContextData->importedScripts().isNullOrUndefined()) {
-        scriptsArray = v4->newArrayObject(scripts.count());
+        scriptsArray = v4->newArrayObject(scripts.size());
         qmlContextData->setImportedScripts(
                     QV4::PersistentValue(v4, scriptsArray.asReturnedValue()));
     } else {
         scriptsArray = qmlContextData->importedScripts().valueRef();
     }
     QV4::ScopedValue v(scope);
-    for (int ii = 0; ii < scripts.count(); ++ii) {
+    for (int ii = 0; ii < scripts.size(); ++ii) {
         v = scripts.at(ii)->scriptData()->scriptValueForContext(qmlContextData);
         scriptsArray->put(ii, v);
     }

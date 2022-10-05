@@ -79,7 +79,7 @@ void tst_QQuickMessageDialogImpl::changeText()
 
     // update the text property
     dialogHelper.dialog->setText(testString1);
-    QCOMPARE(textSpy.count(), 1);
+    QCOMPARE(textSpy.size(), 1);
 
     // The textLabel is empty until dialog is re-opened
     QCOMPARE(dialogHelper.dialog->text(), testString1);
@@ -91,7 +91,7 @@ void tst_QQuickMessageDialogImpl::changeText()
 
     // The textLabel isn't updated immediately
     dialogHelper.dialog->setText(testString2);
-    QCOMPARE(textSpy.count(), 2);
+    QCOMPARE(textSpy.size(), 2);
     QCOMPARE(textLabel->text(), testString1);
 
     dialogHelper.dialog->close();
@@ -128,7 +128,7 @@ void tst_QQuickMessageDialogImpl::changeInformativeText()
 
     // update the informativeText property
     dialogHelper.dialog->setInformativeText(testString1);
-    QCOMPARE(informativeTextSpy.count(), 1);
+    QCOMPARE(informativeTextSpy.size(), 1);
 
     // The textLabel is empty until dialog is re-opened
     QCOMPARE(dialogHelper.dialog->informativeText(), testString1);
@@ -140,7 +140,7 @@ void tst_QQuickMessageDialogImpl::changeInformativeText()
 
     // The textLabel shouldn't update immediately
     dialogHelper.dialog->setInformativeText(testString2);
-    QCOMPARE(informativeTextSpy.count(), 2);
+    QCOMPARE(informativeTextSpy.size(), 2);
     QCOMPARE(informativeTextLabel->text(), testString1);
 
     dialogHelper.dialog->close();
@@ -169,7 +169,7 @@ void tst_QQuickMessageDialogImpl::changeStandardButtons()
             QPlatformDialogHelper::StandardButtons(QPlatformDialogHelper::StandardButton::Save
                                                    | QPlatformDialogHelper::StandardButton::Cancel
                                                    | QPlatformDialogHelper::StandardButton::Apply));
-    QCOMPARE(buttonBoxSpy.count(), 1);
+    QCOMPARE(buttonBoxSpy.size(), 1);
     QCOMPARE(buttonBox->count(), 1);
     dialogHelper.dialog->close();
     dialogHelper.dialog->open();
@@ -190,7 +190,7 @@ void tst_QQuickMessageDialogImpl::changeStandardButtons()
     dialogHelper.dialog->setButtons(
             QPlatformDialogHelper::StandardButton(QPlatformDialogHelper::StandardButton::Ok
                                                   | QPlatformDialogHelper::StandardButton::Close));
-    QCOMPARE(buttonBoxSpy.count(), 2);
+    QCOMPARE(buttonBoxSpy.size(), 2);
     QCOMPARE(buttonBox->count(), 3);
     dialogHelper.dialog->open();
     QCOMPARE(buttonBox->count(), 2);
@@ -233,7 +233,7 @@ void tst_QQuickMessageDialogImpl::detailedText()
     // Set the detailed text to a non-empty string
     dialogHelper.dialog->setDetailedText(nonEmptyString);
     QCOMPARE(dialogHelper.dialog->detailedText(), nonEmptyString);
-    QCOMPARE(detailedTextSpy.count(), 1);
+    QCOMPARE(detailedTextSpy.size(), 1);
     QCOMPARE(detailedTextArea->text(), emptyString);
     QVERIFY(!detailedTextButton->isVisible());
     dialogHelper.dialog->close();
@@ -246,7 +246,7 @@ void tst_QQuickMessageDialogImpl::detailedText()
 
     // Set the detailed text to an empty string
     dialogHelper.dialog->setDetailedText(emptyString);
-    QCOMPARE(detailedTextSpy.count(), 2);
+    QCOMPARE(detailedTextSpy.size(), 2);
     QCOMPARE(dialogHelper.dialog->detailedText(), emptyString);
     QCOMPARE(detailedTextArea->text(), nonEmptyString);
     QVERIFY(detailedTextButton->isVisible());
@@ -260,7 +260,7 @@ void tst_QQuickMessageDialogImpl::detailedText()
     // Change the detailed text property while the dialog is already open, should not immediately
     // update the dialog ui
     dialogHelper.dialog->setDetailedText(nonEmptyString);
-    QCOMPARE(detailedTextSpy.count(), 3);
+    QCOMPARE(detailedTextSpy.size(), 3);
     QCOMPARE(dialogHelper.dialog->detailedText(), nonEmptyString);
     QCOMPARE(detailedTextArea->text(), emptyString);
     QVERIFY2(!detailedTextButton->isVisible(),

@@ -147,7 +147,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
     int gId = m_system->groupIds[m_follow];
     int gId2 = groupId();
-    for (int i=0; i<m_system->groupData[gId]->data.count(); i++) {
+    for (int i=0; i<m_system->groupData[gId]->data.size(); i++) {
         QQuickParticleData *d = m_system->groupData[gId]->data[i];
         if (!d->stillAlive(m_system)){
             m_lastEmission[i] = time; //Should only start emitting when it returns to life

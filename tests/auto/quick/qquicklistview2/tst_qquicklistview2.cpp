@@ -273,7 +273,7 @@ void tst_QQuickListView2::metaSequenceAsModel()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QStringList strings = qvariant_cast<QStringList>(o->property("texts"));
-    QCOMPARE(strings.length(), 2);
+    QCOMPARE(strings.size(), 2);
     QCOMPARE(strings[0], QStringLiteral("1/2"));
     QCOMPARE(strings[1], QStringLiteral("5/6"));
 }

@@ -345,7 +345,7 @@ void QQmlProfilerServiceImpl::sendMessages()
         if (next != -1)
             m_startTimes.insert(next, first);
 
-        if (messages.length() >= QQmlAbstractProfilerAdapter::s_numMessagesPerBatch) {
+        if (messages.size() >= QQmlAbstractProfilerAdapter::s_numMessagesPerBatch) {
             emit messagesToClient(name(), messages);
             messages.clear();
         }

@@ -64,18 +64,18 @@ void tst_QQuickPinchArea::pinchProperties()
     QVERIFY(rootItem != nullptr);
     QSignalSpy targetSpy(pinch, SIGNAL(targetChanged()));
     pinch->setTarget(rootItem);
-    QCOMPARE(targetSpy.count(),1);
+    QCOMPARE(targetSpy.size(),1);
     pinch->setTarget(rootItem);
-    QCOMPARE(targetSpy.count(),1);
+    QCOMPARE(targetSpy.size(),1);
 
     // axis
     QCOMPARE(pinch->axis(), QQuickPinch::XAndYAxis);
     QSignalSpy axisSpy(pinch, SIGNAL(dragAxisChanged()));
     pinch->setAxis(QQuickPinch::XAxis);
     QCOMPARE(pinch->axis(), QQuickPinch::XAxis);
-    QCOMPARE(axisSpy.count(),1);
+    QCOMPARE(axisSpy.size(),1);
     pinch->setAxis(QQuickPinch::XAxis);
-    QCOMPARE(axisSpy.count(),1);
+    QCOMPARE(axisSpy.size(),1);
 
     // minimum and maximum drag properties
     QSignalSpy xminSpy(pinch, SIGNAL(minimumXChanged()));
@@ -98,20 +98,20 @@ void tst_QQuickPinchArea::pinchProperties()
     QCOMPARE(pinch->ymin(), 10.0);
     QCOMPARE(pinch->ymax(), 10.0);
 
-    QCOMPARE(xminSpy.count(),1);
-    QCOMPARE(xmaxSpy.count(),1);
-    QCOMPARE(yminSpy.count(),1);
-    QCOMPARE(ymaxSpy.count(),1);
+    QCOMPARE(xminSpy.size(),1);
+    QCOMPARE(xmaxSpy.size(),1);
+    QCOMPARE(yminSpy.size(),1);
+    QCOMPARE(ymaxSpy.size(),1);
 
     pinch->setXmin(10);
     pinch->setXmax(10);
     pinch->setYmin(10);
     pinch->setYmax(10);
 
-    QCOMPARE(xminSpy.count(),1);
-    QCOMPARE(xmaxSpy.count(),1);
-    QCOMPARE(yminSpy.count(),1);
-    QCOMPARE(ymaxSpy.count(),1);
+    QCOMPARE(xminSpy.size(),1);
+    QCOMPARE(xmaxSpy.size(),1);
+    QCOMPARE(yminSpy.size(),1);
+    QCOMPARE(ymaxSpy.size(),1);
 
     // minimum and maximum scale properties
     QSignalSpy scaleMinSpy(pinch, SIGNAL(minimumScaleChanged()));
@@ -126,14 +126,14 @@ void tst_QQuickPinchArea::pinchProperties()
     QCOMPARE(pinch->minimumScale(), 0.5);
     QCOMPARE(pinch->maximumScale(), 1.5);
 
-    QCOMPARE(scaleMinSpy.count(),1);
-    QCOMPARE(scaleMaxSpy.count(),1);
+    QCOMPARE(scaleMinSpy.size(),1);
+    QCOMPARE(scaleMaxSpy.size(),1);
 
     pinch->setMinimumScale(0.5);
     pinch->setMaximumScale(1.5);
 
-    QCOMPARE(scaleMinSpy.count(),1);
-    QCOMPARE(scaleMaxSpy.count(),1);
+    QCOMPARE(scaleMinSpy.size(),1);
+    QCOMPARE(scaleMaxSpy.size(),1);
 
     // minimum and maximum rotation properties
     QSignalSpy rotMinSpy(pinch, SIGNAL(minimumRotationChanged()));
@@ -148,14 +148,14 @@ void tst_QQuickPinchArea::pinchProperties()
     QCOMPARE(pinch->minimumRotation(), -90.0);
     QCOMPARE(pinch->maximumRotation(), 45.0);
 
-    QCOMPARE(rotMinSpy.count(),1);
-    QCOMPARE(rotMaxSpy.count(),1);
+    QCOMPARE(rotMinSpy.size(),1);
+    QCOMPARE(rotMaxSpy.size(),1);
 
     pinch->setMinimumRotation(-90.0);
     pinch->setMaximumRotation(45.0);
 
-    QCOMPARE(rotMinSpy.count(),1);
-    QCOMPARE(rotMaxSpy.count(),1);
+    QCOMPARE(rotMinSpy.size(),1);
+    QCOMPARE(rotMaxSpy.size(),1);
 }
 
 QEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
@@ -388,7 +388,7 @@ void tst_QQuickPinchArea::retouch()
         pinchSequence.move(0, p1,window).move(1, p2,window).commit();
         QQuickTouchUtils::flush(window);
 
-        QCOMPARE(startedSpy.count(), 1);
+        QCOMPARE(startedSpy.size(), 1);
 
         QCOMPARE(root->property("scale").toReal(), 1.5);
         QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
@@ -396,15 +396,15 @@ void tst_QQuickPinchArea::retouch()
 
         QCOMPARE(window->rootObject()->property("pointCount").toInt(), 2);
 
-        QCOMPARE(startedSpy.count(), 1);
-        QCOMPARE(finishedSpy.count(), 0);
+        QCOMPARE(startedSpy.size(), 1);
+        QCOMPARE(finishedSpy.size(), 0);
 
         // Hold down the first finger but release the second one
         pinchSequence.stationary(0).release(1, p2, window).commit();
         QQuickTouchUtils::flush(window);
 
-        QCOMPARE(startedSpy.count(), 1);
-        QCOMPARE(finishedSpy.count(), 0);
+        QCOMPARE(startedSpy.size(), 1);
+        QCOMPARE(finishedSpy.size(), 0);
 
         QCOMPARE(window->rootObject()->property("pointCount").toInt(), 1);
 
@@ -417,8 +417,8 @@ void tst_QQuickPinchArea::retouch()
         QQuickTouchUtils::flush(window);
 
         // Lifting and retouching results in onPinchStarted being called again
-        QCOMPARE(startedSpy.count(), 2);
-        QCOMPARE(finishedSpy.count(), 0);
+        QCOMPARE(startedSpy.size(), 2);
+        QCOMPARE(finishedSpy.size(), 0);
 
         QCOMPARE(window->rootObject()->property("pointCount").toInt(), 2);
 
@@ -426,8 +426,8 @@ void tst_QQuickPinchArea::retouch()
         QQuickTouchUtils::flush(window);
 
         QVERIFY(!root->property("pinchActive").toBool());
-        QCOMPARE(startedSpy.count(), 2);
-        QCOMPARE(finishedSpy.count(), 1);
+        QCOMPARE(startedSpy.size(), 2);
+        QCOMPARE(finishedSpy.size(), 1);
     }
 }
 

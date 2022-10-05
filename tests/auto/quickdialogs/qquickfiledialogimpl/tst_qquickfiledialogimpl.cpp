@@ -316,8 +316,8 @@ void tst_QQuickFileDialogImpl::chooseFileViaStandardButtons()
     COMPARE_URL(delegate->file(), QUrl::fromLocalFile(tempFile2->fileName()));
     QVERIFY(clickButton(delegate));
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempFile2->fileName()), 2);
-    QCOMPARE(dialogSelectedFileChangedSpy.count(), 1);
-    QCOMPARE(dialogCurrentFileChangedSpy.count(), 1);
+    QCOMPARE(dialogSelectedFileChangedSpy.size(), 1);
+    QCOMPARE(dialogCurrentFileChangedSpy.size(), 1);
 
     // Click the "Open" button.
     QVERIFY(dialogHelper.quickDialog->footer());
@@ -329,8 +329,8 @@ void tst_QQuickFileDialogImpl::chooseFileViaStandardButtons()
     COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
     COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
     COMPARE_URL(dialogHelper.quickDialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
-    QCOMPARE(dialogSelectedFileChangedSpy.count(), 1);
-    QCOMPARE(dialogCurrentFileChangedSpy.count(), 1);
+    QCOMPARE(dialogSelectedFileChangedSpy.size(), 1);
+    QCOMPARE(dialogCurrentFileChangedSpy.size(), 1);
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
     QVERIFY(!dialogHelper.dialog->isVisible());
 }
@@ -911,7 +911,7 @@ void tst_QQuickFileDialogImpl::changeNameFilters()
     const QStringList nameFilters = { "Text files (*.txt)", "HTML files (*.html)" };
     dialogHelper.dialog->setNameFilters(nameFilters);
     QCOMPARE(dialogHelper.dialog->nameFilters(), nameFilters);
-    QCOMPARE(nameFiltersChangedSpy.count(), 1);
+    QCOMPARE(nameFiltersChangedSpy.size(), 1);
     QCOMPARE(dialogHelper.dialog->selectedNameFilter()->name(), "Text files");
     QCOMPARE(dialogHelper.dialog->selectedNameFilter()->index(), 0);
     QCOMPARE(dialogHelper.dialog->selectedNameFilter()->extensions(), { "txt" });

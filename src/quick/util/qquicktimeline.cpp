@@ -786,7 +786,7 @@ int QQuickTimeLinePrivate::advance(int t)
 
         std::sort(updates.begin(), updates.end());
         updateQueue = &updates;
-        for (int ii = 0; ii < updates.count(); ++ii) {
+        for (int ii = 0; ii < updates.size(); ++ii) {
             const Update &v = updates.at(ii).second;
             if (v.g) {
                 v.g->setValue(v.v);

@@ -93,7 +93,7 @@ int QQmlCustomParser::evaluateEnum(const QString &script, bool *ok) const
 
     auto nextDot = [&](int dot) {
         const int nextDot = script.indexOf(u'.', dot + 1);
-        return (nextDot == script.length() - 1) ? -1 : nextDot;
+        return (nextDot == script.size() - 1) ? -1 : nextDot;
     };
 
     int dot = nextDot(-1);
@@ -161,7 +161,7 @@ int QQmlCustomParser::evaluateEnum(const QString &script, bool *ok) const
                 if (!scopedEnumName.isEmpty() && scopedEnumName != enumData->name)
                     continue;
 
-                for (int jj = 0; jj < enumData->values.count(); ++jj) {
+                for (int jj = 0; jj < enumData->values.size(); ++jj) {
                     const QQmlEnumValue value = enumData->values.at(jj);
                     if (value.namedValue == enumValue) {
                         *ok = true;

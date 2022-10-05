@@ -243,7 +243,7 @@ void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier
     const quint32 moduleIdx = registerString(module);
     const quint32 qualifierIdx = registerString(qualifier);
 
-    for (int i = 0, count = document->imports.count(); i < count; ++i) {
+    for (int i = 0, count = document->imports.size(); i < count; ++i) {
         const QV4::CompiledData::Import *existingImport = document->imports.at(i);
         if (existingImport->type == QV4::CompiledData::Import::ImportLibrary
             && existingImport->uriIndex == moduleIdx
@@ -282,7 +282,7 @@ SignalHandlerResolver::SignalHandlerResolver(QQmlTypeCompiler *typeCompiler)
 
 bool SignalHandlerResolver::resolveSignalHandlerExpressions()
 {
-    for (int objectIndex = 0; objectIndex < qmlObjects.count(); ++objectIndex) {
+    for (int objectIndex = 0; objectIndex < qmlObjects.size(); ++objectIndex) {
         const QmlIR::Object * const obj = qmlObjects.at(objectIndex);
         QQmlPropertyCache::ConstPtr cache = propertyCaches->at(objectIndex);
         if (!cache)
@@ -335,7 +335,7 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
 
         QString qPropertyName;
         if (signalName.endsWith(QLatin1String("Changed")))
-            qPropertyName = signalName.mid(0, signalName.length() - static_cast<int>(strlen("Changed")));
+            qPropertyName = signalName.mid(0, signalName.size() - static_cast<int>(strlen("Changed")));
 
         bool notInRevision = false;
         const QQmlPropertyData * const signal = resolver.signal(signalName, &notInRevision);
@@ -353,7 +353,7 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
             bool unnamedParameter = false;
 
             QList<QByteArray> parameterNames = propertyCache->signalParameterNames(sigIndex);
-            for (int i = 0; i < parameterNames.count(); ++i) {
+            for (int i = 0; i < parameterNames.size(); ++i) {
                 const QString param = QString::fromUtf8(parameterNames.at(i));
                 if (param.isEmpty())
                     unnamedParameter = true;
@@ -442,7 +442,7 @@ QQmlEnumTypeResolver::QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler)
 
 bool QQmlEnumTypeResolver::resolveEnumBindings()
 {
-    for (int i = 0; i < qmlObjects.count(); ++i) {
+    for (int i = 0; i < qmlObjects.size(); ++i) {
         QQmlPropertyCache::ConstPtr propertyCache = propertyCaches->at(i);
         if (!propertyCache)
             continue;
@@ -517,11 +517,11 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
     // * <TypeName>.<ScopedEnumName>.<EnumValue>
 
     int dot = string.indexOf(QLatin1Char('.'));
-    if (dot == -1 || dot == string.length()-1)
+    if (dot == -1 || dot == string.size()-1)
         return true;
 
     int dot2 = string.indexOf(QLatin1Char('.'), dot+1);
-    if (dot2 != -1 && dot2 != string.length()-1) {
+    if (dot2 != -1 && dot2 != string.size()-1) {
         if (!string.at(dot+1).isUpper())
             return true;
         if (string.indexOf(QLatin1Char('.'), dot2+1) != -1)
@@ -612,7 +612,7 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, QStringView enumNam
             return -1;
         if (!enumName.isEmpty())
             return type.scopedEnumValue(compiler->enginePrivate(), enumName, enumValue, ok);
-        return type.enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue.constData(), enumValue.length()), ok);
+        return type.enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue.constData(), enumValue.size()), ok);
     }
 
     const QMetaObject *mo = &Qt::staticMetaObject;
@@ -674,7 +674,7 @@ QQmlAliasAnnotator::QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler)
 
 void QQmlAliasAnnotator::annotateBindingsToAliases()
 {
-    for (int i = 0; i < qmlObjects.count(); ++i) {
+    for (int i = 0; i < qmlObjects.size(); ++i) {
         QQmlPropertyCache::ConstPtr propertyCache = propertyCaches->at(i);
         if (!propertyCache)
             continue;
@@ -706,7 +706,7 @@ QQmlScriptStringScanner::QQmlScriptStringScanner(QQmlTypeCompiler *typeCompiler)
 void QQmlScriptStringScanner::scan()
 {
     const QMetaType scriptStringMetaType = QMetaType::fromType<QQmlScriptString>();
-    for (int i = 0; i < qmlObjects.count(); ++i) {
+    for (int i = 0; i < qmlObjects.size(); ++i) {
         QQmlPropertyCache::ConstPtr propertyCache = propertyCaches->at(i);
         if (!propertyCache)
             continue;
@@ -951,7 +951,7 @@ bool QQmlComponentAndAliasResolver::resolve(int root)
 
     }
 
-    for (int i = 0; i < componentRoots.count(); ++i) {
+    for (int i = 0; i < componentRoots.size(); ++i) {
         QmlIR::Object *component  = qmlObjects->at(componentRoots.at(i));
         const QmlIR::Binding *rootBinding = component->firstBinding();
 
@@ -997,7 +997,7 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
             recordError(obj->locationOfIdProperty, tr("id is not unique"));
             return false;
         }
-        obj->id = _idToObjectIndex.count();
+        obj->id = _idToObjectIndex.size();
         _idToObjectIndex.insert(obj->idNameIndex, objectIndex);
     }
 
@@ -1416,7 +1416,7 @@ QQmlDefaultPropertyMerger::QQmlDefaultPropertyMerger(QQmlTypeCompiler *typeCompi
 
 void QQmlDefaultPropertyMerger::mergeDefaultProperties()
 {
-    for (int i = 0; i < qmlObjects.count(); ++i)
+    for (int i = 0; i < qmlObjects.size(); ++i)
         mergeDefaultProperties(i);
 }
 

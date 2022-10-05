@@ -401,7 +401,7 @@ void QObjectContainer::children_append(QQmlListProperty<QObject> *prop, QObject 
 
 qsizetype QObjectContainer::children_count(QQmlListProperty<QObject> *prop)
 {
-    return static_cast<QObjectContainer*>(prop->object)->dataChildren.count();
+    return static_cast<QObjectContainer*>(prop->object)->dataChildren.size();
 }
 
 QObject *QObjectContainer::children_at(QQmlListProperty<QObject> *prop, qsizetype index)

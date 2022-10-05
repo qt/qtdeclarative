@@ -189,7 +189,7 @@ void CustomBinding::componentComplete()
 
 void EnumSupportingCustomParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
-    if (bindings.count() != 1) {
+    if (bindings.size() != 1) {
         error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
         return;
     }
@@ -221,7 +221,7 @@ void SimpleObjectCustomParser::applyBindings(QObject *object, const QQmlRefPoint
 {
     SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
     Q_ASSERT(o);
-    o->setCustomBindingsCount(bindings.count());
+    o->setCustomBindingsCount(bindings.size());
 }
 
 

@@ -101,7 +101,7 @@ void doFilter(const QList<QQmlJSResourceFileMapper::Entry> &qrcPathToFileSystemP
 
             if ((filter.flags & QQmlJSResourceFileMapper::Recurse)
                     // Crude. But shall we really allow slashes in QRC file names?
-                    || !candidate.mid(terminatedDirectory.length()).contains(u'/')) {
+                    || !candidate.mid(terminatedDirectory.size()).contains(u'/')) {
                 if (handler(*it))
                     return;
             }

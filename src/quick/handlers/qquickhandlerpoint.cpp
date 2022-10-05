@@ -105,7 +105,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
         qWarning("reset: no points");
         return;
     }
-    if (points.count() == 1) {
+    if (points.size() == 1) {
         *this = points.first(); // copy all values
         return;
     }

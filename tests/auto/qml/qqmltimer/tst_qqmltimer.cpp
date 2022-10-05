@@ -142,13 +142,13 @@ void tst_qqmltimer::repeat()
 
     timer->setRepeating(false);
     QVERIFY(!timer->isRepeating());
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     timer->setRepeating(false);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     timer->setRepeating(true);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     delete timer;
 }
@@ -176,13 +176,13 @@ void tst_qqmltimer::triggeredOnStart()
 
     timer->setTriggeredOnStart(false);
     QVERIFY(!timer->triggeredOnStart());
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     timer->setTriggeredOnStart(false);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     timer->setTriggeredOnStart(true);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     delete timer;
 }
@@ -254,13 +254,13 @@ void tst_qqmltimer::changeDuration()
 
     timer->setInterval(200);
     QCOMPARE(timer->interval(), 200);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     timer->setInterval(200);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     timer->setInterval(300);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     delete timer;
 }

@@ -410,7 +410,7 @@ void QQmlCodeModel::openUpdateEnd()
 void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const QString &docText)
 {
     qCDebug(codeModelLog) << "updating doc" << url << "to version" << version << "("
-                          << docText.length() << "chars)";
+                          << docText.size() << "chars)";
     DomItem newCurrent = m_currentEnv.makeCopy(DomItem::CopyOption::EnvConnected).item();
     QStringList loadPaths = buildPathsForFileUrl(url);
     loadPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
@@ -529,9 +529,9 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
     }
     // we want to longest match to be first, as it should override shorter matches
     std::sort(roots.begin(), roots.end(), [](const QByteArray &el1, const QByteArray &el2) {
-        if (el1.length() > el2.length())
+        if (el1.size() > el2.size())
             return true;
-        if (el1.length() < el2.length())
+        if (el1.size() < el2.size())
             return false;
         return el1 < el2;
     });
@@ -540,7 +540,7 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
     if (!roots.isEmpty() && roots.last().isEmpty())
         roots.removeLast();
     QByteArray urlSlash(url);
-    if (!urlSlash.isEmpty() && isNotSeparator(urlSlash.at(urlSlash.length() - 1)))
+    if (!urlSlash.isEmpty() && isNotSeparator(urlSlash.at(urlSlash.size() - 1)))
         urlSlash.append('/');
     // look if the file has a know prefix path
     for (const QByteArray &root : roots) {
@@ -606,7 +606,7 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
 void QQmlCodeModel::setBuildPathsForRootUrl(QByteArray url, const QStringList &paths)
 {
     QMutexLocker l(&m_mutex);
-    if (!url.isEmpty() && isNotSeparator(url.at(url.length() - 1)))
+    if (!url.isEmpty() && isNotSeparator(url.at(url.size() - 1)))
         url.append('/');
     if (paths.isEmpty())
         m_buildPathsForRootUrl.remove(url);
@@ -673,7 +673,7 @@ QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
             << doc.field(Fields::code).value().toString() << "\n==========\n";
     } else {
         dbg << u"  doc:"
-            << (doc ? u"%1chars"_s.arg(doc.field(Fields::code).value().toString().length())
+            << (doc ? u"%1chars"_s.arg(doc.field(Fields::code).value().toString().size())
                     : u"*none*"_s)
             << "\n";
     }
@@ -685,7 +685,7 @@ QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
     } else {
         dbg << u"  validDoc:"
             << (validDoc ? u"%1chars"_s.arg(
-                        validDoc.field(Fields::code).value().toString().length())
+                        validDoc.field(Fields::code).value().toString().size())
                          : u"*none*"_s)
             << "\n";
     }

@@ -91,7 +91,7 @@ void QSGDistanceFieldGlyphCache::populate(const QVector<glyph_t> &glyphs)
 {
     QSet<glyph_t> referencedGlyphs;
     QSet<glyph_t> newGlyphs;
-    int count = glyphs.count();
+    int count = glyphs.size();
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs.at(i);
         if ((int) glyphIndex >= glyphCount() && glyphCount() > 0) {
@@ -124,7 +124,7 @@ void QSGDistanceFieldGlyphCache::populate(const QVector<glyph_t> &glyphs)
 void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
 {
     QSet<glyph_t> unusedGlyphs;
-    int count = glyphs.count();
+    int count = glyphs.size();
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs.at(i);
         GlyphData &gd = glyphData(glyphIndex);
@@ -203,7 +203,7 @@ void QSGDistanceFieldGlyphCache::setGlyphsPosition(const QList<GlyphPosition> &g
 {
     QVector<quint32> invalidatedGlyphs;
 
-    int count = glyphs.count();
+    int count = glyphs.size();
     for (int i = 0; i < count; ++i) {
         GlyphPosition glyph = glyphs.at(i);
         GlyphData &gd = glyphData(glyph.glyph);
@@ -254,7 +254,7 @@ void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs
 
     QVector<quint32> invalidatedGlyphs;
 
-    int count = glyphs.count();
+    int count = glyphs.size();
     for (int j = 0; j < count; ++j) {
         glyph_t glyphIndex = glyphs.at(j);
         GlyphData &gd = glyphData(glyphIndex);
@@ -272,14 +272,14 @@ void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QVector<glyph_t> &glyphs
 
 void QSGDistanceFieldGlyphCache::markGlyphsToRender(const QVector<glyph_t> &glyphs)
 {
-    int count = glyphs.count();
+    int count = glyphs.size();
     for (int i = 0; i < count; ++i)
         m_pendingGlyphs.add(glyphs.at(i));
 }
 
 void QSGDistanceFieldGlyphCache::updateRhiTexture(QRhiTexture *oldTex, QRhiTexture *newTex, const QSize &newTexSize)
 {
-    int count = m_textures.count();
+    int count = m_textures.size();
     for (int i = 0; i < count; ++i) {
         Texture &tex = m_textures[i];
         if (tex.texture == oldTex) {

@@ -1160,7 +1160,7 @@ static void checkNoErrors(QQmlComponent& component)
     QList<QQmlError> errors = component.errors();
     if (errors.isEmpty())
         return;
-    for (int ii = 0; ii < errors.count(); ++ii) {
+    for (int ii = 0; ii < errors.size(); ++ii) {
         const QQmlError &error = errors.at(ii);
         qWarning("%d:%d:%s",error.line(),error.column(),error.description().toUtf8().constData());
     }
@@ -1690,8 +1690,8 @@ void tst_qqmlvaluetypes::sequences()
     {
         QList<BaseGadget> gadgetList{1, 4, 7, 8, 15};
         QJSValue value = engine.toScriptValue(gadgetList);
-        QCOMPARE(value.property("length").toInt(), gadgetList.length());
-        for (int i = 0; i < gadgetList.length(); ++i)
+        QCOMPARE(value.property("length").toInt(), gadgetList.size());
+        for (int i = 0; i < gadgetList.size(); ++i)
             QCOMPARE(value.property(i).property("baseProperty").toInt(), gadgetList.at(i).baseProperty());
     }
     {
@@ -1704,8 +1704,8 @@ void tst_qqmlvaluetypes::sequences()
     {
         QVector<QChar> qcharVector{QChar(1), QChar(4), QChar(42), QChar(8), QChar(15)};
         QJSValue value = engine.toScriptValue(qcharVector);
-        QCOMPARE(value.property("length").toInt(), qcharVector.length());
-        for (int i = 0; i < qcharVector.length(); ++i)
+        QCOMPARE(value.property("length").toInt(), qcharVector.size());
+        for (int i = 0; i < qcharVector.size(); ++i)
             QCOMPARE(value.property(i).toString(), qcharVector.at(i));
     }
     {
@@ -1767,7 +1767,7 @@ void tst_qqmlvaluetypes::enumerableProperties()
         names.insert(name);
     }
 
-    QCOMPARE(names.count(), 2);
+    QCOMPARE(names.size(), 2);
     QVERIFY(names.contains(QStringLiteral("baseProperty")));
     QVERIFY(names.contains(QStringLiteral("derivedProperty")));
 }

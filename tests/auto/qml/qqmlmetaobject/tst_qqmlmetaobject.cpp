@@ -227,18 +227,18 @@ void tst_QQmlMetaObject::property()
         QCOMPARE(value, expectedValue);
     else
         QVERIFY(value.isValid());
-    QCOMPARE(changedSpy.count(), 0);
+    QCOMPARE(changedSpy.size(), 0);
 
     if (isWritable) {
         QVERIFY(prop.write(object, newValue));
-        QCOMPARE(changedSpy.count(), 1);
+        QCOMPARE(changedSpy.size(), 1);
         QVariant value = prop.read(object);
         if (value.userType() == qMetaTypeId<QJSValue>())
             value = value.value<QJSValue>().toVariant();
         QCOMPARE(value, newValue);
     } else {
         QVERIFY(!prop.write(object, prop.read(object)));
-        QCOMPARE(changedSpy.count(), 0);
+        QCOMPARE(changedSpy.size(), 0);
     }
 }
 

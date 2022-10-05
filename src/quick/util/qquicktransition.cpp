@@ -115,7 +115,7 @@ void QQuickTransitionPrivate::append_animation(QQmlListProperty<QQuickAbstractAn
 qsizetype QQuickTransitionPrivate::animation_count(QQmlListProperty<QQuickAbstractAnimation> *list)
 {
     QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
-    return q->d_func()->animations.count();
+    return q->d_func()->animations.size();
 }
 
 QQuickAbstractAnimation* QQuickTransitionPrivate::animation_at(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype pos)
@@ -127,7 +127,7 @@ QQuickAbstractAnimation* QQuickTransitionPrivate::animation_at(QQmlListProperty<
 void QQuickTransitionPrivate::clear_animations(QQmlListProperty<QQuickAbstractAnimation> *list)
 {
     QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
-    while (q->d_func()->animations.count()) {
+    while (q->d_func()->animations.size()) {
         QQuickAbstractAnimation *firstAnim = q->d_func()->animations.at(0);
         q->d_func()->animations.removeAll(firstAnim);
     }
@@ -232,8 +232,8 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
     group->manager = manager;
 
     QQuickAbstractAnimation::TransitionDirection direction = d->reversed ? QQuickAbstractAnimation::Backward : QQuickAbstractAnimation::Forward;
-    int start = d->reversed ? d->animations.count() - 1 : 0;
-    int end = d->reversed ? -1 : d->animations.count();
+    int start = d->reversed ? d->animations.size() - 1 : 0;
+    int end = d->reversed ? -1 : d->animations.size();
 
     QAbstractAnimationJob *anim = nullptr;
     for (int i = start; i != end;) {

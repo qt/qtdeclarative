@@ -30,7 +30,7 @@ void QQmlTypeModule::add(QQmlTypePrivate *type)
         addMinorVersion(type->version.minorVersion());
 
     QList<QQmlTypePrivate *> &list = m_typeHash[type->elementName];
-    for (int ii = 0; ii < list.count(); ++ii) {
+    for (int ii = 0; ii < list.size(); ++ii) {
         QQmlTypePrivate *in_list = list.at(ii);
         Q_ASSERT(in_list);
         if (in_list->version.minorVersion() < type->version.minorVersion()) {

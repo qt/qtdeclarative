@@ -205,7 +205,7 @@ void QQuickButtonGroupPrivate::buttons_append(QQmlListProperty<QQuickAbstractBut
 qsizetype QQuickButtonGroupPrivate::buttons_count(QQmlListProperty<QQuickAbstractButton> *prop)
 {
     QQuickButtonGroupPrivate *p = static_cast<QQuickButtonGroupPrivate *>(prop->data);
-    return p->buttons.count();
+    return p->buttons.size();
 }
 
 QQuickAbstractButton *QQuickButtonGroupPrivate::buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, qsizetype index)

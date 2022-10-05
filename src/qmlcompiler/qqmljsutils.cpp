@@ -96,7 +96,7 @@ std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
                                                      QQmlJS::SourceLocation location)
 {
     QString shortestDistanceWord;
-    int shortestDistance = userInput.length();
+    int shortestDistance = userInput.size();
 
     // Most of the time the candidates are keys() from QHash, which means that
     // running this function in the seemingly same setup might yield different
@@ -114,14 +114,14 @@ std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
          * Roughly based on
          * https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows.
          */
-        QList<int> v0(candidate.length() + 1);
-        QList<int> v1(candidate.length() + 1);
+        QList<int> v0(candidate.size() + 1);
+        QList<int> v1(candidate.size() + 1);
 
         std::iota(v0.begin(), v0.end(), 0);
 
-        for (qsizetype i = 0; i < userInput.length(); i++) {
+        for (qsizetype i = 0; i < userInput.size(); i++) {
             v1[0] = i + 1;
-            for (qsizetype j = 0; j < candidate.length(); j++) {
+            for (qsizetype j = 0; j < candidate.size(); j++) {
                 int deletionCost = v0[j + 1] + 1;
                 int insertionCost = v1[j] + 1;
                 int substitutionCost = userInput[i] == candidate[j] ? v0[j] : v0[j] + 1;
@@ -130,7 +130,7 @@ std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
             std::swap(v0, v1);
         }
 
-        int distance = v0[candidate.length()];
+        int distance = v0[candidate.size()];
         if (distance < shortestDistance) {
             shortestDistanceWord = candidate;
             shortestDistance = distance;
@@ -138,7 +138,7 @@ std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
     }
 
     if (shortestDistance
-        < std::min(std::max(userInput.length() / 2, qsizetype(3)), userInput.length())) {
+        < std::min(std::max(userInput.size() / 2, qsizetype(3)), userInput.size())) {
         return FixSuggestion { { FixSuggestion::Fix {
                 u"Did you mean \"%1\"?"_s.arg(shortestDistanceWord), location,
                 shortestDistanceWord } } };

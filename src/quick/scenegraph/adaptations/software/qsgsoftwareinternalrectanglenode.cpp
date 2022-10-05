@@ -128,7 +128,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
                 }
             }
 
-            for (int i = 0; i < between.count(); ++i)
+            for (int i = 0; i < between.size(); ++i)
                 normalizedStops.append(stops.at(between.at(i)));
 
             if (above != -1) {

@@ -71,7 +71,7 @@ private:
 
     TextureInfo *textureInfo(int index)
     {
-        for (int i = m_textures.count(); i <= index; ++i) {
+        for (int i = m_textures.size(); i <= index; ++i) {
             if (createFullSizeTextures())
                 m_textures.append(QRect(0, 0, maxTextureSize(), maxTextureSize()));
             else

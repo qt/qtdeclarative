@@ -733,7 +733,7 @@ void tst_qqmlqt::createQmlObject()
 
     QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
     QVERIFY(item != nullptr);
-    QCOMPARE(item->childItems().count(), 1);
+    QCOMPARE(item->childItems().size(), 1);
 }
 
 
@@ -825,7 +825,7 @@ void tst_qqmlqt::dateTimeFormatting()
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
     QVERIFY(object != nullptr);
 
-    QVERIFY(inputProperties.count() > 0);
+    QVERIFY(inputProperties.size() > 0);
     QVariant result;
     foreach(const QString &prop, inputProperties) {
         QVERIFY(QMetaObject::invokeMethod(object.data(), method.toUtf8().constData(),
@@ -833,7 +833,7 @@ void tst_qqmlqt::dateTimeFormatting()
                 Q_ARG(QVariant, prop)));
         QStringList output = result.toStringList();
         QCOMPARE(output.size(), expectedResults.size());
-        for (int i=0; i<output.count(); i++)
+        for (int i=0; i<output.size(); i++)
             QCOMPARE(output[i], expectedResults[i]);
     }
 }
@@ -1136,7 +1136,7 @@ void tst_qqmlqt::quit()
     QSignalSpy spy(&engine, SIGNAL(quit()));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 void tst_qqmlqt::exit()
@@ -1146,7 +1146,7 @@ void tst_qqmlqt::exit()
     QSignalSpy spy(&engine, &QQmlEngine::exit);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     QList<QVariant> arguments = spy.takeFirst();
     QVERIFY(arguments.at(0).toInt() == object->property("returnCode").toInt());
 }

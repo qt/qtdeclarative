@@ -226,7 +226,7 @@ void tst_qqmlinfo::attachedObject()
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object != nullptr, qPrintable(component.errorString()));
-    QCOMPARE(warningSpy.count(), 2);
+    QCOMPARE(warningSpy.size(), 2);
 
     // The Attached C++ type has no QML engine since it was created in C++, so we should see its parent instead.
     const auto cppWarnings = warningSpy.at(0).first().value<QList<QQmlError>>();

@@ -114,7 +114,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     QStringList parameterNames;
 
     // Resolve duplicate parameter names:
-    for (int i = 0, ei = parameters.count(); i != ei; ++i) {
+    for (int i = 0, ei = parameters.size(); i != ei; ++i) {
         const QByteArray &param = parameters.at(i);
         int duplicate = -1;
 

@@ -920,18 +920,18 @@ bool dependencyBetter(const QString &lhs, const QString &rhs)
     if (leftModule > rightModule)
         return false;
 
-    if (leftSegments.length() == 1)
+    if (leftSegments.size() == 1)
         return false;
-    if (rightSegments.length() == 1)
+    if (rightSegments.size() == 1)
         return true;
 
     const QStringList leftVersion = leftSegments.at(1).split(QLatin1Char('.'));
     const QStringList rightVersion = rightSegments.at(1).split(QLatin1Char('.'));
 
     auto compareSegment = [&](int segmentIndex) {
-        if (leftVersion.length() <= segmentIndex)
-            return rightVersion.length() > segmentIndex ? 1 : 0;
-        if (rightVersion.length() <= segmentIndex)
+        if (leftVersion.size() <= segmentIndex)
+            return rightVersion.size() > segmentIndex ? 1 : 0;
+        if (rightVersion.size() <= segmentIndex)
             return -1;
 
         bool leftOk = false;

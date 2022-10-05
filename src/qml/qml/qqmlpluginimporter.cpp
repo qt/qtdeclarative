@@ -96,7 +96,7 @@ static QStringList versionUriList(const QString &uri, QTypeRevision version)
 {
     QStringList result;
     for (int mode = QQmlImports::FullyVersioned; mode <= QQmlImports::Unversioned; ++mode) {
-        int index = uri.length();
+        int index = uri.size();
         do {
             QString versionUri = uri;
             versionUri.insert(index, QQmlImports::versionString(

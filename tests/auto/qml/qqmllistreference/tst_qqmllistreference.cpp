@@ -170,7 +170,7 @@ void tst_qqmllistreference::qmllistreference()
     QVERIFY(fromVar.isValid());
     QCOMPARE(fromVar.count(), 1);
     fromVar.append(&tt);
-    QCOMPARE(tt.data.count(), 2);
+    QCOMPARE(tt.data.size(), 2);
 }
 
 void tst_qqmllistreference::qmllistreference_invalid()
@@ -545,13 +545,13 @@ void tst_qqmllistreference::append()
     {
     QQmlListReference ref(tt, "data");
     QVERIFY(ref.append(tt));
-    QCOMPARE(tt->data.count(), 1);
+    QCOMPARE(tt->data.size(), 1);
     QCOMPARE(tt->data.at(0), tt);
     QVERIFY(!ref.append(&object));
-    QCOMPARE(tt->data.count(), 1);
+    QCOMPARE(tt->data.size(), 1);
     QCOMPARE(tt->data.at(0), tt);
     QVERIFY(ref.append(nullptr));
-    QCOMPARE(tt->data.count(), 2);
+    QCOMPARE(tt->data.size(), 2);
     QCOMPARE(tt->data.at(0), tt);
     QVERIFY(!tt->data.at(1));
     delete tt;
@@ -622,7 +622,7 @@ void tst_qqmllistreference::clear()
     {
     QQmlListReference ref(tt, "data");
     QVERIFY(ref.clear());
-    QCOMPARE(tt->data.count(), 0);
+    QCOMPARE(tt->data.size(), 0);
     delete tt;
     QVERIFY(!ref.clear());
     }
@@ -718,9 +718,9 @@ void tst_qqmllistreference::removeLast()
 
     {
         QQmlListReference ref(tt.get(), "data");
-        QCOMPARE(tt->data.count(), 3);
+        QCOMPARE(tt->data.size(), 3);
         QVERIFY(ref.removeLast());
-        QCOMPARE(tt->data.count(), 2);
+        QCOMPARE(tt->data.size(), 2);
         tt.reset();
         QVERIFY(!ref.removeLast());
     }

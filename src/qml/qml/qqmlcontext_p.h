@@ -50,7 +50,7 @@ public:
     int notifyIndex() const { return m_notifyIndex; }
     void setNotifyIndex(int notifyIndex) { m_notifyIndex = notifyIndex; }
 
-    int numPropertyValues() const { return m_propertyValues.count(); }
+    int numPropertyValues() const { return m_propertyValues.size(); }
     void appendPropertyValue(const QVariant &value) { m_propertyValues.append(value); }
     void setPropertyValue(int index, const QVariant &value) { m_propertyValues[index] = value; }
     QVariant propertyValue(int index) const { return m_propertyValues[index]; }

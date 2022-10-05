@@ -960,7 +960,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
 {
     Q_ASSERT(textDocument);
 #if QT_CONFIG(im)
-    int preeditLength = block.isValid() ? block.layout()->preeditAreaText().length() : 0;
+    int preeditLength = block.isValid() ? block.layout()->preeditAreaText().size() : 0;
     int preeditPosition = block.isValid() ? block.layout()->preeditAreaPosition() : -1;
 #endif
 
@@ -1082,14 +1082,14 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
                 }
 
                 QQuickTextNodeEngine::SelectionState selectionState =
-                        (selectionStart < textPos + text.length()
+                        (selectionStart < textPos + text.size()
                          && selectionEnd >= textPos)
                         ? QQuickTextNodeEngine::Selected
                         : QQuickTextNodeEngine::Unselected;
 
                 addTextObject(block, QPointF(), charFormat, selectionState, textDocument, textPos);
             }
-            textPos += text.length();
+            textPos += text.size();
         } else {
             if (charFormat.foreground().style() != Qt::NoBrush)
                 setTextColor(charFormat.foreground().color());

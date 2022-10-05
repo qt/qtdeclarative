@@ -164,7 +164,7 @@ static void addLexToken(QList<Token> &tokens, int tokenKind, QQmlJS::Lexer &lexe
         break;
     }
     // avoid newline (on multiline comments/strings)
-    qsizetype len = lexer.code().length();
+    qsizetype len = lexer.code().size();
     if (lexer.code().endsWith(u'\n'))
         --len;
     len -= lexer.tokenStartColumn() - 1;

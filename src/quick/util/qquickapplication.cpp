@@ -294,8 +294,8 @@ QQmlListProperty<QQuickScreenInfo> QQuickApplication::screens()
 void QQuickApplication::updateScreens()
 {
     const QList<QScreen *> screenList = QGuiApplication::screens();
-    m_screens.resize(screenList.count());
-    for (int i = 0; i < screenList.count(); ++i) {
+    m_screens.resize(screenList.size());
+    for (int i = 0; i < screenList.size(); ++i) {
         if (!m_screens[i])
             m_screens[i] = new QQuickScreenInfo(this);
         m_screens[i]->setWrappedScreen(screenList[i]);

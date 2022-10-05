@@ -309,7 +309,7 @@ void tst_qqmlbinding::warningOnUnknownProperty()
     QScopedPointer<QQuickItem> item { qobject_cast<QQuickItem *>(c.create()) };
     QVERIFY(item);
 
-    QCOMPARE(messageHandler.messages().count(), 1);
+    QCOMPARE(messageHandler.messages().size(), 1);
 
     const QString expectedMessage = c.url().toString() + QLatin1String(":6:5: QML Binding: Property 'unknown' does not exist on Item.");
     QCOMPARE(messageHandler.messages().first(), expectedMessage);
@@ -324,7 +324,7 @@ void tst_qqmlbinding::warningOnReadOnlyProperty()
     QScopedPointer<QQuickItem> item { qobject_cast<QQuickItem *>(c.create()) };
     QVERIFY(item);
 
-    QCOMPARE(messageHandler.messages().count(), 1);
+    QCOMPARE(messageHandler.messages().size(), 1);
 
     const QString expectedMessage = c.url().toString() + QLatin1String(":8:5: QML Binding: Property 'name' on Item is read-only.");
     QCOMPARE(messageHandler.messages().first(), expectedMessage);
@@ -339,7 +339,7 @@ void tst_qqmlbinding::disabledOnUnknownProperty()
     QScopedPointer<QQuickItem> item { qobject_cast<QQuickItem *>(c.create()) };
     QVERIFY(item);
 
-    QCOMPARE(messageHandler.messages().count(), 0);
+    QCOMPARE(messageHandler.messages().size(), 0);
 }
 
 void tst_qqmlbinding::disabledOnReadonlyProperty()
@@ -350,7 +350,7 @@ void tst_qqmlbinding::disabledOnReadonlyProperty()
     QQmlComponent c(&engine, testFileUrl("disabledReadonly.qml"));
     QScopedPointer<QQuickItem> item { qobject_cast<QQuickItem *>(c.create()) };
     QVERIFY(item);
-    QCOMPARE(messageHandler.messages().count(), 0);
+    QCOMPARE(messageHandler.messages().size(), 0);
 }
 
 void tst_qqmlbinding::delayed()
@@ -447,7 +447,7 @@ void tst_qqmlbinding::bindingOverwriting()
     QVERIFY(item);
 
     QLoggingCategory::setFilterRules(QString());
-    QCOMPARE(messageHandler.messages().count(), 2);
+    QCOMPARE(messageHandler.messages().size(), 2);
 }
 
 void tst_qqmlbinding::bindToQmlComponent()

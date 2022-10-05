@@ -137,7 +137,7 @@ int main(int argc, char **argv)
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
         parser.showHelp();
-    } else if (sources.count() > 1 && (target != GenerateLoader && target != GenerateLoaderStandAlone)) {
+    } else if (sources.size() > 1 && (target != GenerateLoader && target != GenerateLoaderStandAlone)) {
         fprintf(stderr, "%s\n", qPrintable(QStringLiteral("Too many input files specified: '") + sources.join(QStringLiteral("' '")) + QLatin1Char('\'')));
         return EXIT_FAILURE;
     }

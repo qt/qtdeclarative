@@ -170,26 +170,26 @@ void tst_QQmlImport::uiFormatLoading()
 
     QSignalSpy objectCreated(test, SIGNAL(objectCreated(QObject*,QUrl)));
     test->load(testFileUrl("TestForm.ui.qml"));
-    QCOMPARE(objectCreated.count(), size);//one less than rootObjects().size() because we missed the first one
+    QCOMPARE(objectCreated.size(), size);//one less than rootObjects().size() because we missed the first one
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
     QByteArray testQml("import QtQml 2.0; QtObject{property bool success: true; property TestForm t: TestForm{}}");
     test->loadData(testQml, testFileUrl("dynamicTestForm.ui.qml"));
-    QCOMPARE(objectCreated.count(), size);
+    QCOMPARE(objectCreated.size(), size);
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
     test->load(testFileUrl("openTestFormFromDir.qml"));
-    QCOMPARE(objectCreated.count(), size);
+    QCOMPARE(objectCreated.size(), size);
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
     test->load(testFileUrl("openTestFormFromQmlDir.qml"));
-    QCOMPARE(objectCreated.count(), size);
+    QCOMPARE(objectCreated.size(), size);
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());

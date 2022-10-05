@@ -341,7 +341,7 @@ void tst_qv4identifiertable::insertNumericStringPopulatesIdentifier()
     QV4::ExecutionEngine engine;
     const QString numeric = QStringLiteral("1");
     uint subtype;
-    const uint hash = QV4::String::createHashValue(numeric.constData(), numeric.length(), &subtype);
+    const uint hash = QV4::String::createHashValue(numeric.constData(), numeric.size(), &subtype);
     QCOMPARE(subtype, QV4::Heap::String::StringType_ArrayIndex);
     QCOMPARE(engine.identifierTable->insertString(numeric)->identifier,
              QV4::PropertyKey::fromArrayIndex(hash));

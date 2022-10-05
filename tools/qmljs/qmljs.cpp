@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
             }
             if (!script) {
                 QByteArray ba = file.readAll();
-                const QString code = QString::fromUtf8(ba.constData(), ba.length());
+                const QString code = QString::fromUtf8(ba.constData(), ba.size());
                 file.close();
 
                 script.reset(new QV4::Script(ctx, QV4::Compiler::ContextType::Global, code, fn));

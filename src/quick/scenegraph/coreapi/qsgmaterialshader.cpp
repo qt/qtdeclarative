@@ -247,7 +247,7 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
         const QShaderDescription desc = it->shader.description();
 
         const QVector<QShaderDescription::UniformBlock> ubufs = desc.uniformBlocks();
-        const int ubufCount = ubufs.count();
+        const int ubufCount = ubufs.size();
         if (ubufCount > 1) {
             qWarning("Multiple uniform blocks found in shader. "
                      "This should be avoided as Qt Quick supports only one.");
@@ -272,7 +272,7 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
         }
 
         const QVector<QShaderDescription::InOutVariable> imageSamplers = desc.combinedImageSamplers();
-        const int imageSamplersCount = imageSamplers.count();
+        const int imageSamplersCount = imageSamplers.size();
         for (int i = 0; i < imageSamplersCount; ++i) {
             const QShaderDescription::InOutVariable &var(imageSamplers[i]);
 

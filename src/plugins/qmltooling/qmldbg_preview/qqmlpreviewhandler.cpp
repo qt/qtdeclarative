@@ -104,7 +104,7 @@ void QQmlPreviewHandler::loadUrl(const QUrl &url)
     m_component.reset(nullptr);
     QQuickPixmap::purgeCache();
 
-    const int numEngines = m_engines.count();
+    const int numEngines = m_engines.size();
     if (numEngines > 1) {
         emit error(QString::fromLatin1("%1 QML engines available. We cannot decide which one "
                                        "should load the component.").arg(numEngines));

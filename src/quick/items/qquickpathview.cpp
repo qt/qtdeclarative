@@ -1619,21 +1619,21 @@ void QQuickPathView::mousePressEvent(QMouseEvent *event)
 void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QQuickPathView);
-    if (!interactive || !items.count() || !model || !modelCount)
+    if (!interactive || !items.size() || !model || !modelCount)
         return;
     velocityBuffer.clear();
     int idx = 0;
-    for (; idx < items.count(); ++idx) {
+    for (; idx < items.size(); ++idx) {
         QQuickItem *item = items.at(idx);
         if (item->contains(item->mapFromScene(event->scenePosition())))
             break;
     }
-    if (idx == items.count() && qFuzzyIsNull(dragMargin))  // didn't click on an item
+    if (idx == items.size() && qFuzzyIsNull(dragMargin))  // didn't click on an item
         return;
 
     startPoint = pointNear(event->position(), &startPc);
     startPos = event->position();
-    if (idx == items.count()) {
+    if (idx == items.size()) {
         qreal distance = qAbs(event->position().x() - startPoint.x()) + qAbs(event->position().y() - startPoint.y());
         if (distance > dragMargin)
             return;
@@ -1978,7 +1978,7 @@ void QQuickPathView::refill()
     bool waiting = false;
     if (d->modelCount) {
         // add items as needed
-        if (d->items.count() < count+d->cacheSize) {
+        if (d->items.size() < count+d->cacheSize) {
             int endIdx = 0;
             qreal endPos;
             int startIdx = 0;
@@ -2016,9 +2016,9 @@ void QQuickPathView::refill()
             if (idx >= d->modelCount)
                 idx = 0;
             qreal nextPos = d->positionOfIndex(idx);
-            while ((d->isInBound(nextPos, endPos, 1 + d->mappedCache) || !d->items.count())
-                    && d->items.count() < count+d->cacheSize) {
-                qCDebug(lcItemViewDelegateLifecycle) << "append" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
+            while ((d->isInBound(nextPos, endPos, 1 + d->mappedCache) || !d->items.size())
+                    && d->items.size() < count+d->cacheSize) {
+                qCDebug(lcItemViewDelegateLifecycle) << "append" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.size();
                 QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1);
                 if (!item) {
                     waiting = true;
@@ -2049,8 +2049,8 @@ void QQuickPathView::refill()
                 idx = d->modelCount - 1;
             nextPos = d->positionOfIndex(idx);
             while (!waiting && d->isInBound(nextPos, d->mappedRange - d->mappedCache, startPos)
-                    && d->items.count() < count+d->cacheSize) {
-                qCDebug(lcItemViewDelegateLifecycle) << "prepend" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.count();
+                    && d->items.size() < count+d->cacheSize) {
+                qCDebug(lcItemViewDelegateLifecycle) << "prepend" << idx << "@" << nextPos << (d->currentIndex == idx ? "current" : "") << "items count was" << d->items.size();
                 QQuickItem *item = d->getItem(idx, idx+1, nextPos >= 1);
                 if (!item) {
                     waiting = true;
@@ -2078,8 +2078,8 @@ void QQuickPathView::refill()
             // new items appear in the middle. This more generic addition iteration handles this
             // Since this is the rare case, we try append/prepend first and only do this if
             // there are gaps still left to fill.
-            if (!waiting && d->items.count() < count+d->cacheSize) {
-                qCDebug(lcItemViewDelegateLifecycle) << "Checking for pathview middle inserts, items count was" << d->items.count();
+            if (!waiting && d->items.size() < count+d->cacheSize) {
+                qCDebug(lcItemViewDelegateLifecycle) << "Checking for pathview middle inserts, items count was" << d->items.size();
                 idx = startIdx;
                 QQuickItem *lastItem = d->items.at(0);
                 while (idx != endIdx) {
@@ -2095,7 +2095,7 @@ void QQuickPathView::refill()
                         if (!d->items.contains(item)) { //We found a hole
                             qCDebug(lcItemViewDelegateLifecycle) << "middle insert" << idx << "@" << nextPos
                                                                  << (d->currentIndex == idx ? "current" : "")
-                                                                 << "items count was" << d->items.count();
+                                                                 << "items count was" << d->items.size();
                             if (d->currentIndex == idx) {
                                 currentVisible = true;
                                 d->currentItemOffset = nextPos;
@@ -2288,7 +2288,7 @@ void QQuickPathView::movementEnding()
 int QQuickPathViewPrivate::calcCurrentIndex()
 {
     int current = 0;
-    if (modelCount && model && items.count()) {
+    if (modelCount && model && items.size()) {
         offset = std::fmod(offset, qreal(modelCount));
         if (offset < 0)
             offset += modelCount;
@@ -2360,7 +2360,7 @@ void QQuickPathViewPrivate::fixOffsetCallback(void *d)
 void QQuickPathViewPrivate::fixOffset()
 {
     Q_Q(QQuickPathView);
-    if (model && items.count()) {
+    if (model && items.size()) {
         if (haveHighlightRange && (highlightRangeMode == QQuickPathView::StrictlyEnforceRange
                 || snapMode != QQuickPathView::NoSnap)) {
             int curr = calcCurrentIndex();

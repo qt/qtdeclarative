@@ -198,13 +198,13 @@ bool DomUniverse::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
         return self.subListItem(List(
                 Path::Field(Fields::queue),
                 [q](DomItem &list, index_type i) {
-                    if (i >= 0 && i < q.length())
+                    if (i >= 0 && i < q.size())
                         return list.subDataItem(PathEls::Index(i), q.at(i).toCbor(),
                                                 ConstantData::Options::FirstMapIsFields);
                     else
                         return DomItem();
                 },
-                [q](DomItem &) { return index_type(q.length()); }, nullptr,
+                [q](DomItem &) { return index_type(q.size()); }, nullptr,
                 QLatin1String("ParsingTask")));
     });
     return cont;
@@ -1085,7 +1085,7 @@ bool DomEnvironment::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
             loadedLoadInfo = true;
             loadsWithWork = m_loadsWithWork;
             inProgress = m_inProgress;
-            nAllLoadedCallbacks = m_allLoadedCallback.length();
+            nAllLoadedCallbacks = m_allLoadedCallback.size();
         }
     };
     cont = cont
@@ -1095,14 +1095,14 @@ bool DomEnvironment::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                         return self.subListItem(List(
                                 Path::Field(Fields::loadsWithWork),
                                 [loadsWithWork](DomItem &list, index_type i) {
-                                    if (i >= 0 && i < loadsWithWork.length())
+                                    if (i >= 0 && i < loadsWithWork.size())
                                         return list.subDataItem(PathEls::Index(i),
                                                                 loadsWithWork.at(i).toString());
                                     else
                                         return DomItem();
                                 },
                                 [loadsWithWork](DomItem &) {
-                                    return index_type(loadsWithWork.length());
+                                    return index_type(loadsWithWork.size());
                                 },
                                 nullptr, QLatin1String("Path")));
                     });
@@ -1112,13 +1112,13 @@ bool DomEnvironment::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                    return self.subListItem(List(
                            Path::Field(Fields::inProgress),
                            [inProgress](DomItem &list, index_type i) {
-                               if (i >= 0 && i < inProgress.length())
+                               if (i >= 0 && i < inProgress.size())
                                    return list.subDataItem(PathEls::Index(i),
                                                            inProgress.at(i).toString());
                                else
                                    return DomItem();
                            },
-                           [inProgress](DomItem &) { return index_type(inProgress.length()); },
+                           [inProgress](DomItem &) { return index_type(inProgress.size()); },
                            nullptr, QLatin1String("Path")));
                });
     cont = cont && self.dvItemField(visitor, Fields::loadInfo, [&self, this]() {
@@ -1729,7 +1729,7 @@ QSet<QString> DomEnvironment::qmlDirPaths(DomItem &self, EnvLookup options) cons
     const auto qmldirFiles = qmldirFilePaths(self, options);
     for (const QString &p : qmldirFiles) {
         if (p.endsWith(u"/qmldir")) {
-            res.insert(p.left(p.length() - 7));
+            res.insert(p.left(p.size() - 7));
         } else {
             myErrors()
                     .warning(tr("Unexpected path not ending with qmldir in qmldirFilePaths: %1")

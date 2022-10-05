@@ -371,7 +371,7 @@ inline const QQmlPropertyData *QQmlPropertyCache::signal(int index) const
 
 inline QQmlEnumData *QQmlPropertyCache::qmlEnum(int index) const
 {
-    if (index < 0 || index >= enumCache.count())
+    if (index < 0 || index >= enumCache.size())
         return nullptr;
 
     return const_cast<QQmlEnumData *>(&enumCache.at(index));
@@ -464,7 +464,7 @@ int QQmlPropertyCache::signalOffset() const
 
 int QQmlPropertyCache::qmlEnumCount() const
 {
-    return enumCache.count();
+    return enumCache.size();
 }
 
 bool QQmlPropertyCache::callJSFactoryMethod(QObject *object, void **args) const

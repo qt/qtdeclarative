@@ -123,7 +123,7 @@ QString resolveLocalUrl(const QString &url, const QString &relative)
         QString base = baseRef + relative;
 
         // Remove any relative directory elements in the path
-        int length = base.length();
+        int length = base.size();
         int index = 0;
         while ((index = base.indexOf(QLatin1String("/."), index)) != -1) {
             if ((length > (index + 2)) && (base.at(index + 2) == Dot) &&
@@ -235,7 +235,7 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 {
     const QQmlImportNamespace &set = m_unqualifiedset;
 
-    for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
+    for (int ii = set.imports.size() - 1; ii >= 0; --ii) {
         const QQmlImportInstance *import = set.imports.at(ii);
         QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->version);
         if (module) {
@@ -251,7 +251,7 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
         QQmlImportRef &typeimport = cache->m_namedImports[set.prefix];
         typeimport.m_qualifier = set.prefix;
 
-        for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
+        for (int ii = set.imports.size() - 1; ii >= 0; --ii) {
             const QQmlImportInstance *import = set.imports.at(ii);
             QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->version);
             if (module) {
@@ -283,7 +283,7 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
 {
     typedef QQmlDirComponents::const_iterator ConstIterator;
 
-    for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
+    for (int ii = set.imports.size() - 1; ii >= 0; --ii) {
         const QQmlImportInstance *import = set.imports.at(ii);
 
         const QQmlDirComponents &components = import->qmlDirComponents;
@@ -373,7 +373,7 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
 
     const QQmlImportNamespace &set = m_unqualifiedset;
 
-    for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
+    for (int ii = set.imports.size() - 1; ii >= 0; --ii) {
         const QQmlImportInstance *import = set.imports.at(ii);
 
         for (const QQmlDirParser::Script &script : import->qmlDirScripts) {
@@ -387,7 +387,7 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
     for (QQmlImportNamespace *ns = m_qualifiedSets.first(); ns; ns = m_qualifiedSets.next(ns)) {
         const QQmlImportNamespace &set = *ns;
 
-        for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
+        for (int ii = set.imports.size() - 1; ii >= 0; --ii) {
             const QQmlImportInstance *import = set.imports.at(ii);
 
             for (const QQmlDirParser::Script &script : import->qmlDirScripts) {
@@ -736,7 +736,7 @@ bool QQmlImports::resolveType(
                     m_typeLoader, unqualifiedtype,  version_return, type_return, &m_base, errors,
                     registrationType, typeRecursionDetected))
             return true;
-        if (nameSpace->imports.count() == 1
+        if (nameSpace->imports.size() == 1
                 && !nameSpace->imports.at(0)->isLibrary
                 && type_return
                 && nameSpace != &m_unqualifiedset) {
@@ -868,13 +868,13 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
         });
         setNeedsSorting(false);
     }
-    for (int i=0; i<imports.count(); ++i) {
+    for (int i=0; i<imports.size(); ++i) {
         const QQmlImportInstance *import = imports.at(i);
         if (import->resolveType(typeLoader, type, version_return, type_return, base,
                                 typeRecursionDetected, registrationType, recursionRestriction, errors)) {
             if (qmlCheckTypes()) {
                 // check for type clashes
-                for (int j = i+1; j<imports.count(); ++j) {
+                for (int j = i+1; j<imports.size(); ++j) {
                     const QQmlImportInstance *import2 = imports.at(j);
                     if (import2->resolveType(typeLoader, type, version_return, nullptr, base,
                                              nullptr, registrationType)) {
@@ -1012,7 +1012,7 @@ QString QQmlImports::resolvedUri(const QString &dir_arg, QQmlImportDatabase *dat
     QString stableRelativePath = dir;
     for (const QString &path : qAsConst(paths)) {
         if (dir.startsWith(path)) {
-            stableRelativePath = dir.mid(path.length()+1);
+            stableRelativePath = dir.mid(path.size()+1);
             break;
         }
     }
@@ -1496,7 +1496,7 @@ QUrl QQmlImports::urlFromLocalFileOrQrcOrUrl(const QString &file)
     QUrl url(QLatin1String(file.at(0) == Colon ? "qrc" : "") + file);
 
     // We don't support single character schemes as those conflict with windows drive letters.
-    if (url.scheme().length() < 2)
+    if (url.scheme().size() < 2)
         return QUrl::fromLocalFile(file);
     return url;
 }
@@ -1554,7 +1554,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     auto addEnvImportPath = [this](const char *var) {
         if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
             const QStringList paths = parseEnvPath(qEnvironmentVariable(var));
-            for (int ii = paths.count() - 1; ii >= 0; --ii)
+            for (int ii = paths.size() - 1; ii >= 0; --ii)
                 addImportPath(paths.at(ii));
         }
     };
@@ -1570,7 +1570,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     auto addEnvPluginPath = [this](const char *var) {
         if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
             const QStringList paths = parseEnvPath(qEnvironmentVariable(var));
-            for (int ii = paths.count() - 1; ii >= 0; --ii)
+            for (int ii = paths.size() - 1; ii >= 0; --ii)
                 addPluginPath(paths.at(ii));
         }
     };
@@ -1617,7 +1617,7 @@ void QQmlImportDatabase::addPluginPath(const QString& path)
 
     QUrl url = QUrl(path);
     if (url.isRelative() || url.scheme() == QLatin1String("file")
-            || (url.scheme().length() == 1 && QFile::exists(path)) ) {  // windows path
+            || (url.scheme().size() == 1 && QFile::exists(path)) ) {  // windows path
         QDir dir = QDir(path);
         filePluginPath.prepend(dir.canonicalPath());
     } else {
@@ -1651,7 +1651,7 @@ void QQmlImportDatabase::addImportPath(const QString& path)
         cPath = QLatin1String("qrc") + path;
         cPath.replace(Backslash, Slash);
     } else if (url.isRelative() ||
-               (url.scheme().length() == 1 && QFile::exists(path)) ) {  // windows path
+               (url.scheme().size() == 1 && QFile::exists(path)) ) {  // windows path
         QDir dir = QDir(path);
         cPath = dir.canonicalPath();
     } else {

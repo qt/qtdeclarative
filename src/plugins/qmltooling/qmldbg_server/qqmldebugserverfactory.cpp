@@ -442,7 +442,7 @@ void QQmlDebugServerImpl::receiveMessage()
             QStringList pluginNames;
             QList<float> pluginVersions;
             if (clientSupportsMultiPackets) { // otherwise, disable all plugins
-                const int count = m_plugins.count();
+                const int count = m_plugins.size();
                 pluginNames.reserve(count);
                 pluginVersions.reserve(count);
                 for (QHash<QString, QQmlDebugService *>::ConstIterator i = m_plugins.constBegin();
@@ -561,7 +561,7 @@ void QQmlDebugServerImpl::addEngine(QJSEngine *engine)
     for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineAboutToBeAdded(engine);
 
-    m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.count());
+    m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.size());
 
     for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineAdded(engine);
@@ -578,7 +578,7 @@ void QQmlDebugServerImpl::removeEngine(QJSEngine *engine)
     for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineAboutToBeRemoved(engine);
 
-    m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.count());
+    m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.size());
 
     for (QQmlDebugService *service : qAsConst(m_plugins))
         service->engineRemoved(engine);

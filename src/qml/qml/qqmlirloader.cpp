@@ -98,7 +98,7 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
         object->bindings->append(b);
         if (b->type() == QV4::CompiledData::Binding::Type_Script) {
             functionIndices.append(b->value.compiledScriptIndex);
-            b->value.compiledScriptIndex = functionIndices.count() - 1;
+            b->value.compiledScriptIndex = functionIndices.size() - 1;
 
             QmlIR::CompiledFunctionOrExpression *foe = pool->New<QmlIR::CompiledFunctionOrExpression>();
             foe->nameIndex = 0;
@@ -106,9 +106,9 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
             QQmlJS::AST::ExpressionNode *expr;
 
             if (b->stringIndex != quint32(0)) {
-                const int start = output->code.length();
+                const int start = output->code.size();
                 const QString script = output->stringAt(b->stringIndex);
-                const int length = script.length();
+                const int length = script.size();
                 output->code.append(script);
                 expr = new (pool) FakeExpression(start, length);
             } else
@@ -118,7 +118,7 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
         }
     }
 
-    Q_ASSERT(object->functionsAndExpressions->count == functionIndices.count());
+    Q_ASSERT(object->functionsAndExpressions->count == functionIndices.size());
 
     for (uint i = 0; i < serializedObject->nSignals; ++i) {
         const QV4::CompiledData::Signal *serializedSignal = serializedObject->signalAt(i);
@@ -174,7 +174,7 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
         const QV4::CompiledData::Function *compiledFunction = unit->functionAt(*functionIdx);
 
         functionIndices.append(*functionIdx);
-        f->index = functionIndices.count() - 1;
+        f->index = functionIndices.size() - 1;
         f->location = compiledFunction->location;
         f->nameIndex = compiledFunction->nameIndex;
         f->returnType = compiledFunction->returnType;

@@ -37,7 +37,7 @@ class tst_qqmljsscope : public QQmlDataTest
         QFile f(fi.absoluteFilePath());
         f.open(QIODevice::ReadOnly);
         QByteArray data(fi.size(), Qt::Uninitialized);
-        f.read(data.data(), data.length());
+        f.read(data.data(), data.size());
         return QString::fromUtf8(data);
     }
 

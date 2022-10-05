@@ -124,7 +124,7 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc,
                 continue;
             const QString propName =  doc.stringAt(binding->propertyNameIndex);
             if (!propName.startsWith(QLatin1String("on"))
-                || propName.length() < 3
+                || propName.size() < 3
                 || !propName.at(2).isUpper())
                 continue;
             auto compiledFunction = doc.jsModule.functions.value(object->runtimeFunctionIndices.at(binding->value.compiledScriptIndex));
@@ -289,7 +289,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                         break;
                     }
 
-                    Q_ASSERT(quint32(functionsToCompile.length()) > binding->value.compiledScriptIndex);
+                    Q_ASSERT(quint32(functionsToCompile.size()) > binding->value.compiledScriptIndex);
                     const auto &functionToCompile
                             = functionsToCompile[binding->value.compiledScriptIndex];
                     auto *parentNode = functionToCompile.parentNode;
@@ -326,7 +326,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                                            << irDocument.stringAt(binding->propertyNameIndex);
                     result = aotCompiler->compileBinding(context, *binding, node);
                 } else if (const auto *function = bindingOrFunction.function()) {
-                    Q_ASSERT(quint32(functionsToCompile.length()) > function->index);
+                    Q_ASSERT(quint32(functionsToCompile.size()) > function->index);
                     auto *node = functionsToCompile[function->index].node;
                     Q_ASSERT(node);
                     Q_ASSERT(contextMap.contains(node));

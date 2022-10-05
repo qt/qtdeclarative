@@ -126,7 +126,7 @@ void QQmlScriptBlob::done()
         return;
 
     // Check all script dependencies for errors
-    for (int ii = 0; ii < m_scripts.count(); ++ii) {
+    for (int ii = 0; ii < m_scripts.size(); ++ii) {
         const ScriptReference &script = m_scripts.at(ii);
         Q_ASSERT(script.script->isCompleteOrError());
         if (script.script->isError()) {
@@ -147,7 +147,7 @@ void QQmlScriptBlob::done()
 
         QSet<QString> ns;
 
-        for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
+        for (int scriptIndex = 0; scriptIndex < m_scripts.size(); ++scriptIndex) {
             const ScriptReference &script = m_scripts.at(scriptIndex);
 
             m_scriptData->scripts.append(script.script);

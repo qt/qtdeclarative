@@ -1149,7 +1149,7 @@ QObject *QtObject::createQmlObject(const QString &qml, QObject *parent, const QU
             QV4::ScopedObject qmlerror(scope);
             QV4::ScopedString s(scope);
             QV4::ScopedValue v(scope);
-            for (int ii = 0; ii < errors.count(); ++ii) {
+            for (int ii = 0; ii < errors.size(); ++ii) {
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
                 qmlerror = v4->newObject();
@@ -1225,7 +1225,7 @@ QObject *QtObject::createQmlObject(const QString &qml, QObject *parent, const QU
         obj->setParent(parent);
 
         QList<QQmlPrivate::AutoParentFunction> functions = QQmlMetaType::parentFunctions();
-        for (int ii = 0; ii < functions.count(); ++ii) {
+        for (int ii = 0; ii < functions.size(); ++ii) {
             if (QQmlPrivate::Parented == functions.at(ii)(obj, parent))
                 break;
         }
@@ -1517,7 +1517,7 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
 
     QVector<QV4::StackFrame> stackTrace = engine->stackTrace(10);
 
-    for (int i = 0; i < stackTrace.count(); i++) {
+    for (int i = 0; i < stackTrace.size(); i++) {
         const QV4::StackFrame &frame = stackTrace.at(i);
 
         QString stackFrame;

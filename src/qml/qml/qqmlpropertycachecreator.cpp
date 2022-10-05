@@ -58,7 +58,7 @@ QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &ur
     if (lastSlash <= -1)
         return QByteArray();
     // ### this might not be correct for .ui.qml files
-    const QStringView nameBase = QStringView{path}.mid(lastSlash + 1, path.length() - lastSlash - 5);
+    const QStringView nameBase = QStringView{path}.mid(lastSlash + 1, path.size() - lastSlash - 5);
     // Not a reusable type if it doesn't start with a upper case letter.
     if (nameBase.isEmpty() || !nameBase.at(0).isUpper())
         return QByteArray();

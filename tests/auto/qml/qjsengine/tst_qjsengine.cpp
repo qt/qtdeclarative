@@ -327,14 +327,14 @@ void tst_QJSEngine::callQObjectSlot()
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithoutArgCalled()));
         eng.evaluate("dummy.slotToCall();");
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
     }
 
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithSingleArgCalled(QString)));
         eng.evaluate("dummy.slotToCall('arg');");
 
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
         const QList<QVariant> arguments = spy.takeFirst();
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
     }
@@ -342,7 +342,7 @@ void tst_QJSEngine::callQObjectSlot()
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString, QString, QString)));
         eng.evaluate("dummy.slotToCall('arg', 'arg2');");
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         const QList<QVariant> arguments = spy.takeFirst();
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
@@ -353,7 +353,7 @@ void tst_QJSEngine::callQObjectSlot()
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithArgumentsCalled(QString, QString, QString)));
         eng.evaluate("dummy.slotToCall('arg', 'arg2', 'arg3');");
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         const QList<QVariant> arguments = spy.takeFirst();
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
@@ -364,7 +364,7 @@ void tst_QJSEngine::callQObjectSlot()
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithOverloadedArgumentsCalled(QString, Qt::KeyboardModifier, Qt::KeyboardModifiers)));
         eng.evaluate(QStringLiteral("dummy.slotToCall('arg', %1);").arg(QString::number(Qt::ControlModifier)));
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         const QList<QVariant> arguments = spy.first();
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
@@ -376,7 +376,7 @@ void tst_QJSEngine::callQObjectSlot()
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithTwoOverloadedArgumentsCalled(QString, Qt::KeyboardModifiers, Qt::KeyboardModifier)));
         QJSValue v = eng.evaluate(QStringLiteral("dummy.slotToCallTwoDefault('arg', %1);").arg(QString::number(Qt::MetaModifier | Qt::KeypadModifier)));
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         const QList<QVariant> arguments = spy.first();
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
@@ -397,7 +397,7 @@ void tst_QJSEngine::callQObjectSlot()
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithOverloadedArgumentsCalled(QString, Qt::KeyboardModifier, Qt::KeyboardModifiers)));
         QJSValue v = eng.evaluate(QStringLiteral("dummy.slotToCall('arg', Qt.ControlModifier);"));
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         const QList<QVariant> arguments = spy.first();
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
@@ -408,7 +408,7 @@ void tst_QJSEngine::callQObjectSlot()
     {
         QSignalSpy spy(&dummy, SIGNAL(slotWithTwoOverloadedArgumentsCalled(QString, Qt::KeyboardModifiers, Qt::KeyboardModifier)));
         QJSValue v = eng.evaluate(QStringLiteral("dummy.slotToCallTwoDefault('arg', Qt.MetaModifier | Qt.KeypadModifier);"));
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         const QList<QVariant> arguments = spy.first();
         QCOMPARE(arguments.at(0).toString(), QString("arg"));
@@ -968,7 +968,7 @@ void tst_QJSEngine::newQObject_deletedEngine()
         object = engine.newQObject(ptr);
         engine.globalObject().setProperty("obj", object);
     }
-    QTRY_VERIFY(spy.count());
+    QTRY_VERIFY(spy.size());
 }
 
 class TestQMetaObject : public QObject {
@@ -2667,8 +2667,8 @@ void tst_QJSEngine::stringObjects()
     // in C++
     {
         QJSValue obj = eng.evaluate(QString::fromLatin1("new String('%0')").arg(str));
-        QCOMPARE(obj.property("length").toInt(), str.length());
-        for (int i = 0; i < str.length(); ++i) {
+        QCOMPARE(obj.property("length").toInt(), str.size());
+        for (int i = 0; i < str.size(); ++i) {
             QString pname = QString::number(i);
             QVERIFY(obj.property(pname).isString());
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
@@ -2678,7 +2678,7 @@ void tst_QJSEngine::stringObjects()
             QCOMPARE(obj.property(pname).toString(), QString(str.at(i)));
         }
         QVERIFY(obj.property("-1").isUndefined());
-        QVERIFY(obj.property(QString::number(str.length())).isUndefined());
+        QVERIFY(obj.property(QString::number(str.size())).isUndefined());
 
         QJSValue val = eng.toScriptValue(123);
         obj.setProperty("-1", val);
@@ -2691,13 +2691,13 @@ void tst_QJSEngine::stringObjects()
         QJSValue ret = eng.evaluate("s = new String('ciao'); r = []; for (var p in s) r.push(p); r");
         QVERIFY(ret.isArray());
         QStringList lst = qjsvalue_cast<QStringList>(ret);
-        QCOMPARE(lst.size(), str.length());
-        for (int i = 0; i < str.length(); ++i)
+        QCOMPARE(lst.size(), str.size());
+        for (int i = 0; i < str.size(); ++i)
             QCOMPARE(lst.at(i), QString::number(i));
 
         QJSValue ret2 = eng.evaluate("s[0] = 123; s[0]");
         QVERIFY(ret2.isString());
-        QCOMPARE(ret2.toString().length(), 1);
+        QCOMPARE(ret2.toString().size(), 1);
         QCOMPARE(ret2.toString().at(0), str.at(0));
 
         QJSValue ret3 = eng.evaluate("s[-1] = 123; s[-1]");
@@ -3485,7 +3485,7 @@ void tst_QJSEngine::dateConversionJSQt()
         QDateTime qtDate = jsDate.toDateTime();
         QString qtUTCDateStr = qtDate.toUTC().toString(Qt::ISODate);
         QString jsUTCDateStr = jsDate.property("toISOString").callWithInstance(jsDate).toString();
-        jsUTCDateStr.remove(jsUTCDateStr.length() - 5, 4); // get rid of milliseconds (".000")
+        jsUTCDateStr.remove(jsUTCDateStr.size() - 5, 4); // get rid of milliseconds (".000")
         if (qtUTCDateStr != jsUTCDateStr)
             QFAIL(qPrintable(jsDate.toString()));
         secs += 2*60*60;
@@ -3500,7 +3500,7 @@ void tst_QJSEngine::dateConversionQtJS()
         QJSValue jsDate = eng.toScriptValue(qtDate);
         QString jsUTCDateStr = jsDate.property("toISOString").callWithInstance(jsDate).toString();
         QString qtUTCDateStr = qtDate.toUTC().toString(Qt::ISODate);
-        jsUTCDateStr.remove(jsUTCDateStr.length() - 5, 4); // get rid of milliseconds (".000")
+        jsUTCDateStr.remove(jsUTCDateStr.size() - 5, 4); // get rid of milliseconds (".000")
         if (jsUTCDateStr != qtUTCDateStr)
             QFAIL(qPrintable(qtDate.toString()));
         qtDate = qtDate.addSecs(2*60*60);
@@ -4397,7 +4397,7 @@ void tst_QJSEngine::exceptionReporting()
     function g() {f()}
     g() )", QString("tesfile.js"), 1, &stackTrace);
     QVERIFY2(!result.isError(), qPrintable(result.toString()));
-    QCOMPARE(stackTrace.count(), 3);
+    QCOMPARE(stackTrace.size(), 3);
     QCOMPARE(stackTrace.at(0), "f:2:-1:file:tesfile.js");
     QCOMPARE(stackTrace.at(1), "g:3:-1:file:tesfile.js");
     QCOMPARE(stackTrace.at(2), "%entry:4:-1:file:tesfile.js");

@@ -326,7 +326,7 @@ void QQuickFileDialog::setNameFilters(const QStringList &filters)
     m_options->setNameFilters(filters);
     if (m_selectedNameFilter) {
         int index = m_selectedNameFilter->index();
-        if (index < 0 || index >= filters.count())
+        if (index < 0 || index >= filters.size())
             index = 0;
         m_selectedNameFilter->update(filters.value(index));
     }

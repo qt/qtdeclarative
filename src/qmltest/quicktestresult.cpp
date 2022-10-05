@@ -682,7 +682,7 @@ bool QuickTestResult::measurementAccepted()
 
 static QBenchmarkResult qMedian(const QList<QBenchmarkResult> &container)
 {
-    const int count = container.count();
+    const int count = container.size();
     if (count == 0)
         return QBenchmarkResult();
 

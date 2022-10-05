@@ -1706,7 +1706,7 @@ void tst_qqmllanguage::propertyValueSource()
             valueSources.append(child);
     }
 
-    QCOMPARE(valueSources.count(), 1);
+    QCOMPARE(valueSources.size(), 1);
     MyPropertyValueSource *valueSource =
         qobject_cast<MyPropertyValueSource *>(valueSources.at(0));
     QVERIFY(valueSource != nullptr);
@@ -1727,7 +1727,7 @@ void tst_qqmllanguage::propertyValueSource()
             valueSources.append(child);
     }
 
-    QCOMPARE(valueSources.count(), 1);
+    QCOMPARE(valueSources.size(), 1);
     MyPropertyValueSource *valueSource =
         qobject_cast<MyPropertyValueSource *>(valueSources.at(0));
     QVERIFY(valueSource != nullptr);
@@ -2851,7 +2851,7 @@ void tst_qqmllanguage::testType(const QString& qml, const QString& type, const Q
                 actualerror.append("; ");
             actualerror.append(e.description());
         }
-        QCOMPARE(actualerror.left(partialMatch ? expectederror.length(): -1),expectederror);
+        QCOMPARE(actualerror.left(partialMatch ? expectederror.size(): -1),expectederror);
     } else {
         VERIFY_ERRORS(0);
         QScopedPointer<QObject> object(component.create());
@@ -3301,7 +3301,7 @@ void tst_qqmllanguage::importsPath()
 
     ThreadedTestHTTPServer server(dataDirectory());
 
-    for (int i = 0; i < importPath.count(); ++i)
+    for (int i = 0; i < importPath.size(); ++i)
         importPath[i].replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
 
     engine.setImportPathList(QStringList(defaultImportPathList) << importPath);
@@ -3429,7 +3429,7 @@ void tst_qqmllanguage::importIncorrectCase()
     QQmlComponent component(&engine, testFileUrl("ImportIncorrectCase.qml"));
 
     QList<QQmlError> errors = component.errors();
-    QCOMPARE(errors.count(), 1);
+    QCOMPARE(errors.size(), 1);
 
     const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
         QStringLiteral("No such file or directory") :
@@ -3516,7 +3516,7 @@ void tst_qqmllanguage::importJs()
         QCOMPARE(actual.size(), expected.size());
         for (int i = 0; i < expected.size(); ++i)
         {
-            const int compareLen = qMin(expected.at(i).length(), actual.at(i).length());
+            const int compareLen = qMin(expected.at(i).size(), actual.at(i).size());
             QCOMPARE(actual.at(i).left(compareLen), expected.at(i).left(compareLen));
         }
     }
@@ -3565,7 +3565,7 @@ void tst_qqmllanguage::explicitSelfImport()
     engine.setImportPathList(QStringList(defaultImportPathList) << testFile("lib"));
 
     QQmlComponent component(&engine, testFileUrl("mixedModuleWithSelfImport.qml"));
-    QVERIFY(component.errors().count() == 0);
+    QVERIFY(component.errors().size() == 0);
 
     engine.setImportPathList(defaultImportPathList);
 }
@@ -3736,7 +3736,7 @@ void tst_qqmllanguage::subclassedUncreateableRevision()
         c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
         QScopedPointer<QObject> obj(c.create());
         QCOMPARE(obj.data(), static_cast<QObject*>(nullptr));
-        QCOMPARE(c.errors().count(), 1);
+        QCOMPARE(c.errors().size(), 1);
         QCOMPARE(c.errors().first().description(), QString("Cannot create MyUncreateableBaseClass"));
     }
 
@@ -3791,7 +3791,7 @@ void tst_qqmllanguage::subclassedExtendedUncreateableRevision()
         c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
         QScopedPointer<QObject> obj(c.create());
         QCOMPARE(obj.data(), static_cast<QObject*>(nullptr));
-        QCOMPARE(c.errors().count(), 1);
+        QCOMPARE(c.errors().size(), 1);
         QCOMPARE(c.errors().first().description(), QString("Cannot create MyExtendedUncreateableBaseClass"));
     }
 
@@ -4170,8 +4170,8 @@ void tst_qqmllanguage::globalEnums()
     QVERIFY(enum2Class->getValueE() == MyEnum2Class::E_14);
     QVERIFY(enum2Class->getValueE2() == MyEnum2Class::E_76);
 
-    QVERIFY(signalA.count() == 1);
-    QVERIFY(signalB.count() == 1);
+    QVERIFY(signalA.size() == 1);
+    QVERIFY(signalB.size() == 1);
 
     QVERIFY(enum2Class->property("aValue") == MyEnum1Class::A_11);
     QVERIFY(enum2Class->property("bValue") == 37);
@@ -5012,13 +5012,13 @@ void tst_qqmllanguage::deferredProperties()
     QQmlData *qmlData = QQmlData::get(object.data());
     QVERIFY(qmlData);
 
-    QCOMPARE(qmlData->deferredData.count(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
-    QCOMPARE(qmlData->deferredData.first()->bindings.count(), 3); // "innerobj", "innerlist1", "innerlist2"
-    QCOMPARE(qmlData->deferredData.last()->bindings.count(), 3); // "outerobj", "outerlist1", "outerlist2"
+    QCOMPARE(qmlData->deferredData.size(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
+    QCOMPARE(qmlData->deferredData.first()->bindings.size(), 3); // "innerobj", "innerlist1", "innerlist2"
+    QCOMPARE(qmlData->deferredData.last()->bindings.size(), 3); // "outerobj", "outerlist1", "outerlist2"
 
     qmlExecuteDeferred(object.data());
 
-    QCOMPARE(qmlData->deferredData.count(), 0);
+    QCOMPARE(qmlData->deferredData.size(), 0);
 
     innerObj = object->findChild<QObject *>(QStringLiteral("innerobj")); // MyDeferredListProperty.qml
     QVERIFY(innerObj);
@@ -5129,16 +5129,16 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     QQmlData *qmlData = QQmlData::get(object.data());
     QVERIFY(qmlData);
 
-    QCOMPARE(qmlData->deferredData.count(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
-    QCOMPARE(qmlData->deferredData.first()->bindings.count(), 3); // "innerobj", "innerlist1", "innerlist2"
-    QCOMPARE(qmlData->deferredData.last()->bindings.count(), 3); // "outerobj", "outerlist1", "outerlist2"
+    QCOMPARE(qmlData->deferredData.size(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
+    QCOMPARE(qmlData->deferredData.first()->bindings.size(), 3); // "innerobj", "innerlist1", "innerlist2"
+    QCOMPARE(qmlData->deferredData.last()->bindings.size(), 3); // "outerobj", "outerlist1", "outerlist2"
 
     // first execution creates the outer object
     testExecuteDeferredOnce(QQmlProperty(object.data(), "groupProperty"));
 
-    QCOMPARE(qmlData->deferredData.count(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
-    QCOMPARE(qmlData->deferredData.first()->bindings.count(), 2); // "innerlist1", "innerlist2"
-    QCOMPARE(qmlData->deferredData.last()->bindings.count(), 2); // "outerlist1", "outerlist2"
+    QCOMPARE(qmlData->deferredData.size(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
+    QCOMPARE(qmlData->deferredData.first()->bindings.size(), 2); // "innerlist1", "innerlist2"
+    QCOMPARE(qmlData->deferredData.last()->bindings.size(), 2); // "outerlist1", "outerlist2"
 
     QObjectList innerObjsAfterFirstExecute = object->findChildren<QObject *>(QStringLiteral("innerobj")); // MyDeferredListProperty.qml
     QVERIFY(innerObjsAfterFirstExecute.isEmpty());
@@ -5156,9 +5156,9 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     // re-execution does nothing (to avoid overriding the property)
     testExecuteDeferredOnce(QQmlProperty(object.data(), "groupProperty"));
 
-    QCOMPARE(qmlData->deferredData.count(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
-    QCOMPARE(qmlData->deferredData.first()->bindings.count(), 2); // "innerlist1", "innerlist2"
-    QCOMPARE(qmlData->deferredData.last()->bindings.count(), 2); // "outerlist1", "outerlist2"
+    QCOMPARE(qmlData->deferredData.size(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
+    QCOMPARE(qmlData->deferredData.first()->bindings.size(), 2); // "innerlist1", "innerlist2"
+    QCOMPARE(qmlData->deferredData.last()->bindings.size(), 2); // "outerlist1", "outerlist2"
 
     QObjectList innerObjsAfterSecondExecute = object->findChildren<QObject *>(QStringLiteral("innerobj")); // MyDeferredListProperty.qml
     QVERIFY(innerObjsAfterSecondExecute.isEmpty());
@@ -5175,7 +5175,7 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     // execution of a list property should execute all outer list bindings
     testExecuteDeferredOnce(QQmlProperty(object.data(), "listProperty"));
 
-    QCOMPARE(qmlData->deferredData.count(), 0);
+    QCOMPARE(qmlData->deferredData.size(), 0);
 
     listProperty = object->property("listProperty").value<QQmlListProperty<QObject>>();
     QCOMPARE(listProperty.count(&listProperty), 2);
@@ -5692,10 +5692,10 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(o->property("extendedExtension").toInt(), 42);
     QCOMPARE(o->property("foreignExtendedExtension").toInt(), 42);
 
-    QCOMPARE(extensionChangedSpy.count(), 0);
+    QCOMPARE(extensionChangedSpy.size(), 0);
     extended->setProperty("extension", 44);
-    QCOMPARE(extensionChangedSpy.count(), 1);
-    QCOMPARE(extensionChangedWithValueSpy.count(), 1);
+    QCOMPARE(extensionChangedSpy.size(), 1);
+    QCOMPARE(extensionChangedWithValueSpy.size(), 1);
     QCOMPARE(o->property("extendedChangeCount").toInt(), 1);
     QCOMPARE(o->property("extendedExtension").toInt(), 44);
 
@@ -6174,7 +6174,7 @@ void tst_qqmllanguage::checkUncreatableNoReason()
     QString qml = QString("import QtQuick 2.0\nimport qt.uncreatable.noreason 1.0\nUncreatableElementNoReason {}");
     QQmlComponent c(&engine);
     c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
-    QCOMPARE(c.errors().count(), 1);
+    QCOMPARE(c.errors().size(), 1);
     QCOMPARE(c.errors().first().description(), QString("Type cannot be created in QML."));
 }
 
@@ -6185,7 +6185,7 @@ void tst_qqmllanguage::checkURLtoURLObject()
                           "Component.onCompleted: { new URL(parent.source); } }");
     QQmlComponent c(&engine);
     c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
-    QCOMPARE(c.errors().count(), 0);
+    QCOMPARE(c.errors().size(), 0);
 }
 
 struct TestValueType
@@ -6390,7 +6390,7 @@ void tst_qqmllanguage::qtbug_85932()
 
     QQmlComponent c(&engine, testFileUrl("qtbug_85932.qml"));
     QScopedPointer<QObject> obj(c.create());
-    QTRY_COMPARE(allWarnings.count(), 2);
+    QTRY_COMPARE(allWarnings.size(), 2);
     QCOMPARE(allWarnings.at(0).toString(), warning1);
     QCOMPARE(allWarnings.at(1).toString(), warning2);
 }
@@ -7134,13 +7134,13 @@ void tst_qqmllanguage::valueTypeList()
         QCOMPARE(qvariant_cast<QPointF>(o->property("d")), QPointF(3, 4));
         QCOMPARE(qvariant_cast<DerivedValueType>(o->property("y")).content(), 29);
         const QList<DerivedValueType> x = qvariant_cast<QList<DerivedValueType>>(o->property("x"));
-        QCOMPARE(x.length(), 3);
+        QCOMPARE(x.size(), 3);
         for (const DerivedValueType &d : x)
             QCOMPARE(d.content(), 29);
 
         const QList<BaseValueType> baseList
                 = qvariant_cast<QList<BaseValueType>>(o->property("baseList"));
-        QCOMPARE(baseList.length(), 3);
+        QCOMPARE(baseList.size(), 3);
         for (const BaseValueType &b : baseList)
             QCOMPARE(b.content(), 29);
 
@@ -7155,13 +7155,13 @@ void tst_qqmllanguage::valueTypeList()
         QCOMPARE(qvariant_cast<QPointF>(o->property("d")), QPointF(12, 4));
         QCOMPARE(qvariant_cast<DerivedValueType>(o->property("y")).content(), 30);
         const QList<DerivedValueType> x = qvariant_cast<QList<DerivedValueType>>(o->property("x"));
-        QCOMPARE(x.length(), 3);
+        QCOMPARE(x.size(), 3);
         for (const DerivedValueType &d : x)
             QCOMPARE(d.content(), 30);
 
         const QList<BaseValueType> baseList
                 = qvariant_cast<QList<BaseValueType>>(o->property("baseList"));
-        QCOMPARE(baseList.length(), 3);
+        QCOMPARE(baseList.size(), 3);
         for (const BaseValueType &b : baseList)
             QCOMPARE(b.content(), 30);
     }
@@ -7460,8 +7460,8 @@ static void listsEqual(QObject *object, const char *method)
     const QList<QRectF> jsArrayProperty
             = object->property(jsArrayPropertyName.constData()).value<QList<QRectF>>();
 
-    const qsizetype v4SequenceCount = v4SequenceProperty.count();
-    QCOMPARE(v4SequenceCount, jsArrayProperty.count());
+    const qsizetype v4SequenceCount = v4SequenceProperty.size();
+    QCOMPARE(v4SequenceCount, jsArrayProperty.size());
 
     for (qsizetype i = 0; i < v4SequenceCount; ++i)
         QCOMPARE(v4SequenceProperty.at(i), jsArrayProperty.at(i));

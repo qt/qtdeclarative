@@ -173,10 +173,10 @@ QVariant createValueTypeFromNumberString(const QString &s)
 
     QVarLengthArray<float, NumParams> parameters;
     bool ok = true;
-    for (qsizetype prev = 0, next = s.indexOf(u','), length = s.length(); ok && prev < length;) {
+    for (qsizetype prev = 0, next = s.indexOf(u','), length = s.size(); ok && prev < length;) {
         parameters.append(s.mid(prev, next - prev).toFloat(&ok));
         prev = next + 1;
-        next = (parameters.length() == NumParams - 1) ? length : s.indexOf(u',', prev);
+        next = (parameters.size() == NumParams - 1) ? length : s.indexOf(u',', prev);
     }
 
     if (!ok)

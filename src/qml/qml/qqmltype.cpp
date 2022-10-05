@@ -208,7 +208,7 @@ void QQmlTypePrivate::init() const
             mo, baseMetaObject, metaObjects.isEmpty() ? nullptr
                                                       : metaObjects.constLast().metaObject));
 
-    for (int ii = 0; ii < metaObjects.count(); ++ii) {
+    for (int ii = 0; ii < metaObjects.size(); ++ii) {
         metaObjects[ii].propertyOffset =
                 metaObjects.at(ii).metaObject->propertyOffset();
         metaObjects[ii].methodOffset =
@@ -320,7 +320,7 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
 
         if (isScoped) {
             scopedEnums << scoped;
-            scopedEnumIndex.insert(QString::fromUtf8(e.name()), scopedEnums.count()-1);
+            scopedEnumIndex.insert(QString::fromUtf8(e.name()), scopedEnums.size()-1);
         }
     }
 }
@@ -392,13 +392,13 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(
             QStringHash<int> *scoped = new QStringHash<int>();
             QQmlEnumData *enumData = currentCache->qmlEnum(ii);
 
-            for (int jj = 0; jj < enumData->values.count(); ++jj) {
+            for (int jj = 0; jj < enumData->values.size(); ++jj) {
                 const QQmlEnumValue &value = enumData->values.at(jj);
                 enums.insert(value.namedValue, value.value);
                 scoped->insert(value.namedValue, value.value);
             }
             scopedEnums << scoped;
-            scopedEnumIndex.insert(enumData->name, scopedEnums.count()-1);
+            scopedEnumIndex.insert(enumData->name, scopedEnums.size()-1);
         }
     }
     insertEnums(cppMetaObject);
@@ -855,7 +855,7 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::S
     *ok = true;
 
     if (d) {
-        Q_ASSERT(index > -1 && index < d->scopedEnums.count());
+        Q_ASSERT(index > -1 && index < d->scopedEnums.size());
         int *rv = d->scopedEnums.at(index)->value(name);
         if (rv)
             return *rv;
@@ -872,7 +872,7 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QStrin
     *ok = true;
 
     if (d) {
-        Q_ASSERT(index > -1 && index < d->scopedEnums.count());
+        Q_ASSERT(index > -1 && index < d->scopedEnums.size());
         int *rv = d->scopedEnums.at(index)->value(name);
         if (rv)
             return *rv;
@@ -890,11 +890,11 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scope
 
         d->initEnums(engine);
 
-        int *rv = d->scopedEnumIndex.value(QHashedCStringRef(scopedEnumName.constData(), scopedEnumName.length()));
+        int *rv = d->scopedEnumIndex.value(QHashedCStringRef(scopedEnumName.constData(), scopedEnumName.size()));
         if (rv) {
             int index = *rv;
-            Q_ASSERT(index > -1 && index < d->scopedEnums.count());
-            rv = d->scopedEnums.at(index)->value(QHashedCStringRef(name.constData(), name.length()));
+            Q_ASSERT(index > -1 && index < d->scopedEnums.size());
+            rv = d->scopedEnums.at(index)->value(QHashedCStringRef(name.constData(), name.size()));
             if (rv)
                 return *rv;
         }
@@ -915,7 +915,7 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, QStringView scopedEnumN
         int *rv = d->scopedEnumIndex.value(QHashedStringRef(scopedEnumName));
         if (rv) {
             int index = *rv;
-            Q_ASSERT(index > -1 && index < d->scopedEnums.count());
+            Q_ASSERT(index > -1 && index < d->scopedEnums.size());
             rv = d->scopedEnums.at(index)->value(QHashedStringRef(name));
             if (rv)
                 return *rv;

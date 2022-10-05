@@ -11,13 +11,13 @@ static int parseInt(QStringView str, bool *ok)
 {
     int pos = 0;
     int number = 0;
-    while (pos < str.length() && str.at(pos).isDigit()) {
+    while (pos < str.size() && str.at(pos).isDigit()) {
         if (pos != 0)
             number *= 10;
         number += str.at(pos).unicode() - '0';
         ++pos;
     }
-    if (pos != str.length())
+    if (pos != str.size())
         *ok = false;
     else
         *ok = true;
@@ -31,7 +31,7 @@ static QTypeRevision parseVersion(const QString &str)
         bool ok = false;
         const int major = parseInt(QStringView(str).left(dotIndex), &ok);
         if (!ok) return QTypeRevision();
-        const int minor = parseInt(QStringView(str).mid(dotIndex + 1, str.length() - dotIndex - 1), &ok);
+        const int minor = parseInt(QStringView(str).mid(dotIndex + 1, str.size() - dotIndex - 1), &ok);
         return ok ? QTypeRevision::fromVersion(major, minor) : QTypeRevision();
     }
     return QTypeRevision();

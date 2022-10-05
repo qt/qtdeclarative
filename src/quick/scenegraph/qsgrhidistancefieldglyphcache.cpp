@@ -35,7 +35,7 @@ QSGRhiDistanceFieldGlyphCache::~QSGRhiDistanceFieldGlyphCache()
     // A plain delete should work, but just in case commitResourceUpdates was
     // not called and something is enqueued on the update batch for a texture,
     // defer until the end of the frame.
-    for (int i = 0; i < m_textures.count(); ++i) {
+    for (int i = 0; i < m_textures.size(); ++i) {
         if (m_textures[i].texture)
             m_textures[i].texture->deleteLater();
     }

@@ -423,7 +423,7 @@ void tst_qquickimageprovider::threadTest()
     //MUST not deadlock
     QVERIFY(obj != nullptr);
     QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
-    QCOMPARE(images.count(), 4);
+    QCOMPARE(images.size(), 4);
     QTest::qWait(100);
     foreach (QQuickImage *img, images) {
         QCOMPARE(img->status(), QQuickImage::Loading);
@@ -542,7 +542,7 @@ void tst_qquickimageprovider::asyncTextureTest()
     //MUST not deadlock
     QVERIFY(obj != nullptr);
     QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
-    QCOMPARE(images.count(), 4);
+    QCOMPARE(images.size(), 4);
 
     QTRY_COMPARE(provider->pool.activeThreadCount(), 4);
     foreach (QQuickImage *img, images) {
@@ -615,7 +615,7 @@ void tst_qquickimageprovider::instantAsyncTextureTest()
 
     QVERIFY(!obj.isNull());
     const QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
-    QCOMPARE(images.count(), 4);
+    QCOMPARE(images.size(), 4);
 
     for (QQuickImage *img: images) {
         QTRY_COMPARE(img->status(), QQuickImage::Ready);

@@ -161,7 +161,7 @@ void tst_QQuickLoader::sourceOrComponent()
     QCOMPARE(loader->progress(), 1.0);
 
     QCOMPARE(loader->status(), error ? QQuickLoader::Error : QQuickLoader::Ready);
-    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), error ? 0: 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().size(), error ? 0: 1);
 
     if (!error) {
         bool sourceComponentIsChildOfLoader = false;
@@ -222,12 +222,12 @@ void tst_QQuickLoader::clear()
         QVERIFY(loader != nullptr);
         QVERIFY(loader->item());
         QCOMPARE(loader->progress(), 1.0);
-        QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 1);
+        QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().size(), 1);
 
         QTRY_VERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
-        QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 0);
+        QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().size(), 0);
     }
     {
         QQmlComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
@@ -238,14 +238,14 @@ void tst_QQuickLoader::clear()
         QVERIFY(loader);
         QVERIFY(loader->item());
         QCOMPARE(loader->progress(), 1.0);
-        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
 
         loader->setSourceComponent(nullptr);
 
         QVERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
-        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
+        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 0);
     }
     {
         QQmlComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
@@ -256,14 +256,14 @@ void tst_QQuickLoader::clear()
         QVERIFY(loader);
         QVERIFY(loader->item());
         QCOMPARE(loader->progress(), 1.0);
-        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
 
         QMetaObject::invokeMethod(item.data(), "clear");
 
         QVERIFY(!loader->item());
         QCOMPARE(loader->progress(), 0.0);
         QCOMPARE(loader->status(), QQuickLoader::Null);
-        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
+        QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 0);
     }
 }
 
@@ -284,7 +284,7 @@ void tst_QQuickLoader::urlToComponent()
     QTRY_VERIFY(loader != nullptr);
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
-    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().size(), 1);
     QCOMPARE(loader->width(), 10.0);
     QCOMPARE(loader->height(), 10.0);
 }
@@ -300,12 +300,12 @@ void tst_QQuickLoader::componentToUrl()
     QVERIFY(loader);
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
 
     loader->setSourceWithoutResolve(testFileUrl("/Rect120x60.qml"));
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
     QCOMPARE(loader->width(), 120.0);
     QCOMPARE(loader->height(), 60.0);
 }
@@ -435,7 +435,7 @@ void tst_QQuickLoader::networkRequestUrl()
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->property("signalCount").toInt(), 1);
-    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().size(), 1);
 }
 
 /* XXX Component waits until all dependencies are loaded.  Is this actually possible? */
@@ -489,7 +489,7 @@ void tst_QQuickLoader::failNetworkRequest()
     QVERIFY(!loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->property("did_load").toInt(), 123);
-    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().count(), 0);
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().size(), 0);
 }
 
 void tst_QQuickLoader::active()
@@ -789,7 +789,7 @@ void tst_QQuickLoader::deleteComponentCrash()
     QCOMPARE(loader->status(), QQuickLoader::Ready);
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
-    QTRY_COMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+    QTRY_COMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
     QCOMPARE(loader->source(), QUrl("BlueRect.qml"));
 }
 
@@ -866,8 +866,8 @@ void tst_QQuickLoader::implicitSize()
     QCOMPARE(loader->property("implicitWidth").toReal(), 200.);
     QCOMPARE(loader->property("implicitHeight").toReal(), 300.);
 
-    QCOMPARE(implWidthSpy.count(), 1);
-    QCOMPARE(implHeightSpy.count(), 1);
+    QCOMPARE(implWidthSpy.size(), 1);
+    QCOMPARE(implHeightSpy.size(), 1);
 }
 
 void tst_QQuickLoader::QTBUG_17114()
@@ -970,7 +970,7 @@ void tst_QQuickLoader::asynchronous_clear()
 
     QCOMPARE(loader->progress(), 0.0);
     QCOMPARE(loader->status(), QQuickLoader::Null);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 0);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 0);
 
     // check loading component
     root->setProperty("comp", "BigComponent.qml");
@@ -983,7 +983,7 @@ void tst_QQuickLoader::asynchronous_clear()
     QTRY_VERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
 }
 
 void tst_QQuickLoader::simultaneousSyncAsync()
@@ -1047,7 +1047,7 @@ void tst_QQuickLoader::asyncToSync1()
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
 }
 
 void tst_QQuickLoader::asyncToSync2()
@@ -1079,7 +1079,7 @@ void tst_QQuickLoader::asyncToSync2()
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->childItems().size(), 1);
 }
 
 void tst_QQuickLoader::loadedSignal()
@@ -1287,7 +1287,7 @@ void tst_QQuickLoader::sourceComponentGarbageCollection()
     if (spy.isEmpty())
         QVERIFY(spy.wait());
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 // QTBUG-51995

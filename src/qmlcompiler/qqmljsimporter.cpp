@@ -694,7 +694,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         if (modulePath.startsWith(u':')) {
             if (m_mapper) {
                 const QString resourcePath = modulePath.mid(
-                            1, modulePath.endsWith(u'/') ? modulePath.length() - 2 : -1)
+                            1, modulePath.endsWith(u'/') ? modulePath.size() - 2 : -1)
                         + SlashQmldir;
                 const auto entry = m_mapper->entry(
                             QQmlJSResourceFileMapper::resourceFileFilter(resourcePath));

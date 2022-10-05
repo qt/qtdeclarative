@@ -64,7 +64,7 @@ void tst_QQmlInspector::checkAnimationSpeed(int targetMillisPerDegree)
 
     for (int i = 0; i < 10; ++i) {
         QString output = m_process->output();
-        int position = output.length();
+        int position = output.size();
         do {
             QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
             output = m_process->output();

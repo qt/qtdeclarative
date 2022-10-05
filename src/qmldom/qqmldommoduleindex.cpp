@@ -154,7 +154,7 @@ QSet<QString> ModuleIndex::exportNames(DomItem &self) const
 {
     QSet<QString> res;
     QList<Path> mySources = sources();
-    for (int i = 0; i < mySources.length(); ++i) {
+    for (int i = 0; i < mySources.size(); ++i) {
         DomItem source = self.path(mySources.at(i));
         res += source.field(Fields::exports).keys();
     }
@@ -230,7 +230,7 @@ QList<DomItem> ModuleIndex::exportsWithNameAndMinorVersion(DomItem &self, QStrin
     if (minorVersion < 0)
         minorVersion = std::numeric_limits<int>::max();
     int vNow = Version::Undefined;
-    for (int i = 0; i < mySources.length(); ++i) {
+    for (int i = 0; i < mySources.size(); ++i) {
         DomItem source = self.path(mySources.at(i));
         DomItem exports = source.field(Fields::exports).key(name);
         int nExports = exports.indexes();

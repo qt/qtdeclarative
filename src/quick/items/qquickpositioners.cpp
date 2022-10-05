@@ -223,7 +223,7 @@ void QQuickBasePositioner::componentComplete()
     QQuickItem::componentComplete();
     if (d->transitioner)
         d->transitioner->setPopulateTransitionEnabled(true);
-    positionedItems.reserve(childItems().count());
+    positionedItems.reserve(childItems().size());
     prePositioning();
     if (d->transitioner)
         d->transitioner->setPopulateTransitionEnabled(false);
@@ -277,7 +277,7 @@ void QQuickBasePositioner::prePositioning()
     unpositionedItems.clear();
     int addedIndex = -1;
 
-    for (int ii = 0; ii < children.count(); ++ii) {
+    for (int ii = 0; ii < children.size(); ++ii) {
         QQuickItem *child = children.at(ii);
         if (QQuickItemPrivate::get(child)->isTransparentForPositioner())
             continue;

@@ -168,7 +168,7 @@ public:
     inline void setLineDash(const QVector<qreal> &pattern)
     {
         commands << QQuickContext2D::LineDash;
-        reals << pattern.length();
+        reals << pattern.size();
         for (qreal r : pattern)
             reals << r;
     }

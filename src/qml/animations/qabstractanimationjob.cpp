@@ -93,7 +93,7 @@ void QQmlAnimationTimer::updateAnimationsTime(qint64 delta)
     //when the CPU load is high
     if (delta) {
         insideTick = true;
-        for (currentAnimationIdx = 0; currentAnimationIdx < animations.count(); ++currentAnimationIdx) {
+        for (currentAnimationIdx = 0; currentAnimationIdx < animations.size(); ++currentAnimationIdx) {
             QAbstractAnimationJob *animation = animations.at(currentAnimationIdx);
             int elapsed = animation->m_totalCurrentTime
                           + (animation->direction() == QAbstractAnimationJob::Forward ? delta : -delta);
@@ -101,7 +101,7 @@ void QQmlAnimationTimer::updateAnimationsTime(qint64 delta)
         }
         if (animationTickDump()) {
             qDebug() << "***** Dumping Animation Tree ***** ( tick:" << lastTick << "delta:" << delta << ")";
-            for (int i = 0; i < animations.count(); ++i)
+            for (int i = 0; i < animations.size(); ++i)
                 qDebug() << animations.at(i);
         }
         insideTick = false;

@@ -315,7 +315,7 @@ public:
 #endif
     }
 
-    bool allSelected() const { return !m_text.isEmpty() && m_selstart == 0 && m_selend == (int)m_text.length(); }
+    bool allSelected() const { return !m_text.isEmpty() && m_selstart == 0 && m_selend == (int)m_text.size(); }
     bool hasSelectedText() const { return !m_text.isEmpty() && m_selend > m_selstart; }
 
     void setSelection(int start, int length);
@@ -342,7 +342,7 @@ public:
     }
 
     int start() const { return 0; }
-    int end() const { return m_text.length(); }
+    int end() const { return m_text.size(); }
 
     QString realText() const;
 
@@ -379,18 +379,18 @@ public:
     void cursorWordBackward(bool mark) { moveCursor(m_textLayout.previousCursorPosition(m_cursor, QTextLayout::SkipWords), mark); }
 
     void home(bool mark) { moveCursor(0, mark); }
-    void end(bool mark) { moveCursor(q_func()->text().length(), mark); }
+    void end(bool mark) { moveCursor(q_func()->text().size(), mark); }
 
     void backspace();
     void del();
     void deselect() { internalDeselect(); finishChange(); }
-    void selectAll() { m_selstart = m_selend = m_cursor = 0; moveCursor(m_text.length(), true); }
+    void selectAll() { m_selstart = m_selend = m_cursor = 0; moveCursor(m_text.size(), true); }
 
     void insert(const QString &);
     void clear();
     void selectWordAtPos(int);
 
-    void setCursorPosition(int pos) { if (pos <= m_text.length()) moveCursor(qMax(0, pos)); }
+    void setCursorPosition(int pos) { if (pos <= m_text.size()) moveCursor(qMax(0, pos)); }
 
     bool fixup();
 

@@ -336,7 +336,7 @@ void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
     QList<QQuickItem *> siblings = contentItem->childItems();
 
     int to = 0;
-    for (int i = 0; i < siblings.count(); ++i) {
+    for (int i = 0; i < siblings.size(); ++i) {
         QQuickItem* sibling = siblings.at(i);
         if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
             continue;
@@ -672,7 +672,7 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
 qsizetype QQuickMenuPrivate::contentData_count(QQmlListProperty<QObject> *prop)
 {
     QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
-    return QQuickMenuPrivate::get(q)->contentData.count();
+    return QQuickMenuPrivate::get(q)->contentData.size();
 }
 
 QObject *QQuickMenuPrivate::contentData_at(QQmlListProperty<QObject> *prop, qsizetype index)

@@ -117,7 +117,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     }
 
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
+    for (int ii = children.size() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
         if (!child->isVisible() || !child->isEnabled())
             continue;

@@ -1045,8 +1045,8 @@ void tst_qmltc::propertyAlias_external()
     QSignalSpy heightAliasChangedSpy(&created, &PREPEND_NAMESPACE(propertyAlias_external)::heightAliasChanged);
     created.setHeight(10);
     QCOMPARE(created.heightAlias(), 10);
-    QCOMPARE(heightChangedSpy.count(), 1);
-    QCOMPARE(heightAliasChangedSpy.count(), 1);
+    QCOMPARE(heightChangedSpy.size(), 1);
+    QCOMPARE(heightAliasChangedSpy.size(), 1);
 }
 
 void tst_qmltc::propertyAliasAttribute()
@@ -1144,22 +1144,22 @@ void tst_qmltc::propertyAliasAttribute()
     // write through alias
     fromQmltc.setNotifiableAlias(stringA);
     QVERIFY(fromEngine.setProperty("notifiableAlias", stringA));
-    QCOMPARE(spyQmltc.count(), ++calls);
-    QCOMPARE(spyEngine.count(), calls);
+    QCOMPARE(spyQmltc.size(), ++calls);
+    QCOMPARE(spyEngine.size(), calls);
     // write through property
     fromQmltc.setReadAndWriteAndNotify(stringB);
     QVERIFY(fromEngine.setProperty("notifiable", stringB));
-    QCOMPARE(spyQmltc.count(), ++calls);
-    QCOMPARE(spyEngine.count(), calls);
+    QCOMPARE(spyQmltc.size(), ++calls);
+    QCOMPARE(spyEngine.size(), calls);
 
     fromQmltc.setNotifiableMemberAlias(stringA);
     QVERIFY(fromEngine.setProperty("notifiableMemberAlias", stringA));
-    QCOMPARE(spyQmltc.count(), ++calls);
-    QCOMPARE(spyEngine.count(), calls);
+    QCOMPARE(spyQmltc.size(), ++calls);
+    QCOMPARE(spyEngine.size(), calls);
     fromQmltc.setProperty("notifiableMember", stringB);
     QVERIFY(fromEngine.setProperty("notifiableMember", stringB));
-    QCOMPARE(spyQmltc.count(), ++calls);
-    QCOMPARE(spyEngine.count(), calls);
+    QCOMPARE(spyQmltc.size(), ++calls);
+    QCOMPARE(spyEngine.size(), calls);
 
     // check that the alias to a revisioned property works
     fromQmltc.setLatestReadAndWriteAlias(stringA);
@@ -1317,15 +1317,15 @@ void tst_qmltc::complexAliases()
     created.setAFont(newFont);
     QCOMPARE(created.aFont(), newFont);
     QCOMPARE(created.aFont(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 1);
+    QCOMPARE(aFontSpy.size(), 1);
     newFont.setStyle(QFont::StyleOblique);
     theText->setProperty("font", newFont);
     QCOMPARE(theText->property("font").value<QFont>(), newFont);
     QCOMPARE(created.aFont(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 2);
+    QCOMPARE(aFontSpy.size(), 2);
 
     created.setAWordSpacing(1);
-    QCOMPARE(aFontSpy.count(), 3);
+    QCOMPARE(aFontSpy.size(), 3);
 
     // aliasToObjectAlias:
     QCOMPARE(created.aliasToObjectAlias(), created.aRectObject());
@@ -1360,12 +1360,12 @@ void tst_qmltc::complexAliases()
     QCOMPARE(created.aliasToValueTypeAlias(), newFont);
     QCOMPARE(created.aliasToValueTypeAlias(), created.aFont());
     QCOMPARE(created.aliasToValueTypeAlias(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 4);
-    QCOMPARE(aliasToValueTypeAliasSpy.count(), 1);
+    QCOMPARE(aFontSpy.size(), 4);
+    QCOMPARE(aliasToValueTypeAliasSpy.size(), 1);
     newFont.setPixelSize(12);
     created.setAFont(newFont);
-    QCOMPARE(aFontSpy.count(), 5);
-    QCOMPARE(aliasToValueTypeAliasSpy.count(), 2);
+    QCOMPARE(aFontSpy.size(), 5);
+    QCOMPARE(aliasToValueTypeAliasSpy.size(), 2);
     QCOMPARE(created.aliasToValueTypeAlias(), created.aFont());
     QCOMPARE(created.aliasToValueTypeAlias(), theText->property("font").value<QFont>());
 
@@ -1374,8 +1374,8 @@ void tst_qmltc::complexAliases()
     created.setAliasToPropertyOfValueTypeAlias(3);
     QCOMPARE(created.aliasToPropertyOfValueTypeAlias(), created.aFont().pixelSize());
     QCOMPARE(created.aFont(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 6);
-    QCOMPARE(aliasToValueTypeAliasSpy.count(), 3);
+    QCOMPARE(aFontSpy.size(), 6);
+    QCOMPARE(aliasToValueTypeAliasSpy.size(), 3);
 
     // aliasToImportedMessage:
     QCOMPARE(created.aliasToImportedMessage(), localImport->property("message").toString());
@@ -1413,7 +1413,7 @@ void tst_qmltc::complexAliases()
     newPalette->fromQPalette(QPalette(QColor(u"cyan"_s)));
     QCOMPARE(newPalette->button(), QColor(u"cyan"_s));
     created.setAliasToPrivatePalette(newPalette);
-    QCOMPARE(paletteChangedSpy.count(), 1);
+    QCOMPARE(paletteChangedSpy.size(), 1);
     QCOMPARE(QQuickItemPrivate::get(theRect)->palette()->button(), QColor(u"cyan"_s));
     QCOMPARE(created.aliasToPrivatePalette(), QQuickItemPrivate::get(theRect)->palette());
 
@@ -1495,9 +1495,9 @@ void tst_qmltc::componentHelloWorld()
     QCOMPARE(created->hello(), QStringLiteral("Hello, World!"));
 
     QSignalSpy onDestroySpy(created.get(), &PREPEND_NAMESPACE(ComponentHelloWorld)::sDestroying);
-    QCOMPARE(onDestroySpy.count(), 0);
+    QCOMPARE(onDestroySpy.size(), 0);
     created.reset();
-    QCOMPARE(onDestroySpy.count(), 1);
+    QCOMPARE(onDestroySpy.size(), 1);
 }
 
 void tst_qmltc::propertyReturningFunction()
@@ -2283,7 +2283,7 @@ void tst_qmltc::calqlatrBits()
 
     QSignalSpy scaleChangedSpy(textItem, &QQuickItem::scaleChanged);
     controller->completeToBeginning();
-    QTRY_VERIFY(scaleChangedSpy.count() > 0);
+    QTRY_VERIFY(scaleChangedSpy.size() > 0);
 }
 
 void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
@@ -2358,7 +2358,7 @@ void tst_qmltc::valueTypeListProperty()
     QQmlEngine e;
     PREPEND_NAMESPACE(valueTypeListProperty) created(&e);
     QList<int> intsRef = created.arrayOfInts();
-    QCOMPARE(intsRef.count(), 4);
+    QCOMPARE(intsRef.size(), 4);
     QList<int> intsGroundTruth = { 1, 0, 42, -5 };
 
     QCOMPARE(intsRef, intsGroundTruth);
@@ -2368,13 +2368,13 @@ void tst_qmltc::valueTypeListProperty()
     QCOMPARE(created.arrayOfInts().at(2), 43);
 
     QList<QFont> arrayOfFonts = created.arrayOfFonts();
-    QCOMPARE(arrayOfFonts.count(), 2);
+    QCOMPARE(arrayOfFonts.size(), 2);
     QCOMPARE(arrayOfFonts[0].family(), "Arial");
     QCOMPARE(arrayOfFonts[1].family(), "Comic Sans");
 
     QList<QColor> arrayOfColors = created.arrayOfColors();
 
-    QCOMPARE(arrayOfColors.count(), 3);
+    QCOMPARE(arrayOfColors.size(), 3);
 
     QVERIFY(arrayOfColors[0].red() > 0);
     QCOMPARE(arrayOfColors[0].green(), 0);

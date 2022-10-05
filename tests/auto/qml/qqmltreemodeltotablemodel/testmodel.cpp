@@ -52,7 +52,7 @@ int TestModel::rowCount(const QModelIndex &parent) const
     if (!parent.isValid())
         return 1; // root of the tree
     if (parent.column() == 0)
-        return treeItem(parent)->m_childItems.count();
+        return treeItem(parent)->m_childItems.size();
 
     return 0;
 }

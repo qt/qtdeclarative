@@ -148,7 +148,7 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::So
         return result;
 
     if (c->contextType == ContextType::ESModule) {
-        for (int i = 0; i < c->importEntries.count(); ++i) {
+        for (int i = 0; i < c->importEntries.size(); ++i) {
             if (c->importEntries.at(i).localName == name) {
                 result.index = i;
                 result.type = ResolvedName::Import;
@@ -181,7 +181,7 @@ void Context::emitBlockHeader(Codegen *codegen)
     if (requiresExecutionContext) {
         if (blockIndex < 0) {
             codegen->module()->blocks.append(this);
-            blockIndex = codegen->module()->blocks.count() - 1;
+            blockIndex = codegen->module()->blocks.size() - 1;
         }
 
         if (contextType == ContextType::Global) {
@@ -361,7 +361,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
         break;
     }
 
-    sizeOfLocalTemporalDeadZone = localsInTDZ.count();
+    sizeOfLocalTemporalDeadZone = localsInTDZ.size();
     for (auto &member: qAsConst(localsInTDZ)) {
         member->index = locals.size();
         locals.append(member.key());
@@ -376,7 +376,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
         }
     }
 
-    sizeOfRegisterTemporalDeadZone = registersInTDZ.count();
+    sizeOfRegisterTemporalDeadZone = registersInTDZ.size();
     firstTemporalDeadZoneRegister = bytecodeGenerator->currentRegister();
     for (auto &member: qAsConst(registersInTDZ))
         member->index = bytecodeGenerator->newRegister();

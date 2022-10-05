@@ -39,10 +39,10 @@ void QQmlInstantiatorPrivate::clear()
     Q_Q(QQmlInstantiator);
     if (!instanceModel)
         return;
-    if (!objects.count())
+    if (!objects.size())
         return;
 
-    for (int i=0; i < objects.count(); i++) {
+    for (int i=0; i < objects.size(); i++) {
         q->objectRemoved(i, objects[i]);
         instanceModel->release(objects[i]);
     }
@@ -103,7 +103,7 @@ void QQmlInstantiatorPrivate::_q_createdItem(int idx, QObject* item)
     if (QObject *o = objects.at(idx))
         instanceModel->release(o);
     objects.replace(idx, item);
-    if (objects.count() == 1)
+    if (objects.size() == 1)
         q->objectChanged();
     q->objectAdded(idx, item);
 }
@@ -126,8 +126,8 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
     QHash<int, QVector<QPointer<QObject> > > moved;
     const QVector<QQmlChangeSet::Change> &removes = changeSet.removes();
     for (const QQmlChangeSet::Change &remove : removes) {
-        int index = qMin(remove.index, objects.count());
-        int count = qMin(remove.index + remove.count, objects.count()) - index;
+        int index = qMin(remove.index, objects.size());
+        int count = qMin(remove.index + remove.count, objects.size()) - index;
         if (remove.isMove()) {
             moved.insert(remove.moveId, objects.mid(index, count));
             objects.erase(
@@ -146,7 +146,7 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
 
     const QVector<QQmlChangeSet::Change> &inserts = changeSet.inserts();
     for (const QQmlChangeSet::Change &insert : inserts) {
-        int index = qMin(insert.index, objects.count());
+        int index = qMin(insert.index, objects.size());
         if (insert.isMove()) {
             QVector<QPointer<QObject> > movedObjects = moved.value(insert.moveId);
             objects = objects.mid(0, index) + movedObjects + objects.mid(index);
@@ -288,7 +288,7 @@ void QQmlInstantiator::setAsync(bool newVal)
 int QQmlInstantiator::count() const
 {
     Q_D(const QQmlInstantiator);
-    return d->objects.count();
+    return d->objects.size();
 }
 
 /*!
@@ -420,7 +420,7 @@ void QQmlInstantiator::setModel(const QVariant &v)
 QObject *QQmlInstantiator::object() const
 {
     Q_D(const QQmlInstantiator);
-    if (d->objects.count())
+    if (d->objects.size())
         return d->objects[0];
     return nullptr;
 }
@@ -433,7 +433,7 @@ QObject *QQmlInstantiator::object() const
 QObject *QQmlInstantiator::objectAt(int index) const
 {
     Q_D(const QQmlInstantiator);
-    if (index >= 0 && index < d->objects.count())
+    if (index >= 0 && index < d->objects.size())
         return d->objects[index];
     return nullptr;
 }

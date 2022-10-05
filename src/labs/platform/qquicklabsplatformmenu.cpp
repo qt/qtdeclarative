@@ -564,7 +564,7 @@ void QQuickLabsPlatformMenu::setIcon(const QQuickLabsPlatformIcon &icon)
 */
 void QQuickLabsPlatformMenu::addItem(QQuickLabsPlatformMenuItem *item)
 {
-    insertItem(m_items.count(), item);
+    insertItem(m_items.size(), item);
 }
 
 /*!
@@ -613,7 +613,7 @@ void QQuickLabsPlatformMenu::removeItem(QQuickLabsPlatformMenuItem *item)
 */
 void QQuickLabsPlatformMenu::addMenu(QQuickLabsPlatformMenu *menu)
 {
-    insertMenu(m_items.count(), menu);
+    insertMenu(m_items.size(), menu);
 }
 
 /*!
@@ -809,7 +809,7 @@ void QQuickLabsPlatformMenu::data_append(QQmlListProperty<QObject> *property, QO
 qsizetype QQuickLabsPlatformMenu::data_count(QQmlListProperty<QObject> *property)
 {
     QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
-    return menu->m_data.count();
+    return menu->m_data.size();
 }
 
 QObject *QQuickLabsPlatformMenu::data_at(QQmlListProperty<QObject> *property, qsizetype index)
@@ -833,7 +833,7 @@ void QQuickLabsPlatformMenu::items_append(QQmlListProperty<QQuickLabsPlatformMen
 qsizetype QQuickLabsPlatformMenu::items_count(QQmlListProperty<QQuickLabsPlatformMenuItem> *property)
 {
     QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
-    return menu->m_items.count();
+    return menu->m_items.size();
 }
 
 QQuickLabsPlatformMenuItem *QQuickLabsPlatformMenu::items_at(QQmlListProperty<QQuickLabsPlatformMenuItem> *property, qsizetype index)

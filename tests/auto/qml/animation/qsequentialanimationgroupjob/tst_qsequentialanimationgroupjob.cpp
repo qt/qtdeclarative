@@ -116,7 +116,7 @@ public:
     }
 
     void clear() { states.clear(); }
-    int count() const { return states.count(); }
+    int count() const { return states.size(); }
 
     QList<QAbstractAnimationJob::State> states;
     bool beEvil = false;

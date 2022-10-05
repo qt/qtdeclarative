@@ -29,7 +29,7 @@ static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos,
     }
 
     QList<QQuickItem *> children = QQuickItemPrivate::get(item)->paintOrderChildItems();
-    for (int i = children.count() - 1; i >= 0; --i) {
+    for (int i = children.size() - 1; i >= 0; --i) {
         QQuickItem *child = children.at(i);
         if (QQuickItem *betterCandidate = itemAt(child, item->mapToItem(child, pos),
                                                  overlay))
@@ -60,7 +60,7 @@ static void collectItemsAt(QQuickItem *item, const QPointF &pos,
     }
 
     QList<QQuickItem *> children = QQuickItemPrivate::get(item)->paintOrderChildItems();
-    for (int i = children.count() - 1; i >= 0; --i) {
+    for (int i = children.size() - 1; i >= 0; --i) {
         QQuickItem *child = children.at(i);
         collectItemsAt(child, item->mapToItem(child, pos), overlay, resultList);
     }

@@ -350,7 +350,7 @@ void tst_QQuickGridView::items()
 
     QTRY_COMPARE(gridview->count(), model.count());
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
-    QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
+    QTRY_COMPARE(contentItem->childItems().size(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     for (int i = 0; i < model.count(); ++i) {
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -365,7 +365,7 @@ void tst_QQuickGridView::items()
     QaimModel model2;
     ctxt->setContextProperty("testModel", &model2);
 
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     QTRY_COMPARE(itemCount, 0);
 
     delete window;
@@ -430,7 +430,7 @@ void tst_QQuickGridView::inserted_basic()
     model.insertItem(1, "Will", "9876");
 
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
-    QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
+    QTRY_COMPARE(contentItem->childItems().size(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     QQuickText *name = findItem<QQuickText>(contentItem, "textName", 1);
     QTRY_VERIFY(name != nullptr);
@@ -452,7 +452,7 @@ void tst_QQuickGridView::inserted_basic()
 
     model.insertItem(0, "Foo", "1111"); // zero index, and current item
 
-    QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
+    QTRY_COMPARE(contentItem->childItems().size(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     name = findItem<QQuickText>(contentItem, "textName", 0);
     QTRY_VERIFY(name != nullptr);
@@ -539,7 +539,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item && delegateVisible(item)) {
             firstVisibleIndex = i;
@@ -549,7 +549,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
-    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->position(), expectedItemPos(gridview, i, rowOffsetAfterMove));
@@ -732,7 +732,7 @@ void tst_QQuickGridView::insertBeforeVisible()
     QTRY_COMPARE(gridview->contentY(), 0.0 + itemsOffsetAfterMove);
 
     // Confirm items positioned correctly and indexes correct
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -804,7 +804,7 @@ void tst_QQuickGridView::removed_basic()
     QTRY_COMPARE(removed, QString("Item1"));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -825,7 +825,7 @@ void tst_QQuickGridView::removed_basic()
 
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -838,7 +838,7 @@ void tst_QQuickGridView::removed_basic()
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -876,7 +876,7 @@ void tst_QQuickGridView::removed_basic()
     QVERIFY(QQuickTest::qWaitForPolish(gridview));
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QTRY_COMPARE(item->x(), qreal((i%3)*80));
@@ -959,7 +959,7 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
     int firstVisibleIndex = -1;
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     QRectF viewRect(gridview->contentX(), gridview->contentY(), gridview->width(), gridview->height());
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item) {
             QRectF itemRect(item->x(), item->y(), item->width(), item->height());
@@ -975,7 +975,7 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
     QCOMPARE(firstName, firstVisible);
 
     // Confirm items positioned correctly and indexes correct
-    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->position(), expectedItemPos(gridview, i, rowOffsetAfterMove));
@@ -1200,7 +1200,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
         QCOMPARE(name->text(), QString("Item1"));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QTRY_VERIFY(findItem<QQuickItem>(contentItem, "wrapper", i));
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
@@ -1309,7 +1309,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     // Confirm items positioned correctly and indexes correct
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item && delegateVisible(item)) {
             firstVisibleIndex = i;
@@ -1318,7 +1318,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     }
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
-    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item &&
                 (  (flow == QQuickGridView::FlowLeftToRight && i >= firstVisibleIndex + (3*6))
@@ -1545,7 +1545,7 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
     QTRY_VERIFY(gridview != nullptr);
     QVERIFY(QQuickTest::qWaitForPolish(gridview));
 
-    for (int i=0; i<changes.count(); i++) {
+    for (int i=0; i<changes.size(); i++) {
         switch (changes[i].type) {
             case ListChange::Inserted:
             {
@@ -1584,7 +1584,7 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
     QQuickText *number;
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -2172,7 +2172,7 @@ void tst_QQuickGridView::changeFlow()
     QTRY_VERIFY(contentItem != nullptr);
 
     // Confirm items positioned correctly and indexes correct
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -2190,7 +2190,7 @@ void tst_QQuickGridView::changeFlow()
     ctxt->setContextProperty("testTopToBottom", QVariant(true));
 
     // Confirm items positioned correctly and indexes correct
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -2208,7 +2208,7 @@ void tst_QQuickGridView::changeFlow()
     ctxt->setContextProperty("testRightToLeft", QVariant(true));
 
     // Confirm items positioned correctly and indexes correct
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -2228,7 +2228,7 @@ void tst_QQuickGridView::changeFlow()
     QTRY_COMPARE(gridview->contentX(), 0.);
 
     // Confirm items positioned correctly and indexes correct
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -2322,17 +2322,17 @@ void tst_QQuickGridView::propertyChanges()
     QTRY_COMPARE(gridView->cacheBuffer(), 3);
     QTRY_COMPARE(gridView->flow(), QQuickGridView::FlowTopToBottom);
 
-    QTRY_COMPARE(keyNavigationWrapsSpy.count(),1);
-    QTRY_COMPARE(cacheBufferSpy.count(),1);
-    QTRY_COMPARE(flowSpy.count(),1);
+    QTRY_COMPARE(keyNavigationWrapsSpy.size(),1);
+    QTRY_COMPARE(cacheBufferSpy.size(),1);
+    QTRY_COMPARE(flowSpy.size(),1);
 
     gridView->setWrapEnabled(false);
     gridView->setCacheBuffer(3);
     gridView->setFlow(QQuickGridView::FlowTopToBottom);
 
-    QTRY_COMPARE(keyNavigationWrapsSpy.count(),1);
-    QTRY_COMPARE(cacheBufferSpy.count(),1);
-    QTRY_COMPARE(flowSpy.count(),1);
+    QTRY_COMPARE(keyNavigationWrapsSpy.size(),1);
+    QTRY_COMPARE(cacheBufferSpy.size(),1);
+    QTRY_COMPARE(flowSpy.size(),1);
 
     gridView->setFlow(QQuickGridView::FlowLeftToRight);
     QTRY_COMPARE(gridView->flow(), QQuickGridView::FlowLeftToRight);
@@ -2345,26 +2345,26 @@ void tst_QQuickGridView::propertyChanges()
     QTRY_COMPARE(gridView->cacheBuffer(), 5);
     QTRY_COMPARE(gridView->layoutDirection(), Qt::RightToLeft);
 
-    QTRY_COMPARE(keyNavigationWrapsSpy.count(),2);
-    QTRY_COMPARE(cacheBufferSpy.count(),2);
-    QTRY_COMPARE(layoutSpy.count(),1);
-    QTRY_COMPARE(flowSpy.count(),2);
+    QTRY_COMPARE(keyNavigationWrapsSpy.size(),2);
+    QTRY_COMPARE(cacheBufferSpy.size(),2);
+    QTRY_COMPARE(layoutSpy.size(),1);
+    QTRY_COMPARE(flowSpy.size(),2);
 
     gridView->setWrapEnabled(true);
     gridView->setCacheBuffer(5);
     gridView->setLayoutDirection(Qt::RightToLeft);
 
-    QTRY_COMPARE(keyNavigationWrapsSpy.count(),2);
-    QTRY_COMPARE(cacheBufferSpy.count(),2);
-    QTRY_COMPARE(layoutSpy.count(),1);
-    QTRY_COMPARE(flowSpy.count(),2);
+    QTRY_COMPARE(keyNavigationWrapsSpy.size(),2);
+    QTRY_COMPARE(cacheBufferSpy.size(),2);
+    QTRY_COMPARE(layoutSpy.size(),1);
+    QTRY_COMPARE(flowSpy.size(),2);
 
     gridView->setFlow(QQuickGridView::FlowTopToBottom);
     QTRY_COMPARE(gridView->flow(), QQuickGridView::FlowTopToBottom);
-    QTRY_COMPARE(flowSpy.count(),3);
+    QTRY_COMPARE(flowSpy.size(),3);
 
     gridView->setFlow(QQuickGridView::FlowTopToBottom);
-    QTRY_COMPARE(flowSpy.count(),3);
+    QTRY_COMPARE(flowSpy.size(),3);
 
     delete window;
 }
@@ -2404,24 +2404,24 @@ void tst_QQuickGridView::componentChanges()
     QVERIFY(gridView->headerItem());
     QVERIFY(gridView->footerItem());
 
-    QTRY_COMPARE(highlightSpy.count(),1);
-    QTRY_COMPARE(delegateSpy.count(),1);
-    QTRY_COMPARE(headerSpy.count(),1);
-    QTRY_COMPARE(footerSpy.count(),1);
-    QTRY_COMPARE(headerItemSpy.count(),1);
-    QTRY_COMPARE(footerItemSpy.count(),1);
+    QTRY_COMPARE(highlightSpy.size(),1);
+    QTRY_COMPARE(delegateSpy.size(),1);
+    QTRY_COMPARE(headerSpy.size(),1);
+    QTRY_COMPARE(footerSpy.size(),1);
+    QTRY_COMPARE(headerItemSpy.size(),1);
+    QTRY_COMPARE(footerItemSpy.size(),1);
 
     gridView->setHighlight(&component);
     gridView->setDelegate(&delegateComponent);
     gridView->setHeader(&component);
     gridView->setFooter(&component);
 
-    QTRY_COMPARE(highlightSpy.count(),1);
-    QTRY_COMPARE(delegateSpy.count(),1);
-    QTRY_COMPARE(headerSpy.count(),1);
-    QTRY_COMPARE(footerSpy.count(),1);
-    QTRY_COMPARE(headerItemSpy.count(),1);
-    QTRY_COMPARE(footerItemSpy.count(),1);
+    QTRY_COMPARE(highlightSpy.size(),1);
+    QTRY_COMPARE(delegateSpy.size(),1);
+    QTRY_COMPARE(headerSpy.size(),1);
+    QTRY_COMPARE(footerSpy.size(),1);
+    QTRY_COMPARE(headerItemSpy.size(),1);
+    QTRY_COMPARE(footerItemSpy.size(),1);
 
     delete window;
 }
@@ -2442,13 +2442,13 @@ void tst_QQuickGridView::modelChanges()
 
     gridView->setModel(modelVariant);
     QTRY_COMPARE(gridView->model(), modelVariant);
-    QTRY_COMPARE(modelSpy.count(),1);
+    QTRY_COMPARE(modelSpy.size(),1);
 
     gridView->setModel(modelVariant);
-    QTRY_COMPARE(modelSpy.count(),1);
+    QTRY_COMPARE(modelSpy.size(),1);
 
     gridView->setModel(QVariant());
-    QTRY_COMPARE(modelSpy.count(),2);
+    QTRY_COMPARE(modelSpy.size(),2);
     delete window;
 }
 
@@ -2578,7 +2578,7 @@ void tst_QQuickGridView::positionViewAtIndex()
         QTRY_COMPARE(gridview->contentY(), contentPos);
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = index; i < model.count() && i < itemCount-index-1; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -3073,7 +3073,7 @@ void tst_QQuickGridView::footer()
     QSignalSpy footerItemSpy(gridview, SIGNAL(footerItemChanged()));
     QMetaObject::invokeMethod(window->rootObject(), "changeFooter");
 
-    QCOMPARE(footerItemSpy.count(), 1);
+    QCOMPARE(footerItemSpy.size(), 1);
 
     footer = findItem<QQuickText>(contentItem, "footer");
     QVERIFY(!footer);
@@ -3292,7 +3292,7 @@ void tst_QQuickGridView::header()
     QSignalSpy headerItemSpy(gridview, SIGNAL(headerItemChanged()));
     QMetaObject::invokeMethod(window->rootObject(), "changeHeader");
 
-    QCOMPARE(headerItemSpy.count(), 1);
+    QCOMPARE(headerItemSpy.size(), 1);
 
     header = findItem<QQuickText>(contentItem, "header");
     QVERIFY(!header);
@@ -3651,16 +3651,16 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
     // Ensure we handle -ve sizes
     gridview->setHeight(-100);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 3);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 3);
 
     gridview->setCacheBuffer(120);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 9);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 9);
 
     // ensure items in cache become visible
     gridview->setHeight(120);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 15);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 15);
 
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -3672,9 +3672,9 @@ void tst_QQuickGridView::resizeViewAndRepaint()
 
     // ensure items outside view become invisible
     gridview->setHeight(60);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 12);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 12);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -3730,8 +3730,8 @@ void tst_QQuickGridView::resizeGrid()
 
     // Confirm items positioned correctly and indexes correct
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    QVERIFY(items.count() >= 18 && items.count() <= 21);
-    for (int i = 0; i < model.count() && i < items.count(); ++i) {
+    QVERIFY(items.size() >= 18 && items.size() <= 21);
+    for (int i = 0; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->position(), expectedItemPos(gridview, i, 0));
@@ -3762,8 +3762,8 @@ void tst_QQuickGridView::resizeGrid()
 
     // Confirm items positioned correctly and indexes correct
     items = findItems<QQuickItem>(contentItem, "wrapper");
-    QVERIFY(items.count() >= 28);
-    for (int i = 0; i < model.count() && i < items.count(); ++i) {
+    QVERIFY(items.size() >= 28);
+    for (int i = 0; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->position(), expectedItemPos(gridview, i, 0));
@@ -3851,7 +3851,7 @@ void tst_QQuickGridView::changeColumnCount()
     QVERIFY(QQuickTest::qWaitForPolish(gridview));
 
     // a single column of 6 items are visible
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     QCOMPARE(itemCount, 6);
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
@@ -3863,7 +3863,7 @@ void tst_QQuickGridView::changeColumnCount()
     // now 6x3 grid is visible, plus 1 extra below for refill
     gridview->setWidth(240);
     QVERIFY(QQuickTest::qWaitForPolish(gridview));
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     QCOMPARE(itemCount, 6*3 + 1);
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
@@ -3875,7 +3875,7 @@ void tst_QQuickGridView::changeColumnCount()
     // back to single column
     gridview->setWidth(100);
     QVERIFY(QQuickTest::qWaitForPolish(gridview));
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     QCOMPARE(itemCount, 6);
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
@@ -3976,8 +3976,8 @@ void tst_QQuickGridView::onAdd()
     qApp->processEvents();
 
     QVariantList result = gridview->property("addedDelegates").toList();
-    QTRY_COMPARE(result.count(), items.count());
-    for (int i=0; i<items.count(); i++)
+    QTRY_COMPARE(result.count(), items.size());
+    for (int i=0; i<items.size(); i++)
         QCOMPARE(result[i].toString(), items[i].first);
 
     releaseView(window);
@@ -4461,7 +4461,7 @@ void tst_QQuickGridView::snapOneRow()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(gridview->currentIndex(), 2);
-        QCOMPARE(currentIndexSpy.count(), 1);
+        QCOMPARE(currentIndexSpy.size(), 1);
     }
 
     // flick to end
@@ -4474,7 +4474,7 @@ void tst_QQuickGridView::snapOneRow()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(gridview->currentIndex(), 6);
-        QCOMPARE(currentIndexSpy.count(), 3);
+        QCOMPARE(currentIndexSpy.size(), 3);
     }
 
     if (flow == QQuickGridView::FlowLeftToRight)
@@ -4497,7 +4497,7 @@ void tst_QQuickGridView::snapOneRow()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(gridview->currentIndex(), 0);
-        QCOMPARE(currentIndexSpy.count(), 6);
+        QCOMPARE(currentIndexSpy.size(), 6);
     }
 
     releaseView(window);
@@ -4611,7 +4611,7 @@ void tst_QQuickGridView::populateTransitions()
         QCOMPARE(gridview->property("countAddTransitions").toInt(), 0);
     }
 
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -4633,7 +4633,7 @@ void tst_QQuickGridView::populateTransitions()
     // clear the model
     window->rootContext()->setContextProperty("testModel", QVariant());
     QTRY_COMPARE(gridview->count(), 0);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").size(), 0);
     gridview->setProperty("countPopulateTransitions", 0);
     gridview->setProperty("countAddTransitions", 0);
 
@@ -4647,7 +4647,7 @@ void tst_QQuickGridView::populateTransitions()
     QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 18 : 0);
     QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -4665,7 +4665,7 @@ void tst_QQuickGridView::populateTransitions()
     QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 18 : 0);
     QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -4753,7 +4753,7 @@ void tst_QQuickGridView::addTransitions()
                 targetIndexes << i;
             }
         }
-        QVERIFY(expectedTargetData.count() > 0);
+        QVERIFY(expectedTargetData.size() > 0);
     }
 
     // start animation
@@ -4766,7 +4766,7 @@ void tst_QQuickGridView::addTransitions()
     QList<QQuickItem *> targetItems = findItems<QQuickItem>(contentItem, "wrapper", targetIndexes);
 
     if (shouldAnimateTargets) {
-        QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+        QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.size());
         QTRY_COMPARE(gridview->property("displaceTransitionsDone").toInt(),
                      expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
 
@@ -4792,7 +4792,7 @@ void tst_QQuickGridView::addTransitions()
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         if (items[i]->y() >= gridview->contentY()) {
             QQmlExpression e(qmlContext(items[i]), items[i], "index");
             firstVisibleIndex = e.evaluate().toInt();
@@ -4802,7 +4802,7 @@ void tst_QQuickGridView::addTransitions()
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // verify all items moved to the correct final positions
-    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->x(), (i%3)*80.0);
@@ -4965,7 +4965,7 @@ void tst_QQuickGridView::moveTransitions()
     model.moveItems(moveFrom, moveTo, moveCount);
     gridview->forceLayout();
 
-    QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+    QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.size());
     QTRY_COMPARE(gridview->property("displaceTransitionsDone").toInt(),
                  expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
 
@@ -4989,7 +4989,7 @@ void tst_QQuickGridView::moveTransitions()
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         if (items[i]->y() >= gridview->contentY()) {
             QQmlExpression e(qmlContext(items[i]), items[i], "index");
             firstVisibleIndex = e.evaluate().toInt();
@@ -5000,7 +5000,7 @@ void tst_QQuickGridView::moveTransitions()
 
     // verify all items moved to the correct final positions
     qreal pixelOffset = 60 * rowOffsetAfterMove;
-    for (int i=firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i=firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->x(), (i%3)*80.0);
@@ -5201,13 +5201,13 @@ void tst_QQuickGridView::removeTransitions()
                 targetIndexes << i;
             }
         }
-        QVERIFY(expectedTargetData.count() > 0);
+        QVERIFY(expectedTargetData.size() > 0);
     }
 
     // calculate targetItems and expectedTargets before model changes
     QList<QQuickItem *> targetItems = findItems<QQuickItem>(contentItem, "wrapper", targetIndexes);
     QVariantMap expectedTargets;
-    for (int i=0; i<targetIndexes.count(); i++)
+    for (int i=0; i<targetIndexes.size(); i++)
         expectedTargets[model.name(targetIndexes[i])] = targetIndexes[i];
 
     // start animation
@@ -5216,7 +5216,7 @@ void tst_QQuickGridView::removeTransitions()
     QTRY_COMPARE(model.count(), gridview->count());
 
     if (shouldAnimateTargets || expectedDisplacedIndexes.isValid()) {
-        QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+        QTRY_COMPARE(gridview->property("targetTransitionsDone").toInt(), expectedTargetData.size());
         QTRY_COMPARE(gridview->property("displaceTransitionsDone").toInt(),
                      expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
 
@@ -5241,9 +5241,9 @@ void tst_QQuickGridView::removeTransitions()
     }
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    int itemCount = items.count();
+    int itemCount = items.size();
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQmlExpression e(qmlContext(items[i]), items[i], "index");
         int index = e.evaluate().toInt();
         if (firstVisibleIndex < 0 && items[i]->y() >= gridview->contentY())
@@ -5440,10 +5440,10 @@ void tst_QQuickGridView::displacedTransitions()
         // check the correct number of target items and indexes were received
         QCOMPARE(resultTargetIndexes.count(), expectedDisplacedIndexes.count());
         for (int i=0; i<resultTargetIndexes.count(); i++)
-            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().count(), change.count);
+            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().size(), change.count);
         QCOMPARE(resultTargetItems.count(), expectedDisplacedIndexes.count());
         for (int i=0; i<resultTargetItems.count(); i++)
-            QCOMPARE(resultTargetItems[i].toList().count(), change.count);
+            QCOMPARE(resultTargetItems[i].toList().size(), change.count);
     } else {
         QCOMPARE(resultTargetIndexes.count(), 0);
         QCOMPARE(resultTargetItems.count(), 0);
@@ -5473,7 +5473,7 @@ void tst_QQuickGridView::displacedTransitions()
 
     // verify all items moved to the correct final positions
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    for (int i=0; i < model.count() && i < items.count(); ++i) {
+    for (int i=0; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->x(), (i%3)*80.0);
@@ -5626,7 +5626,7 @@ void tst_QQuickGridView::multipleTransitions()
 
     int timeBetweenActions = window->rootObject()->property("timeBetweenActions").toInt();
 
-    for (int i=0; i<changes.count(); i++) {
+    for (int i=0; i<changes.size(); i++) {
         switch (changes[i].type) {
             case ListChange::Inserted:
             {
@@ -5636,7 +5636,7 @@ void tst_QQuickGridView::multipleTransitions()
                 model.insertItems(changes[i].index, targetItems);
                 gridview->forceLayout();
                 QTRY_COMPARE(model.count(), gridview->count());
-                if (i == changes.count() - 1) {
+                if (i == changes.size() - 1) {
                     QTRY_VERIFY(!gridview->property("runningAddTargets").toBool());
                     QTRY_VERIFY(!gridview->property("runningAddDisplaced").toBool());
                 } else {
@@ -5648,7 +5648,7 @@ void tst_QQuickGridView::multipleTransitions()
                 model.removeItems(changes[i].index, changes[i].count);
                 gridview->forceLayout();
                 QTRY_COMPARE(model.count(), gridview->count());
-                if (i == changes.count() - 1) {
+                if (i == changes.size() - 1) {
                     QTRY_VERIFY(!gridview->property("runningRemoveTargets").toBool());
                     QTRY_VERIFY(!gridview->property("runningRemoveDisplaced").toBool());
                 } else {
@@ -5659,7 +5659,7 @@ void tst_QQuickGridView::multipleTransitions()
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
                 gridview->forceLayout();
                 QVERIFY(QQuickTest::qWaitForPolish(gridview));
-                if (i == changes.count() - 1) {
+                if (i == changes.size() - 1) {
                     QTRY_VERIFY(!gridview->property("runningMoveTargets").toBool());
                     QTRY_VERIFY(!gridview->property("runningMoveDisplaced").toBool());
                 } else {
@@ -5683,7 +5683,7 @@ void tst_QQuickGridView::multipleTransitions()
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         if (items[i]->y() >= contentY) {
             QQmlExpression e(qmlContext(items[i]), items[i], "index");
             firstVisibleIndex = e.evaluate().toInt();
@@ -5694,7 +5694,7 @@ void tst_QQuickGridView::multipleTransitions()
     QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // verify all items moved to the correct final positions
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
@@ -5802,7 +5802,7 @@ void tst_QQuickGridView::multipleDisplaced()
 
     // verify all items moved to the correct final positions
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    for (int i=0; i < model.count() && i < items.count(); ++i) {
+    for (int i=0; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), (i%3)*80.0);
@@ -5896,7 +5896,7 @@ void tst_QQuickGridView::cacheBuffer()
     QVERIFY(gridview->model() != 0);
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QTRY_COMPARE(item->x(), (i%3)*80.0);
@@ -5926,7 +5926,7 @@ void tst_QQuickGridView::cacheBuffer()
     }
 
     int newItemCount = 0;
-    newItemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    newItemCount = findItems<QQuickItem>(contentItem, "wrapper", false).size();
 
     // Confirm items positioned correctly
     for (int i = 0; i < model.count() && i < newItemCount; ++i) {
@@ -6436,7 +6436,7 @@ void tst_QQuickGridView::matchItemsAndIndexes(const QVariantMap &items, const Qa
             qDebug() << itemIndex;
         QCOMPARE(model.name(itemIndex), name);
     }
-    QCOMPARE(items.count(), expectedIndexes.count());
+    QCOMPARE(items.count(), expectedIndexes.size());
 }
 
 void tst_QQuickGridView::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
@@ -6448,7 +6448,7 @@ void tst_QQuickGridView::matchItemLists(const QVariantList &itemLists, const QLi
             QVERIFY2(o, QTest::toString(QString("Invalid actual item at %1").arg(j)));
             QVERIFY2(expectedItems.contains(o), QTest::toString(QString("Cannot match item %1").arg(j)));
         }
-        QCOMPARE(current.count(), expectedItems.count());
+        QCOMPARE(current.count(), expectedItems.size());
     }
 }
 
@@ -6552,11 +6552,11 @@ void tst_QQuickGridView::jsArrayChange()
     }
 
     view->setModel(QVariant::fromValue(array1));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // no change
     view->setModel(QVariant::fromValue(array2));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 void tst_QQuickGridView::contentHeightWithDelayRemove_data()
@@ -6725,7 +6725,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
     // of disabling both mouse and keyboard interaction.
     QSignalSpy enabledSpy(gridView, SIGNAL(keyNavigationEnabledChanged()));
     gridView->setInteractive(false);
-    QCOMPARE(enabledSpy.count(), 1);
+    QCOMPARE(enabledSpy.size(), 1);
     QCOMPARE(gridView->isKeyNavigationEnabled(), false);
 
     flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
@@ -6738,17 +6738,17 @@ void tst_QQuickGridView::keyNavigationEnabled()
 
     // Check that isKeyNavigationEnabled implicitly follows the value of interactive.
     gridView->setInteractive(true);
-    QCOMPARE(enabledSpy.count(), 2);
+    QCOMPARE(enabledSpy.size(), 2);
     QCOMPARE(gridView->isKeyNavigationEnabled(), true);
 
     // Change it back again for the next check.
     gridView->setInteractive(false);
-    QCOMPARE(enabledSpy.count(), 3);
+    QCOMPARE(enabledSpy.size(), 3);
     QCOMPARE(gridView->isKeyNavigationEnabled(), false);
 
     // Setting keyNavigationEnabled to true shouldn't enable mouse interaction.
     gridView->setKeyNavigationEnabled(true);
-    QCOMPARE(enabledSpy.count(), 4);
+    QCOMPARE(enabledSpy.size(), 4);
     flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
     QVERIFY(!gridView->isMoving());
     QCOMPARE(gridView->contentY(), 0.0);
@@ -6761,7 +6761,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
     // Changing interactive now shouldn't result in keyNavigationEnabled changing,
     // since we broke the "binding".
     gridView->setInteractive(true);
-    QCOMPARE(enabledSpy.count(), 4);
+    QCOMPARE(enabledSpy.size(), 4);
 
     // Keyboard interaction shouldn't work now.
     gridView->setKeyNavigationEnabled(false);

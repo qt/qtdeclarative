@@ -503,7 +503,7 @@ void dumpBytecode(const char *bytecode, int len, int nLocals, int nFormals, int 
                   const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping = QVector<CompiledData::CodeOffsetToLine>());
 inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals, int startLine = 1,
                          const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping = QVector<CompiledData::CodeOffsetToLine>()) {
-    dumpBytecode(bytecode.constData(), bytecode.length(), nLocals, nFormals, startLine, lineNumberMapping);
+    dumpBytecode(bytecode.constData(), bytecode.size(), nLocals, nFormals, startLine, lineNumberMapping);
 }
 
 union Instr

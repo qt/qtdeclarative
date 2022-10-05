@@ -578,7 +578,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints 
         break;
     }
 
-    int numTouchPoints = touchPoints.count();
+    int numTouchPoints = touchPoints.size();
     //always remove released touches, and make sure we handle all releases before adds.
     for (const QEventPoint &p : qAsConst(touchPoints)) {
         QEventPoint::State touchPointState = p.state();
@@ -743,7 +743,7 @@ void QQuickMultiPointTouchArea::setTouchEventsEnabled(bool enable)
 
 void QQuickMultiPointTouchArea::addTouchPrototype(QQuickTouchPoint *prototype)
 {
-    int id = _touchPrototypes.count();
+    int id = _touchPrototypes.size();
     prototype->setPointId(id);
     _touchPrototypes.insert(id, prototype);
 }
@@ -796,7 +796,7 @@ void QQuickMultiPointTouchArea::mousePressEvent(QMouseEvent *event)
     if (event->source() != Qt::MouseEventNotSynthesized && event->source() != Qt::MouseEventSynthesizedByQt)
         return;
 
-    if (_touchPoints.count() >= _minimumTouchPoints - 1 && _touchPoints.count() < _maximumTouchPoints) {
+    if (_touchPoints.size() >= _minimumTouchPoints - 1 && _touchPoints.size() < _maximumTouchPoints) {
         updateTouchData(event);
     }
 }
@@ -844,7 +844,7 @@ void QQuickMultiPointTouchArea::ungrab(bool normalRelease)
     if (!normalRelease)
         ungrabTouchPoints();
 
-    if (_touchPoints.count()) {
+    if (_touchPoints.size()) {
         for (QObject *obj : qAsConst(_touchPoints))
             static_cast<QQuickTouchPoint*>(obj)->setPressed(false);
         if (!normalRelease)

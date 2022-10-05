@@ -941,7 +941,7 @@ bool QQuickSwipeDelegatePrivate::attachedObjectsSetPressed(QQuickItem *item, QPo
     bool found = false;
     QVarLengthArray<QQuickItem *, 16> itemAndChildren;
     itemAndChildren.append(item);
-    for (int i = 0; i < itemAndChildren.count(); ++i) {
+    for (int i = 0; i < itemAndChildren.size(); ++i) {
         auto item = itemAndChildren.at(i);
         auto posInItem = item->mapFromScene(scenePos);
         if (item->contains(posInItem)) {

@@ -61,7 +61,7 @@ QString QQmlTranslation::contextFromQmlFilename(const QString &qmlFilename)
 {
     int lastSlash = qmlFilename.lastIndexOf(QLatin1Char('/'));
     QStringView contextView = (lastSlash > -1)
-            ? QStringView{ qmlFilename }.mid(lastSlash + 1, qmlFilename.length() - lastSlash - 5)
+            ? QStringView{ qmlFilename }.mid(lastSlash + 1, qmlFilename.size() - lastSlash - 5)
             : QStringView();
     return contextView.toString();
 }

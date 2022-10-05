@@ -55,7 +55,7 @@ public:
     using ListPropertyAssignBehavior = QmlIR::Pragma::ListPropertyAssignBehaviorValue;
 
     const QmlIR::Object *objectAt(int index) const { return document->objects.at(index); }
-    int objectCount() const { return document->objects.count(); }
+    int objectCount() const { return document->objects.size(); }
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }

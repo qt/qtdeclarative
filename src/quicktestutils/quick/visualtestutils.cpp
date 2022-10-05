@@ -15,7 +15,7 @@ QQuickItem *QQuickVisualTestUtils::findVisibleChild(QQuickItem *parent, const QS
 {
     QQuickItem *item = nullptr;
     QList<QQuickItem*> items = parent->findChildren<QQuickItem*>(objectName);
-    for (int i = 0; i < items.count(); ++i) {
+    for (int i = 0; i < items.size(); ++i) {
         if (items.at(i)->isVisible() && !QQuickItemPrivate::get(items.at(i))->culled) {
             item = items.at(i);
             break;
@@ -27,7 +27,7 @@ QQuickItem *QQuickVisualTestUtils::findVisibleChild(QQuickItem *parent, const QS
 void QQuickVisualTestUtils::dumpTree(QQuickItem *parent, int depth)
 {
     static QString padding = QStringLiteral("                       ");
-    for (int i = 0; i < parent->childItems().count(); ++i) {
+    for (int i = 0; i < parent->childItems().size(); ++i) {
         QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
         if (!item)
             continue;

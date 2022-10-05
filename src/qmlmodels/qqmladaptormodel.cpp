@@ -109,7 +109,7 @@ public:
         }
 
         QVector<int> signalIndexes;
-        for (int i = 0; i < roles.count(); ++i) {
+        for (int i = 0; i < roles.size(); ++i) {
             const int role = roles.at(i);
             if (!changed && watchedRoleIds.contains(role))
                 changed = true;
@@ -119,7 +119,7 @@ public:
                 signalIndexes.append(propertyId + signalOffset);
         }
         if (roles.isEmpty()) {
-            const int propertyRolesCount = propertyRoles.count();
+            const int propertyRolesCount = propertyRoles.size();
             signalIndexes.reserve(propertyRolesCount);
             for (int propertyId = 0; propertyId < propertyRolesCount; ++propertyId)
                 signalIndexes.append(propertyId + signalOffset);
@@ -135,7 +135,7 @@ public:
 
             const int idx = item->modelIndex();
             if (idx >= index && idx < index + count) {
-                for (int i = 0; i < signalIndexes.count(); ++i)
+                for (int i = 0; i < signalIndexes.size(); ++i)
                     QMetaObject::activate(item, signalIndexes.at(i), nullptr);
             }
         }
@@ -226,7 +226,7 @@ QQmlDMCachedModelData::QQmlDMCachedModelData(
     , type(dataType)
 {
     if (index == -1)
-        cachedData.resize(type->hasModelData ? 1 : type->propertyRoles.count());
+        cachedData.resize(type->hasModelData ? 1 : type->propertyRoles.size());
 
     QObjectPrivate::get(this)->metaObject = type;
 
@@ -250,10 +250,10 @@ int QQmlDMCachedModelData::metaCall(QMetaObject::Call call, int id, void **argum
         const int propertyIndex = id - type->propertyOffset;
         if (index == -1) {
             const QMetaObject *meta = metaObject();
-            if (cachedData.count() > 1) {
+            if (cachedData.size() > 1) {
                 cachedData[propertyIndex] = *static_cast<QVariant *>(arguments[0]);
                 QMetaObject::activate(this, meta, propertyIndex, nullptr);
-            } else if (cachedData.count() == 1) {
+            } else if (cachedData.size() == 1) {
                 cachedData[0] = *static_cast<QVariant *>(arguments[0]);
                 QMetaObject::activate(this, meta, 0, nullptr);
                 QMetaObject::activate(this, meta, 1, nullptr);
@@ -271,7 +271,7 @@ void QQmlDMCachedModelData::setValue(const QString &role, const QVariant &value)
 {
     QHash<QByteArray, int>::iterator it = type->roleNames.find(role.toUtf8());
     if (it != type->roleNames.end()) {
-        for (int i = 0; i < type->propertyRoles.count(); ++i) {
+        for (int i = 0; i < type->propertyRoles.size(); ++i) {
             if (type->propertyRoles.at(i) == *it) {
                 cachedData[i] = value;
                 return;
@@ -287,7 +287,7 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &adaptorModel, i
         cachedData.clear();
         setModelIndex(idx, adaptorModel.rowAt(idx), adaptorModel.columnAt(idx));
         const QMetaObject *meta = metaObject();
-        const int propertyCount = type->propertyRoles.count();
+        const int propertyCount = type->propertyRoles.size();
         for (int i = 0; i < propertyCount; ++i)
             QMetaObject::activate(this, meta, i, nullptr);
         return true;
@@ -332,11 +332,11 @@ QV4::ReturnedValue QQmlDMCachedModelData::set_property(const QV4::FunctionObject
     if (o->d()->item->index == -1) {
         QQmlDMCachedModelData *modelData = static_cast<QQmlDMCachedModelData *>(o->d()->item);
         if (!modelData->cachedData.isEmpty()) {
-            if (modelData->cachedData.count() > 1) {
+            if (modelData->cachedData.size() > 1) {
                 modelData->cachedData[propertyId]
                         = QV4::ExecutionEngine::toVariant(argv[0], QMetaType {});
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), propertyId, nullptr);
-            } else if (modelData->cachedData.count() == 1) {
+            } else if (modelData->cachedData.size() == 1) {
                 modelData->cachedData[0] = QV4::ExecutionEngine::toVariant(argv[0], QMetaType {});
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 0, nullptr);
                 QMetaObject::activate(o->d()->item, o->d()->item->metaObject(), 1, nullptr);
@@ -497,12 +497,12 @@ public:
         const QAbstractItemModel *aim = model.aim();
         const QHash<int, QByteArray> names = aim ? aim->roleNames() : QHash<int, QByteArray>();
         for (QHash<int, QByteArray>::const_iterator it = names.begin(), cend = names.end(); it != cend; ++it) {
-            const int propertyId = propertyRoles.count();
+            const int propertyId = propertyRoles.size();
             propertyRoles.append(it.key());
             roleNames.insert(it.value(), it.key());
             addProperty(&builder, propertyId, it.value(), propertyType);
         }
-        if (propertyRoles.count() == 1) {
+        if (propertyRoles.size() == 1) {
             hasModelData = true;
             const int role = names.begin().key();
             const QByteArray propertyName = QByteArrayLiteral("modelData");

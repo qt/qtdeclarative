@@ -1093,7 +1093,7 @@ int QQuickTextEdit::positionAt(qreal x, qreal y) const
         // preedit or the next text block.
         QTextLayout *layout = cursor.block().layout();
         const int preeditLength = layout
-                ? layout->preeditAreaText().length()
+                ? layout->preeditAreaText().size()
                 : 0;
         if (preeditLength > 0
                 && d->document->documentLayout()->blockBoundingRect(cursor.block()).contains(x, y)) {

@@ -441,10 +441,10 @@ void QQuickComboBoxPrivate::updateEditText()
 
     if (extra.isAllocated() && extra->allowComplete && !text.isEmpty()) {
         const QString completed = tryComplete(text);
-        if (completed.length() > text.length()) {
+        if (completed.size() > text.size()) {
             input->setText(completed);
             // This will select the text backwards.
-            input->select(completed.length(), text.length());
+            input->select(completed.size(), text.size());
             return;
         }
     }
@@ -548,14 +548,14 @@ QString QQuickComboBoxPrivate::tryComplete(const QString &input)
             continue;
 
         // either the first or the shortest match
-        if (match.isEmpty() || text.length() < match.length())
+        if (match.isEmpty() || text.size() < match.size())
             match = text;
     }
 
     if (match.isEmpty())
         return input;
 
-    return input + match.mid(input.length());
+    return input + match.mid(input.size());
 }
 
 void QQuickComboBoxPrivate::setCurrentIndex(int index, Activation activate)

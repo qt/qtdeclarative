@@ -68,7 +68,7 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode,
                     Lexer::CodeContinuation codeContinuation)
 {
     if (codeContinuation == Lexer::CodeContinuation::Continue)
-        _currentOffset += _code.length();
+        _currentOffset += _code.size();
     else
         _currentOffset = 0;
     if (_engine)
@@ -85,7 +85,7 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode,
     _rawString = QStringView();
 
     _codePtr = code.unicode();
-    _endPtr = _codePtr + code.length();
+    _endPtr = _codePtr + code.size();
     _tokenStartPtr = _codePtr;
 
     if (lineno >= 0)

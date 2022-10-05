@@ -81,7 +81,7 @@ QSGAdaptationBackendData *contextFactory()
         const QStringList args = QGuiApplication::arguments();
         QString requestedBackend = backendData->quickWindowBackendRequest; // empty or set via QQuickWindow::setSceneGraphBackend()
 
-        for (int index = 0; index < args.count(); ++index) {
+        for (int index = 0; index < args.size(); ++index) {
             if (args.at(index).startsWith(QLatin1String("--device="))) {
                 requestedBackend = args.at(index).mid(9);
                 break;

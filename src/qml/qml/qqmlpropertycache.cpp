@@ -235,7 +235,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     handler.m_flags.setIsSignalHandler(true);
 
     if (types) {
-        const auto argumentCount = names.length();
+        const auto argumentCount = names.size();
         QQmlPropertyCacheMethodArguments *args = createArgumentsObject(argumentCount, names);
         new (args->types) QMetaType; // Invalid return type
         ::memcpy(args->types + 1, types, argumentCount * sizeof(QMetaType));
@@ -267,7 +267,7 @@ void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flag
                                      const QList<QByteArray> &names,
                                      const QVector<QMetaType> &parameterTypes)
 {
-    int argumentCount = names.count();
+    int argumentCount = names.size();
 
     QQmlPropertyData data;
     data.setPropType(returnType);
@@ -743,7 +743,7 @@ QString QQmlPropertyCache::signalParameterStringForJS(QV4::ExecutionEngine *engi
     const QSet<QString> &illegalNames = engine->illegalNames();
     QString parameters;
 
-    const qsizetype count = parameterNameList.count();
+    const qsizetype count = parameterNameList.size();
     if (count > std::numeric_limits<quint16>::max())
         *errorString = QCoreApplication::translate("QQmlRewrite", "Signal has an excessive number of parameters: %1").arg(count);
 
@@ -980,13 +980,13 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder) const
     for (StringCache::ConstIterator iter = stringCache.begin(), cend = stringCache.end(); iter != cend; ++iter)
         Insert::in(this, properties, methods, iter, iter.value().second);
 
-    Q_ASSERT(properties.count() == propertyIndexCache.count());
-    Q_ASSERT(methods.count() == methodIndexCache.count());
+    Q_ASSERT(properties.size() == propertyIndexCache.count());
+    Q_ASSERT(methods.size() == methodIndexCache.count());
 
     std::sort(properties.begin(), properties.end(), Sort::lt);
     std::sort(methods.begin(), methods.end(), Sort::lt);
 
-    for (int ii = 0; ii < properties.count(); ++ii) {
+    for (int ii = 0; ii < properties.size(); ++ii) {
         const QQmlPropertyData *data = properties.at(ii).second;
 
         int notifierId = -1;
@@ -1005,7 +1005,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder) const
         property.setAlias(data->isAlias());
     }
 
-    for (int ii = 0; ii < methods.count(); ++ii) {
+    for (int ii = 0; ii < methods.size(); ++ii) {
         const QQmlPropertyData *data = methods.at(ii).second;
 
         QByteArray returnType;
@@ -1044,11 +1044,11 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder) const
             method.setReturnType(returnType);
     }
 
-    for (int ii = 0; ii < enumCache.count(); ++ii) {
+    for (int ii = 0; ii < enumCache.size(); ++ii) {
         const QQmlEnumData &enumData = enumCache.at(ii);
         QMetaEnumBuilder enumeration = builder.addEnumerator(enumData.name.toUtf8());
         enumeration.setIsScoped(true);
-        for (int jj = 0; jj < enumData.values.count(); ++jj) {
+        for (int jj = 0; jj < enumData.values.size(); ++jj) {
             const QQmlEnumValue &value = enumData.values.at(jj);
             enumeration.addKey(value.namedValue.toUtf8(), value.value);
         }

@@ -296,7 +296,7 @@ void QQuickContainerPrivate::reorderItems()
     QList<QQuickItem *> siblings = effectiveContentItem(contentItem)->childItems();
 
     int to = 0;
-    for (int i = 0; i < siblings.count(); ++i) {
+    for (int i = 0; i < siblings.size(); ++i) {
         QQuickItem* sibling = siblings.at(i);
         if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
             continue;

@@ -297,7 +297,7 @@ void tst_QQuickTableView::emptyModel()
 
     tableView->setModel(model);
     WAIT_UNTIL_POLISHED;
-    QCOMPARE(tableViewPrivate->loadedItems.count(), 0);
+    QCOMPARE(tableViewPrivate->loadedItems.size(), 0);
 }
 
 void tst_QQuickTableView::checkPreload_data()
@@ -739,7 +739,7 @@ void tst_QQuickTableView::checkForceLayoutWhenAllItemsAreHidden()
     // Check that the we have no items loaded
     QCOMPARE(tableViewPrivate->loadedColumns.count(), 0);
     QCOMPARE(tableViewPrivate->loadedRows.count(), 0);
-    QCOMPARE(tableViewPrivate->loadedItems.count(), 0);
+    QCOMPARE(tableViewPrivate->loadedItems.size(), 0);
 
     // Tell all columns to be visible
     view->rootObject()->setProperty(propertyName, 10);
@@ -747,7 +747,7 @@ void tst_QQuickTableView::checkForceLayoutWhenAllItemsAreHidden()
 
     QCOMPARE(tableViewPrivate->loadedRows.count(), rows);
     QCOMPARE(tableViewPrivate->loadedColumns.count(), columns);
-    QCOMPARE(tableViewPrivate->loadedItems.count(), rows * columns);
+    QCOMPARE(tableViewPrivate->loadedItems.size(), rows * columns);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()
@@ -1131,7 +1131,7 @@ void tst_QQuickTableView::noDelegate()
     WAIT_UNTIL_POLISHED;
 
     items = tableViewPrivate->loadedItems;
-    QCOMPARE(items.count(), rows * columns);
+    QCOMPARE(items.size(), rows * columns);
 
     // And then unset the delegate again, and check
     // that we end up with no items.
@@ -1220,11 +1220,11 @@ void tst_QQuickTableView::countDelegateItems()
 
     // Check that tableview internals contain the expected number of items
     auto const items = tableViewPrivate->loadedItems;
-    QCOMPARE(items.count(), count);
+    QCOMPARE(items.size(), count);
 
     // Check that this also matches the items found in the view
     auto foundItems = findItems<QQuickItem>(tableView, kDelegateObjectName);
-    QCOMPARE(foundItems.count(), count);
+    QCOMPARE(foundItems.size(), count);
 }
 
 void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems_data()
@@ -2337,7 +2337,7 @@ void tst_QQuickTableView::checkRebuildViewportOnly()
     // Set reuse items to false, just to make it easier to
     // check the number of items created during a rebuild.
     tableView->setReuseItems(false);
-    const int itemCountBeforeRebuild = tableViewPrivate->loadedItems.count();
+    const int itemCountBeforeRebuild = tableViewPrivate->loadedItems.size();
 
     // Since all cells have the same size, we expect that we end up creating
     // the same amount of items that were already showing before, even after
@@ -2492,8 +2492,8 @@ void tst_QQuickTableView::hideRowsAndColumns()
 
     WAIT_UNTIL_POLISHED;
 
-    const int expectedRowCount = modelSize - rowsToHideList.count();
-    const int expectedColumnCount = modelSize - columnsToHideList.count();
+    const int expectedRowCount = modelSize - rowsToHideList.size();
+    const int expectedColumnCount = modelSize - columnsToHideList.size();
     QCOMPARE(tableViewPrivate->loadedRows.count(), expectedRowCount);
     QCOMPARE(tableViewPrivate->loadedColumns.count(), expectedColumnCount);
 
@@ -2523,7 +2523,7 @@ void tst_QQuickTableView::hideAndShowFirstColumn()
 
     WAIT_UNTIL_POLISHED;
 
-    const int expectedColumnCount = modelSize - columnsToHideList.count();
+    const int expectedColumnCount = modelSize - columnsToHideList.size();
     QCOMPARE(tableViewPrivate->loadedColumns.count(), expectedColumnCount);
     QCOMPARE(tableViewPrivate->leftColumn(), 1);
     QCOMPARE(tableView->contentX(), 0);
@@ -2561,7 +2561,7 @@ void tst_QQuickTableView::hideAndShowFirstRow()
 
     WAIT_UNTIL_POLISHED;
 
-    const int expectedRowsCount = modelSize - rowsToHideList.count();
+    const int expectedRowsCount = modelSize - rowsToHideList.size();
     QCOMPARE(tableViewPrivate->loadedRows.count(), expectedRowsCount);
     QCOMPARE(tableViewPrivate->topRow(), 1);
     QCOMPARE(tableView->contentY(), 0);
@@ -3886,10 +3886,10 @@ void tst_QQuickTableView::leftRightTopBottomProperties()
     QCOMPARE(tableView->rightColumn(), expectedTable.right());
     QCOMPARE(tableView->bottomRow(), expectedTable.bottom());
 
-    QCOMPARE(leftSpy.count(), expectedSignalCount.left());
-    QCOMPARE(rightSpy.count(), expectedSignalCount.right());
-    QCOMPARE(topSpy.count(), expectedSignalCount.top());
-    QCOMPARE(bottomSpy.count(), expectedSignalCount.bottom());
+    QCOMPARE(leftSpy.size(), expectedSignalCount.left());
+    QCOMPARE(rightSpy.size(), expectedSignalCount.right());
+    QCOMPARE(topSpy.size(), expectedSignalCount.top());
+    QCOMPARE(bottomSpy.size(), expectedSignalCount.bottom());
 }
 
 void tst_QQuickTableView::checkContentSize_data()

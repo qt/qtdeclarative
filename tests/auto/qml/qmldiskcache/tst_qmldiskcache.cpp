@@ -697,7 +697,7 @@ void tst_qmldiskcache::cacheResources()
     }
 
     const QSet<QString> entries = entrySet(m_qmlCacheDirectory).subtract(existingFiles);
-    QCOMPARE(entries.count(), 1);
+    QCOMPARE(entries.size(), 1);
 
     QDateTime cacheFileTimeStamp;
 
@@ -726,7 +726,7 @@ void tst_qmldiskcache::cacheResources()
 
     {
         const QSet<QString> entries = entrySet(m_qmlCacheDirectory).subtract(existingFiles);
-        QCOMPARE(entries.count(), 1);
+        QCOMPARE(entries.size(), 1);
 
         QCOMPARE(QFileInfo(m_qmlCacheDirectory.absoluteFilePath(*entries.cbegin())).lastModified().toMSecsSinceEpoch(),
                            cacheFileTimeStamp.toMSecsSinceEpoch());
@@ -972,7 +972,7 @@ void tst_qmldiskcache::cacheModuleScripts()
 
     const QSet<QString> entries = entrySet(m_qmlCacheDirectory, QStringList("*.mjsc"));
 
-    QCOMPARE(entries.count(), 1);
+    QCOMPARE(entries.size(), 1);
 
     QDateTime cacheFileTimeStamp;
 

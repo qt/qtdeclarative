@@ -123,7 +123,7 @@ void tst_QQuickView::resizemodeitem()
     view->resize(QSize(200,300));
     QTRY_COMPARE(item->width(), 200.0);
 
-    for (int i = 0; i < sizeListener.count(); ++i) {
+    for (int i = 0; i < sizeListener.size(); ++i) {
         // Check that we have the correct geometry on all signals
         QCOMPARE(sizeListener.at(i), view->size());
     }
@@ -171,7 +171,7 @@ void tst_QQuickView::errors()
         QQmlTestMessageHandler messageHandler;
         view.setSource(testFileUrl("error1.qml"));
         QCOMPARE(view.status(), QQuickView::Error);
-        QCOMPARE(view.errors().count(), 1);
+        QCOMPARE(view.errors().size(), 1);
     }
 
     {
@@ -179,7 +179,7 @@ void tst_QQuickView::errors()
         QQmlTestMessageHandler messageHandler;
         view.setSource(testFileUrl("error2.qml"));
         QCOMPARE(view.status(), QQuickView::Error);
-        QCOMPARE(view.errors().count(), 1);
+        QCOMPARE(view.errors().size(), 1);
         view.show();
     }
 }

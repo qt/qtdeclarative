@@ -17,7 +17,7 @@ static void (*notifyPropertyChangeCallBack)(QObject*, const QQuickDesignerSuppor
 
 struct MetaPropertyData {
     inline QPair<QVariant, bool> &getDataRef(int idx) {
-        while (m_data.count() <= idx)
+        while (m_data.size() <= idx)
             m_data << QPair<QVariant, bool>(QVariant(), false);
         return m_data[idx];
     }
@@ -32,12 +32,12 @@ struct MetaPropertyData {
     }
 
     inline bool hasData(int idx) const {
-        if (idx >= m_data.count())
+        if (idx >= m_data.size())
             return false;
         return m_data[idx].second;
     }
 
-    inline int count() { return m_data.count(); }
+    inline int count() { return m_data.size(); }
 
     QVector<QPair<QVariant, bool> > m_data;
 };

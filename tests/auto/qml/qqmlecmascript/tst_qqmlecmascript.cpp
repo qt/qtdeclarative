@@ -2290,9 +2290,9 @@ void tst_qqmlecmascript::scriptErrors()
     QQmlComponent component(&engine, testFileUrl("scriptErrors.qml"));
     QString url = component.url().toString();
 
-    QString warning1 = url.left(url.length() - 3) + "js:2: Error: Invalid write to global property \"a\"";
+    QString warning1 = url.left(url.size() - 3) + "js:2: Error: Invalid write to global property \"a\"";
     QString warning2 = url + ":5: ReferenceError: a is not defined";
-    QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
+    QString warning3 = url.left(url.size() - 3) + "js:4: Error: Invalid write to global property \"a\"";
     QString warning4 = url + ":13: ReferenceError: a is not defined";
     QString warning5 = url + ":11: ReferenceError: a is not defined";
     QString warning6 = url + ":10:5: Unable to assign [undefined] to int";
@@ -4849,7 +4849,7 @@ void tst_qqmlecmascript::importScripts()
     else {
         QVERIFY(component.isError());
         QCOMPARE(warningMessages.size(), 1);
-        QCOMPARE(component.errors().count(), 2);
+        QCOMPARE(component.errors().size(), 2);
         QCOMPARE(component.errors().at(1).toString(), warningMessages.first());
         return;
     }
@@ -5864,22 +5864,22 @@ void tst_qqmlecmascript::sequenceConversionRead()
 
         QMetaObject::invokeMethod(object.data(), "readSequences");
         QList<int> intList; intList << 1 << 2 << 3 << 4;
-        QCOMPARE(object->property("intListLength").toInt(), intList.length());
+        QCOMPARE(object->property("intListLength").toInt(), intList.size());
         QCOMPARE(object->property("intList").value<QList<int> >(), intList);
         QList<qreal> qrealList; qrealList << 1.1 << 2.2 << 3.3 << 4.4;
-        QCOMPARE(object->property("qrealListLength").toInt(), qrealList.length());
+        QCOMPARE(object->property("qrealListLength").toInt(), qrealList.size());
         QCOMPARE(object->property("qrealList").value<QList<qreal> >(), qrealList);
         QList<bool> boolList; boolList << true << false << true << false;
-        QCOMPARE(object->property("boolListLength").toInt(), boolList.length());
+        QCOMPARE(object->property("boolListLength").toInt(), boolList.size());
         QCOMPARE(object->property("boolList").value<QList<bool> >(), boolList);
         QList<QString> stringList; stringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
-        QCOMPARE(object->property("stringListLength").toInt(), stringList.length());
+        QCOMPARE(object->property("stringListLength").toInt(), stringList.size());
         QCOMPARE(object->property("stringList").value<QList<QString> >(), stringList);
         QList<QUrl> urlList; urlList << QUrl("http://www.example1.com") << QUrl("http://www.example2.com") << QUrl("http://www.example3.com");
-        QCOMPARE(object->property("urlListLength").toInt(), urlList.length());
+        QCOMPARE(object->property("urlListLength").toInt(), urlList.size());
         QCOMPARE(object->property("urlList").value<QList<QUrl> >(), urlList);
         QStringList qstringList; qstringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
-        QCOMPARE(object->property("qstringListLength").toInt(), qstringList.length());
+        QCOMPARE(object->property("qstringListLength").toInt(), qstringList.size());
         QCOMPARE(object->property("qstringList").value<QStringList>(), qstringList);
 
         QMetaObject::invokeMethod(object.data(), "readSequenceElements");
@@ -7355,7 +7355,7 @@ void tst_qqmlecmascript::nonNotifyable()
                         QLatin1String(object->metaObject()->className()) +
                         QLatin1String("::value");
 
-    QCOMPARE(messageHandler.messages().length(), 2);
+    QCOMPARE(messageHandler.messages().size(), 2);
     QCOMPARE(messageHandler.messages().at(0), expected1);
     QCOMPARE(messageHandler.messages().at(1), expected2);
 }
@@ -7413,7 +7413,7 @@ void tst_qqmlecmascript::qtbug_22679()
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY2(o, qPrintable(component.errorString()));
-    QCOMPARE(warningsSpy.count(), 0);
+    QCOMPARE(warningsSpy.size(), 0);
 }
 
 void tst_qqmlecmascript::qtbug_22843_data()
@@ -7437,7 +7437,7 @@ void tst_qqmlecmascript::qtbug_22843()
     QQmlComponent component(&engine, testFileUrl(fileName));
 
     QString url = component.url().toString();
-    QString expectedError = url.left(url.length()-3) + QLatin1String("js:4:16: Expected token `;'");
+    QString expectedError = url.left(url.size()-3) + QLatin1String("js:4:16: Expected token `;'");
 
     QVERIFY(component.isError());
     QCOMPARE(component.errors().value(1).toString(), expectedError);
@@ -8267,8 +8267,8 @@ void tst_qqmlecmascript::jsOwnedObjectsDeletedOnEngineDestroy()
     QSignalSpy spy1(object1, SIGNAL(destroyed()));
     QSignalSpy spy2(object2, SIGNAL(destroyed()));
     myEngine.reset();
-    QCOMPARE(spy1.count(), 1);
-    QCOMPARE(spy2.count(), 1);
+    QCOMPARE(spy1.size(), 1);
+    QCOMPARE(spy2.size(), 1);
 
     deleteObject.deleteNestedObject();
 }
@@ -8583,14 +8583,14 @@ void tst_qqmlecmascript::garbageCollectionDuringCreation()
     QVERIFY2(object, qPrintable(component.errorString()));
 
     QObjectContainer *container = qobject_cast<QObjectContainer*>(object.data());
-    QCOMPARE(container->dataChildren.count(), 1);
+    QCOMPARE(container->dataChildren.size(), 1);
 
     QObject *child = container->dataChildren.first();
     QQmlData *ddata = QQmlData::get(child);
     QVERIFY(!ddata->jsWrapper.isNullOrUndefined());
 
     gc(engine);
-    QCOMPARE(container->dataChildren.count(), 0);
+    QCOMPARE(container->dataChildren.size(), 0);
 }
 
 void tst_qqmlecmascript::qtbug_39520()

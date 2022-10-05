@@ -388,7 +388,7 @@ void tst_RenderControl::renderAndReadBackWithVulkanNative()
     f->vkGetPhysicalDeviceQueueFamilyProperties(physDev, &queueCount, queueFamilyProps.data());
 
     int gfxQueueFamilyIdx = -1;
-    for (int i = 0; i < queueFamilyProps.count(); ++i) {
+    for (int i = 0; i < queueFamilyProps.size(); ++i) {
         if (queueFamilyProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             gfxQueueFamilyIdx = i;
             break;

@@ -28,7 +28,7 @@ QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths
 
     QStringList importPaths;
     // fully & partially versioned parts + 1 unversioned for each base path
-    importPaths.reserve(2 * parts.count() + 1);
+    importPaths.reserve(2 * parts.size() + 1);
 
     auto versionString = [](QTypeRevision version, ImportVersion mode)
     {
@@ -71,7 +71,7 @@ QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths
 
             if (mode != Unversioned) {
                 // insert in the middle
-                for (int index = parts.count() - 2; index >= 0; --index) {
+                for (int index = parts.size() - 2; index >= 0; --index) {
                     importPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
                             + ver + Slash
                             + joinStringRefs(parts.mid(index + 1), Slash);

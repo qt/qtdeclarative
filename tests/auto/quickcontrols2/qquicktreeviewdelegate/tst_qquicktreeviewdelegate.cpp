@@ -297,7 +297,7 @@ void tst_qquicktreeviewdelegate::checkClickedSignal()
     QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(clickedSpy.count(), 1);
+    QCOMPARE(clickedSpy.size(), 1);
     clickedSpy.clear();
 
     // Click on the indicator
@@ -306,7 +306,7 @@ void tst_qquicktreeviewdelegate::checkClickedSignal()
     localPos = QPoint(indicator->x() + indicator->width() / 2, indicator->y() + indicator->height() / 2);
     pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(clickedSpy.count(), 0);
+    QCOMPARE(clickedSpy.size(), 0);
 }
 
 void tst_qquicktreeviewdelegate::clearSelectionOnClick()

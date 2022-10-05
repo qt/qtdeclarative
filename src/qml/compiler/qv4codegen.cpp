@@ -3257,7 +3257,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
 
     _context->name = name.isEmpty() ? currentExpr().result().name : name;
     _module->functions.append(_context);
-    _context->functionIndex = _module->functions.count() - 1;
+    _context->functionIndex = _module->functions.size() - 1;
 
     Context *savedFunctionContext = _functionContext;
     _functionContext = _context;
@@ -3266,7 +3266,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
 
     if (_context->contextType == ContextType::Global || _context->contextType == ContextType::ScriptImportedByQML) {
         _module->blocks.append(_context);
-        _context->blockIndex = _module->blocks.count() - 1;
+        _context->blockIndex = _module->blocks.size() - 1;
     }
     if (_module->debugMode) // allow the debugger to see overwritten arguments
         _context->argumentsCanEscape = true;
@@ -3307,7 +3307,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
     // register the lexical scope for global code
     if (!_context->parent && _context->requiresExecutionContext) {
         _module->blocks.append(_context);
-        _context->blockIndex = _module->blocks.count() - 1;
+        _context->blockIndex = _module->blocks.size() - 1;
     }
 
     TailCallBlocker maybeBlockTailCalls(this, _context->canHaveTailCalls());

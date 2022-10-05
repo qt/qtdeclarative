@@ -935,7 +935,7 @@ QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) con
     const QString &path = fileName();
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
     QStringView context = (lastSlash > -1)
-            ? QStringView{ path }.mid(lastSlash + 1, path.length() - lastSlash - 5)
+            ? QStringView{ path }.mid(lastSlash + 1, path.size() - lastSlash - 5)
             : QStringView();
     QByteArray contextUtf8 = context.toUtf8();
     QByteArray comment = stringAt(translation.commentIndex).toUtf8();

@@ -89,10 +89,10 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
 
         QString sourceName;
         QDebug(&sourceName) << source;
-        sourceName = sourceName.left(sourceName.length() - 1);
+        sourceName = sourceName.left(sourceName.size() - 1);
         QString engineName;
         QDebug(&engineName).nospace() << engine;
-        engineName = engineName.left(engineName.length() - 1);
+        engineName = engineName.left(engineName.size() - 1);
 
         qFatal("QQmlEngine: Illegal attempt to connect to %s that is in"
                " a different thread than the QML engine %s.", qPrintable(sourceName),

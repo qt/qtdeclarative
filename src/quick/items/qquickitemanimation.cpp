@@ -343,7 +343,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         //take care of any child animations
         bool valid = d->defaultProperty.isValid();
         QAbstractAnimationJob* anim;
-        for (int ii = 0; ii < d->animations.count(); ++ii) {
+        for (int ii = 0; ii < d->animations.size(); ++ii) {
             if (valid)
                 d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
             anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);

@@ -167,7 +167,7 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     // Move handle to where the saturation is the highest and the lightness is 'neutral'
     QTest::mouseClick(dialogHelper.window(), Qt::LeftButton, Qt::NoModifier, topCenter);
 
-    QCOMPARE(colorChangedSpy.count(), 1);
+    QCOMPARE(colorChangedSpy.size(), 1);
 
     const qreal floatingPointComparisonThreshold = 1.0 / colorPicker->width();
     const QString floatComparisonErrorString(
@@ -195,7 +195,7 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     QCOMPARE(colorPicker->hue(), QColorConstants::Cyan.hslHueF());
     QCOMPARE(colorPicker->color().rgba(), QColorConstants::Cyan.rgba());
 
-    QCOMPARE(colorChangedSpy.count(), 2);
+    QCOMPARE(colorChangedSpy.size(), 2);
 
     QPoint bottomCenter = colorPicker->mapToScene({ colorPicker->width() / 2, colorPicker->height() }).toPoint();
 
@@ -208,7 +208,7 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     // This means that the current color was changed twice.
     // (The press happens 1 pixel above the release, to work around an issue where the mouse event
     // wasn't received by the color picker)
-    QCOMPARE(colorChangedSpy.count(), 4);
+    QCOMPARE(colorChangedSpy.size(), 4);
     FUZZYCOMPARE(colorPicker->saturation(), 0.0, floatingPointComparisonThreshold,
              qPrintable(floatComparisonErrorString.arg("saturation()").arg(colorPicker->saturation()).arg(0.0).arg(floatingPointComparisonThreshold)));
     FUZZYCOMPARE(dialogHelper.quickDialog->saturation(), 0.0, floatingPointComparisonThreshold,
@@ -317,7 +317,7 @@ void tst_QQuickColorDialogImpl::changeHex()
 
     // Modify the value in the TextField to something else.
     colorTextField->forceActiveFocus();
-    colorTextField->select(1, colorTextField->text().length());
+    colorTextField->select(1, colorTextField->text().size());
     QVERIFY(colorTextField->hasActiveFocus());
     QTest::keyClick(dialogHelper.window(), Qt::Key_Backspace);
     QTest::keyClick(dialogHelper.window(), '0');

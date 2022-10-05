@@ -208,7 +208,7 @@ int main(int argv, char *argc[])
     QQmlLanguageServer qmlServer(
             [&writeMutex](const QByteArray &data) {
                 QMutexLocker l(&writeMutex);
-                std::cout.write(data.constData(), data.length());
+                std::cout.write(data.constData(), data.size());
                 std::cout.flush();
             },
             (parser.isSet(ignoreSettings) ? nullptr : &settings));

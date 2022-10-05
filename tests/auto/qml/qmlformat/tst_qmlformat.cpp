@@ -147,7 +147,7 @@ void TestQmlformat::initTestCase()
 
 QStringList TestQmlformat::findFiles(const QDir &d)
 {
-    for (int ii = 0; ii < m_excludedDirs.count(); ++ii) {
+    for (int ii = 0; ii < m_excludedDirs.size(); ++ii) {
         QString s = m_excludedDirs.at(ii);
         if (d.absolutePath().endsWith(s))
             return QStringList();

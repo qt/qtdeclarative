@@ -466,7 +466,7 @@ static QString existingImageFileForPath(const QString &localFile)
         return localFile;
 
     QString tryFile = localFile + QStringLiteral(".xxxx");
-    const int suffixIdx = localFile.length() + 1;
+    const int suffixIdx = localFile.size() + 1;
     for (const QString &suffix : backendSupport()->fileSuffixes) {
         tryFile.replace(suffixIdx, 10, suffix);
         if (QFileInfo::exists(tryFile))
@@ -674,7 +674,7 @@ void QQuickPixmapReader::processJobs()
 
         // Clean cancelled jobs
         if (!cancelled.isEmpty()) {
-            for (int i = 0; i < cancelled.count(); ++i) {
+            for (int i = 0; i < cancelled.size(); ++i) {
                 QQuickPixmapReply *job = cancelled.at(i);
 #if QT_CONFIG(qml_network)
                 QNetworkReply *reply = networkJobs.key(job, 0);
@@ -702,7 +702,7 @@ void QQuickPixmapReader::processJobs()
         if (!jobs.isEmpty()) {
             // Find a job we can use
             bool usableJob = false;
-            for (int i = jobs.count() - 1; !usableJob && i >= 0; i--) {
+            for (int i = jobs.size() - 1; !usableJob && i >= 0; i--) {
                 QQuickPixmapReply *job = jobs.at(i);
                 const QUrl url = job->url;
                 QString localFile;
@@ -720,7 +720,7 @@ void QQuickPixmapReader::processJobs()
                     localFile = QQmlFile::urlToLocalFileOrQrc(url);
                     usableJob = !localFile.isEmpty()
 #if QT_CONFIG(qml_network)
-                            || networkJobs.count() < IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT
+                            || networkJobs.size() < IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT
 #endif
                             ;
                 }
@@ -1315,7 +1315,7 @@ void QQuickPixmapData::addToCache()
         pixmapStore()->m_cache.insert(key, this);
         inCache = true;
         PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
-                url, pixmapStore()->m_cache.count()));
+                url, pixmapStore()->m_cache.size()));
     }
 }
 
@@ -1329,7 +1329,7 @@ void QQuickPixmapData::removeFromCache(QQuickPixmapStore *store)
         store->m_cache.remove(key);
         inCache = false;
         PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
-                url, store->m_cache.count()));
+                url, store->m_cache.size()));
     }
 }
 

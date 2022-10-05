@@ -1350,7 +1350,7 @@ bool DomItem::visitPrototypeChain(function_ref<bool(DomItem &)> visitor,
                                         .withItem(*this)
                                         .handle(h);
                     } else {
-                        if (protos.length() > 1) {
+                        if (protos.size() > 1) {
                             QStringList protoPaths;
                             for (DomItem &p : protos)
                                 protoPaths.append(p.canonicalPath().toString());
@@ -1646,7 +1646,7 @@ bool DomItem::visitLookup1(QString symbolName, function_ref<bool(DomItem &)> vis
                            LookupOptions opts, ErrorHandler h, QSet<quintptr> *visited,
                            QList<Path> *visitedRefs)
 {
-    bool typeLookupInQmlFile = symbolName.length() > 1 && symbolName.at(0).isUpper()
+    bool typeLookupInQmlFile = symbolName.size() > 1 && symbolName.at(0).isUpper()
             && fileObject().internalKind() == DomType::QmlFile;
     if (typeLookupInQmlFile) {
         // shortcut to lookup types (scope chain would find them too, but after looking
@@ -1737,7 +1737,7 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
     case LookupType::Symbol:
     case LookupType::Type: {
         QStringList subpath = target.split(QChar::fromLatin1('.'));
-        if (subpath.length() == 1) {
+        if (subpath.size() == 1) {
             return visitLookup1(subpath.first(), visitor, opts, errorHandler, visited, visitedRefs);
         } else {
             return visitLookup1(
@@ -1746,16 +1746,16 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
                         QVector<ResolveToDo> lookupToDos({ ResolveToDo {
                                 newIt, 1 } }); // invariant: always increase pathIndex to guarantee
                                                // end even with only partial visited match
-                        QList<QSet<quintptr>> lookupVisited(subpath.length() + 1);
+                        QList<QSet<quintptr>> lookupVisited(subpath.size() + 1);
                         while (!lookupToDos.isEmpty()) {
                             ResolveToDo tNow = lookupToDos.takeFirst();
                             auto vNow = qMakePair(tNow.item.id(), tNow.pathIndex);
                             DomItem subNow = tNow.item;
                             int iSubPath = tNow.pathIndex;
-                            Q_ASSERT(iSubPath < subpath.length());
+                            Q_ASSERT(iSubPath < subpath.size());
                             QString subPathNow = subpath[iSubPath++];
                             DomItem scope = subNow.proceedToScope();
-                            if (iSubPath < subpath.length()) {
+                            if (iSubPath < subpath.size()) {
                                 if (vNow.first != 0) {
                                     if (lookupVisited[vNow.second].contains(vNow.first))
                                         continue;
@@ -3385,7 +3385,7 @@ MutableDomItem MutableDomItem::addPreComment(const Comment &comment, QString reg
     MutableDomItem rC = field(Fields::comments);
     if (auto rcPtr = rC.mutableAs<RegionComments>()) {
         auto &preList = rcPtr->regionComments[regionName].preComments;
-        idx = preList.length();
+        idx = preList.size();
         preList.append(comment);
         MutableDomItem res = path(Path::Field(Fields::comments)
                                           .field(Fields::regionComments)
@@ -3404,7 +3404,7 @@ MutableDomItem MutableDomItem::addPostComment(const Comment &comment, QString re
     MutableDomItem rC = field(Fields::comments);
     if (auto rcPtr = rC.mutableAs<RegionComments>()) {
         auto &postList = rcPtr->regionComments[regionName].postComments;
-        idx = postList.length();
+        idx = postList.size();
         postList.append(comment);
         MutableDomItem res = path(Path::Field(Fields::comments)
                                           .field(Fields::regionComments)

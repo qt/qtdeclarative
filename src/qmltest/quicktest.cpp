@@ -167,8 +167,8 @@ bool QQuickTest::qWaitForPolish(const QQuickWindow *window, int timeout)
 
 static inline QString stripQuotes(const QString &s)
 {
-    if (s.length() >= 2 && s.startsWith(QLatin1Char('"')) && s.endsWith(QLatin1Char('"')))
-        return s.mid(1, s.length() - 2);
+    if (s.size() >= 2 && s.startsWith(QLatin1Char('"')) && s.endsWith(QLatin1Char('"')))
+        return s.mid(1, s.size() - 2);
     else
         return s;
 }
@@ -663,7 +663,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
         qWarning() << "Could not find the following test functions:";
         for (const QString &functionName : qAsConst(commandLineTestFunctions))
             qWarning("    %s()", qUtf8Printable(functionName));
-        return commandLineTestFunctions.count();
+        return commandLineTestFunctions.size();
     }
 
     // Return the number of failures as the exit code.

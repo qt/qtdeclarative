@@ -456,9 +456,9 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
 
 bool IRBuilder::isSignalPropertyName(const QString &name)
 {
-    if (name.length() < 3) return false;
+    if (name.size() < 3) return false;
     if (!name.startsWith(QLatin1String("on"))) return false;
-    int ns = name.length();
+    int ns = name.size();
     for (int i = 2; i < ns; ++i) {
         const QChar curr = name.at(i);
         if (curr.unicode() == '_') continue;
@@ -604,7 +604,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiArrayBinding *node)
         memberList.append(member);
         member = member->next;
     }
-    for (int i = memberList.count() - 1; i >= 0; --i) {
+    for (int i = memberList.size() - 1; i >= 0; --i) {
         member = memberList.at(i);
         QQmlJS::AST::UiObjectDefinition *def = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(member->member);
 
@@ -732,7 +732,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
 
         // Check for script qualifier clashes
         bool isScript = import->type == QV4::CompiledData::Import::ImportScript;
-        for (int ii = 0; ii < _imports.count(); ++ii) {
+        for (int ii = 0; ii < _imports.size(); ++ii) {
             const QV4::CompiledData::Import *other = _imports.at(ii);
             bool otherIsScript = other->type == QV4::CompiledData::Import::ImportScript;
 
@@ -1365,13 +1365,13 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
         COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
     }
 
-    if (aliasReference.count() < 1 || aliasReference.count() > 3)
+    if (aliasReference.size() < 1 || aliasReference.size() > 3)
         COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
 
      alias->setIdIndex(registerString(aliasReference.first()));
 
      QString propertyValue = aliasReference.value(1);
-     if (aliasReference.count() == 3)
+     if (aliasReference.size() == 3)
          propertyValue += QLatin1Char('.') + aliasReference.at(2);
      alias->propertyNameIndex = registerString(propertyValue);
 
@@ -1639,8 +1639,8 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     // No more new strings after this point, we're calculating offsets.
     output.jsGenerator.stringTable.freeze();
 
-    const uint importSize = uint(sizeof(QV4::CompiledData::Import)) * output.imports.count();
-    const uint objectOffsetTableSize = output.objects.count() * uint(sizeof(quint32));
+    const uint importSize = uint(sizeof(QV4::CompiledData::Import)) * output.imports.size();
+    const uint objectOffsetTableSize = output.objects.size() * uint(sizeof(quint32));
 
     QHash<const Object*, quint32> objectOffsets;
 
@@ -1668,9 +1668,9 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     memset(data, 0, totalSize);
     QV4::CompiledData::QmlUnit *qmlUnit = reinterpret_cast<QV4::CompiledData::QmlUnit *>(data);
     qmlUnit->offsetToImports = sizeof(*qmlUnit);
-    qmlUnit->nImports = output.imports.count();
+    qmlUnit->nImports = output.imports.size();
     qmlUnit->offsetToObjects = objectOffset;
-    qmlUnit->nObjects = output.objects.count();
+    qmlUnit->nObjects = output.objects.size();
 
     // write imports
     char *importPtr = data + qmlUnit->offsetToImports;
@@ -1682,7 +1682,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     // write objects
     quint32_le *objectTable = reinterpret_cast<quint32_le*>(data + qmlUnit->offsetToObjects);
-    for (int i = 0; i < output.objects.count(); ++i) {
+    for (int i = 0; i < output.objects.size(); ++i) {
         const Object *o = output.objects.at(i);
         char * const objectPtr = data + objectOffsets.value(o);
         *objectTable++ = objectOffsets.value(o);
@@ -1926,7 +1926,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
 
     _context = nullptr;
 
-    for (int i = 0; i < functions.count(); ++i) {
+    for (int i = 0; i < functions.size(); ++i) {
         const CompiledFunctionOrExpression &qmlFunction = functions.at(i);
         QQmlJS::AST::Node *node = qmlFunction.node;
         Q_ASSERT(node != document->program);

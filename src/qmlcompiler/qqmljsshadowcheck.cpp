@@ -36,7 +36,7 @@ void QQmlJSShadowCheck::run(
     m_function = function;
     m_error = error;
     m_state = initialState(function);
-    decode(m_function->code.constData(), static_cast<uint>(m_function->code.length()));
+    decode(m_function->code.constData(), static_cast<uint>(m_function->code.size()));
 }
 
 void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)

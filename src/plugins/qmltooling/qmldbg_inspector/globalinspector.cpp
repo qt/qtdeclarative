@@ -60,7 +60,7 @@ void GlobalInspector::setSelectedItems(const QList<QQuickItem *> &items)
         return;
 
     QList<QObject*> objectList;
-    objectList.reserve(items.count());
+    objectList.reserve(items.size());
     for (QQuickItem *item : items)
         objectList << item;
 
@@ -81,7 +81,7 @@ void GlobalInspector::sendCurrentObjects(const QList<QObject*> &objects)
     ds << QByteArray(EVENT) << m_eventId++ << QByteArray(SELECT);
 
     QList<int> debugIds;
-    debugIds.reserve(objects.count());
+    debugIds.reserve(objects.size());
     for (QObject *object : objects)
         debugIds << QQmlDebugService::idForObject(object);
     ds << debugIds;

@@ -119,7 +119,7 @@ bool Component::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 
 DomItem Component::field(DomItem &self, QStringView name)
 {
-    switch (name.length()) {
+    switch (name.size()) {
     case 4:
         if (name == Fields::name)
             return self.wrapField(Fields::name, m_name);
@@ -180,7 +180,7 @@ QList<QString> QmlComponent::subComponentsNames(DomItem &self) const
     QList<QString> subNames;
     for (QString cName : cNames)
         if (cName.startsWith(myNameDot)
-            && !QStringView(cName).mid(myNameDot.length()).contains(QLatin1Char('.'))
+            && !QStringView(cName).mid(myNameDot.size()).contains(QLatin1Char('.'))
             && !cName.isEmpty())
             subNames.append(cName);
     std::sort(subNames.begin(), subNames.end());
@@ -873,7 +873,7 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
             const PropertyDefinition *pDefPtr = pDef.as<PropertyDefinition>();
             Q_ASSERT(pDefPtr);
             DomItem b;
-            bool uniqueDeclarationWithThisName = pDefs.length() == 1;
+            bool uniqueDeclarationWithThisName = pDefs.size() == 1;
             if (uniqueDeclarationWithThisName && !pDefPtr->isRequired)
                 bindings.key(pDef.name()).visitIndexes([&b, pDefPtr](DomItem &el) {
                     const Binding *elPtr = el.as<Binding>();
@@ -1218,7 +1218,7 @@ Export Export::fromString(Path source, QStringView exp, Path typePath, ErrorHand
     int slashIdx = exp.indexOf(QLatin1Char('/'));
     int spaceIdx = exp.indexOf(QLatin1Char(' '));
     if (spaceIdx == -1)
-        spaceIdx = exp.length();
+        spaceIdx = exp.size();
     else
         res.version = Version::fromString(exp.mid(spaceIdx + 1));
     if (!res.version.isValid())
@@ -1613,17 +1613,17 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
     }
     if (!preCode.isEmpty() || !postCode.isEmpty())
         m_codeStr = preCode + code + postCode;
-    m_code = QStringView(m_codeStr).mid(preCode.length(), code.length());
-    m_preCode = QStringView(m_codeStr).mid(0, preCode.length());
-    m_postCode = QStringView(m_codeStr).mid(preCode.length() + code.length(), postCode.length());
+    m_code = QStringView(m_codeStr).mid(preCode.size(), code.size());
+    m_preCode = QStringView(m_codeStr).mid(0, preCode.size());
+    m_postCode = QStringView(m_codeStr).mid(preCode.size() + code.size(), postCode.size());
     m_engine = nullptr;
     m_ast = nullptr;
     m_localOffset = SourceLocation();
     if (!m_code.isEmpty()) {
         IndentInfo preChange(m_preCode, 4);
-        m_localOffset.offset = m_preCode.length();
-        m_localOffset.length = m_code.length();
-        m_localOffset.startColumn = preChange.trailingString.length();
+        m_localOffset.offset = m_preCode.size();
+        m_localOffset.length = m_code.size();
+        m_localOffset.startColumn = preChange.trailingString.size();
         m_localOffset.startLine = preChange.nNewlines;
         m_engine = std::make_shared<QQmlJS::Engine>();
         m_astComments = std::make_shared<AstComments>(m_engine);
@@ -1645,8 +1645,8 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
             m_ast = programPtr->statements;
         }
         if (!m_preCode.isEmpty())
-            m_ast = firstNodeInRange(m_ast, m_preCode.length(),
-                                     m_preCode.length() + m_code.length());
+            m_ast = firstNodeInRange(m_ast, m_preCode.size(),
+                                     m_preCode.size() + m_code.size());
         if (m_expressionType != ExpressionType::FunctionBody) {
             if (AST::StatementList *sList = AST::cast<AST::StatementList *>(m_ast)) {
                 if (!sList->next)
@@ -1918,7 +1918,7 @@ void EnumItem::writeOut(DomItem &self, OutWriter &ow) const
 QmlUri QmlUri::fromString(const QString &str)
 {
     if (str.startsWith(u'"'))
-        return fromDirectoryString(str.mid(1, str.length() - 2)
+        return fromDirectoryString(str.mid(1, str.size() - 2)
                                            .replace(u"\\\""_s, u"\""_s)
                                            .replace(u"\\\\"_s, u"\\"_s));
     else
@@ -1934,7 +1934,7 @@ QmlUri QmlUri::fromUriString(const QString &str)
 QmlUri QmlUri::fromDirectoryString(const QString &str)
 {
     QUrl url(str);
-    if (url.isValid() && url.scheme().length() > 1)
+    if (url.isValid() && url.scheme().size() > 1)
         return QmlUri(url);
     if (!str.isEmpty()) {
         QFileInfo path(str);

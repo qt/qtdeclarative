@@ -30,14 +30,14 @@ static inline int cacheSize()
 static QList<QStringList> permutations(const QStringList &input, int count = -1)
 {
     if (count == -1)
-        count = input.count();
+        count = input.size();
 
     QList<QStringList> output;
-    for (int i = 0; i < input.count(); ++i) {
+    for (int i = 0; i < input.size(); ++i) {
         QStringList sub = input.mid(i, count);
 
         if (count > 1) {
-            if (i + count > input.count())
+            if (i + count > input.size())
                 sub += input.mid(0, count - i + 1);
 
             std::sort(sub.begin(), sub.end());
@@ -49,7 +49,7 @@ static QList<QStringList> permutations(const QStringList &input, int count = -1)
             output += sub;
         }
 
-        if (count == input.count())
+        if (count == input.size())
             break;
     }
 
@@ -275,8 +275,8 @@ bool QQuickImageSelector::updateActiveStates()
 int QQuickImageSelector::calculateScore(const QStringList &states) const
 {
     int score = 0;
-    for (int i = 0; i < states.count(); ++i)
-        score += (m_activeStates.count() - m_activeStates.indexOf(states.at(i))) << 1;
+    for (int i = 0; i < states.size(); ++i)
+        score += (m_activeStates.size() - m_activeStates.indexOf(states.at(i))) << 1;
     return score;
 }
 

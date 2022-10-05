@@ -96,7 +96,7 @@ QQuickStateGroup::QQuickStateGroup(QObject *parent)
 QQuickStateGroup::~QQuickStateGroup()
 {
     Q_D(const QQuickStateGroup);
-    for (int i = 0; i < d->states.count(); ++i)
+    for (int i = 0; i < d->states.size(); ++i)
         d->states.at(i)->setStateGroup(nullptr);
     if (d->nullState)
         d->nullState->setStateGroup(nullptr);
@@ -153,7 +153,7 @@ void QQuickStateGroupPrivate::append_state(QQmlListProperty<QQuickState> *list, 
 qsizetype QQuickStateGroupPrivate::count_state(QQmlListProperty<QQuickState> *list)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
-    return _this->d_func()->states.count();
+    return _this->d_func()->states.size();
 }
 
 QQuickState *QQuickStateGroupPrivate::at_state(QQmlListProperty<QQuickState> *list, qsizetype index)
@@ -166,7 +166,7 @@ void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     _this->d_func()->setCurrentStateInternal(QString(), true);
-    for (qsizetype i = 0; i < _this->d_func()->states.count(); ++i) {
+    for (qsizetype i = 0; i < _this->d_func()->states.size(); ++i) {
         _this->d_func()->states.at(i)->setStateGroup(nullptr);
     }
     _this->d_func()->states.clear();
@@ -190,7 +190,7 @@ void QQuickStateGroupPrivate::removeLast_states(QQmlListProperty<QQuickState> *l
 {
     auto *d = qobject_cast<QQuickStateGroup *>(list->object)->d_func();
     if (d->currentState == d->states.last()->name())
-        d->setCurrentStateInternal(d->states.length() > 1 ? d->states.first()->name() : QString(), true);
+        d->setCurrentStateInternal(d->states.size() > 1 ? d->states.first()->name() : QString(), true);
     d->states.last()->setStateGroup(nullptr);
     d->states.removeLast();
 }
@@ -234,7 +234,7 @@ void QQuickStateGroupPrivate::append_transition(QQmlListProperty<QQuickTransitio
 qsizetype QQuickStateGroupPrivate::count_transitions(QQmlListProperty<QQuickTransition> *list)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
-    return _this->d_func()->transitions.count();
+    return _this->d_func()->transitions.size();
 }
 
 QQuickTransition *QQuickStateGroupPrivate::at_transition(QQmlListProperty<QQuickTransition> *list, qsizetype index)
@@ -299,8 +299,8 @@ void QQuickStateGroup::componentComplete()
     d->componentComplete = true;
 
     QVarLengthArray<QString, 4> names;
-    names.reserve(d->states.count());
-    for (int ii = 0; ii < d->states.count(); ++ii) {
+    names.reserve(d->states.size());
+    for (int ii = 0; ii < d->states.size(); ++ii) {
         QQuickState *state = d->states.at(ii);
         if (!state->isNamed())
             state->setName(QLatin1String("anonymousState") + QString::number(++d->unnamedCount));
@@ -338,7 +338,7 @@ bool QQuickStateGroupPrivate::updateAutoState()
         return false;
 
     bool revert = false;
-    for (int ii = 0; ii < states.count(); ++ii) {
+    for (int ii = 0; ii < states.size(); ++ii) {
         QQuickState *state = states.at(ii);
         if (state->isWhenKnown()) {
             if (state->isNamed()) {
@@ -391,7 +391,7 @@ QQuickTransition *QQuickStateGroupPrivate::findTransition(const QString &from, c
     bool reversed = false;
     bool done = false;
 
-    for (int ii = 0; !done && ii < transitions.count(); ++ii) {
+    for (int ii = 0; !done && ii < transitions.size(); ++ii) {
         QQuickTransition *t = transitions.at(ii);
         if (!t->enabled())
             continue;
@@ -405,10 +405,10 @@ QQuickTransition *QQuickStateGroupPrivate::findTransition(const QString &from, c
             const QString toStateStr = t->toState();
 
             auto fromState = QStringView{fromStateStr}.split(QLatin1Char(','));
-            for (int jj = 0; jj < fromState.count(); ++jj)
+            for (int jj = 0; jj < fromState.size(); ++jj)
                 fromState[jj] = fromState.at(jj).trimmed();
             auto toState = QStringView{toStateStr}.split(QLatin1Char(','));
-            for (int jj = 0; jj < toState.count(); ++jj)
+            for (int jj = 0; jj < toState.size(); ++jj)
                 toState[jj] = toState.at(jj).trimmed();
             if (ii == 1)
                 qSwap(fromState, toState);
@@ -476,7 +476,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
 
     QQuickState *oldState = nullptr;
     if (!currentState.isEmpty()) {
-        for (int ii = 0; ii < states.count(); ++ii) {
+        for (int ii = 0; ii < states.size(); ++ii) {
             if (states.at(ii)->name() == currentState) {
                 oldState = states.at(ii);
                 break;
@@ -488,7 +488,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
     emit q->stateChanged(currentState);
 
     QQuickState *newState = nullptr;
-    for (int ii = 0; ii < states.count(); ++ii) {
+    for (int ii = 0; ii < states.size(); ++ii) {
         if (states.at(ii)->name() == currentState) {
             newState = states.at(ii);
             break;
@@ -512,7 +512,7 @@ void QQuickStateGroupPrivate::setCurrentStateInternal(const QString &state,
 QQuickState *QQuickStateGroup::findState(const QString &name) const
 {
     Q_D(const QQuickStateGroup);
-    for (int i = 0; i < d->states.count(); ++i) {
+    for (int i = 0; i < d->states.size(); ++i) {
         QQuickState *state = d->states.at(i);
         if (state->name() == name)
             return state;

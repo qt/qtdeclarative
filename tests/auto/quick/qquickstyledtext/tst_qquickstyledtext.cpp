@@ -152,7 +152,7 @@ void tst_qquickstyledtext::textOutput()
 
     const QVector<QTextLayout::FormatRange> layoutFormats = layout.formats();
 
-    QCOMPARE(layoutFormats.count(), formats.count());
+    QCOMPARE(layoutFormats.size(), formats.count());
     for (int i = 0; i < formats.count(); ++i) {
         QCOMPARE(layoutFormats.at(i).start, formats.at(i).start);
         QCOMPARE(layoutFormats.at(i).length, formats.at(i).length);
@@ -182,7 +182,7 @@ void tst_qquickstyledtext::anchors()
 
     const QVector<QTextLayout::FormatRange> layoutFormats = layout.formats();
 
-    QCOMPARE(layoutFormats.count(), formats.count());
+    QCOMPARE(layoutFormats.size(), formats.count());
     for (int i = 0; i < formats.count(); ++i) {
         QCOMPARE(layoutFormats.at(i).start, formats.at(i).start);
         QCOMPARE(layoutFormats.at(i).length, formats.at(i).length);

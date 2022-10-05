@@ -36,10 +36,10 @@ public:
         return data.resize(size);
     }
 
-    int count() const { return data.count(); }
+    int count() const { return data.size(); }
     void clear()
     {
-        for (int i = 0; i < data.count(); ++i) {
+        for (int i = 0; i < data.size(); ++i) {
             const auto &cache = data.at(i);
             if (cache.isT2()) {
                 if (QQmlPropertyCache *data = cache.asT2())
