@@ -219,12 +219,14 @@ private slots:
     void setColumnWidth();
     void setColumnWidthWhenProviderIsSet();
     void setColumnWidthForInvalidColumn();
+    void setColumnWidthWhenUsingSyncView();
     void resetColumnWidth();
     void clearColumnWidths();
     void setRowHeight_data();
     void setRowHeight();
     void setRowHeightWhenProviderIsSet();
     void setRowHeightForInvalidRow();
+    void setRowHeightWhenUsingSyncView();
     void resetRowHeight();
     void clearRowHeights();
 };
@@ -5433,6 +5435,34 @@ void tst_QQuickTableView::setColumnWidthForInvalidColumn()
     QCOMPARE(tableView->columnWidth(-1), -1);
 }
 
+void tst_QQuickTableView::setColumnWidthWhenUsingSyncView()
+{
+    // Test that if you set an explicit column width on a TableView
+    // that has a sync view, then we set the column width on the
+    // sync view instead.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewHV);
+
+    const auto model = TestModelAsVariant(3, 3);
+    QQuickTableView *views[] = {tableView, tableViewH, tableViewHV};
+    for (auto view : views)
+        view->setModel(model);
+
+    const int column = 1;
+    const qreal size = 200;
+
+    tableView->setColumnWidthProvider(QJSValue());
+    tableViewH->setColumnWidth(column, size);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto view : views) {
+        QCOMPARE(view->explicitColumnWidth(column), size);
+        QCOMPARE(view->columnWidth(column), size);
+    }
+}
+
 void tst_QQuickTableView::resetColumnWidth()
 {
     // Check that you can reset a column width
@@ -5566,6 +5596,34 @@ void tst_QQuickTableView::setRowHeightForInvalidRow()
 
     QCOMPARE(tableView->explicitRowHeight(-1), -1);
     QCOMPARE(tableView->rowHeight(-1), -1);
+}
+
+void tst_QQuickTableView::setRowHeightWhenUsingSyncView()
+{
+    // Test that if you set an explicit row height on a TableView
+    // that has a sync view, then we set the column width on the
+    // sync view instead.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+
+    const auto model = TestModelAsVariant(3, 3);
+    QQuickTableView *views[] = {tableView, tableViewV, tableViewHV};
+    for (auto view : views)
+        view->setModel(model);
+
+    const int row = 1;
+    const qreal size = 200;
+
+    tableView->setRowHeightProvider(QJSValue());
+    tableViewV->setRowHeight(row, size);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto view : views) {
+        QCOMPARE(view->explicitRowHeight(row), size);
+        QCOMPARE(view->rowHeight(row), size);
+    }
 }
 
 void tst_QQuickTableView::resetRowHeight()

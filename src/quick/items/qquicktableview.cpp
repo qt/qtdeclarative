@@ -901,6 +901,8 @@
     \note The sizes you set will not be cleared if you change the \l model.
     To clear the sizes, you need to call \l clearColumnWidths() explicitly.
 
+    \include tableview.qdocinc explicit-column-size-and-syncview
+
     \note For models with \e lots of columns, using \l setColumnWidth() to set the widths for
     all the columns at start-up, can be suboptimal. This will consume start-up time and
     memory (for storing all the widths). A more scalable approach is to use a
@@ -916,6 +918,8 @@
 
     Clears all the column widths set with \l setColumnWidth().
 
+    \include tableview.qdocinc explicit-column-size-and-syncview
+
     \sa setColumnWidth(), clearRowHeights(), {Row heights and column widths}
 */
 
@@ -929,6 +933,8 @@
     A return value equal to \c 0 means that the column has been told to hide.
     A return value equal to \c -1 means that no explicit width has been set
     for the column.
+
+    \include tableview.qdocinc explicit-column-size-and-syncview
 
     \sa setColumnWidth(), columnWidth(), {Row heights and column widths}
 */
@@ -967,6 +973,8 @@
     \note The sizes you set will not be cleared if you change the \l model.
     To clear the sizes, you need to call \l clearRowHeights() explicitly.
 
+    \include tableview.qdocinc explicit-row-size-and-syncview
+
     \note For models with \e lots of rows, using \l setRowHeight() to set the heights for
     all the rows at start-up, can be suboptimal. This will consume start-up time and
     memory (for storing all the heights). A more scalable approach is to use a
@@ -982,6 +990,8 @@
 
     Clears all the row heights set with \l setRowHeight().
 
+    \include tableview.qdocinc explicit-row-size-and-syncview
+
     \sa setRowHeight(), clearColumnWidths(), {Row heights and column widths}
 */
 
@@ -995,6 +1005,8 @@
     A return value equal to \c 0 means that the row has been told to hide.
     A return value equal to \c -1 means that no explicit height has been set
     for the row.
+
+    \include tableview.qdocinc explicit-row-size-and-syncview
 
     \sa setRowHeight(), rowHeight(), {Row heights and column widths}
 */
@@ -5028,6 +5040,11 @@ void QQuickTableView::setColumnWidth(int column, qreal size)
         return;
     }
 
+    if (d->syncHorizontally) {
+        d->syncView->setColumnWidth(column, size);
+        return;
+    }
+
     if (qFuzzyCompare(explicitColumnWidth(column), size))
         return;
 
@@ -5035,6 +5052,9 @@ void QQuickTableView::setColumnWidth(int column, qreal size)
         d->explicitColumnWidths.remove(column);
     else
         d->explicitColumnWidths.insert(column, size);
+
+    if (d->loadedItems.isEmpty())
+        return;
 
     const bool allColumnsLoaded = d->atTableEnd(Qt::LeftEdge) && d->atTableEnd(Qt::RightEdge);
     if (column >= leftColumn() || column <= rightColumn() || allColumnsLoaded)
@@ -5044,6 +5064,11 @@ void QQuickTableView::setColumnWidth(int column, qreal size)
 void QQuickTableView::clearColumnWidths()
 {
     Q_D(QQuickTableView);
+
+    if (d->syncHorizontally) {
+        d->syncView->clearColumnWidths();
+        return;
+    }
 
     if (d->explicitColumnWidths.isEmpty())
         return;
@@ -5055,6 +5080,10 @@ void QQuickTableView::clearColumnWidths()
 qreal QQuickTableView::explicitColumnWidth(int column) const
 {
     Q_D(const QQuickTableView);
+
+    if (d->syncHorizontally)
+        return d->syncView->explicitColumnWidth(column);
+
     const auto it = d->explicitColumnWidths.constFind(column);
     if (it != d->explicitColumnWidths.constEnd())
         return *it;
@@ -5069,6 +5098,11 @@ void QQuickTableView::setRowHeight(int row, qreal size)
         return;
     }
 
+    if (d->syncVertically) {
+        d->syncView->setRowHeight(row, size);
+        return;
+    }
+
     if (qFuzzyCompare(explicitRowHeight(row), size))
         return;
 
@@ -5076,6 +5110,9 @@ void QQuickTableView::setRowHeight(int row, qreal size)
         d->explicitRowHeights.remove(row);
     else
         d->explicitRowHeights.insert(row, size);
+
+    if (d->loadedItems.isEmpty())
+        return;
 
     const bool allRowsLoaded = d->atTableEnd(Qt::TopEdge) && d->atTableEnd(Qt::BottomEdge);
     if (row >= topRow() || row <= bottomRow() || allRowsLoaded)
@@ -5085,6 +5122,11 @@ void QQuickTableView::setRowHeight(int row, qreal size)
 void QQuickTableView::clearRowHeights()
 {
     Q_D(QQuickTableView);
+
+    if (d->syncVertically) {
+        d->syncView->clearRowHeights();
+        return;
+    }
 
     if (d->explicitRowHeights.isEmpty())
         return;
@@ -5096,6 +5138,10 @@ void QQuickTableView::clearRowHeights()
 qreal QQuickTableView::explicitRowHeight(int row) const
 {
     Q_D(const QQuickTableView);
+
+    if (d->syncVertically)
+        return d->syncView->explicitRowHeight(row);
+
     const auto it = d->explicitRowHeights.constFind(row);
     if (it != d->explicitRowHeights.constEnd())
         return *it;

@@ -1,0 +1,11 @@
+//! [explicit-column-size-and-syncview]
+\note If a \l syncView is set, together with a \l {Qt::Horizontal}{Qt.Horizontal}
+\l syncDirection, the sync view will control the column widths. Therefore, in that
+case, any call to this function will be forwarded to the sync view instead.
+//! [explicit-column-size-and-syncview]
+
+//! [explicit-row-size-and-syncview]
+\note If a \l syncView is set, together with a \l {Qt::Vertical}{Qt.Vertical}
+\l syncDirection, the sync view will control the row heights. Therefore, in that
+case, any call to this function will be forwarded to the sync view instead.
+//! [explicit-row-size-and-syncview]
