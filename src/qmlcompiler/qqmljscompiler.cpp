@@ -438,7 +438,7 @@ void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, 
 {
     using return_type = std::invoke_result_t<Binding, const QQmlPrivate::AOTCompiledContext *, void **>;
     if constexpr (std::is_same_v<return_type, void>) {
-       Q_UNUSED(dataPtr);
+       Q_UNUSED(dataPtr)
        binding(aotContext, argumentsPtr);
     } else {
         if (dataPtr) {
@@ -453,8 +453,8 @@ void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, 
 static const char *funcHeaderCode = R"(
     [](const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, void **argumentsPtr) {
         wrapCall(aotContext, dataPtr, argumentsPtr, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
-Q_UNUSED(aotContext);
-Q_UNUSED(argumentsPtr);
+Q_UNUSED(aotContext)
+Q_UNUSED(argumentsPtr)
 )";
 
 bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName, const QV4::CompiledData::SaveableUnitPointer &unit, const QQmlJSAotFunctionMap &aotFunctions, QString *errorString)

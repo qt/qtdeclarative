@@ -1704,7 +1704,7 @@ function(qt6_add_qml_plugin target)
         # file have sensible indenting
         set(qt_qml_plugin_constructor_content
         "volatile auto registration = &${register_types_function_name};
-        Q_UNUSED(registration);"
+        Q_UNUSED(registration)"
         )
 
         set(generated_cpp_file

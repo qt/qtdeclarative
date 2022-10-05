@@ -136,7 +136,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
     // * bool canFinalize [optional, when document root]
     const bool isDocumentRoot = type == visitor->result();
 
-    current.init.body << u"Q_UNUSED(creator);"_s; // can happen sometimes
+    current.init.body << u"Q_UNUSED(creator)"_s; // can happen sometimes
 
     current.init.body << u"auto context = parentContext;"_s;
 
@@ -182,7 +182,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
 
     current.init.body
             << QStringLiteral("auto %1 = QQmlEnginePrivate::get(engine);").arg(privateEngineName);
-    current.init.body << QStringLiteral("Q_UNUSED(%1);").arg(privateEngineName); // precaution
+    current.init.body << QStringLiteral("Q_UNUSED(%1)").arg(privateEngineName); // precaution
 
     // when generating root, we need to create a new (document-level) context.
     // otherwise, just use existing context as is
@@ -379,8 +379,8 @@ inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
     // QML_endInit()'s parameters:
     // * QQmltcObjectCreationHelper* creator
     // * QQmlEngine* engine
-    current.endInit.body << u"Q_UNUSED(creator);"_s;
-    current.endInit.body << u"Q_UNUSED(engine);"_s;
+    current.endInit.body << u"Q_UNUSED(creator)"_s;
+    current.endInit.body << u"Q_UNUSED(engine)"_s;
 
     generate_qmltcInstructionCallCode(&current.endInit, type, u"engine"_s, u"creator, engine"_s);
 
@@ -415,8 +415,8 @@ QmltcCodeGenerator::generate_setComplexBindingsCode(QmltcType &current,
     // QML_setComplexBindings()'s parameters:
     // * QQmltcObjectCreationHelper* creator
     // * QQmlEngine* engine
-    current.setComplexBindings.body << u"Q_UNUSED(creator);"_s;
-    current.setComplexBindings.body << u"Q_UNUSED(engine);"_s;
+    current.setComplexBindings.body << u"Q_UNUSED(creator)"_s;
+    current.setComplexBindings.body << u"Q_UNUSED(engine)"_s;
 
     generate_qmltcInstructionCallCode(&current.setComplexBindings, type, u"engine"_s,
                                       u"creator, engine"_s);
@@ -440,9 +440,9 @@ inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function
     // * QQmltcObjectCreationHelper* creator
     // * bool canFinalize [optional, when document root]
     const bool isDocumentRoot = type == visitor->result();
-    function->body << u"Q_UNUSED(creator);"_s;
+    function->body << u"Q_UNUSED(creator)"_s;
     if (isDocumentRoot)
-        function->body << u"Q_UNUSED(canFinalize);"_s;
+        function->body << u"Q_UNUSED(canFinalize)"_s;
 
     if (auto base = type->baseType(); base->isComposite()) {
         function->body << u"// call base's method"_s;
@@ -550,7 +550,7 @@ QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
 
     // QML_handleOnCompleted()'s parameters:
     // * QQmltcObjectCreationHelper* creator
-    current.handleOnCompleted.body << u"Q_UNUSED(creator);"_s;
+    current.handleOnCompleted.body << u"Q_UNUSED(creator)"_s;
 
     generate_qmltcInstructionCallCode(&current.handleOnCompleted, type, QString(), u"creator"_s);
 }
