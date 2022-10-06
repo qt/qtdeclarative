@@ -535,7 +535,8 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (!writeStr(qQmlJSSymbolNamespaceForPath(inputFileName).toUtf8()))
         return false;
 
-    if (!writeStr(QByteArrayLiteral(" {\nextern const unsigned char qmlData alignas(16) [] = {\n")))
+    if (!writeStr(QByteArrayLiteral(" {\nextern const unsigned char qmlData alignas(16) [];\n"
+                                    "extern const unsigned char qmlData alignas(16) [] = {\n")))
         return false;
 
     unit.saveToDisk<uchar>([&writeStr](const uchar *begin, quint32 size) {
@@ -575,10 +576,12 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     writeStr(aotFunctions[FileScopeCodeIndex].code.toUtf8().constData());
     if (aotFunctions.size() <= 1) {
         // FileScopeCodeIndex is always there, but it may be the only one.
-        writeStr("extern const QQmlPrivate::TypedFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };");
+        writeStr("extern const QQmlPrivate::TypedFunction aotBuiltFunctions[];\n"
+                 "extern const QQmlPrivate::TypedFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };");
     } else {
         writeStr(wrapCallCode);
-        writeStr("extern const QQmlPrivate::TypedFunction aotBuiltFunctions[] = {\n");
+        writeStr("extern const QQmlPrivate::TypedFunction aotBuiltFunctions[];\n"
+                 "extern const QQmlPrivate::TypedFunction aotBuiltFunctions[] = {\n");
 
         QString footer = QStringLiteral("});}\n");
 
