@@ -381,6 +381,8 @@ bool QSGRenderThread::event(QEvent *e)
             qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- not releasing because window is still active");
             if (window) {
                 QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- requesting external renderers such as Quick 3D to release cached resources");
+                emit d->context->releaseCachedResourcesRequested();
                 if (d->renderer) {
                     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- requesting renderer to release cached resources");
                     d->renderer->releaseCachedResources();

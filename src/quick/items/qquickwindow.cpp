@@ -1146,18 +1146,24 @@ void qtquick_shadereffect_purge_gui_thread_shader_cache();
     This function tries to release redundant resources currently held by the QML scene.
 
     Calling this function requests the scene graph to release cached graphics
-    resources, such as graphics pipeline objects or shader programs.
-
-    \note The releasing of cached graphics resources is not dependent on the
-    hint from setPersistentGraphics().
+    resources, such as graphics pipeline objects, shader programs, or image
+    data.
 
     Additionally, depending on the render loop in use, this function may also
-    result in the scene graph and all rendering resources to be released. If
-    this happens, the sceneGraphInvalidated() signal will be emitted, allowing
-    users to clean up their own graphics resources. The
-    setPersistentGraphics() and setPersistentSceneGraph() functions can be
-    used to prevent this from happening, if handling the cleanup is not feasible
-    in the application, at the cost of higher memory usage.
+    result in the scene graph and all window-related rendering resources to be
+    released. If this happens, the sceneGraphInvalidated() signal will be
+    emitted, allowing users to clean up their own graphics resources. The
+    setPersistentGraphics() and setPersistentSceneGraph() functions can be used
+    to prevent this from happening, if handling the cleanup is not feasible in
+    the application, at the cost of higher memory usage.
+
+    \note The releasing of cached graphics resources, such as graphics
+    pipelines or shader programs is not dependent on the persistency hints. The
+    releasing of those will happen regardless of the values of the persistent
+    graphics and scenegraph hints.
+
+    \note This function is not related to the QQuickItem::releaseResources()
+    virtual function.
 
     \sa sceneGraphInvalidated(), setPersistentGraphics(), setPersistentSceneGraph()
  */

@@ -172,6 +172,7 @@ public:
 Q_SIGNALS:
     void initialized();
     void invalidated();
+    void releaseCachedResourcesRequested();
 
 public Q_SLOTS:
     void textureFactoryDestroyed(QObject *o);

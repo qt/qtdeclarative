@@ -798,6 +798,7 @@ void QSGGuiThreadRenderLoop::releaseResources(QQuickWindow *w)
 {
     // No full invalidation of the rendercontext, just clear some caches.
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(w);
+    emit d->context->releaseCachedResourcesRequested();
     if (d->renderer)
         d->renderer->releaseCachedResources();
 }
