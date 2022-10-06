@@ -1280,7 +1280,7 @@ namespace Heap {
     Member(class, NoMark, QV4QPointer<QObject>, parent)
 
 DECLARE_HEAP_OBJECT(QmlIncubatorObject, Object) {
-    DECLARE_MARKOBJECTS(QmlIncubatorObject);
+    DECLARE_MARKOBJECTS(QmlIncubatorObject)
 
     void init(QQmlIncubator::IncubationMode = QQmlIncubator::Asynchronous);
     inline void destroy();

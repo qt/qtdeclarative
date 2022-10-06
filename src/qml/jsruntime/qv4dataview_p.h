@@ -33,7 +33,7 @@ struct DataViewCtor : FunctionObject {
     Member(class, NoMark, uint, byteOffset)
 
 DECLARE_HEAP_OBJECT(DataView, Object) {
-    DECLARE_MARKOBJECTS(DataView);
+    DECLARE_MARKOBJECTS(DataView)
     void init() { Object::init(); }
 };
 

@@ -56,7 +56,7 @@ public:
     QQmlProperty &operator=(const QQmlProperty &);
 
     QQmlProperty(QQmlProperty &&other) noexcept : d(std::exchange(other.d, nullptr)) {}
-    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlProperty);
+    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlProperty)
 
     void swap(QQmlProperty &other) noexcept { qt_ptr_swap(d, other.d); }
     bool operator==(const QQmlProperty &) const;

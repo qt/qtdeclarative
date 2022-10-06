@@ -1047,8 +1047,8 @@ public:
     InlineComponentIterator inlineComponentsEnd() const {return InlineComponentIterator(this, nInlineComponents);}
 
     typedef TableIterator<RequiredPropertyExtraData, Object, &Object::requiredPropertyExtraDataAt> RequiredPropertyExtraDataIterator;
-    RequiredPropertyExtraDataIterator requiredPropertyExtraDataBegin() const {return RequiredPropertyExtraDataIterator(this, 0); };
-    RequiredPropertyExtraDataIterator requiredPropertyExtraDataEnd() const {return RequiredPropertyExtraDataIterator(this, nRequiredPropertyExtraData); };
+    RequiredPropertyExtraDataIterator requiredPropertyExtraDataBegin() const {return RequiredPropertyExtraDataIterator(this, 0); }
+    RequiredPropertyExtraDataIterator requiredPropertyExtraDataEnd() const {return RequiredPropertyExtraDataIterator(this, nRequiredPropertyExtraData); }
 
     int namedObjectsInComponentCount() const { return nNamedObjectsInComponent; }
     // ---

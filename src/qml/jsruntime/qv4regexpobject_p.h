@@ -56,7 +56,7 @@ DECLARE_HEAP_OBJECT(RegExpObject, Object) {
     Member(class, NoMark, int, lastMatchEnd)
 
 DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
-    DECLARE_MARKOBJECTS(RegExpCtor);
+    DECLARE_MARKOBJECTS(RegExpCtor)
 
     void init(QV4::ExecutionContext *scope);
     void clearLastMatch();

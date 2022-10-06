@@ -30,7 +30,7 @@ namespace Heap {
     Member(class, NoMark, quint64, mapped)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
-    DECLARE_MARKOBJECTS(ArgumentsObject);
+    DECLARE_MARKOBJECTS(ArgumentsObject)
     enum {
         LengthPropertyIndex = 0,
         SymbolIteratorPropertyIndex = 1,

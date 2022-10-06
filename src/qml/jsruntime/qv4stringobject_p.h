@@ -28,7 +28,7 @@ namespace Heap {
     Member(class, Pointer, String *, string)
 
 DECLARE_HEAP_OBJECT(StringObject, Object) {
-    DECLARE_MARKOBJECTS(StringObject);
+    DECLARE_MARKOBJECTS(StringObject)
 
     enum {
         LengthPropertyIndex = 0

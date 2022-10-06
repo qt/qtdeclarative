@@ -34,7 +34,7 @@ namespace Heap {
     Member(class, Pointer, Module *, module)
 
 DECLARE_HEAP_OBJECT(QQmlContextWrapper, Object) {
-    DECLARE_MARKOBJECTS(QQmlContextWrapper);
+    DECLARE_MARKOBJECTS(QQmlContextWrapper)
 
     void init(QQmlRefPointer<QQmlContextData> context, QObject *scopeObject);
     void destroy();
@@ -47,7 +47,7 @@ DECLARE_HEAP_OBJECT(QQmlContextWrapper, Object) {
 #define QmlContextMembers(class, Member)
 
 DECLARE_HEAP_OBJECT(QmlContext, ExecutionContext) {
-    DECLARE_MARKOBJECTS(QmlContext);
+    DECLARE_MARKOBJECTS(QmlContext)
 
     QQmlContextWrapper *qml() { return static_cast<QQmlContextWrapper *>(activation.get()); }
     void init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml);

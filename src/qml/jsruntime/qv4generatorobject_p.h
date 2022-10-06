@@ -57,7 +57,7 @@ struct GeneratorPrototype : FunctionObject {
     Member(class, Pointer, ArrayObject *, jsFrame)
 
 DECLARE_HEAP_OBJECT(GeneratorObject, Object) {
-    DECLARE_MARKOBJECTS(GeneratorObject);
+    DECLARE_MARKOBJECTS(GeneratorObject)
 };
 
 }
