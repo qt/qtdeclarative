@@ -1422,8 +1422,16 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
                 break;
             }
         }
-        if (engine->hasException || !object) {
+        if (engine->hasException) {
             qmlWarning(createdComponent, engine->catchExceptionAsQmlError());
+            continue;
+        }
+        if (!object) {
+            QQmlError error;
+            error.setUrl(qmlContext ? qmlContext->qmlContext()->url() : QUrl());
+            error.setDescription(QLatin1String("Cannot resolve property \"%1\".")
+                                 .arg(properties.join(u'.')));
+            qmlWarning(createdComponent, error);
             continue;
         }
         name = engine->newString(properties.last());
