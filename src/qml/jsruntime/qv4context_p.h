@@ -29,7 +29,7 @@ namespace Heap {
     Member(class, Pointer, Object *, activation)
 
 DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
-    DECLARE_MARKOBJECTS(ExecutionContext);
+    DECLARE_MARKOBJECTS(ExecutionContext)
 
     enum ContextType {
         Type_GlobalContext = 0x1,
@@ -68,7 +68,7 @@ Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(Execution
     Member(class, ValueArray, ValueArray, locals)
 
 DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
-    DECLARE_MARKOBJECTS(CallContext);
+    DECLARE_MARKOBJECTS(CallContext)
 
     void init()
     {

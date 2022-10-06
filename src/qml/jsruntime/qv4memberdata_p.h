@@ -27,7 +27,7 @@ namespace Heap {
     Member(class, ValueArray, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(MemberData, Base) {
-    DECLARE_MARKOBJECTS(MemberData);
+    DECLARE_MARKOBJECTS(MemberData)
 };
 Q_STATIC_ASSERT(std::is_trivial_v<MemberData>);
 

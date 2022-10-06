@@ -41,7 +41,7 @@ namespace Heap {
 
 DECLARE_HEAP_OBJECT(UrlObject, Object)
 {
-    DECLARE_MARKOBJECTS(UrlObject);
+    DECLARE_MARKOBJECTS(UrlObject)
     void init() { Object::init(); }
 };
 
@@ -59,7 +59,7 @@ struct UrlCtor : FunctionObject
 
 DECLARE_HEAP_OBJECT(UrlSearchParamsObject, Object)
 {
-    DECLARE_MARKOBJECTS(UrlSearchParamsObject);
+    DECLARE_MARKOBJECTS(UrlSearchParamsObject)
     void init() { Object::init(); }
 };
 

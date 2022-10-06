@@ -30,7 +30,7 @@ namespace Heap {
     Member(class, Pointer, String *, stack)
 
 DECLARE_HEAP_OBJECT(ErrorObject, Object) {
-    DECLARE_MARKOBJECTS(ErrorObject);
+    DECLARE_MARKOBJECTS(ErrorObject)
     enum ErrorType {
         Error,
         EvalError,
