@@ -360,7 +360,7 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
               [](const QQmlJSMetaProperty &x, const QQmlJSMetaProperty &y) {
                   return x.index() < y.index();
               });
-    for (const QQmlJSMetaProperty &p : qAsConst(properties)) {
+    for (const QQmlJSMetaProperty &p : std::as_const(properties)) {
         if (p.index() == -1) {
             recordError(type->sourceLocation(),
                         u"Internal error: property '%1' has incomplete information"_s.arg(

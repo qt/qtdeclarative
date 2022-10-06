@@ -81,7 +81,7 @@ void QSGOpenVGNodeVisitor::endVisit(QSGClipNode *)
         vgMask(0,VG_FILL_MASK, 0, 0, VG_MAXINT, VG_MAXINT);
         vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
         vgLoadIdentity();
-        for (auto path : qAsConst(m_clipStack)) {
+        for (auto path : std::as_const(m_clipStack)) {
             vgRenderToMask(path, VG_FILL_PATH, VG_INTERSECT_MASK);
         }
     }

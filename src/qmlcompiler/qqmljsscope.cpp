@@ -340,7 +340,7 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
         const QString outerTypeName = name.left(colonColon);
         const auto outerType = contextualTypes.constFind(outerTypeName);
         if (outerType != contextualTypes.constEnd()) {
-            for (const auto &innerType : qAsConst(outerType->scope->m_childScopes)) {
+            for (const auto &innerType : std::as_const(outerType->scope->m_childScopes)) {
                 if (innerType->m_internalName == name) {
                     if (usedTypes != nullptr)
                         usedTypes->insert(name);

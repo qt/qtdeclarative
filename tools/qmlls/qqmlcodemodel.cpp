@@ -114,7 +114,7 @@ int QQmlCodeModel::indexEvalProgress() const
     Q_ASSERT(!m_mutex.tryLock()); // should be called while locked
     const int dirCost = 10;
     int costToDo = 1;
-    for (const ToIndex &el : qAsConst(m_toIndex))
+    for (const ToIndex &el : std::as_const(m_toIndex))
         costToDo += dirCost * el.leftDepth;
     costToDo += m_indexInProgressCost;
     return m_indexDoneCost * 100 / (costToDo + m_indexDoneCost);

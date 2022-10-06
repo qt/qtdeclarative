@@ -84,7 +84,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     updateOffsets();
 
     QList<QQuickParticleData*> toAffect;
-    for (const QQuickParticleGroupData *gd : qAsConst(m_system->groupData)) {
+    for (const QQuickParticleGroupData *gd : std::as_const(m_system->groupData)) {
         if (activeGroup(gd->index)) {
             for (QQuickParticleData *d : gd->data) {
                 if (shouldAffect(d)) {
@@ -98,7 +98,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
         return;
 
     if (justAffected) {
-        for (const QQuickParticleData *d : qAsConst(toAffect)) {//Not postAffect to avoid saying the particle changed
+        for (const QQuickParticleData *d : std::as_const(toAffect)) {//Not postAffect to avoid saying the particle changed
             if (m_onceOff)
                 m_onceOffed << qMakePair(d->groupId, d->index);
             emit affected(d->curX(m_system), d->curY(m_system));
@@ -140,7 +140,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
             doAffect(dt);
     }
 
-    for (QQuickParticleData *d : qAsConst(toAffect))
+    for (QQuickParticleData *d : std::as_const(toAffect))
         if (d->update == 1.0)
             postAffect(d);
 }

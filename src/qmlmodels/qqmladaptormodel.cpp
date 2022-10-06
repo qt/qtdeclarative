@@ -129,7 +129,7 @@ public:
         for (const auto item : items)
             guardedItems.append(item);
 
-        for (const auto &item : qAsConst(guardedItems)) {
+        for (const auto &item : std::as_const(guardedItems)) {
             if (item.isNull())
                 continue;
 

@@ -4483,7 +4483,7 @@ void tst_qqmlecmascript::singletonType()
     if (!errorMessage.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
 
-    for (const QString &warning : qAsConst(warningMessages))
+    for (const QString &warning : std::as_const(warningMessages))
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
     QScopedPointer<QObject> object(component.create());
@@ -4840,7 +4840,7 @@ void tst_qqmlecmascript::importScripts()
         QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
 
     if (compilationShouldSucceed) {
-        for (const QString &warning : qAsConst(warningMessages))
+        for (const QString &warning : std::as_const(warningMessages))
             QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     }
 

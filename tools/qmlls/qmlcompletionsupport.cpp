@@ -473,7 +473,7 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
                     localSymbols.remove(it.key());
                     if (completeMethodCalls == FunctionCompletion::Declaration) {
                         QStringList parameters;
-                        for (const MethodParameter &pInfo : qAsConst(it->parameters)) {
+                        for (const MethodParameter &pInfo : std::as_const(it->parameters)) {
                             QStringList param;
                             if (!pInfo.typeName.isEmpty())
                                 param << pInfo.typeName;

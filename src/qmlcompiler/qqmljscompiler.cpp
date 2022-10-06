@@ -87,7 +87,7 @@ static void annotateListElements(QmlIR::Document *document)
 {
     QStringList listElementNames;
 
-    for (const QV4::CompiledData::Import *import : qAsConst(document->imports)) {
+    for (const QV4::CompiledData::Import *import : std::as_const(document->imports)) {
         const QString uri = document->stringAt(import->uriIndex);
         if (uri != QStringLiteral("QtQml.Models") && uri != QStringLiteral("QtQuick"))
             continue;
@@ -104,7 +104,7 @@ static void annotateListElements(QmlIR::Document *document)
     if (listElementNames.isEmpty())
         return;
 
-    for (QmlIR::Object *object : qAsConst(document->objects)) {
+    for (QmlIR::Object *object : std::as_const(document->objects)) {
         if (!listElementNames.contains(document->stringAt(object->inheritedTypeNameIndex)))
             continue;
         for (QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
@@ -118,7 +118,7 @@ static void annotateListElements(QmlIR::Document *document)
 static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc,
                                                     QQmlJSCompileError *error)
 {
-    for (QmlIR::Object *object: qAsConst(doc.objects)) {
+    for (QmlIR::Object *object: std::as_const(doc.objects)) {
         for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
             if (binding->type() != QV4::CompiledData::Binding::Type_Script)
                 continue;
@@ -227,7 +227,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
             aotCompiler->setDocument(&v4CodeGen, &irDocument);
 
         QHash<QmlIR::Object *, QmlIR::Object *> effectiveScopes;
-        for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
+        for (QmlIR::Object *object: std::as_const(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0 && object->bindingCount() == 0)
                 continue;
 

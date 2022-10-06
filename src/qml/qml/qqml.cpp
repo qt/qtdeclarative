@@ -592,7 +592,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         auto revisions = prepareRevisions(type.instanceMetaObject, added) + furtherRevisions;
         uniqueRevisions(&revisions, type.version, added);
 
-        for (QTypeRevision revision : qAsConst(revisions)) {
+        for (QTypeRevision revision : std::as_const(revisions)) {
             if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
                 break;
 
@@ -635,7 +635,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         revisions.append(added);
         uniqueRevisions(&revisions, type.version, added);
 
-        for (QTypeRevision revision : qAsConst(revisions)) {
+        for (QTypeRevision revision : std::as_const(revisions)) {
             if (revision < added)
                 continue;
             if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())

@@ -469,32 +469,32 @@ void tst_QQmlProfilerService::cleanup()
     if (m_client && QTest::currentTestFailed()) {
         qDebug() << "QML Messages:" << m_client->qmlMessages.size();
         int i = 0;
-        for (const QQmlProfilerEvent &data : qAsConst(m_client->qmlMessages))
+        for (const QQmlProfilerEvent &data : std::as_const(m_client->qmlMessages))
             log(data, i++);
 
         qDebug() << " ";
         qDebug() << "JavaScript Messages:" << m_client->javascriptMessages.size();
         i = 0;
 
-        for (const QQmlProfilerEvent &data : qAsConst(m_client->javascriptMessages))
+        for (const QQmlProfilerEvent &data : std::as_const(m_client->javascriptMessages))
             log(data, i++);
 
         qDebug() << " ";
         qDebug() << "Asynchronous Messages:" << m_client->asynchronousMessages.size();
         i = 0;
-        for (const QQmlProfilerEvent &data : qAsConst(m_client->asynchronousMessages))
+        for (const QQmlProfilerEvent &data : std::as_const(m_client->asynchronousMessages))
             log(data, i++);
 
         qDebug() << " ";
         qDebug() << "Pixmap Cache Messages:" << m_client->pixmapMessages.size();
         i = 0;
-        for (const QQmlProfilerEvent &data : qAsConst(m_client->pixmapMessages))
+        for (const QQmlProfilerEvent &data : std::as_const(m_client->pixmapMessages))
             log(data, i++);
 
         qDebug() << " ";
         qDebug() << "Javascript Heap Messages:" << m_client->jsHeapMessages.size();
         i = 0;
-        for (const QQmlProfilerEvent &data : qAsConst(m_client->jsHeapMessages))
+        for (const QQmlProfilerEvent &data : std::as_const(m_client->jsHeapMessages))
             log(data, i++);
 
         qDebug() << " ";

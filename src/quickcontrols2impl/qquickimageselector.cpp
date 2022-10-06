@@ -256,7 +256,7 @@ void QQuickImageSelector::setUrl(const QUrl &url)
 bool QQuickImageSelector::updateActiveStates()
 {
     QStringList active;
-    for (const QVariant &v : qAsConst(m_allStates)) {
+    for (const QVariant &v : std::as_const(m_allStates)) {
         const QVariantMap state = v.toMap();
         if (state.isEmpty())
             continue;

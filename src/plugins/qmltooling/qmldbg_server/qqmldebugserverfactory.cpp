@@ -558,12 +558,12 @@ void QQmlDebugServerImpl::addEngine(QJSEngine *engine)
     QMutexLocker locker(&m_helloMutex);
     Q_ASSERT(!m_engineConditions.contains(engine));
 
-    for (QQmlDebugService *service : qAsConst(m_plugins))
+    for (QQmlDebugService *service : std::as_const(m_plugins))
         service->engineAboutToBeAdded(engine);
 
     m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.size());
 
-    for (QQmlDebugService *service : qAsConst(m_plugins))
+    for (QQmlDebugService *service : std::as_const(m_plugins))
         service->engineAdded(engine);
 }
 
@@ -575,12 +575,12 @@ void QQmlDebugServerImpl::removeEngine(QJSEngine *engine)
     QMutexLocker locker(&m_helloMutex);
     Q_ASSERT(m_engineConditions.contains(engine));
 
-    for (QQmlDebugService *service : qAsConst(m_plugins))
+    for (QQmlDebugService *service : std::as_const(m_plugins))
         service->engineAboutToBeRemoved(engine);
 
     m_engineConditions[engine].waitForServices(&m_helloMutex, m_plugins.size());
 
-    for (QQmlDebugService *service : qAsConst(m_plugins))
+    for (QQmlDebugService *service : std::as_const(m_plugins))
         service->engineRemoved(engine);
 
     m_engineConditions.remove(engine);

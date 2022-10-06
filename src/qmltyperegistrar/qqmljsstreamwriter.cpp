@@ -161,7 +161,7 @@ void QQmlJSStreamWriter::flushPotentialLinesWithNewlines()
 {
     if (m_maybeOneline)
         m_stream->write("\n");
-    for (const QByteArray &line : qAsConst(m_pendingLines)) {
+    for (const QByteArray &line : std::as_const(m_pendingLines)) {
         writeIndent();
         m_stream->write(line);
         m_stream->write("\n");

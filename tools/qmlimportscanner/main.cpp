@@ -281,7 +281,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
     QString ver = version;
     QPair<QString, QString> candidate;
     while (true) {
-        for (const QString &qmlImportPath : qAsConst(g_qmlImportPaths)) {
+        for (const QString &qmlImportPath : std::as_const(g_qmlImportPaths)) {
             // Search for the most specific version first, and search
             // also for the version in parent modules. For example:
             // - qml/QtQml/Models.2.0

@@ -561,7 +561,7 @@ void QQuickStackView::push(QQmlV4Function *args)
 
     if (!errors.isEmpty() || elements.isEmpty()) {
         if (!errors.isEmpty()) {
-            for (const QString &error : qAsConst(errors))
+            for (const QString &error : std::as_const(errors))
                 d->warn(error);
         } else {
             d->warn(QStringLiteral("nothing to push"));
@@ -828,7 +828,7 @@ void QQuickStackView::replace(QQmlV4Function *args)
     QList<QQuickStackElement *> elements = d->parseElements(target ? 1 : 0, args, &errors);
     if (!errors.isEmpty() || elements.isEmpty()) {
         if (!errors.isEmpty()) {
-            for (const QString &error : qAsConst(errors))
+            for (const QString &error : std::as_const(errors))
                 d->warn(error);
         } else {
             d->warn(QStringLiteral("nothing to push"));
@@ -1135,7 +1135,7 @@ void QQuickStackView::geometryChange(const QRectF &newGeometry, const QRectF &ol
     QQuickControl::geometryChange(newGeometry, oldGeometry);
 
     Q_D(QQuickStackView);
-    for (QQuickStackElement *element : qAsConst(d->elements)) {
+    for (QQuickStackElement *element : std::as_const(d->elements)) {
         if (element->item) {
             if (!element->widthValid)
                 element->item->setWidth(newGeometry.width());

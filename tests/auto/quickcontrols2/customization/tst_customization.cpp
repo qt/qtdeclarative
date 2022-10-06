@@ -293,7 +293,7 @@ void tst_customization::creation()
     QCOMPARE(control->objectName(), controlName);
     QVERIFY2(qt_createdQObjects()->removeOne(controlName), qPrintable(controlName + " was not created as expected"));
 
-    for (QString delegate : qAsConst(delegates)) {
+    for (QString delegate : std::as_const(delegates)) {
         QStringList properties = delegate.split(".", Qt::SkipEmptyParts);
 
         // <control>-<delegate>-<style>(-<override>)
@@ -390,7 +390,7 @@ void tst_customization::override()
     QCOMPARE(control->objectName(), controlName);
     QVERIFY2(qt_createdQObjects()->removeOne(controlName), qPrintable(controlName + " was not created as expected"));
 
-    for (QString delegate : qAsConst(delegates)) {
+    for (QString delegate : std::as_const(delegates)) {
         QStringList properties = delegate.split(".", Qt::SkipEmptyParts);
 
         // <control>-<delegate>-<style>(-override)
@@ -420,7 +420,7 @@ void tst_customization::override()
 
     if (!nonDeferred.isEmpty()) {
         // There were items for which deferred execution was not possible.
-        for (QString delegateName : qAsConst(delegates)) {
+        for (QString delegateName : std::as_const(delegates)) {
             if (!delegateName.contains("-"))
                 delegateName.append("-" + nonDeferred);
             delegateName.prepend(type.toLower() + "-");

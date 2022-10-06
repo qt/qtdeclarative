@@ -31,7 +31,7 @@ void tst_qquicktrailemitter::test_basic()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -48,7 +48,7 @@ void tst_qquicktrailemitter::test_basic()
     }
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[1]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[1]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[1]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 

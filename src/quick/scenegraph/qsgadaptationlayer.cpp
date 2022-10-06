@@ -180,7 +180,7 @@ void QSGDistanceFieldGlyphCache::update()
     storeGlyphs(distanceFields);
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
-    for (Texture texture : qAsConst(m_textures))
+    for (Texture texture : std::as_const(m_textures))
         saveTexture(texture.texture, m_referenceFont.familyName());
 #endif
 

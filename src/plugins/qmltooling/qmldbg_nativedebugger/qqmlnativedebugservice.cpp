@@ -260,7 +260,7 @@ void NativeDebugger::signalEmitted(const QString &signal)
     //Normalize to Lower case.
     QString signalName = signal.left(signal.indexOf(QLatin1Char('('))).toLower();
 
-    for (const QString &signal : qAsConst(breakOnSignals)) {
+    for (const QString &signal : std::as_const(breakOnSignals)) {
         if (signal == signalName) {
             // TODO: pause debugger
             break;
@@ -710,7 +710,7 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 void QQmlNativeDebugServiceImpl::stateAboutToBeChanged(QQmlDebugService::State state)
 {
     if (state == Enabled) {
-        for (NativeDebugger *debugger : qAsConst(m_debuggers)) {
+        for (NativeDebugger *debugger : std::as_const(m_debuggers)) {
             QV4::ExecutionEngine *engine = debugger->engine();
             if (!engine->debugger())
                 engine->setDebugger(debugger);
@@ -734,7 +734,7 @@ void QQmlNativeDebugServiceImpl::messageReceived(const QByteArray &message)
     } else if (cmd == QLatin1String("echo")) {
         response.insert(QStringLiteral("result"), arguments);
     } else {
-        for (NativeDebugger *debugger : qAsConst(m_debuggers))
+        for (NativeDebugger *debugger : std::as_const(m_debuggers))
             if (debugger)
                 debugger->handleCommand(&response, cmd, arguments);
     }

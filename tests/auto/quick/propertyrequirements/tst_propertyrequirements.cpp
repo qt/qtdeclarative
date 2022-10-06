@@ -160,7 +160,7 @@ void tst_PropertyRequirements::testQmlType(TestDepth testDepth, const QQmlType &
         inheritanceHierarchy.append(qmlType.metaObject());
     }
 
-    for (const QMetaObject *metaClass : qAsConst(inheritanceHierarchy)) {
+    for (const QMetaObject *metaClass : std::as_const(inheritanceHierarchy)) {
         for (int idx = metaClass->propertyOffset(); idx < metaClass->propertyCount(); ++idx) {
             const QMetaProperty property = metaClass->property(idx);
 

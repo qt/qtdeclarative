@@ -109,7 +109,7 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQml
 QQuickStackElement *QQuickStackViewPrivate::findElement(QQuickItem *item) const
 {
     if (item) {
-        for (QQuickStackElement *e : qAsConst(elements)) {
+        for (QQuickStackElement *e : std::as_const(elements)) {
             if (e->item == item)
                 return e;
         }
@@ -287,7 +287,7 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
         QList<QQuickStackElement*> removedElements = removed;
         removed.clear();
 
-        for (QQuickStackElement *removedElement : qAsConst(removedElements)) {
+        for (QQuickStackElement *removedElement : std::as_const(removedElements)) {
             // If an element with the same item is found in the active stack list,
             // forget about the item so that we don't hide it.
             if (removedElement->item && findElement(removedElement->item)) {

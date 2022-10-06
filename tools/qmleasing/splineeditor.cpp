@@ -265,7 +265,7 @@ QHash<QString, QEasingCurve> SplineEditor::presets() const
 QString SplineEditor::generateCode()
 {
     QString s = QLatin1String("[");
-    for (const QPointF &point : qAsConst(m_controlPoints)) {
+    for (const QPointF &point : std::as_const(m_controlPoints)) {
         s += QString::number(point.x(), 'g', 2) + QLatin1Char(',')
              + QString::number(point.y(), 'g', 3) + QLatin1Char(',');
     }

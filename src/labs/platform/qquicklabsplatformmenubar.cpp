@@ -84,7 +84,7 @@ QQuickLabsPlatformMenuBar::QQuickLabsPlatformMenuBar(QObject *parent)
 
 QQuickLabsPlatformMenuBar::~QQuickLabsPlatformMenuBar()
 {
-    for (QQuickLabsPlatformMenu *menu : qAsConst(m_menus))
+    for (QQuickLabsPlatformMenu *menu : std::as_const(m_menus))
         menu->setMenuBar(nullptr);
     delete m_handle;
     m_handle = nullptr;
@@ -203,7 +203,7 @@ void QQuickLabsPlatformMenuBar::clear()
     if (m_menus.isEmpty())
         return;
 
-    for (QQuickLabsPlatformMenu *menu : qAsConst(m_menus)) {
+    for (QQuickLabsPlatformMenu *menu : std::as_const(m_menus)) {
         m_data.removeOne(menu);
         if (m_handle)
             m_handle->removeMenu(menu->handle());
@@ -222,7 +222,7 @@ void QQuickLabsPlatformMenuBar::classBegin()
 void QQuickLabsPlatformMenuBar::componentComplete()
 {
     m_complete = true;
-    for (QQuickLabsPlatformMenu *menu : qAsConst(m_menus))
+    for (QQuickLabsPlatformMenu *menu : std::as_const(m_menus))
         menu->sync();
     if (!m_window)
         setWindow(findWindow());

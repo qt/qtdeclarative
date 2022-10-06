@@ -620,7 +620,7 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
         // literal bindings must already be added at this point.
         QSet<QPair<QQmlJSScope::Ptr, QString>> visited;
         for (const PendingPropertyObjectBinding &objectBinding :
-             qAsConst(m_pendingPropertyObjectBindings)) {
+             std::as_const(m_pendingPropertyObjectBindings)) {
             // unique because it's per-scope and per-property
             const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
             if (visited.contains(uniqueBindingId))
@@ -642,7 +642,7 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
     QSet<QPair<QQmlJSScope::Ptr, QString>> foundValueSources;
 
     for (const PendingPropertyObjectBinding &objectBinding :
-         qAsConst(m_pendingPropertyObjectBindings)) {
+         std::as_const(m_pendingPropertyObjectBindings)) {
         const QString propertyName = objectBinding.name;
         QQmlJSScope::ConstPtr childScope = objectBinding.childScope;
 
@@ -1044,7 +1044,7 @@ void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &origina
     for (QQmlJSScope::ConstPtr scope = originalScope; scope;) {
         if (scopes.contains(scope)) {
             QString inheritenceCycle;
-            for (const auto &seen : qAsConst(scopes)) {
+            for (const auto &seen : std::as_const(scopes)) {
                 inheritenceCycle.append(seen->baseTypeName());
                 inheritenceCycle.append(QLatin1String(" -> "));
             }

@@ -118,7 +118,7 @@ void QQuickDesignerSupportItems::tweakObjects(QObject *object)
 {
     QObjectList objectList;
     allSubObjects(object, objectList);
-    for (QObject* childObject : qAsConst(objectList)) {
+    for (QObject* childObject : std::as_const(objectList)) {
         stopAnimation(childObject);
         makeLoaderSynchronous(childObject);
         if (fixResourcePathsForObjectCallBack)

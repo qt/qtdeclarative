@@ -151,14 +151,14 @@ void QQuickActionPrivate::setShortcut(const QVariant &var)
         return;
 
     defaultShortcutEntry->ungrab();
-    for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries))
+    for (QQuickActionPrivate::ShortcutEntry *entry : std::as_const(shortcutEntries))
         entry->ungrab();
 
     vshortcut = var;
     keySequence = variantToKeySequence(var);
 
     defaultShortcutEntry->grab(keySequence, enabled);
-    for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries))
+    for (QQuickActionPrivate::ShortcutEntry *entry : std::as_const(shortcutEntries))
         entry->grab(keySequence, enabled);
 
     emit q->shortcutChanged(keySequence);
@@ -175,7 +175,7 @@ void QQuickActionPrivate::setEnabled(bool enable)
 
 #if QT_CONFIG(shortcut)
     defaultShortcutEntry->setEnabled(enable);
-    for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries))
+    for (QQuickActionPrivate::ShortcutEntry *entry : std::as_const(shortcutEntries))
         entry->setEnabled(enable);
 #endif
 
@@ -288,7 +288,7 @@ QQuickActionPrivate::ShortcutEntry *QQuickActionPrivate::findShortcutEntry(QObje
 void QQuickActionPrivate::updateDefaultShortcutEntry()
 {
     bool hasActiveShortcutEntries = false;
-    for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries)) {
+    for (QQuickActionPrivate::ShortcutEntry *entry : std::as_const(shortcutEntries)) {
         if (entry->shortcutId()) {
             hasActiveShortcutEntries = true;
             break;
@@ -318,7 +318,7 @@ QQuickAction::~QQuickAction()
         d->group->removeAction(this);
 
 #if QT_CONFIG(shortcut)
-    for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(d->shortcutEntries))
+    for (QQuickActionPrivate::ShortcutEntry *entry : std::as_const(d->shortcutEntries))
         d->unwatchItem(qobject_cast<QQuickItem *>(entry->target()));
 
     qDeleteAll(d->shortcutEntries);

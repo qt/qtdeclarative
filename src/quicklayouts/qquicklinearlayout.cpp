@@ -471,7 +471,7 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     d->engine.setGeometries(QRectF(QPointF(0,0), size), d->styleInfo);
     d->m_rearranging = false;
 
-    for (QQuickItem *invalid : qAsConst(d->m_invalidateAfterRearrange))
+    for (QQuickItem *invalid : std::as_const(d->m_invalidateAfterRearrange))
         invalidate(invalid);
     d->m_invalidateAfterRearrange.clear();
 }

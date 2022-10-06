@@ -548,15 +548,15 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
 
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a separate QQuickView (for test isolation).
-    for (const QString &file : qAsConst(files)) {
+    for (const QString &file : std::as_const(files)) {
         const QFileInfo fi(file);
         if (!fi.exists())
             continue;
 
         QQmlEngine engine;
-        for (const QString &path : qAsConst(imports))
+        for (const QString &path : std::as_const(imports))
             engine.addImportPath(path);
-        for (const QString &path : qAsConst(pluginPaths))
+        for (const QString &path : std::as_const(pluginPaths))
             engine.addPluginPath(path);
 
         if (!fileSelectors.isEmpty()) {
@@ -661,7 +661,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     // Check that all test functions passed on the command line were found
     if (!commandLineTestFunctions.isEmpty()) {
         qWarning() << "Could not find the following test functions:";
-        for (const QString &functionName : qAsConst(commandLineTestFunctions))
+        for (const QString &functionName : std::as_const(commandLineTestFunctions))
             qWarning("    %s()", qUtf8Printable(functionName));
         return commandLineTestFunctions.size();
     }

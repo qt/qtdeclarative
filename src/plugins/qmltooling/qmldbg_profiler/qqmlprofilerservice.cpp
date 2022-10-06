@@ -67,8 +67,8 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
     m_startTimes.insert(0, profiler);
     if (dataComplete) {
         QList<QJSEngine *> enginesToRelease;
-        for (QJSEngine *engine : qAsConst(m_stoppingEngines)) {
-            const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+        for (QJSEngine *engine : std::as_const(m_stoppingEngines)) {
+            const auto range = std::as_const(m_engineProfilers).equal_range(engine);
             const auto startTimesEnd = m_startTimes.cend();
             for (auto it = range.first; it != range.second; ++it) {
                 if (std::find(m_startTimes.cbegin(), startTimesEnd, *it) != startTimesEnd) {
@@ -78,7 +78,7 @@ void QQmlProfilerServiceImpl::dataReady(QQmlAbstractProfilerAdapter *profiler)
             }
         }
         sendMessages();
-        for (QJSEngine *engine : qAsConst(enginesToRelease)) {
+        for (QJSEngine *engine : std::as_const(enginesToRelease)) {
             m_stoppingEngines.removeOne(engine);
             emit detachedFromEngine(engine);
         }
@@ -114,7 +114,7 @@ void QQmlProfilerServiceImpl::engineAdded(QJSEngine *engine)
     if (m_globalEnabled)
         startProfiling(engine, m_globalFeatures);
 
-    const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+    const auto range = std::as_const(m_engineProfilers).equal_range(engine);
     for (auto it = range.first; it != range.second; ++it)
         (*it)->stopWaiting();
 }
@@ -126,7 +126,7 @@ void QQmlProfilerServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 
     QMutexLocker lock(&m_configMutex);
     bool isRunning = false;
-    const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+    const auto range = std::as_const(m_engineProfilers).equal_range(engine);
     for (auto it = range.first; it != range.second; ++it) {
         QQmlAbstractProfilerAdapter *profiler = *it;
         if (profiler->isRunning())
@@ -147,7 +147,7 @@ void QQmlProfilerServiceImpl::engineRemoved(QJSEngine *engine)
                "QML profilers have to be removed from the engine thread");
 
     QMutexLocker lock(&m_configMutex);
-    const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+    const auto range = std::as_const(m_engineProfilers).equal_range(engine);
     for (auto it = range.first; it != range.second; ++it) {
         QQmlAbstractProfilerAdapter *profiler = *it;
         removeProfilerFromStartTimes(profiler);
@@ -172,7 +172,7 @@ void QQmlProfilerServiceImpl::addGlobalProfiler(QQmlAbstractProfilerAdapter *pro
     // Global profilers are started whenever any engine profiler is started and stopped when
     // all engine profilers are stopped.
     quint64 features = 0;
-    for (QQmlAbstractProfilerAdapter *engineProfiler : qAsConst(m_engineProfilers))
+    for (QQmlAbstractProfilerAdapter *engineProfiler : std::as_const(m_engineProfilers))
         features |= engineProfiler->features();
 
     if (features != 0)
@@ -220,7 +220,7 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
     d << m_timer.nsecsElapsed() << static_cast<qint32>(Event) << static_cast<qint32>(StartTrace);
     bool startedAny = false;
     if (engine != nullptr) {
-        const auto range = qAsConst(m_engineProfilers).equal_range(engine);
+        const auto range = std::as_const(m_engineProfilers).equal_range(engine);
         for (auto it = range.first; it != range.second; ++it) {
             QQmlAbstractProfilerAdapter *profiler = *it;
             if (!profiler->isRunning()) {
@@ -243,12 +243,12 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
                 startedAny = true;
             }
         }
-        for (QJSEngine *profiledEngine : qAsConst(engines))
+        for (QJSEngine *profiledEngine : std::as_const(engines))
             d << idForObject(profiledEngine);
     }
 
     if (startedAny) {
-        for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_globalProfilers)) {
+        for (QQmlAbstractProfilerAdapter *profiler : std::as_const(m_globalProfilers)) {
             if (!profiler->isRunning())
                 profiler->startProfiling(features);
         }
@@ -291,7 +291,7 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     if (stopping.isEmpty())
         return;
 
-    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_globalProfilers)) {
+    for (QQmlAbstractProfilerAdapter *profiler : std::as_const(m_globalProfilers)) {
         if (!profiler->isRunning())
             continue;
         m_startTimes.insert(-1, profiler);
@@ -305,10 +305,10 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     emit stopFlushTimer();
     m_waitingForStop = true;
 
-    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(reporting))
+    for (QQmlAbstractProfilerAdapter *profiler : std::as_const(reporting))
         profiler->reportData();
 
-    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(stopping))
+    for (QQmlAbstractProfilerAdapter *profiler : std::as_const(stopping))
         profiler->stopProfiling();
 }
 
@@ -325,7 +325,7 @@ void QQmlProfilerServiceImpl::sendMessages()
                  << static_cast<qint32>(EndTrace);
 
         QSet<QJSEngine *> seen;
-        for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_startTimes)) {
+        for (QQmlAbstractProfilerAdapter *profiler : std::as_const(m_startTimes)) {
             for (QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
                     i != m_engineProfilers.end(); ++i) {
                 if (i.value() == profiler && !seen.contains(i.key())) {
@@ -352,7 +352,7 @@ void QQmlProfilerServiceImpl::sendMessages()
     }
 
     bool stillRunning = false;
-    for (const QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
+    for (const QQmlAbstractProfilerAdapter *profiler : std::as_const(m_engineProfilers)) {
         if (profiler->isRunning()) {
             stillRunning = true;
             break;
@@ -446,21 +446,21 @@ void QQmlProfilerServiceImpl::flush()
     QMutexLocker lock(&m_configMutex);
     QList<QQmlAbstractProfilerAdapter *> reporting;
 
-    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
+    for (QQmlAbstractProfilerAdapter *profiler : std::as_const(m_engineProfilers)) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
             reporting.append(profiler);
         }
     }
 
-    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_globalProfilers)) {
+    for (QQmlAbstractProfilerAdapter *profiler : std::as_const(m_globalProfilers)) {
         if (profiler->isRunning()) {
             m_startTimes.insert(-1, profiler);
             reporting.append(profiler);
         }
     }
 
-    for (QQmlAbstractProfilerAdapter *profiler : qAsConst(reporting))
+    for (QQmlAbstractProfilerAdapter *profiler : std::as_const(reporting))
         profiler->reportData();
 }
 

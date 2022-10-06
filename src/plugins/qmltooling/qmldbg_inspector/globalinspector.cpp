@@ -192,7 +192,7 @@ void GlobalInspector::removeWindow(QQuickWindow *window)
 
 void GlobalInspector::setParentWindow(QQuickWindow *window, QWindow *parentWindow)
 {
-    for (QmlJSDebugger::QQuickWindowInspector *inspector : qAsConst(m_windowInspectors)) {
+    for (QmlJSDebugger::QQuickWindowInspector *inspector : std::as_const(m_windowInspectors)) {
         if (inspector->quickWindow() == window)
             inspector->setParentWindow(parentWindow);
     }
@@ -222,7 +222,7 @@ bool GlobalInspector::syncSelectedItems(const QList<QQuickItem *> &items)
         selectionChanged = true;
         connect(item, &QObject::destroyed, this, &GlobalInspector::removeFromSelectedItems);
         m_selectedItems.append(item);
-        for (QQuickWindowInspector *inspector : qAsConst(m_windowInspectors)) {
+        for (QQuickWindowInspector *inspector : std::as_const(m_windowInspectors)) {
             if (inspector->isEnabled() && inspector->quickWindow() == item->window()) {
                 m_highlightItems.insert(item, new SelectionHighlight(titleForItem(item), item,
                                                                      inspector->overlay()));
@@ -284,12 +284,12 @@ void GlobalInspector::processMessage(const QByteArray &message)
         ds >> requestId >> command;
 
         if (command == ENABLE) {
-            for (QQuickWindowInspector *inspector : qAsConst(m_windowInspectors))
+            for (QQuickWindowInspector *inspector : std::as_const(m_windowInspectors))
                 inspector->setEnabled(true);
             success = !m_windowInspectors.isEmpty();
         } else if (command == DISABLE) {
             setSelectedItems(QList<QQuickItem*>());
-            for (QQuickWindowInspector *inspector : qAsConst(m_windowInspectors))
+            for (QQuickWindowInspector *inspector : std::as_const(m_windowInspectors))
                 inspector->setEnabled(false);
             success = !m_windowInspectors.isEmpty();
         } else if (command == SELECT) {
@@ -297,7 +297,7 @@ void GlobalInspector::processMessage(const QByteArray &message)
             ds >> debugIds;
 
             QList<QQuickItem *> selectedObjects;
-            for (int debugId : qAsConst(debugIds)) {
+            for (int debugId : std::as_const(debugIds)) {
                 if (QQuickItem *obj =
                         qobject_cast<QQuickItem *>(QQmlDebugService::objectForId(debugId)))
                     selectedObjects << obj;
@@ -311,7 +311,7 @@ void GlobalInspector::processMessage(const QByteArray &message)
         } else if (command == SHOW_APP_ON_TOP) {
             bool showOnTop;
             ds >> showOnTop;
-            for (QmlJSDebugger::QQuickWindowInspector *inspector : qAsConst(m_windowInspectors))
+            for (QmlJSDebugger::QQuickWindowInspector *inspector : std::as_const(m_windowInspectors))
                 inspector->setShowAppOnTop(showOnTop);
             success = !m_windowInspectors.isEmpty();
         } else if (command == CREATE_OBJECT) {

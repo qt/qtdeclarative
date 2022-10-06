@@ -210,10 +210,10 @@ void QQuickPathViewPrivate::clear()
         currentItem = nullptr;
     }
 
-    for (QQuickItem *p : qAsConst(items))
+    for (QQuickItem *p : std::as_const(items))
         releaseItem(p);
 
-    for (QQuickItem *p : qAsConst(itemCache))
+    for (QQuickItem *p : std::as_const(itemCache))
         releaseItem(p);
 
     if (requestedIndex >= 0) {
@@ -386,7 +386,7 @@ void QQuickPathViewPrivate::setHighlightPosition(qreal pos)
 void QQuickPathView::pathUpdated()
 {
     Q_D(QQuickPathView);
-    for (QQuickItem *item : qAsConst(d->items)) {
+    for (QQuickItem *item : std::as_const(d->items)) {
         if (QQuickPathViewAttached *att = d->attached(item))
             att->m_percent = -1;
     }
@@ -1989,7 +1989,7 @@ void QQuickPathView::refill()
                 endPos = -1;
                 startPos = 2;
 
-                for (QQuickItem * item : qAsConst(d->items)) {
+                for (QQuickItem * item : std::as_const(d->items)) {
                     int idx = d->model->indexOf(item, nullptr);
                     qreal curPos = d->positionOfIndex(idx);
                     if (curPos > endPos) {
@@ -2149,7 +2149,7 @@ void QQuickPathView::refill()
         if (QQuickPathViewAttached *att = d->attached(d->highlightItem))
             att->setOnPath(currentVisible);
     }
-    for (QQuickItem *item : qAsConst(d->itemCache))
+    for (QQuickItem *item : std::as_const(d->itemCache))
         d->releaseItem(item);
     d->itemCache.clear();
 
@@ -2235,7 +2235,7 @@ void QQuickPathView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     d->items.clear();
 
     if (!d->modelCount) {
-        for (QQuickItem * item : qAsConst(d->itemCache))
+        for (QQuickItem * item : std::as_const(d->itemCache))
             d->releaseItem(item);
         d->itemCache.clear();
         d->offset = 0;
@@ -2305,7 +2305,7 @@ void QQuickPathViewPrivate::createCurrentItem()
         return;
 
     bool inItems = false;
-    for (QQuickItem *item : qAsConst(items)) {
+    for (QQuickItem *item : std::as_const(items)) {
         if (model->indexOf(item, nullptr) == currentIndex) {
             inItems = true;
             break;

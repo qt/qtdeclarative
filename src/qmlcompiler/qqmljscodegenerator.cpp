@@ -204,7 +204,7 @@ QT_WARNING_POP
 
     result.code += m_body;
 
-    for (const QQmlJSRegisterContent &argType : qAsConst(function->argumentTypes)) {
+    for (const QQmlJSRegisterContent &argType : std::as_const(function->argumentTypes)) {
         if (argType.isValid()) {
             result.argumentTypes.append(
                         m_typeResolver->originalType(argType.storedType())

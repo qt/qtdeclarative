@@ -236,7 +236,7 @@ public Q_SLOTS:
         if (o) {
             checkForWindow(o);
             if (conf && qae)
-                for (PartialScene *ps : qAsConst(conf->completers))
+                for (PartialScene *ps : std::as_const(conf->completers))
                     if (o->inherits(ps->itemType().toUtf8().constData()))
                         contain(o, ps->container());
         }
@@ -612,7 +612,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    for (const QString &path : qAsConst(files)) {
+    for (const QString &path : std::as_const(files)) {
         QUrl url = QUrl::fromUserInput(path, QDir::currentPath(), QUrl::AssumeLocalFile);
         if (verboseMode)
             printf("qml: loading %s\n", qPrintable(url.toString()));

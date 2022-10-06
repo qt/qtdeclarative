@@ -73,7 +73,7 @@ void QV4DebuggerAgent::addDebugger(QV4Debugger *debugger)
 
     debugger->setBreakOnThrow(m_breakOnThrow);
 
-    for (const BreakPoint &breakPoint : qAsConst(m_breakPoints))
+    for (const BreakPoint &breakPoint : std::as_const(m_breakPoints))
         if (breakPoint.enabled)
             debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
 
@@ -120,7 +120,7 @@ void QV4DebuggerAgent::resumeAll() const
 int QV4DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber, bool enabled, const QString &condition)
 {
     if (enabled) {
-        for (QV4Debugger *debugger : qAsConst(m_debuggers))
+        for (QV4Debugger *debugger : std::as_const(m_debuggers))
             debugger->addBreakPoint(fileName, lineNumber, condition);
     }
 
@@ -138,7 +138,7 @@ void QV4DebuggerAgent::removeBreakPoint(int id)
     m_breakPoints.remove(id);
 
     if (breakPoint.enabled)
-        for (QV4Debugger *debugger : qAsConst(m_debuggers))
+        for (QV4Debugger *debugger : std::as_const(m_debuggers))
             debugger->removeBreakPoint(breakPoint.fileName, breakPoint.lineNr);
 }
 
@@ -155,7 +155,7 @@ void QV4DebuggerAgent::enableBreakPoint(int id, bool onoff)
         return;
     breakPoint.enabled = onoff;
 
-    for (QV4Debugger *debugger : qAsConst(m_debuggers)) {
+    for (QV4Debugger *debugger : std::as_const(m_debuggers)) {
         if (onoff)
             debugger->addBreakPoint(breakPoint.fileName, breakPoint.lineNr, breakPoint.condition);
         else
@@ -178,14 +178,14 @@ void QV4DebuggerAgent::setBreakOnThrow(bool onoff)
 {
     if (onoff != m_breakOnThrow) {
         m_breakOnThrow = onoff;
-        for (QV4Debugger *debugger : qAsConst(m_debuggers))
+        for (QV4Debugger *debugger : std::as_const(m_debuggers))
             debugger->setBreakOnThrow(onoff);
     }
 }
 
 void QV4DebuggerAgent::clearAllPauseRequests()
 {
-    for (QV4Debugger *debugger : qAsConst(m_debuggers))
+    for (QV4Debugger *debugger : std::as_const(m_debuggers))
         debugger->clearPauseRequest();
 }
 

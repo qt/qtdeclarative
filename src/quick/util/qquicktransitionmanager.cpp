@@ -59,7 +59,7 @@ void QQuickTransitionManager::complete()
 
     // Explicitly take a copy in case the write action triggers a script that modifies the list.
     QQuickTransitionManagerPrivate::SimpleActionList completeListCopy = d->completeList;
-    for (const QQuickSimpleAction &action : qAsConst(completeListCopy))
+    for (const QQuickSimpleAction &action : std::as_const(completeListCopy))
         action.property().write(action.value());
 
     d->completeList.clear();
@@ -72,7 +72,7 @@ void QQuickTransitionManager::complete()
 
 void QQuickTransitionManagerPrivate::applyBindings()
 {
-    for (const QQuickStateAction &action : qAsConst(bindingsList)) {
+    for (const QQuickStateAction &action : std::as_const(bindingsList)) {
         if (auto binding = action.toBinding; binding) {
             binding.installOn(action.property, QQmlAnyBinding::RespectInterceptors);
         } else if (action.event) {
@@ -101,7 +101,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
     QQuickStateOperation::ActionList applyList = list;
 
     // Determine which actions are binding changes and disable any current bindings
-    for (const QQuickStateAction &action : qAsConst(applyList)) {
+    for (const QQuickStateAction &action : std::as_const(applyList)) {
         if (action.toBinding)
             d->bindingsList << action;
         if (action.fromBinding) {
@@ -125,7 +125,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
     if (transition && !d->bindingsList.isEmpty()) {
 
         // Apply all the property and binding changes
-        for (const QQuickStateAction &action : qAsConst(applyList)) {
+        for (const QQuickStateAction &action : std::as_const(applyList)) {
             if (auto binding = action.toBinding; binding) {
                 binding.installOn(action.property);
             } else if (!action.event) {
@@ -150,7 +150,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
         }
 
         // Revert back to the original values
-        for (const QQuickStateAction &action : qAsConst(applyList)) {
+        for (const QQuickStateAction &action : std::as_const(applyList)) {
             if (action.event) {
                 if (action.event->isReversable()) {
                     action.event->clearBindings();
@@ -198,7 +198,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
     // be applied immediately.  We skip applying bindings, as they are all
     // applied at the end in applyBindings() to avoid any nastiness mid
     // transition
-    for (const QQuickStateAction &action : qAsConst(applyList)) {
+    for (const QQuickStateAction &action : std::as_const(applyList)) {
         if (action.event && !action.event->changesBindings()) {
             if (action.event->isReversable() && action.reverseEvent)
                 action.event->reverse();
@@ -209,7 +209,7 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
         }
     }
     if (lcStates().isDebugEnabled()) {
-        for (const QQuickStateAction &action : qAsConst(applyList)) {
+        for (const QQuickStateAction &action : std::as_const(applyList)) {
             if (action.event)
                 qCDebug(lcStates) << "no transition for event:" << action.event->type();
             else
@@ -228,7 +228,7 @@ void QQuickTransitionManager::cancel()
     if (d->transitionInstance && d->transitionInstance->isRunning())
         RETURN_IF_DELETED(d->transitionInstance->stop());
 
-    for (const QQuickStateAction &action : qAsConst(d->bindingsList)) {
+    for (const QQuickStateAction &action : std::as_const(d->bindingsList)) {
         if (action.toBinding && action.deletableToBinding) {
             auto property = action.property;
             QQmlAnyBinding::removeBindingFrom(property);

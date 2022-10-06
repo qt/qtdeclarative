@@ -35,7 +35,7 @@ void tst_qquickage::test_kill()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -60,7 +60,7 @@ void tst_qquickage::test_jump()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -86,7 +86,7 @@ void tst_qquickage::test_onceOff()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -112,7 +112,7 @@ void tst_qquickage::test_sustained()
     //TODO: Ensure some particles have lived to 0.4s point despite unified timer
 
     //Can't verify size, because particles never die. It will constantly grow.
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 

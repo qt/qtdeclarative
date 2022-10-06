@@ -49,7 +49,7 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
         // reset the property to avoid endless loop when aliasExprBits is empty
         nextProperty = QQmlJSMetaProperty {};
 
-        for (const QString &bit : qAsConst(aliasExprBits)) {
+        for (const QString &bit : std::as_const(aliasExprBits)) {
             nextProperty = resultOwner->property(bit);
             if (!nextProperty.isValid())
                 return {};

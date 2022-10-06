@@ -375,7 +375,7 @@ void QQmlOpenMetaObject::setValues(const QHash<QByteArray, QVariant> &values, bo
     d->type->createProperties(missingProperties);
     d->dropPropertyCache();
 
-    for (const QByteArray &name : qAsConst(missingProperties))
+    for (const QByteArray &name : std::as_const(missingProperties))
         checkedSetValue(names[name], values[name], force);
 }
 

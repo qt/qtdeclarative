@@ -73,7 +73,7 @@ void QSGOpenVGInternalRectangleNode::setGradientStops(const QGradientStops &stop
 
     //normalize stops
     bool needsNormalization = false;
-    for (const QGradientStop &stop : qAsConst(stops)) {
+    for (const QGradientStop &stop : std::as_const(stops)) {
         if (stop.first < 0.0 || stop.first > 1.0) {
             needsNormalization = true;
             continue;
@@ -218,7 +218,7 @@ void QSGOpenVGInternalRectangleNode::render()
             vgSetParameteri(m_rectanglePaint, VG_PAINT_COLOR_RAMP_PREMULTIPLIED, false);
 
             QVector<VGfloat> stops;
-            for (const QGradientStop &stop : qAsConst(m_gradientStops)) {
+            for (const QGradientStop &stop : std::as_const(m_gradientStops)) {
                 // offset
                 stops.append(stop.first);
                 // color

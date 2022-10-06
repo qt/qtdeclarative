@@ -129,10 +129,10 @@ void tst_QQMLTypeLoader::trimCache()
         // The cache is free to keep the others.
     }
 
-    for (auto *data : qAsConst(releaseCompilationUnitLater))
+    for (auto *data : std::as_const(releaseCompilationUnitLater))
         data->release();
 
-    for (auto *data : qAsConst(releaseLater))
+    for (auto *data : std::as_const(releaseLater))
         data->release();
 }
 

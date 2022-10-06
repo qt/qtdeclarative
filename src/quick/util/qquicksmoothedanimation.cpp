@@ -351,7 +351,7 @@ QQuickSmoothedAnimationPrivate::~QQuickSmoothedAnimationPrivate()
 
 void QQuickSmoothedAnimationPrivate::updateRunningAnimations()
 {
-    for (QSmoothedAnimation *ease : qAsConst(activeAnimations)) {
+    for (QSmoothedAnimation *ease : std::as_const(activeAnimations)) {
         ease->maximumEasingTime = anim->maximumEasingTime;
         ease->reversingMode = anim->reversingMode;
         ease->velocity = anim->velocity;

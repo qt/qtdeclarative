@@ -117,7 +117,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
         document->jsModule.fileName = typeData->urlString();
         document->jsModule.finalUrl = typeData->finalUrlString();
         QmlIR::JSCodeGen v4CodeGenerator(document, engine->v4engine()->illegalNames());
-        for (QmlIR::Object *object : qAsConst(document->objects)) {
+        for (QmlIR::Object *object : std::as_const(document->objects)) {
             if (!v4CodeGenerator.generateRuntimeFunctions(object)) {
                 Q_ASSERT(v4CodeGenerator.hasError());
                 recordError(v4CodeGenerator.error());
@@ -1036,7 +1036,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
         atLeastOneAliasResolved = false;
         QVector<int> pendingObjects;
 
-        for (int objectIndex: qAsConst(_objectsWithAliases)) {
+        for (int objectIndex: std::as_const(_objectsWithAliases)) {
 
             QQmlError error;
             const auto result = resolveAliasesInObject(objectIndex, &error);

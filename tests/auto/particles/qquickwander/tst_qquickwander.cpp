@@ -35,7 +35,7 @@ void tst_qquickwander::test_basic()
     //the 500 was randomly changed from 0.0 in velocity
     bool vxChanged = false;
     bool vyChanged = false;
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 

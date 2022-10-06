@@ -273,14 +273,14 @@ void ShaderManager::invalidated()
 
 void ShaderManager::clearCachedRendererData()
 {
-    for (ShaderManager::Shader *sms : qAsConst(stockShaders)) {
+    for (ShaderManager::Shader *sms : std::as_const(stockShaders)) {
         QSGMaterialShader *s = sms->programRhi.program;
         if (s) {
             QSGMaterialShaderPrivate *sd = QSGMaterialShaderPrivate::get(s);
             sd->clearCachedRendererData();
         }
     }
-    for (ShaderManager::Shader *sms : qAsConst(rewrittenShaders)) {
+    for (ShaderManager::Shader *sms : std::as_const(rewrittenShaders)) {
         QSGMaterialShader *s = sms->programRhi.program;
         if (s) {
             QSGMaterialShaderPrivate *sd = QSGMaterialShaderPrivate::get(s);
@@ -916,7 +916,7 @@ Renderer::~Renderer()
             qsg_wipeBatch(m_batchPool.at(i));
     }
 
-    for (Node *n : qAsConst(m_nodes))
+    for (Node *n : std::as_const(m_nodes))
         m_nodeAllocator.release(n);
 
     // Remaining elements...

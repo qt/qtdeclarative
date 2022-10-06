@@ -2692,7 +2692,7 @@ void tst_QQuickPathView::objectModelMove()
     QVector<QString> itemObjectNames;
     itemObjectNames << QLatin1String("red") << QLatin1String("green") << QLatin1String("blue");
     QVector<QQuickItem*> childItems;
-    for (const QString &itemObjectName : qAsConst(itemObjectNames)) {
+    for (const QString &itemObjectName : std::as_const(itemObjectNames)) {
         QQuickItem *childItem = findItem<QQuickItem>(pathView, itemObjectName);
         QVERIFY(childItem);
         childItems.append(childItem);
@@ -2705,7 +2705,7 @@ void tst_QQuickPathView::objectModelMove()
     QTRY_VERIFY(pathView.isNull());
     // By this point, all of its cached items should have been released,
     // which means none of the items should have any listeners.
-    for (const auto childItem : qAsConst(childItems)) {
+    for (const auto childItem : std::as_const(childItems)) {
         const QQuickItemPrivate *childItemPrivate = QQuickItemPrivate::get(childItem);
         QCOMPARE(childItemPrivate->changeListeners.size(), 0);
     }

@@ -211,7 +211,7 @@ void QmlProfilerData::computeQmlTime()
     qint64 level0Start = -1;
     int level = 0;
 
-    for (const QQmlProfilerEvent &event : qAsConst(d->events)) {
+    for (const QQmlProfilerEvent &event : std::as_const(d->events)) {
         const QQmlProfilerEventType &type = d->eventTypes.at(event.typeIndex());
         if (type.message() != MaximumMessage)
             continue;
@@ -510,7 +510,7 @@ bool QmlProfilerData::save(const QString &filename)
         }
     };
 
-    for (const QQmlProfilerEvent &event : qAsConst(d->events)) {
+    for (const QQmlProfilerEvent &event : std::as_const(d->events)) {
         const QQmlProfilerEventType &type = d->eventTypes.at(event.typeIndex());
 
         if (type.rangeType() != MaximumRangeType) {

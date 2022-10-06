@@ -227,7 +227,7 @@ QQmlDelegateModel::~QQmlDelegateModel()
     d->disconnectFromAbstractItemModel();
     d->m_adaptorModel.setObject(nullptr);
 
-    for (QQmlDelegateModelItem *cacheItem : qAsConst(d->m_cache)) {
+    for (QQmlDelegateModelItem *cacheItem : std::as_const(d->m_cache)) {
         if (cacheItem->object) {
             delete cacheItem->object;
 
@@ -833,7 +833,7 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
 
         if (m_parts) {
             auto partsCopy = m_parts->models; // deliberate; this may alter m_parts
-            for (QQmlPartsModel *model : qAsConst(partsCopy))
+            for (QQmlPartsModel *model : std::as_const(partsCopy))
                 model->updateFilterGroup(m_compositorGroup, changeSet);
         }
     }
@@ -1831,7 +1831,7 @@ void QQmlDelegateModelPrivate::emitChanges()
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
 
     auto cacheCopy = m_cache; // deliberate; emitChanges may alter m_cache
-    for (QQmlDelegateModelItem *cacheItem : qAsConst(cacheCopy)) {
+    for (QQmlDelegateModelItem *cacheItem : std::as_const(cacheCopy)) {
         if (cacheItem->attached)
             cacheItem->attached->emitChanges();
     }

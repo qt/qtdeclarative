@@ -91,10 +91,10 @@ void QQmlEngineControlServiceImpl::stateChanged(State)
 {
     // We flush everything for any kind of state change, to avoid complicated timing issues.
     QMutexLocker lock(&dataMutex);
-    for (QJSEngine *engine : qAsConst(startingEngines))
+    for (QJSEngine *engine : std::as_const(startingEngines))
         emit attachedToEngine(engine);
     startingEngines.clear();
-    for (QJSEngine *engine : qAsConst(stoppingEngines))
+    for (QJSEngine *engine : std::as_const(stoppingEngines))
         emit detachedFromEngine(engine);
     stoppingEngines.clear();
 }

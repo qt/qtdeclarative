@@ -248,7 +248,7 @@ bool QmltypesReader::parse()
     QStringList dependencies;
     QHash<QString, QQmlJSExportedScope> objects;
     m_isValid = reader(&objects, &dependencies);
-    for (const auto &obj : qAsConst(objects))
+    for (const auto &obj : std::as_const(objects))
         insertComponent(obj.scope, obj.exports);
     qmltypesFilePtr()->setIsValid(m_isValid);
     return m_isValid;

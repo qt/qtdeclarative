@@ -265,7 +265,7 @@ bool QQuickMultiPointHandler::hasCurrentPoints(QPointerEvent *event)
         return false;
     // TODO optimize: either ensure the points are sorted,
     // or use std::equal with a predicate
-    for (const QQuickHandlerPoint &p : qAsConst(d->currentPoints)) {
+    for (const QQuickHandlerPoint &p : std::as_const(d->currentPoints)) {
         const QEventPoint *ep = event->pointById(p.id());
         if (!ep)
             return false;
@@ -362,7 +362,7 @@ bool QQuickMultiPointHandler::grabPoints(QPointerEvent *event, const QVector<QEv
         }
     }
     if (allowed) {
-        for (const auto &point : qAsConst(points))
+        for (const auto &point : std::as_const(points))
             setExclusiveGrab(event, point);
     }
     return allowed;

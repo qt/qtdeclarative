@@ -25,7 +25,7 @@ IdentifierTable::~IdentifierTable()
 {
     free(entriesByHash);
     free(entriesById);
-    for (const auto &h : qAsConst(idHashes))
+    for (const auto &h : std::as_const(idHashes))
         h->identifierTable = nullptr;
 }
 

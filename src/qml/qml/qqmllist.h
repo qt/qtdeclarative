@@ -116,7 +116,7 @@ private:
             for (qsizetype i = 0; i < length; ++i)
                 stash.append(i == idx ? v : list->at(list, i));
             list->clear(list);
-            for (T *item : qAsConst(stash))
+            for (T *item : std::as_const(stash))
                 list->append(list, item);
         } else {
             stash.reserve(length - idx - 1);
@@ -147,7 +147,7 @@ private:
         for (qsizetype i = 0; i < length; ++i)
             stash.append(list->at(list, i));
         list->clear(list);
-        for (T *item : qAsConst(stash))
+        for (T *item : std::as_const(stash))
             list->append(list, item);
     }
 };

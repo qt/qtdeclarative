@@ -315,7 +315,7 @@ QItemSelection  QQmlTreeModelToTableModel::selectionForRowRange(const QModelInde
 
     QItemSelection sel;
     sel.reserve(ranges.count());
-    for (const MIPair &pair : qAsConst(ranges))
+    for (const MIPair &pair : std::as_const(ranges))
        sel.append(QItemSelectionRange(pair.first, pair.second));
 
     return sel;
@@ -1045,7 +1045,7 @@ void QQmlTreeModelToTableModel::emitQueuedSignals()
      * We don't merge adjacent updates, because they are typically filed with a
      * different role (a parent row is next to its children).
      */
-    for (const DataChangedParams &dataChange : qAsConst(m_queuedDataChanged)) {
+    for (const DataChangedParams &dataChange : std::as_const(m_queuedDataChanged)) {
         int startRow = dataChange.topLeft.row();
         int endRow = dataChange.bottomRight.row();
         bool merged = false;

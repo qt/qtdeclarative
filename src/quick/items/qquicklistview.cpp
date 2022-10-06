@@ -593,7 +593,7 @@ FxViewItem *QQuickListViewPrivate::snapItemAt(qreal pos)
     FxViewItem *snapItem = nullptr;
     FxViewItem *prevItem = nullptr;
     qreal prevItemSize = 0;
-    for (FxViewItem *item : qAsConst(visibleItems)) {
+    for (FxViewItem *item : std::as_const(visibleItems)) {
         if (item->index == -1)
             continue;
 
@@ -1114,7 +1114,7 @@ void QQuickListViewPrivate::releaseSectionItem(QQuickItem *item)
 
 void QQuickListViewPrivate::releaseSectionItems()
 {
-    for (FxViewItem *item : qAsConst(visibleItems)) {
+    for (FxViewItem *item : std::as_const(visibleItems)) {
         FxListItemSG *listItem = static_cast<FxListItemSG *>(item);
         if (listItem->section()) {
             qreal pos = listItem->position();
@@ -1274,7 +1274,7 @@ void QQuickListViewPrivate::updateSections()
         QQuickListViewAttached *prevAtt = nullptr;
         int prevIdx = -1;
         int idx = -1;
-        for (FxViewItem *item : qAsConst(visibleItems)) {
+        for (FxViewItem *item : std::as_const(visibleItems)) {
             QQuickListViewAttached *attached = static_cast<QQuickListViewAttached*>(item->attached);
             attached->setPrevSection(prevSection);
             if (item->index != -1) {
@@ -1399,7 +1399,7 @@ void QQuickListViewPrivate::updateAverage()
     if (!visibleItems.size())
         return;
     qreal sum = 0.0;
-    for (FxViewItem *item : qAsConst(visibleItems))
+    for (FxViewItem *item : std::as_const(visibleItems))
         sum += item->size();
     averageSize = qRound(sum / visibleItems.size());
 }
@@ -3385,7 +3385,7 @@ void QQuickListView::viewportMoved(Qt::Orientations orient)
     // Set visibility of items to eliminate cost of items outside the visible area.
     qreal from = d->isContentFlowReversed() ? -d->position()-d->displayMarginBeginning-d->size() : d->position()-d->displayMarginBeginning;
     qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
-    for (FxViewItem *item : qAsConst(d->visibleItems)) {
+    for (FxViewItem *item : std::as_const(d->visibleItems)) {
         if (item->item)
             QQuickItemPrivate::get(item->item)->setCulled(item->endPosition() < from || item->position() > to);
     }
@@ -3628,7 +3628,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (modelIndex < visibleIndex) {
                 // Insert before visible items
                 visibleIndex += count;
-                for (FxViewItem *item : qAsConst(visibleItems)) {
+                for (FxViewItem *item : std::as_const(visibleItems)) {
                     if (item->index != -1 && item->index >= modelIndex)
                         item->index += count;
                 }
@@ -3645,7 +3645,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     }
 
     // Update the indexes of the following visible items.
-    for (FxViewItem *item : qAsConst(visibleItems)) {
+    for (FxViewItem *item : std::as_const(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
             if (change.isMove())

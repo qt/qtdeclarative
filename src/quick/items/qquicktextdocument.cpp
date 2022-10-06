@@ -183,7 +183,7 @@ QQuickPixmap *QQuickTextDocumentWithImageResources::loadPixmap(
 
 void QQuickTextDocumentWithImageResources::clearResources()
 {
-    for (QQuickPixmap *pixmap : qAsConst(m_resources))
+    for (QQuickPixmap *pixmap : std::as_const(m_resources))
         pixmap->clear(this);
     qDeleteAll(m_resources);
     m_resources.clear();

@@ -830,7 +830,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
     do {
         QVector<int> pendingObjects;
 
-        for (int objectIndex: qAsConst(objectsWithAliases)) {
+        for (int objectIndex: std::as_const(objectsWithAliases)) {
             const CompiledObject &object = *objectContainer->objectAt(objectIndex);
 
             if (allAliasTargetsExist(object)) {

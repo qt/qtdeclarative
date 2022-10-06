@@ -33,7 +33,7 @@ void tst_qquickparticlesystem::test_basic()
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     int stillAlive = 0;
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 

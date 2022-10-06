@@ -140,7 +140,7 @@ struct RuntimeCounters::Data {
         }
         std::sort(lines.begin(), lines.end(), Line::less);
         outs << lines.size() << " counters:" << endl;
-        for (const Line &line : qAsConst(lines))
+        for (const Line &line : std::as_const(lines))
             outs << qSetFieldWidth(10) << line.count << qSetFieldWidth(0)
                  << " | " << line.func
                  << " | " << pretty(line.tag1)

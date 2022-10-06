@@ -9872,7 +9872,7 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
     QCOMPARE(listView->property("delegatesCreatedCount").toInt(), initialItemCount);
 
     // Go through all the initial items and check that they have not been reused yet
-    for (const auto item : qAsConst(items))
+    for (const auto item : std::as_const(items))
         QCOMPARE(item->property("reusedCount").toInt(), 0);
 
     // Flick one page down and count how many items we have created thus
@@ -9896,7 +9896,7 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
     // QML model classes, we need to catch it through a binding instead (which is
     // OK, since then we can also check that bindings are updated when reused).
     items = findItems<QQuickItem>(listView, "delegate");
-    for (const auto item : qAsConst(items)) {
+    for (const auto item : std::as_const(items)) {
         const QString display = item->property("displayBinding").toString();
         const int modelIndex = item->property("modelIndex").toInt();
         QVERIFY(modelIndex >= initialItemCount);
@@ -9918,7 +9918,7 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
     // (except for ListView.currentItem, which was never released).
     const auto listViewCurrentItem = listView->currentItem();
     items = findItems<QQuickItem>(listView, "delegate");
-    for (const auto item : qAsConst(items)) {
+    for (const auto item : std::as_const(items)) {
         const int reusedCount = item->property("reusedCount").toInt();
         if (item == listViewCurrentItem)
             QCOMPARE(reusedCount, 0);
@@ -9929,7 +9929,7 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
     // Go through all items again and check that all model data inside the delegate
     // have correct values now that they have been reused.
     items = findItems<QQuickItem>(listView, "delegate");
-    for (const auto item : qAsConst(items)) {
+    for (const auto item : std::as_const(items)) {
         const QString display = item->property("displayBinding").toString();
         const int modelIndex = item->property("modelIndex").toInt();
         QVERIFY(modelIndex < initialItemCount);

@@ -223,7 +223,7 @@ void tst_examples::sgexamples_data()
     QStringList files;
     files << findQmlFiles(examplesDir);
 
-    for (const QString &file : qAsConst(files))
+    for (const QString &file : std::as_const(files))
         QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
 }
 
@@ -273,7 +273,7 @@ void tst_examples::sgsnippets_data()
 
     QStringList files;
     files << findQmlFiles(snippetsDir);
-    for (const QString &file : qAsConst(files))
+    for (const QString &file : std::as_const(files))
         QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
 
     // Add Quick snippets.
@@ -283,7 +283,7 @@ void tst_examples::sgsnippets_data()
 
     files.clear();
     files << findQmlFiles(snippetsDir);
-    for (const QString &file : qAsConst(files))
+    for (const QString &file : std::as_const(files))
         QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
 }
 

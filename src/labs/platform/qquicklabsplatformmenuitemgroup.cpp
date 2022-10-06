@@ -131,7 +131,7 @@ void QQuickLabsPlatformMenuItemGroup::setEnabled(bool enabled)
     m_enabled = enabled;
     emit enabledChanged();
 
-    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items)) {
         if (item->m_enabled) {
             item->sync();
             emit item->enabledChanged();
@@ -160,7 +160,7 @@ void QQuickLabsPlatformMenuItemGroup::setVisible(bool visible)
     m_visible = visible;
     emit visibleChanged();
 
-    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items)) {
         if (item->m_visible) {
             item->sync();
             emit item->visibleChanged();
@@ -189,7 +189,7 @@ void QQuickLabsPlatformMenuItemGroup::setExclusive(bool exclusive)
     m_exclusive = exclusive;
     emit exclusiveChanged();
 
-    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items))
+    for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items))
         item->sync();
 }
 
@@ -284,7 +284,7 @@ void QQuickLabsPlatformMenuItemGroup::clear()
     if (m_items.isEmpty())
         return;
 
-    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items)) {
         item->setGroup(nullptr);
         disconnect(item, &QQuickLabsPlatformMenuItem::checkedChanged, this, &QQuickLabsPlatformMenuItemGroup::updateCurrent);
         disconnect(item, &QQuickLabsPlatformMenuItem::triggered, this, &QQuickLabsPlatformMenuItemGroup::activateItem);
