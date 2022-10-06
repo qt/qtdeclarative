@@ -182,11 +182,11 @@ QVariantMap pluginsForModulePath(const QString &modulePath) {
             } else if (sections.size() == 2 && sectionType != "module"
                        && sectionType != "typeinfo") {
                 componentFiles.append(modulePath + QLatin1Char('/')
-                                      + QString::fromUtf8(sections.at(1)));
+                                      + QString::fromUtf8(sections.at(1)).trimmed());
             } else if (sections.size() == 3
                        || (sectionType == "singleton" && sections.size() == 4)) {
                 int fileNameIndex = (sectionType == "singleton") ? 3 : 2;
-                const QString fileName = QString::fromUtf8(sections.at(fileNameIndex));
+                const QString fileName = QString::fromUtf8(sections.at(fileNameIndex)).trimmed();
                 const QString filePath = modulePath + QLatin1Char('/') + fileName;
                 if (fileName.endsWith(QLatin1String(".js"))
                     || fileName.endsWith(QLatin1String(".mjs")))
