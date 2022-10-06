@@ -1572,4 +1572,26 @@ TestCase {
         control.push(control.cppComponent, { color: "tomato" })
         compare(control.currentItem.color, Qt.color("tomato"))
     }
+
+    Component {
+        id: noProperties
+        Item {}
+    }
+
+    Component {
+        id: invalidProperties
+
+        StackView {
+            anchors.fill: parent
+        }
+    }
+
+    function test_invalidProperties() {
+        let control = createTemporaryObject(invalidProperties, testCase)
+        verify(control)
+        verify(control.empty)
+        ignoreWarning(/Cannot resolve property "unknownProperty.test"/)
+        control.push(noProperties, { "unknownProperty.test": "crashes" })
+        verify(!control.empty)
+    }
 }
