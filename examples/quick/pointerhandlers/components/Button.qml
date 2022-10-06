@@ -11,6 +11,7 @@ Rectangle {
     property alias hovered: hoverHandler.hovered
     property alias gesturePolicy: tap.gesturePolicy
     property alias margin: tap.margin
+    property alias exclusiveSignals: tap.exclusiveSignals
     signal tapped
 
     implicitHeight: Math.max(Screen.pixelDensity * 7, label.implicitHeight * 2)
@@ -29,7 +30,7 @@ Rectangle {
         id: tap
         margin: 10 // the user can tap a little beyond the edges
         objectName: label.text + " Tap"
-        onTapped: {
+        onSingleTapped: {
             tapFlash.start()
             root.tapped()
         }

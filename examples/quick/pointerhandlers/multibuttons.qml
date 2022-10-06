@@ -30,6 +30,7 @@ Item {
             text: "Launch Missile"
             Layout.fillWidth: true
             gesturePolicy: TapHandler.ReleaseWithinBounds
+            exclusiveSignals: TapHandler.SingleTap
             onTapped: missileEmitter.burst(1)
             Text {
                 anchors { top: parent.bottom; horizontalCenter: parent.horizontalCenter }

@@ -26,7 +26,10 @@ Rectangle {
         id: tap
         objectName: label.text
         longPressThreshold: 100 // CI can be insanely slow, so don't demand a timely release to generate onTapped
+        onSingleTapped: console.log("Single tap")
+        onDoubleTapped: console.log("Double tap")
         onTapped: {
+            console.log("Tapped")
             tapFlash.start()
             root.tappedPosition = point.scenePosition
             root.tapped()
