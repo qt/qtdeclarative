@@ -76,7 +76,7 @@ QQuickHoverHandler::~QQuickHoverHandler()
     \since 6.3
 
     Whether this handler prevents other items or handlers behind it from
-    being hovered at the same timee. This property is \c false by default.
+    being hovered at the same time. This property is \c false by default.
 */
 void QQuickHoverHandler::setBlocking(bool blocking)
 {
