@@ -21,6 +21,7 @@ qt_internal_add_test(tst_qqmltranslation
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QmlModelsPrivate
         Qt::Quick
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
