@@ -111,25 +111,28 @@ enum class DomKind {
 Q_ENUM_NS(DomKind)
 
 enum class DomType {
-    Empty,
+    Empty, // only for default ctor
 
-    ExternalItemInfo,
-    ExternalItemPair,
+    ExternalItemInfo, // base class for anything represented by an actual file
+    ExternalItemPair, // pair of newest version of item, and latest valid update ### REVISIT
     // ExternalOwningItems refer to an external path and can be shared between environments
-    QmlDirectory, // dir
+    QmlDirectory, // dir e.g. used for implicit import
     QmldirFile, // qmldir
     JsFile, // file
     QmlFile, // file
     QmltypesFile, // qmltypes
-    GlobalScope, // language dependent
+    GlobalScope, // language dependent (currently no difference)
+    /* enum A {  B, C }
+                 *  *
+    EnumItem  is marked with * */
     EnumItem,
 
     // types
-    EnumDecl,
-    JsResource,
-    QmltypesComponent,
-    QmlComponent,
-    GlobalComponent,
+    EnumDecl, // A in above example
+    JsResource, // QML file contains QML object, JSFile contains JsResource
+    QmltypesComponent, // Component inside a qmltypes fles; compared to component it has exported meta-object revisions; singleton flag; can export multiple names
+    QmlComponent, // "normal" QML file based Component; also can represent inline components
+    GlobalComponent, // component of global object ### REVISIT, try to replace with one of the above
 
     ModuleAutoExport, // dependent imports to automatically load when a module is imported
     ModuleIndex, // index for all the imports of a major version
@@ -143,27 +146,27 @@ enum class DomType {
 
     // qml elements
     Id,
-    QmlObject,
-    ConstantData,
-    SimpleObjectWrap,
-    ScriptExpression,
-    Reference,
-    PropertyDefinition,
-    Binding,
+    QmlObject, // the Item in Item {}; also used to represent types in qmltype files
+    ConstantData, // the 2 in  "property int i: 2"; can be any generic data in a QML document
+    SimpleObjectWrap, // internal wrapping to give uniform DOMItem access; ### research more
+    ScriptExpression, // wraps an AST script expression as a DOMItem
+    Reference, // reference to another DOMItem; e.g. asking for a type of an object returns a Reference
+    PropertyDefinition, // _just_ the property definition; without the binding, even if it's one line
+    Binding, // the part after the ":"
     MethodParameter,
-    MethodInfo,
+    MethodInfo, // container of MethodParameter
     Version, // wrapped
     Comment,
-    CommentedElement,
-    RegionComments,
-    AstComments,
-    FileLocations,
-    UpdatedScriptExpression,
+    CommentedElement, // attached to AST if they have pre-/post-comments?
+    RegionComments, // DomItems have attached RegionComments; can attach comments to fine grained "regions" in a DomItem; like the default keyword of a property definition
+    AstComments, // hash-table from AST node to commented element
+    FileLocations, // mapping from DomItem to file location ### REVISIT: try to move out of hierarchy?
+    UpdatedScriptExpression, // used in writeOut method when formatting changes ### Revisit: try to move out of DOM hierarchy
 
     // convenience collecting types
-    PropertyInfo,
+    PropertyInfo, // not a DOM Item, just a convenience class
 
-    // Moc objects, mainly for testing
+    // Moc objects, mainly for testing ### Try to remove them; replace their usage in tests with "real" instances
     MockObject,
     MockOwner,
 
@@ -173,13 +176,13 @@ enum class DomType {
     ListP,
 
     // supporting objects
-    LoadInfo, // owning
+    LoadInfo, // owning, used inside DomEnvironment ### REVISIT: move out of hierarchy
     ErrorMessage, // wrapped
     AttachedInfo, // owning
 
     // Dom top level
-    DomEnvironment,
-    DomUniverse
+    DomEnvironment, // a consistent view of modules, types, files, etc.
+    DomUniverse // a cache of what can be found in the DomEnvironment, contains the latest valid version for every file/type, etc. + latest overall
 };
 Q_ENUM_NS(DomType)
 

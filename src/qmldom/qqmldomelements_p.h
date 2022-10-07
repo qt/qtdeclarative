@@ -519,7 +519,7 @@ public:
     Binding &operator=(Binding &&) = default;
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor);
-    DomItem valueItem(DomItem &self) const;
+    DomItem valueItem(DomItem &self) const; //  ### REVISIT: consider replacing return value with variant
     BindingValueKind valueKind() const;
     QString name() const { return m_name; }
     BindingType bindingType() const { return m_bindingType; }
@@ -643,7 +643,7 @@ public:
 class QMLDOM_EXPORT PropertyInfo
 {
 public:
-    constexpr static DomType kindValue = DomType::PropertyInfo;
+    constexpr static DomType kindValue = DomType::PropertyInfo; // used to get the correct kind in ObjectWrapper
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
 
@@ -686,7 +686,7 @@ public:
     }
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
-    QString preCode(DomItem &) const;
+    QString preCode(DomItem &) const; // ### REVISIT, might be simplified by using different toplevel production rules at usage site
     QString postCode(DomItem &) const;
     void writePre(DomItem &self, OutWriter &ow) const;
     void writeOut(DomItem &self, OutWriter &ow) const;
