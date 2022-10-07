@@ -2502,6 +2502,16 @@ void QQmlListModel::updateTranslations()
     if (m_dynamicRoles)
         return;
     Q_ASSERT(m_listModel);
+
+    QList<int> roles;
+    for (int i = 0, end = m_listModel->roleCount(); i != end; ++i) {
+        if (m_listModel->getExistingRole(i).type == ListLayout::Role::String)
+            roles.append(i);
+    }
+
+    if (!roles.isEmpty())
+        emitItemsChanged(0, rowCount(QModelIndex()), roles);
+
     m_listModel->updateTranslations();
 }
 
