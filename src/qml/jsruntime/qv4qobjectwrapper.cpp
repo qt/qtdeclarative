@@ -1229,7 +1229,7 @@ ReturnedValue QObjectWrapper::method_disconnect(const FunctionObject *b, const V
 static void markChildQObjectsRecursively(QObject *parent, MarkStack *markStack)
 {
     const QObjectList &children = parent->children();
-    for (int i = 0; i < children.count(); ++i) {
+    for (int i = 0; i < children.size(); ++i) {
         QObject *child = children.at(i);
         if (!child)
             continue;

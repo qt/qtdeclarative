@@ -277,7 +277,7 @@ void QQuickApplication::setDisplayName(const QString &displayName)
 
 qsizetype screens_count(QQmlListProperty<QQuickScreenInfo> *prop)
 {
-    return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->count();
+    return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->size();
 }
 
 QQuickScreenInfo *screens_at(QQmlListProperty<QQuickScreenInfo> *prop, qsizetype idx)

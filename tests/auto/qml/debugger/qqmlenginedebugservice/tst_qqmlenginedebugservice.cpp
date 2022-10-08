@@ -210,7 +210,7 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
                  qmlContext(o)));
 
     const QObjectList &children = o->children();
-    for (int i=0; i<children.count(); i++) {
+    for (int i=0; i<children.size(); i++) {
         QObject *child = children[i];
         if (!qmlContext(child))
             continue;

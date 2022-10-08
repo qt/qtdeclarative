@@ -80,7 +80,7 @@ public:
         reinterpret_cast<QList<TestType *> *>(p->data)->append(v);
     }
     static qsizetype count(QQmlListProperty<TestType> *p) {
-        return reinterpret_cast<QList<TestType *> *>(p->data)->count();
+        return reinterpret_cast<QList<TestType *> *>(p->data)->size();
     }
     static TestType *at(QQmlListProperty<TestType> *p, qsizetype idx) {
         return reinterpret_cast<QList<TestType *> *>(p->data)->at(idx);

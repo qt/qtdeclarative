@@ -362,7 +362,7 @@ void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop,
 qsizetype QQuickContainerPrivate::contentData_count(QQmlListProperty<QObject> *prop)
 {
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
-    return QQuickContainerPrivate::get(q)->contentData.count();
+    return QQuickContainerPrivate::get(q)->contentData.size();
 }
 
 QObject *QQuickContainerPrivate::contentData_at(QQmlListProperty<QObject> *prop, qsizetype index)

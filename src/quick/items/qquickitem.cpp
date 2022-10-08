@@ -3357,7 +3357,7 @@ void QQuickItemPrivate::resources_append(QQmlListProperty<QObject> *prop, QObjec
 qsizetype QQuickItemPrivate::resources_count(QQmlListProperty<QObject> *prop)
 {
     QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
-    return  quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.count() : 0;
+    return  quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.size() : 0;
 }
 
 void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)

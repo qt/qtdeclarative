@@ -584,7 +584,7 @@ public:
             if (currentNode().kind == DomType::Binding) {
                 QList<QmlObject> *vals = std::get<Binding>(currentNode().value).arrayValue();
                 if (vals) {
-                    int idx = vals->length();
+                    int idx = vals->size();
                     vals->append(scope);
                     sPathFromOwner = currentNodeEl().path.field(Fields::value).index(idx);
                     sPtr = &((*vals)[idx]);

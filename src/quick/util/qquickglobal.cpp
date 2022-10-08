@@ -85,7 +85,7 @@ void QQmlQtQuick2DebugStatesDelegate::buildStatesList(QObject *obj)
     }
 
     QObjectList children = obj->children();
-    for (int ii = 0; ii < children.count(); ++ii) {
+    for (int ii = 0; ii < children.size(); ++ii) {
         buildStatesList(children.at(ii));
     }
 }

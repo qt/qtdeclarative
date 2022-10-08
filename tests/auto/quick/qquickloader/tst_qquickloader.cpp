@@ -466,7 +466,7 @@ void tst_QQuickLoader::networkComponent()
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QQuickLoader::Ready);
-    QCOMPARE(static_cast<QQuickItem*>(loader)->children().count(), 1);
+    QCOMPARE(static_cast<QQuickItem*>(loader)->children().size(), 1);
 
 }
 

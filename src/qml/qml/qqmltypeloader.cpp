@@ -615,7 +615,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
                 scriptImported(blob, import->location, script.nameSpace, import->qualifier);
             }
         }
-        if (!qmldir.plugins().count()) {
+        if (!qmldir.plugins().size()) {
             // If the qmldir does not register a plugin, we might still have declaratively
             // registered types (if we are dealing with an application instead of a library)
             auto module = QQmlMetaType::typeModule(import->uri, import->version);

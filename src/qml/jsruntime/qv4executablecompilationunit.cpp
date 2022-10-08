@@ -885,7 +885,7 @@ bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorSt
 bool ResolvedTypeReferenceMap::addToHash(
         QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const
 {
-    std::vector<int> keys (count());
+    std::vector<int> keys (size());
     int i = 0;
     for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
         keys[i] = it.key();

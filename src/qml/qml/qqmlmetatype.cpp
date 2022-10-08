@@ -1483,7 +1483,7 @@ QList<QString> QQmlMetaType::qmlTypeNames()
     const QQmlMetaTypeDataPtr data;
 
     QList<QString> names;
-    names.reserve(data->nameToType.count());
+    names.reserve(data->nameToType.size());
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.cbegin();
     while (it != data->nameToType.cend()) {
         QQmlType t(*it);

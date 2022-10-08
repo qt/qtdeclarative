@@ -430,7 +430,7 @@ void tst_QQuickListView2::tapDelegateDuringFlicking() // QTBUG-103832
     QVERIFY(lastPressed > 5);
     QCOMPARE(releasedDelegates.last(), lastPressed);
     QCOMPARE(tappedDelegates.last(), lastPressed);
-    QCOMPARE(canceledDelegates.count(), 1); // only the first press was canceled, not the second
+    QCOMPARE(canceledDelegates.size(), 1); // only the first press was canceled, not the second
 }
 
 void tst_QQuickListView2::flickDuringFlicking_data()

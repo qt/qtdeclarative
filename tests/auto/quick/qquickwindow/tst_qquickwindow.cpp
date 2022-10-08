@@ -3332,12 +3332,12 @@ private:
     static void appendEvent(QQuickItem *filter, QQuickItem *receiver, QEvent *event) {
         if (includedEventTypes().contains(event->type())) {
             auto record = DeliveryRecord(filter ? filter->objectName() : QString(), receiver ? receiver->objectName() : QString());
-            int i = m_deliveryList.count();
-            if (m_expectedDeliveryList.count() > i && m_expectedDeliveryList[i] == record)
+            int i = m_deliveryList.size();
+            if (m_expectedDeliveryList.size() > i && m_expectedDeliveryList[i] == record)
                 qCDebug(lcTests).noquote().nospace() << i << ": " << record;
             else
                 qCDebug(lcTests).noquote().nospace() << i << ": " << record
-                     << ", expected " << (m_expectedDeliveryList.count() > i ? m_expectedDeliveryList[i].toString() : QLatin1String("nothing")) << " <---";
+                     << ", expected " << (m_expectedDeliveryList.size() > i ? m_expectedDeliveryList[i].toString() : QLatin1String("nothing")) << " <---";
             m_deliveryList << record;
         }
     }
@@ -3577,7 +3577,7 @@ void tst_qquickwindow::testChildMouseEventFilter()
     if (rootFilter->events.contains(QEvent::MouseButtonPress))
         actualDeliveryOrder.append(DeliveryRecord("root"));
 
-    for (int i = 0; i < qMax(actualDeliveryOrder.count(), expectedDeliveryOrder.count()); ++i) {
+    for (int i = 0; i < qMax(actualDeliveryOrder.size(), expectedDeliveryOrder.size()); ++i) {
         const DeliveryRecord expectedNames = expectedDeliveryOrder.value(i);
         const DeliveryRecord actualNames = actualDeliveryOrder.value(i);
         QCOMPARE(actualNames.toString(), expectedNames.toString());

@@ -193,7 +193,7 @@ void tst_QmlCppCodegen::anchorsFill()
     QVERIFY2(!object.isNull(), component.errorString().toUtf8().constData());
 
     QCOMPARE(object->property("width").toInt(), 234);
-    QCOMPARE(object->children().length(), 2);
+    QCOMPARE(object->children().size(), 2);
 
     QObject *child = object->children().front();
     QVERIFY(child);
@@ -625,7 +625,7 @@ void tst_QmlCppCodegen::conversions()
     QCOMPARE(object->property("doneStuff").toInt(), 19);
 
     QVariantList modulos = object->property("modulos").toList();
-    QCOMPARE(modulos.length(), 7);
+    QCOMPARE(modulos.size(), 7);
 
     QCOMPARE(modulos[0].userType(), QMetaType::Double);
     QCOMPARE(modulos[0].toDouble(), 0.0);
@@ -649,7 +649,7 @@ void tst_QmlCppCodegen::conversions()
     QVERIFY(qIsNaN(modulos[6].toDouble()));
 
     QVariantList unaryOps = object->property("unaryOps").toList();
-    QCOMPARE(unaryOps.length(), 6);
+    QCOMPARE(unaryOps.size(), 6);
 
     QCOMPARE(unaryOps[0].userType(), QMetaType::Double);
     QCOMPARE(unaryOps[0].toDouble(), 1221);
@@ -1790,7 +1790,7 @@ void tst_QmlCppCodegen::variantlist()
     QVERIFY(o);
 
     const QVariantList things = qvariant_cast<QVariantList>(o->property("things"));
-    QCOMPARE(things.length(), 2);
+    QCOMPARE(things.size(), 2);
     QCOMPARE(things[0].toString(), u"thing"_s);
     QCOMPARE(things[1].toInt(), 30);
 }

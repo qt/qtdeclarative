@@ -682,7 +682,7 @@ ReturnedValue StringPrototype::method_repeat(const FunctionObject *b, const Valu
 
 static void appendReplacementString(QString *result, const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)
 {
-    result->reserve(result->length() + replaceValue.size());
+    result->reserve(result->size() + replaceValue.size());
     for (int i = 0; i < replaceValue.size(); ++i) {
         if (replaceValue.at(i) == QLatin1Char('$') && i < replaceValue.size() - 1) {
             ushort ch = replaceValue.at(i + 1).unicode();

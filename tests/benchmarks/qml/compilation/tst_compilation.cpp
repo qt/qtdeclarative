@@ -157,7 +157,7 @@ void tst_compilation::bigimport()
         QQmlComponent c(&e, p);
         QCOMPARE(c.status(), QQmlComponent::Ready);
         QScopedPointer<QObject> o(c.create());
-        QVERIFY(o->children().count() == filesToCreate);
+        QVERIFY(o->children().size() == filesToCreate);
     }
 }
 

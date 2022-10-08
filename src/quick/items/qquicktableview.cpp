@@ -3585,9 +3585,9 @@ void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelecti
 
     const auto &selectedIndexes = selected.indexes();
     const auto &deselectedIndexes = deselected.indexes();
-    for (int i = 0; i < selectedIndexes.count(); ++i)
+    for (int i = 0; i < selectedIndexes.size(); ++i)
         setSelectedOnDelegateItem(selectedIndexes.at(i), true);
-    for (int i = 0; i < deselectedIndexes.count(); ++i)
+    for (int i = 0; i < deselectedIndexes.size(); ++i)
         setSelectedOnDelegateItem(deselectedIndexes.at(i), false);
 }
 

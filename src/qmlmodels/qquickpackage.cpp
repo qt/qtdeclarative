@@ -80,7 +80,7 @@ public:
     }
     static qsizetype data_count(QQmlListProperty<QObject> *prop) {
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
-        return list->count();
+        return list->size();
     }
     static void data_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *o) {
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);

@@ -836,7 +836,7 @@ void QQuickTimeLine::remove(QQuickTimeLineObject *v)
     }
 
     if (d->updateQueue) {
-        for (int ii = 0; ii < d->updateQueue->count(); ++ii) {
+        for (int ii = 0; ii < d->updateQueue->size(); ++ii) {
             if (d->updateQueue->at(ii).second.g == v ||
                d->updateQueue->at(ii).second.e.callbackObject() == v) {
                 d->updateQueue->removeAt(ii);

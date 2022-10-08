@@ -264,7 +264,7 @@ void QQuickStatePrivate::complete()
     Q_Q(QQuickState);
 
     for (int ii = 0; ii < reverting.size(); ++ii) {
-        for (int jj = 0; jj < revertList.count(); ++jj) {
+        for (int jj = 0; jj < revertList.size(); ++jj) {
             const QQuickRevertAction &revert = reverting.at(ii);
             const QQuickSimpleAction &simple = revertList.at(jj);
             if ((revert.event && simple.event() == revert.event) ||
@@ -520,14 +520,14 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
     // List of actions that need to be reverted to roll back (just) this state
     QQuickStatePrivate::SimpleActionList additionalReverts;
     // First add the reverse of all the applyList actions
-    for (int ii = 0; ii < applyList.count(); ++ii) {
+    for (int ii = 0; ii < applyList.size(); ++ii) {
         QQuickStateAction &action = applyList[ii];
 
         if (action.event) {
             if (!action.event->isReversable())
                 continue;
             bool found = false;
-            for (int jj = 0; jj < d->revertList.count(); ++jj) {
+            for (int jj = 0; jj < d->revertList.size(); ++jj) {
                 QQuickStateActionEvent *event = d->revertList.at(jj).event();
                 if (event && event->type() == action.event->type()) {
                     if (action.event->mayOverride(event)) {
@@ -558,7 +558,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
             bool found = false;
             action.fromBinding = QQmlAnyBinding::ofProperty(action.property);
 
-            for (int jj = 0; jj < d->revertList.count(); ++jj) {
+            for (int jj = 0; jj < d->revertList.size(); ++jj) {
                 if (d->revertList.at(jj).property() == action.property) {
                     found = true;
                     if (d->revertList.at(jj).binding() != action.fromBinding) {
@@ -583,13 +583,13 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
 
     // Any reverts from a previous state that aren't carried forth
     // into this state need to be translated into apply actions
-    for (int ii = 0; ii < d->revertList.count(); ++ii) {
+    for (int ii = 0; ii < d->revertList.size(); ++ii) {
         bool found = false;
         if (d->revertList.at(ii).event()) {
             QQuickStateActionEvent *event = d->revertList.at(ii).event();
             if (!event->isReversable())
                 continue;
-            for (int jj = 0; !found && jj < applyList.count(); ++jj) {
+            for (int jj = 0; !found && jj < applyList.size(); ++jj) {
                 const QQuickStateAction &action = applyList.at(jj);
                 if (action.event && action.event->type() == event->type()) {
                     if (action.event->mayOverride(event))
@@ -597,7 +597,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
                 }
             }
         } else {
-            for (int jj = 0; !found && jj < applyList.count(); ++jj) {
+            for (int jj = 0; !found && jj < applyList.size(); ++jj) {
                 const QQuickStateAction &action = applyList.at(jj);
                 if (action.property == d->revertList.at(ii).property())
                     found = true;

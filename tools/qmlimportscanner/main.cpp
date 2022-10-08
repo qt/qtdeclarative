@@ -475,7 +475,7 @@ QVariantList getGetDetailedModuleImportsIncludingDependencies(
     std::unordered_set<QVariant, ImportVariantHasher> importsSeen;
     importsToProcess.append(inputImport);
 
-    for (int i = 0; i < importsToProcess.length(); ++i) {
+    for (int i = 0; i < importsToProcess.size(); ++i) {
         const QVariant importToProcess = importsToProcess.at(i);
         auto [details, deps] = getImportDetails(importToProcess, fileImportsWithoutDepsCache);
         if (details.value(typeLiteral()) == moduleLiteral()) {
@@ -674,7 +674,7 @@ QVariantList findQmlImportsInFile(const QString &filePath,
     const auto pathsTimeEnd = QDateTime::currentDateTime();
     const auto duration = pathsTimeBegin.msecsTo(pathsTimeEnd);
     const auto fileProcessingDuration = fileProcessTimeBegin.msecsTo(pathsTimeEnd);
-    qCDebug(lcImportScanner) << "Found module paths:" << importPaths.count()
+    qCDebug(lcImportScanner) << "Found module paths:" << importPaths.size()
                              << "TS:" << pathsTimeEnd.toMSecsSinceEpoch()
                              << "Path resolution duration:" << duration << "msecs";
     qCDebug(lcImportScanner) << "Scan duration:" << fileProcessingDuration << "msecs";

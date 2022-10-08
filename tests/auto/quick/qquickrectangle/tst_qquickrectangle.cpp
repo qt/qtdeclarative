@@ -75,7 +75,7 @@ void tst_qquickrectangle::gradient()
     QCOMPARE(stops.at(&stops, 1)->color(), QColor("white"));
 
     QGradientStops gradientStops = grad->gradientStops();
-    QCOMPARE(gradientStops.count(), 2);
+    QCOMPARE(gradientStops.size(), 2);
     QCOMPARE(gradientStops.at(0).first, 0.0);
     QCOMPARE(gradientStops.at(0).second, QColor("gray"));
     QCOMPARE(gradientStops.at(1).first, 1.0);

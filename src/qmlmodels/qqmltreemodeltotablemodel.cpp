@@ -314,7 +314,7 @@ QItemSelection  QQmlTreeModelToTableModel::selectionForRowRange(const QModelInde
     }
 
     QItemSelection sel;
-    sel.reserve(ranges.count());
+    sel.reserve(ranges.size());
     for (const MIPair &pair : std::as_const(ranges))
        sel.append(QItemSelectionRange(pair.first, pair.second));
 

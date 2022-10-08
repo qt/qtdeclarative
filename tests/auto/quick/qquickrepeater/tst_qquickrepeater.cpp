@@ -166,15 +166,15 @@ void tst_QQuickRepeater::objectList()
     QCOMPARE(repeater->property("instantiated").toInt(), 100);
 
     QVERIFY(!repeater->itemAt(-1));
-    for (int i=0; i<data.count(); i++)
+    for (int i=0; i<data.size(); i++)
         QCOMPARE(repeater->itemAt(i), repeater->parentItem()->childItems().at(i));
-    QVERIFY(!repeater->itemAt(data.count()));
+    QVERIFY(!repeater->itemAt(data.size()));
 
     QSignalSpy addedSpy(repeater, SIGNAL(itemAdded(int,QQuickItem*)));
     QSignalSpy removedSpy(repeater, SIGNAL(itemRemoved(int,QQuickItem*)));
     ctxt->setContextProperty("testData", QVariant::fromValue(data));
-    QCOMPARE(addedSpy.size(), data.count());
-    QCOMPARE(removedSpy.size(), data.count());
+    QCOMPARE(addedSpy.size(), data.size());
+    QCOMPARE(removedSpy.size(), data.size());
 
     qDeleteAll(data);
     delete window;
@@ -805,7 +805,7 @@ void tst_QQuickRepeater::invalidContextCrash()
     engine.rootContext()->setContextProperty("badModel", model);
 
     QScopedPointer<QObject> root(component.create());
-    QCOMPARE(root->children().count(), 1);
+    QCOMPARE(root->children().size(), 1);
     QObject *repeater = root->children().first();
 
     // Make sure the model comes first in the child list, so it will be
@@ -815,7 +815,7 @@ void tst_QQuickRepeater::invalidContextCrash()
     repeater->setParent(nullptr);
     repeater->setParent(root.data());
 
-    QCOMPARE(root->children().count(), 2);
+    QCOMPARE(root->children().size(), 2);
     QCOMPARE(root->children().at(0), model);
     QCOMPARE(root->children().at(1), repeater);
 

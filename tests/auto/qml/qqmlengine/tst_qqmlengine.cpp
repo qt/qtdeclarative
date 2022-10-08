@@ -317,7 +317,7 @@ void tst_qqmlengine::offlineStoragePath()
 
     QSignalSpy offlineStoragePathSpy(&engine, &QQmlEngine::offlineStoragePathChanged);
     engine.setOfflineStoragePath(QDir::homePath());
-    QCOMPARE(offlineStoragePathSpy.count(), 1);
+    QCOMPARE(offlineStoragePathSpy.size(), 1);
     QCOMPARE(engine.offlineStoragePath(), QDir::homePath());
 }
 

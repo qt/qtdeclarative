@@ -316,7 +316,7 @@ void tst_qquicktreeviewdelegate::clearSelectionOnClick()
     // Select root item
     const auto index = treeView->selectionModel()->model()->index(0, 0);
     treeView->selectionModel()->select(index, QItemSelectionModel::Select);
-    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 1);
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().size(), 1);
 
     // Click on a cell. This should remove the selection
     const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtCell(0, 0));
@@ -324,7 +324,7 @@ void tst_qquicktreeviewdelegate::clearSelectionOnClick()
     QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 0);
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().size(), 0);
 }
 
 void tst_qquicktreeviewdelegate::dragToSelect()
@@ -361,7 +361,7 @@ void tst_qquicktreeviewdelegate::dragToSelect()
 
     // Since TreeView uses TableView.SelectRows by default, we
     // now expect cells from 0,0 and 1,1 to be selected.
-    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 4);
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().size(), 4);
 }
 
 void tst_qquicktreeviewdelegate::pressAndHoldToSelect()
@@ -392,7 +392,7 @@ void tst_qquicktreeviewdelegate::pressAndHoldToSelect()
     QTRY_VERIFY(treeView->selectionModel()->hasSelection());
     // Since TreeView uses TableView.SelectRows by default, we
     // now expect both cell 0,0 and 1,0 to be selected.
-    QCOMPARE(treeView->selectionModel()->selectedIndexes().count(), 2);
+    QCOMPARE(treeView->selectionModel()->selectedIndexes().size(), 2);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowPos0_0);
 }
 

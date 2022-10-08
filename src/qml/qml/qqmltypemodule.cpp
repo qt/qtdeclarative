@@ -54,7 +54,7 @@ void QQmlTypeModule::remove(const QQmlTypePrivate *type)
 QQmlType QQmlTypeModule::findType(const QList<QQmlTypePrivate *> *types, QTypeRevision version)
 {
     if (types) {
-        for (int ii = 0; ii < types->count(); ++ii)
+        for (int ii = 0; ii < types->size(); ++ii)
             if (types->at(ii)->version.minorVersion() <= version.minorVersion())
                 return QQmlType(types->at(ii));
     }

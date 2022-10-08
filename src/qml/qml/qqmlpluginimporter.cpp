@@ -506,7 +506,7 @@ bool QQmlPluginImporter::populatePluginDataVector(QVector<StaticPluginData> &res
 
 QTypeRevision QQmlPluginImporter::importPlugins() {
     const auto qmldirPlugins = qmldir->plugins();
-    const int qmldirPluginCount = qmldirPlugins.count();
+    const int qmldirPluginCount = qmldirPlugins.size();
     QTypeRevision importVersion = version;
 
     // If the path contains a version marker or if we have more than one plugin,

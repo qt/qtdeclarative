@@ -1284,7 +1284,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
         QCOMPARE(window->rootObject()->property("displacedTrans_targetIndexes").toList(), listOfEmptyIntLists);
         QVariantList listOfEmptyObjectLists;
         for (int i=0; i<displacedIndexes.size(); i++)
-            listOfEmptyObjectLists.insert(listOfEmptyObjectLists.count(), QVariantList());
+            listOfEmptyObjectLists.insert(listOfEmptyObjectLists.size(), QVariantList());
         QCOMPARE(window->rootObject()->property("displacedTrans_targetItems").toList(), listOfEmptyObjectLists);
     }
 
@@ -4012,7 +4012,7 @@ QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait
 void tst_qquickpositioners::matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes)
 {
     const QSet<int> expectedIndexSet(expectedIndexes.cbegin(), expectedIndexes.cend());
-    for (int i=0; i<indexLists.count(); i++) {
+    for (int i=0; i<indexLists.size(); i++) {
         const auto &currentList = indexLists[i].value<QList<int> >();
         const QSet<int> current(currentList.cbegin(), currentList.cend());
         if (current != expectedIndexSet)
@@ -4032,20 +4032,20 @@ void tst_qquickpositioners::matchItemsAndIndexes(const QVariantMap &items, const
             qDebug() << itemIndex;
         QCOMPARE(model.name(itemIndex), name);
     }
-    QCOMPARE(items.count(), expectedIndexes.size());
+    QCOMPARE(items.size(), expectedIndexes.size());
 }
 
 void tst_qquickpositioners::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
 {
-    for (int i=0; i<itemLists.count(); i++) {
+    for (int i=0; i<itemLists.size(); i++) {
         QCOMPARE(itemLists[i].typeId(), QMetaType::QVariantList);
         QVariantList current = itemLists[i].toList();
-        for (int j=0; j<current.count(); j++) {
+        for (int j=0; j<current.size(); j++) {
             QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());
             QVERIFY2(o, QTest::toString(QString("Invalid actual item at %1").arg(j)));
             QVERIFY2(expectedItems.contains(o), QTest::toString(QString("Cannot match item %1").arg(j)));
         }
-        QCOMPARE(current.count(), expectedItems.size());
+        QCOMPARE(current.size(), expectedItems.size());
     }
 }
 

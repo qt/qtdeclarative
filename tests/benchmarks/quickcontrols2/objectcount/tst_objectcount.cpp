@@ -99,7 +99,7 @@ static void doBenchmark(QQmlEngine *engine, const QUrl &url)
             qInfo() << "\t" << object;
     }
 
-    QTest::setBenchmarkResult(objects.count(), QTest::Events);
+    QTest::setBenchmarkResult(objects.size(), QTest::Events);
 }
 
 void tst_ObjectCount::qobjects()

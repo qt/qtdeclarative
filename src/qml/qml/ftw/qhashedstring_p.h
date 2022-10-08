@@ -424,7 +424,7 @@ quint32 QHashedString::stringHash(const char *data, int length)
 
 void QHashedString::computeHash() const
 {
-    m_hash = stringHash(constData(), length());
+    m_hash = stringHash(constData(), size());
 }
 
 namespace QtPrivate {

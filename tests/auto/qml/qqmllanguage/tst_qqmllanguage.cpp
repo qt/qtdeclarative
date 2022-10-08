@@ -779,7 +779,7 @@ void tst_qqmllanguage::simpleContainer()
     VERIFY_ERRORS(0);
     QScopedPointer<MyContainer> container(qobject_cast<MyContainer*>(component.create()));
     QVERIFY(container != nullptr);
-    QCOMPARE(container->getChildren()->count(),2);
+    QCOMPARE(container->getChildren()->size(),2);
 }
 
 void tst_qqmllanguage::interfaceProperty()
@@ -798,7 +798,7 @@ void tst_qqmllanguage::interfaceQList()
     VERIFY_ERRORS(0);
     QScopedPointer<MyContainer> container(qobject_cast<MyContainer*>(component.create()));
     QVERIFY(container != nullptr);
-    QCOMPARE(container->getQListInterfaces()->count(), 2);
+    QCOMPARE(container->getQListInterfaces()->size(), 2);
     for(int ii = 0; ii < 2; ++ii)
         QCOMPARE(container->getQListInterfaces()->at(ii)->id, 913);
 }
@@ -839,7 +839,7 @@ void tst_qqmllanguage::assignQmlComponent()
     VERIFY_ERRORS(0);
     QScopedPointer<MyContainer> object(qobject_cast<MyContainer *>(component.create()));
     QVERIFY(object != nullptr);
-    QCOMPARE(object->getChildren()->count(), 1);
+    QCOMPARE(object->getChildren()->size(), 1);
     QObject *child = object->getChildren()->at(0);
     QCOMPARE(child->property("x"), QVariant(10));
     QCOMPARE(child->property("y"), QVariant(11));
@@ -1365,7 +1365,7 @@ void tst_qqmllanguage::rootAsQmlComponent()
     QScopedPointer<MyContainer> object(qobject_cast<MyContainer *>(component.create()));
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("x"), QVariant(11));
-    QCOMPARE(object->getChildren()->count(), 2);
+    QCOMPARE(object->getChildren()->size(), 2);
 }
 
 void tst_qqmllanguage::rootItemIsComponent()
@@ -1397,7 +1397,7 @@ void tst_qqmllanguage::inlineQmlComponents()
     VERIFY_ERRORS(0);
     QScopedPointer<MyContainer> object(qobject_cast<MyContainer *>(component.create()));
     QVERIFY(object != nullptr);
-    QCOMPARE(object->getChildren()->count(), 1);
+    QCOMPARE(object->getChildren()->size(), 1);
     QQmlComponent *comp = qobject_cast<QQmlComponent *>(object->getChildren()->at(0));
     QVERIFY(comp != nullptr);
     QScopedPointer<MyQmlObject> compObject(qobject_cast<MyQmlObject *>(comp->create()));
@@ -1413,7 +1413,7 @@ void tst_qqmllanguage::idProperty()
         VERIFY_ERRORS(0);
         QScopedPointer<MyContainer> object(qobject_cast<MyContainer *>(component.create()));
         QVERIFY(object != nullptr);
-        QCOMPARE(object->getChildren()->count(), 2);
+        QCOMPARE(object->getChildren()->size(), 2);
         MyTypeObject *child =
                 qobject_cast<MyTypeObject *>(object->getChildren()->at(0));
         QVERIFY(child != nullptr);
@@ -2704,7 +2704,7 @@ void tst_qqmllanguage::defaultPropertyListOrder()
     QScopedPointer<MyContainer> container(qobject_cast<MyContainer *>(component.create()));
     QVERIFY(container  != nullptr);
 
-    QCOMPARE(container->getChildren()->count(), 6);
+    QCOMPARE(container->getChildren()->size(), 6);
     QCOMPARE(container->getChildren()->at(0)->property("index"), QVariant(0));
     QCOMPARE(container->getChildren()->at(1)->property("index"), QVariant(1));
     QCOMPARE(container->getChildren()->at(2)->property("index"), QVariant(2));
@@ -5144,7 +5144,7 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     QVERIFY(innerObjsAfterFirstExecute.isEmpty());
 
     QObjectList outerObjsAfterFirstExecute = object->findChildren<QObject *>(QStringLiteral("outerobj")); // deferredListProperty.qml
-    QCOMPARE(outerObjsAfterFirstExecute.count(), 1);
+    QCOMPARE(outerObjsAfterFirstExecute.size(), 1);
     QCOMPARE(outerObjsAfterFirstExecute.first()->property("wasCompleted"), QVariant(true));
 
     groupProperty = object->property("groupProperty").value<QObject *>();
@@ -6920,7 +6920,7 @@ void tst_qqmllanguage::variantListConversion()
     Foo *foo = qobject_cast<Foo *>(o.data());
     QVERIFY(foo);
     const QVariantList list = foo->getList();
-    QCOMPARE(list.length(), 3);
+    QCOMPARE(list.size(), 3);
     const Large l0 = qvariant_cast<Large>(list.at(0));
     QCOMPARE(l0.a, 12ull);
     const Large l1 = qvariant_cast<Large>(list.at(1));

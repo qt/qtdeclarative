@@ -3903,7 +3903,7 @@ public:
         return engine->memoryManager->allocate<QQmlDelegateModelGroupChangeArray>(changes);
     }
 
-    quint32 count() const { return d()->changes->count(); }
+    quint32 count() const { return d()->changes->size(); }
     const QQmlChangeSet::Change &at(int index) const { return d()->changes->at(index); }
 
     static QV4::ReturnedValue virtualGet(const QV4::Managed *m, QV4::PropertyKey id, const QV4::Value *receiver, bool *hasProperty)

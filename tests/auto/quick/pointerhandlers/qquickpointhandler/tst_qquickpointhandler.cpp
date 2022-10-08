@@ -204,8 +204,8 @@ void tst_PointHandler::simultaneousMultiTouch()
     int i = 0;
     for (auto h : handlers) {
         QTRY_COMPARE(h->active(), true);
-        QCOMPARE(activeSpies[i]->count(), 1);
-        QCOMPARE(pointSpies[i]->count(), 1);
+        QCOMPARE(activeSpies[i]->size(), 1);
+        QCOMPARE(pointSpies[i]->size(), 1);
         int chosenPointIndex = points.indexOf(h->point().position().toPoint());
         QVERIFY(chosenPointIndex != -1);
         // Verify that each handler chose a unique point
@@ -215,7 +215,7 @@ void tst_PointHandler::simultaneousMultiTouch()
         QCOMPARE(h->point().scenePosition().toPoint(), point);
         QCOMPARE(h->point().pressedButtons(), Qt::NoButton);
         QCOMPARE(h->translation(), QVector2D());
-        QCOMPARE(translationSpies[i]->count(), 1);
+        QCOMPARE(translationSpies[i]->size(), 1);
         ++i;
     }
 
@@ -226,8 +226,8 @@ void tst_PointHandler::simultaneousMultiTouch()
     i = 0;
     for (auto h : handlers) {
         QCOMPARE(h->active(), true);
-        QCOMPARE(activeSpies[i]->count(), 1);
-        QCOMPARE(pointSpies[i]->count(), 2);
+        QCOMPARE(activeSpies[i]->size(), 1);
+        QCOMPARE(pointSpies[i]->size(), 2);
         QCOMPARE(h->point().position().toPoint(), points[pointIndexPerHandler[i]]);
         QCOMPARE(h->point().scenePosition().toPoint(), points[pointIndexPerHandler[i]]);
         QCOMPARE(h->point().pressPosition().toPoint(), pressPoints[pointIndexPerHandler[i]]);
@@ -236,7 +236,7 @@ void tst_PointHandler::simultaneousMultiTouch()
         QVERIFY(h->point().velocity().x() > 0);
         QVERIFY(h->point().velocity().y() > 0);
         QCOMPARE(h->translation(), QVector2D(10 + 10 * pointIndexPerHandler[i], 10 + 10 * pointIndexPerHandler[i] % 2));
-        QCOMPARE(translationSpies[i]->count(), 2);
+        QCOMPARE(translationSpies[i]->size(), 2);
         ++i;
     }
 
@@ -245,10 +245,10 @@ void tst_PointHandler::simultaneousMultiTouch()
     i = 0;
     for (auto h : handlers) {
         QTRY_COMPARE(h->active(), false);
-        QCOMPARE(activeSpies[i]->count(), 2);
-        QCOMPARE(pointSpies[i]->count(), 3);
+        QCOMPARE(activeSpies[i]->size(), 2);
+        QCOMPARE(pointSpies[i]->size(), 3);
         QCOMPARE(h->translation(), QVector2D());
-        QCOMPARE(translationSpies[i]->count(), 3);
+        QCOMPARE(translationSpies[i]->size(), 3);
         ++i;
     }
 

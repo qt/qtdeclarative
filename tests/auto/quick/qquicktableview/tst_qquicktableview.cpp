@@ -4173,7 +4173,7 @@ void tst_QQuickTableView::selectionBehaviorCells()
     }
 
     const int expectedCount = (x2 - x1 + 1) * (y2 - y1 + 1);
-    const int actualCount = selectionModel.selectedIndexes().count();
+    const int actualCount = selectionModel.selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     // Wrap the selection
@@ -4186,7 +4186,7 @@ void tst_QQuickTableView::selectionBehaviorCells()
         }
     }
 
-    const int actualCountAfterWrap = selectionModel.selectedIndexes().count();
+    const int actualCountAfterWrap = selectionModel.selectedIndexes().size();
     QCOMPARE(actualCountAfterWrap, expectedCount);
 
     tableViewPrivate->clearSelection();
@@ -4217,7 +4217,7 @@ void tst_QQuickTableView::selectionBehaviorRows()
     QCOMPARE(selectionModel.hasSelection(), true);
 
     const int expectedCount = 10 * 3; // all columns * three rows
-    int actualCount = selectionModel.selectedIndexes().count();
+    int actualCount = selectionModel.selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < tableView->columns(); ++x) {
@@ -4236,7 +4236,7 @@ void tst_QQuickTableView::selectionBehaviorRows()
 
     QCOMPARE(selectionModel.hasSelection(), true);
 
-    actualCount = selectionModel.selectedIndexes().count();
+    actualCount = selectionModel.selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < tableView->columns(); ++x) {
@@ -4271,7 +4271,7 @@ void tst_QQuickTableView::selectionBehaviorColumns()
     QCOMPARE(selectionModel.hasSelection(), true);
 
     const int expectedCount = 10 * 3; // all rows * three columns
-    int actualCount = selectionModel.selectedIndexes().count();
+    int actualCount = selectionModel.selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < 3; ++x) {
@@ -4290,7 +4290,7 @@ void tst_QQuickTableView::selectionBehaviorColumns()
 
     QCOMPARE(selectionModel.hasSelection(), true);
 
-    actualCount = selectionModel.selectedIndexes().count();
+    actualCount = selectionModel.selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < 3; ++x) {
@@ -4468,7 +4468,7 @@ void tst_QQuickTableView::clearSelectionOnTap()
     // Select root item
     const auto index = tableView->selectionModel()->model()->index(0, 0);
     tableView->selectionModel()->select(index, QItemSelectionModel::Select);
-    QCOMPARE(tableView->selectionModel()->selectedIndexes().count(), 1);
+    QCOMPARE(tableView->selectionModel()->selectedIndexes().size(), 1);
 
     // Click on a cell. This should remove the selection
     const auto item = tableView->itemAtCell(0, 0);
@@ -4476,7 +4476,7 @@ void tst_QQuickTableView::clearSelectionOnTap()
     QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(tableView->selectionModel()->selectedIndexes().count(), 0);
+    QCOMPARE(tableView->selectionModel()->selectedIndexes().size(), 0);
 }
 
 void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()

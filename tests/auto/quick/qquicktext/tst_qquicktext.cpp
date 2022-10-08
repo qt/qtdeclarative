@@ -2075,7 +2075,7 @@ void tst_qquicktext::linkInteraction()
     QObject::connect(textObject, SIGNAL(linkActivated(QString)), &test, SLOT(linkClicked(QString)));
     QObject::connect(textObject, SIGNAL(linkHovered(QString)), &test, SLOT(linkHovered(QString)));
 
-    QVERIFY(mousePositions.count() > 0);
+    QVERIFY(mousePositions.size() > 0);
 
     QPointF mousePosition = mousePositions.first();
     auto globalPos = textObject->mapToGlobal(mousePosition);
@@ -2091,7 +2091,7 @@ void tst_qquicktext::linkInteraction()
     QCOMPARE(textObject->hoveredLink(), hoverEnterLink);
     QCOMPARE(textObject->linkAt(mousePosition.x(), mousePosition.y()), hoverEnterLink);
 
-    for (int i = 1; i < mousePositions.count(); ++i) {
+    for (int i = 1; i < mousePositions.size(); ++i) {
         mousePosition = mousePositions.at(i);
         auto globalPos = textObject->mapToGlobal(mousePosition);
 

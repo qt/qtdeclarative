@@ -357,9 +357,9 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         return false;
     }
 
-    if (target->length() <= expectedPosition) {
+    if (target->size() <= expectedPosition) {
         qWarning() << "Not enough events. expected position:" << expectedPosition
-                   << "length:" << target->length();
+                   << "length:" << target->size();
         return false;
     }
 
@@ -438,7 +438,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         }
 
         return true;
-    } while (++position < target->length() && target->at(position).timestamp() == timestamp);
+    } while (++position < target->size() && target->at(position).timestamp() == timestamp);
 
     foreach (const QString &message, warnings)
         qWarning() << message.toLocal8Bit().constData();

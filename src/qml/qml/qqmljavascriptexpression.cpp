@@ -176,7 +176,7 @@ public:
     ~QQmlJavaScriptExpressionCapture()
     {
         if (capture.errorString) {
-            for (int ii = 0; ii < capture.errorString->count(); ++ii)
+            for (int ii = 0; ii < capture.errorString->size(); ++ii)
                 qWarning("%s", qPrintable(capture.errorString->at(ii)));
             delete capture.errorString;
             capture.errorString = nullptr;

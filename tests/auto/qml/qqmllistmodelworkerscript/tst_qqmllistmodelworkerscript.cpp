@@ -91,10 +91,10 @@ bool tst_qqmllistmodelworkerscript::compareVariantList(const QVariantList &testL
     if (model == nullptr)
         return false;
 
-    if (model->count() != testList.count())
+    if (model->count() != testList.size())
         return false;
 
-    for (int i=0 ; i < testList.count() ; ++i) {
+    for (int i=0 ; i < testList.size() ; ++i) {
         const QVariant &testVariant = testList.at(i);
         if (testVariant.typeId() != QMetaType::QVariantMap)
             return false;
@@ -394,7 +394,7 @@ void tst_qqmllistmodelworkerscript::dynamic_worker_sync()
     // execute a set of commands on the worker list model, then check the
     // changes are reflected in the list model in the main thread
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
-            Q_ARG(QVariant, operations.mid(0, operations.length()-1))));
+            Q_ARG(QVariant, operations.mid(0, operations.size()-1))));
     waitForWorker(item);
 
     QQmlExpression e(eng.rootContext(), &model, operations.last().toString());
@@ -809,7 +809,7 @@ void tst_qqmllistmodelworkerscript::dynamic_role()
     // execute a set of commands on the worker list model, then check the
     // changes are reflected in the list model in the main thread
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
-            Q_ARG(QVariant, operations.mid(0, operations.length()-1))));
+            Q_ARG(QVariant, operations.mid(0, operations.size()-1))));
     waitForWorker(item);
 
     QQmlExpression e(engine.rootContext(), &model, operations.last().toString());

@@ -52,7 +52,7 @@ void removeRecursive(const QString& dirname)
 {
     QDir dir(dirname);
     QFileInfoList entries(dir.entryInfoList(QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot));
-    for (int i = 0; i < entries.count(); ++i)
+    for (int i = 0; i < entries.size(); ++i)
         if (entries[i].isDir())
             removeRecursive(entries[i].filePath());
         else
@@ -174,7 +174,7 @@ void tst_qqmlsqldatabase::totalDatabases()
     if (engine->offlineStoragePath().isEmpty())
         QSKIP("offlineStoragePath is empty, skip this test.");
 
-    QCOMPARE(QDir(dbDir()+"/Databases").entryInfoList(QDir::Files|QDir::NoDotAndDotDot).count(), total_databases_created_by_tests*2);
+    QCOMPARE(QDir(dbDir()+"/Databases").entryInfoList(QDir::Files|QDir::NoDotAndDotDot).size(), total_databases_created_by_tests*2);
 }
 
 void tst_qqmlsqldatabase::upgradeDatabase()

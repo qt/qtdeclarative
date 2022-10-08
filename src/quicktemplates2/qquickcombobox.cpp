@@ -190,7 +190,7 @@ QVariant QQuickComboBoxDelegateModel::variantValue(int index, const QString &rol
             const QVariant object = model.toList().value(index);
             if (object.metaType() == QMetaType::fromType<QVariantMap>()) {
                 const QVariantMap data = object.toMap();
-                if (data.count() == 1)
+                if (data.size() == 1)
                     return data.first();
             }
         }

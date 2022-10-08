@@ -386,7 +386,7 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
     if (customCurveVariant.isEmpty())
         return;
 
-    if ((customCurveVariant.count() % 6) != 0)
+    if ((customCurveVariant.size() % 6) != 0)
         return;
 
     auto convert = [](const QVariant &v, qreal &r) {

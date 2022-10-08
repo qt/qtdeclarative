@@ -259,8 +259,8 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
 
     QObjectList children = object->children();
 
-    int childrenCount = children.count();
-    for (int ii = 0; ii < children.count(); ++ii) {
+    int childrenCount = children.size();
+    for (int ii = 0; ii < children.size(); ++ii) {
         if (qobject_cast<QQmlContext*>(children[ii]))
             --childrenCount;
     }
@@ -269,7 +269,7 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
 
     QList<QQmlObjectProperty> fakeProperties;
 
-    for (int ii = 0; ii < children.count(); ++ii) {
+    for (int ii = 0; ii < children.size(); ++ii) {
         QObject *child = children.at(ii);
         if (qobject_cast<QQmlContext*>(child))
             continue;
@@ -332,7 +332,7 @@ void QQmlEngineDebugServiceImpl::prepareDeferredObjects(QObject *obj)
     qmlExecuteDeferred(obj);
 
     QObjectList children = obj->children();
-    for (int ii = 0; ii < children.count(); ++ii) {
+    for (int ii = 0; ii < children.size(); ++ii) {
         QObject *child = children.at(ii);
         prepareDeferredObjects(child);
     }
@@ -343,7 +343,7 @@ void QQmlEngineDebugServiceImpl::storeObjectIds(QObject *co)
 {
     QQmlDebugService::idForObject(co);
     QObjectList children = co->children();
-    for (int ii = 0; ii < children.count(); ++ii)
+    for (int ii = 0; ii < children.size(); ++ii)
         storeObjectIds(children.at(ii));
 }
 

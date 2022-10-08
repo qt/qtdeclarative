@@ -291,7 +291,7 @@ inline void spriteClear(QQmlListProperty<QQuickSprite> *p)
 
 inline qsizetype spriteCount(QQmlListProperty<QQuickSprite> *p)
 {
-    return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->count();
+    return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->size();
 }
 
 inline void spriteReplace(QQmlListProperty<QQuickSprite> *p, qsizetype idx, QQuickSprite *s)

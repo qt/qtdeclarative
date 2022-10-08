@@ -3976,7 +3976,7 @@ void tst_QQuickGridView::onAdd()
     qApp->processEvents();
 
     QVariantList result = gridview->property("addedDelegates").toList();
-    QTRY_COMPARE(result.count(), items.size());
+    QTRY_COMPARE(result.size(), items.size());
     for (int i=0; i<items.size(); i++)
         QCOMPARE(result[i].toString(), items[i].first);
 
@@ -5438,15 +5438,15 @@ void tst_QQuickGridView::displacedTransitions()
         QTRY_VERIFY(gridview->property("displaceTransitionsDone").toBool());
 
         // check the correct number of target items and indexes were received
-        QCOMPARE(resultTargetIndexes.count(), expectedDisplacedIndexes.count());
-        for (int i=0; i<resultTargetIndexes.count(); i++)
+        QCOMPARE(resultTargetIndexes.size(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetIndexes.size(); i++)
             QCOMPARE(resultTargetIndexes[i].value<QList<int> >().size(), change.count);
-        QCOMPARE(resultTargetItems.count(), expectedDisplacedIndexes.count());
-        for (int i=0; i<resultTargetItems.count(); i++)
+        QCOMPARE(resultTargetItems.size(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetItems.size(); i++)
             QCOMPARE(resultTargetItems[i].toList().size(), change.count);
     } else {
-        QCOMPARE(resultTargetIndexes.count(), 0);
-        QCOMPARE(resultTargetItems.count(), 0);
+        QCOMPARE(resultTargetIndexes.size(), 0);
+        QCOMPARE(resultTargetItems.size(), 0);
     }
 
     if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)
@@ -6404,7 +6404,7 @@ QList<int> tst_QQuickGridView::toIntList(const QVariantList &list)
 {
     QList<int> ret;
     bool ok = true;
-    for (int i=0; i<list.count(); i++) {
+    for (int i=0; i<list.size(); i++) {
         ret << list[i].toInt(&ok);
         if (!ok)
             qWarning() << "tst_QQuickGridView::toIntList(): not a number:" << list[i];
@@ -6416,7 +6416,7 @@ QList<int> tst_QQuickGridView::toIntList(const QVariantList &list)
 void tst_QQuickGridView::matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes)
 {
     const QSet<int> expectedIndexSet(expectedIndexes.cbegin(), expectedIndexes.cend());
-    for (int i=0; i<indexLists.count(); i++) {
+    for (int i=0; i<indexLists.size(); i++) {
         const auto &currentList = indexLists[i].value<QList<int> >();
         const QSet<int> current(currentList.cbegin(), currentList.cend());
         if (current != expectedIndexSet)
@@ -6436,19 +6436,19 @@ void tst_QQuickGridView::matchItemsAndIndexes(const QVariantMap &items, const Qa
             qDebug() << itemIndex;
         QCOMPARE(model.name(itemIndex), name);
     }
-    QCOMPARE(items.count(), expectedIndexes.size());
+    QCOMPARE(items.size(), expectedIndexes.size());
 }
 
 void tst_QQuickGridView::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
 {
-    for (int i=0; i<itemLists.count(); i++) {
+    for (int i=0; i<itemLists.size(); i++) {
         QVariantList current = itemLists[i].toList();
-        for (int j=0; j<current.count(); j++) {
+        for (int j=0; j<current.size(); j++) {
             QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());
             QVERIFY2(o, QTest::toString(QString("Invalid actual item at %1").arg(j)));
             QVERIFY2(expectedItems.contains(o), QTest::toString(QString("Cannot match item %1").arg(j)));
         }
-        QCOMPARE(current.count(), expectedItems.size());
+        QCOMPARE(current.size(), expectedItems.size());
     }
 }
 

@@ -98,10 +98,10 @@ void tst_QQuickAccessible::cleanup()
 {
     const EventList list = QTestAccessibility::events();
     if (!list.isEmpty()) {
-        qWarning().noquote() << list.count()
+        qWarning().noquote() << list.size()
                              << "accessibility event(s) were not handled in testfunction '"
                              << QTest::currentTestFunction() << "':";
-        for (int i = 0; i < list.count(); ++i) {
+        for (int i = 0; i < list.size(); ++i) {
             auto object = list.at(i)->object();
             QString objectInfo = object ? QDebug::toString(object)
                                         : u"[deleted object]"_s;

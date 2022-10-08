@@ -833,7 +833,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(
         }
 
         qmlObjects->append(syntheticComponent);
-        const int componentIndex = qmlObjects->count() - 1;
+        const int componentIndex = qmlObjects->size() - 1;
         // Keep property caches symmetric
         QQmlPropertyCache::ConstPtr componentCache
                 = QQmlMetaType::propertyCache(&QQmlComponent::staticMetaObject);
@@ -863,7 +863,7 @@ bool QQmlComponentAndAliasResolver::resolve(int root)
     //     someItemDelegate: Item {}
     // In the implicit case Item is surrounded by a synthetic Component {} because the property
     // on the left hand side is of QQmlComponent type.
-    const int objCountWithoutSynthesizedComponents = qmlObjects->count();
+    const int objCountWithoutSynthesizedComponents = qmlObjects->size();
     const int startObjectIndex = root == 0 ? root : root+1; // root+1, as ic root is handled at the end
     for (int i = startObjectIndex; i < objCountWithoutSynthesizedComponents; ++i) {
         QmlIR::Object *obj = qmlObjects->at(i);

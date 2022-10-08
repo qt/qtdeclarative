@@ -94,16 +94,16 @@ qsizetype QQmlListAccessor::count() const
     switch(m_type) {
     case StringList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QStringList>());
-        return reinterpret_cast<const QStringList *>(d.constData())->count();
+        return reinterpret_cast<const QStringList *>(d.constData())->size();
     case UrlList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QList<QUrl>>());
-        return reinterpret_cast<const QList<QUrl> *>(d.constData())->count();
+        return reinterpret_cast<const QList<QUrl> *>(d.constData())->size();
     case VariantList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QVariantList>());
-        return reinterpret_cast<const QVariantList *>(d.constData())->count();
+        return reinterpret_cast<const QVariantList *>(d.constData())->size();
     case ObjectList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QList<QObject *>>());
-        return reinterpret_cast<const QList<QObject *> *>(d.constData())->count();
+        return reinterpret_cast<const QList<QObject *> *>(d.constData())->size();
     case ListProperty:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QQmlListReference>());
         return reinterpret_cast<const QQmlListReference *>(d.constData())->count();

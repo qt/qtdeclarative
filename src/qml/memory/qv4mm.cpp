@@ -1075,7 +1075,7 @@ void MemoryManager::runGC()
         std::swap(freedObjectStats, *freedObjectStatsGlobal());
         typedef std::pair<const char*, int> ObjectStatInfo;
         std::vector<ObjectStatInfo> freedObjectsSorted;
-        freedObjectsSorted.reserve(freedObjectStats.count());
+        freedObjectsSorted.reserve(freedObjectStats.size());
         for (auto it = freedObjectStats.constBegin(); it != freedObjectStats.constEnd(); ++it) {
             freedObjectsSorted.push_back(std::make_pair(it.key(), it.value()));
         }

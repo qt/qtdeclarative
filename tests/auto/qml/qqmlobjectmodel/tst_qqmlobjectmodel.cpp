@@ -15,7 +15,7 @@ private slots:
 
 static bool compareItems(QQmlObjectModel *model, const QObjectList &items)
 {
-    for (int i = 0; i < items.count(); ++i) {
+    for (int i = 0; i < items.size(); ++i) {
         if (model->get(i) != items.at(i))
             return false;
     }

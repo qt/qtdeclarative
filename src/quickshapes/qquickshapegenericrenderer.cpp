@@ -588,13 +588,13 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
     }
 
     const int indexCount = d->indexType == QSGGeometry::UnsignedShortType
-            ? d->fillIndices.count() * 2 : d->fillIndices.count();
+            ? d->fillIndices.size() * 2 : d->fillIndices.size();
     if (g->indexType() != d->indexType) {
         g = new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(),
-                            d->fillVertices.count(), indexCount, d->indexType);
+                            d->fillVertices.size(), indexCount, d->indexType);
         n->setGeometry(g);
     } else {
-        g->allocate(d->fillVertices.count(), indexCount);
+        g->allocate(d->fillVertices.size(), indexCount);
     }
     g->setDrawingMode(QSGGeometry::DrawTriangles);
     memcpy(g->vertexData(), d->fillVertices.constData(), g->vertexCount() * g->sizeOfVertex());
@@ -635,7 +635,7 @@ void QQuickShapeGenericRenderer::updateStrokeNode(ShapePathData *d, QQuickShapeG
         return;
     }
 
-    g->allocate(d->strokeVertices.count(), 0);
+    g->allocate(d->strokeVertices.size(), 0);
     g->setDrawingMode(QSGGeometry::DrawTriangleStrip);
     memcpy(g->vertexData(), d->strokeVertices.constData(), g->vertexCount() * g->sizeOfVertex());
 }
@@ -778,10 +778,10 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
     if (int d = ga->b.y() - gb->b.y())
         return d;
 
-    if (int d = ga->stops.count() - gb->stops.count())
+    if (int d = ga->stops.size() - gb->stops.size())
         return d;
 
-    for (int i = 0; i < ga->stops.count(); ++i) {
+    for (int i = 0; i < ga->stops.size(); ++i) {
         if (int d = ga->stops[i].first - gb->stops[i].first)
             return d;
         if (int d = ga->stops[i].second.rgba() - gb->stops[i].second.rgba())
@@ -912,10 +912,10 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
     if (int d = ga->v1 - gb->v1)
         return d;
 
-    if (int d = ga->stops.count() - gb->stops.count())
+    if (int d = ga->stops.size() - gb->stops.size())
         return d;
 
-    for (int i = 0; i < ga->stops.count(); ++i) {
+    for (int i = 0; i < ga->stops.size(); ++i) {
         if (int d = ga->stops[i].first - gb->stops[i].first)
             return d;
         if (int d = ga->stops[i].second.rgba() - gb->stops[i].second.rgba())
@@ -1021,10 +1021,10 @@ int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
     if (int d = ga->v0 - gb->v0)
         return d;
 
-    if (int d = ga->stops.count() - gb->stops.count())
+    if (int d = ga->stops.size() - gb->stops.size())
         return d;
 
-    for (int i = 0; i < ga->stops.count(); ++i) {
+    for (int i = 0; i < ga->stops.size(); ++i) {
         if (int d = ga->stops[i].first - gb->stops[i].first)
             return d;
         if (int d = ga->stops[i].second.rgba() - gb->stops[i].second.rgba())

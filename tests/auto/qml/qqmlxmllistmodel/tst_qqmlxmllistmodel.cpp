@@ -313,7 +313,7 @@ void tst_QQmlXmlListModel::headers()
                  QQmlXmlListModel::Ready);
 
     // It doesn't do a network request for a local file
-    QCOMPARE(factory.lastSentHeaders.count(), 0);
+    QCOMPARE(factory.lastSentHeaders.size(), 0);
 
     model->setProperty("source", QUrl("http://localhost/filethatdoesnotexist.xml"));
     QTRY_COMPARE_WITH_TIMEOUT(qvariant_cast<QQmlXmlListModel::Status>(model->property("status")),
@@ -322,7 +322,7 @@ void tst_QQmlXmlListModel::headers()
     QVariantMap expectedHeaders;
     expectedHeaders["Accept"] = "application/xml,*/*";
 
-    QCOMPARE(factory.lastSentHeaders.count(), expectedHeaders.count());
+    QCOMPARE(factory.lastSentHeaders.size(), expectedHeaders.size());
     for (auto it = expectedHeaders.cbegin(), end = expectedHeaders.cend(); it != end; ++it) {
         QVERIFY(factory.lastSentHeaders.contains(it.key()));
         QCOMPARE(factory.lastSentHeaders[it.key()].toString(), it.value().toString());

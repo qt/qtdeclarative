@@ -843,7 +843,7 @@ void tst_qquicktreeview::selectionBehaviorCells()
     }
 
     const int expectedCount = (x2 - x1 + 1) * (y2 - y1 + 1);
-    const int actualCount = selectionModel->selectedIndexes().count();
+    const int actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     // Wrap the selection
@@ -856,7 +856,7 @@ void tst_qquicktreeview::selectionBehaviorCells()
         }
     }
 
-    const int actualCountAfterWrap = selectionModel->selectedIndexes().count();
+    const int actualCountAfterWrap = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCountAfterWrap, expectedCount);
 
     treeViewPrivate->clearSelection();
@@ -885,7 +885,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
     QCOMPARE(selectionModel->hasSelection(), true);
 
     const int expectedCount = treeView->columns() * 3; // all columns * three rows
-    int actualCount = selectionModel->selectedIndexes().count();
+    int actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < treeView->columns(); ++x) {
@@ -904,7 +904,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
 
     QCOMPARE(selectionModel->hasSelection(), true);
 
-    actualCount = selectionModel->selectedIndexes().count();
+    actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < treeView->columns(); ++x) {
@@ -936,7 +936,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
     QCOMPARE(selectionModel->hasSelection(), true);
 
     const int expectedCount = treeView->rows() * 3; // all rows * three columns
-    int actualCount = selectionModel->selectedIndexes().count();
+    int actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < 3; ++x) {
@@ -955,7 +955,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
 
     QCOMPARE(selectionModel->hasSelection(), true);
 
-    actualCount = selectionModel->selectedIndexes().count();
+    actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < 3; ++x) {

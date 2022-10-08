@@ -128,10 +128,10 @@ bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVarian
     if (model == nullptr)
         return false;
 
-    if (model->count() != testList.count())
+    if (model->count() != testList.size())
         return false;
 
-    for (int i=0 ; i < testList.count() ; ++i) {
+    for (int i=0 ; i < testList.size() ; ++i) {
         const QVariant &testVariant = testList.at(i);
         if (testVariant.typeId() != QMetaType::QVariantMap)
             return false;
