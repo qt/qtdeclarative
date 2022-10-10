@@ -28,8 +28,8 @@ T.RangeSlider {
             source: control.IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": IOS.theme === IOS.Light},
-                    {"dark": IOS.theme === IOS.Dark},
+                    {"light": Qt.styleHints.appearance === Qt.Light},
+                    {"dark": Qt.styleHints.appearance === Qt.Dark},
                 ]
             }
         }
@@ -47,8 +47,8 @@ T.RangeSlider {
             source: control.IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme === IOS.Light},
-                    {"dark": control.IOS.theme === IOS.Dark},
+                    {"light": Qt.styleHints.appearance === Qt.Light},
+                    {"dark": Qt.styleHints.appearance === Qt.Dark},
                 ]
             }
         }
@@ -67,8 +67,8 @@ T.RangeSlider {
             width: control.horizontal ? control.background.width : control.background.height
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme === IOS.Light},
-                    {"dark": control.IOS.theme === IOS.Dark},
+                    {"light": Qt.styleHints.appearance === Qt.Light},
+                    {"dark": Qt.styleHints.appearance === Qt.Dark},
                 ]
             }
 
@@ -81,8 +81,8 @@ T.RangeSlider {
                 source: control.IOS.url + "slider-progress"
                 NinePatchImageSelector on source {
                     states: [
-                        {"light": control.IOS.theme === IOS.Light},
-                        {"dark": control.IOS.theme === IOS.Dark},
+                        {"light": Qt.styleHints.appearance === Qt.Light},
+                        {"dark": Qt.styleHints.appearance === Qt.Dark},
                     ]
                 }
             }

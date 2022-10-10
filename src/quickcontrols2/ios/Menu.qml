@@ -52,8 +52,8 @@ T.Menu {
             source: control.IOS.url + "menu-background"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme === IOS.Light},
-                    {"dark": control.IOS.theme === IOS.Dark}
+                    {"light": Qt.styleHints.appearance === Qt.Light},
+                    {"dark": Qt.styleHints.appearance === Qt.Dark}
                 ]
             }
         }

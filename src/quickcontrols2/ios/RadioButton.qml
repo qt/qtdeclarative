@@ -26,8 +26,8 @@ T.RadioButton {
         ImageSelector on source {
             states: [
                 {"checked": control.checked},
-                {"light": control.IOS.theme === IOS.Light},
-                {"dark": control.IOS.theme === IOS.Dark}
+                {"light": Qt.styleHints.appearance === Qt.Light},
+                {"dark": Qt.styleHints.appearance === Qt.Dark}
             ]
         }
     }

@@ -16,7 +16,7 @@ T.ToolBar {
 
     background: Rectangle {
         implicitHeight: 49
-        color: control.IOS.theme === IOS.Dark ? control.palette.light : control.palette.base
+        color: Qt.styleHints.appearance === Qt.Dark ? control.palette.light : control.palette.base
         Rectangle {
             height: 1
             width: parent.width

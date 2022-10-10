@@ -24,6 +24,7 @@ public:
 
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
+    void updateTheme() override;
 
     QQuickIOSTheme m_theme;
 };
@@ -41,6 +42,12 @@ QString QtQuickControls2IOSStylePlugin::name() const
 
 void QtQuickControls2IOSStylePlugin::initializeTheme(QQuickTheme *theme)
 {
+    m_theme.initialize(theme);
+}
+
+void QtQuickControls2IOSStylePlugin::updateTheme()
+{
+    QQuickTheme *theme = QQuickTheme::instance();
     m_theme.initialize(theme);
 }
 

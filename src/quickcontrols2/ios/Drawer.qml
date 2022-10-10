@@ -32,8 +32,8 @@ T.Drawer {
             source: control.IOS.url + "drawer-background"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme === IOS.Light},
-                    {"dark": control.IOS.theme === IOS.Dark},
+                    {"light": Qt.styleHints.appearance === Qt.Light},
+                    {"dark": Qt.styleHints.appearance === Qt.Dark},
                     {"modal": control.modal}
                 ]
             }

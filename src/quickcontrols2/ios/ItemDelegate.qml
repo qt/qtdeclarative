@@ -36,7 +36,7 @@ T.ItemDelegate {
 
     background: Rectangle {
         implicitHeight: 44
-        color: control.IOS.theme === IOS.Dark ? control.palette.light : control.palette.base
+        color: Qt.styleHints.appearance === Qt.Dark ? control.palette.light : control.palette.base
         NinePatchImage {
             property real offset: control.icon.source.toString() !== "" ? control.icon.width + control.spacing : 0
             x: control.down ? 0 : control.leftPadding + offset
@@ -46,8 +46,8 @@ T.ItemDelegate {
             source: control.IOS.url + "itemdelegate-background"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme === IOS.Light},
-                    {"dark": control.IOS.theme === IOS.Dark},
+                    {"light": Qt.styleHints.appearance === Qt.Light},
+                    {"dark": Qt.styleHints.appearance === Qt.Dark},
                     {"pressed": control.down}
                 ]
             }

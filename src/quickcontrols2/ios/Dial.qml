@@ -92,8 +92,8 @@ T.Dial {
             source: control.IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme === IOS.Light},
-                    {"dark": control.IOS.theme === IOS.Dark},
+                    {"light": Qt.styleHints.appearance === Qt.Light},
+                    {"dark": Qt.styleHints.appearance === Qt.Dark},
                     {"disabled": !control.enabled}
                 ]
             }

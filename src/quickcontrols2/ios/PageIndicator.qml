@@ -18,8 +18,8 @@ T.PageIndicator {
         source: control.IOS.url + "pageindicator-delegate"
         ImageSelector on source {
             states: [
-                {"light": control.IOS.theme === IOS.Light},
-                {"dark": control.IOS.theme === IOS.Dark},
+                {"light": Qt.styleHints.appearance === Qt.Light},
+                {"dark": Qt.styleHints.appearance === Qt.Dark},
                 {"current": index === control.currentIndex},
             ]
         }
