@@ -112,6 +112,7 @@ private slots:
     void noEngine();
 
     void stackOverflow();
+    void stackOverflow2();
     void boundComponent();
 };
 
@@ -1526,15 +1527,30 @@ void tst_QQuickLoader::noEngine()
     QTRY_COMPARE(o->property("changes").toInt(), 1);
 }
 
-void tst_QQuickLoader::stackOverflow()
+static void qTestForOverflow(const QUrl &url)
 {
     QQmlEngine engine;
-    const QUrl url = testFileUrl("overflow.qml");
     QQmlComponent component(&engine, url);
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     const QString message = url.toString() + QStringLiteral(": Maximum call stack size exceeded.");
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(message));
     QScopedPointer<QObject> o(component.create());
+}
+
+void tst_QQuickLoader::stackOverflow()
+{
+    auto t = QThread::create(qTestForOverflow, testFileUrl("overflow.qml"));
+    t->setStackSize(1024 * 1024);
+    t->start();
+    t->wait();
+}
+
+void tst_QQuickLoader::stackOverflow2()
+{
+    auto t = QThread::create(qTestForOverflow, testFileUrl("overflow2.qml"));
+    t->setStackSize(1024 * 1024);
+    t->start();
+    t->wait();
 }
 
 void tst_QQuickLoader::boundComponent()

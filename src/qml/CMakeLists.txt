@@ -232,6 +232,7 @@ qt_internal_add_qml_module(Qml
         memory/qv4heap_p.h
         memory/qv4mm.cpp memory/qv4mm_p.h
         memory/qv4mmdefs_p.h
+        memory/qv4stacklimits.cpp memory/qv4stacklimits_p.h
         memory/qv4writebarrier_p.h
         parser/qqmljsast.cpp parser/qqmljsast_p.h
         parser/qqmljsastfwd_p.h
@@ -497,6 +498,11 @@ qt_internal_extend_target(Qml CONDITION WIN32
         NOMINMAX
     PUBLIC_LIBRARIES
         shell32
+)
+
+qt_internal_extend_target(Qml CONDITION LINUX AND QT_FEATURE_dlopen
+    LIBRARIES
+        dl
 )
 
 #### Keys ignored in scope 7:.:.:qml.pro:solaris-cc_x_:

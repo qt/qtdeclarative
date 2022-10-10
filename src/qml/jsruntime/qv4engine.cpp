@@ -54,6 +54,7 @@
 #include "qv4reflect_p.h"
 #include "qv4proxy_p.h"
 #include "qv4stackframe_p.h"
+#include "qv4stacklimits_p.h"
 #include "qv4atomics_p.h"
 #include "qv4urlobject_p.h"
 #include "qv4variantobject_p.h"
@@ -305,33 +306,9 @@ void ExecutionEngine::initializeStaticMembers()
     } else {
         ok = false;
         s_maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
-        if (!ok || s_maxCallDepth <= 0) {
-#if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !__has_feature(address_sanitizer)
-#ifdef Q_OS_QNX
-            s_maxCallDepth = 640; // QNX's stack is only 512k by default
-#elif defined(Q_OS_ANDROID)
-            // In experiments, it started crashing at 1059.
-            s_maxCallDepth = 1000;
-#elif defined(Q_OS_WIN)
-            // We've seen crashes around 750.
-            s_maxCallDepth = 640;
-#else
-            s_maxCallDepth = 1234;
-#endif
-#else
-            // no (tail call) optimization is done, so there'll be a lot mare stack frames active
-#ifdef Q_OS_ANDROID
-            // Android's stack seems to be about 1mb.
-            // In experiments, it started crashing at 82.
-            s_maxCallDepth = 80;
-#else
-            s_maxCallDepth = 200;
-#endif
-#endif
-        }
+        if (!ok || s_maxCallDepth <= 0)
+            s_maxCallDepth = -1;
     }
-
-    Q_ASSERT(s_maxCallDepth > 0);
 
     ok = false;
     s_jitCallCountThreshold = qEnvironmentVariableIntValue("QV4_JIT_CALL_THRESHOLD", &ok);
@@ -380,6 +357,14 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
         while (engineSerial.loadAcquire() & 1) {
             QThread::yieldCurrentThread();
         }
+    }
+
+    if (s_maxCallDepth < 0) {
+        const StackProperties stack = stackProperties();
+        cppStackBase = stack.base;
+        cppStackLimit = stack.softLimit;
+    } else {
+        callDepth = 0;
     }
 
     // We allocate guard pages around our stacks.

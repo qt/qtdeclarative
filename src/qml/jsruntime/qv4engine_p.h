@@ -24,10 +24,12 @@
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qset.h>
+#include <QtCore/qprocessordetection.h>
 
 #include "qv4function_p.h"
 #include <private/qv4compileddata_p.h>
 #include <private/qv4executablecompilationunit_p.h>
+#include <private/qv4stacklimits_p.h>
 
 namespace WTF {
 class BumpPointerAllocator;
@@ -744,11 +746,49 @@ public:
             QMetaType type, const void *ptr,
             Heap::Object *parent = nullptr, int property = -1, uint flags = 0);
 
+    static void setMaxCallDepth(int maxCallDepth) { s_maxCallDepth = maxCallDepth; }
+    static int maxCallDepth() { return s_maxCallDepth; }
+
 private:
     template<int Frames>
     friend struct ExecutionEngineCallDepthRecorder;
 
     static void initializeStaticMembers();
+
+    bool inStack(const void *current) const
+    {
+#if Q_STACK_GROWTH_DIRECTION > 0
+        return current < cppStackLimit && current >= cppStackBase;
+#else
+        return current > cppStackLimit && current <= cppStackBase;
+#endif
+    }
+
+    bool hasCppStackOverflow()
+    {
+        if (s_maxCallDepth >= 0)
+            return callDepth >= s_maxCallDepth;
+
+        if (inStack(currentStackPointer()))
+            return false;
+
+        // Double check the stack limits on failure.
+        // We may have moved to a different thread.
+        const StackProperties stack = stackProperties();
+        cppStackBase = stack.base;
+        cppStackLimit = stack.softLimit;
+        return !inStack(currentStackPointer());
+    }
+
+    bool hasJsStackOverflow() const
+    {
+        return jsStackTop > jsStackLimit;
+    }
+
+    bool hasStackOverflow()
+    {
+        return hasJsStackOverflow() || hasCppStackOverflow();
+    }
 
     static int s_maxCallDepth;
     static int s_jitCallCountThreshold;
@@ -789,7 +829,9 @@ private:
     QHash<QUrl, Value *> nativeModules;
 };
 
-#define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
+#define CHECK_STACK_LIMITS(v4) \
+    if (v4->checkStackLimits()) \
+        return Encode::undefined(); \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
 template<int Frames = 1>
@@ -797,15 +839,27 @@ struct ExecutionEngineCallDepthRecorder
 {
     ExecutionEngine *ee;
 
-    ExecutionEngineCallDepthRecorder(ExecutionEngine *e): ee(e) { ee->callDepth += Frames; }
-    ~ExecutionEngineCallDepthRecorder() { ee->callDepth -= Frames; }
+    ExecutionEngineCallDepthRecorder(ExecutionEngine *e): ee(e)
+    {
+        if (ExecutionEngine::s_maxCallDepth >= 0)
+            ee->callDepth += Frames;
+    }
 
-    bool hasOverflow() const { return ee->callDepth >= ExecutionEngine::s_maxCallDepth; }
+    ~ExecutionEngineCallDepthRecorder()
+    {
+        if (ExecutionEngine::s_maxCallDepth >= 0)
+            ee->callDepth -= Frames;
+    }
+
+    bool hasOverflow() const
+    {
+        return ee->hasCppStackOverflow();
+    }
 };
 
 inline bool ExecutionEngine::checkStackLimits()
 {
-    if (Q_UNLIKELY((jsStackTop > jsStackLimit) || (callDepth >= s_maxCallDepth))) {
+    if (Q_UNLIKELY(hasStackOverflow())) {
         throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
         return true;
     }

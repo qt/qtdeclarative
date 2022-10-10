@@ -5094,19 +5094,29 @@ void tst_QJSEngine::aggressiveGc()
 
 void tst_QJSEngine::noAccumulatorInTemplateLiteral()
 {
+    // Use aggressive GC to increase our chances of triggering the problem.
     const QByteArray origAggressiveGc = qgetenv("QV4_MM_AGGRESSIVE_GC");
     qputenv("QV4_MM_AGGRESSIVE_GC", "true");
-    {
-        QJSEngine engine;
 
-        // getTemplateLiteral should not save the accumulator as it's garbage and trashes
-        // the next GC run. Instead, we want to see the stack overflow error.
-        QJSValue value = engine.evaluate("function a(){\nS=o=>s\nFunction``\na()}a()");
+    QJSEngine engine;
+    const int maxCallDepth = QV4::ExecutionEngine::maxCallDepth();
 
-        QVERIFY(value.isError());
-        QCOMPARE(value.toString(), "RangeError: Maximum call stack size exceeded.");
-    }
-    qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
+    const auto guard = qScopeGuard([&]() {
+        QV4::ExecutionEngine::setMaxCallDepth(maxCallDepth);
+        qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
+    });
+
+    // Since it takes too long to get a real stack overflow with the function below,
+    // let's switch to call depth tracking.
+    QV4::ExecutionEngine::setMaxCallDepth(64);
+    engine.handle()->callDepth = 0;
+
+    // getTemplateLiteral should not save the accumulator as it's garbage and trashes
+    // the next GC run. Instead, we want to see the stack overflow error.
+    QJSValue value = engine.evaluate("function a(){\nS=o=>s\nFunction``\na()}a()");
+
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), "RangeError: Maximum call stack size exceeded.");
 }
 
 void tst_QJSEngine::interrupt_data()
