@@ -999,7 +999,13 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                } };
     QTest::newRow("badlyBoundComponents")
             << QStringLiteral("badlyBoundComponents.qml")
-            << Result { { Message { QStringLiteral("Unqualified access"), 18, 36 } } };
+            << Result{ { Message{ QStringLiteral("Unqualified access"), 18, 36 } } };
+    QTest::newRow("NotScopedEnumCpp")
+            << QStringLiteral("NotScopedEnumCpp.qml")
+            << Result{ { Message{
+                       QStringLiteral(
+                               "Type is an unscoped enum. You cannot access \"V1\" from here."),
+                       5, 57 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1166,6 +1172,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("template literal (substitution)") << QStringLiteral("templateStringSubstitution.qml");
     QTest::newRow("enumsOfScrollBar") << QStringLiteral("enumsOfScrollBar.qml");
     QTest::newRow("optionalChainingCall") << QStringLiteral("optionalChainingCall.qml");
+    QTest::newRow("EnumAccessCpp") << QStringLiteral("EnumAccessCpp.qml");
 }
 
 void TestQmllint::cleanQmlCode()

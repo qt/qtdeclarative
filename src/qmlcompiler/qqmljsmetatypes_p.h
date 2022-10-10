@@ -52,6 +52,7 @@ class QQmlJSMetaEnum
     QString m_alias;
     QSharedPointer<const QQmlJSScope> m_type;
     bool m_isFlag = false;
+    bool m_scoped = true;
 
 public:
     QQmlJSMetaEnum() = default;
@@ -67,6 +68,9 @@ public:
 
     bool isFlag() const { return m_isFlag; }
     void setIsFlag(bool isFlag) { m_isFlag = isFlag; }
+
+    bool isScoped() const { return m_scoped; }
+    void setScoped(bool v) { m_scoped = v; }
 
     void addKey(const QString &key) { m_keys.append(key); }
     QStringList keys() const { return m_keys; }

@@ -18,6 +18,14 @@ Module {
                 "CCC": 2
             }
         }
+        Enum {
+            name: "TheEnum"
+            scoped: false
+            values: {
+                "V1": 0,
+                "V2": 1
+            }
+        }
         Property { name: "palette"; type: "QPalette" }
         Property { name: "palette2"; type: "CustomPalette" }
     }

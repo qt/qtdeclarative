@@ -465,9 +465,14 @@ bool QQmlJSTypePropagator::isRestricted(const QString &propertyName) const
 
     if (accumulatorIn.value().isList() && propertyName != u"length") {
         restrictedKind = u"a list"_s;
-    } else if (accumulatorIn.value().isEnumeration()
-               && !accumulatorIn.value().enumeration().hasKey(propertyName)) {
-        restrictedKind = u"an enum"_s;
+    } else if (accumulatorIn.value().isEnumeration()) {
+        const auto metaEn = accumulatorIn.value().enumeration();
+        if (metaEn.isScoped()) {
+            if (!metaEn.hasKey(propertyName))
+                restrictedKind = u"an enum"_s;
+        } else {
+            restrictedKind = u"an unscoped enum"_s;
+        }
     } else if (accumulatorIn.value().isMethod()) {
         restrictedKind = u"a method"_s;
     }
