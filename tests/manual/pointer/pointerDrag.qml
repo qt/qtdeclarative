@@ -240,5 +240,55 @@ Rectangle {
                 }
             }
         }
+
+        TextBox {
+            objectName: "dragSquircle9"
+            x: 200; y: 100
+            width: 100; height: 100
+            label: "DragHandler"
+            color: queryColor(drag9.active)
+            CheckBox {
+                id: ckGreedyDrag9
+                x: 10
+                y: 20
+                label: " Greedy"
+                checked: true
+            }
+            CheckBox {
+                id: ckZeroDragThreshold9
+                label: " Zero threshold"
+                x: 10
+                anchors.bottom: ckGreedyDragR9.top
+                checked: false
+            }
+            CheckBox {
+                id: ckGreedyDragR9
+                x: 10
+                anchors.bottom: dragRect9.top
+                label: " Greedy ↓"
+                checked: false
+            }
+            DragHandler {
+                id: drag9
+                objectName: "drag9"
+                grabPermissions: ckGreedyDrag9.checked ? DragHandler.CanTakeOverFromAnything :
+                                                DragHandler.CanTakeOverFromItems | DragHandler.CanTakeOverFromHandlersOfDifferentType | DragHandler.ApprovesTakeOverByAnything
+                dragThreshold: ckZeroDragThreshold9.checked ? 0 : undefined
+            }
+
+            TextBox {
+                id: dragRect9
+                objectName: "dragRect9"
+                label: "DragHandler"
+                x: (parent.width - width)/2
+                y: 65
+                DragHandler {
+                    objectName: "dragRect9"
+                    grabPermissions: ckGreedyDragR9.checked ? DragHandler.CanTakeOverFromAnything :
+                                                    DragHandler.CanTakeOverFromItems | DragHandler.CanTakeOverFromHandlersOfDifferentType | DragHandler.ApprovesTakeOverByAnything
+                    dragThreshold: ckZeroDragThreshold9.checked ? 0 : undefined
+                }
+            }
+        }
     }
 }
