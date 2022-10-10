@@ -31,6 +31,7 @@ qt_internal_add_module(QuickTestUtilsPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Test
+        Qt::Network
         Qt::Qml
         Qt::QmlPrivate
 )
