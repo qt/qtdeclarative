@@ -384,7 +384,7 @@ const QPalette *QQuickStylePrivate::readPalette(const QSharedPointer<QSettings> 
 
 bool QQuickStylePrivate::isDarkSystemTheme()
 {
-    const static bool dark = [](){
+    const bool dark = [](){
         if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
             return theme->appearance() == Qt::Appearance::Dark;
         return false;
