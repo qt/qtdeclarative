@@ -88,4 +88,5 @@ private slots:
     void generalizedGroupedProperty();
     void appendToQQmlListProperty();
     void inlineComponents();
+    void aliases();
 };

@@ -101,6 +101,7 @@ set(qml_sources
     appendToQQmlListProperty.qml
     inlineComponents.qml
     repeaterCrash.qml
+    aliases.qml
 
     # support types:
     DefaultPropertySingleChild.qml
@@ -110,6 +111,9 @@ set(qml_sources
     LocalWithOnCompleted.qml
     LocallyImported_context.qml
 #   SingletonThing.qml
+    ComponentWithAlias1.qml
+    ComponentWithAlias2.qml
+    ComponentWithAlias3.qml
 
     badFile.qml
 )
