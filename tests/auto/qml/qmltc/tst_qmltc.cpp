@@ -70,7 +70,7 @@
 #include "calqlatrbits.h"
 #include "propertychangeandsignalhandlers.h"
 #include "repeatercrash.h"
-
+#include "aliases.h"
 #include "testprivateproperty.h"
 
 // Qt:
@@ -2192,6 +2192,36 @@ void tst_qmltc::repeaterCrash()
         QVERIFY(nameFromQmltc.isValid());
         QCOMPARE(nameFromQmltc.toString(), nameFromEngine.toString());
     }
+}
+
+void tst_qmltc::aliases()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(aliases) fromQmltc(&e);
+
+    QQmlComponent component(&e);
+    component.loadUrl(QUrl("qrc:/QmltcTests/aliases.qml"));
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> fromComponent(component.create());
+    const QString testString = u"myTestString"_s;
+
+    QCOMPARE(fromQmltc.aliasToAlias(), u"Hello World!"_s);
+    QCOMPARE(fromComponent->property("aliasToAlias"), u"Hello World!"_s);
+
+    fromQmltc.setAliasToAlias(testString);
+    QVERIFY(fromComponent->setProperty("aliasToAlias", testString));
+
+    QCOMPARE(fromQmltc.aliasToAlias(), testString);
+    QCOMPARE(fromComponent->property("aliasToAlias"), testString);
+
+    QCOMPARE(fromQmltc.aliasToOtherFile(), u"Set me!"_s);
+    QCOMPARE(fromComponent->property("aliasToOtherFile"), u"Set me!"_s);
+
+    fromQmltc.setAliasToOtherFile(testString);
+    QVERIFY(fromComponent->setProperty("aliasToOtherFile", testString));
+
+    QCOMPARE(fromQmltc.aliasToOtherFile(), testString);
+    QCOMPARE(fromComponent->property("aliasToOtherFile"), testString);
 }
 
 QTEST_MAIN(tst_qmltc)

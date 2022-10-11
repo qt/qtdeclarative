@@ -25,17 +25,23 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
     QQmlJSUtils::ResolvedAlias result {};
     result.owner = owner;
 
-    for (QQmlJSMetaProperty nextProperty = property; nextProperty.isAlias();) {
-
-        // this is a special (seemingly useless) section which is necessary when
-        // we have an alias pointing to an alias. this way we avoid a check
-        // whether a property is an alias at the very end of the loop body
+    // TODO: one could optimize the generated alias code for aliases pointing to aliases
+    //  e.g., if idA.myAlias -> idB.myAlias2 -> idC.myProp, then one could directly generate
+    //  idA.myProp as pointing to idC.myProp.
+    //  This gets complicated when idB.myAlias is in a different Component than where the
+    //  idA.myAlias is defined: scopeForId currently only contains the ids of the current
+    //  component and alias resolution on the ids of a different component fails then.
+    if (QQmlJSMetaProperty nextProperty = property; nextProperty.isAlias()) {
         QQmlJSScope::ConstPtr resultOwner = result.owner;
         result = QQmlJSUtils::ResolvedAlias {};
 
         visitor.reset();
 
         auto aliasExprBits = nextProperty.aliasExpression().split(u'.');
+        // do not crash on invalid aliasexprbits when accessing aliasExprBits[0]
+        if (aliasExprBits.size() < 1)
+            return {};
+
         // resolve id first:
         resultOwner = scopeForId(aliasExprBits[0], resultOwner);
         if (!resultOwner)
@@ -46,8 +52,6 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
         aliasExprBits.removeFirst(); // Note: for simplicity, remove the <id>
         result.owner = resultOwner;
         result.kind = QQmlJSUtils::AliasTarget_Object;
-        // reset the property to avoid endless loop when aliasExprBits is empty
-        nextProperty = QQmlJSMetaProperty {};
 
         for (const QString &bit : qAsConst(aliasExprBits)) {
             nextProperty = resultOwner->property(bit);

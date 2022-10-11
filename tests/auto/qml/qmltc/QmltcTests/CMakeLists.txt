@@ -91,6 +91,7 @@ set(qml_sources
     deferredProperties_attached.qml
     deferredProperties_complex.qml
     repeaterCrash.qml
+    aliases.qml
 
     # support types:
     DefaultPropertySingleChild.qml
@@ -99,6 +100,9 @@ set(qml_sources
     LocalWithOnCompleted.qml
     LocallyImported_context.qml
 #   SingletonThing.qml
+    ComponentWithAlias1.qml
+    ComponentWithAlias2.qml
+    ComponentWithAlias3.qml
 
     badFile.qml
 )
