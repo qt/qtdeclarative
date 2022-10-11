@@ -79,7 +79,7 @@ bool QQuickGraphicsDevice::isNull() const
     the associated QSurfaceFormat, or threading issues due to attempting to use
     \a context on multiple threads are up to the caller to avoid.
  */
-#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(opengl) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromOpenGLContext(QOpenGLContext *context)
 {
     QQuickGraphicsDevice dev;
@@ -99,7 +99,7 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromOpenGLContext(QOpenGLContext *con
     value. \a featureLevel can be set to 0 if it is not intended to be
     specified, in which case the scene graph's defaults will be used.
  */
-#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+#if defined(Q_OS_WIN) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromAdapter(quint32 adapterLuidLow,
                                                        qint32 adapterLuidHigh,
                                                        int featureLevel)
@@ -124,7 +124,7 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromAdapter(quint32 adapterLuidLow,
     it merely contains references. It is the caller's responsibility to ensure
     that the native resource exists as long as necessary.
  */
-#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+#if defined(Q_OS_WIN) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndContext(void *device, void *context)
 {
     QQuickGraphicsDevice dev;
@@ -146,7 +146,7 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndContext(void *device, vo
     that the native resource exists as long as necessary.
 
  */
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndCommandQueue(MTLDevice *device,
                                                                      MTLCommandQueue *commandQueue)
 {
@@ -168,7 +168,7 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndCommandQueue(MTLDevice *
     it merely contains references. It is the caller's responsibility to ensure
     that the native resource exists as long as necessary.
  */
-#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(vulkan) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromPhysicalDevice(VkPhysicalDevice physicalDevice)
 {
     QQuickGraphicsDevice dev;
@@ -190,7 +190,7 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromPhysicalDevice(VkPhysicalDevice p
     it merely contains references. It is the caller's responsibility to ensure
     that the native resource exists as long as necessary.
  */
-#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(vulkan) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(VkPhysicalDevice physicalDevice,
                                                              VkDevice device,
                                                              int queueFamilyIndex,

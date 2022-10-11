@@ -679,7 +679,7 @@ QSGDynamicTexture::~QSGDynamicTexture()
  */
 
 
-#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(opengl) || defined(Q_QDOC)
 namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGOpenGLTexture
@@ -779,7 +779,7 @@ GLuint QSGTexturePlatformOpenGL::nativeTexture() const
 }
 #endif // opengl
 
-#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+#if defined(Q_OS_WIN) || defined(Q_QDOC)
 namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGD3D11Texture
@@ -839,7 +839,7 @@ void *QSGTexturePlatformD3D11::nativeTexture() const
 }
 #endif // win
 
-#if defined(__OBJC__) || defined(Q_CLANG_QDOC)
+#if defined(__OBJC__) || defined(Q_QDOC)
 namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGMetalTexture
@@ -886,7 +886,7 @@ namespace QNativeInterface {
 } // QNativeInterface
 #endif // OBJC
 
-#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(vulkan) || defined(Q_QDOC)
 namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGVulkanTexture

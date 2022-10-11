@@ -60,7 +60,7 @@ public:
 
         // Uppermost 8 bits are reserved for internal use.
         IsVisitableNode             = 0x01000000
-#ifdef Q_CLANG_QDOC
+#ifdef Q_QDOC
         , InternalReserved            = 0x01000000
 #endif
     };

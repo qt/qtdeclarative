@@ -15,7 +15,7 @@
 #include <QtGui/qvulkaninstance.h>
 #endif
 
-#if defined(__OBJC__) || defined(Q_CLANG_QDOC)
+#if defined(__OBJC__) || defined(Q_QDOC)
 @protocol MTLTexture;
 #endif
 
@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QNativeInterface {
 
-#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(opengl) || defined(Q_QDOC)
 struct Q_QUICK_EXPORT QSGOpenGLTexture
 {
     QT_DECLARE_NATIVE_INTERFACE(QSGOpenGLTexture, 1, QSGTexture)
@@ -39,7 +39,7 @@ struct Q_QUICK_EXPORT QSGOpenGLTexture
 };
 #endif
 
-#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+#if defined(Q_OS_WIN) || defined(Q_QDOC)
 struct Q_QUICK_EXPORT QSGD3D11Texture
 {
     QT_DECLARE_NATIVE_INTERFACE(QSGD3D11Texture, 1, QSGTexture)
@@ -51,7 +51,7 @@ struct Q_QUICK_EXPORT QSGD3D11Texture
 };
 #endif
 
-#if defined(__OBJC__) || defined(Q_CLANG_QDOC)
+#if defined(__OBJC__) || defined(Q_QDOC)
 struct Q_QUICK_EXPORT QSGMetalTexture
 {
     QT_DECLARE_NATIVE_INTERFACE(QSGMetalTexture, 1, QSGTexture)
@@ -63,7 +63,7 @@ struct Q_QUICK_EXPORT QSGMetalTexture
 };
 #endif
 
-#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(vulkan) || defined(Q_QDOC)
 struct Q_QUICK_EXPORT QSGVulkanTexture
 {
     QT_DECLARE_NATIVE_INTERFACE(QSGVulkanTexture, 1, QSGTexture)

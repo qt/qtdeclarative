@@ -191,7 +191,7 @@ void QQuickRenderTarget::setMirrorVertically(bool enable)
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
-#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(opengl) || defined(Q_QDOC)
 QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint format,
                                                          const QSize &pixelSize, int sampleCount)
 {
@@ -328,7 +328,7 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferI
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
-#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+#if defined(Q_OS_WIN) || defined(Q_QDOC)
 QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint format,
                                                         const QSize &pixelSize, int sampleCount)
 {
@@ -414,7 +414,7 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSi
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
 QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uint format,
                                                         const QSize &pixelSize, int sampleCount)
 {
@@ -501,7 +501,7 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
-#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+#if QT_CONFIG(vulkan) || defined(Q_QDOC)
 QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, VkFormat format,
                                                        const QSize &pixelSize, int sampleCount)
 {
