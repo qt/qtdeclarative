@@ -1824,15 +1824,15 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         return QQuickItemViewPrivate::flick(data, minExtent, maxExtent, vSize, fixupCallback, velocity);
     }
     qreal maxDistance = 0;
-    qreal dataValue = isContentFlowReversed() ? -data.move.value()+size() : data.move.value();
+    const qreal dataValue =
+            isContentFlowReversed() ? -data.move.value() + size() : data.move.value();
 
     // -ve velocity means list is moving up/left
     if (velocity > 0) {
         if (data.move.value() < minExtent) {
             if (snapMode == QQuickListView::SnapOneItem && !hData.flicking && !vData.flicking) {
-                // if we've been dragged < averageSize/2 then bias towards the next item
-                qreal dist = data.move.value() - data.pressPos;
-                qreal bias = dist < averageSize/2 ? averageSize/2 : 0;
+                // averageSize/2 + 1 - next item
+                qreal bias = averageSize / 2 + 1 - (pressed ? data.pressPos : 0);
                 if (isContentFlowReversed())
                     bias = -bias;
                 data.flickTarget = -snapPosAt(-(dataValue - highlightRangeStart) - bias) + highlightRangeStart;
@@ -1847,12 +1847,12 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     } else {
         if (data.move.value() > maxExtent) {
             if (snapMode == QQuickListView::SnapOneItem && !hData.flicking && !vData.flicking) {
-                // if we've been dragged < averageSize/2 then bias towards the next item
-                qreal dist = data.move.value() - data.pressPos;
-                qreal bias = -dist < averageSize/2 ? averageSize/2 : 0;
+                // averageSize/2 + 1 - next item
+                qreal bias = averageSize / 2 + 1 - (pressed ? data.pressPos : 0);
                 if (isContentFlowReversed())
                     bias = -bias;
-                data.flickTarget = -snapPosAt(-(dataValue - highlightRangeStart) + bias) + highlightRangeStart;
+                data.flickTarget =
+                        -snapPosAt(-(dataValue - highlightRangeStart) + bias) + highlightRangeStart;
                 maxDistance = qAbs(data.flickTarget - data.move.value());
                 velocity = -maxVelocity;
             } else {
