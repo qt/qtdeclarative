@@ -154,6 +154,7 @@ int QQmlCustomParser::evaluateEnum(const QString &script, bool *ok) const
         // enums.
         const QUrl documentUrl = validator ? validator->documentSourceUrl() : QUrl();
         if (documentUrl.isValid() && documentUrl == type.sourceUrl()) {
+            Q_ASSERT(validator);
             const QQmlPropertyCache::ConstPtr rootCache = validator->rootPropertyCache();
             const int count = rootCache->qmlEnumCount();
             for (int ii = 0; ii < count; ++ii) {
