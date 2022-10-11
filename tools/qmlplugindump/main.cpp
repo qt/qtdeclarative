@@ -1157,7 +1157,10 @@ int main(int argc, char *argv[])
         QDir cur = QDir::current();
         cur.cd(pluginImportPath);
         pluginImportPath = cur.canonicalPath();
-        QDir::setCurrent(pluginImportPath);
+        if (!QDir::setCurrent(pluginImportPath)) {
+            std::cerr << "Cannot set current directory to import path "
+                      << qPrintable(pluginImportPath) << std::endl;
+        }
         engine.addImportPath(pluginImportPath);
     }
 
