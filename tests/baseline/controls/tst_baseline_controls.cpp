@@ -51,7 +51,7 @@ private Q_SLOTS:
     void ios() { runTest("iOS"); }
 #endif
     void native_data() { setupTestSuite(); }
-    void native() { runTest(QQuickStyle::name()); }
+    void native() { runTest(); }
 
 private:
     void test();
@@ -147,8 +147,9 @@ void tst_Baseline_Controls::initTestCase()
         QSKIP(msg);
 
     // let users know where they can find the results
-    qDebug() << "PlatformName computed to be:" << platformName;
-    qDebug() << "Appearance ID computed as:" << appearanceIdString;
+    qInfo("PlatformName computed to be  : %s", qPrintable(platformName));
+    qInfo("Appearance ID computed as    : %s", qPrintable(appearanceIdString));
+    qInfo("Native style name is         : %s", qPrintable(QQuickStyle::name()));
 }
 
 void tst_Baseline_Controls::init()
@@ -199,7 +200,10 @@ void tst_Baseline_Controls::runTest(const QString& style)
 
     QImage screenShot;
     QString errorMessage;
-    if (renderAndGrab(qmlFile, QStringList{"-style", style}, &screenShot, &errorMessage)) {
+    QStringList args;
+    if (!style.isEmpty())
+        args.append({"-style", style});
+    if (renderAndGrab(qmlFile, args, &screenShot, &errorMessage)) {
         consecutiveErrors = 0;
     } else {
         if (++consecutiveErrors >= 3)
