@@ -714,8 +714,10 @@ void QObjectWrapper::markWrapper(QObject *object, MarkStack *markStack)
         ddata->jsWrapper.markOnce(markStack);
     else if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
         engine->m_multiplyWrappedQObjects->mark(object, markStack);
-    if (ddata->hasConstWrapper)
+    if (ddata->hasConstWrapper) {
+        Q_ASSERT(engine->m_multiplyWrappedQObjects);
         engine->m_multiplyWrappedQObjects->mark(static_cast<const QObject *>(object), markStack);
+    }
 }
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value)
