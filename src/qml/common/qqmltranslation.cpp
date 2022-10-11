@@ -4,14 +4,14 @@
 #include "private/qqmltranslation_p.h"
 
 QQmlTranslation::QQmlTranslation(const Data &d) : data(d) { }
-QQmlTranslation::QQmlTranslation() : data(std::monostate()) { }
+QQmlTranslation::QQmlTranslation() : data(nullptr) { }
 
 QString QQmlTranslation::translate() const
 {
     return std::visit(
             [](auto &&arg) -> QString {
                 using T = std::decay_t<decltype(arg)>;
-                if constexpr (!std::is_same_v<T, std::monostate>)
+                if constexpr (!std::is_same_v<T, std::nullptr_t>)
                     return arg.translate();
                 else {
                     Q_ASSERT_X(false, "QQmlTranslation", "Uninitialized Translation");
@@ -26,7 +26,7 @@ QString QQmlTranslation::serializeForQmltc() const
     return std::visit(
             [](auto &&arg) -> QString {
                 using T = std::decay_t<decltype(arg)>;
-                if constexpr (!std::is_same_v<T, std::monostate>)
+                if constexpr (!std::is_same_v<T, std::nullptr_t>)
                     return arg.serializeForQmltc();
                 else {
                     Q_ASSERT_X(false, "QQmlTranslation", "Uninitialized Translation");
@@ -41,7 +41,7 @@ QString QQmlTranslation::idForQmlDebug() const
     return std::visit(
             [](auto &&arg) -> QString {
                 using T = std::decay_t<decltype(arg)>;
-                if constexpr (!std::is_same_v<T, std::monostate>)
+                if constexpr (!std::is_same_v<T, std::nullptr_t>)
                     return arg.idForQmlDebug();
                 else {
                     Q_ASSERT_X(false, "QQmlTranslation", "Uninitialized Translation");

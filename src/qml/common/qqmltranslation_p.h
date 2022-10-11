@@ -51,7 +51,10 @@ public:
         QString idForQmlDebug() const;
     };
 
-    using Data = std::variant<std::monostate, QsTrData, QsTrIdData>;
+    // The static analyzer hates std::monostate in std::variant because
+    // that results in various uninitialized memory "problems". Just use
+    // std::nullptr_t to indicate "empty".
+    using Data = std::variant<std::nullptr_t, QsTrData, QsTrIdData>;
 
 private:
     Data data;
