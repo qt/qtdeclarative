@@ -77,8 +77,8 @@ public:
         Visible = 0x01000,
         Contain = 0x02000
     };
-    Q_FLAG(PositionModeFlag)
     Q_DECLARE_FLAGS(PositionMode, PositionModeFlag)
+    Q_FLAG(PositionMode)
 
     enum SelectionBehavior {
         SelectionDisabled,
