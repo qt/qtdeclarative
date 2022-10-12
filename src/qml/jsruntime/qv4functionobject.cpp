@@ -352,30 +352,30 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
         return v4->throwTypeError();
 
     Scope scope(v4);
-    const uint len = v4->safeForAllocLength(arr->getLength());
+    const int len = v4->safeForAllocLength(arr->getLength());
     CHECK_EXCEPTION();
 
     Value *arguments = scope.alloc<Scope::Uninitialized>(len);
     if (len) {
         if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
             QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
-            int l = qMin(len, (uint)a->d()->context->argc());
+            int l = qMin(len, a->d()->context->argc());
             memcpy(arguments, a->d()->context->args(), l*sizeof(Value));
-            for (quint32 i = l; i < len; ++i)
+            for (int i = l; i < len; ++i)
                 arguments[i] = Value::undefinedValue();
         } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
             auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
-            uint alen = sad ? sad->values.size : 0;
+            int alen = sad ? sad->values.size : 0;
             if (alen > len)
                 alen = len;
-            for (uint i = 0; i < alen; ++i)
+            for (int i = 0; i < alen; ++i)
                 arguments[i] = sad->data(i);
-            for (quint32 i = alen; i < len; ++i)
+            for (int i = alen; i < len; ++i)
                 arguments[i] = Value::undefinedValue();
         } else {
             // need to init the arguments array, as the get() calls below can have side effects
             memset(arguments, 0, len*sizeof(Value));
-            for (quint32 i = 0; i < len; ++i)
+            for (int i = 0; i < len; ++i)
                 arguments[i] = arr->get(i);
         }
     }

@@ -905,9 +905,10 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
     if (o) {
         stringify.replacerFunction = o->as<FunctionObject>();
         if (o->isArrayObject()) {
-            uint arrayLen = o->getLength();
+            int arrayLen = scope.engine->safeForAllocLength(o->getLength());
+            CHECK_EXCEPTION();
             stringify.propertyList = static_cast<QV4::String *>(scope.alloc(arrayLen));
-            for (uint i = 0; i < arrayLen; ++i) {
+            for (int i = 0; i < arrayLen; ++i) {
                 Value *v = stringify.propertyList + i;
                 *v = o->get(i);
                 if (v->as<NumberObject>() || v->as<StringObject>() || v->isNumber())
@@ -915,7 +916,7 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
                 if (!v->isString()) {
                     v->setM(nullptr);
                 } else {
-                    for (uint j = 0; j <i; ++j) {
+                    for (int j = 0; j <i; ++j) {
                         if (stringify.propertyList[j].m() == v->m()) {
                             v->setM(nullptr);
                             break;

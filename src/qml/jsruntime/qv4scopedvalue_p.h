@@ -88,6 +88,10 @@ struct Scope {
         /* Be careful when using Uninitialized, the stack has to be fully initialized before calling into the memory manager again */
         Uninitialized
     };
+
+    template <AllocMode mode = Undefined>
+    Value *alloc(qint64 nValues) const = delete; // use safeForAllocLength
+
     template <AllocMode mode = Undefined>
     QML_NEARLY_ALWAYS_INLINE Value *alloc(int nValues) const
     {
@@ -408,7 +412,7 @@ struct ScopedProperty
 {
     ScopedProperty(Scope &scope)
     {
-        property = reinterpret_cast<Property*>(scope.alloc(sizeof(Property) / sizeof(Value)));
+        property = reinterpret_cast<Property*>(scope.alloc(int(sizeof(Property) / sizeof(Value))));
     }
 
     Property *operator->() { return property; }

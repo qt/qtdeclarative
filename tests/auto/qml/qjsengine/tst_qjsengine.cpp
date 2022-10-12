@@ -250,6 +250,7 @@ private slots:
     void iterateInvalidProxy();
     void applyOnHugeArray();
     void reflectApplyOnHugeArray();
+    void jsonStringifyHugeArray();
 
     void tostringRecursionCheck();
     void arrayIncludesWithLargeArray();
@@ -5338,6 +5339,20 @@ const v1 = [];
 const v3 = [];
 v3.length = 3900000000;
 Reflect.apply(v1.reverse,v1,v3);
+})()
+    )");
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), QLatin1String("RangeError: Invalid array length."));
+}
+
+void tst_QJSEngine::jsonStringifyHugeArray()
+{
+    QQmlEngine engine;
+    const QJSValue value = engine.evaluate(R"(
+(function(){
+const v3 = [];
+v3.length = 3900000000;
+JSON.stringify([], v3);
 })()
     )");
     QVERIFY(value.isError());
