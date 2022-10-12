@@ -40,7 +40,10 @@ struct CallArgs {
 
 static CallArgs createListFromArrayLike(Scope &scope, const Object *o)
 {
-    int len = o->getLength();
+    int len = scope.engine->safeForAllocLength(o->getLength());
+    if (scope.engine->hasException)
+        return {nullptr, 0};
+
     Value *arguments = scope.alloc(len);
 
     for (int i = 0; i < len; ++i) {
