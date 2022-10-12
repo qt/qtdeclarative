@@ -145,6 +145,7 @@ set(qml_files
     themergood.qml
     throwObjectName.qml
     toString.qml
+    typePropagationLoop.qml
     typePropertyClash.qml
     typedArray.qml
     undefinedResets.qml

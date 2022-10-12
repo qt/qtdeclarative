@@ -1244,7 +1244,7 @@ bool QQmlJSTypeResolver::registerContains(const QQmlJSRegisterContent &reg,
                 : equals(type, prop.type());
     }
     if (reg.isEnumeration())
-        return equals(type, intType());
+        return equals(type, reg.enumeration().type());
     if (reg.isMethod())
         return equals(type, jsValueType());
     return false;

@@ -133,6 +133,7 @@ private slots:
     void listPropertyAsModel();
     void notNotString();
     void inaccessibleProperty();
+    void typePropagationLoop();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2448,6 +2449,17 @@ void tst_QmlCppCodegen::inaccessibleProperty()
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("c").toInt(), 5);
+}
+
+void tst_QmlCppCodegen::typePropagationLoop()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/typePropagationLoop.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("j").toInt(), 3);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
