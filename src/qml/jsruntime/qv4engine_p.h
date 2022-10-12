@@ -655,6 +655,7 @@ public:
     int maxGCStackSize() const;
 
     bool checkStackLimits();
+    int safeForAllocLength(qint64 len64);
 
     bool canJIT(Function *f = nullptr)
     {
