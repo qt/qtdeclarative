@@ -20,6 +20,7 @@ set(cpp_sources
 
     cpptypes/typewithmanyproperties.h
     cpptypes/singletontype.h cpptypes/singletontype.cpp
+    cpptypes/typewithsignal.h
 )
 
 set(qml_sources
@@ -105,6 +106,7 @@ set(qml_sources
     aliases.qml
     inlineComponentsFromDifferentFiles.qml
     singletons.qml
+    mySignals.qml
 
     # support types:
     DefaultPropertySingleChild.qml

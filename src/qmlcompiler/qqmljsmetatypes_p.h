@@ -135,6 +135,8 @@ public:
     void setType(QWeakPointer<const QQmlJSScope> type) { m_type = type; }
     Constness typeQualifier() const { return m_typeQualifier; }
     void setTypeQualifier(Constness typeQualifier) { m_typeQualifier = typeQualifier; }
+    bool isPointer() const { return m_isPointer; }
+    void setIsPointer(bool isPointer) { m_isPointer = isPointer; }
 
     friend bool operator==(const QQmlJSMetaParameter &a, const QQmlJSMetaParameter &b)
     {
@@ -159,6 +161,7 @@ private:
     QString m_typeName;
     QWeakPointer<const QQmlJSScope> m_type;
     Constness m_typeQualifier = NonConst;
+    bool m_isPointer = false;
 };
 
 class QQmlJSMetaMethod

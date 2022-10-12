@@ -359,6 +359,7 @@ qt_internal_add_qml_module(Qml
         qmltc/supportlibrary/qqmlcppbinding.cpp
         qmltc/supportlibrary/qqmlcpponassignment_p.h
         qmltc/supportlibrary/qqmlcpponassignment.cpp
+        qmltc/supportlibrary/qqmlcpptypehelpers_p.h
     DEFINES
         BUILDING_QT__
         ENABLE_ASSEMBLER_WX_EXCLUSIVE=1

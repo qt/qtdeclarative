@@ -90,4 +90,5 @@ private slots:
     void aliases();
     void inlineComponentsFromDifferentFiles();
     void singletons();
+    void constSignalParameters();
 };

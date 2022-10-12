@@ -31,7 +31,7 @@ public:
     void setHello(const QString& hello_);
     QString hello();
     QBindable<QString> bindableHello();
-    Q_INVOKABLE void printHello(QString prefix, QString suffix);
+    Q_INVOKABLE void printHello(passByConstRefOrValue<QString> prefix, passByConstRefOrValue<QString> suffix);
 
     // ...
 };

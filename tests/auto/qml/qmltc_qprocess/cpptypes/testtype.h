@@ -7,6 +7,7 @@
 #include <QtQmlIntegration/qqmlintegration.h>
 #include <QtCore/qobject.h>
 #include <QtQml/qqmlregistration.h>
+#include <QtGui/qfont.h>
 
 class TypeWithVersionedAlias : public QObject
 {
@@ -67,6 +68,19 @@ class NormalType : public QObject
     }
 };
 
+class TypeWithSignals : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+Q_SIGNALS:
+    void signalWithConstPointerToGadget(const QFont *); // not allowed
+    void signalWithConstPointerToGadgetConst(const QFont *const); // not allowed
+    void signalWithPointerToGadgetConst(QFont *const); // not allowed
+    void signalWithPointerToGadget(QFont *); // not allowed
 
+    void signalWithPrimitivePointer(int *);
+    void signalWithConstPrimitivePointer(const int *);
+};
 
 #endif // TESTTYPE_H

@@ -428,6 +428,7 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
     QString name;
     QString type;
     bool isConstant = false;
+    bool isPointer = false;
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -443,9 +444,9 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
         } else if (id == QLatin1String("type")) {
             type = readStringBinding(script);
         } else if (id == QLatin1String("isPointer")) {
-            // ### unhandled
+            isPointer = readBoolBinding(script);
         } else if (id == QLatin1String("isConstant")) {
-            isConstant = true;
+            isConstant = readBoolBinding(script);
         } else if (id == QLatin1String("isReadonly")) {
             // ### unhandled
         } else if (id == QLatin1String("isList")) {
@@ -458,6 +459,7 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
 
     QQmlJSMetaParameter p(name, type);
     p.setTypeQualifier(isConstant ? QQmlJSMetaParameter::Const : QQmlJSMetaParameter::NonConst);
+    p.setIsPointer(isPointer);
     metaMethod->addParameter(std::move(p));
 }
 

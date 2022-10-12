@@ -137,6 +137,7 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     code.rawAppendToCpp(u"// qmltc support library:");
     code.rawAppendToCpp(u"#include <private/qqmlcppbinding_p.h>"); // QmltcSupportLib
     code.rawAppendToCpp(u"#include <private/qqmlcpponassignment_p.h>"); // QmltcSupportLib
+    code.rawAppendToHeader(u"#include <private/qqmlcpptypehelpers_p.h> "); // QmltcSupportLib
 
     code.rawAppendToCpp(u"#include <private/qqmlobjectcreator_p.h>"); // createComponent()
     code.rawAppendToCpp(u"#include <private/qqmlcomponent_p.h>"); // QQmlComponentPrivate::get()

@@ -986,8 +986,69 @@ void QQmlJSImportVisitor::checkSignals()
 
             const auto signalParameters = signalMethod->parameters();
             QHash<QString, qsizetype> parameterNameIndexes;
-            for (int i = 0; i < signalParameters.size(); i++)
-                parameterNameIndexes[signalParameters[i].name()] = i;
+            // check parameter positions and also if signal is suitable for onSignal handler
+            for (int i = 0, end = signalParameters.size(); i < end; ++i) {
+                auto &p = signalParameters[i];
+                parameterNameIndexes[p.name()] = i;
+
+                auto signalName = [&]() {
+                    if (signal)
+                        return u" called %1"_s.arg(*signal);
+                    return QString();
+                };
+                auto type = p.type();
+                if (!type) {
+                    m_logger->log(
+                            QStringLiteral(
+                                    "Type %1 of parameter %2 in signal%3 was not found, but is "
+                                    "required to compile %4. Did you add all import paths?")
+                                    .arg(p.typeName(), p.name(), signalName(), pair.first),
+                            qmlSignalParameters, location);
+                    continue;
+                }
+
+                if (type->isComposite())
+                    continue;
+
+                // only accept following parameters for non-composite types:
+                // * QObjects by pointer (nonconst*, const*, const*const,*const)
+                // * Value types by value (QFont, int)
+                // * Value types by const ref (const QFont&, const int&)
+
+                auto parameterName = [&]() {
+                    if (p.name().isEmpty())
+                        return QString();
+                    return u" called %1"_s.arg(p.name());
+                };
+                switch (type->accessSemantics()) {
+                case QQmlJSScope::AccessSemantics::Reference:
+                    if (!p.isPointer())
+                        m_logger->log(QStringLiteral("Type %1 of parameter%2 in signal%3 should be "
+                                                     "passed by pointer to be able to compile %4. ")
+                                              .arg(p.typeName(), parameterName(), signalName(),
+                                                   pair.first),
+                                      qmlSignalParameters, location);
+                    break;
+                case QQmlJSScope::AccessSemantics::Value:
+                case QQmlJSScope::AccessSemantics::Sequence:
+                    if (p.isPointer())
+                        m_logger->log(
+                                QStringLiteral(
+                                        "Type %1 of parameter%2 in signal%3 should be passed by "
+                                        "value or const reference to be able to compile %4. ")
+                                        .arg(p.typeName(), parameterName(), signalName(),
+                                             pair.first),
+                                qmlSignalParameters, location);
+                    break;
+                case QQmlJSScope::AccessSemantics::None:
+                    m_logger->log(
+                            QStringLiteral("Type %1 of parameter%2 in signal%3 required by the "
+                                           "compilation of %4 cannot be used. ")
+                                    .arg(p.typeName(), parameterName(), signalName(), pair.first),
+                            qmlSignalParameters, location);
+                    break;
+                }
+            }
 
             if (pair.second.size() > signalParameters.size()) {
                 m_logger->log(QStringLiteral("Signal handler for \"%2\" has more formal"

@@ -50,6 +50,7 @@ private slots:
     void invalidAliasRevision();
     void topLevelComponent();
     void dashesInFilename();
+    void invalidSignalHandlers();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -238,6 +239,25 @@ void tst_qmltc_qprocess::dashesInFilename()
         const auto errors = runQmltc(u"kebab-case.qml"_s, false);
         QVERIFY(errors.contains(
                 u"The given QML filename is unsuited for type compilation: the name must consist of letters, digits and underscores, starting with a letter or an underscore and ending in '.qml'!"_s));
+    }
+}
+
+void tst_qmltc_qprocess::invalidSignalHandlers()
+{
+    {
+        const auto errors = runQmltc(u"invalidSignalHandlers.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"invalidSignalHandlers.qml:4:5: Type QFont of parameter in signal called signalWithConstPointerToGadget should be passed by value or const reference to be able to compile onSignalWithConstPointerToGadget.  [signal-handler-parameters]"_s));
+        QVERIFY(errors.contains(
+                u"invalidSignalHandlers.qml:5:5: Type QFont of parameter in signal called signalWithConstPointerToGadgetConst should be passed by value or const reference to be able to compile onSignalWithConstPointerToGadgetConst.  [signal-handler-parameters]"_s));
+        QVERIFY(errors.contains(
+                u"invalidSignalHandlers.qml:6:5: Type QFont of parameter in signal called signalWithPointerToGadgetConst should be passed by value or const reference to be able to compile onSignalWithPointerToGadgetConst.  [signal-handler-parameters]"_s));
+        QVERIFY(errors.contains(
+                u"invalidSignalHandlers.qml:7:5: Type QFont of parameter in signal called signalWithPointerToGadget should be passed by value or const reference to be able to compile onSignalWithPointerToGadget.  [signal-handler-parameters]"_s));
+        QVERIFY(errors.contains(
+                u"invalidSignalHandlers.qml:8:5: Type int of parameter in signal called signalWithPrimitivePointer should be passed by value or const reference to be able to compile onSignalWithPrimitivePointer.  [signal-handler-parameters]"_s));
+        QVERIFY(errors.contains(
+                u"invalidSignalHandlers.qml:9:5: Type int of parameter in signal called signalWithConstPrimitivePointer should be passed by value or const reference to be able to compile onSignalWithConstPrimitivePointer.  [signal-handler-parameters]"_s));
     }
 }
 

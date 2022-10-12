@@ -425,7 +425,24 @@ compileMethodParameters(const QList<QQmlJSMetaParameter> &parameterInfos, bool a
         Q_ASSERT(allowUnnamed || !name.isEmpty()); // assume verified
         if (name.isEmpty() && allowUnnamed)
             name = u"unnamed_" + QString::number(i);
-        parameters.emplaceBack(p.type()->augmentedInternalName(), name, QString());
+
+        QString internalName;
+        const QQmlJSScope::AccessSemantics semantics = p.type()->accessSemantics();
+
+        switch (semantics) {
+        case QQmlJSScope::AccessSemantics::Reference:
+            if (p.typeQualifier() == QQmlJSMetaParameter::Const)
+                internalName = u"const "_s;
+            internalName += u"%1*"_s.arg(p.type()->internalName());
+            break;
+        case QQmlJSScope::AccessSemantics::Value:
+        case QQmlJSScope::AccessSemantics::Sequence:
+            internalName = u"passByConstRefOrValue<%1>"_s.arg(p.type()->internalName());
+            break;
+        case QQmlJSScope::AccessSemantics::None:
+            Q_ASSERT(false); // or maybe print an error message
+        }
+        parameters.emplaceBack(internalName, name, QString());
     }
     return parameters;
 }
@@ -1658,12 +1675,9 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         slotMethod.type = QQmlJSMetaMethod::Slot;
 
         current.functions << std::move(slotMethod);
-        current.setComplexBindings.body
-                << u"QObject::connect(" + This_signal + u", "
-                        + QmltcCodeGenerator::wrap_qOverload(
-                                slotParameters, u"&" + objectClassName_signal + u"::" + signalName)
-                        + u", " + This_slot + u", &" + objectClassName_slot + u"::" + slotName
-                        + u");";
+        current.setComplexBindings.body << u"QObject::connect(" + This_signal + u", " + u"&"
+                        + objectClassName_signal + u"::" + signalName + u", " + This_slot + u", &"
+                        + objectClassName_slot + u"::" + slotName + u");";
     };
 
     switch (binding.scriptKind()) {

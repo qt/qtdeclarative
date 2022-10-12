@@ -80,6 +80,7 @@
 
 #include "testprivateproperty.h"
 #include "singletons.h"
+#include "mysignals.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -3124,4 +3125,61 @@ void tst_qmltc::singletons()
         QCOMPARE(createdByComponent->property("qmlSingleton2"), 100);
     }
 }
+
+void tst_qmltc::constSignalParameters()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(mySignals) fromQmltc(&e);
+
+    int primitive = 123;
+    QFont defaultGadget;
+    QFont gadget;
+    gadget.setBold(true);
+    QQuickItem myItem;
+    myItem.setObjectName("New Name");
+
+    // by value
+    fromQmltc.setPrimitive(123);
+    emit fromQmltc.signalWithPrimitive(primitive);
+    QCOMPARE(fromQmltc.primitive(), primitive);
+
+    fromQmltc.setGadget(defaultGadget);
+    emit fromQmltc.signalWithGadget(gadget);
+    QCOMPARE(fromQmltc.gadget(), gadget);
+
+    // by const ref
+    fromQmltc.setPrimitive(123);
+    emit fromQmltc.signalWithConstReferenceToPrimitive(primitive);
+    QCOMPARE(fromQmltc.primitive(), primitive);
+
+    fromQmltc.setGadget(defaultGadget);
+    emit fromQmltc.signalWithConstReferenceToGadget(gadget);
+    QCOMPARE(fromQmltc.gadget(), gadget);
+
+    // by pointer
+    fromQmltc.setObject(nullptr);
+    emit fromQmltc.signalWithPointer(&myItem);
+    QCOMPARE(fromQmltc.object(), &myItem);
+
+    fromQmltc.setObject(nullptr);
+    emit fromQmltc.signalWithPointerToConst(&myItem);
+    QCOMPARE(fromQmltc.object(), &myItem);
+
+    fromQmltc.setObject(nullptr);
+    emit fromQmltc.signalWithPointerToConst2(&myItem);
+    QCOMPARE(fromQmltc.object(), &myItem);
+
+    fromQmltc.setObject(nullptr);
+    emit fromQmltc.signalWithConstPointer(&myItem);
+    QCOMPARE(fromQmltc.object(), &myItem);
+
+    fromQmltc.setObject(nullptr);
+    emit fromQmltc.signalWithConstPointerToConst(&myItem);
+    QCOMPARE(fromQmltc.object(), &myItem);
+
+    fromQmltc.setObject(nullptr);
+    emit fromQmltc.signalWithConstPointerToConst2(&myItem);
+    QCOMPARE(fromQmltc.object(), &myItem);
+}
+
 QTEST_MAIN(tst_qmltc)

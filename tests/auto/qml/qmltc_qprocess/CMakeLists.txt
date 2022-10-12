@@ -20,6 +20,8 @@ qt6_add_qml_module(tst_qmltc_qprocess
     AUTO_RESOURCE_PREFIX
     SOURCES
         cpptypes/testtype.h
+    DEPENDENCIES
+        QtQuick/auto
     QML_FILES
         data/dummy.qml
         data/inlineComponentInvalidAlias.qml
@@ -30,6 +32,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/inlineComponentWithEnum.qml
         data/singletonUncreatable.qml
         data/uncreatable.qml
+        data/invalidSignalHandlers.qml
 )
 
 set(common_libraries
