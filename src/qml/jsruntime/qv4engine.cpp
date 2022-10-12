@@ -2003,11 +2003,11 @@ int ExecutionEngine::maxGCStackSize() const
 int ExecutionEngine::safeForAllocLength(qint64 len64)
 {
     if (len64 < 0ll || len64 > qint64(std::numeric_limits<int>::max())) {
-        this->throwRangeError(QStringLiteral("Invalid array length."));
+        throwRangeError(QStringLiteral("Invalid array length."));
         return 0;
     }
     if (len64 > qint64(this->jsStackLimit - this->jsStackTop)) {
-        this->throwRangeError(QStringLiteral("Array too large for apply()."));
+        throwRangeError(QStringLiteral("Array too large for apply()."));
         return 0;
     }
     return len64;
