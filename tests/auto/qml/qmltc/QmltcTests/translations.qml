@@ -8,8 +8,8 @@ Text {
     alsoTranslated: qsTr("Bye bye!", "") // has bindable, compiled as translation by qmltc
     text: qsTr("Bye bye!") // has no bindable, compiled as translation by qmltc
 
-    property string hardcodedContext: qsTranslate("translations", "Bye bye!", "") //compiled as Script
-    property string anotherContext: qsTranslate("anotherContext", "Bye bye!", "") //compiled as Script
+    property string hardcodedContext: qsTranslate("translations", "Bye bye!", "") //compiled as String Literal
+    property string anotherContext: qsTranslate("anotherContext", "Bye bye!", "") //compiled as String Literal
     property string toBeTranslatedLater: QT_TR_NOOP("Bye bye!") //compiled as String Literal
     property string toBeTranslatedLaterWithHardcodedContext: QT_TRANSLATE_NOOP("translations", "Bye bye!", "", -1) //compiled as Script
     property string translatedN: qsTr("The solution is %n", "", 42) //compiled as translation by qmltc

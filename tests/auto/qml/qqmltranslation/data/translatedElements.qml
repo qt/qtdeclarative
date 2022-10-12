@@ -7,6 +7,7 @@ DelegateModel {
         ListElement { dish: qsTr("fish"); price: 100 }
         ListElement { dish: qsTr("meat"); price: 230 }
         ListElement { dish: qsTr("bread"); price: 10 }
+        ListElement { dish: qsTranslate("ctx", "sizzling hot pebbles"); price: 12 }
     }
 
     delegate: QtObject {

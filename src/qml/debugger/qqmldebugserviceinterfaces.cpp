@@ -64,13 +64,16 @@ const TranslationBindingInformation TranslationBindingInformation::create(
 
         const QV4::CompiledData::TranslationData data =
                 compilationUnit->data->translations()[binding->value.translationDataIndex];
-        const QString context =
-                QQmlTranslation::contextFromQmlFilename(compilationUnit->fileName());
         const QString text = compilationUnit->stringAt(data.stringIndex);
         const QString comment = compilationUnit->stringAt(data.commentIndex);
+        const QString context = compilationUnit->stringAt(data.contextIndex);
         const int n = data.number;
 
-        translation = QQmlTranslation(QQmlTranslation::QsTrData(context, text, comment, n));
+        translation = QQmlTranslation(
+                    QQmlTranslation::QsTrData(context.isEmpty()
+                                              ? QQmlTranslation::contextFromQmlFilename(
+                                                    compilationUnit->fileName())
+                                              : context, text, comment, n));
     }
 
     return { compilationUnit,

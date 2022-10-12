@@ -1638,8 +1638,13 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
 {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     // #if required for standalone DOM compilation
+    QStringView contextString;
     QStringView mainString;
     QStringView commentString;
+    auto registerContextString = [&](QStringView string) {
+        contextString = string;
+        return 0;
+    };
     auto registerMainString = [&](QStringView string) {
         mainString = string;
         return 0;
@@ -1651,15 +1656,16 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
     auto finalizeBinding = [&](QV4::CompiledData::Binding::Type type,
                                QV4::CompiledData::TranslationData data) {
         if (type == QV4::CompiledData::Binding::Type_Translation) {
-            binding.setTranslation(mainString, commentString, data.number);
+            binding.setTranslation(mainString, commentString, contextString, data.number);
         } else if (type == QV4::CompiledData::Binding::Type_TranslationById) {
             binding.setTranslationId(mainString, data.number);
         } else {
             binding.setStringLiteral(mainString);
         }
     };
-    QmlIR::tryGeneratingTranslationBindingBase(base, args, registerMainString,
-                                               registerCommentString, finalizeBinding);
+    QmlIR::tryGeneratingTranslationBindingBase(
+                base, args,
+                registerMainString, registerCommentString, registerContextString, finalizeBinding);
 #endif
 }
 

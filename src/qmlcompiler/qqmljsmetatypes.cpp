@@ -78,7 +78,9 @@ QQmlTranslation QQmlJSMetaPropertyBinding::translationDataValue(QString qmlFileN
     if (auto translation = std::get_if<Content::TranslationById>(&m_bindingContent)) {
         data = QQmlTranslation::QsTrIdData(translation->id, translation->number);
     } else if (auto translation = std::get_if<Content::TranslationString>(&m_bindingContent)) {
-        const QString context = QQmlTranslation::contextFromQmlFilename(qmlFileNameForContext);
+        const QString context = translation->context.isEmpty()
+                ? QQmlTranslation::contextFromQmlFilename(qmlFileNameForContext)
+                : translation->context;
         data = QQmlTranslation::QsTrData(context, translation->text, translation->comment,
                                          translation->number);
     }

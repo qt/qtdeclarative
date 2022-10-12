@@ -603,10 +603,15 @@ private:
     Result will be stored in a TranslationData's commentIndex
     \a finalizeTranslationData: Takes the type of the binding and the previously set up TranslationData
  */
-template<typename RegisterString1, typename RegisterString2, typename FinalizeTranslationData>
+template<
+        typename RegisterMainString,
+        typename RegisterCommentString,
+        typename RegisterContextString,
+        typename FinalizeTranslationData>
 void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::ArgumentList *args,
-                                         RegisterString1 registerMainString,
-                                         RegisterString2 registerCommentString,
+                                         RegisterMainString registerMainString,
+                                         RegisterCommentString registerCommentString,
+                                         RegisterContextString registerContextString,
                                          FinalizeTranslationData finalizeTranslationData
                                          )
 {
@@ -614,7 +619,7 @@ void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::Argument
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
         translationData.commentIndex = 0; // empty string
-        translationData.padding = 0;
+        translationData.contextIndex = 0;
 
         if (!args || !args->expression)
             return; // no arguments, stop
@@ -655,7 +660,7 @@ void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::Argument
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
         translationData.commentIndex = 0; // empty string, but unused
-        translationData.padding = 0;
+        translationData.contextIndex = 0;
 
         if (!args || !args->expression)
             return; // no arguments, stop
@@ -723,6 +728,57 @@ void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::Argument
         QV4::CompiledData::TranslationData fakeTranslationData;
         fakeTranslationData.number = registerMainString(str);
         finalizeTranslationData(QV4::CompiledData::Binding::Type_String, fakeTranslationData);
+    } else if (base == QLatin1String("qsTranslate")) {
+        QV4::CompiledData::TranslationData translationData;
+        translationData.number = -1;
+        translationData.commentIndex = 0; // empty string
+
+        if (!args || !args->next)
+            return; // less than 2 arguments, stop
+
+        QStringView translation;
+        if (QQmlJS::AST::StringLiteral *arg1
+                = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression)) {
+            translation = arg1->value;
+        } else {
+            return; // first argument is not a string, stop
+        }
+
+        translationData.contextIndex = registerContextString(translation);
+
+        args = args->next;
+        Q_ASSERT(args);
+
+        QQmlJS::AST::StringLiteral *arg2
+                = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression);
+        if (!arg2)
+            return; // second argument is not a string, stop
+        translationData.stringIndex = registerMainString(arg2->value);
+
+        args = args->next;
+        if (args) {
+            QQmlJS::AST::StringLiteral *arg3
+                    = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression);
+            if (!arg3)
+                return; // third argument is not a string, stop
+            translationData.commentIndex = registerCommentString(arg3->value);
+
+            args = args->next;
+            if (args) {
+                if (QQmlJS::AST::NumericLiteral *arg4
+                        = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(args->expression)) {
+                    translationData.number = int(arg4->value);
+                    args = args->next;
+                } else {
+                    return; // fourth argument is not a translation number, stop
+                }
+            }
+        }
+
+        if (args)
+            return; // too many arguments, stop
+
+        finalizeTranslationData(QV4::CompiledData::Binding::Type_Translation, translationData);
     }
 }
 

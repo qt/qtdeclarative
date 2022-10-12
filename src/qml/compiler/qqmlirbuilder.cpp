@@ -1231,17 +1231,25 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
 
 void IRBuilder::tryGeneratingTranslationBinding(QStringView base, AST::ArgumentList *args, QV4::CompiledData::Binding *binding)
 {
-    auto registerMainString = [&](QStringView mainString) { return jsGenerator->registerString(mainString.toString()) ; };
-    auto registerCommentString = [&](QStringView commentString) { return jsGenerator->registerString(commentString.toString()); };
-    auto finalizeTranslationData = [&](QV4::CompiledData::Binding::Type type, QV4::CompiledData::TranslationData translationData) {
-        binding->setType(type);
-        if (type == QV4::CompiledData::Binding::Type_Translation || type == QV4::CompiledData::Binding::Type_TranslationById)
-            binding->value.translationDataIndex = jsGenerator->registerTranslation(translationData);
-        else if (type == QV4::CompiledData::Binding::Type_String)
-            binding->stringIndex = translationData.number;
+    const auto registerString = [&](QStringView string) {
+        return jsGenerator->registerString(string.toString()) ;
     };
 
-    tryGeneratingTranslationBindingBase(base, args, registerMainString, registerCommentString, finalizeTranslationData);
+    const auto finalizeTranslationData = [&](
+            QV4::CompiledData::Binding::Type type,
+            QV4::CompiledData::TranslationData translationData) {
+        binding->setType(type);
+        if (type == QV4::CompiledData::Binding::Type_Translation
+                || type == QV4::CompiledData::Binding::Type_TranslationById) {
+            binding->value.translationDataIndex = jsGenerator->registerTranslation(translationData);
+        } else if (type == QV4::CompiledData::Binding::Type_String) {
+            binding->stringIndex = translationData.number;
+        }
+    };
+
+    tryGeneratingTranslationBindingBase(
+                base, args,
+                registerString, registerString, registerString, finalizeTranslationData);
 }
 
 void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value, QQmlJS::AST::Node *parentNode)

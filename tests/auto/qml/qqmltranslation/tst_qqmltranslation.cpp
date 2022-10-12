@@ -63,7 +63,9 @@ void tst_qqmltranslation::translation()
 
         QSet<QString> compiledTranslations;
         compiledTranslations << QStringLiteral("basic")
+                             << QStringLiteral("basic2")
                              << QStringLiteral("disambiguation")
+                             << QStringLiteral("disambiguation2")
                              << QStringLiteral("singular") << QStringLiteral("plural");
 
         const QV4::CompiledData::Object *rootObject
@@ -180,6 +182,8 @@ class DummyTranslator : public QTranslator
             return QString::fromUtf8("Fleisch");
         if (!qstrcmp(sourceText, "bread"))
             return QString::fromUtf8("Brot");
+        if (!qstrcmp(sourceText, "sizzling hot pebbles"))
+            return QString::fromUtf8("Eiersalat");
         return QString();
     }
 
@@ -252,12 +256,13 @@ void tst_qqmltranslation::listModel()
     QQmlDelegateModel *model = qobject_cast<QQmlDelegateModel *>(o.data());
     QVERIFY(model);
 
-    QCOMPARE(model->count(), 4);
+    QCOMPARE(model->count(), 5);
 
     QCOMPARE(model->object(0)->property("dish").toString(), QStringLiteral("soup"));
     QCOMPARE(model->object(1)->property("dish").toString(), QStringLiteral("fish"));
     QCOMPARE(model->object(2)->property("dish").toString(), QStringLiteral("meat"));
     QCOMPARE(model->object(3)->property("dish").toString(), QStringLiteral("bread"));
+    QCOMPARE(model->object(4)->property("dish").toString(), QStringLiteral("sizzling hot pebbles"));
 
     DummyTranslator translator;
     QCoreApplication::installTranslator(&translator);
@@ -268,6 +273,7 @@ void tst_qqmltranslation::listModel()
     QCOMPARE(model->object(1)->property("dish").toString(), QStringLiteral("Fisch"));
     QCOMPARE(model->object(2)->property("dish").toString(), QStringLiteral("Fleisch"));
     QCOMPARE(model->object(3)->property("dish").toString(), QStringLiteral("Brot"));
+    QCOMPARE(model->object(4)->property("dish").toString(), QStringLiteral("Eiersalat"));
 }
 
 QTEST_MAIN(tst_qqmltranslation)

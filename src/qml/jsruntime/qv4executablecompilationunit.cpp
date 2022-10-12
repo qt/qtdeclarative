@@ -931,17 +931,22 @@ QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) con
         return qtTrId(id.constData(), translation.number);
     }
 
-    // This code must match that in the qsTr() implementation
-    const QString &path = fileName();
-    int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-    QStringView context = (lastSlash > -1)
-            ? QStringView{ path }.mid(lastSlash + 1, path.size() - lastSlash - 5)
-            : QStringView();
-    QByteArray contextUtf8 = context.toUtf8();
+    const auto fileContext = [this]() {
+        // This code must match that in the qsTr() implementation
+        const QString &path = fileName();
+        int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+
+        QStringView context = (lastSlash > -1)
+                ? QStringView{ path }.mid(lastSlash + 1, path.size() - lastSlash - 5)
+                : QStringView();
+        return context.toUtf8();
+    };
+
+    QByteArray context = stringAt(translation.contextIndex).toUtf8();
     QByteArray comment = stringAt(translation.commentIndex).toUtf8();
     QByteArray text = stringAt(translation.stringIndex).toUtf8();
-    return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
-                                       comment.constData(), translation.number);
+    return QCoreApplication::translate(
+                context.isEmpty() ? fileContext() : context, text, comment, translation.number);
 #endif
 }
 

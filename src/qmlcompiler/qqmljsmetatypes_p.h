@@ -454,11 +454,12 @@ private:
         struct TranslationString {
             friend bool operator==(TranslationString a, TranslationString b)
             {
-                return a.text == b.text && a.comment == b.comment && a.number == b.number;
+                return a.text == b.text && a.comment == b.comment && a.number == b.number && a.context == b.context;
             }
             friend bool operator!=(TranslationString a, TranslationString b) { return !(a == b); }
             QString text;
             QString comment;
+            QString context;
             int number;
         };
         struct TranslationById {
@@ -650,11 +651,11 @@ public:
         m_bindingContent = Content::RegexpLiteral { value.toString() };
     }
 
-    void setTranslation(QStringView text, QStringView comment, int number)
+    void setTranslation(QStringView text, QStringView comment, QStringView context, int number)
     {
         ensureSetBindingTypeOnce();
         m_bindingContent =
-                Content::TranslationString{ text.toString(), comment.toString(), number };
+                Content::TranslationString{ text.toString(), comment.toString(), context.toString(), number };
     }
 
     void setTranslationId(QStringView id, int number)
