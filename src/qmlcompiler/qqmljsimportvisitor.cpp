@@ -1418,7 +1418,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         method.setMethodType(QQmlJSMetaMethod::Signal);
         method.setMethodName(publicMember->name.toString());
         while (param) {
-            method.addParameter(param->name.toString(), buildName(param->type));
+            method.addParameter(param->name.toString(), buildName(param->type),
+                                QQmlJSMetaMethod::NonConst);
             param = param->next;
         }
         m_currentScope->addOwnMethod(method);
@@ -1573,10 +1574,11 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
                 const QString type = parameter.typeName();
                 if (type.isEmpty()) {
                     formalsFullyTyped = false;
-                    method.addParameter(parameter.id, QStringLiteral("var"));
+                    method.addParameter(parameter.id, QStringLiteral("var"),
+                                        QQmlJSMetaMethod::NonConst);
                 }  else {
                     anyFormalTyped = true;
-                    method.addParameter(parameter.id, type);
+                    method.addParameter(parameter.id, type, QQmlJSMetaMethod::NonConst);
                 }
             }
         }

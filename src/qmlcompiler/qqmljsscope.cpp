@@ -506,6 +506,9 @@ QTypeRevision QQmlJSScope::resolveType(
         QList<QSharedPointer<const QQmlJSScope>> paramTypes = it->parameterTypes();
         if (paramTypes.size() < paramTypeNames.size())
             paramTypes.resize(paramTypeNames.size());
+        QList<QQmlJSMetaMethod::Constness> paramQualifiers = it->parameterTypeQualifiers();
+        if (paramQualifiers.size() < paramTypeNames.size())
+            paramQualifiers.resize(paramTypeNames.size());
 
         for (int i = 0, length = paramTypes.size(); i < length; ++i) {
             auto &paramType = paramTypes[i];
@@ -516,7 +519,7 @@ QTypeRevision QQmlJSScope::resolveType(
             }
         }
 
-        it->setParameterTypes(paramTypes);
+        it->setParameterTypes(paramTypes, paramQualifiers);
     }
 
     return baseType.revision;

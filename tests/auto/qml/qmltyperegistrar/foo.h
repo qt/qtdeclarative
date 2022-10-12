@@ -12,6 +12,12 @@ class Bbb : public QObject
     Q_OBJECT
 public:
     Bbb(QObject *parent = nullptr) : QObject(parent) {}
+
+Q_SIGNALS:
+    void mySignal(QObject *myObject, const QObject *myConstObject, QObject const *myConstObject2,
+                  QObject *const myObject2, const QObject *const myConstObject3);
+    void myVolatileSignal(volatile const QObject *a, const volatile QObject *b,
+                          volatile QObject *nonConst);
 };
 
 class Ccc : public QObject

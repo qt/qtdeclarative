@@ -399,12 +399,12 @@ void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
                               u"Q_ENUM(%1)"_s.arg(e.name()));
 }
 
-static QList<QmltcVariable>
-compileMethodParameters(const QStringList &names,
-                        const QList<QSharedPointer<const QQmlJSScope>> &types,
-                        bool allowUnnamed = false)
+static QList<QmltcVariable> compileMethodParameters(
+        const QStringList &names, const QList<QSharedPointer<const QQmlJSScope>> &types,
+        const QList<QQmlJSMetaMethod::Constness> &parameterQualifiers, bool allowUnnamed = false)
 {
     Q_ASSERT(names.size() == types.size());
+    Q_ASSERT(parameterQualifiers.size() == types.size());
 
     QList<QmltcVariable> parameters;
     const auto size = names.size();
@@ -440,8 +440,12 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
     const auto returnType = figureReturnType(m);
     const auto paramNames = m.parameterNames();
     const auto paramTypes = m.parameterTypes();
+    const auto paramFlags = m.parameterTypeQualifiers();
+
     Q_ASSERT(paramNames.size() == paramTypes.size()); // assume verified
-    const QList<QmltcVariable> compiledParams = compileMethodParameters(paramNames, paramTypes);
+    Q_ASSERT(paramFlags.size() == paramTypes.size());
+    const QList<QmltcVariable> compiledParams =
+            compileMethodParameters(paramNames, paramTypes, paramFlags);
     const auto methodType = QQmlJSMetaMethod::Type(m.methodType());
 
     QStringList code;
@@ -902,6 +906,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         } else {
             setter.parameterList = compileMethodParameters(methods.at(0).parameterNames(),
                                                            methods.at(0).parameterTypes(),
+                                                           methods.at(0).parameterTypeQualifiers(),
                                                            /* allow unnamed = */ true);
         }
 
@@ -1635,7 +1640,8 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
 
         const QString signalReturnType = figureReturnType(signal);
         const QList<QmltcVariable> slotParameters = compileMethodParameters(
-                signal.parameterNames(), signal.parameterTypes(), /* allow unnamed = */ true);
+                signal.parameterNames(), signal.parameterTypes(), signal.parameterTypeQualifiers(),
+                /* allow unnamed = */ true);
 
         // SignalHander specific:
         QmltcMethod slotMethod {};

@@ -8,4 +8,5 @@ QtObject {
     property string type
     property bool isPointer: false
     property bool isList: false
+    property bool isConstant: false
 }
