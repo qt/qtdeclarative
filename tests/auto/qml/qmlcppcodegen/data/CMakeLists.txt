@@ -152,6 +152,7 @@ set(qml_files
     toString.qml
     translation.qml
     trivialSignalHandler.qml
+    typePropagationLoop.qml
     typePropertyClash.qml
     typedArray.qml
     undefinedResets.qml
