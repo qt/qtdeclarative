@@ -435,7 +435,7 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::tapped(EventPoint eventPoint, Qt::MouseButton button)
+    \qmlsignal QtQuick::TapHandler::tapped(eventPoint eventPoint, Qt::MouseButton button)
 
     This signal is emitted each time the \c parent Item is tapped.
 
@@ -451,7 +451,7 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::singleTapped(EventPoint eventPoint, Qt::MouseButton button)
+    \qmlsignal QtQuick::TapHandler::singleTapped(eventPoint eventPoint, Qt::MouseButton button)
     \since 5.11
 
     This signal is emitted when the \c parent Item is tapped once.
@@ -464,7 +464,7 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::doubleTapped(EventPoint eventPoint, Qt::MouseButton button)
+    \qmlsignal QtQuick::TapHandler::doubleTapped(eventPoint eventPoint, Qt::MouseButton button)
     \since 5.11
 
     This signal is emitted when the \c parent Item is tapped twice within a
