@@ -55,7 +55,7 @@ QQuickWheelHandler::QQuickWheelHandler(QQuickItem *parent)
 }
 
 /*!
-    \qmlproperty enum QtQuick::WheelHandler::orientation
+    \qmlproperty enumeration QtQuick::WheelHandler::orientation
 
     Which wheel to react to.  The default is \c Qt.Vertical.
 

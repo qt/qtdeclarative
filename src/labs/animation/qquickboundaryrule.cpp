@@ -318,7 +318,7 @@ qreal QQuickBoundaryRule::peakOvershoot() const
 }
 
 /*!
-    \qmlproperty enum QtQuick::BoundaryRule::overshootFilter
+    \qmlproperty enumeration QtQuick::BoundaryRule::overshootFilter
 
     This property specifies the aggregation function that will be applied to
     the intercepted property value.
