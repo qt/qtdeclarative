@@ -240,6 +240,12 @@ This example builds on:
 \brief Attached Properties.
 \ingroup qmlextendingexamples
 
+This example demonstrates how to create custom
+\l {Attached Properties and Attached Signal Handlers} {attached properties}.
+For a more in-depth description on how one can create attached properties,
+see \l {Providing Attached Properties}.
+
+
 This example builds on:
 \list
 \li \l {Extending QML - Grouped Properties Example}
