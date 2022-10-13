@@ -78,6 +78,22 @@ QT_BEGIN_NAMESPACE
     top-left corner of the selection rectangle. When a handle is
     provided, the user can drag it to adjust the selection.
 
+    The handle is not hidden by default when a selection is removed.
+    Instead, this is the responsibility of the delegate, to open up for
+    custom fade-out animations. The easiest way to ensure that the handle
+    ends up hidden, is to simply bind \l visible to the the \l active
+    state of the SelectionRectangle:
+
+    \qml
+    SelectionRectangle {
+        topLeftHandle: Rectangle {
+            width: 20
+            height: 20
+            visible: SelectionRectangle.control.active
+        }
+    }
+    \endqml
+
     Set this property to \c null if you don't want a selection handle on the top-left.
 
     \sa bottomRightHandle
@@ -89,6 +105,22 @@ QT_BEGIN_NAMESPACE
     This property holds the delegate that will be shown on the center of the
     top-left corner of the selection rectangle. When a handle is
     provided, the user can drag it to adjust the selection.
+
+    The handle is not hidden by default when a selection is removed.
+    Instead, this is the responsibility of the delegate, to open up for
+    custom fade-out animations. The easiest way to ensure that the handle
+    ends up hidden, is to simply bind \l visible to the the \l active
+    state of the SelectionRectangle:
+
+    \qml
+    SelectionRectangle {
+        bottomRightHandle: Rectangle {
+            width: 20
+            height: 20
+            visible: SelectionRectangle.control.active
+        }
+    }
+    \endqml
 
     Set this property to \c null if you don't want a selection handle on the bottom-right.
 
