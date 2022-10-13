@@ -1818,8 +1818,7 @@ public:
 
     int c()
     {
-        Q_UNREACHABLE();
-        return 1111;
+        Q_UNREACHABLE_RETURN(1111);
     }
 };
 

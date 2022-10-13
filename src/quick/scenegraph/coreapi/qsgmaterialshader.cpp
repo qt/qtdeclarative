@@ -336,8 +336,7 @@ static inline QShader::Stage toShaderStage(QSGMaterialShader::Stage stage)
     case QSGMaterialShader::FragmentStage:
         return QShader::FragmentStage;
     default:
-        Q_UNREACHABLE();
-        return QShader::VertexStage;
+        Q_UNREACHABLE_RETURN(QShader::VertexStage);
     }
 }
 

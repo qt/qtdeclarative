@@ -634,8 +634,7 @@ QVariant QJSManagedValue::toVariant() const
     if (d->as<QV4::Managed>())
         return QV4::ExecutionEngine::toVariant(*d, QMetaType{}, true);
 
-    Q_UNREACHABLE();
-    return QVariant();
+    Q_UNREACHABLE_RETURN(QVariant());
 }
 
 /*!

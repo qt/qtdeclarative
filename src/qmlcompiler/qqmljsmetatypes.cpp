@@ -112,8 +112,8 @@ QSharedPointer<const QQmlJSScope> QQmlJSMetaPropertyBinding::literalType(const Q
     default:
         return {};
     }
-    Q_UNREACHABLE();
-    return {}; // needed on some compilers which do not see that every case in the switch returns
+    Q_UNREACHABLE_RETURN({});
+    // needed on some compilers which do not see that every case in the switch returns
 }
 
 QT_END_NAMESPACE

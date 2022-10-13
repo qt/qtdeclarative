@@ -564,8 +564,7 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
             gradMat = QQuickShapeGenericStrokeFillNode::MatConicalGradient;
             break;
         default:
-            Q_UNREACHABLE();
-            return;
+            Q_UNREACHABLE_RETURN();
         }
         n->activateMaterial(m_item->window(), gradMat);
         if (d->effectiveDirty & DirtyFillGradient) {

@@ -97,8 +97,7 @@ QString toString(BinaryOperator op) {
     case Mod:  return "%";
     }
 
-    Q_UNREACHABLE();
-    return QString();
+    Q_UNREACHABLE_RETURN(QString());
 }
 
 template<typename Result>
@@ -239,8 +238,7 @@ QString toString(UnaryOperator op) {
         return "--";
     }
 
-    Q_UNREACHABLE();
-    return QString();
+    Q_UNREACHABLE_RETURN(QString());
 }
 
 template<typename Result, UnaryOperator Operator>

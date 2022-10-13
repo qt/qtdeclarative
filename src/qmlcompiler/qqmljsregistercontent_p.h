@@ -134,8 +134,7 @@ public:
             return qHash(std::get<ConvertedTypes>(registerContent.m_content), seed);
         }
 
-        Q_UNREACHABLE();
-        return seed;
+        Q_UNREACHABLE_RETURN(seed);
     }
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,

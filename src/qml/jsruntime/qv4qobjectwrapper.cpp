@@ -316,8 +316,7 @@ static OptionalReturnedValue getPropertyFromImports(
                                          v4, qobj, qmlContext->imports(), r.importNamespace,
                                          Heap::QQmlTypeWrapper::ExcludeEnums));
     }
-    Q_UNREACHABLE();
-    return OptionalReturnedValue();
+    Q_UNREACHABLE_RETURN(OptionalReturnedValue());
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(

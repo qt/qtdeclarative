@@ -393,8 +393,7 @@ bool QQuickPopupPrivate::handleMouseEvent(QQuickItem *item, QMouseEvent *event)
     case QEvent::MouseButtonRelease:
         return handleRelease(item, event->scenePosition(), event->timestamp());
     default:
-        Q_UNREACHABLE();
-        return false;
+        Q_UNREACHABLE_RETURN(false);
     }
 }
 
@@ -406,8 +405,7 @@ bool QQuickPopupPrivate::handleHoverEvent(QQuickItem *item, QHoverEvent *event)
     case QEvent::HoverLeave:
         return blockInput(item, event->scenePosition());
     default:
-        Q_UNREACHABLE();
-        return false;
+        Q_UNREACHABLE_RETURN(false);
     }
 }
 

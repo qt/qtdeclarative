@@ -1411,8 +1411,7 @@ bool AOTCompiledContext::loadScopeObjectPropertyLookup(uint index, void *target)
         return true;
     }
 
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 void AOTCompiledContext::initLoadScopeObjectPropertyLookup(uint index, QMetaType type) const
@@ -1595,8 +1594,7 @@ bool AOTCompiledContext::getObjectLookup(uint index, QObject *object, void *targ
         return true;
     }
 
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 void AOTCompiledContext::initGetObjectLookup(uint index, QObject *object, QMetaType type) const
@@ -1701,8 +1699,7 @@ bool AOTCompiledContext::setObjectLookup(uint index, QObject *object, void *valu
         return true;
     }
 
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 void AOTCompiledContext::initSetObjectLookup(uint index, QObject *object, QMetaType type) const

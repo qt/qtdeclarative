@@ -54,8 +54,7 @@ QString QQmlJSRegisterContent::descriptiveName() const
                     std::get<ConvertedTypes>(m_content).result->internalName());
     }
     }
-    Q_UNREACHABLE();
-    return result + u"wat?"_s;
+    Q_UNREACHABLE_RETURN(result + u"wat?"_s);
 }
 
 bool QQmlJSRegisterContent::isList() const

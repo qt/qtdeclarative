@@ -422,8 +422,7 @@ bool QQmlInstanceModel::setRequiredProperty(int index, const QString &name, cons
     Q_UNUSED(value);
     // The view should not call this function, unless
     // it's actually handled in a subclass.
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 QT_END_NAMESPACE

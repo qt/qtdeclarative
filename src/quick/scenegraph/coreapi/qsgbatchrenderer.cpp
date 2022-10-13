@@ -115,8 +115,7 @@ QRhiVertexInputAttribute::Format qsg_vertexInputFormat(const QSGGeometry::Attrib
         break;
     }
     qWarning("Unsupported attribute type 0x%x with %d components", a.type, a.tupleSize);
-    Q_UNREACHABLE();
-    return QRhiVertexInputAttribute::Float;
+    Q_UNREACHABLE_RETURN(QRhiVertexInputAttribute::Float);
 }
 
 static QRhiVertexInputLayout calculateVertexInputLayout(const QSGMaterialShader *s, const QSGGeometry *geometry, bool batchable)
@@ -169,8 +168,7 @@ QRhiCommandBuffer::IndexFormat qsg_indexFormat(const QSGGeometry *geometry)
         return QRhiCommandBuffer::IndexUInt32;
         break;
     default:
-        Q_UNREACHABLE();
-        return QRhiCommandBuffer::IndexUInt16;
+        Q_UNREACHABLE_RETURN(QRhiCommandBuffer::IndexUInt16);
     }
 }
 

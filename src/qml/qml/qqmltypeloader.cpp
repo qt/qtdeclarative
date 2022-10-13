@@ -725,12 +725,10 @@ bool QQmlTypeLoader::Blob::addImport(
     case QV4::CompiledData::Import::ImportScript:
         return addScriptImport(import);
     case QV4::CompiledData::Import::ImportInlineComponent:
-        Q_UNREACHABLE(); // addImport is never called with an inline component import
-        return false;
+        Q_UNREACHABLE_RETURN(false); // addImport is never called with an inline component import
     }
 
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)

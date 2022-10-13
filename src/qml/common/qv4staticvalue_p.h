@@ -366,8 +366,7 @@ struct StaticValue
             return 0; // Coercion of NaN to int, results in 0;
         }
 
-        Q_UNREACHABLE();
-        return 0;
+        Q_UNREACHABLE_RETURN(0);
     }
 
     ReturnedValue *data_ptr() { return &_val; }

@@ -330,8 +330,7 @@ QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
     if (container.isConversion())
         return container.conversionResult();
 
-    Q_UNREACHABLE();
-    return {};
+    Q_UNREACHABLE_RETURN({});
 }
 
 void QQmlJSTypeResolver::trackListPropertyType(
@@ -411,8 +410,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
                     origin.variant(), (this->*op)(origin.scopeType()));
     }
 
-    Q_UNREACHABLE();
-    return {};
+    Q_UNREACHABLE_RETURN({});
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::referenceTypeForName(
@@ -804,8 +802,7 @@ static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::Ex
     case QQmlJSScope::ExtensionNamespace:
         break;
     }
-    Q_UNREACHABLE();
-    return QQmlJSRegisterContent::Unknown;
+    Q_UNREACHABLE_RETURN(QQmlJSRegisterContent::Unknown);
 }
 
 static bool isRevisionAllowed(int memberRevision, const QQmlJSScope::ConstPtr &scope)
@@ -1201,8 +1198,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
         return result.isValid() ? result : memberEnumType(type.scopeType(), name);
     }
 
-    Q_UNREACHABLE();
-    return {};
+    Q_UNREACHABLE_RETURN({});
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent &list) const

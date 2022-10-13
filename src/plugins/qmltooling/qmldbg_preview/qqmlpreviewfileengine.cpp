@@ -113,8 +113,7 @@ bool QQmlPreviewFileEngine::open(QIODevice::OpenMode flags,
     case QQmlPreviewFileLoader::Fallback:
         return m_fallback->open(flags, permissions);
     default:
-        Q_UNREACHABLE();
-        return false;
+        Q_UNREACHABLE_RETURN(false);
     }
 }
 
@@ -129,8 +128,7 @@ bool QQmlPreviewFileEngine::close()
     case QQmlPreviewFileLoader::Directory:
         return false;
     default:
-        Q_UNREACHABLE();
-        return false;
+        Q_UNREACHABLE_RETURN(false);
     }
 }
 
@@ -293,8 +291,7 @@ bool QQmlPreviewFileEngine::setSize(qint64 size)
     case QQmlPreviewFileLoader::Directory:
         return false;
     default:
-        Q_UNREACHABLE();
-        return false;
+        Q_UNREACHABLE_RETURN(false);
     }
 }
 

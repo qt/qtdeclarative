@@ -117,8 +117,7 @@ qsizetype QQmlListAccessor::count() const
     case Invalid:
         return 0;
     }
-    Q_UNREACHABLE();
-    return 0;
+    Q_UNREACHABLE_RETURN(0);
 }
 
 QVariant QQmlListAccessor::at(qsizetype idx) const
@@ -159,8 +158,7 @@ QVariant QQmlListAccessor::at(qsizetype idx) const
     case Invalid:
         return QVariant();
     }
-    Q_UNREACHABLE();
-    return QVariant();
+    Q_UNREACHABLE_RETURN(QVariant());
 }
 
 bool QQmlListAccessor::isValid() const

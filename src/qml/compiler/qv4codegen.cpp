@@ -759,86 +759,72 @@ void Codegen::destructurePattern(Pattern *p, const Reference &rhs)
 
 bool Codegen::visit(ArgumentList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(CaseBlock *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(CaseClause *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(CaseClauses *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(Catch *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(DefaultClause *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(Elision *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(Finally *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(FormalParameterList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(Program *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(PatternElement *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(PatternElementList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(PatternProperty *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(PatternPropertyList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(ExportDeclaration *ast)
@@ -879,68 +865,57 @@ bool Codegen::visit(TypeAnnotation *ast)
 
 bool Codegen::visit(StatementList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiArrayMemberList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiImport *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiHeaderItemList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiPragma *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiObjectInitializer *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiObjectMemberList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiParameterList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiProgram *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(UiQualifiedId *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(VariableDeclarationList *)
 {
-    Q_UNREACHABLE();
-    return false;
+    Q_UNREACHABLE_RETURN(false);
 }
 
 bool Codegen::visit(ClassExpression *ast)
@@ -4473,8 +4448,7 @@ void Codegen::Reference::storeAccumulator() const
     }
     switch (type) {
     case Super:
-        Q_UNREACHABLE();
-        return;
+        Q_UNREACHABLE_RETURN();
     case SuperProperty:
         Instruction::StoreSuperProperty store;
         store.property = property.stackSlot();
@@ -4562,8 +4536,7 @@ void Codegen::Reference::loadInAccumulator() const
     case Accumulator:
         return;
     case Super:
-        Q_UNREACHABLE();
-        return;
+        Q_UNREACHABLE_RETURN();
     case SuperProperty:
         tdzCheckStackSlot(property, subscriptRequiresTDZCheck);
         Instruction::LoadSuperProperty load;

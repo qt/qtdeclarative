@@ -2624,8 +2624,7 @@ double jsEval(double arg1, double arg2, const QString &op, QJSEngine *engine)
         return evalBinaryConst(u"<<"_s);
 
     qDebug() << op;
-    Q_UNREACHABLE();
-    return 0;
+    Q_UNREACHABLE_RETURN(0);
 }
 
 void tst_QmlCppCodegen::mathOperations()

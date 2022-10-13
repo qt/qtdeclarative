@@ -23,9 +23,9 @@ static constexpr bool is_valid(QPalette::ColorGroup cg) noexcept
 
     // GCC 8.x does not tread __builtin_unreachable() as constexpr
 #if defined(Q_CC_INTEL) || defined(Q_CC_CLANG) || (defined(Q_CC_GNU) && Q_CC_GNU >= 900)
+    // NOLINTNEXTLINE(qt-use-unreachable-return): Triggers on Clang, breaking GCC 8
     Q_UNREACHABLE();
 #endif
-
     return false;
 }
 

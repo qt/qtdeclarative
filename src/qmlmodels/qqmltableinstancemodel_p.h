@@ -85,9 +85,9 @@ public:
 
     bool setRequiredProperty(int index, const QString &name, const QVariant &value) final;
 
-    QVariant variantValue(int, const QString &) override { Q_UNREACHABLE(); return QVariant(); }
+    QVariant variantValue(int, const QString &) override { Q_UNREACHABLE_RETURN(QVariant()); }
     void setWatchedRoles(const QList<QByteArray> &) override { Q_UNREACHABLE(); }
-    int indexOf(QObject *, QObject *) const override { Q_UNREACHABLE(); return 0; }
+    int indexOf(QObject *, QObject *) const override { Q_UNREACHABLE_RETURN(0); }
 
 private:
     enum DestructionMode {

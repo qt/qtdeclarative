@@ -86,8 +86,7 @@ static QString findClassName(const QJSManagedValue &value)
     if (QV4::ScopedValue scoped(scope, asManaged(value)); scoped->isManaged())
         return scoped->managed()->vtable()->className;
 
-    Q_UNREACHABLE();
-    return QString();
+    Q_UNREACHABLE_RETURN(QString());
 }
 
 static QString buildClass(const QJSManagedValue &value, QJsonArray *classes,

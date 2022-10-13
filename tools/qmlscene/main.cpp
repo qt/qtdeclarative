@@ -397,8 +397,7 @@ static QQuickWindow::TextRenderType parseTextRenderType(const QString &renderTyp
 
     usage();
 
-    Q_UNREACHABLE();
-    return QQuickWindow::QtTextRendering;
+    Q_UNREACHABLE_RETURN(QQuickWindow::QtTextRendering);
 }
 
 int main(int argc, char ** argv)

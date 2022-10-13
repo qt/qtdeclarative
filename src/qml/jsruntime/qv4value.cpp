@@ -91,8 +91,7 @@ static QString primitiveToQString(const Value *value)
     switch (value->type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
-        Q_UNREACHABLE();
-        return QString();
+        Q_UNREACHABLE_RETURN(QString());
     case Value::Undefined_Type:
         return QStringLiteral("undefined");
     case Value::Null_Type:
@@ -103,8 +102,7 @@ static QString primitiveToQString(const Value *value)
         else
             return QStringLiteral("false");
     case Value::Managed_Type:
-        Q_UNREACHABLE();
-        return QString();
+        Q_UNREACHABLE_RETURN(QString());
     case Value::Integer_Type: {
         QString str;
         RuntimeHelpers::numberToString(&str, (double)value->int_32(), 10);
@@ -117,8 +115,7 @@ static QString primitiveToQString(const Value *value)
     }
     } // switch
 
-    Q_UNREACHABLE();
-    return QString();
+    Q_UNREACHABLE_RETURN(QString());
 }
 
 

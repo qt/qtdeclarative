@@ -227,8 +227,7 @@ public:
         case String: return asString();
         }
 
-        Q_UNREACHABLE();
-        return QString();
+        Q_UNREACHABLE_RETURN(QString());
     }
 
     QVariant toVariant() const
@@ -242,8 +241,7 @@ public:
         case String:    return QVariant(asString());
         }
 
-        Q_UNREACHABLE();
-        return QVariant();
+        Q_UNREACHABLE_RETURN(QVariant());
     }
 
     friend inline QJSPrimitiveValue operator+(const QJSPrimitiveValue &lhs,
@@ -629,8 +627,7 @@ private:
             break;
         }
 
-        Q_UNREACHABLE();
-        return QJSPrimitiveUndefined();
+        Q_UNREACHABLE_RETURN(QJSPrimitiveUndefined());
     }
 
     constexpr bool isNanOrUndefined() const
@@ -742,8 +739,7 @@ private:
             else if constexpr (std::is_same_v<T, QString>)
                 return getString();
 
-            Q_UNREACHABLE();
-            return T();
+            Q_UNREACHABLE_RETURN(T());
         }
 
     private:

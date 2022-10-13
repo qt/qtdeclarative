@@ -323,8 +323,7 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::updateChildrenPalettes(const QPa
          * nothing in this instantiation of updateChildrenPalettes and instead add an override in
          * QQuickWindowPrivate, which does the correct thing.
          */
-        Q_UNREACHABLE(); // You are not supposed to call this function
-        return;
+        Q_UNREACHABLE_RETURN(); // You are not supposed to call this function
     } else {
         if (auto root = rootItem(*itemWithPalette())) {
             for (auto &&child : root->childItems()) {

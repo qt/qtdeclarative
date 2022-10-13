@@ -352,8 +352,7 @@ QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
     }
     // coverity complains about the unreachable return below,
     // some compilers; some compilers complain without it
-    Q_UNREACHABLE();
-    return {};
+    Q_UNREACHABLE_RETURN({});
 }
 
 template<typename Predicate>

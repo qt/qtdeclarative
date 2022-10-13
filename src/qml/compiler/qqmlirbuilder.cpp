@@ -483,8 +483,7 @@ QString IRBuilder::signalNameFromSignalPropertyName(const QString &signalPropert
         }
     }
 
-    Q_UNREACHABLE();
-    return QString();
+    Q_UNREACHABLE_RETURN(QString());
 }
 
 bool IRBuilder::visit(QQmlJS::AST::UiArrayMemberList *ast)
@@ -803,8 +802,7 @@ private:
             return Pragma::FunctionSignatureBehavior;
         }
 
-        Q_UNREACHABLE();
-        return Pragma::PragmaType(-1);
+        Q_UNREACHABLE_RETURN(Pragma::PragmaType(-1));
     }
 
     static bool assign(Pragma *pragma, QStringView value)
@@ -869,8 +867,7 @@ private:
         default:
             break;
         }
-        Q_UNREACHABLE();
-        return QLatin1StringView();
+        Q_UNREACHABLE_RETURN(QLatin1StringView());
     }
 };
 

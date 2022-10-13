@@ -75,8 +75,8 @@ QV4::ExecutableCompilationUnit *QQmlTypeData::compilationUnitForInlineComponent(
             return m_inlineComponentToCompiledData[icIt->nameIndex].data();
         }
     }
-    Q_UNREACHABLE();
-    return nullptr; // make integrity happy
+    Q_UNREACHABLE_RETURN(nullptr);
+    // make integrity happy
 }
 
 void QQmlTypeData::registerCallback(TypeDataCallback *callback)

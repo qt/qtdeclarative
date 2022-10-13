@@ -67,8 +67,7 @@ static inline Number readNumber(QDataStream &stream, qint8 type)
         return static_cast<Number>(value);
     }
     default:
-        Q_UNREACHABLE();
-        return 0;
+        Q_UNREACHABLE_RETURN(0);
     }
 }
 

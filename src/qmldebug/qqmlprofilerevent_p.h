@@ -175,8 +175,7 @@ QT_WARNING_POP
         case Inline8Bit:
             return QString::fromUtf8(m_data.internalChar, m_dataLength);
         default:
-            Q_UNREACHABLE();
-            return QString();
+            Q_UNREACHABLE_RETURN(QString());
         }
     }
 

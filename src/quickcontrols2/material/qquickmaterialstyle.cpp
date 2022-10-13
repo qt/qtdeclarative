@@ -1156,8 +1156,7 @@ QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
     case ShadeA700:
         return darkerShade(color, m_theme == Light ? 0.12 : 0.38);
     default:
-        Q_UNREACHABLE();
-        return QColor();
+        Q_UNREACHABLE_RETURN(QColor());
     }
 }
 

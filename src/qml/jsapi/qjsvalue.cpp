@@ -371,8 +371,7 @@ QJSValue::ErrorType QJSValue::errorType() const
     case QV4::Heap::ErrorObject::URIError:
         return URIError;
     }
-    Q_UNREACHABLE();
-    return NoError;
+    Q_UNREACHABLE_RETURN(NoError);
 }
 
 /*!

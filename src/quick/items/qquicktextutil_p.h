@@ -101,8 +101,7 @@ typename T::RenderType QQuickTextUtil::textRenderType()
         return T::NativeRendering;
     }
 
-    Q_UNREACHABLE();
-    return T::QtRendering;
+    Q_UNREACHABLE_RETURN(T::QtRendering);
 }
 
 QT_END_NAMESPACE
