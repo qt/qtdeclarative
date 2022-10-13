@@ -334,6 +334,9 @@ public:
     Q_INVOKABLE QMatrix4x4 inverted() const;
     Q_INVOKABLE QMatrix4x4 transposed() const;
 
+    Q_INVOKABLE QPointF map(const QPointF p) const;
+    Q_INVOKABLE QRectF mapRect(const QRectF r) const;
+
     Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m, qreal epsilon) const;
     Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m) const;
 };

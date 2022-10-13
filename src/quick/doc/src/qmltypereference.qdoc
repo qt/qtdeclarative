@@ -1077,6 +1077,29 @@ console.log(b.toString());
             \endcode
 
         \row
+        \li rect mapRect(rect)
+        \li Maps the provided rectangle into the coordinate system defined by this matrix.
+            If rotation or shearing has been specified, this function returns the bounding rectangle.
+            This function was introduced in Qt 6.5.
+        \li \code
+var a = Qt.matrix4x4(2,0,0,0,0,2,0,0,0,0,1,0,0,0,0,1);
+var b = a.mapRect(Qt.rect(10, 20, 30, 40));
+console.log(b.toString());
+// Qt.rect(20, 40, 60, 80)
+            \endcode
+
+        \row
+        \li point map(point)
+        \li Maps the provided point into the coordinate system defined by this matrix.
+            This function was introduced in Qt 6.5.
+        \li \code
+var a = Qt.matrix4x4(2,0,0,0,0,2,0,0,0,0,1,0,0,0,0,1);
+var b = a.map(10, 20);
+console.log(b.toString());
+// Qt.point(20, 40)
+            \endcode
+
+        \row
         \li bool fuzzyEquals(matrix4x4 other, real epsilon)
         \li Returns true if \c this matrix4x4 is approximately equal to the \c other matrix4x4.
             The approximation will be true if each attribute of \c this is within \c epsilon

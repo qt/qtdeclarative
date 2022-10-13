@@ -762,6 +762,16 @@ QMatrix4x4 QQuickMatrix4x4ValueType::transposed() const
     return v.transposed();
 }
 
+QPointF QQuickMatrix4x4ValueType::map(const QPointF p) const
+{
+    return v.map(p);
+}
+
+QRectF QQuickMatrix4x4ValueType::mapRect(const QRectF r) const
+{
+    return v.mapRect(r);
+}
+
 bool QQuickMatrix4x4ValueType::fuzzyEquals(const QMatrix4x4 &m, qreal epsilon) const
 {
     qreal absEps = qAbs(epsilon);

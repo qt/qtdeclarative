@@ -70,6 +70,20 @@ Item {
         return true;
     }
 
+    function testMatrixMapping()
+    {
+        let m = Qt.matrix4x4();
+        m.scale(1, 2, 3);
+
+        if (m.mapRect(Qt.rect(10, 15, 20, 20)) !== Qt.rect(10, 30, 20, 40))
+            return false;
+
+        if (m.map(Qt.point(10, 15)) !== Qt.point(10, 30))
+            return false;
+
+        return true;
+    }
+
     Component.onCompleted: {
         success = true;
         if (m1.times(m2) != Qt.matrix4x4(26, 26, 26, 26, 52, 52, 52, 52, 78, 78, 78, 78, 104, 104, 104, 104)) success = false;
@@ -88,5 +102,6 @@ Item {
         if (m1.fuzzyEquals(m2)) success = false;
         if (!m1.fuzzyEquals(m2, 10)) success = false;
         if (!testTransformation()) success = false;
+        if (!testMatrixMapping()) success = false;
     }
 }
