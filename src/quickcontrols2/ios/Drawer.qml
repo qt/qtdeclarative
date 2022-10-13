@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.Drawer {
     id: control
@@ -29,7 +29,7 @@ T.Drawer {
 
     background: Item {
         NinePatchImage {
-            source: control.IOS.url + "drawer-background"
+            source: IOS.url + "drawer-background"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

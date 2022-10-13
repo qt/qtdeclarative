@@ -4,7 +4,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.iOS
 
 Page {
     id: root
@@ -160,7 +159,7 @@ Page {
                     anchors.leftMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
                     icon.source: "images/close.png"
-                    icon.color: IOS.theme === IOS.Dark ? "white" : "black"
+                    icon.color: Qt.styleHints.appearance === Qt.Dark ? "white" : "black"
 
                     onClicked: {
                         Database.deleteTask(taskList.taskId)

@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 import QtQuick.Controls.impl
 
 T.ScrollIndicator {
@@ -15,7 +15,7 @@ T.ScrollIndicator {
                              implicitContentHeight + topPadding + bottomPadding)
 
     contentItem: NinePatchImage {
-        source: control.IOS.url + "scrollindicator-handle"
+        source: IOS.url + "scrollindicator-handle"
         NinePatchImageSelector on source {
             states: [
                 {"light": Qt.styleHints.appearance === Qt.Light},

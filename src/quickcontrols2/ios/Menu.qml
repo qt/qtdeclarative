@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.Menu {
     id: control
@@ -49,7 +49,7 @@ T.Menu {
         NinePatchImage {
             width: parent.width
             height: parent.height
-            source: control.IOS.url + "menu-background"
+            source: IOS.url + "menu-background"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

@@ -4,7 +4,6 @@
 import QtQuick
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
-import QtQuick.Controls.iOS
 
 T.ToolBar {
     id: control

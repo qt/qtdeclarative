@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.MenuItem {
     id: control
@@ -80,7 +80,7 @@ T.MenuItem {
             height: control.isLastItem ? parent.height + 1 : parent.height
             rotation: control.isLastItem ? 180 : 0
             visible: !(isSingleItem && !control.down)
-            source: control.IOS.url + "menuitem-background"
+            source: IOS.url + "menuitem-background"
             NinePatchImageSelector on source {
                 states: [
                     {"edge": control.isFirstItem || control.isLastItem},

@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 import QtQuick.Controls.impl
 
 T.Slider {
@@ -23,7 +23,7 @@ T.Slider {
         NinePatchImage {
             x: -leftInset
             y: -topInset
-            source: control.IOS.url + "slider-handle"
+            source: IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},
@@ -40,7 +40,7 @@ T.Slider {
         opacity: control.enabled ? 1 : 0.5
 
         NinePatchImage {
-            source: control.IOS.url + "slider-background"
+            source: IOS.url + "slider-background"
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             rotation: control.horizontal ? 0 : -90
@@ -56,7 +56,7 @@ T.Slider {
                 width: control.handle.width / 2 + control.position * (parent.width - control.handle.width)
                 height: parent.height
 
-                source: control.IOS.url + "slider-progress"
+                source: IOS.url + "slider-progress"
                 NinePatchImageSelector on source {
                     states: [
                         {"light": Qt.styleHints.appearance === Qt.Light},

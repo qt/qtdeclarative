@@ -59,7 +59,6 @@ qt_internal_add_qml_module(qtquickcontrols2iosstyleplugin
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         qtquickcontrols2iosstyleplugin.cpp
-        qquickiosstyle.cpp qquickiosstyle_p.h
         qquickiostheme_p.h qquickiostheme.mm
     QML_FILES
         ${qml_files}

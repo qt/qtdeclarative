@@ -15,44 +15,23 @@
 // We mean it.
 //
 
-#include <QtCore/qvariant.h>
+#include <QtCore/qobject.h>
 #include <QtQml/qqml.h>
-#include <QtQuickControls2/qquickattachedpropertypropagator.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickIOSStyle : public QQuickAttachedPropertyPropagator
+class QQuickIOSStyle : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QUrl url READ url CONSTANT)
-    Q_PROPERTY(Theme theme READ theme NOTIFY themeChanged FINAL)
     QML_NAMED_ELEMENT(IOS)
-    QML_ATTACHED(QQuickIOSStyle)
-    QML_UNCREATABLE("")
-    QML_ADDED_IN_VERSION(2, 3)
+    QML_SINGLETON
+    QML_ADDED_IN_VERSION(6, 5)
 
 public:
-    enum Theme {
-        Light,
-        Dark
-    };
-    Q_ENUM(Theme)
-
     explicit QQuickIOSStyle(QObject *parent = nullptr);
 
-    static QQuickIOSStyle *qmlAttachedProperties(QObject *object);
-
-    Theme theme() const;
-
-    QUrl url() const;
-
-Q_SIGNALS:
-    void themeChanged();
-
-private:
-    void init();
-
-    Theme m_theme = Light;
+    static QUrl url();
 };
 
 QT_END_NAMESPACE

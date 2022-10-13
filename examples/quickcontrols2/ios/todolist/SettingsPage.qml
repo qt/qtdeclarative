@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.iOS
 
 Page {
     title: "settingsPage"
@@ -53,7 +52,7 @@ Page {
             required property string page
 
             Image {
-                source: IOS.theme === IOS.Dark ? "images/back-white.png"
+                source: Qt.styleHints.appearance === Qt.Dark ? "images/back-white.png"
                                                : "images/back.png"
                 width: 20
                 height: 20

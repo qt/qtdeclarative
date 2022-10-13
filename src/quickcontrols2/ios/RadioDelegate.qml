@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.RadioDelegate {
     id: control
@@ -29,7 +29,7 @@ T.RadioDelegate {
         opacity: control.enabled ? 1 : 0.5
         visible: control.checked
 
-        source: control.IOS.url + "radiodelegate-indicator"
+        source: IOS.url + "radiodelegate-indicator"
         ImageSelector on source {
             states: [
                 {"light": Qt.styleHints.appearance === Qt.Light},
@@ -62,7 +62,7 @@ T.RadioDelegate {
             y: control.down ? -1 : 0
             height: control.height + (control.down ? 1 : 0)
             width: control.down ? control.width : control.availableWidth + control.rightPadding - offset
-            source: control.IOS.url + "itemdelegate-background"
+            source: IOS.url + "itemdelegate-background"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

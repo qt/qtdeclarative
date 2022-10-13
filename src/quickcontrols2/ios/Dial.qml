@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 import QtQuick.Shapes
 
 T.Dial {
@@ -89,7 +89,7 @@ T.Dial {
             x: -leftInset
             y: -topInset
 
-            source: control.IOS.url + "slider-handle"
+            source: IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

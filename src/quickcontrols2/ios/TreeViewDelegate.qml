@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.TreeViewDelegate {
     id: control
@@ -43,7 +43,7 @@ T.TreeViewDelegate {
             rotation:  control.expanded ? 90 : (control.mirrored ? 180 : 0)
             opacity: control.enabled ? 1 : 0.5
 
-            source: control.IOS.url + "arrow-indicator"
+            source: IOS.url + "arrow-indicator"
             ImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},
@@ -59,7 +59,7 @@ T.TreeViewDelegate {
         NinePatchImage {
             height: parent.height
             width: parent.width
-            source: control.IOS.url + (control.highlighted ? "itemdelegate-background-pressed" : "itemdelegate-background")
+            source: IOS.url + (control.highlighted ? "itemdelegate-background-pressed" : "itemdelegate-background")
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

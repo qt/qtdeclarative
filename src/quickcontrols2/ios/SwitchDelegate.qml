@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.SwitchDelegate {
     id: control
@@ -30,7 +30,7 @@ T.SwitchDelegate {
         height: Math.max(implicitHeight, handle.implicitHeight)
         opacity: control.enabled ? 1 : 0.5
 
-        source: control.IOS.url + "switch-indicator"
+        source: IOS.url + "switch-indicator"
         ImageSelector on source {
             states: [
                 {"light": Qt.styleHints.appearance === Qt.Light},
@@ -51,7 +51,7 @@ T.SwitchDelegate {
             y: (parent.height - height) / 2 - topInset + margin
             width: control.pressed ? implicitWidth + 4 : implicitWidth
 
-            source: control.IOS.url + "switch-handle"
+            source: IOS.url + "switch-handle"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},
@@ -90,7 +90,7 @@ T.SwitchDelegate {
             x: control.leftPadding + offset
             height: control.height
             width: control.availableWidth + control.rightPadding - offset
-            source: control.IOS.url + "itemdelegate-background"
+            source: IOS.url + "itemdelegate-background"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

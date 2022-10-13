@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 import QtQuick.Controls.impl
 
 T.CheckDelegate {
@@ -27,7 +27,7 @@ T.CheckDelegate {
         y: control.topPadding + (control.availableHeight - height) / 2
         opacity: control.enabled ? 1 : 0.5
 
-        source: control.IOS.url + (control.checkState === Qt.Unchecked ?  "radiobutton-indicator" : "checkbox-indicator")
+        source: IOS.url + (control.checkState === Qt.Unchecked ?  "radiobutton-indicator" : "checkbox-indicator")
         ImageSelector on source {
             states: [
                 {"checked": control.checkState === Qt.Checked},
@@ -62,7 +62,7 @@ T.CheckDelegate {
             y: control.down ? -1 : 0
             height: control.height + (control.down ? 1 : 0)
             width: control.down ? control.width : control.availableWidth + control.rightPadding - offset
-            source: control.IOS.url + "itemdelegate-background"
+            source: IOS.url + "itemdelegate-background"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

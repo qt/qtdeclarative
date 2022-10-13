@@ -15,6 +15,7 @@ qt_internal_add_qml_module(qtquickcontrols2iosstyleimplplugin
     PLUGIN_TARGET qtquickcontrols2iosstyleimplplugin
     NO_PLUGIN_OPTIONAL
     SOURCES
+        qquickiosstyle.cpp qquickiosstyle_p.h
         qquickioscursorflashtimer_p.h qquickioscursorflashtimer.cpp
     QML_FILES
         ${qml_files}

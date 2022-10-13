@@ -59,16 +59,4 @@
     that the iOS style uses are style-dependent. However, as most of the visual
     appearance of controls (for example: backgrounds) is managed through image assets,
     only the roles that are typically used for text will have an effect.
-
-    \section1 Attached Property Documentation
-
-    \styleproperty {IOS.theme} {enumeration} {ios-theme-attached-prop}
-    \target ios-theme-attached-prop
-    This attached property holds whether the theme is light or dark.
-
-    Available themes:
-    \value IOS.Light Light theme (default)
-    \value IOS.Dark Dark theme
-
-    \endstyleproperty
 */

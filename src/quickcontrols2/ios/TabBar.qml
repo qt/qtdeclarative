@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Templates as T
-import QtQuick.Controls.iOS
 
 T.TabBar {
     id: control

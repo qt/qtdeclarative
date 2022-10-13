@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.Popup {
     id: control
@@ -32,7 +32,7 @@ T.Popup {
         NinePatchImage {
             width: parent.width
             height: parent.height
-            source: control.IOS.url + "popup-background"
+            source: IOS.url + "popup-background"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

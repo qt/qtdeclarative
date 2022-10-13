@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.ProgressBar {
     id: control
@@ -28,7 +28,7 @@ T.ProgressBar {
             y: (parent.height - height) / 2
             width: control.indeterminate ? control.width * 0.4 : control.position * parent.width
 
-            source: control.IOS.url + "slider-progress"
+            source: IOS.url + "slider-progress"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},
@@ -52,7 +52,7 @@ T.ProgressBar {
         implicitHeight: children[0].implicitHeight
         clip: control.indeterminate
         NinePatchImage {
-            source: control.IOS.url + "slider-background"
+            source: IOS.url + "slider-background"
             y: (parent.height - height) / 2
             width: control.background.width
             NinePatchImageSelector on source {

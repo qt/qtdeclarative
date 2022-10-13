@@ -4,7 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 
 T.ItemDelegate {
     id: control
@@ -43,7 +43,7 @@ T.ItemDelegate {
             y: control.down ? -1 : 0
             height: control.height + (control.down ? 1 : 0)
             width: control.down ? control.width : control.availableWidth + control.rightPadding - offset
-            source: control.IOS.url + "itemdelegate-background"
+            source: IOS.url + "itemdelegate-background"
             NinePatchImageSelector on source {
                 states: [
                     {"light": Qt.styleHints.appearance === Qt.Light},

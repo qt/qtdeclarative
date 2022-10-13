@@ -5,7 +5,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.LocalStorage
-import QtQuick.Controls.iOS
 
 Page {
     id: root
@@ -57,7 +56,7 @@ Page {
                 }
 
                 Image {
-                    source: IOS.theme === IOS.Dark ? "images/close-white.png"
+                    source: Qt.styleHints.appearance === Qt.Dark ? "images/close-white.png"
                                                    : "images/close.png"
                     width: 20
                     height: 20

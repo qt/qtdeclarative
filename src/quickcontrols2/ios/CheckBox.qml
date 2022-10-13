@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 import QtQuick.Controls.impl
 
 T.CheckBox {
@@ -22,7 +22,7 @@ T.CheckBox {
         y: control.topPadding + (control.availableHeight - height) / 2
         opacity: control.enabled ? 1 : 0.5
 
-        source: control.IOS.url + (control.checkState === Qt.Unchecked ?  "radiobutton-indicator" : "checkbox-indicator")
+        source: IOS.url + (control.checkState === Qt.Unchecked ?  "radiobutton-indicator" : "checkbox-indicator")
         ImageSelector on source {
             states: [
                 {"checked": control.checkState === Qt.Checked},

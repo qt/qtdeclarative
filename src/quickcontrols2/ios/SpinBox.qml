@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
-import QtQuick.Controls.iOS
+import QtQuick.Controls.iOS.impl
 import QtQuick.Controls.impl
 
 T.SpinBox {
@@ -49,7 +49,7 @@ T.SpinBox {
         height: control.height
         opacity: control.up.indicator.enabled ? 1 : 0.5
 
-        source: control.IOS.url + "spinbox-indicator"
+        source: IOS.url + "spinbox-indicator"
         NinePatchImageSelector on source {
             states: [
                 {"up": true},
@@ -65,7 +65,7 @@ T.SpinBox {
         height: control.height
         opacity: control.down.indicator.enabled ? 1 : 0.5
 
-        source: control.IOS.url + "spinbox-indicator"
+        source: IOS.url + "spinbox-indicator"
         NinePatchImageSelector on source {
             states: [
                 {"down": true},
@@ -81,7 +81,7 @@ T.SpinBox {
         implicitHeight: children[0].implicitHeight
 
         NinePatchImage {
-            source: control.IOS.url + "spinbox-background"
+            source: IOS.url + "spinbox-background"
             width: control.background.width
             height: control.background.height
             opacity: control.enabled ? 1 : 0.5
