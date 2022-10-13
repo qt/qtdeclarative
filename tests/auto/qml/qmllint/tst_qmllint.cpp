@@ -1006,6 +1006,11 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        QStringLiteral(
                                "Type is an unscoped enum. You cannot access \"V1\" from here."),
                        5, 57 } } };
+
+    QTest::newRow("unresolvedArrayBinding")
+            << QStringLiteral("unresolvedArrayBinding.qml")
+            << Result{ { Message{ QStringLiteral(u"Declaring an object which is not an Qml object"
+                          " as a list member.") } } };
 }
 
 void TestQmllint::dirtyQmlCode()

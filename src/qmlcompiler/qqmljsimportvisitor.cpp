@@ -15,6 +15,7 @@
 #include <QtQml/private/qv4codegen_p.h>
 #include <QtQml/private/qqmlstringconverters_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
+#include "qqmljsscope_p.h"
 #include "qqmljsutils_p.h"
 
 #include <algorithm>
@@ -2019,7 +2020,11 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
     qsizetype i = 0;
     for (auto element = arrayBinding->members; element; element = element->next, ++i) {
         const auto &type = children[i];
-        Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+        if ((type->scopeType() != QQmlJSScope::QMLScope)) {
+            m_logger->log(u"Declaring an object which is not an Qml object"
+                          " as a list member."_s, qmlSyntax, element->firstSourceLocation());
+            return;
+        }
         m_pendingPropertyObjectBindings
                 << PendingPropertyObjectBinding { m_currentScope, type, propertyName,
                                                   element->firstSourceLocation(), false };
