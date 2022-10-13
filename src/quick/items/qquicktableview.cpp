@@ -188,6 +188,12 @@
     \note \l{Qt Quick Controls} offers a SelectionRectangle that can be used
     to let the user select cells.
 
+    \note By default, a cell will become
+    \l {QQuickItemSelectionModel::currentIndex()}{current}, and any selections will
+    be removed, when the user taps on it. If such default tap behavior is not wanted
+    (e.g if you use custom pointer handlers inside your delegate), you can set
+    \l pointerNavigationEnabled to \c false.
+
     \section1 Keyboard navigation
 
     In order to support keyboard navigation, you need to assign an \l ItemSelectionModel
