@@ -246,6 +246,7 @@ int main(int argc, char **argv)
             // Always trigger the qFatal() on "pragma Strict" violations.
             logger.setCategoryLevel(Log_Compiler, QtCriticalMsg);
             logger.setCategoryIgnored(Log_Compiler, false);
+            logger.setCategoryFatal(Log_Compiler, true);
 
             // By default, we're completely silent,
             // as the lcAotCompiler category default is QtFatalMsg

@@ -201,6 +201,16 @@ public:
         m_categoryChanged[category] = true;
     }
 
+    bool isCategoryFatal(QQmlJSLoggerCategory category) const
+    {
+        return m_categoryFatal[category];
+    }
+    void setCategoryFatal(QQmlJSLoggerCategory category, bool error)
+    {
+        m_categoryFatal[category] = error;
+        m_categoryChanged[category] = true;
+    }
+
     bool wasCategoryChanged(QQmlJSLoggerCategory category) const
     {
         return m_categoryChanged[category];
@@ -256,6 +266,10 @@ private:
     QtMsgType m_categoryLevels[QQmlJSLoggerCategory_Last + 1] = {};
     bool m_categoryIgnored[QQmlJSLoggerCategory_Last + 1] = {};
     bool m_categoryChanged[QQmlJSLoggerCategory_Last + 1] = {};
+
+    // If true, triggers qFatal on documents with "pragma Strict"
+    // TODO: Works only for qmlCompiler category so far.
+    bool m_categoryFatal[QQmlJSLoggerCategory_Last + 1] = {};
 
     QList<Message> m_infos;
     QList<Message> m_warnings;
