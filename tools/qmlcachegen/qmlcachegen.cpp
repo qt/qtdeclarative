@@ -244,8 +244,9 @@ int main(int argc, char **argv)
             QQmlJSLogger logger;
 
             // Always trigger the qFatal() on "pragma Strict" violations.
-            logger.setCategoryLevel(qmlCompiler, QtCriticalMsg);
+            logger.setCategoryLevel(qmlCompiler, QtWarningMsg);
             logger.setCategoryIgnored(qmlCompiler, false);
+            logger.setCategoryFatal(qmlCompiler, true);
 
             // By default, we're completely silent,
             // as the lcAotCompiler category default is QtFatalMsg

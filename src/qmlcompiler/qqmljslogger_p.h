@@ -227,6 +227,16 @@ public:
         m_categoryChanged[id.name().toString()] = true;
     }
 
+    bool isCategoryFatal(LoggerWarningId id) const
+    {
+        return m_categoryFatal[id.name().toString()];
+    }
+    void setCategoryFatal(LoggerWarningId id, bool error)
+    {
+        m_categoryFatal[id.name().toString()] = error;
+        m_categoryChanged[id.name().toString()] = true;
+    }
+
     bool wasCategoryChanged(LoggerWarningId id) const
     {
         return m_categoryChanged[id.name().toString()];
@@ -282,6 +292,11 @@ private:
 
     QHash<QString, QtMsgType> m_categoryLevels;
     QHash<QString, bool> m_categoryIgnored;
+
+    // If true, triggers qFatal on documents with "pragma Strict"
+    // TODO: Works only for qmlCompiler category so far.
+    QHash<QString, bool> m_categoryFatal;
+
     QHash<QString, bool> m_categoryChanged;
 
     QList<Message> m_infos;

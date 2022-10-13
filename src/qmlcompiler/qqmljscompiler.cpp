@@ -674,9 +674,8 @@ QQmlJS::DiagnosticMessage QQmlJSAotCompiler::diagnose(
         const QString &message, QtMsgType type, const QQmlJS::SourceLocation &location) const
 {
     if (isStrict(m_document)
-        && (type == QtWarningMsg || type == QtCriticalMsg || type == QtFatalMsg)
-        && !m_logger->isCategoryIgnored(qmlCompiler)
-        && m_logger->categoryLevel(qmlCompiler) == QtCriticalMsg) {
+            && (type == QtWarningMsg || type == QtCriticalMsg || type == QtFatalMsg)
+            && m_logger->isCategoryFatal(qmlCompiler)) {
         qFatal("%s:%d: (strict mode) %s",
                qPrintable(QFileInfo(m_resourcePath).fileName()),
                location.startLine, qPrintable(message));
