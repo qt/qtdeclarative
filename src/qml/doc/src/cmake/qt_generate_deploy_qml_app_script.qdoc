@@ -27,6 +27,12 @@ qt_generate_deploy_qml_app_script(
     [NO_TRANSLATIONS]
     [DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM]
     [MACOS_BUNDLE_POST_BUILD]
+    [PRE_INCLUDE_REGEXES regexes...]
+    [PRE_EXCLUDE_REGEXES regexes...]
+    [POST_INCLUDE_REGEXES regexes...]
+    [POST_EXCLUDE_REGEXES regexes...]
+    [POST_INCLUDE_FILES files...]
+    [POST_EXCLUDE_FILES files...]
 )
 \endcode
 
@@ -91,6 +97,12 @@ On platforms other than macOS, Qt translations are automatically deployed. To
 inhibit this behavior, specify \c{NO_TRANSLATIONS}. Use
 \l{qt6_deploy_translations}{qt_deploy_translations} to deploy translations in a
 customized way.
+
+The options \c{PRE_INCLUDE_REGEXES}, \c{PRE_EXCLUDE_REGEXES},
+\c{POST_INCLUDE_REGEXES}, \c{POST_EXCLUDE_REGEXES}, \c{POST_INCLUDE_FILES}, and
+\c{POST_EXCLUDE_FILES} can be specified to control the deployment of runtime
+dependencies. These options do not apply to all platforms and are forwarded
+unmodified to \l{qt_deploy_runtime_dependencies()}.
 
 For deploying a non-QML application, use
 \l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}
