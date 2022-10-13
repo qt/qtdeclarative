@@ -1011,6 +1011,12 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << QStringLiteral("unresolvedArrayBinding.qml")
             << Result{ { Message{ QStringLiteral(u"Declaring an object which is not an Qml object"
                           " as a list member.") } } };
+    QTest::newRow("duplicatedPropertyName")
+            << QStringLiteral("duplicatedPropertyName.qml")
+            << Result{ { Message{ QStringLiteral("Duplicated property name \"cat\"."), 5, 5 } } };
+    QTest::newRow("duplicatedSignalName")
+            << QStringLiteral("duplicatedPropertyName.qml")
+            << Result{ { Message{ QStringLiteral("Duplicated signal name \"clicked\"."), 8, 5 } } };
 }
 
 void TestQmllint::dirtyQmlCode()

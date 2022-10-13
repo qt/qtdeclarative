@@ -113,6 +113,7 @@ extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlPrefixedImportType;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlNonListProperty;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlReadOnlyProperty;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlDuplicatePropertyBinding;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlDuplicatedName;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlDeferredPropertyId;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUnqualified;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUnusedImports;

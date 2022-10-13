@@ -175,7 +175,7 @@ void tst_qqmljsscope::orderedBindings()
 
 void tst_qqmljsscope::signalCreationDifferences()
 {
-    QQmlJSScope::ConstPtr root = run(u"signalCreationDifferences.qml"_s);
+    QQmlJSScope::ConstPtr root = run(u"signalCreationDifferences.qml"_s, true);
     QVERIFY(root);
 
     QVERIFY(root->hasOwnProperty(u"myProperty"_s));

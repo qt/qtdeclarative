@@ -39,6 +39,7 @@ const LoggerWarningId qmlMissingProperty { "missing-property" };
 const LoggerWarningId qmlNonListProperty { "non-list-property" };
 const LoggerWarningId qmlReadOnlyProperty { "read-only-property" };
 const LoggerWarningId qmlDuplicatePropertyBinding { "duplicate-property-binding" };
+const LoggerWarningId qmlDuplicatedName { "duplicated-name" };
 const LoggerWarningId qmlDeferredPropertyId { "deferred-property-id" };
 const LoggerWarningId qmlUnqualified { "unqualified" };
 const LoggerWarningId qmlUnusedImports { "unused-imports" };
@@ -116,6 +117,10 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                                  QStringLiteral("DuplicatePropertyBinding"),
                                  QStringLiteral("Warn about duplicate property bindings"),
                                  QtWarningMsg },
+        QQmlJSLogger::Category { qmlDuplicatedName.name().toString(),
+                            QStringLiteral("DuplicatedName"),
+                            QStringLiteral("Warn about duplicated property/signal names"),
+                            QtWarningMsg },
         QQmlJSLogger::Category {
                 qmlDeferredPropertyId.name().toString(), QStringLiteral("DeferredPropertyId"),
                 QStringLiteral(

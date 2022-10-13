@@ -1403,6 +1403,11 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
 {
     switch (publicMember->type) {
     case UiPublicMember::Signal: {
+        if (m_currentScope->ownMethods().contains(publicMember->name.toString())) {
+            m_logger->log(QStringLiteral("Duplicated signal name \"%1\".").arg(
+                publicMember->name.toString()), qmlDuplicatedName,
+                publicMember->firstSourceLocation());
+        }
         UiParameterList *param = publicMember->parameters;
         QQmlJSMetaMethod method;
         method.setMethodType(QQmlJSMetaMethod::Signal);
@@ -1415,6 +1420,11 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         break;
     }
     case UiPublicMember::Property: {
+        if (m_currentScope->ownProperties().contains(publicMember->name.toString())) {
+            m_logger->log(QStringLiteral("Duplicated property name \"%1\".").arg(
+                publicMember->name.toString()), qmlDuplicatedName,
+                publicMember->firstSourceLocation());
+        }
         QString typeName = buildName(publicMember->memberType);
         QString aliasExpr;
         const bool isAlias = (typeName == u"alias"_s);
