@@ -109,11 +109,16 @@ QSharedPointer<const QQmlJSScope> QQmlJSMetaPropertyBinding::literalType(const Q
         return resolver->typeForName(QLatin1String("regexp"));
     case QQmlJSMetaPropertyBinding::Null:
         return resolver->nullType();
-    default:
+    case QQmlJSMetaPropertyBinding::Invalid:
+    case QQmlJSMetaPropertyBinding::Script:
+    case QQmlJSMetaPropertyBinding::Object:
+    case QQmlJSMetaPropertyBinding::Interceptor:
+    case QQmlJSMetaPropertyBinding::ValueSource:
+    case QQmlJSMetaPropertyBinding::AttachedProperty:
+    case QQmlJSMetaPropertyBinding::GroupProperty:
         return {};
     }
     Q_UNREACHABLE_RETURN({});
-    // needed on some compilers which do not see that every case in the switch returns
 }
 
 QT_END_NAMESPACE
