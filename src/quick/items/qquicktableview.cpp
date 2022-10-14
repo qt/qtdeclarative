@@ -1241,6 +1241,12 @@ QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
     return const_cast<QQuickTableView *>(q_func())->contentItem();
 }
 
+bool QQuickTableViewPrivate::canStartSelection(const QPointF &pos)
+{
+    Q_UNUSED(pos);
+    return true;
+}
+
 void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 {
     if (loadedItems.isEmpty())

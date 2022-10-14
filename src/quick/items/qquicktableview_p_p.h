@@ -473,6 +473,7 @@ public:
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;
+    bool canStartSelection(const QPointF &pos) override;
     void setSelectionStartPos(const QPointF &pos) override;
     void setSelectionEndPos(const QPointF &pos) override;
     void clearSelection() override;

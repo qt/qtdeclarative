@@ -181,7 +181,10 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     });
 
     QObject::connect(m_tapHandler, &QQuickTapHandler::longPressed, [this]() {
-        if (handleUnderPos(m_tapHandler->point().pressPosition()) != nullptr) {
+        const QPointF pos = m_tapHandler->point().pressPosition();
+        if (!m_selectable->canStartSelection(pos))
+            return;
+        if (handleUnderPos(pos) != nullptr) {
             // Don't allow press'n'hold to start a new
             // selection if it started on top of a handle.
             return;
@@ -196,7 +199,6 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             }
         }
 
-        const QPointF pos = m_tapHandler->point().position();
         m_selectable->clearSelection();
         m_selectable->setSelectionStartPos(pos);
         m_selectable->setSelectionEndPos(pos);
@@ -207,7 +209,10 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     QObject::connect(m_dragHandler, &QQuickDragHandler::activeChanged, [this]() {
         const QPointF startPos = m_dragHandler->centroid().pressPosition();
         const QPointF dragPos = m_dragHandler->centroid().position();
+
         if (m_dragHandler->active()) {
+            if (!m_selectable->canStartSelection(startPos))
+                return;
             m_selectable->clearSelection();
             m_selectable->setSelectionStartPos(startPos);
             m_selectable->setSelectionEndPos(dragPos);
