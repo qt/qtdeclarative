@@ -76,7 +76,6 @@ QV4::ExecutableCompilationUnit *QQmlTypeData::compilationUnitForInlineComponent(
         }
     }
     Q_UNREACHABLE_RETURN(nullptr);
-    // make integrity happy
 }
 
 void QQmlTypeData::registerCallback(TypeDataCallback *callback)
