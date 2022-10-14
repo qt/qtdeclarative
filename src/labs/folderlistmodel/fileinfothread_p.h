@@ -71,6 +71,19 @@ protected:
     void findChangeRange(const QList<FileProperty> &list, int &fromIndex, int &toIndex);
 
 private:
+    enum class UpdateType {
+        None = 1 << 0,
+        // The order of the files in the current folder changed.
+        Sort = 1 << 1,
+        // A subset of files in the current folder changed.
+        Contents = 1 << 2
+    };
+    Q_DECLARE_FLAGS(UpdateTypes, UpdateType)
+
+    // Declare these ourselves, as Q_DECLARE_OPERATORS_FOR_FLAGS needs the enum to be public.
+    friend constexpr UpdateTypes operator|(UpdateType f1, UpdateTypes f2) noexcept;
+    friend constexpr UpdateTypes operator&(UpdateType f1, UpdateTypes f2) noexcept;
+
     QMutex mutex;
     QWaitCondition condition;
     volatile bool abort;
@@ -85,8 +98,7 @@ private:
     QString rootPath;
     QStringList nameFilters;
     bool needUpdate;
-    bool folderUpdate;
-    bool sortUpdate;
+    UpdateTypes updateTypes;
     bool showFiles;
     bool showDirs;
     bool showDirsFirst;

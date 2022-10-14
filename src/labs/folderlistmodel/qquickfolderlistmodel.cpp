@@ -5,10 +5,13 @@
 #include "qquickfolderlistmodel_p.h"
 #include "fileinfothread_p.h"
 #include "fileproperty_p.h"
+#include <QtCore/qloggingcategory.h>
 #include <qqmlcontext.h>
 #include <qqmlfile.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcFolderListModel, "qt.labs.folderlistmodel")
 
 class QQuickFolderListModelPrivate
 {
@@ -103,11 +106,13 @@ void QQuickFolderListModelPrivate::updateSorting()
 
 void QQuickFolderListModelPrivate::_q_directoryChanged(const QString &directory, const QList<FileProperty> &list)
 {
+    qCDebug(lcFolderListModel) << "_q_directoryChanged called with directory" << directory;
     Q_Q(QQuickFolderListModel);
     Q_UNUSED(directory);
 
     data = list;
     q->endResetModel();
+    qCDebug(lcFolderListModel) << "- endResetModel called";
     emit q->rowCountChanged();
     emit q->folderChanged();
 }
@@ -147,17 +152,22 @@ void QQuickFolderListModelPrivate::_q_directoryUpdated(const QString &directory,
 void QQuickFolderListModelPrivate::_q_sortFinished(const QList<FileProperty> &list)
 {
     Q_Q(QQuickFolderListModel);
+    qCDebug(lcFolderListModel) << "_q_sortFinished called with" << list.size() << "files";
 
     QModelIndex parent;
     if (data.size() > 0) {
+        qCDebug(lcFolderListModel) << "- removing all existing rows...";
         q->beginRemoveRows(parent, 0, data.size()-1);
         data.clear();
         q->endRemoveRows();
+        qCDebug(lcFolderListModel) << "- ...removed all existing rows";
     }
 
+    qCDebug(lcFolderListModel) << "- inserting sorted rows...";
     q->beginInsertRows(parent, 0, list.size()-1);
     data = list;
     q->endInsertRows();
+    qCDebug(lcFolderListModel) << "- ... inserted sorted rows";
 }
 
 void QQuickFolderListModelPrivate::_q_statusChanged(QQuickFolderListModel::Status s)
@@ -400,6 +410,7 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
 
     QString resolvedPath = QQuickFolderListModelPrivate::resolvePath(folder);
 
+    qCDebug(lcFolderListModel) << "about to emit beginResetModel since our folder was set to" << folder;
     beginResetModel();
 
     //Remove the old path for the file system watcher

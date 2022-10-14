@@ -7,8 +7,11 @@
 #include <qtimer.h>
 
 #include <QDebug>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcFileInfoThread, "qt.labs.folderlistmodel.fileinfothread")
 
 FileInfoThread::FileInfoThread(QObject *parent)
     : QThread(parent),
@@ -19,8 +22,7 @@ FileInfoThread::FileInfoThread(QObject *parent)
 #endif
       sortFlags(QDir::Name),
       needUpdate(true),
-      folderUpdate(false),
-      sortUpdate(false),
+      updateTypes(UpdateType::None),
       showFiles(true),
       showDirs(true),
       showDirsFirst(false),
@@ -68,6 +70,7 @@ void FileInfoThread::removePath(const QString &path)
 
 void FileInfoThread::setPath(const QString &path)
 {
+    qCDebug(lcFileInfoThread) << "setPath called with path" << path;
     Q_ASSERT(!path.isEmpty());
 
     QMutexLocker locker(&mutex);
@@ -82,6 +85,7 @@ void FileInfoThread::setPath(const QString &path)
 
 void FileInfoThread::setRootPath(const QString &path)
 {
+    qCDebug(lcFileInfoThread) << "setRootPath called with path" << path;
     Q_ASSERT(!path.isEmpty());
 
     QMutexLocker locker(&mutex);
@@ -91,94 +95,106 @@ void FileInfoThread::setRootPath(const QString &path)
 #if QT_CONFIG(filesystemwatcher)
 void FileInfoThread::dirChanged(const QString &directoryPath)
 {
+    qCDebug(lcFileInfoThread) << "dirChanged called with directoryPath" << directoryPath;
     Q_UNUSED(directoryPath);
     QMutexLocker locker(&mutex);
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 #endif
 
 void FileInfoThread::setSortFlags(QDir::SortFlags flags)
 {
+    qCDebug(lcFileInfoThread) << "setSortFlags called with flags" << flags;
+    Q_ASSERT(flags != sortFlags);
     QMutexLocker locker(&mutex);
     sortFlags = flags;
-    sortUpdate = true;
+    updateTypes |= UpdateType::Sort;
     needUpdate = true;
     initiateScan();
 }
 
 void FileInfoThread::setNameFilters(const QStringList & filters)
 {
+    qCDebug(lcFileInfoThread) << "setNameFilters called with filters" << filters;
     QMutexLocker locker(&mutex);
     nameFilters = filters;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 
 void FileInfoThread::setShowFiles(bool show)
 {
+    qCDebug(lcFileInfoThread) << "setShowFiles called with show" << show;
     QMutexLocker locker(&mutex);
     showFiles = show;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 
 void FileInfoThread::setShowDirs(bool showFolders)
 {
+    qCDebug(lcFileInfoThread) << "setShowDirs called with showFolders" << showFolders;
     QMutexLocker locker(&mutex);
     showDirs = showFolders;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 
 void FileInfoThread::setShowDirsFirst(bool show)
 {
+    qCDebug(lcFileInfoThread) << "setShowDirsFirst called with show" << show;
     QMutexLocker locker(&mutex);
     showDirsFirst = show;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 
 void FileInfoThread::setShowDotAndDotDot(bool on)
 {
+    qCDebug(lcFileInfoThread) << "setShowDotAndDotDot called with on" << on;
     QMutexLocker locker(&mutex);
     showDotAndDotDot = on;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     needUpdate = true;
     initiateScan();
 }
 
 void FileInfoThread::setShowHidden(bool on)
 {
+    qCDebug(lcFileInfoThread) << "setShowHidden called with on" << on;
     QMutexLocker locker(&mutex);
     showHidden = on;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     needUpdate = true;
     initiateScan();
 }
 
 void FileInfoThread::setShowOnlyReadable(bool on)
 {
+    qCDebug(lcFileInfoThread) << "setShowOnlyReadable called with on" << on;
     QMutexLocker locker(&mutex);
     showOnlyReadable = on;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 
 void FileInfoThread::setCaseSensitive(bool on)
 {
+    qCDebug(lcFileInfoThread) << "setCaseSensitive called with on" << on;
     QMutexLocker locker(&mutex);
     caseSensitive = on;
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 
 #if QT_CONFIG(filesystemwatcher)
 void FileInfoThread::updateFile(const QString &path)
 {
+    qCDebug(lcFileInfoThread) << "updateFile called with path" << path;
     Q_UNUSED(path);
     QMutexLocker locker(&mutex);
-    folderUpdate = true;
+    updateTypes |= UpdateType::Contents;
     initiateScan();
 }
 #endif
@@ -236,14 +252,25 @@ void FileInfoThread::runOnce()
 void FileInfoThread::initiateScan()
 {
 #if QT_CONFIG(thread)
+    qCDebug(lcFileInfoThread) << "initiateScan is about to call condition.wakeAll()";
     condition.wakeAll();
 #else
+    qCDebug(lcFileInfoThread) << "initiateScan is about to call runOnce()";
     runOnce();
 #endif
 }
 
+QString fileInfoListToString(const QFileInfoList &fileInfoList)
+{
+    return fileInfoList.size() <= 10
+        ? QDebug::toString(fileInfoList)
+        : QString::fromLatin1("%1 files").arg(fileInfoList.size());
+}
+
 void FileInfoThread::getFileInfos(const QString &path)
 {
+    qCDebug(lcFileInfoThread) << "getFileInfos called with path" << path << "- updateType" << updateTypes;
+
     QDir::Filters filter;
     if (caseSensitive)
         filter = QDir::CaseSensitive;
@@ -269,39 +296,45 @@ void FileInfoThread::getFileInfos(const QString &path)
 
     if (!fileInfoList.isEmpty()) {
         filePropertyList.reserve(fileInfoList.size());
-        for (const QFileInfo &info : fileInfoList) {
-            //qDebug() << "Adding file : " << info.fileName() << "to list ";
+        for (const QFileInfo &info : fileInfoList)
             filePropertyList << FileProperty(info);
-        }
-        if (folderUpdate) {
+
+        if (updateTypes & UpdateType::Contents) {
             int fromIndex = 0;
             int toIndex = currentFileList.size()-1;
             findChangeRange(filePropertyList, fromIndex, toIndex);
-            folderUpdate = false;
             currentFileList = filePropertyList;
-            //qDebug() << "emit directoryUpdated : " << fromIndex << " " << toIndex;
+            qCDebug(lcFileInfoThread) << "- about to emit directoryUpdated with fromIndex" << fromIndex
+                << "toIndex" << toIndex << "fileInfoList" << fileInfoListToString(fileInfoList);
             emit directoryUpdated(path, filePropertyList, fromIndex, toIndex);
         } else {
             currentFileList = filePropertyList;
-            if (sortUpdate) {
+            if (updateTypes & UpdateType::Sort) {
+                qCDebug(lcFileInfoThread) << "- about to emit sortFinished - fileInfoList:"
+                    << fileInfoListToString(fileInfoList);
                 emit sortFinished(filePropertyList);
-                sortUpdate = false;
-            } else
+            } else {
+                qCDebug(lcFileInfoThread) << "- about to emit directoryChanged - fileInfoList:"
+                    << fileInfoListToString(fileInfoList);
                 emit directoryChanged(path, filePropertyList);
+            }
         }
     } else {
         // The directory is empty
-        if (folderUpdate) {
+        if (updateTypes & UpdateType::Contents) {
             int fromIndex = 0;
             int toIndex = currentFileList.size()-1;
-            folderUpdate = false;
             currentFileList.clear();
+            qCDebug(lcFileInfoThread) << "- directory is empty, about to emit directoryUpdated with fromIndex"
+                << fromIndex << "toIndex" << toIndex;
             emit directoryUpdated(path, filePropertyList, fromIndex, toIndex);
         } else {
             currentFileList.clear();
+            qCDebug(lcFileInfoThread) << "- directory is empty, about to emit directoryChanged";
             emit directoryChanged(path, filePropertyList);
         }
     }
+    updateTypes = UpdateType::None;
     needUpdate = false;
 }
 
@@ -331,6 +364,16 @@ void FileInfoThread::findChangeRange(const QList<FileProperty> &list, int &fromI
 
     // For now I let the rest of the list be updated..
     toIndex = list.size() > currentFileList.size() ? list.size() - 1 : currentFileList.size() - 1;
+}
+
+constexpr FileInfoThread::UpdateTypes operator|(FileInfoThread::UpdateType f1, FileInfoThread::UpdateTypes f2) noexcept
+{
+    return f2 | f1;
+}
+
+constexpr FileInfoThread::UpdateTypes operator&(FileInfoThread::UpdateType f1, FileInfoThread::UpdateTypes f2) noexcept
+{
+    return f2 & f1;
 }
 
 QT_END_NAMESPACE
