@@ -60,7 +60,10 @@ private:
         return *reinterpret_cast<QArrayDataPointer<char> *>(&arrayDataPointerStorage);
     }
 
-    std::aligned_storage_t<sizeof(QArrayDataPointer<char>), alignof(QArrayDataPointer<char>)>
+    template <typename T>
+    struct storage_t { alignas(T) unsigned char data[sizeof(T)]; };
+
+    storage_t<QArrayDataPointer<char>>
     arrayDataPointerStorage;
     bool isShared;
 };
