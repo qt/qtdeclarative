@@ -1,0 +1,26 @@
+// Copyright (C) 2022 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example scenegraph/customrendernode
+    \title Scene Graph - Custom QSGRenderNode
+    \ingroup qtquickexamples
+    \brief Shows how to use QSGRenderNode to implement custom rendering in the Qt Quick scenegraph.
+
+    The custom render node example shows how to implement an item that is rendered using
+    a custom QSGRenderNode.
+
+    \image customrendernode-example.gif
+
+    QSGRenderNode allows direct access to the Render Hardware Interface (RHI) within the
+    scenegraph. This example demonstrates how to create QSGRenderNode based render node
+    and manage it with a custom item. The render node creates an RHI pipeline, updates
+    vertex and uniform buffers, and renders into the RHI command buffer.
+
+    \warning This example demonstrates advanced, low-level functionality
+    performing portable, cross-platform 3D rendering, while relying on private
+    APIs from the Qt Gui and Qt Quick modules. Developers are encouraged to
+    carefully evaluate the potential lack of source and binary compatibility
+    guarantees before using these APIs in their applications.
+
+ */
