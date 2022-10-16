@@ -72,7 +72,7 @@ struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object {
     void init(size_t length);
     void init(const QByteArray& array);
     void destroy();
-    std::aligned_storage_t<sizeof(QArrayDataPointer<char>), alignof(QArrayDataPointer<char>)> d;
+    struct { alignas(QArrayDataPointer<char>) unsigned char data[sizeof(QArrayDataPointer<char>)]; } d;
     const QArrayDataPointer<char> &data() const { return *reinterpret_cast<const QArrayDataPointer<char> *>(&d); }
     QArrayDataPointer<char> &data()  { return *reinterpret_cast<QArrayDataPointer<char> *>(&d); }
     bool isShared;
