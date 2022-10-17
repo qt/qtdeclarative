@@ -600,6 +600,9 @@ void FormatPartialStatus::handleTokens()
 
         case StateType::FunctionArglistOpen:
             switch (kind) {
+            case QQmlJSGrammar::T_COLON:
+                enter(StateType::TypeAnnotation);
+                break;
             case QQmlJSGrammar::T_RPAREN:
                 turnInto(StateType::FunctionArglistClosed);
                 break;
@@ -608,12 +611,40 @@ void FormatPartialStatus::handleTokens()
 
         case StateType::FunctionArglistClosed:
             switch (kind) {
+            case QQmlJSGrammar::T_COLON:
+                enter(StateType::TypeAnnotation);
+                break;
             case QQmlJSGrammar::T_LBRACE:
                 turnInto(StateType::JsblockOpen);
                 break;
             default:
                 leave(true);
                 continue; // error recovery
+            }
+            break;
+
+        case StateType::TypeAnnotation:
+            switch (kind) {
+            case QQmlJSGrammar::T_IDENTIFIER:
+            case QQmlJSGrammar::T_DOT:
+                break;
+            case QQmlJSGrammar::T_LT:
+                turnInto(StateType::TypeParameter);
+                break;
+            default:
+                leave();
+                continue; // error recovery
+            }
+            break;
+
+        case StateType::TypeParameter:
+            switch (kind) {
+            case QQmlJSGrammar::T_LT:
+                enter(StateType::TypeParameter);
+                break;
+            case QQmlJSGrammar::T_GT:
+                leave();
+                break;
             }
             break;
 

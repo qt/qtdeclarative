@@ -62,8 +62,8 @@ public:
         ComponentStart, // after component
         ComponentName, // after component Name
 
-        TypeAnnotation, // after a : starting a type annotation // new, to do
-        TypeParameter, // after a < in a type annotation (starting type parameters) // new, to do
+        TypeAnnotation, // after a : starting a type annotation
+        TypeParameter, // after a < in a type annotation (starting type parameters)
 
         EnumStart, // after 'enum'
 

@@ -67,6 +67,26 @@ static QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLat
     return result;
 }
 
+static QString typeToString(AST::Type *t)
+{
+    Q_ASSERT(t);
+    QString res = toString(t->typeId);
+    if (!t->typeArguments)
+        return res;
+    res += u"<";
+    bool first = true;
+    for (TypeArgumentList *tt = static_cast<TypeArgumentList *>(t->typeArguments);
+         tt; tt = tt->next) {
+        if (first)
+            first = false;
+        else
+            res += u",";
+        res += typeToString(tt->typeId);
+    }
+    res += u">";
+    return res;
+}
+
 SourceLocation combineLocations(SourceLocation s1, SourceLocation s2)
 {
     return combine(s1, s2);
@@ -487,13 +507,8 @@ public:
             MethodInfo m;
             m.name = fDef->name.toString();
             if (AST::TypeAnnotation *tAnn = fDef->typeAnnotation) {
-                if (AST::Type *t = tAnn->type) {
-                    m.typeName = toString(t->typeId);
-                    if (t->typeArguments) {
-                        Q_ASSERT_X(false, className,
-                                   "todo: type argument should be added to the typeName");
-                    }
-                }
+                if (AST::Type *t = tAnn->type)
+                    m.typeName = typeToString(t);
             }
             m.access = MethodInfo::Public;
             m.methodType = MethodInfo::Method;
@@ -528,13 +543,8 @@ public:
                 MethodParameter param;
                 param.name = args->element->bindingIdentifier.toString();
                 if (AST::TypeAnnotation *tAnn = args->element->typeAnnotation) {
-                    if (AST::Type *t = tAnn->type) {
-                        param.typeName = toString(t->typeId);
-                        if (t->typeArguments) {
-                            Q_ASSERT_X(false, className,
-                                       "todo: type argument should be added to the typeName");
-                        }
-                    }
+                    if (AST::Type *t = tAnn->type)
+                        param.typeName = typeToString(t);
                 }
                 if (args->element->initializer) {
                     SourceLocation loc = combineLocations(args->element->initializer);

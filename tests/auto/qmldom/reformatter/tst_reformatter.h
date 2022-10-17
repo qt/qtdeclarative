@@ -127,6 +127,10 @@ private slots:
         QTest::newRow("template") << QStringLiteral(u"template.qml")
                                   << QStringLiteral(u"templateReformatted.qml") << defaultOptions;
 
+        QTest::newRow("typeAnnotations")
+                << QStringLiteral(u"typeAnnotations.qml")
+                << QStringLiteral(u"typeAnnotationsReformatted.qml") << defaultOptions;
+
         QTest::newRow("file1NoReorder")
                 << QStringLiteral(u"file1.qml") << QStringLiteral(u"file1Reformatted2.qml")
                 << noReorderOptions;

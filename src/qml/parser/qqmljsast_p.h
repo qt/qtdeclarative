@@ -369,7 +369,7 @@ public:
 
     TypeArgumentList(Type *typeId)
         : typeId(typeId)
-        , next(nullptr)
+        , next(this)
     { kind = K; }
 
     TypeArgumentList(TypeArgumentList *previous, Type *typeId)
