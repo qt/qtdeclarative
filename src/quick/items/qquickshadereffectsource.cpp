@@ -353,8 +353,11 @@ void QQuickShaderEffectSource::setSourceRect(const QRectF &rect)
 /*!
     \qmlproperty size QtQuick::ShaderEffectSource::textureSize
 
-    This property holds the requested size of the texture. If it is empty,
-    which is the default, the size of the source rectangle is used.
+    This property holds the requested pixel size of the texture. If it is
+    empty, which is the default, the size of the source rectangle is used.
+
+    \note This value is in pixels since it directly controls the size of a
+    texture object.
 
     \note Some platforms have a limit on how small framebuffer objects can be,
     which means the actual texture size might be larger than the requested
@@ -671,16 +674,12 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
                       ? QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height())
                       : m_sourceRect;
     m_texture->setRect(sourceRect);
-    QSize textureSize = m_textureSize.isEmpty()
-                      ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())))
-                      : m_textureSize;
-    Q_ASSERT(!textureSize.isEmpty());
-
     QQuickItemPrivate *d = static_cast<QQuickItemPrivate *>(QObjectPrivate::get(this));
-
-    // Crate large textures on high-dpi displays.
-    if (sourceItem())
-        textureSize *= d->window->effectiveDevicePixelRatio();
+    const float dpr = d->window->effectiveDevicePixelRatio();
+    QSize textureSize = m_textureSize.isEmpty()
+            ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height()))) * dpr
+            : m_textureSize;
+    Q_ASSERT(!textureSize.isEmpty());
 
     const QSize minTextureSize = d->sceneGraphContext()->minimumFBOSize();
     // Keep power-of-two by doubling the size.
