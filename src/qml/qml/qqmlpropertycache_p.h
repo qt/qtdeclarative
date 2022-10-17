@@ -434,7 +434,7 @@ bool QQmlPropertyCache::isAllowedInRevision(const QQmlPropertyData *data) const
 
 int QQmlPropertyCache::propertyCount() const
 {
-    return propertyIndexCacheStart + propertyIndexCache.size();
+    return propertyIndexCacheStart + int(propertyIndexCache.size());
 }
 
 int QQmlPropertyCache::propertyOffset() const
@@ -444,7 +444,7 @@ int QQmlPropertyCache::propertyOffset() const
 
 int QQmlPropertyCache::methodCount() const
 {
-    return methodIndexCacheStart + methodIndexCache.size();
+    return methodIndexCacheStart + int(methodIndexCache.size());
 }
 
 int QQmlPropertyCache::methodOffset() const
@@ -454,7 +454,7 @@ int QQmlPropertyCache::methodOffset() const
 
 int QQmlPropertyCache::signalCount() const
 {
-    return signalHandlerIndexCacheStart + signalHandlerIndexCache.size();
+    return signalHandlerIndexCacheStart + int(signalHandlerIndexCache.size());
 }
 
 int QQmlPropertyCache::signalOffset() const
@@ -464,7 +464,7 @@ int QQmlPropertyCache::signalOffset() const
 
 int QQmlPropertyCache::qmlEnumCount() const
 {
-    return enumCache.size();
+    return int(enumCache.size());
 }
 
 bool QQmlPropertyCache::callJSFactoryMethod(QObject *object, void **args) const
