@@ -63,7 +63,11 @@ Rectangle {
         Rectangle {
             id: content
 
-            anchors { left: parent.left; right: parent.right }
+            anchors {
+                left: parent ? parent.left : undefined
+                right: parent ? parent.right : undefined
+            }
+
             height: column.implicitHeight + 4
 
             border.width: 1
