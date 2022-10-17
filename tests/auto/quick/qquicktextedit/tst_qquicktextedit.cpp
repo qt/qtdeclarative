@@ -3770,6 +3770,10 @@ void tst_qquicktextedit::largeTextObservesViewport_data()
     QTest::newRow("clipped plain text") << text << QQuickTextEdit::PlainText << true << 1000 << 0
                                         << 5 << 123 << 147 << 1200 << 2100;
 
+    // scroll backwards
+    QTest::newRow("scroll backwards in plain text") << text << QQuickTextEdit::PlainText << true << 1000 << 600
+                                                    << 10 << 72 << 97 << 600 << 1400;
+
     {
         QStringList lines;
         // "line 100" is 8 characters; many lines are longer, some are shorter
@@ -3854,18 +3858,21 @@ void tst_qquicktextedit::largeTextObservesViewport()
     Q_ASSERT(textItem->text().size() > QQuickTextEditPrivate::largeTextSizeThreshold);
     QVERIFY(textItem->flags().testFlag(QQuickItem::ItemObservesViewport)); // large text sets this flag automatically
     QCOMPARE(textItem->viewportItem(), parentIsViewport ? viewportItem : viewportItem->parentItem());
-    QTRY_VERIFY(textPriv->firstBlockInViewport > 0); // wait for rendering
+    QTRY_COMPARE_GT(textPriv->firstBlockInViewport, 0); // wait for rendering
     qCDebug(lcTests) << "first block rendered" << textPriv->firstBlockInViewport
                      << "expected" << expectedBlocksAboveViewport
                      << "first block past viewport" << textPriv->firstBlockPastViewport
                      << "expected" << expectedBlocksPastViewport
                      << "region" << textPriv->renderedRegion << "bottom" << textPriv->renderedRegion.bottom()
                      << "expected range" << expectedRenderedRegionMin << expectedRenderedRegionMax;
-    if (scrollDelta >= 0) // unfortunately firstBlockInViewport isn't always reliable after scrolling
-        QTRY_VERIFY(qAbs(textPriv->firstBlockInViewport - expectedBlocksAboveViewport) < expectedBlockTolerance);
-    QVERIFY(qAbs(textPriv->firstBlockPastViewport - expectedBlocksPastViewport) < expectedBlockTolerance);
-    QVERIFY(textPriv->renderedRegion.top() > expectedRenderedRegionMin);
-    QVERIFY(textPriv->renderedRegion.bottom() < expectedRenderedRegionMax);
+    if (scrollDelta >= 0) { // unfortunately firstBlockInViewport isn't always reliable after scrolling
+        QTRY_IMPL((qAbs(textPriv->firstBlockInViewport - expectedBlocksAboveViewport) < expectedBlockTolerance), 5000);
+    }
+    QVERIFY2((qAbs(textPriv->firstBlockPastViewport - expectedBlocksPastViewport) < expectedBlockTolerance),
+             qPrintable(QString::fromLatin1("Expected first block in viewport %1 to be near %2 (tolerance: %3)")
+                        .arg(textPriv->firstBlockInViewport).arg(expectedBlocksAboveViewport).arg(expectedBlockTolerance)));
+    QCOMPARE_GT(textPriv->renderedRegion.top(), expectedRenderedRegionMin);
+    QCOMPARE_LT(textPriv->renderedRegion.bottom(), expectedRenderedRegionMax);
     QVERIFY(textPriv->cursorItem);
     qCDebug(lcTests) << "cursor rect" << textItem->cursorRectangle() << "visible?" << textPriv->cursorItem->isVisible();
     QCOMPARE(textPriv->cursorItem->isVisible(), textPriv->renderedRegion.intersects(textItem->cursorRectangle()));
