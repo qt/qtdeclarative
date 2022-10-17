@@ -35,15 +35,15 @@ public:
 
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
-    QSize textureSize() const override { return m_size; }
+    QSize textureSize() const override { return m_pixelSize; }
 
     qint64 comparisonKey() const override;
     QRhiTexture *rhiTexture() const override;
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
     void setItem(QSGNode *item) override;
-    void setRect(const QRectF &rect) override;
-    void setSize(const QSize &size) override;
+    void setRect(const QRectF &logicalRect) override;
+    void setSize(const QSize &pixelSize) override;
     void setHasMipmaps(bool mipmap) override;
     void setFormat(Format format) override;
     void setLive(bool live) override;
@@ -66,8 +66,8 @@ private:
     void releaseResources();
 
     QSGNode *m_item = nullptr;
-    QRectF m_rect;
-    QSize m_size;
+    QRectF m_logicalRect;
+    QSize m_pixelSize;
     qreal m_dpr = 1;
     QRhiTexture::Format m_format = QRhiTexture::RGBA8;
 

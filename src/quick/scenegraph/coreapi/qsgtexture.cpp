@@ -420,7 +420,7 @@ bool QSGTexture::isAtlasTexture() const
 /*!
     \fn QSize QSGTexture::textureSize() const
 
-    Returns the size of the texture.
+    Returns the size of the texture in pixels.
  */
 
 /*!
