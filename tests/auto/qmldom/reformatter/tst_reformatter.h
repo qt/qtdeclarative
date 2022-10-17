@@ -57,6 +57,10 @@ private slots:
         QTest::newRow("template") << QStringLiteral(u"template.qml")
                                   << QStringLiteral(u"templateReformatted.qml") << defaultOptions;
 
+        QTest::newRow("typeAnnotations")
+                << QStringLiteral(u"typeAnnotations.qml")
+                << QStringLiteral(u"typeAnnotationsReformatted.qml") << defaultOptions;
+
         QTest::newRow("arrowFunctions")
                 << QStringLiteral(u"arrowFunctions.qml")
                 << QStringLiteral(u"arrowFunctionsReformatted.qml") << defaultOptions;
