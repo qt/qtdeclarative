@@ -212,7 +212,7 @@ public:
       AST::ExportClause *ExportClause;
       AST::ExportDeclaration *ExportDeclaration;
       AST::TypeAnnotation *TypeAnnotation;
-      AST::TypeArgumentList *TypeArgumentList;
+      AST::TypeArgument *TypeArgument;
       AST::Type *Type;
 
       AST::UiProgram *UiProgram;
@@ -1575,28 +1575,16 @@ BindingIdentifier: IdentifierReference;
 -- Types
 --------------------------------------------------------------------------------------------------------
 
-TypeArguments: Type;
+Type: UiQualifiedId T_LT SimpleType T_GT;
 /.
     case $rule_number: {
-        sym(1).TypeArgumentList = new (pool) AST::TypeArgumentList(sym(1).Type);
+        sym(1).Type = new (pool) AST::Type(sym(1).UiQualifiedId, sym(3).Type);
     } break;
 ./
 
-TypeArguments: TypeArguments T_COMMA Type;
-/.
-    case $rule_number: {
-        sym(1).TypeArgumentList = new (pool) AST::TypeArgumentList(sym(1).TypeArgumentList, sym(3).Type);
-    } break;
-./
+Type: SimpleType;
 
-Type: UiQualifiedId T_LT TypeArguments T_GT;
-/.
-    case $rule_number: {
-        sym(1).Type = new (pool) AST::Type(sym(1).UiQualifiedId, sym(3).TypeArgumentList->finish());
-    } break;
-./
-
-Type: T_RESERVED_WORD;
+SimpleType: T_RESERVED_WORD;
 /.
     case $rule_number: {
         AST::UiQualifiedId *id = new (pool) AST::UiQualifiedId(stringRef(1));
@@ -1605,17 +1593,17 @@ Type: T_RESERVED_WORD;
     } break;
 ./
 
-Type: UiQualifiedId;
+SimpleType: UiQualifiedId;
 /.
     case $rule_number: {
         sym(1).Type = new (pool) AST::Type(sym(1).UiQualifiedId);
     } break;
 ./
 
-Type: T_VAR;
+SimpleType: T_VAR;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
 
-Type: T_VOID;
+SimpleType: T_VOID;
 /.
     case $rule_number: {
         AST::UiQualifiedId *id = new (pool) AST::UiQualifiedId(stringRef(1));

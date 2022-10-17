@@ -990,11 +990,19 @@ public:
     }
     void endVisit(AST::Type *) override { stop(u"Type"); }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    bool visit(AST::TypeArgument *) override {
+        start(u"TypeArgument");
+        return true;
+    }
+    void endVisit(AST::TypeArgument *) override { stop(u"TypeArgument"); }
+#else
     bool visit(AST::TypeArgumentList *) override {
         start(u"TypeArgumentList");
         return true;
     }
     void endVisit(AST::TypeArgumentList *) override { stop(u"TypeArgumentList"); }
+#endif
 
     bool visit(AST::TypeAnnotation *el) override {
         start(QLatin1String("TypeAnnotation colonToken=%1")

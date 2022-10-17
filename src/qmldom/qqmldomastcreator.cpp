@@ -71,6 +71,11 @@ static QString typeToString(AST::Type *t)
 {
     Q_ASSERT(t);
     QString res = toString(t->typeId);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    if (UiQualifiedId *arg = t->typeArgument)
+        res += u'<' + toString(arg) + u'>';
+#else
     if (!t->typeArguments)
         return res;
     res += u"<";
@@ -84,6 +89,8 @@ static QString typeToString(AST::Type *t)
         res += typeToString(tt->typeId);
     }
     res += u">";
+#endif
+
     return res;
 }
 

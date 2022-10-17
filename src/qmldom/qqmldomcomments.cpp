@@ -419,7 +419,11 @@ const QSet<int> AstRangesVisitor::kindsToSkip()
                                              AST::Node::Kind_ClassElementList,
                                              AST::Node::Kind_PatternElementList,
                                              AST::Node::Kind_PatternPropertyList,
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+                                             AST::Node::Kind_TypeArgument,
+#else
                                              AST::Node::Kind_TypeArgumentList,
+#endif
                                      })
                                    .unite(VisitAll::uiKinds());
     return res;

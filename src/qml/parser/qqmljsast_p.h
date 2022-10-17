@@ -211,7 +211,7 @@ public:
         Kind_PatternProperty,
         Kind_PatternPropertyList,
         Kind_Type,
-        Kind_TypeArgumentList,
+        Kind_TypeArgument,
         Kind_TypeAnnotation,
 
         Kind_UiArrayBinding,
@@ -329,6 +329,22 @@ public:
     SourceLocation lastSourceLocation() const override
     { return lastListElement(this)->identifierToken; }
 
+    QString toString() const
+    {
+        QString result;
+        toString(&result);
+        return result;
+    }
+
+    void toString(QString *out) const
+    {
+        for (const UiQualifiedId *it = this; it; it = it->next) {
+            out->append(it->name);
+            if (it->next)
+                out->append(QLatin1Char('.'));
+        }
+    }
+
 // attributes
     UiQualifiedId *next;
     QStringView name;
@@ -340,9 +356,9 @@ class QML_PARSER_EXPORT Type: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(Type)
 
-    Type(UiQualifiedId *typeId, Node *typeArguments = nullptr)
+    Type(UiQualifiedId *typeId, Type *typeArgument = nullptr)
         : typeId(typeId)
-        , typeArguments(typeArguments)
+        , typeArgument(typeArgument ? typeArgument->typeId : nullptr)
     { kind = K; }
 
     void accept0(BaseVisitor *visitor) override;
@@ -351,53 +367,14 @@ public:
     { return typeId->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return typeArguments ? typeArguments->lastSourceLocation() : typeId->lastSourceLocation(); }
+    { return typeArgument ? typeArgument->lastSourceLocation() : typeId->lastSourceLocation(); }
 
     QString toString() const;
     void toString(QString *out) const;
 
 // attributes
     UiQualifiedId *typeId;
-    Node *typeArguments; // TypeArgumentList
-};
-
-
-class QML_PARSER_EXPORT TypeArgumentList: public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(TypeArgumentList)
-
-    TypeArgumentList(Type *typeId)
-        : typeId(typeId)
-        , next(this)
-    { kind = K; }
-
-    TypeArgumentList(TypeArgumentList *previous, Type *typeId)
-        : typeId(typeId)
-    {
-        kind = K;
-        next = previous->next;
-        previous->next = this;
-    }
-
-    void accept0(BaseVisitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return typeId->firstSourceLocation(); }
-
-    SourceLocation lastSourceLocation() const override
-    { return lastListElement(this)->typeId->lastSourceLocation(); }
-
-    inline TypeArgumentList *finish()
-    {
-        TypeArgumentList *front = next;
-        next = nullptr;
-        return front;
-    }
-
-// attributes
-    Type *typeId;
-    TypeArgumentList *next;
+    UiQualifiedId *typeArgument;
 };
 
 class QML_PARSER_EXPORT TypeAnnotation: public Node

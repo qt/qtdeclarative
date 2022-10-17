@@ -122,7 +122,7 @@ class NestedExpression;
 class ClassExpression;
 class ClassDeclaration;
 class ClassElementList;
-class TypeArgumentList;
+class TypeArgument;
 class Type;
 class TypeAnnotation;
 
