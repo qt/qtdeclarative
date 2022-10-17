@@ -471,7 +471,12 @@ inline void Object::push_back(const Value &v)
 {
     arrayCreate();
 
-    uint idx = getLength();
+    const auto length = getLength();
+    if (Q_UNLIKELY(length == std::numeric_limits<uint>::max())) {
+        engine()->throwRangeError(QLatin1String("Too many elements."));
+        return;
+    }
+    uint idx = uint(length);
     arrayReserve(idx + 1);
     arrayPut(idx, v);
     setArrayLengthUnchecked(idx + 1);
