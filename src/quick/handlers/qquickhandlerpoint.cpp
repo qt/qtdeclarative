@@ -3,6 +3,7 @@
 
 #include "qquickhandlerpoint_p.h"
 #include "private/qquickevents_p_p.h"
+#include "private/qquickdeliveryagent_p_p.h"
 
 QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)

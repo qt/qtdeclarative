@@ -3,6 +3,8 @@
 
 #include "qquickhoverhandler_p.h"
 #include <private/qquicksinglepointhandler_p_p.h>
+#include <private/qquickdeliveryagent_p.h>
+#include <private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 

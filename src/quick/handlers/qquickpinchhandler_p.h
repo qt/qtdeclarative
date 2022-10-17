@@ -102,6 +102,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPinchHandler)
-
 #endif // QQUICKPINCHHANDLER_H

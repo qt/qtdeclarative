@@ -8,7 +8,9 @@
 #include <QtGui/private/qpointingdevice_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/qquickview.h>
+#include <QtQml/private/qqmlglobal_p.h> // qmlobject_cast
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>

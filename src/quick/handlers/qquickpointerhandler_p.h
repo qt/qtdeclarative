@@ -15,14 +15,23 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquickevents_p_p.h>
-#include <QtQuick/private/qquickitem_p.h>
+#include <QtCore/QObject>
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qtconfigmacros.h>
+#include <QtGui/qeventpoint.h>
+#include <QtGui/qpointingdevice.h>
+#include <QtQml/QQmlParserStatus>
+#include <QtQml/qqmlregistration.h>
+#include <QtQuick/qtquickglobal.h>
+#include <QtQuick/private/qtquickexports_p.h>
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcPointerHandlerDispatch)
 
+class QQuickItem;
 class QQuickPointerHandlerPrivate;
+class QPointerEvent;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlParserStatus
 {
@@ -144,7 +153,5 @@ protected:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerHandler::GrabPermissions)
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPointerHandler)
 
 #endif // QQUICKPOINTERHANDLER_H

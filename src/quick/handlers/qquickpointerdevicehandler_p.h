@@ -59,6 +59,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPointerDeviceHandler)
-
 #endif // QQUICKPOINTERDEVICEHANDLER_H

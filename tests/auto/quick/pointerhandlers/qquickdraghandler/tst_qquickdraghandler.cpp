@@ -3,6 +3,8 @@
 
 #include <QtTest/QtTest>
 
+#include <QtGui/qstylehints.h>
+#include <QtQml/private/qqmlglobal_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQuick/private/qquickdraghandler_p.h>

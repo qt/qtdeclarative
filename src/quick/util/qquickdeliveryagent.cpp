@@ -13,6 +13,7 @@
 #if QT_CONFIG(quick_draganddrop)
 #include <QtQuick/private/qquickdrag_p.h>
 #endif
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickprofiler_p.h>
 #include <QtQuick/private/qquickrendercontrol_p.h>
 #include <QtQuick/private/qquickwindow_p.h>

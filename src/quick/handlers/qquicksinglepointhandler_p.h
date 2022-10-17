@@ -56,6 +56,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSinglePointHandler)
-
 #endif // QQUICKPOINTERSINGLEHANDLER_H

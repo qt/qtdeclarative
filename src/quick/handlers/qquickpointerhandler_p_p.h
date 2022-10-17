@@ -17,6 +17,7 @@
 
 #include "qevent.h"
 
+#include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
 

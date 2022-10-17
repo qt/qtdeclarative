@@ -41,6 +41,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPointHandler)
-
 #endif // QQUICKPONTHANDLER_H

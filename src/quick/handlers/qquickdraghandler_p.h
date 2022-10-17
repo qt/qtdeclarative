@@ -94,7 +94,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDragHandler)
-QML_DECLARE_TYPE(QQuickDragAxis)
-
 #endif // QQUICKDRAGHANDLER_H

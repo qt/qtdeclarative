@@ -19,6 +19,7 @@
 #include "qevent.h"
 #include "qquicksinglepointhandler_p.h"
 #include <QtCore/qbasictimer.h>
+#include <QtCore/qelapsedtimer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -114,7 +115,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickTapHandler)
 
 #endif // QQUICKTAPHANDLER_H

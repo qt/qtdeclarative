@@ -3,6 +3,8 @@
 
 #include "qquicktaphandler_p.h"
 #include "qquicksinglepointhandler_p_p.h"
+#include <QtQuick/private/qquickdeliveryagent_p_p.h>
+#include <QtQuick/qquickwindow.h>
 #include <qpa/qplatformtheme.h>
 #include <private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>

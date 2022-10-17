@@ -3,6 +3,7 @@
 
 #include "qquickwheelhandler_p.h"
 #include "qquickwheelhandler_p_p.h"
+#include <QtQuick/private/qquickitem_p.h>
 #include <QLoggingCategory>
 #include <QtMath>
 
