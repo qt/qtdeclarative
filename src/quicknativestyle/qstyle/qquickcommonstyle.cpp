@@ -4475,12 +4475,13 @@ int QCommonStyle::pixelMetric(PixelMetric m, const QStyleOption *opt) const
 QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &csz) const
 {
     Q_D(const QCommonStyle);
-    QSize sz(csz);
+    QSize sz(!csz.isEmpty() ? csz : QSize(0,0));
+
     switch (ct) {
     case CT_PushButton:
         if (const QStyleOptionButton *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
-            int w = csz.width(),
-                h = csz.height(),
+            int w = sz.width(),
+                h = sz.height(),
                 bm = proxy()->pixelMetric(PM_ButtonMargin, btn),
             fw = proxy()->pixelMetric(PM_DefaultFrameWidth, btn) * 2;
             w += bm + fw;
