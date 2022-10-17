@@ -389,7 +389,13 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
     // do not generate method implementation if it is a signal
     const auto methodType = method.type;
     if (methodType != QQmlJSMetaMethod::Signal) {
-        code.rawAppendToCpp(u""); // blank line
+        code.rawAppendToCpp(u""_s); // blank line
+        if (method.comments.size() > 0) {
+            code.rawAppendToCpp(u"/*! \\internal"_s);
+            for (const auto &comment : method.comments)
+                code.rawAppendToCpp(comment, 1);
+            code.rawAppendToCpp(u"*/"_s);
+        }
         code.rawAppendToCpp(method.returnType);
         code.rawAppendSignatureToCpp(cppSignature);
         code.rawAppendToCpp(u"{");

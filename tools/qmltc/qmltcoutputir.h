@@ -62,6 +62,7 @@ struct QmltcEnum
 
 struct QmltcMethodBase
 {
+    QStringList comments; // C++ comments
     QString name; // C++ function name
     QList<QmltcVariable> parameterList; // C++ function parameter list
     QStringList body; // C++ function code
