@@ -672,18 +672,61 @@ void QQmlTreeModelToTableModel::modelDataChanged(const QModelIndex &topLeft, con
 
 void QQmlTreeModelToTableModel::modelLayoutAboutToBeChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
 {
-    ASSERT_CONSISTENCY();
-    Q_UNUSED(parents)
     Q_UNUSED(hint)
+
+    // Since the m_items is a list of TreeItems that contains QPersistentModelIndexes, we
+    // cannot wait until we get a modelLayoutChanged() before we remove the affected rows
+    // from that list. After the layout has changed, the list (or, the persistent indexes
+    // that it contains) is no longer in sync with the model (after all, that is what we're
+    // supposed to correct in modelLayoutChanged()).
+    // This means that vital functions, like itemIndex(index), cannot be trusted at that point.
+    // Therefore we need to do the update in two steps; First remove all the affected rows
+    // from here (while we're still in sync with the model), and then add back the
+    // affected rows, and notify about it, from modelLayoutChanged().
+    m_modelLayoutChanged = false;
+
+    if (parents.isEmpty() || !parents[0].isValid()) {
+        // Update entire model
+        emit layoutAboutToBeChanged();
+        m_modelLayoutChanged = true;
+        m_items.clear();
+        return;
+    }
+
+    for (const QPersistentModelIndex &pmi : parents) {
+        if (!m_expandedItems.contains(pmi))
+            continue;
+        const int row = itemIndex(pmi);
+        if (row == -1)
+            continue;
+        const int rowCount = m_model->rowCount(pmi);
+        if (rowCount == 0)
+            continue;
+
+        if (!m_modelLayoutChanged) {
+            emit layoutAboutToBeChanged();
+            m_modelLayoutChanged = true;
+        }
+
+        const QModelIndex &lmi = m_model->index(rowCount - 1, 0, pmi);
+        const int lastRow = lastChildIndex(lmi);
+        removeVisibleRows(row + 1, lastRow, false /*doRemoveRows*/);
+    }
+
+    ASSERT_CONSISTENCY();
 }
 
 void QQmlTreeModelToTableModel::modelLayoutChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
 {
     Q_UNUSED(hint)
 
-    if (parents.isEmpty()) {
-        emit layoutAboutToBeChanged();
-        m_items.clear();
+    if (!m_modelLayoutChanged) {
+        // No relevant changes done from modelLayoutAboutToBeChanged()
+        return;
+    }
+
+    if (m_items.isEmpty()) {
+        // Entire model has changed. Add back all rows.
         showModelTopLevelItems(false /*doInsertRows*/);
         const QModelIndex &mi = m_model->index(0, 0);
         const int columnCount = m_model->columnCount(mi);
@@ -692,30 +735,24 @@ void QQmlTreeModelToTableModel::modelLayoutChanged(const QList<QPersistentModelI
         return;
     }
 
-    bool shouldEmitLayoutChanged = false;
     for (const QPersistentModelIndex &pmi : parents) {
-        if (m_expandedItems.contains(pmi)) {
-            int row = itemIndex(pmi);
-            if (row != -1) {
-                if (!shouldEmitLayoutChanged) {
-                    shouldEmitLayoutChanged = true;
-                    emit layoutAboutToBeChanged();
-                }
-                int rowCount = m_model->rowCount(pmi);
-                if (rowCount > 0) {
-                    const QModelIndex &lmi = m_model->index(rowCount - 1, 0, pmi);
-                    const int lastRow = lastChildIndex(lmi);
-                    const int columnCount = m_model->columnCount(lmi);
-                    removeVisibleRows(row + 1, lastRow, false /*doRemoveRows*/);
-                    showModelChildItems(m_items.at(row), 0, rowCount - 1, false /*doInsertRows*/);
-                    emit dataChanged(index(row + 1, 0), index(lastRow, columnCount - 1));
-                }
-            }
-        }
+        if (!m_expandedItems.contains(pmi))
+            continue;
+        const int row = itemIndex(pmi);
+        if (row == -1)
+            continue;
+        const int rowCount = m_model->rowCount(pmi);
+        if (rowCount == 0)
+            continue;
+
+        const QModelIndex &lmi = m_model->index(rowCount - 1, 0, pmi);
+        const int columnCount = m_model->columnCount(lmi);
+        showModelChildItems(m_items.at(row), 0, rowCount - 1, false /*doInsertRows*/);
+        const int lastRow = lastChildIndex(lmi);
+        emit dataChanged(index(row + 1, 0), index(lastRow, columnCount - 1));
     }
 
-    if (shouldEmitLayoutChanged)
-        emit layoutChanged();
+    emit layoutChanged();
 
     ASSERT_CONSISTENCY();
 }

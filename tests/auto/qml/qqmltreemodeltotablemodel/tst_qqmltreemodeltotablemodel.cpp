@@ -8,6 +8,10 @@
 
 #include "testmodel.h"
 
+/*
+ * Note: Out of practical reasons, QQmlTreeModelToTableModel is by and large
+ * tested from tst_qquicktreeview.cpp, where TreeView is available.
+ */
 class tst_QQmlTreeModelToTableModel : public QObject {
     Q_OBJECT
 

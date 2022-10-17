@@ -165,6 +165,7 @@ private:
     QList<TreeItem> m_itemsToExpand;
     mutable int m_lastItemIndex = 0;
     bool m_visibleRowsMoved = false;
+    bool m_modelLayoutChanged = false;
     int m_signalAggregatorStack = 0;
     QVector<DataChangedParams> m_queuedDataChanged;
     int m_column = 0;
