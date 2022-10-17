@@ -11,6 +11,7 @@ ApplicationWindow {
     height: 400
 
     property alias popup: popup
+    property alias nestedPopup: nestedPopup
     property alias popupSlider: popupSlider
     property alias contentSlider: contentSlider
 
@@ -29,6 +30,14 @@ ApplicationWindow {
         contentItem: Slider {
             id: popupSlider
             wheelEnabled: true
+        }
+
+        Popup {
+            id: nestedPopup
+            x: 0; y: 0
+            clip: true
+            implicitWidth: 50
+            implicitHeight: 50
         }
     }
 }

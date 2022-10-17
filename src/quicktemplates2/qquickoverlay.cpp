@@ -554,6 +554,30 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
             d->handleRelease(d->window->contentItem(), event, nullptr);
         break;
 
+    case QEvent::Wheel: {
+        // If the top item in the drawing-order is blocked by a modal popup, then
+        // eat the event. There is no scenario where the top most item is blocked
+        // by a popup, but an item further down in the drawing order is not.
+        QWheelEvent *we = static_cast<QWheelEvent *>(event);
+        const QVector<QQuickItem *> targetItems = d->deliveryAgentPrivate()->pointerTargets(
+                                    d->window->contentItem(), we, we->point(0), false, false);
+        if (targetItems.isEmpty())
+            break;
+
+        QQuickItem * const topItem = targetItems.first();
+        const auto popups = d->stackingOrderPopups();
+        for (const auto &popup : popups) {
+            if (!popup->overlayEvent(topItem, we))
+                continue;
+            const QQuickItem *popupItem = popup->popupItem();
+            if (!popupItem)
+                continue;
+            if (!popupItem->isAncestorOf(topItem))
+                return true;
+        }
+        break;
+    }
+
     default:
         break;
     }
