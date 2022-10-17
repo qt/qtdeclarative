@@ -467,6 +467,121 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
     current.functions.emplaceBack(compiled);
 }
 
+/*! \internal
+   Compiles an extra set of methods for Lists, that makes manipulating lists easier from C++
+   for the user.
+*/
+void QmltcCompiler::compileExtraListMethods(QmltcType &current, const QQmlJSMetaProperty &p)
+{
+    QmltcPropertyData data(p);
+    const QString variableName = data.read + u"()"_s;
+    const QStringList ownershipWarning = {
+        u"\\note {This method does not change the ownership of its argument."_s,
+        u"The caller is responsible for setting the argument's \\c {QObject::parent} or"_s,
+        u"for ensuring that the argument lives long enough."_s,
+        u"For example, an argument created with \\c {createObject()} that has no parent"_s,
+        u"will eventually be garbage-collected, leaving a dangling pointer.}"_s
+    };
+
+    // generate append() sugar for users
+    {
+        QmltcMethod append{};
+        append.comments.emplaceBack(u"\\brief Append an element to %1."_s.arg(data.read));
+        append.comments << ownershipWarning;
+        append.returnType = u"void"_s;
+        append.name = u"%1Append"_s.arg(data.read);
+        append.parameterList.emplaceBack(u"%1*"_s.arg(p.type()->internalName()), u"toBeAppended"_s);
+
+        append.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
+        append.body
+                << u"q_qmltc_localList.append(std::addressof(q_qmltc_localList), toBeAppended);"_s;
+        // append.body << u"Q_EMIT %1();"_s.arg(data.notify); // uncomment this when QTBUG-106587 is
+        // resolved
+        append.userVisible = true;
+        current.functions.emplaceBack(append);
+    }
+
+    // generate count() sugar for users
+    {
+        QmltcMethod count{};
+        count.comments.emplaceBack(u"\\brief Number of elements in %1."_s.arg(data.read));
+        count.returnType = u"int"_s;
+        count.name = u"%1Count"_s.arg(data.read);
+
+        count.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
+        count.body << u"int result = q_qmltc_localList.count(std::addressof(q_qmltc_localList));"_s;
+        count.body << u"return result;"_s;
+        count.userVisible = true;
+        current.functions.emplaceBack(count);
+    }
+
+    // generate at() sugar for users
+    {
+        QmltcMethod at{};
+        at.comments.emplaceBack(u"\\brief Access an element in %1."_s.arg(data.read));
+        at.returnType = u"%1*"_s.arg(p.type()->internalName());
+        at.name = u"%1At"_s.arg(data.read);
+        at.parameterList.emplaceBack(u"qsizetype"_s, u"position"_s, QString());
+
+        at.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
+        at.body << u"auto result = q_qmltc_localList.at(std::addressof(q_qmltc_localList), position);"_s;
+        at.body << u"return result;"_s;
+        at.userVisible = true;
+        current.functions.emplaceBack(at);
+    }
+
+    // generate clear() sugar for users
+    {
+        QmltcMethod clear{};
+        clear.comments.emplaceBack(u"\\brief Clear %1."_s.arg(data.read));
+        clear.returnType = u"void"_s;
+        clear.name = u"%1Clear"_s.arg(data.read);
+
+        clear.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
+        clear.body << u"q_qmltc_localList.clear(std::addressof(q_qmltc_localList));"_s;
+        // clear.body << u"Q_EMIT %1();"_s.arg(data.notify); // uncomment this when QTBUG-106587 is
+        // resolved
+        clear.userVisible = true;
+        current.functions.emplaceBack(clear);
+    }
+
+    // generate replace() sugar for users
+    {
+        QmltcMethod replace{};
+        replace.comments.emplaceBack(u"\\brief Replace an element in %1."_s.arg(data.read));
+        replace.comments << ownershipWarning;
+        replace.returnType = u"void"_s;
+        replace.name = u"%1Replace"_s.arg(data.read);
+        replace.parameterList.emplaceBack(u"qsizetype"_s, u"position"_s, QString());
+        replace.parameterList.emplaceBack(u"%1*"_s.arg(p.type()->internalName()), u"element"_s,
+                                          QString());
+
+        replace.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
+        replace.body
+                << u"q_qmltc_localList.replace(std::addressof(q_qmltc_localList), position, element);"_s;
+        // replace.body << u"Q_EMIT %1();"_s.arg(data.notify); // uncomment this when QTBUG-106587
+        // is resolved
+        replace.userVisible = true;
+        current.functions.emplaceBack(replace);
+    }
+
+    // generate removeLast() sugar for users
+    {
+        QmltcMethod removeLast{};
+        removeLast.comments.emplaceBack(u"\\brief Remove the last element in %1."_s.arg(data.read));
+        removeLast.returnType = u"void"_s;
+        removeLast.name = u"%1RemoveLast"_s.arg(data.read);
+
+        removeLast.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
+        removeLast.body << u"q_qmltc_localList.removeLast(std::addressof(q_qmltc_localList));"_s;
+        // removeLast.body << u"Q_EMIT %1();"_s.arg(data.notify); // uncomment this when
+        // QTBUG-106587 is resolved
+
+        removeLast.userVisible = true;
+        current.functions.emplaceBack(removeLast);
+    }
+}
+
 void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
                                     const QQmlJSScope::ConstPtr &owner)
 {
@@ -476,8 +591,6 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
     const QString name = p.propertyName();
     const QString variableName = u"m_" + name;
     const QString underlyingType = getUnderlyingType(p);
-    // only check for isList() here as it needs some special arrangements.
-    // otherwise, getUnderlyingType() handles the specifics of a type in C++
     if (qIsReferenceTypeList(p)) {
         const QString storageName = variableName + u"_storage";
         current.variables.emplaceBack(u"QList<" + p.type()->internalName() + u"*>", storageName,
@@ -485,6 +598,7 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
         current.baselineCtor.initializerList.emplaceBack(variableName + u"(" + underlyingType
                                                          + u"(this, std::addressof(" + storageName
                                                          + u")))");
+        compileExtraListMethods(current, p);
     }
 
     // along with property, also add relevant moc code, so that we can use the

@@ -1526,6 +1526,11 @@ void tst_qmltc::listProperty()
     QQmlEngine e;
     PREPEND_NAMESPACE(listProperty) created(&e);
 
+    QQmlComponent c(&e);
+    c.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/listProperty.qml"));
+    QScopedPointer<QObject> fromEngine(c.create());
+    QVERIFY2(fromEngine, qPrintable(c.errorString()));
+
     QCOMPARE(created.hello(), QStringLiteral("Hello from parent"));
 
     QQmlListReference ref(&created, "children");
@@ -1544,6 +1549,36 @@ void tst_qmltc::listProperty()
     QCOMPARE(refIds.at(0), &created);
     QCOMPARE(refIds.at(1), ref.at(0));
     QCOMPARE(refIds.at(2), ref.at(1));
+
+    QCOMPARE(fromEngine->property("firstCount"), 4);
+    QCOMPARE(fromEngine->property("secondCount"), 5);
+
+    QCOMPARE(created.firstCount(), 4);
+    QCOMPARE(created.secondCount(), 5);
+
+    QCOMPARE(created.childrenCount(), 2);
+    QCOMPARE(created.childrenAt(0)->property("hello"), u"Hello from parent.children[0]"_s);
+    QCOMPARE(created.childrenAt(1)->property("hello"), u"Hello from parent.children[1]"_s);
+
+    created.childrenAppend(created.appendMe());
+    QCOMPARE(created.childrenCount(), 3);
+    QCOMPARE(created.childrenAt(0)->property("hello"), u"Hello from parent.children[0]"_s);
+    QCOMPARE(created.childrenAt(1)->property("hello"), u"Hello from parent.children[1]"_s);
+    QCOMPARE(created.childrenAt(2)->property("hello"), u"Hello from parent.children[2]"_s);
+
+    created.childrenReplace(0, created.appendMe());
+    QCOMPARE(created.childrenCount(), 3);
+    QCOMPARE(created.childrenAt(0)->property("hello"), u"Hello from parent.children[2]"_s);
+    QCOMPARE(created.childrenAt(1)->property("hello"), u"Hello from parent.children[1]"_s);
+    QCOMPARE(created.childrenAt(2)->property("hello"), u"Hello from parent.children[2]"_s);
+
+    created.childrenRemoveLast();
+    QCOMPARE(created.childrenCount(), 2);
+    QCOMPARE(created.childrenAt(0)->property("hello"), u"Hello from parent.children[2]"_s);
+    QCOMPARE(created.childrenAt(1)->property("hello"), u"Hello from parent.children[1]"_s);
+
+    created.childrenClear();
+    QCOMPARE(created.childrenCount(), 0);
 }
 
 void tst_qmltc::listPropertiesWithTheSameName()
