@@ -2246,13 +2246,16 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                             if (coveredRegion.top() > viewport.top() + 1) {
                                 qCDebug(lcVP) << "checking backwards from block" << block.blockNumber() << "@" << nodeOffset.y() << coveredRegion;
                                 while (it != textFrame->begin() && it.currentBlock().layout() &&
-                                       it.currentBlock().layout()->boundingRect().top() + nodeOffset.y() > viewport.top())
+                                       it.currentBlock().layout()->boundingRect().top() + nodeOffset.y() > viewport.top()) {
+                                    nodeOffset = d->document->documentLayout()->blockBoundingRect(it.currentBlock()).topLeft();
                                     --it;
+                                }
                                 if (!it.currentBlock().layout())
                                     ++it;
                                 if (Q_LIKELY(it.currentBlock().layout())) {
                                     block = it.currentBlock();
                                     coveredRegion = block.layout()->boundingRect().adjusted(nodeOffset.x(), nodeOffset.y(), nodeOffset.x(), nodeOffset.y());
+                                    firstDirtyPos = it.currentBlock().position();
                                 } else {
                                     qCWarning(lcVP) << "failed to find a text block with layout during back-scrolling";
                                 }
@@ -2303,7 +2306,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                         nodeStart = block.next().position();
                     }
                     ++it;
-                }
+                } // loop over blocks in frame
             }
             if (Q_LIKELY(node && !node->parent()))
                 d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
