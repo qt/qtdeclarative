@@ -38,10 +38,11 @@ public:
     }
 
     QStringHashNode(const QHashedString &key)
-    : length(key.size()), hash(key.hash()), symbolId(0)
+    : length(int(key.size())), hash(key.hash()), symbolId(0)
     , arrayData(mutableStringData(key).d_ptr())
     , strData(mutableStringData(key).data())
     {
+        Q_ASSERT(key.size() <= std::numeric_limits<int>::max());
         if (arrayData)
             arrayData->ref();
         setQString(true);
@@ -232,13 +233,21 @@ class QStringHashBase
 {
 public:
     static HashedForm<QString>::Type hashedString(const QString &s) { return QHashedString(s);}
-    static HashedForm<QStringView>::Type hashedString(QStringView s) { return QHashedStringRef(s.constData(), s.size());}
+    static HashedForm<QStringView>::Type hashedString(QStringView s)
+    {
+        Q_ASSERT(s.size() <= std::numeric_limits<int>::max());
+        return QHashedStringRef(s.constData(), int(s.size()));
+    }
     static HashedForm<QHashedString>::Type hashedString(const QHashedString &s) { return s; }
     static HashedForm<QV4::String *>::Type hashedString(QV4::String *s) { return s; }
     static HashedForm<const QV4::String *>::Type hashedString(const QV4::String *s) { return s; }
     static HashedForm<QHashedStringRef>::Type hashedString(const QHashedStringRef &s) { return s; }
 
-    static HashedForm<QLatin1String>::Type hashedString(const QLatin1String &s) { return QHashedCStringRef(s.data(), s.size()); }
+    static HashedForm<QLatin1StringView>::Type hashedString(QLatin1StringView s)
+    {
+        Q_ASSERT(s.size() <= std::numeric_limits<int>::max());
+        return QHashedCStringRef(s.data(), int(s.size()));
+    }
     static HashedForm<QHashedCStringRef>::Type hashedString(const QHashedCStringRef &s) { return s; }
 
     static const QString &toQString(const QString &s) { return s; }

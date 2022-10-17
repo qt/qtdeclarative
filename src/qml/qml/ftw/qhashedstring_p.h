@@ -199,14 +199,18 @@ QHashedStringRef::QHashedStringRef()
 {
 }
 
+// QHashedStringRef is meant for identifiers, property names, etc.
+// Those should alsways be smaller than std::numeric_limits<int>::max())
 QHashedStringRef::QHashedStringRef(const QString &str)
-: m_data(str.constData()), m_length(str.size()), m_hash(0)
+: m_data(str.constData()), m_length(int(str.size())), m_hash(0)
 {
+    Q_ASSERT(str.size() <= std::numeric_limits<int>::max());
 }
 
 QHashedStringRef::QHashedStringRef(QStringView str)
-: m_data(str.constData()), m_length(str.size()), m_hash(0)
+: m_data(str.constData()), m_length(int(str.size())), m_hash(0)
 {
+    Q_ASSERT(str.size() <= std::numeric_limits<int>::max());
 }
 
 QHashedStringRef::QHashedStringRef(const QChar *data, int length)
@@ -220,8 +224,9 @@ QHashedStringRef::QHashedStringRef(const QChar *data, int length, quint32 hash)
 }
 
 QHashedStringRef::QHashedStringRef(const QHashedString &string)
-: m_data(string.constData()), m_length(string.size()), m_hash(string.m_hash)
+: m_data(string.constData()), m_length(int(string.size())), m_hash(string.m_hash)
 {
+    Q_ASSERT(string.size() <= std::numeric_limits<int>::max());
 }
 
 QHashedStringRef::QHashedStringRef(const QHashedStringRef &string)
@@ -424,7 +429,7 @@ quint32 QHashedString::stringHash(const char *data, int length)
 
 void QHashedString::computeHash() const
 {
-    m_hash = stringHash(constData(), size());
+    m_hash = stringHash(constData(), int(size()));
 }
 
 namespace QtPrivate {
