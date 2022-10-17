@@ -1,6 +1,7 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 //![0]
 import QtQuick
 
@@ -16,7 +17,12 @@ Rectangle {
         Rectangle {
             id: content
 
-            anchors { left: parent.left; right: parent.right }
+            required property string name
+            required property string type
+            required property string size
+            required property int age
+
+            width: view.width
             height: column.implicitHeight + 4
 
             border.width: 1
