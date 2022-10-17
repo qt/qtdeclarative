@@ -178,17 +178,17 @@ struct HeapItem {
 
     bool isGray() const {
         Chunk *c = chunk();
-        uint index = this - c->realBase();
+        std::ptrdiff_t index = this - c->realBase();
         return Chunk::testBit(c->grayBitmap, index);
     }
     bool isBlack() const {
         Chunk *c = chunk();
-        uint index = this - c->realBase();
+        std::ptrdiff_t index = this - c->realBase();
         return Chunk::testBit(c->blackBitmap, index);
     }
     bool isInUse() const {
         Chunk *c = chunk();
-        uint index = this - c->realBase();
+        std::ptrdiff_t index = this - c->realBase();
         return Chunk::testBit(c->objectBitmap, index);
     }
 
@@ -207,10 +207,10 @@ struct HeapItem {
     // Doesn't report correctly for huge items
     size_t size() const {
         Chunk *c = chunk();
-        uint index = this - c->realBase();
+        std::ptrdiff_t index = this - c->realBase();
         Q_ASSERT(Chunk::testBit(c->objectBitmap, index));
         // ### optimize me
-        uint end = index + 1;
+        std::ptrdiff_t end = index + 1;
         while (end < Chunk::NumSlots && Chunk::testBit(c->extendsBitmap, end))
             ++end;
         return (end - index)*sizeof(HeapItem);

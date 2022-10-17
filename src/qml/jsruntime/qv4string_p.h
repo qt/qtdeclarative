@@ -130,7 +130,8 @@ Q_STATIC_ASSERT(std::is_trivial_v<ComplexString>);
 
 inline
 int String::length() const {
-    return subtype < StringType_AddedString ? text().size : static_cast<const ComplexString *>(this)->len;
+    // TODO: ensure that our strings never actually grow larger than INT_MAX
+    return subtype < StringType_AddedString ? int(text().size) : static_cast<const ComplexString *>(this)->len;
 }
 
 }

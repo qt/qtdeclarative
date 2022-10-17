@@ -231,7 +231,9 @@ struct String
     qint32_le size;
 
     static int calculateSize(const QString &str) {
-        return (sizeof(String) + (str.size() + 1) * sizeof(quint16) + 7) & ~0x7;
+        // we cannot enconuter strings larger than INT_MAX anyway, as such a string
+        // would already break in other parts of the compilation process
+        return (sizeof(String) + (int(str.size()) + 1) * sizeof(quint16) + 7) & ~0x7;
     }
 };
 

@@ -167,7 +167,7 @@ struct StaticValue
     };
 
     inline Type type() const {
-        int t = quickType();
+        auto t = quickType();
         if (t < QT_Empty)
             return _val ? Managed_Type : Undefined_Type;
         if (t > QT_Int)

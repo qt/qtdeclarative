@@ -36,7 +36,10 @@ public:
         return data.resize(size);
     }
 
-    int count() const { return data.size(); }
+    int count() const {
+        // the property cache vector will never contain more thant INT_MAX many elements
+        return int(data.size());
+    }
     void clear()
     {
         for (int i = 0; i < data.size(); ++i) {
@@ -55,12 +58,14 @@ public:
         cache->addref();
         data.append(QBiPointer<const QQmlPropertyCache, QQmlPropertyCache>(cache.data()));
         Q_ASSERT(data.last().isT1());
+        Q_ASSERT(data.size() <= std::numeric_limits<int>::max());
     }
 
     void appendOwn(const QQmlPropertyCache::Ptr &cache) {
         cache->addref();
         data.append(QBiPointer<const QQmlPropertyCache, QQmlPropertyCache>(cache.data()));
         Q_ASSERT(data.last().isT2());
+        Q_ASSERT(data.size() <= std::numeric_limits<int>::max());
     }
 
     QQmlPropertyCache::ConstPtr at(int index) const
