@@ -128,6 +128,20 @@ the QML code to interact with C++ code.
     \endlist
 \endomit
 
+\section1 Licenses and Attributions
+
+Qt QML is available under commercial licenses from \l{The Qt Company}.
+In addition, it is available under free software licenses. Since Qt 5.4,
+these free software licenses are
+\l{GNU Lesser General Public License, version 3}, or
+the \l{GNU General Public License, version 2}.
+See \l{Qt Licensing} for further details.
+
+Furthermore Qt QML in Qt \QtVersion may contain third party
+modules under following permissive licenses:
+
+\generatelist{groupsbymodule attributions-qtqml}
+
 \section1 Related Articles and Guides
 
 Further information for writing QML applications:
@@ -146,30 +160,11 @@ Further information for writing QML applications:
            results
 \endlist
 
-\section1 Examples
-
-\list
-    \li \l {Qt QML Examples} {Examples}
-\endlist
-
-\section2 Reference
+\section1 Reference
 
 \list
     \li \l {Qt QML C++ Classes} {C++ Classes}
     \li \l {Qt QML QML Types} {QML Types}
+    \li \l {Qt QML Examples} {Examples}
 \endlist
-
-\section1 Licenses and Attributions
-
-Qt QML is available under commercial licenses from \l{The Qt Company}.
-In addition, it is available under free software licenses. Since Qt 5.4,
-these free software licenses are
-\l{GNU Lesser General Public License, version 3}, or
-the \l{GNU General Public License, version 2}.
-See \l{Qt Licensing} for further details.
-
-Furthermore Qt QML in Qt \QtVersion may contain third party
-modules under following permissive licenses:
-
-\generatelist{groupsbymodule attributions-qtqml}
 */
