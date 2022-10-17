@@ -38,8 +38,14 @@ void TestModel::createTreeRecursive(TreeItem *item, int childCount, int currentD
         for (int col = 0; col < m_columnCount; ++col)
             childItem->m_entries << QVariant(QString("%1, %2").arg(row).arg(col));
         item->m_childItems.append(childItem);
-        if (row == childCount - 1)
+        if (row == childCount - 2 && currentDepth != maxDepth()) {
+            // Add a branch that doesn't recurse
+            createTreeRecursive(childItem, childCount, maxDepth());
+        }
+        if (row == childCount - 1) {
+            // Add a branch that recurses
             createTreeRecursive(childItem, childCount, currentDepth + 1);
+        }
     }
 }
 

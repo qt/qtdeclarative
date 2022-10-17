@@ -45,4 +45,6 @@ private:
     int m_columnCount = 5;
 };
 
+#define TestModelAsVariant(...) QVariant::fromValue(QSharedPointer<TestModel>(new TestModel(__VA_ARGS__)))
+
 #endif // TESTMODEL_H
