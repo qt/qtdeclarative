@@ -179,6 +179,17 @@ namespace QQuickTest {
     [[nodiscard]] bool initView(QQuickView &v, const QUrl &url,
         bool moveMouseOut = true, QByteArray *errorMessage = nullptr);
     [[nodiscard]] bool showView(QQuickView &v, const QUrl &url);
+
+    void pointerPress(const QPointingDevice *dev, QQuickWindow *window,
+                      int pointId, const QPoint &p, Qt::MouseButton button = Qt::LeftButton,
+                      Qt::KeyboardModifiers modifiers = Qt::NoModifier);
+
+    void pointerMove(const QPointingDevice *dev, QQuickWindow *window, int pointId,
+                     const QPoint &p);
+
+    void pointerRelease(const QPointingDevice *dev, QQuickWindow *window, int pointId,
+                        const QPoint &p, Qt::MouseButton button = Qt::LeftButton,
+                        Qt::KeyboardModifiers modifiers = Qt::NoModifier);
 }
 
 QT_END_NAMESPACE
