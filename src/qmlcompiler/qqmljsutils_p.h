@@ -319,7 +319,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
 
         using namespace Qt::StringLiterals;
         // ignore special extensions
-        constexpr QLatin1String ignoredExtensionNames[] = {
+        const QLatin1String ignoredExtensionNames[] = {
             // QObject extensions: (not related to C++)
             "Object"_L1,
             "ObjectPrototype"_L1,
