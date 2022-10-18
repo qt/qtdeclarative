@@ -312,11 +312,33 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     QAccessibleEvent ev(item(), QAccessible::ObjectCreated);
     QAccessible::updateAccessibility(&ev);
 
-    if (!parent->property("value").isNull()) {
-        connect(parent, SIGNAL(valueChanged()), this, SLOT(valueChanged()));
-    }
-    if (!parent->property("cursorPosition").isNull()) {
-        connect(parent, SIGNAL(cursorPositionChanged()), this, SLOT(cursorPositionChanged()));
+    if (const QMetaObject *pmo = parent->metaObject()) {
+        auto connectPropertyChangeSignal = [parent, pmo, this](
+                const char *propertyName, const char *signalName, int slotIndex)
+        {
+            // basically does this:
+            // if the parent has the property \a propertyName with the associated \a signalName:
+            //     connect(parent, signalName, this, slotIndex)
+
+            // Note that we explicitly want to only connect to standard property/signal naming
+            // convention: "value" & "valueChanged"
+            // (e.g. avoid a compound property with e.g. a signal notifier named "updated()")
+            int idxProperty = pmo->indexOfProperty(propertyName);
+            if (idxProperty != -1) {
+                const QMetaProperty property = pmo->property(idxProperty);
+                const QMetaMethod signal = property.notifySignal();
+                if (signal.name() == signalName)
+                    QMetaObject::connect(parent, signal.methodIndex(), this, slotIndex);
+            }
+            return;
+        };
+        const QMetaObject &smo = staticMetaObject;
+        static const int valueChangedIndex = smo.indexOfSlot("valueChanged()");
+        connectPropertyChangeSignal("value", "valueChanged", valueChangedIndex);
+
+        static const int cursorPositionChangedIndex = smo.indexOfSlot("cursorPositionChanged()");
+        connectPropertyChangeSignal("cursorPosition", "cursorPositionChanged",
+                                    cursorPositionChangedIndex);
     }
 
     if (!sigPress.isValid()) {
