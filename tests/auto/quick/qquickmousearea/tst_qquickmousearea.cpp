@@ -1857,7 +1857,12 @@ void tst_QQuickMouseArea::nestedStopAtBounds()
     QTest::mouseMove(&window, position);
     axis += invert ? threshold : -threshold;
     QTest::mouseMove(&window, position);
-    QTRY_COMPARE(outer->drag()->active(), true);
+
+    // outer drag will not receive mouse event, when the focus has been stolen.
+    // => try to regain and time out if it fails.
+    while (!QTest::qWaitFor([&outer]() { return outer->drag()->active(); }))
+        window.raise();
+
     QCOMPARE(inner->drag()->active(), false);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, position);
 

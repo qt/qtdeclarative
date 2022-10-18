@@ -2,10 +2,6 @@
 [pressAndHold]
 macos ci
 
-# QTBUG-78153
-[nestedStopAtBounds]
-opensuse-leap
-
 # QTBUG-82282
 [pressOneAndTapAnother]
 opensuse-leap
