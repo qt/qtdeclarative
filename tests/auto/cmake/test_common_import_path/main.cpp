@@ -11,6 +11,8 @@ Q_IMPORT_QML_PLUGIN(duck_tickPlugin)
 Q_IMPORT_QML_PLUGIN(duck_trickPlugin)
 Q_IMPORT_QML_PLUGIN(duck_trackPlugin)
 
+using namespace Qt::StringLiterals;
+
 class test : public QObject
 {
     Q_OBJECT
@@ -22,7 +24,7 @@ void test::test_loadable()
 {
     QQmlEngine engine;
     engine.addImportPath(QStringLiteral(":/"));
-    QQmlComponent c(&engine, QUrl(u"qrc:/duck/main.qml"_qs));
+    QQmlComponent c(&engine, QUrl(u"qrc:/duck/main.qml"_s));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());

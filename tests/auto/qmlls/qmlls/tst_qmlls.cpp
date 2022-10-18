@@ -12,6 +12,7 @@
 
 #include <iostream>
 
+using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
 
 class DiagnosticsHandler
@@ -127,8 +128,8 @@ void tst_Qmlls::initTestCase()
     tDoc.publishDiagnostics = pDiag;
     pDiag.versionSupport = true;
     clientInfo.capabilities.textDocument = tDoc;
-    QJsonObject workspace({ { u"didChangeWatchedFiles"_qs,
-                              QJsonObject({ { u"dynamicRegistration"_qs, true } }) } });
+    QJsonObject workspace({ { u"didChangeWatchedFiles"_s,
+                              QJsonObject({ { u"dynamicRegistration"_s, true } }) } });
     clientInfo.capabilities.workspace = workspace;
     bool didInit = false;
     m_protocol.registerRegistrationRequestHandler([this](const QByteArray &,

@@ -424,13 +424,11 @@ void tst_QmllsCompletions::function_documentations()
                             continue;
 
                         QVERIFY2(c.detail == details,
-                                 qPrintable(u"Completion item '%1' has wrong "
-                                            "details '%2'"_qs.arg(label)
-                                                    .arg(*c.detail)));
+                                 qPrintable(u"Completion item '%1' has wrong details '%2'"_s
+                                                    .arg(label).arg(*c.detail)));
                         QVERIFY2(cDoc == docs,
-                                 qPrintable(u"Completion item '%1' has wrong "
-                                            "documentation '%2'"_qs.arg(label)
-                                                    .arg(cDoc)));
+                                 qPrintable(u"Completion item '%1' has wrong documentation '%2'"_s
+                                                    .arg(label).arg(cDoc)));
                     }
                 }
                 clean();

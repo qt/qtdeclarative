@@ -6,6 +6,8 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQuickControls2/qquickstyle.h>
 
+using namespace Qt::StringLiterals;
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
@@ -13,7 +15,7 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("iOS");
 
     QQmlApplicationEngine engine;
-    const QUrl url(u"qrc:/main.qml"_qs);
+    const QUrl url(u"qrc:/main.qml"_s);
     QObject::connect(
                 &engine, &QQmlApplicationEngine::objectCreated, &app,
                 [url](QObject *obj, const QUrl &objUrl) {
