@@ -113,7 +113,7 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 
 bool QSGRhiDistanceFieldGlyphCache::isActive() const
 {
-    return m_unusedGlyphs.size() != m_glyphsTexture.size();
+    return !m_referencedGlyphs.empty();
 }
 
 void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &glyphs)
@@ -176,11 +176,13 @@ void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &gly
 
 void QSGRhiDistanceFieldGlyphCache::referenceGlyphs(const QSet<glyph_t> &glyphs)
 {
+    m_referencedGlyphs += glyphs;
     m_unusedGlyphs -= glyphs;
 }
 
 void QSGRhiDistanceFieldGlyphCache::releaseGlyphs(const QSet<glyph_t> &glyphs)
 {
+    m_referencedGlyphs -= glyphs;
     m_unusedGlyphs += glyphs;
 }
 

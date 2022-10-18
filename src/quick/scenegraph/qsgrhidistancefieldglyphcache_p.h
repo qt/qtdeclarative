@@ -89,6 +89,7 @@ private:
     QList<TextureInfo> m_textures;
     QHash<glyph_t, TextureInfo *> m_glyphsTexture;
     QSet<glyph_t> m_unusedGlyphs;
+    QSet<glyph_t> m_referencedGlyphs;
     QSet<QRhiTexture *> m_pendingDispose;
 };
 
