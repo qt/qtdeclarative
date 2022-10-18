@@ -7,6 +7,7 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>
+#include <QtGui/qpa/qwindowsysteminterface.h>
 
 #include <QtTest/QTest>
 
@@ -446,6 +447,10 @@ namespace QQuickTouchUtils {
 
 }
 
+namespace QTest {
+    int Q_TESTLIB_EXPORT defaultMouseDelay();
+}
+
 namespace QQuickTest {
 
     /*! \internal
@@ -503,6 +508,88 @@ namespace QQuickTest {
             return false;
         return true;
     }
+
+    // TODO maybe move the generic pointerPress/Move/Release functions to QTestLib later on
+
+    static Qt::MouseButton pressedTabletButton = Qt::NoButton;
+    static Qt::KeyboardModifiers pressedTabletModifiers = Qt::NoModifier;
+
+    void pointerPress(const QPointingDevice *dev, QQuickWindow *window, int pointId, const QPoint &p,
+                      Qt::MouseButton button, Qt::KeyboardModifiers modifiers)
+    {
+        switch (dev->type()) {
+        case QPointingDevice::DeviceType::Mouse:
+        case QPointingDevice::DeviceType::TouchPad:
+            QTest::mousePress(window, button, modifiers, p);
+            break;
+        case QPointingDevice::DeviceType::TouchScreen:
+            QTest::touchEvent(window, const_cast<QPointingDevice *>(dev)).press(pointId, p, window);
+            QQuickTouchUtils::flush(window);
+            break;
+        case QPointingDevice::DeviceType::Puck:
+        case QPointingDevice::DeviceType::Stylus:
+        case QPointingDevice::DeviceType::Airbrush:
+            QTest::lastMouseTimestamp += QTest::defaultMouseDelay();
+            pressedTabletButton = button;
+            pressedTabletModifiers = modifiers;
+            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, p, window->mapToGlobal(p),
+                                                      button, 0.8, 0, 0, 0, 0, 0, modifiers);
+            break;
+        default:
+            qWarning() << "can't send a press event from" << dev;
+            break;
+        }
+    }
+
+    void pointerMove(const QPointingDevice *dev, QQuickWindow *window, int pointId, const QPoint &p)
+    {
+        switch (dev->type()) {
+        case QPointingDevice::DeviceType::Mouse:
+        case QPointingDevice::DeviceType::TouchPad:
+            QTest::mouseMove(window, p);
+            break;
+        case QPointingDevice::DeviceType::TouchScreen:
+            QTest::touchEvent(window, const_cast<QPointingDevice *>(dev)).move(pointId, p, window);
+            QQuickTouchUtils::flush(window);
+            break;
+        case QPointingDevice::DeviceType::Puck:
+        case QPointingDevice::DeviceType::Stylus:
+        case QPointingDevice::DeviceType::Airbrush:
+            QTest::lastMouseTimestamp += QTest::defaultMouseDelay();
+            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, p, window->mapToGlobal(p),
+                                                      pressedTabletButton, 0, 0, 0, 0, 0, 0, pressedTabletModifiers);
+            break;
+        default:
+            qWarning() << "can't send a move event from" << dev;
+            break;
+        }
+    }
+
+    void pointerRelease(const QPointingDevice *dev, QQuickWindow *window, int pointId, const QPoint &p,
+                        Qt::MouseButton button, Qt::KeyboardModifiers modifiers)
+    {
+        switch (dev->type()) {
+        case QPointingDevice::DeviceType::Mouse:
+        case QPointingDevice::DeviceType::TouchPad:
+            QTest::mouseRelease(window, button, modifiers, p);
+            break;
+        case QPointingDevice::DeviceType::TouchScreen:
+            QTest::touchEvent(window, const_cast<QPointingDevice *>(dev)).release(pointId, p, window);
+            QQuickTouchUtils::flush(window);
+            break;
+        case QPointingDevice::DeviceType::Puck:
+        case QPointingDevice::DeviceType::Stylus:
+        case QPointingDevice::DeviceType::Airbrush:
+            QTest::lastMouseTimestamp += QTest::defaultMouseDelay();
+            QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, p, window->mapToGlobal(p),
+                                                      Qt::NoButton, 0, 0, 0, 0, 0, 0, modifiers);
+            break;
+        default:
+            qWarning() << "can't send a press event from" << dev;
+            break;
+        }
+    }
+
 }
 
 QT_END_NAMESPACE
