@@ -431,8 +431,7 @@ TestCase {
         var splitViewHeight = testCase.height
         var data = [
             {
-                // When the combined size of items is too large, the non-fill items should just exceed
-                // the size of the SplitView, exactly as they would were they in a RowLayout, for example.
+                // When the combined size of items is too large, make them fit.
                 tag: "fillItemOnLeft",
                 expectedGeometries: [
                     // We're the fill item, but since the combined implicitWidths
@@ -445,8 +444,8 @@ TestCase {
                     // Second handle.
                     { x: 200 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth,
                         height: splitViewHeight },
-                    // The third item also gets its implicitWidth.
-                    { x: 200 + defaultHorizontalHandleWidth * 2, y: 0, width: 200, height: splitViewHeight }
+                    // The third item is reduced from its implicitWidth to fit into SplitView.
+                    { x: 200 + defaultHorizontalHandleWidth * 2, y: 0, width: 200 - 2 * defaultHorizontalHandleWidth, height: splitViewHeight }
                 ]
             },
             {
@@ -463,8 +462,8 @@ TestCase {
                     // Second handle.
                     { x: 0, y: 200 + defaultVerticalHandleHeight, width: splitViewWidth,
                         height: defaultVerticalHandleHeight },
-                    // The third item also gets its implicitHeight.
-                    { x: 0, y: 200 + defaultVerticalHandleHeight * 2, width: splitViewWidth, height: 200 }
+                    // The third item is reduced from its implicitWidth to fit into SplitView.
+                    { x: 0, y: 200 + defaultVerticalHandleHeight * 2, width: splitViewWidth, height: 200 - 2 * defaultVerticalHandleHeight }
                 ]
             },
             {
@@ -1103,7 +1102,7 @@ TestCase {
                     { x: 0, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
                     { x: defaultHorizontalHandleWidth, y: 0, width: 100, height: splitViewHeight },
                     { x: 100 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
-                    { x: 100 + defaultHorizontalHandleWidth * 2, y: 0, width: 200, height: splitViewHeight }
+                    { x: 100 + defaultHorizontalHandleWidth * 2, y: 0, width: 200 - defaultHorizontalHandleWidth * 2, height: splitViewHeight }
                 ],
                 expectedGeometriesAfterDrag: [
                     // The fill item is to the left of the handle at index 1, so the handle belongs
@@ -1136,7 +1135,7 @@ TestCase {
                     { x: 0, y: 0, width: splitViewWidth, height: defaultVerticalHandleHeight },
                     { x: 0, y: defaultVerticalHandleHeight, width: splitViewWidth, height: 100 },
                     { x: 0, y: 100 + defaultVerticalHandleHeight, width: splitViewWidth, height: defaultVerticalHandleHeight },
-                    { x: 0, y: 100 + defaultVerticalHandleHeight * 2, width: splitViewWidth, height: 200 }
+                    { x: 0, y: 100 + defaultVerticalHandleHeight * 2, width: splitViewWidth, height: 200 - defaultVerticalHandleHeight * 2 }
                 ],
                 expectedGeometriesAfterDrag: [
                     // The fill item is to the top of the handle at index 1, so the handle belongs
@@ -1168,8 +1167,8 @@ TestCase {
                     { x: defaultHorizontalHandleWidth, y: 0, width: 100, height: splitViewHeight },
                     { x: 100 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
                     // The second item's implicitWidth is 100, and ours is 200. The available width is 300,
-                    // so both items get their implicit widths.
-                    { x: 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100, height: splitViewHeight }
+                    // so this item gets size 300 - 100 - 2 * 10 = 180.
+                    { x: 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100 - 2 * defaultHorizontalHandleWidth, height: splitViewHeight }
                 ],
                 // Should be unchanged.
                 expectedGeometriesAfterDrag: [
@@ -1177,7 +1176,7 @@ TestCase {
                     { x: 0, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
                     { x: defaultHorizontalHandleWidth, y: 0, width: 100, height: splitViewHeight },
                     { x: 100 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
-                    { x: 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100, height: splitViewHeight }
+                    { x: 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100 - 2 * defaultHorizontalHandleWidth, height: splitViewHeight }
                 ]
             },
             {
@@ -1192,7 +1191,9 @@ TestCase {
                     { x: 25, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
                     { x: 25 + defaultHorizontalHandleWidth, y: 0, width: 100, height: splitViewHeight },
                     { x: 25 + 100 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
-                    { x: 25 + 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100, height: splitViewHeight }
+                    // The first item is the filling one, with minimum size 25. Second item is 100.
+                    // The available size is 300, so third item is 300 - 100 - 25 - 2 * 10 = 155.
+                    { x: 25 + 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100 - 25 - 2 * defaultHorizontalHandleWidth, height: splitViewHeight }
                 ],
                 // Should be unchanged.
                 expectedGeometriesAfterDrag: [
@@ -1200,7 +1201,7 @@ TestCase {
                     { x: 25, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
                     { x: 25 + defaultHorizontalHandleWidth, y: 0, width: 100, height: splitViewHeight },
                     { x: 25 + 100 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
-                    { x: 25 + 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100, height: splitViewHeight }
+                    { x: 25 + 100 + defaultHorizontalHandleWidth * 2, y: 0, width: splitViewWidth - 100 - 25 - 2 * defaultHorizontalHandleWidth, height: splitViewHeight }
                 ]
             },
             {
@@ -2530,6 +2531,9 @@ TestCase {
         verify(control.resizing)
         compare(firstItem.width, 0)
         compare(secondItem.SplitView.preferredWidth, 50)
+        // Wait for polish so item width becomes preferredWidth
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(secondItem.width, 50)
         mouseRelease(targetHandle, -100, targetHandle.height / 2, Qt.LeftButton)
         verify(!control.resizing)
