@@ -175,14 +175,12 @@ private slots:
         QTextStream out(&fOut);
         QString line = out.readLine();
         QString resLine = res.readLine();
-        int iLine = 0;
         auto writeReformatted = [fullRes]() {
             qDebug().noquote().nospace() << "Reformatted output:\n"
                                          << "-----------------\n"
                                          << fullRes << "-----------------\n";
         };
         while (!line.isNull() && !resLine.isNull()) {
-            ++iLine;
             if (resLine != line)
                 writeReformatted();
             QCOMPARE(resLine, line);
@@ -284,14 +282,12 @@ private slots:
         QTextStream out(&fOut);
         QString line = out.readLine();
         QString resLine = res.readLine();
-        int iLine = 0;
         auto writeReformatted = [fullRes]() {
             qDebug().noquote().nospace() << "Reformatted output:\n"
                                          << "-----------------\n"
                                          << fullRes << "-----------------\n";
         };
         while (!line.isNull() && !resLine.isNull()) {
-            ++iLine;
             if (resLine != line)
                 writeReformatted();
             QCOMPARE(resLine, line);
