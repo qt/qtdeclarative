@@ -63,7 +63,7 @@ Rectangle {
         Rectangle {
             id: content
 
-            anchors { left: parent.left; right: parent.right }
+            width: ListView.view.width
             height: column.implicitHeight + 4
 
             border.width: 1
