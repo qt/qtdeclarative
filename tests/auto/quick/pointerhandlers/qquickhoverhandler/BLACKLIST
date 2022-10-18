@@ -3,6 +3,3 @@ macos  # Can't move cursor (QTBUG-76312)
 # QTBUG-103065
 [movingItemWithHoverHandler]
 android
-
-[hoverHandlerAndUnderlyingHoverHandler]
-macos ci # QTBUG-89933
