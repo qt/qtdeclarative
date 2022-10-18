@@ -1038,6 +1038,12 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_D(QQuickMouseArea);
     switch (change) {
+    case ItemEnabledHasChanged:
+        // If MouseArea becomes effectively disabled by disabling a parent
+        // (for example, onPressed: parent.enabled = false), cancel the pressed state.
+        if (d->pressed && !d->effectiveEnable)
+            ungrabMouse();
+        break;
     case ItemVisibleHasChanged:
         if (d->effectiveEnable && d->enabled && hoverEnabled() && d->hovered != (isVisible() && isUnderMouse())) {
             if (!d->hovered) {
@@ -1048,7 +1054,7 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
             setHovered(!d->hovered);
         }
         if (d->pressed && (!isVisible())) {
-            // This happens when the mouse area sets itself disabled or hidden
+            // This happens when the mouse area hides itself
             // inside the press handler. In that case we should not keep the internal
             // state as pressed, since we never became the mouse grabber.
             ungrabMouse();

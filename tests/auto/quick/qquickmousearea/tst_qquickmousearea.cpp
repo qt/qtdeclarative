@@ -110,6 +110,8 @@ private slots:
     void subtreeHoverEnabled();
     void hoverWhenDisabled();
     void disableAfterPress();
+    void disableParentOnPress_data();
+    void disableParentOnPress();
     void onWheel();
     void transformedMouseArea_data();
     void transformedMouseArea();
@@ -1530,6 +1532,53 @@ void tst_QQuickMouseArea::disableAfterPress()
     QTest::qWait(50);
 
     QCOMPARE(mouseReleaseSpy.size(), 0);
+}
+
+void tst_QQuickMouseArea::disableParentOnPress_data()
+{
+    QTest::addColumn<const QPointingDevice *>("device");
+
+    QTest::newRow("core pointer") << QPointingDevice::primaryPointingDevice();
+    QTest::newRow("touch") << device;
+}
+
+void tst_QQuickMouseArea::disableParentOnPress() // QTBUG-39806 and QTBUG-103788
+{
+    QFETCH(const QPointingDevice *, device);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("disableParentOnPress.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    QQuickMouseArea *mouseArea = root->findChild<QQuickMouseArea*>();
+    QVERIFY(mouseArea);
+
+    QSignalSpy pressedChangedSpy(mouseArea, &QQuickMouseArea::pressedChanged);
+    QSignalSpy canceledSpy(mouseArea, &QQuickMouseArea::canceled);
+    QSignalSpy enabledSpy(mouseArea, &QQuickMouseArea::enabledChanged);
+    QSignalSpy parentEnabledSpy(root, &QQuickItem::enabledChanged);
+    const QPoint p(100, 100);
+
+    QQuickTest::pointerPress(device, &window, 0, p);
+    QTRY_COMPARE(parentEnabledSpy.size(), 1);
+    QCOMPARE(root->isEnabled(), false);
+    QCOMPARE(mouseArea->isEnabled(), true); // enabled is independent, unfortunately (inverse of QTBUG-38364)
+    QCOMPARE(QQuickItemPrivate::get(mouseArea)->effectiveEnable, false);
+    // bug fix: it knows it got effectively disabled, so now it's no longer pressed
+    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(canceledSpy.size(), 1); // ...because the press was canceled
+    QCOMPARE(pressedChangedSpy.size(), 2); // kerchunk
+    QQuickTest::pointerRelease(device, &window, 0, p);
+
+    // now re-enable it and try again
+    root->setEnabled(true);
+    QQuickTest::pointerPress(device, &window, 0, p);
+    QTRY_COMPARE(root->isEnabled(), false);
+    QCOMPARE(QQuickItemPrivate::get(mouseArea)->effectiveEnable, false);
+    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(canceledSpy.size(), 2);
+    QCOMPARE(pressedChangedSpy.size(), 4);
+    QQuickTest::pointerRelease(device, &window, 0, p);
 }
 
 void tst_QQuickMouseArea::onWheel()
