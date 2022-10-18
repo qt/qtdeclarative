@@ -546,13 +546,18 @@ void tst_HoverHandler::deviceCursor()
     // move the mouse: the mouse-specific HoverHandler gets to set the cursor only if
     // more than kCursorOverrideTimeout ms have elapsed (100ms)
     QTest::mouseMove(&window, point, 100);
-    QTRY_COMPARE(mouseHandler->isHovered(), true);
+    QTRY_IMPL(mouseHandler->isHovered() == true, 500);
     const bool afterTimeout =
             QQuickPointerHandlerPrivate::get(airbrushEraserHandler)->lastEventTime + 100 <
             QQuickPointerHandlerPrivate::get(mouseHandler)->lastEventTime;
     qCDebug(lcPointerTests) << "airbrush handler reacted last time:" << QQuickPointerHandlerPrivate::get(airbrushEraserHandler)->lastEventTime
                             << "and the mouse handler reacted at time:" << QQuickPointerHandlerPrivate::get(mouseHandler)->lastEventTime
                             << "so > 100 ms have elapsed?" << afterTimeout;
+    if (afterTimeout)
+        QCOMPARE(mouseHandler->isHovered(), true);
+    else
+        QSKIP("Failed to delay mouse move 100ms after the previous tablet event");
+
 #if QT_CONFIG(cursor)
     QCOMPARE(window.cursor().shape(), afterTimeout ? Qt::IBeamCursor : Qt::OpenHandCursor);
 #endif
