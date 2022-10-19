@@ -663,15 +663,15 @@ void tst_qqmllocale::addFormattedDataSizeDataForLocale(const QString &localeStr)
     expectedResult = locale.formattedDataSize(1000000, 3);
     QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
 
-    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, localeType.DataSizeIecFormat)");
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, Locale.DataSizeIecFormat)");
     expectedResult = locale.formattedDataSize(1000000, 3, QLocale::DataSizeIecFormat);
     QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
 
-    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, localeType.DataSizeTraditionalFormat)");
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, Locale.DataSizeTraditionalFormat)");
     expectedResult = locale.formattedDataSize(1000000, 3, QLocale::DataSizeTraditionalFormat);
     QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
 
-    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, localeType.DataSizeSIFormat)");
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, Locale.DataSizeSIFormat)");
     expectedResult = locale.formattedDataSize(1000000, 3, QLocale::DataSizeSIFormat);
     QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
 }
@@ -695,7 +695,7 @@ void tst_qqmllocale::formattedDataSize_data()
     QString errorMessage = ".*Locale: formattedDataSize\\(\\): Expected 1-3 arguments, but received 0";
     QTest::newRow("too few args") << "en_AU" << functionCallScript << QString() << errorMessage;
 
-    functionCallScript = "locale.formattedDataSize(10, 1, localeType.DataSizeIecFormat, \"foo\")";
+    functionCallScript = "locale.formattedDataSize(10, 1, Locale.DataSizeIecFormat, \"foo\")";
     errorMessage = ".*Locale: formattedDataSize\\(\\): Expected 1-3 arguments, but received 4";
     QTest::newRow("too many args") << "en_AU" << functionCallScript << QString() << errorMessage;
 
@@ -727,7 +727,9 @@ void tst_qqmllocale::formattedDataSize()
     QVERIFY(QMetaObject::invokeMethod(object.data(), "setLocale", Qt::DirectConnection,
         Q_ARG(QVariant, QVariant(localeStr))));
 
-    QQmlExpression qmlExpression(engine.rootContext(), object.data(), functionCallScript);
+    // Make sure that we use the object's context rather than the root context,
+    // so that e.g. enums from the Locale type are available (QTBUG-91747).
+    QQmlExpression qmlExpression(qmlContext(object.data()), object.data(), functionCallScript);
     const QVariant evaluationResult = qmlExpression.evaluate();
     if (expectedErrorMessagePattern.isEmpty()) {
         QVERIFY2(!qmlExpression.hasError(), qPrintable(qmlExpression.error().toString()));
