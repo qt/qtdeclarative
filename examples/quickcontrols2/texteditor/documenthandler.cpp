@@ -276,4 +276,73 @@ void DocumentHandler::setFont(const QFont & font){
     emit fontChanged();
 }
 
+bool DocumentHandler::bold() const
+{
+    const QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return m_document->textDocument()->defaultFont().bold();
+    return cursor.charFormat().font().bold();
+}
+
+void DocumentHandler::setBold(bool bold)
+{
+    const QTextCursor cursor = textCursor();
+    if (!cursor.isNull() && cursor.charFormat().font().bold() == bold)
+        return;
+
+    QFont font = cursor.charFormat().font();
+    font.setBold(bold);
+    QTextCharFormat format;
+    format.setFont(font);
+    mergeFormatOnWordOrSelection(format);
+
+    emit boldChanged();
+}
+
+bool DocumentHandler::underline() const
+{
+    const QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return m_document->textDocument()->defaultFont().underline();
+    return cursor.charFormat().font().underline();
+}
+
+void DocumentHandler::setUnderline(bool underline)
+{
+    const QTextCursor cursor = textCursor();
+    if (!cursor.isNull() && cursor.charFormat().font().underline() == underline)
+        return;
+
+    QFont font = cursor.charFormat().font();
+    font.setUnderline(underline);
+    QTextCharFormat format;
+    format.setFont(font);
+    mergeFormatOnWordOrSelection(format);
+
+    emit underlineChanged();
+}
+
+bool DocumentHandler::italic() const
+{
+    const QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return m_document->textDocument()->defaultFont().italic();
+    return cursor.charFormat().font().italic();
+}
+
+void DocumentHandler::setItalic(bool italic)
+{
+    const QTextCursor cursor = textCursor();
+    if (!cursor.isNull() && cursor.charFormat().font().italic() == italic)
+        return;
+
+    QFont font = cursor.charFormat().font();
+    font.setItalic(italic);
+    QTextCharFormat format;
+    format.setFont(font);
+    mergeFormatOnWordOrSelection(format);
+
+    emit italicChanged();
+}
+
 #include "moc_documenthandler.cpp"
