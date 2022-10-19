@@ -3,9 +3,6 @@ import QtQuick
 QtObject {
     property var locale: Qt.locale()
 
-    // TODO: Workaround for not being able to use "Locale" in QQmlExpression (QTBUG-91747).
-    property var localeType: Locale
-
     function setLocale(l) {
         locale = Qt.locale(l)
     }
