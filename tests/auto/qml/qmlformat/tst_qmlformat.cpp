@@ -54,6 +54,8 @@ private Q_SLOTS:
     void testExample_data();
 #endif
 
+    void testBackupFileLimit();
+
 private:
     QString readTestFile(const QString &path);
     QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true);
@@ -296,6 +298,29 @@ void TestQmlformat::testExample()
         QVERIFY(!output.isEmpty());
 }
 #endif
+
+void TestQmlformat::testBackupFileLimit()
+{
+    // Create a temporary directory
+    QTemporaryDir tempDir;
+
+    // Unformatted file to format
+    const QString fileToFormat{ testFile("Annotations.qml") };
+
+    {
+        const QString tempFile = tempDir.path() + QDir::separator() + "test_0.qml";
+        const QString backupFile = tempFile + QStringLiteral("~");
+        QFile::copy(fileToFormat, tempFile);
+
+        QProcess process;
+        process.start(m_qmlformatPath, QStringList{ "--verbose", "--inplace", tempFile });
+        QVERIFY(process.waitForFinished());
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(process.exitCode(), 0);
+        QVERIFY(QFileInfo::exists(tempFile));
+        QVERIFY(!QFileInfo::exists(backupFile));
+    };
+}
 
 QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList args,
                                     bool shouldSucceed)
