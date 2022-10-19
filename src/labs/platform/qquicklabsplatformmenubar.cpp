@@ -96,6 +96,7 @@ QT_BEGIN_NAMESPACE
     \li macOS
     \li Android
     \li Linux (only available on desktop environments that provide a global D-Bus menu bar)
+    \li Windows
     \endlist
 
     \labs
