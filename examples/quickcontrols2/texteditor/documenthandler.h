@@ -28,6 +28,10 @@ class DocumentHandler : public QObject
 
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
 
+    Q_PROPERTY(bool bold READ bold WRITE setBold NOTIFY boldChanged)
+    Q_PROPERTY(bool underline READ underline WRITE setUnderline NOTIFY underlineChanged)
+    Q_PROPERTY(bool italic READ italic WRITE setItalic NOTIFY italicChanged)
+
     Q_PROPERTY(QString fileName READ fileName NOTIFY fileUrlChanged)
     Q_PROPERTY(QString fileType READ fileType NOTIFY fileUrlChanged)
     Q_PROPERTY(QUrl fileUrl READ fileUrl NOTIFY fileUrlChanged)
@@ -58,6 +62,15 @@ public:
     QFont font() const;
     void setFont(const QFont & font);
 
+    bool bold() const;
+    void setBold(bool bold);
+
+    bool underline() const;
+    void setUnderline(bool underline);
+
+    bool italic() const;
+    void setItalic(bool italic);
+
     QString fileName() const;
     QString fileType() const;
     QUrl fileUrl() const;
@@ -76,6 +89,9 @@ Q_SIGNALS:
     void selectionEndChanged();
 
     void fontChanged();
+    void boldChanged();
+    void underlineChanged();
+    void italicChanged();
     void textColorChanged();
     void alignmentChanged();
 
