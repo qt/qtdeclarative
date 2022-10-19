@@ -229,6 +229,7 @@ private slots:
     void setRowHeightWhenUsingSyncView();
     void resetRowHeight();
     void clearRowHeights();
+    void deletedDelegate();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -5686,6 +5687,19 @@ void tst_QQuickTableView::clearRowHeights()
     QCOMPARE(tableView->rowHeight(0), defaultSize);
     QCOMPARE(tableView->explicitRowHeight(1), -1);
     QCOMPARE(tableView->rowHeight(1), defaultSize);
+}
+
+void tst_QQuickTableView::deletedDelegate()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deletedDelegate.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+    auto tv = root->findChild<QQuickTableView *>("tableview");
+    QVERIFY(tv);
+    // we need one event loop iteration for the deferred delete to trigger
+    // thus the QTRY_VERIFY
+    QTRY_COMPARE(tv->delegate(), nullptr);
 }
 
 QTEST_MAIN(tst_QQuickTableView)
