@@ -38,6 +38,13 @@ QT_BEGIN_NAMESPACE
     next month. This means it always shows six rows, even when first or last
     row is entirely within an adjacent month.
 
+    \section1 Localizing days
+
+    To localize days, use \l {Locale::toString()}{Locale.toString()}.
+    For example, to display day numbers in an Arabic locale:
+
+    \snippet qtquickcontrols2-monthgrid-localization.qml 1
+
     \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
 */
 
