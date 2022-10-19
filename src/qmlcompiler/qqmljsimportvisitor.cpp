@@ -73,7 +73,11 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(
       m_currentScope(QQmlJSScope::create()),
       m_exportedRootScope(target),
       m_importer(importer),
-      m_logger(logger)
+      m_logger(logger),
+      m_rootScopeImports(
+          QQmlJSImporter::ImportedTypes::QML, {},
+          importer->builtinInternalNames().intType(),
+          importer->builtinInternalNames().arrayType())
 {
     m_currentScope->setScopeType(QQmlJSScope::JSFunctionScope);
     Q_ASSERT(logger); // must be valid
@@ -340,11 +344,11 @@ void QQmlJSImportVisitor::processImportWarnings(
 
 void QQmlJSImportVisitor::importBaseModules()
 {
-    Q_ASSERT(m_rootScopeImports.types.isEmpty());
+    Q_ASSERT(m_rootScopeImports.types().isEmpty());
     m_rootScopeImports = m_importer->importBuiltins();
 
     const QQmlJS::SourceLocation invalidLoc;
-    for (auto it = m_rootScopeImports.types.keyBegin(), end = m_rootScopeImports.types.keyEnd();
+    for (auto it = m_rootScopeImports.types().keyBegin(), end = m_rootScopeImports.types().keyEnd();
          it != end; it++) {
         addImportWithLocation(*it, invalidLoc);
     }
@@ -357,8 +361,7 @@ void QQmlJSImportVisitor::importBaseModules()
     if (!m_logger->fileName().endsWith(u".qmltypes"_s)) {
         QQmlJSScope::ContextualTypes fromDirectory =
                 m_importer->importDirectory(m_implicitImportDirectory);
-        Q_ASSERT(fromDirectory.context == QQmlJSScope::ContextualTypes::QML);
-        m_rootScopeImports.types.insert(std::move(fromDirectory.types));
+        m_rootScopeImports.addTypes(std::move(fromDirectory));
 
         QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper();
 
@@ -375,8 +378,7 @@ void QQmlJSImportVisitor::importBaseModules()
             if (qmldirEntry != filePaths.constEnd()) {
                 QQmlJSScope::ContextualTypes fromDirectory =
                         m_importer->importDirectory(QFileInfo(*qmldirEntry).absolutePath());
-                Q_ASSERT(fromDirectory.context == QQmlJSScope::ContextualTypes::QML);
-                m_rootScopeImports.types.insert(std::move(fromDirectory.types));
+                m_rootScopeImports.addTypes(std::move(fromDirectory));
             }
         }
     }
@@ -1079,7 +1081,7 @@ void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &origina
                         name + QStringLiteral(" was not found. Did you add all import paths?"),
                         qmlImport, scope->sourceLocation(), true, true,
                         QQmlJSUtils::didYouMean(scope->baseTypeName(),
-                                                m_rootScopeImports.types.keys(),
+                                                m_rootScopeImports.types().keys(),
                                                 scope->sourceLocation()));
             }
         }
@@ -1348,7 +1350,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             const QString &name = std::get<InlineComponentNameType>(m_currentRootName);
             m_currentScope->setIsInlineComponent(true);
             m_currentScope->setInlineComponentName(name);
-            m_rootScopeImports.types.insert(name, { m_currentScope, revision });
+            m_rootScopeImports.setType(name, { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
 
@@ -1456,11 +1458,10 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             };
             tryParseAlias();
         } else {
-            const QString name = buildName(publicMember->memberType);
-            if (m_rootScopeImports.types.contains(name)
-                && !m_rootScopeImports.types[name].scope.isNull()) {
-                if (m_importTypeLocationMap.contains(name))
-                    m_usedTypes.insert(name);
+            if (m_rootScopeImports.hasType(typeName)
+                && !m_rootScopeImports.type(typeName).scope.isNull()) {
+                if (m_importTypeLocationMap.contains(typeName))
+                    m_usedTypes.insert(typeName);
             }
         }
         QQmlJSMetaProperty prop;
@@ -1474,7 +1475,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
 #endif
         prop.setAliasExpression(aliasExpr);
         const auto type =
-                isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.types.value(typeName).scope;
+                isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.type(typeName).scope;
         if (type) {
             prop.setType(type);
             const QString internalName = type->internalName();
@@ -1792,12 +1793,7 @@ bool QQmlJSImportVisitor::isImportPrefix(QString prefix) const
     if (prefix.isEmpty() || !prefix.front().isUpper())
         return false;
 
-    auto it = m_rootScopeImports.types.find(prefix);
-
-    if (it == m_rootScopeImports.types.end())
-        return false;
-
-    return it->scope.isNull();
+    return m_rootScopeImports.isNullType(prefix);
 }
 
 void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding)
@@ -2079,7 +2075,10 @@ void QQmlJSImportVisitor::addImportWithLocation(const QString &name,
         return;
 
     m_importTypeLocationMap.insert(name, loc);
-    m_importLocations.insert(loc);
+
+    // If it's not valid it's a builtin. We don't need to complain about it being unused.
+    if (loc.isValid())
+        m_importLocations.insert(loc);
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
@@ -2108,14 +2107,13 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
                     const QString actualPrefix = prefix.isEmpty()
                             ? QFileInfo(entry.resourcePath).baseName()
                             : prefix;
-                    m_rootScopeImports.types.insert(actualPrefix, { scope, QTypeRevision() });
+                    m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
 
                     addImportLocation(actualPrefix);
                 } else {
                     const auto scopes = m_importer->importDirectory(absolute, prefix);
-                    Q_ASSERT(scopes.context == QQmlJSScope::ContextualTypes::QML);
-                    m_rootScopeImports.types.insert(scopes.types);
-                    for (auto it = scopes.types.keyBegin(), end = scopes.types.keyEnd(); it != end;
+                    m_rootScopeImports.addTypes(scopes);
+                    for (auto it = scopes.types().keyBegin(), end = scopes.types().keyEnd(); it != end;
                          it++)
                         addImportLocation(*it);
                 }
@@ -2128,14 +2126,13 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
         QFileInfo path(absolute);
         if (path.isDir()) {
             const auto scopes = m_importer->importDirectory(path.canonicalFilePath(), prefix);
-            Q_ASSERT(scopes.context == QQmlJSScope::ContextualTypes::QML);
-            m_rootScopeImports.types.insert(scopes.types);
-            for (auto it = scopes.types.keyBegin(), end = scopes.types.keyEnd(); it != end; it++)
+            m_rootScopeImports.addTypes(scopes);
+            for (auto it = scopes.types().keyBegin(), end = scopes.types().keyEnd(); it != end; it++)
                 addImportLocation(*it);
         } else if (path.isFile()) {
             const auto scope = m_importer->importFile(path.canonicalFilePath());
             const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
-            m_rootScopeImports.types.insert(actualPrefix, { scope, QTypeRevision() });
+            m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
             addImportLocation(actualPrefix);
         }
 
@@ -2150,9 +2147,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     const auto imported = m_importer->importModule(
             path, prefix, import->version ? import->version->version : QTypeRevision(),
             &staticModulesProvided);
-    Q_ASSERT(imported.context == QQmlJSScope::ContextualTypes::QML);
-    m_rootScopeImports.types.insert(imported.types);
-    for (auto it = imported.types.keyBegin(), end = imported.types.keyEnd(); it != end; it++)
+    m_rootScopeImports.addTypes(imported);
+    for (auto it = imported.types().keyBegin(), end = imported.types().keyEnd(); it != end; it++)
         addImportLocation(*it);
 
     if (prefix.isEmpty()) {
@@ -2534,8 +2530,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMemb
 {
     const QString name = fieldMember->name.toString();
     if (m_importTypeLocationMap.contains(name)) {
-        if (auto it = m_rootScopeImports.types.find(name);
-            it != m_rootScopeImports.types.end() && !it->scope)
+        if (m_rootScopeImports.isNullType(name))
             m_usedTypes.insert(name);
     }
 }

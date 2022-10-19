@@ -20,24 +20,25 @@ using namespace Qt::StringLiterals;
 Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
 
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
-    : m_typeTracker(std::make_unique<TypeTracker>())
+    : m_imports(importer->builtinInternalNames())
+    , m_typeTracker(std::make_unique<TypeTracker>())
 {
-    const QQmlJSImporter::ImportedTypes builtinTypes = importer->builtinInternalNames();
-    m_voidType = builtinTypes.types[u"void"_s].scope;
-    m_nullType = builtinTypes.types[u"std::nullptr_t"_s].scope;
-    m_realType = builtinTypes.types[u"double"_s].scope;
-    m_floatType = builtinTypes.types[u"float"_s].scope;
-    m_intType = builtinTypes.types[u"int"_s].scope;
-    m_uintType = builtinTypes.types[u"uint"_s].scope;
-    m_boolType = builtinTypes.types[u"bool"_s].scope;
-    m_stringType = builtinTypes.types[u"QString"_s].scope;
-    m_stringListType = builtinTypes.types[u"QStringList"_s].scope;
-    m_byteArrayType = builtinTypes.types[u"QByteArray"_s].scope;
-    m_urlType = builtinTypes.types[u"QUrl"_s].scope;
-    m_dateTimeType = builtinTypes.types[u"QDateTime"_s].scope;
-    m_variantListType = builtinTypes.types[u"QVariantList"_s].scope;
-    m_varType = builtinTypes.types[u"QVariant"_s].scope;
-    m_jsValueType = builtinTypes.types[u"QJSValue"_s].scope;
+    const QQmlJSImporter::ImportedTypes &builtinTypes = m_imports;
+    m_voidType = builtinTypes.type(u"void"_s).scope;
+    m_nullType = builtinTypes.type(u"std::nullptr_t"_s).scope;
+    m_realType = builtinTypes.type(u"double"_s).scope;
+    m_floatType = builtinTypes.type(u"float"_s).scope;
+    m_intType = builtinTypes.type(u"int"_s).scope;
+    m_uintType = builtinTypes.type(u"uint"_s).scope;
+    m_boolType = builtinTypes.type(u"bool"_s).scope;
+    m_stringType = builtinTypes.type(u"QString"_s).scope;
+    m_stringListType = builtinTypes.type(u"QStringList"_s).scope;
+    m_byteArrayType = builtinTypes.type(u"QByteArray"_s).scope;
+    m_urlType = builtinTypes.type(u"QUrl"_s).scope;
+    m_dateTimeType = builtinTypes.type(u"QDateTime"_s).scope;
+    m_variantListType = builtinTypes.type(u"QVariantList"_s).scope;
+    m_varType = builtinTypes.type(u"QVariant"_s).scope;
+    m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
 
     QQmlJSScope::Ptr emptyListType = QQmlJSScope::create();
     emptyListType->setInternalName(u"void*"_s);
@@ -97,7 +98,7 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
 
     m_objectsById.clear();
     m_objectsByLocation.clear();
-    m_imports.types.clear();
+    m_imports.clearTypes();
     m_signalHandlers.clear();
 
     program->accept(visitor);
@@ -150,9 +151,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(
         listType->setFilePath(elementType->filePath());
         const QQmlJSImportedScope element = {elementType, QTypeRevision()};
         const QQmlJSImportedScope array = {m_arrayType, QTypeRevision()};
-        QQmlJSScope::ContextualTypes contextualTypes{ { { elementType->internalName(), element },
-                                                        { u"Array"_s, array } },
-                                                      QQmlJSScope::ContextualTypes::INTERNAL };
+        QQmlJSScope::ContextualTypes contextualTypes(
+                    QQmlJSScope::ContextualTypes::INTERNAL,
+                    { { elementType->internalName(), element } },
+                    m_intType, m_arrayType);
         QQmlJSScope::resolveTypes(listType, contextualTypes);
         Q_ASSERT(equals(listType->valueType(), elementType));
         m_typeTracker->listTypes[elementType] = listType;
@@ -166,7 +168,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) const
 {
-    return m_imports.types[QmlIR::IRBuilder::asString(type->typeId)].scope;
+    return m_imports.type(QmlIR::IRBuilder::asString(type->typeId)).scope;
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeForConst(QV4::ReturnedValue rv) const

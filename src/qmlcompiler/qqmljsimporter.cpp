@@ -124,7 +124,6 @@ static bool isComposite(const QQmlJSScope::ConstPtr &scope)
 QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                                bool useOptionalImports)
     : m_importPaths(importPaths),
-      m_builtins({}),
       m_mapper(mapper),
       m_useOptionalImports(useOptionalImports),
       m_createImportVisitor([](const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
@@ -329,8 +328,8 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
             if (!bestExport.isValid() || valExport.version() > bestExport.version())
                 bestExport = valExport;
 
-            const auto it = types->qmlNames.types.find(qmlName);
-            if (it != types->qmlNames.types.end()) {
+            const auto it = types->qmlNames.types().find(qmlName);
+            if (it != types->qmlNames.types().end()) {
 
                 // The same set of exports can declare the same name multiple times for different
                 // versions. That's the common thing and we would just continue here when we hit
@@ -370,7 +369,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                     });
 
                     // Invalidate the type. We don't know which one to use.
-                    it->scope = QQmlJSScope::ConstPtr();
+                    types->qmlNames.clearType(qmlName);
                     continue;
                 }
                 case HigherVersion:
@@ -378,29 +377,28 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                 }
             }
 
-            types->qmlNames.types.insert(qmlName, { val.scope, valExport.version() });
+            types->qmlNames.setType(qmlName, { val.scope, valExport.version() });
             seenExports[qmlName].append(valExport);
         }
 
         const QTypeRevision bestRevision = bestExport.isValid()
                 ? bestExport.revision()
                 : QTypeRevision::zero();
-        types->cppNames.types.insert(cppName, { val.scope, bestRevision });
+        types->cppNames.setType(cppName, { val.scope, bestRevision });
 
         const QTypeRevision bestVersion = bestExport.isValid()
                 ? bestExport.version()
                 : QTypeRevision::zero();
-        types->qmlNames.types.insert(prefixedName(internalPrefix, cppName),
-                                     { val.scope, bestVersion });
+        types->qmlNames.setType(prefixedName(internalPrefix, cppName), { val.scope, bestVersion });
     };
 
+    // Empty type means "this is the prefix"
     if (!importDescription.prefix().isEmpty())
-        types->qmlNames.types.insert(importDescription.prefix(),
-                                     {}); // Empty type means "this is the prefix"
+        types->qmlNames.setType(importDescription.prefix(), {});
 
     // Add a marker to show that this module has been imported
     if (!importDescription.isDependency())
-        types->qmlNames.types.insert(prefixedName(modulePrefix, importDescription.name()), {});
+        types->qmlNames.setType(prefixedName(modulePrefix, importDescription.name()), {});
 
     if (!importDescription.isDependency()) {
         if (import.isStaticModule)
@@ -426,9 +424,9 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
 
         if (val.exports.isEmpty()) {
             // Insert an unresolvable dummy name
-            types->qmlNames.types.insert(prefixedName(internalPrefix, cppName),
-                                         { val.scope, QTypeRevision() });
-            types->cppNames.types.insert(cppName, { val.scope, QTypeRevision() });
+            types->qmlNames.setType(
+                        prefixedName(internalPrefix, cppName), { val.scope, QTypeRevision() });
+            types->cppNames.setType(cppName, { val.scope, QTypeRevision() });
         } else {
             insertExports(val, cppName);
         }
@@ -456,14 +454,14 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     */
 
     QQmlJSImporter::AvailableTypes tempTypes(builtinImportHelper().cppNames);
-    tempTypes.cppNames.types.insert(types->cppNames.types);
+    tempTypes.cppNames.addTypes(types->cppNames);
 
     // At present, there are corner cases that couldn't be resolved in a single
     // pass of resolveTypes() (e.g. QQmlEasingEnums::Type). However, such cases
     // only happen when enumerations are involved, thus the strategy is to
     // resolve enumerations (which can potentially create new child scopes)
     // before resolving the type fully
-    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.types.value(u"int"_s).scope;
+    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.type(u"int"_s).scope;
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         if (!it->scope.factory())
             QQmlJSScope::resolveEnums(it->scope, intType);
@@ -503,8 +501,10 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
 
 QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 {
-    if (!m_builtins.qmlNames.types.isEmpty() || !m_builtins.cppNames.types.isEmpty())
-        return m_builtins;
+    if (m_builtins)
+        return *m_builtins;
+
+    AvailableTypes builtins(ImportedTypes(ImportedTypes::INTERNAL, {}, {}, {}));
 
     Import result;
     result.name = QStringLiteral("QML");
@@ -519,7 +519,7 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
                 qmltypesFiles.removeOne(it.fileName());
             }
             setQualifiedNamesOn(result);
-            importDependencies(result, &m_builtins);
+            importDependencies(result, &builtins);
 
             if (qmltypesFiles.isEmpty())
                 return;
@@ -542,9 +542,23 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
     // otherwise
     const QQmlJSScope::Import builtinImport(
                 QString(), QStringLiteral("QML"), QTypeRevision::fromVersion(1, 0), false, true);
-    processImport(builtinImport, result, &m_builtins);
 
-    return m_builtins;
+    const QQmlJSScope::ConstPtr intType = result.objects[u"int"_s].scope;
+    Q_ASSERT(intType);
+
+    const QQmlJSScope::ConstPtr arrayType = result.objects[u"Array"_s].scope;
+    Q_ASSERT(arrayType);
+
+    m_builtins = AvailableTypes(ImportedTypes(
+                                    ImportedTypes::INTERNAL, std::move(builtins.cppNames.types()),
+                                    intType, arrayType));
+    m_builtins->qmlNames =
+            ImportedTypes(ImportedTypes::QML, std::move(builtins.qmlNames.types()),
+                          intType, arrayType);
+
+    processImport(builtinImport, result, &(*m_builtins));
+
+    return *m_builtins;
 }
 
 /*!
@@ -603,11 +617,10 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(const QString &module
 
     // If we imported a system module add all builtin QML types
     if (result.hasSystemModule) {
-        for (auto nameIt = builtins.qmlNames.types.keyBegin(),
-                  end = builtins.qmlNames.types.keyEnd();
+        for (auto nameIt = builtins.qmlNames.types().keyBegin(),
+                  end = builtins.qmlNames.types().keyEnd();
              nameIt != end; ++nameIt)
-            result.qmlNames.types.insert(prefixedName(prefix, *nameIt),
-                                         builtins.qmlNames.types[*nameIt]);
+            result.qmlNames.setType(prefixedName(prefix, *nameIt), builtins.qmlNames.type(*nameIt));
     }
 
     if (staticModuleList)
@@ -639,13 +652,13 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 
         const auto &cacheEntry = m_cachedImportTypes[cacheKey];
 
-        types->cppNames.types.insert(cacheEntry->cppNames.types);
+        types->cppNames.addTypes(cacheEntry->cppNames);
         types->staticModules << cacheEntry->staticModules;
         types->hasSystemModule |= cacheEntry->hasSystemModule;
 
         // No need to import qml names for dependencies
         if (!isDependency)
-            types->qmlNames.types.insert(cacheEntry->qmlNames.types);
+            types->qmlNames.addTypes(cacheEntry->qmlNames);
 
         return true;
     };
@@ -658,8 +671,11 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
     if (getTypesFromCache())
         return true;
 
-    auto cacheTypes =
-            QSharedPointer<QQmlJSImporter::AvailableTypes>(new QQmlJSImporter::AvailableTypes({}));
+    auto cacheTypes = QSharedPointer<QQmlJSImporter::AvailableTypes>(
+                new QQmlJSImporter::AvailableTypes(
+                    ImportedTypes(
+                        ImportedTypes::INTERNAL, {},
+                        types->cppNames.intType(), types->cppNames.arrayType())));
     m_cachedImportTypes[cacheKey] = cacheTypes;
 
     const QPair<QString, QTypeRevision> importId { module, version };
@@ -773,7 +789,11 @@ QQmlJSScope::Ptr QQmlJSImporter::importFile(const QString &file)
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
         const QString &directory, const QString &prefix)
 {
-    QQmlJSImporter::AvailableTypes types({});
+    const AvailableTypes builtins = builtinImportHelper();
+    QQmlJSImporter::AvailableTypes types(
+                ImportedTypes(
+                    ImportedTypes::INTERNAL, {},
+                    builtins.cppNames.intType(), builtins.cppNames.arrayType()));
     importHelper(directory, &types, prefix, QTypeRevision(), false, true);
     return types.qmlNames;
 }
@@ -799,7 +819,7 @@ void QQmlJSImporter::clearCache()
 
 QQmlJSScope::ConstPtr QQmlJSImporter::jsGlobalObject() const
 {
-    return m_builtins.cppNames.types[u"GlobalObject"_s].scope;
+    return m_builtins->cppNames.type(u"GlobalObject"_s).scope;
 }
 
 void QQmlJSImporter::setQualifiedNamesOn(const Import &import)

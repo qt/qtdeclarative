@@ -212,8 +212,63 @@ public:
     {
         enum CompileContext { INTERNAL, QML };
 
-        QHash<QString, ImportedScope<ConstPtr>> types;
-        CompileContext context;
+        ContextualTypes(
+                CompileContext context,
+                const QHash<QString, ImportedScope<ConstPtr>> types,
+                const QQmlJSScope::ConstPtr &intType,
+                const QQmlJSScope::ConstPtr &arrayType)
+            : m_types(types)
+            , m_context(context)
+            , m_intType(intType)
+            , m_arrayType(arrayType)
+        {}
+
+        CompileContext context() const { return m_context; }
+        ConstPtr intType() const { return m_intType; }
+        ConstPtr arrayType() const { return m_arrayType; }
+
+        bool hasType(const QString &name) const { return m_types.contains(name); }
+        ImportedScope<ConstPtr> type(const QString &name) const { return m_types[name]; }
+        void setType(const QString &name, const ImportedScope<ConstPtr> &type)
+        {
+            m_types.insert(name, type);
+        }
+        void clearType(const QString &name)
+        {
+            m_types[name].scope = QQmlJSScope::ConstPtr();
+        }
+
+        bool isNullType(const QString &name) const
+        {
+            const auto it = m_types.constFind(name);
+            return it != m_types.constEnd() && it->scope.isNull();
+        }
+
+        void addTypes(ContextualTypes &&types)
+        {
+            Q_ASSERT(types.m_context == m_context);
+            m_types.insert(std::move(types.m_types));
+        }
+
+        void addTypes(const ContextualTypes &types)
+        {
+            Q_ASSERT(types.m_context == m_context);
+            m_types.insert(types.m_types);
+        }
+
+        const QHash<QString, ImportedScope<ConstPtr>> &types() const { return m_types; }
+
+        void clearTypes() { m_types.clear(); }
+
+    private:
+        QHash<QString, ImportedScope<ConstPtr>> m_types;
+        CompileContext m_context;
+
+        // For resolving enums
+        QQmlJSScope::ConstPtr m_intType;
+
+        // For resolving sequence types
+        QQmlJSScope::ConstPtr m_arrayType;
     };
 
     struct JavaScriptIdentifier

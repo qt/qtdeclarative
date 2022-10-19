@@ -203,8 +203,9 @@ void tst_qqmljsscope::allTypesAvailable()
         };
 
         QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
-        const auto [types, context] = importer.importModule(u"QtQml"_s);
-        QCOMPARE(context, QQmlJSScope::ContextualTypes::QML);
+        const auto imported = importer.importModule(u"QtQml"_s);
+        QCOMPARE(imported.context(), QQmlJSScope::ContextualTypes::QML);
+        const auto types = imported.types();
         QVERIFY(types.contains(u"$internal$.QObject"_s));
         QVERIFY(types.contains(u"QtObject"_s));
         QCOMPARE(types[u"$internal$.QObject"_s].scope, types[u"QtObject"_s].scope);

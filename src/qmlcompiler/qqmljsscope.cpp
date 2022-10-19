@@ -334,8 +334,8 @@ qFindInlineComponents(QStringView typeName, const QQmlJSScope::ContextualTypes &
     if (separatorIndex < 1 || separatorIndex >= typeName.size() - 1)
         return {};
 
-    const auto parentIt = contextualTypes.types.constFind(typeName.first(separatorIndex).toString());
-    if (parentIt == contextualTypes.types.constEnd())
+    const auto parentIt = contextualTypes.types().constFind(typeName.first(separatorIndex).toString());
+    if (parentIt == contextualTypes.types().constEnd())
         return {};
 
     auto inlineComponentParent = *parentIt;
@@ -372,14 +372,14 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
             usedTypes->insert(name);
     };
 
-    auto type = contextualTypes.types.constFind(name);
+    auto type = contextualTypes.types().constFind(name);
 
-    if (type != contextualTypes.types.constEnd()) {
+    if (type != contextualTypes.types().constEnd()) {
         useType();
         return *type;
     }
 
-    switch (contextualTypes.context) {
+    switch (contextualTypes.context()) {
     case ContextualTypes::INTERNAL: {
         // look for c++ namescoped enums!
         const auto colonColon = name.lastIndexOf(QStringLiteral("::"));
@@ -387,8 +387,8 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
             break;
 
         const QString outerTypeName = name.left(colonColon);
-        const auto outerType = contextualTypes.types.constFind(outerTypeName);
-        if (outerType == contextualTypes.types.constEnd())
+        const auto outerType = contextualTypes.types().constFind(outerTypeName);
+        if (outerType == contextualTypes.types().constEnd())
             break;
 
         for (const auto &innerType : qAsConst(outerType->scope->m_childScopes)) {
@@ -432,9 +432,8 @@ QTypeRevision QQmlJSScope::resolveType(
         if (self->m_extensionTypeName.isEmpty()) {
             if (self->accessSemantics() == AccessSemantics::Sequence) {
                 // All sequence types are implicitly extended by JS Array.
-                const QString array = u"Array"_s;
-                self->setExtensionTypeName(array);
-                self->m_extensionType = findType(array, context, usedTypes).scope;
+                self->setExtensionTypeName(u"Array"_s);
+                self->m_extensionType = context.arrayType();
             }
         } else {
             self->m_extensionType = findType(self->m_extensionTypeName, context, usedTypes).scope;
@@ -540,7 +539,7 @@ QTypeRevision QQmlJSScope::resolveTypes(
     const auto resolveAll = [](const QQmlJSScope::Ptr &self,
                                const QQmlJSScope::ContextualTypes &contextualTypes,
                                QSet<QString> *usedTypes) {
-        resolveEnums(self, findType(u"int"_s, contextualTypes, usedTypes).scope);
+        resolveEnums(self, contextualTypes.intType());
         return resolveType(self, contextualTypes, usedTypes);
     };
     return resolveTypesInternal(resolveAll, updateChildScope, self, contextualTypes, usedTypes);
@@ -1003,8 +1002,7 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
     typeReader(scope);
     m_importer->m_globalWarnings.append(typeReader.errors());
     scope->setInternalName(internalName());
-    QQmlJSScope::resolveEnums(scope,
-                              m_importer->builtinInternalNames().types.value(u"int"_s).scope);
+    QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames().intType());
 
     if (m_isSingleton && !scope->isSingleton()) {
         m_importer->m_globalWarnings.append(

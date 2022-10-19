@@ -92,9 +92,9 @@ private:
     {
         AvailableTypes(ImportedTypes builtins)
             : cppNames(std::move(builtins))
+            , qmlNames(QQmlJSScope::ContextualTypes::QML, {},
+                       cppNames.intType(), cppNames.arrayType())
         {
-            cppNames.context = QQmlJSScope::ContextualTypes::INTERNAL;
-            qmlNames.context = QQmlJSScope::ContextualTypes::QML;
         }
 
         // C++ names used in qmltypes files for non-composite types
@@ -147,7 +147,8 @@ private:
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QList<QQmlJS::DiagnosticMessage> m_globalWarnings;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
-    AvailableTypes m_builtins;
+    std::optional<AvailableTypes> m_builtins;
+
     QQmlJSResourceFileMapper *m_mapper = nullptr;
     QQmlJSResourceFileMapper *m_metaDataMapper = nullptr;
     bool m_useOptionalImports;
