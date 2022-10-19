@@ -92,6 +92,7 @@ private:
     void disconnectSignals(Shader shaderType);
     void clearMappers(Shader shaderType);
     std::optional<int> findMappedShaderVariableId(const QByteArray &name) const;
+    bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
 
     bool inDestructor = false;
     const QMetaObject *m_itemMetaObject = nullptr;
@@ -115,6 +116,8 @@ private:
     QSGGuiThreadShaderEffectManager::ShaderInfo *m_inProgress[NShader];
 
     QVector<QtPrivate::EffectSlotMapper *> m_mappers[NShader];
+
+    QHash<QQuickItem *, QMetaObject::Connection> m_destroyedConnections;
 };
 
 QT_END_NAMESPACE
