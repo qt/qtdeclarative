@@ -144,6 +144,9 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     provide delegates to multiple views, and with DelegateModelGroup to sort and filter
     delegate items.
 
+    DelegateModel only supports one-dimensional models -- assigning a table model to
+    DelegateModel and that to TableView will thus only show one column.
+
     The example below illustrates using a DelegateModel with a ListView.
 
     \snippet delegatemodel/delegatemodel.qml 0
