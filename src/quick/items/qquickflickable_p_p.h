@@ -71,7 +71,7 @@ public:
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
             , transitionToSet(false)
             , fixingUp(false), inOvershoot(false), inRebound(false), moving(false), flicking(false)
-            , dragging(false), extentsChanged(false)
+            , flickingWhenDragBegan(false), dragging(false), extentsChanged(false)
             , explicitValue(false), minExtentDirty(true), maxExtentDirty(true)
             , contentPositionChangedExternallyDuringDrag(false)
             , unused(0)
@@ -121,21 +121,22 @@ public:
         int vTime;
         QQuickFlickablePrivate::Velocity smoothVelocity;
         QPODVector<qreal,10> velocityBuffer;
-        bool atEnd : 1;
-        bool atBeginning : 1;
-        bool transitionToSet : 1;
-        bool fixingUp : 1;
-        bool inOvershoot : 1;
-        bool inRebound : 1;
-        bool moving : 1;
-        bool flicking : 1;
-        bool dragging : 1;
-        bool extentsChanged : 1;
-        bool explicitValue : 1;
-        mutable bool minExtentDirty : 1;
-        mutable bool maxExtentDirty : 1;
-        bool contentPositionChangedExternallyDuringDrag : 1;
-        uint unused : 18;
+        uint atEnd : 1;
+        uint atBeginning : 1;
+        uint transitionToSet : 1;
+        uint fixingUp : 1;
+        uint inOvershoot : 1;
+        uint inRebound : 1;
+        uint moving : 1;
+        uint flicking : 1;
+        uint flickingWhenDragBegan : 1;
+        uint dragging : 1;
+        uint extentsChanged : 1;
+        uint explicitValue : 1;
+        mutable uint minExtentDirty : 1;
+        mutable uint maxExtentDirty : 1;
+        uint contentPositionChangedExternallyDuringDrag : 1;
+        uint unused : 17;
     };
 
     bool flickX(qreal velocity);
