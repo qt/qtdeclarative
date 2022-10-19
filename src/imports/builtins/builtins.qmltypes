@@ -154,6 +154,20 @@ Module {
     }
 
     Component {
+        file: "qqmllist.h"
+        name: "QQmlListProperty<QObject>"
+        accessSemantics: "sequence"
+        valueType: "QObject"
+    }
+
+    Component {
+        file: "qobject.h"
+        name: "QObjectList"
+        accessSemantics: "sequence"
+        valueType: "QObject"
+    }
+
+    Component {
         name: "int"
         extension: "Number"
         exports: ["QML/int 1.0"]

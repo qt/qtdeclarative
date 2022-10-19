@@ -558,7 +558,9 @@ void QQmlJSImportVisitor::processDefaultProperties()
 
         const QQmlJSMetaProperty defaultProp = parentScope->property(defaultPropertyName);
 
-        if (it.value().size() > 1 && !defaultProp.isList()) {
+        if (it.value().size() > 1
+                && !defaultProp.isList()
+                && !defaultProp.type()->isListProperty()) {
             m_logger->log(
                     QStringLiteral("Cannot assign multiple objects to a default non-list property"),
                     qmlNonListProperty, it.value().constFirst()->sourceLocation());
@@ -1477,7 +1479,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         const auto type =
                 isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.type(typeName).scope;
         if (type) {
-            prop.setType(type);
+            prop.setType(prop.isList() ? type->listType() : type);
             const QString internalName = type->internalName();
             prop.setTypeName(internalName.isEmpty() ? typeName : internalName);
         } else if (!isAlias) {

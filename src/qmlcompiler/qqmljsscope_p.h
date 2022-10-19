@@ -81,6 +81,7 @@ public:
         WrappedInImplicitComponent = 0x80,
         HasBaseTypeError = 0x100,
         HasExtensionNamespace = 0x200,
+        IsListProperty = 0x400,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -490,6 +491,8 @@ public:
     QString valueTypeName() const { return m_valueTypeName; }
     void setValueTypeName(const QString &name) { m_valueTypeName = name; }
     QQmlJSScope::ConstPtr valueType() const { return m_valueType; }
+    QQmlJSScope::ConstPtr listType() const { return m_listType; }
+    QQmlJSScope::Ptr listType() { return m_listType; }
 
     void addOwnRuntimeFunctionIndex(QQmlJSMetaMethod::AbsoluteFunctionIndex index)
     {
@@ -530,6 +533,9 @@ public:
     void setIsInlineComponent(bool v) { m_flags.setFlag(InlineComponent, v); }
     void setIsWrappedInImplicitComponent(bool v) { m_flags.setFlag(WrappedInImplicitComponent, v); }
     void setExtensionIsNamespace(bool v) { m_flags.setFlag(HasExtensionNamespace, v); }
+
+    bool isListProperty() const { return m_flags.testFlag(IsListProperty); }
+    void setIsListProperty(bool v) { m_flags.setFlag(IsListProperty, v); }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }
@@ -574,6 +580,8 @@ public:
             QSet<QString> *usedTypes = nullptr);
     static void resolveEnums(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType);
+    static void resolveList(
+            const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType);
     static void resolveGeneralizedGroup(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &baseType,
             const QQmlJSScope::ContextualTypes &contextualTypes,
@@ -738,6 +746,7 @@ private:
      */
     QString m_valueTypeName;
     QQmlJSScope::WeakConstPtr m_valueType;
+    QQmlJSScope::Ptr m_listType;
 
     /*!
        The extension is provided as either a type (QML_{NAMESPACE_}EXTENDED) or as a

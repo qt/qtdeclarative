@@ -107,6 +107,7 @@ set(qml_files
     jsmoduleimport.qml
     layouts.qml
     library.js
+    listAsArgument.qml
     listIndices.qml
     listPropertyAsModel.qml
     listlength.qml

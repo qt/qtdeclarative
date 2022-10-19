@@ -5,6 +5,7 @@
 #define QMLTCPROPERTYUTILS_H
 
 #include <private/qqmljsmetatypes_p.h>
+#include <private/qqmljsscope_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -15,19 +16,15 @@ QT_BEGIN_NAMESPACE
 */
 inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
 {
-    QString underlyingType = p.type()->internalName();
-    // NB: can be a pointer or a list, can't be both (list automatically assumes
-    // that it holds pointers though). check isList() first, as list<QtObject>
-    // would be both a list and a pointer (weird).
     if (p.isList()) {
-        if (p.type()->isReferenceType())
-            underlyingType = u"QQmlListProperty<" + underlyingType + u">";
-        else
-            underlyingType = u"QList<" + underlyingType + u">";
-    } else if (p.type()->isReferenceType()) {
-        underlyingType += u'*';
+        // We cannot just use p.type()->internalName() here because it may be
+        // a list property of something that only receives a C++ name from qmltc.
+        const QQmlJSScope::ConstPtr valueType = p.type()->valueType();
+        return (valueType->isReferenceType() ? u"QQmlListProperty<" : u"QList<")
+                + valueType->internalName() + u'>';
     }
-    return underlyingType;
+
+    return p.type()->augmentedInternalName();
 }
 
 // simple class that, for a given property, creates information for the

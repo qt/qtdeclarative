@@ -32,6 +32,7 @@ class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypeResolver
 public:
     enum ParentMode { UseDocumentParent, UseParentProperty };
     enum CloneMode { CloneTypes, DoNotCloneTypes };
+    enum ListMode { UseListProperty, UseQObjectList };
 
     QQmlJSTypeResolver(QQmlJSImporter *importer);
 
@@ -59,6 +60,7 @@ public:
     QQmlJSScope::ConstPtr metaObjectType() const { return m_metaObjectType; }
     QQmlJSScope::ConstPtr functionType() const { return m_functionType; }
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
+    QQmlJSScope::ConstPtr qObjectListType() const { return m_qObjectListType; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(
@@ -69,8 +71,6 @@ public:
         return m_imports.hasType(name) && !m_imports.type(name).scope;
     }
 
-    enum ListMode { UseListReference, UseQObjectList };
-    QQmlJSScope::ConstPtr listType(const QQmlJSScope::ConstPtr &elementType, ListMode mode) const;
     QQmlJSScope::ConstPtr typeForName(const QString &name) const
     {
         return m_imports.type(name).scope;
@@ -169,7 +169,6 @@ protected:
     bool canPrimitivelyConvertFromTo(
             const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const;
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
-    void trackListPropertyType(const QQmlJSScope::ConstPtr &trackedListElementType) const;
     QQmlJSRegisterContent transformed(
             const QQmlJSRegisterContent &origin,
             QQmlJSScope::ConstPtr (QQmlJSTypeResolver::*op)(const QQmlJSScope::ConstPtr &) const) const;
@@ -199,6 +198,7 @@ protected:
     QQmlJSScope::ConstPtr m_jsValueType;
     QQmlJSScope::ConstPtr m_jsPrimitiveType;
     QQmlJSScope::ConstPtr m_listPropertyType;
+    QQmlJSScope::ConstPtr m_qObjectListType;
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_functionType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
@@ -225,13 +225,7 @@ protected:
         QQmlJSScope::Ptr clone;
     };
 
-    struct TypeTracker
-    {
-        QHash<QQmlJSScope::ConstPtr, QQmlJSScope::Ptr> listTypes;
-        QHash<QQmlJSScope::ConstPtr, TrackedType> trackedTypes;
-    };
-
-    std::unique_ptr<TypeTracker> m_typeTracker;
+    std::unique_ptr<QHash<QQmlJSScope::ConstPtr, TrackedType>> m_trackedTypes;
 };
 
 QT_END_NAMESPACE

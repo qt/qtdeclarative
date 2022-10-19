@@ -746,6 +746,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::globalCode() const
         u"QtQml/qqmlcomponent.h"_s,
         u"QtQml/qqmlcontext.h"_s,
         u"QtQml/qqmlengine.h"_s,
+        u"QtQml/qqmllist.h"_s,
 
         u"QtCore/qdatetime.h"_s,
         u"QtCore/qobject.h"_s,
