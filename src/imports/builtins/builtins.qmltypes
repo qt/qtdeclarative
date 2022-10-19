@@ -170,7 +170,7 @@ Module {
     Component {
        name: "qlonglong"
        accessSemantics: "value"
-    }
+    }
 
     Component {
       name: "qulonglong"
