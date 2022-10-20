@@ -32,6 +32,8 @@
 #include <algorithm>
 #include <functional>
 
+using namespace Qt::Literals::StringLiterals;
+
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlImportTrace, QML_IMPORT_TRACE)
@@ -1034,6 +1036,26 @@ QString QQmlImports::resolvedUri(const QString &dir_arg, QQmlImportDatabase *dat
     return stableRelativePath;
 }
 
+/* removes all file selector occurrences in path
+   firstPlus is the position of the initial '+' in the path
+   which we always have as we check for '+' to decide whether
+   we need to do some work at all
+*/
+static QString pathWithoutFileSelectors(QString path, // we want a copy of path
+                                        qsizetype firstPlus)
+{
+    do {
+        Q_ASSERT(path.at(firstPlus) == u'+');
+        const auto eos = path.size();
+        qsizetype terminatingSlashPos = firstPlus + 1;
+        while (terminatingSlashPos != eos && path.at(terminatingSlashPos) != u'/')
+            ++terminatingSlashPos;
+        path.remove(firstPlus, terminatingSlashPos - firstPlus + 1);
+        firstPlus = path.indexOf(u'+', firstPlus);
+    } while (firstPlus != -1);
+    return path;
+}
+
 /*!
   \internal
 
@@ -1080,10 +1102,42 @@ QTypeRevision QQmlImports::matchingQmldirVersion(
     typedef QQmlDirComponents::const_iterator ConstIterator;
     const QQmlDirComponents &components = qmldir.components();
 
+    QMultiHash<QString, ConstIterator> baseFileName2ConflictingComponents;
+
     ConstIterator cend = components.constEnd();
     for (ConstIterator cit = components.constBegin(); cit != cend; ++cit) {
         for (ConstIterator cit2 = components.constBegin(); cit2 != cit; ++cit2) {
             if (cit2->typeName == cit->typeName && cit2->version == cit->version) {
+                // ugly heuristic to deal with file selectors
+                const auto comp2PotentialFileSelectorPos = cit2->fileName.indexOf(u'+');
+                const bool comp2MightHaveFileSelector = comp2PotentialFileSelectorPos != -1;
+                /* If we detect conflicting paths, we check if they agree when we remove anything looking like a
+                   file selector.
+                   We need to create copies of the filenames, otherwise QString::replace would modify the
+                   existing file-names
+                 */
+                QString compFileName1 = cit->fileName;
+                QString compFileName2 = cit2->fileName;
+                if (auto fileSelectorPos1 = compFileName1.indexOf(u'+'); fileSelectorPos1 != -1) {
+                    // existing entry was file selector entry, fix it up
+                    // it could also be the case that _both_ are using file selectors
+                    QString baseName =  comp2MightHaveFileSelector ? pathWithoutFileSelectors(compFileName2,
+                                                                                         comp2PotentialFileSelectorPos)
+                                                                   : compFileName2;
+                    if (pathWithoutFileSelectors(compFileName1, fileSelectorPos1) == baseName) {
+                        baseFileName2ConflictingComponents.insert(baseName, cit);
+                        baseFileName2ConflictingComponents.insert(baseName, cit2);
+                        continue;
+                    }
+                    // fall through to error case
+                } else if (comp2MightHaveFileSelector) {
+                    // new entry contains file selector (and we now that cit did not)
+                    if (pathWithoutFileSelectors(compFileName2, comp2PotentialFileSelectorPos) == compFileName1) {
+                        baseFileName2ConflictingComponents.insert(compFileName1, cit2);
+                        continue;
+                    }
+                    // fall through to error case
+                }
                 // This entry clashes with a predecessor
                 QQmlError error;
                 error.setDescription(QQmlImportDatabase::tr("\"%1\" version %2.%3 is defined more than once in module \"%4\"")
@@ -1095,6 +1149,14 @@ QTypeRevision QQmlImports::matchingQmldirVersion(
         }
 
         addVersion(cit->version);
+    }
+
+    // ensure that all components point to the actual base URL, and let the file selectors resolve them correctly during URL resolution
+    for (auto keyIt = baseFileName2ConflictingComponents.keyBegin(); keyIt != baseFileName2ConflictingComponents.keyEnd(); ++keyIt) {
+        const QString& baseFileName = *keyIt;
+        const auto conflictingComponents = baseFileName2ConflictingComponents.values(baseFileName);
+        for (ConstIterator component: conflictingComponents)
+            component->fileName = baseFileName;
     }
 
     typedef QList<QQmlDirParser::Script>::const_iterator SConstIterator;
