@@ -41,6 +41,18 @@ extern Q_GUI_EXPORT bool qt_sendShortcutOverrideEvent(QObject *o, ulong timestam
 bool QQuickDeliveryAgentPrivate::subsceneAgentsExist(false);
 QQuickDeliveryAgent *QQuickDeliveryAgentPrivate::currentEventDeliveryAgent(nullptr);
 
+static bool allowSyntheticRightClick()
+{
+    static int allowRightClick = -1;
+    if (allowRightClick < 0) {
+        bool ok = false;
+        allowRightClick = qEnvironmentVariableIntValue("QT_QUICK_ALLOW_SYNTHETIC_RIGHT_CLICK", &ok);
+        if (!ok)
+            allowRightClick = 1; // user didn't opt out
+    }
+    return allowRightClick != 0;
+}
+
 void QQuickDeliveryAgentPrivate::touchToMouseEvent(QEvent::Type type, const QEventPoint &p, const QTouchEvent *touchEvent, QMutableSinglePointEvent *mouseEvent)
 {
     Q_ASSERT(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
@@ -1576,7 +1588,11 @@ void QQuickDeliveryAgentPrivate::handleTouchEvent(QTouchEvent *event)
 void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
 {
     Q_Q(QQuickDeliveryAgent);
-    if (event->source() == Qt::MouseEventSynthesizedBySystem) {
+    // We generally don't want OS-synthesized mouse events, because Qt Quick does its own touch->mouse synthesis.
+    // But if the platform converts long-press to right-click, it's ok to react to that,
+    // unless the user has opted out by setting QT_QUICK_ALLOW_SYNTHETIC_RIGHT_CLICK=0.
+    if (event->source() == Qt::MouseEventSynthesizedBySystem &&
+            !(event->button() == Qt::RightButton && allowSyntheticRightClick())) {
         event->accept();
         return;
     }

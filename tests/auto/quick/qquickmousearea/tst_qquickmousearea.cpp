@@ -143,6 +143,7 @@ private slots:
 #if QT_CONFIG(tabletevent)
     void tabletStylusTap();
 #endif
+    void syntheticRightClick();
 
 private:
     int startDragDistance() const {
@@ -2530,6 +2531,34 @@ void tst_QQuickMouseArea::tabletStylusTap()
     QCOMPARE(pressSpy.size(), 1);
 }
 #endif
+
+void tst_QQuickMouseArea::syntheticRightClick()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("simple.qml")));
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+    mouseArea->setAcceptedButtons(Qt::RightButton);
+
+    QSignalSpy clickSpy(mouseArea, &QQuickMouseArea::clicked);
+    const QPointF p(20, 20);
+    quint64 timestamp = 10;
+
+    // The right-click is probably synthesized from a touch long-press IRL, but it doesn't matter for the DA's logic.
+    // We could set QT_QUICK_ALLOW_SYNTHETIC_RIGHT_CLICK=0 to opt out, but otherwise it's allowed.
+    QMouseEvent press(QEvent::MouseButtonPress, p, mouseArea->mapToScene(p), mouseArea->mapToGlobal(p),
+                      Qt::RightButton, Qt::RightButton, Qt::NoModifier, Qt::MouseEventSynthesizedBySystem);
+    press.setTimestamp(timestamp++);
+    QGuiApplication::sendEvent(&window, &press);
+    QCOMPARE(mouseArea->pressedButtons(), Qt::RightButton);
+
+    QMouseEvent release(QEvent::MouseButtonRelease, p, mouseArea->mapToScene(p), mouseArea->mapToGlobal(p),
+                        Qt::RightButton, Qt::RightButton, Qt::NoModifier, Qt::MouseEventSynthesizedBySystem);
+    release.setTimestamp(timestamp);
+    QGuiApplication::sendEvent(&window, &release);
+    QCOMPARE(mouseArea->pressedButtons(), Qt::NoButton);
+    QCOMPARE(clickSpy.size(), 1);
+}
 
 QTEST_MAIN(tst_QQuickMouseArea)
 
