@@ -765,8 +765,7 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
         break;
 #endif
     case QEvent::ShortcutOverride:
-        if (d->activeFocusItem)
-            QCoreApplication::sendEvent(d->activeFocusItem, ev);
+        d->deliverKeyEvent(static_cast<QKeyEvent *>(ev));
         break;
     case QEvent::InputMethod:
     case QEvent::InputMethodQuery:
@@ -826,10 +825,16 @@ void QQuickDeliveryAgentPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     if (activeFocusItem) {
         const bool keyPress = (e->type() == QEvent::KeyPress);
-        if (keyPress)
+        switch (e->type()) {
+        case QEvent::KeyPress:
             Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyPress, e->key(), e->modifiers());
-        else
+            break;
+        case QEvent::KeyRelease:
             Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyRelease, e->key(), e->modifiers());
+            break;
+        default:
+            break;
+        }
 
         QQuickItem *item = activeFocusItem;
 
@@ -839,12 +844,10 @@ void QQuickDeliveryAgentPrivate::deliverKeyEvent(QKeyEvent *e)
                                          e->key(), e->modifiers(), e->text(),
                                          e->isAutoRepeat(), e->count());
 
-        e->accept();
-        QCoreApplication::sendEvent(item, e);
-        while (!e->isAccepted() && (item = item->parentItem())) {
+        do {
             e->accept();
             QCoreApplication::sendEvent(item, e);
-        }
+        } while (!e->isAccepted() && (item = item->parentItem()));
     }
 }
 

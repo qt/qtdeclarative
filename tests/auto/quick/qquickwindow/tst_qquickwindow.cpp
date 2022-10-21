@@ -536,6 +536,8 @@ private slots:
 
 #if QT_CONFIG(shortcut)
     void testShortCut();
+    void shortcutOverride_data();
+    void shortcutOverride();
 #endif
 
     void rendererInterface();
@@ -3694,6 +3696,39 @@ void tst_qquickwindow::testShortCut()
     QCoreApplication::sendEvent(window, &keyEvent);
     QVERIFY(eventFilter.events.contains(int(QEvent::ShortcutOverride)));
     QVERIFY(window->property("received").value<bool>());
+}
+
+void tst_qquickwindow::shortcutOverride_data()
+{
+    QTest::addColumn<Qt::Key>("key");
+    QTest::addColumn<bool>("overridden");
+    QTest::addColumn<bool>("receivedA");
+    QTest::addColumn<bool>("receivedB");
+
+    QTest::addRow("Space") << Qt::Key_Space << false << false << false;
+    QTest::addRow("A") << Qt::Key_A << true << false << false;
+    QTest::addRow("B") << Qt::Key_B << false << false << true;
+}
+
+void tst_qquickwindow::shortcutOverride()
+{
+    QFETCH(Qt::Key, key);
+    QFETCH(bool, overridden);
+    QFETCH(bool, receivedA);
+    QFETCH(bool, receivedB);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("shortcutOverride.qml"));
+
+    QScopedPointer<QWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(window);
+    QVERIFY(QTest::qWaitForWindowActive(window.get()));
+
+    QTest::keyPress(window.get(), key);
+    QCOMPARE(window->property("overridden").value<bool>(), overridden);
+    QCOMPARE(window->property("receivedA").value<bool>(), receivedA);
+    QCOMPARE(window->property("receivedB").value<bool>(), receivedB);
 }
 #endif
 

@@ -322,6 +322,8 @@ void QQuickItemKeyFilter::shortcutOverride(QKeyEvent *event)
 {
     if (m_next)
         m_next->shortcutOverride(event);
+    else
+        event->ignore();
 }
 
 void QQuickItemKeyFilter::componentComplete()
@@ -5491,9 +5493,10 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
 
 void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
 {
-    if (extra.isAllocated() && extra->keyHandler) {
+    if (extra.isAllocated() && extra->keyHandler)
         extra->keyHandler->shortcutOverride(event);
-    }
+    else
+        event->ignore();
 }
 
 bool QQuickItemPrivate::anyPointerHandlerWants(const QPointerEvent *event, const QEventPoint &point) const
