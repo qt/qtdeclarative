@@ -509,6 +509,17 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
         }
         break;
     default:
+        if (!event->text().isEmpty() && event->modifiers() == Qt::NoModifier) {
+            const QKeyCombination mnemonic(Qt::AltModifier, Qt::Key(event->key()));
+            for (int i = 0; i < count(); ++i) {
+                if (auto *item = qobject_cast<QQuickMenuBarItem *>(d->itemAt(i))) {
+                    if (item->shortcut() == mnemonic) {
+                        d->activateItem(item);
+                        d->toggleCurrentMenu(true, true);
+                    }
+                }
+            }
+        }
         break;
     }
 }

@@ -612,6 +612,16 @@ void tst_qquickmenubar::altNavigation()
     QTest::keyRelease(window.get(), Qt::Key_Alt, Qt::AltModifier);
     QVERIFY(menuBar->hasActiveFocus());
     QVERIFY(fileMenuBarItem->isHighlighted());
+
+    // if menu has focus, pressing the mnemonic without Alt should open the menu
+    QQuickMenu *editMenuBarMenu = menuBar->menuAt(1);
+    QQuickMenuBarItem *editMenuBarItem = qobject_cast<QQuickMenuBarItem *>(editMenuBarMenu->parentItem());
+
+    QTest::keyPress(window.get(), Qt::Key_E);
+    QVERIFY(editMenuBarItem->isHighlighted());
+    QVERIFY(editMenuBarMenu->isVisible());
+    QTRY_VERIFY(editMenuBarMenu->isOpened());
+    QVERIFY(editMenuBarMenu->hasActiveFocus());
 }
 
 void tst_qquickmenubar::addRemove()
