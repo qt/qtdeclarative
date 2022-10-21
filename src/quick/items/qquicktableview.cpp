@@ -3334,7 +3334,7 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
 void QQuickTableViewPrivate::loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode)
 {
     const int edgeIndex = nextVisibleEdgeIndexAroundLoadedTable(edge);
-    qCDebug(lcTableViewDelegateLifecycle) << edge << edgeIndex;
+    qCDebug(lcTableViewDelegateLifecycle) << edge << edgeIndex <<  q_func();
 
     const auto &visibleCells = edge & (Qt::LeftEdge | Qt::RightEdge)
             ? loadedRows.values() : loadedColumns.values();
@@ -4246,10 +4246,26 @@ void QQuickTableViewPrivate::setLocalViewportY(qreal contentY)
 
 void QQuickTableViewPrivate::syncViewportRect()
 {
-    // Sync viewportRect so that it contains the actual geometry of the viewport
+    // Sync viewportRect so that it contains the actual geometry of the viewport.
+    // Since the column (and row) size of a sync child is decided by the column size
+    // of its sync view, the viewport width of a sync view needs to be the maximum of
+    // the sync views width, and its sync childrens width. This to ensure that no sync
+    // child loads a column which is not yet loaded by the sync view, since then the
+    // implicit column size cannot be resolved.
     Q_Q(QQuickTableView);
-    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
-    qCDebug(lcTableViewDelegateLifecycle) << viewportRect;
+
+    qreal w = q->width();
+    qreal h = q->height();
+
+    for (auto syncChild : std::as_const(syncChildren)) {
+        auto syncChild_d = syncChild->d_func();
+        if (syncChild_d->syncHorizontally)
+            w = qMax(w, syncChild->width());
+        if (syncChild_d->syncHorizontally)
+            h = qMax(h, syncChild->height());
+    }
+
+    viewportRect = QRectF(q->contentX(), q->contentY(), w, h);
 }
 
 void QQuickTableViewPrivate::init()
