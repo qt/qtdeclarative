@@ -14,7 +14,7 @@ Item {
         id: txt
         x: 100
         text: "enter text"
-        Keys.onShortcutOverride: {
+        Keys.onShortcutOverride: (event) => {
             who = "TextEdit"
             event.accepted = (event.key === Qt.Key_Escape)
         }
@@ -26,7 +26,7 @@ Item {
         height: width
         focus: true
         color: focus ? "red" : "gray"
-        Keys.onShortcutOverride: {
+        Keys.onShortcutOverride: (event) => {
             who = "Rectangle"
             event.accepted = (event.key === Qt.Key_Escape)
         }

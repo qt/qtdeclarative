@@ -1692,8 +1692,10 @@ bool QQuickTextInput::event(QEvent* ev)
 #if QT_CONFIG(shortcut)
     Q_D(QQuickTextInput);
     if (ev->type() == QEvent::ShortcutOverride) {
-        if (d->m_readOnly)
+        if (d->m_readOnly) {
+            ev->ignore();
             return false;
+        }
         QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
         if (ke == QKeySequence::Copy
             || ke == QKeySequence::Paste
@@ -1736,6 +1738,7 @@ bool QQuickTextInput::event(QEvent* ev)
                 }
             }
         }
+        ev->ignore();
     }
 #endif
 
