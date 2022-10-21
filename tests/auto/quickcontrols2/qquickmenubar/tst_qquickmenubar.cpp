@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtTest>
 #include <QtQml>
@@ -29,6 +30,7 @@ private slots:
     void mouse();
     void keys();
     void mnemonics();
+    void altNavigation();
     void addRemove();
     void checkHighlightWhenMenuDismissed();
 
@@ -581,6 +583,35 @@ void tst_qquickmenubar::mnemonics()
     keySim.click(Qt::Key_O); // "&Oops"
     keySim.release(Qt::Key_Alt);
     QCOMPARE(oopsButtonSpy.size(), 1);
+}
+
+void tst_qquickmenubar::altNavigation()
+{
+    if (!QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::MenuBarFocusOnAltPressRelease).toBool())
+        QSKIP("Menu doesn't get focus via Alt press&release on this platform");
+
+    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+
+    centerOnScreen(window.data());
+    moveMouseAway(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
+    QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
+
+    // This logic is somewhat inverted, but QKeyEvent::modifiers() XOR's the modifier
+    // corresponding to the activated key, so pressing Alt adds the AltModifier, and
+    // releasing Alt with AltModifier removes the AltModifier.
+    QTest::keyPress(window.get(), Qt::Key_Alt);
+    QTest::keyRelease(window.get(), Qt::Key_Alt, Qt::AltModifier);
+    QVERIFY(menuBar->hasActiveFocus());
+    QVERIFY(fileMenuBarItem->isHighlighted());
 }
 
 void tst_qquickmenubar::addRemove()

@@ -7,6 +7,9 @@
 #include "qquickmenu_p.h"
 #include "qquickmenu_p_p.h"
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
+
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
@@ -425,6 +428,56 @@ QQmlListProperty<QObject> QQuickMenuBarPrivate::contentData()
 
 bool QQuickMenuBar::eventFilter(QObject *object, QEvent *event)
 {
+    Q_D(QQuickMenuBar);
+
+    if (d->altPressed) {
+        switch (event->type()) {
+        case QEvent::KeyRelease: {
+            const QKeyEvent *keyEvent = static_cast<const QKeyEvent *>(event);
+            if ((keyEvent->key() == Qt::Key_Alt || keyEvent->key() == Qt::Key_Meta)
+                && keyEvent->modifiers() == Qt::NoModifier) {
+                for (int i = 0; i < count(); ++i) {
+                    if (auto *item = qobject_cast<QQuickMenuBarItem *>(d->itemAt(i))) {
+                        d->activateItem(item);
+                        setFocusReason(Qt::MenuBarFocusReason);
+                        setFocus(true);
+                        break;
+                    }
+                }
+            }
+            Q_FALLTHROUGH();
+        }
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseButtonRelease:
+        case QEvent::MouseMove:
+        case QEvent::TabletPress:
+        case QEvent::TabletMove:
+        case QEvent::TabletRelease:
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+        case QEvent::TouchEnd:
+        case QEvent::FocusIn:
+        case QEvent::FocusOut:
+        case QEvent::ActivationChange:
+        case QEvent::Shortcut:
+            d->altPressed = false;
+            qApp->removeEventFilter(this);
+            break;
+        default:
+            break;
+        }
+    } else if (isVisible() && event->type() == QEvent::ShortcutOverride) {
+        const bool altKeyNavigation = QGuiApplicationPrivate::platformTheme()
+                                    ->themeHint(QPlatformTheme::MenuBarFocusOnAltPressRelease).toBool();
+        if (altKeyNavigation) {
+            const QKeyEvent *keyEvent = static_cast<const QKeyEvent *>(event);
+            if ((keyEvent->key() == Qt::Key_Alt || keyEvent->key() == Qt::Key_Meta)
+                && keyEvent->modifiers() == Qt::AltModifier) {
+                d->altPressed = true;
+                qApp->installEventFilter(this);
+            }
+        }
+    }
     return QObject::eventFilter(object, event);
 }
 
@@ -490,6 +543,25 @@ void QQuickMenuBar::hoverLeaveEvent(QHoverEvent *event)
 bool QQuickMenuBar::isContent(QQuickItem *item) const
 {
     return qobject_cast<QQuickMenuBarItem *>(item);
+}
+
+void QQuickMenuBar::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    Q_D(QQuickMenuBar);
+    QQuickContainer::itemChange(change, value);
+    switch (change) {
+    case ItemSceneChange:
+        if (d->windowContentItem)
+            d->windowContentItem->removeEventFilter(this);
+        if (value.window) {
+            d->windowContentItem = value.window->contentItem();
+            if (d->windowContentItem)
+                d->windowContentItem->installEventFilter(this);
+        }
+        break;
+    default:
+        break;
+    }
 }
 
 void QQuickMenuBar::itemAdded(int index, QQuickItem *item)

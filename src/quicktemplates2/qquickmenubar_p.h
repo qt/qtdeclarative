@@ -54,6 +54,7 @@ protected:
     void hoverLeaveEvent(QHoverEvent *event) override;
 
     bool isContent(QQuickItem *item) const override;
+    void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value) override;
     void itemAdded(int index, QQuickItem *item) override;
     void itemMoved(int index, QQuickItem *item) override;
     void itemRemoved(int index, QQuickItem *item) override;
