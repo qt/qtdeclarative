@@ -3,6 +3,7 @@
 
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <QQmlExpression>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtCore/qstandardpaths.h>
 
@@ -15,6 +16,31 @@ public:
 
 private Q_SLOTS:
     void standardPaths();
+    void standardLocations();
+};
+
+static const QList<QStandardPaths::StandardLocation> allStandardLocations = {
+    QStandardPaths::DesktopLocation,
+    QStandardPaths::DocumentsLocation,
+    QStandardPaths::FontsLocation,
+    QStandardPaths::ApplicationsLocation,
+    QStandardPaths::MusicLocation,
+    QStandardPaths::MoviesLocation,
+    QStandardPaths::PicturesLocation,
+    QStandardPaths::TempLocation,
+    QStandardPaths::HomeLocation,
+    QStandardPaths::AppLocalDataLocation,
+    QStandardPaths::CacheLocation,
+    QStandardPaths::GenericDataLocation,
+    QStandardPaths::RuntimeLocation,
+    QStandardPaths::ConfigLocation,
+    QStandardPaths::DownloadLocation,
+    QStandardPaths::GenericCacheLocation,
+    QStandardPaths::GenericConfigLocation,
+    QStandardPaths::AppDataLocation,
+    QStandardPaths::AppConfigLocation,
+    QStandardPaths::PublicShareLocation,
+    QStandardPaths::TemplatesLocation
 };
 
 void tst_qqmlstandardpaths::standardPaths()
@@ -46,6 +72,67 @@ void tst_qqmlstandardpaths::standardPaths()
     QCOMPARE(object->property("appConfig").toInt(), QStandardPaths::AppConfigLocation);
     QCOMPARE(object->property("locateFile").toInt(), QStandardPaths::LocateFile);
     QCOMPARE(object->property("locateDirectory").toInt(), QStandardPaths::LocateDirectory);
+}
+
+/*
+    E.g.
+
+        ENUM_VALUE_TO_STRING(QStandardPaths, StandardLocation, QStandardPaths::DesktopLocation)
+
+    would result in "DesktopLocation".
+*/
+#define ENUM_VALUE_TO_STRING(ClassType, UnqualifiedEnumType, enumValue) \
+    ClassType::staticMetaObject.enumerator(ClassType::staticMetaObject.indexOfEnumerator( \
+        #UnqualifiedEnumType)).valueToKey(enumValue)
+
+// Tests that the QML implementation of standardLocations() matches the C++ implementation.
+void tst_qqmlstandardpaths::standardLocations()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("tst_standardpaths.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    for (const QStandardPaths::StandardLocation standardLocation : allStandardLocations) {
+        // First, check that the QStandardPaths doesn't give us any empty paths.
+        // While we're at it, convert the strings to URLs to allow us to compare later on.
+        const QString locationName = ENUM_VALUE_TO_STRING(QStandardPaths, StandardLocation, standardLocation);
+        const QList<QString> standardLocationPaths = QStandardPaths::standardLocations(standardLocation);
+        QList<QUrl> standardLocationUrls;
+        bool skipLocation = false;
+        for (const auto &path : standardLocationPaths) {
+#ifdef Q_OS_ANDROID
+            // These paths are empty on Android (see QTBUG-108057 for related doc task).
+            if (standardLocation == QStandardPaths::ApplicationsLocation
+                    || standardLocation == QStandardPaths::PublicShareLocation
+                    || standardLocation == QStandardPaths::TemplatesLocation) {
+                skipLocation = true;
+                continue;
+            }
+#endif
+            QVERIFY2(!path.isEmpty(), qPrintable(QString::fromLatin1(
+                "Path for %1 received from QStandardPaths::standardLocations is empty").arg(locationName)));
+            QUrl url = QUrl(path);
+            if (url.scheme().isEmpty())
+                url = QUrl::fromLocalFile(path);
+            QVERIFY(!url.isEmpty());
+            QVERIFY(url.isValid());
+            standardLocationUrls.append(url);
+        }
+        if (skipLocation)
+            continue;
+
+        const QString qml = QLatin1String("StandardPaths.standardLocations(StandardPaths.") + locationName + QLatin1Char(')');
+        QQmlExpression qmlExpression(qmlContext(object.data()), object.data(), qml);
+        const QVariant evaluationResult = qmlExpression.evaluate();
+        QVERIFY2(!qmlExpression.hasError(), qPrintable(qmlExpression.error().toString()));
+        const auto actualValue = evaluationResult.value<QList<QUrl>>();
+        // Give some extra context to the failure message since we're not using data rows.
+        if (actualValue != standardLocationUrls)
+            qWarning() << "Comparison failed for" << locationName;
+        QCOMPARE(actualValue, standardLocationUrls);
+    }
 }
 
 QTEST_MAIN(tst_qqmlstandardpaths)
