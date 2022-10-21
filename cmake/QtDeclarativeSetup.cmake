@@ -7,6 +7,8 @@
 function(qt_declarative_write_tag_header target_name)
     set(out_file "${CMAKE_CURRENT_BINARY_DIR}/qml_compile_hash_p.h")
     if(FEATURE_developer_build AND EXISTS "${out_file}")
+        target_sources(${target_name} PRIVATE "${out_file}")
+        set_source_files_properties("${out_file}" PROPERTIES GENERATED TRUE)
         return()
     endif()
 
