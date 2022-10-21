@@ -2147,18 +2147,16 @@ void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, b
         qCDebug(lcTouch) << "actually delivering" << &touchEvent << " to " << item;
         QCoreApplication::sendEvent(item, &touchEvent);
         eventAccepted = touchEvent.isAccepted();
-    } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+    } else {
         // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
-        if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
-            // send mouse event
-            if (deliverTouchAsMouse(item, &touchEvent))
-                eventAccepted = true;
-        }
+        if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents)) &&
+                !eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton))
+            deliverTouchAsMouse(item, &touchEvent);
+        return;
     }
 
+    Q_ASSERT(item->acceptTouchEvents()); // else we would've returned early above
     if (eventAccepted) {
-        // If the touch was accepted (regardless by whom or in what form),
-        // update accepted new points.
         bool isPressOrRelease = pointerEvent->isBeginEvent() || pointerEvent->isEndEvent();
         for (int i = 0; i < touchEvent.pointCount(); ++i) {
             auto &point = touchEvent.point(i);

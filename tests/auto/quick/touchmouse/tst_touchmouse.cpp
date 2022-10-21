@@ -166,12 +166,14 @@ class GrabMonitor : public QObject
 {
 public:
     QObject *exclusiveGrabber = nullptr;
+    int transitionCount = 0;
     bool fromMouseEvent = false;
     bool canceled = false;
 
     void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point)
     {
         qCDebug(lcTests) << grabber << transition << event << point << point.device();
+        ++transitionCount;
         switch (transition) {
         case QPointingDevice::GrabTransition::GrabExclusive:
             exclusiveGrabber = grabber;
@@ -231,6 +233,8 @@ private slots:
     void touchCancelWillCancelMousePress();
 
     void oneTouchInsideAndOneOutside();
+
+    void strayTouchDoesntAutograb();
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -1598,6 +1602,46 @@ void tst_TouchMouse::oneTouchInsideAndOneOutside() // QTBUG-102996
     // Release the second finger
     QTest::touchEvent(&window, device).release(2, p2);
     QQuickTouchUtils::flush(&window);
+}
+
+void tst_TouchMouse::strayTouchDoesntAutograb() // QTBUG-107867
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("singleitem.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    EventItem *eventItem = root->findChild<EventItem*>();
+    QVERIFY(eventItem);
+    // This item accepts (synth-)mouse events but NOT touch
+    eventItem->acceptMouse = true;
+    QCOMPARE(eventItem->acceptTouchEvents(), false); // the default in Qt 6
+    QPoint p1(6, 6);
+
+    // Begin a new touch, that gets converted to a mouse press
+    QTest::touchEvent(&window, device).press(0, p1);
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "after touch press:" << eventItem->eventList;
+    QCOMPARE(eventItem->eventList.size(), 1);
+    QCOMPARE(eventItem->eventList.at(0).type, QEvent::MouseButtonPress);
+    QCOMPARE(grabMonitor.exclusiveGrabber, eventItem);
+
+    // Drag
+    for (int i = 0; i < 3; ++i) {
+        QTest::touchEvent(&window, device).move(0, p1 + QPoint(i * 5, i * 5), &window);
+        QQuickTouchUtils::flush(&window);
+        QCOMPARE(grabMonitor.transitionCount, 1); // no new grab
+        QCOMPARE(eventItem->eventList.size(), i + 2);
+        QCOMPARE(eventItem->eventList.last().type, QEvent::MouseMove);
+    }
+
+    // Press an extra point: EventItem should see nothing
+    QTest::touchEvent(&window, device).stationary(0).press(1, p1);
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "after press of second touchpoint:" << eventItem->eventList;
+    QCOMPARE(eventItem->eventList.size(), 4);
+    QCOMPARE(grabMonitor.transitionCount, 1); // no new grab
+
+    QTest::touchEvent(&window, device).release(0, p1).release(1, p1);
 }
 
 QTEST_MAIN(tst_TouchMouse)
