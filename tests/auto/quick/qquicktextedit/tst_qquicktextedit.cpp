@@ -3772,7 +3772,7 @@ void tst_qquicktextedit::largeTextObservesViewport_data()
 
     // scroll backwards
     QTest::newRow("scroll backwards in plain text") << text << QQuickTextEdit::PlainText << true << 1000 << 600
-                                                    << 10 << 72 << 97 << 600 << 1400;
+                                                    << 10 << 72 << 97 << 600 << 1500;
 
     {
         QStringList lines;
