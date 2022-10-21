@@ -42,10 +42,16 @@ To visualize data, bind the view's \c model property to a model and the
     \li \l{ListView} - arranges items in a horizontal or vertical list
     \li \l{GridView} - arranges items in a grid within the available space
     \li \l{PathView} - arranges items on a path
+    \li \l{TableView} - arranges data from a \l QAbstractTableModel in a table
+    \li \l{TreeView} - arranges data from a \l QAbstractItemModel in a tree
     \endlist
 
     These types have properties and behaviors exclusive to each type.
     Visit their respective documentation for more information.
+
+    In addition, \l{Qt Quick Controls} contains some extra views and
+    delegates that are styled according to the application style, for
+    example \l HorizontalHeaderView and \l VerticalHeaderView.
 
     \section2 Decorating Views
 
