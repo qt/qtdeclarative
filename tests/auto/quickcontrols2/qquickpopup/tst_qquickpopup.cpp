@@ -88,6 +88,7 @@ private slots:
     void dimmerContainmentMask();
     void shrinkPopupThatWasLargerThanWindow_data();
     void shrinkPopupThatWasLargerThanWindow();
+    void relativeZOrder();
 
 private:
     static bool hasWindowActivation();
@@ -1925,6 +1926,36 @@ void tst_QQuickPopup::shrinkPopupThatWasLargerThanWindow()
     QVERIFY2(popup->height() < window->height(), qPrintable(QString::fromLatin1(
         "Expected popup's height (%1) to be less than the window's height (%2)")
             .arg(popup->height()).arg(window->height())));
+}
+
+void tst_QQuickPopup::relativeZOrder()
+{
+    QQuickApplicationHelper helper(this, "relativeZOrder.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *parentDialog = window->findChild<QQuickPopup *>("parentDialog");
+    auto *subDialog = window->findChild<QQuickPopup *>("subDialog");
+
+    QVERIFY(!parentDialog->isVisible());
+    QVERIFY(!subDialog->isVisible());
+
+    QCOMPARE(parentDialog->popupItem()->parent(), parentDialog);
+    QCOMPARE(subDialog->popupItem()->parent(), subDialog);
+
+    parentDialog->open();
+    QCOMPARE(parentDialog->popupItem()->parentItem(), QQuickOverlay::overlay(window));
+    QTRY_VERIFY(parentDialog->isOpened());
+
+    subDialog->open();
+    QCOMPARE(subDialog->popupItem()->parentItem(), QQuickOverlay::overlay(window));
+    QTRY_VERIFY(subDialog->isOpened());
+
+    auto *overlayPrivate = QQuickOverlayPrivate::get(QQuickOverlay::overlay(window));
+    QCOMPARE(overlayPrivate->paintOrderChildItems().last(), subDialog->popupItem());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

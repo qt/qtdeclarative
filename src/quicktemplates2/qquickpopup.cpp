@@ -458,7 +458,27 @@ bool QQuickPopupPrivate::prepareEnterTransition()
         return false;
 
     if (transitionState != EnterTransition) {
-        popupItem->setParentItem(QQuickOverlay::overlay(window));
+        QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+        const auto popupStack = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups();
+        popupItem->setParentItem(overlay);
+        // if there is a stack of popups, and the current top popup item belongs to an
+        // ancestor of this popup, then make sure that this popup's item is at the top
+        // of the stack.
+        const QQuickPopup *topPopup = popupStack.isEmpty() ? nullptr : popupStack.first();
+        const QObject *ancestor = q;
+        while (ancestor && topPopup) {
+            if (ancestor == topPopup)
+                break;
+            ancestor = ancestor->parent();
+        }
+        if (topPopup && topPopup != q && ancestor) {
+            QQuickItem *topPopupItem = popupStack.first()->popupItem();
+            popupItem->stackAfter(topPopupItem);
+            // If the popup doesn't have an explicit z value set, set it to be at least as
+            // high as the current top popup item so that later opened popups are on top.
+            if (!hasZ)
+                popupItem->setZ(qMax(topPopupItem->z(), popupItem->z()));
+        }
         if (dim)
             createOverlay();
         showOverlay();
@@ -990,6 +1010,10 @@ void QQuickPopup::setPosition(const QPointF &pos)
     If two visible popups have the same z-value, the last one that
     was opened will be on top.
 
+    If a popup has no explicitly set z-value when opened, and is a child
+    of an already open popup, then it will be stacked on top of its parent.
+    This ensures that children are never hidden under their parents.
+
     The default z-value is \c 0.
 
     \sa x, y
@@ -1003,6 +1027,7 @@ qreal QQuickPopup::z() const
 void QQuickPopup::setZ(qreal z)
 {
     Q_D(QQuickPopup);
+    d->hasZ = true;
     if (qFuzzyCompare(z, d->popupItem->z()))
         return;
     d->popupItem->setZ(z);

@@ -140,6 +140,7 @@ public:
     bool hasLeftMargin = false;
     bool hasRightMargin = false;
     bool hasBottomMargin = false;
+    bool hasZ = false;
     bool allowVerticalFlip = false;
     bool allowHorizontalFlip = false;
     bool allowVerticalMove = true;
