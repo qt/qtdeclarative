@@ -430,7 +430,7 @@ public:
     }
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanup();
     void aboutToStopSignal();
 
@@ -546,8 +546,8 @@ private slots:
     void graphicsConfiguration();
 
 private:
-    QPointingDevice *touchDevice;
-    QPointingDevice *touchDeviceWithVelocity;
+    QPointingDevice *touchDevice; // TODO make const after fixing QTBUG-107864
+    const QPointingDevice *touchDeviceWithVelocity;
     const QPointingDevice *tabletStylusDevice;
 };
 
@@ -3636,7 +3636,7 @@ void tst_qquickwindow::subclassWithPointerEventVirtualOverrides_data()
     QTest::addColumn<const QPointingDevice *>("device");
 
     QTest::newRow("mouse click") << QPointingDevice::primaryPointingDevice();
-    QTest::newRow("touch tap") << touchDevice;
+    QTest::newRow("touch tap") << static_cast<const QPointingDevice*>(touchDevice); // TODO QTBUG-107864
     QTest::newRow("stylus tap") << tabletStylusDevice;
 }
 

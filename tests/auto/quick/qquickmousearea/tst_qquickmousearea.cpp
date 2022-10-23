@@ -150,7 +150,7 @@ private:
     }
     void acceptedButton_data();
     void rejectedButton_data();
-    QPointingDevice *device = QTest::createTouchDevice();
+    QPointingDevice *device = QTest::createTouchDevice(); // TODO const after fixing QTBUG-107864
 };
 
 Q_DECLARE_METATYPE(Qt::MouseButton)
@@ -1539,7 +1539,7 @@ void tst_QQuickMouseArea::disableParentOnPress_data()
     QTest::addColumn<const QPointingDevice *>("device");
 
     QTest::newRow("core pointer") << QPointingDevice::primaryPointingDevice();
-    QTest::newRow("touch") << device;
+    QTest::newRow("touch") << static_cast<const QPointingDevice *>(device); // TODO QTBUG-107864
 }
 
 void tst_QQuickMouseArea::disableParentOnPress() // QTBUG-39806 and QTBUG-103788

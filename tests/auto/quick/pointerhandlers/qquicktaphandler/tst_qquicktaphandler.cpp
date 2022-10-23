@@ -59,7 +59,7 @@ private slots:
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName,
                     QWindow *parent = nullptr);
-    QPointingDevice *touchDevice = QTest::createTouchDevice();
+    QPointingDevice *touchDevice = QTest::createTouchDevice(); // TODO const after fixing QTBUG-107864
     void mouseEvent(QEvent::Type type, Qt::MouseButton button, const QPoint &point,
                     QWindow *targetWindow, QWindow *mapToWindow);
 };
@@ -420,12 +420,14 @@ void tst_TapHandler::gesturePolicyDragWithinBounds_data()
     QTest::addColumn<QPoint>("dragDistance");
     QTest::addColumn<QString>("expectedFeedback");
 
+    const QPointingDevice *constTouchDevice = touchDevice;
+
     QTest::newRow("mouse: click") << QPointingDevice::primaryPointingDevice() << QPoint(200, 200) << QPoint(0, 0) << "middle";
-    QTest::newRow("touch: tap") << touchDevice << QPoint(200, 200) << QPoint(0, 0) << "middle";
+    QTest::newRow("touch: tap") << constTouchDevice << QPoint(200, 200) << QPoint(0, 0) << "middle";
     QTest::newRow("mouse: drag up") << QPointingDevice::primaryPointingDevice() << QPoint(200, 200) << QPoint(0, -20) << "top";
-    QTest::newRow("touch: drag up") << touchDevice << QPoint(200, 200) << QPoint(0, -20) << "top";
+    QTest::newRow("touch: drag up") << constTouchDevice << QPoint(200, 200) << QPoint(0, -20) << "top";
     QTest::newRow("mouse: drag out to cancel") << QPointingDevice::primaryPointingDevice() << QPoint(435, 200) << QPoint(10, 0) << "canceled";
-    QTest::newRow("touch: drag out to cancel") << touchDevice << QPoint(435, 200) << QPoint(10, 0) << "canceled";
+    QTest::newRow("touch: drag out to cancel") << constTouchDevice << QPoint(435, 200) << QPoint(10, 0) << "canceled";
 }
 
 void tst_TapHandler::gesturePolicyDragWithinBounds()
