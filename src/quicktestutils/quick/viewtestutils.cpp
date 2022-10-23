@@ -475,6 +475,10 @@ namespace QQuickTest {
         }
         const QRect screenGeometry = view.screen()->availableGeometry();
         const QSize size = view.size();
+        if (view.width() == 0)
+            view.setWidth(100);
+        if (view.height() == 0)
+            view.setHeight(100);
         const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
         view.setFramePosition(screenGeometry.center() - offset);
     #if QT_CONFIG(cursor) // Get the cursor out of the way.
