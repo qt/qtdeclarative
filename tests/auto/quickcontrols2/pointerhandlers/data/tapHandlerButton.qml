@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 
 Rectangle {
+    width: 150; height: 150
     color: th.pressed ? "lightsteelblue" : "beige"
     Button {
         text: pressed ? "pressed" : ""
