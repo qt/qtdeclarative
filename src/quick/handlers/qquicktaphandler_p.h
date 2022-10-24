@@ -114,6 +114,8 @@ private:
     static int m_touchMultiTapDistanceSquared;
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTapHandler::ExclusiveSignals)
+
 QT_END_NAMESPACE
 
 #endif // QQUICKTAPHANDLER_H
