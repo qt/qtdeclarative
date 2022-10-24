@@ -283,6 +283,7 @@ void QQuickPopupPrivate::closeOrReject()
         dialog->reject();
     else
         q->close();
+    touchId = -1;
 }
 
 bool QQuickPopupPrivate::tryClose(const QPointF &pos, QQuickPopup::ClosePolicy flags)
