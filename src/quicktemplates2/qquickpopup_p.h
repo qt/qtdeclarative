@@ -44,7 +44,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
     Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
-    Q_PROPERTY(qreal z READ z WRITE setZ NOTIFY zChanged FINAL)
+    Q_PROPERTY(qreal z READ z WRITE setZ RESET resetZ NOTIFY zChanged FINAL)
     Q_PROPERTY(qreal width READ width WRITE setWidth RESET resetWidth NOTIFY widthChanged FINAL)
     Q_PROPERTY(qreal height READ height WRITE setHeight RESET resetHeight NOTIFY heightChanged FINAL)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
@@ -121,6 +121,7 @@ public:
 
     qreal z() const;
     void setZ(qreal z);
+    void resetZ();
 
     qreal width() const;
     void setWidth(qreal width);

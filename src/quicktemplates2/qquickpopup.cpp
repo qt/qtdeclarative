@@ -1034,6 +1034,13 @@ void QQuickPopup::setZ(qreal z)
     emit zChanged();
 }
 
+void QQuickPopup::resetZ()
+{
+    Q_D(QQuickPopup);
+    setZ(0);
+    d->hasZ = false;
+}
+
 /*!
     \qmlproperty real QtQuick.Controls::Popup::width
 
