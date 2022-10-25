@@ -29,10 +29,10 @@ private slots:
     void init();
     void cleanup();
 
-    void sgexamples_data();
-    void sgexamples();
-    void sgsnippets_data();
-    void sgsnippets();
+    void examples_data();
+    void examples();
+    void snippets_data();
+    void snippets();
 
     void namingConvention();
 private:
@@ -87,13 +87,13 @@ tst_examples::~tst_examples()
 
 void tst_examples::init()
 {
-    if (!qstrcmp(QTest::currentTestFunction(), "sgsnippets"))
+    if (!qstrcmp(QTest::currentTestFunction(), "snippets"))
         testlibMsgHandler = qInstallMessageHandler(msgHandlerFilter);
 }
 
 void tst_examples::cleanup()
 {
-    if (!qstrcmp(QTest::currentTestFunction(), "sgsnippets"))
+    if (!qstrcmp(QTest::currentTestFunction(), "snippets"))
         qInstallMessageHandler(testlibMsgHandler);
 }
 
@@ -205,10 +205,10 @@ that they start and exit cleanly.
 Examples are any .qml files under the examples/ directory that start
 with a lower case letter.
 */
-void tst_examples::sgexamples_data()
+void tst_examples::examples_data()
 {
 #ifdef Q_OS_ANDROID
-    QSKIP("tst_examples::sgexamples_data needs adaptions for Android, QTBUG-102858.");
+    QSKIP("tst_examples::examples_data needs adaptions for Android, QTBUG-102858.");
 #endif
     QTest::addColumn<QString>("file");
 
@@ -227,7 +227,7 @@ void tst_examples::sgexamples_data()
         QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
 }
 
-void tst_examples::sgexamples()
+void tst_examples::examples()
 {
     QFETCH(QString, file);
     QQuickWindow window;
@@ -255,10 +255,10 @@ void tst_examples::sgexamples()
     qApp->processEvents();
 }
 
-void tst_examples::sgsnippets_data()
+void tst_examples::snippets_data()
 {
 #ifdef Q_OS_ANDROID
-    QSKIP("tst_examples::sgsnippets_data needs adaptions for Android, QTBUG-102858.");
+    QSKIP("tst_examples::snippets_data needs adaptions for Android, QTBUG-102858.");
 #endif
     QTest::addColumn<QString>("file");
 
@@ -287,7 +287,7 @@ void tst_examples::sgsnippets_data()
         QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
 }
 
-void tst_examples::sgsnippets()
+void tst_examples::snippets()
 {
 
     QFETCH(QString, file);
