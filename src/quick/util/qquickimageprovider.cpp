@@ -476,6 +476,7 @@ public:
     }
 
     QColorSpace targetColorSpace;
+    QRectF sourceClipRect;
     QQuickImageProviderOptions::AutoTransform autoTransform = QQuickImageProviderOptions::UsePluginDefaultTransform;
     bool preserveAspectRatioCrop = false;
     bool preserveAspectRatioFit = false;
@@ -580,6 +581,19 @@ QColorSpace QQuickImageProviderOptions::targetColorSpace() const
 void QQuickImageProviderOptions::setTargetColorSpace(const QColorSpace &colorSpace)
 {
     d->targetColorSpace = colorSpace;
+}
+
+/*!
+    Returns the requested source clip rect.
+*/
+QRectF QQuickImageProviderOptions::sourceClipRect() const
+{
+    return d->sourceClipRect;
+}
+
+void QQuickImageProviderOptions::setSourceClipRect(const QRectF &rect)
+{
+    d->sourceClipRect = rect;
 }
 
 QQuickImageProviderWithOptions::QQuickImageProviderWithOptions(ImageType type, Flags flags)

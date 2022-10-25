@@ -83,6 +83,9 @@ public:
     QColorSpace targetColorSpace() const;
     void setTargetColorSpace(const QColorSpace &colorSpace);
 
+    QRectF sourceClipRect() const;
+    void setSourceClipRect(const QRectF &rect);
+
 private:
     QSharedDataPointer<QQuickImageProviderOptionsPrivate> d;
 };
