@@ -106,6 +106,16 @@
       integers.append(jsArray.property(i).toInt());
   }
   \endcode
+
+  \section2 Converting to JSON
+
+  It's possible to convert a QJSValue to a JSON type. For example,
+  to convert to an array, use \l QJSEngine::fromScriptValue():
+
+  \code
+  const QJsonValue jsonValue = engine.fromScriptValue<QJsonValue>(jsValue);
+  const QJsonArray jsonArray = jsonValue.toArray();
+  \endcode
 */
 
 /*!
