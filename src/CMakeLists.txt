@@ -28,8 +28,8 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     add_subdirectory(quick)
     add_subdirectory(quicklayouts)
 
-    find_package(Qt6 ${PROJECT_VERSION} CONFIG COMPONENTS Test) # special case
-    if(QT_FEATURE_testlib AND TARGET Qt::Test) # special case
+    find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Test)
+    if(QT_FEATURE_testlib AND TARGET Qt::Test)
         add_subdirectory(qmltest)
         add_subdirectory(quicktestutils)
     endif()
@@ -52,7 +52,7 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     add_subdirectory(quickdialogs2)
     add_subdirectory(quicknativestyle)
 
-    if(TARGET Qt::QuickControls2)
+    if(QT_FEATURE_testlib AND TARGET Qt::Test AND TARGET Qt::QuickControls2)
         add_subdirectory(quickcontrolstestutils)
     endif()
 else()
