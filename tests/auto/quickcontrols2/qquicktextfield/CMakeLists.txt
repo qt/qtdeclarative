@@ -1,6 +1,12 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
+if (NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
+    cmake_minimum_required(VERSION 3.16)
+    project(tst_qquicktextfield LANGUAGES C CXX ASM)
+    find_package(Qt6BuildInternals COMPONENTS STANDALONE_TEST)
+endif()
+
 #####################################################################
 ## tst_qquicktextfield Test:
 #####################################################################
