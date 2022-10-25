@@ -123,7 +123,6 @@ extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlSyntax;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlSyntaxIdQuotation;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlSyntaxDuplicateIds;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlCompiler;
-extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlControlsSanity;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAttachedPropertyReuse;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlPlugin;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlVarUsedBeforeDeclaration;

@@ -32,8 +32,7 @@ using namespace Qt::StringLiterals;
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
     for (const QQmlJSLogger::Category &category : logger.categories()) {
-        if (category == qmlControlsSanity // this category is just weird
-            || category == qmlUnusedImports)
+        if (category == qmlUnusedImports)
             continue;
         logger.setCategoryLevel(category.id(), QtCriticalMsg);
         logger.setCategoryIgnored(category.id(), false);

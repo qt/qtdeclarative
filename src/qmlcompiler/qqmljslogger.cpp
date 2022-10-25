@@ -48,7 +48,6 @@ const LoggerWarningId qmlSyntax { "syntax" };
 const LoggerWarningId qmlSyntaxIdQuotation { "syntax.id-quotation" };
 const LoggerWarningId qmlSyntaxDuplicateIds { "syntax.duplicate-ids" };
 const LoggerWarningId qmlCompiler { "compiler" };
-const LoggerWarningId qmlControlsSanity { "controls-sanity" };
 const LoggerWarningId qmlAttachedPropertyReuse { "attached-property-reuse" };
 const LoggerWarningId qmlPlugin { "plugin" };
 const LoggerWarningId qmlVarUsedBeforeDeclaration { "var-used-before-declaration" };
@@ -146,12 +145,6 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                                  QStringLiteral("ID duplication"), QtCriticalMsg, false, true },
         QQmlJSLogger::Category { qmlCompiler.name().toString(), QStringLiteral("CompilerWarnings"),
                                  QStringLiteral("Warn about compiler issues"), QtWarningMsg, true },
-
-        QQmlJSLogger::Category {
-                qmlControlsSanity.name().toString(), QStringLiteral("ControlsSanity"),
-                QStringLiteral("Performance checks used for QuickControl's implementation"),
-                QtCriticalMsg, true },
-
         QQmlJSLogger::Category {
                 qmlAttachedPropertyReuse.name().toString(), QStringLiteral("AttachedPropertyReuse"),
                 QStringLiteral("Warn if attached types from parent components aren't reused"),

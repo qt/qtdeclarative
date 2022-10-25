@@ -1,0 +1,14 @@
+{
+    "name": "QuickControlsSanity",
+    "author": "Qt",
+    "description": "Log warnings about quick controls sanity",
+    "version": "1.0",
+    "isInternal": true,
+    "loggingCategories": [
+        {
+            "name": "controls-sanity",
+            "settingsName": "ControlsSanity",
+            "description": "Performance checks used for QuickControl's implementation"
+        }
+    ]
+}

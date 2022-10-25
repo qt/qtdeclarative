@@ -58,9 +58,6 @@ private Q_SLOTS:
     void compilerWarnings_data();
     void compilerWarnings();
 
-    void controlsSanity_data();
-    void controlsSanity();
-
     void testUnknownCausesFail();
 
     void directoryPassedAsQmlTypesFile();
@@ -1263,37 +1260,6 @@ void TestQmllint::compilerWarnings()
 
     if (enableCompilerWarnings)
         category->setLevel(u"warning"_s);
-
-    runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
-}
-
-void TestQmllint::controlsSanity_data()
-{
-    QTest::addColumn<QString>("filename");
-    QTest::addColumn<Result>("result");
-    QTest::newRow("functionDeclarations")
-            << QStringLiteral("functionDeclarations.qml")
-            << Result { { Message { QStringLiteral("Declared function \"add\"") } } };
-    QTest::newRow("signalHandlers")
-            << QStringLiteral("signalHandlers.qml")
-            << Result { { Message { QStringLiteral("Declared signal handler \"onCompleted\"") } } };
-    QTest::newRow("anchors") << QStringLiteral("anchors.qml")
-                             << Result { { Message { QStringLiteral("Using anchors here") } } };
-}
-
-void TestQmllint::controlsSanity()
-{
-    QFETCH(QString, filename);
-    QFETCH(Result, result);
-
-    QJsonArray warnings;
-
-    auto categories = QQmlJSLogger::defaultCategories();
-
-    auto category = std::find(categories.begin(), categories.end(), qmlControlsSanity);
-    Q_ASSERT(category != categories.end());
-
-    category->setLevel(u"warning"_s);
 
     runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
 }

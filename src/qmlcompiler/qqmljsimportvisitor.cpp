@@ -1715,8 +1715,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiSourceElement *srcElement)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)
 {
-    m_logger->log(u"Declared function \"%1\""_s.arg(fdecl->name), qmlControlsSanity,
-                  fdecl->firstSourceLocation());
     visitFunctionExpressionHelper(fdecl);
     return true;
 }
@@ -2001,10 +1999,6 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 
     auto name = group->name.toString();
 
-    if (id && id->name.toString() == u"anchors")
-        m_logger->log(u"Using anchors here"_s, qmlControlsSanity,
-                      scriptBinding->firstSourceLocation());
-
     // This is a preliminary check.
     // Even if the name starts with "on", it might later turn out not to be a signal.
     const auto signal = QQmlJSUtils::signalName(name);
@@ -2025,9 +2019,6 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                     signalParameters << formal->element->bindingIdentifier.toString();
             }
         }
-
-        m_logger->log(u"Declared signal handler \"%1\""_s.arg(name), qmlControlsSanity,
-                      scriptBinding->firstSourceLocation());
 
         QQmlJSMetaMethod scopeSignal;
         const auto methods = m_currentScope->methods(*signal, QQmlJSMetaMethod::Signal);

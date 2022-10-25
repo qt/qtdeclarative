@@ -9,9 +9,19 @@ if (NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
     find_package(Qt6BuildInternals COMPONENTS STANDALONE_TEST)
 endif()
 
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*)
+list(APPEND test_data ${test_data_glob})
+
 #####################################################################
 ## tst_sanity Test:
 #####################################################################
+
+add_library(QuickControlsSanityPlugin STATIC quickcontrolssanity.h quickcontrolssanity.cpp)
+target_link_libraries(QuickControlsSanityPlugin PRIVATE Qt::QmlCompilerPrivate)
+qt_autogen_tools_initial_setup(QuickControlsSanityPlugin)
+target_compile_definitions(QuickControlsSanityPlugin PRIVATE QT_STATICPLUGIN)
 
 qt_internal_add_test(tst_sanity
     SOURCES
@@ -33,6 +43,8 @@ qt_internal_add_test(tst_sanity
         Qt::QuickTestUtilsPrivate
         Qt::TestPrivate
         Qt::QmlCompilerPrivate
+        QuickControlsSanityPlugin
+    TESTDATA ${test_data}
 )
 
 #### Keys ignored in scope 1:.:.:sanity.pro:<TRUE>:
