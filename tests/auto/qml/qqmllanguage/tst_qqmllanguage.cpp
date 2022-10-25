@@ -5066,19 +5066,18 @@ static void beginDeferredOnce(QQmlEnginePrivate *enginePriv,
         QQmlComponentPrivate::ConstructionState state;
         state.completePending = true;
 
-        state.creator.reset(new QQmlObjectCreator(
-                                 deferData->context->parent(), deferData->compilationUnit,
-                                 QQmlRefPointer<QQmlContextData>()));
+        state.initCreator(deferData->context->parent(), deferData->compilationUnit,
+                                 QQmlRefPointer<QQmlContextData>());
 
         enginePriv->inProgressCreations++;
 
         std::deque<const QV4::CompiledData::Binding *> reversedBindings;
         std::copy(range.first, range.second, std::front_inserter(reversedBindings));
-        state.creator->beginPopulateDeferred(deferData->context);
+        state.creator()->beginPopulateDeferred(deferData->context);
         for (const QV4::CompiledData::Binding *binding: reversedBindings)
-            state.creator->populateDeferredBinding(property, deferData->deferredIdx, binding);
-        state.creator->finalizePopulateDeferred();
-        state.appendErrors(state.creator->errors);
+            state.creator()->populateDeferredBinding(property, deferData->deferredIdx, binding);
+        state.creator()->finalizePopulateDeferred();
+        state.appendErrors(state.creator()->errors);
 
         deferredState->push_back(std::move(state));
 

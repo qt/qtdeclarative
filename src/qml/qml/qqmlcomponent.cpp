@@ -308,13 +308,13 @@ void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data
 
 RequiredProperties &QQmlComponentPrivate::requiredProperties()
 {
-    Q_ASSERT(state.creator);
-    return state.creator->requiredProperties();
+    Q_ASSERT(state.hasCreator());
+    return state.creator()->requiredProperties();
 }
 
 bool QQmlComponentPrivate::hadTopLevelRequiredProperties() const
 {
-    return state.creator->componentHadTopLevelRequiredProperties();
+    return state.creator()->componentHadTopLevelRequiredProperties();
 }
 
 void QQmlComponentPrivate::clear()
@@ -413,7 +413,7 @@ QQmlComponent::~QQmlComponent()
         }
 
         // we might not have the creator anymore if the engine is gone
-        if (d->state.creator)
+        if (d->state.hasCreator())
             d->completeCreate();
     }
 
@@ -539,7 +539,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QObject *parent)
     Q_D(QQmlComponent);
     d->engine = engine;
     QObject::connect(engine, &QObject::destroyed, this, [d]() {
-        d->state.creator.reset();
+        d->state.clear();
         d->engine = nullptr;
     });
 }
@@ -1004,7 +1004,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
                                           return e.isTransient;
                                       }),
                        state.errors.end());
-    if (state.creator)
+    if (state.hasCreator())
         requiredProperties().clear();
 
     if (!q->isReady()) {
@@ -1029,10 +1029,10 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
 
     if (!loadedType.isValid()) {
         enginePriv->referenceScarceResources();
-        state.creator.reset(new QQmlObjectCreator(std::move(context), compilationUnit, creationContext));
-        rv = state.creator->create(start);
+        state.initCreator(std::move(context), compilationUnit, creationContext);
+        rv = state.creator()->create(start);
         if (!rv)
-            state.appendErrors(state.creator->errors);
+            state.appendErrors(state.creator()->errors);
         enginePriv->dereferenceScarceResources();
     } else {
         rv = loadedType.createWithQQmlData();
@@ -1065,12 +1065,13 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
         ConstructionState state;
         state.completePending = true;
 
-        state.creator.reset(new QQmlObjectCreator(
-                                 deferredData->context->parent(), deferredData->compilationUnit,
-                                 QQmlRefPointer<QQmlContextData>()));
+        auto creator = state.initCreator(
+                    deferredData->context->parent(),
+                    deferredData->compilationUnit,
+                    QQmlRefPointer<QQmlContextData>());
 
-        if (!state.creator->populateDeferredProperties(object, deferredData))
-            state.appendErrors(state.creator->errors);
+        if (!creator->populateDeferredProperties(object, deferredData))
+            state.appendErrors(creator->errors);
         deferredData->bindings.clear();
 
         deferredState->push_back(std::move(state));
@@ -1087,7 +1088,7 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 {
     if (state->completePending) {
         QQmlInstantiationInterrupt interrupt;
-        state->creator->finalize(interrupt);
+        state->creator()->finalize(interrupt);
 
         state->completePending = false;
 

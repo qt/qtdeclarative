@@ -90,7 +90,6 @@ public:
     };
 
     struct ConstructionState {
-        std::unique_ptr<QQmlObjectCreator> creator;
         QList<AnnotatedQmlError> errors;
         bool completePending = false;
 
@@ -99,6 +98,23 @@ public:
             for (const QQmlError &e : qmlErrors)
                 errors.emplaceBack(e);
         }
+
+        QQmlObjectCreator *creator() {return m_creator.get(); }
+        const QQmlObjectCreator *creator() const {return m_creator.get(); }
+        bool hasCreator() const { return m_creator != nullptr; }
+        void clear() { m_creator.reset(); }
+        QQmlObjectCreator *initCreator(QQmlRefPointer<QQmlContextData> parentContext,
+                         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+                         const QQmlRefPointer<QQmlContextData> &creationContext)
+        {
+            m_creator.reset(new QQmlObjectCreator(
+                std::move(parentContext), compilationUnit,
+                creationContext));
+            return m_creator.get();
+        }
+
+        private:
+        std::unique_ptr<QQmlObjectCreator> m_creator;
     };
     ConstructionState state;
 
