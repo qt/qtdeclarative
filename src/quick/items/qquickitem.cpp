@@ -7914,6 +7914,9 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
     if (!hasHover && subtreeHoverEnabled) {
         if (hoverEnabled)
             return; // nope! sorry, I need hover myself
+        if (hasEnabledHoverHandlers())
+            return; // nope! sorry, this item has enabled HoverHandlers
+
         for (QQuickItem *otherChild : std::as_const(childItems)) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
             if (otherChildPrivate->subtreeHoverEnabled || otherChildPrivate->hoverEnabled)

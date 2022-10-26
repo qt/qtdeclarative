@@ -47,6 +47,7 @@ private slots:
     void deviceCursor_data();
     void deviceCursor();
     void addHandlerFromCpp();
+    void ensureHoverHandlerWorksWhenItemHasHoverDisabled();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -619,6 +620,45 @@ void tst_HoverHandler::addHandlerFromCpp()
     // Reparent back the item to the handler
     spy.clear();
     handler->setParentItem(childItem);
+
+    // Move mouse inside child
+    QTest::mouseMove(window.data(), inside);
+    QVERIFY(handler->isHovered());
+    QCOMPARE(spy.count(), 1);
+
+    // Move mouse outside child
+    QTest::mouseMove(window.data(), outside);
+    QVERIFY(!handler->isHovered());
+    QCOMPARE(spy.count(), 2);
+}
+
+void tst_HoverHandler::ensureHoverHandlerWorksWhenItemHasHoverDisabled()
+{
+    // Check that a hover handler with a leaf item as parent, continues to
+    // receive hover, even if the item itself stops listening for hover.
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("nohandler.qml"));
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(!window.isNull());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickItem *childItem = window->findChild<QQuickItem *>("childItem");
+    QVERIFY(childItem);
+
+    // Move mouse outside child
+    const QPoint outside(200, 200);
+    const QPoint inside(50, 50);
+    QTest::mouseMove(window.data(), outside);
+
+    QQuickHoverHandler *handler = new QQuickHoverHandler(childItem);
+
+    // Toggle hover on the item. This should not clear subtreeHoverEnabled
+    // on the item as a whole, since it still has a hover handler.
+    childItem->setAcceptHoverEvents(true);
+    childItem->setAcceptHoverEvents(false);
+    QSignalSpy spy(handler, &QQuickHoverHandler::hoveredChanged);
 
     // Move mouse inside child
     QTest::mouseMove(window.data(), inside);
