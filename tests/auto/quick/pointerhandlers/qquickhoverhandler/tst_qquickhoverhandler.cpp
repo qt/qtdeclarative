@@ -46,6 +46,7 @@ private slots:
     void window();
     void deviceCursor_data();
     void deviceCursor();
+    void addHandlerFromCpp();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -565,6 +566,69 @@ void tst_HoverHandler::deviceCursor()
     QCOMPARE(eraserHandler->isHovered(), false);
     QCOMPARE(aibrushHandler->isHovered(), false);
     QCOMPARE(airbrushEraserHandler->isHovered(), true); // there was no fresh QTabletEvent to tell it not to be hovered
+}
+
+void tst_HoverHandler::addHandlerFromCpp()
+{
+    // Check that you can create a hover handler from c++, and add it
+    // as a child of an existing item. Continue to check that you can
+    // also change the parent item at runtime.
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("nohandler.qml"));
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(!window.isNull());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickItem *childItem = window->findChild<QQuickItem *>("childItem");
+    QVERIFY(childItem);
+
+    // Move mouse outside child
+    const QPoint outside(200, 200);
+    const QPoint inside(50, 50);
+    QTest::mouseMove(window.data(), outside);
+
+    QQuickHoverHandler *handler = new QQuickHoverHandler(childItem);
+    QSignalSpy spy(handler, &QQuickHoverHandler::hoveredChanged);
+
+    // Move mouse inside child
+    QTest::mouseMove(window.data(), inside);
+    QVERIFY(handler->isHovered());
+    QCOMPARE(spy.count(), 1);
+
+    // Move mouse outside child
+    QTest::mouseMove(window.data(), outside);
+    QVERIFY(!handler->isHovered());
+    QCOMPARE(spy.count(), 2);
+
+    // Remove the parent item from the handler
+    spy.clear();
+    handler->setParentItem(nullptr);
+
+    // Move mouse inside child
+    QTest::mouseMove(window.data(), inside);
+    QVERIFY(!handler->isHovered());
+    QCOMPARE(spy.count(), 0);
+
+    // Move mouse outside child
+    QTest::mouseMove(window.data(), outside);
+    QVERIFY(!handler->isHovered());
+    QCOMPARE(spy.count(), 0);
+
+    // Reparent back the item to the handler
+    spy.clear();
+    handler->setParentItem(childItem);
+
+    // Move mouse inside child
+    QTest::mouseMove(window.data(), inside);
+    QVERIFY(handler->isHovered());
+    QCOMPARE(spy.count(), 1);
+
+    // Move mouse outside child
+    QTest::mouseMove(window.data(), outside);
+    QVERIFY(!handler->isHovered());
+    QCOMPARE(spy.count(), 2);
 }
 
 QTEST_MAIN(tst_HoverHandler)

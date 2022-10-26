@@ -597,15 +597,18 @@ QQuickItem *QQuickPointerHandler::parentItem() const
 
 void QQuickPointerHandler::setParentItem(QQuickItem *p)
 {
+    Q_D(QQuickPointerHandler);
     if (QObject::parent() == p)
         return;
 
     qCDebug(lcHandlerParent) << "reparenting handler" << this << ":" << parent() << "->" << p;
-    if (auto *oldParent = static_cast<QQuickItem *>(QObject::parent()))
+    auto *oldParent = static_cast<QQuickItem *>(QObject::parent());
+    if (oldParent)
         QQuickItemPrivate::get(oldParent)->removePointerHandler(this);
     setParent(p);
     if (p)
         QQuickItemPrivate::get(p)->addPointerHandler(this);
+    d->onParentChanged(oldParent, p);
     emit parentChanged();
 }
 
