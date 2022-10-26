@@ -2046,18 +2046,23 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         QSGNode *desiredNode = nullptr;
 
         while (currentNode && (desiredNode = fetchNextNode(itemPriv, ii, fetchedPaintNode))) {
-            // uh oh... reality and our utopic paradise are diverging!
-            // we need to reconcile this...
             if (currentNode != desiredNode) {
-                // for now, we're just removing the node from the children -
-                // and replacing it with the new node.
-                if (desiredNode->parent())
-                    desiredNode->parent()->removeChildNode(desiredNode);
-                groupNode->insertChildNodeAfter(desiredNode, currentNode);
-                groupNode->removeChildNode(currentNode);
+                // uh oh... reality and our utopic paradise are diverging!
+                // we need to reconcile this...
+                if (currentNode->nextSibling() == desiredNode) {
+                    // nice and simple: a node was removed, and the next in line is correct.
+                    groupNode->removeChildNode(currentNode);
+                } else {
+                    // a node needs to be added..
+                    // remove it from any pre-existing parent, and push it before currentNode,
+                    // so it's in the correct place...
+                    if (desiredNode->parent()) {
+                        desiredNode->parent()->removeChildNode(desiredNode);
+                    }
+                    groupNode->insertChildNodeBefore(desiredNode, currentNode);
+                }
 
-                // since we just replaced currentNode, we also need to reset
-                // the pointer.
+                // continue iteration at the correct point, now desiredNode is in place...
                 currentNode = desiredNode;
             }
 
