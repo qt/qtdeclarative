@@ -73,17 +73,12 @@ ApplicationWindow {
             Button {
                 text: qsTr("Next")
                 onClicked: gameOfLifeModel.nextStep()
+                Layout.rightMargin: 50
             }
             //! [next]
 
-            Item {
-                width: 50
-            }
-
             Slider {
                 id: slider
-                x: 245
-                y: 17
                 from: 0
                 to: 1
                 value: 0.9

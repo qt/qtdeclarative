@@ -37,6 +37,8 @@ qt_add_qml_module(gameoflife
     QML_FILES main.qml
     RESOURCES gosperglidergun.cells
     NO_RESOURCE_TARGET_PATH
+    DEPENDENCIES
+        QtQml.Models
 )
 
 install(TARGETS gameoflife
