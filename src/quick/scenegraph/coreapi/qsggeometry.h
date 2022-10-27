@@ -165,6 +165,7 @@ public:
     void setLineWidth(float w);
 
 private:
+    Q_DISABLE_COPY_MOVE(QSGGeometry)
     friend class QSGGeometryData;
 
     int m_drawing_mode;
