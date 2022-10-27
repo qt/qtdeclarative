@@ -353,11 +353,10 @@ bool QQuickStateGroupPrivate::updateAutoState()
                 if (abstractBinding && abstractBinding->kind() == QQmlAbstractBinding::QmlBinding) {
                     QQmlBinding *binding = static_cast<QQmlBinding *>(abstractBinding);
                     if (binding->hasValidContext()) {
-                        QVariant evalResult = binding->evaluate();
-                        if (evalResult.metaType() == QMetaType::fromType<QJSValue>())
-                            whenValue = evalResult.value<QJSValue>().toBool();
-                        else
-                            whenValue = evalResult.toBool();
+                        const auto boolType = QMetaType::fromType<bool>();
+                        const bool isUndefined = !binding->evaluate(&whenValue, boolType);
+                        if (isUndefined)
+                            whenValue = false;
                     }
                 }
 
