@@ -1071,7 +1071,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
 
         if (!child->isVisible() || childPrivate->culled)
             continue;
-        if (!child->isEnabled() && !childPrivate->subtreeHoverEnabled)
+        if (!childPrivate->subtreeHoverEnabled)
             continue;
         if (childPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
             const QPointF localPos = child->mapFromScene(scenePos);
