@@ -79,6 +79,10 @@ public:
     };
 
     QVariant evaluate();
+    bool evaluate(void *result, QMetaType type)
+    {
+        return QQmlJavaScriptExpression::evaluate(&result, &type, 0);
+    }
 
     void expressionChanged() override;
 
@@ -116,10 +120,6 @@ protected:
                    QQmlPropertyData::WriteFlags flags);
 
     QV4::ReturnedValue evaluate(bool *isUndefined);
-    bool evaluate(void *result, QMetaType type)
-    {
-        return QQmlJavaScriptExpression::evaluate(&result, &type, 0);
-    }
 
 private:
     static QQmlBinding *newBinding(const QQmlPropertyData *property);
