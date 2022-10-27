@@ -175,6 +175,7 @@ private slots:
     void revertListMemoryLeak();
     void duplicateStateName();
     void trivialWhen();
+    void jsValueWhen_data();
     void jsValueWhen();
     void noStateOsciallation();
     void parentChangeCorrectReversal();
@@ -1695,11 +1696,20 @@ void tst_qquickstates::trivialWhen()
     QVERIFY(root);
 }
 
+
+void tst_qquickstates::jsValueWhen_data()
+{
+    QTest::addColumn<QByteArray>("fileName");
+    QTest::addRow("jsObject") << QByteArray("jsValueWhen.qml");
+    QTest::addRow("qmlObject") << QByteArray("jsValueWhen2.qml");
+}
+
 void tst_qquickstates::jsValueWhen()
 {
+    QFETCH(QByteArray, fileName);
     QQmlEngine engine;
 
-    QQmlComponent c(&engine, testFileUrl("jsValueWhen.qml"));
+    QQmlComponent c(&engine, testFileUrl(fileName.constData()));
     QScopedPointer<QObject> root(c.create());
     QVERIFY(root);
     QVERIFY(root->property("works").toBool());
