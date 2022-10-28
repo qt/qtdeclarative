@@ -2104,8 +2104,6 @@ void QQuickTableViewPrivate::forceLayout(bool immediate)
 
 void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
 {
-    Q_Q(QQuickTableView);
-
     if (loadRequest.edge() == Qt::Edge(0)) {
         // No edge means we're loading the top-left item
         loadedColumns.insert(loadRequest.column());
@@ -2115,24 +2113,12 @@ void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
 
     switch (loadRequest.edge()) {
     case Qt::LeftEdge:
-        loadedColumns.insert(loadRequest.column());
-        if (rebuildState == RebuildState::Done)
-            emit q->leftColumnChanged();
-        break;
     case Qt::RightEdge:
         loadedColumns.insert(loadRequest.column());
-        if (rebuildState == RebuildState::Done)
-            emit q->rightColumnChanged();
         break;
     case Qt::TopEdge:
-        loadedRows.insert(loadRequest.row());
-        if (rebuildState == RebuildState::Done)
-            emit q->topRowChanged();
-        break;
     case Qt::BottomEdge:
         loadedRows.insert(loadRequest.row());
-        if (rebuildState == RebuildState::Done)
-            emit q->bottomRowChanged();
         break;
     }
 }
@@ -2862,6 +2848,7 @@ void QQuickTableViewPrivate::layoutTableEdgeFromLoadRequest()
 
 void QQuickTableViewPrivate::processLoadRequest()
 {
+    Q_Q(QQuickTableView);
     Q_TABLEVIEW_ASSERT(loadRequest.isActive(), "");
 
     while (loadRequest.hasCurrentCell()) {
@@ -2889,6 +2876,21 @@ void QQuickTableViewPrivate::processLoadRequest()
         // instead as an incremental build after e.g a flick.
         updateExtents();
         drainReusePoolAfterLoadRequest();
+
+        switch (loadRequest.edge()) {
+        case Qt::LeftEdge:
+            emit q->leftColumnChanged();
+            break;
+        case Qt::RightEdge:
+            emit q->rightColumnChanged();
+            break;
+        case Qt::TopEdge:
+            emit q->topRowChanged();
+            break;
+        case Qt::BottomEdge:
+            emit q->bottomRowChanged();
+            break;
+        }
     }
 
     loadRequest.markAsDone();

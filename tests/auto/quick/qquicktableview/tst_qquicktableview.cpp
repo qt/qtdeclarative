@@ -186,6 +186,7 @@ private slots:
     void itemAtCell();
     void leftRightTopBottomProperties_data();
     void leftRightTopBottomProperties();
+    void leftRightTopBottomUpdatedBeforeSignalEmission();
     void checkContentSize_data();
     void checkContentSize();
     void checkSelectionModelWithRequiredSelectedProperty_data();
@@ -3985,6 +3986,33 @@ void tst_QQuickTableView::leftRightTopBottomProperties()
     QCOMPARE(rightSpy.size(), expectedSignalCount.right());
     QCOMPARE(topSpy.size(), expectedSignalCount.top());
     QCOMPARE(bottomSpy.size(), expectedSignalCount.bottom());
+}
+
+void tst_QQuickTableView::leftRightTopBottomUpdatedBeforeSignalEmission()
+{
+    // Check that leftColumn, rightColumn, topRow and bottomRow are
+    // actually updated before the changed signals are emitted.
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    connect(tableView, &QQuickTableView::leftColumnChanged, [=]{
+        QCOMPARE(tableView->leftColumn(), 1);
+    });
+    connect(tableView, &QQuickTableView::rightColumnChanged, [=]{
+        QCOMPARE(tableView->rightColumn(), 6);
+    });
+    connect(tableView, &QQuickTableView::topRowChanged, [=]{
+        QCOMPARE(tableView->topRow(), 1);
+    });
+    connect(tableView, &QQuickTableView::bottomRowChanged, [=]{
+        QCOMPARE(tableView->bottomRow(), 8);
+    });
+
+    tableView->setContentX(100);
+    tableView->setContentY(50);
 }
 
 void tst_QQuickTableView::checkContentSize_data()
