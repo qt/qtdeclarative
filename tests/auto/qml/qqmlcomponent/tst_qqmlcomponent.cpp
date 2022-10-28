@@ -1380,7 +1380,6 @@ void tst_qqmlcomponent::loadFromModuleRequired()
     QVERIFY2(!component.isError(), qPrintable(component.errorString()));
 
     QScopedPointer<QObject> root(component.create());
-    QEXPECT_FAIL("", "Missing support for required property verification", Continue);
     QVERIFY(!root);
 }
 

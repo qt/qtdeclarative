@@ -96,6 +96,14 @@ public:
         QList<AnnotatedQmlError> errors;
         bool completePending = false;
 
+        RequiredProperties &requiredProperties() {
+            if (hasCreator())
+                return m_creator->requiredProperties();
+            else
+                return m_requiredProperties;
+        }
+
+
         void appendErrors(const QList<QQmlError> &qmlErrors)
         {
             for (const QQmlError &e : qmlErrors)
@@ -132,6 +140,7 @@ public:
         }
 
         private:
+        RequiredProperties m_requiredProperties; // todo: union with another member
         std::unique_ptr<QQmlObjectCreator> m_creator;
     };
     ConstructionState state;

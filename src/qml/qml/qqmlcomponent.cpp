@@ -308,8 +308,7 @@ void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data
 
 RequiredProperties &QQmlComponentPrivate::requiredProperties()
 {
-    Q_ASSERT(state.hasCreator());
-    return state.creator()->requiredProperties();
+    return state.requiredProperties();
 }
 
 bool QQmlComponentPrivate::hadTopLevelRequiredProperties() const
@@ -916,9 +915,7 @@ QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVari
     q->setInitialProperties(rv, properties);
     q->completeCreate();
 
-    // TODO: remove loadedType check; change requiredProperties to return
-    // something sensible
-    if (!loadedType.isValid() && !requiredProperties().empty()) {
+    if (!requiredProperties().empty()) {
         if (behavior == CreateWarnAboutRequiredProperties) {
             const RequiredProperties &unsetRequiredProperties = requiredProperties();
             for (const auto &unsetRequiredProperty : unsetRequiredProperties) {
@@ -1036,6 +1033,14 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         enginePriv->dereferenceScarceResources();
     } else {
         rv = loadedType.createWithQQmlData();
+        QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(rv);
+        for (int i = 0, propertyCount = propertyCache->propertyCount(); i < propertyCount; ++i) {
+            if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
+                RequiredPropertyInfo info;
+                info.propertyName = propertyData->name(rv);
+                state.requiredProperties().insert(propertyData, info);
+            }
+        }
     }
 
     if (rv) {
@@ -1174,26 +1179,24 @@ void QQmlComponent::completeCreate()
 
 void QQmlComponentPrivate::completeCreate()
 {
-    if (!loadedType.isValid()) {
-        const RequiredProperties& unsetRequiredProperties = requiredProperties();
-        for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
-            QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
-            state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
-        }
-        if (state.completePending) {
-            ++creationDepth;
-            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-            complete(ep, &state);
-            --creationDepth;
-        }
-    } else {
-        /* TODO: we need a way to track required properties
+    const RequiredProperties& unsetRequiredProperties = requiredProperties();
+    for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
+        QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
+        state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
+    }
+    if (loadedType.isValid()) {
+        /*
            We can directly set completePending to false, as finalize is only concerned
            with setting up pending bindings, but that cannot happen here, as we're
            dealing with a pure C++ type, which cannot have pending bindings
         */
         state.completePending = false;
         QQmlEnginePrivate::get(engine)->inProgressCreations--;
+    } else if (state.completePending) {
+        ++creationDepth;
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+        complete(ep, &state);
+        --creationDepth;
     }
 }
 
