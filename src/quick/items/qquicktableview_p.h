@@ -242,6 +242,7 @@ Q_SIGNALS:
     Q_REVISION(6, 5) void resizableColumnsChanged();
     Q_REVISION(6, 5) void resizableRowsChanged();
     Q_REVISION(6, 5) void editTriggersChanged();
+    Q_REVISION(6, 5) void layoutChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;

@@ -104,6 +104,7 @@ private slots:
     void checkForceLayoutEndUpDoingALayout();
     void checkForceLayoutDuringModelChange();
     void checkForceLayoutWhenAllItemsAreHidden();
+    void checkLayoutChangedSignal();
     void checkContentWidthAndHeight();
     void checkContentWidthAndHeightForSmallTables();
     void checkPageFlicking();
@@ -807,6 +808,52 @@ void tst_QQuickTableView::checkForceLayoutWhenAllItemsAreHidden()
     QCOMPARE(tableViewPrivate->loadedRows.count(), rows);
     QCOMPARE(tableViewPrivate->loadedColumns.count(), columns);
     QCOMPARE(tableViewPrivate->loadedItems.size(), rows * columns);
+}
+
+void tst_QQuickTableView::checkLayoutChangedSignal()
+{
+    // Check that the layoutChanged signal is emitted
+    // when the layout has changed.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const QSignalSpy layoutChanges(tableView, &QQuickTableView::layoutChanged);
+    TestModel model(100, 100);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(layoutChanges.size(), 1);
+
+    tableView->forceLayout();
+    QCOMPARE(layoutChanges.size(), 2);
+
+    tableView->setRowHeight(1, 10);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(layoutChanges.size(), 3);
+
+    tableView->setColumnWidth(1, 10);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(layoutChanges.size(), 4);
+
+    tableView->setContentX(30);
+    QCOMPARE(layoutChanges.size(), 5);
+
+    tableView->setContentY(30);
+    QCOMPARE(layoutChanges.size(), 6);
+
+    tableView->setContentX(0);
+    QCOMPARE(layoutChanges.size(), 7);
+
+    tableView->setContentY(0);
+    QCOMPARE(layoutChanges.size(), 8);
+
+    model.addRow(1);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(layoutChanges.size(), 9);
+
+    model.removeRow(1);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(layoutChanges.size(), 10);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()

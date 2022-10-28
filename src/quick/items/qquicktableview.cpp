@@ -194,6 +194,19 @@
 
     \snippet qml/tableview/tableviewwithheader.qml 0
 
+    Here is another example that shows how to create an overlay item that
+    stays on top of a particular cell. This requires a bit more code, since
+    the location of a cell will \l {layoutChanged}{change} if the user, for
+    example, is resizing a column in front of it.
+
+    \snippet qml/tableview/overlay.qml 0
+
+    You could also parent the overlay directly to the cell instead of the
+    \l contentItem. But doing so will be fragile since the cell is unloaded
+    or reused whenever it's flicked out of the viewport.
+
+    \sa layoutChanged()
+
     \section1 Selecting items
 
     You can add selection support to TableView by assigning an \l ItemSelectionModel to
@@ -1195,6 +1208,22 @@
     stop the editing, and destroy the edit delegate instance.
 
     \sa edit(), TableView::editDelegate, {Editing cells}
+*/
+
+/*!
+    \qmlsignal QtQuick::TableView::layoutChanged()
+    \since 6.5
+
+    This signal is emitted whenever the layout of the
+    \l {isColumnLoaded()}{loaded} rows and columns has potentially
+    changed. This will especially be the case when \l forceLayout()
+    is called, but also when e.g resizing a row or a column, or
+    when a row or column have entered or left the viewport.
+
+    This signal can be used to for example update the geometry
+    of overlays.
+
+    \sa forceLayout(), {Overlays and underlays}
 */
 
 /*!
@@ -3098,6 +3127,8 @@ void QQuickTableViewPrivate::processLoadRequest()
 
         if (editIndex.isValid())
             updateEditItem();
+
+        emit q->layoutChanged();
     }
 
     loadRequest.markAsDone();
@@ -3203,6 +3234,8 @@ void QQuickTableViewPrivate::processRebuildTable()
         if (editIndex.isValid())
             updateEditItem();
         updateCurrentRowAndColumn();
+
+        emit q->layoutChanged();
 
         qCDebug(lcTableViewDelegateLifecycle()) << "current table:" << tableLayoutToString();
         qCDebug(lcTableViewDelegateLifecycle()) << "rebuild completed!";
@@ -3555,6 +3588,9 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
             emit q->bottomRowChanged();
         break; }
     }
+
+    if (rebuildState == RebuildState::Done)
+        emit q->layoutChanged();
 
     qCDebug(lcTableViewDelegateLifecycle) << tableLayoutToString();
 }
