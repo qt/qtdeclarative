@@ -1,0 +1,6 @@
+//! [customize-note]
+\note to customize the \l {Attached Tool Tips}{attached ToolTip}, it
+must be provided as part of
+\l {Creating a Custom Style}{your own style}. To do a one-off
+customization of a \c ToolTip, see \l {Custom Tool Tips}.
+//! [customize-note]
