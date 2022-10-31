@@ -401,7 +401,7 @@ QQmlComponent::~QQmlComponent()
 {
     Q_D(QQmlComponent);
 
-    if (d->state.completePending) {
+    if (d->state.isCompletePending()) {
         qWarning("QQmlComponent: Component destroyed while completion pending");
 
         if (isError()) {
@@ -898,7 +898,7 @@ QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVari
 
     QObject *rv = doBeginCreate(q, context);
     if (!rv) {
-        if (state.completePending) {
+        if (state.isCompletePending()) {
             // overridden completCreate might assume that
             // the object has actually been created
             ++creationDepth;
@@ -987,7 +987,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         return nullptr;
     }
 
-    if (state.completePending) {
+    if (state.isCompletePending()) {
         qWarning("QQmlComponent: Cannot create new component instance before completing the previous");
         return nullptr;
     }
@@ -1017,7 +1017,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
 
     enginePriv->inProgressCreations++;
     state.errors.clear();
-    state.completePending = true;
+    state.setCompletePending(true);
 
     QObject *rv = nullptr;
 
@@ -1065,7 +1065,7 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
         enginePriv->inProgressCreations++;
 
         ConstructionState state;
-        state.completePending = true;
+        state.setCompletePending(true);
 
         auto creator = state.initCreator(
                     deferredData->context->parent(),
@@ -1088,11 +1088,11 @@ void QQmlComponentPrivate::completeDeferred(QQmlEnginePrivate *enginePriv, QQmlC
 
 void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionState *state)
 {
-    if (state->completePending) {
+    if (state->isCompletePending()) {
         QQmlInstantiationInterrupt interrupt;
         state->creator()->finalize(interrupt);
 
-        state->completePending = false;
+        state->setCompletePending(false);
 
         enginePriv->inProgressCreations--;
 
@@ -1190,9 +1190,9 @@ void QQmlComponentPrivate::completeCreate()
            with setting up pending bindings, but that cannot happen here, as we're
            dealing with a pure C++ type, which cannot have pending bindings
         */
-        state.completePending = false;
+        state.setCompletePending(false);
         QQmlEnginePrivate::get(engine)->inProgressCreations--;
-    } else if (state.completePending) {
+    } else if (state.isCompletePending()) {
         ++creationDepth;
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
         complete(ep, &state);

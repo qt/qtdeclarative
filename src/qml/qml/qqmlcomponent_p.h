@@ -92,73 +92,28 @@ public:
     };
 
     struct ConstructionState {
-        QList<AnnotatedQmlError> errors;
-        bool completePending = false;
+        inline RequiredProperties *requiredProperties();
+        inline void addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info);
+        inline bool hasUnsetRequiredProperties() const;
+        inline void clearRequiredProperties();
 
-        /*!
-           \internal A list of pending required properties that need
-           to be set in order for object construction to be successful.
-         */
-        RequiredProperties *requiredProperties() {
-            if (hasCreator())
-                return m_creator->requiredProperties();
-            else
-                return &m_requiredProperties;
-        }
+        inline void appendErrors(const QList<QQmlError> &qmlErrors);
+        inline void appendCreatorErrors();
 
-        void addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info)
-        {
-            Q_ASSERT(requiredProperties());
-            requiredProperties()->insert(propData, info);
-        }
-
-        bool hasUnsetRequiredProperties() const {
-            return !const_cast<ConstructionState *>(this)->requiredProperties()->isEmpty();
-        }
-
-        void clearRequiredProperties()
-        {
-            if (auto reqProps = requiredProperties())
-                reqProps->clear();
-        }
-
-
-        void appendErrors(const QList<QQmlError> &qmlErrors)
-        {
-            for (const QQmlError &e : qmlErrors)
-                errors.emplaceBack(e);
-        }
-
-        //! \internal Moves errors from creator into construction state itself
-        void appendCreatorErrors()
-        {
-            if (!hasCreator())
-                return;
-            auto creatorErrorCount = creator()->errors.size();
-            if (creatorErrorCount == 0)
-                return;
-            auto existingErrorCount = errors.size();
-            errors.resize(existingErrorCount + creatorErrorCount);
-            for (qsizetype i = 0; i < creatorErrorCount; ++i)
-                errors[existingErrorCount + i] = AnnotatedQmlError { std::move(creator()->errors[i]) };
-            creator()->errors.clear();
-        }
-
-        QQmlObjectCreator *creator() {return m_creator.get(); }
-        const QQmlObjectCreator *creator() const {return m_creator.get(); }
-        bool hasCreator() const { return m_creator != nullptr; }
-        void clear() { m_creator.reset(); }
-        QQmlObjectCreator *initCreator(QQmlRefPointer<QQmlContextData> parentContext,
+        inline QQmlObjectCreator *creator();
+        inline const QQmlObjectCreator *creator() const;
+        inline void clear();
+        inline bool hasCreator() const;
+        inline QQmlObjectCreator *initCreator(QQmlRefPointer<QQmlContextData> parentContext,
                          const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-                         const QQmlRefPointer<QQmlContextData> &creationContext)
-        {
-            m_creator.reset(new QQmlObjectCreator(
-                std::move(parentContext), compilationUnit,
-                creationContext));
-            return m_creator.get();
-        }
+                         const QQmlRefPointer<QQmlContextData> &creationContext);
+
+        QList<AnnotatedQmlError> errors;
+        inline bool isCompletePending() const;
+        inline void setCompletePending(bool isPending);
 
         private:
+        bool m_completePending = false;
         RequiredProperties m_requiredProperties; // todo: union with another member
         std::unique_ptr<QQmlObjectCreator> m_creator;
     };
@@ -195,6 +150,87 @@ public:
         return compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound;
     }
 };
+
+
+/*!
+   \internal A list of pending required properties that need
+   to be set in order for object construction to be successful.
+ */
+inline RequiredProperties *QQmlComponentPrivate::ConstructionState::requiredProperties() {
+    if (hasCreator())
+        return m_creator->requiredProperties();
+    else
+        return &m_requiredProperties;
+}
+
+inline void QQmlComponentPrivate::ConstructionState::addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info)
+{
+    Q_ASSERT(requiredProperties());
+    requiredProperties()->insert(propData, info);
+}
+
+inline bool QQmlComponentPrivate::ConstructionState::hasUnsetRequiredProperties() const {
+    return !const_cast<ConstructionState *>(this)->requiredProperties()->isEmpty();
+}
+
+inline void QQmlComponentPrivate::ConstructionState::clearRequiredProperties()
+{
+    if (auto reqProps = requiredProperties())
+        reqProps->clear();
+}
+
+inline void QQmlComponentPrivate::ConstructionState::appendErrors(const QList<QQmlError> &qmlErrors)
+{
+    for (const QQmlError &e : qmlErrors)
+        errors.emplaceBack(e);
+}
+
+//! \internal Moves errors from creator into construction state itself
+inline void QQmlComponentPrivate::ConstructionState::appendCreatorErrors()
+{
+    if (!hasCreator())
+        return;
+    auto creatorErrorCount = creator()->errors.size();
+    if (creatorErrorCount == 0)
+        return;
+    auto existingErrorCount = errors.size();
+    errors.resize(existingErrorCount + creatorErrorCount);
+    for (qsizetype i = 0; i < creatorErrorCount; ++i)
+        errors[existingErrorCount + i] = AnnotatedQmlError { std::move(creator()->errors[i]) };
+    creator()->errors.clear();
+}
+
+inline QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::creator()
+{
+    return m_creator.get();
+}
+
+inline const QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::creator() const
+{
+    return m_creator.get();
+}
+
+inline bool QQmlComponentPrivate::ConstructionState::hasCreator() const { return m_creator != nullptr; }
+
+inline void QQmlComponentPrivate::ConstructionState::clear() { m_creator.reset(); }
+
+inline QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::initCreator(QQmlRefPointer<QQmlContextData> parentContext, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QQmlRefPointer<QQmlContextData> &creationContext)
+{
+    m_creator.reset(new QQmlObjectCreator(
+                        std::move(parentContext), compilationUnit,
+                        creationContext));
+    return m_creator.get();
+}
+
+inline bool QQmlComponentPrivate::ConstructionState::isCompletePending() const
+{
+    return m_completePending;
+}
+
+inline void QQmlComponentPrivate::ConstructionState::setCompletePending(bool isPending)
+{
+    m_completePending = isPending;
+}
 
 QT_END_NAMESPACE
 

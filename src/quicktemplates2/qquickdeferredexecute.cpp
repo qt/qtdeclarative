@@ -42,7 +42,7 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
             continue;
 
         QQmlComponentPrivate::ConstructionState state;
-        state.completePending = true;
+        state.setCompletePending(true);
 
         QQmlContextData *creationContext = nullptr;
         state.initCreator(deferData->context->parent(), deferData->compilationUnit, creationContext);

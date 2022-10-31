@@ -760,7 +760,7 @@ void QQmlBindPrivate::decodeBinding(
         QQmlProperty property(q, propertyName);
         if (property.isValid()) {
             if (!immediateState->hasCreator()) {
-                immediateState->completePending = true;
+                immediateState->setCompletePending(true);
                 immediateState->initCreator(
                             deferredData->context->parent(), deferredData->compilationUnit,
                             contextData);
