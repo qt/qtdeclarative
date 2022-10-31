@@ -85,6 +85,12 @@
     An added benefit of these three methods is that it's not necessary to
     implement the template from scratch.
 
+    \note the three approaches mentioned here do not work for customizing the
+    attached \l ToolTip, as that is a shared item created internally. To do
+    a one-off customization of a \c ToolTip, see \l {Custom Tool Tips}. To
+    customize the attached \c ToolTip, it must be provided as part of
+    \l {Creating a Custom Style}{your own style}.
+
     \section1 Creating a Custom Style
 
     There are several ways to go about creating your own styles. Below, we'll
@@ -1003,6 +1009,7 @@
         \printuntil }
         \printuntil }
 
+        \include qquicktooltip.qdocinc customize-note
 
     \section2 Customizing Tumbler
 
