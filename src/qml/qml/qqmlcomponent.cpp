@@ -306,11 +306,6 @@ void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data
     }
 }
 
-RequiredProperties &QQmlComponentPrivate::requiredProperties()
-{
-    return state.requiredProperties();
-}
-
 bool QQmlComponentPrivate::hadTopLevelRequiredProperties() const
 {
     return state.creator()->componentHadTopLevelRequiredProperties();
@@ -365,8 +360,12 @@ bool QQmlComponentPrivate::setInitialProperty(
         return true;
     }
 
-    QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(
-            base, name, requiredProperties(), engine);
+    QQmlProperty prop;
+    if (state.hasUnsetRequiredProperties())
+        prop = QQmlComponentPrivate::removePropertyFromRequired(
+                    base, name, state.requiredProperties(), engine);
+    else
+        prop = QQmlProperty(base, name, engine);
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
     const bool isValid = prop.isValid();
     if (!isValid || !privProp->writeValueProperty(value, {})) {
@@ -915,9 +914,9 @@ QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVari
     q->setInitialProperties(rv, properties);
     q->completeCreate();
 
-    if (!requiredProperties().empty()) {
+    if (state.hasUnsetRequiredProperties()) {
         if (behavior == CreateWarnAboutRequiredProperties) {
-            const RequiredProperties &unsetRequiredProperties = requiredProperties();
+            const RequiredProperties &unsetRequiredProperties = state.requiredProperties();
             for (const auto &unsetRequiredProperty : unsetRequiredProperties) {
                 const QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
                 qmlWarning(rv, error);
@@ -1001,8 +1000,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
                                           return e.isTransient;
                                       }),
                        state.errors.end());
-    if (state.hasCreator())
-        requiredProperties().clear();
+    state.clearRequiredProperties();
 
     if (!q->isReady()) {
         qWarning("QQmlComponent: Component is not ready");
@@ -1038,7 +1036,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
             if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
                 RequiredPropertyInfo info;
                 info.propertyName = propertyData->name(rv);
-                state.requiredProperties().insert(propertyData, info);
+                state.addPendingRequiredProperty(propertyData, info);
             }
         }
     }
@@ -1179,10 +1177,12 @@ void QQmlComponent::completeCreate()
 
 void QQmlComponentPrivate::completeCreate()
 {
-    const RequiredProperties& unsetRequiredProperties = requiredProperties();
-    for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
-        QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
-        state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
+    if (state.hasUnsetRequiredProperties()) {
+        const RequiredProperties& unsetRequiredProperties = state.requiredProperties();
+        for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
+            QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
+            state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
+        }
     }
     if (loadedType.isValid()) {
         /*
@@ -1716,11 +1716,12 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 
     if (!valuemap->isUndefined()) {
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, v4->qmlContext());
-        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, object, valuemap, d->requiredProperties(), rv);
+        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, object, valuemap,
+                                                   d->state.requiredProperties(), rv);
     }
-    if (!d->requiredProperties().empty()) {
+    if (d->state.hasUnsetRequiredProperties()) {
         QList<QQmlError> errors;
-        for (const auto &requiredProperty: d->requiredProperties()) {
+        for (const auto &requiredProperty: d->state.requiredProperties()) {
             errors.push_back(QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(requiredProperty));
         }
         qmlWarning(rv, errors);

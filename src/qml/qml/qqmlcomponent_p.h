@@ -68,7 +68,6 @@ public:
     qreal progress;
 
     int start;
-    RequiredProperties& requiredProperties();
     bool hadTopLevelRequiredProperties() const;
     // TODO: merge compilation unit and type
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
@@ -96,11 +95,29 @@ public:
         QList<AnnotatedQmlError> errors;
         bool completePending = false;
 
+        /*!
+           \internal A list of pending required properties that need
+           to be set in order for object construction to be successful.
+         */
         RequiredProperties &requiredProperties() {
             if (hasCreator())
                 return m_creator->requiredProperties();
             else
                 return m_requiredProperties;
+        }
+
+        void addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info)
+        {
+            requiredProperties().insert(propData, info);
+        }
+
+        bool hasUnsetRequiredProperties() const {
+            return !const_cast<ConstructionState *>(this)->requiredProperties().isEmpty();
+        }
+
+        void clearRequiredProperties()
+        {
+            requiredProperties().clear();
         }
 
 
