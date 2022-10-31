@@ -7918,7 +7918,7 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
             if (otherChildPrivate->subtreeHoverEnabled || otherChildPrivate->hoverEnabled)
                 return; // nope! sorry, something else wants it kept on.
-            if (otherChildPrivate->hasHoverHandlers())
+            if (otherChildPrivate->hasEnabledHoverHandlers())
                 return; // nope! sorry, we have pointer handlers which are interested.
         }
     }
@@ -9061,12 +9061,12 @@ bool QQuickItemPrivate::hasPointerHandlers() const
     return extra.isAllocated() && !extra->pointerHandlers.isEmpty();
 }
 
-bool QQuickItemPrivate::hasHoverHandlers() const
+bool QQuickItemPrivate::hasEnabledHoverHandlers() const
 {
     if (!hasPointerHandlers())
         return false;
     for (QQuickPointerHandler *h : extra->pointerHandlers)
-        if (qmlobject_cast<QQuickHoverHandler *>(h))
+        if (auto *hh = qmlobject_cast<QQuickHoverHandler *>(h); hh && hh->enabled())
             return true;
     return false;
 }
