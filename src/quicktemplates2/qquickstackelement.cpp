@@ -141,13 +141,12 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         if (component->isError())
             QQuickStackViewPrivate::get(parent)->warn(component->errorString().trimmed());
     } else {
-        RequiredProperties noRequiredProperties {};
-        initialize(noRequiredProperties);
+        initialize(/*required properties=*/nullptr);
     }
     return item;
 }
 
-void QQuickStackElement::incubate(QObject *object, RequiredProperties &requiredProperties)
+void QQuickStackElement::incubate(QObject *object, RequiredProperties *requiredProperties)
 {
     item = qmlobject_cast<QQuickItem *>(object);
     if (item) {
@@ -157,7 +156,7 @@ void QQuickStackElement::incubate(QObject *object, RequiredProperties &requiredP
     }
 }
 
-void QQuickStackElement::initialize(RequiredProperties &requiredProperties)
+void QQuickStackElement::initialize(RequiredProperties *requiredProperties)
 {
     if (!item || init)
         return;
@@ -182,9 +181,9 @@ void QQuickStackElement::initialize(RequiredProperties &requiredProperties)
         properties.clear();
     }
 
-    if (!requiredProperties.empty()) {
+    if (requiredProperties && !requiredProperties->empty()) {
         QString error;
-        for (const auto &property: requiredProperties) {
+        for (const auto &property: *requiredProperties) {
             error += QLatin1String("Property %1 was marked as required but not set.\n")
                     .arg(property.propertyName);
         }

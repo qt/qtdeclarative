@@ -916,8 +916,7 @@ QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVari
 
     if (state.hasUnsetRequiredProperties()) {
         if (behavior == CreateWarnAboutRequiredProperties) {
-            const RequiredProperties &unsetRequiredProperties = state.requiredProperties();
-            for (const auto &unsetRequiredProperty : unsetRequiredProperties) {
+            for (const auto &unsetRequiredProperty : std::as_const(*state.requiredProperties())) {
                 const QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
                 qmlWarning(rv, error);
             }
@@ -1110,6 +1109,7 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
     Finds the matching top-level property with name \a name of the component \a createdComponent.
     If it was a required property or an alias to a required property contained in \a
     requiredProperties, it is removed from it.
+    \a requiredProperties must be non-null.
 
     If wasInRequiredProperties is non-null, the referenced boolean is set to true iff the property
     was found in requiredProperties.
@@ -1122,9 +1122,10 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
     setInitialProperties.
  */
 QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
-        QObject *createdComponent, const QString &name, RequiredProperties &requiredProperties,
+        QObject *createdComponent, const QString &name, RequiredProperties *requiredProperties,
         QQmlEngine *engine, bool *wasInRequiredProperties)
 {
+    Q_ASSERT(requiredProperties);
     QQmlProperty prop(createdComponent, name, engine);
     auto privProp = QQmlPropertyPrivate::get(prop);
     if (prop.isValid()) {
@@ -1145,11 +1146,11 @@ QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
             Q_ASSERT(data && data->propertyCache);
             targetProp = data->propertyCache->property(targetProp->coreIndex());
         }
-        auto it = requiredProperties.find(targetProp);
-        if (it != requiredProperties.end()) {
+        auto it = requiredProperties->find(targetProp);
+        if (it != requiredProperties->end()) {
             if (wasInRequiredProperties)
                 *wasInRequiredProperties = true;
-            requiredProperties.erase(it);
+            requiredProperties->erase(it);
         } else {
             if (wasInRequiredProperties)
                 *wasInRequiredProperties = false;
@@ -1178,8 +1179,7 @@ void QQmlComponent::completeCreate()
 void QQmlComponentPrivate::completeCreate()
 {
     if (state.hasUnsetRequiredProperties()) {
-        const RequiredProperties& unsetRequiredProperties = state.requiredProperties();
-        for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
+        for (const auto& unsetRequiredProperty: std::as_const(*state.requiredProperties())) {
             QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
             state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
         }
@@ -1484,7 +1484,7 @@ struct QmlIncubatorObject : public QV4::Object
     static ReturnedValue method_forceCompletion(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     void statusChanged(QQmlIncubator::Status);
-    void setInitialState(QObject *, RequiredProperties &requiredProperties);
+    void setInitialState(QObject *, RequiredProperties *requiredProperties);
 };
 
 }
@@ -1582,7 +1582,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 */
 
 
-void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties &requiredProperties, QObject *createdComponent)
+void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties *requiredProperties, QObject *createdComponent)
 {
     QV4::Scope scope(engine);
     QV4::ScopedObject object(scope);
@@ -1627,7 +1627,7 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
         if (engine->hasException) {
             qmlWarning(createdComponent, engine->catchExceptionAsQmlError());
             continue;
-        } else if (isTopLevelProperty) {
+        } else if (isTopLevelProperty && requiredProperties) {
             auto prop = removePropertyFromRequired(createdComponent, name->toQString(),
                                                    requiredProperties, engine->qmlEngine());
         }
@@ -1721,7 +1721,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     }
     if (d->state.hasUnsetRequiredProperties()) {
         QList<QQmlError> errors;
-        for (const auto &requiredProperty: d->state.requiredProperties()) {
+        for (const auto &requiredProperty: std::as_const(*d->state.requiredProperties())) {
             errors.push_back(QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(requiredProperty));
         }
         qmlWarning(rv, errors);
@@ -1878,7 +1878,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 }
 
 // XXX used by QSGLoader
-void QQmlComponentPrivate::initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate, RequiredProperties &requiredProperties)
+void QQmlComponentPrivate::initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate, RequiredProperties *requiredProperties)
 {
     QV4::ExecutionEngine *v4engine = engine->handle();
     QV4::Scope scope(v4engine);
@@ -1977,7 +1977,7 @@ void QV4::Heap::QmlIncubatorObject::destroy() {
     Object::destroy();
 }
 
-void QV4::QmlIncubatorObject::setInitialState(QObject *o, RequiredProperties &requiredProperties)
+void QV4::QmlIncubatorObject::setInitialState(QObject *o, RequiredProperties *requiredProperties)
 {
     QQmlComponent_setQmlParent(o, d()->parent);
 

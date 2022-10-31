@@ -113,7 +113,7 @@ public:
     }
     QFiniteStack<QQmlGuard<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
 
-    RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
+    RequiredProperties *requiredProperties() {return &sharedState->requiredProperties;}
     bool componentHadTopLevelRequiredProperties() const {return sharedState->hadTopLevelRequiredProperties;}
 
     static QQmlComponent *createComponent(QQmlEngine *engine,

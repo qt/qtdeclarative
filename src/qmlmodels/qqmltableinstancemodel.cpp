@@ -397,8 +397,8 @@ bool QQmlTableInstanceModel::setRequiredProperty(int index, const QString &name,
 
     bool wasInRequired = false;
     const auto task = QQmlIncubatorPrivate::get(modelItem->incubationTask);
-    RequiredProperties &props = task->requiredProperties();
-    if (props.empty())
+    RequiredProperties *props = task->requiredProperties();
+    if (props->empty())
         return false;
 
     QQmlProperty componentProp = QQmlComponentPrivate::removePropertyFromRequired(
@@ -492,7 +492,7 @@ void QQmlTableInstanceModelIncubationTask::setInitialState(QObject *object)
     modelItemToIncubate->object = object;
     emit tableInstanceModel->initItem(modelItemToIncubate->index, object);
 
-    if (!QQmlIncubatorPrivate::get(this)->requiredProperties().empty()) {
+    if (!QQmlIncubatorPrivate::get(this)->requiredProperties()->empty()) {
         modelItemToIncubate->object = nullptr;
         object->deleteLater();
     }

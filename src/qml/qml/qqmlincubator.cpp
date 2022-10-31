@@ -263,7 +263,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
         if (!tresult)
             errors = creator->errors;
         else {
-           RequiredProperties& requiredProperties = creator->requiredProperties();
+           RequiredProperties* requiredProperties = creator->requiredProperties();
            for (auto it = initialProperties.cbegin(); it != initialProperties.cend(); ++it) {
                auto component = tresult;
                auto name = it.key();
@@ -295,9 +295,9 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
             ddata->rootObjectInCreation = false;
             if (q) {
                 q->setInitialState(result);
-                if (creator && !creator->requiredProperties().empty()) {
-                    const auto& unsetRequiredProperties = creator->requiredProperties();
-                    for (const auto& unsetRequiredProperty: unsetRequiredProperties)
+                if (creator && !creator->requiredProperties()->empty()) {
+                    const RequiredProperties *unsetRequiredProperties = creator->requiredProperties();
+                    for (const auto& unsetRequiredProperty: *unsetRequiredProperties)
                         errors << QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
                 }
             }
@@ -647,14 +647,15 @@ QObject *QQmlIncubator::object() const
 }
 
 /*!
-Return a list of properties which are required but haven't been set yet.
+Return a pointer to a list of properties which are required but haven't
+been set yet.
 This list can be modified, so that subclasses which implement special logic
 setInitialProperties can mark properties set there as no longer required.
 
 \sa QQmlIncubator::setInitialProperties
 \since 5.15
 */
-RequiredProperties &QQmlIncubatorPrivate::requiredProperties()
+RequiredProperties *QQmlIncubatorPrivate::requiredProperties()
 {
     return creator->requiredProperties();
 }

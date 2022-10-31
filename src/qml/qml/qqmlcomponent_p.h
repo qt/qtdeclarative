@@ -47,8 +47,8 @@ public:
 
     QObject *beginCreate(QQmlRefPointer<QQmlContextData>);
     void completeCreate();
-    void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate, RequiredProperties &requiredProperties);
-    static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties &requiredProperties, QObject *createdComponent);
+    void initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate, RequiredProperties *requiredProperties);
+    static void setInitialProperties(QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &o, const QV4::Value &v, RequiredProperties *requiredProperties, QObject *createdComponent);
     static QQmlError unsetRequiredPropertyToQQmlError(const RequiredPropertyInfo &unsetRequiredProperty);
 
     virtual void incubateObject(
@@ -99,25 +99,27 @@ public:
            \internal A list of pending required properties that need
            to be set in order for object construction to be successful.
          */
-        RequiredProperties &requiredProperties() {
+        RequiredProperties *requiredProperties() {
             if (hasCreator())
                 return m_creator->requiredProperties();
             else
-                return m_requiredProperties;
+                return &m_requiredProperties;
         }
 
         void addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info)
         {
-            requiredProperties().insert(propData, info);
+            Q_ASSERT(requiredProperties());
+            requiredProperties()->insert(propData, info);
         }
 
         bool hasUnsetRequiredProperties() const {
-            return !const_cast<ConstructionState *>(this)->requiredProperties().isEmpty();
+            return !const_cast<ConstructionState *>(this)->requiredProperties()->isEmpty();
         }
 
         void clearRequiredProperties()
         {
-            requiredProperties().clear();
+            if (auto reqProps = requiredProperties())
+                reqProps->clear();
         }
 
 
@@ -167,8 +169,7 @@ public:
     static void completeDeferred(QQmlEnginePrivate *enginePriv, DeferredState *deferredState);
 
     static void complete(QQmlEnginePrivate *enginePriv, ConstructionState *state);
-    static QQmlProperty removePropertyFromRequired(
-            QObject *createdComponent, const QString &name, RequiredProperties &requiredProperties,
+    static QQmlProperty removePropertyFromRequired(QObject *createdComponent, const QString &name, RequiredProperties *requiredProperties,
             QQmlEngine *engine, bool *wasInRequiredProperties = nullptr);
 
     QQmlEngine *engine;
