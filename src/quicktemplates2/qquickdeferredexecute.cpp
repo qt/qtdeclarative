@@ -55,7 +55,7 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
         for (const QV4::CompiledData::Binding *binding : reversedBindings)
             state.creator()->populateDeferredBinding(property, deferData->deferredIdx, binding);
         state.creator()->finalizePopulateDeferred();
-        state.appendErrors(state.creator()->errors);
+        state.appendCreatorErrors();
 
         deferredState->push_back(std::move(state));
 

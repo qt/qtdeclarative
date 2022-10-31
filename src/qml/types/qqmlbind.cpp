@@ -885,7 +885,7 @@ void QQmlBindPrivate::buildBindEntries(QQmlBind *q, QQmlComponentPrivate::Deferr
                 if (constructionState.hasCreator()) {
                     ++ep->inProgressCreations;
                     constructionState.creator()->finalizePopulateDeferred();
-                    constructionState.appendErrors(constructionState.creator()->errors);
+                    constructionState.appendCreatorErrors();
                     deferredState->push_back(std::move(constructionState));
                 }
             } else {

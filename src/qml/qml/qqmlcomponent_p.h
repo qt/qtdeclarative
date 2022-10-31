@@ -77,12 +77,15 @@ public:
     struct AnnotatedQmlError
     {
         AnnotatedQmlError() = default;
-        AnnotatedQmlError(const QQmlError &error) // convenience ctor
-            : error(error)
+
+        AnnotatedQmlError(QQmlError error)
+            : error(std::move(error))
         {
         }
-        AnnotatedQmlError(const QQmlError &error, bool transient)
-            : error(error), isTransient(transient)
+
+
+        AnnotatedQmlError(QQmlError error, bool transient)
+            : error(std::move(error)), isTransient(transient)
         {
         }
         QQmlError error;
@@ -97,6 +100,21 @@ public:
         {
             for (const QQmlError &e : qmlErrors)
                 errors.emplaceBack(e);
+        }
+
+        //! \internal Moves errors from creator into construction state itself
+        void appendCreatorErrors()
+        {
+            if (!hasCreator())
+                return;
+            auto creatorErrorCount = creator()->errors.size();
+            if (creatorErrorCount == 0)
+                return;
+            auto existingErrorCount = errors.size();
+            errors.resize(existingErrorCount + creatorErrorCount);
+            for (qsizetype i = 0; i < creatorErrorCount; ++i)
+                errors[existingErrorCount + i] = AnnotatedQmlError { std::move(creator()->errors[i]) };
+            creator()->errors.clear();
         }
 
         QQmlObjectCreator *creator() {return m_creator.get(); }

@@ -1032,7 +1032,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         state.initCreator(std::move(context), compilationUnit, creationContext);
         rv = state.creator()->create(start);
         if (!rv)
-            state.appendErrors(state.creator()->errors);
+            state.appendCreatorErrors();
         enginePriv->dereferenceScarceResources();
     } else {
         rv = loadedType.createWithQQmlData();
@@ -1071,7 +1071,7 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
                     QQmlRefPointer<QQmlContextData>());
 
         if (!creator->populateDeferredProperties(object, deferredData))
-            state.appendErrors(creator->errors);
+            state.appendCreatorErrors();
         deferredData->bindings.clear();
 
         deferredState->push_back(std::move(state));
