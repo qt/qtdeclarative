@@ -47,6 +47,8 @@ QT_BEGIN_NAMESPACE
     shown for the last item that made it visible. The position of the shared tool
     tip is determined by the framework.
 
+    \include qquicktooltip.qdocinc customize-note
+
     \section2 Delay and Timeout
 
     Tool tips are typically transient in a sense that they are shown as a
