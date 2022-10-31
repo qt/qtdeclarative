@@ -1517,11 +1517,18 @@ QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
     return const_cast<QQuickTableView *>(q_func())->contentItem();
 }
 
-bool QQuickTableViewPrivate::canStartSelection(const QPointF &pos)
+bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
 {
+    Q_Q(QQuickTableView);
     Q_UNUSED(pos);
     // Only allow a selection if it doesn't conflict with resizing
-    return resizeHandler->state() == QQuickTableViewResizeHandler::Listening;
+    const bool canStartSelection = resizeHandler->state() == QQuickTableViewResizeHandler::Listening;
+    if (canStartSelection) {
+        selectionStartCell = QPoint(-1, -1);
+        selectionEndCell = QPoint(-1, -1);
+        q->closeEditor();
+    }
+    return canStartSelection;
 }
 
 void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
@@ -4633,12 +4640,12 @@ void QQuickTableViewPrivate::init()
         positionYAnimation.stop();
 
         if (!q->isInteractive())
-            handleTap(tapHandler->point().pressPosition());
+            handleTap(tapHandler->point());
     });
 
     QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, [this, q, tapHandler] {
         if (q->isInteractive())
-            handleTap(tapHandler->point().pressPosition());
+            handleTap(tapHandler->point());
     });
 
     QObject::connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, q, tapHandler] {
@@ -4660,13 +4667,15 @@ void QQuickTableViewPrivate::init()
     });
 }
 
-void QQuickTableViewPrivate::handleTap(const QPointF &pos)
+void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
 {
     Q_Q(QQuickTableView);
 
     if (keyNavigationEnabled)
         q->forceActiveFocus(Qt::MouseFocusReason);
 
+    if (point.modifiers() != Qt::NoModifier)
+        return;
     if (resizableRows && hoverHandler->m_row != -1)
         return;
     if (resizableColumns && hoverHandler->m_column != -1)
@@ -4679,14 +4688,14 @@ void QQuickTableViewPrivate::handleTap(const QPointF &pos)
         prevIndex = selectionModel->currentIndex();
         if (pointerNavigationEnabled) {
             clearSelection();
-            setCurrentIndexFromTap(pos);
+            setCurrentIndexFromTap(point.position());
         }
     }
 
     if (editTriggers != QQuickTableView::NoEditTriggers)
         q->closeEditor();
 
-    const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(pos));
+    const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(point.position()));
     if (canEdit(tappedIndex, false)) {
         if (editTriggers & QQuickTableView::SingleTapped)
             q->edit(tappedIndex);

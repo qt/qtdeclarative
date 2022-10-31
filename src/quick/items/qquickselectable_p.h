@@ -25,7 +25,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSelectable
 public:
     virtual QQuickItem *selectionPointerHandlerTarget() const = 0;
 
-    virtual bool canStartSelection(const QPointF &pos) = 0;
+    virtual bool startSelection(const QPointF &pos) = 0;
     virtual void setSelectionStartPos(const QPointF &pos) = 0;
     virtual void setSelectionEndPos(const QPointF &pos) = 0;
     virtual void clearSelection() = 0;

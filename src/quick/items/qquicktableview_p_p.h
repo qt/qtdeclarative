@@ -548,7 +548,7 @@ public:
                              int serializedModelIndex,
                              QObject *object, bool init);
 
-    void handleTap(const QPointF &pos);
+    void handleTap(const QQuickHandlerPoint &point);
     void setCurrentIndexFromTap(const QPointF &pos);
     void setCurrentIndex(const QPoint &cell);
     bool setCurrentIndexFromKeyEvent(QKeyEvent *e);
@@ -557,7 +557,7 @@ public:
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;
-    bool canStartSelection(const QPointF &pos) override;
+    bool startSelection(const QPointF &pos) override;
     void setSelectionStartPos(const QPointF &pos) override;
     void setSelectionEndPos(const QPointF &pos) override;
     void clearSelection() override;

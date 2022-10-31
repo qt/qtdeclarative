@@ -182,7 +182,9 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
 
     QObject::connect(m_tapHandler, &QQuickTapHandler::longPressed, [this]() {
         const QPointF pos = m_tapHandler->point().pressPosition();
-        if (!m_selectable->canStartSelection(pos))
+        const auto modifiers = m_tapHandler->point().modifiers();
+
+        if (!m_selectable->startSelection(pos))
             return;
         if (handleUnderPos(pos) != nullptr) {
             // Don't allow press'n'hold to start a new
@@ -199,7 +201,8 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             }
         }
 
-        m_selectable->clearSelection();
+        if (!modifiers.testFlag(Qt::ShiftModifier))
+            m_selectable->clearSelection();
         m_selectable->setSelectionStartPos(pos);
         m_selectable->setSelectionEndPos(pos);
         updateHandles();
@@ -209,11 +212,13 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     QObject::connect(m_dragHandler, &QQuickDragHandler::activeChanged, [this]() {
         const QPointF startPos = m_dragHandler->centroid().pressPosition();
         const QPointF dragPos = m_dragHandler->centroid().position();
+        const auto modifiers = m_dragHandler->centroid().modifiers();
 
         if (m_dragHandler->active()) {
-            if (!m_selectable->canStartSelection(startPos))
+            if (!m_selectable->startSelection(startPos))
                 return;
-            m_selectable->clearSelection();
+            if (!modifiers.testFlag(Qt::ShiftModifier))
+                m_selectable->clearSelection();
             m_selectable->setSelectionStartPos(startPos);
             m_selectable->setSelectionEndPos(dragPos);
             m_draggedHandle = nullptr;

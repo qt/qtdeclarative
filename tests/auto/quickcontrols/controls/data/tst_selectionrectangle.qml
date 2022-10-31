@@ -198,7 +198,35 @@ TestCase {
         mousePress(tableView, 1, 1, Qt.LeftButton)
         mousePress(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 1000)
         verify(!tableView.selectionModel.hasSelection)
+
     }
+
+// TODO: enable this test when mouseDrag sends modifiers for all mouse events
+// (including mouseMove)
+//    function test_multi_selection() {
+//        let tableView = createTemporaryObject(tableviewComp, testCase)
+//        verify(tableView)
+//        let selectionRectangle = tableView.selectionRectangle
+//        verify(selectionRectangle)
+//        verify(!tableView.selectionModel.hasSelection)
+
+//        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+//        mouseDrag(tableView, 1, 1, (cellWidth * 2) - 2, 1, Qt.LeftButton)
+//        verify(tableView.selectionModel.hasSelection)
+//        compare(tableView.selectionModel.selectedIndexes.length, 2)
+//        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+//        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+
+//        // Hold down shift, and drag again to do a multi-selection
+//        mouseDrag(tableView, 1, cellHeight + 5, (cellWidth * 2) - 2, 1, Qt.LeftButton, Qt.ShiftModifier)
+//        verify(tableView.selectionModel.hasSelection)
+//        compare(tableView.selectionModel.selectedIndexes.length, 4)
+//        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+//        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
+//        verify(tableView.selectionModel.isSelected(tableView.model.index(1, 0)))
+//        verify(tableView.selectionModel.isSelected(tableView.model.index(1, 1)))
+//    }
 
     function test_pressAndHold_data() {
         return [
