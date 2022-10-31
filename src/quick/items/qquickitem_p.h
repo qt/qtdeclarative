@@ -248,7 +248,7 @@ public:
 
     void localizedTouchEvent(const QTouchEvent *event, bool isFiltering, QMutableTouchEvent *localized);
     bool hasPointerHandlers() const;
-    bool hasHoverHandlers() const;
+    bool hasEnabledHoverHandlers() const;
     virtual void addPointerHandler(QQuickPointerHandler *h);
     virtual void removePointerHandler(QQuickPointerHandler *h);
 
