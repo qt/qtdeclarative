@@ -446,7 +446,9 @@ void QQuickDragAttached::setKeys(const QStringList &keys)
     \qmlattachedproperty stringlist QtQuick::Drag::mimeData
     \since 5.2
 
-    This property holds a map of mimeData that is used during startDrag.
+    This property holds a map from mime type to data that is used during startDrag.
+    The mime data needs to be a \c string, or an \c ArrayBuffer with the data encoded
+    according to the mime type.
 */
 
 QVariantMap QQuickDragAttached::mimeData() const
@@ -731,8 +733,12 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
     QDrag *drag = new QDrag(source ? source : q);
     QMimeData *mimeData = new QMimeData();
 
-    for (auto it = externalMimeData.cbegin(), end = externalMimeData.cend(); it != end; ++it)
-        mimeData->setData(it.key(), it.value().toString().toUtf8());
+    for (auto it = externalMimeData.cbegin(), end = externalMimeData.cend(); it != end; ++it) {
+        if (it.value().typeId() == QMetaType::QByteArray)
+            mimeData->setData(it.key(), it.value().toByteArray());
+        else
+            mimeData->setData(it.key(), it.value().toString().toUtf8());
+    }
 
     drag->setMimeData(mimeData);
     if (pixmapLoader.isReady()) {
