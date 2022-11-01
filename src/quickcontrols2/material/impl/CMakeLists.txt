@@ -12,6 +12,7 @@ set(qml_files
     "ElevationEffect.qml"
     "RadioIndicator.qml"
     "RectangularGlow.qml"
+    "RoundedElevationEffect.qml"
     "SliderHandle.qml"
     "SwitchIndicator.qml"
 )

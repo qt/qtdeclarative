@@ -7,7 +7,6 @@ import QtQuick.Layouts
 import ".."
 
 Page {
-    id: root
     topPadding: 20
 
     property var backgroundColor
@@ -19,62 +18,86 @@ Page {
         }
 
         CheckBox {
-            id: flatCheckBox
-            text: "Flat"
+            id: disabledCheckBox
+            text: "Disabled"
+        }
+
+        Item {
+            Layout.fillWidth: true
         }
     }
 
-    component RoundedScaleRepeater: Repeater {
-        id: roundedScaleRepeater
+    component RoundedScaleLayout: ColumnLayout {
+        id: roundedScaleLayout
+        enabled: !disabledCheckBox.checked
 
+        property bool allowFlat
         property var backgroundColor: undefined
         property var foregroundColor: undefined
 
         property int contentLeftMargin
         property int contentRightMargin
 
-        model: ListModel {
-            ListElement { displayName: "NotRounded"; roundedScale: Material.NotRounded }
-            ListElement { displayName: "ExtraSmall"; roundedScale: Material.ExtraSmallScale }
-            ListElement { displayName: "Small"; roundedScale: Material.SmallScale }
-            ListElement { displayName: "Medium"; roundedScale: Material.MediumScale }
-            ListElement { displayName: "Large"; roundedScale: Material.LargeScale }
-            ListElement { displayName: "ExtraLarge"; roundedScale: Material.ExtraLargeScale }
-            ListElement { displayName: "Full"; roundedScale: Material.FullScale }
+        RowLayout {
+            enabled: roundedScaleLayout.allowFlat
+
+            CheckBox {
+                id: flatCheckBox
+                text: "Flat"
+
+                Layout.leftMargin: roundedScaleLayout.contentLeftMargin
+            }
         }
 
-        // Workaround for QTBUG-98859.
-        delegate: Component {
-            ColumnLayout {
-                id: scaleLayout
-                spacing: Constants.spacing
+        RowLayout {
+            spacing: Constants.spacing
 
-                Layout.leftMargin: index === 0 ? roundedScaleRepeater.contentLeftMargin : 0
-                Layout.rightMargin: index === roundedScaleRepeater.count - 1 ? roundedScaleRepeater.contentRightMargin : 0
-                Layout.bottomMargin: Constants.spacing
-
-                required property int index
-                required property string displayName
-                required property int roundedScale
-
-                Label {
-                    text: scaleLayout.displayName
-
-                    Layout.alignment: Qt.AlignHCenter
+            Repeater {
+                id: roundedScaleRepeater
+                model: ListModel {
+                    ListElement { displayName: "NotRounded"; roundedScale: Material.NotRounded }
+                    ListElement { displayName: "ExtraSmall"; roundedScale: Material.ExtraSmallScale }
+                    ListElement { displayName: "Small"; roundedScale: Material.SmallScale }
+                    ListElement { displayName: "Medium"; roundedScale: Material.MediumScale }
+                    ListElement { displayName: "Large"; roundedScale: Material.LargeScale }
+                    ListElement { displayName: "ExtraLarge"; roundedScale: Material.ExtraLargeScale }
+                    ListElement { displayName: "Full"; roundedScale: Material.FullScale }
                 }
 
-                Repeater {
-                    model: 13
+                // Workaround for QTBUG-98859.
+                delegate: Component {
+                    ColumnLayout {
+                        id: scaleLayout
+                        spacing: Constants.spacing
 
-                    Button {
-                        text: modelData
-                        flat: flatCheckBox.checked
-                        icon.source: iconCheckBox.checked ? Constants.iconSource : ""
+                        required property int index
+                        required property string displayName
+                        required property int roundedScale
 
-                        Material.background: roundedScaleRepeater.backgroundColor
-                        Material.foreground: roundedScaleRepeater.foregroundColor
-                        Material.elevation: modelData
-                        Material.roundedScale: scaleLayout.roundedScale
+                        Layout.leftMargin: index === 0 ? roundedScaleLayout.contentLeftMargin : 0
+                        Layout.rightMargin: index === roundedScaleRepeater.count - 1 ? roundedScaleLayout.contentRightMargin : 0
+                        Layout.bottomMargin: Constants.spacing
+
+                        Label {
+                            text: scaleLayout.displayName
+
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Repeater {
+                            model: 13
+
+                            Button {
+                                text: modelData
+                                flat: flatCheckBox.checked
+                                icon.source: iconCheckBox.checked ? "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png" : ""
+
+                                Material.background: roundedScaleLayout.backgroundColor
+                                Material.foreground: roundedScaleLayout.foregroundColor
+                                Material.elevation: modelData
+                                Material.roundedScale: scaleLayout.roundedScale
+                            }
+                        }
                     }
                 }
             }
@@ -87,11 +110,12 @@ Page {
         RowLayout {
             spacing: Constants.spacing
 
-            RoundedScaleRepeater {
+            RoundedScaleLayout {
                 contentLeftMargin: Constants.spacing
+                allowFlat: true
             }
 
-            RoundedScaleRepeater {
+            RoundedScaleLayout {
                 backgroundColor: Material.Teal
                 foregroundColor: "white"
                 contentRightMargin: Constants.spacing

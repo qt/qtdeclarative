@@ -58,8 +58,8 @@ void tst_qquickmaterialstyleconf::variants_data()
     // Just to ensure that the correct conf is loaded.
     QTest::addColumn<QColor>("expectedColor");
 
-    // (36 button height + 12 touchable area)
-    QTest::newRow("normal") << QByteArray(":/variant-normal.conf") << 48 << QColor::fromRgb(0x123456);
+    // (40 button height + 12 touchable area)
+    QTest::newRow("normal") << QByteArray(":/variant-normal.conf") << 52 << QColor::fromRgb(0x123456);
     // We specified a custom variant (dense), so the button should be small.
     // (32 button height + 12 touchable area)
     QTest::newRow("dense") << QByteArray(":/variant-dense.conf") << 44 << QColor::fromRgb(0x789abc);

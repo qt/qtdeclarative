@@ -827,9 +827,6 @@ TestCase {
         property Component row_foregroundToDividerColor: Item { Material.foreground: Material.dividerColor }
         property Component row_foregroundToIconColor: Item { Material.foreground: Material.iconColor }
         property Component row_foregroundToIconDisabledColor: Item { Material.foreground: Material.iconDisabledColor }
-        property Component row_foregroundToButtonColor: Item { Material.foreground: Material.buttonColor }
-        property Component row_foregroundToButtonDisabledColor: Item { Material.foreground: Material.buttonDisabledColor }
-        property Component row_foregroundToHighlightedButtonColor: Item { Material.foreground: Material.highlightedButtonColor }
         property Component row_foregroundToFrameColor: Item { Material.foreground: Material.frameColor }
         property Component row_foregroundToRippleColor: Item { Material.foreground: Material.rippleColor }
         property Component row_foregroundToHighlightedRippleColor: Item { Material.foreground: Material.highlightedRippleColor }

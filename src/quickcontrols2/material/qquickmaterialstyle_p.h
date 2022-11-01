@@ -45,10 +45,6 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor iconColor READ iconColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor iconDisabledColor READ iconDisabledColor NOTIFY themeChanged FINAL)
-    Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY buttonColorChanged FINAL)
-    Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY buttonDisabledColorChanged FINAL)
-    Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY buttonColorChanged FINAL)
-    Q_PROPERTY(QColor highlightedCheckedButtonColor READ highlightedCheckedButtonColor NOTIFY buttonColorChanged FINAL REVISION(6, 2))
     Q_PROPERTY(QColor frameColor READ frameColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor rippleColor READ rippleColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor highlightedRippleColor READ highlightedRippleColor NOTIFY themeOrAccentChanged FINAL)
@@ -212,11 +208,8 @@ public:
     QColor dividerColor() const;
     QColor iconColor() const;
     QColor iconDisabledColor() const;
-    QColor buttonColor() const;
-    QColor buttonDisabledColor() const;
-    QColor highlightedButtonColor() const;
-    QColor highlightedCheckedButtonColor() const;
-    QColor highlightedButtonDisabledColor() const;
+    Q_INVOKABLE QColor buttonColor(Theme theme, const QVariant &background, const QVariant &accent,
+        bool enabled, bool flat, bool highlighted, bool checked) const;
     QColor frameColor() const;
     QColor rippleColor() const;
     QColor highlightedRippleColor() const;
@@ -266,8 +259,6 @@ Q_SIGNALS:
     void themeOrAccentChanged();
 
     void primaryHighlightedTextColorChanged();
-    void buttonColorChanged();
-    void buttonDisabledColorChanged();
     void dialogColorChanged();
     void tooltipColorChanged();
     void toolBarColorChanged();
@@ -283,7 +274,7 @@ private:
 
     QColor backgroundColor(Shade shade) const;
     QColor accentColor(Shade shade) const;
-    QColor buttonColor(bool highlighted, bool checked = false) const;
+
     Shade themeShade() const;
 
     // These reflect whether a color value was explicitly set on the specific
