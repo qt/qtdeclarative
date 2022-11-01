@@ -45,6 +45,9 @@ public:
 private slots:
     void containsDrag_internal();
     void containsDrag_external();
+
+    void ignoreRetriggerEvent();
+
     void keys_internal();
     void keys_external();
     void source_internal();
@@ -806,6 +809,32 @@ void tst_QQuickDropArea::competingDrags()
     evaluate<void>(dragItem, "Drag.active = true");
     QCOMPARE(evaluate<QString>(dropArea1, "statuslol"), QStringLiteral("parent"));
 }
+
+void tst_QQuickDropArea::ignoreRetriggerEvent()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("ignoreRetriggerEvent.qml"), true, &errorMessage), errorMessage.constData());
+
+    QQuickItem *dropArea = window.rootObject();
+    QVERIFY(dropArea);
+    QQuickItem *dragItem = dropArea->findChild<QQuickItem *>("dragItem");
+    QVERIFY(dragItem);
+
+    evaluate<void>(dragItem, "Drag.active = true");
+    // Drag the item within the drop area
+    dragItem->setPosition(QPointF(25, 25));
+    QCoreApplication::processEvents();
+    dragItem->setPosition(QPointF(50, 50));
+    QCoreApplication::processEvents();
+    dragItem->setPosition(QPointF(75, 75));
+    QCoreApplication::processEvents();
+
+    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
+    QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
+    QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
+}
+
 
 void tst_QQuickDropArea::simultaneousDrags()
 {

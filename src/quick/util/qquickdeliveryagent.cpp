@@ -2231,6 +2231,7 @@ void QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QE
             QDragLeaveEvent leaveEvent;
             for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
                 QCoreApplication::sendEvent(**grabItem, &leaveEvent);
+            grabber->ignoreList().clear();
             return;
         } else {
             QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
@@ -2288,6 +2289,8 @@ void QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QE
                 e->modifiers());
         QQuickDropEventEx::copyActions(&enterEvent, *e);
         event->setAccepted(deliverDragEvent(grabber, rootItem, &enterEvent));
+    } else {
+        grabber->ignoreList().clear();
     }
 }
 
@@ -2301,8 +2304,13 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(
     QPointF p = item->mapFromScene(event->position().toPoint());
     bool itemContained = item->contains(p);
 
-    if (!itemContained && itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        return false;
+    const int itemIndex = grabber->ignoreList().indexOf(item);
+    if (!itemContained) {
+        if (itemIndex >= 0)
+            grabber->ignoreList().remove(itemIndex);
+
+        if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape)
+            return false;
     }
 
     QDragEnterEvent enterEvent(
@@ -2332,15 +2340,19 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(
         }
 
         if (event->type() == QEvent::DragMove || itemPrivate->flags & QQuickItem::ItemAcceptsDrops) {
-            if (event->type() == QEvent::DragEnter && formerTarget) {
-                QQuickItem *formerTargetItem = qobject_cast<QQuickItem *>(formerTarget);
-                if (formerTargetItem && currentGrabItems) {
-                    QDragLeaveEvent leaveEvent;
-                    QCoreApplication::sendEvent(formerTarget, &leaveEvent);
+            if (event->type() == QEvent::DragEnter) {
+                if (formerTarget) {
+                    QQuickItem *formerTargetItem = qobject_cast<QQuickItem *>(formerTarget);
+                    if (formerTargetItem && currentGrabItems) {
+                        QDragLeaveEvent leaveEvent;
+                        QCoreApplication::sendEvent(formerTarget, &leaveEvent);
 
-                    // Remove the item from the currentGrabItems so a leave event won't be generated
-                    // later on
-                    currentGrabItems->removeAll(formerTarget);
+                        // Remove the item from the currentGrabItems so a leave event won't be generated
+                        // later on
+                        currentGrabItems->removeAll(formerTarget);
+                    }
+                } else if (itemIndex >= 0) {
+                    return false;
                 }
             }
 
@@ -2356,6 +2368,8 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(
                     grabber->grab(item);
                     grabber->setTarget(item);
                     return true;
+                } else if (itemIndex < 0) {
+                    grabber->ignoreList().append(item);
                 }
             } else {
                 return true;

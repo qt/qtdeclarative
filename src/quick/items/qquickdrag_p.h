@@ -72,9 +72,12 @@ public:
     void grab(QQuickItem *item) { m_items.insert(new Item(item)); }
     iterator release(iterator at) { Item *item = *at; at = at.erase(); delete item; return at; }
 
+    auto& ignoreList() { return m_ignoreDragItems; }
+
 private:
 
     ItemList m_items;
+    QVarLengthArray<QQuickItem *, 4> m_ignoreDragItems;
     QObject *m_target;
 };
 
