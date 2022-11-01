@@ -1529,14 +1529,20 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
 {
     Q_Q(QQuickTableView);
     Q_UNUSED(pos);
-    // Only allow a selection if it doesn't conflict with resizing
-    const bool canStartSelection = resizeHandler->state() == QQuickTableViewResizeHandler::Listening;
-    if (canStartSelection) {
-        selectionStartCell = QPoint(-1, -1);
-        selectionEndCell = QPoint(-1, -1);
-        q->closeEditor();
+
+    if (selectionBehavior == QQuickTableView::SelectionDisabled) {
+        qmlWarning(q) << "Cannot start selection: TableView.selectionBehavior == TableView.SelectionDisabled";
+        return false;
     }
-    return canStartSelection;
+
+    // Only allow a selection if it doesn't conflict with resizing
+    if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
+        return false;
+
+    selectionStartCell = QPoint(-1, -1);
+    selectionEndCell = QPoint(-1, -1);
+    q->closeEditor();
+    return true;
 }
 
 void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
@@ -1559,7 +1565,6 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
         return;
 
     setCurrentIndex(clampedCell);
-    selectionStartCellRect = loadedTableItem(clampedCell)->geometry();
 
     switch (selectionBehavior) {
     case QQuickTableView::SelectCells:
@@ -1602,7 +1607,6 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
         return;
 
     setCurrentIndex(clampedCell);
-    selectionEndCellRect = loadedTableItem(clampedCell)->geometry();;
 
     switch (selectionBehavior) {
     case QQuickTableView::SelectCells:
@@ -1685,8 +1689,6 @@ void QQuickTableViewPrivate::clearSelection()
 {
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
-    selectionStartCellRect = QRectF();
-    selectionEndCellRect = QRectF();
 
     if (selectionModel)
         selectionModel->clearSelection();
@@ -1698,50 +1700,60 @@ void QQuickTableViewPrivate::normalizeSelection()
     // and above the end cell. This is typically done after a selection drag has
     // finished so that the start and end positions up in sync with the handles.
     // This will not cause any changes to the selection itself.
-    const bool flippedX = selectionEndCell.x() < selectionStartCell.x();
-    const bool flippedY = selectionEndCell.y() < selectionStartCell.y();
-
-    if (flippedX) {
+    if (selectionEndCell.x() < selectionStartCell.x())
         std::swap(selectionStartCell.rx(), selectionEndCell.rx());
-        QPointF startPos = selectionStartCellRect.topLeft();
-        QPointF endPos = selectionEndCellRect.topLeft();
-        selectionStartCellRect.moveLeft(endPos.x());
-        selectionEndCellRect.moveLeft(startPos.x());
-    }
-
-    if (flippedY) {
+    if (selectionEndCell.y() < selectionStartCell.y())
         std::swap(selectionStartCell.ry(), selectionEndCell.ry());
-        QPointF startPos = selectionStartCellRect.topLeft();
-        QPointF endPos = selectionEndCellRect.topLeft();
-        selectionStartCellRect.moveTop(endPos.y());
-        selectionEndCellRect.moveTop(startPos.y());
-    }
 }
 
 QRectF QQuickTableViewPrivate::selectionRectangle() const
 {
-    // Normalize the rectangle before we return it. But in order to do
-    // that correctly, QRectF::normalize() will not be enough, we need to
-    // take cell size into account as well.
-    QRectF rect;
+    Q_Q(const QQuickTableView);
 
-    if (selectionStartCell.x() < selectionEndCell.x()) {
-        rect.setX(selectionStartCellRect.x());
-        rect.setWidth(selectionEndCellRect.x() + selectionEndCellRect.width() - selectionStartCellRect.x());
-    } else {
-        rect.setX(selectionEndCellRect.x());
-        rect.setWidth(selectionStartCellRect.x() + selectionStartCellRect.width() - selectionEndCellRect.x());
-    }
+    QPoint topLeftCell = selectionStartCell;
+    QPoint bottomRightCell = selectionEndCell;
+    if (bottomRightCell.x() < topLeftCell.x())
+        std::swap(topLeftCell.rx(), bottomRightCell.rx());
+    if (selectionEndCell.y() < topLeftCell.y())
+        std::swap(topLeftCell.ry(), bottomRightCell.ry());
 
-    if (selectionStartCell.y() < selectionEndCell.y()) {
-        rect.setY(selectionStartCellRect.y());
-        rect.setHeight(selectionEndCellRect.y() + selectionEndCellRect.height() - selectionStartCellRect.y());
-    } else {
-        rect.setY(selectionEndCellRect.y());
-        rect.setHeight(selectionStartCellRect.y() + selectionStartCellRect.height() - selectionEndCellRect.y());
-    }
+    const QPoint leftCell(topLeftCell.x(), topRow());
+    const QPoint topCell(leftColumn(), topLeftCell.y());
+    const QPoint rightCell(bottomRightCell.x(), topRow());
+    const QPoint bottomCell(leftColumn(), bottomRightCell.y());
 
-    return rect;
+    // If the corner cells of the selection are loaded, we can position the
+    // selection rectangle at its exact location. Otherwise we extend it out
+    // to the edges of the content item. This is not ideal, but the best we
+    // can do while the location of the the corner cells are unknown.
+    // This will at least move the selection handles (and other overlay) out
+    // of the viewport until the affected cells are eventually loaded.
+    int left = 0;
+    int top = 0;
+    int right = 0;
+    int bottom = 0;
+
+    if (loadedItems.contains(modelIndexAtCell(leftCell)))
+        left = loadedTableItem(leftCell)->geometry().left();
+    else if (leftCell.x() > rightColumn())
+        left = q->contentWidth();
+
+    if (loadedItems.contains(modelIndexAtCell(topCell)))
+        top = loadedTableItem(topCell)->geometry().top();
+    else if (topCell.y() > bottomRow())
+        top = q->contentHeight();
+
+    if (loadedItems.contains(modelIndexAtCell(rightCell)))
+        right = loadedTableItem(rightCell)->geometry().right();
+    else if (rightCell.x() > rightColumn())
+        right = q->contentWidth();
+
+    if (loadedItems.contains(modelIndexAtCell(bottomCell)))
+        bottom = loadedTableItem(bottomCell)->geometry().bottom();
+    else if (bottomCell.y() > bottomRow())
+        bottom = q->contentHeight();
+
+    return QRectF(left, top, right - left, bottom - top);
 }
 
 QRect QQuickTableViewPrivate::selection() const

@@ -16,7 +16,8 @@ TestCase {
 
     property real cellWidth: 50
     property real cellHeight: 20
-    property Item handle: null
+    property Item topLeftHandle: null
+    property Item bottomRightHandle: null
     property bool handleWasDragged: false
 
     Component {
@@ -26,7 +27,7 @@ TestCase {
     }
 
     Component {
-        id: handleComp
+        id: topLeftHandleComp
         Rectangle {
             id: handle
             width: 28
@@ -43,7 +44,31 @@ TestCase {
                     testCase.handleWasDragged = true
             }
 
-            Component.onCompleted: testCase.handle = handle
+            Component.onCompleted: testCase.topLeftHandle = handle
+            Component.onDestruction: testCase.topLeftHandle = null
+        }
+    }
+
+    Component {
+        id: bottomRightHandleComp
+        Rectangle {
+            id: handle
+            width: 28
+            height: width
+            radius: width / 2
+            property bool dragging: SelectionRectangle.dragging
+            property Item control: SelectionRectangle.control
+            border.width: 1
+            border.color: "green"
+            visible: SelectionRectangle.control.active
+
+            SelectionRectangle.onDraggingChanged: {
+                if (SelectionRectangle.dragging)
+                    testCase.handleWasDragged = true
+            }
+
+            Component.onCompleted: testCase.bottomRightHandle = handle
+            Component.onDestruction: testCase.bottomRightHandle = null
         }
     }
 
@@ -59,11 +84,26 @@ TestCase {
                 TableModelColumn { display: "c2" }
                 TableModelColumn { display: "c3" }
                 TableModelColumn { display: "c4" }
+                TableModelColumn { display: "c5" }
+                TableModelColumn { display: "c6" }
+                TableModelColumn { display: "c7" }
+                TableModelColumn { display: "c8" }
                 rows: [
-                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4" },
-                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4" },
-                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4" },
-                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" },
+                    { "c1": "v1", "c2":"v2", "c3":"v3", "c4": "v4", "c5": "v5", "c6":"v6", "c7":"v7", "c8": "v8" }
                 ]
             }
 
@@ -72,7 +112,7 @@ TestCase {
                 implicitWidth: cellWidth
                 implicitHeight: cellHeight
                 color: selected ? "lightblue" : "gray"
-                Text { text: "cell" }
+                Text { text: row + "," + column }
             }
 
             selectionModel: ItemSelectionModel {
@@ -146,11 +186,11 @@ TestCase {
         selectionRectangle.bottomRightHandle = null
         compare(selectionRectangle.bottomRightHandle, null)
 
-        selectionRectangle.topLeftHandle = handleComp
-        compare(selectionRectangle.topLeftHandle, handleComp)
+        selectionRectangle.topLeftHandle = topLeftHandleComp
+        compare(selectionRectangle.topLeftHandle, topLeftHandleComp)
 
-        selectionRectangle.bottomRightHandle = handleComp
-        compare(selectionRectangle.bottomRightHandle, handleComp)
+        selectionRectangle.bottomRightHandle = bottomRightHandleComp
+        compare(selectionRectangle.bottomRightHandle, bottomRightHandleComp)
     }
 
     function test_drag_data() {
@@ -198,7 +238,86 @@ TestCase {
         mousePress(tableView, 1, 1, Qt.LeftButton)
         mousePress(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 1000)
         verify(!tableView.selectionModel.hasSelection)
+    }
 
+    function test_handle_position() {
+        // Check that the handles end up at the corner of the selection
+        // even if if we resize some rows and column while they have
+        // been flicked out of the viewport.
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+        selectionRectangle.topLeftHandle = topLeftHandleComp
+        selectionRectangle.bottomRightHandle = bottomRightHandleComp
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+        tableView.animate = false
+        verify(waitForItemPolished(tableView))
+
+        // Select a cell
+        let selectedCell = Qt.point(1, 1)
+        let selectedItem = tableView.itemAtCell(selectedCell)
+        verify(selectedItem)
+        mouseDrag(tableView.contentItem, selectedItem.x, selectedItem.y, 10, 10, Qt.LeftButton)
+        compare(tableView.selectionModel.selectedIndexes.length, 1)
+        verify(topLeftHandle)
+        verify(bottomRightHandle)
+
+        // Check that the handles are placed at the corners of the selected cell
+        compare(topLeftHandle.x, selectedItem.x - (topLeftHandle.width / 2))
+        compare(topLeftHandle.y, selectedItem.y - (topLeftHandle.height / 2))
+        compare(bottomRightHandle.x, selectedItem.x + selectedItem.width - (bottomRightHandle.width / 2))
+        compare(bottomRightHandle.y, selectedItem.y + selectedItem.height - (bottomRightHandle.height / 2))
+
+        // Resize some of the rows and columns that will
+        // affect the position of the handles.
+        tableView.setColumnWidth(0, cellWidth + 5)
+        tableView.setRowHeight(0, cellHeight + 5)
+        tableView.setColumnWidth(1, cellWidth + 5)
+        tableView.setRowHeight(1, cellHeight + 5)
+        verify(waitForItemPolished(tableView))
+
+        // Check that the handles are still placed at
+        // the corners of the selected cell.
+        compare(topLeftHandle.x, selectedItem.x - (topLeftHandle.width / 2))
+        compare(topLeftHandle.y, selectedItem.y - (topLeftHandle.height / 2))
+        compare(bottomRightHandle.x, selectedItem.x + selectedItem.width - (bottomRightHandle.width / 2))
+        compare(bottomRightHandle.y, selectedItem.y + selectedItem.height - (bottomRightHandle.height / 2))
+
+        // Move the selected cell out of the
+        // viewport (together with the selection handles).
+        tableView.positionViewAtCell(Qt.point(4, 4), TableView.AlignLeft | TableView.AlignTop)
+        verify(waitForItemPolished(tableView))
+
+        // Resize some of the rows and columns that will
+        // affect the position of the handles.
+        tableView.setColumnWidth(0, cellWidth + 10)
+        tableView.setRowHeight(0, cellHeight + 10)
+        tableView.setColumnWidth(1, cellWidth + 10)
+        tableView.setRowHeight(1, cellHeight + 10)
+        verify(waitForItemPolished(tableView))
+
+        // Flick the selected cell back into the viewport
+        tableView.positionViewAtCell(Qt.point(0, 0), TableView.AlignLeft | TableView.AlignTop)
+        verify(waitForItemPolished(tableView))
+
+        // Check that the handles are still placed around the selected cell
+        selectedItem = tableView.itemAtCell(selectedCell)
+        verify(selectedItem)
+        verify(topLeftHandle)
+        verify(bottomRightHandle)
+
+        compare(topLeftHandle.x, selectedItem.x - (topLeftHandle.width / 2))
+        compare(topLeftHandle.y, selectedItem.y - (topLeftHandle.height / 2))
+        compare(bottomRightHandle.x, selectedItem.x + selectedItem.width - (bottomRightHandle.width / 2))
+        compare(bottomRightHandle.y, selectedItem.y + selectedItem.height - (bottomRightHandle.height / 2))
+
+        // Remove the selection, and check that the handles end up hidden
+        mouseClick(tableView, tableView.width - 1, tableView.height - 1, Qt.LeftButton)
+        verify(!tableView.selectionModel.hasSelection)
+        verify(!topLeftHandle.visible)
+        verify(!bottomRightHandle.visible)
     }
 
 // TODO: enable this test when mouseDrag sends modifiers for all mouse events
@@ -379,7 +498,7 @@ TestCase {
         }
 
         // Drag on the bottom right handle, so that the selection expands to cell 9 cells
-        mouseDrag(tableView, cellWidth * 3, cellHeight * 3, cellWidth * 4, cellHeight * 4, Qt.LeftButton)
+        mouseDrag(tableView, cellWidth * 3, cellHeight * 3, 10, 10, Qt.LeftButton)
         compare(tableView.selectionModel.selectedIndexes.length, 9)
         for (x = 1; x < 4; ++x) {
            for (y = 1; y < 4; ++y) {

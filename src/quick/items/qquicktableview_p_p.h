@@ -360,8 +360,6 @@ public:
 
     QPoint selectionStartCell = {-1, -1};
     QPoint selectionEndCell = {-1, -1};
-    QRectF selectionStartCellRect;
-    QRectF selectionEndCellRect;
 
     QMargins edgesBeforeRebuild;
 
