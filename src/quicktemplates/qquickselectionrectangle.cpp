@@ -288,6 +288,16 @@ void QQuickSelectionRectanglePrivate::updateActiveState(bool active)
         return;
 
     m_active = active;
+
+    if (const auto tableview = qobject_cast<QQuickTableView *>(m_target)) {
+        if (active) {
+            // If the position of rows and columns changes, we'll need to reposition the handles
+            connect(tableview, &QQuickTableView::layoutChanged, this, &QQuickSelectionRectanglePrivate::updateHandles);
+        } else {
+            disconnect(tableview, &QQuickTableView::layoutChanged, this, &QQuickSelectionRectanglePrivate::updateHandles);
+        }
+    }
+
     emit q_func()->activeChanged();
 }
 
@@ -374,9 +384,6 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
 
 void QQuickSelectionRectanglePrivate::updateHandles()
 {
-    if (!m_selectable)
-        return;
-
     const QRectF rect = m_selectable->selectionRectangle().normalized();
 
     if (!m_topLeftHandle && m_topLeftHandleDelegate)

@@ -127,6 +127,13 @@ ApplicationWindow {
                         text: "Highlight row/col"
                     }
 
+                    CheckBox {
+                        id: showSelectionHandles
+                        checkable: true
+                        checked: tableView.interactive
+                        text: "Show selection handles"
+                    }
+
                     ComboBox {
                         id: selectionCombo
                         model: [
@@ -138,6 +145,7 @@ ApplicationWindow {
                     }
                     ComboBox {
                         id: selectionModeCombo
+                        enabled: selectionCombo.currentText != "SelectionDisabled"
                         model: [
                             "Auto",
                             "Drag",
@@ -502,7 +510,24 @@ ApplicationWindow {
     }
 
     SelectionRectangle {
+        id: selectionRectangle
         target: tableView
+        topLeftHandle: Rectangle {
+            width: 20
+            height: 20
+            radius: 10
+            color: "blue"
+            visible: showSelectionHandles.checked && selectionRectangle.active
+        }
+
+        bottomRightHandle: Rectangle {
+            width: 20
+            height: 20
+            radius: 10
+            color: "green"
+            visible: showSelectionHandles.checked && selectionRectangle.active
+        }
+
         selectionMode: {
             switch (selectionModeCombo.currentText) {
             case "Drag": return SelectionRectangle.Drag
