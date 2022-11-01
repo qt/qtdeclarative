@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qt_generate_deploy_qml_app_script.html
+\page qt-generate-deploy-qml-app-script.html
 \ingroup cmake-commands-qtqml
 
 \title qt_generate_deploy_qml_app_script

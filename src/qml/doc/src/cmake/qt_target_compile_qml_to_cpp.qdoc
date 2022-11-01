@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qt_target_compile_qml_to_cpp.html
+\page qt-target-compile-qml-to-cpp.html
 \ingroup cmake-commands-qtqml
 
 \title qt_target_compile_qml_to_cpp

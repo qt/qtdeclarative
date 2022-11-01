@@ -13,7 +13,7 @@ CMake source file properties:
 
 
 /*!
-\page cmake-source-file-property-QT_QML_INTERNAL_TYPE.html
+\page cmake-source-file-property-qt-qml-internal-type.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_INTERNAL_TYPE
@@ -30,7 +30,7 @@ Set this property to \c TRUE to indicate that the \c{.qml} file provides an inte
 
 
 /*!
-\page cmake-source-file-property-QT_QML_SINGLETON_TYPE.html
+\page cmake-source-file-property-qt-qml-singleton-type.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SINGLETON_TYPE
@@ -53,7 +53,7 @@ how to set the \c QT_QML_SINGLETON_TYPE property.
 
 
 /*!
-\page cmake-source-file-property-QT_QML_SKIP_CACHEGEN.html
+\page cmake-source-file-property-qt-qml-skip-cachegen.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_CACHEGEN
@@ -72,7 +72,7 @@ The file will still be added to the \c target as a resource in uncompiled form
 
 
 /*!
-\page cmake-source-file-property-QT_QML_SKIP_QMLDIR_ENTRY.html
+\page cmake-source-file-property-qt-qml-skip-qmldir-entry.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_QMLDIR_ENTRY
@@ -91,7 +91,7 @@ the \c{.qml} file from being added as a type to the QML module's typeinfo file
 
 
 /*!
-\page cmake-source-file-property-QT_QML_SKIP_QMLLINT.html
+\page cmake-source-file-property-qt-qml-skip-qmllint.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_QMLLINT
@@ -109,7 +109,7 @@ Set this property to \c TRUE to prevent the file from being included in
 
 
 /*!
-\page cmake-source-file-property-QT_QML_SOURCE_TYPENAME.html
+\page cmake-source-file-property-qt-qml-source-typename.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SOURCE_TYPENAME
@@ -126,7 +126,7 @@ Use this property to override the \c QML type name provided by this file.
 
 
 /*!
-\page cmake-source-file-property-QT_QML_SOURCE_VERSIONS.html
+\page cmake-source-file-property-qt-qml-source-versions.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SOURCE_VERSIONS
@@ -145,7 +145,7 @@ version after the \c{.0} release, specify those versions using this property.
 
 
 /*!
-\page cmake-source-file-property-QT_QMLTC_FILE_BASENAME.html
+\page cmake-source-file-property-qt-qmltc-file-basename.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QMLTC_FILE_BASENAME
@@ -163,7 +163,7 @@ conflicting file names.
 */
 
 /*!
-\page cmake-source-file-property-QT_QML_SKIP_TYPE_COMPILER.html
+\page cmake-source-file-property-qt-qml-skip-type-compiler.html
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_TYPE_COMPILER
