@@ -3900,7 +3900,7 @@ void QQuickItem::updatePolish()
 do { \
     qDebug().nospace() << q_func() << " (" << this \
         << ") now has the following listeners:"; \
-    for (const auto listener : changeListeners) { \
+    for (const auto &listener : std::as_const(changeListeners)) { \
         const auto objectPrivate = dynamic_cast<QObjectPrivate*>(listener.listener); \
         qDebug().nospace() << "- " << listener << " (QObject: " << (objectPrivate ? objectPrivate->q_func() : nullptr) << ")"; \
     } \
