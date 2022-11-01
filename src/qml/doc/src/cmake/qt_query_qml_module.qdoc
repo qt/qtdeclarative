@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qt_query_qml_module.html
+\page qt-query-qml-module.html
 \ingroup cmake-commands-qtqml
 
 \title qt_query_qml_module

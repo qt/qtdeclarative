@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \page qtquickcontrols2-macOS.html
+    \page qtquickcontrols2-macos.html
     \title macOS Style
 
     The macOS style is a style that looks native on macOS.

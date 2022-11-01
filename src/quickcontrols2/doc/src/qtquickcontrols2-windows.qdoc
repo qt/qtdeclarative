@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \page qtquickcontrols2-Windows.html
+    \page qtquickcontrols2-windows.html
     \title Windows Style
 
     The Windows style is a style that looks native on Windows.

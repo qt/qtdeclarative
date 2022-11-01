@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page cmake-variable-QT_QML_OUTPUT_DIRECTORY.html
+\page cmake-variable-qt-qml-output-directory.html
 \ingroup cmake-variables-qtqml
 
 \title QT_QML_OUTPUT_DIRECTORY
