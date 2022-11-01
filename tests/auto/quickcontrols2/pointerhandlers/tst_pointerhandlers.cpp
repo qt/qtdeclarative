@@ -199,8 +199,8 @@ void tst_pointerhandlers::buttonTapHandler() // QTBUG-105609
     case QPointingDevice::DeviceType::Mouse:
         // click it
         QTest::mouseClick(&window, mouseButton, Qt::NoModifier, pos);
-        QTRY_COMPARE(clickedSpy.count(), 1); // perhaps Button should not react to right-click, but it does
-        QCOMPARE(tappedSpy.count(), 1);
+        QTRY_COMPARE(clickedSpy.size(), 1); // perhaps Button should not react to right-click, but it does
+        QCOMPARE(tappedSpy.size(), 1);
         break;
 
     case QPointingDevice::DeviceType::TouchScreen: {
@@ -209,8 +209,8 @@ void tst_pointerhandlers::buttonTapHandler() // QTBUG-105609
         touch.press(0, pos, &window).commit();
         QTRY_COMPARE(target->property("pressed").toBool(), true);
         touch.release(0, pos, &window).commit();
-        QTRY_COMPARE(clickedSpy.count(), 1);
-        QCOMPARE(tappedSpy.count(), 1);
+        QTRY_COMPARE(clickedSpy.size(), 1);
+        QCOMPARE(tappedSpy.size(), 1);
         break;
     }
     default:
@@ -247,7 +247,7 @@ void tst_pointerhandlers::buttonDragHandler() // QTBUG-105610
     case QPointingDevice::DeviceType::Mouse:
         // click it
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, dragPos);
-        QTRY_COMPARE(clickedSpy.count(), 1);
+        QTRY_COMPARE(clickedSpy.size(), 1);
 
         // drag it
         QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, dragPos);
@@ -266,7 +266,7 @@ void tst_pointerhandlers::buttonDragHandler() // QTBUG-105610
         // tap it
         touch.press(0, dragPos, &window).commit();
         touch.release(0, dragPos, &window).commit();
-        QTRY_COMPARE(clickedSpy.count(), 1);
+        QTRY_COMPARE(clickedSpy.size(), 1);
 
         // drag it
         touch.press(0, dragPos, &window).commit();
@@ -286,7 +286,7 @@ void tst_pointerhandlers::buttonDragHandler() // QTBUG-105610
 
     // click it again
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, dragPos);
-    QTRY_COMPARE(clickedSpy.count(), 2);
+    QTRY_COMPARE(clickedSpy.size(), 2);
 }
 
 QTEST_MAIN(tst_pointerhandlers)

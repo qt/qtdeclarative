@@ -1441,7 +1441,7 @@ std::optional<int> QQuickShaderEffectPrivate::findMappedShaderVariableId(const Q
 bool QQuickShaderEffectPrivate::sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const
 {
     for (int shaderType = 0; shaderType < NShader; ++shaderType) {
-        for (int idx = 0; idx < m_shaders[shaderType].varData.count(); ++idx) {
+        for (int idx = 0; idx < m_shaders[shaderType].varData.size(); ++idx) {
             if (shaderType != typeToSkip || idx != indexToSkip) {
                 const auto &vd(m_shaders[shaderType].varData[idx]);
                 if (vd.specialType == QSGShaderEffectNode::VariableData::Source && qvariant_cast<QObject *>(vd.value) == source)

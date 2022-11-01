@@ -372,8 +372,8 @@ void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, clickPos);
     qCDebug(lcTests) << "clicking subscene TextEdit set cursorPos to" << cursorPos;
     QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos); // TextEdit reacts regardless
-    QCOMPARE(clickSpy.count(), expectedTaps);
-    QCOMPARE(cancelSpy.count(), expectedCancels);
+    QCOMPARE(clickSpy.size(), expectedTaps);
+    QCOMPARE(cancelSpy.size(), expectedCancels);
 }
 
 void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-105192

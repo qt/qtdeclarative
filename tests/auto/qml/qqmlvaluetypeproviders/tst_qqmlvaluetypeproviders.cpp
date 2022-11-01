@@ -340,7 +340,7 @@ void tst_qqmlvaluetypeproviders::recursive()
     QVERIFY(!o.isNull());
 
     const QList<StructuredValueType> l = o->property("l").value<QList<StructuredValueType>>();
-    QCOMPARE(l.length(), 3);
+    QCOMPARE(l.size(), 3);
     QCOMPARE(l[2].i(), 4);
     QCOMPARE(l[1].p().x(), 88);
     QCOMPARE(l[0].sizes()[1].width(), 19);

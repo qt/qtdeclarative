@@ -596,12 +596,12 @@ void tst_HoverHandler::addHandlerFromCpp()
     // Move mouse inside child
     QTest::mouseMove(window.data(), inside);
     QVERIFY(handler->isHovered());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // Move mouse outside child
     QTest::mouseMove(window.data(), outside);
     QVERIFY(!handler->isHovered());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     // Remove the parent item from the handler
     spy.clear();
@@ -610,12 +610,12 @@ void tst_HoverHandler::addHandlerFromCpp()
     // Move mouse inside child
     QTest::mouseMove(window.data(), inside);
     QVERIFY(!handler->isHovered());
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     // Move mouse outside child
     QTest::mouseMove(window.data(), outside);
     QVERIFY(!handler->isHovered());
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     // Reparent back the item to the handler
     spy.clear();
@@ -624,12 +624,12 @@ void tst_HoverHandler::addHandlerFromCpp()
     // Move mouse inside child
     QTest::mouseMove(window.data(), inside);
     QVERIFY(handler->isHovered());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // Move mouse outside child
     QTest::mouseMove(window.data(), outside);
     QVERIFY(!handler->isHovered());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 void tst_HoverHandler::ensureHoverHandlerWorksWhenItemHasHoverDisabled()
@@ -663,12 +663,12 @@ void tst_HoverHandler::ensureHoverHandlerWorksWhenItemHasHoverDisabled()
     // Move mouse inside child
     QTest::mouseMove(window.data(), inside);
     QVERIFY(handler->isHovered());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // Move mouse outside child
     QTest::mouseMove(window.data(), outside);
     QVERIFY(!handler->isHovered());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 QTEST_MAIN(tst_HoverHandler)
