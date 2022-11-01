@@ -1300,7 +1300,8 @@ void tst_qqmlcomponent::loadFromModule_data()
     QTest::addRow("Basic.Button") << u"QtQuick.Controls.Basic"_s << u"Button"_s << u"Button_QMLTYPE_\\d+"_s;
 #endif
 
-    // TODO: load inline component
+    QTest::addRow("IC") << u"test"_s << u"TestComponentWithIC"_s << u"TestComponentWithIC"_s; // sanity check for next test
+    QTest::addRow("IC") << u"test"_s << u"TestComponentWithIC.InnerIC"_s << u"InnerIC"_s;
 }
 
 void tst_qqmlcomponent::loadFromModule()

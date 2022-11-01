@@ -36,6 +36,15 @@ if(TARGET Qt::QuickControls2)
     target_compile_definitions(tst_qqmlcomponent PRIVATE HAS_CONTROLS)
 endif()
 
+qt_add_qml_module(
+    tst_qqmlcomponent
+    URI test
+    VERSION 1.0
+    AUTO_RESOURCE_PREFIX
+    QML_FILES
+        "data/TestComponentWithIC.qml"
+)
+
 # Resources:
 set(qmake_immediate_resource_files
     "data/QtObjectComponent.qml"

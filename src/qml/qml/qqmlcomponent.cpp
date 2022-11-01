@@ -320,6 +320,7 @@ void QQmlComponentPrivate::clear()
 
     compilationUnit.reset();
     loadedType = {};
+    isInlineComponent = false;
 }
 
 QObject *QQmlComponentPrivate::doBeginCreate(QQmlComponent *q, QQmlContext *context)
@@ -759,7 +760,6 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
     QQmlTypeLoader::Mode loaderMode = (mode == QQmlComponent::Asynchronous)
             ? QQmlTypeLoader::Asynchronous
             : QQmlTypeLoader::PreferSynchronous;
-
     QQmlRefPointer<QQmlTypeData> data = QQmlEnginePrivate::get(engine)->typeLoader.getType(url, loaderMode);
 
     if (data->isCompleteOrError()) {
@@ -1024,7 +1024,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     if (!loadedType.isValid()) {
         enginePriv->referenceScarceResources();
         state.initCreator(std::move(context), compilationUnit, creationContext);
-        rv = state.creator()->create(start);
+        rv = state.creator()->create(start, nullptr, nullptr, isInlineComponent ? QQmlObjectCreator::InlineComponent : QQmlObjectCreator::NormalObject);
         if (!rv)
             state.appendCreatorErrors();
         enginePriv->dereferenceScarceResources();
@@ -1336,6 +1336,18 @@ void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
 
     } else if (type.isComposite()) {
         loadUrl(type.sourceUrl(), mode);
+    } else if (type.isInlineComponentType()) {
+        auto baseUrl = type.sourceUrl();
+        baseUrl.setFragment(QString());
+        // if the outer type has not been resolved yet, we need to load the outer type synchronously
+        // in order to get the correct object id
+        mode = type.inlineComponentObjectId() > 0 ? mode : QQmlComponent::CompilationMode::PreferSynchronous;
+        loadUrl(baseUrl, mode);
+        if (!isError()) {
+            d->isInlineComponent = true;
+            d->start = type.inlineComponentObjectId();
+            Q_ASSERT(d->start >= 0);
+        }
     } else if (type.isSingleton() || type.isCompositeSingleton()) {
         reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)")
                     .arg(typeName.toString()));
