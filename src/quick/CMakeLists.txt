@@ -302,12 +302,6 @@ qt_internal_add_shaders(Quick "scenegraph_shaders"
         "scenegraph/shaders_ng/visualization.vert"
 )
 
-if(ANDROID)
-    set_property(TARGET Quick APPEND PROPERTY QT_ANDROID_BUNDLED_FILES
-        qml
-    )
-endif()
-
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_qml_network
     LIBRARIES
         Qt::Network
