@@ -14,7 +14,7 @@ global CMake properties:
 
 /*!
 \page cmake-global-property-qt-qmllinter-targets-folder.html
-1\ingroup cmake-properties-qtqml
+\ingroup cmake-properties-qtqml
 \ingroup cmake-global-properties-qtqml
 
 \title QT_QMLLLINTER_TARGETS_FOLDER
