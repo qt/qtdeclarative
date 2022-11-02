@@ -165,6 +165,9 @@ QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object,
     Q_ASSERT(object);
     auto modelItem = qvariant_cast<QQmlDelegateModelItem *>(object->property(kModelItemTag));
     Q_ASSERT(modelItem);
+    // Ensure that the object was incubated by this QQmlTableInstanceModel
+    Q_ASSERT(m_modelItems.contains(modelItem->index));
+    Q_ASSERT(m_modelItems[modelItem->index]->object == object);
 
     if (!modelItem->releaseObject())
         return QQmlDelegateModel::Referenced;
@@ -214,6 +217,9 @@ void QQmlTableInstanceModel::dispose(QObject *object)
     // The item is not referenced by anyone
     Q_ASSERT(!modelItem->isObjectReferenced());
     Q_ASSERT(!modelItem->isReferenced());
+    // Ensure that the object was incubated by this QQmlTableInstanceModel
+    Q_ASSERT(m_modelItems.contains(modelItem->index));
+    Q_ASSERT(m_modelItems[modelItem->index]->object == object);
 
     m_modelItems.remove(modelItem->index);
 
