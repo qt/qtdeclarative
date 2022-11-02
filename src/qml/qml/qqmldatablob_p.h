@@ -181,13 +181,14 @@ private:
             }
         }
 
-        inline quint8 progress() const
+        inline qreal progress() const
         {
-            return quint8((_p.loadRelaxed() & ProgressMask) >> ProgressShift);
+            return quint8((_p.loadRelaxed() & ProgressMask) >> ProgressShift) / float(0xFF);
         }
 
-        inline void setProgress(quint8 v)
+        inline void setProgress(qreal progress)
         {
+            quint8 v = 0xFF * progress;
             while (true) {
                 int d = _p.loadRelaxed();
                 int nd = (d & ~ProgressMask) | ((v << ProgressShift) & ProgressMask);

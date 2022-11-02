@@ -250,7 +250,7 @@ void QQmlTypeLoader::loadThread(const QQmlDataBlob::Ptr &blob)
             return;
         }
 
-        blob->m_data.setProgress(0xFF);
+        blob->m_data.setProgress(1.f);
         if (blob->m_data.isAsync())
             m_thread->callDownloadProgressChanged(blob, 1.);
 
@@ -333,7 +333,7 @@ void QQmlTypeLoader::networkReplyProgress(QNetworkReply *reply,
     Q_ASSERT(blob);
 
     if (bytesTotal != 0) {
-        quint8 progress = 0xFF * (qreal(bytesReceived) / qreal(bytesTotal));
+        qreal progress = (qreal(bytesReceived) / qreal(bytesTotal));
         blob->m_data.setProgress(progress);
         if (blob->m_data.isAsync())
             m_thread->callDownloadProgressChanged(blob, blob->m_data.progress());
