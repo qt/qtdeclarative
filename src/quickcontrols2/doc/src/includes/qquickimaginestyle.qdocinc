@@ -53,5 +53,8 @@
 
             \note Due to a technical limitation, the path should not be named
                   \e "imagine" if it is relative to the \c qtquickcontrols2.conf file.
+        \li \c QT_QUICK_CONTROLS_IMAGINE_SMOOTH
+        \li Set to \c 1 to enable smooth scaling for 9-patch images.
+            This environment variable was added in Qt 6.5.
 \endtable
 //! [env]
