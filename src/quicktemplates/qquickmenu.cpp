@@ -745,6 +745,10 @@ QQuickMenu::~QQuickMenu()
     if (d->contentItem) {
         QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
         QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+
+        const auto children = d->contentItem->childItems();
+        for (QQuickItem *child : std::as_const(children))
+            QQuickItemPrivate::get(child)->removeItemChangeListener(d, QQuickItemPrivate::SiblingOrder);
     }
 }
 
