@@ -99,7 +99,7 @@ public:
     void syncMaterial(SyncData *syncData) override;
     void preprocess() override;
 
-    static void cleanupMaterialTypeCache();
+    static void cleanupMaterialTypeCache(void *materialTypeCacheKey);
 
 private Q_SLOTS:
     void handleTextureChange();

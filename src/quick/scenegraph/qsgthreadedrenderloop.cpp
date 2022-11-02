@@ -476,7 +476,7 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
     if (wipeSG) {
         dd->cleanupNodesOnShutdown();
 #if QT_CONFIG(quick_shadereffect)
-        QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
+        QSGRhiShaderEffectNode::cleanupMaterialTypeCache(window);
 #endif
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- persistent SG, avoiding cleanup");

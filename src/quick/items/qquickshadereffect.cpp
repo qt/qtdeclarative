@@ -1129,6 +1129,8 @@ QSGNode *QQuickShaderEffectImpl::handleUpdatePaintNode(QSGNode *oldNode, QQuickI
     sd.fragment.shader = &m_shaders[Fragment];
     sd.fragment.dirtyConstants = &m_dirtyConstants[Fragment];
     sd.fragment.dirtyTextures = &m_dirtyTextures[Fragment];
+    sd.materialTypeCacheKey = m_item->window();
+
     node->syncMaterial(&sd);
 
     if (m_dirty & QSGShaderEffectNode::DirtyShaderMesh) {
@@ -1207,6 +1209,7 @@ bool QQuickShaderEffectImpl::updateUniformValue(const QByteArray &name, const QV
     sd.fragment.shader = &m_shaders[Fragment];
     sd.fragment.dirtyConstants = &dirtyConstants[Fragment];
     sd.fragment.dirtyTextures = {};
+    sd.materialTypeCacheKey = m_item->window();
 
     node->syncMaterial(&sd);
 
