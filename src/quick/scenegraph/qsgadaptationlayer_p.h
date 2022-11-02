@@ -336,6 +336,7 @@ public:
         };
         ShaderSyncData vertex;
         ShaderSyncData fragment;
+        void *materialTypeCacheKey;
     };
 
     // Each ShaderEffect item has one node (render thread) and one manager (gui thread).

@@ -333,7 +333,7 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     d->cleanupNodesOnShutdown();
 
 #if QT_CONFIG(quick_shadereffect)
-    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
+    QSGRhiShaderEffectNode::cleanupMaterialTypeCache(window);
 #endif
 
     if (data.rc) {
