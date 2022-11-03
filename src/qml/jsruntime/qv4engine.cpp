@@ -86,16 +86,6 @@
 
 #include <private/qqmlengine_p.h>
 
-#if USE(PTHREADS)
-#  include <pthread.h>
-#if !defined(Q_OS_INTEGRITY)
-#  include <sys/resource.h>
-#endif
-#if HAVE(PTHREAD_NP_H)
-#  include <pthread_np.h>
-#endif
-#endif
-
 #ifdef V4_USE_VALGRIND
 #include <valgrind/memcheck.h>
 #endif
