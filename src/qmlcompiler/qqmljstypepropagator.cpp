@@ -1371,16 +1371,6 @@ void QQmlJSTypePropagator::generate_CallPropertyLookup(int lookupIndex, int base
     generate_CallProperty(m_jsUnitGenerator->lookupNameIndex(lookupIndex), base, argc, argv);
 }
 
-void QQmlJSTypePropagator::generate_CallElement(int base, int index, int argc, int argv)
-{
-    m_state.setHasSideEffects(true);
-    Q_UNUSED(base)
-    Q_UNUSED(index)
-    Q_UNUSED(argc)
-    Q_UNUSED(argv)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
-}
-
 void QQmlJSTypePropagator::generate_CallName(int name, int argc, int argv)
 {
     propagateScopeLookupCall(m_jsUnitGenerator->stringForIndex(name), argc, argv);

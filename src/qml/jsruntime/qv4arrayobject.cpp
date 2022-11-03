@@ -342,6 +342,9 @@ ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, con
     ScopedValue v(scope);
     ScopedString s(scope);
 
+    ScopedPropertyKey tolocaleString(scope, scope.engine->id_toLocaleString()->toPropertyKey());
+    Q_ASSERT(!scope.engine->hasException);
+
     for (uint k = 0; k < len; ++k) {
         if (k)
             R += separator;
@@ -349,7 +352,18 @@ ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, con
         v = instance->get(k);
         if (v->isNullOrUndefined())
             continue;
-        v = Runtime::CallElement::call(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
+
+        ScopedObject valueAsObject(scope, v->toObject(scope.engine));
+        Q_ASSERT(valueAsObject); // null and undefined handled above
+
+        ScopedFunctionObject function(scope, valueAsObject->get(tolocaleString));
+        if (!function)
+            return scope.engine->throwTypeError();
+
+        v = function->call(valueAsObject, nullptr, 0);
+        if (scope.hasException())
+            return Encode::undefined();
+
         s = v->toString(scope.engine);
         if (scope.hasException())
             return Encode::undefined();

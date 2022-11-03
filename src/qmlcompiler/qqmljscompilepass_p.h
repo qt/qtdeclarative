@@ -266,7 +266,6 @@ protected:
     void generate_BitOrConst(int) override {}
     void generate_BitXor(int) override {}
     void generate_BitXorConst(int) override {}
-    void generate_CallElement(int, int, int, int) override {}
     void generate_CallGlobalLookup(int, int, int) override {}
     void generate_CallName(int, int, int) override {}
     void generate_CallPossiblyDirectEval(int, int) override {}

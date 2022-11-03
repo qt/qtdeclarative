@@ -1516,15 +1516,6 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     m_body += u"}\n"_s;
 }
 
-void QQmlJSCodeGenerator::generate_CallElement(int base, int index, int argc, int argv)
-{
-    Q_UNUSED(base)
-    Q_UNUSED(index)
-    Q_UNUSED(argc)
-    Q_UNUSED(argv)
-    BYTECODE_UNIMPLEMENTED();
-}
-
 void QQmlJSCodeGenerator::generate_CallName(int name, int argc, int argv)
 {
     Q_UNUSED(name);

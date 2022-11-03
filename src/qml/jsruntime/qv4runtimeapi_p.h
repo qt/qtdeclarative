@@ -67,10 +67,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, uint, Value[], int);
     };
-    struct Q_QML_PRIVATE_EXPORT CallElement : Method<Throws::Yes>
-    {
-        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value[], int);
-    };
     struct Q_QML_PRIVATE_EXPORT CallValue : Method<Throws::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, Value[], int);

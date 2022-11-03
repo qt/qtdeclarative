@@ -1487,24 +1487,6 @@ ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const V
     return checkedResult(engine, static_cast<FunctionObject &>(f).call(&base, argv, argc));
 }
 
-ReturnedValue Runtime::CallElement::call(ExecutionEngine *engine, const Value &baseRef, const Value &index, Value *argv, int argc)
-{
-    const Value *base = &baseRef;
-    Scope scope(engine);
-    ScopedValue thisObject(scope, base->toObject(engine));
-    base = thisObject;
-
-    ScopedPropertyKey str(scope, index.toPropertyKey(engine));
-    if (engine->hasException)
-        return Encode::undefined();
-
-    ScopedFunctionObject f(scope, static_cast<const Object *>(base)->get(str));
-    if (!f)
-        return engine->throwTypeError();
-
-    return checkedResult(engine, f->call(base, argv, argc));
-}
-
 ReturnedValue Runtime::CallValue::call(ExecutionEngine *engine, const Value &func, Value *argv, int argc)
 {
     if (!func.isFunctionObject())
@@ -2389,7 +2371,6 @@ QHash<const void *, const char *> Runtime::symbolTable()
             {symbol<CallName>(), "CallName" },
             {symbol<CallProperty>(), "CallProperty" },
             {symbol<CallPropertyLookup>(), "CallPropertyLookup" },
-            {symbol<CallElement>(), "CallElement" },
             {symbol<CallValue>(), "CallValue" },
             {symbol<CallWithReceiver>(), "CallWithReceiver" },
             {symbol<CallPossiblyDirectEval>(), "CallPossiblyDirectEval" },

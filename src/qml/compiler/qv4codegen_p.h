@@ -342,7 +342,10 @@ public:
             };
             struct {
                 Moth::StackSlot elementBase;
-                RValue elementSubscript;
+                union {
+                    RValue elementSubscript;
+                    Moth::StackSlot element;
+                };
             };
             Moth::StackSlot property; // super property
         };
@@ -822,6 +825,7 @@ private:
     void throwError(ErrorType errorType, const QQmlJS::SourceLocation &loc,
                     const QString &detail);
     std::optional<Moth::BytecodeGenerator::Label> traverseOptionalChain(QQmlJS::AST::Node *node);
+    Reference loadSubscriptForCall(const Reference &base);
 };
 
 }

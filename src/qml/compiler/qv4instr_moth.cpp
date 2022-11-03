@@ -306,11 +306,6 @@ void dumpBytecode(
               << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallPropertyLookup)
 
-        MOTH_BEGIN_INSTR(CallElement)
-            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]"
-              << dumpArguments(argc, argv, nFormals);
-        MOTH_END_INSTR(CallElement)
-
         MOTH_BEGIN_INSTR(CallName)
             d << name << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallName)

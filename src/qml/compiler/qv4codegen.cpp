@@ -1908,6 +1908,17 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
     return Reference();
 }
 
+Codegen::Reference Codegen::loadSubscriptForCall(const Codegen::Reference &base)
+{
+    // Retrieve the function to be called before generating the arguments.
+    // Generating the arguments might change the array.
+    base.elementSubscript.loadInAccumulator();
+    Codegen::Instruction::LoadElement load;
+    load.base = base.elementBase;
+    bytecodeGenerator->addInstruction(load);
+    return Reference::fromAccumulator(this);
+}
+
 bool Codegen::visit(CallExpression *ast)
 {
     if (hasError())
@@ -1924,8 +1935,10 @@ bool Codegen::visit(CallExpression *ast)
         return false;
     switch (base.type) {
     case Reference::Member:
-    case Reference::Subscript:
         base = base.asLValue();
+        break;
+    case Reference::Subscript:
+        base.element = loadSubscriptForCall(base).storeOnStack().stackSlot();
         break;
     case Reference::Name:
         break;
@@ -2034,9 +2047,9 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
             bytecodeGenerator->addInstruction(call);
         }
     } else if (base.type == Reference::Subscript) {
-        Instruction::CallElement call;
-        call.base = base.elementBase;
-        call.index = base.elementSubscript.stackSlot();
+        Instruction::CallWithReceiver call;
+        call.thisObject = base.elementBase.stackSlot();
+        call.name = base.element;
         call.argc = calldata.argc;
         call.argv = calldata.argv;
         bytecodeGenerator->addInstruction(call);
@@ -2480,8 +2493,10 @@ bool Codegen::handleTaggedTemplate(Reference base, TaggedTemplate *ast)
     int functionObject = -1, thisObject = -1;
     switch (base.type) {
     case Reference::Member:
-    case Reference::Subscript:
         base = base.asLValue();
+        break;
+    case Reference::Subscript:
+        base.element = loadSubscriptForCall(base).storeOnStack().stackSlot();
         break;
     case Reference::Name:
         break;

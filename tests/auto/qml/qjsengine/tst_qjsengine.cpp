@@ -266,6 +266,7 @@ private slots:
     void jsExponentiate();
     void arrayBuffer();
     void staticInNestedClasses();
+    void callElement();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5677,6 +5678,17 @@ void tst_QJSEngine::staticInNestedClasses()
         Tester.test
     )"_s;
 
+    QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
+}
+
+void tst_QJSEngine::callElement()
+{
+    QJSEngine engine;
+    const QString program = uR"(
+        function myFunc(arg) { return arg === this; };
+        let array = [myFunc, "string"];
+        array[0](array.reverse()) ? "a" : "b";
+    )"_s;
     QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
 }
 

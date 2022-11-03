@@ -387,18 +387,6 @@ void BaselineJIT::generate_CallPropertyLookup(int lookupIndex, int base, int arg
     BASELINEJIT_GENERATE_RUNTIME_CALL(CallPropertyLookup, CallResultDestination::InAccumulator);
 }
 
-void BaselineJIT::generate_CallElement(int base, int index, int argc, int argv)
-{
-    STORE_IP();
-    as->prepareCallWithArgCount(5);
-    as->passInt32AsArg(argc, 4);
-    as->passJSSlotAsArg(argv, 3);
-    as->passJSSlotAsArg(index, 2);
-    as->passJSSlotAsArg(base, 1);
-    as->passEngineAsArg(0);
-    BASELINEJIT_GENERATE_RUNTIME_CALL(CallElement, CallResultDestination::InAccumulator);
-}
-
 void BaselineJIT::generate_CallName(int name, int argc, int argv)
 {
     STORE_IP();

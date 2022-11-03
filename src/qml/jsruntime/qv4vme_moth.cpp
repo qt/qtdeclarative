@@ -862,12 +862,6 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPropertyLookup)
 
-    MOTH_BEGIN_INSTR(CallElement)
-        STORE_IP();
-        acc = Runtime::CallElement::call(engine, STACK_VALUE(base), STACK_VALUE(index), stack + argv, argc);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(CallElement)
-
     MOTH_BEGIN_INSTR(CallName)
         STORE_IP();
         acc = Runtime::CallName::call(engine, name, stack + argv, argc);

@@ -1552,6 +1552,9 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const Function
     ScopedValue v(scope);
     ScopedString s(scope);
 
+    ScopedPropertyKey tolocaleString(scope, scope.engine->id_toLocaleString()->toPropertyKey());
+    Q_ASSERT(!scope.engine->hasException);
+
     for (uint k = 0; k < len; ++k) {
         if (instance->hasDetachedArrayData())
             return scope.engine->throwTypeError();
@@ -1559,7 +1562,19 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const Function
             R += separator;
 
         v = instance->get(k);
-        v = Runtime::CallElement::call(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
+        Q_ASSERT(!v->isNullOrUndefined()); // typed array cannot hold null or undefined
+
+        ScopedObject valueAsObject(scope, v->toObject(scope.engine));
+        Q_ASSERT(valueAsObject); // only null or undefined cannot be converted to object
+
+        ScopedFunctionObject function(scope, valueAsObject->get(tolocaleString));
+        if (!function)
+            return scope.engine->throwTypeError();
+
+        v = function->call(valueAsObject, nullptr, 0);
+        if (scope.hasException())
+            return Encode::undefined();
+
         s = v->toString(scope.engine);
         if (scope.hasException())
             return Encode::undefined();
