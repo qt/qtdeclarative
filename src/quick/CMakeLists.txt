@@ -417,7 +417,7 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_sprite
 
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_draganddrop
     SOURCES
-        items/qquickdrag.cpp items/qquickdrag_p.h
+        items/qquickdrag.cpp items/qquickdrag_p.h items/qquickdrag_p_p.h
         items/qquickdroparea.cpp items/qquickdroparea_p.h
 )
 
