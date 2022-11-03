@@ -6,7 +6,6 @@
 \ingroup cmake-variables-qtqml
 
 \title QT_QML_OUTPUT_DIRECTORY
-\target cmake-variable-QT_QML_OUTPUT_DIRECTORY
 
 \brief Base output directory below which QML modules will be created by default.
 
