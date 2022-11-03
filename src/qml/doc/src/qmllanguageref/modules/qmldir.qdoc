@@ -419,7 +419,7 @@ documentation on this, no further action is needed. qmltyperegistrar will
 automatically generate the \c .qmltypes files.
 
 Example:
-If your module is in \c /tmp/imports/My/Module, a file caled \c plugins.qmltypes
+If your module is in \c /tmp/imports/My/Module, a file called \c plugins.qmltypes
 should be generated alongside the actual plugin binary.
 
 Add the line
