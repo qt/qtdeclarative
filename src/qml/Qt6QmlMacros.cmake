@@ -2601,6 +2601,42 @@ function(_qt_internal_get_main_qt_qml_import_paths out_var)
     set(${out_var} "${qml_import_paths}" PARENT_SCOPE)
 endfunction()
 
+function(_qt_internal_collect_target_qml_import_paths out_var target)
+    set(qml_import_paths "")
+    # Get custom import paths provided during qt_add_qml_module call.
+    get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
+    if(qml_import_path)
+        list(APPEND qml_import_paths ${qml_import_path})
+    endif()
+
+    # Facilitate self-import so we can find the qmldir file
+    get_target_property(module_out_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+    if(module_out_dir)
+        list(APPEND qml_import_paths "${module_out_dir}")
+    endif()
+
+    # Find qmldir files we copied to the build directory
+    if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
+        if(EXISTS "${QT_QML_OUTPUT_DIRECTORY}")
+            list(APPEND qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
+        endif()
+    else()
+        list(APPEND qml_import_paths "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
+
+    set(${out_var} "${qml_import_paths}" PARENT_SCOPE)
+endfunction()
+
+function(_qt_internal_collect_qml_import_paths out_var target)
+    _qt_internal_collect_target_qml_import_paths(qml_import_paths ${target})
+
+    # Add the Qt import paths last.
+    _qt_internal_get_main_qt_qml_import_paths(qt_main_import_paths)
+    list(APPEND qml_import_paths ${qt_main_import_paths})
+
+    set(${out_var} "${qml_import_paths}" PARENT_SCOPE)
+endfunction()
+
 function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     if(NOT "${ARGN}" STREQUAL "")
         message(FATAL_ERROR "Unknown/unexpected arguments: ${ARGN}")
@@ -2650,31 +2686,8 @@ but this file does not exist.  Possible reasons include:
         -output-file "${imports_file}"
     )
 
-    set(qml_import_paths "")
-    # Get custom import paths provided during qt_add_qml_module call.
-    get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
-    if(qml_import_path)
-        list(APPEND qml_import_paths ${qml_import_path})
-    endif()
-
-    # Facilitate self-import so we can find the qmldir file
-    get_target_property(module_out_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
-    if(module_out_dir)
-        list(APPEND qml_import_paths "${module_out_dir}")
-    endif()
-
-    # Find qmldir files we copied to the build directory
-    if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
-        if(EXISTS "${QT_QML_OUTPUT_DIRECTORY}")
-            list(APPEND qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
-        endif()
-    else()
-        list(APPEND qml_import_paths "${CMAKE_CURRENT_BINARY_DIR}")
-    endif()
-
-    # Add the Qt import paths last.
-    _qt_internal_get_main_qt_qml_import_paths(qt_import_paths)
-    list(APPEND qml_import_paths ${qt_import_paths})
+    _qt_internal_collect_qml_import_paths(qml_import_paths ${target})
+    list(REMOVE_DUPLICATES qml_import_paths)
 
     # Construct the -importPath arguments.
     set(import_path_arguments)

@@ -26,18 +26,16 @@ function(_qt_internal_generate_android_qml_deployment_settings out_var target)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
 
     # QML import paths
-    if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
-        # Need to prepend the default qml module output directory to take precedence
-        # over other qml import paths.
-        get_target_property(native_qml_import_paths "${target}" _qt_native_qml_import_paths)
-        if(native_qml_import_paths)
-            list(PREPEND native_qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
-        else()
-            set(native_qml_import_paths "${QT_QML_OUTPUT_DIRECTORY}")
-        endif()
-        set_property(TARGET "${target}" PROPERTY
-            "_qt_native_qml_import_paths" "${native_qml_import_paths}")
+    _qt_internal_collect_target_qml_import_paths(qml_import_paths ${target})
+    get_target_property(native_qml_import_paths "${target}" _qt_native_qml_import_paths)
+    if(native_qml_import_paths)
+        list(PREPEND native_qml_import_paths "${qml_import_paths}")
+    else()
+        set(native_qml_import_paths "${qml_import_paths}")
     endif()
+    list(REMOVE_DUPLICATES native_qml_import_paths)
+    set_property(TARGET "${target}" PROPERTY
+        _qt_native_qml_import_paths "${native_qml_import_paths}")
     _qt_internal_add_android_deployment_multi_value_property(${out_var} "qml-import-paths"
         ${target} "_qt_native_qml_import_paths")
 
