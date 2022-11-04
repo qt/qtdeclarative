@@ -65,6 +65,7 @@ public:
             QV4::CompiledData::Location location;
 
             QQmlImports::ImportFlags flags;
+            quint8 precedence = 0;
             int priority = 0;
 
             QTypeRevision version;
@@ -101,7 +102,8 @@ public:
     protected:
         bool loadDependentImports(
                 const QList<QQmlDirParser::Import> &imports, const QString &qualifier,
-                QTypeRevision version, QQmlImports::ImportFlags flags, QList<QQmlError> *errors);
+                QTypeRevision version, quint16 precedence, QQmlImports::ImportFlags flags,
+                QList<QQmlError> *errors);
         virtual QString stringAt(int) const { return QString(); }
 
         bool isDebugging() const;

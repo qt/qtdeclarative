@@ -153,7 +153,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
                     && !import->version.hasMinorVersion()) {
                     QList<QQmlError> errors;
                     auto pendingImport = std::make_shared<PendingImport>(
-                                this, import, QQmlImports::ImportImplicit);
+                                this, import, QQmlImports::ImportNoFlag);
+                    pendingImport->precedence = QQmlImportInstance::Implicit;
                     if (!fetchQmldir(qmldirUrl, pendingImport, 1, &errors)) {
                         setError(errors);
                         return false;
@@ -535,7 +536,8 @@ bool QQmlTypeData::loadImplicitImport()
                 = QQmlMetaType::moduleImports(qmldir.typeNamespace(), QTypeRevision())
                 + qmldir.imports();
         loadDependentImports(moduleImports, QString(), QTypeRevision(),
-                             QQmlImports::ImportImplicit, &implicitImportErrors);
+                             QQmlImportInstance::Implicit + 1, QQmlImports::ImportNoFlag,
+                             &implicitImportErrors);
     }
 
     if (!implicitImportErrors.isEmpty()) {

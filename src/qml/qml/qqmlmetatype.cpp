@@ -677,13 +677,20 @@ QList<QQmlDirParser::Import> QQmlMetaType::moduleImports(
         const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
+    QList<QQmlDirParser::Import> result;
 
     const auto unrevisioned = data->moduleImports.equal_range(
                 QQmlMetaTypeData::VersionedUri(uri, QTypeRevision()));
+    for (auto it = unrevisioned.second; it != unrevisioned.first;)
+        result.append(*(--it));
 
-    QList<QQmlDirParser::Import> result(unrevisioned.first, unrevisioned.second);
-    if (version.hasMajorVersion())
-        return result + data->moduleImports.values(QQmlMetaTypeData::VersionedUri(uri, version));
+    if (version.hasMajorVersion()) {
+        const auto revisioned = data->moduleImports.equal_range(
+                    QQmlMetaTypeData::VersionedUri(uri, version));
+        for (auto it = revisioned.second; it != revisioned.first;)
+            result.append(*(--it));
+        return result;
+    }
 
     // Use latest module available with that URI.
     const auto begin = data->moduleImports.begin();

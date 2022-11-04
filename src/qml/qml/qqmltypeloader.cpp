@@ -555,7 +555,7 @@ bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImpo
 
     const QTypeRevision version = m_importCache->addFileImport(
                 importDatabase, import->uri, import->qualifier, import->version, flags,
-                nullptr, errors);
+                import->precedence, nullptr, errors);
     if (!version.isValid())
         return false;
 
@@ -586,7 +586,8 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
         // This is a local library import
         const QTypeRevision actualVersion = m_importCache->addLibraryImport(
                     importDatabase, import->uri, import->qualifier,
-                    import->version, qmldirFilePath, qmldirUrl, import->flags, errors);
+                    import->version, qmldirFilePath, qmldirUrl, import->flags, import->precedence,
+                    errors);
         if (!actualVersion.isValid())
             return false;
 
@@ -594,12 +595,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
         if (actualVersion.hasMajorVersion())
             import->version = actualVersion;
 
-        if (!loadImportDependencies(
-                    import, qmldirFilePath,
-                    (import->flags & QQmlImports::ImportImplicit)
-                        ? QQmlImports::ImportImplicit
-                        : QQmlImports::ImportLowPrecedence,
-                    errors)) {
+        if (!loadImportDependencies(import, qmldirFilePath, import->flags, errors)) {
             QQmlError error;
             if (import->version.hasMajorVersion()) {
                 error.setDescription(QQmlImportDatabase::tr(
@@ -666,7 +662,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
 
         if (!m_importCache->addLibraryImport(
                     importDatabase, import->uri, import->qualifier, import->version,
-                    QString(), QString(), import->flags, errors).isValid()) {
+                    QString(), QString(), import->flags, import->precedence, errors).isValid()) {
             return false;
         }
     } else {
@@ -687,7 +683,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
             const QTypeRevision version = m_importCache->addLibraryImport(
                         importDatabase, import->uri, import->qualifier, import->version,
                         QString(), QString(), import->flags | QQmlImports::ImportIncomplete,
-                        errors);
+                        import->precedence, errors);
 
             if (!version.isValid())
                 return false;
@@ -766,7 +762,8 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
 
 bool QQmlTypeLoader::Blob::loadDependentImports(
         const QList<QQmlDirParser::Import> &imports, const QString &qualifier,
-        QTypeRevision version, QQmlImports::ImportFlags flags, QList<QQmlError> *errors)
+        QTypeRevision version, quint16 precedence, QQmlImports::ImportFlags flags,
+        QList<QQmlError> *errors)
 {
     for (const auto &import : imports) {
         if (import.flags & QQmlDirParser::Import::Optional)
@@ -777,6 +774,7 @@ bool QQmlTypeLoader::Blob::loadDependentImports(
         dependencyImport->version = (import.flags & QQmlDirParser::Import::Auto)
                 ? version : import.version;
         dependencyImport->flags = flags;
+        dependencyImport->precedence = precedence;
 
         qCDebug(lcQmlImport)
                 << "loading dependent import" << dependencyImport->uri << "version"
@@ -798,16 +796,35 @@ bool QQmlTypeLoader::Blob::loadDependentImports(
     return true;
 }
 
-bool QQmlTypeLoader::Blob::loadImportDependencies(const QQmlTypeLoader::Blob::PendingImportPtr &currentImport, const QString &qmldirUri, QQmlImports::ImportFlags flags,
-        QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::loadImportDependencies(
+        const QQmlTypeLoader::Blob::PendingImportPtr &currentImport, const QString &qmldirUri,
+        QQmlImports::ImportFlags flags, QList<QQmlError> *errors)
 {
     const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirUri);
     const QList<QQmlDirParser::Import> implicitImports
             = QQmlMetaType::moduleImports(currentImport->uri, currentImport->version)
             + qmldir.imports();
+
+    // Prevent overflow from one category of import into the other.
+    switch (currentImport->precedence) {
+    case QQmlImportInstance::Implicit - 1:
+    case QQmlImportInstance::Lowest: {
+        QQmlError error;
+        error.setDescription(
+                    QString::fromLatin1("Too many dependent imports")
+                    .arg(currentImport->uri)
+                    .arg(currentImport->version.majorVersion())
+                    .arg(currentImport->version.minorVersion()));
+        errors->append(error);
+        return false;
+    }
+    default:
+        break;
+    }
+
     if (!loadDependentImports(
                 implicitImports, currentImport->qualifier, currentImport->version,
-                flags, errors)) {
+                currentImport->precedence + 1, flags, errors)) {
         QQmlError error;
         error.setDescription(
                     QString::fromLatin1(

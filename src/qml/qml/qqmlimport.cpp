@@ -1159,7 +1159,7 @@ QQmlImportNamespace *QQmlImports::importNamespace(const QString &prefix)
 
 QQmlImportInstance *QQmlImports::addImportToNamespace(
         QQmlImportNamespace *nameSpace, const QString &uri, const QString &url, QTypeRevision version,
-        QV4::CompiledData::Import::ImportType type, QList<QQmlError> *errors, ImportFlags flags)
+        QV4::CompiledData::Import::ImportType type, QList<QQmlError> *errors, quint16 precedence)
 {
     Q_ASSERT(nameSpace);
     Q_ASSERT(errors);
@@ -1171,38 +1171,25 @@ QQmlImportInstance *QQmlImports::addImportToNamespace(
     import->url = url;
     import->version = version;
     import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
+    import->precedence = precedence;
+    import->implicitlyImported = precedence >= QQmlImportInstance::Implicit;
 
-    if (flags & QQmlImports::ImportImplicit) {
-        import->implicitlyImported = true;
-        nameSpace->imports.append(import);
+    for (auto it = nameSpace->imports.cbegin(), end = nameSpace->imports.cend();
+         it != end; ++it) {
+        if ((*it)->precedence < precedence)
+            continue;
+
+        nameSpace->imports.insert(it, import);
         return import;
     }
-
-    if (flags & QQmlImports::ImportLowPrecedence) {
-        for (auto it = nameSpace->imports.rbegin(), end = nameSpace->imports.rend();
-             it != end; ++it) {
-            if (!(*it)->implicitlyImported) {
-                nameSpace->imports.insert(it.base(), import);
-                return import;
-            }
-        }
-    }
-
-    // This is one of 3 cases:
-    //
-    // 1. existing imports are empty
-    // 2. new import is low precedence and all existing ones are implicit
-    // 3. new import is normal precedence
-    //
-    // In those cases the new import overrides all existing ones and has to be prepended.
-    nameSpace->imports.prepend(import);
+    nameSpace->imports.append(import);
     return import;
 }
 
 QTypeRevision QQmlImports::addLibraryImport(
         QQmlImportDatabase *database, const QString &uri, const QString &prefix,
         QTypeRevision version, const QString &qmldirIdentifier, const QString &qmldirUrl,
-        ImportFlags flags, QList<QQmlError> *errors)
+        ImportFlags flags, quint16 precedence, QList<QQmlError> *errors)
 {
     Q_ASSERT(database);
     Q_ASSERT(errors);
@@ -1217,7 +1204,7 @@ QTypeRevision QQmlImports::addLibraryImport(
     QQmlImportInstance *inserted = addImportToNamespace(
                 nameSpace, uri, qmldirUrl, version,
                 QV4::CompiledData::Import::ImportLibrary, errors,
-                flags);
+                precedence);
     Q_ASSERT(inserted);
 
     if (!(flags & QQmlImports::ImportIncomplete)) {
@@ -1285,7 +1272,8 @@ QTypeRevision QQmlImports::addLibraryImport(
 */
 QTypeRevision QQmlImports::addFileImport(
         QQmlImportDatabase *database, const QString &uri, const QString &prefix,
-        QTypeRevision version, ImportFlags flags, QString *localQmldir, QList<QQmlError> *errors)
+        QTypeRevision version, ImportFlags flags, quint16 precedence,
+        QString *localQmldir, QList<QQmlError> *errors)
 {
     Q_ASSERT(database);
     Q_ASSERT(errors);
@@ -1328,7 +1316,7 @@ QTypeRevision QQmlImports::addFileImport(
 
         const QString dir = localFileOrQrc.left(localFileOrQrc.lastIndexOf(Slash) + 1);
         if (!m_typeLoader->directoryExists(dir)) {
-            if (!(flags & QQmlImports::ImportImplicit)) {
+            if (precedence < QQmlImportInstance::Implicit) {
                 QQmlError error;
                 error.setDescription(QQmlImportDatabase::tr("\"%1\": no such directory").arg(uri));
                 error.setUrl(QUrl(qmldirUrl));
@@ -1351,7 +1339,7 @@ QTypeRevision QQmlImports::addFileImport(
 
     } else if (nameSpace->prefix.isEmpty() && !(flags & QQmlImports::ImportIncomplete)) {
 
-        if (!(flags & QQmlImports::ImportImplicit)) {
+        if (precedence < QQmlImportInstance::Implicit) {
             QQmlError error;
             error.setDescription(QQmlImportDatabase::tr("import \"%1\" has no qmldir and no namespace").arg(importUri));
             error.setUrl(QUrl(qmldirUrl));
@@ -1371,7 +1359,7 @@ QTypeRevision QQmlImports::addFileImport(
     //     if the implicit import has already been explicitly added, otherwise we can run into issues
     //     with duplicate imports. However remember that we attempted to add this as implicit import, to
     //     allow for the loading of internal types.
-    if (flags & QQmlImports::ImportImplicit) {
+    if (precedence >= QQmlImportInstance::Implicit) {
         for (QList<QQmlImportInstance *>::const_iterator it = nameSpace->imports.constBegin();
              it != nameSpace->imports.constEnd(); ++it) {
             if ((*it)->url == url) {
@@ -1383,10 +1371,8 @@ QTypeRevision QQmlImports::addFileImport(
 
     QQmlImportInstance *inserted = addImportToNamespace(
                 nameSpace, importUri, url, version, QV4::CompiledData::Import::ImportFile,
-                errors, flags);
+                errors, precedence);
     Q_ASSERT(inserted);
-    if (flags & QQmlImports::ImportImplicit)
-        inserted->implicitlyImported = true;
 
     if (!(flags & QQmlImports::ImportIncomplete) && !qmldirIdentifier.isEmpty()) {
         QQmlTypeLoaderQmldirContent qmldir;

@@ -399,6 +399,7 @@ private slots:
     void functionInGroupedProperty();
     void signalInlineComponentArg();
     void functionSignatureEnforcement();
+    void importPrecedence();
 
 private:
     QQmlEngine engine;
@@ -7704,6 +7705,28 @@ void tst_qqmllanguage::functionSignatureEnforcement()
     QCOMPARE(enforced->property("m").toInt(), 12);
     QCOMPARE(enforced->property("n").toInt(), 99);
     QCOMPARE(enforced->property("o").toInt(), 77);
+}
+
+void tst_qqmllanguage::importPrecedence()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c1(&engine, testFileUrl("importPrecedenceGood.qml"));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+    QScopedPointer<QObject> o1(c1.create());
+    QVERIFY(!o1.isNull());
+    QVERIFY(o1->property("theAgent").value<QObject *>() != nullptr);
+
+    QUrl c2Url = testFileUrl("importPrecedenceBad.qml");
+    QQmlComponent c2(&engine, c2Url);
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(c2Url.toString() + u":11: ReferenceError: agent is not defined"_s));
+
+    QScopedPointer<QObject> o2(c2.create());
+    QVERIFY(!o2.isNull());
+    QCOMPARE(o2->property("theAgent").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
