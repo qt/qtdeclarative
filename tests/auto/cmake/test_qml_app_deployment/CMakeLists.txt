@@ -49,7 +49,7 @@ function(create_test_executable target)
     # of macdeployqt.
     # Note we install all the binaries and backing libraries before calling the deploy tool.
     if(WIN32)
-        install(TARGETS EllipseShape FunkyShape
+        install(TARGETS ShapesWrapper EllipseShape FunkyShape
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         )
     endif()
@@ -95,7 +95,6 @@ endfunction()
 
 # Create the backing targets before the app, so that the backing library
 # install commands don't error out.
-add_subdirectory(Shapes/FunkyShape)
-add_subdirectory(Shapes/EllipseShape)
+add_subdirectory(Shapes)
 
 create_test_executable(UserQmlApp)
