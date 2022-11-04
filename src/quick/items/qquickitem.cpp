@@ -5230,6 +5230,13 @@ void QQuickItem::componentComplete()
         d->addToDirtyList();
         QQuickWindowPrivate::get(d->window)->dirtyItem(this);
     }
+
+#if QT_CONFIG(accessibility)
+    if (d->isAccessible && d->effectiveVisible) {
+        QAccessibleEvent ev(this, QAccessible::ObjectShow);
+        QAccessible::updateAccessibility(&ev);
+    }
+#endif
 }
 
 QQuickStateGroup *QQuickItemPrivate::_states()
