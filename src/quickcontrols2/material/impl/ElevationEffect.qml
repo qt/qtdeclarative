@@ -126,55 +126,7 @@ Item {
 
         [{offset: 7, blur: 8, spread: -4},
          {offset: 12, blur: 17, spread: 2},
-         {offset: 5, blur: 22, spread: 4}],
-
-        [{offset: 7, blur: 8, spread: -4},
-         {offset: 13, blur: 19, spread: 2},
-         {offset: 5, blur: 24, spread: 4}],
-
-        [{offset: 7, blur: 9, spread: -4},
-         {offset: 14, blur: 21, spread: 2},
-         {offset: 5, blur: 26, spread: 4}],
-
-        [{offset: 8, blur: 9, spread: -5},
-         {offset: 15, blur: 22, spread: 2},
-         {offset: 6, blur: 28, spread: 5}],
-
-        [{offset: 8, blur: 10, spread: -5},
-         {offset: 16, blur: 24, spread: 2},
-         {offset: 6, blur: 30, spread: 5}],
-
-        [{offset: 8, blur: 11, spread: -5},
-         {offset: 17, blur: 26, spread: 2},
-         {offset: 6, blur: 32, spread: 5}],
-
-        [{offset: 9, blur: 11, spread: -5},
-         {offset: 18, blur: 28, spread: 2},
-         {offset: 7, blur: 34, spread: 6}],
-
-        [{offset: 9, blur: 12, spread: -6},
-         {offset: 19, blur: 29, spread: 2},
-         {offset: 7, blur: 36, spread: 6}],
-
-        [{offset: 10, blur: 13, spread: -6},
-         {offset: 20, blur: 31, spread: 3},
-         {offset: 8, blur: 38, spread: 7}],
-
-        [{offset: 10, blur: 13, spread: -6},
-         {offset: 21, blur: 33, spread: 3},
-         {offset: 8, blur: 40, spread: 7}],
-
-        [{offset: 10, blur: 14, spread: -6},
-         {offset: 22, blur: 35, spread: 3},
-         {offset: 8, blur: 42, spread: 7}],
-
-        [{offset: 11, blur: 14, spread: -7},
-         {offset: 23, blur: 36, spread: 3},
-         {offset: 9, blur: 44, spread: 8}],
-
-        [{offset: 11, blur: 15, spread: -7},
-         {offset: 24, blur: 38, spread: 3},
-         {offset: 9, blur: 46, spread: 8}]
+         {offset: 5, blur: 22, spread: 4}]
     ]
 
     /*
