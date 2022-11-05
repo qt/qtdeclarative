@@ -4081,7 +4081,7 @@ void tst_qquickwindow::graphicsConfiguration()
     QCOMPARE(config2.pipelineCacheLoadFile(), QLatin1String("load"));
 
 #if QT_CONFIG(vulkan)
-    QQuickGraphicsConfiguration::preferredInstanceExtensions() == QRhiVulkanInitParams::preferredInstanceExtensions();
+    QCOMPARE(QQuickGraphicsConfiguration::preferredInstanceExtensions(), QRhiVulkanInitParams::preferredInstanceExtensions());
 #endif
 }
 
