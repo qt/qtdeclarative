@@ -726,6 +726,10 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
                 .writeRegion(u"idColon", u":")
                 .space()
                 .writeRegion(u"id", idStr());
+        if (ow.lineWriter.options().attributesSequence
+            == LineWriterOptions::AttributesSequence::Normalize) {
+            ow.ensureNewline(2);
+        }
         if (myId)
             myId.writeOutPost(ow);
     }

@@ -286,6 +286,10 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("normalize + objects spacing")
             << "normalizedObjectsSpacing.qml"
             << "normalizedObjectsSpacing.formatted.qml" << QStringList { "-n", "--objects-spacing" } << RunOption::OnCopy;
+
+    QTest::newRow("ids new lines")
+            << "checkIdsNewline.qml"
+            << "checkIdsNewline.formatted.qml" << QStringList { "-n" } << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
