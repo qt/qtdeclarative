@@ -10,8 +10,8 @@
 class PieChart : public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(QString name READ name WRITE setName)
-    Q_PROPERTY(QColor color READ color WRITE setColor)
+    Q_PROPERTY(QString name READ name WRITE setName FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
     QML_ELEMENT
 
 public:

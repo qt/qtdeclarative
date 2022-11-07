@@ -10,8 +10,8 @@ class PieSlice;
 class PieChart : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<PieSlice> slices READ slices)
-    Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(QQmlListProperty<PieSlice> slices READ slices FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName FINAL)
     QML_ELEMENT
 
 public:

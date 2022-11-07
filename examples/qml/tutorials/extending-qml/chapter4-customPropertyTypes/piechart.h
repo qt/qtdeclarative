@@ -11,9 +11,9 @@ class PieSlice;
 class PieChart : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(PieSlice* pieSlice READ pieSlice WRITE setPieSlice)
+    Q_PROPERTY(PieSlice* pieSlice READ pieSlice WRITE setPieSlice FINAL)
 //![0]
-    Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(QString name READ name WRITE setName FINAL)
     Q_MOC_INCLUDE("pieslice.h")
     QML_ELEMENT
 //![1]

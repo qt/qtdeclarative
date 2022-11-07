@@ -36,6 +36,7 @@ qt_add_qml_module(chapter1-basics
     VERSION 1.0
     QML_FILES app.qml
     NO_RESOURCE_TARGET_PATH
+    DEPENDENCIES QtQuick
 )
 #![0]
 install(TARGETS chapter1-basics
