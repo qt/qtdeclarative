@@ -791,11 +791,8 @@ QQuickGraphicsConfigurationPrivate::QQuickGraphicsConfigurationPrivate()
     static const bool autoPipelineCache = !QCoreApplication::instance()->testAttribute(Qt::AA_DisableShaderDiskCache)
             && !qEnvironmentVariableIntValue("QT_DISABLE_SHADER_DISK_CACHE")
             && !qEnvironmentVariableIntValue("QSG_RHI_DISABLE_DISK_CACHE");
-    if (autoPipelineCache) {
-#if !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
+    if (autoPipelineCache)
         flags |= AutoPipelineCache;
-#endif
-    }
 
     static const QString pipelineCacheSaveFileEnv = qEnvironmentVariable("QSG_RHI_PIPELINE_CACHE_SAVE");
     pipelineCacheSaveFile = pipelineCacheSaveFileEnv;

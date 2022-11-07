@@ -4056,9 +4056,7 @@ void tst_qquickwindow::graphicsConfiguration()
     QVERIFY(!config.isDebugLayerEnabled());
     QVERIFY(!config.isDebugMarkersEnabled());
     QVERIFY(!config.prefersSoftwareDevice());
-#if !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
     QVERIFY(config.isAutomaticPipelineCacheEnabled());
-#endif
     QVERIFY(config.pipelineCacheSaveFile().isEmpty());
     QVERIFY(config.pipelineCacheLoadFile().isEmpty());
 
