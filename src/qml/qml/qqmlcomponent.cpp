@@ -1033,6 +1033,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(rv);
         for (int i = 0, propertyCount = propertyCache->propertyCount(); i < propertyCount; ++i) {
             if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
+                state.ensureRequiredPropertyStorage();
                 RequiredPropertyInfo info;
                 info.propertyName = propertyData->name(rv);
                 state.addPendingRequiredProperty(propertyData, info);

@@ -26,6 +26,7 @@
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtCore/QList>
+#include <QtCore/qtclasshelpermacros.h>
 
 #include <private/qobject_p.h>
 
@@ -92,6 +93,19 @@ public:
     };
 
     struct ConstructionState {
+        ConstructionState() = default;
+        inline ~ConstructionState();
+        Q_DISABLE_COPY(ConstructionState)
+        inline ConstructionState(ConstructionState &&other) noexcept;
+
+        void swap(ConstructionState &other)
+        {
+            m_creatorOrRequiredProperties.swap(other.m_creatorOrRequiredProperties);
+        }
+
+        QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlComponentPrivate::ConstructionState);
+
+        inline void ensureRequiredPropertyStorage();
         inline RequiredProperties *requiredProperties();
         inline void addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info);
         inline bool hasUnsetRequiredProperties() const;
@@ -113,9 +127,7 @@ public:
         inline void setCompletePending(bool isPending);
 
         private:
-        bool m_completePending = false;
-        RequiredProperties m_requiredProperties; // todo: union with another member
-        std::unique_ptr<QQmlObjectCreator> m_creator;
+        QBiPointer<QQmlObjectCreator, RequiredProperties> m_creatorOrRequiredProperties;
     };
     ConstructionState state;
 
@@ -151,16 +163,31 @@ public:
     }
 };
 
+QQmlComponentPrivate::ConstructionState::~ConstructionState()
+{
+    if (m_creatorOrRequiredProperties.isT1())
+        delete m_creatorOrRequiredProperties.asT1();
+    else
+        delete m_creatorOrRequiredProperties.asT2();
+}
+
+QQmlComponentPrivate::ConstructionState::ConstructionState(ConstructionState &&other) noexcept
+{
+    errors = std::move(other.errors);
+    m_creatorOrRequiredProperties = std::exchange(other.m_creatorOrRequiredProperties, {});
+}
 
 /*!
    \internal A list of pending required properties that need
    to be set in order for object construction to be successful.
  */
 inline RequiredProperties *QQmlComponentPrivate::ConstructionState::requiredProperties() {
-    if (hasCreator())
-        return m_creator->requiredProperties();
+    if (m_creatorOrRequiredProperties.isNull())
+        return nullptr;
+    else if (m_creatorOrRequiredProperties.isT1())
+        return m_creatorOrRequiredProperties.asT1()->requiredProperties();
     else
-        return &m_requiredProperties;
+        return m_creatorOrRequiredProperties.asT2();
 }
 
 inline void QQmlComponentPrivate::ConstructionState::addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info)
@@ -170,7 +197,8 @@ inline void QQmlComponentPrivate::ConstructionState::addPendingRequiredProperty(
 }
 
 inline bool QQmlComponentPrivate::ConstructionState::hasUnsetRequiredProperties() const {
-    return !const_cast<ConstructionState *>(this)->requiredProperties()->isEmpty();
+    auto properties = const_cast<ConstructionState *>(this)->requiredProperties();
+    return properties && !properties->isEmpty();
 }
 
 inline void QQmlComponentPrivate::ConstructionState::clearRequiredProperties()
@@ -202,34 +230,64 @@ inline void QQmlComponentPrivate::ConstructionState::appendCreatorErrors()
 
 inline QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::creator()
 {
-    return m_creator.get();
+    if (m_creatorOrRequiredProperties.isT1())
+        return m_creatorOrRequiredProperties.asT1();
+    return nullptr;
 }
 
 inline const QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::creator() const
 {
-    return m_creator.get();
+    if (m_creatorOrRequiredProperties.isT1())
+        return m_creatorOrRequiredProperties.asT1();
+    return nullptr;
 }
 
-inline bool QQmlComponentPrivate::ConstructionState::hasCreator() const { return m_creator != nullptr; }
+inline bool QQmlComponentPrivate::ConstructionState::hasCreator() const
+{
+    return creator() != nullptr;
+}
 
-inline void QQmlComponentPrivate::ConstructionState::clear() { m_creator.reset(); }
+inline void QQmlComponentPrivate::ConstructionState::clear()
+{
+    if (m_creatorOrRequiredProperties.isT1()) {
+        delete m_creatorOrRequiredProperties.asT1();
+        m_creatorOrRequiredProperties = static_cast<QQmlObjectCreator *>(nullptr);
+    }
+}
 
 inline QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::initCreator(QQmlRefPointer<QQmlContextData> parentContext, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QQmlRefPointer<QQmlContextData> &creationContext)
 {
-    m_creator.reset(new QQmlObjectCreator(
+    if (m_creatorOrRequiredProperties.isT1())
+        delete m_creatorOrRequiredProperties.asT1();
+    else
+        delete m_creatorOrRequiredProperties.asT2();
+    m_creatorOrRequiredProperties = new QQmlObjectCreator(
                         std::move(parentContext), compilationUnit,
-                        creationContext));
-    return m_creator.get();
+                        creationContext);
+    return m_creatorOrRequiredProperties.asT1();
 }
 
 inline bool QQmlComponentPrivate::ConstructionState::isCompletePending() const
 {
-    return m_completePending;
+    return m_creatorOrRequiredProperties.flag();
 }
 
 inline void QQmlComponentPrivate::ConstructionState::setCompletePending(bool isPending)
 {
-    m_completePending = isPending;
+    m_creatorOrRequiredProperties.setFlagValue(isPending);
+}
+
+/*!
+    \internal
+    This is meant to be used in the context of QQmlComponent::loadFromModule,
+    when dealing with a C++ type. In that case, we do not have a creator,
+    and need a separate storage for required properties.
+ */
+inline void QQmlComponentPrivate::ConstructionState::ensureRequiredPropertyStorage()
+{
+    Q_ASSERT(m_creatorOrRequiredProperties.isT2() || m_creatorOrRequiredProperties.isNull());
+    if (m_creatorOrRequiredProperties.isNull())
+        m_creatorOrRequiredProperties = new RequiredProperties;
 }
 
 QT_END_NAMESPACE
