@@ -10,7 +10,7 @@
 class PieSlice : public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
     QML_ELEMENT
 
 public:

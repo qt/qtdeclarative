@@ -11,11 +11,11 @@ class PieChart : public QQuickPaintedItem
 {
 //![0]
     Q_OBJECT
-    Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(QString name READ name WRITE setName FINAL)
     QML_ELEMENT
 
 //![1]
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
 public:
 //![1]
 

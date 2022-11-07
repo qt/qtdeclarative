@@ -33,6 +33,7 @@ qt_add_qml_module(chapter3-bindings
     VERSION 1.0
     QML_FILES app.qml
     NO_RESOURCE_TARGET_PATH
+    DEPENDENCIES QtQuick
 )
 
 install(TARGETS chapter3-bindings

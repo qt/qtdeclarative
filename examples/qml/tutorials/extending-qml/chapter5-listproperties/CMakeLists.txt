@@ -34,6 +34,7 @@ qt_add_qml_module(chapter5-listproperties
     VERSION 1.0
     QML_FILES app.qml
     NO_RESOURCE_TARGET_PATH
+    DEPENDENCIES QtQuick
 )
 
 install(TARGETS chapter5-listproperties

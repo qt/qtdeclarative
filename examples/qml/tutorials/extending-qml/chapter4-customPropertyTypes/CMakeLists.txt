@@ -34,6 +34,7 @@ qt_add_qml_module(chapter4-customPropertyTypes
     VERSION 1.0
     QML_FILES app.qml
     NO_RESOURCE_TARGET_PATH
+    DEPENDENCIES QtQuick
 )
 #![1]
 install(TARGETS chapter4-customPropertyTypes

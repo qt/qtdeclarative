@@ -2,6 +2,7 @@ qt6_add_qml_module(chartsplugin
     VERSION 1.0
     URI "Charts"
     PLUGIN_TARGET chartsplugin
+    DEPENDENCIES QtQuick
 )
 
 target_sources(chartsplugin PRIVATE

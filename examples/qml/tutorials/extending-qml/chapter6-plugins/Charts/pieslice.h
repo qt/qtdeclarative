@@ -9,9 +9,9 @@
 class PieSlice : public QQuickPaintedItem
 {
     Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor)
-    Q_PROPERTY(int fromAngle READ fromAngle WRITE setFromAngle)
-    Q_PROPERTY(int angleSpan READ angleSpan WRITE setAngleSpan)
+    Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
+    Q_PROPERTY(int fromAngle READ fromAngle WRITE setFromAngle FINAL)
+    Q_PROPERTY(int angleSpan READ angleSpan WRITE setAngleSpan FINAL)
     QML_ELEMENT
 
 public:
