@@ -60,15 +60,13 @@ Q_LOGGING_CATEGORY(lcQmlConnections, "qt.qml.connections")
 class QQmlConnectionsPrivate : public QObjectPrivate
 {
 public:
-    QQmlConnectionsPrivate() : target(nullptr), enabled(true), targetSet(false), ignoreUnknownSignals(false), componentcomplete(true) {}
-
     QList<QQmlBoundSignal*> boundsignals;
-    QObject *target;
+    QQmlGuard<QObject> target;
 
-    bool enabled;
-    bool targetSet;
-    bool ignoreUnknownSignals;
-    bool componentcomplete;
+    bool enabled = true;
+    bool targetSet = false;
+    bool ignoreUnknownSignals = false;
+    bool componentcomplete = true;
 
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
     QList<const QV4::CompiledData::Binding *> bindings;
@@ -159,7 +157,7 @@ QQmlConnections::~QQmlConnections()
 QObject *QQmlConnections::target() const
 {
     Q_D(const QQmlConnections);
-    return d->targetSet ? d->target : parent();
+    return d->targetSet ? d->target.data() : parent();
 }
 
 class QQmlBoundSignalDeleter : public QObject
