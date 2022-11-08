@@ -279,6 +279,20 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
     // get a copy of the engine pointer as it might get reset;
     QQmlEnginePrivate *enginePriv = this->enginePriv;
 
+    // Incubating objects takes quite a bit more stack space than our usual V4 function
+    enum { EstimatedSizeInV4Frames = 2 };
+    QV4::ExecutionEngineCallDepthRecorder<EstimatedSizeInV4Frames> callDepthRecorder(
+                compilationUnit->engine);
+    if (callDepthRecorder.hasOverflow()) {
+        QQmlError error;
+        error.setMessageType(QtCriticalMsg);
+        error.setUrl(compilationUnit->url());
+        error.setDescription(QQmlComponent::tr("Maximum call stack size exceeded."));
+        errors << error;
+        progress = QQmlIncubatorPrivate::Completed;
+        goto finishIncubate;
+    }
+
     if (!vmeGuard.isOK()) {
         QQmlError error;
         error.setMessageType(QtInfoMsg);

@@ -134,6 +134,8 @@ private slots:
     void setSourceAndCheckStatus();
     void asyncLoaderRace();
     void noEngine();
+
+    void stackOverflow();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1528,6 +1530,17 @@ void tst_QQuickLoader::noEngine()
             + QStringLiteral(":27:13: QML Loader: createComponent: Cannot find a QML engine.");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
     QTRY_COMPARE(o->property("changes").toInt(), 1);
+}
+
+void tst_QQuickLoader::stackOverflow()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("overflow.qml");
+    QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    const QString message = url.toString() + QStringLiteral(": Maximum call stack size exceeded.");
+    QTest::ignoreMessage(QtCriticalMsg, qPrintable(message));
+    QScopedPointer<QObject> o(component.create());
 }
 
 QTEST_MAIN(tst_QQuickLoader)
