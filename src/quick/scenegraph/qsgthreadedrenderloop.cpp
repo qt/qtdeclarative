@@ -511,6 +511,7 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
         if (ownRhi)
             QSGRhiSupport::instance()->destroyRhi(rhi, dd->graphicsConfig);
         rhi = nullptr;
+        dd->rhi = nullptr;
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- QRhi destroyed");
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- persistent GL, avoiding cleanup");
