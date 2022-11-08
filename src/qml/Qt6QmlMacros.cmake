@@ -375,7 +375,7 @@ function(qt6_add_qml_module target)
         target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
     endif()
 
-    if(NOT arg_TYPEINFO)
+    if(NOT arg_TYPEINFO AND NOT arg_NO_GENERATE_QMLTYPES)
         set(arg_TYPEINFO ${target}.qmltypes)
     endif()
 
@@ -489,11 +489,16 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
         QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
         QT_QML_MODULE_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
-        QT_QML_MODULE_TYPEINFO "${arg_TYPEINFO}"
 
         # TODO: Check how this is used by qt6_android_generate_deployment_settings()
         QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}"
     )
+
+    if(arg_TYPEINFO)
+        set_target_properties(${target} PROPERTIES
+            QT_QML_MODULE_TYPEINFO "${arg_TYPEINFO}"
+        )
+    endif()
 
     # Executables don't have a plugin target, so no need to export the properties.
     if(NOT backing_target_type STREQUAL "EXECUTABLE" AND NOT is_android_executable)
@@ -3239,8 +3244,9 @@ function(qt6_query_qml_module target)
     endif()
 
     # This should always be set to something non-empty
+    # unless we've explicitly said NO_GENERATE_QMLTYPES
     get_target_property(typeinfo ${target} QT_QML_MODULE_TYPEINFO)
-    if(arg_TYPEINFO)
+    if(arg_TYPEINFO AND typeinfo)
         set(${arg_TYPEINFO} "${output_dir}/${typeinfo}" PARENT_SCOPE)
     endif()
 
