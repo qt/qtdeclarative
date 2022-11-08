@@ -15,24 +15,28 @@
 // We mean it.
 //
 
-#include <QtQml>
-#include <QAbstractItemModel>
-#include <QByteArray>
-#include <QtCore/private/qflatmap_p.h>
-#include <QHash>
-#include <QStringList>
-#include <QUrl>
-#include <QFuture>
-#if QT_CONFIG(qml_network)
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QXmlStreamReader>
-#endif
+#include <private/qflatmap_p.h>
+#include <private/qtqmlxmllistmodelglobal_p.h>
 
-#include "qtqmlxmllistmodelglobal_p.h"
+#include <QtQml/qqmllist.h>
+#include <QtQml/qqmlparserstatus.h>
+
+#include <QtQmlIntegration/qqmlintegration.h>
+
+#include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qbytearray.h>
+#include <QtCore/qfuture.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qurl.h>
 
 QT_BEGIN_NAMESPACE
 
+#if QT_CONFIG(qml_network)
+class QNetworkReply;
+#endif
+
+class QXmlStreamReader;
 class QQmlContext;
 struct QQmlXmlListModelQueryJob
 {

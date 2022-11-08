@@ -3,9 +3,21 @@
 
 #include "qqmlxmllistmodel_p.h"
 
-#include <QQmlFile>
-#include <QFile>
-#include <QCoreApplication>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlfile.h>
+
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qfuturewatcher.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qxmlstream.h>
+
+#if QT_CONFIG(qml_network)
+#include <QtNetwork/qnetworkreply.h>
+#include <QtNetwork/qnetworkrequest.h>
+#endif
 
 Q_DECLARE_METATYPE(QQmlXmlListModelQueryResult)
 
