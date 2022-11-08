@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x39 // Changed CodeOffsetToLine(AndStatement) struct
+#define QV4_DATA_STRUCTURE_VERSION 0x3A // Dropped CallElement instruction
 
 class QIODevice;
 class QQmlTypeNameCache;
