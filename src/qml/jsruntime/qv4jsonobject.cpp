@@ -665,7 +665,7 @@ public:
     bool foundProblem() const { return m_callDepthRecorder.ee->hasException; }
 
 private:
-    ExecutionEngineCallDepthRecorder m_callDepthRecorder;
+    ExecutionEngineCallDepthRecorder<1> m_callDepthRecorder;
 };
 
 static QString quote(const QString &str)
