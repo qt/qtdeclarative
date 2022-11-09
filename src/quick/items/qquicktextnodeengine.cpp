@@ -13,7 +13,6 @@
 #include <QtGui/qtextlist.h>
 
 #include <private/qquicktext_p.h>
-#include <private/qquicktextdocument_p.h>
 #include <private/qtextdocumentlayout_p.h>
 #include <private/qtextimagehandler_p.h>
 #include <private/qrawfont_p.h>
@@ -429,15 +428,8 @@ void QQuickTextNodeEngine::addTextObject(const QTextBlock &block, const QPointF 
 
         if (format.objectType() == QTextFormat::ImageObject) {
             QTextImageFormat imageFormat = format.toImageFormat();
-            if (QQuickTextDocumentWithImageResources *imageDoc = qobject_cast<QQuickTextDocumentWithImageResources *>(textDocument)) {
-                image = imageDoc->image(imageFormat);
-
-                if (image.isNull())
-                    return;
-            } else {
-                QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
-                image = imageHandler->image(textDocument, imageFormat);
-            }
+            QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
+            image = imageHandler->image(textDocument, imageFormat);
         }
 
         if (image.isNull()) {

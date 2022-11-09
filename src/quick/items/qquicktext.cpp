@@ -13,7 +13,6 @@
 #include "qsginternaltextnode_p.h"
 #include "qquickimage_p_p.h"
 #include "qquicktextutil_p.h"
-#include "qquicktextdocument_p.h"
 
 #include <QtQuick/private/qsgtexture_p.h>
 
@@ -37,6 +36,9 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
+Q_LOGGING_CATEGORY(lcText, "qt.quick.text")
+
+using namespace Qt::StringLiterals;
 
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
@@ -273,6 +275,85 @@ void QQuickTextPrivate::updateLayout()
     q->polish();
 }
 
+/*! \internal
+    QTextDocument::loadResource() calls this to load inline images etc.
+    But if it's a local file, don't do it: let QTextDocument::loadResource()
+    load it in the default way. QQuickPixmap is for QtQuick-specific uses.
+*/
+QVariant QQuickText::loadResource(int type, const QUrl &source)
+{
+    Q_D(QQuickText);
+    const QUrl url = d->extra->doc->baseUrl().resolved(source);
+    if (url.isLocalFile()) {
+        // qmlWarning if the file doesn't exist (because QTextDocument::loadResource() can't do that)
+        const QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(url));
+        if (!fi.exists())
+            qmlWarning(this) << "Cannot open: " << url.toString();
+        // let QTextDocument::loadResource() handle local file loading
+        return {};
+    }
+    // see if we already started a load job
+    for (auto it = d->extra->pixmapsInProgress.cbegin(); it != d->extra->pixmapsInProgress.cend();) {
+        auto *job = *it;
+        if (job->url() == url) {
+            if (job->isError()) {
+                qmlWarning(this) << job->error();
+                delete *it;
+                it = d->extra->pixmapsInProgress.erase(it);
+                return QImage();
+            }
+            qCDebug(lcText) << "already downloading" << url;
+            // existing job: return a null variant if it's not done yet
+            return job->isReady() ? job->image() : QVariant();
+        }
+        ++it;
+    }
+    qCDebug(lcText) << "loading" << source << "resolved" << url
+                    << "type" << static_cast<QTextDocument::ResourceType>(type);
+    QQmlContext *context = qmlContext(this);
+    Q_ASSERT(context);
+    // don't cache it in QQuickPixmapCache, because it's cached in QTextDocumentPrivate::cachedResources
+    QQuickPixmap *p = new QQuickPixmap(context->engine(), url, QQuickPixmap::Options{});
+    p->connectFinished(this, SLOT(resourceRequestFinished()));
+    d->extra->pixmapsInProgress.append(p);
+    // the new job is probably not done; return a null variant if the caller should poll again
+    return p->isReady() ? p->image() : QVariant();
+}
+
+/*! \internal
+    Handle completion of a download that QQuickText::loadResource() started.
+*/
+void QQuickText::resourceRequestFinished()
+{
+    Q_D(QQuickText);
+    bool allDone = true;
+    for (auto it = d->extra->pixmapsInProgress.cbegin(); it != d->extra->pixmapsInProgress.cend();) {
+        auto *job = *it;
+        if (job->isError()) {
+            // get QTextDocument::loadResource() to call QQuickText::loadResource() again, to return the placeholder
+            qCDebug(lcText) << "failed to load" << job->url();
+            d->extra->doc->resource(QTextDocument::ImageResource, job->url());
+        } else if (job->isReady()) {
+            // get QTextDocument::loadResource() to call QQuickText::loadResource() again, and cache the result
+            auto res = d->extra->doc->resource(QTextDocument::ImageResource, job->url());
+            // If QTextDocument::resource() returned a valid variant, it's been cached too. Either way, the job is done.
+            qCDebug(lcText) << (res.isValid() ? "done downloading" : "failed to load") << job->url();
+            delete *it;
+            it = d->extra->pixmapsInProgress.erase(it);
+        } else {
+            allDone = false;
+            ++it;
+        }
+    }
+    if (allDone) {
+        Q_ASSERT(d->extra->pixmapsInProgress.isEmpty());
+        d->updateLayout();
+    }
+}
+
+/*! \internal
+    Handle completion of StyledText image downloads (there's no QTextDocument instance in that case).
+*/
 void QQuickText::imageDownloadFinished()
 {
     Q_D(QQuickText);
@@ -1266,13 +1347,14 @@ void QQuickTextPrivate::ensureDoc()
 {
     if (!extra.isAllocated() || !extra->doc) {
         Q_Q(QQuickText);
-        extra.value().doc = new QQuickTextDocumentWithImageResources(q);
-        extra->doc->setPageSize(QSizeF(0, 0));
-        extra->doc->setDocumentMargin(0);
+        extra.value().doc = new QTextDocument(q);
+        auto *doc = extra->doc;
+        extra->imageHandler = new QQuickTextImageHandler(doc);
+        doc->documentLayout()->registerHandler(QTextFormat::ImageObject, extra->imageHandler);
+        doc->setPageSize(QSizeF(0, 0));
+        doc->setDocumentMargin(0);
         const QQmlContext *context = qmlContext(q);
-        extra->doc->setBaseUrl(context ? context->resolvedUrl(q->baseUrl()) : q->baseUrl());
-        qmlobject_connect(extra->doc, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()),
-                          q, QQuickText, SLOT(q_updateLayout()));
+        doc->setBaseUrl(context ? context->resolvedUrl(q->baseUrl()) : q->baseUrl());
     }
 }
 
@@ -1289,7 +1371,6 @@ void QQuickTextPrivate::updateDocumentText()
 #else
         extra->doc->setPlainText(text);
 #endif
-    extra->doc->clearResources();
     rightToLeftText = extra->doc->toPlainText().isRightToLeft();
 }
 
@@ -1353,6 +1434,11 @@ QQuickText::QQuickText(QQuickTextPrivate &dd, QQuickItem *parent)
 
 QQuickText::~QQuickText()
 {
+    Q_D(QQuickText);
+    if (d->extra.isAllocated()) {
+        qDeleteAll(d->extra->pixmapsInProgress);
+        d->extra->pixmapsInProgress.clear();
+    }
 }
 
 /*!
@@ -2829,8 +2915,8 @@ void QQuickText::setMinimumPointSize(int size)
 int QQuickText::resourcesLoading() const
 {
     Q_D(const QQuickText);
-    if (d->richText && d->extra.isAllocated() && d->extra->doc)
-        return d->extra->doc->resourcesLoading();
+    if (d->richText && d->extra.isAllocated())
+        return d->extra->pixmapsInProgress.size();
     return 0;
 }
 

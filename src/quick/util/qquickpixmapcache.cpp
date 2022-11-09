@@ -1647,6 +1647,12 @@ QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url)
     load(engine, url);
 }
 
+QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, Options options)
+: d(nullptr)
+{
+    load(engine, url, options);
+}
+
 QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, const QRect &region, const QSize &size)
 : d(nullptr)
 {

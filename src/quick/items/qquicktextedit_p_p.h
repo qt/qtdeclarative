@@ -22,6 +22,7 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qlist.h>
 #include <private/qlazilyallocated_p.h>
+#include <private/qquicktextdocument_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
@@ -31,7 +32,7 @@
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
-class QQuickTextDocumentWithImageResources;
+class QQuickPixmap;
 class QQuickTextControl;
 class QSGInternalTextNode;
 class QQuickTextNodeEngine;
@@ -163,10 +164,11 @@ public:
 
     QQmlComponent* cursorComponent = nullptr;
     QQuickItem* cursorItem = nullptr;
-    QQuickTextDocumentWithImageResources *document = nullptr;
+    QTextDocument *document = nullptr;
     QQuickTextControl *control = nullptr;
     QQuickTextDocument *quickDocument = nullptr;
     QList<Node> textNodeMap;
+    QList<QQuickPixmap *> pixmapsInProgress;
 
     int lastSelectionStart = 0;
     int lastSelectionEnd = 0;

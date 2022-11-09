@@ -23,11 +23,11 @@
 #include <QtGui/qtextlayout.h>
 #include <private/qquickstyledtext_p.h>
 #include <private/qlazilyallocated_p.h>
+#include <private/qquicktextdocument_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QTextLayout;
-class QQuickTextDocumentWithImageResources;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTextPrivate : public QQuickImplicitSizeItemPrivate
 {
@@ -71,7 +71,8 @@ public:
         bool explicitRightPadding : 1;
         bool explicitBottomPadding : 1;
         qreal lineHeight;
-        QQuickTextDocumentWithImageResources *doc;
+        QTextDocument *doc;
+        QQuickTextImageHandler *imageHandler = nullptr;
         QString activeLink;
         QString hoveredLink;
         int minimumPixelSize;
@@ -84,6 +85,7 @@ public:
         QQuickText::FontSizeMode fontSizeMode;
         QList<QQuickStyledTextImgTag*> imgTags;
         QList<QQuickStyledTextImgTag*> visibleImgTags;
+        QList<QQuickPixmap *> pixmapsInProgress;
         QUrl baseUrl;
     };
     QLazilyAllocated<ExtraData> extra;

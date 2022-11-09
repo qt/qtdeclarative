@@ -85,6 +85,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, pub
 
 public:
     QQuickTextEdit(QQuickItem *parent=nullptr);
+    ~QQuickTextEdit() override;
 
     enum HAlignment {
         AlignLeft = Qt::AlignLeft,
@@ -208,6 +209,8 @@ public:
     bool canRedo() const;
 
     void componentComplete() override;
+
+    int resourcesLoading() const; // mainly for testing
 
     /* FROM EDIT */
     void setReadOnly(bool);
@@ -354,6 +357,8 @@ private Q_SLOTS:
     void q_updateAlignment();
     void updateSize();
     void triggerPreprocess();
+    QVariant loadResource(int type, const QUrl &source);
+    void resourceRequestFinished();
 
 private:
     void markDirtyNodesForRange(int start, int end, int charDelta);

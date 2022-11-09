@@ -79,6 +79,8 @@ private:
     friend class QQuickPixmap;
     friend class QQuickPixmapData;
     friend class tst_qquickpixmapcache;
+    friend class tst_qquicktext;
+    friend class tst_qquicktextedit;
 };
 
 QT_END_NAMESPACE

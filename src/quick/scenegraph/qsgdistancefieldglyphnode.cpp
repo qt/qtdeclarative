@@ -94,7 +94,8 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
         }
         m_glyph_cache->registerGlyphNode(this);
     }
-    m_glyph_cache->populate(glyphs.glyphIndexes());
+    if (m_glyph_cache)
+        m_glyph_cache->populate(glyphs.glyphIndexes());
 
     const QVector<quint32> glyphIndexes = m_glyphs.glyphIndexes();
     for (int i = 0; i < glyphIndexes.size(); ++i)
@@ -154,7 +155,8 @@ void QSGDistanceFieldGlyphNode::invalidateGlyphs(const QVector<quint32> &glyphs)
 
 void QSGDistanceFieldGlyphNode::updateGeometry()
 {
-    Q_ASSERT(m_glyph_cache);
+    if (!m_glyph_cache)
+        return;
 
     // Remove previously created sub glyph nodes
     // We assume all the children are sub glyph nodes

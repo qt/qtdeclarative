@@ -34,12 +34,6 @@ QT_BEGIN_NAMESPACE
     in question may stop functioning or crash.
 */
 
-class QQuickTextDocumentPrivate : public QObjectPrivate
-{
-public:
-    QPointer<QTextDocument> document;
-};
-
 /*!
    Constructs a QQuickTextDocument object with
    \a parent as the parent object.
@@ -62,61 +56,27 @@ QTextDocument* QQuickTextDocument::textDocument() const
     return d->document.data();
 }
 
-QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuickItem *parent)
-: QTextDocument(parent), outstanding(0)
+QQuickTextImageHandler::QQuickTextImageHandler(QObject *parent)
+    : QObject(parent)
 {
-    setUndoRedoEnabled(false);
-    documentLayout()->registerHandler(QTextFormat::ImageObject, this);
-    connect(this, &QTextDocument::baseUrlChanged, [this]() {
-        clearResources();
-        markContentsDirty(0, characterCount());
-    });
 }
 
-QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
-{
-    if (!m_resources.isEmpty())
-        qDeleteAll(m_resources);
-}
-
-QVariant QQuickTextDocumentWithImageResources::loadResource(int type, const QUrl &name)
-{
-    QVariant resource = QTextDocument::loadResource(type, name);
-    if (resource.isNull() && type == QTextDocument::ImageResource) {
-        QQmlContext *context = qmlContext(parent());
-        QUrl url = baseUrl().resolved(name);
-        QQuickPixmap *p = loadPixmap(context, url);
-        resource = p->image();
-    }
-
-    return resource;
-}
-
-void QQuickTextDocumentWithImageResources::requestFinished()
-{
-    outstanding--;
-    if (outstanding == 0) {
-        markContentsDirty(0, characterCount());
-        emit imagesLoaded();
-    }
-}
-
-QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
-        QTextDocument *, int, const QTextFormat &format)
+QSizeF QQuickTextImageHandler::intrinsicSize(
+        QTextDocument *doc, int, const QTextFormat &format)
 {
     if (format.isImageFormat()) {
         QTextImageFormat imageFormat = format.toImageFormat();
-
         const int width = qRound(imageFormat.width());
         const bool hasWidth = imageFormat.hasProperty(QTextFormat::ImageWidth) && width > 0;
         const int height = qRound(imageFormat.height());
         const bool hasHeight = imageFormat.hasProperty(QTextFormat::ImageHeight) && height > 0;
-
         QSizeF size(width, height);
         if (!hasWidth || !hasHeight) {
-            QVariant res = resource(QTextDocument::ImageResource, QUrl(imageFormat.name()));
+            QVariant res = doc->resource(QTextDocument::ImageResource, QUrl(imageFormat.name()));
             QImage image = res.value<QImage>();
             if (image.isNull()) {
+                // autotests expect us to reserve a 16x16 space for a "broken image" icon,
+                // even though we don't actually display one
                 if (!hasWidth)
                     size.setWidth(16);
                 if (!hasHeight)
@@ -124,7 +84,6 @@ QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
                 return size;
             }
             QSize imgSize = image.size();
-
             if (!hasWidth) {
                 if (!hasHeight)
                     size.setWidth(imgSize.width());
@@ -142,54 +101,6 @@ QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
     }
     return QSizeF();
 }
-
-void QQuickTextDocumentWithImageResources::drawObject(
-        QPainter *, const QRectF &, QTextDocument *, int, const QTextFormat &)
-{
-}
-
-QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &format) const
-{
-    QVariant res = resource(QTextDocument::ImageResource, QUrl(format.name()));
-    return res.value<QImage>();
-}
-
-QQuickPixmap *QQuickTextDocumentWithImageResources::loadPixmap(
-        QQmlContext *context, const QUrl &url)
-{
-
-    QHash<QUrl, QQuickPixmap *>::Iterator iter = m_resources.find(url);
-
-    if (iter == m_resources.end()) {
-        QQuickPixmap *p = new QQuickPixmap(context->engine(), url);
-        iter = m_resources.insert(url, p);
-
-        if (p->isLoading()) {
-            p->connectFinished(this, SLOT(requestFinished()));
-            outstanding++;
-        }
-    }
-
-    QQuickPixmap *p = *iter;
-    if (p->isError()) {
-        if (!errors.contains(url)) {
-            errors.insert(url);
-            qmlWarning(parent()) << p->error();
-        }
-    }
-    return p;
-}
-
-void QQuickTextDocumentWithImageResources::clearResources()
-{
-    for (QQuickPixmap *pixmap : std::as_const(m_resources))
-        pixmap->clear(this);
-    qDeleteAll(m_resources);
-    m_resources.clear();
-    outstanding = 0;
-}
-
-QSet<QUrl> QQuickTextDocumentWithImageResources::errors;
 
 QT_END_NAMESPACE
 

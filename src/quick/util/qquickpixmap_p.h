@@ -101,12 +101,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
 {
     Q_DECLARE_TR_FUNCTIONS(QQuickPixmap)
 public:
-    QQuickPixmap();
-    QQuickPixmap(QQmlEngine *, const QUrl &);
-    QQuickPixmap(QQmlEngine *, const QUrl &, const QRect &region, const QSize &);
-    QQuickPixmap(const QUrl &, const QImage &image);
-    ~QQuickPixmap();
-
     enum Status { Null, Ready, Error, Loading };
 
     enum Option {
@@ -114,6 +108,13 @@ public:
         Cache        = 0x00000002
     };
     Q_DECLARE_FLAGS(Options, Option)
+
+    QQuickPixmap();
+    QQuickPixmap(QQmlEngine *, const QUrl &);
+    QQuickPixmap(QQmlEngine *, const QUrl &, Options options);
+    QQuickPixmap(QQmlEngine *, const QUrl &, const QRect &region, const QSize &);
+    QQuickPixmap(const QUrl &, const QImage &image);
+    ~QQuickPixmap();
 
     bool isNull() const;
     bool isReady() const;

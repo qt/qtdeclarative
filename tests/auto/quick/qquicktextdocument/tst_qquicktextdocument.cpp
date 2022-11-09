@@ -6,7 +6,6 @@
 #include <QtQuick/QQuickTextDocument>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquicktextedit_p.h>
-#include <QtQuick/private/qquicktextdocument_p.h>
 #include <QtGui/QTextDocument>
 #include <QtGui/QTextDocumentWriter>
 #include <QtQml/QQmlEngine>
@@ -21,7 +20,6 @@ public:
 
 private slots:
     void textDocumentWriter();
-    void textDocumentWithImage();
 };
 
 QString text = QStringLiteral("foo bar");
@@ -52,20 +50,6 @@ void tst_qquicktextdocument::textDocumentWriter()
     QVERIFY(writer.write(quickDocument->textDocument()));
     QCOMPARE(output.buffer(), text.toLatin1());
     delete o;
-}
-
-void tst_qquicktextdocument::textDocumentWithImage()
-{
-    QQuickTextDocumentWithImageResources document(nullptr);
-    QImage image(1, 1, QImage::Format_Mono);
-    image.fill(1);
-
-    QString name = "image";
-    document.addResource(QTextDocument::ImageResource, name, image);
-    QTextImageFormat format;
-    format.setName(name);
-    QCOMPARE(image, document.image(format));
-    QCOMPARE(image, document.resource(QTextDocument::ImageResource, name).value<QImage>());
 }
 
 QTEST_MAIN(tst_qquicktextdocument)

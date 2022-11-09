@@ -18,7 +18,7 @@
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktextedit_p_p.h>
 #include <private/qquicktext_p.h>
-#include <private/qquicktextdocument_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QFontMetrics>
 #include <QtQuick/QQuickView>
 #include <QDir>
@@ -40,6 +40,21 @@ Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
 Q_DECLARE_METATYPE(Qt::Key)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
+typedef QList<int> IntList;
+Q_DECLARE_METATYPE(IntList)
+
+typedef QPair<int, QChar> Key;
+typedef QList<Key> KeyList;
+Q_DECLARE_METATYPE(KeyList)
+
+Q_DECLARE_METATYPE(QQuickTextEdit::HAlignment)
+Q_DECLARE_METATYPE(QQuickTextEdit::VAlignment)
+Q_DECLARE_METATYPE(QQuickTextEdit::TextFormat)
+
+#if QT_CONFIG(shortcut)
+Q_DECLARE_METATYPE(QKeySequence::StandardKey)
+#endif
+
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 static bool isPlatformWayland()
@@ -47,7 +62,7 @@ static bool isPlatformWayland()
     return !QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive);
 }
 
-typedef QPair<int, QChar> Key;
+QT_BEGIN_NAMESPACE
 
 class tst_qquicktextedit : public QQmlDataTest
 
@@ -236,16 +251,6 @@ private:
 
     QPointingDevice *touchDevice = QTest::createTouchDevice();
 };
-
-typedef QList<int> IntList;
-Q_DECLARE_METATYPE(IntList)
-
-typedef QList<Key> KeyList;
-Q_DECLARE_METATYPE(KeyList)
-
-Q_DECLARE_METATYPE(QQuickTextEdit::HAlignment)
-Q_DECLARE_METATYPE(QQuickTextEdit::VAlignment)
-Q_DECLARE_METATYPE(QQuickTextEdit::TextFormat)
 
 void tst_qquicktextedit::simulateKeys(QWindow *window, const QList<Key> &keys)
 {
@@ -2374,8 +2379,6 @@ void tst_qquicktextedit::selectByKeyboard()
 }
 
 #if QT_CONFIG(shortcut)
-
-Q_DECLARE_METATYPE(QKeySequence::StandardKey)
 
 void tst_qquicktextedit::keyboardSelection_data()
 {
@@ -6053,30 +6056,32 @@ void tst_qquicktextedit::embeddedImages()
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
 
     QQmlComponent textComponent(&engine, qmlfile);
-    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.beginCreate(engine.rootContext()));
-    QVERIFY(textObject != nullptr);
+    QScopedPointer<QQuickTextEdit> textObject(qobject_cast<QQuickTextEdit*>(textComponent.beginCreate(engine.rootContext())));
+    QVERIFY(!textObject.isNull());
 
     const int baseUrlPropertyIndex = textObject->metaObject()->indexOfProperty("serverBaseUrl");
     if (baseUrlPropertyIndex != -1) {
         QMetaProperty prop = textObject->metaObject()->property(baseUrlPropertyIndex);
-        QVERIFY(prop.write(textObject, server.baseUrl().toString()));
+        QVERIFY(prop.write(textObject.get(), server.baseUrl().toString()));
     }
 
     textComponent.completeCreate();
 
-    QTRY_COMPARE(QQuickTextEditPrivate::get(textObject)->document->resourcesLoading(), 0);
+    QTRY_COMPARE(textObject->resourcesLoading(), 0);
 
     QPixmap pm(testFile("http/exists.png"));
     if (error.isEmpty()) {
-        QCOMPARE(textObject->width(), double(pm.width()));
-        QCOMPARE(textObject->height(), double(pm.height()));
+        QCOMPARE(textObject->width(), pm.width());
+        QCOMPARE(textObject->height(), pm.height());
     } else {
         QVERIFY(16 != pm.width()); // check test is effective
-        QCOMPARE(textObject->width(), 16.0); // default size of QTextDocument broken image icon
-        QCOMPARE(textObject->height(), 16.0);
+        QCOMPARE(textObject->width(), 16); // default size of QTextDocument broken image icon
+        QCOMPARE(textObject->height(), 16);
     }
 
-    delete textObject;
+    // QTextDocument images are cached in QTextDocumentPrivate::cachedResources,
+    // so verify that we don't redundantly cache them in QQuickPixmapCache
+    QCOMPARE(QQuickPixmapCache::instance()->m_cache.size(), 0);
 }
 
 void tst_qquicktextedit::emptytags_QTBUG_22058()
@@ -6590,6 +6595,8 @@ void tst_qquicktextedit::rtlAlignmentInColumnLayout_QTBUG_112858()
         currentLineStartPos += lines.at(i).size() + 1;
     }
 }
+
+QT_END_NAMESPACE
 
 QTEST_MAIN(tst_qquicktextedit)
 

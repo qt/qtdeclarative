@@ -301,6 +301,8 @@ protected:
 private Q_SLOTS:
     void q_updateLayout();
     void triggerPreprocess();
+    QVariant loadResource(int type, const QUrl &source);
+    void resourceRequestFinished();
     void imageDownloadFinished();
 
 private:

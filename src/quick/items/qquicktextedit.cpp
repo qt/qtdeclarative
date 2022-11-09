@@ -22,6 +22,7 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qtextengine_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <private/qquickaccessibleattached_p.h>
@@ -35,6 +36,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcVP)
 Q_LOGGING_CATEGORY(lcTextEdit, "qt.quick.textedit")
+
+using namespace Qt::StringLiterals;
 
 /*!
     \qmltype TextEdit
@@ -143,6 +146,12 @@ QQuickTextEdit::QQuickTextEdit(QQuickItem *parent)
 {
     Q_D(QQuickTextEdit);
     d->init();
+}
+
+QQuickTextEdit::~QQuickTextEdit()
+{
+    Q_D(QQuickTextEdit);
+    qDeleteAll(d->pixmapsInProgress);
 }
 
 QQuickTextEdit::QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent)
@@ -386,7 +395,6 @@ void QQuickTextEdit::setText(const QString &text)
     if (QQuickTextEdit::text() == text)
         return;
 
-    d->document->clearResources();
     d->richText = d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(text));
     d->markdownText = d->format == MarkdownText;
     if (!isComponentComplete()) {
@@ -1575,6 +1583,12 @@ void QQuickTextEdit::componentComplete()
 #endif
 }
 
+int QQuickTextEdit::resourcesLoading() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->pixmapsInProgress.size();
+}
+
 /*!
     \qmlproperty bool QtQuick::TextEdit::selectByKeyboard
     \since 5.1
@@ -2098,6 +2112,83 @@ void QQuickTextEdit::triggerPreprocess()
     update();
 }
 
+/*! \internal
+    QTextDocument::loadResource() calls this to load inline images etc.
+    But if it's a local file, don't do it: let QTextDocument::loadResource()
+    load it in the default way. QQuickPixmap is for QtQuick-specific uses.
+*/
+QVariant QQuickTextEdit::loadResource(int type, const QUrl &source)
+{
+    Q_D(QQuickTextEdit);
+    const QUrl url = d->document->baseUrl().resolved(source);
+    if (url.isLocalFile()) {
+        // qmlWarning if the file doesn't exist (because QTextDocument::loadResource() can't do that)
+        QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(url));
+        if (!fi.exists())
+            qmlWarning(this) << "Cannot open: " << url.toString();
+        // let QTextDocument::loadResource() handle local file loading
+        return {};
+    }
+    // see if we already started a load job
+    for (auto it = d->pixmapsInProgress.cbegin(); it != d->pixmapsInProgress.cend(); ++it) {
+        const auto *job = *it;
+        if (job->url() == url) {
+            if (job->isError()) {
+                qmlWarning(this) << job->error();
+                delete *it;
+                it = d->pixmapsInProgress.erase(it);
+                return QImage();
+            }
+            qCDebug(lcTextEdit) << "already downloading" << url;
+            // existing job: return a null variant if it's not done yet
+            return job->isReady() ? job->image() : QVariant();
+        }
+    }
+    qCDebug(lcTextEdit) << "loading" << source << "resolved" << url
+                        << "type" << static_cast<QTextDocument::ResourceType>(type);
+    QQmlContext *context = qmlContext(this);
+    Q_ASSERT(context);
+    // don't cache it in QQuickPixmapCache, because it's cached in QTextDocumentPrivate::cachedResources
+    QQuickPixmap *p = new QQuickPixmap(context->engine(), url, QQuickPixmap::Options{});
+    p->connectFinished(this, SLOT(resourceRequestFinished()));
+    d->pixmapsInProgress.append(p);
+    // the new job is probably not done; return a null variant if the caller should poll again
+    return p->isReady() ? p->image() : QVariant();
+}
+
+/*! \internal
+    Handle completion of a download that QQuickTextEdit::loadResource() started.
+*/
+void QQuickTextEdit::resourceRequestFinished()
+{
+    Q_D(QQuickTextEdit);
+    bool allDone = true;
+    for (auto it = d->pixmapsInProgress.cbegin(); it != d->pixmapsInProgress.cend();) {
+        auto *job = *it;
+        if (job->isError()) {
+            // get QTextDocument::loadResource() to call QQuickTextEdit::loadResource() again, to return the placeholder
+            qCDebug(lcTextEdit) << "failed to load" << job->url();
+            d->document->resource(QTextDocument::ImageResource, job->url());
+        } else if (job->isReady()) {
+            // get QTextDocument::loadResource() to call QQuickTextEdit::loadResource() again, and cache the result
+            auto res = d->document->resource(QTextDocument::ImageResource, job->url());
+            // If QTextDocument::resource() returned a valid variant, it's been cached too. Either way, the job is done.
+            qCDebug(lcTextEdit) << (res.isValid() ? "done downloading" : "failed to load") << job->url() << job->rect();
+            delete *it;
+            it = d->pixmapsInProgress.erase(it);
+        } else {
+            allDone = false;
+            ++it;
+        }
+    }
+    if (allDone) {
+        Q_ASSERT(d->pixmapsInProgress.isEmpty());
+        invalidate();
+        updateSize();
+        q_invalidate();
+    }
+}
+
 typedef QQuickTextEditPrivate::Node TextNode;
 using TextNodeIterator = QQuickTextEditPrivate::TextNodeIterator;
 
@@ -2494,7 +2585,9 @@ void QQuickTextEditPrivate::init()
 
     q->setAcceptHoverEvents(true);
 
-    document = new QQuickTextDocumentWithImageResources(q);
+    document = new QTextDocument(q);
+    auto *imageHandler = new QQuickTextImageHandler(document);
+    document->documentLayout()->registerHandler(QTextFormat::ImageObject, imageHandler);
 
     control = new QQuickTextControl(document, q);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
@@ -2515,10 +2608,9 @@ void QQuickTextEditPrivate::init()
 #if QT_CONFIG(clipboard)
     qmlobject_connect(QGuiApplication::clipboard(), QClipboard, SIGNAL(dataChanged()), q, QQuickTextEdit, SLOT(q_canPasteChanged()));
 #endif
-    qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(undoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canUndoChanged()));
-    qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(redoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canRedoChanged()));
-    qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()), q, QQuickTextEdit, SLOT(updateSize()));
-    QObject::connect(document, &QQuickTextDocumentWithImageResources::contentsChange, q, &QQuickTextEdit::q_contentsChange);
+    qmlobject_connect(document, QTextDocument, SIGNAL(undoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canUndoChanged()));
+    qmlobject_connect(document, QTextDocument, SIGNAL(redoAvailable(bool)), q, QQuickTextEdit, SIGNAL(canRedoChanged()));
+    QObject::connect(document, &QTextDocument::contentsChange, q, &QQuickTextEdit::q_contentsChange);
     QObject::connect(document->documentLayout(), &QAbstractTextDocumentLayout::updateBlock, q, &QQuickTextEdit::invalidateBlock);
     QObject::connect(control, &QQuickTextControl::linkHovered, q, &QQuickTextEdit::q_linkHovered);
     QObject::connect(control, &QQuickTextControl::markerHovered, q, &QQuickTextEdit::q_markerHovered);

@@ -230,7 +230,7 @@ QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompre
 QString QSGDefaultRenderContext::fontKey(const QRawFont &font, int renderTypeQuality)
 {
     QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-    if (!fe->faceId().filename.isEmpty()) {
+    if (fe && !fe->faceId().filename.isEmpty()) {
         QByteArray keyName =
                 fe->faceId().filename + ' ' + QByteArray::number(fe->faceId().index)
                 + (font.style() != QFont::StyleNormal ? QByteArray(" I") : QByteArray())
@@ -277,7 +277,7 @@ QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(con
 {
     QString key = fontKey(font, renderTypeQuality);
     QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
-    if (!cache) {
+    if (!cache && font.isValid()) {
         cache = new QSGRhiDistanceFieldGlyphCache(this, font, renderTypeQuality);
         m_glyphCaches.insert(key, cache);
     }

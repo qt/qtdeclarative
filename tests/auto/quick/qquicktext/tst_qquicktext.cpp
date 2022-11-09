@@ -9,10 +9,10 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <private/qquicktext_p_p.h>
 #include <private/qsginternaltextnode_p.h>
-#include <private/qquicktextdocument_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <QFontMetrics>
 #include <qmath.h>
@@ -29,11 +29,16 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 Q_DECLARE_METATYPE(QQuickText::TextFormat)
 
-QT_BEGIN_NAMESPACE
-extern void qt_setQtEnableTestFont(bool value);
-QT_END_NAMESPACE
+typedef QVector<QPointF> PointVector;
+Q_DECLARE_METATYPE(PointVector);
+
+typedef qreal (*ExpectedBaseline)(QQuickText *item);
+Q_DECLARE_METATYPE(ExpectedBaseline)
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
+QT_BEGIN_NAMESPACE
+extern void qt_setQtEnableTestFont(bool value);
 
 class tst_qquicktext : public QQmlDataTest
 {
@@ -1803,10 +1808,6 @@ public:
     QTextLayout layout;
 };
 
-
-typedef QVector<QPointF> PointVector;
-Q_DECLARE_METATYPE(PointVector);
-
 void tst_qquicktext::linkInteraction_data()
 {
     QTest::addColumn<QString>("text");
@@ -2181,13 +2182,10 @@ void tst_qquicktext::embeddedImages()
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
 
-    QScopedPointer<QQuickView> view(new QQuickView);
-    view->rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
-    view->setSource(qmlfile);
-    view->show();
-    view->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(view.get()));
-    QQuickText *textObject = qobject_cast<QQuickText*>(view->rootObject());
+    QQuickView view;
+    view.rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
+    QVERIFY(QQuickTest::showView(view, qmlfile));
+    QQuickText *textObject = qobject_cast<QQuickText*>(view.rootObject());
 
     QVERIFY(textObject != nullptr);
     QTRY_COMPARE(textObject->resourcesLoading(), 0);
@@ -2201,6 +2199,10 @@ void tst_qquicktext::embeddedImages()
         QCOMPARE(textObject->width(), 16.0); // default size of QTextDocument broken image icon
         QCOMPARE(textObject->height(), 16.0);
     }
+
+    // QTextDocument images are cached in QTextDocumentPrivate::cachedResources,
+    // so verify that we don't redundantly cache them in QQuickPixmapCache
+    QCOMPARE(QQuickPixmapCache::instance()->m_cache.size(), 0);
 }
 
 void tst_qquicktext::lineCount()
@@ -4048,9 +4050,6 @@ void tst_qquicktext::fontFormatSizes()
     }
 }
 
-typedef qreal (*ExpectedBaseline)(QQuickText *item);
-Q_DECLARE_METATYPE(ExpectedBaseline)
-
 static qreal expectedBaselineTop(QQuickText *item)
 {
     QFontMetricsF fm(item->font());
@@ -4822,6 +4821,8 @@ void tst_qquicktext::displaySuperscriptedTag()
     QCOMPARE(color.blue(), 255);
     QCOMPARE(color.green(), 255);
 }
+
+QT_END_NAMESPACE
 
 QTEST_MAIN(tst_qquicktext)
 
