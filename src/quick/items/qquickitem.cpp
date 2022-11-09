@@ -2324,9 +2324,9 @@ QQuickItem::~QQuickItem()
     else if (d->window)
         d->derefWindow();
 
-    // XXX todo - optimize
-    while (!d->childItems.isEmpty())
-        d->childItems.constFirst()->setParentItem(nullptr);
+    for (QQuickItem *child : std::as_const(d->childItems))
+        child->setParentItem(nullptr);
+    d->childItems.clear();
 
     d->notifyChangeListeners(QQuickItemPrivate::AllChanges, [this](const QQuickItemPrivate::ChangeListener &change){
         QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
@@ -2939,9 +2939,12 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     Q_Q(QQuickItem);
 
     Q_ASSERT(child);
-    Q_ASSERT(childItems.contains(child));
-    childItems.removeOne(child);
-    Q_ASSERT(!childItems.contains(child));
+    if (!inDestructor) {
+        // if we are getting destroyed, then the destructor will clear the list
+        Q_ASSERT(childItems.contains(child));
+        childItems.removeOne(child);
+        Q_ASSERT(!childItems.contains(child));
+    }
 
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
@@ -2955,8 +2958,10 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
         setHasHoverInChild(false);
 
     childPrivate->recursiveRefFromEffectItem(-extra.value().recursiveEffectRefCount);
-    markSortedChildrenDirty(child);
-    dirty(QQuickItemPrivate::ChildrenChanged);
+    if (!inDestructor) {
+        markSortedChildrenDirty(child);
+        dirty(QQuickItemPrivate::ChildrenChanged);
+    }
 
     itemChange(QQuickItem::ItemChildRemovedChange, child);
 
