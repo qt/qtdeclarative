@@ -137,6 +137,7 @@ set(qml_files
     shifts.qml
     signal.qml
     signalHandler.qml
+    signalIndexMismatch.qml
     specificParent.qml
     stringLength.qml
     stringToByteArray.qml
