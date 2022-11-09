@@ -4316,7 +4316,6 @@ void QQuickTableViewPrivate::init()
     positionYAnimation.setEasing(QEasingCurve::OutQuart);
 
     auto tapHandler = new QQuickTapHandler(q->contentItem());
-    tapHandler->setExclusiveSignals(QQuickTapHandler::SingleTap | QQuickTapHandler::DoubleTap);
 
     hoverHandler = new QQuickTableViewHoverHandler(q);
     resizeHandler = new QQuickTableViewResizeHandler(q);
@@ -4341,6 +4340,10 @@ void QQuickTableViewPrivate::init()
             q->forceActiveFocus(Qt::MouseFocusReason);
         if (q->isInteractive())
             return;
+        if (resizableRows && hoverHandler->m_row != -1)
+            return;
+        if (resizableColumns && hoverHandler->m_column != -1)
+            return;
         if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
             return;
 
@@ -4349,22 +4352,25 @@ void QQuickTableViewPrivate::init()
         currentIndexChangedOnPress = true;
     });
 
-    QObject::connect(tapHandler, &QQuickTapHandler::tapped, [this, q, tapHandler] {
-        if (currentIndexChangedOnPress)
+    QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, [this, tapHandler] {
+        if (!pointerNavigationEnabled || currentIndexChangedOnPress)
             return;
-        if (tapHandler->tapCount() == 1) {
-            if (pointerNavigationEnabled) {
-                clearSelection();
-                setCurrentIndexFromTap(tapHandler->point().pressPosition());
-            }
-        } else if (tapHandler->tapCount() == 2) {
-            if (hoverHandler->isHoveringGrid()) {
-                if (hoverHandler->m_row != -1)
-                    q->setRowHeight(hoverHandler->m_row, -1);
-                if (hoverHandler->m_column != -1)
-                    q->setColumnWidth(hoverHandler->m_column, -1);
-            }
-        }
+        if (resizableRows && hoverHandler->m_row != -1)
+            return;
+        if (resizableColumns && hoverHandler->m_column != -1)
+            return;
+
+        clearSelection();
+        setCurrentIndexFromTap(tapHandler->point().pressPosition());
+    });
+
+    QObject::connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, q] {
+        const bool resizeRow = resizableRows && hoverHandler->m_row != -1;
+        const bool resizeColumn = resizableColumns && hoverHandler->m_column != -1;
+        if (resizeRow)
+            q->setRowHeight(hoverHandler->m_row, -1);
+        if (resizeColumn)
+            q->setColumnWidth(hoverHandler->m_column, -1);
     });
 }
 

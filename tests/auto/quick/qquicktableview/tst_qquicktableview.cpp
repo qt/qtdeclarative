@@ -6270,23 +6270,33 @@ void tst_QQuickTableView::dragFromCellCenter()
 
 void tst_QQuickTableView::tapOnResizeArea_data()
 {
-    QTest::addColumn<bool>("pointerNavigationEnabled");
-    QTest::newRow("pointer naviagation enabled") << true;
-    QTest::newRow("pointer naviagation disabled") << false;
+    QTest::addColumn<bool>("resizableRows");
+    QTest::addColumn<bool>("resizableColumns");
+    QTest::addColumn<bool>("interactive");
+
+    for (bool interactive : {true, false}) {
+        QTest::newRow("resize disabled") << false << false << interactive;
+        QTest::newRow("resizableRows") << true << false << interactive;
+        QTest::newRow("resizableColumns") << false << true << interactive;
+        QTest::newRow("resizableRows && resizableColumns") << true << true << interactive;
+    }
 }
 
 void tst_QQuickTableView::tapOnResizeArea()
 {
-    // Check that the user can tap close to the edge of a cell, on the resize area, and
-    // as such, change the current index (unless pointer navigation is disabled).
-    QFETCH(bool, pointerNavigationEnabled);
+    // Check that if a tap or a press happens on the resize area between the
+    // cells, we only change the current index if the resizing is disabled.
+    QFETCH(bool, resizableRows);
+    QFETCH(bool, resizableColumns);
+    QFETCH(bool, interactive);
     LOAD_TABLEVIEW("tableviewwithselected2.qml");
 
     auto model = TestModel(3, 3);
     tableView->setModel(QVariant::fromValue(&model));
-    tableView->setResizableColumns(true);
-    tableView->setResizableRows(true);
-    tableView->setPointerNavigationEnabled(pointerNavigationEnabled);
+    tableView->setResizableRows(resizableRows);
+    tableView->setResizableColumns(resizableColumns);
+    tableView->setInteractive(interactive);
+    tableView->setPointerNavigationEnabled(true);
 
     WAIT_UNTIL_POLISHED;
 
@@ -6297,13 +6307,16 @@ void tst_QQuickTableView::tapOnResizeArea()
     const QPoint localPos = QPoint(item->width() - 1, item->height() - 1);
     const QPoint tapPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
 
+    // Start by moving the mouse out of the way
+    QTest::mouseMove(window, tapPos + QPoint(200, 200));
+    // Then do a tap on the resize area
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, tapPos);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, tapPos);
 
-    if (pointerNavigationEnabled)
-        QCOMPARE(tableView->selectionModel()->currentIndex(), model.index(1, 1));
-    else
+    if (resizableRows || resizableColumns)
         QVERIFY(!tableView->selectionModel()->currentIndex().isValid());
+    else
+        QCOMPARE(tableView->selectionModel()->currentIndex(), model.index(1, 1));
 }
 
 QTEST_MAIN(tst_QQuickTableView)
