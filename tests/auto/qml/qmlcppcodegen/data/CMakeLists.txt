@@ -143,6 +143,7 @@ set(qml_files
     shifts.qml
     signal.qml
     signalHandler.qml
+    signalIndexMismatch.qml
     signatureIgnored.qml
     specificParent.qml
     stringArg.qml

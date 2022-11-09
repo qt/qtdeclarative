@@ -1022,7 +1022,8 @@ static ObjectLookupResult initObjectLookup(
         // & 1 to tell the gc that this is not heap allocated; see markObjects in qv4lookup_p.h
         l->qobjectFallbackLookup.metaObject = quintptr(metaObject) + 1;
         l->qobjectFallbackLookup.coreIndex = coreIndex;
-        l->qobjectFallbackLookup.notifyIndex = property.notifySignalIndex();
+        l->qobjectFallbackLookup.notifyIndex =
+                QMetaObjectPrivate::signalIndex(property.notifySignal());
         l->qobjectFallbackLookup.isConstant = property.isConstant() ? 1 : 0;
         return ObjectLookupResult::Fallback;
     }

@@ -143,6 +143,7 @@ private slots:
     void signatureIgnored();
     void listAsArgument();
     void letAndConst();
+    void signalIndexMismatch();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2776,6 +2777,21 @@ void tst_QmlCppCodegen::letAndConst()
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), u"ab"_s);
 }
+
+void tst_QmlCppCodegen::signalIndexMismatch()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c1(&engine, QUrl(u"qrc:/qt/qml/TestTypes/signalIndexMismatch.qml"_s));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> item(c1.create());
+    const auto visualIndexBeforeMoveList = item->property("visualIndexBeforeMove").toList();
+    const auto visualIndexAfterMoveList = item->property("visualIndexAfterMove").toList();
+
+    QCOMPARE(visualIndexBeforeMoveList, QList<QVariant>({ 0, 1, 2 }));
+    QCOMPARE(visualIndexAfterMoveList, QList<QVariant>({ 0, 1, 2 }));
+};
 
 QTEST_MAIN(tst_QmlCppCodegen)
 
