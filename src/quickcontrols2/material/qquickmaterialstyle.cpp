@@ -784,6 +784,25 @@ void QQuickMaterialStyle::elevationChange()
     emit buttonDisabledColorChanged();
 }
 
+QQuickMaterialStyle::RoundedScale QQuickMaterialStyle::roundedScale() const
+{
+    return m_roundedScale;
+}
+
+void QQuickMaterialStyle::setRoundedScale(RoundedScale roundedScale)
+{
+    if (m_roundedScale == roundedScale)
+        return;
+
+    m_roundedScale = roundedScale;
+    emit roundedScaleChanged();
+}
+
+void QQuickMaterialStyle::resetRoundedScale()
+{
+    setRoundedScale(RoundedScale::NotRounded);
+}
+
 QColor QQuickMaterialStyle::primaryColor() const
 {
     if (m_customPrimary)

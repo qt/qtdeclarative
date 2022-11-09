@@ -35,6 +35,7 @@ TestCase {
             Material.accent: Material.DeepPurple
             Material.background: Material.Green
             Material.foreground: Material.Blue
+            Material.roundedScale: Material.SmallScale
         }
     }
 
@@ -158,6 +159,8 @@ TestCase {
         compare(control.Material.foreground, "#dd000000")
         compare(control.Material.background, "#fafafa")
         compare(control.Material.theme, Material.Light)
+        // This doesn't propagate but we check its default anyway.
+        compare(control.Material.roundedScale, Material.FullScale)
     }
 
     function test_set() {
@@ -168,11 +171,13 @@ TestCase {
         control.Material.background = Material.Red
         control.Material.foreground = Material.Blue
         control.Material.theme = Material.Dark
+        control.Material.roundedScale = Material.SmallScale
         compare(control.Material.primary, Material.color(Material.Green))
         compare(control.Material.accent, Material.color(Material.Brown, themeshade(control.Material.theme)))
         compare(control.Material.background, Material.color(Material.Red, themeshade(control.Material.theme)))
         compare(control.Material.foreground, Material.color(Material.Blue))
         compare(control.Material.theme, Material.Dark)
+        compare(control.Material.roundedScale, Material.SmallScale)
     }
 
     function test_reset() {
@@ -183,16 +188,21 @@ TestCase {
         compare(control.Material.background, Material.color(Material.Green, themeshade(control.Material.theme)))
         compare(control.Material.foreground, Material.color(Material.Blue))
         compare(control.Material.theme, Material.Dark)
+        compare(control.Material.roundedScale, Material.SmallScale)
         control.Material.primary = undefined
         control.Material.accent = undefined
         control.Material.background = undefined
         control.Material.foreground = undefined
         control.Material.theme = undefined
+        control.Material.roundedScale = undefined
         compare(control.Material.primary, testCase.Material.primary)
         compare(control.Material.accent, testCase.Material.accent)
         compare(control.Material.background, testCase.Material.background)
         compare(control.Material.foreground, testCase.Material.foreground)
         compare(control.Material.theme, testCase.Material.theme)
+        // Button's default is FullyRounded, but it specifies that default in QML,
+        // which means we have no way of knowing how to reset that in resetRoundedScale().
+        compare(control.Material.roundedScale, Material.NotRounded)
     }
 
     function test_inheritance_data() {
