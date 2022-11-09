@@ -2315,6 +2315,7 @@ QQuickItem::QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent)
 QQuickItem::~QQuickItem()
 {
     Q_D(QQuickItem);
+    d->inDestructor = true;
 
     if (d->windowRefCount > 1)
         d->windowRefCount = 1; // Make sure window is set to null in next call to derefWindow().
@@ -2682,9 +2683,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
         const bool wasVisible = isVisible();
         op->removeChild(this);
-        if (wasVisible) {
+        if (wasVisible && !op->inDestructor)
             emit oldParentItem->visibleChildrenChanged();
-        }
     } else if (d->window) {
         QQuickWindowPrivate::get(d->window)->parentlessItems.remove(this);
     }
@@ -2762,8 +2762,9 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
-    emit parentChanged(d->parentItem);
-    if (isVisible() && d->parentItem)
+    if (!d->inDestructor)
+        emit parentChanged(d->parentItem);
+    if (isVisible() && d->parentItem && !QQuickItemPrivate::get(d->parentItem)->inDestructor)
         emit d->parentItem->visibleChildrenChanged();
 }
 
@@ -2959,7 +2960,8 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
 
     itemChange(QQuickItem::ItemChildRemovedChange, child);
 
-    emit q->childrenChanged();
+    if (!inDestructor)
+        emit q->childrenChanged();
 }
 
 void QQuickItemPrivate::refWindow(QQuickWindow *c)
@@ -3193,6 +3195,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , hasCursorHandler(false)
     , maybeHasSubsceneDeliveryAgent(true)
     , subtreeTransformChangedEnabled(true)
+    , inDestructor(false)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -6434,9 +6437,11 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         QAccessible::updateAccessibility(&ev);
     }
 #endif
-    emit q->visibleChanged();
-    if (childVisibilityChanged)
-        emit q->visibleChildrenChanged();
+    if (!inDestructor) {
+        emit q->visibleChanged();
+        if (childVisibilityChanged)
+            emit q->visibleChildrenChanged();
+    }
 
     return true;    // effective visibility DID change
 }
