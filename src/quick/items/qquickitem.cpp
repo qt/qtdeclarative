@@ -2620,6 +2620,12 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
     \e {QObject parent}. An item's visual parent may not necessarily be the
     same as its object parent. See \l {Concepts - Visual Parent in Qt Quick}
     for more details.
+
+    \note The notification signal for this property gets emitted during destruction
+    of the visual parent. C++ signal handlers cannot assume that items in the
+    visual parent hierarchy are still fully constructed. Use \l qobject_cast to
+    verify that items in the parent hierarchy can be used safely as the expected
+    type.
 */
 QQuickItem *QQuickItem::parentItem() const
 {
@@ -6290,6 +6296,12 @@ void QQuickItem::setOpacity(qreal newOpacity)
     \note This property's value is only affected by changes to this property or
     the parent's \c visible property. It does not change, for example, if this
     item moves off-screen, or if the \l opacity changes to 0.
+
+    \note The notification signal for this property gets emitted during destruction
+    of the visual parent. C++ signal handlers cannot assume that items in the
+    visual parent hierarchy are still fully constructed. Use \l qobject_cast to
+    verify that items in the parent hierarchy can be used safely as the expected
+    type.
 
     \sa opacity, enabled
 */
