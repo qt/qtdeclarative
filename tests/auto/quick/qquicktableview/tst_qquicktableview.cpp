@@ -91,6 +91,7 @@ private slots:
     void checkColumnWidthProviderInvalidReturnValues();
     void checkColumnWidthProviderNegativeReturnValue();
     void checkColumnWidthProviderNotCallable();
+    void checkColumnWidthBoundToViewWidth();
     void checkRowHeightWithoutProvider();
     void checkRowHeightProvider();
     void checkRowHeightProviderInvalidReturnValues();
@@ -313,7 +314,8 @@ void tst_QQuickTableView::emptyModel()
     LOAD_TABLEVIEW("plaintableview.qml");
 
     tableView->setModel(model);
-    WAIT_UNTIL_POLISHED;
+    if (QQuickTest::qIsPolishScheduled(tableView))
+        WAIT_UNTIL_POLISHED;
     QCOMPARE(tableViewPrivate->loadedItems.size(), 0);
 }
 
@@ -531,6 +533,27 @@ void tst_QQuickTableView::checkColumnWidthProviderNotCallable()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->width(), kDefaultColumnWidth);
+}
+
+void tst_QQuickTableView::checkColumnWidthBoundToViewWidth()
+{
+    // Check that you can bind the width of a delegate to the
+    // width of TableView, and that it updates when TableView is resized.
+    LOAD_TABLEVIEW("columnwidthboundtoviewwidth.qml");
+
+    auto model = TestModelAsVariant(10, 1);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), tableView->width());
+
+    tableView->setWidth(200);
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), 200);
 }
 
 void tst_QQuickTableView::checkRowHeightWithoutProvider()

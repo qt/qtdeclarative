@@ -5308,7 +5308,7 @@ void QQuickTableView::geometryChange(const QRectF &newGeometry, const QRectF &ol
         d->tableModel->drainReusableItemsPool(0);
     }
 
-    polish();
+    d->forceLayout(false);
 }
 
 void QQuickTableView::viewportMoved(Qt::Orientations orientation)
