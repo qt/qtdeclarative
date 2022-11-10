@@ -70,4 +70,26 @@ GHS_KEEP_REFERENCE(qml_register_types_QtQml);
 #  define Q_QML_AUTOTEST_EXPORT
 #endif
 
+// When doing macOS universal builds, JIT needs to be disabled for the ARM slice.
+// Because both arm and x86_64 slices are built in one clang frontend invocation
+// we need this hack to ensure each backend invocation sees the correct value
+// of the feature definition.
+
+// Unset dummy value
+#undef QT_QML_JIT_SUPPORTED_IMPL
+// Compute per-arch value and save in extra define
+#if QT_CONFIG(qml_jit) && !(defined(Q_OS_MACOS) && defined(Q_PROCESSOR_ARM))
+#  define QT_QML_JIT_SUPPORTED_IMPL 1
+#else
+#  define QT_QML_JIT_SUPPORTED_IMPL 0
+#endif
+// Unset original feature value
+#undef QT_FEATURE_qml_jit
+// Set new value based on previous computation
+#if QT_QML_JIT_SUPPORTED_IMPL
+#  define QT_FEATURE_qml_jit 1
+#else
+#  define QT_FEATURE_qml_jit -1
+#endif
+
 #endif // QTQMLGLOBAL_P_H

@@ -2402,8 +2402,6 @@ void QQuickItemView::createdItem(int index, QObject* object)
             d->repositionPackageItemAt(item, index);
         else if (index == d->currentIndex)
             d->updateCurrent(index);
-    } else if (index == d->currentIndex) {
-        d->updateCurrent(index);
     }
 }
 

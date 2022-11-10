@@ -3458,7 +3458,12 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     for (int i = 0; i < event->attributes().size(); ++i) {
         const QInputMethodEvent::Attribute &a = event->attributes().at(i);
         if (a.type == QInputMethodEvent::Selection) {
-            m_cursor = qBound(0, a.start + a.length, m_text.length());
+            // If we already called internalInsert(), the cursor position will
+            // already be adjusted correctly. The attribute.start does
+            // not seem to take the mask into account, so it will reset cursor
+            // to an invalid position in such case.
+            if (!cursorPositionChanged)
+                m_cursor = qBound(0, a.start + a.length, m_text.length());
             if (a.length) {
                 m_selstart = qMax(0, qMin(a.start, m_text.length()));
                 m_selend = m_cursor;

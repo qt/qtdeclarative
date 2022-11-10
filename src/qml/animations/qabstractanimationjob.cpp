@@ -65,6 +65,30 @@ QQmlAnimationTimer::QQmlAnimationTimer() :
 {
 }
 
+void QQmlAnimationTimer::unsetJobTimer(QAbstractAnimationJob *animation)
+{
+    if (!animation)
+        return;
+    if (animation->m_timer == this)
+        animation->m_timer = nullptr;
+
+    if (animation->isGroup()) {
+        QAnimationGroupJob *group = static_cast<QAnimationGroupJob *>(animation);
+        for (auto *child = group->firstChild(); child; child = child->nextSibling())
+            unsetJobTimer(child);
+    }
+}
+
+QQmlAnimationTimer::~QQmlAnimationTimer()
+{
+    for (const auto &animation : qAsConst(animations))
+        unsetJobTimer(animation);
+    for (const auto &animation : qAsConst(animationsToStart))
+        unsetJobTimer(animation);
+    for (const auto &animation : qAsConst(runningPauseAnimations))
+        unsetJobTimer(animation);
+}
+
 QQmlAnimationTimer *QQmlAnimationTimer::instance(bool create)
 {
     QQmlAnimationTimer *inst;
@@ -216,6 +240,7 @@ void QQmlAnimationTimer::registerRunningAnimation(QAbstractAnimationJob *animati
 
 void QQmlAnimationTimer::unregisterRunningAnimation(QAbstractAnimationJob *animation)
 {
+    unsetJobTimer(animation);
     if (animation->userControlDisabled())
         return;
 
@@ -282,8 +307,10 @@ QAbstractAnimationJob::~QAbstractAnimationJob()
 
         Q_ASSERT(m_state == Stopped);
         if (oldState == Running) {
-            Q_ASSERT(QQmlAnimationTimer::instance() == m_timer);
-            m_timer->unregisterAnimation(this);
+            if (m_timer) {
+                Q_ASSERT(QQmlAnimationTimer::instance(false) == m_timer);
+                m_timer->unregisterAnimation(this);
+            }
         }
         Q_ASSERT(!m_hasRegisteredTimer);
     }
@@ -308,8 +335,9 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
     if (m_loopCount == 0)
         return;
 
-    if (!m_timer)
-        m_timer = QQmlAnimationTimer::instance();
+    if (!m_timer) // don't create a timer just to stop the animation
+        m_timer = QQmlAnimationTimer::instance(newState != Stopped);
+    Q_ASSERT(m_timer || newState == Stopped);
 
     State oldState = m_state;
     int oldCurrentTime = m_currentTime;
@@ -337,8 +365,9 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
     if (oldState == Running) {
         if (newState == Paused && m_hasRegisteredTimer)
             m_timer->ensureTimerUpdate();
-        //the animation, is not running any more
-        m_timer->unregisterAnimation(this);
+        // the animation is not running any more
+        if (m_timer)
+            m_timer->unregisterAnimation(this);
     } else if (newState == Running) {
         m_timer->registerAnimation(this, isTopLevel);
     }

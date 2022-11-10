@@ -875,24 +875,9 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
         return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
     }
 
-    lookup->qobjectLookup.ic = This->internalClass();
-    lookup->qobjectLookup.propertyCache = ddata->propertyCache;
-    lookup->qobjectLookup.propertyCache->addref();
-    lookup->qobjectLookup.propertyData = property;
-    lookup->getter = QV4::QObjectWrapper::lookupGetter;
+    QV4::setupQObjectLookup(lookup, ddata, property, This);
+    lookup->getter = QV4::Lookup::getterQObject;
     return lookup->getter(lookup, engine, *object);
-}
-
-ReturnedValue QObjectWrapper::lookupGetter(Lookup *lookup, ExecutionEngine *engine, const Value &object)
-{
-    const auto revertLookup = [lookup, engine, &object]() {
-        lookup->qobjectLookup.propertyCache->release();
-        lookup->qobjectLookup.propertyCache = nullptr;
-        lookup->getter = Lookup::getterGeneric;
-        return Lookup::getterGeneric(lookup, engine, object);
-    };
-
-    return lookupGetterImpl(lookup, engine, object, /*useOriginalProperty*/ false, revertLookup);
 }
 
 bool QObjectWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup,

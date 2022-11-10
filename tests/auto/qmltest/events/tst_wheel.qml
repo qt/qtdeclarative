@@ -64,7 +64,7 @@ Rectangle {
             verify(flick.contentX == 0);
             flick.contentY = 0;
             verify(flick.contentY == 0);
-            mouseWheel(flick, 200, 200, -120, 0, Qt.NoButton, Qt.NoModifier, -1);
+            mouseWheel(flick, 200, 200, -120, 0, Qt.NoButton, Qt.NoModifier, 100);
             wait(1000);
             verify(flick.contentX > 0);
             verify(flick.contentY == 0);

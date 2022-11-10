@@ -1,4 +1,5 @@
-uniform highp mat4 matrix;
+uniform highp mat4 modelViewMatrix;
+uniform highp mat4 projectionMatrix;
 uniform highp vec2 textureScale;
 uniform highp vec2 shift;
 uniform highp float dpr;
@@ -13,6 +14,6 @@ void main()
 {
      sampleCoord = tCoord * textureScale;
      shiftedSampleCoord = (tCoord - shift) * textureScale;
-     vec3 dprSnapPos = floor(vCoord.xyz * dpr + 0.5) / dpr;
-     gl_Position = matrix * vec4(dprSnapPos, vCoord.w);
+     vec4 xformed = modelViewMatrix * vCoord;
+     gl_Position = projectionMatrix * vec4(floor(xformed.xyz * dpr + 0.5) / dpr, xformed.w);
 }

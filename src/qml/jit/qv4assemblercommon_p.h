@@ -58,7 +58,7 @@
 #include <wtf/Vector.h>
 #include <assembler/MacroAssembler.h>
 
-QT_REQUIRE_CONFIG(qml_jit);
+#if QT_CONFIG(qml_jit)
 
 QT_BEGIN_NAMESPACE
 
@@ -739,5 +739,7 @@ private:
 } // QV4 namespace
 
 QT_END_NAMESPACE
+
+#endif // QT_CONFIG(qml_jit)
 
 #endif // QV4PLATFORMASSEMBLER_P_H

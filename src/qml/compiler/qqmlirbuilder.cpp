@@ -1901,6 +1901,12 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
             scan.enterEnvironment(f.parentNode, QV4::Compiler::ContextType::Binding, qmlName(f));
         }
 
+        /* We do not want to visit the whole function, as we already  called enterQmlFunction
+           However, there might be a function defined as a default argument of the function.
+           That needs to be considered, too, so we call handleTopLevelFunctionFormals to
+           deal with them.
+         */
+        scan.handleTopLevelFunctionFormals(function);
         scan(function ? function->body : f.node);
         scan.leaveEnvironment();
     }

@@ -78,6 +78,7 @@ protected:
     void componentComplete() override;
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
     void handleEventPoint(QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
 
 private:
     void setHovered(bool hovered);

@@ -1133,6 +1133,9 @@ void Renderer::releaseCachedResources()
 
     if (m_rhi)
         m_rhi->releaseCachedResources();
+
+    m_vertexUploadPool.resize(0);
+    m_indexUploadPool.resize(0);
 }
 
 void Renderer::invalidateAndRecycleBatch(Batch *b)
@@ -4006,6 +4009,16 @@ void Renderer::renderBatches()
 
         if (m_useDepthBuffer) {
             glClearDepthf(1); // calls glClearDepth() under the hood for desktop OpenGL
+        }
+        glColorMask(true, true, true, true);
+        glDisable(GL_SCISSOR_TEST);
+
+        bindable()->clear(clearMode());
+
+        if (m_renderPassRecordingCallbacks.start)
+            m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);
+
+        if (m_useDepthBuffer) {
             glEnable(GL_DEPTH_TEST);
             glDepthFunc(GL_LESS);
             glDepthMask(true);
@@ -4018,11 +4031,6 @@ void Renderer::renderBatches()
         glColorMask(true, true, true, true);
         glDisable(GL_SCISSOR_TEST);
         glDisable(GL_STENCIL_TEST);
-
-        bindable()->clear(clearMode());
-
-        if (m_renderPassRecordingCallbacks.start)
-            m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);
 
         if (Q_LIKELY(renderOpaque)) {
             for (int i=0; i<m_opaqueBatches.size(); ++i) {

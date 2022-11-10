@@ -598,12 +598,8 @@ QObject *QQmlProperty::object() const
 */
 QQmlProperty &QQmlProperty::operator=(const QQmlProperty &other)
 {
-    if (d)
-        d->release();
-    d = other.d;
-    if (d)
-        d->addref();
-
+    QQmlProperty copied(other);
+    qSwap(d, copied.d);
     return *this;
 }
 

@@ -56,11 +56,17 @@
 #include "qv4context_p.h"
 #include "qv4object_p.h"
 #include "qv4internalclass_p.h"
+#include "qv4qmlcontext_p.h"
+#include <private/qqmltypewrapper_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+// Note: We cannot hide the copy ctor and assignment operator of this class because it needs to
+//       be trivially copyable. But you should never ever copy it. There are refcounted members
+//       in there.
 struct Q_QML_PRIVATE_EXPORT Lookup {
     union {
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -187,6 +193,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
     static ReturnedValue getterProtoAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterIndexed(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObject(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -216,12 +223,53 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
     void clear() {
         memset(&markDef, 0, sizeof(markDef));
     }
+
+    void releasePropertyCache()
+    {
+        if (getter == getterQObject
+                || getter == QQmlTypeWrapper::lookupSingletonProperty
+                || qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty
+                || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
+            if (QQmlPropertyCache *pc = qobjectLookup.propertyCache)
+                pc->release();
+        } else if (getter == QQmlValueTypeWrapper::lookupGetter) {
+            if (QQmlPropertyCache *pc = qgadgetLookup.propertyCache)
+                pc->release();
+        }
+    }
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);
 // Ensure that these offsets are always at this point to keep generated code compatible
 // across 32-bit and 64-bit (matters when cross-compiling).
 Q_STATIC_ASSERT(offsetof(Lookup, getter) == 0);
+
+inline void setupQObjectLookup(
+        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData)
+{
+    lookup->releasePropertyCache();
+    Q_ASSERT(ddata->propertyCache != nullptr);
+    lookup->qobjectLookup.propertyCache = ddata->propertyCache;
+    lookup->qobjectLookup.propertyCache->addref();
+    lookup->qobjectLookup.propertyData = propertyData;
+}
+
+inline void setupQObjectLookup(
+        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        const Object *self)
+{
+    lookup->qobjectLookup.ic = self->internalClass();
+    setupQObjectLookup(lookup, ddata, propertyData);
+}
+
+
+inline void setupQObjectLookup(
+        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        const Object *self, const Object *qmlType)
+{
+    lookup->qobjectLookup.qmlTypeIc = qmlType->internalClass();
+    setupQObjectLookup(lookup, ddata, propertyData, self);
+}
 
 }
 

@@ -2146,6 +2146,15 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
                 while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems.at(0))) {
                     QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
                     sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp, accepted);
+                    QQuickItemPrivate *hoverLeaveItemPrivate = QQuickItemPrivate::get(hoverLeaveItem);
+                    if (hoverLeaveItemPrivate->hasPointerHandlers()) {
+                        for (QQuickPointerHandler *handler : hoverLeaveItemPrivate->extra->pointerHandlers) {
+                            if (auto *hh = qmlobject_cast<QQuickHoverHandler *>(handler)) {
+                                QQuickPointerEvent *pointerEvent = pointerEventInstance(QQuickPointerDevice::genericMouseDevice(), QEvent::MouseMove);
+                                pointerEvent->point(0)->cancelPassiveGrab(hh);
+                            }
+                        }
+                    }
                 }
 
                 if (!hoverItems.isEmpty() && hoverItems.at(0) == item) {//Not entering a new Item
@@ -2190,6 +2199,8 @@ bool QQuickWindowPrivate::deliverSinglePointEventUntilAccepted(QQuickPointerEven
     QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point, false, false);
 
     for (QQuickItem *item : targetItems) {
+        if (!item->window())
+            continue;
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         event->localize(item);
         // Let Pointer Handlers have the first shot

@@ -387,6 +387,7 @@ private slots:
     void proxyIteration();
     void proxyHandlerTraps();
     void gcCrashRegressionTest();
+    void functionAsDefaultArgument();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9369,6 +9370,15 @@ void tst_qqmlecmascript::proxyHandlerTraps()
     QJSEngine engine;
     QJSValue value = engine.evaluate(expression);
     QVERIFY(value.isString() && value.toString() == QStringLiteral("SUCCESS"));
+}
+
+void tst_qqmlecmascript::functionAsDefaultArgument()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("functionAsDefaultArgument.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    QCOMPARE(root->objectName(), "didRun");
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

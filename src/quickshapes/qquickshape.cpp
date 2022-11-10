@@ -763,6 +763,13 @@ void QQuickShape::setAsynchronous(bool async)
     performance. Setting the value to \c true is safe in any case since
     rendering falls back to the default method when the vendor-specific
     approach, such as \c GL_NV_path_rendering, is not supported at run time.
+
+    \deprecated
+
+    Changing the default value (false) is not recommended. In particular,
+    support for Shape.NvprRenderer will not be available in future Qt versions.
+    Applications experiencing rendering problems with the property set to true
+    are advised to set it to false.
  */
 
 bool QQuickShape::vendorExtensionsEnabled() const

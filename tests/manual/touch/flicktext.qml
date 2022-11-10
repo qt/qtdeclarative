@@ -380,6 +380,36 @@ Rectangle {
                 text: "content X " + flick.contentX.toFixed(2) + " Y " + flick.contentY.toFixed(2)
             }
         }
+
+        Column {
+            Row {
+                spacing: 2
+                Examples.Button {
+                    id: decrButton
+                    text: "-"
+                    onClicked: flick.flickDeceleration -= 100
+                    Timer {
+                        running: decrButton.pressed
+                        interval: 100; repeat: true
+                        onTriggered: flick.flickDeceleration -= 100
+                    }
+                }
+                Text {
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "decel:\n" + flick.flickDeceleration.toFixed(4)
+                }
+                Examples.Button {
+                    id: incrButton
+                    text: "+"
+                    onClicked: flick.flickDeceleration += 100
+                }
+                Timer {
+                    running: incrButton.pressed
+                    interval: 100; repeat: true
+                    onTriggered: flick.flickDeceleration += 100
+                }
+            }
+        }
     }
 
     Component.onCompleted: {

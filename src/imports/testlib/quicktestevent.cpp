@@ -231,8 +231,10 @@ namespace QtQuickTest
         QTEST_ASSERT(item);
         if (delay == -1 || delay < QTest::defaultMouseDelay())
             delay = QTest::defaultMouseDelay();
-        if (delay > 0)
+        if (delay > 0) {
             QTest::qWait(delay);
+            lastMouseTimestamp += delay;
+        }
 
         QPoint pos;
         QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
@@ -245,6 +247,7 @@ namespace QtQuickTest
         stateKey &= static_cast<unsigned int>(Qt::KeyboardModifierMask);
         QWheelEvent we(pos, window->mapToGlobal(pos), QPoint(0, 0), QPoint(xDelta, yDelta), buttons,
                        stateKey, Qt::NoScrollPhase, false);
+        we.setTimestamp(++lastMouseTimestamp);
 
         QSpontaneKeyEvent::setSpontaneous(&we); // hmmmm
         if (!qApp->notify(window, &we))

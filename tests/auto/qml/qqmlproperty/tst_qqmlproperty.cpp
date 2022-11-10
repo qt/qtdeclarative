@@ -1943,7 +1943,8 @@ void tst_qqmlproperty::copy()
 {
     PropertyObject object;
 
-    QQmlProperty *property = new QQmlProperty(&object, QLatin1String("defaultProperty"));
+    QScopedPointer<QQmlProperty> property(
+                new QQmlProperty(&object, QLatin1String("defaultProperty")));
     QCOMPARE(property->name(), QString("defaultProperty"));
     QCOMPARE(property->read(), QVariant(10));
     QCOMPARE(property->type(), QQmlProperty::Property);
@@ -1966,7 +1967,7 @@ void tst_qqmlproperty::copy()
     QCOMPARE(p2.propertyTypeCategory(), QQmlProperty::Normal);
     QCOMPARE(p2.propertyType(), (int)QVariant::Int);
 
-    delete property; property = nullptr;
+    property.reset();
 
     QCOMPARE(p1.name(), QString("defaultProperty"));
     QCOMPARE(p1.read(), QVariant(10));
@@ -1979,6 +1980,16 @@ void tst_qqmlproperty::copy()
     QCOMPARE(p2.type(), QQmlProperty::Property);
     QCOMPARE(p2.propertyTypeCategory(), QQmlProperty::Normal);
     QCOMPARE(p2.propertyType(), (int)QVariant::Int);
+
+    p1 = QQmlProperty();
+    QQmlPropertyPrivate *p2d = QQmlPropertyPrivate::get(p2);
+    QCOMPARE(p2d->count(), 1);
+
+    // Use a pointer to avoid compiler warning about self-assignment.
+    QQmlProperty *p2p = &p2;
+    *p2p = p2;
+
+    QCOMPARE(p2d->count(), 1);
 }
 
 void tst_qqmlproperty::noContext()

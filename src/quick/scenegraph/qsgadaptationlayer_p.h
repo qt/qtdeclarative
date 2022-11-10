@@ -465,9 +465,9 @@ public:
     {
         return pixelSize / QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution);
     }
-    int distanceFieldRadius() const
+    qreal distanceFieldRadius() const
     {
-        return QT_DISTANCEFIELD_RADIUS(m_doubleGlyphResolution) / QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution);
+        return QT_DISTANCEFIELD_RADIUS(m_doubleGlyphResolution) / qreal(QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     }
     int glyphCount() const { return m_glyphCount; }
     bool doubleGlyphResolution() const { return m_doubleGlyphResolution; }

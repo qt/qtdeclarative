@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcTl, "qt.quick.timeline")
+
 struct Update {
     Update(QQuickTimeLineValue *_g, qreal _v)
         : g(_g), v(_v) {}
@@ -513,6 +515,7 @@ void QQuickTimeLine::reset(QQuickTimeLineValue &timeLineValue)
         qWarning() << "QQuickTimeLine: Cannot reset a QQuickTimeLineValue owned by another timeline.";
         return;
     }
+    qCDebug(lcTl) << static_cast<QObject*>(this) << timeLineValue.value();
     remove(&timeLineValue);
     timeLineValue._t = nullptr;
 }

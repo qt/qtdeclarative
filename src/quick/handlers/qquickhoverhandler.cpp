@@ -85,8 +85,11 @@ QQuickHoverHandler::~QQuickHoverHandler()
 
 void QQuickHoverHandler::componentComplete()
 {
-    parentItem()->setAcceptHoverEvents(true);
-    QQuickItemPrivate::get(parentItem())->setHasHoverInChild(true);
+    QQuickSinglePointHandler::componentComplete();
+    if (auto par = parentItem()) {
+        par->setAcceptHoverEvents(true);
+        QQuickItemPrivate::get(par)->setHasHoverInChild(true);
+    }
 }
 
 bool QQuickHoverHandler::wantsPointerEvent(QQuickPointerEvent *event)
@@ -122,6 +125,13 @@ void QQuickHoverHandler::handleEventPoint(QQuickEventPoint *point)
         m_hoveredTablet = true;
     setHovered(hovered);
     setPassiveGrab(point);
+}
+
+void QQuickHoverHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
+{
+    QQuickSinglePointHandler::onGrabChanged(grabber, transition, point);
+    if (grabber == this && transition == QQuickEventPoint::CancelGrabPassive)
+        setHovered(false);
 }
 
 /*!
