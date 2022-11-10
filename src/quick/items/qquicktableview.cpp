@@ -3301,11 +3301,25 @@ void QQuickTableViewPrivate::syncSyncView()
     if (syncHorizontally) {
         q->setColumnSpacing(syncView->columnSpacing());
         updateContentWidth();
+
+        if (syncView->leftColumn() != q->leftColumn()) {
+            // The left column is no longer the same as the left
+            // column in syncView. This requires a rebuild.
+            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn;
+            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        }
     }
 
     if (syncVertically) {
         q->setRowSpacing(syncView->rowSpacing());
         updateContentHeight();
+
+        if (syncView->topRow() != q->topRow()) {
+            // The top row is no longer the same as the top
+            // row in syncView. This requires a rebuild.
+            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow;
+            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        }
     }
 
     if (syncView && loadedItems.isEmpty() && !tableSize.isEmpty()) {
