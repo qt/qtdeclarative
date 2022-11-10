@@ -107,6 +107,7 @@ set(qml_files
     jsmoduleimport.qml
     layouts.qml
     library.js
+    letAndConst.qml
     listAsArgument.qml
     listIndices.qml
     listPropertyAsModel.qml

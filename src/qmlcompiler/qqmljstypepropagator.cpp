@@ -2107,7 +2107,7 @@ void QQmlJSTypePropagator::generate_InitializeBlockDeadTemporalZone(int firstReg
 {
     Q_UNUSED(firstReg)
     Q_UNUSED(count)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    // Ignore. We reject uninitialized values anyway.
 }
 
 void QQmlJSTypePropagator::generate_ThrowOnNullOrUndefined()
@@ -2238,6 +2238,7 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     case QV4::Moth::Instr::Type::SetUnwindHandler:
     case QV4::Moth::Instr::Type::PushCatchContext:
     case QV4::Moth::Instr::Type::UnwindDispatch:
+    case QV4::Moth::Instr::Type::InitializeBlockDeadTemporalZone:
         if (m_state.changedRegisterIndex() == Accumulator && !m_error->isValid()) {
             setError(u"Instruction is not expected to populate the accumulator"_s);
             return;

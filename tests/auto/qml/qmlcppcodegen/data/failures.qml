@@ -44,4 +44,16 @@ QtObject {
 
     property int enumFromGadget1: GadgetWithEnum.CONNECTED + 1
     property int enumFromGadget2: TT2.GadgetWithEnum.CONNECTED + 1
+
+    function constStore() : int {
+        const x = 1;
+        x = 2;
+        return x;
+    }
+
+    function earlyLoad() : int {
+        var a = b;
+        let b = 5;
+        return a;
+    }
 }

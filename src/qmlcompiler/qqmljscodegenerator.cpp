@@ -2321,7 +2321,7 @@ void QQmlJSCodeGenerator::generate_InitializeBlockDeadTemporalZone(int firstReg,
 {
     Q_UNUSED(firstReg)
     Q_UNUSED(count)
-    BYTECODE_UNIMPLEMENTED();
+    // Ignore. We reject uninitialized values anyway.
 }
 
 void QQmlJSCodeGenerator::generate_ThrowOnNullOrUndefined()

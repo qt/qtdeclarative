@@ -142,6 +142,7 @@ private slots:
     void typePropagationLoop();
     void signatureIgnored();
     void listAsArgument();
+    void letAndConst();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2764,6 +2765,16 @@ void tst_QmlCppCodegen::listAsArgument()
     QCOMPARE(o->property("i1").toInt(), 2);
     QCOMPARE(o->property("i2").toInt(), 4);
     QCOMPARE(o->property("d").value<QObject *>()->objectName(), u"this one"_s);
+}
+
+void tst_QmlCppCodegen::letAndConst()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/letAndConst.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"ab"_s);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
