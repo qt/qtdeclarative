@@ -4955,7 +4955,10 @@ void QQuickTableView::geometryChange(const QRectF &newGeometry, const QRectF &ol
         d->tableModel->drainReusableItemsPool(0);
     }
 
-    polish();
+    d->scheduleRebuildTable(
+                QQuickTableViewPrivate::RebuildOption::LayoutOnly |
+                QQuickTableViewPrivate::RebuildOption::CalculateNewContentWidth |
+                QQuickTableViewPrivate::RebuildOption::CalculateNewContentHeight);
 }
 
 void QQuickTableView::viewportMoved(Qt::Orientations orientation)
