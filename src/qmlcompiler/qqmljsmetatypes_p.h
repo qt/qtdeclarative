@@ -106,17 +106,9 @@ public:
     }
 };
 
-class QQmlJSMetaMethod
+class QQmlJSMetaParameter
 {
 public:
-    enum Type { Signal, Slot, Method, StaticMethod };
-
-    enum Access {
-        Private,
-        Protected,
-        Public
-    };
-
     /*!
        \internal
        A non-const parameter is passed either by pointer or by value, depending on its access
@@ -128,6 +120,55 @@ public:
         Const,
     };
 
+    QQmlJSMetaParameter(const QString &name, const QString &typeName,
+                        Constness typeQualifier = NonConst,
+                        QWeakPointer<const QQmlJSScope> type = {})
+        : m_name(name), m_typeName(typeName), m_type(type), m_typeQualifier(typeQualifier)
+    {
+    }
+
+    QString name() const { return m_name; }
+    void setName(const QString &name) { m_name = name; }
+    QString typeName() const { return m_typeName; }
+    void setTypeName(const QString &typeName) { m_typeName = typeName; }
+    QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
+    void setType(QWeakPointer<const QQmlJSScope> type) { m_type = type; }
+    Constness typeQualifier() const { return m_typeQualifier; }
+    void setTypeQualifier(Constness typeQualifier) { m_typeQualifier = typeQualifier; }
+
+    friend bool operator==(const QQmlJSMetaParameter &a, const QQmlJSMetaParameter &b)
+    {
+        return a.m_name == b.m_name && a.m_typeName == b.m_typeName
+                && a.m_type.toStrongRef().data() == b.m_type.toStrongRef().data()
+                && a.m_typeQualifier == b.m_typeQualifier;
+    }
+
+    friend bool operator!=(const QQmlJSMetaParameter &a, const QQmlJSMetaParameter &b)
+    {
+        return !(a == b);
+    }
+
+    friend size_t qHash(const QQmlJSMetaParameter &e, size_t seed = 0)
+    {
+        return qHashMulti(seed, e.m_name, e.m_typeName, e.m_type.toStrongRef().data(),
+                          e.m_typeQualifier);
+    }
+
+private:
+    QString m_name;
+    QString m_typeName;
+    QWeakPointer<const QQmlJSScope> m_type;
+    Constness m_typeQualifier = NonConst;
+};
+
+class QQmlJSMetaMethod
+{
+public:
+    enum Type { Signal, Slot, Method, StaticMethod };
+
+    enum Access { Private, Protected, Public };
+
+public:
     /*! \internal
 
         Represents a relative JavaScript function/expression index within a type
@@ -162,36 +203,20 @@ public:
         m_returnType = type;
     }
 
-    QStringList parameterNames() const { return m_paramNames; }
-    QStringList parameterTypeNames() const { return m_paramTypeNames; }
-    QList<QSharedPointer<const QQmlJSScope>> parameterTypes() const
+    QList<QQmlJSMetaParameter> parameters() const { return m_parameters; }
+
+    QStringList parameterNames() const
     {
-        QList<QSharedPointer<const QQmlJSScope>> result;
-        for (const auto &type : m_paramTypes)
-            result.append(type.toStrongRef());
-        return result;
+        QStringList names;
+        for (const auto &p : m_parameters)
+            names.append(p.name());
+
+        return names;
     }
 
-    QList<Constness> parameterTypeQualifiers() const { return m_paramTypeQualifiers; }
+    void setParameters(const QList<QQmlJSMetaParameter> &parameters) { m_parameters = parameters; }
 
-    void setParameterTypes(const QList<QSharedPointer<const QQmlJSScope>> &types,
-                           const QList<Constness> &flags)
-    {
-        Q_ASSERT(types.size() == m_paramNames.size());
-        Q_ASSERT(flags.size() == m_paramNames.size());
-        m_paramTypes.clear();
-        m_paramTypeQualifiers = flags;
-        for (const auto &type : types)
-            m_paramTypes.append(type);
-    }
-    void addParameter(const QString &name, const QString &typeName, const Constness &flag,
-                      const QSharedPointer<const QQmlJSScope> &type = {})
-    {
-        m_paramNames.append(name);
-        m_paramTypeNames.append(typeName);
-        m_paramTypes.append(type);
-        m_paramTypeQualifiers.append(flag);
-    }
+    void addParameter(const QQmlJSMetaParameter &p) { m_parameters.append(p); }
 
     int methodType() const { return m_methodType; }
     void setMethodType(Type methodType) { m_methodType = methodType; }
@@ -227,9 +252,7 @@ public:
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
         return a.m_name == b.m_name && a.m_returnTypeName == b.m_returnTypeName
-                && a.m_returnType == b.m_returnType && a.m_paramNames == b.m_paramNames
-                && a.m_paramTypeNames == b.m_paramTypeNames && a.m_paramTypes == b.m_paramTypes
-                && a.m_paramTypeQualifiers == b.m_paramTypeQualifiers
+                && a.m_returnType == b.m_returnType && a.m_parameters == b.m_parameters
                 && a.m_annotations == b.m_annotations && a.m_methodType == b.m_methodType
                 && a.m_methodAccess == b.m_methodAccess && a.m_revision == b.m_revision
                 && a.m_isConstructor == b.m_isConstructor;
@@ -247,16 +270,15 @@ public:
         seed = combine(seed, method.m_name);
         seed = combine(seed, method.m_returnTypeName);
         seed = combine(seed, method.m_returnType.toStrongRef().data());
-        seed = combine(seed, method.m_paramNames);
-        seed = combine(seed, method.m_paramTypeNames);
         seed = combine(seed, method.m_annotations);
         seed = combine(seed, method.m_methodType);
         seed = combine(seed, method.m_methodAccess);
         seed = combine(seed, method.m_revision);
         seed = combine(seed, method.m_isConstructor);
 
-        for (const auto &type : method.m_paramTypes)
-            seed = combine(seed, type.toStrongRef().data());
+        for (const auto &type : method.m_parameters) {
+            seed = combine(seed, type);
+        }
 
         return seed;
     }
@@ -266,10 +288,7 @@ private:
     QString m_returnTypeName;
     QWeakPointer<const QQmlJSScope> m_returnType;
 
-    QStringList m_paramNames;
-    QStringList m_paramTypeNames;
-    QList<QWeakPointer<const QQmlJSScope>> m_paramTypes;
-    QList<Constness> m_paramTypeQualifiers;
+    QList<QQmlJSMetaParameter> m_parameters;
     QList<QQmlJSAnnotation> m_annotations;
 
     Type m_methodType = Signal;

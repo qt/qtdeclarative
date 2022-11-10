@@ -1126,21 +1126,21 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
             continue;
         }
 
-        const auto argumentTypes = method.parameterTypes();
-        if (argc != argumentTypes.size()) {
-            errors->append(u"Function expects %1 arguments, but %2 were provided"_s
-                                   .arg(argumentTypes.size())
-                                   .arg(argc));
+        const auto arguments = method.parameters();
+        if (argc != arguments.size()) {
+            errors->append(
+                    u"Function expects %1 arguments, but %2 were provided"_s.arg(arguments.size())
+                            .arg(argc));
             continue;
         }
 
         bool matches = true;
         for (int i = 0; i < argc; ++i) {
-            const auto argumentType = argumentTypes[i];
+            const auto argumentType = arguments[i].type();
             if (argumentType.isNull()) {
-                errors->append(u"type %1 for argument %2 cannot be resolved"_s
-                                       .arg(method.parameterTypeNames().at(i))
-                                       .arg(i));
+                errors->append(
+                        u"type %1 for argument %2 cannot be resolved"_s.arg(arguments[i].typeName())
+                                .arg(i));
                 matches = false;
                 break;
             }
@@ -1153,7 +1153,7 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
             errors->append(
                     u"argument %1 contains %2 but is expected to contain the type %3"_s.arg(i).arg(
                             m_state.registers[argv + i].descriptiveName(),
-                            method.parameterTypeNames().at(i)));
+                            arguments[i].typeName()));
             matches = false;
             break;
         }
@@ -1258,12 +1258,12 @@ void QQmlJSTypePropagator::propagateCall(
         setError(u"Cannot store return type of method %1()."_s.arg(match.methodName()));
 
     m_state.setHasSideEffects(true);
-    const auto types = match.parameterTypes();
+    const auto types = match.parameters();
     for (int i = 0; i < argc; ++i) {
         if (i < types.size()) {
             const QQmlJSScope::ConstPtr type = match.isJavaScriptFunction()
                     ? m_typeResolver->jsValueType()
-                    : QQmlJSScope::ConstPtr(types.at(i));
+                    : QQmlJSScope::ConstPtr(types.at(i).type());
             if (!type.isNull()) {
                 addReadRegister(argv + i, m_typeResolver->globalType(type));
                 continue;

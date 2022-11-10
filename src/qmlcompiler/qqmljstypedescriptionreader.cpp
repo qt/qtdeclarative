@@ -454,8 +454,9 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
         }
     }
 
-    metaMethod->addParameter(name, type,
-                             isConstant ? QQmlJSMetaMethod::Const : QQmlJSMetaMethod::NonConst);
+    QQmlJSMetaParameter p(name, type);
+    p.setTypeQualifier(isConstant ? QQmlJSMetaParameter::Const : QQmlJSMetaParameter::NonConst);
+    metaMethod->addParameter(std::move(p));
 }
 
 QString QQmlJSTypeDescriptionReader::readStringBinding(UiScriptBinding *ast)

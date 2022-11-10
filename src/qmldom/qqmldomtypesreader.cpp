@@ -73,13 +73,12 @@ void QmltypesReader::insertSignalOrMethod(const QQmlJSMetaMethod &metaMethod,
     default:
         Q_UNREACHABLE();
     }
-    QStringList pNames = metaMethod.parameterNames();
-    QStringList pTypes = metaMethod.parameterTypeNames();
-    qsizetype nParam = qMax(pNames.size(), pTypes.size());
+    auto parameters = metaMethod.parameters();
+    qsizetype nParam = parameters.size();
     for (int i = 0; i < nParam; ++i) {
         MethodParameter param;
-        param.name = ((i < pNames.size()) ? pNames.at(i) : QString());
-        param.typeName = ((i < pTypes.size()) ? pTypes.at(i) : QString());
+        param.name = parameters[i].name();
+        param.typeName = parameters[i].typeName();
         methodInfo.parameters.append(param);
     }
     methodInfo.name = metaMethod.methodName();

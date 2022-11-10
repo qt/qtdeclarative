@@ -171,12 +171,12 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
             for (const auto &method : methods) {
                 if (method.methodType() == QQmlJSMetaMethod::Signal) {
                     function.isSignalHandler = true;
-                    const auto argumentTypes = method.parameterTypes();
-                    for (qsizetype i = 0, end = argumentTypes.size(); i < end; ++i) {
-                        const auto &type = argumentTypes[i];
+                    const auto arguments = method.parameters();
+                    for (qsizetype i = 0, end = arguments.size(); i < end; ++i) {
+                        const auto &type = arguments[i].type();
                         if (type.isNull()) {
-                            diagnose(u"Cannot resolve the argument type %1."_s
-                                           .arg(method.parameterTypeNames()[i]),
+                            diagnose(u"Cannot resolve the argument type %1."_s.arg(
+                                             arguments[i].typeName()),
                                      QtDebugMsg, bindingLocation, error);
                             function.argumentTypes.append(
                                         m_typeResolver->tracked(

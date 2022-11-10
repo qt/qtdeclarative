@@ -159,9 +159,9 @@ void QmltcVisitor::findCppIncludes()
             for (const QQmlJSMetaMethod &m : methods) {
                 findInType(m.returnType());
 
-                const auto parameters = m.parameterTypes();
+                const auto parameters = m.parameters();
                 for (const auto &param : parameters)
-                    findInType(param);
+                    findInType(param.type());
             }
         }
 
