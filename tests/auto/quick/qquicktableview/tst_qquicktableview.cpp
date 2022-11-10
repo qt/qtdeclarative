@@ -162,6 +162,7 @@ private slots:
     void checkSyncView_connect_late();
     void checkSyncView_pageFlicking();
     void checkSyncView_emptyModel();
+    void checkSyncView_topLeftChanged();
     void delegateWithRequiredProperties();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
     void replaceModel();
@@ -3146,6 +3147,42 @@ void tst_QQuickTableView::checkSyncView_emptyModel()
 
     QCOMPARE(tableViewVPrivate->loadedTableOuterRect.top(), tableViewPrivate->loadedTableOuterRect.top());
     QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
+}
+
+void tst_QQuickTableView::checkSyncView_topLeftChanged()
+{
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+    QQuickTableView *views[] = {tableViewH, tableViewV, tableViewHV};
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    for (auto view : views)
+        view->setModel(model);
+
+    tableView->setColumnWidthProvider(QJSValue());
+    tableView->setRowHeightProvider(QJSValue());
+    view->rootObject()->setProperty("delegateWidth", 300);
+    view->rootObject()->setProperty("delegateHeight", 300);
+    tableView->forceLayout();
+
+    tableViewHV->setContentX(350);
+    tableViewHV->setContentY(350);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewH->leftColumn(), tableView->leftColumn());
+    QCOMPARE(tableViewV->topRow(), tableView->topRow());
+
+    view->rootObject()->setProperty("delegateWidth", 50);
+    view->rootObject()->setProperty("delegateHeight", 50);
+    tableView->forceLayout();
+
+    QCOMPARE(tableViewH->leftColumn(), tableView->leftColumn());
+    QCOMPARE(tableViewV->topRow(), tableView->topRow());
 }
 
 void tst_QQuickTableView::checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable()

@@ -3908,6 +3908,13 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setLeftMargin(syncView->leftMargin());
         q->setRightMargin(syncView->rightMargin());
         updateContentWidth();
+
+        if (syncView->leftColumn() != q->leftColumn()) {
+            // The left column is no longer the same as the left
+            // column in syncView. This requires a rebuild.
+            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn;
+            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        }
     }
 
     if (syncVertically) {
@@ -3916,6 +3923,13 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setTopMargin(syncView->topMargin());
         q->setBottomMargin(syncView->bottomMargin());
         updateContentHeight();
+
+        if (syncView->topRow() != q->topRow()) {
+            // The top row is no longer the same as the top
+            // row in syncView. This requires a rebuild.
+            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow;
+            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        }
     }
 
     if (syncView && loadedItems.isEmpty() && !tableSize.isEmpty()) {
