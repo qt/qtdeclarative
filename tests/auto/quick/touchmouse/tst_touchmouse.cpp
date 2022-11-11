@@ -195,6 +195,14 @@ public:
     bool fromMouseEvent = false;
     bool canceled = false;
 
+    void reset()
+    {
+        exclusiveGrabber = nullptr;
+        transitionCount = 0;
+        fromMouseEvent = false;
+        canceled = false;
+    }
+
     void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point)
     {
         qCDebug(lcTests) << grabber << transition << event << point << point.device();
@@ -1641,6 +1649,7 @@ void tst_TouchMouse::strayTouchDoesntAutograb() // QTBUG-107867
     eventItem->acceptMouse = true;
     QCOMPARE(eventItem->acceptTouchEvents(), false); // the default in Qt 6
     QPoint p1(6, 6);
+    grabMonitor.reset();
 
     // Begin a new touch, that gets converted to a mouse press
     QTest::touchEvent(&window, device).press(0, p1);
