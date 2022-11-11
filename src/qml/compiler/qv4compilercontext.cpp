@@ -111,7 +111,7 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::So
             result.scope = scope;
             result.index = m.index;
             result.isConst = (m.scope == VariableScope::Const);
-            result.requiresTDZCheck = m.requiresTDZCheck(accessLocation, c != this);
+            result.requiresTDZCheck = m.requiresTDZCheck(accessLocation, c != this) || c->isCaseBlock();
             if (c->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval")))
                 result.isArgOrEval = true;
             result.declarationLocation = m.declarationLocation;

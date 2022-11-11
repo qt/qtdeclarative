@@ -2161,14 +2161,12 @@ Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
         Reference e = expression(it->expression);
         if (hasError())
             break;
-        if (e.throwsReferenceError) {
-            generateThrowException(QStringLiteral("ReferenceError"),
-                                   e.name + QStringLiteral(" is not defined"));
-        }
         if (!argc && !it->next && !hasSpread) {
             // avoid copy for functions taking a single argument
-            if (e.isStackSlot())
+            if (e.isStackSlot()) {
+                e.tdzCheck();
                 return { 1, e.stackSlot(), hasSpread };
+            }
         }
         (void) e.storeOnStack(calldata + argc);
         ++argc;
@@ -4441,6 +4439,28 @@ Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
     return slot;
 }
 
+void Codegen::Reference::tdzCheck(bool requiresCheck, bool throwsReferenceError) const {
+    if (throwsReferenceError) {
+        codegen->generateThrowException(QStringLiteral("ReferenceError"),
+                                        name + QStringLiteral(" is not defined"));
+        return;
+    }
+    if (!requiresCheck)
+        return;
+    Instruction::DeadTemporalZoneCheck check;
+    check.name = codegen->registerString(name);
+    codegen->bytecodeGenerator->addInstruction(check);
+}
+
+void Codegen::Reference::tdzCheckStackSlot(Moth::StackSlot slot, bool requiresCheck, bool throwsReferenceError) const {
+    if (!requiresCheck)
+        return;
+    Instruction::LoadReg load;
+    load.reg = slot;
+    codegen->bytecodeGenerator->addInstruction(load);
+    tdzCheck(true, throwsReferenceError);
+}
+
 Codegen::Reference Codegen::Reference::storeRetainAccumulator() const
 {
     if (storeWipesAccumulator()) {
@@ -4559,27 +4579,6 @@ void Codegen::Reference::storeAccumulator() const
 
 void Codegen::Reference::loadInAccumulator() const
 {
-    auto tdzCheck = [this](bool requiresCheck, bool throwsReferenceError) {
-        if (throwsReferenceError) {
-            codegen->generateThrowException(QStringLiteral("ReferenceError"),
-                                            name + QStringLiteral(" is not defined"));
-            return;
-        }
-        if (!requiresCheck)
-            return;
-        Instruction::DeadTemporalZoneCheck check;
-        check.name = codegen->registerString(name);
-        codegen->bytecodeGenerator->addInstruction(check);
-    };
-    auto tdzCheckStackSlot = [this, tdzCheck](Moth::StackSlot slot, bool requiresCheck, bool throwsReferenceError) {
-        if (!requiresCheck)
-            return;
-        Instruction::LoadReg load;
-        load.reg = slot;
-        codegen->bytecodeGenerator->addInstruction(load);
-        tdzCheck(true, throwsReferenceError);
-    };
-
     switch (type) {
     case Accumulator:
         return;

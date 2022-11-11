@@ -268,8 +268,8 @@ private slots:
     void staticInNestedClasses();
     void callElement();
 
-    void writeTdzBeforeDeclaration_data();
-    void writeTdzBeforeDeclaration();
+    void tdzViolations_data();
+    void tdzViolations();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5695,19 +5695,21 @@ void tst_QJSEngine::callElement()
     QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
 }
 
-void tst_QJSEngine::writeTdzBeforeDeclaration_data()
+void tst_QJSEngine::tdzViolations_data()
 {
     QTest::addColumn<QString>("type");
     QTest::addRow("let") << u"let"_s;
     QTest::addRow("const") << u"const"_s;
 }
 
-void tst_QJSEngine::writeTdzBeforeDeclaration()
+void tst_QJSEngine::tdzViolations()
 {
     QFETCH(QString, type);
     type.resize(8, u' '); // pad with some spaces, so that the columns match.
 
     QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+
     const QString program1 = uR"(
         (function() {
             a = 5;
@@ -5745,6 +5747,22 @@ void tst_QJSEngine::writeTdzBeforeDeclaration()
     const QJSValue result2 = engine.evaluate(program2);
     QVERIFY(result2.isError());
     QCOMPARE(result2.toString(), u"ReferenceError: b is not defined"_s);
+
+    const QString program3 = uR"(
+        (function() {
+            var a = 10;
+            switch (a) {
+            case 1:
+                %1 b = 5;
+            case 10:
+                console.log(b);
+            }
+        })();
+    )"_s.arg(type);
+
+    const QJSValue result3 = engine.evaluate(program3);
+    QVERIFY(result3.isError());
+    QCOMPARE(result3.toString(), u"ReferenceError: b is not defined"_s);
 }
 
 QTEST_MAIN(tst_QJSEngine)

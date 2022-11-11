@@ -360,6 +360,11 @@ struct Context {
             return parent->canHaveTailCalls();
         return false;
     }
+
+    bool isCaseBlock() const
+    {
+        return contextType == ContextType::Block && name == u"%CaseBlock";
+    }
 };
 
 

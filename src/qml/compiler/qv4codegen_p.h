@@ -330,6 +330,14 @@ public:
             return theStackSlot;
         }
 
+        void tdzCheck() const
+        {
+            if (isAccumulator())
+                tdzCheck(requiresTDZCheck, throwsReferenceError);
+            else if (isStackSlot())
+                tdzCheckStackSlot(stackSlot(), requiresTDZCheck, throwsReferenceError);
+        }
+
         union {
             Moth::StackSlot theStackSlot;
             QV4::ReturnedValue constant;
@@ -370,6 +378,9 @@ public:
     private:
         void storeAccumulator() const;
         Reference doStoreOnStack(int tempIndex) const;
+        void tdzCheck(bool requiresCheck, bool throwsReferenceError) const;
+        void tdzCheckStackSlot(
+                Moth::StackSlot slot, bool requiresCheck, bool throwsReferenceError) const;
     };
 
     struct RegisterScope {
