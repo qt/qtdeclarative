@@ -227,7 +227,6 @@ void QQuickMaterialRipple::setClipRadius(qreal radius)
         return;
 
     m_clipRadius = radius;
-    setClip(!qFuzzyIsNull(radius));
     update();
 }
 
