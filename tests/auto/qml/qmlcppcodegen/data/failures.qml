@@ -56,4 +56,10 @@ QtObject {
         let b = 5;
         return a;
     }
+
+    function earlyStore() : int {
+        a = 5;
+        let a;
+        return a;
+    }
 }

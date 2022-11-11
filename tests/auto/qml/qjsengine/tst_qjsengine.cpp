@@ -268,6 +268,9 @@ private slots:
     void staticInNestedClasses();
     void callElement();
 
+    void writeTdzBeforeDeclaration_data();
+    void writeTdzBeforeDeclaration();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -5690,6 +5693,58 @@ void tst_QJSEngine::callElement()
         array[0](array.reverse()) ? "a" : "b";
     )"_s;
     QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
+}
+
+void tst_QJSEngine::writeTdzBeforeDeclaration_data()
+{
+    QTest::addColumn<QString>("type");
+    QTest::addRow("let") << u"let"_s;
+    QTest::addRow("const") << u"const"_s;
+}
+
+void tst_QJSEngine::writeTdzBeforeDeclaration()
+{
+    QFETCH(QString, type);
+    type.resize(8, u' '); // pad with some spaces, so that the columns match.
+
+    QJSEngine engine;
+    const QString program1 = uR"(
+        (function() {
+            a = 5;
+            %1 a = 1;
+            return a;
+        })();
+    )"_s.arg(type);
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                ":3:13 Variable \"a\" is used before its declaration at 4:22.");
+
+    const QJSValue result1 = engine.evaluate(program1);
+    QVERIFY(result1.isError());
+    QCOMPARE(result1.toString(), u"ReferenceError: a is not defined"_s);
+
+    const QString program2 = uR"(
+        (function() {
+            function stringify(x) { return x + "" }
+            var c = "";
+            for (var a = 0; a < 10; ++a) {
+                if (a > 0) {
+                    c += stringify(b);
+                }
+                %1 b = 10;
+            }
+            return c;
+        })();
+    )"_s.arg(type);
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                ":7:36 Variable \"b\" is used before its declaration at 9:26.");
+
+    const QJSValue result2 = engine.evaluate(program2);
+    QVERIFY(result2.isError());
+    QCOMPARE(result2.toString(), u"ReferenceError: b is not defined"_s);
 }
 
 QTEST_MAIN(tst_QJSEngine)

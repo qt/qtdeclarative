@@ -188,7 +188,8 @@ public:
             stackSlotIsLocalOrArgument(false),
             isVolatile(false),
             global(false),
-            qmlGlobal(false)
+            qmlGlobal(false),
+            throwsReferenceError(false)
         {}
 
         Reference(const Reference &) = default;
@@ -361,6 +362,7 @@ public:
         quint32 isVolatile:1;
         quint32 global:1;
         quint32 qmlGlobal:1;
+        quint32 throwsReferenceError:1;
         QQmlJS::SourceLocation sourceLocation = QQmlJS::SourceLocation();
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainJumpLabel;
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainTargetLabel;
@@ -826,6 +828,7 @@ private:
                     const QString &detail);
     std::optional<Moth::BytecodeGenerator::Label> traverseOptionalChain(QQmlJS::AST::Node *node);
     Reference loadSubscriptForCall(const Reference &base);
+    void generateThrowException(const QString &type, const QString &text = QString());
 };
 
 }
