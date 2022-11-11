@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/qt/qml/testbed">
+        <file>qml/main.qml</file>
+        <file>qml/Settings.qml</file>
+        <file>qml/ResetSettingsOverlay.qml</file>
+        <file>qml/FpsItem.qml</file>
+        <file>qml/images/spinner.png</file>
+        <file>qml/images/warning.png</file>
+        <file>qml/WarningsView.qml</file>
+        <file>qml/WarningsItem.qml</file>
+        <file>qml/ShaderView.qml</file>
+        <file>qml/TestSourceItem.qml</file>
+        <file>qml/TestMaskItem.qml</file>
+        <file>qml/SettingsView.qml</file>
+        <file>qml/images/pause.png</file>
+        <file>qml/images/play.png</file>
+        <file>qml/SettingsComponentCheckBox.qml</file>
+        <file>qml/SettingsComponentColorSelector.qml</file>
+        <file>qml/SettingsComponentSlider.qml</file>
+        <file>qml/SettingsComponentView.qml</file>
+        <file>qml/images/arrow.png</file>
+        <file>qml/images/Built_with_Qt.png</file>
+        <file>qml/images/Built_with_Qt_RGB_logo.png</file>
+    </qresource>
+</RCC>

@@ -41,6 +41,10 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
         add_subdirectory(particles)
     endif()
 
+    if(QT_FEATURE_quick_shadereffect)
+        add_subdirectory(effects)
+    endif()
+
     if(QT_FEATURE_quick_path)
         add_subdirectory(quickshapes)
     endif()

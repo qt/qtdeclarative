@@ -1,0 +1,14 @@
+/*!
+//! [performance shader regen]
+\b {Performance note:} Causes shader change; do not change this property during animation.
+//! [performance shader regen]
+
+//! [performance item resize]
+\b {Performance note:} Causes a resize of the item; do not change this property during animation.
+//! [performance item resize]
+
+//! [performance item size]
+\b {Performance note:} Item size should be as small as possible for optimal performance.
+//! [performance item size]
+
+*/
