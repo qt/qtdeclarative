@@ -1436,7 +1436,7 @@ void QQmlXMLHttpRequest::finished()
 
 void QQmlXMLHttpRequest::readEncoding()
 {
-    for (const HeaderPair &header : qAsConst(m_headersList)) {
+    for (const HeaderPair &header : std::as_const(m_headersList)) {
         if (header.first == "content-type") {
             int separatorIdx = header.second.indexOf(';');
             if (separatorIdx == -1) {

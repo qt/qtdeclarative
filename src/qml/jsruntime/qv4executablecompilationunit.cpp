@@ -297,7 +297,7 @@ void ExecutableCompilationUnit::unlink()
     delete [] runtimeLookups;
     runtimeLookups = nullptr;
 
-    for (QV4::Function *f : qAsConst(runtimeFunctions))
+    for (QV4::Function *f : std::as_const(runtimeFunctions))
         f->destroy();
     runtimeFunctions.clear();
 
@@ -325,14 +325,14 @@ void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack)
             if (runtimeClasses[i])
                 runtimeClasses[i]->mark(markStack);
     }
-    for (QV4::Function *f : qAsConst(runtimeFunctions))
+    for (QV4::Function *f : std::as_const(runtimeFunctions))
         if (f && f->internalClass)
             f->internalClass->mark(markStack);
-    for (QV4::Heap::InternalClass *c : qAsConst(runtimeBlocks))
+    for (QV4::Heap::InternalClass *c : std::as_const(runtimeBlocks))
         if (c)
             c->mark(markStack);
 
-    for (QV4::Heap::Object *o : qAsConst(templateObjects))
+    for (QV4::Heap::Object *o : std::as_const(templateObjects))
         if (o)
             o->mark(markStack);
 

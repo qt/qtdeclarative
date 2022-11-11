@@ -408,7 +408,7 @@ QQmlComponent::~QQmlComponent()
 
         if (isError()) {
             qWarning() << "This may have been caused by one of the following errors:";
-            for (const QQmlError &error : qAsConst(d->state.errors))
+            for (const QQmlError &error : std::as_const(d->state.errors))
                 qWarning().nospace().noquote() << QLatin1String("    ") << error;
         }
 
@@ -924,7 +924,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     Q_Q(QQmlComponent);
     auto cleanup = qScopeGuard([this] {
         if (!state.errors.isEmpty() && lcQmlComponentGeneral().isDebugEnabled()) {
-            for (const auto &e : qAsConst(state.errors)) {
+            for (const auto &e : std::as_const(state.errors)) {
                 qCDebug(lcQmlComponentGeneral) << "QQmlComponent: " << e.toString();
             }
         }
@@ -996,7 +996,7 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
 
     deferredState->reserve(ddata->deferredData.size());
 
-    for (QQmlData::DeferredData *deferredData : qAsConst(ddata->deferredData)) {
+    for (QQmlData::DeferredData *deferredData : std::as_const(ddata->deferredData)) {
         enginePriv->inProgressCreations++;
 
         ConstructionState state;
@@ -1586,7 +1586,7 @@ QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &propert
 
     if (!d->requiredProperties().empty()) {
         QList<QQmlError> errors;
-        for (const auto &requiredProperty: qAsConst(d->requiredProperties())) {
+        for (const auto &requiredProperty: std::as_const(d->requiredProperties())) {
             errors.push_back(QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(
                     requiredProperty));
         }

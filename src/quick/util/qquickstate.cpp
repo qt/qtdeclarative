@@ -636,7 +636,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
     d->revertList << additionalReverts;
 
     if (lcStates().isDebugEnabled()) {
-        for (const QQuickStateAction &action : qAsConst(applyList)) {
+        for (const QQuickStateAction &action : std::as_const(applyList)) {
             if (action.event)
                 qCDebug(lcStates) << "QQuickStateAction event:" << action.event->type();
             else

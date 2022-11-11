@@ -1682,7 +1682,7 @@ void QQuickItemViewPrivate::clear(bool onDestruction)
     releaseVisibleItems(QQmlInstanceModel::NotReusable);
     visibleIndex = 0;
 
-    for (FxViewItem *item : qAsConst(releasePendingTransition)) {
+    for (FxViewItem *item : std::as_const(releasePendingTransition)) {
         item->releaseAfterTransition = false;
         releaseItem(item, QQmlInstanceModel::NotReusable);
     }
@@ -1866,7 +1866,7 @@ void QQuickItemViewPrivate::layout()
         // Give the view one more chance to refill itself,
         // in case its size is changed such that more delegates become visible after component completed
         refill();
-        for (FxViewItem *item : qAsConst(visibleItems)) {
+        for (FxViewItem *item : std::as_const(visibleItems)) {
             if (!item->transitionScheduledOrRunning())
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
         }
@@ -2034,7 +2034,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         }
         itemCount += insertions[i].count;
     }
-    for (FxViewItem *item : qAsConst(newItems)) {
+    for (FxViewItem *item : std::as_const(newItems)) {
         if (item->attached)
             item->attached->emitAdd();
     }
@@ -2043,7 +2043,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     // find the index it was moved from in order to set its initial position, so that we
     // can transition it from this "original" position to its new position in the view
     if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true)) {
-        for (const MovedItem &m : qAsConst(movingIntoView)) {
+        for (const MovedItem &m : std::as_const(movingIntoView)) {
             int fromIndex = findMoveKeyIndex(m.moveKey, removals);
             if (fromIndex >= 0) {
                 if (prevFirstItemInViewIndex >= 0 && fromIndex < prevFirstItemInViewIndex)

@@ -885,7 +885,7 @@ void tst_qqmlqt::dateTimeFormattingVariants()
              << component.url().toString() + ":40: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed."
              << component.url().toString() + ":43: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed.";
 
-    for (const QString &warning : qAsConst(warnings))
+    for (const QString &warning : std::as_const(warnings))
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     warnings.clear();
@@ -899,7 +899,7 @@ void tst_qqmlqt::dateTimeFormattingVariants()
              << "Could not convert argument 1 at"
              << "expression for err_dateTime2@";
 
-    for (const QString &warning : qAsConst(warnings))
+    for (const QString &warning : std::as_const(warnings))
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning));
 
     warnings.clear();

@@ -194,7 +194,7 @@ QQuickLabsPlatformMenu::~QQuickLabsPlatformMenu()
 
 void QQuickLabsPlatformMenu::unparentSubmenus()
 {
-    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items)) {
         if (QQuickLabsPlatformMenu *subMenu = item->subMenu())
             subMenu->setParentMenu(nullptr);
         item->setMenu(nullptr);
@@ -234,7 +234,7 @@ QPlatformMenu * QQuickLabsPlatformMenu::create()
             connect(m_handle, &QPlatformMenu::aboutToShow, this, &QQuickLabsPlatformMenu::aboutToShow);
             connect(m_handle, &QPlatformMenu::aboutToHide, this, &QQuickLabsPlatformMenu::aboutToHide);
 
-            for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items))
+            for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items))
                 m_handle->insertMenuItem(item->create(), nullptr);
 
             if (m_menuItem) {
@@ -278,7 +278,7 @@ void QQuickLabsPlatformMenu::sync()
         m_systemTrayIcon->handle()->updateMenu(m_handle);
 #endif
 
-    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items))
+    for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items))
         item->sync();
 }
 
@@ -654,7 +654,7 @@ void QQuickLabsPlatformMenu::clear()
     if (m_items.isEmpty())
         return;
 
-    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : std::as_const(m_items)) {
         m_data.removeOne(item);
         if (m_handle)
             m_handle->removeMenuItem(item->handle());

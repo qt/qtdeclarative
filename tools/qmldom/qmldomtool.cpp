@@ -188,10 +188,10 @@ int main(int argc, char *argv[])
     {
         QDebug dbg = qDebug();
         dbg << "dirs:\n";
-        for (const QString &d : qAsConst(qmltypeDirs))
+        for (const QString &d : std::as_const(qmltypeDirs))
             dbg << "    '" << d << "'\n";
         dbg << "files:\n";
-        for (const QString &f : qAsConst(positionalArguments))
+        for (const QString &f : std::as_const(positionalArguments))
             dbg << "    '" << f << "'\n";
         dbg << "fieldFilter: " << filter.describeFieldsFilter();
         dbg << "\n";
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
         env.loadBuiltins();
     QList<DomItem> loadedFiles(positionalArguments.size());
     qsizetype iPos = 0;
-    for (const QString &s : qAsConst(positionalArguments)) {
+    for (const QString &s : std::as_const(positionalArguments)) {
         env.loadFile(
                 s, QString(),
                 [&loadedFiles, iPos](Path, const DomItem &, const DomItem &newIt) {

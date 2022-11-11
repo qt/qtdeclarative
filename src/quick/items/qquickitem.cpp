@@ -3374,7 +3374,7 @@ void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)
     QQuickItem *quickItem = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(quickItem);
     if (quickItemPrivate->extra.isAllocated()) {//If extra is not allocated resources is empty.
-        for (QObject *object : qAsConst(quickItemPrivate->extra->resourcesList)) {
+        for (QObject *object : std::as_const(quickItemPrivate->extra->resourcesList)) {
             qmlobject_disconnect(object, QObject, SIGNAL(destroyed(QObject*)),
                                  quickItem, QQuickItem, SLOT(_q_resourceObjectDeleted(QObject*)));
         }
@@ -7895,7 +7895,7 @@ void QQuickItemPrivate::setHasCursorInChild(bool hc)
     if (!hc && subtreeCursorEnabled) {
         if (hasCursor)
             return; // nope! sorry, I have a cursor myself
-        for (QQuickItem *otherChild : qAsConst(childItems)) {
+        for (QQuickItem *otherChild : std::as_const(childItems)) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
             if (otherChildPrivate->subtreeCursorEnabled || otherChildPrivate->hasCursor)
                 return; // nope! sorry, something else wants it kept on.
@@ -7925,7 +7925,7 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
         if (hasEnabledHoverHandlers())
             return; // nope! sorry, this item has enabled HoverHandlers
 
-        for (QQuickItem *otherChild : qAsConst(childItems)) {
+        for (QQuickItem *otherChild : std::as_const(childItems)) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);
             if (otherChildPrivate->subtreeHoverEnabled || otherChildPrivate->hoverEnabled)
                 return; // nope! sorry, something else wants it kept on.
@@ -8792,18 +8792,18 @@ bool QQuickItem::event(QEvent *ev)
 #endif // gestures
     case QEvent::LanguageChange:
     case QEvent::LocaleChange:
-        for (QQuickItem *item : qAsConst(d->childItems))
+        for (QQuickItem *item : std::as_const(d->childItems))
             QCoreApplication::sendEvent(item, ev);
         break;
     case QEvent::WindowActivate:
     case QEvent::WindowDeactivate:
         if (d->providesPalette())
             d->setCurrentColorGroup();
-        for (QQuickItem *item : qAsConst(d->childItems))
+        for (QQuickItem *item : std::as_const(d->childItems))
             QCoreApplication::sendEvent(item, ev);
         break;
     case QEvent::ApplicationPaletteChange:
-        for (QQuickItem *item : qAsConst(d->childItems))
+        for (QQuickItem *item : std::as_const(d->childItems))
             QCoreApplication::sendEvent(item, ev);
         break;
     default:
@@ -9683,7 +9683,7 @@ void QV4::Heap::QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::MarkS
 {
     QObjectWrapper *This = static_cast<QObjectWrapper *>(that);
     if (QQuickItem *item = static_cast<QQuickItem*>(This->object())) {
-        for (QQuickItem *child : qAsConst(QQuickItemPrivate::get(item)->childItems))
+        for (QQuickItem *child : std::as_const(QQuickItemPrivate::get(item)->childItems))
             QV4::QObjectWrapper::markWrapper(child, markStack);
     }
     QObjectWrapper::markObjects(that, markStack);

@@ -1391,7 +1391,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
     // If it's a namespace, prepend the qualifier and we'll resolve it later to the correct type.
     QString currentName = qualifiedIdElement->name.toString();
     if (qualifiedIdElement->next) {
-        for (const QV4::CompiledData::Import* import : qAsConst(_imports))
+        for (const QV4::CompiledData::Import* import : std::as_const(_imports))
             if (import->qualifierIndex != emptyStringIndex
                 && stringAt(import->qualifierIndex) == currentName) {
                 qualifiedIdElement = qualifiedIdElement->next;
@@ -1522,7 +1522,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         jsUnit = createdUnit = output.jsGenerator.generateUnit();
 
         // enable flag if we encountered pragma Singleton
-        for (Pragma *p : qAsConst(output.pragmas)) {
+        for (Pragma *p : std::as_const(output.pragmas)) {
             switch (p->type) {
             case Pragma::Singleton:
                 createdUnit->flags |= Unit::IsSingleton;
@@ -1579,7 +1579,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     const unsigned int objectOffset = sizeof(QV4::CompiledData::QmlUnit) + importSize;
     uint nextOffset = objectOffset + objectOffsetTableSize;
-    for (Object *o : qAsConst(output.objects)) {
+    for (Object *o : std::as_const(output.objects)) {
         objectOffsets.insert(o, nextOffset);
         nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size(), o->inlineComponentCount(), o->requiredPropertyExtraDataCount());
 
@@ -1607,7 +1607,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     // write imports
     char *importPtr = data + qmlUnit->offsetToImports;
-    for (const QV4::CompiledData::Import *imp : qAsConst(output.imports)) {
+    for (const QV4::CompiledData::Import *imp : std::as_const(output.imports)) {
         QV4::CompiledData::Import *importToWrite = reinterpret_cast<QV4::CompiledData::Import*>(importPtr);
         *importToWrite = *imp;
         importPtr += sizeof(QV4::CompiledData::Import);

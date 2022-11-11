@@ -150,7 +150,7 @@ void tst_QQmlDebuggingEnabler::custom()
         m_clients = QQmlDebugTest::createOtherClients(m_connection);
         m_connection->connectToHost("127.0.0.1", m_process->debugPort());
         QVERIFY(m_connection->waitForConnected());
-        for (QQmlDebugClient *client : qAsConst(m_clients))
+        for (QQmlDebugClient *client : std::as_const(m_clients))
             QCOMPARE(client->state(), (services.isEmpty() || services.contains(client->name())) ?
                          QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
     }

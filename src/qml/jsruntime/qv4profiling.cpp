@@ -60,7 +60,7 @@ void Profiler::reportData()
     FunctionLocationHash locations;
     properties.reserve(m_data.size());
 
-    for (const FunctionCall &call : qAsConst(m_data)) {
+    for (const FunctionCall &call : std::as_const(m_data)) {
         properties.append(call.properties());
         Function *function = call.function();
         SentMarker &marker = m_sentLocations[reinterpret_cast<quintptr>(function)];

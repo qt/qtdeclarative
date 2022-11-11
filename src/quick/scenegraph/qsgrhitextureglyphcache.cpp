@@ -30,7 +30,7 @@ QSGRhiTextureGlyphCache::~QSGRhiTextureGlyphCache()
         m_texture->deleteLater();
 
     // should be empty, but just in case
-    for (QRhiTexture *t : qAsConst(m_pendingDispose))
+    for (QRhiTexture *t : std::as_const(m_pendingDispose))
         t->deleteLater();
 }
 
@@ -224,7 +224,7 @@ void QSGRhiTextureGlyphCache::commitResourceUpdates(QRhiResourceUpdateBatch *mer
     }
 
     // now let's assume the resource updates will be committed in this frame
-    for (QRhiTexture *t : qAsConst(m_pendingDispose))
+    for (QRhiTexture *t : std::as_const(m_pendingDispose))
         t->deleteLater(); // will be deleted after the frame is submitted -> safe
 
     m_pendingDispose.clear();

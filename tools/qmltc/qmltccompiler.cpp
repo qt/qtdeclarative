@@ -310,7 +310,7 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
               [](const QQmlJSMetaProperty &x, const QQmlJSMetaProperty &y) {
                   return x.index() < y.index();
               });
-    for (const QQmlJSMetaProperty &p : qAsConst(properties)) {
+    for (const QQmlJSMetaProperty &p : std::as_const(properties)) {
         if (p.index() == -1) {
             recordError(type->sourceLocation(),
                         u"Internal error: property '%1' has incomplete information"_s.arg(
@@ -1042,7 +1042,7 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
         auto subbindings = attachedType->ownPropertyBindingsInQmlIROrder();
         // compile bindings of the attached property
         partitionBindings(subbindings.begin(), subbindings.end());
-        for (const auto &b : qAsConst(subbindings)) {
+        for (const auto &b : std::as_const(subbindings)) {
             compileBinding(current, b, attachedType,
                            { type, attachedMemberName, propertyName, false });
         }

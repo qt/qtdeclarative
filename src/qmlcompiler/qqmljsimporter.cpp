@@ -81,7 +81,7 @@ void QQmlJSImporter::readQmltypes(
                           QQmlJS::SourceLocation()
                       });
 
-    for (const QString &dependency : qAsConst(dependencyStrings)) {
+    for (const QString &dependency : std::as_const(dependencyStrings)) {
         const auto blank = dependency.indexOf(u' ');
         if (blank < 0) {
             dependencies->append(QQmlDirParser::Import(dependency, {},
@@ -265,11 +265,11 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
 {
     // Import the dependencies with an invalid prefix. The prefix will never be matched by actual
     // QML code but the C++ types will be visible.
-    for (auto const &dependency : qAsConst(import.dependencies))
+    for (auto const &dependency : std::as_const(import.dependencies))
         importHelper(dependency.module, types, QString(), dependency.version, true);
 
     bool hasOptionalImports = false;
-    for (auto const &import : qAsConst(import.imports)) {
+    for (auto const &import : std::as_const(import.imports)) {
         if (import.flags & QQmlDirParser::Import::Optional) {
             hasOptionalImports = true;
             if (!m_useOptionalImports) {
@@ -576,7 +576,7 @@ void QQmlJSImporter::importQmldirs(const QStringList &qmldirFiles)
 
         m_seenQmldirFiles.insert(qmldirName, result);
 
-        for (const auto &object : qAsConst(result.objects)) {
+        for (const auto &object : std::as_const(result.objects)) {
             for (const auto &ex : object.exports) {
                 m_seenImports.insert({ex.package(), ex.version()}, qmldirName);
                 // We also have to handle the case that no version is provided

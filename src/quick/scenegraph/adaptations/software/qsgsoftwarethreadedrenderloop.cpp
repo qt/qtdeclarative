@@ -754,7 +754,7 @@ void QSGSoftwareThreadedRenderLoop::onAnimationStarted()
 {
     startOrStopAnimationTimer();
 
-    for (const WindowData &w : qAsConst(m_windows))
+    for (const WindowData &w : std::as_const(m_windows))
         w.window->requestUpdate();
 }
 

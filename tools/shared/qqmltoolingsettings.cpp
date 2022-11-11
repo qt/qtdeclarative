@@ -83,7 +83,7 @@ bool QQmlToolingSettings::search(const QString &path)
         const QString iniFile = dir.absoluteFilePath(settingsFileName);
 
         if (read(iniFile)) {
-            for (const QString &dir : qAsConst(dirs))
+            for (const QString &dir : std::as_const(dirs))
                 m_seenDirectories[dir] = iniFile;
             return true;
         }
@@ -94,7 +94,7 @@ bool QQmlToolingSettings::search(const QString &path)
 
     if (const QString iniFile = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, u"%1.ini"_s.arg(m_toolName)); !iniFile.isEmpty()) {
         if (read(iniFile)) {
-            for (const QString &dir : qAsConst(dirs))
+            for (const QString &dir : std::as_const(dirs))
                 m_seenDirectories[dir] = iniFile;
             return true;
         }
@@ -102,7 +102,7 @@ bool QQmlToolingSettings::search(const QString &path)
 
     // No INI file found anywhere, record the failure so we won't have to traverse the entire
     // filesystem again
-    for (const QString &dir : qAsConst(dirs))
+    for (const QString &dir : std::as_const(dirs))
         m_seenDirectories[dir] = QString();
 
     return false;

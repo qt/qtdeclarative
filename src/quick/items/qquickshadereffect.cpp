@@ -1221,7 +1221,7 @@ void QQuickShaderEffectImpl::handleItemChange(QQuickItem::ItemChange change, con
     // Move the window ref.
     if (change == QQuickItem::ItemSceneChange) {
         for (int shaderType = 0; shaderType < NShader; ++shaderType) {
-            for (const auto &vd : qAsConst(m_shaders[shaderType].varData)) {
+            for (const auto &vd : std::as_const(m_shaders[shaderType].varData)) {
                 if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
                     QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
                     if (source) {
@@ -1263,7 +1263,7 @@ void QQuickShaderEffectImpl::disconnectSignals(Shader shaderType)
         if (mapper)
             QObjectPrivate::disconnect(m_item, mapper->signalIndex(), &a);
     }
-    for (const auto &vd : qAsConst(m_shaders[shaderType].varData)) {
+    for (const auto &vd : std::as_const(m_shaders[shaderType].varData)) {
         if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
             if (source) {
@@ -1277,7 +1277,7 @@ void QQuickShaderEffectImpl::disconnectSignals(Shader shaderType)
 
 void QQuickShaderEffectImpl::clearMappers(QQuickShaderEffectImpl::Shader shaderType)
 {
-    for (auto *mapper : qAsConst(m_mappers[shaderType])) {
+    for (auto *mapper : std::as_const(m_mappers[shaderType])) {
         if (mapper)
             mapper->destroyIfLastRef();
     }

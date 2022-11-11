@@ -2158,7 +2158,7 @@ void DomEnvironment::loadPendingDependencies(DomItem &self)
                         m_allLoadedCallback.clear();
                     }
                 }
-                for (const Callback &cb : qAsConst(endCallbacks))
+                for (const Callback &cb : std::as_const(endCallbacks))
                     cb(self.canonicalPath(), self, self);
             });
             DomItem loadInfoObj = self.copy(loadInfo);

@@ -430,7 +430,7 @@ void QQmlJSBasicBlocks::adjustTypes()
                     valueType);
         }
 
-        for (const QList<int> &conversions : qAsConst(it->registerReadersAndConversions)) {
+        for (const QList<int> &conversions : std::as_const(it->registerReadersAndConversions)) {
             for (int conversion : conversions)
                 liveConversions[conversion].append(it->trackedRegister);
         }
@@ -439,7 +439,7 @@ void QQmlJSBasicBlocks::adjustTypes()
     }
 
     for (auto it = m_readerLocations.begin(), end = m_readerLocations.end(); it != end; ++it) {
-        for (const QList<int> &conversions : qAsConst(it->registerReadersAndConversions)) {
+        for (const QList<int> &conversions : std::as_const(it->registerReadersAndConversions)) {
             for (int conversion : conversions)
                 liveConversions[conversion].append(it->trackedRegister);
         }

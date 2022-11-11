@@ -355,7 +355,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
 
 void QQuickShapeGenericRenderer::maybeUpdateAsyncItem()
 {
-    for (const ShapePathData &d : qAsConst(m_sp)) {
+    for (const ShapePathData &d : std::as_const(m_sp)) {
         if (d.pendingFill || d.pendingStroke)
             return;
     }

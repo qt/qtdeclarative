@@ -162,7 +162,7 @@ void tst_qmltc_examples::helloWorld()
     QVERIFY(!documentationCode.isEmpty());
 
     auto begin = generatedCode.cbegin();
-    for (const QString &existingString : qAsConst(documentationCode)) {
+    for (const QString &existingString : std::as_const(documentationCode)) {
         auto pos = std::find(begin, generatedCode.cend(), existingString);
         QVERIFY2(pos != generatedCode.cend(), qPrintable(u"Could not find: " + existingString));
         begin = std::next(pos);

@@ -125,7 +125,7 @@ void QQuickItemParticle::take(QQuickItem *item, bool prioritize)
 void QQuickItemParticle::give(QQuickItem *item)
 {
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* data : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* data : std::as_const(m_system->groupData[groupId]->data)) {
             if (data->delegate == item){
                 m_deletables << item;
                 data->delegate = nullptr;
@@ -173,7 +173,7 @@ void QQuickItemParticle::tick(int time)
     Q_UNUSED(time);//only needed because QTickAnimationProxy expects one
     processDeletables();
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* d : std::as_const(m_system->groupData[groupId]->data)) {
             if (!d->delegate && d->t != -1 && d->stillAlive(m_system)) {
                 QQuickItem* parentItem = nullptr;
                 if (!m_pendingItems.isEmpty()){
@@ -214,7 +214,7 @@ void QQuickItemParticle::reset()
     // but leave it alone if the logical particle is maintained
     QSet<QQuickItem*> lost = QSet<QQuickItem*>(m_managed.cbegin(), m_managed.cend());
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* d : std::as_const(m_system->groupData[groupId]->data)) {
             lost.remove(d->delegate);
         }
     }
@@ -251,7 +251,7 @@ void QQuickItemParticle::prepareNextFrame()
 
     //TODO: Size, better fade?
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* data : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* data : std::as_const(m_system->groupData[groupId]->data)) {
             QQuickItem* item = data->delegate;
             if (!item)
                 continue;

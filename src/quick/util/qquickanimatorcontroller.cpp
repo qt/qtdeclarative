@@ -36,7 +36,7 @@ static void qquickanimator_invalidate_jobs(QAbstractAnimationJob *job)
 
 void QQuickAnimatorController::windowNodesDestroyed()
 {
-    for (const QSharedPointer<QAbstractAnimationJob> &toStop : qAsConst(m_rootsPendingStop)) {
+    for (const QSharedPointer<QAbstractAnimationJob> &toStop : std::as_const(m_rootsPendingStop)) {
         qquickanimator_invalidate_jobs(toStop.data());
         toStop->stop();
     }
@@ -59,14 +59,14 @@ void QQuickAnimatorController::windowNodesDestroyed()
 void QQuickAnimatorController::advance()
 {
     bool running = false;
-    for (const QSharedPointer<QAbstractAnimationJob> &job : qAsConst(m_animationRoots)) {
+    for (const QSharedPointer<QAbstractAnimationJob> &job : std::as_const(m_animationRoots)) {
         if (job->isRunning()) {
             running = true;
             break;
         }
     }
 
-    for (QQuickAnimatorJob *job : qAsConst(m_runningAnimators))
+    for (QQuickAnimatorJob *job : std::as_const(m_runningAnimators))
         job->commit();
 
     if (running)
@@ -85,18 +85,18 @@ static void qquickanimator_sync_before_start(QAbstractAnimationJob *job)
 
 void QQuickAnimatorController::beforeNodeSync()
 {
-    for (const QSharedPointer<QAbstractAnimationJob> &toStop : qAsConst(m_rootsPendingStop)) {
+    for (const QSharedPointer<QAbstractAnimationJob> &toStop : std::as_const(m_rootsPendingStop)) {
         toStop->stop();
         m_animationRoots.remove(toStop.data());
     }
     m_rootsPendingStop.clear();
 
 
-    for (QQuickAnimatorJob *job : qAsConst(m_runningAnimators))
+    for (QQuickAnimatorJob *job : std::as_const(m_runningAnimators))
         job->preSync();
 
     // Start pending jobs
-    for (const QSharedPointer<QAbstractAnimationJob> &job : qAsConst(m_rootsPendingStart)) {
+    for (const QSharedPointer<QAbstractAnimationJob> &job : std::as_const(m_rootsPendingStart)) {
         Q_ASSERT(!job->isRunning());
 
         // We want to make sure that presync is called before
@@ -118,7 +118,7 @@ void QQuickAnimatorController::beforeNodeSync()
 
 void QQuickAnimatorController::afterNodeSync()
 {
-    for (QQuickAnimatorJob *job : qAsConst(m_runningAnimators))
+    for (QQuickAnimatorJob *job : std::as_const(m_runningAnimators))
         job->postSync();
 }
 

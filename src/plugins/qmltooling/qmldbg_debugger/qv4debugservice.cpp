@@ -734,7 +734,7 @@ void QV4DebugServiceImpl::signalEmitted(const QString &signal)
     //Normalize to Lower case.
     QString signalName = signal.left(signal.indexOf(QLatin1Char('('))).toLower();
 
-    for (const QString &signal : qAsConst(breakOnSignals)) {
+    for (const QString &signal : std::as_const(breakOnSignals)) {
         if (signal == signalName) {
             // TODO: pause debugger
             break;

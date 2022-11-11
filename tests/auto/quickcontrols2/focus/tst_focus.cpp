@@ -93,7 +93,7 @@ void tst_focus::navigation()
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QVERIFY(QGuiApplication::focusWindow() == &view);
 
-    for (const QString &name : qAsConst(order)) {
+    for (const QString &name : std::as_const(order)) {
         QKeyEvent event(QEvent::KeyPress, key, Qt::NoModifier);
         QGuiApplication::sendEvent(&view, &event);
         QVERIFY(event.isAccepted());

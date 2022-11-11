@@ -288,7 +288,7 @@ QQuickParticleGroupData::QQuickParticleGroupData(const QString &name, QQuickPart
 
 QQuickParticleGroupData::~QQuickParticleGroupData()
 {
-    for (QQuickParticleData *d : qAsConst(data))
+    for (QQuickParticleData *d : std::as_const(data))
         delete d;
 }
 
@@ -311,7 +311,7 @@ void QQuickParticleGroupData::setSize(int newSize)
     }
     int delta = newSize - m_size;
     m_size = newSize;
-    for (QQuickParticlePainter *p : qAsConst(painters))
+    for (QQuickParticlePainter *p : std::as_const(painters))
         p->setCount(p->count() + delta);
 }
 
@@ -324,7 +324,7 @@ void QQuickParticleGroupData::kill(QQuickParticleData* d)
 {
     Q_ASSERT(d->groupId == index);
     d->lifeSpan = 0;//Kill off
-    for (QQuickParticlePainter *p : qAsConst(painters))
+    for (QQuickParticlePainter *p : std::as_const(painters))
         p->reload(d);
     freeList.free(d->index);
 }
@@ -543,7 +543,7 @@ QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
 
 QQuickParticleSystem::~QQuickParticleSystem()
 {
-    for (QQuickParticleGroupData *gd : qAsConst(groupData))
+    for (QQuickParticleGroupData *gd : std::as_const(groupData))
         delete gd;
 }
 
@@ -557,10 +557,10 @@ void QQuickParticleSystem::initGroups()
     groupIds.clear();
     nextFreeGroupId = 0;
 
-    for (auto e : qAsConst(m_emitters)) {
+    for (auto e : std::as_const(m_emitters)) {
         e->reclaculateGroupId();
     }
-    for (QQuickParticlePainter *p : qAsConst(m_painters)) {
+    for (QQuickParticlePainter *p : std::as_const(m_painters)) {
         p->recalculateGroupIds();
     }
 
@@ -632,7 +632,7 @@ void QQuickParticleSystem::setPaused(bool arg) {
         if (m_animation && m_animation->state() != QAbstractAnimation::Stopped)
             m_paused ? m_animation->pause() : m_animation->resume();
         if (!m_paused) {
-            for (QQuickParticlePainter *p : qAsConst(m_painters)) {
+            for (QQuickParticlePainter *p : std::as_const(m_painters)) {
                 if (p) {
                     p->update();
                 }
@@ -741,12 +741,12 @@ void QQuickParticleSystem::reset()
     if (!m_running)
         return;
 
-    for (QQuickParticleEmitter *e : qAsConst(m_emitters))
+    for (QQuickParticleEmitter *e : std::as_const(m_emitters))
         e->reset();
 
     emittersChanged();
 
-    for (QQuickParticlePainter *p : qAsConst(m_painters)) {
+    for (QQuickParticlePainter *p : std::as_const(m_painters)) {
         loadPainter(p);
         p->reset();
     }
@@ -839,13 +839,13 @@ void QQuickParticleSystem::emittersChanged()
     if (particleCount > bySysIdx.size())//New datum requests haven't updated it
         bySysIdx.resize(particleCount);
 
-    for (QQuickParticleAffector *a : qAsConst(m_affectors)) {//Groups may have changed
+    for (QQuickParticleAffector *a : std::as_const(m_affectors)) {//Groups may have changed
         if (a) {
             a->m_updateIntSet = true;
         }
     }
 
-    for (QQuickParticlePainter *p : qAsConst(m_painters))
+    for (QQuickParticlePainter *p : std::as_const(m_painters))
         loadPainter(p);
 
     if (!m_groups.isEmpty())
@@ -860,7 +860,7 @@ void QQuickParticleSystem::createEngine()
     if (stateEngine && m_debugMode)
         qDebug() << "Resetting Existing Sprite Engine...";
     //### Solve the losses if size/states go down
-    for (QQuickParticleGroup *group : qAsConst(m_groups)) {
+    for (QQuickParticleGroup *group : std::as_const(m_groups)) {
         bool exists = false;
         for (auto it = groupIds.keyBegin(), end = groupIds.keyEnd(); it != end; ++it) {
             if (group->name() == *it) {
@@ -880,7 +880,7 @@ void QQuickParticleSystem::createEngine()
         for (int i = 0, ei = groupData.size(); i != ei; ++i) {
             bool exists = false;
             QString name = groupData[i]->name();
-            for (QQuickParticleGroup *existing : qAsConst(m_groups)) {
+            for (QQuickParticleGroup *existing : std::as_const(m_groups)) {
                 if (existing->name() == name) {
                     newList << existing;
                     exists = true;
@@ -894,7 +894,7 @@ void QQuickParticleSystem::createEngine()
         m_groups = newList;
         QList<QQuickStochasticState*> states;
         states.reserve(m_groups.size());
-        for (QQuickParticleGroup *g : qAsConst(m_groups))
+        for (QQuickParticleGroup *g : std::as_const(m_groups))
             states << (QQuickStochasticState*)g;
 
         if (!stateEngine)
@@ -999,10 +999,10 @@ void QQuickParticleSystem::finishNewDatum(QQuickParticleData *pd)
     Q_ASSERT(pd);
     groupData[pd->groupId]->prepareRecycler(pd);
 
-    for (QQuickParticleAffector *a : qAsConst(m_affectors))
+    for (QQuickParticleAffector *a : std::as_const(m_affectors))
         if (a && a->m_needsReset)
             a->reset(pd);
-    for (QQuickParticlePainter *p : qAsConst(groupData[pd->groupId]->painters))
+    for (QQuickParticlePainter *p : std::as_const(groupData[pd->groupId]->painters))
         if (p)
             p->load(pd);
 }
@@ -1025,18 +1025,18 @@ void QQuickParticleSystem::updateCurrentTime( int currentTime )
 
     bool oldClear = m_empty;
     m_empty = true;
-    for (QQuickParticleGroupData *gd : qAsConst(groupData))//Recycle all groups and see if they're out of live particles
+    for (QQuickParticleGroupData *gd : std::as_const(groupData))//Recycle all groups and see if they're out of live particles
         m_empty = gd->recycle() && m_empty;
 
     if (stateEngine)
         stateEngine->updateSprites(timeInt);
 
-    for (QQuickParticleEmitter *emitter : qAsConst(m_emitters))
+    for (QQuickParticleEmitter *emitter : std::as_const(m_emitters))
         emitter->emitWindow(timeInt);
-    for (QQuickParticleAffector *a : qAsConst(m_affectors))
+    for (QQuickParticleAffector *a : std::as_const(m_affectors))
         a->affectSystem(dt);
     for (QQuickParticleData *d : needsReset)
-        for (QQuickParticlePainter *p : qAsConst(groupData[d->groupId]->painters))
+        for (QQuickParticlePainter *p : std::as_const(groupData[d->groupId]->painters))
             p->reload(d);
 
     if (oldClear != m_empty)

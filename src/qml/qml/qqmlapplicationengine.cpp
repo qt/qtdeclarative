@@ -26,7 +26,7 @@ QQmlApplicationEnginePrivate::~QQmlApplicationEnginePrivate()
 void QQmlApplicationEnginePrivate::cleanUp()
 {
     Q_Q(QQmlApplicationEngine);
-    for (auto obj : qAsConst(objects))
+    for (auto obj : std::as_const(objects))
         obj->disconnect(q);
 
     qDeleteAll(objects);

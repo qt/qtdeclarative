@@ -1760,7 +1760,7 @@ void QQuickTableViewPrivate::updateExtents()
         relayoutTableItems();
 
         // Inform the sync children that they need to rebuild to stay in sync
-        for (auto syncChild : qAsConst(syncChildren)) {
+        for (auto syncChild : std::as_const(syncChildren)) {
             auto syncChild_d = syncChild->d_func();
             syncChild_d->scheduledRebuildOptions |= RebuildOption::ViewportOnly;
             if (tableMovedHorizontally)
@@ -4168,7 +4168,7 @@ void QQuickTableViewPrivate::syncViewportPosRecursive()
         }
     }
 
-    for (auto syncChild : qAsConst(syncChildren)) {
+    for (auto syncChild : std::as_const(syncChildren)) {
         auto syncChild_d = syncChild->d_func();
         if (!syncChild_d->inSyncViewportPosRecursive) {
             if (syncChild_d->syncHorizontally)

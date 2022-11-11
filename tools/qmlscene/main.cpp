@@ -454,7 +454,7 @@ int main(int argc, char ** argv)
     }
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
-    for (Qt::ApplicationAttribute a : qAsConst(options.applicationAttributes))
+    for (Qt::ApplicationAttribute a : std::as_const(options.applicationAttributes))
         QCoreApplication::setAttribute(a);
     QScopedPointer<QGuiApplication> app;
 #ifdef QT_WIDGETS_LIB

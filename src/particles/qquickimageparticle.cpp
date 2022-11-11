@@ -981,7 +981,7 @@ void QQuickImageParticle::resetColor()
 {
     m_explicitColor = false;
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* d : std::as_const(m_system->groupData[groupId]->data)) {
             if (d->colorOwner == this) {
                 d->colorOwner = nullptr;
             }
@@ -1000,7 +1000,7 @@ void QQuickImageParticle::resetRotation()
 {
     m_explicitRotation = false;
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* d : std::as_const(m_system->groupData[groupId]->data)) {
             if (d->rotationOwner == this) {
                 d->rotationOwner = nullptr;
             }
@@ -1017,7 +1017,7 @@ void QQuickImageParticle::resetDeformation()
 {
     m_explicitDeformation = false;
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* d : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* d : std::as_const(m_system->groupData[groupId]->data)) {
             if (d->deformationOwner == this) {
                 d->deformationOwner = nullptr;
             }
@@ -1261,7 +1261,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 
     for (auto groupId : groupIds()) {
         //For sharing higher levels, need to have highest used so it renders
-        for (QQuickParticlePainter* p : qAsConst(m_system->groupData[groupId]->painters)) {
+        for (QQuickParticlePainter* p : std::as_const(m_system->groupData[groupId]->painters)) {
             QQuickImageParticle* other = qobject_cast<QQuickImageParticle*>(p);
             if (other){
                 if (other->perfLevel > perfLevel) {
@@ -1616,7 +1616,7 @@ void QQuickImageParticle::spritesUpdate(qreal time)
     ImageMaterialData *state = getState(m_material);
     // Sprite progression handled CPU side, so as to have per-frame control.
     for (auto groupId : groupIds()) {
-        for (QQuickParticleData* mainDatum : qAsConst(m_system->groupData[groupId]->data)) {
+        for (QQuickParticleData* mainDatum : std::as_const(m_system->groupData[groupId]->data)) {
             QSGGeometryNode *node = m_nodes[groupId];
             if (!node)
                 continue;

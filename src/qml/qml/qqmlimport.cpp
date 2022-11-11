@@ -1010,7 +1010,7 @@ QString QQmlImports::resolvedUri(const QString &dir_arg, QQmlImportDatabase *dat
         std::sort(paths.begin(), paths.end(), std::greater<QString>()); // Ensure subdirs preceed their parents.
 
     QString stableRelativePath = dir;
-    for (const QString &path : qAsConst(paths)) {
+    for (const QString &path : std::as_const(paths)) {
         if (dir.startsWith(path)) {
             stableRelativePath = dir.mid(path.size()+1);
             break;

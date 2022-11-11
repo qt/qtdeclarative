@@ -130,7 +130,7 @@ void tst_qquickiconlabel::display()
 
     // Test that the icon and text are correctly positioned and sized after
     // setting several different display types in succession.
-    for (QQuickIconLabel::Display displayType : qAsConst(displayTypes)) {
+    for (QQuickIconLabel::Display displayType : std::as_const(displayTypes)) {
         label->setDisplay(displayType);
         QCOMPARE(label->display(), displayType);
 

@@ -413,7 +413,7 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
 
     bool usesPercent = false;
     int index = 0;
-    for (QQuickPathElement *pathElement : qAsConst(d->_pathElements)) {
+    for (QQuickPathElement *pathElement : std::as_const(d->_pathElements)) {
         if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement)) {
             QQuickPathData data;
             data.index = index;
@@ -495,7 +495,7 @@ QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPoint
     path.moveTo(startX, startY);
 
     int index = 0;
-    for (QQuickCurve *curve : qAsConst(d->_pathCurves)) {
+    for (QQuickCurve *curve : std::as_const(d->_pathCurves)) {
         QQuickPathData data;
         data.index = index;
         data.endPoint = endPoint;
@@ -504,7 +504,7 @@ QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPoint
         ++index;
     }
 
-    for (QQuickPathText *text : qAsConst(d->_pathTexts))
+    for (QQuickPathText *text : std::as_const(d->_pathTexts))
         text->addToPath(path);
 
     if (closed) {
@@ -550,7 +550,7 @@ void QQuickPath::gatherAttributes()
     QSet<QString> attributes;
 
     // First gather up all the attributes
-    for (QQuickPathElement *pathElement : qAsConst(d->_pathElements)) {
+    for (QQuickPathElement *pathElement : std::as_const(d->_pathElements)) {
         if (QQuickCurve *curve = qobject_cast<QQuickCurve *>(pathElement))
             d->_pathCurves.append(curve);
         else if (QQuickPathText *text = qobject_cast<QQuickPathText *>(pathElement))

@@ -109,7 +109,7 @@ public:
         if (s == false)
             qWarning() << "disable WatchTextElides is not implemented";
         watchTextElides = s;
-        for (auto &&information : qAsConst(objectTranslationBindingMultiMap)) {
+        for (auto &&information : std::as_const(objectTranslationBindingMultiMap)) {
             QObject *scopeObject = information.scopeObject;
             int elideIndex = scopeObject->metaObject()->indexOfProperty("elide");
             if (elideIndex >= 0) {
@@ -143,7 +143,7 @@ public:
 
         QVector<QmlElement> qmlElements;
 
-        for (auto &&information : qAsConst(objectTranslationBindingMultiMap)) {
+        for (auto &&information : std::as_const(objectTranslationBindingMultiMap)) {
 
             QObject *scopeObject = information.scopeObject;
             auto compilationUnit = information.compilationUnit;
@@ -209,7 +209,7 @@ public:
         packet << Reply::TranslationIssues;
 
         QVector<TranslationIssue> issues;
-        for (auto &&information : qAsConst(objectTranslationBindingMultiMap)) {
+        for (auto &&information : std::as_const(objectTranslationBindingMultiMap)) {
             if (!proxyTranslator->hasTranslation(information)) {
                 TranslationIssue issue;
                 issue.type = TranslationIssue::Type::Missing;

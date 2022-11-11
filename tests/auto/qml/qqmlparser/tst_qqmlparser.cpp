@@ -550,7 +550,7 @@ void tst_qqmlparser::typeAnnotations_data()
     QStringList files;
     files << findFiles(QDir(tests));
 
-    for (const QString &file: qAsConst(files))
+    for (const QString &file: std::as_const(files))
         QTest::newRow(qPrintable(file)) << file;
 }
 
@@ -590,7 +590,7 @@ void tst_qqmlparser::disallowedTypeAnnotations_data()
     QStringList files;
     files << findFiles(QDir(tests));
 
-    for (const QString &file: qAsConst(files))
+    for (const QString &file: std::as_const(files))
         QTest::newRow(qPrintable(file)) << file;
 }
 
@@ -679,7 +679,7 @@ void tst_qqmlparser::annotations_data()
     QStringList refFiles;
     refFiles << findFiles(QDir(compare));
 
-    for (const QString &file: qAsConst(files)) {
+    for (const QString &file: std::as_const(files)) {
         auto fileNameStart = file.lastIndexOf(QDir::separator());
         auto fileName = QStringView(file).mid(fileNameStart, file.length()-fileNameStart);
         auto ref=std::find_if(refFiles.constBegin(),refFiles.constEnd(), [fileName](const QString &s){ return s.endsWith(fileName); });

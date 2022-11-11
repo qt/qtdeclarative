@@ -119,7 +119,7 @@ void QmlPreviewFileSystemWatcher::onDirectoryChanged(const QString &path)
             toReadd.removeOne(rejected);
 
         // If we've successfully added the file, that means it was deleted and replaced.
-        for (const QString &reAdded : qAsConst(toReadd))
+        for (const QString &reAdded : std::as_const(toReadd))
             emit fileChanged(reAdded);
     }
 }

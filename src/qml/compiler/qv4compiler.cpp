@@ -209,7 +209,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
 {
     registerString(module->fileName);
     registerString(module->finalUrl);
-    for (Context *f : qAsConst(module->functions)) {
+    for (Context *f : std::as_const(module->functions)) {
         registerString(f->name);
         registerString(f->returnType);
         for (int i = 0; i < f->arguments.size(); ++i) {
@@ -219,7 +219,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         for (int i = 0; i < f->locals.size(); ++i)
             registerString(f->locals.at(i));
     }
-    for (Context *c : qAsConst(module->blocks)) {
+    for (Context *c : std::as_const(module->blocks)) {
         for (int i = 0; i < c->locals.size(); ++i)
             registerString(c->locals.at(i));
     }
@@ -290,7 +290,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     }
 
     CompiledData::Lookup *lookupsToWrite = reinterpret_cast<CompiledData::Lookup*>(dataPtr + unit->offsetToLookupTable);
-    for (const CompiledData::Lookup &l : qAsConst(lookups))
+    for (const CompiledData::Lookup &l : std::as_const(lookups))
         *lookupsToWrite++ = l;
 
     CompiledData::RegExp *regexpTable = reinterpret_cast<CompiledData::RegExp *>(dataPtr + unit->offsetToRegexpTable);

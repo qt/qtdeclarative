@@ -834,7 +834,7 @@ QQmlMetaType::RegistrationResult QQmlMetaType::registerPluginTypes(
 
         if (!failures.isEmpty()) {
             if (errors) {
-                for (const QString &failure : qAsConst(failures)) {
+                for (const QString &failure : std::as_const(failures)) {
                     QQmlError error;
                     error.setDescription(failure);
                     errors->prepend(error);
@@ -1406,7 +1406,7 @@ void QQmlMetaType::registerMetaObjectForType(const QMetaObject *metaobject, QQml
 
 static bool hasActiveInlineComponents(const QQmlTypePrivate *d)
 {
-    for (const QQmlType &ic : qAsConst(d->objectIdToICType)) {
+    for (const QQmlType &ic : std::as_const(d->objectIdToICType)) {
         const QQmlTypePrivate *icPriv = ic.priv();
         if (icPriv && icPriv->count() > 1)
             return true;
@@ -1513,7 +1513,7 @@ QList<QQmlType> QQmlMetaType::qmlSingletonTypes()
     const QQmlMetaTypeDataPtr data;
 
     QList<QQmlType> retn;
-    for (const auto t : qAsConst(data->nameToType)) {
+    for (const auto t : std::as_const(data->nameToType)) {
         QQmlType type(t);
         if (type.isSingleton())
             retn.append(type);
@@ -1525,7 +1525,7 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const 
 {
     const QQmlMetaTypeDataPtr data;
 
-    for (const auto lookup : qAsConst(data->lookupCachedQmlUnit)) {
+    for (const auto lookup : std::as_const(data->lookupCachedQmlUnit)) {
         if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri)) {
             QString error;
             if (!QV4::ExecutableCompilationUnit::verifyHeader(unit->qmlData, QDateTime(), &error)) {

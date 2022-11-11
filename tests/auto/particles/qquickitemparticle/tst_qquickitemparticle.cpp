@@ -38,7 +38,7 @@ void tst_qquickitemparticle::test_basic()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
 
@@ -119,7 +119,7 @@ void tst_qquickitemparticle::test_noLeakWhenDeleted()
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     ensureAnimTime(100, system->m_animation);
 
-    auto particles = qAsConst(system->groupData[0]->data);
+    auto particles = std::as_const(system->groupData[0]->data);
     QVERIFY(!particles.isEmpty());
 
     QQuickParticleData* firstParticleData = particles.first();

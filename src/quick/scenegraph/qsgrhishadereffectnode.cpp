@@ -690,7 +690,7 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
             v.bindPoint = 1;
             v.type = QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler;
             defaultSD.shaderInfo.variables.append(v);
-            for (const QSGShaderEffectNode::VariableData &extVarData : qAsConst(syncData->fragment.shader->varData)) {
+            for (const QSGShaderEffectNode::VariableData &extVarData : std::as_const(syncData->fragment.shader->varData)) {
                 if (extVarData.specialType == QSGShaderEffectNode::VariableData::Source) {
                     vd.value = extVarData.value;
                     break;

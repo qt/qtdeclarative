@@ -321,7 +321,7 @@ void QQuickSpriteEngine::startAssemblingImage()
 
     QList<QQuickStochasticState*> removals;
 
-    for (QQuickStochasticState* s : qAsConst(m_states)) {
+    for (QQuickStochasticState* s : std::as_const(m_states)) {
         QQuickSprite* sprite = qobject_cast<QQuickSprite*>(s);
         if (sprite) {
             m_sprites << sprite;
@@ -330,7 +330,7 @@ void QQuickSpriteEngine::startAssemblingImage()
             qDebug() << "Error: Non-sprite in QQuickSpriteEngine";
         }
     }
-    for (QQuickStochasticState* s : qAsConst(removals))
+    for (QQuickStochasticState* s : std::as_const(removals))
         m_states.removeAll(s);
     m_startedImageAssembly = true;
 }
@@ -339,7 +339,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
 {
     QQuickPixmap::Status stat = status();
     if (!m_errorsPrinted && stat == QQuickPixmap::Error) {
-        for (QQuickSprite* s : qAsConst(m_sprites))
+        for (QQuickSprite* s : std::as_const(m_sprites))
             if (s->m_pix.isError())
                 qmlWarning(s) << s->m_pix.error();
         m_errorsPrinted = true;
@@ -354,7 +354,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
     m_imageStateCount = 0;
     qreal pixelRatio = 1.0;
 
-    for (QQuickSprite* state : qAsConst(m_sprites)) {
+    for (QQuickSprite* state : std::as_const(m_sprites)) {
         if (state->frames() > m_maxFrames)
             m_maxFrames = state->frames();
 
@@ -414,7 +414,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
     image.fill(0);
     QPainter p(&image);
     int y = 0;
-    for (QQuickSprite* state : qAsConst(m_sprites)) {
+    for (QQuickSprite* state : std::as_const(m_sprites)) {
         QImage img(state->m_pix.image());
         const int frameWidth = state->m_frameWidth;
         const int frameHeight = state->m_frameHeight;

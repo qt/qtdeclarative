@@ -138,7 +138,7 @@ void QQmlConnections::setTarget(QObject *obj)
     if (d->targetSet && d->target == obj)
         return;
     d->targetSet = true; // even if setting to 0, it is *set*
-    for (QQmlBoundSignal *s : qAsConst(d->boundsignals)) {
+    for (QQmlBoundSignal *s : std::as_const(d->boundsignals)) {
         // It is possible that target is being changed due to one of our signal
         // handlers -> use deleteLater().
         if (s->isNotifying())
@@ -174,7 +174,7 @@ void QQmlConnections::setEnabled(bool enabled)
 
     d->enabled = enabled;
 
-    for (QQmlBoundSignal *s : qAsConst(d->boundsignals))
+    for (QQmlBoundSignal *s : std::as_const(d->boundsignals))
         s->setEnabled(d->enabled);
 
     emit enabledChanged();
@@ -321,7 +321,7 @@ void QQmlConnections::connectSignalsToBindings()
     QQmlData *ddata = QQmlData::get(this);
     QQmlRefPointer<QQmlContextData> ctxtdata = ddata ? ddata->outerContext : nullptr;
 
-    for (const QV4::CompiledData::Binding *binding : qAsConst(d->bindings)) {
+    for (const QV4::CompiledData::Binding *binding : std::as_const(d->bindings)) {
         Q_ASSERT(binding->type() == QV4::CompiledData::Binding::Type_Script);
         QString propName = d->compilationUnit->stringAt(binding->propertyNameIndex);
 

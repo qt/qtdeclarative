@@ -272,7 +272,7 @@ void Context::emitBlockHeader(Codegen *codegen)
         codegen->referenceForName(QStringLiteral("arguments"), false).storeConsumeAccumulator();
     }
 
-    for (const Context::Member &member : qAsConst(members)) {
+    for (const Context::Member &member : std::as_const(members)) {
         if (member.function) {
             const int function = codegen->defineFunction(member.function->name.toString(), member.function, member.function->formals, member.function->body);
             codegen->loadClosure(function);
@@ -361,7 +361,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     }
 
     sizeOfLocalTemporalDeadZone = localsInTDZ.size();
-    for (auto &member: qAsConst(localsInTDZ)) {
+    for (auto &member: std::as_const(localsInTDZ)) {
         member->index = locals.size();
         locals.append(member.key());
     }
@@ -377,7 +377,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
 
     sizeOfRegisterTemporalDeadZone = registersInTDZ.size();
     firstTemporalDeadZoneRegister = bytecodeGenerator->currentRegister();
-    for (auto &member: qAsConst(registersInTDZ))
+    for (auto &member: std::as_const(registersInTDZ))
         member->index = bytecodeGenerator->newRegister();
 
     nRegisters = bytecodeGenerator->currentRegister() - registerOffset;

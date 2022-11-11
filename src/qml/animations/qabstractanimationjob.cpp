@@ -48,11 +48,11 @@ void QQmlAnimationTimer::unsetJobTimer(QAbstractAnimationJob *animation)
 
 QQmlAnimationTimer::~QQmlAnimationTimer()
 {
-    for (const auto &animation : qAsConst(animations))
+    for (const auto &animation : std::as_const(animations))
         unsetJobTimer(animation);
-    for (const auto &animation : qAsConst(animationsToStart))
+    for (const auto &animation : std::as_const(animationsToStart))
         unsetJobTimer(animation);
-    for (const auto &animation : qAsConst(runningPauseAnimations))
+    for (const auto &animation : std::as_const(runningPauseAnimations))
         unsetJobTimer(animation);
 }
 

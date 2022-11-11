@@ -152,7 +152,7 @@ void WorkspaceHandlers::clientInitialized(QLanguageServer *server)
     if (clientInfo.workspaceFolders
         && std::holds_alternative<QList<WorkspaceFolder>>(*clientInfo.workspaceFolders)) {
         for (const WorkspaceFolder &workspace :
-             qAsConst(std::get<QList<WorkspaceFolder>>(*clientInfo.workspaceFolders))) {
+             std::as_const(std::get<QList<WorkspaceFolder>>(*clientInfo.workspaceFolders))) {
             const QUrl workspaceUrl(QString::fromUtf8(QmlLsp::lspUriToQmlUrl(workspace.uri)));
             rootPaths.insert(workspaceUrl.toLocalFile());
         }

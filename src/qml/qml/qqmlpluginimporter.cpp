@@ -129,7 +129,7 @@ static bool unloadPlugin(const std::pair<const QString, QmlPlugin> &plugin)
 void qmlClearEnginePlugins()
 {
     PluginMapPtr plugins(qmlPluginsById());
-    for (const auto &plugin : qAsConst(*plugins))
+    for (const auto &plugin : std::as_const(*plugins))
         unloadPlugin(plugin);
     plugins->clear();
 }
@@ -395,7 +395,7 @@ QString QQmlPluginImporter::resolvePlugin(const QString &qmldirPluginPath, const
     if (!qmldirPluginPathIsRelative)
         searchPaths.prepend(qmldirPluginPath);
 
-    for (const QString &pluginPath : qAsConst(searchPaths)) {
+    for (const QString &pluginPath : std::as_const(searchPaths)) {
         QString resolvedBasePath;
         if (pluginPath == QLatin1String(".")) {
             if (qmldirPluginPathIsRelative && !qmldirPluginPath.isEmpty()
@@ -550,7 +550,7 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
                 return QTypeRevision();
 
             for (const QString &versionUri : versionUris) {
-                for (const StaticPluginData &pair : qAsConst(pluginPairs)) {
+                for (const StaticPluginData &pair : std::as_const(pluginPairs)) {
                     for (const QJsonValueConstRef metaTagUri : pair.uriList) {
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;

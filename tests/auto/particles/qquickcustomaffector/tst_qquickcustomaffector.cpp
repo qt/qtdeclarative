@@ -33,7 +33,7 @@ void tst_qquickcustomaffector::test_basic()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
         //in CI the whole simulation often happens at once, so dead particles end up missing out
@@ -66,7 +66,7 @@ void tst_qquickcustomaffector::test_move()
     ensureAnimTime(600, system->m_animation);
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1)
             continue; //Particle data unused
         if (!d->stillAlive(system))

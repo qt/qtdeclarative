@@ -499,7 +499,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
 
     mutex.lock();
     // manually cancel all outstanding jobs.
-    for (QQuickPixmapReply *reply : qAsConst(jobs)) {
+    for (QQuickPixmapReply *reply : std::as_const(jobs)) {
         if (reply->data && reply->data->reply == reply)
             reply->data->reply = nullptr;
         delete reply;
@@ -514,10 +514,10 @@ QQuickPixmapReader::~QQuickPixmapReader()
         }
     };
 
-    for (auto *reply : qAsConst(networkJobs))
+    for (auto *reply : std::as_const(networkJobs))
         cancelJob(reply);
 
-    for (auto *reply : qAsConst(asyncResponses))
+    for (auto *reply : std::as_const(asyncResponses))
         cancelJob(reply);
 #endif
     if (threadObject) threadObject->processJobs();

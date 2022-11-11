@@ -129,7 +129,7 @@ QSGAdaptationBackendData *contextFactory()
             qCDebug(QSG_LOG_INFO, "Loading backend %s", qUtf8Printable(requestedBackend));
 
             // First look for a built-in adaptation.
-            for (QSGContextFactoryInterface *builtInBackend : qAsConst(backendData->builtIns)) {
+            for (QSGContextFactoryInterface *builtInBackend : std::as_const(backendData->builtIns)) {
                 if (builtInBackend->keys().contains(requestedBackend)) {
                     backendData->factory = builtInBackend;
                     backendData->name = requestedBackend;

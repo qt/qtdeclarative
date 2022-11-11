@@ -183,7 +183,7 @@ const PathEls::PathComponent &Path::component(int i) const
     while (data) {
         i += data->components.size();
         if (i >= 0)
-            return qAsConst(data)->components[i];
+            return std::as_const(data)->components[i];
         data = data->parent.get();
     }
     Q_ASSERT(false && "Invalid data reached while resolving a seemengly valid index in Path (inconsisten Path object)");

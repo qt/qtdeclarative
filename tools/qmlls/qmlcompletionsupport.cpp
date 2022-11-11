@@ -468,7 +468,7 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
                         QString label = it.key() + u"(";
                         QString doc = it.key() + u"(";
                         bool first = true;
-                        for (const MethodParameter &pInfo : qAsConst(it->parameters)) {
+                        for (const MethodParameter &pInfo : std::as_const(it->parameters)) {
                             if (first)
                                 first = false;
                             else {

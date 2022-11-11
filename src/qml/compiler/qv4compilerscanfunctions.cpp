@@ -308,7 +308,7 @@ bool ScanFunctions::visit(PatternElement *ast)
         declarationLocation.length = ast->lastSourceLocation().end() - declarationLocation.offset;
     }
 
-    for (const auto &name : qAsConst(names)) {
+    for (const auto &name : std::as_const(names)) {
         if (_context->isStrict && (name.id == QLatin1String("eval") || name.id == QLatin1String("arguments")))
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
         checkName(QStringView(name.id), ast->identifierToken);
@@ -721,7 +721,7 @@ void ScanFunctions::calcEscapingVariables()
 {
     Module *m = _cg->_module;
 
-    for (Context *inner : qAsConst(m->contextMap)) {
+    for (Context *inner : std::as_const(m->contextMap)) {
         if (inner->usesArgumentsObject != Context::ArgumentsObjectUsed)
             continue;
         if (inner->contextType != ContextType::Block && !inner->isArrowFunction)
@@ -733,7 +733,7 @@ void ScanFunctions::calcEscapingVariables()
             c->usesArgumentsObject = Context::ArgumentsObjectUsed;
         inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
-    for (Context *inner : qAsConst(m->contextMap)) {
+    for (Context *inner : std::as_const(m->contextMap)) {
         if (!inner->parent || inner->usesArgumentsObject == Context::ArgumentsObjectUnknown)
             inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
         if (inner->usesArgumentsObject == Context::ArgumentsObjectUsed) {
@@ -746,7 +746,7 @@ void ScanFunctions::calcEscapingVariables()
         }
     }
 
-    for (Context *c : qAsConst(m->contextMap)) {
+    for (Context *c : std::as_const(m->contextMap)) {
         if (c->contextType != ContextType::ESModule)
             continue;
         for (const auto &entry: c->exportEntries) {
@@ -757,8 +757,8 @@ void ScanFunctions::calcEscapingVariables()
         break;
     }
 
-    for (Context *inner : qAsConst(m->contextMap)) {
-        for (const QString &var : qAsConst(inner->usedVariables)) {
+    for (Context *inner : std::as_const(m->contextMap)) {
+        for (const QString &var : std::as_const(inner->usedVariables)) {
             Context *c = inner;
             while (c) {
                 Context *current = c;
@@ -820,7 +820,7 @@ void ScanFunctions::calcEscapingVariables()
             c->innerFunctionAccessesThis |= innerFunctionAccessesThis;
         }
     }
-    for (Context *c : qAsConst(m->contextMap)) {
+    for (Context *c : std::as_const(m->contextMap)) {
         if (c->innerFunctionAccessesThis) {
             // add an escaping 'this' variable
             c->addLocalVar(QStringLiteral("this"), Context::VariableDefinition, VariableScope::Let);
@@ -846,7 +846,7 @@ void ScanFunctions::calcEscapingVariables()
                 c->requiresExecutionContext = true;
                 c->argumentsCanEscape = true;
             } else {
-                for (const auto &m : qAsConst(c->members)) {
+                for (const auto &m : std::as_const(c->members)) {
                     if (m.isLexicallyScoped()) {
                         c->requiresExecutionContext = true;
                         break;
@@ -867,7 +867,7 @@ void ScanFunctions::calcEscapingVariables()
             // we don't know if the code is a signal handler or not.
             c->requiresExecutionContext = true;
         if (c->allVarsEscape) {
-            for (const auto &m : qAsConst(c->members))
+            for (const auto &m : std::as_const(c->members))
                 m.canEscape = true;
         }
     }
@@ -875,7 +875,7 @@ void ScanFunctions::calcEscapingVariables()
     static const bool showEscapingVars = qEnvironmentVariableIsSet("QV4_SHOW_ESCAPING_VARS");
     if (showEscapingVars) {
         qDebug() << "==== escaping variables ====";
-        for (Context *c : qAsConst(m->contextMap)) {
+        for (Context *c : std::as_const(m->contextMap)) {
             qDebug() << "Context" << c << c->name << "requiresExecutionContext" << c->requiresExecutionContext << "isStrict" << c->isStrict;
             qDebug() << "    isArrowFunction" << c->isArrowFunction << "innerFunctionAccessesThis" << c->innerFunctionAccessesThis;
             qDebug() << "    parent:" << c->parent;

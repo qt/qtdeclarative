@@ -99,7 +99,7 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
     typedef QPointer<QQuickState> QuickStatePointer;
     QObject *object = property.object();
     QString propertyName = property.name();
-    for (const QuickStatePointer& statePointer : qAsConst(m_allStates)) {
+    for (const QuickStatePointer& statePointer : std::as_const(m_allStates)) {
         if (QQuickState *state = statePointer.data()) {
             // here we assume that the revert list on itself defines the base state
             if (state->isStateActive() && state->containsPropertyInRevertList(object, propertyName)) {

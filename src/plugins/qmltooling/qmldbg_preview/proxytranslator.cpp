@@ -64,14 +64,14 @@ void ProxyTranslator::setLanguage(const QUrl &context, const QLocale &locale)
     }
 
     // unfortunately setUiLanguage set new translators, so do this first
-    for (QQmlEngine *engine : qAsConst(m_engines))
+    for (QQmlEngine *engine : std::as_const(m_engines))
         engine->setUiLanguage(locale.bcp47Name());
 
     // make sure proxy translator is the first used translator
     QCoreApplication::removeTranslator(this);
     QCoreApplication::installTranslator(this);
 
-    for (QQmlEngine *engine : qAsConst(m_engines)) {
+    for (QQmlEngine *engine : std::as_const(m_engines)) {
         // have two retranslate runs to get elided warning even the same language was set
         m_enable = false;
         engine->retranslate();

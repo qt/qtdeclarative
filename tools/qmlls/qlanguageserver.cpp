@@ -203,7 +203,7 @@ void QLanguageServer::setupCapabilities(const QLspSpecification::InitializeParam
                                         QLspSpecification::InitializeResult &serverInfo)
 {
     Q_D(QLanguageServer);
-    for (auto module : qAsConst(d->modules))
+    for (auto module : std::as_const(d->modules))
         module->setupCapabilities(clientInfo, serverInfo);
 }
 

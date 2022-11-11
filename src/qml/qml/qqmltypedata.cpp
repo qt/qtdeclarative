@@ -309,7 +309,7 @@ void QQmlTypeData::done()
     }
 
     // Check all type dependencies for errors
-    for (auto it = qAsConst(m_resolvedTypes).begin(), end = qAsConst(m_resolvedTypes).end(); it != end;
+    for (auto it = std::as_const(m_resolvedTypes).begin(), end = std::as_const(m_resolvedTypes).end(); it != end;
          ++it) {
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError() || type.type.isInlineComponentType());
@@ -470,7 +470,7 @@ void QQmlTypeData::done()
             auto type = QQmlMetaType::typeForUrl(finalUrlString(), hashedStringRef, false, &errors);
             Q_ASSERT(errors.empty());
             if (type.isValid()) {
-                for (auto const &icDatum : qAsConst(m_inlineComponentData)) {
+                for (auto const &icDatum : std::as_const(m_inlineComponentData)) {
                     Q_ASSERT(icDatum.typeIds.isValid());
                     QQmlType existingType = type.lookupInlineComponentById(type.lookupInlineComponentIdByName(m_compiledData->stringAt(icDatum.nameIndex)));
                     type.associateInlineComponent(m_compiledData->stringAt(icDatum.nameIndex),
@@ -600,7 +600,7 @@ bool QQmlTypeData::loadFromSource()
     if (!compiler.generateFromQml(source, finalUrlString(), m_document.data())) {
         QList<QQmlError> errors;
         errors.reserve(compiler.errors.size());
-        for (const QQmlJS::DiagnosticMessage &msg : qAsConst(compiler.errors)) {
+        for (const QQmlJS::DiagnosticMessage &msg : std::as_const(compiler.errors)) {
             QQmlError e;
             e.setUrl(url());
             e.setLine(qmlConvertSourceCoordinate<quint32, int>(msg.loc.startLine));
@@ -668,7 +668,7 @@ void QQmlTypeData::continueLoadFromIR()
 
     QList<QQmlError> errors;
 
-    for (const QV4::CompiledData::Import *import : qAsConst(m_document->imports)) {
+    for (const QV4::CompiledData::Import *import : std::as_const(m_document->imports)) {
         if (!addImport(import, {}, &errors)) {
             Q_ASSERT(errors.size());
 

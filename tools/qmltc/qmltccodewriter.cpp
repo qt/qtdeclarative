@@ -199,23 +199,23 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
     writeUrl(code, program.urlMethod);
 
     // forward declare all the types first
-    for (const QmltcType &type : qAsConst(program.compiledTypes))
+    for (const QmltcType &type : std::as_const(program.compiledTypes))
         code.rawAppendToHeader(u"class " + type.cppType + u";");
     // write all the types and their content
-    for (const QmltcType &type : qAsConst(program.compiledTypes))
+    for (const QmltcType &type : std::as_const(program.compiledTypes))
         write(code, type);
 
     // add typeCount definitions. after all types have been written down (so
     // they are now complete types as per C++). practically, this only concerns
     // document root type
-    for (const QmltcType &type : qAsConst(program.compiledTypes)) {
+    for (const QmltcType &type : std::as_const(program.compiledTypes)) {
         if (!type.typeCount)
             continue;
         code.rawAppendToHeader(u""); // blank line
         code.rawAppendToHeader(u"constexpr %1 %2::%3()"_s.arg(type.typeCount->returnType,
                                                               type.cppType, type.typeCount->name));
         code.rawAppendToHeader(u"{");
-        for (const QString &line : qAsConst(type.typeCount->body))
+        for (const QString &line : std::as_const(type.typeCount->body))
             code.rawAppendToHeader(line, 1);
         code.rawAppendToHeader(u"}");
     }
@@ -240,7 +240,7 @@ static void dumpFunctions(QmltcOutputWrapper &code, const QList<QmltcMethod> &fu
 
     for (auto it = orderedFunctions.cbegin(); it != orderedFunctions.cend(); ++it) {
         code.rawAppendToHeader(it.key() + u":", -1);
-        for (const QmltcMethod *function : qAsConst(it.value()))
+        for (const QmltcMethod *function : std::as_const(it.value()))
             QmltcCodeWriter::write(code, *function);
     }
 }
@@ -264,7 +264,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
 
     code.rawAppendToHeader(constructClassString());
     code.rawAppendToHeader(u"{");
-    for (const QString &mocLine : qAsConst(type.mocCode))
+    for (const QString &mocLine : std::as_const(type.mocCode))
         code.rawAppendToHeader(mocLine, 1);
 
     QmltcOutputWrapper::MemberNameScope typeScope(&code, type.cppType);
@@ -294,7 +294,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
             QmltcCodeWriter::write(code, *type.dtor);
 
         // enums
-        for (const auto &enumeration : qAsConst(type.enums))
+        for (const auto &enumeration : std::as_const(type.enums))
             QmltcCodeWriter::write(code, enumeration);
 
         // visible functions
@@ -331,7 +331,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
         }
 
         // children
-        for (const auto &child : qAsConst(type.children))
+        for (const auto &child : std::as_const(type.children))
             QmltcCodeWriter::write(code, child);
 
         // (non-visible) functions
@@ -342,14 +342,14 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
             code.rawAppendToHeader(u""); // blank line
             code.rawAppendToHeader(u"protected:", -1);
         }
-        for (const auto &property : qAsConst(type.properties))
+        for (const auto &property : std::as_const(type.properties))
             write(code, property);
-        for (const auto &variable : qAsConst(type.variables))
+        for (const auto &variable : std::as_const(type.variables))
             write(code, variable);
     }
 
     code.rawAppendToHeader(u"private:", -1);
-    for (const QString &otherLine : qAsConst(type.otherCode))
+    for (const QString &otherLine : std::as_const(type.otherCode))
         code.rawAppendToHeader(otherLine, 1);
 
     if (type.typeCount) {
@@ -396,7 +396,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
         {
             QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
             Q_UNUSED(cppIndent);
-            for (const QString &line : qAsConst(method.body))
+            for (const QString &line : std::as_const(method.body))
                 code.rawAppendToCpp(line);
         }
         code.rawAppendToCpp(u"}");
@@ -419,7 +419,7 @@ static void writeSpecialMethod(QmltcOutputWrapper &code, const QmltcMethodBase &
     {
         QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
         Q_UNUSED(cppIndent);
-        for (const QString &line : qAsConst(specialMethod.body))
+        for (const QString &line : std::as_const(specialMethod.body))
             code.rawAppendToCpp(line);
     }
     code.rawAppendToCpp(u"}");
@@ -472,7 +472,7 @@ void QmltcCodeWriter::writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlM
     {
         QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
         Q_UNUSED(cppIndent);
-        for (const QString &line : qAsConst(urlMethod.body))
+        for (const QString &line : std::as_const(urlMethod.body))
             code.rawAppendToCpp(line);
     }
     code.rawAppendToCpp(u"}");

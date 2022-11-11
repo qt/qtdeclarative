@@ -2066,7 +2066,7 @@ void QQuickGridView::viewportMoved(Qt::Orientations orient)
     // Set visibility of items to eliminate cost of items outside the visible area.
     qreal from = d->isContentFlowReversed() ? -d->position()-d->displayMarginBeginning-d->size() : d->position()-d->displayMarginBeginning;
     qreal to = d->isContentFlowReversed() ? -d->position()+d->displayMarginEnd : d->position()+d->size()+d->displayMarginEnd;
-    for (FxViewItem *item : qAsConst(d->visibleItems)) {
+    for (FxViewItem *item : std::as_const(d->visibleItems)) {
         FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
         QQuickItemPrivate::get(gridItem->item)->setCulled(gridItem->rowPos() + d->rowSize() < from || gridItem->rowPos() > to);
     }
@@ -2372,7 +2372,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (modelIndex <= visibleIndex) {
                 // Insert before visible items
                 visibleIndex += count;
-                for (FxViewItem *item : qAsConst(visibleItems)) {
+                for (FxViewItem *item : std::as_const(visibleItems)) {
                     if (item->index != -1 && item->index >= modelIndex)
                         item->index += count;
                 }
@@ -2405,7 +2405,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     }
 
     // Update the indexes of the following visible items.
-    for (FxViewItem *item : qAsConst(visibleItems)) {
+    for (FxViewItem *item : std::as_const(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
             if (change.isMove())

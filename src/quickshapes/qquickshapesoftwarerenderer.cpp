@@ -224,7 +224,7 @@ void QQuickShapeSoftwareRenderNode::render(const RenderState *state)
     p->setTransform(matrix()->toTransform());
     p->setOpacity(inheritedOpacity());
 
-    for (const ShapePathRenderData &d : qAsConst(m_sp)) {
+    for (const ShapePathRenderData &d : std::as_const(m_sp)) {
         p->setPen(d.strokeWidth >= 0.0f && d.pen.color() != Qt::transparent ? d.pen : Qt::NoPen);
         p->setBrush(d.brush.color() != Qt::transparent ? d.brush : Qt::NoBrush);
         p->drawPath(d.path);

@@ -336,7 +336,7 @@ void QQuickRepeater::clear()
                 d->model->release(item);
             }
         }
-        for (QQuickItem *item : qAsConst(d->deletables)) {
+        for (QQuickItem *item : std::as_const(d->deletables)) {
             if (item)
                 item->setParentItem(nullptr);
         }

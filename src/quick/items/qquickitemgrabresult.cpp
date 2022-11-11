@@ -187,7 +187,7 @@ bool QQuickItemGrabResult::saveToFile(const QUrl &filePath) const
  */
 bool QQuickItemGrabResult::saveToFile(const QString &fileName)
 {
-    return qAsConst(*this).saveToFile(fileName);
+    return std::as_const(*this).saveToFile(fileName);
 }
 #endif
 #endif // < Qt 6

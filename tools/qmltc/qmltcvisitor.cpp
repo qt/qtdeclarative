@@ -313,7 +313,7 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
         return;
 
     QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> bindings;
-    for (const QQmlJSScope::ConstPtr &type : qAsConst(m_qmlTypes)) {
+    for (const QQmlJSScope::ConstPtr &type : std::as_const(m_qmlTypes)) {
         if (isOrUnderComponent(type))
             continue;
         bindings.insert(type, type->ownPropertyBindingsInQmlIROrder());
@@ -486,7 +486,7 @@ void QmltcVisitor::postVisitResolve(
     // add explicit components to the object creation indices
     {
         qsizetype index = 0;
-        for (const QQmlJSScope::ConstPtr &c : qAsConst(explicitComponents))
+        for (const QQmlJSScope::ConstPtr &c : std::as_const(explicitComponents))
             m_creationIndices[c] = m_pureQmlTypes.size() + index++;
     }
 

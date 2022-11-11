@@ -32,7 +32,7 @@ void tst_qquickgravity::test_basic()
 
     QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
     float mag = 707.10678f;
-    for (QQuickParticleData *d : qAsConst(system->groupData[0]->data)) {
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
         if (d->t == -1 || !d->stillAlive(system))
             continue; //Particle data unused or dead
 

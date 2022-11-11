@@ -571,7 +571,7 @@ void tst_qqmljsscope::scriptIndices()
             queue.push_back(c);
     }
 
-    for (const QmlIR::Object *irObject : qAsConst(document.objects)) {
+    for (const QmlIR::Object *irObject : std::as_const(document.objects)) {
         const QString objectName = document.stringAt(irObject->inheritedTypeNameIndex);
         for (auto it = irObject->functionsBegin(); it != irObject->functionsEnd(); ++it) {
             QString name = document.stringAt(it->nameIndex);

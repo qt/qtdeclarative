@@ -1033,7 +1033,7 @@ void tst_QQuickFileDialogImpl::tabFocusNavigation()
     }
 
     // Tab through each item, checking the focus after each.
-    for (auto expectedFocusItem : qAsConst(expectedFocusItems)) {
+    for (auto expectedFocusItem : std::as_const(expectedFocusItems)) {
         // Check the focus item first so that we account for the first item.
         // Print detailed failure message as workaround for QTBUG-92102.
         QVERIFY2(dialogHelper.window()->activeFocusItem() == expectedFocusItem, qPrintable(QString::fromLatin1(
@@ -1048,7 +1048,7 @@ void tst_QQuickFileDialogImpl::tabFocusNavigation()
     std::reverse(expectedFocusItems.begin(), expectedFocusItems.end());
     // We know the first (last) item has focus already, so skip it.
     expectedFocusItems.removeFirst();
-    for (auto expectedFocusItem : qAsConst(expectedFocusItems)) {
+    for (auto expectedFocusItem : std::as_const(expectedFocusItems)) {
         QTest::keyClick(dialogHelper.window(), Qt::Key_Tab, Qt::ShiftModifier);
 
         QCOMPARE(dialogHelper.window()->activeFocusItem(), expectedFocusItem);

@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 
     QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
 
-    for (const QString &fn : qAsConst(args)) {
+    for (const QString &fn : std::as_const(args)) {
         QV4::ScopedValue result(scope);
         if (runAsModule) {
             auto moduleUnit = vm.loadModule(QUrl::fromLocalFile(QFileInfo(fn).absoluteFilePath()));

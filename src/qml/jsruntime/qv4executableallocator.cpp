@@ -125,7 +125,7 @@ ExecutableAllocator::ExecutableAllocator()
 
 ExecutableAllocator::~ExecutableAllocator()
 {
-    for (ChunkOfPages *chunk : qAsConst(chunks)) {
+    for (ChunkOfPages *chunk : std::as_const(chunks)) {
         for (Allocation *allocation = chunk->firstAllocation; allocation; allocation = allocation->next)
             if (!allocation->free)
                 allocation->invalidate();

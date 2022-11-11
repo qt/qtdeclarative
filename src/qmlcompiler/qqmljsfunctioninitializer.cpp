@@ -66,7 +66,7 @@ void QQmlJSFunctionInitializer::populateSignature(
         arguments = ast->formals->formals();
 
     if (function->argumentTypes.isEmpty()) {
-        for (const QQmlJS::AST::BoundName &argument : qAsConst(arguments)) {
+        for (const QQmlJS::AST::BoundName &argument : std::as_const(arguments)) {
             if (argument.typeAnnotation) {
                 if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
                     function->argumentTypes.append(

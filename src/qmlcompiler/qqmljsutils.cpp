@@ -53,7 +53,7 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
         result.owner = resultOwner;
         result.kind = QQmlJSUtils::AliasTarget_Object;
 
-        for (const QString &bit : qAsConst(aliasExprBits)) {
+        for (const QString &bit : std::as_const(aliasExprBits)) {
             nextProperty = resultOwner->property(bit);
             if (!nextProperty.isValid())
                 return {};

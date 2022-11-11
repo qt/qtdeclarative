@@ -3718,7 +3718,7 @@ void QQuickWindowPrivate::runAndClearJobs(QList<QRunnable *> *jobs)
     jobs->clear();
     renderJobMutex.unlock();
 
-    for (QRunnable *r : qAsConst(jobList)) {
+    for (QRunnable *r : std::as_const(jobList)) {
         r->run();
         delete r;
     }

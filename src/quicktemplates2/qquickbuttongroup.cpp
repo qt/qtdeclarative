@@ -142,7 +142,7 @@ public:
 
 void QQuickButtonGroupPrivate::clear()
 {
-    for (QQuickAbstractButton *button : qAsConst(buttons)) {
+    for (QQuickAbstractButton *button : std::as_const(buttons)) {
         QQuickAbstractButtonPrivate::get(button)->group = nullptr;
         QObjectPrivate::disconnect(button, &QQuickAbstractButton::clicked, this, &QQuickButtonGroupPrivate::buttonClicked);
         QObjectPrivate::disconnect(button, &QQuickAbstractButton::checkedChanged, this, &QQuickButtonGroupPrivate::_q_updateCurrent);
@@ -178,7 +178,7 @@ void QQuickButtonGroupPrivate::updateCheckState()
 
     bool anyChecked = false;
     bool allChecked = !buttons.isEmpty();
-    for (QQuickAbstractButton *button : qAsConst(buttons)) {
+    for (QQuickAbstractButton *button : std::as_const(buttons)) {
         const bool isChecked = button->isChecked();
         anyChecked |= isChecked;
         allChecked &= isChecked;
@@ -376,7 +376,7 @@ void QQuickButtonGroup::setCheckState(Qt::CheckState state)
         if (d->checkedButton && state == Qt::Unchecked)
             setCheckedButton(nullptr);
     } else {
-        for (QQuickAbstractButton *button : qAsConst(d->buttons))
+        for (QQuickAbstractButton *button : std::as_const(d->buttons))
             button->setChecked(state == Qt::Checked);
     }
     d->settingCheckState = false;
