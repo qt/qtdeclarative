@@ -832,7 +832,7 @@ bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorSt
 bool ResolvedTypeReferenceMap::addToHash(
         QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const
 {
-    std::vector<int> keys (count());
+    std::vector<int> keys (size());
     int i = 0;
     for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
         keys[i] = it.key();
@@ -864,7 +864,7 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
         // This code must match that in the qsTr() implementation
         const QString &path = fileName();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-        QStringView context = (lastSlash > -1) ? QStringView{path}.mid(lastSlash + 1, path.length() - lastSlash - 5)
+        QStringView context = (lastSlash > -1) ? QStringView{path}.mid(lastSlash + 1, path.size() - lastSlash - 5)
                                               : QStringView();
         QByteArray contextUtf8 = context.toUtf8();
         QByteArray comment = stringAt(translation.commentIndex).toUtf8();

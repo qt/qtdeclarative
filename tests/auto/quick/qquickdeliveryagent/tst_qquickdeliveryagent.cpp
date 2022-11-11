@@ -179,7 +179,7 @@ void tst_qquickdeliveryagent::passiveGrabberOrder()
     auto devPriv = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice());
     const auto &persistentPoint = devPriv->activePoints.values().first();
     qCDebug(lcTests) << "passive grabbers" << persistentPoint.passiveGrabbers << "contexts" << persistentPoint.passiveGrabbersContext;
-    QCOMPARE(persistentPoint.passiveGrabbers.count(), 2);
+    QCOMPARE(persistentPoint.passiveGrabbers.size(), 2);
     QCOMPARE(persistentPoint.passiveGrabbers.first(), subsceneTap);
     QCOMPARE(persistentPoint.passiveGrabbersContext.first(), subscene.deliveryAgent);
     QCOMPARE(persistentPoint.passiveGrabbers.last(), rootTap);
@@ -187,10 +187,10 @@ void tst_qquickdeliveryagent::passiveGrabberOrder()
     QTest::mouseRelease(&view, Qt::LeftButton);
     QTest::qWait(100);
     // QQuickWindow::event() has failsafe: clear all grabbers after release
-    QCOMPARE(persistentPoint.passiveGrabbers.count(), 0);
+    QCOMPARE(persistentPoint.passiveGrabbers.size(), 0);
 
     qCDebug(lcTests) << "TapHandlers emitted tapped in this order:" << spy.senders;
-    QCOMPARE(spy.senders.count(), 2);
+    QCOMPARE(spy.senders.size(), 2);
     // passive grabbers are visited in order, and emit tapped() at that time
     QCOMPARE(spy.senders.first(), subsceneTap);
     QCOMPARE(spy.senders.last(), rootTap);
@@ -279,7 +279,7 @@ void tst_qquickdeliveryagent::passiveGrabberItems()
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(exclusiveGrabber->x() + 1, exclusiveGrabber->y() + 1));
     auto devPriv = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice());
     const auto &persistentPoint = devPriv->activePoints.values().first();
-    QTRY_COMPARE(persistentPoint.passiveGrabbers.count(), 1);
+    QTRY_COMPARE(persistentPoint.passiveGrabbers.size(), 1);
     QCOMPARE(persistentPoint.passiveGrabbers.first(), passiveGrabber);
     QCOMPARE(persistentPoint.exclusiveGrabber, exclusiveGrabber);
     QVERIFY(exclusiveGrabber->lastPressed);
@@ -295,7 +295,7 @@ void tst_qquickdeliveryagent::passiveGrabberItems()
     // since it became the exclusive grabber on mouseMove
     QTRY_VERIFY(!passiveGrabber->lastPressed);
     QVERIFY(exclusiveGrabber->lastPressed);
-    QCOMPARE(persistentPoint.passiveGrabbers.count(), 0);
+    QCOMPARE(persistentPoint.passiveGrabbers.size(), 0);
     QCOMPARE(persistentPoint.exclusiveGrabber, nullptr);
 
     exclusiveGrabber->lastPressed = false;
@@ -304,7 +304,7 @@ void tst_qquickdeliveryagent::passiveGrabberItems()
 
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, QPoint(exclusiveGrabber->x() + 1, exclusiveGrabber->y() + 1));
     const auto &pressedPoint = devPriv->activePoints.values().first();
-    QTRY_COMPARE(pressedPoint.passiveGrabbers.count(), 1);
+    QTRY_COMPARE(pressedPoint.passiveGrabbers.size(), 1);
     QCOMPARE(pressedPoint.passiveGrabbers.first(), passiveGrabber);
     QCOMPARE(pressedPoint.exclusiveGrabber, exclusiveGrabber);
     QVERIFY(exclusiveGrabber->lastPressed);
@@ -319,7 +319,7 @@ void tst_qquickdeliveryagent::passiveGrabberItems()
     // Both the passive and the exclusive grabber get the mouseRelease event
     QTRY_VERIFY(!passiveGrabber->lastPressed);
     QVERIFY(!exclusiveGrabber->lastPressed);
-    QCOMPARE(pressedPoint.passiveGrabbers.count(), 0);
+    QCOMPARE(pressedPoint.passiveGrabbers.size(), 0);
     QCOMPARE(pressedPoint.exclusiveGrabber, nullptr);
 }
 
@@ -372,8 +372,8 @@ void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, clickPos);
     qCDebug(lcTests) << "clicking subscene TextEdit set cursorPos to" << cursorPos;
     QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos); // TextEdit reacts regardless
-    QCOMPARE(clickSpy.count(), expectedTaps);
-    QCOMPARE(cancelSpy.count(), expectedCancels);
+    QCOMPARE(clickSpy.size(), expectedTaps);
+    QCOMPARE(cancelSpy.size(), expectedCancels);
 }
 
 void tst_qquickdeliveryagent::undoDelegationWhenSubsceneFocusCleared() // QTBUG-105192

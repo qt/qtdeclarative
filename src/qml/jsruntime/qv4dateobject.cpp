@@ -343,7 +343,7 @@ static inline double ParseString(const QString &s, double localTZA)
     };
 
     const QChar *ch = s.constData();
-    const QChar *end = ch + s.length();
+    const QChar *end = ch + s.size();
 
     uint format = Year;
     int current = 0;

@@ -48,7 +48,7 @@ void Heap::RegExpObject::init(QV4::RegExp *value)
 static QString minimalPattern(const QString &pattern)
 {
     QString ecmaPattern;
-    int len = pattern.length();
+    int len = pattern.size();
     ecmaPattern.reserve(len);
     int i = 0;
     const QChar *wc = pattern.unicode();
@@ -146,7 +146,7 @@ ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *s
 
     Scope scope(engine);
     int offset = (global() || sticky()) ? lastIndex() : 0;
-    if (offset < 0 || offset > s.length()) {
+    if (offset < 0 || offset > s.size()) {
         setLastIndex(0);
         RETURN_RESULT(Encode::null());
     }
@@ -170,7 +170,7 @@ ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *s
     int len = value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);
-    int strlen = s.length();
+    int strlen = s.size();
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
@@ -232,7 +232,7 @@ uint parseFlags(Scope &scope, const QV4::Value *f)
         if (scope.hasException())
             return flags;
         QString str = s->toQString();
-        for (int i = 0; i < str.length(); ++i) {
+        for (int i = 0; i < str.size(); ++i) {
             if (str.at(i) == QLatin1Char('g') && !(flags & CompiledData::RegExp::RegExp_Global)) {
                 flags |= CompiledData::RegExp::RegExp_Global;
             } else if (str.at(i) == QLatin1Char('i') && !(flags & CompiledData::RegExp::RegExp_IgnoreCase)) {
@@ -382,7 +382,7 @@ ReturnedValue RegExpPrototype::execFirstMatch(const FunctionObject *b, const Val
     QString s = str->toQString();
 
     int offset = r->lastIndex();
-    if (offset < 0 || offset > s.length()) {
+    if (offset < 0 || offset > s.size()) {
         r->setLastIndex(0);
         RETURN_RESULT(Encode::null());
     }
@@ -518,7 +518,7 @@ ReturnedValue RegExpPrototype::method_get_ignoreCase(const FunctionObject *f, co
 static int advanceStringIndex(int index, const QString &str, bool unicode)
 {
     if (unicode) {
-        if (index < str.length() - 1 &&
+        if (index < str.size() - 1 &&
             str.at(index).isHighSurrogate() &&
             str.at(index + 1).isLowSurrogate())
             ++index;
@@ -607,7 +607,7 @@ ReturnedValue RegExpPrototype::method_replace(const FunctionObject *f, const Val
     if (scope.hasException())
         return Encode::undefined();
 
-    int lengthS = s->toQString().length();
+    int lengthS = s->toQString().size();
 
     ScopedString replaceValue(scope);
     ScopedFunctionObject replaceFunction(scope, (argc > 1 ? argv[1] : Value::undefinedValue()));
@@ -659,7 +659,7 @@ ReturnedValue RegExpPrototype::method_replace(const FunctionObject *f, const Val
         if (scope.hasException())
             return Encode::undefined();
         QString m = matchString->toQString();
-        int matchLength = m.length();
+        int matchLength = m.size();
         v = resultObject->get(scope.engine->id_index());
         int position = v->toInt32();
         position = qMax(qMin(position, lengthS), 0);
@@ -786,7 +786,7 @@ ReturnedValue RegExpPrototype::method_split(const FunctionObject *f, const Value
         return A->asReturnedValue();
 
     QString S = s->toQString();
-    int size = S.length();
+    int size = S.size();
     if (size == 0) {
         ScopedValue z(scope, exec(scope.engine, splitter, s));
         if (z->isNull())

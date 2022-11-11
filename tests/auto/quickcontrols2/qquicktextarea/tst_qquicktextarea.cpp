@@ -113,7 +113,7 @@ void tst_QQuickTextArea::touchscreenSetsFocusAndMovesCursor()
     QVERIFY(top);
     QQuickTextEdit *bottom = window.rootObject()->findChild<QQuickTextEdit*>("bottom");
     QVERIFY(bottom);
-    const auto len = bottom->text().length();
+    const auto len = bottom->text().size();
 
     // tap the bottom field
     const qreal yOffset = bottom->topPadding() + 6; // where to tap or drag to hit the text
@@ -131,7 +131,7 @@ void tst_QQuickTextArea::touchscreenSetsFocusAndMovesCursor()
     // typing a character inserts it at the cursor position
     QVERIFY(!bottom->text().contains('q'));
     QTest::keyClick(&window, Qt::Key_Q);
-    QCOMPARE(bottom->text().length(), len + 1);
+    QCOMPARE(bottom->text().size(), len + 1);
     QCOMPARE_GT(bottom->text().indexOf('q'), 0);
 
     // press-drag-and-release from p1 to p2 on the top field

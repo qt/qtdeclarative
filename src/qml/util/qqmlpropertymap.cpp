@@ -263,7 +263,7 @@ QStringList QQmlPropertyMap::keys() const
 int QQmlPropertyMap::count() const
 {
     Q_D(const QQmlPropertyMap);
-    return d->keys.count();
+    return d->keys.size();
 }
 
 /*!

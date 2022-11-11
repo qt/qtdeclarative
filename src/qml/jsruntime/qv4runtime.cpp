@@ -217,7 +217,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
         *result = qdtoa(num, &decpt, &sign);
 
         if (decpt <= ecma_shortest_low || decpt > ecma_shortest_high) {
-            if (result->length() > 1)
+            if (result->size() > 1)
                 result->insert(1, dot);
             result->append(QLatin1Char('e'));
             if (decpt > 0)
@@ -225,10 +225,10 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
             result->append(QString::number(decpt - 1));
         } else if (decpt <= 0) {
             result->prepend(QLatin1String("0.") + QString(-decpt, zero));
-        } else if (decpt < result->length()) {
+        } else if (decpt < result->size()) {
             result->insert(decpt, dot);
         } else {
-            result->append(QString(decpt - result->length(), zero));
+            result->append(QString(decpt - result->size(), zero));
         }
 
         if (sign && num)
@@ -392,7 +392,7 @@ double RuntimeHelpers::stringToNumber(const QString &string)
     // libdoubleconversion sources. The same maximum value would be represented by roughly 3.5 times
     // as many binary digits.
     const int excessiveLength = 16 * 1024;
-    if (string.length() > excessiveLength)
+    if (string.size() > excessiveLength)
         return qQNaN();
 
     const QStringView s = QStringView(string).trimmed();
@@ -642,7 +642,7 @@ static Q_NEVER_INLINE ReturnedValue getElementIntFallback(ExecutionEngine *engin
     ScopedObject o(scope, object);
     if (!o) {
         if (const String *str = object.as<String>()) {
-            if (idx >= (uint)str->toQString().length()) {
+            if (idx >= (uint)str->toQString().size()) {
                 return Encode::undefined();
             }
             const QString s = str->toQString().mid(idx, 1);

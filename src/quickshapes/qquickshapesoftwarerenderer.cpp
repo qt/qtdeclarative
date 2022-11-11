@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 
 void QQuickShapeSoftwareRenderer::beginSync(int totalCount, bool *countChanged)
 {
-    if (m_sp.count() != totalCount) {
+    if (m_sp.size() != totalCount) {
         m_sp.resize(totalCount);
         m_accDirty |= DirtyList;
         *countChanged = true;
@@ -155,7 +155,7 @@ void QQuickShapeSoftwareRenderer::updateNode()
     if (!m_accDirty)
         return;
 
-    const int count = m_sp.count();
+    const int count = m_sp.size();
     const bool listChanged = m_accDirty & DirtyList;
     if (listChanged)
         m_node->m_sp.resize(count);

@@ -163,7 +163,7 @@ void tst_qqmlitemmodels::itemSelection()
         QCOMPARE(isVariant.userType(), qMetaTypeId<QItemSelection>());
 
         const QItemSelection &sel = isVariant.value<QItemSelection>();
-        QCOMPARE(sel.count(), object->itemSelection().count());
+        QCOMPARE(sel.size(), object->itemSelection().size());
         QCOMPARE(sel, object->itemSelection());
     }
 }
@@ -181,7 +181,7 @@ void tst_qqmlitemmodels::modelIndexList()
 
     QCOMPARE(object->property("count").toInt(), 10);
     const QModelIndexList &mil = object->modelIndexList();
-    QCOMPARE(mil.count(), 4);
+    QCOMPARE(mil.size(), 4);
     for (int i = 0; i < 3; i++)
         QCOMPARE(mil.at(i), model.index(2 + i, 2 + i));
     QCOMPARE(mil.at(3), QModelIndex()); // The string inserted at the end should result in an invalid index
@@ -198,7 +198,7 @@ void tst_qqmlitemmodels::modelIndexList()
         QCOMPARE(milVariant.userType(), qMetaTypeId<QModelIndexList>());
 
         const QModelIndexList &milProp = milVariant.value<QModelIndexList>();
-        QCOMPARE(milProp.count(), mil.count());
+        QCOMPARE(milProp.size(), mil.size());
         QCOMPARE(milProp, mil);
     }
 }

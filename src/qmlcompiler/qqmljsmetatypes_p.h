@@ -158,7 +158,7 @@ public:
     }
     void setParameterTypes(const QList<QSharedPointer<const QQmlJSScope>> &types)
     {
-        Q_ASSERT(types.length() == m_paramNames.length());
+        Q_ASSERT(types.size() == m_paramNames.size());
         m_paramTypes.clear();
         for (const auto &type : types)
             m_paramTypes.append(type);

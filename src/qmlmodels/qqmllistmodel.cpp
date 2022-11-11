@@ -140,7 +140,7 @@ const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::R
         currentBlockOffset = dataOffset + dataSize;
     }
 
-    int roleIndex = roles.count();
+    int roleIndex = roles.size();
     r->index = roleIndex;
 
     roles.append(r);
@@ -151,7 +151,7 @@ const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::R
 
 ListLayout::ListLayout(const ListLayout *other) : currentBlock(0), currentBlockOffset(0)
 {
-    const int otherRolesCount = other->roles.count();
+    const int otherRolesCount = other->roles.size();
     roles.reserve(otherRolesCount);
     for (int i=0 ; i < otherRolesCount; ++i) {
         Role *role = new Role(other->roles[i]);
@@ -169,8 +169,8 @@ ListLayout::~ListLayout()
 
 void ListLayout::sync(ListLayout *src, ListLayout *target)
 {
-    int roleOffset = target->roles.count();
-    int newRoleCount = src->roles.count() - roleOffset;
+    int roleOffset = target->roles.size();
+    int newRoleCount = src->roles.size() - roleOffset;
 
     for (int i=0 ; i < newRoleCount ; ++i) {
         Role *role = new Role(src->roles[roleOffset + i]);
@@ -271,7 +271,7 @@ void StringOrTranslation::setString(const QString &s)
     QString::DataPointer dataPointer = mutableString.data_ptr();
     arrayData = dataPointer->d_ptr();
     stringData = dataPointer->data();
-    stringSize = mutableString.length();
+    stringSize = mutableString.size();
     if (arrayData)
         arrayData->ref();
 }
@@ -1671,10 +1671,10 @@ void ModelNodeMetaObject::updateValues()
 void ModelNodeMetaObject::updateValues(const QVector<int> &roles)
 {
     if (!m_initialized) {
-        emitDirectNotifies(roles.constData(), roles.count());
+        emitDirectNotifies(roles.constData(), roles.size());
         return;
     }
-    int roleCount = roles.count();
+    int roleCount = roles.size();
     for (int i=0 ; i < roleCount ; ++i) {
         int roleIndex = roles.at(i);
         const ListLayout::Role &role = m_model->m_listModel->getExistingRole(roleIndex);
@@ -1872,7 +1872,7 @@ void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> 
 
         int roleIndex = m_owner->m_roles.indexOf(key);
         if (roleIndex == -1) {
-            roleIndex = m_owner->m_roles.count();
+            roleIndex = m_owner->m_roles.size();
             m_owner->m_roles.append(key);
         }
 
@@ -2172,7 +2172,7 @@ bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
 
     // Build hash of elements <-> uid for each of the lists
     QHash<int, ElementSync> elementHash;
-    for (int i = 0 ; i < target->m_modelObjects.count(); ++i) {
+    for (int i = 0 ; i < target->m_modelObjects.size(); ++i) {
         DynamicRoleModelNode *e = target->m_modelObjects.at(i);
         int uid = e->getUid();
         ElementSync sync;
@@ -2180,7 +2180,7 @@ bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
         sync.targetIndex = i;
         elementHash.insert(uid, sync);
     }
-    for (int i = 0 ; i < src->m_modelObjects.count(); ++i) {
+    for (int i = 0 ; i < src->m_modelObjects.size(); ++i) {
         DynamicRoleModelNode *e = src->m_modelObjects.at(i);
         int uid = e->getUid();
 
@@ -2199,7 +2199,7 @@ bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
 
     // Get list of elements that are in the target but no longer in the source. These get deleted first.
     int rowsRemoved = 0;
-    for (int i = 0 ; i < target->m_modelObjects.count() ; ++i) {
+    for (int i = 0 ; i < target->m_modelObjects.size() ; ++i) {
         DynamicRoleModelNode *element = target->m_modelObjects.at(i);
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.targetIndex >= 0);
@@ -2220,7 +2220,7 @@ bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
 
     // Clear the target list, and append in correct order from the source
     target->m_modelObjects.clear();
-    for (int i = 0 ; i < src->m_modelObjects.count() ; ++i) {
+    for (int i = 0 ; i < src->m_modelObjects.size() ; ++i) {
         DynamicRoleModelNode *element = src->m_modelObjects.at(i);
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.srcIndex >= 0);
@@ -2238,7 +2238,7 @@ bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
     // to ensure things are kept in the correct order, emit inserts and moves first. This shouls ensure all persistent
     // model indices are updated correctly
     int rowsInserted = 0;
-    for (int i = 0 ; i < target->m_modelObjects.count() ; ++i) {
+    for (int i = 0 ; i < target->m_modelObjects.size() ; ++i) {
         DynamicRoleModelNode *element = target->m_modelObjects.at(i);
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.srcIndex >= 0);
@@ -2357,7 +2357,7 @@ QHash<int, QByteArray> QQmlListModel::roleNames() const
     QHash<int, QByteArray> roleNames;
 
     if (m_dynamicRoles) {
-        for (int i = 0 ; i < m_roles.count() ; ++i)
+        for (int i = 0 ; i < m_roles.size() ; ++i)
             roleNames.insert(i, m_roles.at(i).toUtf8());
     } else {
         for (int i = 0 ; i < m_listModel->roleCount() ; ++i) {
@@ -2404,7 +2404,7 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
             else
                 m_dynamicRoles = true;
         } else {
-            if (m_roles.count()) {
+            if (m_roles.size()) {
                 qmlWarning(this) << tr("unable to enable static roles as this model is not empty");
             } else {
                 m_dynamicRoles = false;
@@ -2421,7 +2421,7 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
 */
 int QQmlListModel::count() const
 {
-    return m_dynamicRoles ? m_modelObjects.count() : m_listModel->elementCount();
+    return m_dynamicRoles ? m_modelObjects.size() : m_listModel->elementCount();
 }
 
 /*!
@@ -2678,7 +2678,7 @@ void QQmlListModel::append(QQmlV4Function *args)
             int index;
 
             if (m_dynamicRoles) {
-                index = m_modelObjects.count();
+                index = m_modelObjects.size();
                 emitItemsAboutToBeInserted(index, 1);
                 m_modelObjects.append(DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
             } else {
@@ -2804,7 +2804,7 @@ void QQmlListModel::set(int index, const QJSValue &value)
             m_listModel->set(index, object, &roles);
         }
 
-        if (roles.count())
+        if (roles.size())
             emitItemsChanged(index, 1, roles);
     }
 }
@@ -2832,7 +2832,7 @@ void QQmlListModel::setProperty(int index, const QString& property, const QVaria
     if (m_dynamicRoles) {
         int roleIndex = m_roles.indexOf(property);
         if (roleIndex == -1) {
-            roleIndex = m_roles.count();
+            roleIndex = m_roles.size();
             m_roles.append(property);
         }
         if (m_modelObjects[index]->setValue(property.toUtf8(), value))
@@ -3035,7 +3035,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::
 bool QQmlListModelParser::definesEmptyList(const QString &s)
 {
     if (s.startsWith(QLatin1Char('[')) && s.endsWith(QLatin1Char(']'))) {
-        for (int i=1; i<s.length()-1; i++) {
+        for (int i=1; i<s.size()-1; i++) {
             if (!s[i].isSpace())
                 return false;
         }

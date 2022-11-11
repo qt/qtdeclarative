@@ -883,7 +883,7 @@ int QSGRhiSupport::chooseSampleCount(int samples, QRhi *rhi)
         const QVector<int> supportedSampleCounts = rhi->supportedSampleCounts();
         if (!supportedSampleCounts.contains(msaaSampleCount)) {
             int reducedSampleCount = 1;
-            for (int i = supportedSampleCounts.count() - 1; i >= 0; --i) {
+            for (int i = supportedSampleCounts.size() - 1; i >= 0; --i) {
                 if (supportedSampleCounts[i] <= msaaSampleCount) {
                     reducedSampleCount = supportedSampleCounts[i];
                     break;

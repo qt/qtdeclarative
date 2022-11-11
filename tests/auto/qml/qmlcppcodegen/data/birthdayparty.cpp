@@ -28,7 +28,7 @@ QQmlListProperty<Person> BirthdayParty::guests()
 
 int BirthdayParty::guestCount() const
 {
-    return m_guests.count();
+    return m_guests.size();
 }
 
 Person *BirthdayParty::guest(int index) const

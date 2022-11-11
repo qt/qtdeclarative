@@ -73,7 +73,7 @@ public:
 protected:
     void touchEvent(QTouchEvent *ev) override
     {
-        QCOMPARE(ev->points().count(), 1);
+        QCOMPARE(ev->points().size(), 1);
         auto touchpoint = ev->points().first();
         switch (touchpoint.state()) {
         case QEventPoint::State::Pressed:
@@ -351,27 +351,27 @@ void tst_qquickflickable::boundsBehavior()
 
     flickable->setBoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
     QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::DragAndOvershootBounds);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
     flickable->setBoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     flickable->setBoundsBehavior(QQuickFlickable::DragOverBounds);
     QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::DragOverBounds);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
     flickable->setBoundsBehavior(QQuickFlickable::DragOverBounds);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     flickable->setBoundsBehavior(QQuickFlickable::StopAtBounds);
     QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::StopAtBounds);
-    QCOMPARE(spy.count(),3);
+    QCOMPARE(spy.size(),3);
     flickable->setBoundsBehavior(QQuickFlickable::StopAtBounds);
-    QCOMPARE(spy.count(),3);
+    QCOMPARE(spy.size(),3);
 
     flickable->setBoundsBehavior(QQuickFlickable::OvershootBounds);
     QCOMPARE(flickable->boundsBehavior(), QQuickFlickable::OvershootBounds);
-    QCOMPARE(spy.count(),4);
+    QCOMPARE(spy.size(),4);
     flickable->setBoundsBehavior(QQuickFlickable::OvershootBounds);
-    QCOMPARE(spy.count(),4);
+    QCOMPARE(spy.size(),4);
 
     delete flickable;
 }
@@ -404,23 +404,23 @@ void tst_qquickflickable::rebound()
     flick(window.data(), QPoint(20,20), QPoint(120,120), 200);
 
     QTRY_COMPARE(window->rootObject()->property("transitionsStarted").toInt(), 2);
-    QCOMPARE(hMoveSpy.count(), 1);
-    QCOMPARE(vMoveSpy.count(), 1);
-    QCOMPARE(movementStartedSpy.count(), 1);
-    QCOMPARE(movementEndedSpy.count(), 0);
+    QCOMPARE(hMoveSpy.size(), 1);
+    QCOMPARE(vMoveSpy.size(), 1);
+    QCOMPARE(movementStartedSpy.size(), 1);
+    QCOMPARE(movementEndedSpy.size(), 0);
     QVERIFY(rebound->running());
 
     QTRY_VERIFY(!flickable->isMoving());
     QCOMPARE(flickable->contentX(), 0.0);
     QCOMPARE(flickable->contentY(), 0.0);
 
-    QCOMPARE(hMoveSpy.count(), 2);
-    QCOMPARE(vMoveSpy.count(), 2);
-    QCOMPARE(movementStartedSpy.count(), 1);
-    QCOMPARE(movementEndedSpy.count(), 1);
+    QCOMPARE(hMoveSpy.size(), 2);
+    QCOMPARE(vMoveSpy.size(), 2);
+    QCOMPARE(movementStartedSpy.size(), 1);
+    QCOMPARE(movementEndedSpy.size(), 1);
     QCOMPARE(window->rootObject()->property("transitionsStarted").toInt(), 2);
     QVERIFY(!rebound->running());
-    QCOMPARE(reboundSpy.count(), 2);
+    QCOMPARE(reboundSpy.size(), 2);
 
     hMoveSpy.clear();
     vMoveSpy.clear();
@@ -436,19 +436,19 @@ void tst_qquickflickable::rebound()
 
     QVERIFY(flickable->isMoving());
     QTRY_VERIFY(window->rootObject()->property("transitionsStarted").toInt() >= 1);
-    QCOMPARE(hMoveSpy.count(), 1);
-    QCOMPARE(vMoveSpy.count(), 1);
-    QCOMPARE(movementStartedSpy.count(), 1);
+    QCOMPARE(hMoveSpy.size(), 1);
+    QCOMPARE(vMoveSpy.size(), 1);
+    QCOMPARE(movementStartedSpy.size(), 1);
 
     QTRY_VERIFY(!flickable->isMoving());
     QCOMPARE(flickable->contentX(), 0.0);
 
     // moving started/stopped signals should only have been emitted once,
     // and when they are, all transitions should have finished
-    QCOMPARE(hMoveSpy.count(), 2);
-    QCOMPARE(vMoveSpy.count(), 2);
-    QCOMPARE(movementStartedSpy.count(), 1);
-    QCOMPARE(movementEndedSpy.count(), 1);
+    QCOMPARE(hMoveSpy.size(), 2);
+    QCOMPARE(vMoveSpy.size(), 2);
+    QCOMPARE(movementStartedSpy.size(), 1);
+    QCOMPARE(movementEndedSpy.size(), 1);
 
     hMoveSpy.clear();
     vMoveSpy.clear();
@@ -463,16 +463,16 @@ void tst_qquickflickable::rebound()
 
     flick(window.data(), QPoint(20,20), QPoint(120,120), 200);
     QCOMPARE(window->rootObject()->property("transitionsStarted").toInt(), 0);
-    QCOMPARE(hMoveSpy.count(), 1);
-    QCOMPARE(vMoveSpy.count(), 1);
-    QCOMPARE(movementStartedSpy.count(), 1);
-    QCOMPARE(movementEndedSpy.count(), 0);
+    QCOMPARE(hMoveSpy.size(), 1);
+    QCOMPARE(vMoveSpy.size(), 1);
+    QCOMPARE(movementStartedSpy.size(), 1);
+    QCOMPARE(movementEndedSpy.size(), 0);
 
     QTRY_VERIFY(!flickable->isMoving());
-    QCOMPARE(hMoveSpy.count(), 2);
-    QCOMPARE(vMoveSpy.count(), 2);
-    QCOMPARE(movementStartedSpy.count(), 1);
-    QCOMPARE(movementEndedSpy.count(), 1);
+    QCOMPARE(hMoveSpy.size(), 2);
+    QCOMPARE(vMoveSpy.size(), 2);
+    QCOMPARE(movementStartedSpy.size(), 1);
+    QCOMPARE(movementEndedSpy.size(), 1);
     QCOMPARE(window->rootObject()->property("transitionsStarted").toInt(), 0);
 }
 
@@ -489,9 +489,9 @@ void tst_qquickflickable::maximumFlickVelocity()
 
     flickable->setMaximumFlickVelocity(2.0);
     QCOMPARE(flickable->maximumFlickVelocity(), 2.0);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
     flickable->setMaximumFlickVelocity(2.0);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     delete flickable;
 }
@@ -509,9 +509,9 @@ void tst_qquickflickable::flickDeceleration()
 
     flickable->setFlickDeceleration(2.0);
     QCOMPARE(flickable->flickDeceleration(), 2.0);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
     flickable->setFlickDeceleration(2.0);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     delete flickable;
 }
@@ -535,9 +535,9 @@ void tst_qquickflickable::pressDelay()
 
     flickable->setPressDelay(200);
     QCOMPARE(flickable->pressDelay(), 200);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
     flickable->setPressDelay(200);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     QQuickItem *mouseArea = window->rootObject()->findChild<QQuickItem*>("mouseArea");
     QSignalSpy clickedSpy(mouseArea, SIGNAL(clicked(QQuickMouseEvent*)));
@@ -550,11 +550,11 @@ void tst_qquickflickable::pressDelay()
     // But, it should occur eventually
     QTRY_VERIFY(mouseArea->property("pressed").toBool());
 
-    QCOMPARE(clickedSpy.count(),0);
+    QCOMPARE(clickedSpy.size(),0);
 
     // On release the clicked signal should be emitted
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(150, 150));
-    QCOMPARE(clickedSpy.count(),1);
+    QCOMPARE(clickedSpy.size(),1);
 
     // Press and release position should match
     QCOMPARE(flickable->property("pressX").toReal(), flickable->property("releaseX").toReal());
@@ -568,11 +568,11 @@ void tst_qquickflickable::pressDelay()
     // The press should not occur immediately
     QVERIFY(!mouseArea->property("pressed").toBool());
 
-    QCOMPARE(clickedSpy.count(),0);
+    QCOMPARE(clickedSpy.size(),0);
 
     // On release the press, release and clicked signal should be emitted
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(180, 180));
-    QCOMPARE(clickedSpy.count(),1);
+    QCOMPARE(clickedSpy.size(),1);
 
     // Press and release position should match
     QCOMPARE(flickable->property("pressX").toReal(), flickable->property("releaseX").toReal());
@@ -593,7 +593,7 @@ void tst_qquickflickable::pressDelay()
 
     // On release the clicked signal should *not* be emitted
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(150, 190));
-    QCOMPARE(clickedSpy.count(),1);
+    QCOMPARE(clickedSpy.size(),1);
 }
 
 // QTBUG-17361
@@ -777,19 +777,19 @@ void tst_qquickflickable::flickableDirection()
 
     flickable->setFlickableDirection(QQuickFlickable::HorizontalAndVerticalFlick);
     QCOMPARE(flickable->flickableDirection(), QQuickFlickable::HorizontalAndVerticalFlick);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     flickable->setFlickableDirection(QQuickFlickable::AutoFlickDirection);
     QCOMPARE(flickable->flickableDirection(), QQuickFlickable::AutoFlickDirection);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     flickable->setFlickableDirection(QQuickFlickable::HorizontalFlick);
     QCOMPARE(flickable->flickableDirection(), QQuickFlickable::HorizontalFlick);
-    QCOMPARE(spy.count(),3);
+    QCOMPARE(spy.size(),3);
 
     flickable->setFlickableDirection(QQuickFlickable::HorizontalFlick);
     QCOMPARE(flickable->flickableDirection(), QQuickFlickable::HorizontalFlick);
-    QCOMPARE(spy.count(),3);
+    QCOMPARE(spy.size(),3);
 
     delete flickable;
 }
@@ -862,7 +862,7 @@ void tst_qquickflickable::returnToBounds()
     QTRY_COMPARE(obj->contentY(), 0.);
 
     QVERIFY(!rebound->running());
-    QCOMPARE(reboundSpy.count(), setRebound ? 2 : 0);
+    QCOMPARE(reboundSpy.size(), setRebound ? 2 : 0);
 }
 
 void tst_qquickflickable::returnToBounds_data()
@@ -900,7 +900,7 @@ void tst_qquickflickable::wheel()
     QTRY_VERIFY(flick->contentY() > 0);
     QCOMPARE(flick->contentX(), qreal(0));
 
-    QTRY_COMPARE(moveEndSpy.count(), 1);
+    QTRY_COMPARE(moveEndSpy.size(), 1);
     QCOMPARE(fp->velocityTimeline.isActive(), false);
     QCOMPARE(fp->timeline.isActive(), false);
     QTest::qWait(50); // make sure that onContentYChanged won't sneak in again
@@ -925,7 +925,7 @@ void tst_qquickflickable::wheel()
 
     QTRY_VERIFY(flick->contentX() > 0);
     QCOMPARE(flick->contentY(), qreal(0));
-    QTRY_COMPARE(moveEndSpy.count(), 2);
+    QTRY_COMPARE(moveEndSpy.size(), 2);
     QCOMPARE(fp->velocityTimeline.isActive(), false);
     QCOMPARE(fp->timeline.isActive(), false);
     QTest::qWait(50); // make sure that onContentXChanged won't sneak in again
@@ -979,7 +979,7 @@ void tst_qquickflickable::trackpad()
         QGuiApplication::sendEvent(window.data(), &event);
     }
 
-    QTRY_COMPARE(moveEndSpy.count(), 1); // QTBUG-55871
+    QTRY_COMPARE(moveEndSpy.size(), 1); // QTBUG-55871
     QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
 }
 
@@ -1016,7 +1016,7 @@ void tst_qquickflickable::nestedTrackpad()
         event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(&window, &event);
     }
-    QTRY_COMPARE(innerMoveEndSpy.count(), 1);
+    QTRY_COMPARE(innerMoveEndSpy.size(), 1);
 
     innerFlickable->setContentX(0);
     QCOMPARE(innerFlickable->contentX(), qreal(0));
@@ -1040,7 +1040,7 @@ void tst_qquickflickable::nestedTrackpad()
         event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(&window, &event);
     }
-    QTRY_COMPARE(outerMoveEndSpy.count(), 1);
+    QTRY_COMPARE(outerMoveEndSpy.size(), 1);
 }
 
 void tst_qquickflickable::movingAndFlicking_data()
@@ -1112,15 +1112,15 @@ void tst_qquickflickable::movingAndFlicking()
     QCOMPARE(flickable->property("movingInContentX").value<bool>(), true);
     QCOMPARE(flickable->property("movingInContentY").value<bool>(), true);
 
-    QCOMPARE(moveSpy.count(), 1);
-    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
-    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
-    QCOMPARE(flickSpy.count(), 1);
-    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 1 : 0);
-    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(moveSpy.size(), 1);
+    QCOMPARE(vMoveSpy.size(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(flickSpy.size(), 1);
+    QCOMPARE(vFlickSpy.size(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hFlickSpy.size(), horizontalEnabled ? 1 : 0);
 
-    QCOMPARE(moveStartSpy.count(), 1);
-    QCOMPARE(flickStartSpy.count(), 1);
+    QCOMPARE(moveStartSpy.size(), 1);
+    QCOMPARE(flickStartSpy.size(), 1);
 
     // wait for any motion to end
     QTRY_VERIFY(!flickable->isMoving());
@@ -1131,17 +1131,17 @@ void tst_qquickflickable::movingAndFlicking()
     QVERIFY(!flickable->isFlickingHorizontally());
     QVERIFY(!flickable->isFlickingVertically());
 
-    QCOMPARE(moveSpy.count(), 2);
-    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
-    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
-    QCOMPARE(flickSpy.count(), 2);
-    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 2 : 0);
-    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(moveSpy.size(), 2);
+    QCOMPARE(vMoveSpy.size(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(flickSpy.size(), 2);
+    QCOMPARE(vFlickSpy.size(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hFlickSpy.size(), horizontalEnabled ? 2 : 0);
 
-    QCOMPARE(moveStartSpy.count(), 1);
-    QCOMPARE(moveEndSpy.count(), 1);
-    QCOMPARE(flickStartSpy.count(), 1);
-    QCOMPARE(flickEndSpy.count(), 1);
+    QCOMPARE(moveStartSpy.size(), 1);
+    QCOMPARE(moveEndSpy.size(), 1);
+    QCOMPARE(flickStartSpy.size(), 1);
+    QCOMPARE(flickEndSpy.size(), 1);
 
     // Stop on a full pixel after user interaction
     if (verticalEnabled)
@@ -1168,17 +1168,17 @@ void tst_qquickflickable::movingAndFlicking()
     QCOMPARE(flickable->isFlickingHorizontally(), horizontalEnabled);
     QCOMPARE(flickable->isFlickingVertically(), verticalEnabled);
 
-    QCOMPARE(moveSpy.count(), 1);
-    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
-    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
-    QCOMPARE(flickSpy.count(), 1);
-    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 1 : 0);
-    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(moveSpy.size(), 1);
+    QCOMPARE(vMoveSpy.size(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(flickSpy.size(), 1);
+    QCOMPARE(vFlickSpy.size(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hFlickSpy.size(), horizontalEnabled ? 1 : 0);
 
-    QCOMPARE(moveStartSpy.count(), 1);
-    QCOMPARE(moveEndSpy.count(), 0);
-    QCOMPARE(flickStartSpy.count(), 1);
-    QCOMPARE(flickEndSpy.count(), 0);
+    QCOMPARE(moveStartSpy.size(), 1);
+    QCOMPARE(moveEndSpy.size(), 0);
+    QCOMPARE(flickStartSpy.size(), 1);
+    QCOMPARE(flickEndSpy.size(), 0);
 
     // wait for any motion to end
     QTRY_VERIFY(!flickable->isMoving());
@@ -1189,17 +1189,17 @@ void tst_qquickflickable::movingAndFlicking()
     QVERIFY(!flickable->isFlickingHorizontally());
     QVERIFY(!flickable->isFlickingVertically());
 
-    QCOMPARE(moveSpy.count(), 2);
-    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
-    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
-    QCOMPARE(flickSpy.count(), 2);
-    QCOMPARE(vFlickSpy.count(), verticalEnabled ? 2 : 0);
-    QCOMPARE(hFlickSpy.count(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(moveSpy.size(), 2);
+    QCOMPARE(vMoveSpy.size(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(flickSpy.size(), 2);
+    QCOMPARE(vFlickSpy.size(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hFlickSpy.size(), horizontalEnabled ? 2 : 0);
 
-    QCOMPARE(moveStartSpy.count(), 1);
-    QCOMPARE(moveEndSpy.count(), 1);
-    QCOMPARE(flickStartSpy.count(), 1);
-    QCOMPARE(flickEndSpy.count(), 1);
+    QCOMPARE(moveStartSpy.size(), 1);
+    QCOMPARE(moveEndSpy.size(), 1);
+    QCOMPARE(flickStartSpy.size(), 1);
+    QCOMPARE(flickEndSpy.size(), 1);
 
     QCOMPARE(flickable->contentX(), 0.0);
     QCOMPARE(flickable->contentY(), 0.0);
@@ -1280,26 +1280,26 @@ void tst_qquickflickable::movingAndDragging()
     QCOMPARE(flickable->property("draggingInContentX").value<bool>(), true);
     QCOMPARE(flickable->property("draggingInContentY").value<bool>(), true);
 
-    QCOMPARE(moveSpy.count(), 1);
-    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
-    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
-    QCOMPARE(dragSpy.count(), 1);
-    QCOMPARE(vDragSpy.count(), verticalEnabled ? 1 : 0);
-    QCOMPARE(hDragSpy.count(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(moveSpy.size(), 1);
+    QCOMPARE(vMoveSpy.size(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 1 : 0);
+    QCOMPARE(dragSpy.size(), 1);
+    QCOMPARE(vDragSpy.size(), verticalEnabled ? 1 : 0);
+    QCOMPARE(hDragSpy.size(), horizontalEnabled ? 1 : 0);
 
-    QCOMPARE(moveStartSpy.count(), 1);
-    QCOMPARE(dragStartSpy.count(), 1);
+    QCOMPARE(moveStartSpy.size(), 1);
+    QCOMPARE(dragStartSpy.size(), 1);
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, moveFrom + moveByWithoutSnapBack*3);
 
     QVERIFY(!flickable->isDragging());
     QVERIFY(!flickable->isDraggingHorizontally());
     QVERIFY(!flickable->isDraggingVertically());
-    QCOMPARE(dragSpy.count(), 2);
-    QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
-    QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
-    QCOMPARE(dragStartSpy.count(), 1);
-    QCOMPARE(dragEndSpy.count(), 1);
+    QCOMPARE(dragSpy.size(), 2);
+    QCOMPARE(vDragSpy.size(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hDragSpy.size(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(dragStartSpy.size(), 1);
+    QCOMPARE(dragEndSpy.size(), 1);
     // Don't test whether moving finished because a flick could occur
 
     // wait for any motion to end
@@ -1311,17 +1311,17 @@ void tst_qquickflickable::movingAndDragging()
     QVERIFY(!flickable->isDraggingHorizontally());
     QVERIFY(!flickable->isDraggingVertically());
 
-    QCOMPARE(dragSpy.count(), 2);
-    QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
-    QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
-    QCOMPARE(moveSpy.count(), 2);
-    QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
-    QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(dragSpy.size(), 2);
+    QCOMPARE(vDragSpy.size(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hDragSpy.size(), horizontalEnabled ? 2 : 0);
+    QCOMPARE(moveSpy.size(), 2);
+    QCOMPARE(vMoveSpy.size(), verticalEnabled ? 2 : 0);
+    QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 2 : 0);
 
-    QCOMPARE(dragStartSpy.count(), 1);
-    QCOMPARE(dragEndSpy.count(), 1);
-    QCOMPARE(moveStartSpy.count(), 1);
-    QCOMPARE(moveEndSpy.count(), 1);
+    QCOMPARE(dragStartSpy.size(), 1);
+    QCOMPARE(dragEndSpy.size(), 1);
+    QCOMPARE(moveStartSpy.size(), 1);
+    QCOMPARE(moveEndSpy.size(), 1);
 
     // Stop on a full pixel after user interaction
     if (verticalEnabled)
@@ -1351,17 +1351,17 @@ void tst_qquickflickable::movingAndDragging()
      QCOMPARE(flickable->isDraggingHorizontally(), horizontalEnabled);
      QCOMPARE(flickable->isDraggingVertically(), verticalEnabled);
 
-     QCOMPARE(moveSpy.count(), 1);
-     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
-     QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
-     QCOMPARE(dragSpy.count(), 1);
-     QCOMPARE(vDragSpy.count(), verticalEnabled ? 1 : 0);
-     QCOMPARE(hDragSpy.count(), horizontalEnabled ? 1 : 0);
+     QCOMPARE(moveSpy.size(), 1);
+     QCOMPARE(vMoveSpy.size(), verticalEnabled ? 1 : 0);
+     QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 1 : 0);
+     QCOMPARE(dragSpy.size(), 1);
+     QCOMPARE(vDragSpy.size(), verticalEnabled ? 1 : 0);
+     QCOMPARE(hDragSpy.size(), horizontalEnabled ? 1 : 0);
 
-     QCOMPARE(moveStartSpy.count(), 1);
-     QCOMPARE(moveEndSpy.count(), 0);
-     QCOMPARE(dragStartSpy.count(), 1);
-     QCOMPARE(dragEndSpy.count(), 0);
+     QCOMPARE(moveStartSpy.size(), 1);
+     QCOMPARE(moveEndSpy.size(), 0);
+     QCOMPARE(dragStartSpy.size(), 1);
+     QCOMPARE(dragEndSpy.size(), 0);
 
      QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, moveFrom + moveByWithSnapBack*3);
 
@@ -1373,15 +1373,15 @@ void tst_qquickflickable::movingAndDragging()
      QVERIFY(!flickable->isDraggingHorizontally());
      QVERIFY(!flickable->isDraggingVertically());
 
-     QCOMPARE(moveSpy.count(), 1);
-     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 1 : 0);
-     QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 1 : 0);
-     QCOMPARE(dragSpy.count(), 2);
-     QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
-     QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
+     QCOMPARE(moveSpy.size(), 1);
+     QCOMPARE(vMoveSpy.size(), verticalEnabled ? 1 : 0);
+     QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 1 : 0);
+     QCOMPARE(dragSpy.size(), 2);
+     QCOMPARE(vDragSpy.size(), verticalEnabled ? 2 : 0);
+     QCOMPARE(hDragSpy.size(), horizontalEnabled ? 2 : 0);
 
-     QCOMPARE(moveStartSpy.count(), 1);
-     QCOMPARE(moveEndSpy.count(), 0);
+     QCOMPARE(moveStartSpy.size(), 1);
+     QCOMPARE(moveEndSpy.size(), 0);
 
      // wait for any motion to end
      QTRY_VERIFY(!flickable->isMoving());
@@ -1392,17 +1392,17 @@ void tst_qquickflickable::movingAndDragging()
      QVERIFY(!flickable->isDraggingHorizontally());
      QVERIFY(!flickable->isDraggingVertically());
 
-     QCOMPARE(moveSpy.count(), 2);
-     QCOMPARE(vMoveSpy.count(), verticalEnabled ? 2 : 0);
-     QCOMPARE(hMoveSpy.count(), horizontalEnabled ? 2 : 0);
-     QCOMPARE(dragSpy.count(), 2);
-     QCOMPARE(vDragSpy.count(), verticalEnabled ? 2 : 0);
-     QCOMPARE(hDragSpy.count(), horizontalEnabled ? 2 : 0);
+     QCOMPARE(moveSpy.size(), 2);
+     QCOMPARE(vMoveSpy.size(), verticalEnabled ? 2 : 0);
+     QCOMPARE(hMoveSpy.size(), horizontalEnabled ? 2 : 0);
+     QCOMPARE(dragSpy.size(), 2);
+     QCOMPARE(vDragSpy.size(), verticalEnabled ? 2 : 0);
+     QCOMPARE(hDragSpy.size(), horizontalEnabled ? 2 : 0);
 
-     QCOMPARE(moveStartSpy.count(), 1);
-     QCOMPARE(moveEndSpy.count(), 1);
-     QCOMPARE(dragStartSpy.count(), 1);
-     QCOMPARE(dragEndSpy.count(), 1);
+     QCOMPARE(moveStartSpy.size(), 1);
+     QCOMPARE(moveEndSpy.size(), 1);
+     QCOMPARE(dragStartSpy.size(), 1);
+     QCOMPARE(dragEndSpy.size(), 1);
 
      QCOMPARE(flickable->contentX(), 0.0);
      QCOMPARE(flickable->contentY(), 0.0);
@@ -1430,7 +1430,7 @@ void tst_qquickflickable::flickOnRelease()
     QTest::mouseMove(window.data(), QPoint(50, 10), 10);
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(50, 10), 10);
 
-    QCOMPARE(vFlickSpy.count(), 1);
+    QCOMPARE(vFlickSpy.size(), 1);
 
     // wait for any motion to end
     QTRY_VERIFY(!flickable->isMoving());
@@ -1472,14 +1472,14 @@ void tst_qquickflickable::pressWhileFlicking()
     QVERIFY(flickable->isMoving());
     QVERIFY(flickable->isMovingVertically());
     QVERIFY(!flickable->isMovingHorizontally());
-    QCOMPARE(vMoveSpy.count(), 1);
-    QCOMPARE(hMoveSpy.count(), 0);
-    QCOMPARE(moveSpy.count(), 1);
-    QCOMPARE(vFlickSpy.count(), 1);
-    QCOMPARE(hFlickSpy.count(), 0);
-    QCOMPARE(flickSpy.count(), 1);
-    QCOMPARE(flickStartSpy.count(), 1);
-    QCOMPARE(flickEndSpy.count(), 0);
+    QCOMPARE(vMoveSpy.size(), 1);
+    QCOMPARE(hMoveSpy.size(), 0);
+    QCOMPARE(moveSpy.size(), 1);
+    QCOMPARE(vFlickSpy.size(), 1);
+    QCOMPARE(hFlickSpy.size(), 0);
+    QCOMPARE(flickSpy.size(), 1);
+    QCOMPARE(flickStartSpy.size(), 1);
+    QCOMPARE(flickEndSpy.size(), 0);
 
     QTest::mousePress(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(20, 50));
     QTRY_VERIFY(!flickable->isFlicking());
@@ -2105,10 +2105,10 @@ void tst_qquickflickable::stopAtBounds()
     else
         QCOMPARE(transpose ? flickable->isAtYBeginning() : flickable->isAtXBeginning(), false);
 
-    QCOMPARE(atXBeginningChangedSpy.count(), (!transpose && !invert) ? 1 : 0);
-    QCOMPARE(atYBeginningChangedSpy.count(), ( transpose && !invert) ? 1 : 0);
-    QCOMPARE(atXEndChangedSpy.count(),       (!transpose &&  invert) ? 1 : 0);
-    QCOMPARE(atYEndChangedSpy.count(),       ( transpose &&  invert) ? 1 : 0);
+    QCOMPARE(atXBeginningChangedSpy.size(), (!transpose && !invert) ? 1 : 0);
+    QCOMPARE(atYBeginningChangedSpy.size(), ( transpose && !invert) ? 1 : 0);
+    QCOMPARE(atXEndChangedSpy.size(),       (!transpose &&  invert) ? 1 : 0);
+    QCOMPARE(atYEndChangedSpy.size(),       ( transpose &&  invert) ? 1 : 0);
 
     // Drag away from the aligned boundary again.
     // None of the mouse movements will position the view at the boundary exactly,
@@ -2142,7 +2142,7 @@ void tst_qquickflickable::stopAtBounds()
     else
         flick(&view, QPoint(120,120), QPoint(20,20), 100);
 
-    QVERIFY(flickSignal.count() > 0);
+    QVERIFY(flickSignal.size() > 0);
     if (transpose) {
         if (invert)
             QTRY_COMPARE(flickable->isAtYBeginning(), true);
@@ -2313,22 +2313,22 @@ void tst_qquickflickable::contentSize()
     flickable.setWidth(100);
     QCOMPARE(flickable.width(), qreal(100));
     QCOMPARE(flickable.contentWidth(), qreal(-1.0));
-    QCOMPARE(cwspy.count(), 0);
+    QCOMPARE(cwspy.size(), 0);
 
     flickable.setContentWidth(10);
     QCOMPARE(flickable.width(), qreal(100));
     QCOMPARE(flickable.contentWidth(), qreal(10));
-    QCOMPARE(cwspy.count(), 1);
+    QCOMPARE(cwspy.size(), 1);
 
     flickable.setHeight(100);
     QCOMPARE(flickable.height(), qreal(100));
     QCOMPARE(flickable.contentHeight(), qreal(-1.0));
-    QCOMPARE(chspy.count(), 0);
+    QCOMPARE(chspy.size(), 0);
 
     flickable.setContentHeight(10);
     QCOMPARE(flickable.height(), qreal(100));
     QCOMPARE(flickable.contentHeight(), qreal(10));
-    QCOMPARE(chspy.count(), 1);
+    QCOMPARE(chspy.size(), 1);
 }
 
 // QTBUG-53726
@@ -2822,13 +2822,13 @@ void tst_qquickflickable::ignoreNonLeftMouseButtons() // QTBUG-96909
         QTest::mouseMove(&view, p1, 50);
     }
     QVERIFY(flickable->isDragging());
-    QCOMPARE(dragSpy.count(), 1);
+    QCOMPARE(dragSpy.size(), 1);
 
     // Press other button too, then release left button: dragging changes to false
     QTest::mousePress(&view, otherButton);
     QTest::mouseRelease(&view, Qt::LeftButton);
     QTRY_COMPARE(flickable->isDragging(), false);
-    QCOMPARE(dragSpy.count(), 2);
+    QCOMPARE(dragSpy.size(), 2);
 
     // Drag further with the other button held: Flickable ignores it
     for (int i = 0; i < 8; ++i) {
@@ -2836,11 +2836,11 @@ void tst_qquickflickable::ignoreNonLeftMouseButtons() // QTBUG-96909
         QTest::mouseMove(&view, p1, 50);
     }
     QCOMPARE(flickable->isDragging(), false);
-    QCOMPARE(dragSpy.count(), 2);
+    QCOMPARE(dragSpy.size(), 2);
 
     // Release other button: nothing happens
     QTest::mouseRelease(&view, otherButton);
-    QCOMPARE(dragSpy.count(), 2);
+    QCOMPARE(dragSpy.size(), 2);
 }
 
 void tst_qquickflickable::ignoreNonLeftMouseButtons_data()
@@ -2873,12 +2873,12 @@ void tst_qquickflickable::receiveTapOutsideContentItem()
 
     // Tap outside the content item in the top-left corner
     QTest::mouseClick(&window, Qt::LeftButton, {}, QPoint(5, 5));
-    QCOMPARE(clickedSpy.count(), 1);
+    QCOMPARE(clickedSpy.size(), 1);
 
     // Tap outside the content item in the bottom-right corner
     const QPoint bottomRight(flickable.contentItem()->width() + 5, flickable.contentItem()->height() + 5);
     QTest::mouseClick(&window, Qt::LeftButton, {}, bottomRight);
-    QCOMPARE(clickedSpy.count(), 2);
+    QCOMPARE(clickedSpy.size(), 2);
 }
 
 void tst_qquickflickable::flickWhenRotated_data()

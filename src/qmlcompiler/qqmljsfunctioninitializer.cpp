@@ -97,7 +97,7 @@ void QQmlJSFunctionInitializer::populateSignature(
         }
     }
 
-    for (int i = QQmlJSCompilePass::FirstArgument + function->argumentTypes.length();
+    for (int i = QQmlJSCompilePass::FirstArgument + function->argumentTypes.size();
          i < context->registerCountInFunction; ++i) {
         function->registerTypes.append(m_typeResolver->tracked(
                                            m_typeResolver->globalType(m_typeResolver->voidType())));

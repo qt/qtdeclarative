@@ -445,7 +445,7 @@ void tst_QQuickListView::items(const QUrl &source)
     QTRY_COMPARE(listview->count(), model.count());
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
     listview->forceLayout();
-    QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
+    QTRY_COMPARE(contentItem->childItems().size(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     // current item should be first item
     QTRY_COMPARE(listview->currentItem(), findItem<QQuickItem>(contentItem, "wrapper", 0));
@@ -563,7 +563,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
     model.insertItem(1, "Will", "9876");
 
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
-    QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
+    QTRY_COMPARE(contentItem->childItems().size(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     QQuickText *name = findItem<QQuickText>(contentItem, "textName", 1);
     QTRY_VERIFY(name != nullptr);
@@ -581,7 +581,7 @@ void tst_QQuickListView::inserted(const QUrl &source)
     model.insertItem(0, "Foo", "1111"); // zero index, and current item
 
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
-    QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
+    QTRY_COMPARE(contentItem->childItems().size(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     name = findItem<QQuickText>(contentItem, "textName", 0);
     QTRY_VERIFY(name != nullptr);
@@ -697,7 +697,7 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item && !QQuickItemPrivate::get(item)->culled) {
             firstVisibleIndex = i;
@@ -711,7 +711,7 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
     QQuickText *number;
     const qreal visibleFromPos = listview->contentY() - listview->displayMarginBeginning() - listview->cacheBuffer();
     const qreal visibleToPos = listview->contentY() + listview->height() + listview->displayMarginEnd() + listview->cacheBuffer();
-    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
@@ -885,7 +885,7 @@ void tst_QQuickListView::insertBeforeVisible()
     QTRY_COMPARE(listview->contentY(), 0.0 + itemsOffsetAfterMove);
 
     // Confirm items positioned correctly and indexes correct
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
@@ -976,7 +976,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     QTRY_COMPARE(number->text(), model.number(1));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -996,7 +996,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     QTRY_COMPARE(number->text(), model.number(0));
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -1009,7 +1009,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -1045,7 +1045,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -1079,7 +1079,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     QTRY_COMPARE(listview->count() , model.count());
 
     // Confirm items positioned correctly
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount-1; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i+1);
         if (!item) qWarning() << "Item" << i+1 << "not found";
@@ -1114,7 +1114,7 @@ void tst_QQuickListView::removed(const QUrl &source, bool /* animated */)
     listview->positionViewAtEnd();
     for (int i = 0; i < 18; ++i)
         model.removeItems(model.count() - 1, 1);
-    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() > 16);
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").size() > 16);
 }
 
 template <class T>
@@ -1170,7 +1170,7 @@ void tst_QQuickListView::removed_more(const QUrl &source, QQuickItemView::Vertic
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item && delegateVisible(item)) {
             firstVisibleIndex = i;
@@ -1182,7 +1182,7 @@ void tst_QQuickListView::removed_more(const QUrl &source, QQuickItemView::Vertic
     // Confirm items positioned correctly and indexes correct
     QQuickText *name;
     QQuickText *number;
-    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
@@ -1333,7 +1333,7 @@ void tst_QQuickListView::clear(const QUrl &source, QQuickItemView::VerticalLayou
 
     model.clear();
 
-    QTRY_COMPARE(findItems<QQuickListView>(contentItem, "wrapper").count(), 0);
+    QTRY_COMPARE(findItems<QQuickListView>(contentItem, "wrapper").size(), 0);
     QTRY_COMPARE(listview->count(), 0);
     QTRY_VERIFY(!listview->currentItem());
     if (verticalLayoutDirection == QQuickItemView::TopToBottom)
@@ -1402,7 +1402,7 @@ void tst_QQuickListView::moved(const QUrl &source, QQuickItemView::VerticalLayou
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item && delegateVisible(item)) {
             firstVisibleIndex = i;
@@ -1412,7 +1412,7 @@ void tst_QQuickListView::moved(const QUrl &source, QQuickItemView::VerticalLayou
     QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
-    for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
+    for (int i = firstVisibleIndex; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
@@ -1612,7 +1612,7 @@ void tst_QQuickListView::multipleChanges(bool condensed)
     QTRY_VERIFY(listview != nullptr);
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
-    for (int i=0; i<changes.count(); i++) {
+    for (int i=0; i<changes.size(); i++) {
         switch (changes[i].type) {
             case ListChange::Inserted:
             {
@@ -1651,7 +1651,7 @@ void tst_QQuickListView::multipleChanges(bool condensed)
     QQuickText *number;
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
@@ -2048,7 +2048,7 @@ void tst_QQuickListView::spacing()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -2060,7 +2060,7 @@ void tst_QQuickListView::spacing()
     QTRY_COMPARE(listview->spacing(), qreal(10));
 
     // Confirm items positioned correctly
-    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() == 11);
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").size() == 11);
     for (int i = 0; i < 11; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -2071,7 +2071,7 @@ void tst_QQuickListView::spacing()
     listview->setSpacing(0);
 
     // Confirm items positioned correctly
-    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").count() >= 16);
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").size() >= 16);
     for (int i = 0; i < 16; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -2105,7 +2105,7 @@ void tst_QQuickListView::sections(const QUrl &source)
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY(item);
@@ -2159,12 +2159,12 @@ void tst_QQuickListView::sections(const QUrl &source)
     listview->setContentY(140);
     QTRY_COMPARE(listview->currentSection(), QString("1"));
 
-    QTRY_COMPARE(currentSectionChangedSpy.count(), 1);
+    QTRY_COMPARE(currentSectionChangedSpy.size(), 1);
 
     listview->setContentY(20);
     QTRY_COMPARE(listview->currentSection(), QString("0"));
 
-    QTRY_COMPARE(currentSectionChangedSpy.count(), 2);
+    QTRY_COMPARE(currentSectionChangedSpy.size(), 2);
 
     item = findItem<QQuickItem>(contentItem, "wrapper", 1);
     QTRY_VERIFY(item);
@@ -2214,7 +2214,7 @@ void tst_QQuickListView::sectionsDelegate()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QTRY_VERIFY(item);
@@ -2256,7 +2256,7 @@ void tst_QQuickListView::sectionsDelegate()
 
     // QTBUG-17606
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "sect_1");
-    QCOMPARE(items.count(), 1);
+    QCOMPARE(items.size(), 1);
 
     // QTBUG-17759
     model.modifyItem(0, "One", "aaa");
@@ -2272,10 +2272,10 @@ void tst_QQuickListView::sectionsDelegate()
     model.modifyItem(10, "Two", "aaa");
     model.modifyItem(11, "Two", "aaa");
     QVERIFY(QQuickTest::qWaitForPolish(listview));
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "sect_aaa").count(), 1);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "sect_aaa").size(), 1);
     window->rootObject()->setProperty("sectionProperty", "name");
     // ensure view has settled.
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "sect_Four").count(), 1);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "sect_Four").size(), 1);
     for (int i = 0; i < 4; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem,
                 "sect_" + model.name(i*3));
@@ -2631,8 +2631,8 @@ void tst_QQuickListView::sectionDelegateChange()
 
     QQuickTest::qWaitForPolish(listview);
 
-    QVERIFY(findItems<QQuickItem>(contentItem, "section1").count() > 0);
-    QCOMPARE(findItems<QQuickItem>(contentItem, "section2").count(), 0);
+    QVERIFY(findItems<QQuickItem>(contentItem, "section1").size() > 0);
+    QCOMPARE(findItems<QQuickItem>(contentItem, "section2").size(), 0);
 
     for (int i = 0; i < 3; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "item", i);
@@ -2643,8 +2643,8 @@ void tst_QQuickListView::sectionDelegateChange()
     QMetaObject::invokeMethod(window->rootObject(), "switchDelegates");
     QQuickTest::qWaitForPolish(listview);
 
-    QCOMPARE(findItems<QQuickItem>(contentItem, "section1").count(), 0);
-    QVERIFY(findItems<QQuickItem>(contentItem, "section2").count() > 0);
+    QCOMPARE(findItems<QQuickItem>(contentItem, "section1").size(), 0);
+    QVERIFY(findItems<QQuickItem>(contentItem, "section2").size() > 0);
 
     for (int i = 0; i < 3; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "item", i);
@@ -2691,7 +2691,7 @@ void tst_QQuickListView::sectionsItemInsertion()
 
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     QVERIFY(itemCount > 10);
 
     // Verify that the new items are postioned correctly, and have the correct attached section properties
@@ -2791,7 +2791,7 @@ void tst_QQuickListView::currentIndex_delayedItemCreation()
     QSignalSpy spy(listview, SIGNAL(currentItemChanged()));
     //QCOMPARE(listview->currentIndex(), 0);
     listview->forceLayout();
-    QTRY_COMPARE(spy.count(), 1);
+    QTRY_COMPARE(spy.size(), 1);
 
     releaseView(window);
 }
@@ -3193,7 +3193,7 @@ void tst_QQuickListView::cacheBuffer()
     QTRY_VERIFY(listview->highlight() != nullptr);
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -3224,7 +3224,7 @@ void tst_QQuickListView::cacheBuffer()
     }
 
     int newItemCount = 0;
-    newItemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    newItemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
 
     // Confirm items positioned correctly
     for (int i = 0; i < model.count() && i < newItemCount; ++i) {
@@ -3360,7 +3360,7 @@ void tst_QQuickListView::positionViewAtIndex()
     QTRY_COMPARE(listview->contentY(), contentY);
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = index; i < model.count() && i < itemCount-index-1; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -3493,13 +3493,13 @@ void tst_QQuickListView::propertyChanges()
     QTRY_COMPARE(listView->cacheBuffer(), 3);
     QTRY_COMPARE(listView->snapMode(), QQuickListView::SnapOneItem);
 
-    QTRY_COMPARE(highlightFollowsCurrentItemSpy.count(),1);
-    QTRY_COMPARE(preferredHighlightBeginSpy.count(),1);
-    QTRY_COMPARE(preferredHighlightEndSpy.count(),1);
-    QTRY_COMPARE(highlightRangeModeSpy.count(),1);
-    QTRY_COMPARE(keyNavigationWrapsSpy.count(),1);
-    QTRY_COMPARE(cacheBufferSpy.count(),1);
-    QTRY_COMPARE(snapModeSpy.count(),1);
+    QTRY_COMPARE(highlightFollowsCurrentItemSpy.size(),1);
+    QTRY_COMPARE(preferredHighlightBeginSpy.size(),1);
+    QTRY_COMPARE(preferredHighlightEndSpy.size(),1);
+    QTRY_COMPARE(highlightRangeModeSpy.size(),1);
+    QTRY_COMPARE(keyNavigationWrapsSpy.size(),1);
+    QTRY_COMPARE(cacheBufferSpy.size(),1);
+    QTRY_COMPARE(snapModeSpy.size(),1);
 
     listView->setHighlightFollowsCurrentItem(false);
     listView->setPreferredHighlightBegin(1.0);
@@ -3509,13 +3509,13 @@ void tst_QQuickListView::propertyChanges()
     listView->setCacheBuffer(3);
     listView->setSnapMode(QQuickListView::SnapOneItem);
 
-    QTRY_COMPARE(highlightFollowsCurrentItemSpy.count(),1);
-    QTRY_COMPARE(preferredHighlightBeginSpy.count(),1);
-    QTRY_COMPARE(preferredHighlightEndSpy.count(),1);
-    QTRY_COMPARE(highlightRangeModeSpy.count(),1);
-    QTRY_COMPARE(keyNavigationWrapsSpy.count(),1);
-    QTRY_COMPARE(cacheBufferSpy.count(),1);
-    QTRY_COMPARE(snapModeSpy.count(),1);
+    QTRY_COMPARE(highlightFollowsCurrentItemSpy.size(),1);
+    QTRY_COMPARE(preferredHighlightBeginSpy.size(),1);
+    QTRY_COMPARE(preferredHighlightEndSpy.size(),1);
+    QTRY_COMPARE(highlightRangeModeSpy.size(),1);
+    QTRY_COMPARE(keyNavigationWrapsSpy.size(),1);
+    QTRY_COMPARE(cacheBufferSpy.size(),1);
+    QTRY_COMPARE(snapModeSpy.size(),1);
 }
 
 void tst_QQuickListView::componentChanges()
@@ -3547,20 +3547,20 @@ void tst_QQuickListView::componentChanges()
     QTRY_COMPARE(listView->footer(), &component);
     QTRY_COMPARE(listView->delegate(), &delegateComponent);
 
-    QTRY_COMPARE(highlightSpy.count(),1);
-    QTRY_COMPARE(delegateSpy.count(),1);
-    QTRY_COMPARE(headerSpy.count(),1);
-    QTRY_COMPARE(footerSpy.count(),1);
+    QTRY_COMPARE(highlightSpy.size(),1);
+    QTRY_COMPARE(delegateSpy.size(),1);
+    QTRY_COMPARE(headerSpy.size(),1);
+    QTRY_COMPARE(footerSpy.size(),1);
 
     listView->setHighlight(&component);
     listView->setHeader(&component);
     listView->setFooter(&component);
     listView->setDelegate(&delegateComponent);
 
-    QTRY_COMPARE(highlightSpy.count(),1);
-    QTRY_COMPARE(delegateSpy.count(),1);
-    QTRY_COMPARE(headerSpy.count(),1);
-    QTRY_COMPARE(footerSpy.count(),1);
+    QTRY_COMPARE(highlightSpy.size(),1);
+    QTRY_COMPARE(delegateSpy.size(),1);
+    QTRY_COMPARE(headerSpy.size(),1);
+    QTRY_COMPARE(footerSpy.size(),1);
 }
 
 void tst_QQuickListView::modelChanges()
@@ -3578,13 +3578,13 @@ void tst_QQuickListView::modelChanges()
 
     listView->setModel(modelVariant);
     QTRY_COMPARE(listView->model(), modelVariant);
-    QTRY_COMPARE(modelSpy.count(),1);
+    QTRY_COMPARE(modelSpy.size(),1);
 
     listView->setModel(modelVariant);
-    QTRY_COMPARE(modelSpy.count(),1);
+    QTRY_COMPARE(modelSpy.size(),1);
 
     listView->setModel(QVariant());
-    QTRY_COMPARE(modelSpy.count(),2);
+    QTRY_COMPARE(modelSpy.size(),2);
 }
 
 void tst_QQuickListView::QTBUG_9791()
@@ -3606,7 +3606,7 @@ void tst_QQuickListView::QTBUG_9791()
     qApp->processEvents();
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).size();
     QCOMPARE(itemCount, 3);
 
     for (int i = 0; i < itemCount; ++i) {
@@ -3635,12 +3635,12 @@ void tst_QQuickListView::QTBUG_33568()
 
     listview->incrementCurrentIndex();
     QTRY_COMPARE(listview->contentY(), -100.0);
-    QVERIFY(spy.count() > 1);
+    QVERIFY(spy.size() > 1);
 
     spy.clear();
     listview->incrementCurrentIndex();
     QTRY_COMPARE(listview->contentY(), -50.0);
-    QVERIFY(spy.count() > 1);
+    QVERIFY(spy.size() > 1);
 }
 
 void tst_QQuickListView::manualHighlight()
@@ -3702,7 +3702,7 @@ void tst_QQuickListView::QTBUG_11105()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -3719,7 +3719,7 @@ void tst_QQuickListView::QTBUG_11105()
 
     ctxt->setContextProperty("testModel", &model2);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     QCOMPARE(itemCount, 5);
 }
 
@@ -3827,7 +3827,7 @@ void tst_QQuickListView::header()
     QSignalSpy headerItemSpy(listview, SIGNAL(headerItemChanged()));
     QMetaObject::invokeMethod(window->rootObject(), "changeHeader");
 
-    QCOMPARE(headerItemSpy.count(), 1);
+    QCOMPARE(headerItemSpy.size(), 1);
 
     header = findItem<QQuickText>(contentItem, "header");
     QVERIFY(!header);
@@ -4086,7 +4086,7 @@ void tst_QQuickListView::footer()
     QSignalSpy footerItemSpy(listview, SIGNAL(footerItemChanged()));
     QMetaObject::invokeMethod(window->rootObject(), "changeFooter");
 
-    QCOMPARE(footerItemSpy.count(), 1);
+    QCOMPARE(footerItemSpy.size(), 1);
 
     footer = findItem<QQuickText>(contentItem, "footer");
     QVERIFY(!footer);
@@ -4373,7 +4373,7 @@ void tst_QQuickListView::resizeView()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -4393,16 +4393,16 @@ void tst_QQuickListView::resizeView()
 
     // Ensure we handle -ve sizes
     listview->setHeight(-100);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 1);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 1);
 
     listview->setCacheBuffer(200);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 11);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 11);
 
     // ensure items in cache become visible
     listview->setHeight(200);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 21);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 21);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -4413,9 +4413,9 @@ void tst_QQuickListView::resizeView()
 
     // ensure items outside view become invisible
     listview->setHeight(100);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).count(), 16);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper", false).size(), 16);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper", false).size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -4484,7 +4484,7 @@ void tst_QQuickListView::sizeLessThan1()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Confirm items positioned correctly
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -4629,7 +4629,7 @@ void tst_QQuickListView::resizeFirstDelegate()
     QCOMPARE(listview->contentY(), 0.0);
     QSignalSpy spy(listview, SIGNAL(contentYChanged()));
     QTest::qWait(100);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     for (int i = 1; i < model.count(); ++i) {
         item = findItem<QQuickItem>(contentItem, "wrapper", i);
@@ -4697,13 +4697,13 @@ void tst_QQuickListView::repositionResizedDelegate()
     listview->setContentX(contentPos_itemFirstHalfVisible.x());
     listview->setContentY(contentPos_itemFirstHalfVisible.y());
     QVERIFY(QQuickTest::qWaitForPolish(listview));
-    prevSpyCount = spy.count();
+    prevSpyCount = spy.size();
     QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "incrementRepeater"));
     QTRY_COMPARE(positioner->boundingRect().size(), resizedPositionerRect.size());
     QTRY_COMPARE(positioner->position(), resizedPositionerRect.topLeft());
     QCOMPARE(listview->contentX(), contentPos_itemFirstHalfVisible.x());
     QCOMPARE(listview->contentY(), contentPos_itemFirstHalfVisible.y());
-    QCOMPARE(spy.count(), prevSpyCount);
+    QCOMPARE(spy.size(), prevSpyCount);
 
     QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "decrementRepeater"));
     QTRY_COMPARE(positioner->boundingRect().size(), origPositionerRect.size());
@@ -4714,7 +4714,7 @@ void tst_QQuickListView::repositionResizedDelegate()
     listview->setContentX(contentPos_itemSecondHalfVisible.x());
     listview->setContentY(contentPos_itemSecondHalfVisible.y());
     QVERIFY(QQuickTest::qWaitForPolish(listview));
-    prevSpyCount = spy.count();
+    prevSpyCount = spy.size();
 
     QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "incrementRepeater"));
     positioner = findItem<QQuickItem>(window->rootObject(), "positioner");
@@ -4723,7 +4723,7 @@ void tst_QQuickListView::repositionResizedDelegate()
     QCOMPARE(listview->contentX(), contentPos_itemSecondHalfVisible.x());
     QCOMPARE(listview->contentY(), contentPos_itemSecondHalfVisible.y());
     qApp->processEvents();
-    QCOMPARE(spy.count(), prevSpyCount);
+    QCOMPARE(spy.size(), prevSpyCount);
 
     releaseView(window);
 }
@@ -4913,8 +4913,8 @@ void tst_QQuickListView::onAdd()
     QTRY_COMPARE(listview->property("count").toInt(), model.count());
 
     QVariantList result = listview->property("addedDelegates").toList();
-    QCOMPARE(result.count(), items.count());
-    for (int i=0; i<items.count(); i++)
+    QCOMPARE(result.size(), items.size());
+    for (int i=0; i<items.size(); i++)
         QCOMPARE(result[i].toString(), items[i].first);
 }
 
@@ -6021,7 +6021,7 @@ void tst_QQuickListView::snapOneItemResize_QTBUG_43555()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     QTRY_COMPARE(listview->currentIndex(), 5);
-    QCOMPARE(currentIndexSpy.count(), 0);
+    QCOMPARE(currentIndexSpy.size(), 0);
 }
 
 void tst_QQuickListView::qAbstractItemModel_package_items()
@@ -6345,7 +6345,7 @@ void tst_QQuickListView::snapOneItem()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(listview->currentIndex(), 1);
-        QCOMPARE(currentIndexSpy.count(), 1);
+        QCOMPARE(currentIndexSpy.size(), 1);
     }
 
     // flick to end
@@ -6363,7 +6363,7 @@ void tst_QQuickListView::snapOneItem()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(listview->currentIndex(), 3);
-        QCOMPARE(currentIndexSpy.count(), 3);
+        QCOMPARE(currentIndexSpy.size(), 3);
     }
 
     // flick to start
@@ -6381,7 +6381,7 @@ void tst_QQuickListView::snapOneItem()
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(listview->currentIndex(), 0);
-        QCOMPARE(currentIndexSpy.count(), 6);
+        QCOMPARE(currentIndexSpy.size(), 6);
     }
 
     releaseView(window);
@@ -6407,7 +6407,7 @@ void tst_QQuickListView::snapOneItemCurrentIndexRemoveAnimation()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     QCOMPARE(listview->currentIndex(), 0);
-    QCOMPARE(currentIndexSpy.count(), 0);
+    QCOMPARE(currentIndexSpy.size(), 0);
 }
 
 void tst_QQuickListView::snapOneItemWrongDirection()
@@ -6711,7 +6711,7 @@ void tst_QQuickListView::populateTransitions()
         QCOMPARE(listview->property("countAddTransitions").toInt(), 0);
     }
 
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
@@ -6734,7 +6734,7 @@ void tst_QQuickListView::populateTransitions()
     window->rootContext()->setContextProperty("testModel", QVariant());
     listview->forceLayout();
     QTRY_COMPARE(listview->count(), 0);
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").size(), 0);
     listview->setProperty("countPopulateTransitions", 0);
     listview->setProperty("countAddTransitions", 0);
 
@@ -6746,7 +6746,7 @@ void tst_QQuickListView::populateTransitions()
     QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 16 : 0);
     QTRY_COMPARE(listview->property("countAddTransitions").toInt(), 0);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
@@ -6764,7 +6764,7 @@ void tst_QQuickListView::populateTransitions()
     QTRY_COMPARE(listview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 16 : 0);
     QTRY_COMPARE(listview->property("countAddTransitions").toInt(), 0);
 
-    itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
@@ -6903,7 +6903,7 @@ void tst_QQuickListView::addTransitions()
                 targetIndexes << i;
             }
         }
-        QVERIFY(expectedTargetData.count() > 0);
+        QVERIFY(expectedTargetData.size() > 0);
     }
 
     // start animation
@@ -6916,7 +6916,7 @@ void tst_QQuickListView::addTransitions()
     QList<QQuickItem *> targetItems = findItems<QQuickItem>(contentItem, "wrapper", targetIndexes);
 
     if (shouldAnimateTargets) {
-        QTRY_COMPARE(listview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+        QTRY_COMPARE(listview->property("targetTransitionsDone").toInt(), expectedTargetData.size());
         QTRY_COMPARE(listview->property("displaceTransitionsDone").toInt(),
                      expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
 
@@ -6943,8 +6943,8 @@ void tst_QQuickListView::addTransitions()
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    int itemCount = items.count();
-    for (int i=0; i<items.count(); i++) {
+    int itemCount = items.size();
+    for (int i=0; i<items.size(); i++) {
         if (items[i]->y() >= contentY) {
             QQmlExpression e(qmlContext(items[i]), items[i], "index");
             firstVisibleIndex = e.evaluate().toInt();
@@ -7103,7 +7103,7 @@ void tst_QQuickListView::moveTransitions()
     // start animation
     model.moveItems(moveFrom, moveTo, moveCount);
 
-    QTRY_COMPARE(listview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+    QTRY_COMPARE(listview->property("targetTransitionsDone").toInt(), expectedTargetData.size());
     QTRY_COMPARE(listview->property("displaceTransitionsDone").toInt(),
                  expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
 
@@ -7127,7 +7127,7 @@ void tst_QQuickListView::moveTransitions()
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         if (items[i]->y() >= contentY) {
             QQmlExpression e(qmlContext(items[i]), items[i], "index");
             firstVisibleIndex = e.evaluate().toInt();
@@ -7137,7 +7137,7 @@ void tst_QQuickListView::moveTransitions()
     QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // verify all items moved to the correct final positions
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
+    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").size();
     for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
@@ -7297,13 +7297,13 @@ void tst_QQuickListView::removeTransitions()
                 targetIndexes << i;
             }
         }
-        QVERIFY(expectedTargetData.count() > 0);
+        QVERIFY(expectedTargetData.size() > 0);
     }
 
     // calculate targetItems and expectedTargets before model changes
     QList<QQuickItem *> targetItems = findItems<QQuickItem>(contentItem, "wrapper", targetIndexes);
     QVariantMap expectedTargets;
-    for (int i=0; i<targetIndexes.count(); i++)
+    for (int i=0; i<targetIndexes.size(); i++)
         expectedTargets[model.name(targetIndexes[i])] = targetIndexes[i];
 
     // start animation
@@ -7311,7 +7311,7 @@ void tst_QQuickListView::removeTransitions()
     QTRY_COMPARE(model.count(), listview->count());
 
     if (shouldAnimateTargets) {
-        QTRY_COMPARE(listview->property("targetTransitionsDone").toInt(), expectedTargetData.count());
+        QTRY_COMPARE(listview->property("targetTransitionsDone").toInt(), expectedTargetData.size());
         QTRY_COMPARE(listview->property("displaceTransitionsDone").toInt(),
                      expectedDisplacedIndexes.isValid() ? expectedDisplacedIndexes.count() : 0);
 
@@ -7337,9 +7337,9 @@ void tst_QQuickListView::removeTransitions()
 
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
-    int itemCount = items.count();
+    int itemCount = items.size();
 
-    for (int i=0; i<items.count(); i++) {
+    for (int i=0; i<items.size(); i++) {
         QQmlExpression e(qmlContext(items[i]), items[i], "index");
         int index = e.evaluate().toInt();
         if (firstVisibleIndex < 0 && items[i]->y() >= contentY)
@@ -7528,15 +7528,15 @@ void tst_QQuickListView::displacedTransitions()
         QTRY_VERIFY(listview->property("displaceTransitionsDone").toBool());
 
         // check the correct number of target items and indexes were received
-        QCOMPARE(resultTargetIndexes.count(), expectedDisplacedIndexes.count());
-        for (int i=0; i<resultTargetIndexes.count(); i++)
-            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().count(), change.count);
-        QCOMPARE(resultTargetItems.count(), expectedDisplacedIndexes.count());
-        for (int i=0; i<resultTargetItems.count(); i++)
-            QCOMPARE(resultTargetItems[i].toList().count(), change.count);
+        QCOMPARE(resultTargetIndexes.size(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetIndexes.size(); i++)
+            QCOMPARE(resultTargetIndexes[i].value<QList<int> >().size(), change.count);
+        QCOMPARE(resultTargetItems.size(), expectedDisplacedIndexes.count());
+        for (int i=0; i<resultTargetItems.size(); i++)
+            QCOMPARE(resultTargetItems[i].toList().size(), change.count);
     } else {
-        QCOMPARE(resultTargetIndexes.count(), 0);
-        QCOMPARE(resultTargetItems.count(), 0);
+        QCOMPARE(resultTargetIndexes.size(), 0);
+        QCOMPARE(resultTargetItems.size(), 0);
     }
 
     if (change.type == ListChange::Inserted && useAddDisplaced && addDisplacedEnabled)
@@ -7563,7 +7563,7 @@ void tst_QQuickListView::displacedTransitions()
 
     // verify all items moved to the correct final positions
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    for (int i=0; i < model.count() && i < items.count(); ++i) {
+    for (int i=0; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->x(), 0.0);
@@ -7717,7 +7717,7 @@ void tst_QQuickListView::multipleTransitions()
 
     int timeBetweenActions = window->rootObject()->property("timeBetweenActions").toInt();
 
-    for (int i=0; i<changes.count(); i++) {
+    for (int i=0; i<changes.size(); i++) {
         switch (changes[i].type) {
             case ListChange::Inserted:
             {
@@ -7726,7 +7726,7 @@ void tst_QQuickListView::multipleTransitions()
                     targetItems << qMakePair(QString("new item %1").arg(j), QString::number(j));
                 model.insertItems(changes[i].index, targetItems);
                 QTRY_COMPARE(model.count(), listview->count());
-                if (i == changes.count() - 1) {
+                if (i == changes.size() - 1) {
                     QTRY_VERIFY(!listview->property("runningAddTargets").toBool());
                     QTRY_VERIFY(!listview->property("runningAddDisplaced").toBool());
                 } else {
@@ -7737,7 +7737,7 @@ void tst_QQuickListView::multipleTransitions()
             case ListChange::Removed:
                 model.removeItems(changes[i].index, changes[i].count);
                 QTRY_COMPARE(model.count(), listview->count());
-                if (i == changes.count() - 1) {
+                if (i == changes.size() - 1) {
                     QTRY_VERIFY(!listview->property("runningRemoveTargets").toBool());
                     QTRY_VERIFY(!listview->property("runningRemoveDisplaced").toBool());
                 } else {
@@ -7747,7 +7747,7 @@ void tst_QQuickListView::multipleTransitions()
             case ListChange::Moved:
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
                 QVERIFY(QQuickTest::qWaitForPolish(listview));
-                if (i == changes.count() - 1) {
+                if (i == changes.size() - 1) {
                     QTRY_VERIFY(!listview->property("runningMoveTargets").toBool());
                     QTRY_VERIFY(!listview->property("runningMoveDisplaced").toBool());
                 } else {
@@ -7771,7 +7771,7 @@ void tst_QQuickListView::multipleTransitions()
 
     // verify all items moved to the correct final positions
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    for (int i=0; i < model.count() && i < items.count(); ++i) {
+    for (int i=0; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
@@ -7880,7 +7880,7 @@ void tst_QQuickListView::multipleDisplaced()
 
     // verify all items moved to the correct final positions
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
-    for (int i=0; i < model.count() && i < items.count(); ++i) {
+    for (int i=0; i < model.count() && i < items.size(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
@@ -7897,7 +7897,7 @@ QList<int> tst_QQuickListView::toIntList(const QVariantList &list)
 {
     QList<int> ret;
     bool ok = true;
-    for (int i=0; i<list.count(); i++) {
+    for (int i=0; i<list.size(); i++) {
         ret << list[i].toInt(&ok);
         if (!ok)
             qWarning() << "tst_QQuickListView::toIntList(): not a number:" << list[i];
@@ -7909,7 +7909,7 @@ QList<int> tst_QQuickListView::toIntList(const QVariantList &list)
 void tst_QQuickListView::matchIndexLists(const QVariantList &indexLists, const QList<int> &expectedIndexes)
 {
     const QSet<int> expectedIndexSet(expectedIndexes.cbegin(), expectedIndexes.cend());
-    for (int i=0; i<indexLists.count(); i++) {
+    for (int i=0; i<indexLists.size(); i++) {
         const auto &currentList = indexLists[i].value<QList<int> >();
         const QSet<int> current(currentList.cbegin(), currentList.cend());
         if (current != expectedIndexSet)
@@ -7929,20 +7929,20 @@ void tst_QQuickListView::matchItemsAndIndexes(const QVariantMap &items, const Qa
             qDebug() << itemIndex;
         QCOMPARE(model.name(itemIndex), name);
     }
-    QCOMPARE(items.count(), expectedIndexes.count());
+    QCOMPARE(items.size(), expectedIndexes.size());
 }
 
 void tst_QQuickListView::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
 {
-    for (int i=0; i<itemLists.count(); i++) {
+    for (int i=0; i<itemLists.size(); i++) {
         QCOMPARE(itemLists[i].typeId(), QMetaType::QVariantList);
         QVariantList current = itemLists[i].toList();
-        for (int j=0; j<current.count(); j++) {
+        for (int j=0; j<current.size(); j++) {
             QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());
             QVERIFY2(o, qPrintable(QString("Invalid actual item at %1").arg(j)));
             QVERIFY2(expectedItems.contains(o), qPrintable(QString("Cannot match item %1").arg(j)));
         }
-        QCOMPARE(current.count(), expectedItems.count());
+        QCOMPARE(current.size(), expectedItems.size());
     }
 }
 
@@ -7972,7 +7972,7 @@ void tst_QQuickListView::flickBeyondBounds()
 
     // We're really testing that we don't get stuck in a loop,
     // but also confirm items positioned correctly.
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 2);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").size(), 2);
     for (int i = 0; i < 2; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (!item) qWarning() << "Item" << i << "not found";
@@ -8079,7 +8079,7 @@ void tst_QQuickListView::destroyItemOnCreation()
     model.addItem("new item", "");
     QTRY_COMPARE(window->rootObject()->property("createdIndex").toInt(), 0);
 
-    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
+    QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").size(), 0);
     QCOMPARE(model.count(), 0);
 }
 
@@ -9070,11 +9070,11 @@ void tst_QQuickListView::jsArrayChange()
     }
 
     view->setModel(QVariant::fromValue(array1));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // no change
     view->setModel(QVariant::fromValue(array2));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 static bool compareObjectModel(QQuickListView *listview, QQmlObjectModel *model)
@@ -9259,7 +9259,7 @@ void tst_QQuickListView::keyNavigationEnabled()
     // of disabling both mouse and keyboard interaction.
     QSignalSpy enabledSpy(listView, SIGNAL(keyNavigationEnabledChanged()));
     listView->setInteractive(false);
-    QCOMPARE(enabledSpy.count(), 1);
+    QCOMPARE(enabledSpy.size(), 1);
     QCOMPARE(listView->isKeyNavigationEnabled(), false);
 
     flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
@@ -9272,17 +9272,17 @@ void tst_QQuickListView::keyNavigationEnabled()
 
     // Check that isKeyNavigationEnabled implicitly follows the value of interactive.
     listView->setInteractive(true);
-    QCOMPARE(enabledSpy.count(), 2);
+    QCOMPARE(enabledSpy.size(), 2);
     QCOMPARE(listView->isKeyNavigationEnabled(), true);
 
     // Change it back again for the next check.
     listView->setInteractive(false);
-    QCOMPARE(enabledSpy.count(), 3);
+    QCOMPARE(enabledSpy.size(), 3);
     QCOMPARE(listView->isKeyNavigationEnabled(), false);
 
     // Setting keyNavigationEnabled to true shouldn't enable mouse interaction.
     listView->setKeyNavigationEnabled(true);
-    QCOMPARE(enabledSpy.count(), 4);
+    QCOMPARE(enabledSpy.size(), 4);
     flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
     QVERIFY(!listView->isMoving());
     QCOMPARE(listView->contentY(), 0.0);
@@ -9296,7 +9296,7 @@ void tst_QQuickListView::keyNavigationEnabled()
     // Changing interactive now shouldn't result in keyNavigationEnabled changing,
     // since we broke the "binding".
     listView->setInteractive(true);
-    QCOMPARE(enabledSpy.count(), 4);
+    QCOMPARE(enabledSpy.size(), 4);
 
     // Keyboard interaction shouldn't work now.
     listView->setKeyNavigationEnabled(false);
@@ -9504,7 +9504,7 @@ void tst_QQuickListView::QTBUG_66163_setModelViewPortSizeChange()
     QTest::qWait(1100); // animation takes 1000ms, + 10% extra delay
     /* the viewport should not have changed, thus there should not have
        been any contentYChanged signal*/
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 }
 
 void tst_QQuickListView::itemFiltered()
@@ -9575,7 +9575,7 @@ void tst_QQuickListView::QTBUG_34576_velocityZero()
     window->rootObject()->setProperty("horizontalVelocityZeroCount", QVariant(0));
     listview->setCurrentIndex(2);
     QTRY_COMPARE(window->rootObject()->property("current").toInt(), 2);
-    QCOMPARE(horizontalVelocitySpy.count(), 0);
+    QCOMPARE(horizontalVelocitySpy.size(), 0);
     QCOMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
 
     QSignalSpy currentIndexChangedSpy(listview, SIGNAL(currentIndexChanged()));
@@ -9585,11 +9585,11 @@ void tst_QQuickListView::QTBUG_34576_velocityZero()
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(295,215));
 
     // verify that currentIndexChanged is triggered
-    QTRY_VERIFY(currentIndexChangedSpy.count() > 0);
+    QTRY_VERIFY(currentIndexChangedSpy.size() > 0);
 
     // since we have set currentIndex to an item out of view, the listview will scroll
     QTRY_COMPARE(window->rootObject()->property("current").toInt(), 3);
-    QTRY_VERIFY(horizontalVelocitySpy.count() > 0);
+    QTRY_VERIFY(horizontalVelocitySpy.size() > 0);
 
     // velocity should be always > 0.0
     QTRY_COMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
@@ -9618,7 +9618,7 @@ void tst_QQuickListView::QTBUG_61537_modelChangesAsync()
     // Check that the number of delegates we expect to be visible in
     // the listview matches the number of items we find if we count.
     int reportedCount = listView->count();
-    int actualCount = findItems<QQuickItem>(listView, "delegate").count();
+    int actualCount = findItems<QQuickItem>(listView, "delegate").size();
     QCOMPARE(reportedCount, actualCount);
 }
 
@@ -9749,7 +9749,7 @@ public:
         m_animals.push_back(Animal {5, QLatin1String("Cherry")});
     }
 
-    int rowCount(const QModelIndex & = QModelIndex()) const override {return m_animals.count();}
+    int rowCount(const QModelIndex & = QModelIndex()) const override {return m_animals.size();}
 
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override {
         if (!checkIndex(index))
@@ -9865,7 +9865,7 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
     QVERIFY(listView->reuseItems());
 
     auto items = findItems<QQuickItem>(listView, "delegate");
-    const int initialItemCount = items.count();
+    const int initialItemCount = items.size();
     QVERIFY(initialItemCount > 0);
 
     // Sanity check that the size of the initial list of items match the count we tracked from QML
@@ -10090,9 +10090,9 @@ void tst_QQuickListView::requiredObjectListModel()
     const auto *root = qobject_cast<QQuickListView *>(view.rootObject());
     QVERIFY(root);
 
-    QCOMPARE(root->count(), dataList.count());
+    QCOMPARE(root->count(), dataList.size());
 
-    for (int i = 0, end = dataList.count(); i != end; ++i) {
+    for (int i = 0, end = dataList.size(); i != end; ++i) {
         const auto *rect = qobject_cast<QQuickRectangle *>(root->itemAtIndex(i));
         QVERIFY(rect);
         const auto *data = qobject_cast<DataObject *>(dataList.at(i));

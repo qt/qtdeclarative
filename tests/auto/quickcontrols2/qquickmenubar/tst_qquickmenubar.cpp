@@ -568,19 +568,19 @@ void tst_qquickmenubar::mnemonics()
 
     // trigger a menu item to close the menu, which shouldn't trigger a button
     // action behind the menu (QTBUG-86276)
-    QCOMPARE(oopsButtonSpy.count(), 0);
+    QCOMPARE(oopsButtonSpy.size(), 0);
     keySim.click(Qt::Key_O); // "&Open..."
     keySim.release(Qt::Key_Alt);
     QVERIFY(!fileMenuBarItem->isHighlighted());
     QVERIFY(!fileMenuBarMenu->isOpened());
     QTRY_VERIFY(!fileMenuBarMenu->isVisible());
-    QCOMPARE(oopsButtonSpy.count(), 0);
+    QCOMPARE(oopsButtonSpy.size(), 0);
 
     // trigger a button action while menu is closed
     keySim.press(Qt::Key_Alt);
     keySim.click(Qt::Key_O); // "&Oops"
     keySim.release(Qt::Key_Alt);
-    QCOMPARE(oopsButtonSpy.count(), 1);
+    QCOMPARE(oopsButtonSpy.size(), 1);
 }
 
 void tst_qquickmenubar::addRemove()

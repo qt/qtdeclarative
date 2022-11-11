@@ -161,7 +161,7 @@ void QQuickSpriteSequence::createEngine()
     //TODO: delay until component complete
     if (d->m_spriteEngine)
         delete d->m_spriteEngine;
-    if (d->m_sprites.count()) {
+    if (d->m_sprites.size()) {
         d->m_spriteEngine = new QQuickSpriteEngine(d->m_sprites, this);
         if (!d->m_goalState.isEmpty())
             d->m_spriteEngine->setGoal(d->m_spriteEngine->stateIndex(d->m_goalState));

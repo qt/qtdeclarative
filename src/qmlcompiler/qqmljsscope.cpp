@@ -397,10 +397,10 @@ QTypeRevision QQmlJSScope::resolveType(
 
         const auto paramTypeNames = it->parameterTypeNames();
         QList<QSharedPointer<const QQmlJSScope>> paramTypes = it->parameterTypes();
-        if (paramTypes.length() < paramTypeNames.length())
-            paramTypes.resize(paramTypeNames.length());
+        if (paramTypes.size() < paramTypeNames.size())
+            paramTypes.resize(paramTypeNames.size());
 
-        for (int i = 0, length = paramTypes.length(); i < length; ++i) {
+        for (int i = 0, length = paramTypes.size(); i < length; ++i) {
             auto &paramType = paramTypes[i];
             const auto paramTypeName = paramTypeNames[i];
             if (!paramType && !paramTypeName.isEmpty()) {

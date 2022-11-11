@@ -154,7 +154,7 @@ void QQuickLabsPlatformMenuBar::setWindow(QWindow *window)
 */
 void QQuickLabsPlatformMenuBar::addMenu(QQuickLabsPlatformMenu *menu)
 {
-    insertMenu(m_menus.count(), menu);
+    insertMenu(m_menus.size(), menu);
 }
 
 /*!
@@ -257,7 +257,7 @@ void QQuickLabsPlatformMenuBar::data_append(QQmlListProperty<QObject> *property,
 qsizetype QQuickLabsPlatformMenuBar::data_count(QQmlListProperty<QObject> *property)
 {
     QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
-    return menuBar->m_data.count();
+    return menuBar->m_data.size();
 }
 
 QObject *QQuickLabsPlatformMenuBar::data_at(QQmlListProperty<QObject> *property, qsizetype index)
@@ -281,7 +281,7 @@ void QQuickLabsPlatformMenuBar::menus_append(QQmlListProperty<QQuickLabsPlatform
 qsizetype QQuickLabsPlatformMenuBar::menus_count(QQmlListProperty<QQuickLabsPlatformMenu> *property)
 {
     QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
-    return menuBar->m_menus.count();
+    return menuBar->m_menus.size();
 }
 
 QQuickLabsPlatformMenu *QQuickLabsPlatformMenuBar::menus_at(QQmlListProperty<QQuickLabsPlatformMenu> *property, qsizetype index)

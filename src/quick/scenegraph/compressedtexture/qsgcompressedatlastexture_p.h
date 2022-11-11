@@ -63,7 +63,7 @@ public:
     QSGTexture *removedFromAtlas(QRhiResourceUpdateBatch *) const override;
 
     const QByteArray &data() const { return m_data; }
-    int sizeInBytes() const { return m_data.length(); }
+    int sizeInBytes() const { return m_data.size(); }
 
 private:
     QRectF m_texture_coords_rect;

@@ -286,7 +286,7 @@ public:
     void setImports(const QList<Import> &imports) { m_imports = imports; }
     Path addImport(const Import &i)
     {
-        index_type idx = index_type(m_imports.length());
+        index_type idx = index_type(m_imports.size());
         m_imports.append(i);
         if (i.uri.isModule()) {
             m_importScope.addImport((i.importId.isEmpty()
@@ -313,7 +313,7 @@ public:
     void setPragmas(QList<Pragma> pragmas) { m_pragmas = pragmas; }
     Path addPragma(const Pragma &pragma)
     {
-        int idx = m_pragmas.length();
+        int idx = m_pragmas.size();
         m_pragmas.append(pragma);
         return Path::Field(Fields::pragmas).index(idx);
     }
@@ -383,7 +383,7 @@ public:
     void setExports(QMultiMap<QString, Export> e) { m_exports = e; }
     Path addExport(const Export &e)
     {
-        index_type i = m_exports.values(e.typeName).length();
+        index_type i = m_exports.values(e.typeName).size();
         m_exports.insert(e.typeName, e);
         addUri(e.uri, e.version.majorVersion);
         return canonicalPath().field(Fields::exports).index(i);

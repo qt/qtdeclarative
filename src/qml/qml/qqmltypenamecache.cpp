@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 void QQmlTypeNameCache::add(const QHashedString &name, const QUrl &url, const QHashedString &nameSpace)
 {
-    if (nameSpace.length() != 0) {
+    if (nameSpace.size() != 0) {
         QQmlImportRef *i = m_namedImports.value(nameSpace);
         Q_ASSERT(i != nullptr);
         i->compositeSingletons.insert(name, url);
@@ -28,7 +28,7 @@ void QQmlTypeNameCache::add(const QHashedString &name, int importedScriptIndex, 
     import.scriptIndex = importedScriptIndex;
     import.m_qualifier = name;
 
-    if (nameSpace.length() != 0) {
+    if (nameSpace.size() != 0) {
         QQmlImportRef *i = m_namedImports.value(nameSpace);
         Q_ASSERT(i != nullptr);
         m_namespacedImports[i].insert(name, import);

@@ -268,7 +268,7 @@ void FileInfoThread::getFileInfos(const QString &path)
     const QFileInfoList fileInfoList = currentDir.entryInfoList(nameFilters, filter, sortFlags);
 
     if (!fileInfoList.isEmpty()) {
-        filePropertyList.reserve(fileInfoList.count());
+        filePropertyList.reserve(fileInfoList.size());
         for (const QFileInfo &info : fileInfoList) {
             //qDebug() << "Adding file : " << info.fileName() << "to list ";
             filePropertyList << FileProperty(info);

@@ -903,7 +903,7 @@ void QQuickShape::itemChange(ItemChange change, const ItemChangeData &data)
     if (change == ItemVisibleHasChanged && data.boolValue)
         d->_q_shapePathChanged();
     else if (change == QQuickItem::ItemSceneChange) {
-        for (int i = 0; i < d->sp.count(); ++i)
+        for (int i = 0; i < d->sp.size(); ++i)
             QQuickShapePathPrivate::get(d->sp[i])->dirty = QQuickShapePathPrivate::DirtyAll;
         d->_q_shapePathChanged();
     }
@@ -1002,7 +1002,7 @@ void QQuickShapePrivate::sync()
         renderer->setAsyncCallback(asyncShapeReady, this);
     }
 
-    const int count = sp.count();
+    const int count = sp.size();
     bool countChanged = false;
     renderer->beginSync(count, &countChanged);
 

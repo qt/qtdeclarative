@@ -133,9 +133,9 @@ class QmlDomAstCreator final : public AST::Visitor
     template<typename T>
     StackEl &currentEl(int idx = 0)
     {
-        Q_ASSERT_X(idx < nodeStack.length() && idx >= 0, "currentQmlObjectOrComponentEl",
+        Q_ASSERT_X(idx < nodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
                    "Stack does not contain enough elements!");
-        int i = nodeStack.length() - idx;
+        int i = nodeStack.size() - idx;
         while (i-- > 0) {
             DomType k = nodeStack.at(i).item.kind;
             if (k == T::kindValue)
@@ -155,9 +155,9 @@ class QmlDomAstCreator final : public AST::Visitor
 
     StackEl &currentQmlObjectOrComponentEl(int idx = 0)
     {
-        Q_ASSERT_X(idx < nodeStack.length() && idx >= 0, "currentQmlObjectOrComponentEl",
+        Q_ASSERT_X(idx < nodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
                    "Stack does not contain enough elements!");
-        int i = nodeStack.length() - idx;
+        int i = nodeStack.size() - idx;
         while (i-- > 0) {
             DomType k = nodeStack.at(i).item.kind;
             if (k == DomType::QmlObject || k == DomType::QmlComponent)
@@ -169,16 +169,16 @@ class QmlDomAstCreator final : public AST::Visitor
 
     StackEl &currentNodeEl(int i = 0)
     {
-        Q_ASSERT_X(i < nodeStack.length() && i >= 0, "currentNode",
+        Q_ASSERT_X(i < nodeStack.size() && i >= 0, "currentNode",
                    "Stack does not contain element!");
-        return nodeStack[nodeStack.length() - i - 1];
+        return nodeStack[nodeStack.size() - i - 1];
     }
 
     DomValue &currentNode(int i = 0)
     {
-        Q_ASSERT_X(i < nodeStack.length() && i >= 0, "currentNode",
+        Q_ASSERT_X(i < nodeStack.size() && i >= 0, "currentNode",
                    "Stack does not contain element!");
-        return nodeStack[nodeStack.length() - i - 1].item;
+        return nodeStack[nodeStack.size() - i - 1].item;
     }
 
     void removeCurrentNode(std::optional<DomType> expectedType)
@@ -471,7 +471,7 @@ public:
                                 currentEl<QmlObject>()
                                         .path.field(Fields::bindings)
                                         .key(pDef.name)
-                                        .index(obj.m_bindings.values(pDef.name).length() - 1),
+                                        .index(obj.m_bindings.values(pDef.name).size() - 1),
                                 ann);
                     }
                 }
@@ -591,11 +591,11 @@ public:
         scope.addPrototypePath(Paths::lookupTypePath(scope.name()));
         QmlObject *sPtr = nullptr;
         Path sPathFromOwner;
-        if (!arrayBindingLevels.isEmpty() && nodeStack.length() == arrayBindingLevels.last()) {
+        if (!arrayBindingLevels.isEmpty() && nodeStack.size() == arrayBindingLevels.last()) {
             if (currentNode().kind == DomType::Binding) {
                 QList<QmlObject> *vals = std::get<Binding>(currentNode().value).arrayValue();
                 if (vals) {
-                    int idx = vals->length();
+                    int idx = vals->size();
                     vals->append(scope);
                     sPathFromOwner = currentNodeEl().path.field(Fields::value).index(idx);
                     sPtr = &((*vals)[idx]);
@@ -631,7 +631,7 @@ public:
     {
         QmlObject &obj = current<QmlObject>();
         int idx = currentIndex();
-        if (!arrayBindingLevels.isEmpty() && nodeStack.length() == arrayBindingLevels.last() + 1) {
+        if (!arrayBindingLevels.isEmpty() && nodeStack.size() == arrayBindingLevels.last() + 1) {
             if (currentNode(1).kind == DomType::Binding) {
                 Binding &b = std::get<Binding>(currentNode(1).value);
                 QList<QmlObject> *vals = b.arrayValue();
@@ -814,7 +814,7 @@ public:
                 createMap(currentNodeEl().fileLocations, Path::Field(Fields::value), nullptr);
         FileLocations::addRegion(arrayList, u"leftSquareBrace", el->lbracketToken);
         FileLocations::addRegion(arrayList, u"rightSquareBrace", el->lbracketToken);
-        arrayBindingLevels.append(nodeStack.length());
+        arrayBindingLevels.append(nodeStack.size());
         return true;
     }
 

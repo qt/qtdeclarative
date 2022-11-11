@@ -383,7 +383,7 @@ void QmlProfilerApplication::userCommand(const QString &command)
         } else if (m_profilerData->isEmpty()) {
             prompt(tr("No data was recorded so far."));
         } else {
-            m_interactiveOutputFile = args.length() > 0 ? args.at(0).toString() : m_outputFile;
+            m_interactiveOutputFile = args.size() > 0 ? args.at(0).toString() : m_outputFile;
             if (checkOutputFile(REQUEST_OUTPUT_FILE))
                 output();
         }
@@ -400,7 +400,7 @@ void QmlProfilerApplication::userCommand(const QString &command)
         if (!m_recording && m_profilerData->isEmpty()) {
             prompt(tr("No data was recorded so far."));
         } else {
-            m_interactiveOutputFile = args.length() > 0 ? args.at(0).toString() : m_outputFile;
+            m_interactiveOutputFile = args.size() > 0 ? args.at(0).toString() : m_outputFile;
             if (checkOutputFile(REQUEST_FLUSH_FILE))
                 flush();
         }

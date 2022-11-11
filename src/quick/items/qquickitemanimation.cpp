@@ -173,7 +173,7 @@ struct QQuickParentAnimationData : public QAbstractAnimationAction
     QList<QQuickParentChange *> pc;
     void doAction() override
     {
-        for (int ii = 0; ii < actions.count(); ++ii) {
+        for (int ii = 0; ii < actions.size(); ++ii) {
             const QQuickStateAction &action = actions.at(ii);
             if (reverse)
                 action.event->reverse();
@@ -329,7 +329,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         }
     }
 
-    if (data->actions.count()) {
+    if (data->actions.size()) {
         QSequentialAnimationGroupJob *topLevelGroup = new QSequentialAnimationGroupJob;
         QActionAnimation *viaAction = d->via ? new QActionAnimation : nullptr;
         QActionAnimation *targetAction = new QActionAnimation;
@@ -343,7 +343,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         //take care of any child animations
         bool valid = d->defaultProperty.isValid();
         QAbstractAnimationJob* anim;
-        for (int ii = 0; ii < d->animations.count(); ++ii) {
+        for (int ii = 0; ii < d->animations.size(); ++ii) {
             if (valid)
                 d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
             anim = d->animations.at(ii)->transition(actions, modified, direction, defaultTarget);
@@ -488,7 +488,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     data->fromIsSourced = false;
     data->fromIsDefined = false;
 
-    for (int ii = 0; ii < actions.count(); ++ii) {
+    for (int ii = 0; ii < actions.size(); ++ii) {
         QQuickStateAction &action = actions[ii];
         if (action.event && action.event->type() == QQuickStateActionEvent::AnchorChanges
             && (d->targets.isEmpty() || d->targets.contains(static_cast<QQuickAnchorChanges*>(action.event)->object()))) {
@@ -497,7 +497,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     }
 
     QQuickBulkValueAnimator *animator = new QQuickBulkValueAnimator;
-    if (data->actions.count()) {
+    if (data->actions.size()) {
         animator->setAnimValue(data);
         animator->setFromIsSourcedValue(&data->fromIsSourced);
     } else {
@@ -823,9 +823,9 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
     data->fromIsSourced = false;
     data->fromIsDefined = (d->path && d->path->hasStartX() && d->path->hasStartY()) ? true : false;
     data->toIsDefined = d->path ? true : false;
-    int origModifiedSize = modified.count();
+    int origModifiedSize = modified.size();
 
-    for (int i = 0; i < actions.count(); ++i) {
+    for (int i = 0; i < actions.size(); ++i) {
         QQuickStateAction &action = actions[i];
         if (action.event)
             continue;
@@ -841,7 +841,7 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
         }
     }
 
-    if (target && d->path && (modified.count() > origModifiedSize || data->toIsDefined)) {
+    if (target && d->path && (modified.size() > origModifiedSize || data->toIsDefined)) {
         data->target = target;
         data->path = d->path;
         data->path->invalidateSequentialHistory();

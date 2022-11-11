@@ -293,7 +293,7 @@ void QV4DebugClient::scripts(int types, const QList<int> &ids, bool includeSourc
     QJsonObject args;
     args.insert(QLatin1String(TYPES), types);
 
-    if (ids.count()) {
+    if (ids.size()) {
         QJsonArray array;
         for (int id : ids)
             array.append(id);

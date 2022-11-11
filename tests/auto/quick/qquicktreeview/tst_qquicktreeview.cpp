@@ -140,7 +140,7 @@ void tst_qquicktreeview::expandAndCollapseRoot()
     // Expand the root
     treeView->expand(0);
 
-    QCOMPARE(expandedSpy.count(), 1);
+    QCOMPARE(expandedSpy.size(), 1);
     auto signalArgs = expandedSpy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == 0);
     QVERIFY(signalArgs.at(1).toInt() == 1);
@@ -190,7 +190,7 @@ void tst_qquicktreeview::expandAndCollapseChildren()
 
         treeView->expand(nodeToExpand);
 
-        QCOMPARE(expandedSpy.count(), 1);
+        QCOMPARE(expandedSpy.size(), 1);
         auto signalArgs = expandedSpy.takeFirst();
         QVERIFY(signalArgs.at(0).toInt() == nodeToExpand);
         QVERIFY(signalArgs.at(1).toInt() == 1);
@@ -314,7 +314,7 @@ void tst_qquicktreeview::emptyModel()
     treeView->setModel(QVariant());
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(treeViewPrivate->loadedItems.count(), 0);
+    QCOMPARE(treeViewPrivate->loadedItems.size(), 0);
     QCOMPARE(treeView->rows(), 0);
     QCOMPARE(treeView->columns(), 0);
 
@@ -435,10 +435,10 @@ void tst_qquicktreeview::expandRecursivelyRoot()
     treeView->expandRecursively(rowToExpand, depth);
 
     if (depth == 0) {
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(spy.size(), 0);
     } else {
 
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
         const auto signalArgs = spy.takeFirst();
         QVERIFY(signalArgs.at(0).toInt() == rowToExpand);
         QVERIFY(signalArgs.at(1).toInt() == depth);
@@ -491,7 +491,7 @@ void tst_qquicktreeview::expandRecursivelyChild()
 
     treeView->expand(0);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == 0);
     QVERIFY(signalArgs.at(1).toInt() == 1);
@@ -499,9 +499,9 @@ void tst_qquicktreeview::expandRecursivelyChild()
     treeView->expandRecursively(rowToExpand, depth);
 
     if (depth == 0) {
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(spy.size(), 0);
     } else {
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
         signalArgs = spy.takeFirst();
         QVERIFY(signalArgs.at(0).toInt() == rowToExpand);
         QVERIFY(signalArgs.at(1).toInt() == depth);
@@ -542,7 +542,7 @@ void tst_qquicktreeview::expandRecursivelyWholeTree()
     QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
     treeView->expandRecursively(-1, -1);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == -1);
     QVERIFY(signalArgs.at(1).toInt() == -1);
@@ -576,7 +576,7 @@ void tst_qquicktreeview::collapseRecursivelyRoot()
     // Collapse the whole tree again. This time, only the root should end up visible
     treeView->collapseRecursively();
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     const auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == -1);
     QVERIFY(signalArgs.at(1).toBool() == true);
@@ -627,7 +627,7 @@ void tst_qquicktreeview::collapseRecursivelyChild()
     QCOMPARE(expectedLabel, QStringLiteral("3, 0"));
     treeView->collapseRecursively(rowToCollapse);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     const auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == rowToCollapse);
     QVERIFY(signalArgs.at(1).toBool() == true);
@@ -669,7 +669,7 @@ void tst_qquicktreeview::collapseRecursivelyWholeTree()
     treeView->expandRecursively();
     treeView->collapseRecursively();
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == -1);
     QVERIFY(signalArgs.at(1).toBool() == true);
@@ -705,7 +705,7 @@ void tst_qquicktreeview::expandToIndex()
     QVERIFY(treeView->isExpanded(treeView->rowAtIndex(child1)));
     QVERIFY(treeView->isExpanded(treeView->rowAtIndex(child2)));
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     auto signalArgs = spy.takeFirst();
     QVERIFY(signalArgs.at(0).toInt() == 0);
     QVERIFY(signalArgs.at(1).toInt() == 3);
@@ -859,7 +859,7 @@ void tst_qquicktreeview::selectionBehaviorCells()
     }
 
     const int expectedCount = (x2 - x1 + 1) * (y2 - y1 + 1);
-    const int actualCount = selectionModel->selectedIndexes().count();
+    const int actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     // Wrap the selection
@@ -872,7 +872,7 @@ void tst_qquicktreeview::selectionBehaviorCells()
         }
     }
 
-    const int actualCountAfterWrap = selectionModel->selectedIndexes().count();
+    const int actualCountAfterWrap = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCountAfterWrap, expectedCount);
 
     treeViewPrivate->clearSelection();
@@ -901,7 +901,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
     QCOMPARE(selectionModel->hasSelection(), true);
 
     const int expectedCount = treeView->columns() * 3; // all columns * three rows
-    int actualCount = selectionModel->selectedIndexes().count();
+    int actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < treeView->columns(); ++x) {
@@ -920,7 +920,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
 
     QCOMPARE(selectionModel->hasSelection(), true);
 
-    actualCount = selectionModel->selectedIndexes().count();
+    actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < treeView->columns(); ++x) {
@@ -952,7 +952,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
     QCOMPARE(selectionModel->hasSelection(), true);
 
     const int expectedCount = treeView->rows() * 3; // all rows * three columns
-    int actualCount = selectionModel->selectedIndexes().count();
+    int actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < 3; ++x) {
@@ -971,7 +971,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
 
     QCOMPARE(selectionModel->hasSelection(), true);
 
-    actualCount = selectionModel->selectedIndexes().count();
+    actualCount = selectionModel->selectedIndexes().size();
     QCOMPARE(actualCount, expectedCount);
 
     for (int x = 0; x < 3; ++x) {

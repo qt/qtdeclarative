@@ -786,7 +786,7 @@ int QQuickTimeLinePrivate::advance(int t)
 
         std::sort(updates.begin(), updates.end());
         updateQueue = &updates;
-        for (int ii = 0; ii < updates.count(); ++ii) {
+        for (int ii = 0; ii < updates.size(); ++ii) {
             const Update &v = updates.at(ii).second;
             if (v.g) {
                 v.g->setValue(v.v);
@@ -836,7 +836,7 @@ void QQuickTimeLine::remove(QQuickTimeLineObject *v)
     }
 
     if (d->updateQueue) {
-        for (int ii = 0; ii < d->updateQueue->count(); ++ii) {
+        for (int ii = 0; ii < d->updateQueue->size(); ++ii) {
             if (d->updateQueue->at(ii).second.g == v ||
                d->updateQueue->at(ii).second.e.callbackObject() == v) {
                 d->updateQueue->removeAt(ii);

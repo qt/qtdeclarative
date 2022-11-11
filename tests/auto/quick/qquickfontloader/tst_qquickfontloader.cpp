@@ -147,27 +147,27 @@ void tst_qquickfontloader::changeFont()
     QSignalSpy statusSpy(fontObject, SIGNAL(statusChanged()));
 
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
-    QCOMPARE(nameSpy.count(), 0);
-    QCOMPARE(statusSpy.count(), 0);
+    QCOMPARE(nameSpy.size(), 0);
+    QCOMPARE(statusSpy.size(), 0);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
     ctxt->setContextProperty("fnt", server.urlString("/daniel.ttf"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Loading);
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
-    QCOMPARE(nameSpy.count(), 1);
-    QCOMPARE(statusSpy.count(), 2);
+    QCOMPARE(nameSpy.size(), 1);
+    QCOMPARE(statusSpy.size(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
 
     ctxt->setContextProperty("fnt", testFileUrl("tarzeau_ocr_a.ttf"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
-    QCOMPARE(nameSpy.count(), 2);
-    QCOMPARE(statusSpy.count(), 2);
+    QCOMPARE(nameSpy.size(), 2);
+    QCOMPARE(statusSpy.size(), 2);
     QTRY_COMPARE(fontObject->name(), QString("OCRA"));
 
     ctxt->setContextProperty("fnt", server.urlString("/daniel.ttf"));
     QTRY_COMPARE(fontObject->status(), QQuickFontLoader::Ready);
-    QCOMPARE(nameSpy.count(), 3);
-    QCOMPARE(statusSpy.count(), 2);
+    QCOMPARE(nameSpy.size(), 3);
+    QCOMPARE(statusSpy.size(), 2);
     QTRY_COMPARE(fontObject->name(), QString("Daniel"));
 }
 

@@ -90,7 +90,7 @@ QString Filter::name() const {
 bool Filter::checkName(QStringView s) const
 {
     return s.startsWith(u"?(")
-            && s.mid(2, s.length()-3) == filterDescription
+            && s.mid(2, s.size()-3) == filterDescription
             && s.endsWith(u")");
 }
 
@@ -181,7 +181,7 @@ const PathEls::PathComponent &Path::component(int i) const
     i = i - m_length - m_endOffset;
     auto data = m_data.get();
     while (data) {
-        i += data->components.length();
+        i += data->components.size();
         if (i >= 0)
             return qAsConst(data)->components[i];
         data = data->parent.get();
@@ -311,7 +311,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
     const QChar backslash = QChar::fromLatin1('\\');
     const QChar underscore = QChar::fromLatin1('_');
     const QChar tilda = QChar::fromLatin1('~');
-    for (int i=0; i < s.length(); ++i)
+    for (int i=0; i < s.size(); ++i)
         if (s.at(i) == lsBrace || s.at(i) == dot)
             ++len;
     QVector<Component> components;
@@ -320,25 +320,25 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
     int i0 = 0;
     PathEls::ParserState state = PathEls::ParserState::Start;
     QStringList strVals;
-    while (i < s.length()) {
+    while (i < s.size()) {
         // skip space
-        while (i < s.length() && s.at(i).isSpace())
+        while (i < s.size() && s.at(i).isSpace())
             ++i;
-        if (i >= s.length())
+        if (i >= s.size())
             break;
         QChar c = s.at(i++);
         switch (state) {
         case PathEls::ParserState::Start:
             if (c == dollar) {
                 i0 = i;
-                while (i < s.length() && s.at(i).isLetterOrNumber()){
+                while (i < s.size() && s.at(i).isLetterOrNumber()){
                     ++i;
                 }
                 components.append(Component(PathEls::Root(s.mid(i0,i-i0))));
                 state = PathEls::ParserState::End;
             } else if (c == at) {
                 i0 = i;
-                while (i < s.length() && s.at(i).isLetterOrNumber()){
+                while (i < s.size() && s.at(i).isLetterOrNumber()){
                     ++i;
                 }
                 components.append(Component(PathEls::Current(s.mid(i0,i-i0))));
@@ -355,7 +355,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
         case PathEls::ParserState::IndexOrKey:
             if (c.isDigit()) {
                 i0 = i-1;
-                while (i < s.length() && s.at(i).isDigit())
+                while (i < s.size() && s.at(i).isDigit())
                     ++i;
                 bool ok;
                 components.append(Component(static_cast<index_type>(s.mid(i0,i-i0).toString()
@@ -367,14 +367,14 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                 }
             } else if (c.isLetter() || c == tilda || c == underscore) {
                 i0 = i-1;
-                while (i < s.length() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda))
+                while (i < s.size() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda))
                     ++i;
                 components.append(Component(PathEls::Key(s.mid(i0, i - i0).toString())));
             } else if (c == quote) {
                 i0 = i;
                 QString strVal;
                 bool properEnd = false;
-                while (i < s.length()) {
+                while (i < s.size()) {
                     c = s.at(i);
                     if (c == quote) {
                         properEnd = true;
@@ -406,16 +406,16 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
             } else if (c == QChar::fromLatin1('*')) {
                 components.append(Component(PathEls::Any()));
             } else if (c == QChar::fromLatin1('?')) {
-                while (i < s.length() && s.at(i).isSpace())
+                while (i < s.size() && s.at(i).isSpace())
                     ++i;
-                if (i >= s.length() || s.at(i) != QChar::fromLatin1('(')) {
+                if (i >= s.size() || s.at(i) != QChar::fromLatin1('(')) {
                     myErrors().error(tr("Expected a brace in filter after the question mark (at char %1).")
                             .arg(QString::number(i))).handle(errorHandler);
                     return Path();
                 }
                 i0 = ++i;
-                while (i < s.length() && s.at(i) != QChar::fromLatin1(')')) ++i; // check matching braces when skipping??
-                if (i >= s.length() || s.at(i) != QChar::fromLatin1(')')) {
+                while (i < s.size() && s.at(i) != QChar::fromLatin1(')')) ++i; // check matching braces when skipping??
+                if (i >= s.size() || s.at(i) != QChar::fromLatin1(')')) {
                     myErrors().error(tr("Expected a closing brace in filter after the question mark (at char %1).")
                             .arg(QString::number(i))).handle(errorHandler);
                     return Path();
@@ -429,8 +429,8 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                                  .arg(c).arg(i-1)).handle(errorHandler);
                 return Path();
             }
-            while (i < s.length() && s.at(i).isSpace()) ++i;
-            if (i >= s.length() || s.at(i) != rsBrace) {
+            while (i < s.size() && s.at(i).isSpace()) ++i;
+            if (i >= s.size() || s.at(i) != rsBrace) {
                 myErrors().error(tr("square braces misses closing brace at char %1.")
                                  .arg(QString::number(i))).handle(errorHandler);
                 return Path();
@@ -441,20 +441,20 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
             break;
         case PathEls::ParserState::End:
             if (c == dot) {
-                while (i < s.length() && s.at(i).isSpace()) ++i;
-                if (i == s.length()) {
+                while (i < s.size() && s.at(i).isSpace()) ++i;
+                if (i == s.size()) {
                     components.append(Component());
                     state = PathEls::ParserState::End;
                 } else if (s.at(i).isLetter() || s.at(i) == underscore || s.at(i) == tilda) {
                     i0 = i;
-                    while (i < s.length() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda)) {
+                    while (i < s.size() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda)) {
                         ++i;
                     }
                     components.append(Component(PathEls::Field(s.mid(i0,i-i0))));
                     state = PathEls::ParserState::End;
                 } else if (s.at(i).isDigit()) {
                     i0 = i;
-                    while (i < s.length() && s.at(i).isDigit()){
+                    while (i < s.size() && s.at(i).isDigit()){
                         ++i;
                     }
                     bool ok;
@@ -474,14 +474,14 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                     state = PathEls::ParserState::End;
                 } else if (s.at(i) == at) {
                     i0 = ++i;
-                    while (i < s.length() && s.at(i).isLetterOrNumber()){
+                    while (i < s.size() && s.at(i).isLetterOrNumber()){
                         ++i;
                     }
                     components.append(Component(PathEls::Current(s.mid(i0,i-i0))));
                     state = PathEls::ParserState::End;
                 } else if (s.at(i) == dollar) {
                     i0 = ++i;
-                    while (i < s.length() && s.at(i).isLetterOrNumber()){
+                    while (i < s.size() && s.at(i).isLetterOrNumber()){
                         ++i;
                     }
                     components.append(Component(PathEls::Root(s.mid(i0,i-i0))));
@@ -512,7 +512,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
 
         return Path();
     case PathEls::ParserState::End:
-        return Path(0, components.length(), std::shared_ptr<PathEls::PathData>(
+        return Path(0, components.size(), std::shared_ptr<PathEls::PathData>(
                         new PathEls::PathData(strVals, components)));
     }
     Q_ASSERT(false && "Unexpected state in Path::fromString");
@@ -728,9 +728,9 @@ Path Path::path(Path toAdd, bool avoidToAddAsBase) const
         }
         data = toAdd.m_data.get();
         while (data) {
-            for (int ij = 0; ij < data->strData.length(); ++ij) {
+            for (int ij = 0; ij < data->strData.size(); ++ij) {
                 bool hasAlready = false;
-                for (int ii = 0; ii < myStrs.length() && !hasAlready; ++ii)
+                for (int ii = 0; ii < myStrs.size() && !hasAlready; ++ii)
                     hasAlready = inQString(data->strData[ij], myStrs[ii]);
                 if (!hasAlready)
                     addedStrs.append(data->strData[ij]);
@@ -743,7 +743,7 @@ Path Path::path(Path toAdd, bool avoidToAddAsBase) const
         components.append(toAdd.component(i));
         QStringView compStrView = toAdd.component(i).stringView();
         if (!compStrView.isEmpty()) {
-            for (int j = 0; j < addedStrs.length(); ++j) {
+            for (int j = 0; j < addedStrs.size(); ++j) {
                 if (inQString(compStrView, addedStrs[j])) {
                     toAddStrs.append(addedStrs[j]);
                     addedStrs.removeAt(j);
@@ -761,7 +761,7 @@ Path Path::expandFront() const
     int newLen = 0;
     auto data = m_data.get();
     while (data) {
-        newLen += data->components.length();
+        newLen += data->components.size();
         data = data->parent.get();
     }
     newLen -= m_endOffset;
@@ -822,14 +822,14 @@ Path Path::noEndOffset() const
     // peel back
     qint16 endOffset = m_endOffset;
     std::shared_ptr<PathEls::PathData> lastData = m_data;
-    while (lastData && endOffset >= lastData->components.length()) {
-        endOffset -= lastData->components.length();
+    while (lastData && endOffset >= lastData->components.size()) {
+        endOffset -= lastData->components.size();
         lastData = lastData->parent;
     }
     if (endOffset > 0) {
         Q_ASSERT(lastData && "Internal problem, reference to non existing PathData");
         return Path(0, m_length, std::shared_ptr<PathEls::PathData>(
-                        new PathEls::PathData(lastData->strData, lastData->components.mid(0, lastData->components.length() - endOffset), lastData->parent)));
+                        new PathEls::PathData(lastData->strData, lastData->components.mid(0, lastData->components.size() - endOffset), lastData->parent)));
     }
     return Path(0, m_length, lastData);
 }

@@ -334,9 +334,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
             }
 
             const bool requiredNumberOfPointsDraggedOverThreshold = numberOfPointsDraggedOverThreshold >= minimumPointCount() && numberOfPointsDraggedOverThreshold <= maximumPointCount();
-            accumulatedMovementMagnitude /= currentPoints().count();
+            accumulatedMovementMagnitude /= currentPoints().size();
 
-            QVector2D avgDrag = accumulatedDrag / currentPoints().count();
+            QVector2D avgDrag = accumulatedDrag / currentPoints().size();
             if (!xAxis()->enabled())
                 avgDrag.setX(0);
             if (!yAxis()->enabled())

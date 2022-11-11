@@ -242,7 +242,7 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
 
     // Only type and index are used by Qt Creator, so we keep it easy:
     QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes = getScopeTypes(frameNr);
-    for (int i = 0, ei = scopeTypes.count(); i != ei; ++i) {
+    for (int i = 0, ei = scopeTypes.size(); i != ei; ++i) {
         int type = encodeScopeType(scopeTypes[i]);
         if (type == -1)
             continue;

@@ -275,7 +275,7 @@ void tst_QQuickListView2::metaSequenceAsModel()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QStringList strings = qvariant_cast<QStringList>(o->property("texts"));
-    QCOMPARE(strings.length(), 2);
+    QCOMPARE(strings.size(), 2);
     QCOMPARE(strings[0], QStringLiteral("1/2"));
     QCOMPARE(strings[1], QStringLiteral("5/6"));
 }
@@ -432,7 +432,7 @@ void tst_QQuickListView2::tapDelegateDuringFlicking() // QTBUG-103832
     QVERIFY(lastPressed > 5);
     QCOMPARE(releasedDelegates.last(), lastPressed);
     QCOMPARE(tappedDelegates.last(), lastPressed);
-    QCOMPARE(canceledDelegates.count(), 1); // only the first press was canceled, not the second
+    QCOMPARE(canceledDelegates.size(), 1); // only the first press was canceled, not the second
 }
 
 void tst_QQuickListView2::flickDuringFlicking_data()
@@ -652,7 +652,7 @@ void tst_QQuickListView2::wheelSnap()
 
     if (highlightRangeMode == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(listview->currentIndex(), listview->count() - 1);
-        QCOMPARE(currentIndexSpy.count(), listview->count() - 1);
+        QCOMPARE(currentIndexSpy.size(), listview->count() - 1);
     }
 
     // flick to start
@@ -673,7 +673,7 @@ void tst_QQuickListView2::wheelSnap()
 
     if (highlightRangeMode == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(listview->currentIndex(), 0);
-        QCOMPARE(currentIndexSpy.count(), (listview->count() - 1) * 2);
+        QCOMPARE(currentIndexSpy.size(), (listview->count() - 1) * 2);
     }
 }
 

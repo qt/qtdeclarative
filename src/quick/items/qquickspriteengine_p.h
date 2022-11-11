@@ -168,7 +168,7 @@ public:
         return m_globalGoal;
     }
 
-    int count() const {return m_things.count();}
+    int count() const {return m_things.size();}
     void setCount(int c);
 
     void setGoal(int state, int sprite=0, bool jump=false);
@@ -181,13 +181,13 @@ public:
     QQuickStochasticState* state(int idx) const {return m_states[idx];}
     int stateIndex(QQuickStochasticState* s) const {return m_states.indexOf(s);}
     int stateIndex(const QString& s) const {
-        for (int i=0; i<m_states.count(); i++)
+        for (int i=0; i<m_states.size(); i++)
             if (m_states[i]->name() == s)
                 return i;
         return -1;
     }
 
-    int stateCount() {return m_states.count();}
+    int stateCount() {return m_states.size();}
 private:
 Q_SIGNALS:
 
@@ -291,7 +291,7 @@ inline void spriteClear(QQmlListProperty<QQuickSprite> *p)
 
 inline qsizetype spriteCount(QQmlListProperty<QQuickSprite> *p)
 {
-    return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->count();
+    return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->size();
 }
 
 inline void spriteReplace(QQmlListProperty<QQuickSprite> *p, qsizetype idx, QQuickSprite *s)

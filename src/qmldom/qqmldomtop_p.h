@@ -567,7 +567,7 @@ public:
     int nNotDone() const
     {
         QMutexLocker l(mutex());
-        return m_toDo.length() + m_inProgress.length();
+        return m_toDo.size() + m_inProgress.size();
     }
 
     QList<Dependency> inProgress() const
@@ -585,7 +585,7 @@ public:
     int nCallbacks() const
     {
         QMutexLocker l(mutex());
-        return m_endCallbacks.length();
+        return m_endCallbacks.size();
     }
 
 private:

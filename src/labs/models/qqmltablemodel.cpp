@@ -627,7 +627,7 @@ void QQmlTableModel::columns_append(QQmlListProperty<QQmlTableModelColumn> *prop
 qsizetype QQmlTableModel::columns_count(QQmlListProperty<QQmlTableModelColumn> *property)
 {
     const QQmlTableModel *model = static_cast<QQmlTableModel*>(property->object);
-    return model->mColumns.count();
+    return model->mColumns.size();
 }
 
 QQmlTableModelColumn *QQmlTableModel::columns_at(QQmlListProperty<QQmlTableModelColumn> *property, qsizetype index)

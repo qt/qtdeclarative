@@ -94,10 +94,10 @@ LineWriter &LineWriter::ensureSpace(QStringView space, TextAddType t)
     if (ind.nNewlines > 0)
         ensureNewline(ind.nNewlines, t);
     if (cc != counter() || m_currentLine.isEmpty()
-        || !m_currentLine.at(m_currentLine.length() - 1).isSpace())
+        || !m_currentLine.at(m_currentLine.size() - 1).isSpace())
         write(ind.trailingString, t);
     else {
-        int len = m_currentLine.length();
+        int len = m_currentLine.size();
         int i = len;
         while (i != 0 && m_currentLine.at(i - 1).isSpace())
             --i;
@@ -109,8 +109,8 @@ LineWriter &LineWriter::ensureSpace(QStringView space, TextAddType t)
             ind = IndentInfo(space, tabSize, trailingSpaceStartColumn);
         if (i == 0) {
             if (indExisting.column < ind.column) {
-                qint32 utf16Change = ind.trailingString.length() - trailingSpace.length();
-                m_currentColumnNr += ind.trailingString.length() - trailingSpace.length();
+                qint32 utf16Change = ind.trailingString.size() - trailingSpace.size();
+                m_currentColumnNr += ind.trailingString.size() - trailingSpace.size();
                 m_currentLine.replace(
                         i, len - i, ind.trailingString.toString()); // invalidates most QStringViews
                 changeAtOffset(i, utf16Change, utf16Change, 0);
@@ -341,8 +341,8 @@ void LineWriter::changeAtOffset(quint32 offset, qint32 change, qint32 colChange,
 
 int LineWriter::column(int index)
 {
-    if (index > m_currentLine.length())
-        index = m_currentLine.length();
+    if (index > m_currentLine.size())
+        index = m_currentLine.size();
     IndentInfo iInfo(QStringView(m_currentLine).mid(0, index), m_options.formatOptions.tabSize,
                      m_columnNr);
     return iInfo.column;

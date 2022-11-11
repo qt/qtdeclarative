@@ -133,7 +133,7 @@ void registerStaticPlugin(const char *uri)
     PluginType::metaData.append(QCborValue(QCborMap::fromJsonObject(md)).toCbor());
 
     auto rawMetaDataFunctor = []() -> QPluginMetaData {
-        return {reinterpret_cast<const uchar *>(PluginType::metaData.constData()), size_t(PluginType::metaData.length())};
+        return {reinterpret_cast<const uchar *>(PluginType::metaData.constData()), size_t(PluginType::metaData.size())};
     };
     QStaticPlugin plugin(instanceFunctor, rawMetaDataFunctor);
     qRegisterStaticPluginFunction(plugin);
@@ -235,7 +235,7 @@ void tst_qqmlmoduleplugin::incorrectPluginCase()
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("incorrectCase.qml")));
 
     QList<QQmlError> errors = component.errors();
-    QCOMPARE(errors.count(), 1);
+    QCOMPARE(errors.size(), 1);
 
     QString expectedError = QLatin1String("module \"org.qtproject.WrongCase\" plugin \"PluGin\" not found");
 
@@ -566,7 +566,7 @@ void tst_qqmlmoduleplugin::importStrictModule()
         QVERIFY(object != nullptr);
     } else {
         QVERIFY(!component.isReady());
-        QCOMPARE(component.errors().count(), 1);
+        QCOMPARE(component.errors().size(), 1);
         QCOMPARE(component.errors().first().toString(), url.toString() + error);
     }
 }

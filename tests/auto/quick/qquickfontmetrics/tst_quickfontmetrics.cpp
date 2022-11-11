@@ -39,7 +39,7 @@ void tst_QuickFontMetrics::properties()
 
         QSignalSpy spy(&metrics, SIGNAL(fontChanged(QFont)));
         metrics.setFont(font);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         QCOMPARE(metrics.ascent(), expected.ascent());
         QCOMPARE(metrics.descent(), expected.descent());

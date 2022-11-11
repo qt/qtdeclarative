@@ -211,7 +211,7 @@ void tst_QQuickPathView::items()
 
     QCOMPARE(pathview->count(), model.count());
     QCOMPARE(window->rootObject()->property("count").toInt(), model.count());
-    QCOMPARE(pathview->childItems().count(), model.count()+1); // assumes all are visible, including highlight
+    QCOMPARE(pathview->childItems().size(), model.count()+1); // assumes all are visible, including highlight
 
     for (int i = 0; i < model.count(); ++i) {
         QQuickText *name = findItem<QQuickText>(pathview, "textName", i);
@@ -681,7 +681,7 @@ void tst_QQuickPathView::consecutiveModelChanges()
     else
         pathview->setOffset(4);
 
-    for (int i=0; i<changes.count(); i++) {
+    for (int i=0; i<changes.size(); i++) {
         switch (changes[i].type) {
             case ListChange::Inserted:
             {
@@ -709,7 +709,7 @@ void tst_QQuickPathView::consecutiveModelChanges()
     }
     QQuickTest::qWaitForPolish(pathview);
 
-    QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), count);
+    QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), count);
     QCOMPARE(pathview->count(), count);
     QTRY_COMPARE(pathview->offset(), offset);
 
@@ -812,7 +812,7 @@ void tst_QQuickPathView::dataModel()
     QTest::qWait(100);
 
     QCOMPARE(window->rootObject()->property("viewCount").toInt(), model.count());
-    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 14);
+    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), 14);
 
     QCOMPARE(pathview->currentIndex(), 0);
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 0));
@@ -832,7 +832,7 @@ void tst_QQuickPathView::dataModel()
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(!testObject->error());
 
-    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
+    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), 5);
 
     QQuickRectangle *testItem = findItem<QQuickRectangle>(pathview, "wrapper", 4);
     QVERIFY(testItem != nullptr);
@@ -845,7 +845,7 @@ void tst_QQuickPathView::dataModel()
 
     model.insertItem(2, "pink", "2");
 
-    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
+    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), 5);
     QCOMPARE(pathview->currentIndex(), 1);
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
 
@@ -853,14 +853,14 @@ void tst_QQuickPathView::dataModel()
     QCOMPARE(text->text(), model.name(2));
 
     model.removeItem(3);
-    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
+    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), 5);
     text = findItem<QQuickText>(pathview, "myText", 3);
     QVERIFY(text);
     QCOMPARE(text->text(), model.name(3));
     QCOMPARE(pathview->currentItem(), findItem<QQuickItem>(pathview, "wrapper", 1));
 
     model.moveItem(3, 5);
-    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
+    QTRY_COMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), 5);
     QList<QQuickItem*> items = findItems<QQuickItem>(pathview, "wrapper");
     foreach (QQuickItem *item, items) {
         QVERIFY(item->property("onPath").toBool());
@@ -870,7 +870,7 @@ void tst_QQuickPathView::dataModel()
     // QTBUG-14199
     pathview->setOffset(7);
     pathview->setOffset(0);
-    QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), 5);
+    QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").size(), 5);
 
     pathview->setCurrentIndex(model.count()-1);
     QTRY_COMPARE(pathview->offset(), 1.0);
@@ -1121,7 +1121,7 @@ void tst_QQuickPathView::setCurrentIndex()
     pathview->setSnapMode(QQuickPathView::SnapToItem);
     pathview->setCurrentIndex(3);
     QTRY_COMPARE(pathview->currentIndex(), 3);
-    QCOMPARE(currentIndexSpy.count(), 1);
+    QCOMPARE(currentIndexSpy.size(), 1);
 }
 
 void tst_QQuickPathView::setCurrentIndexWrap()
@@ -1142,8 +1142,8 @@ void tst_QQuickPathView::setCurrentIndexWrap()
     pathview->setCurrentIndex(0);
     pathview->setCurrentIndex(4);
     QCOMPARE(pathview->currentIndex(), 4);
-    QCOMPARE(currentIndexSpy.count(), 2);
-    QCOMPARE(movementStartedSpy.count(), 0);
+    QCOMPARE(currentIndexSpy.size(), 2);
+    QCOMPARE(movementStartedSpy.size(), 0);
 }
 
 void tst_QQuickPathView::resetModel()
@@ -1208,21 +1208,21 @@ void tst_QQuickPathView::propertyChanges()
     QCOMPARE(pathView->preferredHighlightEnd(), 0.4);
     QCOMPARE(pathView->dragMargin(), 20.0);
 
-    QCOMPARE(snapPositionSpy.count(), 1);
-    QCOMPARE(dragMarginSpy.count(), 1);
+    QCOMPARE(snapPositionSpy.size(), 1);
+    QCOMPARE(dragMarginSpy.size(), 1);
 
     pathView->setPreferredHighlightBegin(0.4);
     pathView->setPreferredHighlightEnd(0.4);
     pathView->setDragMargin(20.0);
 
-    QCOMPARE(snapPositionSpy.count(), 1);
-    QCOMPARE(dragMarginSpy.count(), 1);
+    QCOMPARE(snapPositionSpy.size(), 1);
+    QCOMPARE(dragMarginSpy.size(), 1);
 
     QSignalSpy maximumFlickVelocitySpy(pathView, SIGNAL(maximumFlickVelocityChanged()));
     pathView->setMaximumFlickVelocity(1000);
-    QCOMPARE(maximumFlickVelocitySpy.count(), 1);
+    QCOMPARE(maximumFlickVelocitySpy.size(), 1);
     pathView->setMaximumFlickVelocity(1000);
-    QCOMPARE(maximumFlickVelocitySpy.count(), 1);
+    QCOMPARE(maximumFlickVelocitySpy.size(), 1);
 
 }
 
@@ -1250,14 +1250,14 @@ void tst_QQuickPathView::pathChanges()
     QCOMPARE(path->startX(), 240.0);
     QCOMPARE(path->startY(), 220.0);
 
-    QCOMPARE(startXSpy.count(),1);
-    QCOMPARE(startYSpy.count(),1);
+    QCOMPARE(startXSpy.size(),1);
+    QCOMPARE(startYSpy.size(),1);
 
     path->setStartX(240);
     path->setStartY(220);
 
-    QCOMPARE(startXSpy.count(),1);
-    QCOMPARE(startYSpy.count(),1);
+    QCOMPARE(startXSpy.size(),1);
+    QCOMPARE(startYSpy.size(),1);
 
     QQuickPath *alternatePath = window->rootObject()->findChild<QQuickPath*>("alternatePath");
     QVERIFY(alternatePath);
@@ -1268,10 +1268,10 @@ void tst_QQuickPathView::pathChanges()
 
     pathView->setPath(alternatePath);
     QCOMPARE(pathView->path(), alternatePath);
-    QCOMPARE(pathSpy.count(),1);
+    QCOMPARE(pathSpy.size(),1);
 
     pathView->setPath(alternatePath);
-    QCOMPARE(pathSpy.count(),1);
+    QCOMPARE(pathSpy.size(),1);
 
     QQuickPathAttribute *pathAttribute = window->rootObject()->findChild<QQuickPathAttribute*>("pathAttribute");
     QVERIFY(pathAttribute);
@@ -1281,10 +1281,10 @@ void tst_QQuickPathView::pathChanges()
 
     pathAttribute->setName("scale");
     QCOMPARE(pathAttribute->name(), QString("scale"));
-    QCOMPARE(nameSpy.count(),1);
+    QCOMPARE(nameSpy.size(),1);
 
     pathAttribute->setName("scale");
-    QCOMPARE(nameSpy.count(),1);
+    QCOMPARE(nameSpy.size(),1);
 }
 
 void tst_QQuickPathView::componentChanges()
@@ -1303,10 +1303,10 @@ void tst_QQuickPathView::componentChanges()
 
     pathView->setDelegate(&delegateComponent);
     QCOMPARE(pathView->delegate(), &delegateComponent);
-    QCOMPARE(delegateSpy.count(),1);
+    QCOMPARE(delegateSpy.size(),1);
 
     pathView->setDelegate(&delegateComponent);
-    QCOMPARE(delegateSpy.count(),1);
+    QCOMPARE(delegateSpy.size(),1);
 }
 
 void tst_QQuickPathView::modelChanges()
@@ -1329,17 +1329,17 @@ void tst_QQuickPathView::modelChanges()
     QCOMPARE(pathView->currentIndex(), 3);
     pathView->setModel(modelVariant);
     QCOMPARE(pathView->model(), modelVariant);
-    QCOMPARE(modelSpy.count(),1);
+    QCOMPARE(modelSpy.size(),1);
     QCOMPARE(pathView->currentIndex(), 0);
-    QCOMPARE(currentIndexSpy.count(), 1);
+    QCOMPARE(currentIndexSpy.size(), 1);
 
     pathView->setModel(modelVariant);
-    QCOMPARE(modelSpy.count(),1);
+    QCOMPARE(modelSpy.size(),1);
 
     pathView->setModel(QVariant());
-    QCOMPARE(modelSpy.count(),2);
+    QCOMPARE(modelSpy.size(),2);
     QCOMPARE(pathView->currentIndex(), 0);
-    QCOMPARE(currentIndexSpy.count(), 1);
+    QCOMPARE(currentIndexSpy.size(), 1);
 
 }
 
@@ -1523,12 +1523,12 @@ void tst_QQuickPathView::mouseDrag()
     // first move beyond threshold does not trigger drag
     QVERIFY(!pathview->isMoving());
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(movingSpy.count(), 0);
-    QCOMPARE(moveStartedSpy.count(), 0);
-    QCOMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(draggingSpy.count(), 0);
-    QCOMPARE(dragStartedSpy.count(), 0);
-    QCOMPARE(dragEndedSpy.count(), 0);
+    QCOMPARE(movingSpy.size(), 0);
+    QCOMPARE(moveStartedSpy.size(), 0);
+    QCOMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(draggingSpy.size(), 0);
+    QCOMPARE(dragStartedSpy.size(), 0);
+    QCOMPARE(dragEndedSpy.size(), 0);
 
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(90,100), window->mapToGlobal(QPoint(90,100)),
@@ -1542,23 +1542,23 @@ void tst_QQuickPathView::mouseDrag()
 #endif // Q_OS_WIN
     QVERIFY(pathview->isMoving());
     QVERIFY(pathview->isDragging());
-    QCOMPARE(movingSpy.count(), 1);
-    QCOMPARE(moveStartedSpy.count(), 1);
-    QCOMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(draggingSpy.count(), 1);
-    QCOMPARE(dragStartedSpy.count(), 1);
-    QCOMPARE(dragEndedSpy.count(), 0);
+    QCOMPARE(movingSpy.size(), 1);
+    QCOMPARE(moveStartedSpy.size(), 1);
+    QCOMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(draggingSpy.size(), 1);
+    QCOMPARE(dragStartedSpy.size(), 1);
+    QCOMPARE(dragEndedSpy.size(), 0);
 
     QVERIFY(pathview->currentIndex() != current);
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(40,100));
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(draggingSpy.count(), 2);
-    QCOMPARE(dragStartedSpy.count(), 1);
-    QCOMPARE(dragEndedSpy.count(), 1);
-    QTRY_COMPARE(movingSpy.count(), 2);
-    QTRY_COMPARE(moveEndedSpy.count(), 1);
-    QCOMPARE(moveStartedSpy.count(), 1);
+    QCOMPARE(draggingSpy.size(), 2);
+    QCOMPARE(dragStartedSpy.size(), 1);
+    QCOMPARE(dragEndedSpy.size(), 1);
+    QTRY_COMPARE(movingSpy.size(), 2);
+    QTRY_COMPARE(moveEndedSpy.size(), 1);
+    QCOMPARE(moveStartedSpy.size(), 1);
 
 }
 
@@ -1617,30 +1617,30 @@ void tst_QQuickPathView::flickNClick() // QTBUG-77173
         // Dragging the child mouse area should animate the PathView (MA has no drag target)
         flick(window.data(), QPoint(199,199), QPoint(399,199), duration);
         QVERIFY(pathview->isMoving());
-        QCOMPARE(movingChangedSpy.count(), 1);
-        QCOMPARE(draggingSpy.count(), 2);
-        QCOMPARE(dragStartedSpy.count(), 1);
-        QCOMPARE(dragEndedSpy.count(), 1);
-        QVERIFY(currentIndexSpy.count() > 0);
-        QCOMPARE(moveStartedSpy.count(), 1);
-        QCOMPARE(moveEndedSpy.count(), 0);
-        QCOMPARE(flickingSpy.count(), 1);
-        QCOMPARE(flickStartedSpy.count(), 1);
-        QCOMPARE(flickEndedSpy.count(), 0);
+        QCOMPARE(movingChangedSpy.size(), 1);
+        QCOMPARE(draggingSpy.size(), 2);
+        QCOMPARE(dragStartedSpy.size(), 1);
+        QCOMPARE(dragEndedSpy.size(), 1);
+        QVERIFY(currentIndexSpy.size() > 0);
+        QCOMPARE(moveStartedSpy.size(), 1);
+        QCOMPARE(moveEndedSpy.size(), 0);
+        QCOMPARE(flickingSpy.size(), 1);
+        QCOMPARE(flickStartedSpy.size(), 1);
+        QCOMPARE(flickEndedSpy.size(), 0);
 
         // Now while it's still moving, click it.
         // The PathView should stop at a position such that offset is a whole number.
         QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(200, 200));
         QTRY_VERIFY(!pathview->isMoving());
-        QCOMPARE(movingChangedSpy.count(), 2); // QTBUG-78926
-        QCOMPARE(draggingSpy.count(), 2);
-        QCOMPARE(dragStartedSpy.count(), 1);
-        QCOMPARE(dragEndedSpy.count(), 1);
-        QCOMPARE(moveStartedSpy.count(), 1);
-        QCOMPARE(moveEndedSpy.count(), 1);
-        QCOMPARE(flickingSpy.count(), 2);
-        QCOMPARE(flickStartedSpy.count(), 1);
-        QCOMPARE(flickEndedSpy.count(), 1);
+        QCOMPARE(movingChangedSpy.size(), 2); // QTBUG-78926
+        QCOMPARE(draggingSpy.size(), 2);
+        QCOMPARE(dragStartedSpy.size(), 1);
+        QCOMPARE(dragEndedSpy.size(), 1);
+        QCOMPARE(moveStartedSpy.size(), 1);
+        QCOMPARE(moveEndedSpy.size(), 1);
+        QCOMPARE(flickingSpy.size(), 2);
+        QCOMPARE(flickStartedSpy.size(), 1);
+        QCOMPARE(flickEndedSpy.size(), 1);
         QVERIFY(qFuzzyIsNull(pathview->offset() - int(pathview->offset())));
     }
 }
@@ -1762,7 +1762,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     model.insertItem(0, "item1", "1");
     qApp->processEvents();
 
-    QCOMPARE(currentIndexSpy.count(), 1);
+    QCOMPARE(currentIndexSpy.size(), 1);
 
     // currentIndex is now 1
     item = findItem<QQuickRectangle>(pathview, "wrapper", 1);
@@ -1775,7 +1775,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     model.insertItem(0, "item2", "2");
     qApp->processEvents();
 
-    QCOMPARE(currentIndexSpy.count(), 2);
+    QCOMPARE(currentIndexSpy.size(), 2);
 
     // currentIndex is now 2
     item = findItem<QQuickRectangle>(pathview, "wrapper", 2);
@@ -1788,7 +1788,7 @@ void tst_QQuickPathView::currentOffsetOnInsertion()
     model.removeItem(0);
     qApp->processEvents();
 
-    QCOMPARE(currentIndexSpy.count(), 3);
+    QCOMPARE(currentIndexSpy.size(), 3);
 
     // currentIndex is now 1
     item = findItem<QQuickRectangle>(pathview, "wrapper", 1);
@@ -1896,9 +1896,9 @@ void tst_QQuickPathView::cancelDrag()
     QTRY_VERIFY(hasFraction(pathview->offset()));
     QTRY_VERIFY(pathview->isMoving());
     QVERIFY(pathview->isDragging());
-    QCOMPARE(draggingSpy.count(), 1);
-    QCOMPARE(dragStartedSpy.count(), 1);
-    QCOMPARE(dragEndedSpy.count(), 0);
+    QCOMPARE(draggingSpy.size(), 1);
+    QCOMPARE(dragStartedSpy.size(), 1);
+    QCOMPARE(dragEndedSpy.size(), 0);
 
     // steal mouse grab - cancels PathView dragging
     auto mouse = QPointingDevice::primaryPointingDevice();
@@ -1911,9 +1911,9 @@ void tst_QQuickPathView::cancelDrag()
     QTRY_COMPARE(pathview->offset(), qreal(qFloor(pathview->offset())));
     QTRY_VERIFY(!pathview->isMoving());
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(draggingSpy.count(), 2);
-    QCOMPARE(dragStartedSpy.count(), 1);
-    QCOMPARE(dragEndedSpy.count(), 1);
+    QCOMPARE(draggingSpy.size(), 2);
+    QCOMPARE(dragStartedSpy.size(), 1);
+    QCOMPARE(dragEndedSpy.size(), 1);
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(40,100));
 }
@@ -2021,7 +2021,7 @@ void tst_QQuickPathView::snapOneItem()
     QSignalSpy snapModeSpy(pathview, SIGNAL(snapModeChanged()));
 
     window->rootObject()->setProperty("snapOne", true);
-    QCOMPARE(snapModeSpy.count(), 1);
+    QCOMPARE(snapModeSpy.size(), 1);
     QTRY_VERIFY(!pathview->isMoving()); // ensure stable
 
     int currentIndex = pathview->currentIndex();
@@ -2302,22 +2302,22 @@ void tst_QQuickPathView::nestedinFlickable()
     // first move beyond threshold does not trigger drag
     QVERIFY(!pathview->isMoving());
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(movingSpy.count(), 0);
-    QCOMPARE(moveStartedSpy.count(), 0);
-    QCOMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(fflickingSpy.count(), 0);
-    QCOMPARE(fflickStartedSpy.count(), 0);
-    QCOMPARE(fflickEndedSpy.count(), 0);
+    QCOMPARE(movingSpy.size(), 0);
+    QCOMPARE(moveStartedSpy.size(), 0);
+    QCOMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(fflickingSpy.size(), 0);
+    QCOMPARE(fflickStartedSpy.size(), 0);
+    QCOMPARE(fflickEndedSpy.size(), 0);
 
     // no further moves after the initial move beyond threshold
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(73,219));
-    QTRY_COMPARE(movingSpy.count(), 2);
-    QTRY_COMPARE(moveEndedSpy.count(), 1);
-    QCOMPARE(moveStartedSpy.count(), 1);
+    QTRY_COMPARE(movingSpy.size(), 2);
+    QTRY_COMPARE(moveEndedSpy.size(), 1);
+    QCOMPARE(moveStartedSpy.size(), 1);
     // Flickable should not handle this
-    QCOMPARE(fflickingSpy.count(), 0);
-    QCOMPARE(fflickStartedSpy.count(), 0);
-    QCOMPARE(fflickEndedSpy.count(), 0);
+    QCOMPARE(fflickingSpy.size(), 0);
+    QCOMPARE(fflickStartedSpy.size(), 0);
+    QCOMPARE(fflickEndedSpy.size(), 0);
 
     // now test that two quick flicks are both handled by the pathview
     movingSpy.clear();
@@ -2351,25 +2351,25 @@ void tst_QQuickPathView::nestedinFlickable()
     // we allow the multiple signal count case, rather than simply:
     // QTRY_COMPARE(moveEndedSpy.count(), 1);
     // QCOMPARE(moveStartedSpy.count(), 1);
-    QTRY_VERIFY(moveEndedSpy.count() > 0);
+    QTRY_VERIFY(moveEndedSpy.size() > 0);
     qCDebug(lcTests) << "After receiving moveEnded signal:"
-                     << "moveEndedSpy.count():" << moveEndedSpy.count()
-                     << "moveStartedSpy.count():" << moveStartedSpy.count()
-                     << "fflickingSpy.count():" << fflickingSpy.count()
-                     << "fflickStartedSpy.count():" << fflickStartedSpy.count()
-                     << "fflickEndedSpy.count():" << fflickEndedSpy.count();
-    QTRY_COMPARE(moveStartedSpy.count(), moveEndedSpy.count());
+                     << "moveEndedSpy.count():" << moveEndedSpy.size()
+                     << "moveStartedSpy.count():" << moveStartedSpy.size()
+                     << "fflickingSpy.count():" << fflickingSpy.size()
+                     << "fflickStartedSpy.count():" << fflickStartedSpy.size()
+                     << "fflickEndedSpy.count():" << fflickEndedSpy.size();
+    QTRY_COMPARE(moveStartedSpy.size(), moveEndedSpy.size());
     qCDebug(lcTests) << "After receiving matched moveEnded signal(s):"
-                     << "moveEndedSpy.count():" << moveEndedSpy.count()
-                     << "moveStartedSpy.count():" << moveStartedSpy.count()
-                     << "fflickingSpy.count():" << fflickingSpy.count()
-                     << "fflickStartedSpy.count():" << fflickStartedSpy.count()
-                     << "fflickEndedSpy.count():" << fflickEndedSpy.count();
-    QVERIFY(moveStartedSpy.count() <= 2);
+                     << "moveEndedSpy.count():" << moveEndedSpy.size()
+                     << "moveStartedSpy.count():" << moveStartedSpy.size()
+                     << "fflickingSpy.count():" << fflickingSpy.size()
+                     << "fflickStartedSpy.count():" << fflickStartedSpy.size()
+                     << "fflickEndedSpy.count():" << fflickEndedSpy.size();
+    QVERIFY(moveStartedSpy.size() <= 2);
     // Flickable should not handle this
-    QCOMPARE(fflickingSpy.count(), 0);
-    QCOMPARE(fflickStartedSpy.count(), 0);
-    QCOMPARE(fflickEndedSpy.count(), 0);
+    QCOMPARE(fflickingSpy.size(), 0);
+    QCOMPARE(fflickStartedSpy.size(), 0);
+    QCOMPARE(fflickEndedSpy.size(), 0);
 
 }
 
@@ -2440,22 +2440,22 @@ void tst_QQuickPathView::flickableDelegate()
     // first move beyond threshold does not trigger drag
     QVERIFY(!flickable->isMoving());
     QVERIFY(!flickable->isDragging());
-    QCOMPARE(movingSpy.count(), 0);
-    QCOMPARE(moveStartedSpy.count(), 0);
-    QCOMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(fflickingSpy.count(), 0);
-    QCOMPARE(fflickStartedSpy.count(), 0);
-    QCOMPARE(fflickEndedSpy.count(), 0);
+    QCOMPARE(movingSpy.size(), 0);
+    QCOMPARE(moveStartedSpy.size(), 0);
+    QCOMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(fflickingSpy.size(), 0);
+    QCOMPARE(fflickStartedSpy.size(), 0);
+    QCOMPARE(fflickEndedSpy.size(), 0);
 
     // no further moves after the initial move beyond threshold
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(53,100));
-    QTRY_COMPARE(fflickingSpy.count(), 2);
-    QTRY_COMPARE(fflickStartedSpy.count(), 1);
-    QCOMPARE(fflickEndedSpy.count(), 1);
+    QTRY_COMPARE(fflickingSpy.size(), 2);
+    QTRY_COMPARE(fflickStartedSpy.size(), 1);
+    QCOMPARE(fflickEndedSpy.size(), 1);
     // PathView should not handle this
-    QTRY_COMPARE(movingSpy.count(), 0);
-    QTRY_COMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(moveStartedSpy.count(), 0);
+    QTRY_COMPARE(movingSpy.size(), 0);
+    QTRY_COMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(moveStartedSpy.size(), 0);
 }
 
 void tst_QQuickPathView::jsArrayChange()
@@ -2478,11 +2478,11 @@ void tst_QQuickPathView::jsArrayChange()
     }
 
     view->setModel(QVariant::fromValue(array1));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // no change
     view->setModel(QVariant::fromValue(array2));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 void tst_QQuickPathView::qtbug37815()
@@ -2776,14 +2776,14 @@ void tst_QQuickPathView::touchMove()
 
     QVERIFY(!pathview->isMoving());
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(movingSpy.count(), 0);
-    QCOMPARE(moveStartedSpy.count(), 0);
-    QCOMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(draggingSpy.count(), 0);
-    QCOMPARE(dragStartedSpy.count(), 0);
-    QCOMPARE(dragEndedSpy.count(), 0);
-    QCOMPARE(flickStartedSpy.count(), 0);
-    QCOMPARE(flickEndedSpy.count(), 0);
+    QCOMPARE(movingSpy.size(), 0);
+    QCOMPARE(moveStartedSpy.size(), 0);
+    QCOMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(draggingSpy.size(), 0);
+    QCOMPARE(dragStartedSpy.size(), 0);
+    QCOMPARE(dragEndedSpy.size(), 0);
+    QCOMPARE(flickStartedSpy.size(), 0);
+    QCOMPARE(flickEndedSpy.size(), 0);
 
     from -= QPoint(QGuiApplication::styleHints()->startDragDistance() + 1, 0);
     QTest::touchEvent(window.data(), touchDevice.data()).move(0, from, window.data());
@@ -2792,14 +2792,14 @@ void tst_QQuickPathView::touchMove()
     // first move does not trigger move/drag
     QVERIFY(!pathview->isMoving());
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(movingSpy.count(), 0);
-    QCOMPARE(moveStartedSpy.count(), 0);
-    QCOMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(draggingSpy.count(), 0);
-    QCOMPARE(dragStartedSpy.count(), 0);
-    QCOMPARE(dragEndedSpy.count(), 0);
-    QCOMPARE(flickStartedSpy.count(), 0);
-    QCOMPARE(flickEndedSpy.count(), 0);
+    QCOMPARE(movingSpy.size(), 0);
+    QCOMPARE(moveStartedSpy.size(), 0);
+    QCOMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(draggingSpy.size(), 0);
+    QCOMPARE(dragStartedSpy.size(), 0);
+    QCOMPARE(dragEndedSpy.size(), 0);
+    QCOMPARE(flickStartedSpy.size(), 0);
+    QCOMPARE(flickEndedSpy.size(), 0);
 
     QPoint diff = from - to;
     int moveCount = 4;
@@ -2809,14 +2809,14 @@ void tst_QQuickPathView::touchMove()
 
         QVERIFY(pathview->isMoving());
         QVERIFY(pathview->isDragging());
-        QCOMPARE(movingSpy.count(), 1);
-        QCOMPARE(moveStartedSpy.count(), 1);
-        QCOMPARE(moveEndedSpy.count(), 0);
-        QCOMPARE(draggingSpy.count(), 1);
-        QCOMPARE(dragStartedSpy.count(), 1);
-        QCOMPARE(dragEndedSpy.count(), 0);
-        QCOMPARE(flickStartedSpy.count(), 0);
-        QCOMPARE(flickEndedSpy.count(), 0);
+        QCOMPARE(movingSpy.size(), 1);
+        QCOMPARE(moveStartedSpy.size(), 1);
+        QCOMPARE(moveEndedSpy.size(), 0);
+        QCOMPARE(draggingSpy.size(), 1);
+        QCOMPARE(dragStartedSpy.size(), 1);
+        QCOMPARE(dragEndedSpy.size(), 0);
+        QCOMPARE(flickStartedSpy.size(), 0);
+        QCOMPARE(flickEndedSpy.size(), 0);
     }
     QVERIFY(pathview->currentIndex() != current);
 
@@ -2825,14 +2825,14 @@ void tst_QQuickPathView::touchMove()
 
     QVERIFY(pathview->isMoving());
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(movingSpy.count(), 1);
-    QCOMPARE(moveStartedSpy.count(), 1);
-    QCOMPARE(moveEndedSpy.count(), 0);
-    QCOMPARE(draggingSpy.count(), 2);
-    QCOMPARE(dragStartedSpy.count(), 1);
-    QCOMPARE(dragEndedSpy.count(), 1);
-    QCOMPARE(flickStartedSpy.count(), 1);
-    QCOMPARE(flickEndedSpy.count(), 0);
+    QCOMPARE(movingSpy.size(), 1);
+    QCOMPARE(moveStartedSpy.size(), 1);
+    QCOMPARE(moveEndedSpy.size(), 0);
+    QCOMPARE(draggingSpy.size(), 2);
+    QCOMPARE(dragStartedSpy.size(), 1);
+    QCOMPARE(dragEndedSpy.size(), 1);
+    QCOMPARE(flickStartedSpy.size(), 1);
+    QCOMPARE(flickEndedSpy.size(), 0);
 
     // Wait for the flick to finish
     QVERIFY(QTest::qWaitFor([&]()
@@ -2840,14 +2840,14 @@ void tst_QQuickPathView::touchMove()
     ));
     QVERIFY(!pathview->isMoving());
     QVERIFY(!pathview->isDragging());
-    QCOMPARE(movingSpy.count(), 2);
-    QCOMPARE(moveStartedSpy.count(), 1);
-    QCOMPARE(moveEndedSpy.count(), 1);
-    QCOMPARE(draggingSpy.count(), 2);
-    QCOMPARE(dragStartedSpy.count(), 1);
-    QCOMPARE(dragEndedSpy.count(), 1);
-    QCOMPARE(flickStartedSpy.count(), 1);
-    QCOMPARE(flickEndedSpy.count(), 1);
+    QCOMPARE(movingSpy.size(), 2);
+    QCOMPARE(moveStartedSpy.size(), 1);
+    QCOMPARE(moveEndedSpy.size(), 1);
+    QCOMPARE(draggingSpy.size(), 2);
+    QCOMPARE(dragStartedSpy.size(), 1);
+    QCOMPARE(dragEndedSpy.size(), 1);
+    QCOMPARE(flickStartedSpy.size(), 1);
+    QCOMPARE(flickEndedSpy.size(), 1);
 
 }
 

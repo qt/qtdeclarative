@@ -1053,8 +1053,8 @@ void tst_qmltc::propertyAlias_external()
     QSignalSpy heightAliasChangedSpy(&created, &PREPEND_NAMESPACE(propertyAlias_external)::heightAliasChanged);
     created.setHeight(10);
     QCOMPARE(created.heightAlias(), 10);
-    QCOMPARE(heightChangedSpy.count(), 1);
-    QCOMPARE(heightAliasChangedSpy.count(), 1);
+    QCOMPARE(heightChangedSpy.size(), 1);
+    QCOMPARE(heightAliasChangedSpy.size(), 1);
 }
 
 // TODO: we need to support RESET in aliases as well? (does it make sense?)
@@ -1139,15 +1139,15 @@ void tst_qmltc::complexAliases()
     created.setAFont(newFont);
     QCOMPARE(created.aFont(), newFont);
     QCOMPARE(created.aFont(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 1);
+    QCOMPARE(aFontSpy.size(), 1);
     newFont.setStyle(QFont::StyleOblique);
     theText->setProperty("font", newFont);
     QCOMPARE(theText->property("font").value<QFont>(), newFont);
     QCOMPARE(created.aFont(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 2);
+    QCOMPARE(aFontSpy.size(), 2);
 
     created.setAWordSpacing(1);
-    QCOMPARE(aFontSpy.count(), 3);
+    QCOMPARE(aFontSpy.size(), 3);
 
     // aliasToObjectAlias:
     QCOMPARE(created.aliasToObjectAlias(), created.aRectObject());
@@ -1182,12 +1182,12 @@ void tst_qmltc::complexAliases()
     QCOMPARE(created.aliasToValueTypeAlias(), newFont);
     QCOMPARE(created.aliasToValueTypeAlias(), created.aFont());
     QCOMPARE(created.aliasToValueTypeAlias(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 4);
-    QCOMPARE(aliasToValueTypeAliasSpy.count(), 1);
+    QCOMPARE(aFontSpy.size(), 4);
+    QCOMPARE(aliasToValueTypeAliasSpy.size(), 1);
     newFont.setPixelSize(12);
     created.setAFont(newFont);
-    QCOMPARE(aFontSpy.count(), 5);
-    QCOMPARE(aliasToValueTypeAliasSpy.count(), 2);
+    QCOMPARE(aFontSpy.size(), 5);
+    QCOMPARE(aliasToValueTypeAliasSpy.size(), 2);
     QCOMPARE(created.aliasToValueTypeAlias(), created.aFont());
     QCOMPARE(created.aliasToValueTypeAlias(), theText->property("font").value<QFont>());
 
@@ -1196,8 +1196,8 @@ void tst_qmltc::complexAliases()
     created.setAliasToPropertyOfValueTypeAlias(3);
     QCOMPARE(created.aliasToPropertyOfValueTypeAlias(), created.aFont().pixelSize());
     QCOMPARE(created.aFont(), theText->property("font").value<QFont>());
-    QCOMPARE(aFontSpy.count(), 6);
-    QCOMPARE(aliasToValueTypeAliasSpy.count(), 3);
+    QCOMPARE(aFontSpy.size(), 6);
+    QCOMPARE(aliasToValueTypeAliasSpy.size(), 3);
 
     // aliasToImportedMessage:
     QCOMPARE(created.aliasToImportedMessage(), localImport->property("message").toString());
@@ -1235,7 +1235,7 @@ void tst_qmltc::complexAliases()
     newPalette->fromQPalette(QPalette(QColor(u"cyan"_s)));
     QCOMPARE(newPalette->button(), QColor(u"cyan"_s));
     created.setAliasToPrivatePalette(newPalette);
-    QCOMPARE(paletteChangedSpy.count(), 1);
+    QCOMPARE(paletteChangedSpy.size(), 1);
     QCOMPARE(QQuickItemPrivate::get(theRect)->palette()->button(), QColor(u"cyan"_s));
     QCOMPARE(created.aliasToPrivatePalette(), QQuickItemPrivate::get(theRect)->palette());
 
@@ -1317,9 +1317,9 @@ void tst_qmltc::componentHelloWorld()
     QCOMPARE(created->hello(), QStringLiteral("Hello, World!"));
 
     QSignalSpy onDestroySpy(created.get(), &PREPEND_NAMESPACE(ComponentHelloWorld)::sDestroying);
-    QCOMPARE(onDestroySpy.count(), 0);
+    QCOMPARE(onDestroySpy.size(), 0);
     created.reset();
-    QCOMPARE(onDestroySpy.count(), 1);
+    QCOMPARE(onDestroySpy.size(), 1);
 }
 
 void tst_qmltc::propertyReturningFunction()
@@ -2092,7 +2092,7 @@ void tst_qmltc::calqlatrBits()
 
     QSignalSpy scaleChangedSpy(textItem, &QQuickItem::scaleChanged);
     controller->completeToBeginning();
-    QTRY_VERIFY(scaleChangedSpy.count() > 0);
+    QTRY_VERIFY(scaleChangedSpy.size() > 0);
 }
 
 void tst_qmltc::trickyPropertyChangeAndSignalHandlers()

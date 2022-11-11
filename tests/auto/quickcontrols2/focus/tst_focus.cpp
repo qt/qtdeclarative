@@ -421,7 +421,7 @@ void tst_focus::visualFocus()
 
     QQuickItem *column = view.rootObject();
     QVERIFY(column);
-    QCOMPARE(column->childItems().count(), 2);
+    QCOMPARE(column->childItems().size(), 2);
 
     QQuickControl *button = qobject_cast<QQuickControl *>(column->childItems().first());
     QVERIFY(button);

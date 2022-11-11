@@ -39,12 +39,12 @@ public:
     QQmlObjectModelPrivate() : QObjectPrivate(), moveId(0) {}
 
     static void children_append(QQmlListProperty<QObject> *prop, QObject *item) {
-        qsizetype index = static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
+        qsizetype index = static_cast<QQmlObjectModelPrivate *>(prop->data)->children.size();
         static_cast<QQmlObjectModelPrivate *>(prop->data)->insert(index, item);
     }
 
     static qsizetype children_count(QQmlListProperty<QObject> *prop) {
-        return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
+        return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.size();
     }
 
     static QObject *children_at(QQmlListProperty<QObject> *prop, qsizetype index) {
@@ -61,13 +61,13 @@ public:
 
     static void children_removeLast(QQmlListProperty<QObject> *prop) {
         auto data = static_cast<QQmlObjectModelPrivate *>(prop->data);
-        data->remove(data->children.count() - 1, 1);
+        data->remove(data->children.size() - 1, 1);
     }
 
     void insert(int index, QObject *item) {
         Q_Q(QQmlObjectModel);
         children.insert(index, Item(item));
-        for (int i = index; i < children.count(); ++i) {
+        for (int i = index; i < children.size(); ++i) {
             QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.at(i).item);
             attached->setIndex(i);
         }
@@ -126,7 +126,7 @@ public:
             attached->setIndex(-1);
         }
         children.erase(children.begin() + index, children.begin() + index + n);
-        for (int i = index; i < children.count(); ++i) {
+        for (int i = index; i < children.size(); ++i) {
             QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.at(i).item);
             attached->setIndex(i);
         }
@@ -142,11 +142,11 @@ public:
         const auto copy = children;
         for (const Item &child : copy)
             emit q->destroyingItem(child.item);
-        remove(0, children.count());
+        remove(0, children.size());
     }
 
     int indexOf(QObject *item) const {
-        for (int i = 0; i < children.count(); ++i)
+        for (int i = 0; i < children.size(); ++i)
             if (children.at(i).item == item)
                 return i;
         return -1;
@@ -231,7 +231,7 @@ QQmlListProperty<QObject> QQmlObjectModel::children()
 int QQmlObjectModel::count() const
 {
     Q_D(const QQmlObjectModel);
-    return d->children.count();
+    return d->children.size();
 }
 
 bool QQmlObjectModel::isValid() const
@@ -265,7 +265,7 @@ QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item, Reusable
 QVariant QQmlObjectModel::variantValue(int index, const QString &role)
 {
     Q_D(QQmlObjectModel);
-    if (index < 0 || index >= d->children.count())
+    if (index < 0 || index >= d->children.size())
         return QString();
     return d->children.at(index).item->property(role.toUtf8().constData());
 }
@@ -308,7 +308,7 @@ QQmlObjectModelAttached *QQmlObjectModel::qmlAttachedProperties(QObject *obj)
 QObject *QQmlObjectModel::get(int index) const
 {
     Q_D(const QQmlObjectModel);
-    if (index < 0 || index >= d->children.count())
+    if (index < 0 || index >= d->children.size())
         return nullptr;
     return d->children.at(index).item;
 }

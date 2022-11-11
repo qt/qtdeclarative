@@ -195,7 +195,7 @@ struct ModuleNamespaceIterator : ObjectOwnPropertyKeyIterator
 PropertyKey ModuleNamespaceIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
 {
     const Module *module = static_cast<const Module *>(o);
-    if (exportIndex < exportedNames.count()) {
+    if (exportIndex < exportedNames.size()) {
         if (attrs)
             *attrs = Attr_Data;
         Scope scope(module->engine());

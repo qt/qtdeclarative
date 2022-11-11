@@ -186,7 +186,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
         QVector<QEventPoint> chosenPoints;
 
         if (event->isBeginEvent())
-            m_pressedInsideTarget = target() && currentPoints().count() > 0;
+            m_pressedInsideTarget = target() && currentPoints().size() > 0;
 
         for (const QQuickHandlerPoint &p : currentPoints()) {
             if (!allOverThreshold)

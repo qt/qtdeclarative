@@ -120,7 +120,7 @@ ReturnedValue ErrorObject::method_get_stack(const FunctionObject *b, const Value
         return v4->throwTypeError();
     if (!This->d()->stack) {
         QString trace;
-        for (int i = 0; i < This->d()->stackTrace->count(); ++i) {
+        for (int i = 0; i < This->d()->stackTrace->size(); ++i) {
             if (i > 0)
                 trace += QLatin1Char('\n');
             const StackFrame &frame = This->d()->stackTrace->at(i);

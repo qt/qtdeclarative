@@ -188,31 +188,31 @@ void QQuickStyledTextPrivate::parse()
                 hasSpace = true;
             }
 
-            if (rangeStart != drawText.length() && formatStack.count()) {
+            if (rangeStart != drawText.size() && formatStack.size()) {
                 if (formatChanged) {
                     QTextLayout::FormatRange formatRange;
                     formatRange.format = formatStack.top();
                     formatRange.start = rangeStart;
-                    formatRange.length = drawText.length() - rangeStart;
+                    formatRange.length = drawText.size() - rangeStart;
                     ranges.append(formatRange);
                     formatChanged = false;
-                } else if (ranges.count()) {
-                    ranges.last().length += drawText.length() - rangeStart;
+                } else if (ranges.size()) {
+                    ranges.last().length += drawText.size() - rangeStart;
                 }
             }
-            rangeStart = drawText.length();
+            rangeStart = drawText.size();
             ++ch;
             if (*ch == slash) {
                 ++ch;
                 if (parseCloseTag(ch, text, drawText)) {
-                    if (formatStack.count()) {
+                    if (formatStack.size()) {
                         formatChanged = true;
                         formatStack.pop();
                     }
                 }
             } else {
                 QTextCharFormat format;
-                if (formatStack.count())
+                if (formatStack.size())
                     format = formatStack.top();
                 if (parseTag(ch, text, drawText, format)) {
                     formatChanged = true;
@@ -252,15 +252,15 @@ void QQuickStyledTextPrivate::parse()
     }
     if (textLength)
         appendText(text, textStart, textLength, drawText);
-    if (rangeStart != drawText.length() && formatStack.count()) {
+    if (rangeStart != drawText.size() && formatStack.size()) {
         if (formatChanged) {
             QTextLayout::FormatRange formatRange;
             formatRange.format = formatStack.top();
             formatRange.start = rangeStart;
-            formatRange.length = drawText.length() - rangeStart;
+            formatRange.length = drawText.size() - rangeStart;
             ranges.append(formatRange);
-        } else if (ranges.count()) {
-            ranges.last().length += drawText.length() - rangeStart;
+        } else if (ranges.size()) {
+            ranges.last().length += drawText.size() - rangeStart;
         }
     }
 
@@ -483,7 +483,7 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
                 else if (is_equal_ignoring_case(tag, QLatin1String("ul"))) {
                     if (!listStack.isEmpty()) {
                         listStack.pop();
-                        if (!listStack.count())
+                        if (!listStack.size())
                             textOut.append(QChar::LineSeparator);
                     }
                     return false;
@@ -506,7 +506,7 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
             } else if (is_equal_ignoring_case(tag, QLatin1String("ol"))) {
                 if (!listStack.isEmpty()) {
                     listStack.pop();
-                    if (!listStack.count())
+                    if (!listStack.size())
                         textOut.append(QChar::LineSeparator);
                 }
                 return false;
@@ -649,7 +649,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
 
     if (!updateImagePositions) {
         QQuickStyledTextImgTag *image = new QQuickStyledTextImgTag;
-        image->position = textOut.length() + (trailingSpace ? 0 : 1);
+        image->position = textOut.size() + (trailingSpace ? 0 : 1);
 
         QPair<QStringView,QStringView> attr;
         do {
@@ -693,7 +693,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         // if we already have a list of img tags for this text
         // we only want to update the positions of these tags.
         QQuickStyledTextImgTag *image = imgTags->value(nbImages);
-        image->position = textOut.length() + (trailingSpace ? 0 : 1);
+        image->position = textOut.size() + (trailingSpace ? 0 : 1);
         imgWidth = image->size.width();
         image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
         QPair<QStringView,QStringView> attr;

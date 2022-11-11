@@ -223,7 +223,7 @@ void QQmlJSLogger::printContext(const QString &overrideFileName,
 
     int tabCount = issueLocationWithContext.beforeText().count(QLatin1Char('\t'));
     int locationLength = location.length == 0 ? 1 : location.length;
-    m_output.write(QString::fromLatin1(" ").repeated(issueLocationWithContext.beforeText().length()
+    m_output.write(QString::fromLatin1(" ").repeated(issueLocationWithContext.beforeText().size()
                                                      - tabCount)
                    + QString::fromLatin1("\t").repeated(tabCount)
                    + QString::fromLatin1("^").repeated(locationLength) + QLatin1Char('\n'));
@@ -278,9 +278,9 @@ void QQmlJSLogger::printFix(const FixSuggestion &fix)
             continue;
 
         m_output.write(u" "_s.repeated(
-                               issueLocationWithContext.beforeText().length() - tabCount)
+                               issueLocationWithContext.beforeText().size() - tabCount)
                        + u"\t"_s.repeated(tabCount)
-                       + u"^"_s.repeated(fixItem.replacementString.length()) + u'\n');
+                       + u"^"_s.repeated(fixItem.replacementString.size()) + u'\n');
     }
 }
 

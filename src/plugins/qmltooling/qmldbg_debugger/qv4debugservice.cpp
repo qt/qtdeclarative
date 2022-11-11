@@ -395,10 +395,10 @@ public:
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
         if (!debugger) {
             const QList<QV4Debugger *> &debuggers = debugService->debuggerAgent.debuggers();
-            if (debuggers.count() > 1) {
+            if (debuggers.size() > 1) {
                 createErrorResponse(QStringLiteral("Cannot lookup values if multiple debuggers are running and none is paused"));
                 return;
-            } else if (debuggers.count() == 0) {
+            } else if (debuggers.size() == 0) {
                 createErrorResponse(QStringLiteral("No debuggers available to lookup values"));
                 return;
             }
@@ -611,10 +611,10 @@ public:
         QV4Debugger *debugger = debugService->debuggerAgent.pausedDebugger();
         if (!debugger) {
             const QList<QV4Debugger *> &debuggers = debugService->debuggerAgent.debuggers();
-            if (debuggers.count() > 1) {
+            if (debuggers.size() > 1) {
                 createErrorResponse(QStringLiteral("Cannot evaluate expressions if multiple debuggers are running and none is paused"));
                 return;
-            } else if (debuggers.count() == 0) {
+            } else if (debuggers.size() == 0) {
                 createErrorResponse(QStringLiteral("No debuggers available to evaluate expressions"));
                 return;
             }

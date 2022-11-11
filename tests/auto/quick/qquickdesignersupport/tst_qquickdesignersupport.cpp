@@ -344,7 +344,7 @@ void tst_qquickdesignersupport::basicStates()
 
     QVERIFY(stateGroup);
 
-    QCOMPARE(stateGroup->states().count(), 2 );
+    QCOMPARE(stateGroup->states().size(), 2 );
 
     QQuickState *state01 = stateGroup->states().first();
     QQuickState *state02 = stateGroup->states().last();
@@ -390,7 +390,7 @@ void tst_qquickdesignersupport::statesPropertyChanges()
 
     QVERIFY(stateGroup);
 
-    QCOMPARE(stateGroup->states().count(), 2 );
+    QCOMPARE(stateGroup->states().size(), 2 );
 
     QQuickState *state01 = stateGroup->states().first();
     QQuickState *state02 = stateGroup->states().last();
@@ -409,7 +409,7 @@ void tst_qquickdesignersupport::statesPropertyChanges()
 
     QCOMPARE(state01->operationCount(), 1);
 
-    QCOMPARE(statePrivate01->operations.count(), 1);
+    QCOMPARE(statePrivate01->operations.size(), 1);
 
     QQuickStateOperation *propertyChange = statePrivate01->operations.at(0).data();
 
@@ -444,7 +444,7 @@ void tst_qquickdesignersupport::statesPropertyChanges()
     QCOMPARE(rootItem, QQuickDesignerSupportPropertyChanges::targetObject(newPropertyChange));
 
     QCOMPARE(state01->operationCount(), 2);
-    QCOMPARE(statePrivate01->operations.count(), 2);
+    QCOMPARE(statePrivate01->operations.size(), 2);
 
     QCOMPARE(QQuickDesignerSupportPropertyChanges::stateObject(newPropertyChange), state01);
 

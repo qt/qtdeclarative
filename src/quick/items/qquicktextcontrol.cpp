@@ -962,7 +962,7 @@ QRectF QQuickTextControlPrivate::rectForPosition(int position) const
         if (relativePos == preeditPos)
             relativePos += preeditCursor;
         else if (relativePos > preeditPos)
-            relativePos += layout->preeditAreaText().length();
+            relativePos += layout->preeditAreaText().size();
     }
 #endif
     QTextLine line = layout->lineForTextPosition(relativePos);
@@ -1271,7 +1271,7 @@ bool QQuickTextControlPrivate::sendMouseEventToInputContext(QMouseEvent *e, cons
         QTextLayout *layout = cursor.block().layout();
         int cursorPos = q->hitTest(pos, Qt::FuzzyHit) - cursor.position();
 
-        if (cursorPos >= 0 && cursorPos <= layout->preeditAreaText().length()) {
+        if (cursorPos >= 0 && cursorPos <= layout->preeditAreaText().size()) {
             if (e->type() == QEvent::MouseButtonRelease) {
                 QGuiApplication::inputMethod()->invokeAction(QInputMethod::Click, cursorPos);
             }
@@ -1343,7 +1343,7 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
             emit q->preeditTextChanged();
         }
         QVector<QTextLayout::FormatRange> overrides;
-        preeditCursor = e->preeditString().length();
+        preeditCursor = e->preeditString().size();
         hasImState = !e->preeditString().isEmpty();
         cursorVisible = true;
         for (int i = 0; i < e->attributes().size(); ++i) {
@@ -1416,7 +1416,7 @@ QVariant QQuickTextControl::inputMethodQuery(Qt::InputMethodQuery property, cons
         QTextCursor tmpCursor = d->cursor;
         int localPos = d->cursor.position() - block.position();
         QString result = block.text().mid(localPos);
-        while (result.length() < maxLength) {
+        while (result.size() < maxLength) {
             int currentBlock = tmpCursor.blockNumber();
             tmpCursor.movePosition(QTextCursor::NextBlock);
             if (tmpCursor.blockNumber() == currentBlock)

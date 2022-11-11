@@ -70,7 +70,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
 
     m_jsGlobalObject = importer->jsGlobalObject();
     auto numberMethods = m_jsGlobalObject->methods(u"Number"_s);
-    Q_ASSERT(numberMethods.length() == 1);
+    Q_ASSERT(numberMethods.size() == 1);
     m_numberPrototype = numberMethods[0].returnType()->baseType();
     Q_ASSERT(m_numberPrototype);
     Q_ASSERT(m_numberPrototype->internalName() == u"NumberPrototype"_s);

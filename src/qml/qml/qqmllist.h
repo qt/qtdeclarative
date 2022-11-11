@@ -91,7 +91,7 @@ private:
         reinterpret_cast<QList<T *> *>(p->data)->append(v);
     }
     static qsizetype qlist_count(QQmlListProperty *p) {
-        return reinterpret_cast<QList<T *> *>(p->data)->count();
+        return reinterpret_cast<QList<T *> *>(p->data)->size();
     }
     static T *qlist_at(QQmlListProperty *p, qsizetype idx) {
         return reinterpret_cast<QList<T *> *>(p->data)->at(idx);

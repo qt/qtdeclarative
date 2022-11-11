@@ -320,7 +320,7 @@ void QQuickStackLayout::rearrange(const QSizeF &newSize)
 
     qCDebug(lcQuickLayouts) << "QQuickStackLayout::rearrange";
 
-    if (d->currentIndex == -1 || d->currentIndex >= m_cachedItemSizeHints.count())
+    if (d->currentIndex == -1 || d->currentIndex >= m_cachedItemSizeHints.size())
         return;
     QQuickStackLayout::SizeHints &hints = cachedItemSizeHints(d->currentIndex);
     QQuickItem *item = itemAt(d->currentIndex);

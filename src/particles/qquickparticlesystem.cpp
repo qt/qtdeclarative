@@ -807,7 +807,7 @@ void QQuickParticleSystem::emittersChanged()
     }
 
     // Populate groups and set sizes.
-    for (int i = 0; i < m_emitters.count(); ) {
+    for (int i = 0; i < m_emitters.size(); ) {
         QQuickParticleEmitter *e = m_emitters.at(i);
         if (!e) {
             m_emitters.removeAt(i);
@@ -873,7 +873,7 @@ void QQuickParticleSystem::createEngine()
         }
     }
 
-    if (m_groups.count()) {
+    if (m_groups.size()) {
         //Reorder groups List so as to have the same order as groupData
         // TODO: can't we just merge the two lists?
         QList<QQuickParticleGroup*> newList;
@@ -893,7 +893,7 @@ void QQuickParticleSystem::createEngine()
         }
         m_groups = newList;
         QList<QQuickStochasticState*> states;
-        states.reserve(m_groups.count());
+        states.reserve(m_groups.size());
         for (QQuickParticleGroup *g : qAsConst(m_groups))
             states << (QQuickStochasticState*)g;
 
@@ -952,7 +952,7 @@ int QQuickParticleSystem::nextSystemIndex()
 
 QQuickParticleData* QQuickParticleSystem::newDatum(int groupId, bool respectLimits, int sysIndex)
 {
-    Q_ASSERT(groupId < groupData.count());//XXX shouldn't really be an assert
+    Q_ASSERT(groupId < groupData.size());//XXX shouldn't really be an assert
 
     QQuickParticleData* ret = groupData[groupId]->newDatum(respectLimits);
     if (!ret) {

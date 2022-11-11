@@ -111,7 +111,7 @@ Function::Function(ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFuncti
     , aotFunction(aotFunction)
 {
     internalClass = engine->internalClasses(EngineBase::Class_CallContext);
-    nFormals = aotFunction->argumentTypes.length();
+    nFormals = aotFunction->argumentTypes.size();
 }
 
 Function::~Function()
@@ -127,7 +127,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     QStringList parameterNames;
 
     // Resolve duplicate parameter names:
-    for (int i = 0, ei = parameters.count(); i != ei; ++i) {
+    for (int i = 0, ei = parameters.size(); i != ei; ++i) {
         const QByteArray &param = parameters.at(i);
         int duplicate = -1;
 

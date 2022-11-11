@@ -504,7 +504,7 @@ void QQuickParentChange::saveCurrentValues()
         return;
 
     QList<QQuickItem *> children = d->rewind->parent->childItems();
-    for (int ii = 0; ii < children.count() - 1; ++ii) {
+    for (int ii = 0; ii < children.size() - 1; ++ii) {
         if (children.at(ii) == d->target) {
             d->rewind->stackBefore = children.at(ii + 1);
             break;

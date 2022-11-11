@@ -248,7 +248,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
         if (path.isEmpty()) return;
 
         // Everything up to the last property must be an "object type" property
-        for (int ii = 0; ii < path.count() - 1; ++ii) {
+        for (int ii = 0; ii < path.size() - 1; ++ii) {
             const QStringView &pathName = path.at(ii);
 
             // Types must begin with an uppercase letter (see checkRegistration()
@@ -264,7 +264,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                         currentObject = qmlAttachedPropertiesObject(currentObject, func);
                         if (!currentObject) return; // Something is broken with the attachable type
                     } else if (r.importNamespace) {
-                        if (++ii == path.count())
+                        if (++ii == path.size())
                             return; // No type following the namespace
 
                         // TODO: Do we really _not_ want to query the namespaced types here?
@@ -320,7 +320,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                 return; // Not an object property
             }
 
-            if (ii == (path.count() - 2) && QQmlMetaType::isValueType(property->propType())) {
+            if (ii == (path.size() - 2) && QQmlMetaType::isValueType(property->propType())) {
                 // We're now at a value type property
                 const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(property->propType());
                 if (!valueTypeMetaObject) return; // Not a value type
@@ -374,7 +374,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     auto findChangeSignal = [&](QStringView signalName) {
         const QString changed = QStringLiteral("Changed");
         if (signalName.endsWith(changed)) {
-            const QStringView propName = signalName.first(signalName.length() - changed.length());
+            const QStringView propName = signalName.first(signalName.size() - changed.size());
             const QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
             while (d && d->isFunction())
                 d = ddata->propertyCache->overrideData(d);
@@ -392,7 +392,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     if (QmlIR::IRBuilder::isSignalPropertyName(terminalString)) {
         QString signalName = terminalString.mid(2);
         int firstNon_;
-        int length = signalName.length();
+        int length = signalName.size();
         for (firstNon_ = 0; firstNon_ < length; ++firstNon_)
             if (signalName.at(firstNon_) != u'_')
                 break;
@@ -753,7 +753,7 @@ QString QQmlProperty::name() const
         } else if (type() & SignalProperty) {
             // ### Qt7: Return the original signal name here. Do not prepend "on"
             QString name = QStringLiteral("on") + d->core.name(d->object);
-            for (int i = 2, end = name.length(); i != end; ++i) {
+            for (int i = 2, end = name.size(); i != end; ++i) {
                 const QChar c = name.at(i);
                 if (c != u'_') {
                     name[i] = c.toUpper();
@@ -1451,7 +1451,7 @@ bool QQmlPropertyPrivate::write(
             } else if (variantMetaType == QMetaType::fromType<QList<QObject *>>()) {
                 const QList<QObject *> &list = qvariant_cast<QList<QObject *> >(value);
 
-                for (qsizetype ii = 0; ii < list.count(); ++ii) {
+                for (qsizetype ii = 0; ii < list.size(); ++ii) {
                     QObject *o = list.at(ii);
                     if (o && !QQmlMetaObject::canConvert(o, valueMetaObject))
                         o = nullptr;
@@ -1788,7 +1788,7 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
     // If no signal is found, but the signal is of the form "onBlahChanged",
     // return the notify signal for the property "Blah"
     if (name.endsWith("Changed")) {
-        QByteArray propName = name.mid(0, name.length() - 7);
+        QByteArray propName = name.mid(0, name.size() - 7);
         int propIdx = mo->indexOfProperty(propName.constData());
         if (propIdx >= 0) {
             QMetaProperty prop = mo->property(propIdx);

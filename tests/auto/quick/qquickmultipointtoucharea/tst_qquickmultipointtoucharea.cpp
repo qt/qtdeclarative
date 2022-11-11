@@ -1243,22 +1243,22 @@ void tst_QQuickMultiPointTouchArea::mouseGestureStarted() // QTBUG-70258
 
     QPoint p1 = QPoint(distanceFromOrigin, distanceFromOrigin);
     QTest::mousePress(view.data(), Qt::LeftButton, Qt::NoModifier, p1);
-    QCOMPARE(gestureStartedSpy.count(), 0);
+    QCOMPARE(gestureStartedSpy.size(), 0);
 
     p1 += QPoint(dragThreshold, dragThreshold);
     QTest::mouseMove(view.data(), p1);
-    QCOMPARE(gestureStartedSpy.count(), 0);
+    QCOMPARE(gestureStartedSpy.size(), 0);
 
     p1 += QPoint(1, 1);
     QTest::mouseMove(view.data(), p1);
-    QTRY_COMPARE(gestureStartedSpy.count(), 1);
+    QTRY_COMPARE(gestureStartedSpy.size(), 1);
     QTRY_COMPARE(area->property("gestureStartedX").toInt(), distanceFromOrigin);
     QCOMPARE(area->property("gestureStartedY").toInt(), distanceFromOrigin);
 
     p1 += QPoint(10, 10);
     QTest::mouseMove(view.data(), p1);
     // if nobody called gesteure->grab(), gestureStarted will keep happening
-    QTRY_COMPARE(gestureStartedSpy.count(), grabGesture ? 1 : 2);
+    QTRY_COMPARE(gestureStartedSpy.size(), grabGesture ? 1 : 2);
     QCOMPARE(area->property("gestureStartedX").toInt(), distanceFromOrigin);
     QCOMPARE(area->property("gestureStartedY").toInt(), distanceFromOrigin);
 
@@ -1370,7 +1370,7 @@ void tst_QQuickMultiPointTouchArea::touchFiltering() // QTBUG-74028
     QQuickTouchUtils::flush(window.data());
     QTRY_COMPARE(mpta->parentItem()->property("mptaPoint").toPoint(), pt);
     QCOMPARE(mpta->parentItem()->property("maPoint").toPoint(), ma->boundingRect().center().toPoint());
-    QCOMPARE(mptaSpy.count(), 1);
+    QCOMPARE(mptaSpy.size(), 1);
 }
 
 void tst_QQuickMultiPointTouchArea::nestedPinchAreaMouse() // QTBUG-83662
@@ -1391,32 +1391,32 @@ void tst_QQuickMultiPointTouchArea::nestedPinchAreaMouse() // QTBUG-83662
     QTest::mousePress(window.data(), Qt::LeftButton, Qt::NoModifier, p1);
     QCOMPARE(point1->pressed(), true);
     QCOMPARE(point2->pressed(), false);
-    QCOMPARE(pressedSpy.count(), 1);
+    QCOMPARE(pressedSpy.size(), 1);
     QCOMPARE(mpta->property("pressedCount").toInt(), 1);
-    QCOMPARE(updatedSpy.count(), 0);
+    QCOMPARE(updatedSpy.size(), 0);
     QCOMPARE(mpta->property("updatedCount").toInt(), 0);
-    QCOMPARE(releasedSpy.count(), 0);
+    QCOMPARE(releasedSpy.size(), 0);
     QCOMPARE(mpta->property("releasedCount").toInt(), 0);
 
     p1 += QPoint(0, 15);
     QTest::mouseMove(window.data(), p1);
     QCOMPARE(point1->pressed(), true);
     QCOMPARE(point2->pressed(), false);
-    QCOMPARE(pressedSpy.count(), 1);
+    QCOMPARE(pressedSpy.size(), 1);
     QCOMPARE(mpta->property("pressedCount").toInt(), 1);
-    QCOMPARE(updatedSpy.count(), 1);
+    QCOMPARE(updatedSpy.size(), 1);
     QCOMPARE(mpta->property("updatedCount").toInt(), 1);
-    QCOMPARE(releasedSpy.count(), 0);
+    QCOMPARE(releasedSpy.size(), 0);
     QCOMPARE(mpta->property("releasedCount").toInt(), 0);
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, p1);
     QCOMPARE(point1->pressed(), false);
     QCOMPARE(point2->pressed(), false);
-    QCOMPARE(pressedSpy.count(), 1);
+    QCOMPARE(pressedSpy.size(), 1);
     QCOMPARE(mpta->property("pressedCount").toInt(), 1);
-    QCOMPARE(updatedSpy.count(), 1);
+    QCOMPARE(updatedSpy.size(), 1);
     QCOMPARE(mpta->property("updatedCount").toInt(), 1);
-    QCOMPARE(releasedSpy.count(), 1);
+    QCOMPARE(releasedSpy.size(), 1);
     QCOMPARE(mpta->property("releasedCount").toInt(), 1);
 }
 

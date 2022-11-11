@@ -500,7 +500,7 @@ double QJSValue::toNumber() const
 bool QJSValue::toBool() const
 {
     if (const QString *string = QJSValuePrivate::asQString(this))
-        return string->length() > 0;
+        return string->size() > 0;
 
     return caughtResult<bool>(this, &QV4::Value::toBoolean);
 }
@@ -674,7 +674,7 @@ QJSValue QJSValue::call(const QJSValueList &args) const
     Q_ASSERT(engine);
 
     Scope scope(engine);
-    JSCallArguments jsCallData(scope, args.length());
+    JSCallArguments jsCallData(scope, args.size());
     *jsCallData.thisObject = engine->globalObject;
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {

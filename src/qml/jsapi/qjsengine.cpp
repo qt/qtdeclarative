@@ -829,7 +829,7 @@ static bool convertString(const QString &string, QMetaType metaType, void *ptr)
 {
     // have a string based value without engine. Do conversion manually
     if (metaType == QMetaType::fromType<bool>()) {
-        *reinterpret_cast<bool*>(ptr) = string.length() != 0;
+        *reinterpret_cast<bool*>(ptr) = string.size() != 0;
         return true;
     }
     if (metaType == QMetaType::fromType<QString>()) {

@@ -239,7 +239,7 @@ void QQmlDelegateChooser::choices_append(QQmlListProperty<QQmlDelegateChoice> *p
 qsizetype QQmlDelegateChooser::choices_count(QQmlListProperty<QQmlDelegateChoice> *prop)
 {
     QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser*>(prop->object);
-    return q->m_choices.count();
+    return q->m_choices.size();
 }
 
 QQmlDelegateChoice *QQmlDelegateChooser::choices_at(QQmlListProperty<QQmlDelegateChoice> *prop, qsizetype index)
@@ -294,7 +294,7 @@ QQmlComponent *QQmlDelegateChooser::delegate(QQmlAdaptorModel *adaptorModel, int
     }
 
     // loop through choices, finding first one that fits
-    for (int i = 0; i < m_choices.count(); ++i) {
+    for (int i = 0; i < m_choices.size(); ++i) {
         const QQmlDelegateChoice *choice = m_choices.at(i);
         if (choice->match(row, column, v))
             return choice->delegate();

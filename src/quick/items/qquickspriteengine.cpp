@@ -267,7 +267,7 @@ int QQuickSpriteEngine::spriteCount() const //TODO: Actually image state count, 
 
 void QQuickStochasticEngine::setGoal(int state, int sprite, bool jump)
 {
-    if (sprite >= m_things.count() || state >= m_states.count()
+    if (sprite >= m_things.size() || state >= m_states.size()
             || sprite < 0 || state < 0)
         return;
     if (!jump){
@@ -488,7 +488,7 @@ void QQuickStochasticEngine::setCount(int c)
 
 void QQuickStochasticEngine::start(int index, int state)
 {
-    if (index >= m_things.count())
+    if (index >= m_things.size())
         return;
     m_things[index] = state;
     m_duration[index] = m_states.at(state)->variedDuration();
@@ -504,10 +504,10 @@ void QQuickStochasticEngine::start(int index, int state)
 
 void QQuickStochasticEngine::stop(int index)
 {
-    if (index >= m_things.count())
+    if (index >= m_things.size())
         return;
     //Will never change until start is called again with a new state (or manually advanced) - this is not a 'pause'
-    for (int i=0; i<m_stateUpdates.count(); i++)
+    for (int i=0; i<m_stateUpdates.size(); i++)
         m_stateUpdates[i].second.removeAll(index);
 }
 
@@ -520,7 +520,7 @@ void QQuickStochasticEngine::restart(int index)
     if (randomStart)
         m_startTimes[index] -= QRandomGenerator::global()->bounded(m_duration.at(index));
     int time = m_duration.at(index) + m_startTimes.at(index);
-    for (int i=0; i<m_stateUpdates.count(); i++)
+    for (int i=0; i<m_stateUpdates.size(); i++)
         m_stateUpdates[i].second.removeAll(index);
     if (m_duration.at(index) >= 0)
         addToUpdateList(time, index);
@@ -546,7 +546,7 @@ void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and han
                 time += spriteDuration(index);
         }
 
-        for (int i=0; i<m_stateUpdates.count(); i++)
+        for (int i=0; i<m_stateUpdates.size(); i++)
             m_stateUpdates[i].second.removeAll(index);
         addToUpdateList(time, index);
     }
@@ -554,7 +554,7 @@ void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and han
 
 void QQuickStochasticEngine::advance(int idx)
 {
-    if (idx >= m_things.count())
+    if (idx >= m_things.size())
         return;//TODO: Proper fix(because this has happened and I just ignored it)
     int nextIdx = nextState(m_things.at(idx), idx);
     m_things[idx] = nextIdx;
@@ -571,7 +571,7 @@ void QQuickSpriteEngine::advance(int idx) //Reimplemented to recognize and handl
         return;
     }
 
-    if (idx >= m_things.count())
+    if (idx >= m_things.size())
         return;//TODO: Proper fix(because this has happened and I just ignored it)
     if (m_duration.at(idx) == 0) {
         if (m_sprites.at(m_things.at(idx))->frameSync()) {
@@ -614,7 +614,7 @@ int QQuickStochasticEngine::nextState(int curState, int curThing)
                 iter!=m_states.at(curState)->m_to.constEnd(); ++iter){
             if (r < (*iter).toReal()){
                 bool superBreak = false;
-                for (int i=0; i<m_states.count(); i++){
+                for (int i=0; i<m_states.size(); i++){
                     if (m_states.at(i)->name() == iter.key()){
                         nextIdx = i;
                         superBreak = true;
@@ -640,7 +640,7 @@ uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a lis
     m_timeOffset = time;
     m_addAdvance = false;
     int i = 0;
-    for (; i < m_stateUpdates.count() && time >= m_stateUpdates.at(i).first; ++i) {
+    for (; i < m_stateUpdates.size() && time >= m_stateUpdates.at(i).first; ++i) {
         const auto copy = m_stateUpdates.at(i).second;
         for (int idx : copy)
             advance(idx);
@@ -665,16 +665,16 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
         return -1;
     //TODO: caching instead of excessively redoing iterative deepening (which was chosen arbitrarily anyways)
     // Paraphrased - implement in an *efficient* manner
-    for (int i=0; i<m_states.count(); i++)
+    for (int i=0; i<m_states.size(); i++)
         if (m_states.at(curIdx)->name() == goalName)
             return curIdx;
     if (dist < 0)
-        dist = m_states.count();
+        dist = m_states.size();
     QQuickStochasticState* curState = m_states.at(curIdx);
     for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
         iter!=curState->m_to.constEnd(); ++iter){
         if (iter.key() == goalName)
-            for (int i=0; i<m_states.count(); i++)
+            for (int i=0; i<m_states.size(); i++)
                 if (m_states.at(i)->name() == goalName)
                     return i;
     }
@@ -683,7 +683,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
         for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
             iter!=curState->m_to.constEnd(); ++iter){
             int option = -1;
-            for (int j=0; j<m_states.count(); j++)//One place that could be a lot more efficient...
+            for (int j=0; j<m_states.size(); j++)//One place that could be a lot more efficient...
                 if (m_states.at(j)->name() == iter.key())
                     if (goalSeek(j, spriteIdx, i) != -1)
                         option = j;
@@ -691,7 +691,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
                 options << option;
         }
         if (!options.isEmpty()){
-            if (options.count()==1)
+            if (options.size()==1)
                 return *(options.begin());
             int option = -1;
             qreal r = QRandomGenerator::global()->generateDouble();
@@ -703,7 +703,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
             for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
                 iter!=curState->m_to.constEnd(); ++iter){
                 bool superContinue = true;
-                for (int j=0; j<m_states.count(); j++)
+                for (int j=0; j<m_states.size(); j++)
                     if (m_states.at(j)->name() == iter.key())
                         if (options.contains(j))
                             superContinue = false;
@@ -711,7 +711,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
                     continue;
                 if (r < (*iter).toReal()){
                     bool superBreak = false;
-                    for (int j=0; j<m_states.count(); j++){
+                    for (int j=0; j<m_states.size(); j++){
                         if (m_states.at(j)->name() == iter.key()){
                             option = j;
                             superBreak = true;
@@ -731,7 +731,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
 
 void QQuickStochasticEngine::addToUpdateList(uint t, int idx)
 {
-    for (int i=0; i<m_stateUpdates.count(); i++){
+    for (int i=0; i<m_stateUpdates.size(); i++){
         if (m_stateUpdates.at(i).first == t){
             m_stateUpdates[i].second << idx;
             return;

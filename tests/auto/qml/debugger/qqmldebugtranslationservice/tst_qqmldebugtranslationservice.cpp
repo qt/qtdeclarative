@@ -63,7 +63,7 @@ private slots:
         changeLanguage("ru");
         auto translationIssues = getTranslationIssues();
 
-        QCOMPARE(translationIssues.length(), getTranslatableTextOccurrences().count());
+        QCOMPARE(translationIssues.size(), getTranslatableTextOccurrences().size());
         QCOMPARE(translationIssues.at(0).language, "ru-Cyrl-RU ru-RU ru");
     }
 
@@ -73,18 +73,18 @@ private slots:
 
         auto translationIssues = getTranslationIssues();
 
-        QCOMPARE(translationIssues.length(), 3);
+        QCOMPARE(translationIssues.size(), 3);
         QCOMPARE(translationIssues.at(0).language, "fr-Latn-FR fr-FR fr");
     }
 
     void verifyCorrectNumberOfTranslatableTextOccurrences()
     {
-        QCOMPARE(getTranslatableTextOccurrences().length(), 5);
+        QCOMPARE(getTranslatableTextOccurrences().size(), 5);
     }
 
     void verifyCorrectNumberOfStates()
     {
-        QCOMPARE(getStates().length(), 2);
+        QCOMPARE(getStates().size(), 2);
     }
 
     void getElideWarnings()
@@ -128,9 +128,9 @@ private slots:
     {
         QVector<QmlState> stateList = getStates();
 
-        QCOMPARE(stateList.length(), 2);
+        QCOMPARE(stateList.size(), 2);
 
-        for (int i = 0; i < stateList.count(); i++) {
+        for (int i = 0; i < stateList.size(); i++) {
             auto stateName = stateList.at(i).name;
             QVersionedPacket<QQmlDebugConnector> packet;
             sendMessageToService(createChangeStateRequest(packet, stateName));

@@ -28,7 +28,7 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
 // This expects a "fresh" QQmlTypePrivate and adopts its reference.
 void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
 {
-    for (int i = 0; i < types.count(); ++i) {
+    for (int i = 0; i < types.size(); ++i) {
         if (!types.at(i).isValid()) {
             types[i] = QQmlType(priv);
             priv->index = i;
@@ -37,7 +37,7 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
         }
     }
     types.append(QQmlType(priv));
-    priv->index = types.count() - 1;
+    priv->index = types.size() - 1;
     priv->release();
 }
 
@@ -86,7 +86,7 @@ bool QQmlMetaTypeData::registerModuleTypes(const QString &uri)
 QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCacheForVersion(
         int index, QTypeRevision version) const
 {
-    return (index < typePropertyCaches.length())
+    return (index < typePropertyCaches.size())
             ? typePropertyCaches.at(index).value(version)
             : QQmlPropertyCache::ConstPtr();
 }
@@ -94,14 +94,14 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCacheForVersion(
 void QQmlMetaTypeData::setPropertyCacheForVersion(int index, QTypeRevision version,
                                                   const QQmlPropertyCache::ConstPtr &cache)
 {
-    if (index >= typePropertyCaches.length())
+    if (index >= typePropertyCaches.size())
         typePropertyCaches.resize(index + 1);
     typePropertyCaches[index][version] = cache;
 }
 
 void QQmlMetaTypeData::clearPropertyCachesForVersion(int index)
 {
-    if (index < typePropertyCaches.length())
+    if (index < typePropertyCaches.size())
         typePropertyCaches[index].clear();
 }
 
@@ -167,13 +167,13 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCache(
     QQmlPropertyCache::ConstPtr raw = propertyCache(type.metaObject(), combinedVersion);
     QQmlPropertyCache::Ptr copied;
 
-    for (int ii = 0; ii < types.count(); ++ii) {
+    for (int ii = 0; ii < types.size(); ++ii) {
         const QQmlType &currentType = types.at(ii);
         if (!currentType.isValid())
             continue;
 
         QTypeRevision rev = currentType.metaObjectRevision();
-        int moIndex = types.count() - 1 - ii;
+        int moIndex = types.size() - 1 - ii;
 
         if (raw->allowedRevision(moIndex) != rev) {
             if (copied.isNull()) {

@@ -629,11 +629,11 @@ private:
 
         if (typeName->endsWith('*')) {
             *isPointer = true;
-            typeName->truncate(typeName->length() - 1);
+            typeName->truncate(typeName->size() - 1);
             removePointerAndList(typeName, isList, isPointer);
         } else if (typeName->startsWith(declListPrefix)) {
             *isList = true;
-            typeName->truncate(typeName->length() - 1); // get rid of the suffix '>'
+            typeName->truncate(typeName->size() - 1); // get rid of the suffix '>'
             *typeName = typeName->mid(declListPrefix.size());
             removePointerAndList(typeName, isList, isPointer);
         }
@@ -920,18 +920,18 @@ bool dependencyBetter(const QString &lhs, const QString &rhs)
     if (leftModule > rightModule)
         return false;
 
-    if (leftSegments.length() == 1)
+    if (leftSegments.size() == 1)
         return false;
-    if (rightSegments.length() == 1)
+    if (rightSegments.size() == 1)
         return true;
 
     const QStringList leftVersion = leftSegments.at(1).split(QLatin1Char('.'));
     const QStringList rightVersion = rightSegments.at(1).split(QLatin1Char('.'));
 
     auto compareSegment = [&](int segmentIndex) {
-        if (leftVersion.length() <= segmentIndex)
-            return rightVersion.length() > segmentIndex ? 1 : 0;
-        if (rightVersion.length() <= segmentIndex)
+        if (leftVersion.size() <= segmentIndex)
+            return rightVersion.size() > segmentIndex ? 1 : 0;
+        if (rightVersion.size() <= segmentIndex)
             return -1;
 
         bool leftOk = false;

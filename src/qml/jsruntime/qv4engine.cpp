@@ -955,13 +955,13 @@ Heap::Object *ExecutionEngine::newObject(Heap::InternalClass *internalClass)
 
 Heap::String *ExecutionEngine::newString(const QString &s)
 {
-    return memoryManager->allocWithStringData<String>(s.length() * sizeof(QChar), s);
+    return memoryManager->allocWithStringData<String>(s.size() * sizeof(QChar), s);
 }
 
 Heap::String *ExecutionEngine::newIdentifier(const QString &text)
 {
     Scope scope(this);
-    ScopedString s(scope, memoryManager->allocWithStringData<String>(text.length() * sizeof(QChar), text));
+    ScopedString s(scope, memoryManager->allocWithStringData<String>(text.size() * sizeof(QChar), text));
     s->toPropertyKey();
     return s->d();
 }
@@ -1848,11 +1848,11 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(const QList<QObject *>*)ptr;
             QV4::ScopedArrayObject a(scope, newArrayObject());
-            a->arrayReserve(list.count());
+            a->arrayReserve(list.size());
             QV4::ScopedValue v(scope);
-            for (int ii = 0; ii < list.count(); ++ii)
+            for (int ii = 0; ii < list.size(); ++ii)
                 a->arrayPut(ii, (v = QV4::QObjectWrapper::wrap(this, list.at(ii))));
-            a->setArrayLengthUnchecked(list.count());
+            a->setArrayLengthUnchecked(list.size());
             return a.asReturnedValue();
         } else if (auto flags = metaType.flags(); flags & QMetaType::PointerToQObject) {
             if (flags.testFlag(QMetaType::IsConst))
@@ -2271,7 +2271,7 @@ int ExecutionEngine::consoleCountHelper(const QString &file, quint16 line, quint
 
 void ExecutionEngine::setExtensionData(int index, Deletable *data)
 {
-    if (m_extensionData.count() <= index)
+    if (m_extensionData.size() <= index)
         m_extensionData.resize(index + 1);
 
     if (m_extensionData.at(index))

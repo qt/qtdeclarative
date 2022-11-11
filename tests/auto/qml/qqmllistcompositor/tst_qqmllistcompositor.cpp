@@ -1022,7 +1022,7 @@ void tst_qqmllistcompositor::moveFromEnd()
     QVector<C::Insert> inserts;
     compositor.listItemsInserted(a, 0, 1, &inserts);
 
-    QCOMPARE(inserts.count(), 1);
+    QCOMPARE(inserts.size(), 1);
     QCOMPARE(inserts.at(0).index[1], 1);
     QCOMPARE(inserts.at(0).count, 1);
 

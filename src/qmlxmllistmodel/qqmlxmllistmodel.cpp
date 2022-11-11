@@ -363,7 +363,7 @@ QVariant QQmlXmlListModel::data(const QModelIndex &index, int role) const
 QHash<int, QByteArray> QQmlXmlListModel::roleNames() const
 {
     QHash<int, QByteArray> roleNames;
-    for (int i = 0; i < m_roles.count(); ++i)
+    for (int i = 0; i < m_roles.size(); ++i)
         roleNames.insert(m_roles.at(i), m_roleNames.at(i).toUtf8());
     return roleNames;
 }
@@ -437,7 +437,7 @@ QQmlListProperty<QQmlXmlListModelRole> QQmlXmlListModel::roleObjects()
 void QQmlXmlListModel::appendRole(QQmlXmlListModelRole *role)
 {
     if (role) {
-        int i = m_roleObjects.count();
+        int i = m_roleObjects.size();
         m_roleObjects.append(role);
         if (m_roleNames.contains(role->name())) {
             qmlWarning(role)
@@ -519,7 +519,7 @@ QQmlXmlListModelQueryJob QQmlXmlListModel::createJob(const QByteArray &data)
     job.data = data;
     job.query = m_query;
 
-    for (int i = 0; i < m_roleObjects.count(); i++) {
+    for (int i = 0; i < m_roleObjects.size(); i++) {
         if (!m_roleObjects.at(i)->isValid()) {
             job.roleNames << QString();
             job.elementNames << QString();
@@ -744,7 +744,7 @@ void QQmlXmlListModel::dataCleared()
 
 void QQmlXmlListModel::queryError(void *object, const QString &error)
 {
-    for (int i = 0; i < m_roleObjects.count(); i++) {
+    for (int i = 0; i < m_roleObjects.size(); i++) {
         if (m_roleObjects.at(i) == static_cast<QQmlXmlListModelRole *>(object)) {
             qmlWarning(m_roleObjects.at(i))
                     << QQmlXmlListModel::tr("Query error: \"%1\"").arg(error);
@@ -760,7 +760,7 @@ void QQmlXmlListModel::queryCompleted(const QQmlXmlListModelQueryResult &result)
         return;
 
     int origCount = m_size;
-    bool sizeChanged = result.data.count() != m_size;
+    bool sizeChanged = result.data.size() != m_size;
 
     if (m_source.isEmpty())
         m_status = Null;
@@ -773,7 +773,7 @@ void QQmlXmlListModel::queryCompleted(const QQmlXmlListModelQueryResult &result)
         beginRemoveRows(QModelIndex(), 0, origCount - 1);
         endRemoveRows();
     }
-    m_size = result.data.count();
+    m_size = result.data.size();
     m_data = result.data;
 
     if (m_size > 0) {
@@ -841,10 +841,10 @@ void QQmlXmlListModelQueryRunnable::doQueryJob(QQmlXmlListModelQueryResult *curr
 
     while (!reader.atEnd() && !m_promise.isCanceled()) {
         int i = 0;
-        while (i < items.count()) {
+        while (i < items.size()) {
             if (reader.readNextStartElement()) {
                 if (reader.name() == items.at(i)) {
-                    if (i != items.count() - 1) {
+                    if (i != items.size() - 1) {
                         i++;
                         continue;
                     } else {

@@ -162,7 +162,7 @@ void tst_qqmlcomponent::loadEmptyUrl()
     c.loadUrl(QUrl());
 
     QVERIFY(c.isError());
-    QCOMPARE(c.errors().count(), 1);
+    QCOMPARE(c.errors().size(), 1);
     QQmlError error = c.errors().first();
     QCOMPARE(error.url(), QUrl());
     QCOMPARE(error.line(), -1);
@@ -338,7 +338,7 @@ void tst_qqmlcomponent::qmlCreateObjectDirty()
     QQmlEngine engine;
     engine.setOutputWarningsToStandardError(false);
     QObject::connect(&engine, &QQmlEngine::warnings, [](const QList<QQmlError> &warnings) {
-        QCOMPARE(warnings.count(), 1);
+        QCOMPARE(warnings.size(), 1);
         QCOMPARE(warnings[0].description(),
                 "QML Component: Unsuitable arguments passed to createObject(). The first argument "
                 "should be a QObject* or null, and the second argument should be a JavaScript "
@@ -556,7 +556,7 @@ void tst_qqmlcomponent::onDestructionCount()
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);
 
-    QCOMPARE(warnings.count(), 0);
+    QCOMPARE(warnings.size(), 0);
 }
 
 void tst_qqmlcomponent::recursion()
@@ -1095,7 +1095,7 @@ void tst_qqmlcomponent::qmlPropertySignalExists()
 
     QSignalSpy changeSignalSpy(o.get(), SIGNAL(pChanged()));
     QVERIFY(QMetaObject::invokeMethod(o.get(), "doStuff"));
-    QCOMPARE(changeSignalSpy.count(), 1);
+    QCOMPARE(changeSignalSpy.size(), 1);
     QCOMPARE(o->property("p").toInt(), 42);
 }
 

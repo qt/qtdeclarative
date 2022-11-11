@@ -1195,7 +1195,7 @@ ReturnedValue QObjectWrapper::method_disconnect(const FunctionObject *b, const V
 static void markChildQObjectsRecursively(QObject *parent, MarkStack *markStack)
 {
     const QObjectList &children = parent->children();
-    for (int i = 0; i < children.count(); ++i) {
+    for (int i = 0; i < children.size(); ++i) {
         QObject *child = children.at(i);
         if (!child)
             continue;
@@ -1369,8 +1369,8 @@ static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMe
                 }
             }
         }
-        QVarLengthArray<void *, 9> argData(args.count());
-        for (int ii = 0; ii < args.count(); ++ii)
+        QVarLengthArray<void *, 9> argData(args.size());
+        for (int ii = 0; ii < args.size(); ++ii)
             argData[ii] = args[ii].dataPtr();
 
         object.metacall(callType, index, argData.data());
@@ -2116,11 +2116,11 @@ ReturnedValue CallArgument::toValue(ExecutionEngine *engine)
         QList<QObject *> &list = *qlistPtr;
         Scope scope(engine);
         ScopedArrayObject array(scope, engine->newArrayObject());
-        array->arrayReserve(list.count());
+        array->arrayReserve(list.size());
         ScopedValue v(scope);
-        for (int ii = 0; ii < list.count(); ++ii)
+        for (int ii = 0; ii < list.size(); ++ii)
             array->arrayPut(ii, (v = QObjectWrapper::wrap(engine, list.at(ii))));
-        array->setArrayLengthUnchecked(list.count());
+        array->setArrayLengthUnchecked(list.size());
         return array.asReturnedValue();
     }
 

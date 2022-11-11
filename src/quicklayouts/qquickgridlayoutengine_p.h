@@ -109,7 +109,7 @@ public:
 
     QQuickGridLayoutItem *findLayoutItem(QQuickItem *layoutItem) const
     {
-        for (int i = q_items.count() - 1; i >= 0; --i) {
+        for (int i = q_items.size() - 1; i >= 0; --i) {
             QQuickGridLayoutItem *item = static_cast<QQuickGridLayoutItem*>(q_items.at(i));
             if (item->layoutItem() == layoutItem)
                 return item;

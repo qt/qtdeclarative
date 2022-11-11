@@ -45,7 +45,7 @@ public:
         column = initialColumn + fixup;
         const QChar tab = QLatin1Char('\t');
         int iStart = 0;
-        int len = line.length();
+        int len = line.size();
         for (int i = 0; i < len; i++) {
             if (line[i] == tab)
                 column = ((column / tabSize) + 1) * tabSize;

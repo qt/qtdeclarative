@@ -700,7 +700,7 @@ void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 
     QSignalSpy focusScopeSpy(window.data(), SIGNAL(focusScopeKeyPressed()));
     QTest::keyClick(window.data(), Qt::Key_Space);
-    QCOMPARE(focusScopeSpy.count(), 1);
+    QCOMPARE(focusScopeSpy.size(), 1);
 
     // Open the menu.
     QQuickItem* toolButton = window->property("toolButton").value<QQuickItem*>();
@@ -711,14 +711,14 @@ void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 
     // The FocusScope shouldn't receive any key events while the menu is open.
     QTest::keyClick(window.data(), Qt::Key_Space);
-    QCOMPARE(focusScopeSpy.count(), 1);
+    QCOMPARE(focusScopeSpy.size(), 1);
 
     // Close the menu. The FocusScope should regain focus.
     QTest::keyClick(window.data(), Qt::Key_Escape);
     QVERIFY(focusScope->hasActiveFocus());
 
     QTest::keyClick(window.data(), Qt::Key_Space);
-    QCOMPARE(focusScopeSpy.count(), 2);
+    QCOMPARE(focusScopeSpy.size(), 2);
 
     QQuickPopup *focusPopup = window->property("focusPopup").value<QQuickPopup*>();
     QVERIFY(focusPopup);
@@ -729,7 +729,7 @@ void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 
     QSignalSpy focusPopupSpy(window.data(), SIGNAL(focusPopupKeyPressed()));
     QTest::keyClick(window.data(), Qt::Key_Space);
-    QCOMPARE(focusPopupSpy.count(), 1);
+    QCOMPARE(focusPopupSpy.size(), 1);
 
     QQuickMenu *fileMenu = window->property("fileMenu").value<QQuickMenu*>();
     QVERIFY(fileMenu);
@@ -738,21 +738,21 @@ void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 
     // The Popup shouldn't receive any key events while the menu is open.
     QTest::keyClick(window.data(), Qt::Key_Space);
-    QCOMPARE(focusPopupSpy.count(), 1);
+    QCOMPARE(focusPopupSpy.size(), 1);
 
     // Close the menu. The Popup should regain focus.
     QTest::keyClick(window.data(), Qt::Key_Escape);
     QVERIFY(focusPopup->hasActiveFocus());
 
     QTest::keyClick(window.data(), Qt::Key_Space);
-    QCOMPARE(focusPopupSpy.count(), 2);
+    QCOMPARE(focusPopupSpy.size(), 2);
 
     // Close the popup. The FocusScope should regain focus.
     QTest::keyClick(window.data(), Qt::Key_Escape);
     QVERIFY(focusScope->hasActiveFocus());
 
     QTest::keyClick(window.data(), Qt::Key_Space);
-    QCOMPARE(focusScopeSpy.count(), 3);
+    QCOMPARE(focusScopeSpy.size(), 3);
 }
 
 void tst_QQuickApplicationWindow::clearFocusOnDestruction()
@@ -796,7 +796,7 @@ void tst_QQuickApplicationWindow::clearFocusOnDestruction()
        Therefore, if you have good reasons to change the behavior (and not emit
        it) take the test below with a grain of salt.
      */
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 void tst_QQuickApplicationWindow::layout()

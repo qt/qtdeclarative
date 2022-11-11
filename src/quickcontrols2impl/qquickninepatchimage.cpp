@@ -266,7 +266,7 @@ void QQuickNinePatchImagePrivate::updatePaddings(const QSizeF &size, const QList
     qreal oldRightPadding = rightPadding;
     qreal oldBottomPadding = bottomPadding;
 
-    if (horizontal.count() >= 2) {
+    if (horizontal.size() >= 2) {
         leftPadding = horizontal.first();
         rightPadding = size.width() - horizontal.last() - 2;
     } else {
@@ -274,7 +274,7 @@ void QQuickNinePatchImagePrivate::updatePaddings(const QSizeF &size, const QList
         rightPadding = 0;
     }
 
-    if (vertical.count() >= 2) {
+    if (vertical.size() >= 2) {
         topPadding = vertical.first();
         bottomPadding = size.height() - vertical.last() - 2;
     } else {
@@ -300,26 +300,26 @@ void QQuickNinePatchImagePrivate::updateInsets(const QList<qreal> &horizontal, c
     qreal oldRightInset = rightInset;
     qreal oldBottomInset = bottomInset;
 
-    if (horizontal.count() >= 2 && horizontal.first() == 0)
+    if (horizontal.size() >= 2 && horizontal.first() == 0)
         leftInset = horizontal.at(1);
     else
         leftInset = 0;
 
-    if (horizontal.count() == 2 && horizontal.first() > 0)
+    if (horizontal.size() == 2 && horizontal.first() > 0)
         rightInset = horizontal.last() - horizontal.first();
-    else if (horizontal.count() == 4)
+    else if (horizontal.size() == 4)
         rightInset = horizontal.last() - horizontal.at(2);
     else
         rightInset = 0;
 
-    if (vertical.count() >= 2 && vertical.first() == 0)
+    if (vertical.size() >= 2 && vertical.first() == 0)
         topInset = vertical.at(1);
     else
         topInset = 0;
 
-    if (vertical.count() == 2 && vertical.first() > 0)
+    if (vertical.size() == 2 && vertical.first() > 0)
         bottomInset = vertical.last() - vertical.first();
-    else if (vertical.count() == 4)
+    else if (vertical.size() == 4)
         bottomInset = vertical.last() - vertical.at(2);
     else
         bottomInset = 0;

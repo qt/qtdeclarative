@@ -93,7 +93,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
 
     if (needsNormalization) {
         QGradientStops normalizedStops;
-        if (stops.count() == 1) {
+        if (stops.size() == 1) {
             //If there is only one stop, then the position does not matter
             //It is just treated as a color
             QGradientStop stop = stops.at(0);
@@ -104,7 +104,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
             int below = -1;
             int above = -1;
             QVector<int> between;
-            for (int i = 0; i < stops.count(); ++i) {
+            for (int i = 0; i < stops.size(); ++i) {
                 if (stops.at(i).first < 0.0) {
                     below = i;
                 } else if (stops.at(i).first > 1.0) {
@@ -118,7 +118,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
             //Interpoloate new color values for above and below
             if (below != -1 ) {
                 //If there are more than one stops left, interpolate
-                if (below + 1 < stops.count()) {
+                if (below + 1 < stops.size()) {
                     normalizedStops.append(interpolateStop(stops.at(below), stops.at(below + 1), 0.0));
                 } else {
                     QGradientStop singleStop;
@@ -128,7 +128,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
                 }
             }
 
-            for (int i = 0; i < between.count(); ++i)
+            for (int i = 0; i < between.size(); ++i)
                 normalizedStops.append(stops.at(between.at(i)));
 
             if (above != -1) {
@@ -249,7 +249,7 @@ bool QSGSoftwareInternalRectangleNode::isOpaque() const
         return false;
     if (m_penWidth > 0.0f && m_penColor.alpha() < 255)
         return false;
-    if (m_stops.count() > 0) {
+    if (m_stops.size() > 0) {
         for (const QGradientStop &stop : qAsConst(m_stops)) {
             if (stop.second.alpha() < 255)
                 return false;

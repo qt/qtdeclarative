@@ -45,7 +45,7 @@ QImage QuickSharedImageLoader::loadFile(const QString &path, ImageParameters *pa
         }
     }
 
-    if (params && params->count() > OriginalSize)
+    if (params && params->size() > OriginalSize)
         params->replace(OriginalSize, realSize);
 
     return image;

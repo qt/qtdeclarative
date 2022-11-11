@@ -239,7 +239,7 @@ void tst_librarymetrics_performance::compilation()
     if (nResults.size() == 0) nResults.append(9999);
     for (int i = 0; i < nResults.size(); ++i)
         totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
+    double average = ((double)totaltime) / nResults.size();
 
     // and return it as the result
     QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
@@ -288,7 +288,7 @@ void tst_librarymetrics_performance::instantiation_cached()
     if (nResults.size() == 0) nResults.append(9999);
     for (int i = 0; i < nResults.size(); ++i)
         totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
+    double average = ((double)totaltime) / nResults.size();
 
     // and return it as the result
     QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
@@ -345,7 +345,7 @@ void tst_librarymetrics_performance::instantiation()
     if (nResults.size() == 0) nResults.append(9999);
     for (int i = 0; i < nResults.size(); ++i)
         totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
+    double average = ((double)totaltime) / nResults.size();
 
     // and return it as the result
     QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);
@@ -411,7 +411,7 @@ void tst_librarymetrics_performance::positioners()
     if (nResults.size() == 0) nResults.append(9999);
     for (int i = 0; i < nResults.size(); ++i)
         totaltime += nResults.at(i);
-    double average = ((double)totaltime) / nResults.count();
+    double average = ((double)totaltime) / nResults.size();
 
     // and return it as the result
     QTest::setBenchmarkResult(average, QTest::WalltimeNanoseconds);

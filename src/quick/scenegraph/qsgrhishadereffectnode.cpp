@@ -36,10 +36,10 @@ void QSGRhiShaderLinker::reset(const QShader &vs, const QShader &fs)
 
 void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices)
 {
-    Q_ASSERT(shader.shaderInfo.variables.count() == shader.varData.count());
+    Q_ASSERT(shader.shaderInfo.variables.size() == shader.varData.size());
     if (!dirtyIndices) {
         m_constantBufferSize = qMax(m_constantBufferSize, shader.shaderInfo.constantDataSize);
-        for (int i = 0; i < shader.shaderInfo.variables.count(); ++i) {
+        for (int i = 0; i < shader.shaderInfo.variables.size(); ++i) {
             const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &var(shader.shaderInfo.variables.at(i));
             if (var.type == QSGGuiThreadShaderEffectManager::ShaderInfo::Constant) {
                 const QSGShaderEffectNode::VariableData &vd(shader.varData.at(i));
@@ -80,7 +80,7 @@ void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &sh
 void QSGRhiShaderLinker::feedSamplers(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices)
 {
     if (!dirtyIndices) {
-        for (int i = 0; i < shader.shaderInfo.variables.count(); ++i) {
+        for (int i = 0; i < shader.shaderInfo.variables.size(); ++i) {
             const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &var(shader.shaderInfo.variables.at(i));
             const QSGShaderEffectNode::VariableData &vd(shader.varData.at(i));
             if (var.type == QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler) {
@@ -457,7 +457,7 @@ int QSGRhiShaderEffectMaterial::compare(const QSGMaterial *other) const
     if (int diff = m_cullMode - o->m_cullMode)
         return diff;
 
-    if (int diff = m_textureProviders.count() - o->m_textureProviders.count())
+    if (int diff = m_textureProviders.size() - o->m_textureProviders.size())
         return diff;
 
     if (m_linker.m_constants != o->m_linker.m_constants)
@@ -469,7 +469,7 @@ int QSGRhiShaderEffectMaterial::compare(const QSGMaterial *other) const
     if (hasAtlasTexture(o->m_textureProviders) && !o->m_geometryUsesTextureSubRect)
         return 1;
 
-    for (int binding = 0, count = m_textureProviders.count(); binding != count; ++binding) {
+    for (int binding = 0, count = m_textureProviders.size(); binding != count; ++binding) {
         QSGTextureProvider *tp1 = m_textureProviders.at(binding);
         QSGTextureProvider *tp2 = o->m_textureProviders.at(binding);
         if (tp1 && tp2) {
@@ -569,7 +569,7 @@ QRectF QSGRhiShaderEffectNode::updateNormalizedTextureSubRect(bool supportsAtlas
     bool geometryUsesTextureSubRect = false;
     if (supportsAtlasTextures) {
         QSGTextureProvider *tp = nullptr;
-        for (int binding = 0, count = m_material.m_textureProviders.count(); binding != count; ++binding) {
+        for (int binding = 0, count = m_material.m_textureProviders.size(); binding != count; ++binding) {
             if (QSGTextureProvider *candidate = m_material.m_textureProviders.at(binding)) {
                 if (!tp) {
                     tp = candidate;
@@ -834,7 +834,7 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
 
     int ubufBinding = -1;
     const QVector<QShaderDescription::UniformBlock> ubufs = desc.uniformBlocks();
-    const int ubufCount = ubufs.count();
+    const int ubufCount = ubufs.size();
     for (int i = 0; i < ubufCount; ++i) {
         const QShaderDescription::UniformBlock &ubuf(ubufs[i]);
         if (ubufBinding == -1 && ubuf.binding >= 0) {
@@ -855,7 +855,7 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
     }
 
     const QVector<QShaderDescription::InOutVariable> combinedImageSamplers = desc.combinedImageSamplers();
-    const int samplerCount = combinedImageSamplers.count();
+    const int samplerCount = combinedImageSamplers.size();
     for (int i = 0; i < samplerCount; ++i) {
         const QShaderDescription::InOutVariable &combinedImageSampler(combinedImageSamplers[i]);
         ShaderInfo::Variable v;

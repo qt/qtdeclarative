@@ -206,7 +206,7 @@ public:
     }
     static qsizetype operations_count(QQmlListProperty<QQuickStateOperation> *prop) {
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
-        return list->count();
+        return list->size();
     }
     static QQuickStateOperation *operations_at(QQmlListProperty<QQuickStateOperation> *prop, qsizetype index) {
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);

@@ -45,8 +45,8 @@ void tst_QPacketProtocol::init()
 
     m_client->connectToHost(m_server->serverAddress(), m_server->serverPort());
 
-    QVERIFY(clientSpy.count() > 0 || clientSpy.wait());
-    QVERIFY(serverSpy.count() > 0 || serverSpy.wait());
+    QVERIFY(clientSpy.size() > 0 || clientSpy.wait());
+    QVERIFY(serverSpy.size() > 0 || serverSpy.wait());
 
     m_serverConn = m_server->nextPendingConnection();
 }

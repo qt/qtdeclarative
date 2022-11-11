@@ -2290,9 +2290,9 @@ void tst_qqmlecmascript::scriptErrors()
     QQmlComponent component(&engine, testFileUrl("scriptErrors.qml"));
     QString url = component.url().toString();
 
-    QString warning1 = url.left(url.length() - 3) + "js:2: Error: Invalid write to global property \"a\"";
+    QString warning1 = url.left(url.size() - 3) + "js:2: Error: Invalid write to global property \"a\"";
     QString warning2 = url + ":5: ReferenceError: a is not defined";
-    QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
+    QString warning3 = url.left(url.size() - 3) + "js:4: Error: Invalid write to global property \"a\"";
     QString warning4 = url + ":13: ReferenceError: a is not defined";
     QString warning5 = url + ":11: ReferenceError: a is not defined";
     QString warning6 = url + ":10:5: Unable to assign [undefined] to int";
@@ -2854,26 +2854,26 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_ERROR("object.method_nonexistent()"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_nonexistent(10, 11)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     // Insufficient arguments
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_int()"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_intint(10)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     // Excessive arguments
     QTest::ignoreMessage(QtWarningMsg, qPrintable("Too many arguments, ignoring 1"));
@@ -2882,7 +2882,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_int(10, 11)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(10));
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable("Too many arguments, ignoring 1"));
@@ -2891,7 +2891,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_intint(10, 11, 12)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 9);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(10));
     QCOMPARE(o->actuals().at(1), QVariant(11));
 
@@ -2900,19 +2900,19 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs()", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 0);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs_int()", QV4::Primitive::fromInt32(6)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs_real()", QV4::Primitive::fromDouble(19.75)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 2);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     {
@@ -2921,7 +2921,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(scope.engine->toVariant(ret, QMetaType {}), QVariant(QPointF(123, 4.5)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 3);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
     }
 
     o->reset();
@@ -2931,14 +2931,14 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(qobjectWrapper->object(), (QObject *)o);
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 4);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
     }
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_NoArgs_unknown()"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     {
@@ -2947,63 +2947,63 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(ret->toQStringNoThrow(), QString("Hello world"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 6);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
     }
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", QV4::ScopedValue(scope, scope.engine->newString("QML rocks"))));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 7);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     // Test arg types
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(94)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(94));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(\"94\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(94));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(\"not a number\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(0));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(0));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(0));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(object)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(0));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intint(122, 9)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 9);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(122));
     QCOMPARE(o->actuals().at(1), QVariant(9));
 
@@ -3011,56 +3011,56 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_real(94.3)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 10);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(94.3));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(\"94.3\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 10);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(94.3));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(\"not a number\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 10);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QVERIFY(qIsNaN(o->actuals().at(0).toDouble()));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 10);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(0));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 10);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QVERIFY(qIsNaN(o->actuals().at(0).toDouble()));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_real(object)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 10);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QVERIFY(qIsNaN(o->actuals().at(0).toDouble()));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QString(\"Hello world\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 11);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant("Hello world"));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QString(19)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 11);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant("19"));
 
     o->reset();
@@ -3069,7 +3069,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_QString(object)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 11);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(expected));
     }
 
@@ -3077,71 +3077,71 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_QString(null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 11);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(QString()));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QString(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 11);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(QString()));
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_QPointF(0)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_QPointF(null)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_QPointF(undefined)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_QPointF(object)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPointF())", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 12);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(QPointF(99.3, -10.2)));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPoint())", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 12);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(QPointF(9, 12)));
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_QObject(0)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_QObject(\"Hello world\")"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 13);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant::fromValue((QObject *)nullptr));
 
     {
@@ -3151,7 +3151,7 @@ void tst_qqmlecmascript::callQtInvokables()
         QVERIFY(root);
         QCOMPARE(o->error(), false);
         QCOMPARE(o->invoked(), 13);
-        QCOMPARE(o->actuals().count(), 1);
+        QCOMPARE(o->actuals().size(), 1);
         QCOMPARE(o->actuals().at(0).value<QObject *>()->metaObject()->className(), "QQmlComponentAttached");
     }
 
@@ -3168,49 +3168,49 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_QObject(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 13);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant::fromValue((QObject *)nullptr));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(object)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 13);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant::fromValue((QObject *)o));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 14);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).isNull());
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 14);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).isUndefined());
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(19)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 14);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).strictlyEquals(QJSValue(19)));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue([19, 20])", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 14);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(0)).isArray());
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(4, null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 15);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(4));
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).isNull());
 
@@ -3218,7 +3218,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(8, undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 15);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(8));
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).isUndefined());
 
@@ -3226,7 +3226,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(3, 19)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 15);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(3));
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).strictlyEquals(QJSValue(19)));
 
@@ -3234,7 +3234,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(44, [19, 20])", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 15);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(44));
     QVERIFY(qvariant_cast<QJSValue>(o->actuals().at(1)).isArray());
 
@@ -3242,20 +3242,20 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_ERROR("object.method_overload()"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(10)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 16);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(10));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(10, 11)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 17);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(10));
     QCOMPARE(o->actuals().at(1), QVariant(11));
 
@@ -3263,21 +3263,21 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_overload(\"Hello\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 18);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(QString("Hello")));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_with_enum(9)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 19);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(9));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_default(10)", QV4::Primitive::fromInt32(19)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 20);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(10));
     QCOMPARE(o->actuals().at(1), QVariant(19));
 
@@ -3285,7 +3285,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_default(10, 13)", QV4::Primitive::fromInt32(13)));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 20);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(10));
     QCOMPARE(o->actuals().at(1), QVariant(13));
 
@@ -3293,14 +3293,14 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_inherited(9)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -3);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(9));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QVariant(9)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 21);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(9));
     QCOMPARE(o->actuals().at(1), QVariant());
 
@@ -3308,7 +3308,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_QVariant(\"Hello\", \"World\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 21);
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(QString("Hello")));
     QCOMPARE(o->actuals().at(1), QVariant(QString("World")));
 
@@ -3316,104 +3316,104 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_QJsonObject({foo:123})", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 22);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonObject>(o->actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonArray([123])", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 23);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonArray>(o->actuals().at(0)), QJsonDocument::fromJson("[123]").array());
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(123)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 24);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(123));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(42.35)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 24);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(42.35));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue('ciao')", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 24);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QStringLiteral("ciao")));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(true)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 24);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(true));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(false)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 24);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(false));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 24);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Null));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QJsonValue(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 24);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Undefined));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload({foo:123})", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 25);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonObject>(o->actuals().at(0)), QJsonDocument::fromJson("{\"foo\":123}").object());
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload([123])", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 26);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonArray>(o->actuals().at(0)), QJsonDocument::fromJson("[123]").array());
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(null)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 27);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Null));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_overload(undefined)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 27);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QJsonValue>(o->actuals().at(0)), QJsonValue(QJsonValue::Undefined));
 
     o->reset();
     QVERIFY(EVALUATE_ERROR("object.method_unknown(null)"));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), -1);
-    QCOMPARE(o->actuals().count(), 0);
+    QCOMPARE(o->actuals().size(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QByteArray(\"Hello\")", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 29);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QByteArray>(o->actuals().at(0)), QByteArray("Hello"));
 
     o->reset();
@@ -3422,7 +3422,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->invoked(), 30);
     QVERIFY(ret->isString());
     QCOMPARE(ret->toQStringNoThrow(), QString("Hello world!"));
-    QCOMPARE(o->actuals().count(), 2);
+    QCOMPARE(o->actuals().size(), 2);
     QCOMPARE(o->actuals().at(0), QVariant(123));
     QJSValue callback = qvariant_cast<QJSValue>(o->actuals().at(1));
     QVERIFY(!callback.isNull());
@@ -3432,7 +3432,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_overload2('foo', 12, [1, 2, 3])", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 31);
-    QCOMPARE(o->actuals().count(), 3);
+    QCOMPARE(o->actuals().size(), 3);
     QCOMPARE(qvariant_cast<QString>(o->actuals().at(0)), QStringLiteral("foo"));
     QCOMPARE(qvariant_cast<int>(o->actuals().at(1)), 12);
     QCOMPARE(qvariant_cast<QVariantList>(o->actuals().at(2)), (QVariantList {1.0, 2.0, 3.0}));
@@ -3441,7 +3441,7 @@ void tst_qqmlecmascript::callQtInvokables()
     QVERIFY(EVALUATE_VALUE("object.method_overload2(11, 12, {a: 1, b: 2})", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 31);
-    QCOMPARE(o->actuals().count(), 3);
+    QCOMPARE(o->actuals().size(), 3);
     QCOMPARE(qvariant_cast<int>(o->actuals().at(0)), 11);
     QCOMPARE(qvariant_cast<int>(o->actuals().at(1)), 12);
     QCOMPARE(qvariant_cast<QVariantMap>(o->actuals().at(2)),
@@ -3452,7 +3452,7 @@ void tst_qqmlecmascript::callQtInvokables()
                            QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 32);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QVariantList>(o->actuals().at(0)),
              (QVariantList {1.0, QStringLiteral("bar"), 0.2}));
 
@@ -3461,7 +3461,7 @@ void tst_qqmlecmascript::callQtInvokables()
                            QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 33);
-    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(o->actuals().size(), 1);
     QCOMPARE(qvariant_cast<QVariantMap>(o->actuals().at(0)),
              (QVariantMap {
                   {QStringLiteral("one"), 1.0},
@@ -4835,7 +4835,7 @@ void tst_qqmlecmascript::importScripts()
     else {
         QVERIFY(component.isError());
         QCOMPARE(warningMessages.size(), 1);
-        QCOMPARE(component.errors().count(), 2);
+        QCOMPARE(component.errors().size(), 2);
         QCOMPARE(component.errors().at(1).toString(), warningMessages.first());
         return;
     }
@@ -5850,22 +5850,22 @@ void tst_qqmlecmascript::sequenceConversionRead()
 
         QMetaObject::invokeMethod(object.data(), "readSequences");
         QList<int> intList; intList << 1 << 2 << 3 << 4;
-        QCOMPARE(object->property("intListLength").toInt(), intList.length());
+        QCOMPARE(object->property("intListLength").toInt(), intList.size());
         QCOMPARE(object->property("intList").value<QList<int> >(), intList);
         QList<qreal> qrealList; qrealList << 1.1 << 2.2 << 3.3 << 4.4;
-        QCOMPARE(object->property("qrealListLength").toInt(), qrealList.length());
+        QCOMPARE(object->property("qrealListLength").toInt(), qrealList.size());
         QCOMPARE(object->property("qrealList").value<QList<qreal> >(), qrealList);
         QList<bool> boolList; boolList << true << false << true << false;
-        QCOMPARE(object->property("boolListLength").toInt(), boolList.length());
+        QCOMPARE(object->property("boolListLength").toInt(), boolList.size());
         QCOMPARE(object->property("boolList").value<QList<bool> >(), boolList);
         QList<QString> stringList; stringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
-        QCOMPARE(object->property("stringListLength").toInt(), stringList.length());
+        QCOMPARE(object->property("stringListLength").toInt(), stringList.size());
         QCOMPARE(object->property("stringList").value<QList<QString> >(), stringList);
         QList<QUrl> urlList; urlList << QUrl("http://www.example1.com") << QUrl("http://www.example2.com") << QUrl("http://www.example3.com");
-        QCOMPARE(object->property("urlListLength").toInt(), urlList.length());
+        QCOMPARE(object->property("urlListLength").toInt(), urlList.size());
         QCOMPARE(object->property("urlList").value<QList<QUrl> >(), urlList);
         QStringList qstringList; qstringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
-        QCOMPARE(object->property("qstringListLength").toInt(), qstringList.length());
+        QCOMPARE(object->property("qstringListLength").toInt(), qstringList.size());
         QCOMPARE(object->property("qstringList").value<QStringList>(), qstringList);
 
         QMetaObject::invokeMethod(object.data(), "readSequenceElements");
@@ -7341,7 +7341,7 @@ void tst_qqmlecmascript::nonNotifyable()
                         QLatin1String(object->metaObject()->className()) +
                         QLatin1String("::value");
 
-    QCOMPARE(messageHandler.messages().length(), 2);
+    QCOMPARE(messageHandler.messages().size(), 2);
     QCOMPARE(messageHandler.messages().at(0), expected1);
     QCOMPARE(messageHandler.messages().at(1), expected2);
 }
@@ -7399,7 +7399,7 @@ void tst_qqmlecmascript::qtbug_22679()
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY2(o, qPrintable(component.errorString()));
-    QCOMPARE(warningsSpy.count(), 0);
+    QCOMPARE(warningsSpy.size(), 0);
 }
 
 void tst_qqmlecmascript::qtbug_22843_data()
@@ -7423,7 +7423,7 @@ void tst_qqmlecmascript::qtbug_22843()
     QQmlComponent component(&engine, testFileUrl(fileName));
 
     QString url = component.url().toString();
-    QString expectedError = url.left(url.length()-3) + QLatin1String("js:4:16: Expected token `;'");
+    QString expectedError = url.left(url.size()-3) + QLatin1String("js:4:16: Expected token `;'");
 
     QVERIFY(component.isError());
     QCOMPARE(component.errors().value(1).toString(), expectedError);
@@ -8253,8 +8253,8 @@ void tst_qqmlecmascript::jsOwnedObjectsDeletedOnEngineDestroy()
     QSignalSpy spy1(object1, SIGNAL(destroyed()));
     QSignalSpy spy2(object2, SIGNAL(destroyed()));
     myEngine.reset();
-    QCOMPARE(spy1.count(), 1);
-    QCOMPARE(spy2.count(), 1);
+    QCOMPARE(spy1.size(), 1);
+    QCOMPARE(spy2.size(), 1);
 
     deleteObject.deleteNestedObject();
 }
@@ -8569,14 +8569,14 @@ void tst_qqmlecmascript::garbageCollectionDuringCreation()
     QVERIFY2(object, qPrintable(component.errorString()));
 
     QObjectContainer *container = qobject_cast<QObjectContainer*>(object.data());
-    QCOMPARE(container->dataChildren.count(), 1);
+    QCOMPARE(container->dataChildren.size(), 1);
 
     QObject *child = container->dataChildren.first();
     QQmlData *ddata = QQmlData::get(child);
     QVERIFY(!ddata->jsWrapper.isNullOrUndefined());
 
     gc(engine);
-    QCOMPARE(container->dataChildren.count(), 0);
+    QCOMPARE(container->dataChildren.size(), 0);
 }
 
 void tst_qqmlecmascript::qtbug_39520()

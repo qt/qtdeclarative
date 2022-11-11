@@ -86,7 +86,7 @@ void InspectTool::touchEvent(QTouchEvent *event)
 
     switch (event->type()) {
     case QEvent::TouchBegin:
-        if (touchPoints.count() == 1 && (event->touchPointStates() & QEventPoint::State::Pressed)) {
+        if (touchPoints.size() == 1 && (event->touchPointStates() & QEventPoint::State::Pressed)) {
             m_mousePosition = touchPoints.first().position();
             m_tapEvent = true;
         } else {
@@ -94,14 +94,14 @@ void InspectTool::touchEvent(QTouchEvent *event)
         }
         break;
     case QEvent::TouchUpdate: {
-        if (touchPoints.count() > 1)
+        if (touchPoints.size() > 1)
             m_tapEvent = false;
-        else if ((touchPoints.count() == 1) && (event->touchPointStates() & QEventPoint::State::Updated))
+        else if ((touchPoints.size() == 1) && (event->touchPointStates() & QEventPoint::State::Updated))
             m_mousePosition = touchPoints.first().position();
         break;
     }
     case QEvent::TouchEnd: {
-        if (touchPoints.count() == 1 && m_tapEvent) {
+        if (touchPoints.size() == 1 && m_tapEvent) {
             m_tapEvent = false;
             bool doubleTap = event->timestamp() - m_touchTimestamp
                     < static_cast<ulong>(QGuiApplication::styleHints()->mouseDoubleClickInterval());
@@ -125,9 +125,9 @@ void InspectTool::selectNextItem()
     if (m_lastClickedItem != inspector()->topVisibleItemAt(m_mousePosition))
         return;
     QList<QQuickItem*> items = inspector()->itemsAt(m_mousePosition);
-    for (int i = 0; i < items.count(); i++) {
+    for (int i = 0; i < items.size(); i++) {
         if (m_lastItem == items[i]) {
-            if (i + 1 < items.count())
+            if (i + 1 < items.size())
                 m_lastItem = items[i+1];
             else
                 m_lastItem = items[0];

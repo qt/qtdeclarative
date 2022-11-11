@@ -231,10 +231,10 @@ void tst_QQuickFolderDialogImpl::chooseFolderViaStandardButtons()
     COMPARE_URL(dialogHelper.quickDialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
     COMPARE_URL(dialogHelper.dialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
     // Only selectedFile-related signals should be emitted.
-    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.count(), 0);
-    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.count(), 0);
+    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.size(), 0);
+    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.size(), 0);
 
     // Click the "Open" button.
     QVERIFY(dialogHelper.quickDialog->footer());
@@ -245,10 +245,10 @@ void tst_QQuickFolderDialogImpl::chooseFolderViaStandardButtons()
     QVERIFY(clickButton(openButton));
     COMPARE_URL(dialogHelper.dialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
     COMPARE_URL(dialogHelper.quickDialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
-    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.count(), 0);
-    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.count(), 0);
+    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.size(), 0);
+    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.size(), 0);
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
     QVERIFY(!dialogHelper.dialog->isVisible());
 }
@@ -323,10 +323,10 @@ void tst_QQuickFolderDialogImpl::changeFolderViaDoubleClick()
     COMPARE_URL(dialogHelper.dialog->selectedFolder(), QUrl());
     // selectedFolder is set to the folder when clicked and then set to an empty URL after
     // the double click.
-    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.count(), 2);
-    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.count(), 2);
-    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.count(), 1);
+    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.size(), 2);
+    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.size(), 2);
+    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.size(), 1);
     // Since we only changed the current folder, the dialog should still be open.
     QVERIFY(dialogHelper.dialog->isVisible());
 
@@ -396,10 +396,10 @@ void tst_QQuickFolderDialogImpl::changeFolderViaEnter()
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir1.path()));
     COMPARE_URL(dialogHelper.dialog->selectedFolder(), QUrl::fromLocalFile(tempSubSubDir.path()));
-    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.count(), 1);
-    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.count(), 1);
+    QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.quickDialogSelectedFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.dialogCurrentFolderChangedSpy.size(), 1);
+    QCOMPARE(signalHelper.quickDialogCurrentFolderChangedSpy.size(), 1);
     // Since we only changed the current folder, the dialog should still be open.
     QVERIFY(dialogHelper.dialog->isVisible());
 

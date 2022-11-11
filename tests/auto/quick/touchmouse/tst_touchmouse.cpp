@@ -54,7 +54,7 @@ QDebug operator<<(QDebug dbg, const struct Event &event) {
     if (event.points.isEmpty())
         dbg << " @ " << event.mousePos << " global " << event.mousePosGlobal;
     else
-        dbg << ", " << event.points.count() << " touchpoints: " << event.points;
+        dbg << ", " << event.points.size() << " touchpoints: " << event.points;
     dbg << ')';
     return dbg;
 }
@@ -796,7 +796,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
         qCDebug(lcTests) << "expected filtered events: actual TouchBegin and replayed TouchBegin" << filteredEventList;
         QTRY_COMPARE(eventItem1->eventList.size(), 1);
         QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
-        QCOMPARE(filteredEventList.count(), 2); // actual touch begin and replayed touch begin
+        QCOMPARE(filteredEventList.size(), 2); // actual touch begin and replayed touch begin
     }
 
     if (!releaseBeforeDelayIsOver) {
@@ -811,7 +811,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
         if (scrollBeforeDelayIsOver) {
             QCOMPARE(eventItem1->eventList.size(), 0);
             qCDebug(lcTests) << "expected filtered events: 1 TouchBegin and 3 TouchUpdate" << filteredEventList;
-            QCOMPARE(filteredEventList.count(), 4);
+            QCOMPARE(filteredEventList.size(), 4);
         } else {
             qCDebug(lcTests) << "expected delivered events: press(mouse), move(mouse), move(mouse), ungrab(mouse)" << eventItem1->eventList;
             QCOMPARE(eventItem1->eventList.size(), 4);
@@ -819,7 +819,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
             QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseMove);
             QCOMPARE(eventItem1->eventList.last().type, QEvent::UngrabMouse);
             qCDebug(lcTests) << "expected filtered events: 2 TouchBegin and 3 TouchUpdate" << filteredEventList;
-            QCOMPARE(filteredEventList.count(), 5);
+            QCOMPARE(filteredEventList.size(), 5);
         }
 
         // flickable should have the touchpoint grab: it no longer relies on synth-mouse
@@ -840,17 +840,17 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
         QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonRelease);
         QCOMPARE(eventItem1->eventList.last().type, QEvent::UngrabMouse);
         // QQuickWindow filters the delayed press and release
-        QCOMPARE(filteredEventList.count(), 4);
-        QCOMPARE(filteredEventList.at(filteredEventList.count() - 2).type, QEvent::TouchBegin);
+        QCOMPARE(filteredEventList.size(), 4);
+        QCOMPARE(filteredEventList.at(filteredEventList.size() - 2).type, QEvent::TouchBegin);
         QCOMPARE(filteredEventList.last().type, QEvent::TouchEnd);
     } else {
         // QQuickWindow filters the delayed press if there was one
         if (scrollBeforeDelayIsOver) {
             qCDebug(lcTests) << "expected filtered events: 1 TouchBegin, 3 TouchUpdate, 1 TouchEnd" << filteredEventList;
-            QCOMPARE(filteredEventList.count(), 5);
+            QCOMPARE(filteredEventList.size(), 5);
         } else {
             qCDebug(lcTests) << "expected filtered events: 2 TouchBegin, 3 TouchUpdate, 1 TouchEnd" << filteredEventList;
-            QCOMPARE(filteredEventList.count(), 6);
+            QCOMPARE(filteredEventList.size(), 6);
             QCOMPARE(filteredEventList.at(0).type, QEvent::TouchBegin);
             QCOMPARE(filteredEventList.last().type, QEvent::TouchEnd);
         }
@@ -965,7 +965,7 @@ void tst_TouchMouse::buttonOnTouch()
     touchSeq.press(0, p1, &window).press(1, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
     QCOMPARE(button1->scale(), 1);
-    QCOMPARE(eventItem1->eventList.count(), 1);
+    QCOMPARE(eventItem1->eventList.size(), 1);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
 
     p1 -= QPoint(10, 0);
@@ -1277,16 +1277,16 @@ void tst_TouchMouse::tapOnDismissiveTopMouseAreaClicksBottomOne()
     QTest::touchEvent(&window, device).release(0, p1, &window);
     QQuickTouchUtils::flush(&window);
 
-    QCOMPARE(bottomClickedSpy.count(), 1);
-    QCOMPARE(bottomDoubleClickedSpy.count(), 0);
+    QCOMPARE(bottomClickedSpy.size(), 1);
+    QCOMPARE(bottomDoubleClickedSpy.size(), 0);
 
     QTest::touchEvent(&window, device).press(0, p1, &window);
     QQuickTouchUtils::flush(&window);
     QTest::touchEvent(&window, device).release(0, p1, &window);
     QQuickTouchUtils::flush(&window);
 
-    QCOMPARE(bottomClickedSpy.count(), 1);
-    QCOMPARE(bottomDoubleClickedSpy.count(), 1);
+    QCOMPARE(bottomClickedSpy.size(), 1);
+    QCOMPARE(bottomDoubleClickedSpy.size(), 1);
 }
 
 /*
@@ -1461,21 +1461,21 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
     // ------------------------- Mouse move to mouseArea1
     QTest::mouseMove(&window, p1);
 
-    QVERIFY(enterSpy1.count() == 1);
+    QVERIFY(enterSpy1.size() == 1);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
     // ------------------------- Touch click on mouseArea1
     QTest::touchEvent(&window, device).press(0, p1, &window);
 
-    QCOMPARE(enterSpy1.count(), 1);
-    QCOMPARE(enterSpy2.count(), 0);
+    QCOMPARE(enterSpy1.size(), 1);
+    QCOMPARE(enterSpy2.size(), 0);
     QVERIFY(mouseArea1->pressed());
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
     QTest::touchEvent(&window, device).release(0, p1, &window);
-    QVERIFY(clickSpy1.count() == 1);
+    QVERIFY(clickSpy1.size() == 1);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
@@ -1485,28 +1485,28 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
     QVERIFY(mouseArea1->hovered());
     QVERIFY(mouseArea2->hovered());
     QVERIFY(mouseArea2->pressed());
-    QCOMPARE(enterSpy1.count(), 1);
-    QCOMPARE(enterSpy2.count(), 1);
+    QCOMPARE(enterSpy1.size(), 1);
+    QCOMPARE(enterSpy2.size(), 1);
 
     QTest::touchEvent(&window, device).release(0, p2, &window);
 
-    QVERIFY(clickSpy2.count() == 1);
+    QVERIFY(clickSpy2.size() == 1);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
-    QCOMPARE(exitSpy1.count(), 0);
-    QCOMPARE(exitSpy2.count(), 1);
+    QCOMPARE(exitSpy1.size(), 0);
+    QCOMPARE(exitSpy2.size(), 1);
 
     // ------------------------- Another touch click on mouseArea1
     QTest::touchEvent(&window, device).press(0, p1, &window);
 
-    QCOMPARE(enterSpy1.count(), 1);
-    QCOMPARE(enterSpy2.count(), 1);
+    QCOMPARE(enterSpy1.size(), 1);
+    QCOMPARE(enterSpy2.size(), 1);
     QVERIFY(mouseArea1->pressed());
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
     QTest::touchEvent(&window, device).release(0, p1, &window);
-    QCOMPARE(clickSpy1.count(), 2);
+    QCOMPARE(clickSpy1.size(), 2);
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea1->pressed());
     QVERIFY(!mouseArea2->hovered());
@@ -1557,20 +1557,20 @@ void tst_TouchMouse::touchCancelWillCancelMousePress()
 
     // Begin a new touch, that gets converted to a mouse press
     QTest::touchEvent(&window, device).press(0, p1);
-    QCOMPARE(eventItem->eventList.count(), 1);
+    QCOMPARE(eventItem->eventList.size(), 1);
     QCOMPARE(eventItem->eventList.at(0).type, QEvent::MouseButtonPress);
 
     // Cancel it...
     QTouchEvent cancelEvent(QEvent::TouchCancel, device);
     QCoreApplication::sendEvent(&window, &cancelEvent);
-    QCOMPARE(eventItem->eventList.count(), 3);
+    QCOMPARE(eventItem->eventList.size(), 3);
     QCOMPARE(eventItem->eventList.at(1).type, QEvent::TouchCancel);
     QCOMPARE(eventItem->eventList.at(2).type, QEvent::UngrabMouse);
 
     // Begin a second touch. Since the last one was cancelled, this
     // should end up as a new mouse press on the target item.
     QTest::touchEvent(&window, device).press(0, p1);
-    QVERIFY(eventItem->eventList.count() >= 5);
+    QVERIFY(eventItem->eventList.size() >= 5);
     QCOMPARE(eventItem->eventList.at(3).type, QEvent::MouseButtonPress);
 
     QTest::touchEvent(&window, device).release(0, p1);   // clean up potential state

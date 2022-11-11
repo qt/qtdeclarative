@@ -202,7 +202,7 @@ public:
     const Role *getExistingRole(const QString &key) const;
     const Role *getExistingRole(QV4::String *key) const;
 
-    int roleCount() const { return roles.count(); }
+    int roleCount() const { return roles.size(); }
 
     static void sync(ListLayout *src, ListLayout *target);
 

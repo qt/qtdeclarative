@@ -87,7 +87,7 @@ bool QPipeEndPoint::isSequential() const
 
 qint64 QPipeEndPoint::bytesAvailable() const
 {
-    return m_buffer.length() + QIODevice::bytesAvailable();
+    return m_buffer.size() + QIODevice::bytesAvailable();
 }
 
 void QPipeEndPoint::setRemoteEndPoint(QPipeEndPoint *other)
@@ -97,7 +97,7 @@ void QPipeEndPoint::setRemoteEndPoint(QPipeEndPoint *other)
 
 qint64 QPipeEndPoint::readData(char *data, qint64 maxlen)
 {
-    maxlen = qMin(maxlen, static_cast<qint64>(m_buffer.length()));
+    maxlen = qMin(maxlen, static_cast<qint64>(m_buffer.size()));
     if (maxlen <= 0)
         return 0;
 
@@ -116,7 +116,7 @@ qint64 QPipeEndPoint::writeData(const char *data, qint64 len)
         return 0;
 
     QByteArray &buffer = m_remoteEndPoint->m_buffer;
-    const qint64 prevLen = buffer.length();
+    const qint64 prevLen = buffer.size();
     Q_ASSERT(prevLen >= 0);
     len = qMin(len, std::numeric_limits<int>::max() - prevLen);
 

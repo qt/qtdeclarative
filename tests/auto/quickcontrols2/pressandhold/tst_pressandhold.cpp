@@ -79,16 +79,16 @@ void tst_PressAndHold::pressAndHold()
 
     // pressAndHold() emitted
     QGuiApplication::sendEvent(control.data(), &press);
-    QTRY_COMPARE(spy.count(), 1);
+    QTRY_COMPARE(spy.size(), 1);
     QGuiApplication::sendEvent(control.data(), &release);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     spy.clear();
 
     // pressAndHold() canceled by release
     QGuiApplication::sendEvent(control.data(), &press);
     QGuiApplication::processEvents();
     QGuiApplication::sendEvent(control.data(), &release);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     // pressAndHold() canceled by move
     QGuiApplication::sendEvent(control.data(), &press);
@@ -97,12 +97,12 @@ void tst_PressAndHold::pressAndHold()
     // by the time the second control emits pressAndHold(), we can reliably
     // assume that the first control would have emitted pressAndHold() if it
     // wasn't canceled as appropriate by the move event above
-    QTRY_COMPARE(waitSpy.count(), 1);
-    QCOMPARE(spy.count(), 0);
+    QTRY_COMPARE(waitSpy.size(), 1);
+    QCOMPARE(spy.size(), 0);
     QGuiApplication::sendEvent(control.data(), &release);
     QGuiApplication::sendEvent(waitControl.data(), &release);
-    QCOMPARE(waitSpy.count(), 1);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(waitSpy.size(), 1);
+    QCOMPARE(spy.size(), 0);
     waitSpy.clear();
 
     // pressAndHold() canceled by 2nd press
@@ -112,12 +112,12 @@ void tst_PressAndHold::pressAndHold()
     // by the time the second control emits pressAndHold(), we can reliably
     // assume that the first control would have emitted pressAndHold() if it
     // wasn't canceled as appropriate by the 2nd press event above
-    QTRY_COMPARE(waitSpy.count(), 1);
-    QCOMPARE(spy.count(), 0);
+    QTRY_COMPARE(waitSpy.size(), 1);
+    QCOMPARE(spy.size(), 0);
     QGuiApplication::sendEvent(control.data(), &release);
     QGuiApplication::sendEvent(waitControl.data(), &release);
-    QCOMPARE(waitSpy.count(), 1);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(waitSpy.size(), 1);
+    QCOMPARE(spy.size(), 0);
     waitSpy.clear();
 }
 
@@ -158,9 +158,9 @@ void tst_PressAndHold::keepSelection()
 
     // pressAndHold() emitted => selection remains
     QGuiApplication::sendEvent(control.data(), &press);
-    QTRY_COMPARE(spy.count(), 1);
+    QTRY_COMPARE(spy.size(), 1);
     QGuiApplication::sendEvent(control.data(), &release);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     QCOMPARE(control->property("selectedText"), control->property("text"));
     spy.clear();
 
@@ -168,7 +168,7 @@ void tst_PressAndHold::keepSelection()
     QGuiApplication::sendEvent(control.data(), &press);
     QGuiApplication::processEvents();
     QGuiApplication::sendEvent(control.data(), &release);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
     QVERIFY(control->property("selectedText").toString().isEmpty());
 
     QVERIFY(QMetaObject::invokeMethod(control.data(), "selectAll"));
@@ -181,12 +181,12 @@ void tst_PressAndHold::keepSelection()
     // by the time the second control emits pressAndHold(), we can reliably
     // assume that the first control would have emitted pressAndHold() if it
     // wasn't canceled as appropriate by the move event above
-    QTRY_COMPARE(waitSpy.count(), 1);
-    QCOMPARE(spy.count(), 0);
+    QTRY_COMPARE(waitSpy.size(), 1);
+    QCOMPARE(spy.size(), 0);
     QGuiApplication::sendEvent(control.data(), &release);
     QGuiApplication::sendEvent(waitControl.data(), &release);
-    QCOMPARE(waitSpy.count(), 1);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(waitSpy.size(), 1);
+    QCOMPARE(spy.size(), 0);
     QVERIFY(control->property("selectedText").toString().isEmpty());
     waitSpy.clear();
 }

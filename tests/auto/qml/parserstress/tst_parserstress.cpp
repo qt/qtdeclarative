@@ -126,7 +126,7 @@ void tst_parserstress::ecmascript()
     if (fileInfo.fileName() == QLatin1String("regress-352044-02-n.js")) {
         QVERIFY(component.isError());
 
-        QCOMPARE(component.errors().length(), 2);
+        QCOMPARE(component.errors().size(), 2);
 
         QCOMPARE(component.errors().at(0).description(), QString("Expected token `;'"));
         QCOMPARE(component.errors().at(0).line(), 66);

@@ -44,7 +44,7 @@ void tst_QQuickViewExtra::qtbug_87228()
         // for the sake of this test, any child would be suitable, so pick first
         deletionSpy.reset(new QSignalSpy(children[0], SIGNAL(destroyed(QObject *))));
     }
-    QCOMPARE(deletionSpy->count(), 1);
+    QCOMPARE(deletionSpy->size(), 1);
 }
 
 QTEST_APPLESS_MAIN(tst_QQuickViewExtra)

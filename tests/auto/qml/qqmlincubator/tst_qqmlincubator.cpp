@@ -517,7 +517,7 @@ void tst_qqmlincubator::statusChanged()
     MyIncubator incubator(QQmlIncubator::Synchronous);
     component.create(incubator);
     QVERIFY(incubator.isReady());
-    QCOMPARE(incubator.statuses.count(), 3);
+    QCOMPARE(incubator.statuses.size(), 3);
     QCOMPARE(incubator.statuses.at(0), int(QQmlIncubator::Loading));
     QCOMPARE(incubator.statuses.at(1), -1);
     QCOMPARE(incubator.statuses.at(2), int(QQmlIncubator::Ready));
@@ -531,7 +531,7 @@ void tst_qqmlincubator::statusChanged()
     MyIncubator incubator(QQmlIncubator::Asynchronous);
     component.create(incubator);
     QVERIFY(incubator.isLoading());
-    QCOMPARE(incubator.statuses.count(), 1);
+    QCOMPARE(incubator.statuses.size(), 1);
     QCOMPARE(incubator.statuses.at(0), int(QQmlIncubator::Loading));
 
     {
@@ -539,7 +539,7 @@ void tst_qqmlincubator::statusChanged()
     controller.incubateWhile(&b);
     }
 
-    QCOMPARE(incubator.statuses.count(), 3);
+    QCOMPARE(incubator.statuses.size(), 3);
     QCOMPARE(incubator.statuses.at(0), int(QQmlIncubator::Loading));
     QCOMPARE(incubator.statuses.at(1), -1);
     QCOMPARE(incubator.statuses.at(2), int(QQmlIncubator::Ready));
@@ -553,7 +553,7 @@ void tst_qqmlincubator::statusChanged()
     MyIncubator incubator(QQmlIncubator::Asynchronous);
     component2.create(incubator);
     QVERIFY(incubator.isLoading());
-    QCOMPARE(incubator.statuses.count(), 1);
+    QCOMPARE(incubator.statuses.size(), 1);
     QCOMPARE(incubator.statuses.at(0), int(QQmlIncubator::Loading));
 
     {
@@ -562,7 +562,7 @@ void tst_qqmlincubator::statusChanged()
     }
 
     QVERIFY(incubator.isReady());
-    QCOMPARE(incubator.statuses.count(), 3);
+    QCOMPARE(incubator.statuses.size(), 3);
     QCOMPARE(incubator.statuses.at(0), int(QQmlIncubator::Loading));
     QCOMPARE(incubator.statuses.at(1), -1);
     QCOMPARE(incubator.statuses.at(2), int(QQmlIncubator::Ready));

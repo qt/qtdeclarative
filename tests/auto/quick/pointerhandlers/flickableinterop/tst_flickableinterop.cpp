@@ -103,7 +103,7 @@ void tst_FlickableInterop::touchTapButton()
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.count(), 1);
+    QCOMPARE(tappedSpy.size(), 1);
 
     // We can drag <= dragThreshold and the button still acts normal, Flickable doesn't grab
     p1 = button->mapToScene(QPointF(20, 20)).toPoint();
@@ -117,7 +117,7 @@ void tst_FlickableInterop::touchTapButton()
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.count(), 2);
+    QCOMPARE(tappedSpy.size(), 2);
 }
 
 void tst_FlickableInterop::touchDragFlickableBehindButton_data()
@@ -167,7 +167,7 @@ void tst_FlickableInterop::touchDragFlickableBehindButton()
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.count(), 0);
+    QCOMPARE(tappedSpy.size(), 0);
 }
 
 void tst_FlickableInterop::mouseClickButton_data()
@@ -197,7 +197,7 @@ void tst_FlickableInterop::mouseClickButton()
     QTRY_VERIFY(button->property("pressed").toBool());
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.count(), 1);
+    QCOMPARE(tappedSpy.size(), 1);
 
     // We can drag <= dragThreshold and the button still acts normal, Flickable doesn't grab
     p1 = button->mapToScene(QPointF(20, 20)).toPoint();
@@ -208,7 +208,7 @@ void tst_FlickableInterop::mouseClickButton()
     QVERIFY(button->property("pressed").toBool());
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.count(), 2);
+    QCOMPARE(tappedSpy.size(), 2);
 }
 
 void tst_FlickableInterop::mouseDragFlickableBehindButton_data()
@@ -254,7 +254,7 @@ void tst_FlickableInterop::mouseDragFlickableBehindButton()
     QVERIFY(!button->property("pressed").toBool());
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QVERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.count(), 0);
+    QCOMPARE(tappedSpy.size(), 0);
 }
 
 void tst_FlickableInterop::touchDragSlider()
@@ -306,8 +306,8 @@ void tst_FlickableInterop::touchDragSlider()
     // Release, and do not expect the tapped signal
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
-    QCOMPARE(tappedSpy.count(), 0);
-    QCOMPARE(translationChangedSpy.count(), 1);
+    QCOMPARE(tappedSpy.size(), 0);
+    QCOMPARE(translationChangedSpy.size(), 1);
 }
 
 void tst_FlickableInterop::mouseDragSlider_data()
@@ -391,8 +391,8 @@ void tst_FlickableInterop::mouseDragSlider()
 
     // Release, and do not expect the tapped signal
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QCOMPARE(tappedSpy.count(), 0);
-    QCOMPARE(translationChangedSpy.count(), expectedDragHandlerActive ? 1 : 0);
+    QCOMPARE(tappedSpy.size(), 0);
+    QCOMPARE(translationChangedSpy.size(), expectedDragHandlerActive ? 1 : 0);
 }
 
 void tst_FlickableInterop::touchDragFlickableBehindSlider()
@@ -437,8 +437,8 @@ void tst_FlickableInterop::touchDragFlickableBehindSlider()
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!slider->property("pressed").toBool());
-    QCOMPARE(tappedSpy.count(), 0);
-    QCOMPARE(translationChangedSpy.count(), 0);
+    QCOMPARE(tappedSpy.size(), 0);
+    QCOMPARE(translationChangedSpy.size(), 0);
 }
 
 void tst_FlickableInterop::mouseDragFlickableBehindSlider()
@@ -479,8 +479,8 @@ void tst_FlickableInterop::mouseDragFlickableBehindSlider()
     QCOMPARE(i, 2);
     QVERIFY(!slider->property("pressed").toBool());
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QCOMPARE(tappedSpy.count(), 0);
-    QCOMPARE(translationChangedSpy.count(), 0);
+    QCOMPARE(tappedSpy.size(), 0);
+    QCOMPARE(translationChangedSpy.size(), 0);
 }
 
 void tst_FlickableInterop::touchDragFlickableBehindItemWithHandlers_data()

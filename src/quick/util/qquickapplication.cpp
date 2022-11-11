@@ -277,7 +277,7 @@ void QQuickApplication::setDisplayName(const QString &displayName)
 
 qsizetype screens_count(QQmlListProperty<QQuickScreenInfo> *prop)
 {
-    return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->count();
+    return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->size();
 }
 
 QQuickScreenInfo *screens_at(QQmlListProperty<QQuickScreenInfo> *prop, qsizetype idx)
@@ -294,8 +294,8 @@ QQmlListProperty<QQuickScreenInfo> QQuickApplication::screens()
 void QQuickApplication::updateScreens()
 {
     const QList<QScreen *> screenList = QGuiApplication::screens();
-    m_screens.resize(screenList.count());
-    for (int i = 0; i < screenList.count(); ++i) {
+    m_screens.resize(screenList.size());
+    for (int i = 0; i < screenList.size(); ++i) {
         if (!m_screens[i])
             m_screens[i] = new QQuickScreenInfo(this);
         m_screens[i]->setWrappedScreen(screenList[i]);

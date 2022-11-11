@@ -59,19 +59,19 @@ int QQmlOpenMetaObjectType::signalOffset() const
 
 int QQmlOpenMetaObjectType::propertyCount() const
 {
-    return d->names.count();
+    return d->names.size();
 }
 
 QByteArray QQmlOpenMetaObjectType::propertyName(int idx) const
 {
-    Q_ASSERT(idx >= 0 && idx < d->names.count());
+    Q_ASSERT(idx >= 0 && idx < d->names.size());
 
     return d->mob.property(idx).name();
 }
 
 void QQmlOpenMetaObjectType::createProperties(const QVector<QByteArray> &names)
 {
-    for (int i = 0; i < names.count(); ++i) {
+    for (int i = 0; i < names.size(); ++i) {
         const QByteArray &name = names.at(i);
         const int id = d->mob.propertyCount();
         d->mob.addSignal("__" + QByteArray::number(id) + "()");
@@ -114,7 +114,7 @@ int QQmlOpenMetaObjectType::createProperty(const QByteArray &name)
 
 void QQmlOpenMetaObjectType::propertyCreated(int id, QMetaPropertyBuilder &builder)
 {
-    if (d->referers.count())
+    if (d->referers.size())
         (*d->referers.begin())->propertyCreated(id, builder);
 }
 
@@ -163,13 +163,13 @@ public:
     };
 
     inline void setPropertyValue(int idx, const QVariant &value) {
-        if (data.count() <= idx)
+        if (data.size() <= idx)
             data.resize(idx + 1);
         data[idx].setValue(value);
     }
 
     inline Property &propertyRef(int idx) {
-        if (data.count() <= idx)
+        if (data.size() <= idx)
             data.resize(idx + 1);
         Property &prop = data[idx];
         if (!prop.valueSet)
@@ -188,7 +188,7 @@ public:
     }
 
     inline bool hasProperty(int idx) const {
-        if (idx >= data.count())
+        if (idx >= data.size())
             return false;
         return data[idx].valueSet;
     }
@@ -270,7 +270,7 @@ int QQmlOpenMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void *
             propertyRead(propId);
             *reinterpret_cast<QVariant *>(a[0]) = d->propertyValue(propId);
         } else if (c == QMetaObject::WriteProperty) {
-            if (propId >= d->data.count() || d->data.at(propId).value() != *reinterpret_cast<QVariant *>(a[0]))  {
+            if (propId >= d->data.size() || d->data.at(propId).value() != *reinterpret_cast<QVariant *>(a[0]))  {
                 propertyWrite(propId);
                 d->setPropertyValue(propId, propertyWriteValue(propId, *reinterpret_cast<QVariant *>(a[0])));
                 propertyWritten(propId);
@@ -461,12 +461,12 @@ QVariant QQmlOpenMetaObject::initialValue(int)
 
 int QQmlOpenMetaObject::count() const
 {
-    return d->type->d->names.count();
+    return d->type->d->names.size();
 }
 
 QByteArray QQmlOpenMetaObject::name(int idx) const
 {
-    Q_ASSERT(idx >= 0 && idx < d->type->d->names.count());
+    Q_ASSERT(idx >= 0 && idx < d->type->d->names.size());
 
     return d->type->d->mob.property(idx).name();
 }

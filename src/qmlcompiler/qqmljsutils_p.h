@@ -104,7 +104,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     {
         if (handlerName.startsWith(u"on") && handlerName.size() > 2) {
             QString signal = handlerName.mid(2).toString();
-            for (int i = 0; i < signal.length(); ++i) {
+            for (int i = 0; i < signal.size(); ++i) {
                 QChar &ch = signal[i];
                 if (ch.isLower())
                     return {};

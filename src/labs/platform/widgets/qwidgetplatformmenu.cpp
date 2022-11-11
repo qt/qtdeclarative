@@ -39,7 +39,7 @@ void QWidgetPlatformMenu::insertMenuItem(QPlatformMenuItem *item, QPlatformMenuI
     m_menu->insertAction(widgetBefore ? widgetBefore->action() : nullptr, widgetItem->action());
     int index = m_items.indexOf(widgetBefore);
     if (index < 0)
-        index = m_items.count();
+        index = m_items.size();
     m_items.insert(index, widgetItem);
 }
 

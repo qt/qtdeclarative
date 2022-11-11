@@ -853,15 +853,15 @@ void tst_QQmlDebugJS::evaluateInContext()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
 
-    QVERIFY(engineClient->engines().count());
+    QVERIFY(engineClient->engines().size());
     engineClient->queryRootContexts(engineClient->engines()[0], &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
 
     auto contexts = engineClient->rootContext().contexts;
-    QCOMPARE(contexts.count(), 1);
+    QCOMPARE(contexts.size(), 1);
     auto objects = contexts[0].objects;
-    QCOMPARE(objects.count(), 1);
+    QCOMPARE(objects.size(), 1);
     engineClient->queryObjectRecursive(objects[0], &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
@@ -874,7 +874,7 @@ void tst_QQmlDebugJS::evaluateInContext()
     QTRY_COMPARE(responseBody(m_client).value("value").toInt(), 20);
 
     auto childObjects = object.children;
-    QVERIFY(childObjects.count() > 0); // QQmlComponentAttached is also in there
+    QVERIFY(childObjects.size() > 0); // QQmlComponentAttached is also in there
     QCOMPARE(childObjects[0].className, QString::fromLatin1("Item"));
 
     // "b" accessible in context of surrounding (child) object
@@ -1065,7 +1065,7 @@ void tst_QQmlDebugJS::letConstLocals()
             for (const auto prop : props) {
                 const auto propObj = prop.toObject();
                 QString name = propObj.value(QStringLiteral("name")).toString();
-                QVERIFY(name.length() == 1);
+                QVERIFY(name.size() == 1);
                 auto i = expectedMembers.indexOf(name.at(0));
                 QVERIFY(i != -1);
                 expectedMembers.remove(i, 1);

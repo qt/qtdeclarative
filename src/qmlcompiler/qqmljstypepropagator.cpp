@@ -50,7 +50,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
         m_state.State::operator=(initialState(m_function));
 
         reset();
-        decode(m_function->code.constData(), static_cast<uint>(m_function->code.length()));
+        decode(m_function->code.constData(), static_cast<uint>(m_function->code.size()));
 
         // If we have found unresolved backwards jumps, we need to start over with a fresh state.
         // Mind that m_jumpOriginRegisterStateByTargetInstructionOffset is retained in that case.
@@ -294,13 +294,13 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
     std::optional<FixSuggestion> suggestion;
 
     auto childScopes = m_function->qmlScope->childScopes();
-    for (qsizetype i = 0; i < m_function->qmlScope->childScopes().length(); i++) {
+    for (qsizetype i = 0; i < m_function->qmlScope->childScopes().size(); i++) {
         auto &scope = childScopes[i];
         if (location.offset > scope->sourceLocation().offset) {
-            if (i + 1 < childScopes.length()
+            if (i + 1 < childScopes.size()
                 && childScopes.at(i + 1)->sourceLocation().offset < location.offset)
                 continue;
-            if (scope->childScopes().length() == 0)
+            if (scope->childScopes().size() == 0)
                 continue;
 
             const auto jsId = scope->childScopes().first()->findJSIdentifier(name);
@@ -810,7 +810,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         return;
     }
 
-    if (m_state.accumulatorOut().isMethod() && m_state.accumulatorOut().method().length() != 1) {
+    if (m_state.accumulatorOut().isMethod() && m_state.accumulatorOut().method().size() != 1) {
         setError(u"Cannot determine overloaded method on loadProperty"_s);
         return;
     }
@@ -1161,8 +1161,8 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
     const QQmlJSMetaMethod match = bestMatchForCall(methods, argc, argv, &errors);
 
     if (!match.isValid()) {
-        Q_ASSERT(errors.length() == methods.length());
-        if (methods.length() == 1)
+        Q_ASSERT(errors.size() == methods.size());
+        if (methods.size() == 1)
             setError(errors.first());
         else
             setError(u"No matching override found. Candidates:\n"_s + errors.join(u'\n'));
@@ -1182,7 +1182,7 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
     m_state.setHasSideEffects(true);
     const auto types = match.parameterTypes();
     for (int i = 0; i < argc; ++i) {
-        if (i < types.length()) {
+        if (i < types.size()) {
             const QQmlJSScope::ConstPtr type = match.isJavaScriptFunction()
                     ? m_typeResolver->jsValueType()
                     : QQmlJSScope::ConstPtr(types.at(i));
@@ -2158,12 +2158,12 @@ QString QQmlJSTypePropagator::registerName(int registerIndex) const
     if (registerIndex == Accumulator)
         return u"accumulator"_s;
     if (registerIndex >= FirstArgument
-            && registerIndex < FirstArgument + m_function->argumentTypes.count()) {
+            && registerIndex < FirstArgument + m_function->argumentTypes.size()) {
         return u"argument %1"_s.arg(registerIndex - FirstArgument);
     }
 
     return u"temporary register %1"_s.arg(
-            registerIndex - FirstArgument - m_function->argumentTypes.count());
+            registerIndex - FirstArgument - m_function->argumentTypes.size());
 }
 
 QQmlJSRegisterContent QQmlJSTypePropagator::checkedInputRegister(int reg)

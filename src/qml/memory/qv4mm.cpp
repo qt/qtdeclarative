@@ -943,7 +943,7 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
     }
 
     // Now it is time to free QV4::QObjectWrapper Value, we must check the Value's tag to make sure its object has been destroyed
-    const int pendingCount = m_pendingFreedObjectWrapperValue.count();
+    const int pendingCount = m_pendingFreedObjectWrapperValue.size();
     if (pendingCount) {
         QVector<Value *> remainingWeakQObjectWrappers;
         remainingWeakQObjectWrappers.reserve(pendingCount);
@@ -1078,7 +1078,7 @@ void MemoryManager::runGC()
         std::swap(freedObjectStats, *freedObjectStatsGlobal());
         typedef std::pair<const char*, int> ObjectStatInfo;
         std::vector<ObjectStatInfo> freedObjectsSorted;
-        freedObjectsSorted.reserve(freedObjectStats.count());
+        freedObjectsSorted.reserve(freedObjectStats.size());
         for (auto it = freedObjectStats.constBegin(); it != freedObjectStats.constEnd(); ++it) {
             freedObjectsSorted.push_back(std::make_pair(it.key(), it.value()));
         }

@@ -226,7 +226,7 @@ Q_DECLARE_METATYPE(KeyList)
 
 void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
 {
-    for (int i = 0; i < keys.count(); ++i) {
+    for (int i = 0; i < keys.size(); ++i) {
         const Qt::KeyboardModifiers modifiers = keys.at(i).keyCombination.keyboardModifiers();
         const QChar character = keys.at(i).character;
         if (!character.isNull())
@@ -318,7 +318,7 @@ void tst_qquicktextinput::text()
 
         QVERIFY(textinputObject != nullptr);
         QCOMPARE(textinputObject->text(), standard.at(i));
-        QCOMPARE(textinputObject->length(), standard.at(i).length());
+        QCOMPARE(textinputObject->length(), standard.at(i).size());
 
         delete textinputObject;
     }
@@ -470,36 +470,36 @@ void tst_qquicktextinput::color()
 
         textInputObject->setColor(QColor("white"));
         QCOMPARE(textInputObject->color(), QColor("white"));
-        QCOMPARE(colorSpy.count(), 1);
+        QCOMPARE(colorSpy.size(), 1);
 
         textInputObject->setSelectionColor(QColor("black"));
         QCOMPARE(textInputObject->selectionColor(), QColor("black"));
-        QCOMPARE(selectionColorSpy.count(), 1);
+        QCOMPARE(selectionColorSpy.size(), 1);
 
         textInputObject->setSelectedTextColor(QColor("blue"));
         QCOMPARE(textInputObject->selectedTextColor(), QColor("blue"));
-        QCOMPARE(selectedTextColorSpy.count(), 1);
+        QCOMPARE(selectedTextColorSpy.size(), 1);
 
         textInputObject->setColor(QColor("white"));
-        QCOMPARE(colorSpy.count(), 1);
+        QCOMPARE(colorSpy.size(), 1);
 
         textInputObject->setSelectionColor(QColor("black"));
-        QCOMPARE(selectionColorSpy.count(), 1);
+        QCOMPARE(selectionColorSpy.size(), 1);
 
         textInputObject->setSelectedTextColor(QColor("blue"));
-        QCOMPARE(selectedTextColorSpy.count(), 1);
+        QCOMPARE(selectedTextColorSpy.size(), 1);
 
         textInputObject->setColor(QColor("black"));
         QCOMPARE(textInputObject->color(), QColor("black"));
-        QCOMPARE(colorSpy.count(), 2);
+        QCOMPARE(colorSpy.size(), 2);
 
         textInputObject->setSelectionColor(QColor("blue"));
         QCOMPARE(textInputObject->selectionColor(), QColor("blue"));
-        QCOMPARE(selectionColorSpy.count(), 2);
+        QCOMPARE(selectionColorSpy.size(), 2);
 
         textInputObject->setSelectedTextColor(QColor("white"));
         QCOMPARE(textInputObject->selectedTextColor(), QColor("white"));
-        QCOMPARE(selectedTextColorSpy.count(), 2);
+        QCOMPARE(selectedTextColorSpy.size(), 2);
     }
 
     //test color
@@ -575,7 +575,7 @@ void tst_qquicktextinput::wrap()
         delete textObject;
     }
 
-    for (int i = 0; i < standard.count(); i++) {
+    for (int i = 0; i < standard.size(); i++) {
         QString componentStr = "import QtQuick 2.0\nTextInput { wrapMode: Text.WrapAnywhere; width: 30; text: \"" + standard.at(i) + "\" }";
         QQmlComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -605,14 +605,14 @@ void tst_qquicktextinput::wrap()
 
         input->setWrapMode(QQuickTextInput::Wrap);
         QCOMPARE(input->wrapMode(), QQuickTextInput::Wrap);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         input->setWrapMode(QQuickTextInput::Wrap);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         input->setWrapMode(QQuickTextInput::NoWrap);
         QCOMPARE(input->wrapMode(), QQuickTextInput::NoWrap);
-        QCOMPARE(spy.count(), 2);
+        QCOMPARE(spy.size(), 2);
     }
 }
 
@@ -648,7 +648,7 @@ void tst_qquicktextinput::selection()
     QCOMPARE(textinputObject->selectionEnd(), 0);
     QVERIFY(textinputObject->selectedText().isNull());
 
-    textinputObject->setCursorPosition(textinputObject->text().length() + 1);
+    textinputObject->setCursorPosition(textinputObject->text().size() + 1);
     QCOMPARE(textinputObject->cursorPosition(), 0);
     QCOMPARE(textinputObject->selectionStart(), 0);
     QCOMPARE(textinputObject->selectionEnd(), 0);
@@ -708,7 +708,7 @@ void tst_qquicktextinput::selection()
         QInputMethodEvent event("", attributes);
         QGuiApplication::sendEvent(textinputObject, &event);
     }
-    QCOMPARE(selectionSpy.count(), 1);
+    QCOMPARE(selectionSpy.size(), 1);
     QCOMPARE(textinputObject->selectionStart(), 12);
     QCOMPARE(textinputObject->selectionEnd(), 17);
 
@@ -732,7 +732,7 @@ void tst_qquicktextinput::persistentSelection()
 
     input->setPersistentSelection(false);
     QCOMPARE(input->persistentSelection(), false);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     input->select(1, 4);
     QCOMPARE(input->property("selected").toString(), QLatin1String("ell"));
@@ -745,7 +745,7 @@ void tst_qquicktextinput::persistentSelection()
 
     input->setPersistentSelection(true);
     QCOMPARE(input->persistentSelection(), true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     input->select(1, 4);
     QCOMPARE(input->property("selected").toString(), QLatin1String("ell"));
@@ -776,25 +776,25 @@ void tst_qquicktextinput::overwriteMode()
     QVERIFY(textInput->hasActiveFocus());
 
     textInput->setOverwriteMode(true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     QCOMPARE(true, textInput->overwriteMode());
     textInput->setOverwriteMode(false);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
     QCOMPARE(false, textInput->overwriteMode());
 
     QVERIFY(!textInput->overwriteMode());
     QString insertString = "Some first text";
-    for (int j = 0; j < insertString.length(); j++)
+    for (int j = 0; j < insertString.size(); j++)
         QTest::keyClick(&window, insertString.at(j).toLatin1());
 
     QCOMPARE(textInput->text(), QString("Some first text"));
 
     textInput->setOverwriteMode(true);
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
     textInput->setCursorPosition(5);
 
     insertString = "shiny";
-    for (int j = 0; j < insertString.length(); j++)
+    for (int j = 0; j < insertString.size(); j++)
         QTest::keyClick(&window, insertString.at(j).toLatin1());
     QCOMPARE(textInput->text(), QString("Some shiny text"));
 }
@@ -836,24 +836,24 @@ void tst_qquicktextinput::isRightToLeft()
     // first test that the right string is delivered to the QString::isRightToLeft()
     QCOMPARE(textInput.isRightToLeft(0,0), text.mid(0,0).isRightToLeft());
     QCOMPARE(textInput.isRightToLeft(0,1), text.mid(0,1).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(text.length()-2, text.length()-1), text.mid(text.length()-2, text.length()-1).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(text.length()/2, text.length()/2 + 1), text.mid(text.length()/2, text.length()/2 + 1).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(0,text.length()/4), text.mid(0,text.length()/4).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(text.length()/4,3*text.length()/4), text.mid(text.length()/4,3*text.length()/4).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(text.size()-2, text.size()-1), text.mid(text.size()-2, text.size()-1).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(text.size()/2, text.size()/2 + 1), text.mid(text.size()/2, text.size()/2 + 1).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(0,text.size()/4), text.mid(0,text.size()/4).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(text.size()/4,3*text.size()/4), text.mid(text.size()/4,3*text.size()/4).isRightToLeft());
     if (text.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML TextInput: isRightToLeft(start, end) called with the end property being smaller than the start.");
-    QCOMPARE(textInput.isRightToLeft(3*text.length()/4,text.length()-1), text.mid(3*text.length()/4,text.length()-1).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(3*text.size()/4,text.size()-1), text.mid(3*text.size()/4,text.size()-1).isRightToLeft());
 
     // then test that the feature actually works
     QCOMPARE(textInput.isRightToLeft(0,0), emptyString);
     QCOMPARE(textInput.isRightToLeft(0,1), firstCharacter);
-    QCOMPARE(textInput.isRightToLeft(text.length()-2, text.length()-1), lastCharacter);
-    QCOMPARE(textInput.isRightToLeft(text.length()/2, text.length()/2 + 1), middleCharacter);
-    QCOMPARE(textInput.isRightToLeft(0,text.length()/4), startString);
-    QCOMPARE(textInput.isRightToLeft(text.length()/4,3*text.length()/4), midString);
+    QCOMPARE(textInput.isRightToLeft(text.size()-2, text.size()-1), lastCharacter);
+    QCOMPARE(textInput.isRightToLeft(text.size()/2, text.size()/2 + 1), middleCharacter);
+    QCOMPARE(textInput.isRightToLeft(0,text.size()/4), startString);
+    QCOMPARE(textInput.isRightToLeft(text.size()/4,3*text.size()/4), midString);
     if (text.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML TextInput: isRightToLeft(start, end) called with the end property being smaller than the start.");
-    QCOMPARE(textInput.isRightToLeft(3*text.length()/4,text.length()-1), endString);
+    QCOMPARE(textInput.isRightToLeft(3*text.size()/4,text.size()-1), endString);
 }
 
 void tst_qquicktextinput::moveCursorSelection_data()
@@ -1289,8 +1289,8 @@ void tst_qquicktextinput::dragMouseSelection()
     QTest::mouseMove(&window, QPoint(x2, y));
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x2,y));
     QString str1;
-    QTRY_VERIFY((str1 = textInputObject->selectedText()).length() > 3);
-    QTRY_VERIFY(str1.length() > 3);
+    QTRY_VERIFY((str1 = textInputObject->selectedText()).size() > 3);
+    QTRY_VERIFY(str1.size() > 3);
 
     // press and drag the current selection.
     x1 = 40;
@@ -1299,7 +1299,7 @@ void tst_qquicktextinput::dragMouseSelection()
     QTest::mouseMove(&window, QPoint(x2, y));
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x2,y));
     QString str2 = textInputObject->selectedText();
-    QTRY_VERIFY(str2.length() > 3);
+    QTRY_VERIFY(str2.size() > 3);
 
     QTRY_VERIFY(str1 != str2);
 }
@@ -1355,7 +1355,7 @@ void tst_qquicktextinput::mouseSelectionMode()
     if (selectWords) {
         QTRY_COMPARE(textInputObject->selectedText(), text);
     } else {
-        QTRY_VERIFY(textInputObject->selectedText().length() > 3);
+        QTRY_VERIFY(textInputObject->selectedText().size() > 3);
         QVERIFY(textInputObject->selectedText() != text);
     }
 }
@@ -1374,14 +1374,14 @@ void tst_qquicktextinput::mouseSelectionMode_accessors()
 
     input->setMouseSelectionMode(QQuickTextInput::SelectWords);
     QCOMPARE(input->mouseSelectionMode(), QQuickTextInput::SelectWords);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     input->setMouseSelectionMode(QQuickTextInput::SelectWords);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     input->setMouseSelectionMode(QQuickTextInput::SelectCharacters);
     QCOMPARE(input->mouseSelectionMode(), QQuickTextInput::SelectCharacters);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 void tst_qquicktextinput::selectByMouse()
@@ -1398,15 +1398,15 @@ void tst_qquicktextinput::selectByMouse()
 
     input->setSelectByMouse(true);
     QCOMPARE(input->selectByMouse(), true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
     QCOMPARE(spy.at(0).at(0).toBool(), true);
 
     input->setSelectByMouse(true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     input->setSelectByMouse(false);
     QCOMPARE(input->selectByMouse(), false);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
     QCOMPARE(spy.at(1).at(0).toBool(), false);
 }
 
@@ -1424,14 +1424,14 @@ void tst_qquicktextinput::renderType()
 
     input->setRenderType(QQuickTextInput::NativeRendering);
     QCOMPARE(input->renderType(), QQuickTextInput::NativeRendering);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     input->setRenderType(QQuickTextInput::NativeRendering);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     input->setRenderType(QQuickTextInput::QtRendering);
     QCOMPARE(input->renderType(), QQuickTextInput::QtRendering);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 void tst_qquicktextinput::horizontalAlignment_RightToLeft()
@@ -1541,7 +1541,7 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QSignalSpy cursorRectangleSpy(textInput, SIGNAL(cursorRectangleChanged()));
     platformInputContext.setInputDirection(Qt::RightToLeft);
     QCOMPARE(qApp->inputMethod()->inputDirection(), Qt::RightToLeft);
-    QCOMPARE(cursorRectangleSpy.count(), 1);
+    QCOMPARE(cursorRectangleSpy.size(), 1);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(textInput->boundingRect().right() >= textInput->width() - 1);
     QVERIFY(textInput->boundingRect().right() <= textInput->width() + 1);
@@ -1876,15 +1876,15 @@ void tst_qquicktextinput::maxLength()
     QVERIFY(textinputObject->text().isEmpty());
     QCOMPARE(textinputObject->maxLength(), 10);
     foreach (const QString &str, standard) {
-        QVERIFY(textinputObject->text().length() <= 10);
+        QVERIFY(textinputObject->text().size() <= 10);
         textinputObject->setText(str);
-        QVERIFY(textinputObject->text().length() <= 10);
+        QVERIFY(textinputObject->text().size() <= 10);
     }
 
     textinputObject->setText("");
     QTRY_VERIFY(textinputObject->hasActiveFocus());
     for (int i=0; i<20; i++) {
-        QTRY_COMPARE(textinputObject->text().length(), qMin(i,10));
+        QTRY_COMPARE(textinputObject->text().size(), qMin(i,10));
         QTest::keyClick(&window, Qt::Key_A);
     }
 }
@@ -1900,11 +1900,11 @@ void tst_qquicktextinput::masks()
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
     QVERIFY(textinputObject != nullptr);
     QTRY_VERIFY(textinputObject->hasActiveFocus());
-    QCOMPARE(textinputObject->text().length(), 0);
+    QCOMPARE(textinputObject->text().size(), 0);
     QCOMPARE(textinputObject->inputMask(), QString("HHHHhhhh; "));
     QCOMPARE(textinputObject->length(), 8);
     for (int i=0; i<10; i++) {
-        QTRY_COMPARE(qMin(i,8), textinputObject->text().length());
+        QTRY_COMPARE(qMin(i,8), textinputObject->text().size());
         QCOMPARE(textinputObject->length(), 8);
         QCOMPARE(textinputObject->getText(0, qMin(i, 8)), QString(qMin(i, 8), 'a'));
         QCOMPARE(textinputObject->getText(qMin(i, 8), 8), QString(8 - qMin(i, 8), ' '));
@@ -1956,10 +1956,10 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(intInput->text(), QLatin1String("1"));
     QCOMPARE(intInput->hasAcceptableInput(), false);
     QCOMPARE(intInput->property("acceptable").toBool(), false);
-    QCOMPARE(intSpy.count(), 0);
+    QCOMPARE(intSpy.size(), 0);
     QCOMPARE(intInput->hasAcceptableInput(), false);
     QCOMPARE(intInput->property("acceptable").toBool(), false);
-    QCOMPARE(intSpy.count(), 0);
+    QCOMPARE(intSpy.size(), 0);
     QTest::keyPress(&window, Qt::Key_Period);
     QTest::keyRelease(&window, Qt::Key_Period, Qt::NoModifier);
     QTRY_COMPARE(intInput->text(), QLatin1String("1"));
@@ -1987,13 +1987,13 @@ void tst_qquicktextinput::validators()
     QCOMPARE(intInput->text(), QLatin1String("11"));
     QCOMPARE(intInput->hasAcceptableInput(), true);
     QCOMPARE(intInput->property("acceptable").toBool(), true);
-    QCOMPARE(intSpy.count(), 1);
+    QCOMPARE(intSpy.size(), 1);
     QTest::keyPress(&window, Qt::Key_0);
     QTest::keyRelease(&window, Qt::Key_0, Qt::NoModifier);
     QCOMPARE(intInput->text(), QLatin1String("11"));
     QCOMPARE(intInput->hasAcceptableInput(), true);
     QCOMPARE(intInput->property("acceptable").toBool(), true);
-    QCOMPARE(intSpy.count(), 1);
+    QCOMPARE(intSpy.size(), 1);
 
     QQuickTextInput *dblInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(window.rootObject()->property("dblInput")));
     QVERIFY(dblInput);
@@ -2019,13 +2019,13 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 0);
+    QCOMPARE(dblSpy.size(), 0);
     QTest::keyPress(&window, Qt::Key_2);
     QTest::keyRelease(&window, Qt::Key_2, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1);
+    QCOMPARE(dblSpy.size(), 1);
     QTest::keyPress(&window, Qt::Key_Comma);
     QTest::keyRelease(&window, Qt::Key_Comma, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12,"));
@@ -2066,84 +2066,84 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1 + extraSignals);
+    QCOMPARE(dblSpy.size(), 1 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1 + extraSignals);
+    QCOMPARE(dblSpy.size(), 1 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1 + extraSignals);
+    QCOMPARE(dblSpy.size(), 1 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
-    QCOMPARE(dblSpy.count(), 1 + extraSignals);
+    QCOMPARE(dblSpy.size(), 1 + extraSignals);
 
     // Ensure the validator doesn't prevent characters being removed.
     dblInput->setValidator(intInput->validator());
     QCOMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2 + extraSignals);
+    QCOMPARE(dblSpy.size(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2 + extraSignals);
+    QCOMPARE(dblSpy.size(), 2 + extraSignals);
     // Once unacceptable input is in anything goes until it reaches an acceptable state again.
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
-    QCOMPARE(dblSpy.count(), 2 + extraSignals);
+    QCOMPARE(dblSpy.size(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2 + extraSignals);
+    QCOMPARE(dblSpy.size(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2 + extraSignals);
+    QCOMPARE(dblSpy.size(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2 + extraSignals);
+    QCOMPARE(dblSpy.size(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_Backspace);
     QTest::keyRelease(&window, Qt::Key_Backspace, Qt::NoModifier);
     QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
-    QCOMPARE(dblSpy.count(), 2 + extraSignals);
+    QCOMPARE(dblSpy.size(), 2 + extraSignals);
     QTest::keyPress(&window, Qt::Key_1);
     QTest::keyRelease(&window, Qt::Key_1, Qt::NoModifier);
     QCOMPARE(dblInput->text(), QLatin1String("11"));
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
     QCOMPARE(dblInput->hasAcceptableInput(), true);
-    QCOMPARE(dblSpy.count(), 3 + extraSignals);
+    QCOMPARE(dblSpy.size(), 3 + extraSignals);
 
     // Changing the validator properties will re-evaluate whether the input is acceptable.
     intValidator->setTop(10);
     QCOMPARE(dblInput->property("acceptable").toBool(), false);
     QCOMPARE(dblInput->hasAcceptableInput(), false);
-    QCOMPARE(dblSpy.count(), 4 + extraSignals);
+    QCOMPARE(dblSpy.size(), 4 + extraSignals);
     intValidator->setTop(12);
     QCOMPARE(dblInput->property("acceptable").toBool(), true);
     QCOMPARE(dblInput->hasAcceptableInput(), true);
-    QCOMPARE(dblSpy.count(), 5 + extraSignals);
+    QCOMPARE(dblSpy.size(), 5 + extraSignals);
 
     QQuickTextInput *strInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(window.rootObject()->property("strInput")));
     QVERIFY(strInput);
@@ -2157,37 +2157,37 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(strInput->text(), QLatin1String(""));
     QCOMPARE(strInput->hasAcceptableInput(), false);
     QCOMPARE(strInput->property("acceptable").toBool(), false);
-    QCOMPARE(strSpy.count(), 0);
+    QCOMPARE(strSpy.size(), 0);
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(strInput->text(), QLatin1String("a"));
     QCOMPARE(strInput->hasAcceptableInput(), false);
     QCOMPARE(strInput->property("acceptable").toBool(), false);
-    QCOMPARE(strSpy.count(), 0);
+    QCOMPARE(strSpy.size(), 0);
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(strInput->text(), QLatin1String("aa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
     QCOMPARE(strInput->property("acceptable").toBool(), true);
-    QCOMPARE(strSpy.count(), 1);
+    QCOMPARE(strSpy.size(), 1);
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(strInput->text(), QLatin1String("aaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
     QCOMPARE(strInput->property("acceptable").toBool(), true);
-    QCOMPARE(strSpy.count(), 1);
+    QCOMPARE(strSpy.size(), 1);
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(strInput->text(), QLatin1String("aaaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
     QCOMPARE(strInput->property("acceptable").toBool(), true);
-    QCOMPARE(strSpy.count(), 1);
+    QCOMPARE(strSpy.size(), 1);
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(strInput->text(), QLatin1String("aaaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
     QCOMPARE(strInput->property("acceptable").toBool(), true);
-    QCOMPARE(strSpy.count(), 1);
+    QCOMPARE(strSpy.size(), 1);
 
     QQuickTextInput *unvalidatedInput = qobject_cast<QQuickTextInput *>(qvariant_cast<QObject *>(window.rootObject()->property("unvalidatedInput")));
     QVERIFY(unvalidatedInput);
@@ -2201,13 +2201,13 @@ void tst_qquicktextinput::validators()
     QTRY_COMPARE(unvalidatedInput->text(), QLatin1String("1"));
     QCOMPARE(unvalidatedInput->hasAcceptableInput(), true);
     QCOMPARE(unvalidatedInput->property("acceptable").toBool(), true);
-    QCOMPARE(unvalidatedSpy.count(), 0);
+    QCOMPARE(unvalidatedSpy.size(), 0);
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(unvalidatedInput->text(), QLatin1String("1a"));
     QCOMPARE(unvalidatedInput->hasAcceptableInput(), true);
     QCOMPARE(unvalidatedInput->property("acceptable").toBool(), true);
-    QCOMPARE(unvalidatedSpy.count(), 0);
+    QCOMPARE(unvalidatedSpy.size(), 0);
 }
 
 void tst_qquicktextinput::inputMethods()
@@ -2225,9 +2225,9 @@ void tst_qquicktextinput::inputMethods()
     QSignalSpy inputMethodHintSpy(input, SIGNAL(inputMethodHintsChanged()));
     input->setInputMethodHints(Qt::ImhUppercaseOnly);
     QVERIFY(input->inputMethodHints() & Qt::ImhUppercaseOnly);
-    QCOMPARE(inputMethodHintSpy.count(), 1);
+    QCOMPARE(inputMethodHintSpy.size(), 1);
     input->setInputMethodHints(Qt::ImhUppercaseOnly);
-    QCOMPARE(inputMethodHintSpy.count(), 1);
+    QCOMPARE(inputMethodHintSpy.size(), 1);
 
     // default value
     QQuickTextInput plainInput;
@@ -2286,8 +2286,8 @@ void tst_qquicktextinput::inputMethods()
     // input should reset selection even if replacement parameters are out of bounds
     input->setText("text");
     input->setCursorPosition(0);
-    input->moveCursorSelection(input->text().length());
-    event.setCommitString("replacement", -input->text().length(), input->text().length());
+    input->moveCursorSelection(input->text().size());
+    event.setCommitString("replacement", -input->text().size(), input->text().size());
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->selectionStart(), input->selectionEnd());
     QCOMPARE(input->text(), QString("replacement"));
@@ -2326,22 +2326,22 @@ void tst_qquicktextinput::signal_accepted()
     QTRY_COMPARE(input->text(), QLatin1String("a"));
     QCOMPARE(input->hasAcceptableInput(), false);
     QCOMPARE(input->property("acceptable").toBool(), false);
-    QTRY_COMPARE(inputSpy.count(), 0);
+    QTRY_COMPARE(inputSpy.size(), 0);
 
     QTest::keyPress(&window, Qt::Key_Enter);
     QTest::keyRelease(&window, Qt::Key_Enter, Qt::NoModifier);
-    QTRY_COMPARE(acceptedSpy.count(), 0);
+    QTRY_COMPARE(acceptedSpy.size(), 0);
 
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(input->text(), QLatin1String("aa"));
     QCOMPARE(input->hasAcceptableInput(), true);
     QCOMPARE(input->property("acceptable").toBool(), true);
-    QTRY_COMPARE(inputSpy.count(), 1);
+    QTRY_COMPARE(inputSpy.size(), 1);
 
     QTest::keyPress(&window, Qt::Key_Enter);
     QTest::keyRelease(&window, Qt::Key_Enter, Qt::NoModifier);
-    QTRY_COMPARE(acceptedSpy.count(), 1);
+    QTRY_COMPARE(acceptedSpy.size(), 1);
 }
 
 void tst_qquicktextinput::signal_editingfinished()
@@ -2369,23 +2369,23 @@ void tst_qquicktextinput::signal_editingfinished()
     QTRY_COMPARE(input1->text(), QLatin1String("a"));
     QCOMPARE(input1->hasAcceptableInput(), false);
     QCOMPARE(input1->property("acceptable").toBool(), false);
-    QTRY_COMPARE(input1Spy.count(), 0);
+    QTRY_COMPARE(input1Spy.size(), 0);
 
     QTest::keyPress(&window, Qt::Key_Enter);
     QTest::keyRelease(&window, Qt::Key_Enter, Qt::NoModifier);
-    QTRY_COMPARE(editingFinished1Spy.count(), 0);
+    QTRY_COMPARE(editingFinished1Spy.size(), 0);
 
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(input1->text(), QLatin1String("aa"));
     QCOMPARE(input1->hasAcceptableInput(), true);
     QCOMPARE(input1->property("acceptable").toBool(), true);
-    QTRY_COMPARE(input1Spy.count(), 1);
+    QTRY_COMPARE(input1Spy.size(), 1);
 
     QTest::keyPress(&window, Qt::Key_Enter);
     QTest::keyRelease(&window, Qt::Key_Enter, Qt::NoModifier);
-    QTRY_COMPARE(editingFinished1Spy.count(), 1);
-    QTRY_COMPARE(input1Spy.count(), 1);
+    QTRY_COMPARE(editingFinished1Spy.size(), 1);
+    QTRY_COMPARE(input1Spy.size(), 1);
 
     QSignalSpy editingFinished2Spy(input2, SIGNAL(editingFinished()));
     QSignalSpy input2Spy(input2, SIGNAL(acceptableInputChanged()));
@@ -2399,19 +2399,19 @@ void tst_qquicktextinput::signal_editingfinished()
     QTRY_COMPARE(input2->text(), QLatin1String("a"));
     QCOMPARE(input2->hasAcceptableInput(), false);
     QCOMPARE(input2->property("acceptable").toBool(), false);
-    QTRY_COMPARE(input2Spy.count(), 0);
+    QTRY_COMPARE(input2Spy.size(), 0);
 
     QTest::keyPress(&window, Qt::Key_A);
     QTest::keyRelease(&window, Qt::Key_A, Qt::NoModifier);
     QTRY_COMPARE(input2->text(), QLatin1String("aa"));
     QCOMPARE(input2->hasAcceptableInput(), true);
     QCOMPARE(input2->property("acceptable").toBool(), true);
-    QTRY_COMPARE(input2Spy.count(), 1);
+    QTRY_COMPARE(input2Spy.size(), 1);
 
     input1->setFocus(true);
     QTRY_VERIFY(input1->hasActiveFocus());
     QTRY_VERIFY(!input2->hasActiveFocus());
-    QTRY_COMPARE(editingFinished2Spy.count(), 1);
+    QTRY_COMPARE(editingFinished2Spy.size(), 1);
 }
 
 void tst_qquicktextinput::signal_textEdited()
@@ -2437,32 +2437,32 @@ void tst_qquicktextinput::signal_textEdited()
     int textEdits = 0;
 
     QTest::keyClick(&window, Qt::Key_A);
-    QCOMPARE(textChangedSpy.count(), ++textChanges);
-    QCOMPARE(textEditedSpy.count(), ++textEdits);
+    QCOMPARE(textChangedSpy.size(), ++textChanges);
+    QCOMPARE(textEditedSpy.size(), ++textEdits);
 
     QTest::keyClick(&window, Qt::Key_B);
-    QCOMPARE(textChangedSpy.count(), ++textChanges);
-    QCOMPARE(textEditedSpy.count(), ++textEdits);
+    QCOMPARE(textChangedSpy.size(), ++textChanges);
+    QCOMPARE(textEditedSpy.size(), ++textEdits);
 
     QTest::keyClick(&window, Qt::Key_C);
-    QCOMPARE(textChangedSpy.count(), ++textChanges);
-    QCOMPARE(textEditedSpy.count(), ++textEdits);
+    QCOMPARE(textChangedSpy.size(), ++textChanges);
+    QCOMPARE(textEditedSpy.size(), ++textEdits);
 
     QTest::keyClick(&window, Qt::Key_Space);
-    QCOMPARE(textChangedSpy.count(), ++textChanges);
-    QCOMPARE(textEditedSpy.count(), ++textEdits);
+    QCOMPARE(textChangedSpy.size(), ++textChanges);
+    QCOMPARE(textEditedSpy.size(), ++textEdits);
 
     QTest::keyClick(&window, Qt::Key_Backspace);
-    QCOMPARE(textChangedSpy.count(), ++textChanges);
-    QCOMPARE(textEditedSpy.count(), ++textEdits);
+    QCOMPARE(textChangedSpy.size(), ++textChanges);
+    QCOMPARE(textEditedSpy.size(), ++textEdits);
 
     input->clear();
-    QCOMPARE(textChangedSpy.count(), ++textChanges);
-    QCOMPARE(textEditedSpy.count(), textEdits);
+    QCOMPARE(textChangedSpy.size(), ++textChanges);
+    QCOMPARE(textEditedSpy.size(), textEdits);
 
     input->setText("TextInput");
-    QCOMPARE(textChangedSpy.count(), ++textChanges);
-    QCOMPARE(textEditedSpy.count(), textEdits);
+    QCOMPARE(textChangedSpy.size(), ++textChanges);
+    QCOMPARE(textEditedSpy.size(), textEdits);
 }
 
 /*
@@ -2488,12 +2488,12 @@ void tst_qquicktextinput::navigation()
     QTest::keyClick(&window, Qt::Key_Right);
     QVERIFY(input->hasActiveFocus());
     //QT-2944: If text is selected, ensure we deselect upon cursor motion
-    input->setCursorPosition(input->text().length());
-    input->select(0,input->text().length());
+    input->setCursorPosition(input->text().size());
+    input->select(0,input->text().size());
     QVERIFY(input->selectionStart() != input->selectionEnd());
     QTest::keyClick(&window, Qt::Key_Right);
     QCOMPARE(input->selectionStart(), input->selectionEnd());
-    QCOMPARE(input->selectionStart(), input->text().length());
+    QCOMPARE(input->selectionStart(), input->text().size());
     QVERIFY(input->hasActiveFocus());
     QTest::keyClick(&window, Qt::Key_Right);
     QVERIFY(!input->hasActiveFocus());
@@ -2544,7 +2544,7 @@ void tst_qquicktextinput::navigation_RTL()
     QTest::keyClick(&window, Qt::Key_Left);
     QVERIFY(input->hasActiveFocus());
 
-    input->setCursorPosition(input->text().length());
+    input->setCursorPosition(input->text().size());
     QVERIFY(input->hasActiveFocus());
 
     // move off
@@ -2569,16 +2569,16 @@ void tst_qquicktextinput::copyAndPaste()
     QVERIFY(textInput != nullptr);
 
     // copy and paste
-    QCOMPARE(textInput->text().length(), 12);
-    textInput->select(0, textInput->text().length());
+    QCOMPARE(textInput->text().size(), 12);
+    textInput->select(0, textInput->text().size());
     textInput->copy();
     QCOMPARE(textInput->selectedText(), QString("Hello world!"));
-    QCOMPARE(textInput->selectedText().length(), 12);
+    QCOMPARE(textInput->selectedText().size(), 12);
     textInput->setCursorPosition(0);
     QTRY_VERIFY(textInput->canPaste());
     textInput->paste();
     QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
-    QCOMPARE(textInput->text().length(), 24);
+    QCOMPARE(textInput->text().size(), 24);
 
     // can paste
     QVERIFY(textInput->canPaste());
@@ -2586,7 +2586,7 @@ void tst_qquicktextinput::copyAndPaste()
     QVERIFY(!textInput->canPaste());
     textInput->paste();
     QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
-    QCOMPARE(textInput->text().length(), 24);
+    QCOMPARE(textInput->text().size(), 24);
     textInput->setReadOnly(false);
     QVERIFY(textInput->canPaste());
 
@@ -2608,10 +2608,10 @@ void tst_qquicktextinput::copyAndPaste()
     // select all and cut
     textInput->selectAll();
     textInput->cut();
-    QCOMPARE(textInput->text().length(), 0);
+    QCOMPARE(textInput->text().size(), 0);
     textInput->paste();
     QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
-    QCOMPARE(textInput->text().length(), 24);
+    QCOMPARE(textInput->text().size(), 24);
 
     // Copy first word.
     textInput->setCursorPosition(0);
@@ -2638,7 +2638,7 @@ void tst_qquicktextinput::copyAndPaste()
         QQuickTextInput::EchoMode echoMode = QQuickTextInput::EchoMode(index);
         textInput->setEchoMode(echoMode);
         textInput->setText("My password");
-        textInput->select(0, textInput->text().length());
+        textInput->select(0, textInput->text().size());
         textInput->copy();
         if (echoMode == QQuickTextInput::Normal) {
             QVERIFY(!clipboard->text().isEmpty());
@@ -2674,24 +2674,24 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
 
     // copy and paste
     QVERIFY(textInput->hasActiveFocus());
-    QCOMPARE(textInput->text().length(), 12);
-    textInput->select(0, textInput->text().length());
+    QCOMPARE(textInput->text().size(), 12);
+    textInput->select(0, textInput->text().size());
     simulateKeys(&window, QKeySequence::Copy);
     QCOMPARE(textInput->selectedText(), QString("Hello world!"));
-    QCOMPARE(textInput->selectedText().length(), 12);
+    QCOMPARE(textInput->selectedText().size(), 12);
     textInput->setCursorPosition(0);
     QVERIFY(textInput->canPaste());
     simulateKeys(&window, QKeySequence::Paste);
     QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
-    QCOMPARE(textInput->text().length(), 24);
+    QCOMPARE(textInput->text().size(), 24);
 
     // select all and cut
     simulateKeys(&window, QKeySequence::SelectAll);
     simulateKeys(&window, QKeySequence::Cut);
-    QCOMPARE(textInput->text().length(), 0);
+    QCOMPARE(textInput->text().size(), 0);
     simulateKeys(&window, QKeySequence::Paste);
     QCOMPARE(textInput->text(), QString("Hello world!Hello world!"));
-    QCOMPARE(textInput->text().length(), 24);
+    QCOMPARE(textInput->text().size(), 24);
 
     // clear copy buffer
     QClipboard *clipboard = QGuiApplication::clipboard();
@@ -2706,7 +2706,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
         QQuickTextInput::EchoMode echoMode = QQuickTextInput::EchoMode(index);
         textInput->setEchoMode(echoMode);
         textInput->setText("My password");
-        textInput->select(0, textInput->text().length());
+        textInput->select(0, textInput->text().size());
         simulateKeys(&window, QKeySequence::Copy);
         if (echoMode == QQuickTextInput::Normal) {
             QVERIFY(!clipboard->text().isEmpty());
@@ -2733,7 +2733,7 @@ void tst_qquicktextinput::canPasteEmpty()
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != nullptr);
 
-    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
+    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().size() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 }
 #endif
@@ -2749,7 +2749,7 @@ void tst_qquicktextinput::canPaste()
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != nullptr);
 
-    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
+    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().size() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 }
 #endif
@@ -2792,7 +2792,7 @@ void tst_qquicktextinput::middleClickPaste()
     QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval() + 10);
 
     if (QGuiApplication::clipboard()->supportsSelection())
-        QCOMPARE(textInputObject->text().mid(1, selectedText.length()), selectedText);
+        QCOMPARE(textInputObject->text().mid(1, selectedText.size()), selectedText);
     else
         QCOMPARE(textInputObject->text(), originalText);
 }
@@ -2844,7 +2844,7 @@ void tst_qquicktextinput::cursorDelegate()
     QVERIFY(delegateObject);
     QCOMPARE(delegateObject->property("localProperty").toString(), QString("Hello"));
     //Test Delegate gets moved
-    for (int i=0; i<= textInputObject->text().length(); i++) {
+    for (int i=0; i<= textInputObject->text().size(); i++) {
         textInputObject->setCursorPosition(i);
         QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
         QCOMPARE(textInputObject->cursorRectangle().y(), delegateObject->y());
@@ -2982,27 +2982,27 @@ void tst_qquicktextinput::cursorVisible()
 
     input.setCursorVisible(true);
     QCOMPARE(input.isCursorVisible(), true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     input.setCursorVisible(false);
     QCOMPARE(input.isCursorVisible(), false);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     input.setFocus(true);
     QCOMPARE(input.isCursorVisible(), false);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     input.setParentItem(view.rootObject());
     QCOMPARE(input.isCursorVisible(), true);
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     input.setFocus(false);
     QCOMPARE(input.isCursorVisible(), false);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     input.setFocus(true);
     QCOMPARE(input.isCursorVisible(), true);
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
 
     QQuickView alternateView;
     alternateView.show();
@@ -3010,12 +3010,12 @@ void tst_qquicktextinput::cursorVisible()
     QVERIFY(QTest::qWaitForWindowActive(&alternateView));
 
     QCOMPARE(input.isCursorVisible(), false);
-    QCOMPARE(spy.count(), 6);
+    QCOMPARE(spy.size(), 6);
 
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QCOMPARE(input.isCursorVisible(), true);
-    QCOMPARE(spy.count(), 7);
+    QCOMPARE(spy.size(), 7);
 
     {   // Cursor attribute with 0 length hides cursor.
         QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
@@ -3023,7 +3023,7 @@ void tst_qquicktextinput::cursorVisible()
         QCoreApplication::sendEvent(&input, &ev);
     }
     QCOMPARE(input.isCursorVisible(), false);
-    QCOMPARE(spy.count(), 8);
+    QCOMPARE(spy.size(), 8);
 
     {   // Cursor attribute with non zero length shows cursor.
         QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
@@ -3031,7 +3031,7 @@ void tst_qquicktextinput::cursorVisible()
         QCoreApplication::sendEvent(&input, &ev);
     }
     QCOMPARE(input.isCursorVisible(), true);
-    QCOMPARE(spy.count(), 9);
+    QCOMPARE(spy.size(), 9);
 
     {   // If the cursor is hidden by the input method and the text is changed it should be visible again.
         QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
@@ -3039,11 +3039,11 @@ void tst_qquicktextinput::cursorVisible()
         QCoreApplication::sendEvent(&input, &ev);
     }
     QCOMPARE(input.isCursorVisible(), false);
-    QCOMPARE(spy.count(), 10);
+    QCOMPARE(spy.size(), 10);
 
     input.setText("something");
     QCOMPARE(input.isCursorVisible(), true);
-    QCOMPARE(spy.count(), 11);
+    QCOMPARE(spy.size(), 11);
 
     {   // If the cursor is hidden by the input method and the cursor position is changed it should be visible again.
         QInputMethodEvent ev(QString(), QList<QInputMethodEvent::Attribute>()
@@ -3051,11 +3051,11 @@ void tst_qquicktextinput::cursorVisible()
         QCoreApplication::sendEvent(&input, &ev);
     }
     QCOMPARE(input.isCursorVisible(), false);
-    QCOMPARE(spy.count(), 12);
+    QCOMPARE(spy.size(), 12);
 
     input.setCursorPosition(5);
     QCOMPARE(input.isCursorVisible(), true);
-    QCOMPARE(spy.count(), 13);
+    QCOMPARE(spy.size(), 13);
 }
 
 void tst_qquicktextinput::cursorRectangle_data()
@@ -3132,14 +3132,14 @@ void tst_qquicktextinput::cursorRectangle()
     // Check the cursor rectangle remains within the input bounding rect when auto scrolling.
     QCOMPARE(r.left(), leftToRight ? input.width() : 0);
 
-    for (int i = positionAtWidth + 1; i < text.length(); ++i) {
+    for (int i = positionAtWidth + 1; i < text.size(); ++i) {
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
         COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
-    for (int i = text.length() - 2; i >= 0; --i) {
+    for (int i = text.size() - 2; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QCOMPARE(r.top(), 0.);
@@ -3178,7 +3178,7 @@ void tst_qquicktextinput::cursorRectangle()
     COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
     QCOMPARE(input.positionToRectangle(11), r);
 
-    for (int i = wrapPosition + 1; i < text.length(); ++i) {
+    for (int i = wrapPosition + 1; i < text.size(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.top() >= line.height() - 5);
@@ -3219,7 +3219,7 @@ void tst_qquicktextinput::cursorRectangle()
     COMPARE_INPUT_METHOD_QUERY(QRectF, (&input), Qt::ImCursorRectangle, toRectF, r);
     QCOMPARE(input.positionToRectangle(11), r);
 
-    for (int i = wrapPosition + 1; i < text.length(); ++i) {
+    for (int i = wrapPosition + 1; i < text.size(); ++i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height());
@@ -3227,7 +3227,7 @@ void tst_qquicktextinput::cursorRectangle()
         QCOMPARE(input.positionToRectangle(i), r);
     }
 
-    for (int i = text.length() - 2; i >= wrapPosition; --i) {
+    for (int i = text.size() - 2; i >= wrapPosition; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.bottom() >= input.height());
@@ -3268,7 +3268,7 @@ void tst_qquicktextinput::cursorRectangle()
     widerText[1] = 'W'; // Assumes shortText is at least two characters long.
     input.setText(widerText);
 
-    QCOMPARE(cursorRectangleSpy.count(), 1);
+    QCOMPARE(cursorRectangleSpy.size(), 1);
 }
 
 void tst_qquicktextinput::readOnly()
@@ -3296,7 +3296,7 @@ void tst_qquicktextinput::readOnly()
     input->setCursorPosition(3);
     input->setReadOnly(false);
     QCOMPARE(input->isReadOnly(), false);
-    QCOMPARE(input->cursorPosition(), input->text().length());
+    QCOMPARE(input->cursorPosition(), input->text().size());
     QVERIFY(input->isCursorVisible());
 }
 
@@ -3418,7 +3418,7 @@ void tst_qquicktextinput::passwordEchoDelay()
     QSignalSpy cursorSpy(input, SIGNAL(cursorRectangleChanged()));
     QTest::qWait(maskDelay);
     QTRY_COMPARE(input->displayText(), QString(5, fillChar));
-    QCOMPARE(cursorSpy.count(), 1);
+    QCOMPARE(cursorSpy.size(), 1);
     QCOMPARE(input->cursorRectangle().topLeft(), cursor->position());
 
     QTest::keyPress(&window, '5');
@@ -3469,7 +3469,7 @@ void tst_qquicktextinput::focusOnPress()
 
     textInputObject->setFocusOnPress(true);
     QCOMPARE(textInputObject->focusOnPress(), true);
-    QCOMPARE(activeFocusOnPressSpy.count(), 0);
+    QCOMPARE(activeFocusOnPressSpy.size(), 0);
 
     QQuickWindow window;
     window.resize(100, 50);
@@ -3486,20 +3486,20 @@ void tst_qquicktextinput::focusOnPress()
     QGuiApplication::processEvents();
     QCOMPARE(textInputObject->hasFocus(), true);
     QCOMPARE(textInputObject->hasActiveFocus(), true);
-    QCOMPARE(focusSpy.count(), 1);
-    QCOMPARE(activeFocusSpy.count(), 1);
+    QCOMPARE(focusSpy.size(), 1);
+    QCOMPARE(activeFocusSpy.size(), 1);
     QCOMPARE(textInputObject->selectedText(), QString());
     QTest::mouseRelease(&window, Qt::LeftButton, noModifiers);
 
     textInputObject->setFocusOnPress(false);
     QCOMPARE(textInputObject->focusOnPress(), false);
-    QCOMPARE(activeFocusOnPressSpy.count(), 1);
+    QCOMPARE(activeFocusOnPressSpy.size(), 1);
 
     textInputObject->setFocus(false);
     QCOMPARE(textInputObject->hasFocus(), false);
     QCOMPARE(textInputObject->hasActiveFocus(), false);
-    QCOMPARE(focusSpy.count(), 2);
-    QCOMPARE(activeFocusSpy.count(), 2);
+    QCOMPARE(focusSpy.size(), 2);
+    QCOMPARE(activeFocusSpy.size(), 2);
 
     // Wait for double click timeout to expire before clicking again.
     QTest::qWait(400);
@@ -3507,13 +3507,13 @@ void tst_qquicktextinput::focusOnPress()
     QGuiApplication::processEvents();
     QCOMPARE(textInputObject->hasFocus(), false);
     QCOMPARE(textInputObject->hasActiveFocus(), false);
-    QCOMPARE(focusSpy.count(), 2);
-    QCOMPARE(activeFocusSpy.count(), 2);
+    QCOMPARE(focusSpy.size(), 2);
+    QCOMPARE(activeFocusSpy.size(), 2);
     QTest::mouseRelease(&window, Qt::LeftButton, noModifiers);
 
     textInputObject->setFocusOnPress(true);
     QCOMPARE(textInputObject->focusOnPress(), true);
-    QCOMPARE(activeFocusOnPressSpy.count(), 2);
+    QCOMPARE(activeFocusOnPressSpy.size(), 2);
 
     // Test a selection made in the on(Active)FocusChanged handler isn't overwritten.
     textInputObject->setProperty("selectOnFocus", true);
@@ -3523,8 +3523,8 @@ void tst_qquicktextinput::focusOnPress()
     QGuiApplication::processEvents();
     QCOMPARE(textInputObject->hasFocus(), true);
     QCOMPARE(textInputObject->hasActiveFocus(), true);
-    QCOMPARE(focusSpy.count(), 3);
-    QCOMPARE(activeFocusSpy.count(), 3);
+    QCOMPARE(focusSpy.size(), 3);
+    QCOMPARE(activeFocusSpy.size(), 3);
     QCOMPARE(textInputObject->selectedText(), textInputObject->text());
     QTest::mouseRelease(&window, Qt::LeftButton, noModifiers);
 }
@@ -3615,7 +3615,7 @@ void tst_qquicktextinput::openInputPanel()
     anotherInput.setFocus(true);
     QCOMPARE(qApp->inputMethod()->isVisible(), true);
     QCOMPARE(qApp->focusObject(), qobject_cast<QObject*>(&anotherInput));
-    QCOMPARE(inputPanelVisibilitySpy.count(), 0);
+    QCOMPARE(inputPanelVisibilitySpy.size(), 0);
 
     anotherInput.setFocus(false);
     QVERIFY(qApp->focusObject() != &anotherInput);
@@ -3764,18 +3764,18 @@ void tst_qquicktextinput::contentSize()
 
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() < textObject->height());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     textObject->setWrapMode(QQuickTextInput::WordWrap);
     QVERIFY(textObject->contentWidth() <= textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     textObject->setText("The quickredfoxjumpedoverthe lazy brown dog");
 
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     textObject->setText("The quick red fox jumped over the lazy brown dog");
     for (int w = 60; w < 120; ++w) {
@@ -3788,7 +3788,7 @@ void tst_qquicktextinput::contentSize()
 static void sendPreeditText(QQuickItem *item, const QString &text, int cursor)
 {
     QInputMethodEvent event(text, QList<QInputMethodEvent::Attribute>()
-            << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, cursor, text.length(), QVariant()));
+            << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, cursor, text.size(), QVariant()));
     QCoreApplication::sendEvent(item, &event);
 }
 
@@ -3813,14 +3813,14 @@ void tst_qquicktextinput::preeditAutoScroll()
     sendPreeditText(input, preeditText.mid(0, 3), 1);
     QVERIFY(evaluate<int>(input, QString("positionAt(0)")) != 0);
     QVERIFY(input->cursorRectangle().left() < input->boundingRect().width());
-    QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
+    QCOMPARE(cursorRectangleSpy.size(), ++cursorRectangleChanges);
 
     // test the text is scrolled back when the preedit is removed.
     QInputMethodEvent imEvent;
     QCoreApplication::sendEvent(input, &imEvent);
     QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(0)), 0);
     QCOMPARE(evaluate<int>(input, QString("positionAt(%1)").arg(input->width())), 5);
-    QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
+    QCOMPARE(cursorRectangleSpy.size(), ++cursorRectangleChanges);
 
     QTextLayout layout(preeditText);
     layout.setFont(input->font());
@@ -3841,7 +3841,7 @@ void tst_qquicktextinput::preeditAutoScroll()
         int width = ceil(line.cursorToX(i, QTextLine::Trailing)) - floor(line.cursorToX(i));
         QVERIFY(input->cursorRectangle().right() >= width - 3);
         QVERIFY(input->positionToRectangle(0).x() < x);
-        QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
+        QCOMPARE(cursorRectangleSpy.size(), ++cursorRectangleChanges);
         x = input->positionToRectangle(0).x();
     }
     for (int i = 1; i >= 0; --i) {
@@ -3849,24 +3849,24 @@ void tst_qquicktextinput::preeditAutoScroll()
         int width = ceil(line.cursorToX(i, QTextLine::Trailing)) - floor(line.cursorToX(i));
         QVERIFY(input->cursorRectangle().right() >= width - 3);
         QVERIFY(input->positionToRectangle(0).x() > x);
-        QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
+        QCOMPARE(cursorRectangleSpy.size(), ++cursorRectangleChanges);
         x = input->positionToRectangle(0).x();
     }
 
     // Test incrementing the preedit cursor doesn't cause further
     // scrolling when right most text is visible.
-    sendPreeditText(input, preeditText, preeditText.length() - 3);
-    QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
+    sendPreeditText(input, preeditText, preeditText.size() - 3);
+    QCOMPARE(cursorRectangleSpy.size(), ++cursorRectangleChanges);
     x = input->positionToRectangle(0).x();
     for (int i = 2; i >= 0; --i) {
-        sendPreeditText(input, preeditText, preeditText.length() - i);
+        sendPreeditText(input, preeditText, preeditText.size() - i);
         QCOMPARE(input->positionToRectangle(0).x(), x);
-        QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
+        QCOMPARE(cursorRectangleSpy.size(), ++cursorRectangleChanges);
     }
     for (int i = 1; i <  3; ++i) {
-        sendPreeditText(input, preeditText, preeditText.length() - i);
+        sendPreeditText(input, preeditText, preeditText.size() - i);
         QCOMPARE(input->positionToRectangle(0).x(), x);
-        QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
+        QCOMPARE(cursorRectangleSpy.size(), ++cursorRectangleChanges);
     }
 
     // Test disabling auto scroll.
@@ -3920,8 +3920,8 @@ void tst_qquicktextinput::preeditCursorRectangle()
         QVERIFY(previousRect.left() < currentRect.left());
         QCOMPARE(input->cursorRectangle(), currentRect);
         QCOMPARE(cursor->position(), currentRect.topLeft());
-        QVERIFY(inputSpy.count() > 0); inputSpy.clear();
-        QVERIFY(panelSpy.count() > 0); panelSpy.clear();
+        QVERIFY(inputSpy.size() > 0); inputSpy.clear();
+        QVERIFY(panelSpy.size() > 0); panelSpy.clear();
         previousRect = currentRect;
     }
 
@@ -3934,8 +3934,8 @@ void tst_qquicktextinput::preeditCursorRectangle()
     currentRect = query.value(Qt::ImCursorRectangle).toRectF();
     QCOMPARE(input->cursorRectangle(), currentRect);
     QCOMPARE(cursor->position(), currentRect.topLeft());
-    QCOMPARE(inputSpy.count(), 1);
-    QCOMPARE(panelSpy.count(), 1);
+    QCOMPARE(inputSpy.size(), 1);
+    QCOMPARE(panelSpy.size(), 1);
 
     // Verify that if there is no preedit cursor then the micro focus rect is the
     // same as it would be if it were positioned at the end of the preedit text.
@@ -3948,8 +3948,8 @@ void tst_qquicktextinput::preeditCursorRectangle()
     QCOMPARE(currentRect, previousRect);
     QCOMPARE(input->cursorRectangle(), currentRect);
     QCOMPARE(cursor->position(), currentRect.topLeft());
-    QCOMPARE(inputSpy.count(), 1);
-    QCOMPARE(panelSpy.count(), 1);
+    QCOMPARE(inputSpy.size(), 1);
+    QCOMPARE(panelSpy.size(), 1);
 }
 
 void tst_qquicktextinput::inputContextMouseHandler()
@@ -4016,37 +4016,37 @@ void tst_qquicktextinput::inputMethodComposing()
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     {
         QInputMethodEvent event(text.mid(12), QList<QInputMethodEvent::Attribute>());
         QGuiApplication::sendEvent(input, &event);
     }
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     {
         QInputMethodEvent event;
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), false);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     // Changing the text while not composing doesn't alter the composing state.
     input->setText(text.mid(0, 16));
     QCOMPARE(input->isInputMethodComposing(), false);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     {
         QInputMethodEvent event(text.mid(16), QList<QInputMethodEvent::Attribute>());
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), true);
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     // Changing the text while composing cancels composition.
     input->setText(text.mid(0, 12));
     QCOMPARE(input->isInputMethodComposing(), false);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     {   // Preedit cursor positioned outside (empty) preedit; composing.
         QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
@@ -4054,7 +4054,7 @@ void tst_qquicktextinput::inputMethodComposing()
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), true);
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
 
 
     {   // Cursor hidden; composing
@@ -4063,7 +4063,7 @@ void tst_qquicktextinput::inputMethodComposing()
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), true);
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
 
     {   // Default cursor attributes; composing.
         QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
@@ -4071,7 +4071,7 @@ void tst_qquicktextinput::inputMethodComposing()
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), true);
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
 
     {   // Selections are persisted: not composing
         QInputMethodEvent event(QString(), QList<QInputMethodEvent::Attribute>()
@@ -4079,7 +4079,7 @@ void tst_qquicktextinput::inputMethodComposing()
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), false);
-    QCOMPARE(spy.count(), 6);
+    QCOMPARE(spy.size(), 6);
 
     input->setCursorPosition(12);
 
@@ -4091,14 +4091,14 @@ void tst_qquicktextinput::inputMethodComposing()
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), true);
-    QCOMPARE(spy.count(), 7);
+    QCOMPARE(spy.size(), 7);
 
     {
         QInputMethodEvent event;
         QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), false);
-    QCOMPARE(spy.count(), 8);
+    QCOMPARE(spy.size(), 8);
 }
 
 void tst_qquicktextinput::inputMethodUpdate()
@@ -4285,7 +4285,7 @@ void tst_qquicktextinput::getText_data()
     QTest::newRow("all plain text")
             << standard.at(0)
             << QString()
-            << 0 << standard.at(0).length()
+            << 0 << standard.at(0).size()
             << standard.at(0);
 
     QTest::newRow("plain text sub string")
@@ -4309,13 +4309,13 @@ void tst_qquicktextinput::getText_data()
     QTest::newRow("plain text cropped end")
             << standard.at(0)
             << QString()
-            << 23 << standard.at(0).length() + 8
+            << 23 << standard.at(0).size() + 8
             << standard.at(0).mid(23);
 
     QTest::newRow("plain text cropped beginning and end")
             << standard.at(0)
             << QString()
-            << -9 << standard.at(0).length() + 4
+            << -9 << standard.at(0).size() + 4
             << standard.at(0);
 }
 
@@ -4363,10 +4363,10 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("at cursor position (end)")
             << standard.at(0)
             << QString()
-            << standard.at(0).length() << standard.at(0).length() << standard.at(0).length()
+            << standard.at(0).size() << standard.at(0).size() << standard.at(0).size()
             << QString("Hello")
             << standard.at(0) + QString("Hello")
-            << standard.at(0).length() + 5 << standard.at(0).length() + 5 << standard.at(0).length() + 5
+            << standard.at(0).size() + 5 << standard.at(0).size() + 5 << standard.at(0).size() + 5
             << false << true;
 
     QTest::newRow("at cursor position (middle)")
@@ -4390,10 +4390,10 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("before cursor position (end)")
             << standard.at(0)
             << QString()
-            << standard.at(0).length() << standard.at(0).length() << 18
+            << standard.at(0).size() << standard.at(0).size() << 18
             << QString("Hello")
             << standard.at(0).mid(0, 18) + QString("Hello") + standard.at(0).mid(18)
-            << standard.at(0).length() + 5 << standard.at(0).length() + 5 << standard.at(0).length() + 5
+            << standard.at(0).size() + 5 << standard.at(0).size() + 5 << standard.at(0).size() + 5
             << false << true;
 
     QTest::newRow("before cursor position (middle)")
@@ -4408,7 +4408,7 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("after cursor position (middle)")
             << standard.at(0)
             << QString()
-            << 18 << 18 << standard.at(0).length()
+            << 18 << 18 << standard.at(0).size()
             << QString("Hello")
             << standard.at(0) + QString("Hello")
             << 18 << 18 << 18
@@ -4435,7 +4435,7 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("after selection")
             << standard.at(0)
             << QString()
-            << 14 << 19 << standard.at(0).length()
+            << 14 << 19 << standard.at(0).size()
             << QString("Hello")
             << standard.at(0) + QString("Hello")
             << 14 << 19 << 19
@@ -4444,7 +4444,7 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("after reversed selection")
             << standard.at(0)
             << QString()
-            << 19 << 14 << standard.at(0).length()
+            << 19 << 14 << standard.at(0).size()
             << QString("Hello")
             << standard.at(0) + QString("Hello")
             << 14 << 19 << 14
@@ -4489,7 +4489,7 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("past end")
             << standard.at(0)
             << QString()
-            << 0 << 0 << standard.at(0).length() + 3
+            << 0 << 0 << standard.at(0).size() + 3
             << QString("Hello")
             << standard.at(0)
             << 0 << 0 << 0
@@ -4510,10 +4510,10 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("mask: at cursor position (end)")
             << ip
             << inputMask
-            << inputMask.length() << inputMask.length() << inputMask.length()
+            << inputMask.size() << inputMask.size() << inputMask.size()
             << QString("8")
             << ip
-            << inputMask.length() << inputMask.length() << inputMask.length()
+            << inputMask.size() << inputMask.size() << inputMask.size()
             << false << false;
 
     QTest::newRow("mask: at cursor position (middle)")
@@ -4537,10 +4537,10 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("mask: before cursor position (end)")
             << ip
             << inputMask
-            << inputMask.length() << inputMask.length() << 6
+            << inputMask.size() << inputMask.size() << 6
             << QString("75.2")
             << QString("192.167.5.24")
-            << inputMask.length() << inputMask.length() << inputMask.length()
+            << inputMask.size() << inputMask.size() << inputMask.size()
             << false << false;
 
     QTest::newRow("mask: before cursor position (middle)")
@@ -4627,7 +4627,7 @@ void tst_qquicktextinput::insert_data()
     QTest::newRow("mask: past end")
             << ip
             << inputMask
-            << 0 << 0 << ip.length() + 3
+            << 0 << 0 << ip.size() + 3
             << QString("4")
             << ip
             << 0 << 0 << 0
@@ -4684,7 +4684,7 @@ void tst_qquicktextinput::insert()
     textInput->insert(insertPosition, insertText);
 
     QCOMPARE(textInput->text(), expectedText);
-    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.length() : inputMask.length());
+    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.size() : inputMask.size());
 
     QCOMPARE(textInput->selectionStart(), expectedSelectionStart);
     QCOMPARE(textInput->selectionEnd(), expectedSelectionEnd);
@@ -4693,11 +4693,11 @@ void tst_qquicktextinput::insert()
     if (selectionStart > selectionEnd)
         qSwap(selectionStart, selectionEnd);
 
-    QCOMPARE(selectionSpy.count() > 0, selectionChanged);
-    QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
-    QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
-    QCOMPARE(textSpy.count() > 0, text != expectedText);
-    QCOMPARE(cursorPositionSpy.count() > 0, cursorPositionChanged);
+    QCOMPARE(selectionSpy.size() > 0, selectionChanged);
+    QCOMPARE(selectionStartSpy.size() > 0, selectionStart != expectedSelectionStart);
+    QCOMPARE(selectionEndSpy.size() > 0, selectionEnd != expectedSelectionEnd);
+    QCOMPARE(textSpy.size() > 0, text != expectedText);
+    QCOMPARE(cursorPositionSpy.size() > 0, cursorPositionChanged);
 }
 
 void tst_qquicktextinput::remove_data()
@@ -4736,19 +4736,19 @@ void tst_qquicktextinput::remove_data()
     QTest::newRow("to cursor position (end)")
             << standard.at(0)
             << QString()
-            << standard.at(0).length() << standard.at(0).length()
-            << standard.at(0).length() << standard.at(0).length() - 5
-            << standard.at(0).mid(0, standard.at(0).length() - 5)
-            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << standard.at(0).size() << standard.at(0).size()
+            << standard.at(0).size() << standard.at(0).size() - 5
+            << standard.at(0).mid(0, standard.at(0).size() - 5)
+            << standard.at(0).size() - 5 << standard.at(0).size() - 5 << standard.at(0).size() - 5
             << false << true;
 
     QTest::newRow("to cursor position (end)")
             << standard.at(0)
             << QString()
-            << standard.at(0).length() << standard.at(0).length()
-            << standard.at(0).length() - 5 << standard.at(0).length()
-            << standard.at(0).mid(0, standard.at(0).length() - 5)
-            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << standard.at(0).size() << standard.at(0).size()
+            << standard.at(0).size() - 5 << standard.at(0).size()
+            << standard.at(0).mid(0, standard.at(0).size() - 5)
+            << standard.at(0).size() - 5 << standard.at(0).size() - 5 << standard.at(0).size() - 5
             << false << true;
 
     QTest::newRow("from cursor position (middle)")
@@ -4781,10 +4781,10 @@ void tst_qquicktextinput::remove_data()
     QTest::newRow("before cursor position (end)")
             << standard.at(0)
             << QString()
-            << standard.at(0).length() << standard.at(0).length()
+            << standard.at(0).size() << standard.at(0).size()
             << 18 << 23
             << standard.at(0).mid(0, 18) + standard.at(0).mid(23)
-            << standard.at(0).length() - 5 << standard.at(0).length() - 5 << standard.at(0).length() - 5
+            << standard.at(0).size() - 5 << standard.at(0).size() - 5 << standard.at(0).size() - 5
             << false << true;
 
     QTest::newRow("before cursor position (middle)")
@@ -4827,8 +4827,8 @@ void tst_qquicktextinput::remove_data()
             << standard.at(0)
             << QString()
             << 14 << 19
-            << standard.at(0).length() - 5 << standard.at(0).length()
-            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << standard.at(0).size() - 5 << standard.at(0).size()
+            << standard.at(0).mid(0, standard.at(0).size() - 5)
             << 14 << 19 << 19
             << false << false;
 
@@ -4836,8 +4836,8 @@ void tst_qquicktextinput::remove_data()
             << standard.at(0)
             << QString()
             << 19 << 14
-            << standard.at(0).length() - 5 << standard.at(0).length()
-            << standard.at(0).mid(0, standard.at(0).length() - 5)
+            << standard.at(0).size() - 5 << standard.at(0).size()
+            << standard.at(0).mid(0, standard.at(0).size() - 5)
             << 14 << 19 << 14
             << false << false;
 
@@ -4872,7 +4872,7 @@ void tst_qquicktextinput::remove_data()
             << standard.at(0)
             << QString()
             << 0 << 0
-            << 23 << standard.at(0).length() + 8
+            << 23 << standard.at(0).size() + 8
             << standard.at(0).mid(0, 23)
             << 0 << 0 << 0
             << false << false;
@@ -4881,7 +4881,7 @@ void tst_qquicktextinput::remove_data()
             << standard.at(0)
             << QString()
             << 0 << 0
-            << -9 << standard.at(0).length() + 4
+            << -9 << standard.at(0).size() + 4
             << QString()
             << 0 << 0 << 0
             << false << false;
@@ -5039,7 +5039,7 @@ void tst_qquicktextinput::remove()
     textInput->remove(removeStart, removeEnd);
 
     QCOMPARE(textInput->text(), expectedText);
-    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.length() : inputMask.length());
+    QCOMPARE(textInput->length(), inputMask.isEmpty() ? expectedText.size() : inputMask.size());
 
     if (selectionStart > selectionEnd)  //
         qSwap(selectionStart, selectionEnd);
@@ -5048,13 +5048,13 @@ void tst_qquicktextinput::remove()
     QCOMPARE(textInput->selectionEnd(), expectedSelectionEnd);
     QCOMPARE(textInput->cursorPosition(), expectedCursorPosition);
 
-    QCOMPARE(selectionSpy.count() > 0, selectionChanged);
-    QCOMPARE(selectionStartSpy.count() > 0, selectionStart != expectedSelectionStart);
-    QCOMPARE(selectionEndSpy.count() > 0, selectionEnd != expectedSelectionEnd);
-    QCOMPARE(textSpy.count() > 0, text != expectedText);
+    QCOMPARE(selectionSpy.size() > 0, selectionChanged);
+    QCOMPARE(selectionStartSpy.size() > 0, selectionStart != expectedSelectionStart);
+    QCOMPARE(selectionEndSpy.size() > 0, selectionEnd != expectedSelectionEnd);
+    QCOMPARE(textSpy.size() > 0, text != expectedText);
 
     if (cursorPositionChanged)  //
-        QVERIFY(cursorPositionSpy.count() > 0);
+        QVERIFY(cursorPositionSpy.size() > 0);
 }
 
 #if QT_CONFIG(shortcut)
@@ -5414,11 +5414,11 @@ void tst_qquicktextinput::undo()
             // QTest::keyClick(testWidget, Qt::Key_End, Qt::ShiftModifier);
         }
 
-        for (int j = 0; j < insertString.at(i).length(); j++)
+        for (int j = 0; j < insertString.at(i).size(); j++)
             QTest::keyClick(&window, insertString.at(i).at(j).toLatin1());
     }
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
 // STEP 2: Next call undo several times and see if we can restore to the previous state
     for (i = 0; i < expectedString.size() - 1; ++i) {
@@ -5430,7 +5430,7 @@ void tst_qquicktextinput::undo()
 // STEP 3: Verify that we have undone everything
     QVERIFY(textInput->text().isEmpty());
     QVERIFY(!textInput->canUndo());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 void tst_qquicktextinput::redo_data()
@@ -5491,13 +5491,13 @@ void tst_qquicktextinput::redo()
     for (i = 0; i < insertString.size(); ++i) {
         if (insertIndex[i] > -1)
             textInput->setCursorPosition(insertIndex[i]);
-        for (int j = 0; j < insertString.at(i).length(); j++)
+        for (int j = 0; j < insertString.at(i).size(); j++)
             QTest::keyClick(&window, insertString.at(i).at(j).toLatin1());
         QVERIFY(textInput->canUndo());
         QVERIFY(!textInput->canRedo());
     }
 
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     // undo everything
     while (!textInput->text().isEmpty()) {
@@ -5506,7 +5506,7 @@ void tst_qquicktextinput::redo()
         QVERIFY(textInput->canRedo());
     }
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     for (i = 0; i < expectedString.size(); ++i) {
         QVERIFY(textInput->canRedo());
@@ -5515,7 +5515,7 @@ void tst_qquicktextinput::redo()
         QVERIFY(textInput->canUndo());
     }
     QVERIFY(!textInput->canRedo());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 #if QT_CONFIG(shortcut)
@@ -5849,12 +5849,12 @@ void tst_qquicktextinput::clear()
     textInput->clear();
     QVERIFY(textInput->text().isEmpty());
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     // checks that clears can be undone
     textInput->undo();
     QVERIFY(!textInput->canUndo());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
     QCOMPARE(textInput->text(), QString("I am Legend"));
 
     textInput->setCursorPosition(4);
@@ -5868,12 +5868,12 @@ void tst_qquicktextinput::clear()
     QVERIFY(textInput->text().isEmpty());
     QVERIFY2(textInput->preeditText().isEmpty(), "Pre-edit text must be empty after clear");
 
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     // checks that clears can be undone
     textInput->undo();
     QVERIFY(!textInput->canUndo());
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
     QCOMPARE(textInput->text(), QString("I am Legend"));
     QVERIFY2(textInput->preeditText().isEmpty(), "Pre-edit text must be empty after undo");
 }
@@ -5890,7 +5890,7 @@ void tst_qquicktextinput::backspaceSurrogatePairs()
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != nullptr);
     textInput->setText(text);
-    textInput->setCursorPosition(text.length());
+    textInput->setCursorPosition(text.size());
 
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
@@ -5899,7 +5899,7 @@ void tst_qquicktextinput::backspaceSurrogatePairs()
     QVERIFY(QTest::qWaitForWindowActive(&window));
     QCOMPARE(QGuiApplication::focusWindow(), &window);
 
-    for (int i = text.length(); i >= 0; i -= 2) {
+    for (int i = text.size(); i >= 0; i -= 2) {
         QCOMPARE(textInput->text(), text.mid(0, i));
         QTest::keyClick(&window, Qt::Key_Backspace, Qt::NoModifier);
     }
@@ -5908,7 +5908,7 @@ void tst_qquicktextinput::backspaceSurrogatePairs()
     textInput->setText(text);
     textInput->setCursorPosition(0);
 
-    for (int i = 0; i < text.length(); i += 2) {
+    for (int i = 0; i < text.size(); i += 2) {
         QCOMPARE(textInput->text(), text.mid(i));
         QTest::keyClick(&window, Qt::Key_Delete, Qt::NoModifier);
     }
@@ -6397,7 +6397,7 @@ void tst_qquicktextinput::setInputMask()
     unescapedMask.replace(QLatin1String("\\\\"), QLatin1String("\\"));  // simple unescape
     QSignalSpy spy(textInput, SIGNAL(inputMaskChanged(const QString &)));
     textInput->setInputMask(unescapedMask);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     // then either insert using insert() or keyboard
     if (insert_text) {
@@ -6411,7 +6411,7 @@ void tst_qquicktextinput::setInputMask()
         QVERIFY(textInput->hasActiveFocus());
 
         QTest::keyClick(&window, Qt::Key_Home);
-        for (int i = 0; i < input.length(); i++)
+        for (int i = 0; i < input.size(); i++)
             QTest::keyClick(&window, input.at(i).toLatin1());
     }
 
@@ -6891,7 +6891,7 @@ void tst_qquicktextinput::ensureVisible()
 
     input->ensureVisible(input->length());
 
-    QCOMPARE(cursorSpy.count(), 1);
+    QCOMPARE(cursorSpy.size(), 1);
 
     QCOMPARE(input->boundingRect().x(), input->width() - line.naturalTextWidth());
     QCOMPARE(input->boundingRect().y(), qreal(0));
@@ -7167,13 +7167,13 @@ void tst_qquicktextinput::touchscreenSetsFocusAndMovesCursor()
     QQuickTouchUtils::flush(&window);
     QCOMPARE(qApp->focusObject(), bottom);
     // text cursor is at the end by default, on press
-    const auto len = bottom->text().length();
+    const auto len = bottom->text().size();
     QCOMPARE(bottom->cursorPosition(), len);
     // so typing a character appends it
     QVERIFY(!bottom->text().endsWith('q'));
     QTest::keyClick(&window, Qt::Key_Q);
     QVERIFY(bottom->text().endsWith('q'));
-    QCOMPARE(bottom->text().length(), len + 1);
+    QCOMPARE(bottom->text().size(), len + 1);
     QTest::touchEvent(&window, touchscreen.data()).release(0, QPoint(x1,y), &window);
     QQuickTouchUtils::flush(&window);
     // the cursor gets moved on release, as long as TextInput's grab wasn't stolen (e.g. by Flickable)

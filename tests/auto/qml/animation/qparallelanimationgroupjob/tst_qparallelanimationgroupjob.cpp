@@ -99,7 +99,7 @@ public:
     }
 
     void clear() { states.clear(); }
-    int count() { return states.count(); }
+    int count() { return states.size(); }
 
     QList<QAbstractAnimationJob::State> states;
 };

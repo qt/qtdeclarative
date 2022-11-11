@@ -129,7 +129,7 @@ void QPacketProtocol::send(const QByteArray &data)
 qint64 QPacketProtocol::packetsAvailable() const
 {
     Q_D(const QPacketProtocol);
-    return d->packets.count();
+    return d->packets.size();
 }
 
 /*!
@@ -223,7 +223,7 @@ void QPacketProtocol::readyToRead()
                              static_cast<qint64>(d->inProgressSize - d->inProgress.size())));
 
             QByteArray toRead(bytesToRead, Qt::Uninitialized);
-            if (!d->readFromDevice(toRead.data(), toRead.length())) {
+            if (!d->readFromDevice(toRead.data(), toRead.size())) {
                 emit error();
                 return;
             }

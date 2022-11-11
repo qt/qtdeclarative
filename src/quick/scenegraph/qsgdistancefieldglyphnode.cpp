@@ -101,11 +101,11 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     m_glyph_cache->populate(glyphs.glyphIndexes());
 
     const QVector<quint32> glyphIndexes = m_glyphs.glyphIndexes();
-    for (int i = 0; i < glyphIndexes.count(); ++i)
+    for (int i = 0; i < glyphIndexes.size(); ++i)
         m_allGlyphIndexesLookup.insert(glyphIndexes.at(i));
     qCDebug(lcSgText, "inserting %" PRIdQSIZETYPE " glyphs, %" PRIdQSIZETYPE " unique",
-            glyphIndexes.count(),
-            m_allGlyphIndexesLookup.count());
+            glyphIndexes.size(),
+            m_allGlyphIndexesLookup.size());
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QString::number(glyphs.glyphIndexes().count()) + QStringLiteral(" DF glyphs: ") +
                             m_glyphs.rawFont().familyName() + QStringLiteral(" ") + QString::number(m_glyphs.rawFont().pixelSize()));
@@ -147,7 +147,7 @@ void QSGDistanceFieldGlyphNode::invalidateGlyphs(const QVector<quint32> &glyphs)
     if (m_dirtyGeometry)
         return;
 
-    for (int i = 0; i < glyphs.count(); ++i) {
+    for (int i = 0; i < glyphs.size(); ++i) {
         if (m_allGlyphIndexesLookup.contains(glyphs.at(i))) {
             m_dirtyGeometry = true;
             setFlag(UsePreprocess);
@@ -289,12 +289,12 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         Q_ASSERT(m_glyphsInOtherTextures.isEmpty());
     } else {
         if (!m_glyphsInOtherTextures.isEmpty())
-            qCDebug(lcSgText, "%" PRIdQSIZETYPE " 'other' textures", m_glyphsInOtherTextures.count());
+            qCDebug(lcSgText, "%" PRIdQSIZETYPE " 'other' textures", m_glyphsInOtherTextures.size());
         QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo>::const_iterator ite = m_glyphsInOtherTextures.constBegin();
         while (ite != m_glyphsInOtherTextures.constEnd()) {
             QGlyphRun subNodeGlyphRun(m_glyphs);
-            for (int i = 0; i < ite->indexes.count(); i += maxIndexCount) {
-                int len = qMin(maxIndexCount, ite->indexes.count() - i);
+            for (int i = 0; i < ite->indexes.size(); i += maxIndexCount) {
+                int len = qMin(maxIndexCount, ite->indexes.size() - i);
                 subNodeGlyphRun.setRawData(ite->indexes.constData() + i, ite->positions.constData() + i, len);
                 qCDebug(lcSgText) << "subNodeGlyphRun has" << len << "positions:"
                                   << *(ite->positions.constData() + i) << "->" << *(ite->positions.constData() + i + len - 1);

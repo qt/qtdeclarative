@@ -44,7 +44,7 @@ public:
 
     void allocate(MemoryPool *pool, const QVector<T> &vector)
     {
-        count = vector.count();
+        count = vector.size();
         data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
 
         if (QTypeInfo<T>::isComplex) {
@@ -58,7 +58,7 @@ public:
     template <typename Container>
     void allocate(MemoryPool *pool, const Container &container)
     {
-        count = container.count();
+        count = container.size();
         data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
         typename Container::ConstIterator it = container.constBegin();
         for (int i = 0; i < count; ++i)

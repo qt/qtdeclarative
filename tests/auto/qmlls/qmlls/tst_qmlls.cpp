@@ -43,7 +43,7 @@ public:
         int num = 0;
         for (const auto &params : m_received) {
             if (params.uri == uri)
-                num += params.diagnostics.length();
+                num += params.diagnostics.size();
         }
         return num;
     }

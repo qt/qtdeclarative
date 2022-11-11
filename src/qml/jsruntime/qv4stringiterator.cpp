@@ -35,7 +35,7 @@ ReturnedValue StringIteratorPrototype::method_next(const FunctionObject *b, cons
     quint32 index = thisObject->d()->nextIndex;
 
     QString str = s->toQString();
-    quint32 len = str.length();
+    quint32 len = str.size();
 
     if (index >= len) {
         thisObject->d()->iteratedString.set(scope.engine, nullptr);

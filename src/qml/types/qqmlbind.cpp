@@ -307,7 +307,7 @@ void QQmlBindPrivate::validate(QQmlBind *q) const
     if (!when)
         return;
 
-    qsizetype iterationEnd = entries.length();
+    qsizetype iterationEnd = entries.size();
     if (lastIsTarget) {
         if (obj) {
             Q_ASSERT(!entries.isEmpty());
@@ -604,7 +604,7 @@ void QQmlBind::setDelayed(bool delayed)
         oldEntries.pop_back();
     }
 
-    for (qsizetype i = 0, end = oldEntries.length(); i < end; ++i) {
+    for (qsizetype i = 0, end = oldEntries.size(); i < end; ++i) {
         QQmlBindEntry &newEntry = d->entries[i];
         QQmlBindEntry &oldEntry = oldEntries[i];
         newEntry.previousKind = newEntry.previous.set(
@@ -794,7 +794,7 @@ void QQmlBindPrivate::decodeBinding(
         if (delayed) {
             if (!delayedValues)
                 createDelayedValues();
-            const QString delayedName = QString::number(entries.length());
+            const QString delayedName = QString::number(entries.size());
             delayedValues->insert(delayedName, QVariant());
             QQmlProperty bindingTarget = QQmlProperty(delayedValues.get(), delayedName);
             Q_ASSERT(bindingTarget.isValid());
@@ -863,7 +863,7 @@ void QQmlBindPrivate::evalDelayed()
         bool ok;
         const int delayedIndex = delayedName.toInt(&ok);
         Q_ASSERT(ok);
-        Q_ASSERT(delayedIndex >= 0 && delayedIndex < entries.length());
+        Q_ASSERT(delayedIndex >= 0 && delayedIndex < entries.size());
         entries[delayedIndex].prop.write((*delayedValues)[delayedName]);
     }
     (*delayedValues)[pendingName].setValue(QStringList());
@@ -1010,7 +1010,7 @@ void QQmlBind::eval()
         return;
 
     d->writingProperty = true;
-    for (qsizetype i = 0, end = d->entries.length(); i != end; ++i) {
+    for (qsizetype i = 0, end = d->entries.size(); i != end; ++i) {
         QQmlBindEntry &entry = d->entries[i];
         if (!entry.prop.isValid())
             continue;

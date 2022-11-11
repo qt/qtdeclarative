@@ -50,7 +50,7 @@ void tst_qquickscreen::basicProperties()
     QCOMPARE(screen->geometry().x(), root->property("vx").toInt());
     QCOMPARE(screen->geometry().y(), root->property("vy").toInt());
 
-    QVERIFY(root->property("screenCount").toInt() == QGuiApplication::screens().count());
+    QVERIFY(root->property("screenCount").toInt() == QGuiApplication::screens().size());
 }
 
 void tst_qquickscreen::screenOnStartup()
@@ -89,7 +89,7 @@ void tst_qquickscreen::fullScreenList()
     QVERIFY(screensArray.isArray());
     int length = screensArray.property("length").toInt();
     const QList<QScreen *> screenList = QGuiApplication::screens();
-    QVERIFY(length == screenList.count());
+    QVERIFY(length == screenList.size());
 
     for (int i = 0; i < length; ++i) {
         QQuickScreenInfo *info = qobject_cast<QQuickScreenInfo *>(screensArray.property(i).toQObject());

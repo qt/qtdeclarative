@@ -101,7 +101,7 @@ Q_QUICK_PRIVATE_EXPORT QColor qt_color_from_string(const QV4::Value &name)
     QByteArray str = name.toQString().toUtf8();
 
     char *p = str.data();
-    int len = str.length();
+    int len = str.size();
     //rgb/hsl color string has at least 7 characters
     if (!p || len > 255 || len <= 7)
         return QColor::fromString(p);

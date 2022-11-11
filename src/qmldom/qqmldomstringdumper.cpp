@@ -63,7 +63,7 @@ void sinkEscaped(Sink sink, QStringView s, EscapeOptions options) {
     if (options == EscapeOptions::OuterQuotes)
         sink(u"\"");
     int it0=0;
-    for (int it = 0; it < s.length();++it) {
+    for (int it = 0; it < s.size();++it) {
         QChar c=s[it];
         bool noslash = c != QLatin1Char('\\');
         bool noquote = c != QLatin1Char('"');
@@ -84,7 +84,7 @@ void sinkEscaped(Sink sink, QStringView s, EscapeOptions options) {
         else
             Q_ASSERT(0);
     }
-    sink(s.mid(it0, s.length() - it0));
+    sink(s.mid(it0, s.size() - it0));
     if (options == EscapeOptions::OuterQuotes)
         sink(u"\"");
 }
@@ -161,9 +161,9 @@ void sinkIndent(Sink s, int indent)
 {
     if (indent > 0) {
         QStringView spaces = u"                     ";
-        while (indent > spaces.length()) {
+        while (indent > spaces.size()) {
             s(spaces);
-            indent -= spaces.length();
+            indent -= spaces.size();
         }
         s(spaces.left(indent));
     }

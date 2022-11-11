@@ -1104,7 +1104,7 @@ void Heap::ArrayObject::init(const QStringList &list)
     // The result is a new Array object with length equal to the length
     // of the QStringList, and the elements being the QStringList's
     // elements converted to JS Strings.
-    int len = list.count();
+    int len = list.size();
     a->arrayReserve(len);
     ScopedValue v(scope);
     for (int ii = 0; ii < len; ++ii)

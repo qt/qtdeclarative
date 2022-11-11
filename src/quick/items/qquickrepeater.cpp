@@ -297,7 +297,7 @@ int QQuickRepeater::count() const
 QQuickItem *QQuickRepeater::itemAt(int index) const
 {
     Q_D(const QQuickRepeater);
-    if (index >= 0 && index < d->deletables.count())
+    if (index >= 0 && index < d->deletables.size())
         return d->deletables[index];
     return nullptr;
 }
@@ -329,7 +329,7 @@ void QQuickRepeater::clear()
     if (d->model) {
         // We remove in reverse order deliberately; so that signals are emitted
         // with sensible indices.
-        for (int i = d->deletables.count() - 1; i >= 0; --i) {
+        for (int i = d->deletables.size() - 1; i >= 0; --i) {
             if (QQuickItem *item = d->deletables.at(i)) {
                 if (complete)
                     emit itemRemoved(i, item);
@@ -441,8 +441,8 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     int difference = 0;
     QHash<int, QVector<QPointer<QQuickItem> > > moved;
     for (const QQmlChangeSet::Change &remove : changeSet.removes()) {
-        int index = qMin(remove.index, d->deletables.count());
-        int count = qMin(remove.index + remove.count, d->deletables.count()) - index;
+        int index = qMin(remove.index, d->deletables.size());
+        int count = qMin(remove.index + remove.count, d->deletables.size()) - index;
         if (remove.isMove()) {
             moved.insert(remove.moveId, d->deletables.mid(index, count));
             d->deletables.erase(
@@ -463,16 +463,16 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     }
 
     for (const QQmlChangeSet::Change &insert : changeSet.inserts()) {
-        int index = qMin(insert.index, d->deletables.count());
+        int index = qMin(insert.index, d->deletables.size());
         if (insert.isMove()) {
             QVector<QPointer<QQuickItem> > items = moved.value(insert.moveId);
             d->deletables = d->deletables.mid(0, index) + items + d->deletables.mid(index);
-            QQuickItem *stackBefore = index + items.count() < d->deletables.count()
-                    ? d->deletables.at(index + items.count())
+            QQuickItem *stackBefore = index + items.size() < d->deletables.size()
+                    ? d->deletables.at(index + items.size())
                     : this;
             if (stackBefore) {
-                for (int i = index; i < index + items.count(); ++i) {
-                    if (i < d->deletables.count()) {
+                for (int i = index; i < index + items.size(); ++i) {
+                    if (i < d->deletables.size()) {
                         QPointer<QQuickItem> item = d->deletables.at(i);
                         if (item)
                             item->stackBefore(stackBefore);

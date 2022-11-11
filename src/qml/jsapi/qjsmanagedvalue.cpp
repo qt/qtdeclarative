@@ -958,7 +958,7 @@ QJSValue QJSManagedValue::call(const QJSValueList &arguments) const
     QV4::ExecutionEngine *engine = f->engine();
 
     QV4::Scope scope(engine);
-    QV4::JSCallArguments jsCallData(scope, arguments.length());
+    QV4::JSCallArguments jsCallData(scope, arguments.size());
     *jsCallData.thisObject = engine->globalObject;
     int i = 0;
     for (const QJSValue &arg : arguments) {
@@ -997,7 +997,7 @@ QJSValue QJSManagedValue::callWithInstance(const QJSValue &instance,
     }
 
     QV4::Scope scope(engine);
-    QV4::JSCallArguments jsCallData(scope, arguments.length());
+    QV4::JSCallArguments jsCallData(scope, arguments.size());
     *jsCallData.thisObject = QJSValuePrivate::convertToReturnedValue(engine, instance);
     int i = 0;
     for (const QJSValue &arg : arguments) {
@@ -1030,7 +1030,7 @@ QJSValue QJSManagedValue::callAsConstructor(const QJSValueList &arguments) const
     QV4::ExecutionEngine *engine = f->engine();
 
     QV4::Scope scope(engine);
-    QV4::JSCallArguments jsCallData(scope, arguments.length());
+    QV4::JSCallArguments jsCallData(scope, arguments.size());
     int i = 0;
     for (const QJSValue &arg : arguments) {
         if (Q_UNLIKELY(!QJSValuePrivate::checkEngine(engine, arg))) {

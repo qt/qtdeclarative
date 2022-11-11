@@ -282,7 +282,7 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
 
     std::stable_sort(buttons.begin(), buttons.end(), ButtonLayout(static_cast<QPlatformDialogHelper::ButtonLayout>(buttonLayout)));
 
-    for (int i = 0; i < buttons.count() - 1; ++i)
+    for (int i = 0; i < buttons.size() - 1; ++i)
         q->insertItem(i, buttons.at(i));
 }
 

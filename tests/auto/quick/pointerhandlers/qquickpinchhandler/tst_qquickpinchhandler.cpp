@@ -75,9 +75,9 @@ void tst_QQuickPinchHandler::pinchProperties()
     QVERIFY(rootItem != nullptr);
     QSignalSpy targetSpy(pinchHandler, SIGNAL(targetChanged()));
     pinchHandler->setTarget(rootItem);
-    QCOMPARE(targetSpy.count(),1);
+    QCOMPARE(targetSpy.size(),1);
     pinchHandler->setTarget(rootItem);
-    QCOMPARE(targetSpy.count(),1);
+    QCOMPARE(targetSpy.size(),1);
 
     // axis
     /*
@@ -139,14 +139,14 @@ void tst_QQuickPinchHandler::pinchProperties()
     QCOMPARE(pinchHandler->minimumScale(), 0.25);
     QCOMPARE(pinchHandler->maximumScale(), 1.5);
 
-    QCOMPARE(scaleMinSpy.count(),1);
-    QCOMPARE(scaleMaxSpy.count(),1);
+    QCOMPARE(scaleMinSpy.size(),1);
+    QCOMPARE(scaleMaxSpy.size(),1);
 
     pinchHandler->setMinimumScale(0.25);
     pinchHandler->setMaximumScale(1.5);
 
-    QCOMPARE(scaleMinSpy.count(),1);
-    QCOMPARE(scaleMaxSpy.count(),1);
+    QCOMPARE(scaleMinSpy.size(),1);
+    QCOMPARE(scaleMaxSpy.size(),1);
 
     // minimum and maximum rotation properties
     QSignalSpy rotMinSpy(pinchHandler, SIGNAL(minimumRotationChanged()));
@@ -161,14 +161,14 @@ void tst_QQuickPinchHandler::pinchProperties()
     QCOMPARE(pinchHandler->minimumRotation(), -90.0);
     QCOMPARE(pinchHandler->maximumRotation(), 45.0);
 
-    QCOMPARE(rotMinSpy.count(),1);
-    QCOMPARE(rotMaxSpy.count(),1);
+    QCOMPARE(rotMinSpy.size(),1);
+    QCOMPARE(rotMaxSpy.size(),1);
 
     pinchHandler->setMinimumRotation(-90.0);
     pinchHandler->setMaximumRotation(45.0);
 
-    QCOMPARE(rotMinSpy.count(),1);
-    QCOMPARE(rotMaxSpy.count(),1);
+    QCOMPARE(rotMinSpy.size(),1);
+    QCOMPARE(rotMaxSpy.size(),1);
 }
 
 QEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)

@@ -46,7 +46,7 @@ namespace QQuickVisualTestUtils
         using namespace Qt::StringLiterals;
 
         const QMetaObject &mo = T::staticMetaObject;
-        for (int i = 0; i < parent->childItems().count(); ++i) {
+        for (int i = 0; i < parent->childItems().size(); ++i) {
             QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
             if (!item)
                 continue;
@@ -75,7 +75,7 @@ namespace QQuickVisualTestUtils
     {
         QList<T*> items;
         const QMetaObject &mo = T::staticMetaObject;
-        for (int i = 0; i < parent->childItems().count(); ++i) {
+        for (int i = 0; i < parent->childItems().size(); ++i) {
             QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
             if (!item || (visibleOnly && (!item->isVisible() || QQuickItemPrivate::get(item)->culled)))
                 continue;
@@ -91,7 +91,7 @@ namespace QQuickVisualTestUtils
     QList<T*> findItems(QQuickItem *parent, const QString &objectName, const QList<int> &indexes)
     {
         QList<T*> items;
-        for (int i=0; i<indexes.count(); i++)
+        for (int i=0; i<indexes.size(); i++)
             items << qobject_cast<QQuickItem*>(findItem<T>(parent, objectName, indexes[i]));
         return items;
     }

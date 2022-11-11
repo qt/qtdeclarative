@@ -13,7 +13,7 @@ TextDocument::TextDocument(const QString &text)
 
 TextBlock TextDocument::findBlockByNumber(int blockNumber) const
 {
-    return (blockNumber >= 0 && blockNumber < m_blocks.length())
+    return (blockNumber >= 0 && blockNumber < m_blocks.size())
             ? m_blocks.at(blockNumber).textBlock
             : TextBlock();
 }
@@ -30,7 +30,7 @@ QChar TextDocument::characterAt(int pos) const
 
 int TextDocument::characterCount() const
 {
-    return m_content.length();
+    return m_content.size();
 }
 
 TextBlock TextDocument::begin() const
@@ -70,7 +70,7 @@ void TextDocument::setPlainText(const QString &text)
 
     int blockStart = 0;
     int blockNumber = 0;
-    while (blockStart < text.length()) {
+    while (blockStart < text.size()) {
         Block block;
         block.textBlock.setBlockNumber(blockNumber++);
         block.textBlock.setPosition(blockStart);
@@ -78,7 +78,7 @@ void TextDocument::setPlainText(const QString &text)
 
         int blockEnd = text.indexOf('\n', blockStart) + 1;
         if (blockEnd == 0)
-            blockEnd = text.length();
+            blockEnd = text.size();
 
         block.textBlock.setLength(blockEnd - blockStart);
         m_blocks.append(block);
@@ -98,13 +98,13 @@ void TextDocument::setModified(bool modified)
 
 void TextDocument::setUserState(int blockNumber, int state)
 {
-    if (blockNumber >= 0 && blockNumber < m_blocks.length())
+    if (blockNumber >= 0 && blockNumber < m_blocks.size())
         m_blocks[blockNumber].userState = state;
 }
 
 int TextDocument::userState(int blockNumber) const
 {
-    return (blockNumber >= 0 && blockNumber < m_blocks.length()) ? m_blocks[blockNumber].userState
+    return (blockNumber >= 0 && blockNumber < m_blocks.size()) ? m_blocks[blockNumber].userState
                                                                  : -1;
 }
 

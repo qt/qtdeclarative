@@ -117,8 +117,8 @@ void tst_QQuickPalette::newColorSubgroup()
         anotherPalette.fromQPalette(Qt::red);
         (p.*setter)((anotherPalette.*getter)());
 
-        QCOMPARE(subgroupChanged.count(), 1);
-        QCOMPARE(paletteChanged.count(), 1);
+        QCOMPARE(subgroupChanged.size(), 1);
+        QCOMPARE(paletteChanged.size(), 1);
     }
 }
 
@@ -161,7 +161,7 @@ void tst_QQuickPalette::paletteChangedWhenColorGroupChanged()
     p.inactive()->setMid(Qt::green);
     p.disabled()->setMid(Qt::blue);
 
-    QCOMPARE(sp.count(), 3);
+    QCOMPARE(sp.size(), 3);
 }
 
 void tst_QQuickPalette::createDefault()
@@ -182,7 +182,7 @@ void tst_QQuickPalette::changeCurrentColorGroup()
     palette.setCurrentGroup(QPalette::Disabled);
 
     QCOMPARE(palette.currentColorGroup(), QPalette::Disabled);
-    QCOMPARE(ss.count(), 1);
+    QCOMPARE(ss.size(), 1);
 }
 
 void tst_QQuickPalette::inheritColor()
@@ -266,10 +266,10 @@ void tst_QQuickPalette::createFromQtPalette()
     QSignalSpy sp(&palette, &QQuickColorGroup::changed);
 
     palette.fromQPalette(QPalette());
-    QCOMPARE(sp.count(), 0);
+    QCOMPARE(sp.size(), 0);
 
     palette.fromQPalette(somePalette);
-    QCOMPARE(sp.count(), 1);
+    QCOMPARE(sp.size(), 1);
 }
 
 void tst_QQuickPalette::convertToQtPalette()

@@ -80,7 +80,7 @@ public:
     }
     static qsizetype data_count(QQmlListProperty<QObject> *prop) {
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
-        return list->count();
+        return list->size();
     }
     static void data_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *o) {
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
@@ -135,7 +135,7 @@ QQmlListProperty<QObject> QQuickPackage::data()
 bool QQuickPackage::hasPart(const QString &name)
 {
     Q_D(QQuickPackage);
-    for (int ii = 0; ii < d->dataList.count(); ++ii) {
+    for (int ii = 0; ii < d->dataList.size(); ++ii) {
         QObject *obj = d->dataList.at(ii);
         QQuickPackageAttached *a = QQuickPackageAttached::attached.value(obj);
         if (a && a->name() == name)
@@ -150,7 +150,7 @@ QObject *QQuickPackage::part(const QString &name)
     if (name.isEmpty() && !d->dataList.isEmpty())
         return d->dataList.at(0);
 
-    for (int ii = 0; ii < d->dataList.count(); ++ii) {
+    for (int ii = 0; ii < d->dataList.size(); ++ii) {
         QObject *obj = d->dataList.at(ii);
         QQuickPackageAttached *a = QQuickPackageAttached::attached.value(obj);
         if (a && a->name() == name)

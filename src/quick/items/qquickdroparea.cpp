@@ -125,7 +125,7 @@ void QQuickDropArea::setKeys(const QStringList &keys)
             d->keyRegExp = QRegularExpression();
         } else {
             QString pattern = QLatin1Char('(') + QRegularExpression::escape(keys.first());
-            for (int i = 1; i < keys.count(); ++i)
+            for (int i = 1; i < keys.size(); ++i)
                 pattern += QLatin1Char('|') + QRegularExpression::escape(keys.at(i));
             pattern += QLatin1Char(')');
             d->keyRegExp = QRegularExpression(

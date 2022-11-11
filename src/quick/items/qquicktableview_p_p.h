@@ -105,7 +105,7 @@ public:
         inline bool isActive() const { return m_active; }
 
         inline QPoint currentCell() const { return cellAt(m_currentIndex); }
-        inline bool hasCurrentCell() const { return m_currentIndex < m_visibleCellsInEdge.count(); }
+        inline bool hasCurrentCell() const { return m_currentIndex < m_visibleCellsInEdge.size(); }
         inline void moveToNextCell() { ++m_currentIndex; }
 
         inline Qt::Edge edge() const { return m_edge; }

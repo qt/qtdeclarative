@@ -41,7 +41,7 @@ QList<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
     const QList<QQuickItem *> children = paintOrderChildItems();
 
     QList<QQuickPopup *> popups;
-    popups.reserve(children.count());
+    popups.reserve(children.size());
 
     for (auto it = children.crbegin(), end = children.crend(); it != end; ++it) {
         QQuickPopup *popup = qobject_cast<QQuickPopup *>((*it)->parent());

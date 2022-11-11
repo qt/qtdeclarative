@@ -532,7 +532,7 @@ static int findStyleInModel(const QString &selectedStyle, const QStringList &mod
         auto styleClass = classifyStyleFallback(selectedStyle);
 
         if (styleClass != StyleClass::Unknown)
-            for (int i = 0; i < model.count(); ++i)
+            for (int i = 0; i < model.size(); ++i)
                 if (classifyStyleFallback(model.at(i)) == styleClass)
                     return i;
     }
@@ -707,7 +707,7 @@ void QQuickFontDialogImplAttached::searchListView(const QString &s, QQuickListVi
     do {
         m_search.append(s);
 
-        for (int i = 0; i < model.count(); ++i) {
+        for (int i = 0; i < model.size(); ++i) {
             if (model.at(i).startsWith(m_search, Qt::CaseInsensitive)) {
                 listView->setCurrentIndex(i);
                 return;
@@ -774,7 +774,7 @@ void QQuickFontDialogImplAttached::_q_sizeEdited()
         auto model = sizeListView()->model().toStringList();
 
         int i;
-        for (i = 0; i < model.count() - 1; ++i) {
+        for (i = 0; i < model.size() - 1; ++i) {
             if (model.at(i).toInt() >= size)
                 break;
         }

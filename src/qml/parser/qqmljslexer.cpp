@@ -75,7 +75,7 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
     _state.rawString = QStringView();
 
     _state.codePtr = code.unicode();
-    _endPtr = _state.codePtr + code.length();
+    _endPtr = _state.codePtr + code.size();
     _state.tokenStartPtr = _state.codePtr;
 
     _state.currentChar = u'\n';

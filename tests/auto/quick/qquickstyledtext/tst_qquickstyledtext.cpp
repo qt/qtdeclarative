@@ -152,8 +152,8 @@ void tst_qquickstyledtext::textOutput()
 
     const QVector<QTextLayout::FormatRange> layoutFormats = layout.formats();
 
-    QCOMPARE(layoutFormats.count(), formats.count());
-    for (int i = 0; i < formats.count(); ++i) {
+    QCOMPARE(layoutFormats.size(), formats.size());
+    for (int i = 0; i < formats.size(); ++i) {
         QCOMPARE(layoutFormats.at(i).start, formats.at(i).start);
         QCOMPARE(layoutFormats.at(i).length, formats.at(i).length);
         if (formats.at(i).type & Format::Bold)
@@ -182,8 +182,8 @@ void tst_qquickstyledtext::anchors()
 
     const QVector<QTextLayout::FormatRange> layoutFormats = layout.formats();
 
-    QCOMPARE(layoutFormats.count(), formats.count());
-    for (int i = 0; i < formats.count(); ++i) {
+    QCOMPARE(layoutFormats.size(), formats.size());
+    for (int i = 0; i < formats.size(); ++i) {
         QCOMPARE(layoutFormats.at(i).start, formats.at(i).start);
         QCOMPARE(layoutFormats.at(i).length, formats.at(i).length);
         QVERIFY(layoutFormats.at(i).format.isAnchor() == bool(formats.at(i).type & Format::Anchor));

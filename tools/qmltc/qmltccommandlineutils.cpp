@@ -43,7 +43,7 @@ QString loadUrl(const QString &url)
     }
 
     QByteArray data(fi.size(), Qt::Uninitialized);
-    if (f.read(data.data(), data.length()) != data.length()) {
+    if (f.read(data.data(), data.size()) != data.size()) {
         fprintf(stderr, "Unable to read \"%s\": %s.\n",
                 qPrintable(QDir::toNativeSeparators(fi.absoluteFilePath())),
                 qPrintable(f.errorString()));

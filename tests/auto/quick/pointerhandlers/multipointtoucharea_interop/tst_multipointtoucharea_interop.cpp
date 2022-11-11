@@ -145,7 +145,7 @@ void tst_MptaInterop::touchesThenPinch()
     QQuickTouchUtils::flush(window);
     QVERIFY(tp.at(0)->property("pressed").toBool());
     QTRY_VERIFY(tp.at(1)->property("pressed").toBool());
-    QCOMPARE(mptaPressedSpy.count(), 2);
+    QCOMPARE(mptaPressedSpy.size(), 2);
 
     // Press a third touchpoint: MPTA grabs it too
     QPoint p3 = mpta->mapToScene(QPointF(110, 200)).toPoint();
@@ -154,8 +154,8 @@ void tst_MptaInterop::touchesThenPinch()
     QCOMPARE(tp.at(0)->property("pressed").toBool(), true);
     QCOMPARE(tp.at(1)->property("pressed").toBool(), true);
     QCOMPARE(tp.at(2)->property("pressed").toBool(), true);
-    QCOMPARE(mptaPressedSpy.count(), 3);
-    QCOMPARE(mptaCanceledSpy.count(), 0);
+    QCOMPARE(mptaPressedSpy.size(), 3);
+    QCOMPARE(mptaCanceledSpy.size(), 0);
     QCOMPARE(devPriv->pointById(1)->exclusiveGrabber, mpta);
     QCOMPARE(devPriv->pointById(2)->exclusiveGrabber, mpta);
     QCOMPARE(devPriv->pointById(3)->exclusiveGrabber, mpta);
@@ -254,7 +254,7 @@ void tst_MptaInterop::touchesThenPinch()
 
     touch.release(2, p2).commit();
     QQuickTouchUtils::flush(window);
-    QTRY_COMPARE(mptaReleasedSpy.count(), 1);
+    QTRY_COMPARE(mptaReleasedSpy.size(), 1);
 }
 
 void tst_MptaInterop::unloadHandlerWithPassiveGrab()

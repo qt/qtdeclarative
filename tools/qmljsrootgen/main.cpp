@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
 
     QStringList args = app.arguments();
 
-    if (args.length() != 2) {
+    if (args.size() != 2) {
         qWarning().noquote() << app.applicationName() << "[output json path]";
         return 1;
     }

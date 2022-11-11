@@ -72,7 +72,7 @@ void QQmlQtQuick2DebugStatesDelegate::buildStatesList(bool cleanList,
         m_allStates.clear();
 
     //only root context has all instances
-    for (int ii = 0; ii < instances.count(); ++ii) {
+    for (int ii = 0; ii < instances.size(); ++ii) {
         buildStatesList(instances.at(ii));
     }
 }
@@ -84,7 +84,7 @@ void QQmlQtQuick2DebugStatesDelegate::buildStatesList(QObject *obj)
     }
 
     QObjectList children = obj->children();
-    for (int ii = 0; ii < children.count(); ++ii) {
+    for (int ii = 0; ii < children.size(); ++ii) {
         buildStatesList(children.at(ii));
     }
 }

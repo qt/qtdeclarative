@@ -223,7 +223,7 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     engine.setPosition(position);
 
 #if QT_CONFIG(im)
-    int preeditLength = textLayout->preeditAreaText().length();
+    int preeditLength = textLayout->preeditAreaText().size();
     int preeditPosition = textLayout->preeditAreaPosition();
 #endif
 

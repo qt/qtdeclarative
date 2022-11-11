@@ -165,7 +165,7 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
         if (headers_done) {
             m_waitData.body.append(line);
         } else if (line.endsWith("{{Ignore}}\n")) {
-            m_waitData.headerPrefixes.append(line.left(line.length() - strlen("{{Ignore}}\n")));
+            m_waitData.headerPrefixes.append(line.left(line.size() - strlen("{{Ignore}}\n")));
         } else {
             line.replace("{{ServerHostUrl}}", serverHostUrl);
             m_waitData.headerExactMatches.append(line);
@@ -177,7 +177,7 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
     if (!m_replyData.endsWith('\n'))
         m_replyData.append('\n');
     m_replyData.append("Content-length: ");
-    m_replyData.append(QByteArray::number(m_bodyData.length()));
+    m_replyData.append(QByteArray::number(m_bodyData.size()));
     m_replyData.append("\n\n");
 
     for (int ii = 0; ii < m_replyData.size(); ++ii) {
@@ -216,7 +216,7 @@ void TestHTTPServer::disconnected()
         return;
 
     m_dataCache.remove(socket);
-    for (int ii = 0; ii < m_toSend.count(); ++ii) {
+    for (int ii = 0; ii < m_toSend.size(); ++ii) {
         if (m_toSend.at(ii).first == socket) {
             m_toSend.removeAt(ii);
             --ii;
@@ -237,7 +237,7 @@ void TestHTTPServer::readyRead()
         return;
     }
 
-    if (m_state == Failed || (m_waitData.body.isEmpty() && m_waitData.headerExactMatches.count() == 0)) {
+    if (m_state == Failed || (m_waitData.body.isEmpty() && m_waitData.headerExactMatches.size() == 0)) {
         qWarning() << "TestHTTPServer: Unexpected data" << socket->readAll();
         return;
     }
@@ -301,7 +301,7 @@ bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileNameIn)
         return true;
     }
 
-    for (int ii = 0; ii < m_directories.count(); ++ii) {
+    for (int ii = 0; ii < m_directories.size(); ++ii) {
         const QString &dir = m_directories.at(ii).first;
         const Mode mode = m_directories.at(ii).second;
 

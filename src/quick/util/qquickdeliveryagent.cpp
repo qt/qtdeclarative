@@ -120,7 +120,7 @@ bool QQuickDeliveryAgentPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEve
     // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
     QMutableTouchEvent event;
     QQuickItemPrivate::get(item)->localizedTouchEvent(pointerEvent, false, &event);
-    if (!event.points().count())
+    if (!event.points().size())
         return false;
 
     // For each point, check if it is accepted, if not, try the next point.
@@ -425,7 +425,7 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
         emit rootItem->window()->focusObjectChanged(activeFocusItem);
 
     if (!changed.isEmpty())
-        notifyFocusChangesRecur(changed.data(), changed.count() - 1, reason);
+        notifyFocusChangesRecur(changed.data(), changed.size() - 1, reason);
     if (isSubsceneAgent) {
         auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
         qCDebug(lcFocus) << "    delegating setFocusInScope to" << da;
@@ -525,7 +525,7 @@ void QQuickDeliveryAgentPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem
         emit rootItem->window()->focusObjectChanged(activeFocusItem);
 
     if (!changed.isEmpty())
-        notifyFocusChangesRecur(changed.data(), changed.count() - 1, reason);
+        notifyFocusChangesRecur(changed.data(), changed.size() - 1, reason);
     if (isSubsceneAgent) {
         auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
         qCDebug(lcFocus) << "    delegating clearFocusInScope to" << da;
@@ -1065,7 +1065,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
     const QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     const QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
 
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
+    for (int ii = children.size() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
         const QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
@@ -1197,7 +1197,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
 // in the usual reverse-paint-order until propagation is stopped
 bool QQuickDeliveryAgentPrivate::deliverSinglePointEventUntilAccepted(QPointerEvent *event)
 {
-    Q_ASSERT(event->points().count() == 1);
+    Q_ASSERT(event->points().size() == 1);
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->pointingDevice()).clear();
     QEventPoint &point = event->point(0);
     QVector<QQuickItem *> targetItems = pointerTargets(rootItem, event, point, false, false);
@@ -1607,7 +1607,7 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
         const QPointF last = lastMousePosition.isNull() ? event->scenePosition() : lastMousePosition;
         lastMousePosition = event->scenePosition();
         qCDebug(lcHoverTrace) << q << "mouse pos" << last << "->" << lastMousePosition;
-        if (!event->points().count() || !event->exclusiveGrabber(event->point(0))) {
+        if (!event->points().size() || !event->exclusiveGrabber(event->point(0))) {
             bool accepted = deliverHoverEvent(event->scenePosition(), last, event->modifiers(), event->timestamp());
             event->setAccepted(accepted);
         }
@@ -1884,7 +1884,7 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *ite
         children.insert(it, item);
     }
 
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
+    for (int ii = children.size() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
         auto childPrivate = QQuickItemPrivate::get(child);
         if (!child->isVisible() || !child->isEnabled() || childPrivate->culled ||
@@ -1908,8 +1908,8 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::mergePointerTargets(const QVec
     // start at the end of list2
     // if item not in list, append it
     // if item found, move to next one, inserting before the last found one
-    int insertPosition = targets.length();
-    for (int i = list2.length() - 1; i >= 0; --i) {
+    int insertPosition = targets.size();
+    for (int i = list2.size() - 1; i >= 0; --i) {
         int newInsertPosition = targets.lastIndexOf(list2.at(i), insertPosition);
         if (newInsertPosition >= 0) {
             Q_ASSERT(newInsertPosition <= insertPosition);
@@ -1965,7 +1965,7 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
             continue;
         }
         QList<QPointer<QObject>> relevantPassiveGrabbers;
-        for (int i = 0; i < epd->passiveGrabbersContext.count(); ++i) {
+        for (int i = 0; i < epd->passiveGrabbersContext.size(); ++i) {
             if (epd->passiveGrabbersContext.at(i).data() == q)
                 relevantPassiveGrabbers << epd->passiveGrabbers.at(i);
         }
@@ -1985,7 +1985,7 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
             if (point.state() == QEventPoint::Pressed || qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(point)))
                 continue;
             QVector<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, false, false);
-            if (targetItems.count()) {
+            if (targetItems.size()) {
                 targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
             } else {
                 targetItems = targetItemsForPoint;
@@ -2028,7 +2028,7 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
     for (int i = 0; i < event->pointCount(); ++i) {
         auto &point = event->point(i);
         QVector<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, !isTouch, isTouch);
-        if (targetItems.count()) {
+        if (targetItems.size()) {
             targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
         } else {
             targetItems = targetItemsForPoint;
@@ -2306,7 +2306,7 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
 
     // Check children in front of this item first
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
+    for (int ii = children.size() - 1; ii >= 0; --ii) {
         if (children.at(ii)->z() < 0)
             continue;
         if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems, formerTarget))
@@ -2361,7 +2361,7 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(
     }
 
     // Check children behind this item if this item or any higher children have not accepted
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
+    for (int ii = children.size() - 1; ii >= 0; --ii) {
         if (children.at(ii)->z() >= 0)
             continue;
         if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems, formerTarget))

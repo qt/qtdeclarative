@@ -152,7 +152,7 @@ void tst_qquickninepatchimage::inset_data()
     const QStringList files = QStringList() << "inset-all.9.png" << "inset-topleft.9.png" << "inset-bottomright.9.png";
     const QList<QMarginsF> insets = QList<QMarginsF>() << QMarginsF(2, 1, 3, 4) << QMarginsF(2, 1, 0, 0) << QMarginsF(0, 0, 3, 4);
 
-    for (int i = 0; i < files.count(); ++i) {
+    for (int i = 0; i < files.size(); ++i) {
         QString file = files.at(i);
         for (int dpr = 1; dpr <= 4; ++dpr)
             QTest::newRow(qPrintable(QString::fromLatin1("%1 DPR=%2").arg(file).arg(dpr))) << dpr << file << insets.at(i);

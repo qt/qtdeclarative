@@ -106,7 +106,7 @@ static inline void *popPtr(const char *&data)
 #define ALIGN(size) (((size) + 3) & ~3)
 static inline void serializeString(QByteArray &data, const QString &str, Type type)
 {
-    int length = str.length();
+    int length = str.size();
     if (length > 0xFFFFFF) {
         push(data, valueheader(WorkerUndefined));
         return;
@@ -174,7 +174,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
     } else if (const RegExpObject *re = v.as<RegExpObject>()) {
         quint32 flags = re->flags();
         QString pattern = re->source();
-        int length = pattern.length() + 1;
+        int length = pattern.size() + 1;
         if (length > 0xFFFFFF) {
             push(data, valueheader(WorkerUndefined));
             return;

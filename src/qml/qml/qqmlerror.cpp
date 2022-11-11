@@ -295,13 +295,13 @@ QDebug operator<<(QDebug debug, const QQmlError &error)
             const QString code = stream.readAll();
             const auto lines = QStringView{code}.split(QLatin1Char('\n'));
 
-            if (lines.count() >= error.line()) {
+            if (lines.size() >= error.line()) {
                 const QStringView &line = lines.at(error.line() - 1);
                 debug << "\n    " << line.toLocal8Bit().constData();
 
                 if(error.column() > 0) {
                     int column = qMax(0, error.column() - 1);
-                    column = qMin(column, line.length());
+                    column = qMin(column, line.size());
 
                     QByteArray ind;
                     ind.reserve(column);

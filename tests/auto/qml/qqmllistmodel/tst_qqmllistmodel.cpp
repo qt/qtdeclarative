@@ -128,10 +128,10 @@ bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVarian
     if (model == nullptr)
         return false;
 
-    if (model->count() != testList.count())
+    if (model->count() != testList.size())
         return false;
 
-    for (int i=0 ; i < testList.count() ; ++i) {
+    for (int i=0 ; i < testList.size() ; ++i) {
         const QVariant &testVariant = testList.at(i);
         if (testVariant.typeId() != QMetaType::QVariantMap)
             return false;
@@ -597,7 +597,7 @@ void tst_qqmllistmodel::dynamic()
     QCOMPARE(actual,result);
 
     if (model.count() > 0)
-        QVERIFY(spyCount.count() > 0);
+        QVERIFY(spyCount.size() > 0);
 }
 
 void tst_qqmllistmodel::enumerate()
@@ -705,7 +705,7 @@ void tst_qqmllistmodel::error()
     } else {
         QVERIFY(component.isError());
         QList<QQmlError> errors = component.errors();
-        QCOMPARE(errors.count(),1);
+        QCOMPARE(errors.size(),1);
         QCOMPARE(errors.at(0).description(),error);
     }
 }
@@ -803,7 +803,7 @@ void tst_qqmllistmodel::get()
         QCOMPARE(model->data(index, role), roleValue);
     }
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     QList<QVariant> spyResult = spy.takeFirst();
     QCOMPARE(spyResult.at(0).value<QModelIndex>(), model->index(index, 0, QModelIndex()));
@@ -904,7 +904,7 @@ void tst_qqmllistmodel::get_nested()
     testData << qMakePair(1, QString("listRoleB"));
     testData << qMakePair(1, QString("listRoleC"));
 
-    for (int i=0; i<testData.count(); i++) {
+    for (int i=0; i<testData.size(); i++) {
         int outerListIndex = testData[i].first;
         QString outerListRoleName = testData[i].second;
         int outerListRole = roleFromName(model, outerListRoleName);
@@ -927,7 +927,7 @@ void tst_qqmllistmodel::get_nested()
         } else {
             QCOMPARE(childModel->data(index, role), roleValue);
         }
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         QList<QVariant> spyResult = spy.takeFirst();
         QCOMPARE(spyResult.at(0).value<QModelIndex>(), childModel->index(index, 0, QModelIndex()));
@@ -1097,7 +1097,7 @@ void tst_qqmllistmodel::property_changes()
     expr.evaluate();
     QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
-    QString signalHandler = "on" + QString(roleName[0].toUpper()) + roleName.mid(1, roleName.length()) + "Changed:";
+    QString signalHandler = "on" + QString(roleName[0].toUpper()) + roleName.mid(1, roleName.size()) + "Changed:";
     QString qml = "import QtQuick 2.0\n"
                   "Connections {\n"
                         "property bool gotSignal: false\n"
@@ -1122,11 +1122,11 @@ void tst_qqmllistmodel::property_changes()
 
     // test itemsChanged() is emitted correctly
     if (itemsChanged) {
-        QCOMPARE(spyItemsChanged.count(), 1);
+        QCOMPARE(spyItemsChanged.size(), 1);
         QCOMPARE(spyItemsChanged.at(0).at(0).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
         QCOMPARE(spyItemsChanged.at(0).at(1).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
     } else {
-        QCOMPARE(spyItemsChanged.count(), 0);
+        QCOMPARE(spyItemsChanged.size(), 0);
     }
 
     expr.setExpression(testExpression);
@@ -1643,7 +1643,7 @@ void tst_qqmllistmodel::crash_append_empty_array()
     QQmlExpression expr(engine.rootContext(), model, "append(new Array())");
     expr.evaluate();
     QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 }
 
 void tst_qqmllistmodel::dynamic_roles_crash_QTBUG_38907()

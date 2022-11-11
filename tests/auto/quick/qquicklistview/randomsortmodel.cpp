@@ -23,7 +23,7 @@ QHash<int, QByteArray> RandomSortModel::roleNames() const
 int RandomSortModel::rowCount(const QModelIndex& parent) const
 {
     if (!parent.isValid())
-        return mData.count();
+        return mData.size();
 
     return 0;
 }
@@ -34,7 +34,7 @@ QVariant RandomSortModel::data(const QModelIndex& index, int role) const
         return QVariant();
     }
 
-    if (index.row() >= mData.count()) {
+    if (index.row() >= mData.size()) {
         return QVariant();
     }
 
@@ -49,14 +49,14 @@ QVariant RandomSortModel::data(const QModelIndex& index, int role) const
 
 void RandomSortModel::randomize()
 {
-    const int row = QRandomGenerator::global()->bounded(mData.count());
+    const int row = QRandomGenerator::global()->bounded(mData.size());
     int random;
     bool exists = false;
     // Make sure we won't end up with two items with the same weight, as that
     // would make unit-testing much harder
     do {
         exists = false;
-        random = QRandomGenerator::global()->bounded(mData.count() * 10);
+        random = QRandomGenerator::global()->bounded(mData.size() * 10);
         QList<QPair<QString, int> >::ConstIterator iter, end;
         for (iter = mData.constBegin(), end = mData.constEnd(); iter != end; ++iter) {
             if ((*iter).second == random) {

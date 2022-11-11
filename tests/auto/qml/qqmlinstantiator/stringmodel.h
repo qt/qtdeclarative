@@ -37,7 +37,7 @@ public:
 
     int rowCount(const QModelIndex &) const override
     {
-        return items.count();
+        return items.size();
     }
 
     QHash<int, QByteArray> roleNames() const override
@@ -72,7 +72,7 @@ public:
     QVariant data (const QModelIndex & index, int role) const override
     {
         int row = index.row();
-        if ((row<0) || (row>=items.count()))
+        if ((row<0) || (row>=items.size()))
             return QVariant(QMetaType(QMetaType::UnknownType));
 
         switch (role) {

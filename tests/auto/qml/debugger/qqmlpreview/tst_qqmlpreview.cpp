@@ -266,14 +266,14 @@ void tst_QQmlPreview::error()
     QCOMPARE(startQmlProcess("window.qml"), ConnectSuccess);
     QVERIFY(m_client);
     m_client->triggerLoad(testFileUrl("broken.qml"));
-    QTRY_COMPARE_WITH_TIMEOUT(m_serviceErrors.count(), 1, 10000);
+    QTRY_COMPARE_WITH_TIMEOUT(m_serviceErrors.size(), 1, 10000);
     QVERIFY(m_serviceErrors.first().contains("broken.qml:7 Expected token `}'"));
 }
 
 static float parseZoomFactor(const QString &output)
 {
     const QString prefix("zoom ");
-    const int start = output.lastIndexOf(prefix) + prefix.length();
+    const int start = output.lastIndexOf(prefix) + prefix.size();
     if (start < 0)
         return -1;
     const int end = output.indexOf('\n', start);

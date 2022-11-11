@@ -83,20 +83,20 @@ void tst_PointHandler::singleTouch()
     QTest::touchEvent(window, touchDevice).press(1, point, window);
     QQuickTouchUtils::flush(window);
     QTRY_COMPARE(handler->active(), true);
-    QCOMPARE(activeSpy.count(), 1);
-    QCOMPARE(pointSpy.count(), 1);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 1);
     QCOMPARE(handler->point().position().toPoint(), point);
     QCOMPARE(handler->point().scenePosition().toPoint(), point);
     QCOMPARE(handler->point().pressedButtons(), Qt::NoButton);
     QCOMPARE(handler->translation(), QVector2D());
-    QCOMPARE(translationSpy.count(), 1);
+    QCOMPARE(translationSpy.size(), 1);
 
     point += QPoint(10, 10);
     QTest::touchEvent(window, touchDevice).move(1, point, window);
     QQuickTouchUtils::flush(window);
     QCOMPARE(handler->active(), true);
-    QCOMPARE(activeSpy.count(), 1);
-    QCOMPARE(pointSpy.count(), 2);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 2);
     QCOMPARE(handler->point().position().toPoint(), point);
     QCOMPARE(handler->point().scenePosition().toPoint(), point);
     QCOMPARE(handler->point().pressPosition().toPoint(), QPoint(100, 100));
@@ -105,15 +105,15 @@ void tst_PointHandler::singleTouch()
     QVERIFY(handler->point().velocity().x() > 0);
     QVERIFY(handler->point().velocity().y() > 0);
     QCOMPARE(handler->translation(), QVector2D(10, 10));
-    QCOMPARE(translationSpy.count(), 2);
+    QCOMPARE(translationSpy.size(), 2);
 
     QTest::touchEvent(window, touchDevice).release(1, point, window);
     QQuickTouchUtils::flush(window);
     QTRY_COMPARE(handler->active(), false);
-    QCOMPARE(activeSpy.count(), 2);
-    QCOMPARE(pointSpy.count(), 3);
+    QCOMPARE(activeSpy.size(), 2);
+    QCOMPARE(pointSpy.size(), 3);
     QCOMPARE(handler->translation(), QVector2D());
-    QCOMPARE(translationSpy.count(), 3);
+    QCOMPARE(translationSpy.size(), 3);
 }
 
 void tst_PointHandler::tabletStylus()
@@ -139,8 +139,8 @@ void tst_PointHandler::tabletStylus()
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
         int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen), Qt::LeftButton, 0.5, 25, 35, 0.6, 12.3, 3, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), true);
-    QCOMPARE(activeSpy.count(), 1);
-    QCOMPARE(pointSpy.count(), 1);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 1);
     QCOMPARE(handler->point().position().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().scenePosition().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().pressedButtons(), Qt::LeftButton);
@@ -148,16 +148,16 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE(handler->point().rotation(), 12.3);
     QCOMPARE(handler->point().uniqueId().numericId(), stylusId);
     QCOMPARE(handler->translation(), QVector2D());
-    QCOMPARE(translationSpy.count(), 1);
+    QCOMPARE(translationSpy.size(), 1);
 
     QPoint delta(10, 10);
     QPoint deltaLocalDPI = QHighDpi::fromNativeLocalPosition(delta, window);
     point += delta;
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
         int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen), Qt::LeftButton, 0.45, 23, 33, 0.57, 15.6, 3, stylusId, Qt::NoModifier);
-    QTRY_COMPARE(pointSpy.count(), 2);
+    QTRY_COMPARE(pointSpy.size(), 2);
     QCOMPARE(handler->active(), true);
-    QCOMPARE(activeSpy.count(), 1);
+    QCOMPARE(activeSpy.size(), 1);
     QCOMPARE(handler->point().position().toPoint(), pointLocalDPI + deltaLocalDPI);
     QCOMPARE(handler->point().scenePosition().toPoint(), pointLocalDPI + deltaLocalDPI);
     QCOMPARE(handler->point().pressPosition().toPoint(), pointLocalDPI);
@@ -169,15 +169,15 @@ void tst_PointHandler::tabletStylus()
     QVERIFY(handler->point().velocity().x() > 0);
     QVERIFY(handler->point().velocity().y() > 0);
     QCOMPARE(handler->translation(), QVector2D(deltaLocalDPI));
-    QCOMPARE(translationSpy.count(), 2);
+    QCOMPARE(translationSpy.size(), 2);
 
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
         int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen), Qt::NoButton, 0, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), false);
-    QCOMPARE(activeSpy.count(), 2);
-    QCOMPARE(pointSpy.count(), 3);
+    QCOMPARE(activeSpy.size(), 2);
+    QCOMPARE(pointSpy.size(), 3);
     QCOMPARE(handler->translation(), QVector2D());
-    QCOMPARE(translationSpy.count(), 3);
+    QCOMPARE(translationSpy.size(), 3);
 }
 
 void tst_PointHandler::simultaneousMultiTouch()
@@ -186,7 +186,7 @@ void tst_PointHandler::simultaneousMultiTouch()
     createView(windowPtr, "multiPointTracker.qml");
     QQuickView * window = windowPtr.data();
     QList<QQuickPointHandler *> handlers = window->rootObject()->findChildren<QQuickPointHandler *>();
-    QCOMPARE(handlers.count(), 3);
+    QCOMPARE(handlers.size(), 3);
 
     QVector<QSignalSpy*> activeSpies;
     QVector<QSignalSpy*> pointSpies;
@@ -205,8 +205,8 @@ void tst_PointHandler::simultaneousMultiTouch()
     int i = 0;
     for (auto h : handlers) {
         QTRY_COMPARE(h->active(), true);
-        QCOMPARE(activeSpies[i]->count(), 1);
-        QCOMPARE(pointSpies[i]->count(), 1);
+        QCOMPARE(activeSpies[i]->size(), 1);
+        QCOMPARE(pointSpies[i]->size(), 1);
         int chosenPointIndex = points.indexOf(h->point().position().toPoint());
         QVERIFY(chosenPointIndex != -1);
         // Verify that each handler chose a unique point
@@ -216,7 +216,7 @@ void tst_PointHandler::simultaneousMultiTouch()
         QCOMPARE(h->point().scenePosition().toPoint(), point);
         QCOMPARE(h->point().pressedButtons(), Qt::NoButton);
         QCOMPARE(h->translation(), QVector2D());
-        QCOMPARE(translationSpies[i]->count(), 1);
+        QCOMPARE(translationSpies[i]->size(), 1);
         ++i;
     }
 
@@ -227,8 +227,8 @@ void tst_PointHandler::simultaneousMultiTouch()
     i = 0;
     for (auto h : handlers) {
         QCOMPARE(h->active(), true);
-        QCOMPARE(activeSpies[i]->count(), 1);
-        QCOMPARE(pointSpies[i]->count(), 2);
+        QCOMPARE(activeSpies[i]->size(), 1);
+        QCOMPARE(pointSpies[i]->size(), 2);
         QCOMPARE(h->point().position().toPoint(), points[pointIndexPerHandler[i]]);
         QCOMPARE(h->point().scenePosition().toPoint(), points[pointIndexPerHandler[i]]);
         QCOMPARE(h->point().pressPosition().toPoint(), pressPoints[pointIndexPerHandler[i]]);
@@ -237,7 +237,7 @@ void tst_PointHandler::simultaneousMultiTouch()
         QVERIFY(h->point().velocity().x() > 0);
         QVERIFY(h->point().velocity().y() > 0);
         QCOMPARE(h->translation(), QVector2D(10 + 10 * pointIndexPerHandler[i], 10 + 10 * pointIndexPerHandler[i] % 2));
-        QCOMPARE(translationSpies[i]->count(), 2);
+        QCOMPARE(translationSpies[i]->size(), 2);
         ++i;
     }
 
@@ -246,10 +246,10 @@ void tst_PointHandler::simultaneousMultiTouch()
     i = 0;
     for (auto h : handlers) {
         QTRY_COMPARE(h->active(), false);
-        QCOMPARE(activeSpies[i]->count(), 2);
-        QCOMPARE(pointSpies[i]->count(), 3);
+        QCOMPARE(activeSpies[i]->size(), 2);
+        QCOMPARE(pointSpies[i]->size(), 3);
         QCOMPARE(h->translation(), QVector2D());
-        QCOMPARE(translationSpies[i]->count(), 3);
+        QCOMPARE(translationSpies[i]->size(), 3);
         ++i;
     }
 
@@ -363,7 +363,7 @@ void tst_PointHandler::pressedMultipleButtons()
 
     QPoint point(100,100);
 
-    for (int i = 0; i < buttons.count(); ++i) {
+    for (int i = 0; i < buttons.size(); ++i) {
         int btns = int(buttons.at(i));
         int release = 0;
         if (i > 0) {
@@ -383,8 +383,8 @@ void tst_PointHandler::pressedMultipleButtons()
 
     QTest::mousePress(windowPtr.data(), Qt::NoButton, Qt::NoModifier, point);
     QCOMPARE(handler->active(), false);
-    QCOMPARE(activeSpy.count(), activeChangeCount);
-    QCOMPARE(pointSpy.count(), changeCount);
+    QCOMPARE(activeSpy.size(), activeChangeCount);
+    QCOMPARE(pointSpy.size(), changeCount);
 }
 
 void tst_PointHandler::ignoreSystemSynthMouse() // QTBUG-104890

@@ -635,7 +635,7 @@ private:
 static QString quote(const QString &str)
 {
     QString product;
-    const int length = str.length();
+    const int length = str.size();
     product.reserve(length + 2);
     product += u'"';
     for (int i = 0; i < length; ++i) {
@@ -885,7 +885,7 @@ ReturnedValue JsonObject::method_parse(const FunctionObject *b, const Value *, c
         jtext = argv[0].toQString();
 
     DEBUG << "parsing source = " << jtext;
-    JsonParser parser(v4, jtext.constData(), jtext.length());
+    JsonParser parser(v4, jtext.constData(), jtext.size());
     QJsonParseError error;
     ReturnedValue result = parser.parse(&error);
     if (error.error != QJsonParseError::NoError) {

@@ -20,7 +20,7 @@ bool QQmlDebugTest::waitForSignal(QObject *sender, const char *member, int timeo
     QSignalSpy spy(sender, member);
 
     // Do not use spy.wait(). We want to avoid nested event loops.
-    if (QTest::qWaitFor([&]() { return spy.count() > 0; }, timeout))
+    if (QTest::qWaitFor([&]() { return spy.size() > 0; }, timeout))
         return true;
 
     qWarning("waitForSignal %s timed out after %d ms", member, timeout);
@@ -132,7 +132,7 @@ QQmlDebugTest::ConnectResult QQmlDebugTest::connectTo(
     QSignalSpy okSpy(&stateHandler, &ClientStateHandler::allOk);
     QSignalSpy disconnectSpy(m_connection, &QQmlDebugConnection::disconnected);
     m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
-    if (!QTest::qWaitFor([&](){ return okSpy.count() > 0 || disconnectSpy.count() > 0; }, 5000))
+    if (!QTest::qWaitFor([&](){ return okSpy.size() > 0 || disconnectSpy.size() > 0; }, 5000))
         return ConnectionTimeout;
 
     if (!stateHandler.allEnabled())
@@ -231,7 +231,7 @@ QString debugJsServerPath(const QString &selfPath)
     static const char *debugserver = "qqmldebugjsserver";
     QString appPath = QCoreApplication::applicationDirPath();
     const int position = appPath.lastIndexOf(selfPath);
-    return (position == -1 ? appPath : appPath.replace(position, selfPath.length(), debugserver))
+    return (position == -1 ? appPath : appPath.replace(position, selfPath.size(), debugserver))
             + "/" + debugserver;
 }
 

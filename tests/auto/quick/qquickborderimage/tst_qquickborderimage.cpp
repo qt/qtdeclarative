@@ -435,7 +435,7 @@ void tst_qquickborderimage::statusChanges()
     if (remote)
         server.sendDelayedItem();
     QTRY_COMPARE(obj->status(), finalStatus);
-    QCOMPARE(spy.count(), emissions);
+    QCOMPARE(spy.size(), emissions);
 
     delete obj;
 }
@@ -460,48 +460,48 @@ void tst_qquickborderimage::sourceSizeChanges()
     // Local
     ctxt->setContextProperty("srcImage", QUrl(""));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Null);
-    QTRY_COMPARE(sourceSizeSpy.count(), 0);
+    QTRY_COMPARE(sourceSizeSpy.size(), 0);
 
     ctxt->setContextProperty("srcImage", testFileUrl("heart200.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 1);
+    QTRY_COMPARE(sourceSizeSpy.size(), 1);
 
     ctxt->setContextProperty("srcImage", testFileUrl("heart200.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 1);
+    QTRY_COMPARE(sourceSizeSpy.size(), 1);
 
     ctxt->setContextProperty("srcImage", testFileUrl("heart200_copy.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 1);
+    QTRY_COMPARE(sourceSizeSpy.size(), 1);
 
     ctxt->setContextProperty("srcImage", testFileUrl("colors.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 2);
+    QTRY_COMPARE(sourceSizeSpy.size(), 2);
 
     ctxt->setContextProperty("srcImage", QUrl(""));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Null);
-    QTRY_COMPARE(sourceSizeSpy.count(), 3);
+    QTRY_COMPARE(sourceSizeSpy.size(), 3);
 
     // Remote
     ctxt->setContextProperty("srcImage", server.url("/heart200.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 4);
+    QTRY_COMPARE(sourceSizeSpy.size(), 4);
 
     ctxt->setContextProperty("srcImage", server.url("/heart200.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 4);
+    QTRY_COMPARE(sourceSizeSpy.size(), 4);
 
     ctxt->setContextProperty("srcImage", server.url("/heart200_copy.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 4);
+    QTRY_COMPARE(sourceSizeSpy.size(), 4);
 
     ctxt->setContextProperty("srcImage", server.url("/colors.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
-    QTRY_COMPARE(sourceSizeSpy.count(), 5);
+    QTRY_COMPARE(sourceSizeSpy.size(), 5);
 
     ctxt->setContextProperty("srcImage", QUrl(""));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Null);
-    QTRY_COMPARE(sourceSizeSpy.count(), 6);
+    QTRY_COMPARE(sourceSizeSpy.size(), 6);
 
     delete obj;
 }
@@ -532,17 +532,17 @@ void tst_qquickborderimage::progressAndStatusChanges()
     ctxt->setContextProperty("srcImage", testFileUrl("heart200.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
-    QTRY_COMPARE(sourceSpy.count(), 0);
-    QTRY_COMPARE(progressSpy.count(), 0);
-    QTRY_COMPARE(statusSpy.count(), 0);
+    QTRY_COMPARE(sourceSpy.size(), 0);
+    QTRY_COMPARE(progressSpy.size(), 0);
+    QTRY_COMPARE(statusSpy.size(), 0);
 
     // Loading local file
     ctxt->setContextProperty("srcImage", testFileUrl("colors.png"));
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
-    QTRY_COMPARE(sourceSpy.count(), 1);
-    QTRY_COMPARE(progressSpy.count(), 0);
-    QTRY_COMPARE(statusSpy.count(), 1);
+    QTRY_COMPARE(sourceSpy.size(), 1);
+    QTRY_COMPARE(progressSpy.size(), 0);
+    QTRY_COMPARE(statusSpy.size(), 1);
 
     // Loading remote file
     ctxt->setContextProperty("srcImage", server.url("/heart200.png"));
@@ -550,16 +550,16 @@ void tst_qquickborderimage::progressAndStatusChanges()
     QTRY_COMPARE(obj->progress(), 0.0);
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
-    QTRY_COMPARE(sourceSpy.count(), 2);
-    QTRY_VERIFY(progressSpy.count() > 1);
-    QTRY_COMPARE(statusSpy.count(), 3);
+    QTRY_COMPARE(sourceSpy.size(), 2);
+    QTRY_VERIFY(progressSpy.size() > 1);
+    QTRY_COMPARE(statusSpy.size(), 3);
 
     ctxt->setContextProperty("srcImage", "");
     QTRY_COMPARE(obj->status(), QQuickBorderImage::Null);
     QTRY_COMPARE(obj->progress(), 0.0);
-    QTRY_COMPARE(sourceSpy.count(), 3);
-    QTRY_VERIFY(progressSpy.count() > 2);
-    QTRY_COMPARE(statusSpy.count(), 4);
+    QTRY_COMPARE(sourceSpy.size(), 3);
+    QTRY_VERIFY(progressSpy.size() > 2);
+    QTRY_COMPARE(statusSpy.size(), 4);
 
     delete obj;
 }
@@ -614,7 +614,7 @@ void tst_qquickborderimage::multiFrame()
     if (asynchronous) {
         QCOMPARE(image->frameCount(), 0);
         QTRY_COMPARE(image->frameCount(), 4);
-        QCOMPARE(countSpy.count(), 1);
+        QCOMPARE(countSpy.size(), 1);
     } else {
         QCOMPARE(image->frameCount(), 4);
     }
@@ -636,7 +636,7 @@ void tst_qquickborderimage::multiFrame()
 
     image->setCurrentFrame(1);
     QTRY_COMPARE(image->status(), QQuickImageBase::Ready);
-    QCOMPARE(currentSpy.count(), 1);
+    QCOMPARE(currentSpy.size(), 1);
     QCOMPARE(image->currentFrame(), 1);
     contents = view.grabWindow();
     // The middle of the second frame looks green, approximately qRgba(0x3a, 0xd2, 0x31, 0xff)

@@ -52,7 +52,7 @@ uint stringToArrayIndex(const T *ch, const T *end)
 
 inline uint stringToArrayIndex(const QString &str)
 {
-    return stringToArrayIndex(str.constData(), str.constData() + str.length());
+    return stringToArrayIndex(str.constData(), str.constData() + str.size());
 }
 
 } // namespace QV4

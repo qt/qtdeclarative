@@ -132,19 +132,19 @@ static qsizetype posAfterLineChar(QString code, int line, int character)
 {
     int targetLine = line;
     qsizetype i = 0;
-    while (i != code.length() && targetLine != 0) {
+    while (i != code.size() && targetLine != 0) {
         QChar c = code.at(i++);
         if (c == u'\n') {
             --targetLine;
         }
         if (c == u'\r') {
-            if (i != code.length() && code.at(i) == u'\n')
+            if (i != code.size() && code.at(i) == u'\n')
                 ++i;
             --targetLine;
         }
     }
     qsizetype leftChars = character;
-    while (i != code.length() && leftChars) {
+    while (i != code.size() && leftChars) {
         QChar c = code.at(i);
         if (c == u'\n' || c == u'\r')
             break;
@@ -301,7 +301,7 @@ static QList<CompletionItem> importCompletions(DomItem &file, const CompletionCo
     ImportCompletionType importCompletionType = ImportCompletionType::None;
     QRegularExpression spaceRe(uR"(\W+)"_s);
     QList<QStringView> linePieces = ctx.preLine().split(spaceRe, Qt::SkipEmptyParts);
-    qsizetype effectiveLength = linePieces.length()
+    qsizetype effectiveLength = linePieces.size()
             + ((!ctx.preLine().isEmpty() && ctx.preLine().last().isSpace()) ? 1 : 0);
     if (effectiveLength < 2) {
         CompletionItem comp;
@@ -333,7 +333,7 @@ static QList<CompletionItem> importCompletions(DomItem &file, const CompletionCo
             for (const QString &uri : envPtr->moduleIndexUris(env)) {
                 QStringView base = ctx.base(); // if we allow spaces we should get rid of them
                 if (uri.startsWith(base)) {
-                    QStringList rest = uri.mid(base.length()).split(u'.');
+                    QStringList rest = uri.mid(base.size()).split(u'.');
                     if (rest.isEmpty())
                         continue;
                     CompletionItem comp;
@@ -356,7 +356,7 @@ static QList<CompletionItem> importCompletions(DomItem &file, const CompletionCo
                 bool hasMajorVersion = ctx.base().endsWith(u'.');
                 int majorV = -1;
                 if (hasMajorVersion)
-                    majorV = ctx.base().mid(0, ctx.base().length() - 1).toInt(&hasMajorVersion);
+                    majorV = ctx.base().mid(0, ctx.base().size() - 1).toInt(&hasMajorVersion);
                 if (!hasMajorVersion)
                     break;
                 if (std::shared_ptr<ModuleIndex> mIndex =
@@ -559,7 +559,7 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
     QList<ItemLocation> itemsFound =
             findLastItemsContaining(file, completionParams.position.line,
                                     completionParams.position.character - ctx.filterChars().size());
-    if (itemsFound.length() > 1) {
+    if (itemsFound.size() > 1) {
         QStringList paths;
         for (auto &it : itemsFound)
             paths.append(it.domItem.canonicalPath().toString());

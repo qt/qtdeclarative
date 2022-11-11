@@ -283,8 +283,8 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
         if (doRequeue)
             requeue.enqueue(object);
 
-        if (objects.isEmpty() && requeue.length() < lastRequeueLength) {
-            lastRequeueLength = requeue.length();
+        if (objects.isEmpty() && requeue.size() < lastRequeueLength) {
+            lastRequeueLength = requeue.size();
             objects.swap(requeue);
         }
     }
@@ -547,7 +547,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
 
         const QQmlJSMetaProperty defaultProp = parentScope->property(defaultPropertyName);
 
-        if (it.value().length() > 1 && !defaultProp.isList()) {
+        if (it.value().size() > 1 && !defaultProp.isList()) {
             m_logger->log(
                     QStringLiteral("Cannot assign multiple objects to a default non-list property"),
                     Log_Property, it.value().constFirst()->sourceLocation());
@@ -780,7 +780,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                                     QStringList aliasExpression =
                                             property.aliasExpression().split(u'.');
 
-                                    if (aliasExpression.length() != 2)
+                                    if (aliasExpression.size() != 2)
                                         continue;
                                     if (aliasExpression[0] == scopeId
                                         && aliasExpression[1] == propName) {
@@ -793,8 +793,8 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                             if (propertyUsedInRootAlias)
                                 continue;
 
-                            const QQmlJSScope::ConstPtr propertyScope = scopesToSearch.length() > 1
-                                    ? scopesToSearch.at(scopesToSearch.length() - 2)
+                            const QQmlJSScope::ConstPtr propertyScope = scopesToSearch.size() > 1
+                                    ? scopesToSearch.at(scopesToSearch.size() - 2)
                                     : QQmlJSScope::ConstPtr();
 
                             const QString propertyScopeName = !propertyScope.isNull()
@@ -971,7 +971,7 @@ void QQmlJSImportVisitor::checkSignals()
 
             const QStringList signalParameters = signalMethod->parameterNames();
 
-            if (pair.second.length() > signalParameters.length()) {
+            if (pair.second.size() > signalParameters.size()) {
                 m_logger->log(QStringLiteral("Signal handler for \"%2\" has more formal"
                                              " parameters than the signal it handles.")
                                       .arg(pair.first),
@@ -979,7 +979,7 @@ void QQmlJSImportVisitor::checkSignals()
                 continue;
             }
 
-            for (qsizetype i = 0; i < pair.second.length(); i++) {
+            for (qsizetype i = 0; i < pair.second.size(); i++) {
                 const QStringView handlerParameter = pair.second.at(i);
                 const qsizetype j = signalParameters.indexOf(handlerParameter);
                 if (j == i || j < 0)
@@ -1273,7 +1273,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
 
         bool escaped = false;
         const QChar stringQuote = s[0];
-        for (qsizetype i = 1; i < s.length() - 1; i++) {
+        for (qsizetype i = 1; i < s.size() - 1; i++) {
             const QChar c = s[i];
 
             if (c == u'\\') {
@@ -1287,7 +1287,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
             } else {
                 if (c == u'`')
                     templateString += u'\\';
-                if (c == u'$' && i + 1 < s.length() - 1 && s[i + 1] == u'{')
+                if (c == u'$' && i + 1 < s.size() - 1 && s[i + 1] == u'{')
                     templateString += u'\\';
             }
 

@@ -2103,7 +2103,7 @@ void tst_qqmlproperty::assignEmptyVariantMap()
     QVariantMap map;
     map.insert("key", "value");
     o.setVariantMap(map);
-    QCOMPARE(o.variantMap().count(), 1);
+    QCOMPARE(o.variantMap().size(), 1);
     QCOMPARE(o.variantMap().isEmpty(), false);
 
 
@@ -2111,7 +2111,7 @@ void tst_qqmlproperty::assignEmptyVariantMap()
     QObject *obj = component.createWithInitialProperties({{"o", QVariant::fromValue(&o)}});
     QVERIFY(obj);
 
-    QCOMPARE(o.variantMap().count(), 0);
+    QCOMPARE(o.variantMap().size(), 0);
     QCOMPARE(o.variantMap().isEmpty(), true);
 
     delete obj;

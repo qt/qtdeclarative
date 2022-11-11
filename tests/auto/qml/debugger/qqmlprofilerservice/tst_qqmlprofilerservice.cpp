@@ -52,20 +52,20 @@ private:
 void QQmlProfilerTestClient::startTrace(qint64 timestamp, const QList<int> &engineIds)
 {
     types.append(QQmlProfilerEventType(Event, MaximumRangeType, StartTrace));
-    asynchronousMessages.append(QQmlProfilerEvent(timestamp, types.length() - 1,
+    asynchronousMessages.append(QQmlProfilerEvent(timestamp, types.size() - 1,
                                                   engineIds.toVector()));
 }
 
 void QQmlProfilerTestClient::endTrace(qint64 timestamp, const QList<int> &engineIds)
 {
     types.append(QQmlProfilerEventType(Event, MaximumRangeType, EndTrace));
-    asynchronousMessages.append(QQmlProfilerEvent(timestamp, types.length() - 1,
+    asynchronousMessages.append(QQmlProfilerEvent(timestamp, types.size() - 1,
                                                   engineIds.toVector()));
 }
 
 int QQmlProfilerTestClient::numLoadedEventTypes() const
 {
-    return types.length();
+    return types.size();
 }
 
 void QQmlProfilerTestClient::addEventType(const QQmlProfilerEventType &type)
@@ -76,7 +76,7 @@ void QQmlProfilerTestClient::addEventType(const QQmlProfilerEventType &type)
 void QQmlProfilerTestClient::addEvent(const QQmlProfilerEvent &event)
 {
     const int typeIndex = event.typeIndex();
-    QVERIFY(typeIndex < types.length());
+    QVERIFY(typeIndex < types.size());
 
     const QQmlProfilerEventType &type = types[typeIndex];
 
@@ -272,14 +272,14 @@ void tst_QQmlProfilerService::checkTraceReceived()
 
     // must end with "EndTrace"
     expected = QQmlProfilerEventType(Event, MaximumRangeType, EndTrace);
-    VERIFY(MessageListAsynchronous, m_client->asynchronousMessages.length() - 1, expected,
+    VERIFY(MessageListAsynchronous, m_client->asynchronousMessages.size() - 1, expected,
            CheckMessageType | CheckDetailType, numbers);
 }
 
 void tst_QQmlProfilerService::checkJsHeap()
 {
     QVERIFY(m_client);
-    QVERIFY2(m_client->jsHeapMessages.count() > 0, "no JavaScript heap messages received");
+    QVERIFY2(m_client->jsHeapMessages.size() > 0, "no JavaScript heap messages received");
 
     bool seen_alloc = false;
     bool seen_small = false;
@@ -357,9 +357,9 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         return false;
     }
 
-    if (target->length() <= expectedPosition) {
+    if (target->size() <= expectedPosition) {
         qWarning() << "Not enough events. expected position:" << expectedPosition
-                   << "length:" << target->length();
+                   << "length:" << target->size();
         return false;
     }
 
@@ -438,7 +438,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         }
 
         return true;
-    } while (++position < target->length() && target->at(position).timestamp() == timestamp);
+    } while (++position < target->size() && target->at(position).timestamp() == timestamp);
 
     foreach (const QString &message, warnings)
         qWarning() << message.toLocal8Bit().constData();
@@ -467,32 +467,32 @@ void tst_QQmlProfilerService::cleanup()
     };
 
     if (m_client && QTest::currentTestFailed()) {
-        qDebug() << "QML Messages:" << m_client->qmlMessages.count();
+        qDebug() << "QML Messages:" << m_client->qmlMessages.size();
         int i = 0;
         for (const QQmlProfilerEvent &data : qAsConst(m_client->qmlMessages))
             log(data, i++);
 
         qDebug() << " ";
-        qDebug() << "JavaScript Messages:" << m_client->javascriptMessages.count();
+        qDebug() << "JavaScript Messages:" << m_client->javascriptMessages.size();
         i = 0;
 
         for (const QQmlProfilerEvent &data : qAsConst(m_client->javascriptMessages))
             log(data, i++);
 
         qDebug() << " ";
-        qDebug() << "Asynchronous Messages:" << m_client->asynchronousMessages.count();
+        qDebug() << "Asynchronous Messages:" << m_client->asynchronousMessages.size();
         i = 0;
         for (const QQmlProfilerEvent &data : qAsConst(m_client->asynchronousMessages))
             log(data, i++);
 
         qDebug() << " ";
-        qDebug() << "Pixmap Cache Messages:" << m_client->pixmapMessages.count();
+        qDebug() << "Pixmap Cache Messages:" << m_client->pixmapMessages.size();
         i = 0;
         for (const QQmlProfilerEvent &data : qAsConst(m_client->pixmapMessages))
             log(data, i++);
 
         qDebug() << " ";
-        qDebug() << "Javascript Heap Messages:" << m_client->jsHeapMessages.count();
+        qDebug() << "Javascript Heap Messages:" << m_client->jsHeapMessages.size();
         i = 0;
         for (const QQmlProfilerEvent &data : qAsConst(m_client->jsHeapMessages))
             log(data, i++);
@@ -677,9 +677,9 @@ void tst_QQmlProfilerService::flushInterval()
     QCOMPARE(connectTo(true, "timer.qml", true, 1), ConnectSuccess);
 
     // Make sure we get multiple messages
-    QTRY_VERIFY(m_client->qmlMessages.length() > 0);
-    QVERIFY(m_client->qmlMessages.length() < 100);
-    QTRY_VERIFY(m_client->qmlMessages.length() > 100);
+    QTRY_VERIFY(m_client->qmlMessages.size() > 0);
+    QVERIFY(m_client->qmlMessages.size() < 100);
+    QTRY_VERIFY(m_client->qmlMessages.size() > 100);
 
     m_client->client->setRecording(false);
     checkTraceReceived();
@@ -783,7 +783,7 @@ void tst_QQmlProfilerService::multiEngine()
     QTRY_COMPARE(m_process->state(), QProcess::NotRunning);
     QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 }
 
 void tst_QQmlProfilerService::batchOverflow()

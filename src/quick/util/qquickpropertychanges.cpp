@@ -333,7 +333,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
 
 void QQuickPropertyChangesParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
-    for (int ii = 0; ii < props.count(); ++ii)
+    for (int ii = 0; ii < props.size(); ++ii)
         verifyList(compilationUnit, props.at(ii));
 }
 
@@ -358,7 +358,7 @@ QQuickPropertyChanges::QQuickPropertyChanges()
 QQuickPropertyChanges::~QQuickPropertyChanges()
 {
     Q_D(QQuickPropertyChanges);
-    for(int ii = 0; ii < d->signalReplacements.count(); ++ii)
+    for(int ii = 0; ii < d->signalReplacements.size(); ++ii)
         delete d->signalReplacements.at(ii);
 }
 
@@ -427,7 +427,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
 
     ActionList list;
 
-    for (int ii = 0; ii < d->properties.count(); ++ii) {
+    for (int ii = 0; ii < d->properties.size(); ++ii) {
         QQmlProperty prop = d->property(d->properties.at(ii).first);
 
         QQuickStateAction a(d->object, prop, d->properties.at(ii).first,
@@ -439,7 +439,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
         }
     }
 
-    for (int ii = 0; ii < d->signalReplacements.count(); ++ii) {
+    for (int ii = 0; ii < d->signalReplacements.size(); ++ii) {
         QQuickReplaceSignalHandler *handler = d->signalReplacements.at(ii);
 
         if (handler->property.isValid()) {
@@ -449,7 +449,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
         }
     }
 
-    for (int ii = 0; ii < d->expressions.count(); ++ii) {
+    for (int ii = 0; ii < d->expressions.size(); ++ii) {
 
         QQuickPropertyChangesPrivate::ExpressionChange e = d->expressions.at(ii);
         const QString &property = e.name;

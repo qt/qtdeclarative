@@ -481,7 +481,7 @@ qsizetype QQmlContextPrivate::context_count(QQmlListProperty<QObject> *prop)
     if (d->propertyValue(contextProperty).userType() != qMetaTypeId<QList<QObject*> >())
         return 0;
     else
-        return ((const QList<QObject> *)d->propertyValue(contextProperty).constData())->count();
+        return ((const QList<QObject> *)d->propertyValue(contextProperty).constData())->size();
 }
 
 QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, qsizetype index)

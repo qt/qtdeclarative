@@ -91,10 +91,10 @@ bool tst_qqmllistmodelworkerscript::compareVariantList(const QVariantList &testL
     if (model == nullptr)
         return false;
 
-    if (model->count() != testList.count())
+    if (model->count() != testList.size())
         return false;
 
-    for (int i=0 ; i < testList.count() ; ++i) {
+    for (int i=0 ; i < testList.size() ; ++i) {
         const QVariant &testVariant = testList.at(i);
         if (testVariant.typeId() != QMetaType::QVariantMap)
             return false;
@@ -331,8 +331,8 @@ void tst_qqmllistmodelworkerscript::dynamic_worker()
 
     QSignalSpy spyCount(&model, SIGNAL(countChanged()));
 
-    if (script[0] == QLatin1Char('{') && script[script.length()-1] == QLatin1Char('}'))
-        script = script.mid(1, script.length() - 2);
+    if (script[0] == QLatin1Char('{') && script[script.size()-1] == QLatin1Char('}'))
+        script = script.mid(1, script.size() - 2);
     QVariantList operations;
     foreach (const QString &s, script.split(';')) {
         if (!s.isEmpty())
@@ -348,7 +348,7 @@ void tst_qqmllistmodelworkerscript::dynamic_worker()
     QCOMPARE(QQmlProperty(item, "result").read().toInt(), result);
 
     if (model.count() > 0)
-        QVERIFY(spyCount.count() > 0);
+        QVERIFY(spyCount.size() > 0);
 
     delete item;
     qApp->processEvents();
@@ -380,8 +380,8 @@ void tst_qqmllistmodelworkerscript::dynamic_worker_sync()
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != nullptr);
 
-    if (script[0] == QLatin1Char('{') && script[script.length()-1] == QLatin1Char('}'))
-        script = script.mid(1, script.length() - 2);
+    if (script[0] == QLatin1Char('{') && script[script.size()-1] == QLatin1Char('}'))
+        script = script.mid(1, script.size() - 2);
     QVariantList operations;
     foreach (const QString &s, script.split(';')) {
         if (!s.isEmpty())
@@ -394,7 +394,7 @@ void tst_qqmllistmodelworkerscript::dynamic_worker_sync()
     // execute a set of commands on the worker list model, then check the
     // changes are reflected in the list model in the main thread
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
-            Q_ARG(QVariant, operations.mid(0, operations.length()-1))));
+            Q_ARG(QVariant, operations.mid(0, operations.size()-1))));
     waitForWorker(item);
 
     QQmlExpression e(eng.rootContext(), &model, operations.last().toString());
@@ -468,7 +468,7 @@ void tst_qqmllistmodelworkerscript::get_worker()
         QCOMPARE(model.data(index, role), roleValue);
     }
 
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     QList<QVariant> spyResult = spy.takeFirst();
     QCOMPARE(spyResult.at(0).value<QModelIndex>(), model.index(index, 0, QModelIndex()));
@@ -585,11 +585,11 @@ void tst_qqmllistmodelworkerscript::property_changes_worker()
 
     // test itemsChanged() is emitted correctly
     if (itemsChanged) {
-        QCOMPARE(spyItemsChanged.count(), 1);
+        QCOMPARE(spyItemsChanged.size(), 1);
         QCOMPARE(spyItemsChanged.at(0).at(0).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
         QCOMPARE(spyItemsChanged.at(0).at(1).value<QModelIndex>(), model.index(listIndex, 0, QModelIndex()));
     } else {
-        QCOMPARE(spyItemsChanged.count(), 0);
+        QCOMPARE(spyItemsChanged.size(), 0);
     }
 
     delete item;
@@ -638,32 +638,32 @@ void tst_qqmllistmodelworkerscript::worker_sync()
 
     QCOMPARE(model.count(), 2);
     QCOMPARE(childModel->count(), 1);
-    QCOMPARE(spyModelInserted.count(), 0);
-    QCOMPARE(spyChildInserted.count(), 0);
+    QCOMPARE(spyModelInserted.size(), 0);
+    QCOMPARE(spyChildInserted.size(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
     QCOMPARE(model.count(), 2);
     QCOMPARE(childModel->count(), 2);
-    QCOMPARE(spyModelInserted.count(), 0);
-    QCOMPARE(spyChildInserted.count(), 1);
+    QCOMPARE(spyModelInserted.size(), 0);
+    QCOMPARE(spyChildInserted.size(), 1);
 
     QVERIFY(QMetaObject::invokeMethod(item, "addItemViaWorker"));
     waitForWorker(item);
 
     QCOMPARE(model.count(), 2);
     QCOMPARE(childModel->count(), 2);
-    QCOMPARE(spyModelInserted.count(), 0);
-    QCOMPARE(spyChildInserted.count(), 1);
+    QCOMPARE(spyModelInserted.size(), 0);
+    QCOMPARE(spyChildInserted.size(), 1);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
     QCOMPARE(model.count(), 2);
     QCOMPARE(childModel->count(), 3);
-    QCOMPARE(spyModelInserted.count(), 0);
-    QCOMPARE(spyChildInserted.count(), 2);
+    QCOMPARE(spyModelInserted.size(), 0);
+    QCOMPARE(spyChildInserted.size(), 2);
 
     delete item;
     qApp->processEvents();
@@ -688,7 +688,7 @@ void tst_qqmllistmodelworkerscript::worker_remove_element()
     QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
     QCOMPARE(model.count(), 0);
-    QCOMPARE(spyModelRemoved.count(), 0);
+    QCOMPARE(spyModelRemoved.size(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "addItem"));
 
@@ -698,13 +698,13 @@ void tst_qqmllistmodelworkerscript::worker_remove_element()
     waitForWorker(item);
 
     QCOMPARE(model.count(), 1);
-    QCOMPARE(spyModelRemoved.count(), 0);
+    QCOMPARE(spyModelRemoved.size(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
     QCOMPARE(model.count(), 0);
-    QCOMPARE(spyModelRemoved.count(), 1);
+    QCOMPARE(spyModelRemoved.size(), 1);
 
     delete item;
     qApp->processEvents();
@@ -751,7 +751,7 @@ void tst_qqmllistmodelworkerscript::worker_remove_list()
     QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
     QCOMPARE(model.count(), 0);
-    QCOMPARE(spyModelRemoved.count(), 0);
+    QCOMPARE(spyModelRemoved.size(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "addList"));
 
@@ -761,13 +761,13 @@ void tst_qqmllistmodelworkerscript::worker_remove_list()
     waitForWorker(item);
 
     QCOMPARE(model.count(), 1);
-    QCOMPARE(spyModelRemoved.count(), 0);
+    QCOMPARE(spyModelRemoved.size(), 0);
 
     QVERIFY(QMetaObject::invokeMethod(item, "doSync"));
     waitForWorker(item);
 
     QCOMPARE(model.count(), 0);
-    QCOMPARE(spyModelRemoved.count(), 1);
+    QCOMPARE(spyModelRemoved.size(), 1);
 
     delete item;
     qApp->processEvents();
@@ -798,8 +798,8 @@ void tst_qqmllistmodelworkerscript::dynamic_role()
     QQmlExpression preExp(engine.rootContext(), &model, preamble);
     QCOMPARE(preExp.evaluate().toInt(), 0);
 
-    if (script[0] == QLatin1Char('{') && script[script.length()-1] == QLatin1Char('}'))
-        script = script.mid(1, script.length() - 2);
+    if (script[0] == QLatin1Char('{') && script[script.size()-1] == QLatin1Char('}'))
+        script = script.mid(1, script.size() - 2);
     QVariantList operations;
     foreach (const QString &s, script.split(';')) {
         if (!s.isEmpty())
@@ -809,7 +809,7 @@ void tst_qqmllistmodelworkerscript::dynamic_role()
     // execute a set of commands on the worker list model, then check the
     // changes are reflected in the list model in the main thread
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker",
-            Q_ARG(QVariant, operations.mid(0, operations.length()-1))));
+            Q_ARG(QVariant, operations.mid(0, operations.size()-1))));
     waitForWorker(item);
 
     QQmlExpression e(engine.rootContext(), &model, operations.last().toString());

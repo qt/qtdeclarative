@@ -409,7 +409,7 @@ void QQmlTableInstanceModel::deleteIncubationTaskLater(QQmlIncubator *incubation
     // delete them while we're in the middle of an incubation change callback.
     Q_ASSERT(!m_finishedIncubationTasks.contains(incubationTask));
     m_finishedIncubationTasks.append(incubationTask);
-    if (m_finishedIncubationTasks.count() == 1)
+    if (m_finishedIncubationTasks.size() == 1)
         QTimer::singleShot(1, this, &QQmlTableInstanceModel::deleteAllFinishedIncubationTasks);
 }
 

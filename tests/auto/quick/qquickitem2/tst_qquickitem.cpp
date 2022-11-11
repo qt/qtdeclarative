@@ -2548,19 +2548,19 @@ void tst_QQuickItem::smooth()
 
     item->setSmooth(true);
     QVERIFY(item->smooth());
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
     QList<QVariant> arguments = spy.first();
-    QCOMPARE(arguments.count(), 1);
+    QCOMPARE(arguments.size(), 1);
     QVERIFY(arguments.at(0).toBool());
 
     item->setSmooth(true);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     item->setSmooth(false);
     QVERIFY(!item->smooth());
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
     item->setSmooth(false);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     delete item;
 }
@@ -2577,19 +2577,19 @@ void tst_QQuickItem::antialiasing()
 
     item->setAntialiasing(true);
     QVERIFY(item->antialiasing());
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
     QList<QVariant> arguments = spy.first();
-    QCOMPARE(arguments.count(), 1);
+    QCOMPARE(arguments.size(), 1);
     QVERIFY(arguments.at(0).toBool());
 
     item->setAntialiasing(true);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     item->setAntialiasing(false);
     QVERIFY(!item->antialiasing());
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
     item->setAntialiasing(false);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     delete item;
 }
@@ -2608,18 +2608,18 @@ void tst_QQuickItem::clip()
     QVERIFY(item->clip());
 
     QList<QVariant> arguments = spy.first();
-    QCOMPARE(arguments.count(), 1);
+    QCOMPARE(arguments.size(), 1);
     QVERIFY(arguments.at(0).toBool());
 
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
     item->setClip(true);
-    QCOMPARE(spy.count(),1);
+    QCOMPARE(spy.size(),1);
 
     item->setClip(false);
     QVERIFY(!item->clip());
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
     item->setClip(false);
-    QCOMPARE(spy.count(),2);
+    QCOMPARE(spy.size(),2);
 
     delete item;
 }
@@ -2927,50 +2927,50 @@ void tst_QQuickItem::propertyChanges()
     item->setBaselineOffset(10.0);
 
     QCOMPARE(item->parentItem(), parentItem);
-    QCOMPARE(parentSpy.count(),1);
+    QCOMPARE(parentSpy.size(),1);
     QList<QVariant> parentArguments = parentSpy.first();
-    QCOMPARE(parentArguments.count(), 1);
+    QCOMPARE(parentArguments.size(), 1);
     QCOMPARE(item->parentItem(), qvariant_cast<QQuickItem *>(parentArguments.at(0)));
-    QCOMPARE(childrenChangedSpy.count(),1);
+    QCOMPARE(childrenChangedSpy.size(),1);
 
     item->setParentItem(parentItem);
-    QCOMPARE(childrenChangedSpy.count(),1);
+    QCOMPARE(childrenChangedSpy.size(),1);
 
     QCOMPARE(item->width(), 100.0);
-    QCOMPARE(widthSpy.count(),1);
+    QCOMPARE(widthSpy.size(),1);
 
     QCOMPARE(item->height(), 200.0);
-    QCOMPARE(heightSpy.count(),1);
+    QCOMPARE(heightSpy.size(),1);
 
     QCOMPARE(item->baselineOffset(), 10.0);
-    QCOMPARE(baselineOffsetSpy.count(),1);
+    QCOMPARE(baselineOffsetSpy.size(),1);
     QList<QVariant> baselineOffsetArguments = baselineOffsetSpy.first();
-    QCOMPARE(baselineOffsetArguments.count(), 1);
+    QCOMPARE(baselineOffsetArguments.size(), 1);
     QCOMPARE(item->baselineOffset(), baselineOffsetArguments.at(0).toReal());
 
     QCOMPARE(parentItem->childrenRect(), QRectF(0.0,0.0,100.0,200.0));
-    QCOMPARE(childrenRectSpy.count(),1);
+    QCOMPARE(childrenRectSpy.size(),1);
     QList<QVariant> childrenRectArguments = childrenRectSpy.at(0);
-    QCOMPARE(childrenRectArguments.count(), 1);
+    QCOMPARE(childrenRectArguments.size(), 1);
     QCOMPARE(parentItem->childrenRect(), childrenRectArguments.at(0).toRectF());
 
     QCOMPARE(item->hasActiveFocus(), true);
-    QCOMPARE(focusSpy.count(),1);
+    QCOMPARE(focusSpy.size(),1);
     QList<QVariant> focusArguments = focusSpy.first();
-    QCOMPARE(focusArguments.count(), 1);
+    QCOMPARE(focusArguments.size(), 1);
     QCOMPARE(focusArguments.at(0).toBool(), true);
 
     QCOMPARE(parentItem->hasActiveFocus(), false);
     QCOMPARE(parentItem->hasFocus(), false);
-    QCOMPARE(wantsFocusSpy.count(),0);
+    QCOMPARE(wantsFocusSpy.size(),0);
 
     item->setX(10.0);
     QCOMPARE(item->x(), 10.0);
-    QCOMPARE(xSpy.count(), 1);
+    QCOMPARE(xSpy.size(), 1);
 
     item->setY(10.0);
     QCOMPARE(item->y(), 10.0);
-    QCOMPARE(ySpy.count(), 1);
+    QCOMPARE(ySpy.size(), 1);
 
     delete window;
 }
@@ -3255,7 +3255,7 @@ void tst_QQuickItem::changeListener()
     QCOMPARE(child2Listener.count(QQuickItemPrivate::Destroyed), 1);
 
     QQuickItemPrivate::get(parent)->removeItemChangeListener(&parentListener, QQuickItemPrivate::Children);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // QTBUG-54732: all listeners should get invoked even if they remove themselves while iterating the listeners
     QList<TestListener *> listeners;
@@ -3265,89 +3265,89 @@ void tst_QQuickItem::changeListener()
     // itemVisibilityChanged x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Visibility);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     parent->setVisible(false);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Visibility), 1);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemRotationChanged x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Rotation);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     parent->setRotation(90);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Rotation), 1);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemOpacityChanged x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Opacity);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     parent->setOpacity(0.5);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Opacity), 1);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemChildAdded() x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Children);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     child1 = new QQuickItem(parent);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Children), 1);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemParentChanged() x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(child1)->addItemChangeListener(listener, QQuickItemPrivate::Parent);
-    QCOMPARE(QQuickItemPrivate::get(child1)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(child1)->changeListeners.size(), listeners.size());
     child1->setParentItem(nullptr);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Parent), 1);
-    QCOMPARE(QQuickItemPrivate::get(child1)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(child1)->changeListeners.size(), 0);
 
     // itemImplicitWidthChanged() x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::ImplicitWidth);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     parent->setImplicitWidth(parent->implicitWidth() + 1);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::ImplicitWidth), 1);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemImplicitHeightChanged() x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::ImplicitHeight);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     parent->setImplicitHeight(parent->implicitHeight() + 1);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::ImplicitHeight), 1);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemGeometryChanged() x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Geometry);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     parent->setWidth(parent->width() + 1);
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Geometry), 1);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemChildRemoved() x 5
     child1->setParentItem(parent);
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Children);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     delete child1;
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Children), 2);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), 0);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemDestroyed() x 5
     foreach (TestListener *listener, listeners)
         QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Destroyed);
-    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.count(), listeners.count());
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
     delete parent;
     foreach (TestListener *listener, listeners)
         QCOMPARE(listener->count(QQuickItemPrivate::Destroyed), 1);

@@ -49,7 +49,7 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
         uint ret = JSC::Yarr::offsetNoMatch;
 #if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
         char buffer[8192];
-        ret = uint(priv->jitCode->execute(s.characters16(), start, s.length(),
+        ret = uint(priv->jitCode->execute(s.characters16(), start, s.size(),
                                           (int*)matchOffsets, buffer, 8192).start);
 #else
         ret = uint(priv->jitCode->execute(s.characters16(), start, s.length(),
@@ -74,18 +74,18 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     }
 #endif // ENABLE(YARR_JIT)
 
-    return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);
+    return JSC::Yarr::interpret(byteCode(), s.characters16(), string.size(), start, matchOffsets);
 }
 
 QString RegExp::getSubstitution(const QString &matched, const QString &str, int position, const Value *captures, int nCaptures, const QString &replacement)
 {
     QString result;
 
-    int matchedLength = matched.length();
-    Q_ASSERT(position >= 0 && position <= str.length());
+    int matchedLength = matched.size();
+    Q_ASSERT(position >= 0 && position <= str.size());
     int tailPos = position + matchedLength;
     int seenDollar = -1;
-    for (int i = 0; i < replacement.length(); ++i) {
+    for (int i = 0; i < replacement.size(); ++i) {
         QChar ch = replacement.at(i);
         if (seenDollar >= 0) {
             if (ch.unicode() == '$') {
@@ -98,7 +98,7 @@ QString RegExp::getSubstitution(const QString &matched, const QString &str, int 
                 result += str.mid(tailPos);
             } else if (ch.unicode() >= '0' && ch.unicode() <= '9') {
                 int n = ch.unicode() - '0';
-                if (i + 1 < replacement.length()) {
+                if (i + 1 < replacement.size()) {
                     ch = replacement.at(i + 1);
                     if (ch.unicode() >= '0' && ch.unicode() <= '9') {
                         n = n*10 + (ch.unicode() - '0');

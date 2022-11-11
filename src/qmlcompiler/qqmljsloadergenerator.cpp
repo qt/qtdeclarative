@@ -49,7 +49,7 @@ QString mangledIdentifier(const QString &str)
         }
     }
 
-    for (int ei = str.length(); i != ei; ++i) {
+    for (int ei = str.size(); i != ei; ++i) {
         auto c = str.at(i).unicode();
         if ((c >= QLatin1Char('0') && c <= QLatin1Char('9'))
             || (c >= QLatin1Char('a') && c <= QLatin1Char('z'))
@@ -68,7 +68,7 @@ QString qQmlJSSymbolNamespaceForPath(const QString &relativePath)
 {
     QFileInfo fi(relativePath);
     QString symbol = fi.path();
-    if (symbol.length() == 1 && symbol.startsWith(QLatin1Char('.'))) {
+    if (symbol.size() == 1 && symbol.startsWith(QLatin1Char('.'))) {
         symbol.clear();
     } else {
         symbol.replace(QLatin1Char('/'), QLatin1Char('_'));
@@ -105,7 +105,7 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
         stream << "\n";
 
         stream << "namespace QmlCacheGeneratedCode {\n";
-        for (int i = 0; i < compiledFiles.count(); ++i) {
+        for (int i = 0; i < compiledFiles.size(); ++i) {
             const QString compiledFile = compiledFiles.at(i);
             const QString ns = qQmlJSSymbolNamespaceForPath(compiledFile);
             stream << "namespace " << ns << " { \n";
@@ -131,7 +131,7 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
 
         stream << "Registry::Registry() {\n";
 
-        for (int i = 0; i < compiledFiles.count(); ++i) {
+        for (int i = 0; i < compiledFiles.size(); ++i) {
             const QString qrcFile = compiledFiles.at(i);
             const QString ns = qQmlJSSymbolNamespaceForPath(qrcFile);
             stream << "    resourcePathToCachedUnit.insert(QStringLiteral(\"" << qrcFile << "\"), &QmlCacheGeneratedCode::" << ns << "::unit);\n";

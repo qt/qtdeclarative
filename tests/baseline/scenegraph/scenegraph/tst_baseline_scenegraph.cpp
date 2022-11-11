@@ -159,7 +159,7 @@ void tst_Scenegraph::setupTestSuite(const QByteArray& filter)
     while (it.hasNext()) {
         QString fp = it.next();
         if (fp.endsWith(".qml")) {
-            QString itemName = fp.mid(testSuitePath.length() + 1);
+            QString itemName = fp.mid(testSuitePath.size() + 1);
             if (!ignoreItems.contains(itemName) && (filter.isEmpty() || !itemName.startsWith(filter)))
                 itemFiles.append(it.filePath());
         }
@@ -167,7 +167,7 @@ void tst_Scenegraph::setupTestSuite(const QByteArray& filter)
 
     std::sort(itemFiles.begin(), itemFiles.end());
     for (const QString &filePath : qAsConst(itemFiles)) {
-        QByteArray itemName = filePath.mid(testSuitePath.length() + 1).toLatin1();
+        QByteArray itemName = filePath.mid(testSuitePath.size() + 1).toLatin1();
         QBaselineTest::newRow(itemName, checksumFileOrDir(filePath)) << filePath;
         numItems++;
     }

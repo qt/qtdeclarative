@@ -51,7 +51,7 @@ void Heap::StringObject::init(const QV4::String *str)
 Heap::String *Heap::StringObject::getIndex(uint index) const
 {
     QString str = string->toQString();
-    if (index >= (uint)str.length())
+    if (index >= (uint)str.size())
         return nullptr;
     return internalClass->engine->newString(str.mid(index, 1));
 }
@@ -67,7 +67,7 @@ bool StringObject::virtualDeleteProperty(Managed *m, PropertyKey id)
     if (id.isArrayIndex()) {
         StringObject *o = static_cast<StringObject *>(m);
         uint index = id.asArrayIndex();
-        if (index < static_cast<uint>(o->d()->string->toQString().length()))
+        if (index < static_cast<uint>(o->d()->string->toQString().size()))
             return false;
     }
     return Object::virtualDeleteProperty(m, id);
@@ -83,7 +83,7 @@ struct StringObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 PropertyKey StringObjectOwnPropertyKeyIterator::next(const QV4::Object *o, Property *pd, PropertyAttributes *attrs)
 {
     const StringObject *s = static_cast<const StringObject *>(o);
-    uint slen = s->d()->string->toQString().length();
+    uint slen = s->d()->string->toQString().size();
     if (arrayIndex < slen) {
         uint index = arrayIndex;
         ++arrayIndex;
@@ -119,7 +119,7 @@ PropertyAttributes StringObject::virtualGetOwnProperty(const Managed *m, Propert
     if (id.isArrayIndex()) {
         const uint index = id.asArrayIndex();
         const auto s = static_cast<const StringObject *>(m);
-        if (index < uint(s->d()->string->toQString().length())) {
+        if (index < uint(s->d()->string->toQString().size())) {
             if (p)
                 p->value = s->getIndex(index);
             return Attr_NotConfigurable|Attr_NotWritable;
@@ -338,7 +338,7 @@ ReturnedValue StringPrototype::method_charAt(const FunctionObject *b, const Valu
         pos = (int) argv[0].toInteger();
 
     QString result;
-    if (pos >= 0 && pos < str.length())
+    if (pos >= 0 && pos < str.size())
         result += str.at(pos);
 
     return Encode(v4->newString(result));
@@ -356,7 +356,7 @@ ReturnedValue StringPrototype::method_charCodeAt(const FunctionObject *b, const 
         pos = (int) argv[0].toInteger();
 
 
-    if (pos >= 0 && pos < str.length())
+    if (pos >= 0 && pos < str.size())
         RETURN_RESULT(Encode(str.at(pos).unicode()));
 
     return Encode(qt_qnan());
@@ -419,11 +419,11 @@ ReturnedValue StringPrototype::method_endsWith(const FunctionObject *b, const Va
     if (v4->hasException)
         return Encode::undefined();
 
-    int pos = value.length();
+    int pos = value.size();
     if (argc > 1)
         pos = (int) argv[1].toInteger();
 
-    if (pos == value.length())
+    if (pos == value.size())
         RETURN_RESULT(Encode(value.endsWith(searchString)));
 
     QStringView stringToSearch = QStringView{value}.left(pos);
@@ -447,7 +447,7 @@ ReturnedValue StringPrototype::method_indexOf(const FunctionObject *b, const Val
 
     int index = -1;
     if (! value.isEmpty())
-        index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
+        index = value.indexOf(searchString, qMin(qMax(pos, 0), value.size()));
 
     return Encode(index);
 }
@@ -470,7 +470,7 @@ ReturnedValue StringPrototype::method_includes(const FunctionObject *b, const Va
         const Value &posArg = argv[1];
         pos = (int) posArg.toInteger();
         if (!posArg.isInteger() && posArg.isNumber() && qIsInf(posArg.toNumber()))
-            pos = value.length();
+            pos = value.size();
     }
 
     if (pos == 0)
@@ -497,8 +497,8 @@ ReturnedValue StringPrototype::method_lastIndexOf(const FunctionObject *b, const
     else
         position = std::trunc(position);
 
-    int pos = std::trunc(qMin(qMax(position, 0.0), double(value.length())));
-    if (!searchString.isEmpty() && pos == value.length())
+    int pos = std::trunc(qMin(qMax(position, 0.0), double(value.size())));
+    if (!searchString.isEmpty() && pos == value.size())
         --pos;
     if (searchString.isNull() && pos == 0)
         RETURN_RESULT(Encode(-1));
@@ -607,12 +607,12 @@ ReturnedValue StringPrototype::method_padEnd(const FunctionObject *f, const Valu
         return s->asReturnedValue();
 
     QString padded = s->toQString();
-    int oldLength = padded.length();
+    int oldLength = padded.size();
     int toFill = maxLen - oldLength;
     padded.resize(maxLen);
     QChar *ch = padded.data() + oldLength;
     while (toFill) {
-        int copy = qMin(fillString.length(), toFill);
+        int copy = qMin(fillString.size(), toFill);
         memcpy(ch, fillString.constData(), copy*sizeof(QChar));
         toFill -= copy;
         ch += copy;
@@ -646,13 +646,13 @@ ReturnedValue StringPrototype::method_padStart(const FunctionObject *f, const Va
         return s->asReturnedValue();
 
     QString original = s->toQString();
-    int oldLength = original.length();
+    int oldLength = original.size();
     int toFill = maxLen - oldLength;
     QString padded;
     padded.resize(maxLen);
     QChar *ch = padded.data();
     while (toFill) {
-        int copy = qMin(fillString.length(), toFill);
+        int copy = qMin(fillString.size(), toFill);
         memcpy(ch, fillString.constData(), copy*sizeof(QChar));
         toFill -= copy;
         ch += copy;
@@ -682,9 +682,9 @@ ReturnedValue StringPrototype::method_repeat(const FunctionObject *b, const Valu
 
 static void appendReplacementString(QString *result, const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)
 {
-    result->reserve(result->length() + replaceValue.length());
-    for (int i = 0; i < replaceValue.length(); ++i) {
-        if (replaceValue.at(i) == QLatin1Char('$') && i < replaceValue.length() - 1) {
+    result->reserve(result->size() + replaceValue.size());
+    for (int i = 0; i < replaceValue.size(); ++i) {
+        if (replaceValue.at(i) == QLatin1Char('$') && i < replaceValue.size() - 1) {
             ushort ch = replaceValue.at(i + 1).unicode();
             uint substStart = JSC::Yarr::offsetNoMatch;
             uint substEnd = JSC::Yarr::offsetNoMatch;
@@ -703,12 +703,12 @@ static void appendReplacementString(QString *result, const QString &input, const
                 skip = 1;
             } else if (ch == '\'') {
                 substStart = matchOffsets[1];
-                substEnd = input.length();
+                substEnd = input.size();
                 skip = 1;
             } else if (ch >= '0' && ch <= '9') {
                 uint capture = ch - '0';
                 skip = 1;
-                if (i < replaceValue.length() - 2) {
+                if (i < replaceValue.size() - 2) {
                     ch = replaceValue.at(i + 2).unicode();
                     if (ch >= '0' && ch <= '9') {
                         uint c = capture*10 + ch - '0';
@@ -793,7 +793,7 @@ ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Val
         if (idx != -1) {
             numStringMatches = 1;
             matchOffsets[0] = idx;
-            matchOffsets[1] = idx + searchString.length();
+            matchOffsets[1] = idx + searchString.size();
         }
     }
 
@@ -802,7 +802,7 @@ ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Val
     ScopedValue replaceValue(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     ScopedFunctionObject searchCallback(scope, replaceValue);
     if (!!searchCallback) {
-        result.reserve(string.length() + 10*numStringMatches);
+        result.reserve(string.size() + 10*numStringMatches);
         ScopedValue entry(scope);
         Value *arguments = scope.alloc(numCaptures + 2);
         int lastEnd = 0;
@@ -832,7 +832,7 @@ ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Val
         result += QStringView{string}.mid(lastEnd);
     } else {
         QString newString = replaceValue->toQString();
-        result.reserve(string.length() + numStringMatches*newString.size());
+        result.reserve(string.size() + numStringMatches*newString.size());
 
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
@@ -975,7 +975,7 @@ ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value
     } else {
         QString separator = separatorValue->toQString();
         if (separator.isEmpty()) {
-            for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
+            for (uint i = 0; i < qMin(limit, uint(text.size())); ++i)
                 array->push_back((s = scope.engine->newString(text.mid(i, 1))));
             return array.asReturnedValue();
         }
@@ -1033,7 +1033,7 @@ ReturnedValue StringPrototype::method_substr(const FunctionObject *b, const Valu
     if (argc > 1)
         length = argv[1].toInteger();
 
-    double count = value.length();
+    double count = value.size();
     if (start < 0)
         start = qMax(count + start, 0.0);
 
@@ -1051,7 +1051,7 @@ ReturnedValue StringPrototype::method_substring(const FunctionObject *b, const V
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    int length = value.length();
+    int length = value.size();
 
     double start = 0;
     double end = length;
@@ -1124,11 +1124,11 @@ ReturnedValue StringPrototype::method_trim(const FunctionObject *b, const Value 
 
     const QChar *chars = s.constData();
     int start, end;
-    for (start = 0; start < s.length(); ++start) {
+    for (start = 0; start < s.size(); ++start) {
         if (!chars[start].isSpace() && chars[start].unicode() != 0xfeff)
             break;
     }
-    for (end = s.length() - 1; end >= start; --end) {
+    for (end = s.size() - 1; end >= start; --end) {
         if (!chars[end].isSpace() && chars[end].unicode() != 0xfeff)
             break;
     }

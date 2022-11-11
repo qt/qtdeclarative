@@ -209,7 +209,7 @@ void QQuickShortcut::setSequences(const QVariantList &values)
     // if nothing has changed, just return:
     if (m_shortcuts.size() == requestedShortcuts.size()) {
         bool changed = false;
-        for (int i = 0; i < requestedShortcuts.count(); ++i) {
+        for (int i = 0; i < requestedShortcuts.size(); ++i) {
             const Shortcut &requestedShortcut = requestedShortcuts[i];
             const Shortcut &shortcut = m_shortcuts[i];
             if (!(requestedShortcut.userValue == shortcut.userValue
@@ -373,7 +373,7 @@ bool QQuickShortcut::event(QEvent *event)
         QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
         bool match = m_shortcut.matches(se);
         int i = 0;
-        while (!match && i < m_shortcuts.count())
+        while (!match && i < m_shortcuts.size())
             match |= m_shortcuts.at(i++).matches(se);
         if (match) {
             if (se->isAmbiguous())

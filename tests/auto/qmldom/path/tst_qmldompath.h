@@ -28,9 +28,9 @@ public:
         QCOMPARE(p11, p2);
         QCOMPARE(p11, p3);
         QVERIFY(p11.m_data->strData.isEmpty());
-        QCOMPARE(p2.m_data->strData.length(), 1);
+        QCOMPARE(p2.m_data->strData.size(), 1);
         QCOMPARE(p2.m_data->strData.first(), s);
-        QCOMPARE(p3.m_data->strData.length(), 1);
+        QCOMPARE(p3.m_data->strData.size(), 1);
         QCOMPARE(p3.m_data->strData.first(), s);
     }
 

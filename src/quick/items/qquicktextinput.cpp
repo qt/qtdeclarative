@@ -173,7 +173,7 @@ void QQuickTextInput::setRenderType(QQuickTextInput::RenderType renderType)
 int QQuickTextInput::length() const
 {
     Q_D(const QQuickTextInput);
-    return d->m_text.length();
+    return d->m_text.size();
 }
 
 /*!
@@ -833,7 +833,7 @@ int QQuickTextInput::cursorPosition() const
 void QQuickTextInput::setCursorPosition(int cp)
 {
     Q_D(QQuickTextInput);
-    if (cp < 0 || cp > text().length())
+    if (cp < 0 || cp > text().size())
         return;
     d->moveCursor(cp);
 }
@@ -866,7 +866,7 @@ QRectF QQuickTextInput::cursorRectangle() const
     qreal y = l.y() - d->vscroll + topPadding();
     qreal w = 1;
     if (d->overwriteMode) {
-        if (c < text().length())
+        if (c < text().size())
             w = l.cursorToX(c + 1) - x;
         else
             w = QFontMetrics(font()).horizontalAdvance(QLatin1Char(' ')); // in sync with QTextLine::draw()
@@ -922,7 +922,7 @@ int QQuickTextInput::selectionEnd() const
 void QQuickTextInput::select(int start, int end)
 {
     Q_D(QQuickTextInput);
-    if (start < 0 || end < 0 || start > d->m_text.length() || end > d->m_text.length())
+    if (start < 0 || end < 0 || start > d->m_text.size() || end > d->m_text.size())
         return;
     d->setSelection(start, end-start);
 }
@@ -1365,7 +1365,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         pos = 0;
 #if QT_CONFIG(im)
     else if (pos > d->m_cursor)
-        pos += d->preeditAreaText().length();
+        pos += d->preeditAreaText().size();
 #endif
     QTextLine l = d->m_textLayout.lineForTextPosition(pos);
     if (!l.isValid())
@@ -1374,7 +1374,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
     qreal y = l.y() - d->vscroll;
     qreal w = 1;
     if (d->overwriteMode) {
-        if (pos < text().length())
+        if (pos < text().size())
             w = l.cursorToX(pos + 1) - x;
         else
             w = QFontMetrics(font()).horizontalAdvance(QLatin1Char(' ')); // in sync with QTextLine::draw()
@@ -1435,7 +1435,7 @@ void QQuickTextInput::positionAt(QQmlV4Function *args) const
     const int cursor = d->m_cursor;
     if (pos > cursor) {
 #if QT_CONFIG(im)
-        const int preeditLength = d->preeditAreaText().length();
+        const int preeditLength = d->preeditAreaText().size();
         pos = pos > cursor + preeditLength
                 ? pos - preeditLength
                 : cursor;
@@ -1503,7 +1503,7 @@ void QQuickTextInput::keyPressEvent(QKeyEvent* ev)
         int cursorPosition = d->m_cursor;
         if (cursorPosition == 0)
             ignore = ev->key() == (d->layoutDirection() == Qt::LeftToRight ? Qt::Key_Left : Qt::Key_Right);
-        if (!ignore && cursorPosition == d->m_text.length())
+        if (!ignore && cursorPosition == d->m_text.size())
             ignore = ev->key() == (d->layoutDirection() == Qt::LeftToRight ? Qt::Key_Right : Qt::Key_Left);
     }
     if (ignore) {
@@ -1666,7 +1666,7 @@ bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
     if (composeMode()) {
         int tmp_cursor = positionAt(event->position());
         int mousePos = tmp_cursor - m_cursor;
-        if (mousePos >= 0 && mousePos <= m_textLayout.preeditAreaText().length()) {
+        if (mousePos >= 0 && mousePos <= m_textLayout.preeditAreaText().size()) {
             if (event->type() == QEvent::MouseButtonRelease) {
                 QGuiApplication::inputMethod()->invokeAction(QInputMethod::Click, mousePos);
             }
@@ -1810,7 +1810,7 @@ void QQuickTextInputPrivate::updateHorizontalScroll()
 {
     if (autoScroll && m_echoMode != QQuickTextInput::NoEcho) {
 #if QT_CONFIG(im)
-        const int preeditLength = m_textLayout.preeditAreaText().length();
+        const int preeditLength = m_textLayout.preeditAreaText().size();
         ensureVisible(m_cursor, m_preeditCursor, preeditLength);
 #else
         ensureVisible(m_cursor);
@@ -1824,7 +1824,7 @@ void QQuickTextInputPrivate::updateVerticalScroll()
 {
     Q_Q(QQuickTextInput);
 #if QT_CONFIG(im)
-    const int preeditLength = m_textLayout.preeditAreaText().length();
+    const int preeditLength = m_textLayout.preeditAreaText().size();
 #endif
     const qreal height = qMax<qreal>(0, q->height() - q->topPadding() - q->bottomPadding());
     qreal heightUsed = contentSize.height();
@@ -2049,7 +2049,7 @@ void QQuickTextInput::deselect()
 void QQuickTextInput::selectAll()
 {
     Q_D(QQuickTextInput);
-    d->setSelection(0, text().length());
+    d->setSelection(0, text().size());
 }
 
 /*!
@@ -2162,7 +2162,7 @@ void QQuickTextInput::insert(int position, const QString &text)
         if (d->m_passwordMaskDelay > 0)
             d->m_passwordEchoTimer.start(d->m_passwordMaskDelay, this);
     }
-    if (position < 0 || position > d->m_text.length())
+    if (position < 0 || position > d->m_text.size())
         return;
 
     const int priorState = d->m_undoState;
@@ -2175,31 +2175,31 @@ void QQuickTextInput::insert(int position, const QString &text)
     }
     if (d->m_maskData) {
         insertText = d->maskString(position, insertText);
-        for (int i = 0; i < insertText.length(); ++i) {
+        for (int i = 0; i < insertText.size(); ++i) {
             d->addCommand(QQuickTextInputPrivate::Command(
                     QQuickTextInputPrivate::DeleteSelection, position + i, d->m_text.at(position + i), -1, -1));
             d->addCommand(QQuickTextInputPrivate::Command(
                     QQuickTextInputPrivate::Insert, position + i, insertText.at(i), -1, -1));
         }
-        d->m_text.replace(position, insertText.length(), insertText);
+        d->m_text.replace(position, insertText.size(), insertText);
         if (!insertText.isEmpty())
             d->m_textDirty = true;
-        if (position < d->m_selend && position + insertText.length() > d->m_selstart)
+        if (position < d->m_selend && position + insertText.size() > d->m_selstart)
             d->m_selDirty = true;
     } else {
-        int remaining = d->m_maxLength - d->m_text.length();
+        int remaining = d->m_maxLength - d->m_text.size();
         if (remaining != 0) {
             insertText = insertText.left(remaining);
             d->m_text.insert(position, insertText);
-            for (int i = 0; i < insertText.length(); ++i)
+            for (int i = 0; i < insertText.size(); ++i)
                d->addCommand(QQuickTextInputPrivate::Command(
                     QQuickTextInputPrivate::Insert, position + i, insertText.at(i), -1, -1));
             if (d->m_cursor >= position)
-                d->m_cursor += insertText.length();
+                d->m_cursor += insertText.size();
             if (d->m_selstart >= position)
-                d->m_selstart += insertText.length();
+                d->m_selstart += insertText.size();
             if (d->m_selend >= position)
-                d->m_selend += insertText.length();
+                d->m_selend += insertText.size();
             d->m_textDirty = true;
             if (position >= d->m_selstart && position <= d->m_selend)
                 d->m_selDirty = true;
@@ -2232,8 +2232,8 @@ void QQuickTextInput::remove(int start, int end)
 {
     Q_D(QQuickTextInput);
 
-    start = qBound(0, start, d->m_text.length());
-    end = qBound(0, end, d->m_text.length());
+    start = qBound(0, start, d->m_text.size());
+    end = qBound(0, end, d->m_text.size());
 
     if (start > end)
         qSwap(start, end);
@@ -2331,7 +2331,7 @@ QString QQuickTextInput::passwordCharacter() const
 void QQuickTextInput::setPasswordCharacter(const QString &str)
 {
     Q_D(QQuickTextInput);
-    if (str.length() < 1)
+    if (str.size() < 1)
         return;
     d->m_passwordCharacter = str.constData()[0];
     if (d->m_echoMode == Password || d->m_echoMode == PasswordEchoOnEdit)
@@ -2630,7 +2630,7 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
             finder.setPosition(anchor);
 
             const QTextBoundaryFinder::BoundaryReasons reasons = finder.boundaryReasons();
-            if (anchor < text.length() && (reasons == QTextBoundaryFinder::NotAtBoundary
+            if (anchor < text.size() && (reasons == QTextBoundaryFinder::NotAtBoundary
                                            || (reasons & QTextBoundaryFinder::EndOfItem))) {
                 finder.toPreviousBoundary();
             }
@@ -2639,7 +2639,7 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
             finder.setPosition(pos);
             if (pos > 0 && !finder.boundaryReasons())
                 finder.toNextBoundary();
-            const int cursor = finder.position() != -1 ? finder.position() : text.length();
+            const int cursor = finder.position() != -1 ? finder.position() : text.size();
 
             d->setSelection(anchor, cursor - anchor);
         } else if (anchor > pos || (anchor == pos && cursor > pos)) {
@@ -2652,10 +2652,10 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
                                || (reasons & QTextBoundaryFinder::StartOfItem))) {
                 finder.toNextBoundary();
             }
-            anchor = finder.position() != -1 ? finder.position() : text.length();
+            anchor = finder.position() != -1 ? finder.position() : text.size();
 
             finder.setPosition(pos);
-            if (pos < text.length() && !finder.boundaryReasons())
+            if (pos < text.size() && !finder.boundaryReasons())
                  finder.toPreviousBoundary();
             const int cursor = finder.position() != -1 ? finder.position() : 0;
 
@@ -2911,7 +2911,7 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
 
     if (m_echoMode == QQuickTextInput::Password) {
          str.fill(m_passwordCharacter);
-        if (m_passwordEchoTimer.isActive() && m_cursor > 0 && m_cursor <= m_text.length()) {
+        if (m_passwordEchoTimer.isActive() && m_cursor > 0 && m_cursor <= m_text.size()) {
             int cursor = m_cursor - 1;
             QChar uc = m_text.at(cursor);
             str[cursor] = uc;
@@ -2931,7 +2931,7 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
     // drawing boxes when using fonts that don't have glyphs for such
     // characters)
     QChar* uc = str.data();
-    for (int i = 0; i < str.length(); ++i) {
+    for (int i = 0; i < str.size(); ++i) {
         if (uc[i] == QChar::LineSeparator
             || uc[i] == QChar::ParagraphSeparator
             || uc[i] == QChar::ObjectReplacementCharacter)
@@ -3303,7 +3303,7 @@ void QQuickTextInputPrivate::clear()
     int priorState = m_undoState;
     separateSelection();
     m_selstart = 0;
-    m_selend = m_text.length();
+    m_selend = m_text.size();
     removeSelectedText();
     separate();
     finishChange(priorState, /*update*/false, /*edited*/false);
@@ -3324,7 +3324,7 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
     commitPreedit();
 #endif
 
-    if (start < 0 || start > m_text.length()) {
+    if (start < 0 || start > m_text.size()) {
         qWarning("QQuickTextInputPrivate::setSelection: Invalid start position");
         return;
     }
@@ -3333,7 +3333,7 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
         if (start == m_selstart && start + length == m_selend && m_cursor == m_selend)
             return;
         m_selstart = start;
-        m_selend = qMin(start + length, m_text.length());
+        m_selend = qMin(start + length, m_text.size());
         m_cursor = m_selend;
     } else if (length < 0) {
         if (start == m_selend && start + length == m_selstart && m_cursor == m_selstart)
@@ -3465,14 +3465,14 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
         if (m_echoMode == QQuickTextInput::PasswordEchoOnEdit && !m_passwordEchoEditing) {
             updatePasswordEchoEditing(true);
             m_selstart = 0;
-            m_selend = m_text.length();
+            m_selend = m_text.size();
         }
         removeSelectedText();
     }
 
     int c = m_cursor; // cursor position after insertion of commit string
     if (event->replacementStart() <= 0)
-        c += event->commitString().length() - qMin(-event->replacementStart(), event->replacementLength());
+        c += event->commitString().size() - qMin(-event->replacementStart(), event->replacementLength());
 
     int cursorInsertPos = m_cursor + event->replacementStart();
     if (cursorInsertPos < 0)
@@ -3482,7 +3482,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     if (event->replacementLength()) {
         m_selstart = cursorInsertPos;
         m_selend = m_selstart + event->replacementLength();
-        m_selend = qMin(m_selend, m_text.length());
+        m_selend = qMin(m_selend, m_text.size());
         removeSelectedText();
     }
     m_cursor = cursorInsertPos;
@@ -3491,7 +3491,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
         internalInsert(event->commitString());
         cursorPositionChanged = true;
     } else {
-        m_cursor = qBound(0, c, m_text.length());
+        m_cursor = qBound(0, c, m_text.size());
     }
 
     for (int i = 0; i < event->attributes().size(); ++i) {
@@ -3502,9 +3502,9 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
             // not seem to take the mask into account, so it will reset cursor
             // to an invalid position in such case.
             if (!cursorPositionChanged)
-                m_cursor = qBound(0, a.start + a.length, m_text.length());
+                m_cursor = qBound(0, a.start + a.length, m_text.size());
             if (a.length) {
-                m_selstart = qMax(0, qMin(a.start, m_text.length()));
+                m_selstart = qMax(0, qMin(a.start, m_text.size()));
                 m_selend = m_cursor;
                 if (m_selend < m_selstart) {
                     qSwap(m_selstart, m_selend);
@@ -3525,7 +3525,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
             m_undoPreeditState = priorState;
     }
     const int oldPreeditCursor = m_preeditCursor;
-    m_preeditCursor = event->preeditString().length();
+    m_preeditCursor = event->preeditString().size();
     hasImState = !event->preeditString().isEmpty();
     bool cursorVisible = true;
     QVector<QTextLayout::FormatRange> formats;
@@ -3653,7 +3653,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
                 validateFromState = m_undoPreeditState;
 #endif
         if (validateFromState >= 0 && wasValidInput && !m_validInput) {
-            if (m_transactions.count())
+            if (m_transactions.size())
                 return false;
             internalUndo(validateFromState);
             m_history.resize(m_undoState);
@@ -3718,7 +3718,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
     QString oldText = m_text;
     if (m_maskData) {
         m_text = maskString(0, txt, true);
-        m_text += clearString(m_text.length(), m_maxLength - m_text.length());
+        m_text += clearString(m_text.size(), m_maxLength - m_text.size());
     } else {
         m_text = txt.isEmpty() ? txt : txt.left(m_maxLength);
     }
@@ -3727,7 +3727,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
 #if QT_CONFIG(im)
     m_undoPreeditState = -1;
 #endif
-    m_cursor = (pos < 0 || pos > m_text.length()) ? m_text.length() : pos;
+    m_cursor = (pos < 0 || pos > m_text.size()) ? m_text.size() : pos;
     m_textDirty = (oldText != m_text);
 
     bool changed = finishChange(-1, true, edited);
@@ -3783,16 +3783,16 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
     Q_ASSERT(!hasSelectedText());   // insert(), processInputMethodEvent() call removeSelectedText() first.
     if (m_maskData) {
         QString ms = maskString(m_cursor, s);
-        for (int i = 0; i < ms.length(); ++i) {
+        for (int i = 0; i < ms.size(); ++i) {
             addCommand (Command(DeleteSelection, m_cursor + i, m_text.at(m_cursor + i), -1, -1));
             addCommand(Command(Insert, m_cursor + i, ms.at(i), -1, -1));
         }
-        m_text.replace(m_cursor, ms.length(), ms);
-        m_cursor += ms.length();
+        m_text.replace(m_cursor, ms.size(), ms);
+        m_cursor += ms.size();
         m_cursor = nextMaskBlank(m_cursor);
         m_textDirty = true;
     } else {
-        int remaining = m_maxLength - m_text.length();
+        int remaining = m_maxLength - m_text.size();
         if (remaining != 0) {
             const QStringView remainingStr = QStringView{s}.left(remaining);
             m_text.insert(m_cursor, remainingStr);
@@ -3816,7 +3816,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
 */
 void QQuickTextInputPrivate::internalDelete(bool wasBackspace)
 {
-    if (m_cursor < m_text.length()) {
+    if (m_cursor < m_text.size()) {
         cancelPasswordEchoTimer();
         Q_ASSERT(!hasSelectedText());   // del(), backspace() call removeSelectedText() first.
         addCommand(Command((CommandType)((m_maskData ? 2 : 0) + (wasBackspace ? Remove : Delete)),
@@ -3842,7 +3842,7 @@ void QQuickTextInputPrivate::internalDelete(bool wasBackspace)
 */
 void QQuickTextInputPrivate::removeSelectedText()
 {
-    if (m_selstart < m_selend && m_selend <= m_text.length()) {
+    if (m_selstart < m_selend && m_selend <= m_text.size()) {
         cancelPasswordEchoTimer();
         int i ;
         if (m_selstart <= m_cursor && m_cursor < m_selend) {
@@ -3912,13 +3912,13 @@ void QQuickTextInputPrivate::parseInputMask(const QString &maskFields)
         m_inputMask = maskFields;
     } else {
         m_inputMask = maskFields.left(delimiter);
-        m_blank = (delimiter + 1 < maskFields.length()) ? maskFields[delimiter + 1] : QLatin1Char(' ');
+        m_blank = (delimiter + 1 < maskFields.size()) ? maskFields[delimiter + 1] : QLatin1Char(' ');
     }
 
     // calculate m_maxLength / m_maskData length
     m_maxLength = 0;
     QChar c = u'\0';
-    for (int i=0; i<m_inputMask.length(); i++) {
+    for (int i=0; i<m_inputMask.size(); i++) {
         c = m_inputMask.at(i);
         if (i > 0 && m_inputMask.at(i-1) == QLatin1Char('\\')) {
             m_maxLength++;
@@ -3938,7 +3938,7 @@ void QQuickTextInputPrivate::parseInputMask(const QString &maskFields)
     bool s;
     bool escape = false;
     int index = 0;
-    for (int i = 0; i < m_inputMask.length(); i++) {
+    for (int i = 0; i < m_inputMask.size(); i++) {
         c = m_inputMask.at(i);
         if (escape) {
             s = true;
@@ -4089,7 +4089,7 @@ QQuickTextInputPrivate::ValidatorState QQuickTextInputPrivate::hasAcceptableInpu
     if (!m_maskData)
         return AcceptableInput;
 
-    if (str.length() != m_maxLength)
+    if (str.size() != m_maxLength)
         return InvalidInput;
 
     for (int i=0; i < m_maxLength; ++i) {
@@ -4124,7 +4124,7 @@ QString QQuickTextInputPrivate::maskString(uint pos, const QString &str, bool cl
     QString s = QString::fromLatin1("");
     int i = pos;
     while (i < m_maxLength) {
-        if (strIndex < str.length()) {
+        if (strIndex < str.size()) {
             if (m_maskData[i].separator) {
                 s += m_maskData[i].maskChar;
                 if (str[strIndex] == m_maskData[i].maskChar)
@@ -4147,7 +4147,7 @@ QString QQuickTextInputPrivate::maskString(uint pos, const QString &str, bool cl
                     // search for separator first
                     int n = findInMask(i, true, true, str[strIndex]);
                     if (n != -1) {
-                        if (str.length() != 1 || i == 0 || (i > 0 && (!m_maskData[i-1].separator || m_maskData[i-1].maskChar != str[strIndex]))) {
+                        if (str.size() != 1 || i == 0 || (i > 0 && (!m_maskData[i-1].separator || m_maskData[i-1].maskChar != str[strIndex]))) {
                             s += QStringView{fill}.mid(i, n-i+1);
                             i = n + 1; // update i to find + 1
                         }
@@ -4215,7 +4215,7 @@ QString QQuickTextInputPrivate::stripString(const QString &str) const
         return str;
 
     QString s;
-    int end = qMin(m_maxLength, str.length());
+    int end = qMin(m_maxLength, str.size());
     for (int i = 0; i < end; ++i) {
         if (m_maskData[i].separator)
             s += m_maskData[i].maskChar;
@@ -4640,7 +4640,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
                 // no need to call del() if we have a selection, insert
                 // does it already
                 && !hasSelectedText()
-                && !(m_cursor == q_func()->text().length())) {
+                && !(m_cursor == q_func()->text().size())) {
                 del();
             }
 

@@ -296,7 +296,7 @@ void QQuickContainerPrivate::reorderItems()
     QList<QQuickItem *> siblings = effectiveContentItem(contentItem)->childItems();
 
     int to = 0;
-    for (int i = 0; i < siblings.count(); ++i) {
+    for (int i = 0; i < siblings.size(); ++i) {
         QQuickItem* sibling = siblings.at(i);
         if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
             continue;
@@ -362,7 +362,7 @@ void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop,
 qsizetype QQuickContainerPrivate::contentData_count(QQmlListProperty<QObject> *prop)
 {
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
-    return QQuickContainerPrivate::get(q)->contentData.count();
+    return QQuickContainerPrivate::get(q)->contentData.size();
 }
 
 QObject *QQuickContainerPrivate::contentData_at(QQmlListProperty<QObject> *prop, qsizetype index)

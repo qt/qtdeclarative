@@ -1402,7 +1402,7 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
 
     const bool texturesSeparate = mgr->hasSeparateSamplerAndTextureObjects();
 
-    const int varCount = m_shaders[shaderType].shaderInfo.variables.count();
+    const int varCount = m_shaders[shaderType].shaderInfo.variables.size();
     m_shaders[shaderType].varData.resize(varCount);
 
     // Recreate signal mappers when the shader has changed.
@@ -1499,7 +1499,7 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
 bool QQuickShaderEffectImpl::sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const
 {
     for (int shaderType = 0; shaderType < NShader; ++shaderType) {
-        for (int idx = 0; idx < m_shaders[shaderType].varData.count(); ++idx) {
+        for (int idx = 0; idx < m_shaders[shaderType].varData.size(); ++idx) {
             if (shaderType != typeToSkip || idx != indexToSkip) {
                 const auto &vd(m_shaders[shaderType].varData[idx]);
                 if (vd.specialType == QSGShaderEffectNode::VariableData::Source && qvariant_cast<QObject *>(vd.value) == source)
@@ -1514,7 +1514,7 @@ std::optional<int> QQuickShaderEffectImpl::findMappedShaderVariableId(const QByt
 {
     for (int shaderType = 0; shaderType < NShader; ++shaderType) {
         const auto &vars = m_shaders[shaderType].shaderInfo.variables;
-        for (int idx = 0; idx < vars.count(); ++idx) {
+        for (int idx = 0; idx < vars.size(); ++idx) {
             if (vars[idx].name == name)
                 return indexToMappedId(shaderType, idx);
         }

@@ -245,7 +245,7 @@ void QWavefrontMesh::readData()
                     d->textureCoordinates.append(QVector2D(u, v));
                 } else if (command == "v") {
                     // Format: v <x> <y> <z> [w]
-                    if (tokens.length() < 4 || tokens.length() > 5) {
+                    if (tokens.size() < 4 || tokens.size() > 5) {
                         setLastError(InvalidSourceError);
                         return;
                     }
@@ -438,7 +438,7 @@ QString QWavefrontMesh::log() const
 bool QWavefrontMesh::validateAttributes(const QList<QByteArray> &attributes, int *posIndex)
 {
     Q_D(QWavefrontMesh);
-    const int attrCount = attributes.count();
+    const int attrCount = attributes.size();
     int positionIndex = attributes.indexOf(qtPositionAttributeName());
     int texCoordIndex = attributes.indexOf(qtTexCoordAttributeName());
 

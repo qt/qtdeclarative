@@ -122,7 +122,7 @@ QDataStream &operator>>(QDataStream &ds,
 static inline bool isSignalPropertyName(const QString &signalName)
 {
     // see QmlCompiler::isSignalPropertyName
-    return signalName.length() >= 3 && signalName.startsWith(QLatin1String("on")) &&
+    return signalName.size() >= 3 && signalName.startsWith(QLatin1String("on")) &&
             signalName.at(2).isLetter() && signalName.at(2).isUpper();
 }
 
@@ -259,8 +259,8 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
 
     QObjectList children = object->children();
 
-    int childrenCount = children.count();
-    for (int ii = 0; ii < children.count(); ++ii) {
+    int childrenCount = children.size();
+    for (int ii = 0; ii < children.size(); ++ii) {
         if (qobject_cast<QQmlContext*>(children[ii]))
             --childrenCount;
     }
@@ -269,7 +269,7 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
 
     QList<QQmlObjectProperty> fakeProperties;
 
-    for (int ii = 0; ii < children.count(); ++ii) {
+    for (int ii = 0; ii < children.size(); ++ii) {
         QObject *child = children.at(ii);
         if (qobject_cast<QQmlContext*>(child))
             continue;
@@ -318,12 +318,12 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
         }
     }
 
-    message << int(propertyIndexes.size() + fakeProperties.count());
+    message << int(propertyIndexes.size() + fakeProperties.size());
 
     for (int ii = 0; ii < propertyIndexes.size(); ++ii)
         message << propertyData(object, propertyIndexes.at(ii));
 
-    for (int ii = 0; ii < fakeProperties.count(); ++ii)
+    for (int ii = 0; ii < fakeProperties.size(); ++ii)
         message << fakeProperties[ii];
 }
 
@@ -332,7 +332,7 @@ void QQmlEngineDebugServiceImpl::prepareDeferredObjects(QObject *obj)
     qmlExecuteDeferred(obj);
 
     QObjectList children = obj->children();
-    for (int ii = 0; ii < children.count(); ++ii) {
+    for (int ii = 0; ii < children.size(); ++ii) {
         QObject *child = children.at(ii);
         prepareDeferredObjects(child);
     }
@@ -343,7 +343,7 @@ void QQmlEngineDebugServiceImpl::storeObjectIds(QObject *co)
 {
     QQmlDebugService::idForObject(co);
     QObjectList children = co->children();
-    for (int ii = 0; ii < children.count(); ++ii)
+    for (int ii = 0; ii < children.size(); ++ii)
         storeObjectIds(children.at(ii));
 }
 
@@ -380,14 +380,14 @@ void QQmlEngineDebugServiceImpl::buildObjectList(QDataStream &message,
     }
 
     count = 0;
-    for (int ii = 0; ii < instances.count(); ++ii) {
+    for (int ii = 0; ii < instances.size(); ++ii) {
         QQmlData *data = QQmlData::get(instances.at(ii));
         if (data->context == p.data())
             count ++;
     }
     message << count;
 
-    for (int ii = 0; ii < instances.count(); ++ii) {
+    for (int ii = 0; ii < instances.size(); ++ii) {
         QQmlData *data = QQmlData::get(instances.at(ii));
         if (data->context == p.data())
             message << objectData(instances.at(ii));
@@ -465,9 +465,9 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
     if (type == "LIST_ENGINES") {
         rs << QByteArray("LIST_ENGINES_R");
-        rs << queryId << int(m_engines.count());
+        rs << queryId << int(m_engines.size());
 
-        for (int ii = 0; ii < m_engines.count(); ++ii) {
+        for (int ii = 0; ii < m_engines.size(); ++ii) {
             QJSEngine *engine = m_engines.at(ii);
 
             QString engineName = engine->objectName();
@@ -523,7 +523,7 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
         const QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
 
         rs << QByteArray("FETCH_OBJECTS_FOR_LOCATION_R") << queryId
-           << int(objects.count());
+           << int(objects.size());
 
         for (QObject *object : objects) {
             if (recurse)
@@ -755,7 +755,7 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QList<QByteArray> paramNames = metaMethod.parameterNames();
 
     QString paramStr;
-    for (int ii = 0; ii < paramNames.count(); ++ii) {
+    for (int ii = 0; ii < paramNames.size(); ++ii) {
         if (ii != 0) paramStr.append(QLatin1Char(','));
         paramStr.append(QString::fromUtf8(paramNames.at(ii)));
     }

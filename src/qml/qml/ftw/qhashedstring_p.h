@@ -200,12 +200,12 @@ QHashedStringRef::QHashedStringRef()
 }
 
 QHashedStringRef::QHashedStringRef(const QString &str)
-: m_data(str.constData()), m_length(str.length()), m_hash(0)
+: m_data(str.constData()), m_length(str.size()), m_hash(0)
 {
 }
 
 QHashedStringRef::QHashedStringRef(QStringView str)
-: m_data(str.constData()), m_length(str.length()), m_hash(0)
+: m_data(str.constData()), m_length(str.size()), m_hash(0)
 {
 }
 
@@ -220,7 +220,7 @@ QHashedStringRef::QHashedStringRef(const QChar *data, int length, quint32 hash)
 }
 
 QHashedStringRef::QHashedStringRef(const QHashedString &string)
-: m_data(string.constData()), m_length(string.length()), m_hash(string.m_hash)
+: m_data(string.constData()), m_length(string.size()), m_hash(string.m_hash)
 {
 }
 
@@ -248,7 +248,7 @@ bool QHashedStringRef::operator==(const QHashedString &string) const
     if (m_hash && string.m_hash && m_hash != string.m_hash)
         return false;
     QStringView view {m_data, m_length};
-    QStringView otherView {string.constData(), string.length()};
+    QStringView otherView {string.constData(), string.size()};
     return view == otherView;
 }
 
@@ -424,7 +424,7 @@ quint32 QHashedString::stringHash(const char *data, int length)
 
 void QHashedString::computeHash() const
 {
-    m_hash = stringHash(constData(), length());
+    m_hash = stringHash(constData(), size());
 }
 
 namespace QtPrivate {

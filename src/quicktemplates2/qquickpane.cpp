@@ -165,7 +165,7 @@ qreal QQuickPanePrivate::getContentWidth() const
         return cw;
 
     const auto contentChildren = contentChildItems();
-    if (contentChildren.count() == 1)
+    if (contentChildren.size() == 1)
         return contentChildren.first()->implicitWidth();
 
     return 0;
@@ -181,7 +181,7 @@ qreal QQuickPanePrivate::getContentHeight() const
         return ch;
 
     const auto contentChildren = contentChildItems();
-    if (contentChildren.count() == 1)
+    if (contentChildren.size() == 1)
         return contentChildren.first()->implicitHeight();
 
     return 0;

@@ -488,14 +488,14 @@ void tst_qquicktext::wrap()
 
         textObject->setWrapMode(QQuickText::Wrap);
         QCOMPARE(textObject->wrapMode(), QQuickText::Wrap);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         textObject->setWrapMode(QQuickText::Wrap);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         textObject->setWrapMode(QQuickText::NoWrap);
         QCOMPARE(textObject->wrapMode(), QQuickText::NoWrap);
-        QCOMPARE(spy.count(), 2);
+        QCOMPARE(spy.size(), 2);
     }
 }
 
@@ -760,14 +760,14 @@ void tst_qquicktext::textFormat()
 
         text->setTextFormat(QQuickText::StyledText);
         QCOMPARE(text->textFormat(), QQuickText::StyledText);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         text->setTextFormat(QQuickText::StyledText);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
 
         text->setTextFormat(QQuickText::AutoText);
         QCOMPARE(text->textFormat(), QQuickText::AutoText);
-        QCOMPARE(spy.count(), 2);
+        QCOMPARE(spy.size(), 2);
     }
 
     {
@@ -1244,25 +1244,25 @@ void tst_qquicktext::color()
 
         textObject->setColor(QColor("white"));
         QCOMPARE(textObject->color(), QColor("white"));
-        QCOMPARE(colorSpy.count(), 1);
+        QCOMPARE(colorSpy.size(), 1);
 
         textObject->setLinkColor(QColor("black"));
         QCOMPARE(textObject->linkColor(), QColor("black"));
-        QCOMPARE(linkColorSpy.count(), 1);
+        QCOMPARE(linkColorSpy.size(), 1);
 
         textObject->setColor(QColor("white"));
-        QCOMPARE(colorSpy.count(), 1);
+        QCOMPARE(colorSpy.size(), 1);
 
         textObject->setLinkColor(QColor("black"));
-        QCOMPARE(linkColorSpy.count(), 1);
+        QCOMPARE(linkColorSpy.size(), 1);
 
         textObject->setColor(QColor("black"));
         QCOMPARE(textObject->color(), QColor("black"));
-        QCOMPARE(colorSpy.count(), 2);
+        QCOMPARE(colorSpy.size(), 2);
 
         textObject->setLinkColor(QColor("blue"));
         QCOMPARE(textObject->linkColor(), QColor("blue"));
-        QCOMPARE(linkColorSpy.count(), 2);
+        QCOMPARE(linkColorSpy.size(), 2);
 
         delete textObject;
     }
@@ -1329,12 +1329,12 @@ void tst_qquicktext::color()
         QCOMPARE(textObject->color(), testColor);
         textObject->setColor(testColor);
         QCOMPARE(textObject->color(), testColor);
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(spy.size(), 0);
 
         testColor = QColor("black");
         textObject->setColor(testColor);
         QCOMPARE(textObject->color(), testColor);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
     } {
         QString colorStr = "#001234";
         QColor testColor(colorStr);
@@ -1350,12 +1350,12 @@ void tst_qquicktext::color()
         QCOMPARE(textObject->styleColor(), testColor);
         textObject->setStyleColor(testColor);
         QCOMPARE(textObject->styleColor(), testColor);
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(spy.size(), 0);
 
         testColor = QColor("black");
         textObject->setStyleColor(testColor);
         QCOMPARE(textObject->styleColor(), testColor);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
     } {
         QString colorStr = "#001234";
         QColor testColor(colorStr);
@@ -1371,12 +1371,12 @@ void tst_qquicktext::color()
         QCOMPARE(textObject->linkColor(), testColor);
         textObject->setLinkColor(testColor);
         QCOMPARE(textObject->linkColor(), testColor);
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(spy.size(), 0);
 
         testColor = QColor("black");
         textObject->setLinkColor(testColor);
         QCOMPARE(textObject->linkColor(), testColor);
-        QCOMPARE(spy.count(), 1);
+        QCOMPARE(spy.size(), 1);
     }
 }
 
@@ -1440,14 +1440,14 @@ void tst_qquicktext::renderType()
 
     text->setRenderType(QQuickText::NativeRendering);
     QCOMPARE(text->renderType(), QQuickText::NativeRendering);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     text->setRenderType(QQuickText::NativeRendering);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     text->setRenderType(QQuickText::QtRendering);
     QCOMPARE(text->renderType(), QQuickText::QtRendering);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 void tst_qquicktext::antialiasing()
@@ -1464,14 +1464,14 @@ void tst_qquicktext::antialiasing()
 
     text->setAntialiasing(false);
     QCOMPARE(text->antialiasing(), false);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     text->setAntialiasing(false);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     text->resetAntialiasing();
     QCOMPARE(text->antialiasing(), true);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     // QTBUG-39047
     component.setData("import QtQuick 2.0\n Text { antialiasing: true }", QUrl());
@@ -2075,7 +2075,7 @@ void tst_qquicktext::linkInteraction()
     QObject::connect(textObject, SIGNAL(linkActivated(QString)), &test, SLOT(linkClicked(QString)));
     QObject::connect(textObject, SIGNAL(linkHovered(QString)), &test, SLOT(linkHovered(QString)));
 
-    QVERIFY(mousePositions.count() > 0);
+    QVERIFY(mousePositions.size() > 0);
 
     QPointF mousePosition = mousePositions.first();
     auto globalPos = textObject->mapToGlobal(mousePosition);
@@ -2091,7 +2091,7 @@ void tst_qquicktext::linkInteraction()
     QCOMPARE(textObject->hoveredLink(), hoverEnterLink);
     QCOMPARE(textObject->linkAt(mousePosition.x(), mousePosition.y()), hoverEnterLink);
 
-    for (int i = 1; i < mousePositions.count(); ++i) {
+    for (int i = 1; i < mousePositions.size(); ++i) {
         mousePosition = mousePositions.at(i);
         auto globalPos = textObject->mapToGlobal(mousePosition);
 
@@ -2137,15 +2137,15 @@ void tst_qquicktext::baseUrl()
 
     textObject->setBaseUrl(localUrl);
     QCOMPARE(textObject->baseUrl(), localUrl);
-    QCOMPARE(spy.count(), 0);
+    QCOMPARE(spy.size(), 0);
 
     textObject->setBaseUrl(remoteUrl);
     QCOMPARE(textObject->baseUrl(), remoteUrl);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     textObject->resetBaseUrl();
     QCOMPARE(textObject->baseUrl(), localUrl);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 }
 
 void tst_qquicktext::embeddedImages_data()
@@ -2449,23 +2449,23 @@ void tst_qquicktext::contentSize()
 
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() < textObject->height());
-    QCOMPARE(spySize.count(), 1);
-    QCOMPARE(spyWidth.count(), 1);
-    QCOMPARE(spyHeight.count(), 0);
+    QCOMPARE(spySize.size(), 1);
+    QCOMPARE(spyWidth.size(), 1);
+    QCOMPARE(spyHeight.size(), 0);
 
     textObject->setWrapMode(QQuickText::WordWrap);
     QVERIFY(textObject->contentWidth() <= textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
-    QCOMPARE(spySize.count(), 2);
-    QCOMPARE(spyWidth.count(), 2);
-    QCOMPARE(spyHeight.count(), 1);
+    QCOMPARE(spySize.size(), 2);
+    QCOMPARE(spyWidth.size(), 2);
+    QCOMPARE(spyHeight.size(), 1);
 
     textObject->setElideMode(QQuickText::ElideRight);
     QVERIFY(textObject->contentWidth() <= textObject->width());
     QVERIFY(textObject->contentHeight() < textObject->height());
-    QCOMPARE(spySize.count(), 3);
-    QCOMPARE(spyWidth.count(), 3);
-    QCOMPARE(spyHeight.count(), 2);
+    QCOMPARE(spySize.size(), 3);
+    QCOMPARE(spyWidth.size(), 3);
+    QCOMPARE(spyHeight.size(), 2);
     int spyCount = 3;
     qreal elidedWidth = textObject->contentWidth();
 
@@ -2474,16 +2474,16 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentHeight() < textObject->height());
     // this text probably won't have the same elided width, but it's not guaranteed.
     if (textObject->contentWidth() != elidedWidth)
-        QCOMPARE(spySize.count(), ++spyCount);
+        QCOMPARE(spySize.size(), ++spyCount);
     else
-        QCOMPARE(spySize.count(), spyCount);
+        QCOMPARE(spySize.size(), spyCount);
 
     textObject->setElideMode(QQuickText::ElideNone);
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
-    QCOMPARE(spySize.count(), ++spyCount);
-    QCOMPARE(spyWidth.count(), spyCount);
-    QCOMPARE(spyHeight.count(), 3);
+    QCOMPARE(spySize.size(), ++spyCount);
+    QCOMPARE(spyWidth.size(), spyCount);
+    QCOMPARE(spyHeight.size(), 3);
 }
 
 void tst_qquicktext::geometryChanged()
@@ -3297,7 +3297,7 @@ void tst_qquicktext::imgTagsMultipleImages()
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
     QVERIFY(textPrivate != nullptr);
-    QCOMPARE(textPrivate->extra->visibleImgTags.count(), 2);
+    QCOMPARE(textPrivate->extra->visibleImgTags.size(), 2);
 
     delete textObject;
 }
@@ -3310,9 +3310,9 @@ void tst_qquicktext::imgTagsElide()
 
     QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
     QVERIFY(textPrivate != nullptr);
-    QCOMPARE(textPrivate->extra->visibleImgTags.count(), 0);
+    QCOMPARE(textPrivate->extra->visibleImgTags.size(), 0);
     myText->setMaximumLineCount(20);
-    QTRY_COMPARE(textPrivate->extra->visibleImgTags.count(), 1);
+    QTRY_COMPARE(textPrivate->extra->visibleImgTags.size(), 1);
 
     delete myText;
 }
@@ -3329,16 +3329,16 @@ void tst_qquicktext::imgTagsUpdates()
     QVERIFY(textPrivate != nullptr);
 
     myText->setText("This is a heart<img src=\"images/heart200.png\">.");
-    QCOMPARE(textPrivate->extra->visibleImgTags.count(), 1);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(textPrivate->extra->visibleImgTags.size(), 1);
+    QCOMPARE(spy.size(), 1);
 
     myText->setMaximumLineCount(2);
     myText->setText("This is another heart<img src=\"images/heart200.png\">.");
-    QTRY_COMPARE(textPrivate->extra->visibleImgTags.count(), 1);
+    QTRY_COMPARE(textPrivate->extra->visibleImgTags.size(), 1);
 
     // if maximumLineCount is set and the img tag doesn't have an explicit size
     // we relayout twice.
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     delete myText;
 }
@@ -3635,11 +3635,11 @@ void tst_qquicktext::fontSizeMode()
     const qreal oldBaselineOffset = myText->baselineOffset();
     myText->setHeight(myText->height() + 42);
     QVERIFY(QQuickTest::qWaitForPolish(myText));
-    QCOMPARE(baselineOffsetSpy.count(), 1);
+    QCOMPARE(baselineOffsetSpy.size(), 1);
     QCOMPARE(myText->baselineOffset(), oldBaselineOffset + 42);
     myText->setHeight(myText->height() - 42);
     QVERIFY(QQuickTest::qWaitForPolish(myText));
-    QCOMPARE(baselineOffsetSpy.count(), 2);
+    QCOMPARE(baselineOffsetSpy.size(), 2);
     QCOMPARE(myText->baselineOffset(), oldBaselineOffset);
 }
 

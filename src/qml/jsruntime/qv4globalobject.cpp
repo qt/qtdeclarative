@@ -32,7 +32,7 @@ static QString escape(const QString &input)
 {
     QString output;
     output.reserve(input.size() * 3);
-    const int length = input.length();
+    const int length = input.size();
     for (int i = 0; i < length; ++i) {
         ushort uc = input.at(i).unicode();
         if (uc < 0x100) {
@@ -63,9 +63,9 @@ static QString escape(const QString &input)
 static QString unescape(const QString &input)
 {
     QString result;
-    result.reserve(input.length());
+    result.reserve(input.size());
     int i = 0;
-    const int length = input.length();
+    const int length = input.size();
     while (i < length) {
         QChar c = input.at(i++);
         if ((c == u'%') && (i + 1 < length)) {
@@ -113,7 +113,7 @@ static QString encode(const QString &input, const char *unescapedSet, bool *ok)
 {
     *ok = true;
     QString output;
-    const int length = input.length();
+    const int length = input.size();
     int i = 0;
     while (i < length) {
         const QChar c = input.at(i);
@@ -187,8 +187,8 @@ static QString decode(const QString &input, DecodeMode decodeMode, bool *ok)
 {
     *ok = true;
     QString output;
-    output.reserve(input.length());
-    const int length = input.length();
+    output.reserve(input.size());
+    const int length = input.size();
     int i = 0;
     const QChar percent = QLatin1Char('%');
     while (i < length) {
@@ -381,7 +381,7 @@ ReturnedValue GlobalFunctions::method_parseInt(const FunctionObject *b, const Va
     CHECK_EXCEPTION();
 
     const QChar *pos = trimmed.constData();
-    const QChar *end = pos + trimmed.length();
+    const QChar *end = pos + trimmed.size();
 
     int sign = 1; // 3
     if (pos != end) {

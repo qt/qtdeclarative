@@ -54,7 +54,7 @@ QQuickGridMesh::QQuickGridMesh(QObject *parent)
 
 bool QQuickGridMesh::validateAttributes(const QList<QByteArray> &attributes, int *posIndex)
 {
-    const int attrCount = attributes.count();
+    const int attrCount = attributes.size();
     int positionIndex = attributes.indexOf(qtPositionAttributeName());
     int texCoordIndex = attributes.indexOf(qtTexCoordAttributeName());
 

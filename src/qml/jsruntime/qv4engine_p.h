@@ -703,7 +703,7 @@ public:
     void setExtensionData(int, Deletable *);
     Deletable *extensionData(int index) const
     {
-        if (index < m_extensionData.count())
+        if (index < m_extensionData.size())
             return m_extensionData[index];
         else
             return nullptr;

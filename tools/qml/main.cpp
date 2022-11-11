@@ -364,7 +364,7 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 
         if (dummyData && !quietMode) {
             printf("qml: Loaded dummy data: %s\n",  qPrintable(dir.filePath(qml)));
-            qml.truncate(qml.length()-4);
+            qml.truncate(qml.size()-4);
             engine.rootContext()->setContextProperty(qml, dummyData);
             dummyData->setParent(&engine);
         }
@@ -586,7 +586,7 @@ int main(int argc, char *argv[])
         QLoggingCategory::setFilterRules(QStringLiteral("*=false"));
     }
 
-    if (files.count() <= 0) {
+    if (files.size() <= 0) {
 #if defined(Q_OS_DARWIN) && defined(QT_GUI_LIB)
         if (applicationType == QmlApplicationTypeGui)
             exitTimerId = static_cast<LoaderApplication *>(app.get())->startTimer(FILE_OPEN_EVENT_WAIT_TIME);
@@ -599,7 +599,7 @@ int main(int argc, char *argv[])
     loadConf(confFile, !verboseMode);
 
     // Load files
-    QScopedPointer<LoadWatcher> lw(new LoadWatcher(&e, files.count()));
+    QScopedPointer<LoadWatcher> lw(new LoadWatcher(&e, files.size()));
 
 #if QT_DEPRECATED_SINCE(6, 3)
     QString dummyDir;

@@ -227,7 +227,7 @@ void tst_qqmlconnections::errors()
     QQmlComponent c(&engine, url);
     QVERIFY(c.isError());
     QList<QQmlError> errors = c.errors();
-    QCOMPARE(errors.count(), 1);
+    QCOMPARE(errors.size(), 1);
     QCOMPARE(errors.at(0).description(), error);
 }
 

@@ -91,7 +91,7 @@ static QStringList versionUriList(const QString &uri, QTypeRevision version)
 {
     QStringList result;
     for (int mode = QQmlImports::FullyVersioned; mode <= QQmlImports::Unversioned; ++mode) {
-        int index = uri.length();
+        int index = uri.size();
         do {
             QString versionUri = uri;
             versionUri.insert(index, QQmlImports::versionString(
@@ -501,7 +501,7 @@ bool QQmlPluginImporter::populatePluginDataVector(QVector<StaticPluginData> &res
 
 QTypeRevision QQmlPluginImporter::importPlugins() {
     const auto qmldirPlugins = qmldir->plugins();
-    const int qmldirPluginCount = qmldirPlugins.count();
+    const int qmldirPluginCount = qmldirPlugins.size();
     QTypeRevision importVersion = version;
 
     // If the path contains a version marker or if we have more than one plugin,

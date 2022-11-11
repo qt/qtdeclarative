@@ -170,7 +170,7 @@ void QQuickActionGroupPrivate::actions_append(QQmlListProperty<QQuickAction> *pr
 qsizetype QQuickActionGroupPrivate::actions_count(QQmlListProperty<QQuickAction> *prop)
 {
     QQuickActionGroupPrivate *p = static_cast<QQuickActionGroupPrivate *>(prop->data);
-    return p->actions.count();
+    return p->actions.size();
 }
 
 QQuickAction *QQuickActionGroupPrivate::actions_at(QQmlListProperty<QQuickAction> *prop, qsizetype index)

@@ -498,9 +498,9 @@ void tst_qqmllocale::weekDays()
     QList<QVariant> qmlDays = val.toList();
     QList<Qt::DayOfWeek> days = QLocale(locale).weekdays();
 
-    QCOMPARE(days.count(), qmlDays.count());
+    QCOMPARE(days.size(), qmlDays.size());
 
-    for (int i = 0; i < days.count(); ++i) {
+    for (int i = 0; i < days.size(); ++i) {
         int day = int(days.at(i));
         if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
             day = 0;
@@ -540,9 +540,9 @@ void tst_qqmllocale::uiLanguages()
     QList<QVariant> qmlLangs = val.toList();
     QStringList langs = QLocale(locale).uiLanguages();
 
-    QCOMPARE(langs.count(), qmlLangs.count());
+    QCOMPARE(langs.size(), qmlLangs.size());
 
-    for (int i = 0; i < langs.count(); ++i) {
+    for (int i = 0; i < langs.size(); ++i) {
         QCOMPARE(langs.at(i), qmlLangs.at(i).toString());
     }
 

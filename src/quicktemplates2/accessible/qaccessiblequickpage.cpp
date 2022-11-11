@@ -35,7 +35,7 @@ QList<QQuickItem *> QAccessibleQuickPage::orderedChildItems() const
         kids.move(hidx, 0);
     const qsizetype fidx = kids.indexOf(p->footer());
     if (fidx != -1)
-        kids.move(fidx, kids.count() - 1);
+        kids.move(fidx, kids.size() - 1);
     return kids;
 }
 

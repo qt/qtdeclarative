@@ -75,7 +75,7 @@ void tst_qquickrectangle::gradient()
     QCOMPARE(stops.at(&stops, 1)->color(), QColor("white"));
 
     QGradientStops gradientStops = grad->gradientStops();
-    QCOMPARE(gradientStops.count(), 2);
+    QCOMPARE(gradientStops.size(), 2);
     QCOMPARE(gradientStops.at(0).first, 0.0);
     QCOMPARE(gradientStops.at(0).second, QColor("gray"));
     QCOMPARE(gradientStops.at(1).first, 1.0);
@@ -189,46 +189,46 @@ void tst_qquickrectangle::antialiasing()
 
     rect->setAntialiasing(true);
     QCOMPARE(rect->antialiasing(), true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     rect->setAntialiasing(true);
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.size(), 1);
 
     rect->resetAntialiasing();
     QCOMPARE(rect->antialiasing(), false);
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
 
     rect->setRadius(5);
     QCOMPARE(rect->antialiasing(), true);
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     rect->resetAntialiasing();
     QCOMPARE(rect->antialiasing(), true);
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spy.size(), 3);
 
     rect->setRadius(0);
     QCOMPARE(rect->antialiasing(), false);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     rect->resetAntialiasing();
     QCOMPARE(rect->antialiasing(), false);
-    QCOMPARE(spy.count(), 4);
+    QCOMPARE(spy.size(), 4);
 
     rect->setRadius(5);
     QCOMPARE(rect->antialiasing(), true);
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
 
     rect->resetAntialiasing();
     QCOMPARE(rect->antialiasing(), true);
-    QCOMPARE(spy.count(), 5);
+    QCOMPARE(spy.size(), 5);
 
     rect->setAntialiasing(false);
     QCOMPARE(rect->antialiasing(), false);
-    QCOMPARE(spy.count(), 6);
+    QCOMPARE(spy.size(), 6);
 
     rect->resetAntialiasing();
     QCOMPARE(rect->antialiasing(), true);
-    QCOMPARE(spy.count(), 7);
+    QCOMPARE(spy.size(), 7);
 }
 
 QTEST_MAIN(tst_qquickrectangle)

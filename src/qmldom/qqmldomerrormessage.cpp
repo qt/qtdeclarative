@@ -72,20 +72,20 @@ and use it to create new ErrorMessages using its debug, warning, error,... metho
 
 void ErrorGroups::dump(Sink sink) const
 {
-    for (int i = 0; i < groups.length(); ++i)
+    for (int i = 0; i < groups.size(); ++i)
         groups.at(i).dump(sink);
 }
 
 void ErrorGroups::dumpId(Sink sink) const
 {
-    for (int i = 0; i < groups.length(); ++i)
+    for (int i = 0; i < groups.size(); ++i)
         groups.at(i).dumpId(sink);
 }
 
 QCborArray ErrorGroups::toCbor() const
 {
     QCborArray res;
-    for (int i = 0; i < groups.length(); ++i)
+    for (int i = 0; i < groups.size(); ++i)
         res.append(QCborValue(groups.at(i).groupId()));
     return res;
 }
@@ -163,7 +163,7 @@ void ErrorGroups::fatal(Dumper msg, Path element, QStringView canonicalFilePath,
     int ibuf = 0;
     auto sink = [&ibuf, &buf](QStringView s) {
         int is = 0;
-        while (ibuf < FatalMsgMaxLen && is < s.length()) {
+        while (ibuf < FatalMsgMaxLen && is < s.size()) {
             QChar c = s.at(is);
             if (c == QChar::fromLatin1('\n') || c == QChar::fromLatin1('\r') || (c >= QChar::fromLatin1(' ') && c <= QChar::fromLatin1('~')))
                 buf[ibuf++] = c.toLatin1();
@@ -236,11 +236,11 @@ int ErrorGroups::cmp(const ErrorGroups &o1, const ErrorGroups &o2)
 {
     auto &g1 = o1.groups;
     auto &g2 = o2.groups;
-    if (g1.length() < g2.length())
+    if (g1.size() < g2.size())
         return -1;
-    if (g1.length() < g2.length())
+    if (g1.size() < g2.size())
         return 1;
-    for (int i = 0; i < g1.length(); ++i) {
+    for (int i = 0; i < g1.size(); ++i) {
         int c = std::strcmp(g1.at(i).groupId().data(), g2.at(i).groupId().data());
         if (c != 0)
             return c;

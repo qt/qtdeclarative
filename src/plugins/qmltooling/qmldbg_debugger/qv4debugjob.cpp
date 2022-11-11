@@ -124,7 +124,7 @@ FrameJob::FrameJob(QV4DataCollector *collector, int frameNr) :
 void FrameJob::run()
 {
     QVector<QV4::StackFrame> frames = collector->engine()->stackTrace(frameNr + 1);
-    if (frameNr >= frames.length()) {
+    if (frameNr >= frames.size()) {
         success = false;
     } else {
         result = collector->buildFrame(frames[frameNr], frameNr);

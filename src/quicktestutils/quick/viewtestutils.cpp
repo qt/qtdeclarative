@@ -79,7 +79,7 @@ void QQuickViewTestUtils::flick(QQuickView *window, const QPoint &from, const QP
 QList<int> QQuickViewTestUtils::adjustIndexesForAddDisplaced(const QList<int> &indexes, int index, int count)
 {
     QList<int> result;
-    for (int i=0; i<indexes.count(); i++) {
+    for (int i=0; i<indexes.size(); i++) {
         int num = indexes[i];
         if (num >= index) {
             num += count;
@@ -92,7 +92,7 @@ QList<int> QQuickViewTestUtils::adjustIndexesForAddDisplaced(const QList<int> &i
 QList<int> QQuickViewTestUtils::adjustIndexesForMove(const QList<int> &indexes, int from, int to, int count)
 {
     QList<int> result;
-    for (int i=0; i<indexes.count(); i++) {
+    for (int i=0; i<indexes.size(); i++) {
         int num = indexes[i];
         if (from < to) {
             if (num >= from && num < from + count)
@@ -113,7 +113,7 @@ QList<int> QQuickViewTestUtils::adjustIndexesForMove(const QList<int> &indexes, 
 QList<int> QQuickViewTestUtils::adjustIndexesForRemoveDisplaced(const QList<int> &indexes, int index, int count)
 {
     QList<int> result;
-    for (int i=0; i<indexes.count(); i++) {
+    for (int i=0; i<indexes.size(); i++) {
         int num = indexes[i];
         if (num >= index)
             num -= count;
@@ -130,7 +130,7 @@ QQuickViewTestUtils::QaimModel::QaimModel(QObject *parent)
 int QQuickViewTestUtils::QaimModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return list.count();
+    return list.size();
 }
 
 int QQuickViewTestUtils::QaimModel::columnCount(const QModelIndex &parent) const
@@ -175,15 +175,15 @@ QString QQuickViewTestUtils::QaimModel::number(int index) const
 
 void QQuickViewTestUtils::QaimModel::addItem(const QString &name, const QString &number)
 {
-    emit beginInsertRows(QModelIndex(), list.count(), list.count());
+    emit beginInsertRows(QModelIndex(), list.size(), list.size());
     list.append(QPair<QString,QString>(name, number));
     emit endInsertRows();
 }
 
 void QQuickViewTestUtils::QaimModel::addItems(const QList<QPair<QString, QString> > &items)
 {
-    emit beginInsertRows(QModelIndex(), list.count(), list.count()+items.count()-1);
-    for (int i=0; i<items.count(); i++)
+    emit beginInsertRows(QModelIndex(), list.size(), list.size()+items.size()-1);
+    for (int i=0; i<items.size(); i++)
         list.append(QPair<QString,QString>(items[i].first, items[i].second));
     emit endInsertRows();
 }
@@ -197,8 +197,8 @@ void QQuickViewTestUtils::QaimModel::insertItem(int index, const QString &name, 
 
 void QQuickViewTestUtils::QaimModel::insertItems(int index, const QList<QPair<QString, QString> > &items)
 {
-    emit beginInsertRows(QModelIndex(), index, index+items.count()-1);
-    for (int i=0; i<items.count(); i++)
+    emit beginInsertRows(QModelIndex(), index, index+items.size()-1);
+    for (int i=0; i<items.size(); i++)
         list.insert(index + i, QPair<QString,QString>(items[i].first, items[i].second));
     emit endInsertRows();
 }
@@ -240,7 +240,7 @@ void QQuickViewTestUtils::QaimModel::modifyItem(int idx, const QString &name, co
 
 void QQuickViewTestUtils::QaimModel::clear()
 {
-    int count = list.count();
+    int count = list.size();
     if (count > 0) {
         beginRemoveRows(QModelIndex(), 0, count-1);
         list.clear();
@@ -276,11 +276,11 @@ private:
 };
 
 void QQuickViewTestUtils::QaimModel::matchAgainst(const QList<QPair<QString, QString> > &other, const QString &error1, const QString &error2) {
-    for (int i=0; i<other.count(); i++) {
+    for (int i=0; i<other.size(); i++) {
         QVERIFY2(list.contains(other[i]),
                  ScopedPrintable(other[i].first + QLatin1Char(' ') + other[i].second + QLatin1Char(' ') + error1));
     }
-    for (int i=0; i<list.count(); i++) {
+    for (int i=0; i<list.size(); i++) {
         QVERIFY2(other.contains(list[i]),
                  ScopedPrintable(list[i].first + QLatin1Char(' ') + list[i].second + QLatin1Char(' ') + error2));
     }
@@ -337,7 +337,7 @@ bool QQuickViewTestUtils::ListRange::isValid() const
 
 int QQuickViewTestUtils::ListRange::count() const
 {
-    return indexes.count();
+    return indexes.size();
 }
 
 QList<QPair<QString,QString> > QQuickViewTestUtils::ListRange::getModelDataValues(const QaimModel &model)
@@ -345,7 +345,7 @@ QList<QPair<QString,QString> > QQuickViewTestUtils::ListRange::getModelDataValue
     QList<QPair<QString,QString> > data;
     if (!valid)
         return data;
-    for (int i=0; i<indexes.count(); i++)
+    for (int i=0; i<indexes.size(); i++)
         data.append(qMakePair(model.name(indexes[i]), model.number(indexes[i])));
     return data;
 }
@@ -396,7 +396,7 @@ bool QQuickViewTestUtils::testVisibleItems(const QQuickItemViewPrivate *priv, bo
     QHash<QQuickItem*, int> uniqueItems;
 
     int skip = 0;
-    for (int i = 0; i < priv->visibleItems.count(); ++i) {
+    for (int i = 0; i < priv->visibleItems.size(); ++i) {
         FxViewItem *item = priv->visibleItems.at(i);
         if (!item) {
             *failItem = nullptr;
