@@ -2401,8 +2401,10 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         *reinterpret_cast<double*>(data) = value.toNumber();
         return true;
     case QMetaType::QString:
-        if (value.isUndefined() || value.isNull())
-            *reinterpret_cast<QString*>(data) = QString();
+        if (value.isUndefined())
+            *reinterpret_cast<QString*>(data) = QStringLiteral("undefined");
+        else if (value.isNull())
+            *reinterpret_cast<QString*>(data) = QStringLiteral("null");
         else
             *reinterpret_cast<QString*>(data) = value.toQString();
         return true;

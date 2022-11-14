@@ -281,11 +281,11 @@ void tst_QJSValue::toString()
 
     QJSValue undefined = eng.toScriptValue(QVariant());
     QCOMPARE(undefined.toString(), QString("undefined"));
-    QCOMPARE(qjsvalue_cast<QString>(undefined), QString());
+    QCOMPARE(qjsvalue_cast<QString>(undefined), QString("undefined"));
 
     QJSValue null = eng.evaluate("null");
     QCOMPARE(null.toString(), QString("null"));
-    QCOMPARE(qjsvalue_cast<QString>(null), QString());
+    QCOMPARE(qjsvalue_cast<QString>(null), QString("null"));
 
     {
         QJSValue falskt = eng.toScriptValue(false);
