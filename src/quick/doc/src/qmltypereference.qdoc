@@ -56,10 +56,10 @@ available when you import \c QtQuick.
 */
 
 /*!
+    \keyword colorvaluetypedocs
     \qmlvaluetype color
     \ingroup qtquickvaluetypes
     \brief an ARGB color value.
-    \target colorvaluetypedocs
 
     The \c color type refers to an ARGB color value. It can be specified in a number of ways:
 
