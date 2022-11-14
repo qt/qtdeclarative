@@ -151,6 +151,7 @@ public:
         ItemDevicePixelRatioHasChanged, // value.realValue
         ItemEnabledHasChanged      // value.boolValue
     };
+    Q_ENUM(ItemChange)
 
     union ItemChangeData {
         ItemChangeData(QQuickItem *v) : item(v) {}
