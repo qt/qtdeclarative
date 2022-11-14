@@ -102,9 +102,7 @@ struct MemoryAllocationProperties {
 
 class FunctionCall {
 public:
-
-    FunctionCall() : m_function(nullptr), m_start(0), m_end(0)
-    { Q_ASSERT_X(false, Q_FUNC_INFO, "Cannot construct a function call without function"); }
+    FunctionCall() : m_function(nullptr), m_start(0), m_end(0) {}
 
     FunctionCall(Function *function, qint64 start, qint64 end) :
         m_function(function), m_start(start), m_end(end)
@@ -114,18 +112,38 @@ public:
         m_function(other.m_function), m_start(other.m_start), m_end(other.m_end)
     { m_function->executableCompilationUnit()->addref(); }
 
+    FunctionCall(FunctionCall &&other) noexcept
+        : m_function(std::exchange(other.m_function, nullptr))
+        , m_start(std::exchange(other.m_start, 0))
+        , m_end(std::exchange(other.m_end, 0))
+    {}
+
     ~FunctionCall()
-    { m_function->executableCompilationUnit()->release(); }
+    {
+        if (m_function)
+            m_function->executableCompilationUnit()->release();
+    }
 
     FunctionCall &operator=(const FunctionCall &other) {
         if (&other != this) {
-            other.m_function->executableCompilationUnit()->addref();
-            m_function->executableCompilationUnit()->release();
+            if (other.m_function)
+                other.m_function->executableCompilationUnit()->addref();
+            if (m_function)
+                m_function->executableCompilationUnit()->release();
             m_function = other.m_function;
             m_start = other.m_start;
             m_end = other.m_end;
         }
         return *this;
+    }
+
+    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(FunctionCall)
+
+    void swap(FunctionCall &other) noexcept
+    {
+        qt_ptr_swap(m_function, other.m_function);
+        std::swap(m_start, other.m_start);
+        std::swap(m_end, other.m_end);
     }
 
     Function *function() const

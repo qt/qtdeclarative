@@ -63,6 +63,7 @@ void Profiler::reportData()
     for (const FunctionCall &call : std::as_const(m_data)) {
         properties.append(call.properties());
         Function *function = call.function();
+        Q_ASSERT(function);
         SentMarker &marker = m_sentLocations[reinterpret_cast<quintptr>(function)];
         if (!marker.isValid()) {
             FunctionLocation &location = locations[properties.constLast().id];
