@@ -5783,6 +5783,14 @@ struct UnknownToJS
 void tst_QJSEngine::coerceValue()
 {
     const UnknownToJS u;
+    QMetaType::registerConverter<UnknownToJS, int>([](const UnknownToJS &u) {
+        return u.thing;
+    });
+    int v = 0;
+    QVERIFY(QMetaType::convert(QMetaType::fromType<UnknownToJS>(), &u,
+                               QMetaType::fromType<int>(), &v));
+    QCOMPARE(v, 13);
+
     QMetaType::registerConverter<UnknownToJS, QTypeRevision>([](const UnknownToJS &u) {
         return QTypeRevision::fromMinorVersion(u.thing);
     });
@@ -5807,6 +5815,7 @@ void tst_QJSEngine::coerceValue()
     QCOMPARE((engine.coerceValue<WithToString *, const WithToString *>(&withToString)), &withToString);
     QCOMPARE((engine.coerceValue<QString, double>(a)), 5.25);
     QCOMPARE((engine.coerceValue<double, QString>(5.25)), a);
+    QCOMPARE((engine.coerceValue<UnknownToJS, int>(u)), v); // triggers valueOf on a VariantObject
     QCOMPARE((engine.coerceValue<UnknownToJS, QTypeRevision>(u)), w);
 }
 

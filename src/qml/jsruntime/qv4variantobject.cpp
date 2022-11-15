@@ -131,7 +131,17 @@ ReturnedValue VariantPrototype::method_valueOf(const FunctionObject *b, const Va
             return Encode(v.toBool());
         default:
             if (QMetaType(v.metaType()).flags() & QMetaType::IsEnumeration)
-                RETURN_RESULT(Encode(v.toInt()));
+                return Encode(v.toInt());
+            if (v.canConvert<double>())
+                return Encode(v.toDouble());
+            if (v.canConvert<int>())
+                return Encode(v.toInt());
+            if (v.canConvert<uint>())
+                return Encode(v.toUInt());
+            if (v.canConvert<bool>())
+                return Encode(v.toBool());
+            if (v.canConvert<QString>())
+                return Encode(b->engine()->newString(v.toString()));
             break;
         }
     }
