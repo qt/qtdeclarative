@@ -212,7 +212,9 @@ private:
 
     static bool convertManaged(const QJSManagedValue &value, int type, void *ptr);
     static bool convertManaged(const QJSManagedValue &value, QMetaType type, void *ptr);
-    static bool convertV2(const QJSValue &value, int type, void *ptr);
+#if QT_VERSION < QT_VERSION_CHECK(7,0,0)
+    static bool convertV2(const QJSValue &value, int type, void *ptr); // only there for BC reasons
+#endif
     static bool convertV2(const QJSValue &value, QMetaType metaType, void *ptr);
     static bool convertString(const QString &string, QMetaType metaType, void *ptr);
 
