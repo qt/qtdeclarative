@@ -989,6 +989,12 @@ void QQmlJSTypePropagator::generate_CallWithReceiver(int name, int thisObject, i
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
+static bool isLoggingMethod(const QString &consoleMethod)
+{
+    return consoleMethod == u"log" || consoleMethod == u"debug" || consoleMethod == u"info"
+            || consoleMethod == u"warn" || consoleMethod == u"error";
+}
+
 void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int argc, int argv)
 {
     Q_ASSERT(m_state.registers.contains(base));
@@ -1009,6 +1015,40 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, realType);
         setAccumulator(realType);
+        return;
+    }
+
+    if (m_typeResolver->registerContains(
+                callBase, m_typeResolver->jsGlobalObject()->property(u"console"_s).type())
+            && isLoggingMethod(propertyName)) {
+
+        const QQmlJSRegisterContent voidType
+                = m_typeResolver->globalType(m_typeResolver->voidType());
+
+        // If we call a method on the console object we don't need the console object.
+        addReadRegister(base, voidType);
+
+        const QQmlJSRegisterContent stringType
+                = m_typeResolver->globalType(m_typeResolver->stringType());
+
+        if (argc > 0) {
+            const QQmlJSScope::ConstPtr firstArg
+                    = m_typeResolver->containedType(m_state.registers[argv]);
+            if (firstArg->isReferenceType()) {
+                // We cannot know whether this will be a logging category at run time.
+                // Therefore we always pass any object types as special last argument.
+                addReadRegister(argv, m_typeResolver->globalType(
+                                    m_typeResolver->genericType(firstArg)));
+            } else {
+                addReadRegister(argv, stringType);
+            }
+        }
+
+        for (int i = 1; i < argc; ++i)
+            addReadRegister(argv + i, stringType);
+
+        m_state.setHasSideEffects(true);
+        setAccumulator(voidType);
         return;
     }
 

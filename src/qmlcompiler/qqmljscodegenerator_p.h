@@ -269,11 +269,18 @@ private:
     bool inlineStringMethod(const QString &name, int base, int argc, int argv);
     bool inlineTranslateMethod(const QString &name, int argc, int argv);
     bool inlineMathMethod(const QString &name, int argc, int argv);
+    bool inlineConsoleMethod(const QString &name, int argc, int argv);
 
     QQmlJSScope::ConstPtr mathObject() const
     {
         using namespace Qt::StringLiterals;
         return m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
+    }
+
+    QQmlJSScope::ConstPtr consoleObject() const
+    {
+        using namespace Qt::StringLiterals;
+        return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
     }
 
     int nextJSLine(uint line) const;

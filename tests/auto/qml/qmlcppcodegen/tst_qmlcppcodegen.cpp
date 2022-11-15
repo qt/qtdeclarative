@@ -146,6 +146,7 @@ private slots:
     void signalIndexMismatch();
     void callWithSpread();
     void nullComparison();
+    void consoleObject();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2819,6 +2820,44 @@ void tst_QmlCppCodegen::nullComparison()
     QCOMPARE(o->property("x").toInt(), 1);
     QCOMPARE(o->property("y").toInt(), 5);
 };
+
+void tst_QmlCppCodegen::consoleObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/consoleObject.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtInfoMsg, "b 4.55");
+    QTest::ignoreMessage(QtWarningMsg, "b 4.55");
+    QTest::ignoreMessage(QtCriticalMsg, "b 4.55");
+
+    // Unfortunately we cannot check the logging category with QTest::ignoreMessage
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtInfoMsg, "b 4.55");
+    QTest::ignoreMessage(QtWarningMsg, "b 4.55");
+    QTest::ignoreMessage(QtCriticalMsg, "b 4.55");
+
+    const QRegularExpression re(u"QQmlComponentAttached\\(0x[0-9a-f]+\\) b 4\\.55"_s);
+    QTest::ignoreMessage(QtDebugMsg, re);
+    QTest::ignoreMessage(QtDebugMsg, re);
+    QTest::ignoreMessage(QtInfoMsg, re);
+    QTest::ignoreMessage(QtWarningMsg, re);
+    QTest::ignoreMessage(QtCriticalMsg, re);
+
+    QTest::ignoreMessage(QtDebugMsg, "a undefined b false null 7");
+    QTest::ignoreMessage(QtDebugMsg, "");
+    QTest::ignoreMessage(QtDebugMsg, "4");
+    QTest::ignoreMessage(QtDebugMsg, "");
+
+    const QRegularExpression re2(u"QQmlComponentAttached\\(0x[0-9a-f]+\\)"_s);
+    QTest::ignoreMessage(QtDebugMsg, re2);
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
 
 QTEST_MAIN(tst_QmlCppCodegen)
 

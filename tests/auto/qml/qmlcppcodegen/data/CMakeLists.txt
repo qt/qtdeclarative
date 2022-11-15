@@ -58,6 +58,7 @@ set(qml_files
     childobject.qml
     colorAsVariant.qml
     colorString.qml
+    consoleObject.qml
     componentReturnType.qml
     compositeTypeMethod.qml
     compositesingleton.qml
