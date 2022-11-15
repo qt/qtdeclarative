@@ -208,6 +208,8 @@ private slots:
     void moveCurrentIndexUsingArrowKeys();
     void moveCurrentIndexUsingHomeAndEndKeys();
     void moveCurrentIndexUsingPageUpDownKeys();
+    void moveCurrentIndexUsingTabKey_data();
+    void moveCurrentIndexUsingTabKey();
     void setCurrentIndexOnFirstKeyPress_data();
     void setCurrentIndexOnFirstKeyPress();
     void setCurrentIndexFromMouse();
@@ -4917,6 +4919,102 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
     QCOMPARE(tableView->currentColumn(), cellAtEnd.x());
     QCOMPARE(tableView->currentRow(), cellAtEnd.y());
+}
+
+void tst_QQuickTableView::moveCurrentIndexUsingTabKey_data()
+{
+    QTest::addColumn<bool>("hide");
+
+    QTest::newRow("all visible") << false;
+    QTest::newRow("some hidden") << true;
+}
+
+void tst_QQuickTableView::moveCurrentIndexUsingTabKey()
+{
+    QFETCH(bool, hide);
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(5, 6);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kCurrent[] = "current";
+
+    int lastRow = 4;
+    int lastColumn = 5;
+
+    if (hide) {
+        // Hide last row and column. Those sections should
+        // no longer be taking into account when tabbing.
+        tableView->setRowHeight(lastRow, 0);
+        tableView->setColumnWidth(lastColumn, 0);
+        lastRow--;
+        lastColumn--;
+    }
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+
+    // Start by making cell 0, 0 current
+    const QPoint cell0_0(0, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
+
+    // Press Tab
+    const QPoint cell1_0(1, 0);
+    QTest::keyPress(window, Qt::Key_Tab);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell1_0));
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_0)->property(kCurrent).toBool());
+
+    // Press Backtab
+    QTest::keyPress(window, Qt::Key_Backtab);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(cell1_0)->property(kCurrent).toBool());
+    QVERIFY(!selectionModel.hasSelection());
+
+    // Press Backtab again. This wraps current index to the
+    // bottom right of the table
+    const QPoint cell_bottomRight(lastColumn, lastRow);
+    QTest::keyPress(window, Qt::Key_Backtab);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell_bottomRight));
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(cell_bottomRight)->property(kCurrent).toBool());
+    QVERIFY(!selectionModel.hasSelection());
+
+    // Press Tab. This wraps current index back to the 0_0
+    QTest::keyPress(window, Qt::Key_Tab);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(cell_bottomRight)->property(kCurrent).toBool());
+    QVERIFY(!selectionModel.hasSelection());
+
+    // Make 0_1 current, and press Backtab. This should
+    // wrap current index to the last column, but on the row above.
+    const QPoint cell0_1(0, 1);
+    const QPoint cellRightAbove(lastColumn, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_1), QItemSelectionModel::NoUpdate);
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+    QTest::keyPress(window, Qt::Key_Backtab);
+    QVERIFY(tableView->itemAtCell(cellRightAbove)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+    QVERIFY(!selectionModel.hasSelection());
+
+    // Press Tab. This wraps current index back to 0_1
+    QTest::keyPress(window, Qt::Key_Tab);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_1));
+    QVERIFY(!tableView->itemAtCell(cellRightAbove)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+    QVERIFY(!selectionModel.hasSelection());
 }
 
 void tst_QQuickTableView::setCurrentIndexOnFirstKeyPress_data()

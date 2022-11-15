@@ -5378,7 +5378,7 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
     if (d->tableSize.isEmpty())
         return;
 
-    const bool select = e->modifiers() & Qt::ShiftModifier;
+    const bool select = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
     const QModelIndex currentIndex = d->selectionModel->currentIndex();
     const QPoint currentCell = cellAtIndex(currentIndex);
 
@@ -5503,6 +5503,50 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         const int lastColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, columns() - 1);
         d->positionViewAtColumn(lastColumn, Qt::AlignRight, rightMargin());
         endMoveCurrentIndex(QPoint(lastColumn, currentCell.y()));
+        break; }
+    case Qt::Key_Tab: {
+        beginMoveCurrentIndex();
+        int nextRow = currentCell.y();
+        int nextColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, currentCell.x() + 1);
+        if (nextColumn == kEdgeIndexAtEnd) {
+            nextRow = d->nextVisibleEdgeIndex(Qt::BottomEdge, currentCell.y() + 1);
+            if (nextRow == kEdgeIndexAtEnd)
+                nextRow = d->nextVisibleEdgeIndex(Qt::BottomEdge, 0);
+            nextColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, 0);
+            const qreal marginY = d->atTableEnd(Qt::BottomEdge, nextRow + 1) ? bottomMargin() : 0;
+            positionViewAtRow(nextRow, Contain, marginY);
+        }
+
+        qreal marginX = 0;
+        if (d->atTableEnd(Qt::RightEdge, nextColumn + 1))
+            marginX = leftMargin();
+        else if (d->atTableEnd(Qt::LeftEdge, nextColumn - 1))
+            marginX = -leftMargin();
+
+        positionViewAtColumn(nextColumn, Contain, marginX);
+        endMoveCurrentIndex({nextColumn, nextRow});
+        break; }
+    case Qt::Key_Backtab: {
+        beginMoveCurrentIndex();
+        int nextRow = currentCell.y();
+        int nextColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, currentCell.x() - 1);
+        if (nextColumn == kEdgeIndexAtEnd) {
+            nextRow = d->nextVisibleEdgeIndex(Qt::TopEdge, currentCell.y() - 1);
+            if (nextRow == kEdgeIndexAtEnd)
+                nextRow = d->nextVisibleEdgeIndex(Qt::TopEdge, rows() - 1);
+            nextColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, columns() - 1);
+            const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow - 1) ? -topMargin() : 0;
+            positionViewAtRow(nextRow, Contain, marginY);
+        }
+
+        qreal marginX = 0;
+        if (d->atTableEnd(Qt::RightEdge, nextColumn + 1))
+            marginX = leftMargin();
+        else if (d->atTableEnd(Qt::LeftEdge, nextColumn - 1))
+            marginX = -leftMargin();
+
+        positionViewAtColumn(nextColumn, Contain, marginX);
+        endMoveCurrentIndex({nextColumn, nextRow});
         break; }
     default:
         QQuickFlickable::keyPressEvent(e);
