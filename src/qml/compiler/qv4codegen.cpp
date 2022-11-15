@@ -1961,6 +1961,7 @@ bool Codegen::visit(CallExpression *ast)
         break;
     case Reference::Subscript:
         base.element = loadSubscriptForCall(base).storeOnStack().stackSlot();
+        base.subscriptLoadedForCall = true;
         break;
     case Reference::Name:
         break;
@@ -2002,21 +2003,29 @@ bool Codegen::visit(CallExpression *ast)
             baseObject.storeOnStack(thisObject);
             baseObject = Reference::fromStackSlot(this, thisObject);
         }
-        if (!base.isStackSlot()) {
-            base.storeOnStack(functionObject);
-            base = Reference::fromStackSlot(this, functionObject);
-        }
+
+        const int func = [&]() {
+            if (base.type == Reference::Subscript)
+                return base.element;
+
+            if (!base.isStackSlot()) {
+                base.storeOnStack(functionObject);
+                base = Reference::fromStackSlot(this, functionObject);
+            }
+
+            return base.stackSlot();
+        }();
 
         if (calldata.hasSpread) {
             Instruction::CallWithSpread call;
-            call.func = base.stackSlot();
+            call.func = func;
             call.thisObject = baseObject.stackSlot();
             call.argc = calldata.argc;
             call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         } else {
             Instruction::TailCall call;
-            call.func = base.stackSlot();
+            call.func = func;
             call.thisObject = baseObject.stackSlot();
             call.argc = calldata.argc;
             call.argv = calldata.argv;
@@ -2521,6 +2530,7 @@ bool Codegen::handleTaggedTemplate(Reference base, TaggedTemplate *ast)
         break;
     case Reference::Subscript:
         base.element = loadSubscriptForCall(base).storeOnStack().stackSlot();
+        base.subscriptLoadedForCall = true;
         break;
     case Reference::Name:
         break;
@@ -4322,7 +4332,9 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case Member:
         return propertyBase == other.propertyBase && propertyNameIndex == other.propertyNameIndex;
     case Subscript:
-        return elementBase == other.elementBase && elementSubscript == other.elementSubscript;
+        return elementBase == other.elementBase && other.subscriptLoadedForCall
+                ? (subscriptLoadedForCall && element == other.element)
+                : (!subscriptLoadedForCall && elementSubscript == other.elementSubscript);
     case Import:
         return index == other.index;
     case Const:

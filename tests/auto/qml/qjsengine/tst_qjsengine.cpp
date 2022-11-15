@@ -272,6 +272,7 @@ private slots:
     void tdzViolations();
 
     void coerceValue();
+    void callWithSpreadOnElement();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5807,6 +5808,22 @@ void tst_QJSEngine::coerceValue()
     QCOMPARE((engine.coerceValue<QString, double>(a)), 5.25);
     QCOMPARE((engine.coerceValue<double, QString>(5.25)), a);
     QCOMPARE((engine.coerceValue<UnknownToJS, QTypeRevision>(u)), w);
+}
+
+void tst_QJSEngine::callWithSpreadOnElement()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+
+    const QString program = uR"(
+        let f = console.error;
+        const data = [f, ["That is great!"]]
+        data[0](...data[1]);
+    )"_s;
+
+    QTest::ignoreMessage(QtCriticalMsg, "That is great!");
+    const QJSValue result = engine.evaluate(program);
+    QVERIFY(!result.isError());
 }
 
 QTEST_MAIN(tst_QJSEngine)
