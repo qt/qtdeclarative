@@ -50,6 +50,7 @@ set(qml_files
     blockComments.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
+    callWithSpread.qml
     childobject.qml
     colorAsVariant.qml
     colorString.qml

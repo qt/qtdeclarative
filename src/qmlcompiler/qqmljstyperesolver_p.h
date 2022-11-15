@@ -39,6 +39,7 @@ public:
     void init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
+    QQmlJSScope::ConstPtr emptyType() const { return m_emptyType; }
     QQmlJSScope::ConstPtr emptyListType() const { return m_emptyListType; }
     QQmlJSScope::ConstPtr nullType() const { return m_nullType; }
     QQmlJSScope::ConstPtr realType() const { return m_realType; }
@@ -174,6 +175,7 @@ protected:
 
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_emptyListType;
+    QQmlJSScope::ConstPtr m_emptyType;
     QQmlJSScope::ConstPtr m_nullType;
     QQmlJSScope::ConstPtr m_numberPrototype;
     QQmlJSScope::ConstPtr m_realType;
