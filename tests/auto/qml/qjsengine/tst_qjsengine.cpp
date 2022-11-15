@@ -271,6 +271,8 @@ private slots:
     void tdzViolations_data();
     void tdzViolations();
 
+    void coerceValue();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -5763,6 +5765,48 @@ void tst_QJSEngine::tdzViolations()
     const QJSValue result3 = engine.evaluate(program3);
     QVERIFY(result3.isError());
     QCOMPARE(result3.toString(), u"ReferenceError: b is not defined"_s);
+}
+
+class WithToString : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE int toString() const { return 29; }
+};
+
+struct UnknownToJS
+{
+    int thing = 13;
+};
+
+void tst_QJSEngine::coerceValue()
+{
+    const UnknownToJS u;
+    QMetaType::registerConverter<UnknownToJS, QTypeRevision>([](const UnknownToJS &u) {
+        return QTypeRevision::fromMinorVersion(u.thing);
+    });
+    QTypeRevision w;
+    QVERIFY(QMetaType::convert(QMetaType::fromType<UnknownToJS>(),
+                               &u, QMetaType::fromType<QTypeRevision>(), &w));
+    QCOMPARE(w, QTypeRevision::fromMinorVersion(13));
+
+
+    QJSEngine engine;
+    WithToString withToString;
+    const int i = 7;
+    const QString a = QStringLiteral("5.25");
+
+    QCOMPARE((engine.coerceValue<int, int>(i)), i);
+    QVERIFY((engine.coerceValue<int, QJSValue>(i)).strictlyEquals(QJSValue(i)));
+    QVERIFY((engine.coerceValue<int, QJSManagedValue>(i)).strictlyEquals(
+             QJSManagedValue(QJSPrimitiveValue(i), &engine)));
+    QCOMPARE((engine.coerceValue<QVariant, int>(QVariant(i))), i);
+    QCOMPARE((engine.coerceValue<int, QVariant>(i)), QVariant(i));
+    QCOMPARE((engine.coerceValue<WithToString *, QString>(&withToString)), QStringLiteral("29"));
+    QCOMPARE((engine.coerceValue<WithToString *, const WithToString *>(&withToString)), &withToString);
+    QCOMPARE((engine.coerceValue<QString, double>(a)), 5.25);
+    QCOMPARE((engine.coerceValue<double, QString>(5.25)), a);
+    QCOMPARE((engine.coerceValue<UnknownToJS, QTypeRevision>(u)), w);
 }
 
 QTEST_MAIN(tst_QJSEngine)

@@ -833,7 +833,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     return convertV2(value, QMetaType(type), ptr);
 }
 
-static bool convertString(const QString &string, QMetaType metaType, void *ptr)
+bool QJSEngine::convertString(const QString &string, QMetaType metaType, void *ptr)
 {
     // have a string based value without engine. Do conversion manually
     if (metaType == QMetaType::fromType<bool>()) {
@@ -906,12 +906,16 @@ bool QJSEngine::convertV2(const QJSValue &value, QMetaType metaType, void *ptr)
 
 bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *ptr)
 {
-    if (value.metaType() == QMetaType::fromType<QString>())
-        return convertString(value.toString(), metaType, ptr);
-
     // TODO: We could probably avoid creating a QV4::Value in many cases, but we'd have to
     //       duplicate much of metaTypeFromJS and some methods of QV4::Value itself here.
     return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromVariant(value), metaType, ptr);
+}
+
+bool QJSEngine::convertMetaType(QMetaType fromType, const void *from, QMetaType toType, void *to)
+{
+    // TODO: We could probably avoid creating a QV4::Value in many cases, but we'd have to
+    //       duplicate much of metaTypeFromJS and some methods of QV4::Value itself here.
+    return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromData(fromType, from), toType, to);
 }
 
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
@@ -919,7 +923,7 @@ bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *
     Creates a QJSValue with the given \a value.
     This works with any type \c{T} that has a \c{QMetaType}.
 
-    \sa fromScriptValue()
+    \sa fromScriptValue(), coerceValue()
 */
 
 /*! \fn template <typename T> T QJSEngine::fromScriptValue(const QJSValue &value)
@@ -927,7 +931,7 @@ bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *
     Returns the given \a value converted to the template type \c{T}.
     This works with any type \c{T} that has a \c{QMetaType}.
 
-    \sa toScriptValue()
+    \sa toScriptValue(), coerceValue()
 */
 
 /*! \fn template <typename T> T QJSEngine::fromVariant(const QVariant &value)
@@ -939,7 +943,20 @@ bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *
     conversions between JavaScript-equivalent types that are not
     performed by qvariant_cast by default.
 
-    \sa fromScriptValue() qvariant_cast()
+    \sa coerceValue(), fromScriptValue(), qvariant_cast()
+*/
+
+/*! \fn template <typename From, typename To> T QJSEngine::coerceValue(const From &from)
+
+    Returns the given \a from converted to the template type \c{To}.
+    This works with any type \c{T} that has a \c{QMetaType}. The
+    conversion is done in JavaScript semantics. Those differ from
+    qvariant_cast's semantics. There are a number of implicit
+    conversions between JavaScript-equivalent types that are not
+    performed by qvariant_cast by default. This method is a generalization of
+    all the other conversion methods in this class.
+
+    \sa fromVariant(), qvariant_cast(), fromScriptValue(), toScriptValue()
 */
 
 /*!

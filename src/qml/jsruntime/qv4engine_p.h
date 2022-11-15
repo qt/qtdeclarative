@@ -740,13 +740,14 @@ public:
     QV4::ReturnedValue callInContext(QV4::Function *function, QObject *self,
                                      QV4::ExecutionContext *ctxt, int argc, const QV4::Value *argv);
 
+    QV4::ReturnedValue fromData(
+            QMetaType type, const void *ptr,
+            Heap::Object *parent = nullptr, int property = -1, uint flags = 0);
+
 private:
     template<int Frames>
     friend struct ExecutionEngineCallDepthRecorder;
 
-    QV4::ReturnedValue fromData(
-            QMetaType type, const void *ptr,
-            Heap::Object *parent = nullptr, int property = -1, uint flags = 0);
     static void initializeStaticMembers();
 
     static int s_maxCallDepth;
