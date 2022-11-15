@@ -144,6 +144,7 @@ private slots:
     void listAsArgument();
     void letAndConst();
     void signalIndexMismatch();
+    void callWithSpread();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2791,6 +2792,16 @@ void tst_QmlCppCodegen::signalIndexMismatch()
 
     QCOMPARE(visualIndexBeforeMoveList, QList<QVariant>({ 0, 1, 2 }));
     QCOMPARE(visualIndexAfterMoveList, QList<QVariant>({ 0, 1, 2 }));
+}
+
+void tst_QmlCppCodegen::callWithSpread()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/callWithSpread.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(QtCriticalMsg, "That is great!");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 };
 
 QTEST_MAIN(tst_QmlCppCodegen)
