@@ -1023,6 +1023,38 @@ int QObjectWrapper::virtualMetacall(Object *object, QMetaObject::Call call, int 
     return 0;
 }
 
+QString QObjectWrapper::objectToString(
+        ExecutionEngine *engine, const QMetaObject *metaObject, QObject *object)
+{
+    if (!metaObject)
+        return QLatin1String("null");
+
+    if (!object)
+        return QString::fromUtf8(metaObject->className()) + QLatin1String("(0x0)");
+
+    const int id = metaObject->indexOfMethod("toString()");
+    if (id >= 0) {
+        const QMetaMethod method = metaObject->method(id);
+        const QMetaType returnType = method.returnMetaType();
+        QVariant result(returnType);
+        method.invoke(object, QGenericReturnArgument(returnType.name(), result.data()));
+        if (result.metaType() == QMetaType::fromType<QString>())
+            return result.toString();
+        QV4::Scope scope(engine);
+        QV4::ScopedValue value(scope, engine->fromVariant(result));
+        return value->toQString();
+    }
+
+    QString result;
+    result += QString::fromUtf8(metaObject->className()) +
+            QLatin1String("(0x") + QString::number(quintptr(object), 16);
+    QString objectName = object->objectName();
+    if (!objectName.isEmpty())
+        result += QLatin1String(", \"") + objectName + QLatin1Char('\"');
+    result += QLatin1Char(')');
+    return result;
+}
+
 struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 {
     PersistentValue function;
@@ -2385,12 +2417,9 @@ static QObject *qObject(const Value *v)
     return nullptr;
 }
 
-ReturnedValue QObjectMethod::method_toString(ExecutionEngine *engine, const QV4::Value *thisObject) const
+ReturnedValue QObjectMethod::method_toString(
+        ExecutionEngine *engine, const QV4::Value *thisObject) const
 {
-    const auto encode = [engine](const QString &result) {
-        return engine->newString(result)->asReturnedValue();
-    };
-
     QObject *o = qObject(thisObject);
 
     d()->assertIntegrity(o);
@@ -2398,31 +2427,9 @@ ReturnedValue QObjectMethod::method_toString(ExecutionEngine *engine, const QV4:
     const QMetaObject *metaObject = d()->metaObject();
     if (!metaObject && o)
         metaObject = o->metaObject();
-    if (metaObject) {
-        if (QObject *qobject = o ? o : d()->object()) {
-            const int id = metaObject->indexOfMethod("toString()");
-            if (id >= 0) {
-                const QMetaMethod method = metaObject->method(id);
-                const QMetaType returnType = method.returnMetaType();
-                QVariant result(returnType);
-                method.invoke(qobject, QGenericReturnArgument(returnType.name(), result.data()));
-                return engine->fromVariant(result);
-            }
 
-            QString result;
-            result += QString::fromUtf8(metaObject->className()) +
-                    QLatin1String("(0x") + QString::number(quintptr(qobject), 16);
-            QString objectName = qobject->objectName();
-            if (!objectName.isEmpty())
-                result += QLatin1String(", \"") + objectName + QLatin1Char('\"');
-            result += QLatin1Char(')');
-            return encode(result);
-        } else {
-            return encode(QString::fromUtf8(metaObject->className()) + QLatin1String("(0x0)"));
-        }
-    }
-
-    return encode(QLatin1String("null"));
+    return engine->newString(QObjectWrapper::objectToString(
+                                 engine, metaObject, o ? o : d()->object()))->asReturnedValue();
 }
 
 ReturnedValue QObjectMethod::method_destroy(ExecutionEngine *engine, const QV4::Value *thisObject, const Value *args, int argc) const

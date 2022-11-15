@@ -2898,6 +2898,11 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
             return retrieve;
     }
 
+    if (from->isReferenceType() && m_typeResolver->equals(to, m_typeResolver->stringType())) {
+        return u"aotContext->engine->coerceValue<"_s + castTargetName(from) + u", "
+                + castTargetName(to) + u">("_s + variable + u')';
+    }
+
     // TODO: add more conversions
 
     reject(u"conversion from "_s + from->internalName() + u" to "_s + to->internalName());
