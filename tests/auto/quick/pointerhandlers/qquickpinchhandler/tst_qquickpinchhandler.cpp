@@ -54,6 +54,7 @@ public:
 private slots:
     void cleanupTestCase();
     void pinchProperties();
+    void scale_data();
     void scale();
     void scaleThreeFingers();
     void scaleNativeGesture_data();
@@ -204,16 +205,26 @@ QMutableEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i
     return touchPoint;
 }
 
+void tst_QQuickPinchHandler::scale_data()
+{
+    QTest::addColumn<QUrl>("qmlfile");
+    QTest::addColumn<bool>("hasTarget");
+    QTest::newRow("targetModifying") << testFileUrl("pinchproperties.qml") << true;
+    QTest::newRow("nullTarget") << testFileUrl("nullTarget.qml") << false;
+}
+
 void tst_QQuickPinchHandler::scale()
 {
-    QQuickView window;
-    QVERIFY(QQuickTest::showView(window, testFileUrl("pinchproperties.qml")));
+    QFETCH(QUrl, qmlfile);
+    QFETCH(bool, hasTarget);
 
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, qmlfile));
     QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
     QVERIFY(root != nullptr);
     auto *pinchHandler = static_cast<PinchHandler *>(root->findChild<QQuickPinchHandler*>());
     QVERIFY(pinchHandler != nullptr);
-    QQuickItem *blackRect = pinchHandler->target();
+    QQuickItem *blackRect = (hasTarget ? pinchHandler->target() : pinchHandler->parentItem());
     QVERIFY(blackRect != nullptr);
     QSignalSpy grabChangedSpy(pinchHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition, QEventPoint)));
 
@@ -263,6 +274,40 @@ void tst_QQuickPinchHandler::scale()
         QCOMPARE(pinchHandler->scale(), pinchHandler->activeScale()); // in sync for the first gesture
         QPointF expectedCentroid = p0 + (p1 - p0) / 2;
         QCOMPARE(pinchHandler->centroid().scenePosition(), expectedCentroid);
+    }
+
+    qreal lastScale = pinchHandler->scale();
+    pinchSequence.release(0, p0, &window).release(1, p1, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    // scale property is persistent after release
+    QCOMPARE(pinchHandler->scale(), lastScale);
+
+    // pinch a second time: scale picks up where we left off
+    p0 = QPoint(80, 80);
+    p1 = QPoint(100, 100);
+    pinchSequence.press(0, p0, &window).press(1, p1, &window).commit();
+    // move one point until PinchHandler activates
+    for (int pi = 0; pi < 10 && !pinchHandler->active(); ++pi) {
+        p1 += pd;
+        pinchSequence.stationary(0).move(1, p1, &window).commit();
+        QQuickTouchUtils::flush(&window);
+    }
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    QCOMPARE(pinchHandler->active(), true);
+    QCOMPARE(pinchHandler->scale(), lastScale); // just activated, not scaling further yet
+    for (int i = 0; i < 2; ++i) {
+        lastScale = pinchHandler->scale();
+        p1 += pd;
+        pinchSequence.stationary(0).move(1, p1, &window).commit();
+        QQuickTouchUtils::flush(&window);
+        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+        QVERIFY(pinchHandler->scale() > lastScale);
+        line.setP2(p1);
+        qreal expectedActiveScale = line.length() / startLength;
+        QVERIFY(qFloatDistance(pinchHandler->activeScale(), expectedActiveScale) < 10);
+        QCOMPARE(pinchHandler->scale(), root->property("pinchScale").toReal());
+        QVERIFY(pinchHandler->scale() != pinchHandler->activeScale()); // not in sync anymore
     }
 
     // scale beyond maximumScale

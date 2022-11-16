@@ -239,8 +239,8 @@ void QQuickPinchHandler::onActiveChanged()
             m_startRotation = t->rotation();
             m_startPos = t->position();
         } else {
-            m_startScale = 1;
-            m_startRotation = 0;
+            m_startScale = m_accumulatedScale;
+            m_startRotation = 0; // TODO m_accumulatedRotation (QTBUG-94168)
         }
         qCDebug(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
     } else {
