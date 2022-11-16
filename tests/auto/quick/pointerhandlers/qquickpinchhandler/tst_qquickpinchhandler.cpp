@@ -314,9 +314,10 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
 
         QCOMPARE(pinchHandler->active(), true);
         // scale we got was 1.1729088738267854364, but keep some slack
-        QVERIFY(withinBounds(1.163, root->property("scale").toReal(), 1.183));
+        QVERIFY(withinBounds(1.163, pinchHandler->scale(), 1.183));
         // should not rotate
-        QCOMPARE(root->property("rotation").toReal(), 0.);
+        QCOMPARE(root->rotation(), 0.);
+        QCOMPARE(pinchHandler->rotation(), 0.);
 
         for (int i = 0; i < 5;++i) {
             p0 += QPoint(-4, -4);
@@ -326,10 +327,10 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
             QQuickTouchUtils::flush(window);
         }
         // scale we got was 1.4613, but keep some slack
-        QVERIFY(withinBounds(1.361, root->property("scale").toReal(), 1.561));
+        QVERIFY(withinBounds(1.361, pinchHandler->scale(), 1.561));
 
         // since points were moved symetrically around the y axis, centroid should remain at x:150
-        QCOMPARE(root->property("centroid").value<QQuickHandlerPoint>().scenePosition().x(), 150); // blackrect is at 50,50
+        QCOMPARE(pinchHandler->centroid().scenePosition().x(), 150); // blackrect is at 50,50
 
         // scale beyond bound, we should reach the maximumScale
         p0 += QPoint(-40, -40);
@@ -338,7 +339,7 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
         pinchSequence.move(0, p0,window).move(1, p1,window).move(2, p2,window).commit();
         QQuickTouchUtils::flush(window);
 
-        QCOMPARE(root->property("scale").toReal(), 2.);
+        QCOMPARE(pinchHandler->scale(), 2.);
         pinchSequence.release(0, p0, window).release(1, p1, window).release(2, p2, window).commit();
         QQuickTouchUtils::flush(window);
     }
