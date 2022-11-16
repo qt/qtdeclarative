@@ -595,8 +595,21 @@ void QQmlJSScope::resolveNonEnumTypes(
     resolveTypesInternal(resolveType, updateChildScope, self, contextualTypes, usedTypes);
 }
 
+/*!
+    \internal
+    Resolves all enums of self.
+
+    Some enums happen to have an alias, e.g. when an enum is used as a flag, the enum will exist in
+   two versions, once as enum (e.g. Qt::MouseButton) and once as a flag (e.g. Qt::MouseButtons). In
+   this case, normally only the flag is exposed to the qt metatype system and tools like qmltc will
+   have troubles when encountering the enum in signal parameters etc. To solve this problem,
+   resolveEnums() will create a QQmlJSMetaEnum copy for the alias in case the 'self'-scope already
+   does not have an enum called like the alias.
+ */
 void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType)
 {
+    // temporary hash to avoid messing up m_enumerations while iterators are active on it
+    QHash<QString, QQmlJSMetaEnum> toBeAppended;
     for (auto it = self->m_enumerations.begin(), end = self->m_enumerations.end(); it != end;
          ++it) {
         if (it->type())
@@ -609,8 +622,18 @@ void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::
         enumScope->m_baseType.scope = intType;
         enumScope->m_semantics = AccessSemantics::Value;
         enumScope->m_internalName = self->internalName() + QStringLiteral("::") + it->name();
+        if (QString alias = it->alias(); !alias.isEmpty()
+            && self->m_enumerations.constFind(alias) == self->m_enumerations.constEnd()) {
+            auto aliasScope = QQmlJSScope::clone(enumScope);
+            aliasScope->m_internalName = self->internalName() + QStringLiteral("::") + alias;
+            QQmlJSMetaEnum cpy(*it);
+            cpy.setType(QQmlJSScope::ConstPtr(aliasScope));
+            toBeAppended.insert(alias, cpy);
+        }
         it->setType(QQmlJSScope::ConstPtr(enumScope));
     }
+    // no more iterators active on m_enumerations, so it can be changed safely now
+    self->m_enumerations.insert(toBeAppended);
 }
 
 void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType)

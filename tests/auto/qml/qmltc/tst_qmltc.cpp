@@ -2379,6 +2379,15 @@ void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
 
     created.changeProperties3(22);
     QCOMPARE(created.cChangedCount3(), 22);
+
+    TypeWithProperties *five = qobject_cast<TypeWithProperties *>(ctx->objectForName("five"));
+    QVERIFY(five);
+    const Qt::MouseButtons a = Qt::RightButton | Qt::MiddleButton;
+    const Qt::MouseButton b = Qt::LeftButton;
+    emit five->signalWithEnum(a, b);
+
+    QCOMPARE(Qt::MouseButton(five->property("mouseButtonA").toInt()), a);
+    QCOMPARE(Qt::MouseButtons(five->property("mouseButtonB").toInt()), b);
 }
 
 void tst_qmltc::valueTypeListProperty()
