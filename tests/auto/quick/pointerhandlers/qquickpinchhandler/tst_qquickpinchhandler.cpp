@@ -263,7 +263,7 @@ void tst_QQuickPinchHandler::scale()
         QQuickTouchUtils::flush(window);
         line.setP2(p1);
         qreal scale = line.length() / startLength;
-        QVERIFY(qFloatDistance(root->property("scale").toReal(), scale) < 10);
+        QVERIFY(qFloatDistance(root->property("pinchScale").toReal(), scale) < 10);
         QVERIFY(qFloatDistance(blackRect->scale(), scale) < 10);
 
         p1+=pd;
@@ -272,7 +272,7 @@ void tst_QQuickPinchHandler::scale()
         line.setP2(p1);
         scale = line.length() / startLength;
 
-        QVERIFY(qFloatDistance(root->property("scale").toReal(), scale) < 10);
+        QVERIFY(qFloatDistance(root->property("pinchScale").toReal(), scale) < 10);
         QVERIFY(qFloatDistance(blackRect->scale(), scale) < 10);
 
         QPointF expectedCentroid = p0 + (p1 - p0)/2;
@@ -492,7 +492,7 @@ void tst_QQuickPinchHandler::pan()
         pinchSequence.stationary(0).press(1, p1, window).commit();
         QQuickTouchUtils::flush(window);
         QVERIFY(!root->property("pinchActive").toBool());
-        QCOMPARE(root->property("scale").toReal(), -1.0);
+        QCOMPARE(root->property("pinchScale").toReal(), -1.0);
 
         p0 += QPoint(dragThreshold, 0);
         p1 += QPoint(dragThreshold, 0);
@@ -500,7 +500,7 @@ void tst_QQuickPinchHandler::pan()
         QQuickTouchUtils::flush(window);
         // movement < dragThreshold: pinchHandler not yet active
         QVERIFY(!root->property("pinchActive").toBool());
-        QCOMPARE(root->property("scale").toReal(), -1.0);
+        QCOMPARE(root->property("pinchScale").toReal(), -1.0);
 
         // just above the dragThreshold: pinchHandler starts
         p0 += QPoint(1, 0);
@@ -508,7 +508,7 @@ void tst_QQuickPinchHandler::pan()
         pinchSequence.move(0, p0, window).move(1, p1, window).commit();
         QQuickTouchUtils::flush(window);
         QCOMPARE(pinchHandler->active(), true);
-        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QCOMPARE(root->property("pinchScale").toReal(), 1.0);
 
         // Calculation of the center point is tricky at first:
         // center point of the two touch points in item coordinates:
@@ -675,7 +675,7 @@ void tst_QQuickPinchHandler::retouch()
         pinchSequence.move(0, p0,window).move(1, p1,window).commit();
         QQuickTouchUtils::flush(window);
 
-        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QCOMPARE(root->property("pinchScale").toReal(), 1.0);
         QCOMPARE(pinchHandler->active(), true);
 
         p0 -= delta;
@@ -686,7 +686,7 @@ void tst_QQuickPinchHandler::retouch()
         QCOMPARE(pinchHandler->active(), true);
 
         // accept some slack
-        QVERIFY(withinBounds(1.4, root->property("scale").toReal(), 1.6));
+        QVERIFY(withinBounds(1.4, root->property("pinchScale").toReal(), 1.6));
         QCOMPARE(pinchHandler->centroid().position().toPoint(), QPoint(40, 40)); // blackrect is at 50,50
         QVERIFY(withinBounds(1.4, blackRect->scale(), 1.6));
 
@@ -761,7 +761,7 @@ void tst_QQuickPinchHandler::cancel()
         pinchSequence.move(0, p0,window).move(1, p1,window).commit();
         QQuickTouchUtils::flush(window);
 
-        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QCOMPARE(root->property("pinchScale").toReal(), 1.0);
         QCOMPARE(pinchHandler->active(), true);
 
         p0 -= delta;
@@ -769,7 +769,7 @@ void tst_QQuickPinchHandler::cancel()
         pinchSequence.move(0, p0,window).move(1, p1,window).commit();
         QQuickTouchUtils::flush(window);
 
-        QVERIFY(withinBounds(1.4, root->property("scale").toReal(), 1.6));
+        QVERIFY(withinBounds(1.4, root->property("pinchScale").toReal(), 1.6));
         QCOMPARE(pinchHandler->centroid().position().toPoint(), QPoint(40, 40)); // blackrect is at 50,50
         QVERIFY(withinBounds(1.4, blackRect->scale(), 1.6));
 
@@ -779,7 +779,7 @@ void tst_QQuickPinchHandler::cancel()
         QCoreApplication::sendEvent(window, &cancelEvent);
         QQuickTouchUtils::flush(window);
 
-        QCOMPARE(root->property("scale").toReal(), 1.0);
+        QCOMPARE(root->property("pinchScale").toReal(), 1.0);
         QCOMPARE(root->property("center").toPoint(), QPoint(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.0);
         QVERIFY(!root->property("pinchActive").toBool());

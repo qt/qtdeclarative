@@ -30,7 +30,7 @@ import QtQuick 2.12
 
 Rectangle {
     id: whiteRect
-    property real scale: -1.0
+    property real pinchScale: -1.0
     property int activeCount : 0
     property int deactiveCount : 0
     width: 320; height: 320
@@ -63,13 +63,13 @@ Rectangle {
             xAxis.maximum: 140
             yAxis.maximum: 170
             onActiveChanged: {
-                whiteRect.scale = pincharea.scale
+                whiteRect.pinchScale = pincharea.scale
                 if (active) ++activeCount
                 else ++deactiveCount;
             }
 
             onUpdated: {
-                whiteRect.scale = pincharea.scale
+                whiteRect.pinchScale = pincharea.scale
                 //whiteRect.pointCount = pincharea.pointCount
             }
          }
