@@ -1540,8 +1540,23 @@ QList<QQmlType> QQmlMetaType::qmlSingletonTypes()
     return retn;
 }
 
-const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri, CachedUnitLookupError *status)
+static bool isFullyTyped(const QQmlPrivate::CachedQmlUnit *unit)
 {
+    qsizetype numTypedFunctions = 0;
+    for (const QQmlPrivate::TypedFunction *function = unit->aotCompiledFunctions;
+         function; ++function) {
+        if (function->functionPtr)
+            ++numTypedFunctions;
+        else
+            return false;
+    }
+    return numTypedFunctions == unit->qmlData->functionTableSize;
+}
+
+const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(
+        const QUrl &uri, QQmlMetaType::CacheMode mode, CachedUnitLookupError *status)
+{
+    Q_ASSERT(mode != RejectAll);
     const QQmlMetaTypeDataPtr data;
 
     for (const auto lookup : std::as_const(data->lookupCachedQmlUnit)) {
@@ -1553,6 +1568,16 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const 
                     *status = CachedUnitLookupError::VersionMismatch;
                 return nullptr;
             }
+
+            if (mode == RequireFullyTyped && !isFullyTyped(unit)) {
+                qCDebug(DBG_DISK_CACHE)
+                        << "Error loading pre-compiled file " << uri
+                        << ": compilation unit contains functions not compiled to native code.";
+                if (status)
+                    *status = CachedUnitLookupError::NotFullyTyped;
+                return nullptr;
+            }
+
             if (status)
                 *status = CachedUnitLookupError::NoError;
             return unit;

@@ -2028,8 +2028,14 @@ ReturnedValue ExecutionEngine::global()
 QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const QUrl &url)
 {
     QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
-    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = diskCacheEnabled()
-            ? QQmlMetaType::findCachedCompilationUnit(url, &cacheError)
+    const DiskCacheOptions options = diskCacheOptions();
+    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = (options & DiskCache::Aot)
+            ? QQmlMetaType::findCachedCompilationUnit(
+                url,
+                (options & DiskCache::AotByteCode)
+                    ? QQmlMetaType::AcceptUntyped
+                    : QQmlMetaType::RequireFullyTyped,
+                &cacheError)
             : nullptr) {
         return ExecutableCompilationUnit::create(
                     QV4::CompiledData::CompilationUnit(
@@ -2134,9 +2140,44 @@ QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Va
     return val;
 }
 
-bool ExecutionEngine::diskCacheEnabled() const
+static ExecutionEngine::DiskCacheOptions transFormDiskCache(const char *v)
 {
-    return (!disableDiskCache() && !debugger()) || forceDiskCache();
+    using DiskCache = ExecutionEngine::DiskCache;
+
+    if (v == nullptr)
+        return DiskCache::Enabled;
+
+    ExecutionEngine::DiskCacheOptions result = DiskCache::Disabled;
+    const QList<QByteArray> options = QByteArray(v).split(',');
+    for (const QByteArray &option : options) {
+        if (option == "aot-bytecode")
+            result |= DiskCache::AotByteCode;
+        else if (option == "aot-native")
+            result |= DiskCache::AotNative;
+        else if (option == "aot")
+            result |= DiskCache::Aot;
+        else if (option == "qmlc-read")
+            result |= DiskCache::QmlcRead;
+        else if (option == "qmlc-write")
+            result |= DiskCache::QmlcWrite;
+        else if (option == "qmlc")
+            result |= DiskCache::Qmlc;
+        else
+            qWarning() << "Ignoring unknown option to QML_DISK_CACHE:" << option;
+    }
+
+    return result;
+}
+
+ExecutionEngine::DiskCacheOptions ExecutionEngine::diskCacheOptions() const
+{
+    if (forceDiskCache())
+        return DiskCache::Enabled;
+    if (disableDiskCache() || debugger())
+        return DiskCache::Disabled;
+    static const DiskCacheOptions options = qmlGetConfigOption<
+            DiskCacheOptions, transFormDiskCache>("QML_DISK_CACHE");
+    return options;
 }
 
 void ExecutionEngine::callInContext(QV4::Function *function, QObject *self,

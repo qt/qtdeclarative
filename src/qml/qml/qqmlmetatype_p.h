@@ -185,10 +185,13 @@ public:
     enum class CachedUnitLookupError {
         NoError,
         NoUnitFound,
-        VersionMismatch
+        VersionMismatch,
+        NotFullyTyped
     };
 
-    static const QQmlPrivate::CachedQmlUnit *findCachedCompilationUnit(const QUrl &uri, CachedUnitLookupError *status);
+    enum CacheMode { RejectAll, AcceptUntyped, RequireFullyTyped };
+    static const QQmlPrivate::CachedQmlUnit *findCachedCompilationUnit(
+            const QUrl &uri, CacheMode mode, CachedUnitLookupError *status);
 
     // used by tst_qqmlcachegen.cpp
     static void prependCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);

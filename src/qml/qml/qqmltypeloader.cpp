@@ -859,9 +859,27 @@ bool QQmlTypeLoader::Blob::isDebugging() const
     return typeLoader()->engine()->handle()->debugger() != nullptr;
 }
 
-bool QQmlTypeLoader::Blob::diskCacheEnabled() const
+bool QQmlTypeLoader::Blob::readCacheFile() const
 {
-    return typeLoader()->engine()->handle()->diskCacheEnabled();
+    return typeLoader()->engine()->handle()->diskCacheOptions()
+            & QV4::ExecutionEngine::DiskCache::QmlcRead;
+}
+
+bool QQmlTypeLoader::Blob::writeCacheFile() const
+{
+    return typeLoader()->engine()->handle()->diskCacheOptions()
+            & QV4::ExecutionEngine::DiskCache::QmlcWrite;
+}
+
+QQmlMetaType::CacheMode QQmlTypeLoader::Blob::aotCacheMode() const
+{
+    const QV4::ExecutionEngine::DiskCacheOptions options
+            = typeLoader()->engine()->handle()->diskCacheOptions();
+    if (!(options & QV4::ExecutionEngine::DiskCache::Aot))
+        return QQmlMetaType::RejectAll;
+    if (options & QV4::ExecutionEngine::DiskCache::AotByteCode)
+        return QQmlMetaType::AcceptUntyped;
+    return QQmlMetaType::RequireFullyTyped;
 }
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &data, QList<QQmlError> *errors)
@@ -934,8 +952,9 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
         m_typeCache.insert(url, typeData);
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
 
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = typeData->diskCacheEnabled()
-                ? QQmlMetaType::findCachedCompilationUnit(typeData->url(), &error)
+        const QQmlMetaType::CacheMode cacheMode = typeData->aotCacheMode();
+        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = (cacheMode != QQmlMetaType::RejectAll)
+                ? QQmlMetaType::findCachedCompilationUnit(typeData->url(), cacheMode, &error)
                 : nullptr) {
             QQmlTypeLoader::loadWithCachedUnit(typeData, cachedUnit, mode);
         } else {
@@ -993,8 +1012,9 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &unNormalize
         m_scriptCache.insert(url, scriptBlob);
 
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = scriptBlob->diskCacheEnabled()
-                ? QQmlMetaType::findCachedCompilationUnit(scriptBlob->url(), &error)
+        const QQmlMetaType::CacheMode cacheMode = scriptBlob->aotCacheMode();
+        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = (cacheMode != QQmlMetaType::RejectAll)
+                ? QQmlMetaType::findCachedCompilationUnit(scriptBlob->url(), cacheMode, &error)
                 : nullptr) {
             QQmlTypeLoader::loadWithCachedUnit(scriptBlob, cachedUnit);
         } else {

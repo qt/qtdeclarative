@@ -139,6 +139,20 @@ private:
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
 public:
+    enum class DiskCache {
+        Disabled    = 0,
+        AotByteCode = 1 << 0,
+        AotNative   = 1 << 1,
+        QmlcRead    = 1 << 2,
+        QmlcWrite   = 1 << 3,
+        Aot         = AotByteCode | AotNative,
+        Qmlc        = QmlcRead | QmlcWrite,
+        Enabled     = Aot | Qmlc,
+
+    };
+
+    Q_DECLARE_FLAGS(DiskCacheOptions, DiskCache);
+
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
 
@@ -735,7 +749,7 @@ public:
     Module moduleForUrl(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr) const;
     Module loadModule(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr);
 
-    bool diskCacheEnabled() const;
+    DiskCacheOptions diskCacheOptions() const;
 
     void callInContext(QV4::Function *function, QObject *self, QV4::ExecutionContext *ctxt,
                        int argc, void **args, QMetaType *types);
@@ -885,6 +899,8 @@ inline bool ExecutionEngine::checkStackLimits()
 
     return false;
 }
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(ExecutionEngine::DiskCacheOptions);
 
 } // namespace QV4
 

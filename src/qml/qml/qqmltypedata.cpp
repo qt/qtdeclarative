@@ -100,7 +100,7 @@ CompositeMetaTypeIds QQmlTypeData::typeIds(int objectId) const
 
 bool QQmlTypeData::tryLoadFromDiskCache()
 {
-    if (!diskCacheEnabled())
+    if (!readCacheFile())
         return false;
 
     QV4::ExecutionEngine *v4 = typeLoader()->engine()->handle();
@@ -757,7 +757,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         return;
     }
 
-    const bool trySaveToDisk = diskCacheEnabled() && !typeRecompilation;
+    const bool trySaveToDisk = writeCacheFile() && !typeRecompilation;
     if (trySaveToDisk) {
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {

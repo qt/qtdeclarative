@@ -24,20 +24,24 @@
 
 QT_BEGIN_NAMESPACE
 
+inline bool qmlConvertBoolConfigOption(const char *v)
+{
+    return v != nullptr && qstrcmp(v, "0") != 0 && qstrcmp(v, "false") != 0;
+}
+
+template<typename T, T(*Convert)(const char *)>
+T qmlGetConfigOption(const char *var)
+{
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var)))
+        return Convert(qgetenv(var));
+    return Convert(nullptr);
+}
 
 #define DEFINE_BOOL_CONFIG_OPTION(name, var) \
     static bool name() \
     { \
-        static enum { Yes, No, Unknown } status = Unknown; \
-        if (status == Unknown) { \
-            status = No; \
-            if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(#var))) { \
-                const QByteArray v = qgetenv(#var); \
-                if (v != "0" && v != "false") \
-                    status = Yes; \
-            } \
-        } \
-        return status == Yes; \
+        static const bool result = qmlGetConfigOption<bool, qmlConvertBoolConfigOption>(#var); \
+        return result; \
     }
 
 /*!

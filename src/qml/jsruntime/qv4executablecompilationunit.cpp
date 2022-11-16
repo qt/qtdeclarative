@@ -178,9 +178,12 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     }
 
     runtimeFunctions.resize(data->functionTableSize);
-    static bool forceInterpreter = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER");
+    static bool ignoreAotCompiledFunctions
+            = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER")
+            || !(engine->diskCacheOptions() & ExecutionEngine::DiskCache::AotNative);
+
     const QQmlPrivate::TypedFunction *aotFunction
-            = forceInterpreter ? nullptr : aotCompiledFunctions;
+            = ignoreAotCompiledFunctions ? nullptr : aotCompiledFunctions;
 
     auto advanceAotFunction = [&](int i) -> const QQmlPrivate::TypedFunction * {
         if (aotFunction) {

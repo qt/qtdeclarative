@@ -109,7 +109,9 @@ public:
         virtual QString stringAt(int) const { return QString(); }
 
         bool isDebugging() const;
-        bool diskCacheEnabled() const;
+        bool readCacheFile() const;
+        bool writeCacheFile() const;
+        QQmlMetaType::CacheMode aotCacheMode() const;
 
         QQmlRefPointer<QQmlImports> m_importCache;
         QVector<PendingImportPtr> m_unresolvedImports;
