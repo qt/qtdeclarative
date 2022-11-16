@@ -544,6 +544,7 @@ public:
 
     void setCurrentIndexFromTap(const QPointF &pos);
     void setCurrentIndex(const QPoint &cell);
+    bool setCurrentIndexFromKeyEvent(QKeyEvent *e);
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;

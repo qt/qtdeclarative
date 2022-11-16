@@ -4422,6 +4422,194 @@ void QQuickTableViewPrivate::setCurrentIndex(const QPoint &cell)
     selectionModel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
 }
 
+bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
+{
+    Q_Q(QQuickTableView);
+
+    const QModelIndex currentIndex = selectionModel->currentIndex();
+    const QPoint currentCell = q->cellAtIndex(currentIndex);
+    const bool select = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
+
+    if (!cellIsValid(currentCell)) {
+        switch (e->key()) {
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        case Qt::Key_PageUp:
+        case Qt::Key_PageDown:
+        case Qt::Key_Home:
+        case Qt::Key_End:
+        case Qt::Key_Tab:
+        case Qt::Key_Backtab:
+            // Special case: the current index doesn't map to a cell in the view (perhaps
+            // because it isn't set yet). In that case, we set it to be the top-left cell.
+            const QModelIndex topLeftIndex = q->modelIndex(leftColumn(), topRow());
+            selectionModel->setCurrentIndex(topLeftIndex, QItemSelectionModel::NoUpdate);
+            return true;
+        }
+        return false;
+    }
+
+    auto beginMoveCurrentIndex = [=](){
+        if (!select) {
+            clearSelection();
+        } else if (selectionRectangle().isEmpty()) {
+            const int serializedStartIndex = modelIndexToCellIndex(selectionModel->currentIndex());
+            if (loadedItems.contains(serializedStartIndex)) {
+                const QRectF startGeometry = loadedItems.value(serializedStartIndex)->geometry();
+                setSelectionStartPos(startGeometry.center());
+            }
+        }
+    };
+
+    auto endMoveCurrentIndex = [=](const QPoint &cell){
+        if (select) {
+            if (polishScheduled)
+                forceLayout(true);
+            const int serializedEndIndex = modelIndexAtCell(cell);
+            if (loadedItems.contains(serializedEndIndex)) {
+                const QRectF endGeometry = loadedItems.value(serializedEndIndex)->geometry();
+                setSelectionEndPos(endGeometry.center());
+            }
+        }
+        selectionModel->setCurrentIndex(q->modelIndex(cell), QItemSelectionModel::NoUpdate);
+    };
+
+    switch (e->key()) {
+    case Qt::Key_Up: {
+        beginMoveCurrentIndex();
+        const int nextRow = nextVisibleEdgeIndex(Qt::TopEdge, currentCell.y() - 1);
+        if (nextRow == kEdgeIndexAtEnd)
+            break;
+        const qreal marginY = atTableEnd(Qt::TopEdge, nextRow - 1) ? -q->topMargin() : 0;
+        q->positionViewAtRow(nextRow, QQuickTableView::Contain, marginY);
+        endMoveCurrentIndex({currentCell.x(), nextRow});
+        break; }
+    case Qt::Key_Down: {
+        beginMoveCurrentIndex();
+        const int nextRow = nextVisibleEdgeIndex(Qt::BottomEdge, currentCell.y() + 1);
+        if (nextRow == kEdgeIndexAtEnd)
+            break;
+        const qreal marginY = atTableEnd(Qt::BottomEdge, nextRow + 1) ? q->bottomMargin() : 0;
+        q->positionViewAtRow(nextRow, QQuickTableView::Contain, marginY);
+        endMoveCurrentIndex({currentCell.x(), nextRow});
+        break; }
+    case Qt::Key_Left: {
+        beginMoveCurrentIndex();
+        const int nextColumn = nextVisibleEdgeIndex(Qt::LeftEdge, currentCell.x() - 1);
+        if (nextColumn == kEdgeIndexAtEnd)
+            break;
+        const qreal marginX = atTableEnd(Qt::LeftEdge, nextColumn - 1) ? -q->leftMargin() : 0;
+        q->positionViewAtColumn(nextColumn, QQuickTableView::Contain, marginX);
+        endMoveCurrentIndex({nextColumn, currentCell.y()});
+        break; }
+    case Qt::Key_Right: {
+        beginMoveCurrentIndex();
+        const int nextColumn = nextVisibleEdgeIndex(Qt::RightEdge, currentCell.x() + 1);
+        if (nextColumn == kEdgeIndexAtEnd)
+            break;
+        const qreal marginX = atTableEnd(Qt::RightEdge, nextColumn + 1) ? q->rightMargin() : 0;
+        q->positionViewAtColumn(nextColumn, QQuickTableView::Contain, marginX);
+        endMoveCurrentIndex({nextColumn, currentCell.y()});
+        break; }
+    case Qt::Key_PageDown: {
+        int newBottomRow = -1;
+        beginMoveCurrentIndex();
+        if (currentCell.y() < bottomRow()) {
+            // The first PageDown should just move currentIndex to the bottom
+            newBottomRow = bottomRow();
+            q->positionViewAtRow(newBottomRow, QQuickTableView::AlignBottom, 0);
+        } else {
+            q->positionViewAtRow(bottomRow(), QQuickTableView::AlignTop, 0);
+            positionYAnimation.complete();
+            newBottomRow = topRow() != bottomRow() ? bottomRow() : bottomRow() + 1;
+            const qreal marginY = atTableEnd(Qt::BottomEdge, newBottomRow + 1) ? q->bottomMargin() : 0;
+            q->positionViewAtRow(newBottomRow, QQuickTableView::AlignTop | QQuickTableView::AlignBottom, marginY);
+            positionYAnimation.complete();
+        }
+        endMoveCurrentIndex(QPoint(currentCell.x(), newBottomRow));
+        break; }
+    case Qt::Key_PageUp: {
+        int newTopRow = -1;
+        beginMoveCurrentIndex();
+        if (currentCell.y() > topRow()) {
+            // The first PageUp should just move currentIndex to the top
+            newTopRow = topRow();
+            q->positionViewAtRow(newTopRow, QQuickTableView::AlignTop, 0);
+        } else {
+            q->positionViewAtRow(topRow(), QQuickTableView::AlignBottom, 0);
+            positionYAnimation.complete();
+            newTopRow = topRow() != bottomRow() ? topRow() : topRow() - 1;
+            const qreal marginY = atTableEnd(Qt::TopEdge, newTopRow - 1) ? -q->topMargin() : 0;
+            q->positionViewAtRow(newTopRow, QQuickTableView::AlignTop, marginY);
+            positionYAnimation.complete();
+        }
+        endMoveCurrentIndex(QPoint(currentCell.x(), newTopRow));
+        break; }
+    case Qt::Key_Home: {
+        beginMoveCurrentIndex();
+        const int firstColumn = nextVisibleEdgeIndex(Qt::RightEdge, 0);
+        q->positionViewAtColumn(firstColumn, QQuickTableView::AlignLeft, -q->leftMargin());
+        endMoveCurrentIndex(QPoint(firstColumn, currentCell.y()));
+        break; }
+    case Qt::Key_End: {
+        beginMoveCurrentIndex();
+        const int lastColumn = nextVisibleEdgeIndex(Qt::LeftEdge, tableSize.width() - 1);
+        q->positionViewAtColumn(lastColumn, QQuickTableView::AlignRight, q->rightMargin());
+        endMoveCurrentIndex(QPoint(lastColumn, currentCell.y()));
+        break; }
+    case Qt::Key_Tab: {
+        beginMoveCurrentIndex();
+        int nextRow = currentCell.y();
+        int nextColumn = nextVisibleEdgeIndex(Qt::RightEdge, currentCell.x() + 1);
+        if (nextColumn == kEdgeIndexAtEnd) {
+            nextRow = nextVisibleEdgeIndex(Qt::BottomEdge, currentCell.y() + 1);
+            if (nextRow == kEdgeIndexAtEnd)
+                nextRow = nextVisibleEdgeIndex(Qt::BottomEdge, 0);
+            nextColumn = nextVisibleEdgeIndex(Qt::RightEdge, 0);
+            const qreal marginY = atTableEnd(Qt::BottomEdge, nextRow + 1) ? q->bottomMargin() : 0;
+            q->positionViewAtRow(nextRow, QQuickTableView::Contain, marginY);
+        }
+
+        qreal marginX = 0;
+        if (atTableEnd(Qt::RightEdge, nextColumn + 1))
+            marginX = q->leftMargin();
+        else if (atTableEnd(Qt::LeftEdge, nextColumn - 1))
+            marginX = -q->leftMargin();
+
+        q->positionViewAtColumn(nextColumn, QQuickTableView::Contain, marginX);
+        endMoveCurrentIndex({nextColumn, nextRow});
+        break; }
+    case Qt::Key_Backtab: {
+        beginMoveCurrentIndex();
+        int nextRow = currentCell.y();
+        int nextColumn = nextVisibleEdgeIndex(Qt::LeftEdge, currentCell.x() - 1);
+        if (nextColumn == kEdgeIndexAtEnd) {
+            nextRow = nextVisibleEdgeIndex(Qt::TopEdge, currentCell.y() - 1);
+            if (nextRow == kEdgeIndexAtEnd)
+                nextRow = nextVisibleEdgeIndex(Qt::TopEdge, tableSize.height() - 1);
+            nextColumn = nextVisibleEdgeIndex(Qt::LeftEdge, tableSize.width() - 1);
+            const qreal marginY = atTableEnd(Qt::TopEdge, nextRow - 1) ? -q->topMargin() : 0;
+            q->positionViewAtRow(nextRow, QQuickTableView::Contain, marginY);
+        }
+
+        qreal marginX = 0;
+        if (atTableEnd(Qt::RightEdge, nextColumn + 1))
+            marginX = q->leftMargin();
+        else if (atTableEnd(Qt::LeftEdge, nextColumn - 1))
+            marginX = -q->leftMargin();
+
+        q->positionViewAtColumn(nextColumn, QQuickTableView::Contain, marginX);
+        endMoveCurrentIndex({nextColumn, nextRow});
+        break; }
+    default:
+        return false;
+    }
+
+    return true;
+}
+
 void QQuickTableViewPrivate::updateCursor()
 {
     int row = resizableRows ? hoverHandler->m_row : -1;
@@ -5384,7 +5572,6 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
     if (d->tableSize.isEmpty())
         return;
 
-    const bool select = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
     const QModelIndex currentIndex = d->selectionModel->currentIndex();
     const QPoint currentCell = cellAtIndex(currentIndex);
 
@@ -5402,162 +5589,10 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         return;
     }
 
-    auto beginMoveCurrentIndex = [=](){
-        if (!select) {
-            d->clearSelection();
-        } else if (d->selectionRectangle().isEmpty()) {
-            const int serializedStartIndex = d->modelIndexToCellIndex(d->selectionModel->currentIndex());
-            if (d->loadedItems.contains(serializedStartIndex)) {
-                const QRectF startGeometry = d->loadedItems.value(serializedStartIndex)->geometry();
-                d->setSelectionStartPos(startGeometry.center());
-            }
-        }
-    };
+    if (d->setCurrentIndexFromKeyEvent(e))
+        return;
 
-    auto endMoveCurrentIndex = [=](const QPoint &cell){
-        if (select) {
-            if (d->polishScheduled)
-                d->q_func()->forceLayout();
-            const int serializedEndIndex = d->modelIndexAtCell(cell);
-            if (d->loadedItems.contains(serializedEndIndex)) {
-                const QRectF endGeometry = d->loadedItems.value(serializedEndIndex)->geometry();
-                d->setSelectionEndPos(endGeometry.center());
-            }
-        }
-        d->selectionModel->setCurrentIndex(d->q_func()->modelIndex(cell), QItemSelectionModel::NoUpdate);
-    };
-
-    switch (e->key()) {
-    case Qt::Key_Up: {
-        beginMoveCurrentIndex();
-        const int nextRow = d->nextVisibleEdgeIndex(Qt::TopEdge, currentCell.y() - 1);
-        if (nextRow == kEdgeIndexAtEnd)
-            break;
-        const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow - 1) ? -topMargin() : 0;
-        positionViewAtRow(nextRow, Contain, marginY);
-        endMoveCurrentIndex({currentCell.x(), nextRow});
-        break; }
-    case Qt::Key_Down: {
-        beginMoveCurrentIndex();
-        const int nextRow = d->nextVisibleEdgeIndex(Qt::BottomEdge, currentCell.y() + 1);
-        if (nextRow == kEdgeIndexAtEnd)
-            break;
-        const qreal marginY = d->atTableEnd(Qt::BottomEdge, nextRow + 1) ? bottomMargin() : 0;
-        positionViewAtRow(nextRow, Contain, marginY);
-        endMoveCurrentIndex({currentCell.x(), nextRow});
-        break; }
-    case Qt::Key_Left: {
-        beginMoveCurrentIndex();
-        const int nextColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, currentCell.x() - 1);
-        if (nextColumn == kEdgeIndexAtEnd)
-            break;
-        const qreal marginX = d->atTableEnd(Qt::LeftEdge, nextColumn - 1) ? -leftMargin() : 0;
-        positionViewAtColumn(nextColumn, Contain, marginX);
-        endMoveCurrentIndex({nextColumn, currentCell.y()});
-        break; }
-    case Qt::Key_Right: {
-        beginMoveCurrentIndex();
-        const int nextColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, currentCell.x() + 1);
-        if (nextColumn == kEdgeIndexAtEnd)
-            break;
-        const qreal marginX = d->atTableEnd(Qt::RightEdge, nextColumn + 1) ? rightMargin() : 0;
-        positionViewAtColumn(nextColumn, Contain, marginX);
-        endMoveCurrentIndex({nextColumn, currentCell.y()});
-        break; }
-    case Qt::Key_PageDown: {
-        int newBottomRow = -1;
-        beginMoveCurrentIndex();
-        if (currentCell.y() < bottomRow()) {
-            // The first PageDown should just move currentIndex to the bottom
-            newBottomRow = bottomRow();
-            d->positionViewAtRow(newBottomRow, Qt::AlignBottom, 0);
-        } else {
-            d->positionViewAtRow(bottomRow(), Qt::AlignTop, 0);
-            d->positionYAnimation.complete();
-            newBottomRow = topRow() != bottomRow() ? bottomRow() : bottomRow() + 1;
-            const qreal marginY = d->atTableEnd(Qt::BottomEdge, newBottomRow + 1) ? bottomMargin() : 0;
-            positionViewAtRow(newBottomRow, AlignTop | AlignBottom, marginY);
-            d->positionYAnimation.complete();
-        }
-        endMoveCurrentIndex(QPoint(currentCell.x(), newBottomRow));
-        break; }
-    case Qt::Key_PageUp: {
-        int newTopRow = -1;
-        beginMoveCurrentIndex();
-        if (currentCell.y() > topRow()) {
-            // The first PageUp should just move currentIndex to the top
-            newTopRow = topRow();
-            d->positionViewAtRow(newTopRow, Qt::AlignTop, 0);
-        } else {
-            d->positionViewAtRow(topRow(), Qt::AlignBottom, 0);
-            d->positionYAnimation.complete();
-            newTopRow = topRow() != bottomRow() ? topRow() : topRow() - 1;
-            const qreal marginY = d->atTableEnd(Qt::TopEdge, newTopRow - 1) ? -topMargin() : 0;
-            d->positionViewAtRow(newTopRow, Qt::AlignTop, marginY);
-            d->positionYAnimation.complete();
-        }
-        endMoveCurrentIndex(QPoint(currentCell.x(), newTopRow));
-        break; }
-    case Qt::Key_Home: {
-        beginMoveCurrentIndex();
-        const int firstColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, 0);
-        d->positionViewAtColumn(firstColumn, Qt::AlignLeft, -leftMargin());
-        endMoveCurrentIndex(QPoint(firstColumn, currentCell.y()));
-        break; }
-    case Qt::Key_End: {
-        beginMoveCurrentIndex();
-        const int lastColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, columns() - 1);
-        d->positionViewAtColumn(lastColumn, Qt::AlignRight, rightMargin());
-        endMoveCurrentIndex(QPoint(lastColumn, currentCell.y()));
-        break; }
-    case Qt::Key_Tab: {
-        beginMoveCurrentIndex();
-        int nextRow = currentCell.y();
-        int nextColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, currentCell.x() + 1);
-        if (nextColumn == kEdgeIndexAtEnd) {
-            nextRow = d->nextVisibleEdgeIndex(Qt::BottomEdge, currentCell.y() + 1);
-            if (nextRow == kEdgeIndexAtEnd)
-                nextRow = d->nextVisibleEdgeIndex(Qt::BottomEdge, 0);
-            nextColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, 0);
-            const qreal marginY = d->atTableEnd(Qt::BottomEdge, nextRow + 1) ? bottomMargin() : 0;
-            positionViewAtRow(nextRow, Contain, marginY);
-        }
-
-        qreal marginX = 0;
-        if (d->atTableEnd(Qt::RightEdge, nextColumn + 1))
-            marginX = leftMargin();
-        else if (d->atTableEnd(Qt::LeftEdge, nextColumn - 1))
-            marginX = -leftMargin();
-
-        positionViewAtColumn(nextColumn, Contain, marginX);
-        endMoveCurrentIndex({nextColumn, nextRow});
-        break; }
-    case Qt::Key_Backtab: {
-        beginMoveCurrentIndex();
-        int nextRow = currentCell.y();
-        int nextColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, currentCell.x() - 1);
-        if (nextColumn == kEdgeIndexAtEnd) {
-            nextRow = d->nextVisibleEdgeIndex(Qt::TopEdge, currentCell.y() - 1);
-            if (nextRow == kEdgeIndexAtEnd)
-                nextRow = d->nextVisibleEdgeIndex(Qt::TopEdge, rows() - 1);
-            nextColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, columns() - 1);
-            const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow - 1) ? -topMargin() : 0;
-            positionViewAtRow(nextRow, Contain, marginY);
-        }
-
-        qreal marginX = 0;
-        if (d->atTableEnd(Qt::RightEdge, nextColumn + 1))
-            marginX = leftMargin();
-        else if (d->atTableEnd(Qt::LeftEdge, nextColumn - 1))
-            marginX = -leftMargin();
-
-        positionViewAtColumn(nextColumn, Contain, marginX);
-        endMoveCurrentIndex({nextColumn, nextRow});
-        break; }
-    default:
-        QQuickFlickable::keyPressEvent(e);
-        break;
-    }
+    QQuickFlickable::keyPressEvent(e);
 }
 
 bool QQuickTableView::alternatingRows() const
