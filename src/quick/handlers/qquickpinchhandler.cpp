@@ -74,10 +74,10 @@ QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
 */
 void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
 {
-    if (qFuzzyCompare(m_minimumScale, minimumScale))
+    if (qFuzzyCompare(m_scaleAxis.minimum(), minimumScale))
         return;
 
-    m_minimumScale = minimumScale;
+    m_scaleAxis.setMinimum(minimumScale);
     emit minimumScaleChanged();
 }
 
@@ -89,10 +89,10 @@ void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
 */
 void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
 {
-    if (qFuzzyCompare(m_maximumScale, maximumScale))
+    if (qFuzzyCompare(m_scaleAxis.maximum(), maximumScale))
         return;
 
-    m_maximumScale = maximumScale;
+    m_scaleAxis.setMaximum(maximumScale);
     emit maximumScaleChanged();
 }
 
@@ -104,10 +104,10 @@ void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
 */
 void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
 {
-    if (qFuzzyCompare(m_minimumRotation, minimumRotation))
+    if (qFuzzyCompare(m_rotationAxis.minimum(), minimumRotation))
         return;
 
-    m_minimumRotation = minimumRotation;
+    m_rotationAxis.setMinimum(minimumRotation);
     emit minimumRotationChanged();
 }
 
@@ -119,10 +119,10 @@ void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
 */
 void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
 {
-    if (qFuzzyCompare(m_maximumRotation, maximumRotation))
+    if (qFuzzyCompare(m_rotationAxis.maximum(), maximumRotation))
         return;
 
-    m_maximumRotation = maximumRotation;
+    m_rotationAxis.setMaximum(maximumRotation);
     emit maximumRotationChanged();
 }
 
@@ -159,26 +159,110 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \qmlproperty real QtQuick::PinchHandler::xAxis.minimum
     \qmlproperty real QtQuick::PinchHandler::xAxis.maximum
     \qmlproperty bool QtQuick::PinchHandler::xAxis.enabled
+    \qmlproperty real QtQuick::PinchHandler::xAxis.activeValue
+    \qmlproperty real QtQuick::PinchHandler::xAxis.persistentValue
 
     \c xAxis controls the constraints for horizontal translation of the \l target item.
 
     \c minimum is the minimum acceptable x coordinate of the translation.
     \c maximum is the maximum acceptable x coordinate of the translation.
     If \c enabled is true, horizontal dragging is allowed.
- */
+
+    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
+    \c persistentValue) changes, to provide the increment by which it changed.
+    This is intended for incrementally adjusting one property via multiple handlers.
+
+    \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0
+
+    \note The snippet is contrived: PinchHandler already knows how to move,
+    scale and rotate its parent item, but this code achieves different behavior
+    in a less-declarative way, to illustrate how to use \c activeValueChanged
+    in special cases.
+*/
 
 /*!
     \qmlpropertygroup QtQuick::PinchHandler::yAxis
     \qmlproperty real QtQuick::PinchHandler::yAxis.minimum
     \qmlproperty real QtQuick::PinchHandler::yAxis.maximum
     \qmlproperty bool QtQuick::PinchHandler::yAxis.enabled
+    \qmlproperty real QtQuick::PinchHandler::yAxis.activeValue
+    \qmlproperty real QtQuick::PinchHandler::yAxis.persistentValue
 
     \c yAxis controls the constraints for vertical translation of the \l target item.
 
     \c minimum is the minimum acceptable y coordinate of the translation.
     \c maximum is the maximum acceptable y coordinate of the translation.
     If \c enabled is true, vertical dragging is allowed.
- */
+
+    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
+    \c persistentValue) changes, to provide the increment by which it changed.
+    This is intended for incrementally adjusting one property via multiple handlers.
+
+    \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0
+
+    \note The snippet is contrived: PinchHandler already knows how to move,
+    scale and rotate its parent item, but this code achieves different behavior
+    in a less-declarative way, to illustrate how to use \c activeValueChanged
+    in special cases.
+*/
+
+/*!
+    \qmlpropertygroup QtQuick::PinchHandler::scaleAxis
+    \qmlproperty real QtQuick::PinchHandler::scaleAxis.minimum
+    \qmlproperty real QtQuick::PinchHandler::scaleAxis.maximum
+    \qmlproperty bool QtQuick::PinchHandler::scaleAxis.enabled
+    \qmlproperty real QtQuick::PinchHandler::scaleAxis.activeValue
+    \qmlproperty real QtQuick::PinchHandler::scaleAxis.persistentValue
+
+    \c scaleAxis controls the constraints for setting the \l {QtQuick::Item::scale}{scale}
+    of the \l target item according to the distance between the touchpoints.
+
+    \c minimum is the minimum acceptable scale.
+    \c maximum is the maximum acceptable scale.
+    If \c enabled is true, scaling is allowed.
+    \c activeValue is the same as \l {QtQuick::PinchHandler::activeScale}.
+    \c persistentValue is the same as \l {QtQuick::PinchHandler::scale}.
+
+    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
+    \c persistentValue) changes, to provide the multiplier for the incremental change.
+    This is intended for incrementally adjusting one property via multiple handlers.
+
+    \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0
+
+    \note The snippet is contrived: PinchHandler already knows how to move,
+    scale and rotate its parent item, but this code achieves different behavior
+    in a less-declarative way, to illustrate how to use \c activeValueChanged
+    in special cases.
+*/
+
+/*!
+    \qmlpropertygroup QtQuick::PinchHandler::rotationAxis
+    \qmlproperty real QtQuick::PinchHandler::rotationAxis.minimum
+    \qmlproperty real QtQuick::PinchHandler::rotationAxis.maximum
+    \qmlproperty bool QtQuick::PinchHandler::rotationAxis.enabled
+    \qmlproperty real QtQuick::PinchHandler::rotationAxis.activeValue
+    \qmlproperty real QtQuick::PinchHandler::rotationAxis.persistentValue
+
+    \c rotationAxis controls the constraints for setting the \l {QtQuick::Item::rotation}{rotation}
+    of the \l target item according to the rotation of the group of touchpoints.
+
+    \c minimum is the minimum acceptable rotation.
+    \c maximum is the maximum acceptable rotation.
+    If \c enabled is true, rotation is allowed.
+    \c activeValue is the same as \l {QtQuick::PinchHandler::rotation}.
+    \c persistentValue holds the accumulated value across multiple gestures.
+
+    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
+    \c persistentValue) changes, to provide the increment by which it changed.
+    This is intended for incrementally adjusting one property via multiple handlers.
+
+    \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0
+
+    \note The snippet is contrived: PinchHandler already knows how to move,
+    scale and rotate its parent item, but this code achieves different behavior
+    in a less-declarative way, to illustrate how to use \c activeValueChanged
+    in special cases.
+*/
 
 /*!
     \readonly
@@ -193,22 +277,25 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
 void QQuickPinchHandler::onActiveChanged()
 {
     QQuickMultiPointHandler::onActiveChanged();
-    if (active()) {
+    const bool curActive = active();
+    if (const QQuickItem *t = target(); curActive && t) {
+        m_xAxis.m_accumulatedValue = t->position().x();
+        m_yAxis.m_accumulatedValue = t->position().y();
+        m_scaleAxis.m_accumulatedValue = t->scale();
+        m_rotationAxis.m_accumulatedValue = t->rotation();
+    }
+    m_xAxis.onActiveChanged(curActive, 0);
+    m_yAxis.onActiveChanged(curActive, 0);
+    m_scaleAxis.onActiveChanged(curActive, 1);
+    m_rotationAxis.onActiveChanged(curActive, 0);
+
+    if (curActive) {
         m_startAngles = angles(centroid().sceneGrabPosition());
         m_startDistance = averageTouchPointDistance(centroid().sceneGrabPosition());
-        m_activeRotation = 0;
-        m_activeTranslation = QVector2D();
-        if (const QQuickItem *t = target()) {
-            m_startScale = t->scale(); // TODO incompatible with independent x/y scaling
-            m_startRotation = t->rotation();
-            m_startPos = t->position();
-        } else {
-            m_startScale = m_accumulatedScale;
-            m_startRotation = 0; // TODO m_accumulatedRotation (QTBUG-94168)
-        }
-        qCDebug(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
+        qCDebug(lcPinchHandler) << "activated with starting scale" << m_scaleAxis.m_startValue
+                                << "target scale" << m_scaleAxis.m_startValue << "rotation" << m_rotationAxis.m_startValue;
     } else {
-        qCDebug(lcPinchHandler) << "deactivated with scale" << m_activeScale << "rotation" << m_activeRotation;
+        qCDebug(lcPinchHandler) << "deactivated with scale" << m_scaleAxis.m_activeValue << "rotation" << m_rotationAxis.m_activeValue;
     }
 }
 
@@ -226,30 +313,26 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
         const auto gesture = static_cast<const QNativeGestureEvent *>(event);
         mutableCentroid().reset(event, event->point(0));
         switch (gesture->gestureType()) {
+        case Qt::BeginNativeGesture:
+            setActive(true);
+            // Native gestures for 2-finger pinch do not allow dragging, so
+            // the centroid won't move during the gesture, and translation stays at zero
+            return;
         case Qt::EndNativeGesture:
-            m_activeScale = 1;
-            m_activeRotation = 0;
-            m_activeTranslation = QVector2D();
             mutableCentroid().reset();
             setActive(false);
             emit updated();
             return;
         case Qt::ZoomNativeGesture:
-            m_activeScale *= 1 + gesture->value();
-            m_activeScale = qBound(m_minimumScale, m_activeScale, m_maximumScale);
+            m_scaleAxis.updateValue(1 + gesture->value(), m_scaleAxis.m_startValue * (1 + gesture->value()));
             break;
         case Qt::RotateNativeGesture:
-            m_activeRotation += gesture->value();
+            m_rotationAxis.updateValue(m_rotationAxis.m_activeValue + gesture->value(),
+                                       m_rotationAxis.m_startValue + m_rotationAxis.m_activeValue + gesture->value());
             break;
         default:
             // Nothing of interest (which is unexpected, because wantsPointerEvent() should have returned false)
             return;
-        }
-        if (!active()) {
-            setActive(true);
-            // Native gestures for 2-finger pinch do not allow dragging, so
-            // the centroid won't move during the gesture, and translation stays at zero
-            m_activeTranslation = QVector2D();
         }
     } else
 #endif // QT_CONFIG(gestures)
@@ -333,7 +416,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
                     ++numberOfPointsDraggedOverThreshold;
             }
 
-            const bool requiredNumberOfPointsDraggedOverThreshold = numberOfPointsDraggedOverThreshold >= minimumPointCount() && numberOfPointsDraggedOverThreshold <= maximumPointCount();
+            const bool requiredNumberOfPointsDraggedOverThreshold =
+                    numberOfPointsDraggedOverThreshold >= minimumPointCount() &&
+                    numberOfPointsDraggedOverThreshold <= maximumPointCount();
             accumulatedMovementMagnitude /= currentPoints().size();
 
             QVector2D avgDrag = accumulatedDrag / currentPoints().size();
@@ -346,7 +431,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 
             qreal distanceToCentroidDelta = qAbs(accumulatedCentroidDistance - m_accumulatedStartCentroidDistance); // Used to detect scale
             if (numberOfPointsDraggedOverThreshold >= 1) {
-                if (requiredNumberOfPointsDraggedOverThreshold && avgDrag.lengthSquared() >= dragThresholdSquared && accumulatedMovementMagnitude < dragThreshold) {
+                if (requiredNumberOfPointsDraggedOverThreshold &&
+                        avgDrag.lengthSquared() >= dragThresholdSquared && accumulatedMovementMagnitude < dragThreshold) {
                     // Drag
                     if (grabPoints(event, chosenPoints))
                         setActive(true);
@@ -369,60 +455,79 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
         // avoid mapping the minima and maxima, as they might have unmappable values
         // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
         // 1. scale
-        dist = averageTouchPointDistance(centroid().scenePosition());
-        m_activeScale = dist / m_startDistance;
-        m_activeScale = qBound(m_minimumScale/m_startScale, m_activeScale, m_maximumScale/m_startScale);
+        qreal activeScale = 1;
+        if (m_scaleAxis.enabled()) {
+            dist = averageTouchPointDistance(centroid().scenePosition());
+            activeScale = dist / m_startDistance;
+            activeScale = qBound(m_scaleAxis.minimum() / m_scaleAxis.m_startValue, activeScale,
+                                 m_scaleAxis.maximum() / m_scaleAxis.m_startValue);
+            m_scaleAxis.updateValue(activeScale, m_scaleAxis.m_startValue * activeScale,
+                                    activeScale / m_scaleAxis.activeValue());
+        }
 
         // 2. rotate
-        QVector<PointData> newAngles = angles(centroid().scenePosition());
-        const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
-        m_activeRotation += angleDelta;
-        m_startAngles = std::move(newAngles);
+        if (m_rotationAxis.enabled()) {
+            QVector<PointData> newAngles = angles(centroid().scenePosition());
+            const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
+            m_rotationAxis.updateValue(m_rotationAxis.m_activeValue + angleDelta,
+                                       m_rotationAxis.m_startValue + m_rotationAxis.m_activeValue + angleDelta,
+                                       angleDelta);
+            m_startAngles = std::move(newAngles);
+        }
 
         if (!containsReleasedPoints)
             acceptPoints(chosenPoints);
     }
 
-    const qreal totalRotation = m_startRotation + m_activeRotation;
-    const qreal rotation = qBound(m_minimumRotation, totalRotation, m_maximumRotation);
-    m_activeRotation += (rotation - totalRotation);   //adjust for the potential bounding above
-    m_accumulatedScale = m_startScale * m_activeScale;
 
     if (target() && target()->parentItem()) {
         const QPointF centroidParentPos = target()->parentItem()->mapFromScene(centroid().scenePosition());
         // 3. Drag/translate
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(centroid().sceneGrabPosition());
-        m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
+        auto activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
         // apply rotation + scaling around the centroid - then apply translation.
         QPointF pos = QQuickItemPrivate::get(target())->adjustedPosForTransform(centroidParentPos,
-                                                                                m_startPos, m_activeTranslation,
-                                                                                m_startScale, m_activeScale,
-                                                                                m_startRotation, m_activeRotation);
+                                                                                startPos(), activeTranslation,
+                                                                                m_scaleAxis.m_startValue,
+                                                                                m_scaleAxis.persistentValue() / m_scaleAxis.m_startValue,
+                                                                                m_rotationAxis.m_startValue,
+                                                                                m_rotationAxis.persistentValue() - m_rotationAxis.m_startValue);
 
         if (xAxis()->enabled())
             pos.setX(qBound(xAxis()->minimum(), pos.x(), xAxis()->maximum()));
         else
-            pos.rx() -= qreal(m_activeTranslation.x());
+            pos.rx() -= qreal(activeTranslation.x());
         if (yAxis()->enabled())
             pos.setY(qBound(yAxis()->minimum(), pos.y(), yAxis()->maximum()));
         else
-            pos.ry() -= qreal(m_activeTranslation.y());
+            pos.ry() -= qreal(activeTranslation.y());
 
-        target()->setPosition(pos);
-        target()->setRotation(rotation);
-        target()->setScale(m_accumulatedScale);
+        m_xAxis.updateValue(activeTranslation.x(), pos.x(), activeTranslation.x() - m_xAxis.activeValue());
+        m_yAxis.updateValue(activeTranslation.y(), pos.y(), activeTranslation.y() - m_yAxis.activeValue());
+        target()->setPosition(QPointF(m_xAxis.persistentValue(), m_yAxis.persistentValue()));
+        target()->setRotation(m_rotationAxis.persistentValue());
+        target()->setScale(m_scaleAxis.persistentValue());
     } else {
-        m_activeTranslation = QVector2D(centroid().scenePosition() - centroid().scenePressPosition());
+        auto activeTranslation = centroid().scenePosition() - centroid().scenePressPosition();
+        auto accumulated = QPointF(m_xAxis.m_startValue, m_yAxis.m_startValue) + activeTranslation;
+        m_xAxis.updateValue(activeTranslation.x(), accumulated.x(),
+                            activeTranslation.x() - m_xAxis.activeValue());
+        m_yAxis.updateValue(activeTranslation.y(), accumulated.y(),
+                            activeTranslation.y() - m_yAxis.activeValue());
     }
 
     qCDebug(lcPinchHandler) << "centroid" << centroid().scenePressPosition() << "->"  << centroid().scenePosition()
                             << ", distance" << m_startDistance << "->" << dist
-                            << ", scale" << m_startScale << "->" << m_accumulatedScale
-                            << ", activeRotation" << m_activeRotation
-                            << ", rotation" << rotation
-                            << " from " << event->device()->type();
+                            << ", scale" << m_scaleAxis.m_startValue << "->" << m_scaleAxis.m_accumulatedValue
+                            << ", rotation" << m_rotationAxis.m_startValue << "->" << m_rotationAxis.m_accumulatedValue
+                            << ", translation" << translation() << " from " << event->device()->type();
 
     emit updated();
+}
+
+QPointF QQuickPinchHandler::startPos()
+{
+    return {m_xAxis.m_startValue, m_yAxis.m_startValue};
 }
 
 /*!

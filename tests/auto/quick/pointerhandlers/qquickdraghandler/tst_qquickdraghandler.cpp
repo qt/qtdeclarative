@@ -143,6 +143,7 @@ void tst_DragHandler::touchDrag()
 
     QSignalSpy translationChangedSpy(dragHandler, SIGNAL(translationChanged()));
     QSignalSpy centroidChangedSpy(dragHandler, SIGNAL(centroidChanged()));
+    QSignalSpy xDeltaSpy(dragHandler->xAxis(), &QQuickDragAxis::activeValueChanged);
 
     QPointF ballCenter = ball->clipRect().center();
     QPointF scenePressPos = ball->mapToScene(ballCenter);
@@ -169,6 +170,7 @@ void tst_DragHandler::touchDrag()
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(dragHandler->active());
     QCOMPARE(translationChangedSpy.size(), 0);
+    QCOMPARE(xDeltaSpy.size(), 0);
     QCOMPARE(centroidChangedSpy.size(), 3);
     QCOMPARE(dragHandler->persistentTranslation().x(), 0);
     QCOMPARE(dragHandler->activeTranslation().x(), 0);
@@ -196,6 +198,8 @@ void tst_DragHandler::touchDrag()
     QCOMPARE(dragHandler->centroid().velocity(), QVector2D());
     QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.size(), 1);
+    QCOMPARE(xDeltaSpy.size(), 1);
+    QCOMPARE(xDeltaSpy.first().first().toReal(), dragThreshold + 20);
     QCOMPARE(centroidChangedSpy.size(), 5);
     QCOMPARE(dragHandler->persistentTranslation().x(), dragThreshold + 20);
 
@@ -214,11 +218,15 @@ void tst_DragHandler::touchDrag()
     p1 += QPoint(9, 0);
     QTest::touchEvent(window, touchDevice).move(1, p1, window);
     QQuickTouchUtils::flush(window);
+    QCOMPARE(xDeltaSpy.size(), 2);
+    QCOMPARE(xDeltaSpy.last().first().toReal(), dragThreshold + 10);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QCOMPARE(dragHandler->activeTranslation().x(), dragThreshold + 20);
     QCOMPARE(dragHandler->persistentTranslation().x(), dragThreshold * 2 + 40);
+    QCOMPARE(xDeltaSpy.size(), 3);
+    QCOMPARE(xDeltaSpy.last().first().toReal(), 10);
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
 
@@ -244,6 +252,8 @@ void tst_DragHandler::touchDrag()
     QQuickTouchUtils::flush(window);
     QCOMPARE(dragHandler->activeTranslation().x(), dragThreshold + 20);
     QCOMPARE(dragHandler->persistentTranslation().x(), dragThreshold + 30);
+    QCOMPARE(xDeltaSpy.size(), 6);
+    QCOMPARE(xDeltaSpy.last().first().toReal(), 10);
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
 }
@@ -277,6 +287,7 @@ void tst_DragHandler::mouseDrag()
 
     QSignalSpy translationChangedSpy(dragHandler, SIGNAL(translationChanged()));
     QSignalSpy centroidChangedSpy(dragHandler, SIGNAL(centroidChanged()));
+    QSignalSpy xDeltaSpy(dragHandler->xAxis(), &QQuickDragAxis::activeValueChanged);
 
     QPointF ballCenter = ball->clipRect().center();
     QPointF scenePressPos = ball->mapToScene(ballCenter);
@@ -311,6 +322,7 @@ void tst_DragHandler::mouseDrag()
     else
         QVERIFY(!dragHandler->active());
     QCOMPARE(translationChangedSpy.size(), 0);
+    QCOMPARE(xDeltaSpy.size(), 0);
     if (shouldDrag)
         QCOMPARE(centroidChangedSpy.size(), 3);
     QCOMPARE(dragHandler->persistentTranslation().x(), 0.0);
@@ -343,6 +355,7 @@ void tst_DragHandler::mouseDrag()
     if (shouldDrag)
         QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.size(), shouldDrag ? 1 : 0);
+    QCOMPARE(xDeltaSpy.size(), shouldDrag ? 1 : 0);
     QCOMPARE(centroidChangedSpy.size(), shouldDrag ? 5 : 0);
 #if QT_CONFIG(cursor)
     QTest::mouseMove(window, p1 + QPoint(1, 0)); // TODO after fixing QTBUG-53987, don't send mouseMove
@@ -379,6 +392,7 @@ void tst_DragHandler::mouseDragThreshold()
 
     QSignalSpy translationChangedSpy(dragHandler, SIGNAL(translationChanged()));
     QSignalSpy centroidChangedSpy(dragHandler, SIGNAL(centroidChanged()));
+    QSignalSpy xDeltaSpy(dragHandler->xAxis(), &QQuickDragAxis::activeValueChanged);
 
     QPointF ballCenter = ball->clipRect().center();
     QPointF scenePressPos = ball->mapToScene(ballCenter);
@@ -402,6 +416,7 @@ void tst_DragHandler::mouseDragThreshold()
     QTest::mouseMove(window, p1);
     QTRY_VERIFY(dragHandler->active());
     QCOMPARE(translationChangedSpy.size(), dragThreshold ? 0 : 1);
+    QCOMPARE(xDeltaSpy.size(), dragThreshold ? 0 : 1);
     QCOMPARE(centroidChangedSpy.size(), 3);
 #if QT_DEPRECATED_SINCE(6, 2)
 QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
@@ -434,6 +449,7 @@ QT_WARNING_POP
     QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
     QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.size(), dragThreshold ? 1 : 2);
+    QCOMPARE(xDeltaSpy.size(), dragThreshold ? 1 : 2);
     QCOMPARE(centroidChangedSpy.size(), 5);
 }
 
@@ -572,6 +588,7 @@ void tst_DragHandler::touchDragMulti()
     QVERIFY(dragHandler1);
     QSignalSpy translationChangedSpy1(dragHandler1, SIGNAL(translationChanged()));
     QSignalSpy centroidChangedSpy1(dragHandler1, SIGNAL(centroidChanged()));
+    QSignalSpy xDeltaSpy1(dragHandler1->xAxis(), &QQuickDragAxis::activeValueChanged);
 
     QQuickItem *ball2 = window->rootObject()->childItems().at(1);
     QVERIFY(ball2);
@@ -579,6 +596,7 @@ void tst_DragHandler::touchDragMulti()
     QVERIFY(dragHandler2);
     QSignalSpy translationChangedSpy2(dragHandler2, SIGNAL(translationChanged()));
     QSignalSpy centroidChangedSpy2(dragHandler1, SIGNAL(centroidChanged()));
+    QSignalSpy yDeltaSpy2(dragHandler2->yAxis(), &QQuickDragAxis::activeValueChanged);
 
     QPointF ball1Center = ball1->clipRect().center();
     QPointF scenePressPos1 = ball1->mapToScene(ball1Center);
@@ -627,6 +645,7 @@ void tst_DragHandler::touchDragMulti()
     QTRY_VERIFY(dragHandler1->active());
     QVERIFY(dragHandler2->active());
     QCOMPARE(translationChangedSpy1.size(), 0);
+    QCOMPARE(xDeltaSpy1.size(), 0);
 #if QT_DEPRECATED_SINCE(6, 2)
 QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler1->translation().x(), 0.0);
@@ -641,6 +660,7 @@ QT_WARNING_POP
     p2 += QPoint(0, 19);
     QVERIFY(dragHandler2->active());
     QCOMPARE(translationChangedSpy2.size(), 0);
+    QCOMPARE(yDeltaSpy2.size(), 0);
 #if QT_DEPRECATED_SINCE(6, 2)
 QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QCOMPARE(dragHandler2->translation().x(), 0.0);
@@ -678,6 +698,10 @@ QT_WARNING_POP
 #endif
     QCOMPARE(dragHandler2->activeTranslation().x(), 0.0);
     QCOMPARE(dragHandler2->activeTranslation().y(), dragThreshold + 20.0);
+    QCOMPARE(xDeltaSpy1.size(), 1);
+    QCOMPARE(xDeltaSpy1.first().first().toReal(), dragThreshold + 20);
+    QCOMPARE(yDeltaSpy2.size(), 1);
+    QCOMPARE(yDeltaSpy2.first().first().toReal(), dragThreshold + 20);
     touchSeq.release(1, p1, window).stationary(2).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!dragHandler1->active());

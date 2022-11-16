@@ -142,6 +142,41 @@ Rectangle {
                 TapHandler { gesturePolicy: TapHandler.DragThreshold; onTapped: rect3.z = rect2.z + 1 }
                 MomentumAnimation { id: anim; target: rect3 }
             }
+
+            Rectangle {
+                id: rect4
+                x: 400
+                y: 250
+                width: 300
+                height: 220
+                color: "#609cbc3d"
+                radius: 10
+                antialiasing: true
+                border {
+                    width: 5
+                    color: "maroon"
+                }
+                PinchHandler {
+                    id: pinch4
+                    target: null
+                    xAxis.onActiveValueChanged: (delta) => rect4.width = Math.min(500, Math.max(120, 15 * Math.round((rect4.width + delta) / 15)))
+                    yAxis.onActiveValueChanged: (delta) => rect4.opacity = Math.max(0.1, Math.min(0.9, rect4.opacity - delta / 200))
+                    rotationAxis.onActiveValueChanged: (delta) => rect4.radius = Math.max(0, Math.min(60, rect4.radius + delta))
+                    scaleAxis.onActiveValueChanged: (delta) => rect4.border.width *= delta
+                }
+                Text {
+                    anchors.fill: parent
+                    anchors.margins: rect4.radius / Math.PI + rect4.border.width
+                    text: "Pinch with 2 fingers to tweak various properties"
+                    wrapMode: Text.WordWrap
+                }
+                Text {
+                    anchors.top: rect4.bottom
+                    anchors.left: rect4.left
+                    text: "opacity " + rect4.opacity.toFixed(3) + " width " + rect4.width +
+                          " border " + rect4.border.width.toFixed(1) + " radius " + rect4.radius.toFixed(1)
+                }
+            }
         }
     }
     Rectangle {

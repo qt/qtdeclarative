@@ -20,6 +20,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
@@ -51,11 +53,11 @@ public:
     QQuickDragAxis *yAxis() { return &m_yAxis; }
 
 #if QT_DEPRECATED_SINCE(6, 2)
-    QVector2D translation() const { return m_activeTranslation; }
+    QVector2D translation() const { return activeTranslation(); }
 #endif
-    QVector2D activeTranslation() const { return m_activeTranslation; }
+    QVector2D activeTranslation() const { return QVector2D(QPointF(m_xAxis.activeValue(), m_yAxis.activeValue())); }
     void setActiveTranslation(const QVector2D &trans);
-    QVector2D persistentTranslation() const { return m_persistentTranslation; }
+    QVector2D persistentTranslation() const { return QVector2D(QPointF(m_xAxis.persistentValue(), m_yAxis.persistentValue())); }
     void setPersistentTranslation(const QVector2D &trans);
     QQuickDragHandler::SnapMode snapMode() const;
     void setSnapMode(QQuickDragHandler::SnapMode mode);
@@ -80,12 +82,9 @@ private:
     QPointF m_pressTargetPos;   // We must also store the local targetPos, because we cannot deduce
                                 // the press target pos from the scene pos in case there was e.g a
                                 // flick in one of the ancestors during the drag.
-    QVector2D m_activeTranslation;
-    QVector2D m_persistentTranslation;
-    QVector2D m_startTranslation;
 
-    QQuickDragAxis m_xAxis;
-    QQuickDragAxis m_yAxis;
+    QQuickDragAxis m_xAxis = {this, u"x"_s};
+    QQuickDragAxis m_yAxis = {this, u"y"_s};
     QQuickDragHandler::SnapMode m_snapMode = SnapAuto;
     bool m_pressedInsideTarget = false;
 

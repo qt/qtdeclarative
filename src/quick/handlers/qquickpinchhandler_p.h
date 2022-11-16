@@ -23,6 +23,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
@@ -36,31 +38,35 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_PROPERTY(QVector2D translation READ translation NOTIFY updated)
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
+    Q_PROPERTY(QQuickDragAxis * scaleAxis READ scaleAxis CONSTANT)
+    Q_PROPERTY(QQuickDragAxis * rotationAxis READ rotationAxis CONSTANT)
     QML_NAMED_ELEMENT(PinchHandler)
     QML_ADDED_IN_VERSION(2, 12)
 
 public:
     explicit QQuickPinchHandler(QQuickItem *parent = nullptr);
 
-    qreal minimumScale() const { return m_minimumScale; }
+    qreal minimumScale() const { return m_scaleAxis.minimum(); }
     void setMinimumScale(qreal minimumScale);
 
-    qreal maximumScale() const { return m_maximumScale; }
+    qreal maximumScale() const { return m_scaleAxis.maximum(); }
     void setMaximumScale(qreal maximumScale);
 
-    qreal minimumRotation() const { return m_minimumRotation; }
+    qreal minimumRotation() const { return m_rotationAxis.minimum(); }
     void setMinimumRotation(qreal minimumRotation);
 
-    qreal maximumRotation() const { return m_maximumRotation; }
+    qreal maximumRotation() const { return m_rotationAxis.maximum(); }
     void setMaximumRotation(qreal maximumRotation);
 
-    QVector2D translation() const { return m_activeTranslation; }
-    qreal scale() const { return m_accumulatedScale; }
-    qreal activeScale() const { return m_activeScale; }
-    qreal rotation() const { return m_activeRotation; }
+    QVector2D translation() const { return QVector2D(QPointF(m_xAxis.activeValue(), m_yAxis.activeValue())); }
+    qreal scale() const { return m_scaleAxis.m_accumulatedValue; }
+    qreal activeScale() const { return m_scaleAxis.m_activeValue; }
+    qreal rotation() const { return m_rotationAxis.m_accumulatedValue; }
 
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
+    QQuickDragAxis *scaleAxis() { return &m_scaleAxis; }
+    QQuickDragAxis *rotationAxis() { return &m_rotationAxis; }
 
 Q_SIGNALS:
     void minimumScaleChanged();
@@ -74,27 +80,16 @@ protected:
     void onActiveChanged() override;
     void handlePointerEventImpl(QPointerEvent *event) override;
 
+    QPointF startPos();
+
 private:
-    // properties
-    qreal m_activeScale = 1;
-    qreal m_accumulatedScale = 1;
-    qreal m_activeRotation = 0;
-    QVector2D m_activeTranslation = QVector2D(0, 0);
-
-    qreal m_minimumScale = -qInf();
-    qreal m_maximumScale = qInf();
-
-    qreal m_minimumRotation = -qInf();
-    qreal m_maximumRotation = qInf();
-
-    QQuickDragAxis m_xAxis;
-    QQuickDragAxis m_yAxis;
+    QQuickDragAxis m_xAxis = {this, u"x"_s};
+    QQuickDragAxis m_yAxis = {this, u"y"_s};
+    QQuickDragAxis m_scaleAxis = {this, u"scale"_s, true, 1};
+    QQuickDragAxis m_rotationAxis = {this, u"rotation"_s, true};
 
     // internal
-    qreal m_startScale = 1;
-    qreal m_startRotation = 0;
     qreal m_startDistance = 0;
-    QPointF m_startPos;
     qreal m_accumulatedStartCentroidDistance = 0;
     QVector<PointData> m_startAngles;
     QQuickMatrix4x4 m_transform;
