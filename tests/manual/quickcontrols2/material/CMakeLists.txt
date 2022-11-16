@@ -21,6 +21,7 @@ set(qmake_immediate_resource_files
     "material.qml"
     "Constants.qml"
     "pages/ButtonPage.qml"
+    "pages/RoundButtonPage.qml"
     "qmldir"
 )
 

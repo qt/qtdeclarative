@@ -66,7 +66,7 @@ ApplicationWindow {
             currentIndex: -1
             anchors.fill: parent
 
-            model: ["Button"]
+            model: ["Button", "RoundButton"]
             delegate: ItemDelegate {
                 width: listView.width
                 text: modelData
