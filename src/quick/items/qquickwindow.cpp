@@ -1390,6 +1390,7 @@ bool QQuickWindow::event(QEvent *event)
             for (pt : pe->points()) would only iterate once, so we might as well skip that logic.
         */
         if (pe->pointCount()) {
+            const bool synthMouse = QQuickDeliveryAgentPrivate::isSynthMouse(pe);
             if (QQuickDeliveryAgentPrivate::subsceneAgentsExist) {
                 bool ret = false;
                 // Split up the multi-point event according to the relevant QQuickDeliveryAgent that should deliver to each existing grabber
@@ -1398,7 +1399,7 @@ bool QQuickWindow::event(QEvent *event)
                 QEventPoint::States eventStates;
 
                 auto insert = [&](QQuickDeliveryAgent *ptda, const QEventPoint &pt) {
-                    if (pt.state() == QEventPoint::Pressed)
+                    if (pt.state() == QEventPoint::Pressed && !synthMouse)
                         pe->clearPassiveGrabbers(pt);
                     auto &ptList = deliveryAgentsNeedingPoints[ptda];
                     auto idEquals = [](auto id) { return [id] (const auto &e) { return e.id() == id; }; };
@@ -1461,7 +1462,9 @@ bool QQuickWindow::event(QEvent *event)
 
                 if (ret)
                     return true;
-            } else  {
+            } else if (!synthMouse) {
+                // clear passive grabbers unless it's a system synth-mouse event
+                // QTBUG-104890: Windows sends synth mouse events (which should be ignored) after touch events
                 for (const auto &pt : pe->points()) {
                     if (pt.state() == QEventPoint::Pressed)
                         pe->clearPassiveGrabbers(pt);

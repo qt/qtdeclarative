@@ -37,6 +37,7 @@ private slots:
     void simultaneousMultiTouch();
     void pressedMultipleButtons_data();
     void pressedMultipleButtons();
+    void ignoreSystemSynthMouse();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -384,6 +385,89 @@ void tst_PointHandler::pressedMultipleButtons()
     QCOMPARE(handler->active(), false);
     QCOMPARE(activeSpy.size(), activeChangeCount);
     QCOMPARE(pointSpy.size(), changeCount);
+}
+
+void tst_PointHandler::ignoreSystemSynthMouse() // QTBUG-104890
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pointTracker.qml")));
+    QQuickPointHandler *handler = window.rootObject()->findChild<QQuickPointHandler *>();
+    QVERIFY(handler);
+    auto devPriv = QPointingDevicePrivate::get(touchDevice);
+    QSignalSpy activeSpy(handler, SIGNAL(activeChanged()));
+    QSignalSpy pointSpy(handler, SIGNAL(pointChanged()));
+
+    // touch press
+    QPoint point(100,100);
+    QTest::touchEvent(&window, touchDevice).press(0, point, &window);
+    QQuickTouchUtils::flush(&window);
+
+    // touch move
+    point += QPoint(10, 10);
+    QTest::touchEvent(&window, touchDevice).move(0, point, &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(handler->active(), true);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 2);
+    QVERIFY(devPriv->queryPointById(0)->passiveGrabbers.contains(handler));
+
+    // Windows begins to synthesize mouse events in parallel with the touch event stream: move to touchpoint position, then press
+    {
+        QMouseEvent move(QEvent::MouseMove, point, point, window.mapToGlobal(point),
+                          Qt::NoButton, Qt::NoButton, Qt::NoModifier, Qt::MouseEventSynthesizedBySystem, touchDevice);
+        move.setTimestamp(235); // slightly after the last touch event
+        QGuiApplication::sendEvent(&window, &move);
+    }
+    QCOMPARE(handler->active(), true);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 2);
+    QVERIFY(devPriv->queryPointById(0)->passiveGrabbers.contains(handler));
+    {
+        QMouseEvent press(QEvent::MouseButtonPress, point, point, window.mapToGlobal(point),
+                          Qt::LeftButton, Qt::LeftButton, Qt::NoModifier, Qt::MouseEventSynthesizedBySystem, touchDevice);
+        press.setTimestamp(235);
+        QGuiApplication::sendEvent(&window, &press);
+    }
+    QCOMPARE(handler->active(), true);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 2);
+    QVERIFY(devPriv->queryPointById(0)->passiveGrabbers.contains(handler));
+
+    // another touch move
+    point += QPoint(10, 10);
+    QTest::touchEvent(&window, touchDevice).move(0, point, &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(handler->active(), true);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 3);
+    QCOMPARE(handler->point().position().toPoint(), point);
+    QCOMPARE(handler->point().scenePosition().toPoint(), point);
+    QCOMPARE(handler->point().pressPosition().toPoint(), QPoint(100, 100));
+    QCOMPARE(handler->point().scenePressPosition().toPoint(), QPoint(100, 100));
+    QVERIFY(devPriv->queryPointById(0)->passiveGrabbers.contains(handler));
+
+    // another fake mouse move
+    {
+        QMouseEvent move(QEvent::MouseMove, point, point, window.mapToGlobal(point),
+                          Qt::LeftButton, Qt::LeftButton, Qt::NoModifier, Qt::MouseEventSynthesizedBySystem, touchDevice);
+        move.setTimestamp(240);
+        QGuiApplication::sendEvent(&window, &move);
+    }
+    QCOMPARE(handler->active(), true);
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(pointSpy.size(), 3);
+    QCOMPARE(handler->point().position().toPoint(), point);
+    QCOMPARE(handler->point().scenePosition().toPoint(), point);
+    QCOMPARE(handler->point().pressPosition().toPoint(), QPoint(100, 100));
+    QCOMPARE(handler->point().scenePressPosition().toPoint(), QPoint(100, 100));
+    QVERIFY(devPriv->queryPointById(0)->passiveGrabbers.contains(handler));
+
+    // end with released state
+    QTest::touchEvent(&window, touchDevice).release(0, point, &window);
+    QMouseEvent release(QEvent::MouseButtonRelease, point, point, window.mapToGlobal(point),
+                        Qt::LeftButton, Qt::LeftButton, Qt::NoModifier, Qt::MouseEventSynthesizedBySystem);
+    release.setTimestamp(280);
+    QGuiApplication::sendEvent(&window, &release);
 }
 
 QTEST_MAIN(tst_PointHandler)

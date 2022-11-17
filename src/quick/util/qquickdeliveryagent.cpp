@@ -1435,6 +1435,11 @@ bool QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(const QPointerEvent 
            devType == QInputDevice::DeviceType::TouchPad;
 }
 
+bool QQuickDeliveryAgentPrivate::isSynthMouse(const QPointerEvent *ev)
+{
+    return (!isEventFromMouseOrTouchpad(ev) && isMouseEvent(ev));
+}
+
 QQuickPointingDeviceExtra *QQuickDeliveryAgentPrivate::deviceExtra(const QInputDevice *device)
 {
     QInputDevicePrivate *devPriv = QInputDevicePrivate::get(const_cast<QInputDevice *>(device));
