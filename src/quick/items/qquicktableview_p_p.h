@@ -542,6 +542,7 @@ public:
                              int serializedModelIndex,
                              QObject *object, bool init);
 
+    void handleTap(const QPointF &pos);
     void setCurrentIndexFromTap(const QPointF &pos);
     void setCurrentIndex(const QPoint &cell);
     bool setCurrentIndexFromKeyEvent(QKeyEvent *e);

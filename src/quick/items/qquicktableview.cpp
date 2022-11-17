@@ -4328,40 +4328,20 @@ void QQuickTableViewPrivate::init()
     // being hovered/dragged. For those cases, we fall back to setting the current index
     // on tap instead. A double tap on a resize area should also revert the section size
     // back to its implicit size.
-    static bool currentIndexChangedOnPress = false;
-
     QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, q, tapHandler] {
-        currentIndexChangedOnPress = false;
-        if (!pointerNavigationEnabled || !tapHandler->isPressed())
+        if (!tapHandler->isPressed())
             return;
+
         positionXAnimation.stop();
         positionYAnimation.stop();
-        if (keyNavigationEnabled)
-            q->forceActiveFocus(Qt::MouseFocusReason);
-        if (q->isInteractive())
-            return;
-        if (resizableRows && hoverHandler->m_row != -1)
-            return;
-        if (resizableColumns && hoverHandler->m_column != -1)
-            return;
-        if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
-            return;
 
-        clearSelection();
-        setCurrentIndexFromTap(tapHandler->point().pressPosition());
-        currentIndexChangedOnPress = true;
+        if (!q->isInteractive())
+            handleTap(tapHandler->point().pressPosition());
     });
 
-    QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, [this, tapHandler] {
-        if (!pointerNavigationEnabled || currentIndexChangedOnPress)
-            return;
-        if (resizableRows && hoverHandler->m_row != -1)
-            return;
-        if (resizableColumns && hoverHandler->m_column != -1)
-            return;
-
-        clearSelection();
-        setCurrentIndexFromTap(tapHandler->point().pressPosition());
+    QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, [this, q, tapHandler] {
+        if (q->isInteractive())
+            handleTap(tapHandler->point().pressPosition());
     });
 
     QObject::connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, q] {
@@ -4372,6 +4352,26 @@ void QQuickTableViewPrivate::init()
         if (resizeColumn)
             q->setColumnWidth(hoverHandler->m_column, -1);
     });
+}
+
+void QQuickTableViewPrivate::handleTap(const QPointF &pos)
+{
+    Q_Q(QQuickTableView);
+
+    if (keyNavigationEnabled)
+        q->forceActiveFocus(Qt::MouseFocusReason);
+
+    if (resizableRows && hoverHandler->m_row != -1)
+        return;
+    if (resizableColumns && hoverHandler->m_column != -1)
+        return;
+    if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
+        return;
+
+    if (pointerNavigationEnabled) {
+        clearSelection();
+        setCurrentIndexFromTap(pos);
+    }
 }
 
 void QQuickTableViewPrivate::syncViewportPosRecursive()
