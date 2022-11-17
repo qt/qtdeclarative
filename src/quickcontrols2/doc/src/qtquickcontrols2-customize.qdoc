@@ -524,7 +524,7 @@
         \l {ApplicationWindow::background}{background}.
 
         \code
-        import
+        import QtQuick
         import QtQuick.Controls
 
         ApplicationWindow {
