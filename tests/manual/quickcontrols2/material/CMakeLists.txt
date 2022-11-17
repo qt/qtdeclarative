@@ -19,7 +19,9 @@ qt_internal_add_manual_test(material
 
 set(qmake_immediate_resource_files
     "material.qml"
+    "Constants.qml"
     "pages/ButtonPage.qml"
+    "qmldir"
 )
 
 qt_internal_add_resource(material "qmake_immediate"

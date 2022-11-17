@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 
+import ".."
+
 Page {
     id: root
     topPadding: 20
@@ -45,11 +47,11 @@ Page {
         delegate: Component {
             ColumnLayout {
                 id: scaleLayout
-                spacing: 40
+                spacing: Constants.spacing
 
                 Layout.leftMargin: index === 0 ? roundedScaleRepeater.contentLeftMargin : 0
                 Layout.rightMargin: index === roundedScaleRepeater.count - 1 ? roundedScaleRepeater.contentRightMargin : 0
-                Layout.bottomMargin: 40
+                Layout.bottomMargin: Constants.spacing
 
                 required property int index
                 required property string displayName
@@ -67,7 +69,7 @@ Page {
                     Button {
                         text: modelData
                         flat: flatCheckBox.checked
-                        icon.source: iconCheckBox.checked ? "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png" : ""
+                        icon.source: iconCheckBox.checked ? Constants.iconSource : ""
 
                         Material.background: roundedScaleRepeater.backgroundColor
                         Material.foreground: roundedScaleRepeater.foregroundColor
@@ -83,16 +85,16 @@ Page {
         anchors.fill: parent
 
         RowLayout {
-            spacing: 40
+            spacing: Constants.spacing
 
             RoundedScaleRepeater {
-                contentLeftMargin: 40
+                contentLeftMargin: Constants.spacing
             }
 
             RoundedScaleRepeater {
                 backgroundColor: Material.Teal
                 foregroundColor: "white"
-                contentRightMargin: 40
+                contentRightMargin: Constants.spacing
             }
         }
     }
