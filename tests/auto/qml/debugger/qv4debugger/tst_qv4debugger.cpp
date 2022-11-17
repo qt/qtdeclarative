@@ -41,9 +41,12 @@
 #include <private/qv4string_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmldebugservice_p.h>
+#include <QtQml/qqmlextensionplugin.h>
 
 using namespace QV4;
 using namespace QV4::Debugging;
+
+Q_IMPORT_QML_PLUGIN(TestTypesPlugin);
 
 typedef QV4::ReturnedValue (*InjectedFunction)(const FunctionObject *b, const QV4::Value *, const QV4::Value *, int);
 Q_DECLARE_METATYPE(InjectedFunction)
@@ -201,7 +204,15 @@ public slots:
             ExpressionEvalJob job(debugger->engine(), request.frameNr, request.context,
                                   request.expression, &collector);
             debugger->runInEngine(&job);
-            m_expressionResults << job.returnValue();
+            const QJsonObject& result = job.returnValue();
+            m_expressionResults << result;
+
+            if (request.shouldLookup) {
+                QJsonArray handles {result.value("handle").toInt()};
+                ValueLookupJob job(handles, &collector);
+                debugger->runInEngine(&job);
+                m_lookupResults << job.returnValue();
+            }
         }
 
         if (m_captureContextInfo)
@@ -274,10 +285,14 @@ public:
         QString expression;
         int frameNr;
         int context;
+        bool shouldLookup = false;
     };
+
+
     QVector<ExpressionRequest> m_expressionRequests;
     QV4Debugger::Speed m_resumeSpeed;
     QList<QJsonObject> m_expressionResults;
+    QList<QJsonObject> m_lookupResults;
     QV4Debugger *m_debugger;
 
     // Utility methods:
@@ -331,7 +346,7 @@ private slots:
 
     void readThis();
     void signalParameters();
-
+    void debuggerNoCrash();
 private:
     QV4Debugger *debugger() const
     {
@@ -939,6 +954,42 @@ void tst_qv4debugger::signalParameters()
     QCOMPARE(obj->property("result").toString(), QLatin1String("something"));
     QCOMPARE(obj->property("resultCallbackInternal").toString(), QLatin1String("something"));
     QCOMPARE(obj->property("resultCallbackExternal").toString(), QLatin1String("unset"));
+}
+
+void tst_qv4debugger::debuggerNoCrash()
+{
+    QQmlEngine engine;
+    QV4::ExecutionEngine *v4 = engine.handle();
+    QPointer<QV4Debugger> v4Debugger = new QV4Debugger(v4);
+    v4->setDebugger(v4Debugger.data());
+
+    QScopedPointer<QThread> debugThread(new QThread);
+    debugThread->start();
+    QScopedPointer<TestAgent> debuggerAgent(new TestAgent(v4));
+    debuggerAgent->addDebugger(v4Debugger);
+    debuggerAgent->moveToThread(debugThread.data());
+
+    const QString qmlFileName("qtbug_107607.qml");
+    const QString qmlFilePath(testFile(qmlFileName));
+    QQmlComponent component(&engine, qmlFilePath);
+
+    TestAgent::ExpressionRequest request;
+    request.expression = "this.parent";
+    request.frameNr = 0;
+    request.context = -1;
+    request.shouldLookup = true;
+    debuggerAgent->m_expressionRequests << request;
+    v4Debugger->addBreakPoint(qmlFileName, 7);
+
+    QScopedPointer<QObject> obj(component.create());
+
+    QVERIFY(debuggerAgent->m_lookupResults.size() > 0);
+    const QJsonObject result = debuggerAgent->m_lookupResults[0];
+    const QJsonArray properties = result["0"].toObject().value("properties").toArray();
+    QCOMPARE(properties[0].toObject().value("value").toString(), QStringLiteral("patron"));
+
+    debugThread->quit();
+    debugThread->wait();
 }
 
 tst_qv4debugger::tst_qv4debugger() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
