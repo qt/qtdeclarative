@@ -49,6 +49,7 @@ private slots:
     void warningsAsErrors();
     void invalidAliasRevision();
     void topLevelComponent();
+    void dashesInFilename();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -228,6 +229,15 @@ void tst_qmltc_qprocess::topLevelComponent()
         const auto errors = runQmltc(u"ComponentType.qml"_s, false);
         QVERIFY(errors.contains(
                 u"ComponentType.qml:2:1: Qml top level type cannot be 'Component'. [top-level-component]"_s));
+    }
+}
+
+void tst_qmltc_qprocess::dashesInFilename()
+{
+    {
+        const auto errors = runQmltc(u"kebab-case.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"The given QML filename is unsuited for type compilation: the name must consist of letters, digits and underscores, starting with a letter or an underscore and ending in '.qml'!"_s));
     }
 }
 
