@@ -18,6 +18,14 @@ T.Switch {
     padding: 8
     spacing: 8
 
+    icon.width: 16
+    icon.height: 16
+    icon.color: checked
+        ? (Material.theme === Material.Light
+           ? enabled ? Qt.darker(Material.switchCheckedTrackColor, 1.8) : Material.switchDisabledCheckedIconColor
+           : enabled ? Material.primaryTextColor : Material.switchDisabledCheckedIconColor)
+        : enabled ? Material.switchUncheckedTrackColor : Material.switchDisabledUncheckedIconColor
+
     indicator: SwitchIndicator {
         x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2

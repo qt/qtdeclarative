@@ -380,16 +380,48 @@ static const QRgb raisedButtonDisabledColorLight = dividerColorLight;
 static const QRgb raisedButtonDisabledColorDark = dividerColorDark;
 static const QRgb frameColorLight = hintTextColorLight;
 static const QRgb frameColorDark = hintTextColorDark;
-static const QRgb switchUncheckedTrackColorLight = 0x42000000;
-static const QRgb switchUncheckedTrackColorDark = 0x4CFFFFFF;
-static const QRgb switchDisabledTrackColorLight = 0x1E000000;
-static const QRgb switchDisabledTrackColorDark = 0x19FFFFFF;
 static const QRgb rippleColorLight = 0x10000000;
 static const QRgb rippleColorDark = 0x20FFFFFF;
 static const QRgb spinBoxDisabledIconColorLight = 0xFFCCCCCC;
 static const QRgb spinBoxDisabledIconColorDark = 0xFF666666;
 static const QRgb sliderDisabledColorLight = 0xFF9E9E9E;
 static const QRgb sliderDisabledColorDark = 0xFF616161;
+/*
+    https://m3.material.io/components/switch/specs#57a434cd-5fcc-4d79-9bff-12b2a9768789
+
+                     light  / dark
+    surface:         #FFFBFE/#1C1B1F
+    on-surface:      #1C1B1F/#E6E1E5
+    surface-variant: #E7E0EC/#49454F
+
+    12% = 1E
+    38% = 61
+
+    handle
+
+                 unchecked                                     checked
+    disabled     #1C1B1F/#E6E1E5 @ 38% (#611C1B1F/#61E6E1E5)   #FFFBFE/#1C1B1F @ 100%
+
+    track
+
+                 unchecked                                     checked
+    disabled     #E7E0EC/#49454F @ 12% (#1EE7E0EC/#1E49454F)   #1C1B1F/#E6E1E5 @ 12% (#1E1C1B1F/#1EE6E1E5)
+
+    track outline
+
+                 unchecked                                     checked
+    disabled     #1C1B1F/#E6E1E5 @ 12% (#1E1C1B1F/#1EE6E1E5)   same as track
+*/
+static const QRgb switchUncheckedTrackColorLight = 0xFFE7E0EC;
+static const QRgb switchUncheckedTrackColorDark = 0x49454F;
+static const QRgb switchDisabledUncheckedTrackColorLight = 0x1EE7E0EC;
+static const QRgb switchDisabledUncheckedTrackColorDark = 0x1E49454F;
+static const QRgb switchDisabledUncheckedTrackBorderColorLight = 0x1E1C1B1F;
+static const QRgb switchDisabledUncheckedTrackBorderColorDark = 0x1EE6E1E5;
+static const QRgb switchDisabledCheckedTrackColorLight = 0x1E1C1B1F;
+static const QRgb switchDisabledCheckedTrackColorDark = 0x1EE6E1E5;
+static const QRgb switchDisabledUncheckedIconColorLight = 0x611C1B1F;
+static const QRgb switchDisabledUncheckedIconColorDark = 0x61E6E1E5;
 
 static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme theme)
 {
@@ -952,29 +984,67 @@ QColor QQuickMaterialStyle::switchUncheckedTrackColor() const
 
 QColor QQuickMaterialStyle::switchCheckedTrackColor() const
 {
-    QColor trackColor(accentColor());
-    trackColor.setAlphaF(0.5);
-    return trackColor;
+    return accentColor(m_theme == Light ? themeShade() : Shade100);
+}
+
+QColor QQuickMaterialStyle::switchDisabledUncheckedTrackColor() const
+{
+    return QColor::fromRgba(m_theme == Light
+        ? switchDisabledUncheckedTrackColorLight : switchDisabledUncheckedTrackColorDark);
+}
+
+QColor QQuickMaterialStyle::switchDisabledCheckedTrackColor() const
+{
+    return QColor::fromRgba(m_theme == Light
+        ? switchDisabledCheckedTrackColorLight : switchDisabledCheckedTrackColorDark);
+}
+
+QColor QQuickMaterialStyle::switchDisabledUncheckedTrackBorderColor() const
+{
+    return QColor::fromRgba(m_theme == Light
+        ? switchDisabledUncheckedTrackBorderColorLight : switchDisabledUncheckedTrackBorderColorDark);
 }
 
 QColor QQuickMaterialStyle::switchUncheckedHandleColor() const
 {
-    return m_theme == Light ? color(Grey, Shade50) : color(Grey, Shade400);
+    return m_theme == Light ? color(Grey, Shade600) : color(Grey, Shade400);
+}
+
+QColor QQuickMaterialStyle::switchUncheckedHoveredHandleColor() const
+{
+    const QColor color = switchUncheckedHandleColor();
+    return m_theme == Light ? color.darker(140) : color.lighter(120);
 }
 
 QColor QQuickMaterialStyle::switchCheckedHandleColor() const
 {
-    return m_theme == Light ? accentColor() : shade(accentColor(), Shade200);
+    return m_theme == Light ? QColor::fromRgb(0xFFFFFF) : accentColor(Shade800);
 }
 
-QColor QQuickMaterialStyle::switchDisabledTrackColor() const
+QColor QQuickMaterialStyle::switchDisabledUncheckedHandleColor() const
 {
-    return QColor::fromRgba(m_theme == Light ? switchDisabledTrackColorLight : switchDisabledTrackColorDark);
+    if (m_theme == Light)
+        return QColor::fromRgba(0x611C1B1F);
+
+    QColor darkHandleColor = color(Grey, Shade800);
+    darkHandleColor.setAlphaF(0.38f);
+    return darkHandleColor;
 }
 
-QColor QQuickMaterialStyle::switchDisabledHandleColor() const
+QColor QQuickMaterialStyle::switchDisabledCheckedHandleColor() const
 {
-    return m_theme == Light ? color(Grey, Shade400) : color(Grey, Shade800);
+    return QColor::fromRgb(m_theme == Light ? 0xFFFBFE : 0x1C1B1F);
+}
+
+QColor QQuickMaterialStyle::switchDisabledCheckedIconColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? 0x611C1B1F : 0x61E6E1E5);
+}
+
+QColor QQuickMaterialStyle::switchDisabledUncheckedIconColor() const
+{
+    return QColor::fromRgba(m_theme == Light
+        ? switchDisabledUncheckedIconColorLight : switchDisabledUncheckedIconColorDark);
 }
 
 QColor QQuickMaterialStyle::scrollBarColor() const

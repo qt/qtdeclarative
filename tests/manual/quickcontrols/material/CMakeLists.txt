@@ -23,6 +23,7 @@ set(qmake_immediate_resource_files
     "pages/ButtonPage.qml"
     "pages/DelayButtonPage.qml"
     "pages/RoundButtonPage.qml"
+    "pages/SwitchPage.qml"
     "qmldir"
 )
 

@@ -3,37 +3,71 @@
 
 import QtQuick
 import QtQuick.Templates as T
+import QtQuick.Controls.impl
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl
 
-Item {
+Rectangle {
     id: indicator
-    implicitWidth: 38
-    implicitHeight: 32
+    width: 52
+    height: 32
+    radius: height / 2
+    y: parent.height / 2 - height / 2
+    color: control.enabled
+        ? (control.checked
+           ? control.Material.switchCheckedTrackColor : control.Material.switchUncheckedTrackColor)
+        : (control.checked
+           ? control.Material.switchDisabledCheckedTrackColor
+           : control.Material.switchDisabledUncheckedTrackColor)
+    border.width: 2
+    border.color: control.enabled
+        ? (control.checked ? control.Material.switchCheckedTrackColor : control.Material.switchUncheckedHandleColor)
+        : (control.checked ? control.Material.switchDisabledCheckedTrackColor : control.Material.switchDisabledUncheckedTrackBorderColor)
 
     property T.AbstractButton control
     property alias handle: handle
 
-    Material.elevation: 1
-
-    Rectangle {
-        width: parent.width
-        height: 14
-        radius: height / 2
-        y: parent.height / 2 - height / 2
-        color: indicator.control.enabled ? (indicator.control.checked ? indicator.control.Material.switchCheckedTrackColor : indicator.control.Material.switchUncheckedTrackColor)
-                               : indicator.control.Material.switchDisabledTrackColor
+    Behavior on color {
+        ColorAnimation {
+            duration: 200
+        }
+    }
+    Behavior on border.color {
+        ColorAnimation {
+            duration: 200
+        }
     }
 
     Rectangle {
         id: handle
-        x: Math.max(0, Math.min(parent.width - width, indicator.control.visualPosition * parent.width - (width / 2)))
+        x: Math.max(offset, Math.min(parent.width - offset - width,
+            indicator.control.visualPosition * parent.width - (width / 2)))
         y: (parent.height - height) / 2
-        width: 20
-        height: 20
+        // We use scale to allow us to enlarge the circle from the center,
+        // as using width/height will cause it to jump due to the position x/y bindings.
+        // However, a large enough scale on certain displays will show the triangles
+        // that make up the circle, so instead we make sure that the circle is always
+        // its largest size so that more triangles are used, and downscale instead.
+        width: normalSize * largestScale
+        height: normalSize * largestScale
         radius: width / 2
-        color: indicator.control.enabled ? (indicator.control.checked ? indicator.control.Material.switchCheckedHandleColor : indicator.control.Material.switchUncheckedHandleColor)
-                               : indicator.control.Material.switchDisabledHandleColor
+        color: indicator.control.enabled
+            ? (indicator.control.checked
+               ? indicator.control.Material.switchCheckedHandleColor
+               : indicator.control.hovered
+                    ? indicator.control.Material.switchUncheckedHoveredHandleColor : indicator.control.Material.switchUncheckedHandleColor)
+            : (indicator.control.checked
+               ? indicator.control.Material.switchDisabledCheckedHandleColor
+               : indicator.control.Material.switchDisabledUncheckedHandleColor)
+        scale: indicator.control.down ? 1 : (indicator.control.checked ? checkedSize / largestSize : normalSize / largestSize)
+
+        readonly property int offset: 2
+        readonly property real normalSize: !hasIcon ? 16 : checkedSize
+        readonly property real checkedSize: 24
+        readonly property real largestSize: 28
+        readonly property real largestScale: largestSize / normalSize
+        readonly property bool hasIcon: indicator.control.icon.name.length > 0
+            || indicator.control.icon.source.toString().length > 0
 
         Behavior on x {
             enabled: !indicator.control.pressed
@@ -41,9 +75,27 @@ Item {
                 duration: 300
             }
         }
-        layer.enabled: indicator.Material.elevation > 0
-        layer.effect: ElevationEffect {
-            elevation: indicator.Material.elevation
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 100
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
+
+        IconImage {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            name: indicator.control.icon.name
+            source: indicator.control.icon.source
+            sourceSize: Qt.size(indicator.control.icon.width, indicator.control.icon.height)
+            color: indicator.control.icon.color
+            visible: handle.hasIcon
         }
     }
 }

@@ -51,9 +51,15 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QColor switchUncheckedTrackColor READ switchUncheckedTrackColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor switchCheckedTrackColor READ switchCheckedTrackColor NOTIFY themeOrAccentChanged FINAL)
     Q_PROPERTY(QColor switchUncheckedHandleColor READ switchUncheckedHandleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchUncheckedHoveredHandleColor READ switchUncheckedHoveredHandleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledUncheckedTrackColor READ switchDisabledUncheckedTrackColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledCheckedTrackColor READ switchDisabledCheckedTrackColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledUncheckedTrackBorderColor READ switchDisabledUncheckedTrackBorderColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor switchCheckedHandleColor READ switchCheckedHandleColor NOTIFY themeOrAccentChanged FINAL)
-    Q_PROPERTY(QColor switchDisabledTrackColor READ switchDisabledTrackColor NOTIFY themeChanged FINAL)
-    Q_PROPERTY(QColor switchDisabledHandleColor READ switchDisabledHandleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledUncheckedHandleColor READ switchDisabledUncheckedHandleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledCheckedHandleColor READ switchDisabledCheckedHandleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledCheckedIconColor READ switchDisabledCheckedIconColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledUncheckedIconColor READ switchDisabledUncheckedIconColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor scrollBarColor READ scrollBarColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor scrollBarHoveredColor READ scrollBarHoveredColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor NOTIFY themeChanged FINAL)
@@ -215,10 +221,16 @@ public:
     QColor highlightedRippleColor() const;
     QColor switchUncheckedTrackColor() const;
     QColor switchCheckedTrackColor() const;
+    QColor switchDisabledUncheckedTrackColor() const;
+    QColor switchDisabledCheckedTrackColor() const;
+    QColor switchDisabledUncheckedTrackBorderColor() const;
     QColor switchUncheckedHandleColor() const;
+    QColor switchUncheckedHoveredHandleColor() const;
     QColor switchCheckedHandleColor() const;
-    QColor switchDisabledTrackColor() const;
-    QColor switchDisabledHandleColor() const;
+    QColor switchDisabledUncheckedHandleColor() const;
+    QColor switchDisabledCheckedHandleColor() const;
+    QColor switchDisabledCheckedIconColor() const;
+    QColor switchDisabledUncheckedIconColor() const;
     QColor scrollBarColor() const;
     QColor scrollBarHoveredColor() const;
     QColor scrollBarPressedColor() const;
