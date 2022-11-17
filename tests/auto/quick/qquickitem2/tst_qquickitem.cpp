@@ -4023,7 +4023,7 @@ void tst_QQuickItem::signalsOnDestruction()
     QSignalSpy visibleChildrenSpy(parent.get(), &QQuickItem::visibleChildrenChanged);
     QSignalSpy childParentSpy(child.get(), &QQuickItem::parentChanged);
     QSignalSpy childChildrenSpy(child.get(), &QQuickItem::childrenChanged);
-    QSignalSpy childVisibleChildrenSpy(child.get(), &QQuickItem::visibleChanged);
+    QSignalSpy childVisibleChildrenSpy(child.get(), &QQuickItem::visibleChildrenChanged);
     QSignalSpy grandChildParentSpy(grandChild.get(), &QQuickItem::parentChanged);
 
     child->setParentItem(parent.get());
@@ -4038,7 +4038,7 @@ void tst_QQuickItem::signalsOnDestruction()
     QCOMPARE(visibleChildrenSpy.count(), 1);
     QCOMPARE(childParentSpy.count(), 1);
     QCOMPARE(childChildrenSpy.count(), 1);
-    QCOMPARE(childVisibleChildrenSpy.count(), 0);
+    QCOMPARE(childVisibleChildrenSpy.count(), 1);
     QCOMPARE(grandChildParentSpy.count(), 1);
 
     parent.reset();
@@ -4048,6 +4048,8 @@ void tst_QQuickItem::signalsOnDestruction()
     QCOMPARE(childrenSpy.count(), 1);
     QCOMPARE(visibleChildrenSpy.count(), 1);
     QCOMPARE(childParentSpy.count(), 2);
+    QCOMPARE(childChildrenSpy.count(), 1);
+    QCOMPARE(childVisibleChildrenSpy.count(), 1);
     QCOMPARE(grandChildParentSpy.count(), 1);
 }
 
