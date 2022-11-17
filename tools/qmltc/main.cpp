@@ -16,6 +16,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qcommandlineparser.h>
+#include <QtCore/qregularexpression.h>
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -119,6 +120,15 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     if (!url.endsWith(u".qml")) {
         fprintf(stderr, "Non-QML file passed as input\n");
+        return EXIT_FAILURE;
+    }
+
+    static QRegularExpression nameChecker(u"^[a-zA-Z_][a-zA-Z0-9_]*\\.qml$"_s);
+    if (auto match = nameChecker.match(QUrl(url).fileName()); !match.hasMatch()) {
+        fprintf(stderr,
+                "The given QML filename is unsuited for type compilation: the name must consist of "
+                "letters, digits and underscores, starting with "
+                "a letter or an underscore and ending in '.qml'!\n");
         return EXIT_FAILURE;
     }
 
