@@ -4306,6 +4306,7 @@ void QQuickTableViewPrivate::init()
     Q_Q(QQuickTableView);
 
     q->setFlag(QQuickItem::ItemIsFocusScope);
+    q->setActiveFocusOnTab(true);
 
     positionXAnimation.setTargetObject(q);
     positionXAnimation.setProperty(QStringLiteral("contentX"));
@@ -4429,6 +4430,14 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
     const QModelIndex currentIndex = selectionModel->currentIndex();
     const QPoint currentCell = q->cellAtIndex(currentIndex);
     const bool select = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
+
+    if (!q->activeFocusOnTab()) {
+        switch (e->key()) {
+        case Qt::Key_Tab:
+        case Qt::Key_Backtab:
+            return false;
+        }
+    }
 
     if (!cellIsValid(currentCell)) {
         switch (e->key()) {

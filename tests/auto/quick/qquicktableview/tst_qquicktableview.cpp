@@ -210,6 +210,7 @@ private slots:
     void moveCurrentIndexUsingPageUpDownKeys();
     void moveCurrentIndexUsingTabKey_data();
     void moveCurrentIndexUsingTabKey();
+    void respectActiveFocusOnTabDisabled();
     void setCurrentIndexOnFirstKeyPress_data();
     void setCurrentIndexOnFirstKeyPress();
     void setCurrentIndexFromMouse();
@@ -4957,6 +4958,8 @@ void tst_QQuickTableView::moveCurrentIndexUsingTabKey()
 
     WAIT_UNTIL_POLISHED;
 
+    QVERIFY(tableView->activeFocusOnTab());
+
     QCOMPARE(tableView->currentColumn(), -1);
     QCOMPARE(tableView->currentRow(), -1);
 
@@ -5015,6 +5018,49 @@ void tst_QQuickTableView::moveCurrentIndexUsingTabKey()
     QVERIFY(!tableView->itemAtCell(cellRightAbove)->property(kCurrent).toBool());
     QVERIFY(tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
     QVERIFY(!selectionModel.hasSelection());
+}
+
+void tst_QQuickTableView::respectActiveFocusOnTabDisabled()
+{
+    // Ensure that we don't move focus for tab or backtab
+    // when TableView.setActiveFocusOnTab is false.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(3, 3);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setActiveFocusOnTab(false);
+    tableView->setFocus(true);
+
+    QQuickWindow *window = tableView->window();
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+    QVERIFY(!tableView->activeFocusOnTab());
+
+    // Start by making cell 0, 0 current
+    const QPoint cell0_0(0, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
+
+    // Press Tab
+    const QPoint cell1_0(1, 0);
+    QTest::keyPress(window, Qt::Key_Tab);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(cell1_0)->property(kCurrent).toBool());
+
+    // Press Backtab
+    QTest::keyPress(window, Qt::Key_Backtab);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
 }
 
 void tst_QQuickTableView::setCurrentIndexOnFirstKeyPress_data()
