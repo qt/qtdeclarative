@@ -28,7 +28,7 @@ private:
     Q_PROPERTY(QString informativeText READ informativeText WRITE setInformativeText NOTIFY informativeTextChanged FINAL)
     Q_PROPERTY(QString detailedText READ detailedText WRITE setDetailedText NOTIFY detailedTextChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons buttons READ buttons WRITE setButtons NOTIFY buttonsChanged FINAL)
-    Q_FLAG(QPlatformDialogHelper::StandardButton)
+    QML_EXTENDED_NAMESPACE(QPlatformDialogHelper)
     QML_NAMED_ELEMENT(MessageDialog)
     QML_ADDED_IN_VERSION(6, 3)
 
