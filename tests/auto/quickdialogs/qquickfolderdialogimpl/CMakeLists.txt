@@ -11,7 +11,7 @@ qt_internal_add_test(tst_qquickfolderdialogimpl
     SOURCES
         tst_qquickfolderdialogimpl.cpp
     DEFINES
-        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2\\\"
+        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols\\\"
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui

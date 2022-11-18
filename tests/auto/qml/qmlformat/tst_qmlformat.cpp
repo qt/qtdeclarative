@@ -139,7 +139,7 @@ void TestQmlformat::initTestCase()
     // Optional chains are not permitted on the left-hand-side in assignments
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/optionalChaining.LHS.qml";
     // object literal with = assignements
-    m_invalidFiles << "tests/auto/quickcontrols2/controls/data/tst_scrollbar.qml";
+    m_invalidFiles << "tests/auto/quickcontrols/controls/data/tst_scrollbar.qml";
 
     // These files rely on exact formatting
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon1.qml";

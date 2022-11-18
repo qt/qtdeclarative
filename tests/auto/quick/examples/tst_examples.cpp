@@ -60,9 +60,9 @@ tst_examples::tst_examples()
     excludedDirs << "snippets/qml/visualdatamodel_rootindex";
     excludedDirs << "snippets/qml/qtbinding";
     excludedDirs << "snippets/qml/imports";
-    excludedDirs << "examples/quickcontrols2/imagine";
-    excludedDirs << "examples/quickcontrols2/texteditor";
-    excludedDirs << "examples/quickcontrols2/ios/todolist"; // Must be run via executable.
+    excludedDirs << "examples/quickcontrols/imagine";
+    excludedDirs << "examples/quickcontrols/texteditor";
+    excludedDirs << "examples/quickcontrols/ios/todolist"; // Must be run via executable.
     excludedFiles << "snippets/qml/image-ext.qml";
     excludedFiles << "examples/quick/shapes/content/main.qml"; // relies on resources
     excludedFiles << "examples/quick/shapes/content/interactive.qml"; // relies on resources

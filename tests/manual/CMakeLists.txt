@@ -14,6 +14,6 @@ add_subdirectory(tableview)
 add_subdirectory(text)
 add_subdirectory(touch)
 # add_subdirectory(v4) # TODO: port if needed
-add_subdirectory(quickcontrols2)
+add_subdirectory(quickcontrols)
 add_subdirectory(quickdialogs)
 add_subdirectory(frameanimation)
