@@ -35,6 +35,15 @@ using namespace Qt::StringLiterals;
         m_body += u"// "_s + QStringLiteral(#function) + u'\n'; \
     }
 
+
+static bool isTypeStorable(const QQmlJSTypeResolver *resolver, const QQmlJSScope::ConstPtr &type)
+{
+    return !type.isNull()
+            && !resolver->equals(type, resolver->nullType())
+            && !resolver->equals(type, resolver->emptyListType())
+            && !resolver->equals(type, resolver->voidType());
+}
+
 QString QQmlJSCodeGenerator::castTargetName(const QQmlJSScope::ConstPtr &type) const
 {
     return type->augmentedInternalName();
@@ -73,14 +82,6 @@ QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
 
     reject(u"retrieving the metaObject of a composite type without using an instance."_s);
     return QString();
-}
-
-static bool isTypeStorable(const QQmlJSTypeResolver *resolver, const QQmlJSScope::ConstPtr &type)
-{
-    return !type.isNull()
-            && !resolver->equals(type, resolver->nullType())
-            && !resolver->equals(type, resolver->emptyListType())
-            && !resolver->equals(type, resolver->voidType());
 }
 
 QQmlJSAotFunction QQmlJSCodeGenerator::run(
@@ -2459,9 +2460,18 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
 
     const auto primitive = m_typeResolver->jsPrimitiveType();
     if (m_typeResolver->equals(lhsType, rhsType) && !m_typeResolver->equals(lhsType, primitive)) {
-        m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
-                             registerVariable(lhs) + (invert ? u" != "_s : u" == "_s)
-                             + m_state.accumulatorVariableIn);
+        if (isTypeStorable(m_typeResolver, lhsType)) {
+            m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
+                                 registerVariable(lhs) + (invert ? u" != "_s : u" == "_s)
+                                 + m_state.accumulatorVariableIn);
+        } else if (m_typeResolver->equals(lhsType, m_typeResolver->emptyListType())) {
+            // We cannot compare two empty lists, because we don't know whether it's
+            // the same  instance or not. "[] === []" is false, but "var a = []; a === a" is true;
+            reject(u"comparison of two empty lists"_s);
+        } else {
+            // null === null and  undefined === undefined
+            m_body += invert ? u"false"_s : u"true"_s;
+        }
     } else {
         m_body += conversion(
                     m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
