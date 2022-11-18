@@ -240,7 +240,6 @@ public:
     {
         Q_ASSERT(idx >= std::numeric_limits<qint16>::min());
         Q_ASSERT(idx <= std::numeric_limits<qint16>::max());
-        Q_ASSERT(idx != m_coreIndex);
         m_overrideIndex = qint16(idx);
     }
 
