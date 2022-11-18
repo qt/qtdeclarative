@@ -147,7 +147,8 @@ QQmlEngineDebugServiceImpl::propertyData(QObject *obj, int propIdx)
 {
     QQmlObjectProperty rv;
 
-    QMetaProperty prop = obj->metaObject()->property(propIdx);
+    const QMetaObject *metaObject = obj->metaObject();
+    QMetaProperty prop = metaObject->property(propIdx);
 
     rv.type = QQmlObjectProperty::Unknown;
     rv.valueTypeName = QString::fromUtf8(prop.typeName());
@@ -158,7 +159,10 @@ QQmlEngineDebugServiceImpl::propertyData(QObject *obj, int propIdx)
     if (binding)
         rv.binding = binding->expression();
 
-    rv.value = valueContents(prop.read(obj));
+    if (metaObject->metaType().flags().testFlag(QMetaType::IsGadget))
+        rv.value = valueContents(static_cast<QQmlGadgetPtrWrapper *>(obj)->readOnGadget(prop));
+    else
+        rv.value = valueContents(prop.read(obj));
 
     if (prop.metaType().flags().testFlag(QMetaType::PointerToQObject))  {
         rv.type = QQmlObjectProperty::Object;

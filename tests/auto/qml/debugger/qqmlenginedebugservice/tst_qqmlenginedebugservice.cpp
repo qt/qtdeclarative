@@ -21,6 +21,7 @@
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtQml/qqmlapplicationengine.h>
 #include <QtQuick/qquickitem.h>
 
 #include <QtNetwork/qhostaddress.h>
@@ -161,6 +162,7 @@ private slots:
     void asynchronousCreate();
     void invalidContexts();
     void createObjectOnDestruction();
+    void fetchValueType();
 };
 
 QQmlEngineDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
@@ -1356,6 +1358,26 @@ void tst_QQmlEngineDebugService::createObjectOnDestruction()
     // Doesn't crash and doesn't give us another signal for the object created on destruction.
     QTest::qWait(500);
     QCOMPARE(spy.size(), 2);
+}
+
+void tst_QQmlEngineDebugService::fetchValueType()
+{
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("fetchValueType.qml"));
+
+
+    bool success = false;
+    m_dbg->queryAvailableEngines(&success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+    QVERIFY(m_dbg->engines().size() > 1);
+
+    QQmlEngineDebugObjectReference object;
+    object.debugId = QQmlDebugService::idForObject(&engine);
+    m_dbg->queryObjectRecursive(object, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
 }
 
 void tst_QQmlEngineDebugService::debuggerCrashOnAttach() {
