@@ -160,6 +160,7 @@ public:
     void setBottomPadding(qreal value, bool reset = false);
 
     void ensureDoc();
+    void updateDocumentText();
 
     QRectF setupTextLayout(qreal * const baseline);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int fullLayoutTextLength, int lineOffset = 0);

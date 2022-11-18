@@ -97,7 +97,8 @@ void QmltcCodeGenerator::generate_assignToListProperty(
                         type, p, QmltcCodeGenerator::wrap_privateClass(accessor, p));
 
         qmlListVarName = u"listprop_%1"_s.arg(p.propertyName());
-        *block << u"QQmlListProperty<%1> %2;"_s.arg(p.type()->internalName(), qmlListVarName);
+        QQmlJSScope::ConstPtr valueType = p.type()->valueType();
+        *block << u"QQmlListProperty<%1> %2;"_s.arg(valueType->internalName(), qmlListVarName);
         *block << extensionPrologue;
         *block << u"%1 = %2->%3();"_s.arg(qmlListVarName, extensionAccessor, p.read());
         *block << extensionEpilogue;

@@ -47,7 +47,7 @@ public:
         for (int x = 0; x < m_cols; ++x) {
             m_modelData[x] = QVector<CellData>(m_rows);
             for (int y = 0; y < m_rows; ++y)
-                m_modelData[x][y] = qMakePair(QStringLiteral("white"), false);
+                m_modelData[x][y] = qMakePair(QString("%1, %2").arg(x).arg(y), false);
         }
     }
 
@@ -71,15 +71,25 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override
     {
-        if (role != Qt::CheckStateRole)
-            return false;
+        switch (role) {
+        case Qt::DisplayRole: {
+            QString text = value.toString();
+            auto &cellData = m_modelData[index.column()][index.row()];
+            if (text == cellData.first)
+                return false;
+            cellData.first = text;
+            break; }
+        case Qt::CheckStateRole: {
+            bool checked = value.toBool();
+            auto &cellData = m_modelData[index.column()][index.row()];
+            if (checked == cellData.second)
+                return false;
 
-        bool checked = value.toBool();
-        auto &cellData = m_modelData[index.column()][index.row()];
-        if (checked == cellData.second)
-            return false;
-
-        cellData.second = checked;
+            cellData.second = checked;
+            break; }
+        default:
+            return QAbstractTableModel::setData(index, value, role);
+        }
 
         emit dataChanged(index, index, {role});
         return true;
@@ -124,7 +134,7 @@ public:
 
         for (int y = 0; y < count; ++y) {
             for (int x = 0; x < m_cols; ++x)
-                m_modelData[x].insert(row, qMakePair(QStringLiteral("lightgreen"), false));
+                m_modelData[x].insert(row, qMakePair(QStringLiteral("added"), false));
         }
 
         endInsertRows();
@@ -166,7 +176,7 @@ public:
             const int c = column + x;
             m_modelData.insert(c, QVector<CellData>(m_rows));
             for (int y = 0; y < m_rows; ++y)
-                m_modelData[c][y] = qMakePair(QStringLiteral("lightblue"), false);
+                m_modelData[c][y] = qMakePair(QStringLiteral("added"), false);
         }
 
         endInsertColumns();

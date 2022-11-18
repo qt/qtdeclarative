@@ -728,7 +728,7 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 */
 
 /*!
-    \qmlsignal QtQuick::PointerHandler::grabChanged(GrabTransition transition, EventPoint point)
+    \qmlsignal QtQuick::PointerHandler::grabChanged(GrabTransition transition, eventPoint point)
 
     This signal is emitted when the grab has changed in some way which is
     relevant to this handler.
@@ -738,7 +738,7 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 */
 
 /*!
-    \qmlsignal QtQuick::PointerHandler::canceled(EventPoint point)
+    \qmlsignal QtQuick::PointerHandler::canceled(eventPoint point)
 
     If this handler has already grabbed the given \a point, this signal is
     emitted when the grab is stolen by a different Pointer Handler or Item.

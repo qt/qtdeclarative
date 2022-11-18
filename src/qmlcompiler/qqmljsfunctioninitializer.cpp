@@ -206,12 +206,11 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         }
 
         const auto property = m_objectType->property(propertyName);
-        function.returnType = property.isList()
-                ? m_typeResolver->listType(property.type(), QQmlJSTypeResolver::UseQObjectList)
-                : QQmlJSScope::ConstPtr(property.type());
-
-
-        if (!function.returnType) {
+        if (const QQmlJSScope::ConstPtr propertyType = property.type()) {
+            function.returnType = propertyType->isListProperty()
+                    ? m_typeResolver->qObjectListType()
+                    : propertyType;
+        } else {
             diagnose(u"Cannot resolve property type %1 for binding on %2"_s.arg(
                          property.typeName(), propertyName),
                      QtWarningMsg, bindingLocation, error);

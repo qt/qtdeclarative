@@ -188,7 +188,8 @@ public:
             stackSlotIsLocalOrArgument(false),
             isVolatile(false),
             global(false),
-            qmlGlobal(false)
+            qmlGlobal(false),
+            throwsReferenceError(false)
         {}
 
         Reference(const Reference &) = default;
@@ -329,6 +330,14 @@ public:
             return theStackSlot;
         }
 
+        void tdzCheck() const
+        {
+            if (isAccumulator())
+                tdzCheck(requiresTDZCheck, throwsReferenceError);
+            else if (isStackSlot())
+                tdzCheckStackSlot(stackSlot(), requiresTDZCheck, throwsReferenceError);
+        }
+
         union {
             Moth::StackSlot theStackSlot;
             QV4::ReturnedValue constant;
@@ -361,6 +370,7 @@ public:
         quint32 isVolatile:1;
         quint32 global:1;
         quint32 qmlGlobal:1;
+        quint32 throwsReferenceError:1;
         QQmlJS::SourceLocation sourceLocation = QQmlJS::SourceLocation();
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainJumpLabel;
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainTargetLabel;
@@ -368,6 +378,9 @@ public:
     private:
         void storeAccumulator() const;
         Reference doStoreOnStack(int tempIndex) const;
+        void tdzCheck(bool requiresCheck, bool throwsReferenceError) const;
+        void tdzCheckStackSlot(
+                Moth::StackSlot slot, bool requiresCheck, bool throwsReferenceError) const;
     };
 
     struct RegisterScope {
@@ -826,6 +839,7 @@ private:
                     const QString &detail);
     std::optional<Moth::BytecodeGenerator::Label> traverseOptionalChain(QQmlJS::AST::Node *node);
     Reference loadSubscriptForCall(const Reference &base);
+    void generateThrowException(const QString &type, const QString &text = QString());
 };
 
 }

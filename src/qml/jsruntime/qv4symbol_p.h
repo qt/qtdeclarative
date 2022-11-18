@@ -36,7 +36,7 @@ struct Symbol : StringOrSymbol {
     Member(class, Pointer, Symbol *, symbol)
 
 DECLARE_HEAP_OBJECT(SymbolObject, Object) {
-    DECLARE_MARKOBJECTS(SymbolObject);
+    DECLARE_MARKOBJECTS(SymbolObject)
     void init(const QV4::Symbol *s);
 };
 

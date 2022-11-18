@@ -981,7 +981,12 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
+    bool first = true;
     for (auto c : field(self, Fields::children).values()) {
+        if (!first && ow.lineWriter.options().objectsSpacing) {
+            ow.newline().newline();
+        }
+        first = false;
         ow.ensureNewline();
         c.writeOut(ow);
     }

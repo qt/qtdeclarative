@@ -1794,9 +1794,21 @@ void QQmlJSCodeGenerator::generate_DefineArray(int argc, int args)
                                   registerVariable(args + i));
     }
 
-    m_body += m_state.accumulatorVariableOut + u" = "_s + stored->internalName() + u'{';
-    m_body += initializer.join(u", "_s);
-    m_body += u"};\n";
+    if (stored->isListProperty()) {
+        reject(u"creating a QQmlListProperty not backed by a property"_s);
+
+        // We can, technically, generate code for this. But it's dangerous:
+        //
+        // const QString storage = m_state.accumulatorVariableOut + u"_storage"_s;
+        // m_body += stored->internalName() + u"::ListType " + storage
+        //         + u" = {"_s + initializer.join(u", "_s) + u"};\n"_s;
+        // m_body += m_state.accumulatorVariableOut
+        //         + u" = " + stored->internalName() + u"(nullptr, &"_s + storage + u");\n"_s;
+    } else {
+        m_body += m_state.accumulatorVariableOut + u" = "_s + stored->internalName() + u'{';
+        m_body += initializer.join(u", "_s);
+        m_body += u"};\n";
+    }
 }
 
 void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)
@@ -1994,6 +2006,9 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
         return u'&' + var;
     }
 
+    if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
+        return u'&' + var;
+
     reject(u"content pointer of non-QVariant wrapper type "_s + content.descriptiveName());
     return QString();
 }
@@ -2016,6 +2031,9 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
              && m_typeResolver->containedType(content)->scopeType() == QQmlJSScope::EnumScope) {
         return metaTypeFromType(m_typeResolver->intType());
     }
+
+    if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
+        return metaTypeFromType(m_typeResolver->listPropertyType());
 
     reject(u"content type of non-QVariant wrapper type "_s + content.descriptiveName());
     return QString();
@@ -2303,7 +2321,7 @@ void QQmlJSCodeGenerator::generate_InitializeBlockDeadTemporalZone(int firstReg,
 {
     Q_UNUSED(firstReg)
     Q_UNUSED(count)
-    BYTECODE_UNIMPLEMENTED();
+    // Ignore. We reject uninitialized values anyway.
 }
 
 void QQmlJSCodeGenerator::generate_ThrowOnNullOrUndefined()

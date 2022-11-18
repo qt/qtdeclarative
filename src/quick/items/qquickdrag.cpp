@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickdrag_p.h"
+#include "qquickdrag_p_p.h"
 
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -10,78 +11,22 @@
 #include <private/qquickitemchangelistener_p.h>
 #include <private/qquickpixmapcache_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <QtCore/qbuffer.h>
 #include <QtCore/qmimedata.h>
+#include <QtCore/qstringconverter.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qimagewriter.h>
 
 #include <qpa/qplatformdrag.h>
 #include <QtGui/qdrag.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDragAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
-{
-    Q_DECLARE_PUBLIC(QQuickDragAttached)
-    QML_ANONYMOUS
-    QML_ADDED_IN_VERSION(2, 0)
+using namespace Qt::StringLiterals;
 
-public:
-    static QQuickDragAttachedPrivate *get(QQuickDragAttached *attached) {
-        return static_cast<QQuickDragAttachedPrivate *>(QObjectPrivate::get(attached)); }
-
-    QQuickDragAttachedPrivate()
-        : attachedItem(nullptr)
-        , mimeData(nullptr)
-        , proposedAction(Qt::MoveAction)
-        , supportedActions(Qt::MoveAction | Qt::CopyAction | Qt::LinkAction)
-        , active(false)
-        , listening(false)
-        , inEvent(false)
-        , dragRestarted(false)
-        , itemMoved(false)
-        , eventQueued(false)
-        , overrideActions(false)
-        , dragType(QQuickDrag::Internal)
-    {
-    }
-
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
-    void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
-    void updatePosition();
-    void restartDrag();
-    void deliverEnterEvent();
-    void deliverMoveEvent();
-    void deliverLeaveEvent();
-    void deliverEvent(QQuickWindow *window, QEvent *event);
-    void start(Qt::DropActions supportedActions);
-    Qt::DropAction startDrag(Qt::DropActions supportedActions);
-    void setTarget(QQuickItem *item);
-
-    QQuickDragGrabber dragGrabber;
-
-    QPointer<QObject> source;
-    QPointer<QObject> target;
-    QPointer<QQuickWindow> window;
-    QQuickItem *attachedItem;
-    QQuickDragMimeData *mimeData;
-    Qt::DropAction proposedAction;
-    Qt::DropActions supportedActions;
-    bool active : 1;
-    bool listening : 1;
-    bool inEvent : 1;
-    bool dragRestarted : 1;
-    bool itemMoved : 1;
-    bool eventQueued : 1;
-    bool overrideActions : 1;
-    QPointF hotSpot;
-    QUrl imageSource;
-    QQuickPixmap pixmapLoader;
-    QStringList keys;
-    QVariantMap externalMimeData;
-    QQuickDrag::DragType dragType;
-};
 
 /*!
     \qmltype Drag
@@ -443,12 +388,13 @@ void QQuickDragAttached::setKeys(const QStringList &keys)
 }
 
 /*!
-    \qmlattachedproperty stringlist QtQuick::Drag::mimeData
+    \qmlattachedproperty var QtQuick::Drag::mimeData
     \since 5.2
 
     This property holds a map from mime type to data that is used during startDrag.
-    The mime data needs to be a \c string, or an \c ArrayBuffer with the data encoded
-    according to the mime type.
+    The mime data needs to be of a type that matches the mime type (e.g. a string if
+    the mime type is "text/plain", or an image if the mime type is "image/png"), or
+    an \c ArrayBuffer with the data encoded according to the mime type.
 */
 
 QVariantMap QQuickDragAttached::mimeData() const
@@ -726,24 +672,108 @@ void QQuickDragAttached::cancel()
     \sa drop()
  */
 
+QMimeData *QQuickDragAttachedPrivate::createMimeData() const
+{
+    Q_Q(const QQuickDragAttached);
+    QMimeData *mimeData = new QMimeData();
+
+    for (const auto [mimeType, value] : externalMimeData.asKeyValueRange()) {
+        switch (value.typeId()) {
+        case QMetaType::QByteArray:
+            // byte array assumed to already be correctly encoded
+            mimeData->setData(mimeType, value.toByteArray());
+            break;
+        case QMetaType::QString: {
+            const QString text = value.toString();
+            if (mimeType == u"text/plain"_s) {
+                mimeData->setText(text);
+            } else if (mimeType == u"text/html"_s) {
+                mimeData->setHtml(text);
+            } else if (mimeType == u"text/uri-list"_s) {
+                const QUrl url(text);
+                if (url.isValid())
+                    mimeData->setUrls({url});
+                else
+                    qmlWarning(q) << text << " is not a valid URI";
+            } else if (mimeType.startsWith(u"text/"_s)) {
+                if (qsizetype charsetIdx = mimeType.lastIndexOf(u";charset="_s); charsetIdx != -1) {
+                    charsetIdx += sizeof(";charset=") - 1;
+                    const QByteArray encoding = mimeType.mid(charsetIdx).toUtf8();
+                    QStringEncoder encoder(encoding);
+                    if (encoder.isValid())
+                        mimeData->setData(mimeType, encoder.encode(text));
+                    else
+                        qmlWarning(q) << "Don't know how to encode text as " << mimeType;
+                } else {
+                    mimeData->setData(mimeType, text.toUtf8().constData());
+                }
+            } else {
+                qmlWarning(q) << "Mime data contains a string, but mime type " << mimeType
+                              << " is not a supported text type";
+            }
+            break;
+        }
+        case QMetaType::QVariantList:
+        case QMetaType::QStringList:
+            if (mimeType == u"text/uri-list"_s) {
+                const QVariantList values = value.toList();
+                QList<QUrl> urls;
+                urls.reserve(values.size());
+                bool error = false;
+                for (qsizetype index = 0; index < values.size(); ++index) {
+                    const QUrl url = values.at(index).value<QUrl>();
+                    if (url.isValid()) {
+                        urls += url;
+                    } else {
+                        error = true;
+                        qmlWarning(q) << "Value '" << values.at(index) << "' at index " << index
+                                      << " is not a valid URI";
+                    }
+                }
+                if (!error)
+                    mimeData->setUrls(urls);
+            }
+            break;
+        case QMetaType::QImage:
+            if (const QByteArray mimeTypeUtf8 = mimeType.toUtf8();
+                QImageWriter::supportedMimeTypes().contains(mimeTypeUtf8)) {
+                const auto imageFormats = QImageWriter::imageFormatsForMimeType(mimeTypeUtf8);
+                if (imageFormats.isEmpty()) { // shouldn't happen, but we can fall back
+                    mimeData->setImageData(value);
+                    break;
+                }
+                const QImage image = value.value<QImage>();
+                QByteArray bytes;
+                {
+                    QBuffer buffer(&bytes);
+                    QImageWriter encoder(&buffer, imageFormats.first());
+                    encoder.write(image);
+                }
+                mimeData->setData(mimeType, bytes);
+                break;
+            }
+            Q_FALLTHROUGH();
+        default:
+            qmlWarning(q) << "Don't know how to encode variant of type " << value.metaType()
+                          << " as mime type " << mimeType;
+            // compatibility with pre-6.5 - probably a bad idea
+            mimeData->setData(mimeType, value.toString().toUtf8());
+            break;
+        }
+    }
+
+    return mimeData;
+}
+
 Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedActions)
 {
     Q_Q(QQuickDragAttached);
 
     QDrag *drag = new QDrag(source ? source : q);
-    QMimeData *mimeData = new QMimeData();
 
-    for (auto it = externalMimeData.cbegin(), end = externalMimeData.cend(); it != end; ++it) {
-        if (it.value().typeId() == QMetaType::QByteArray)
-            mimeData->setData(it.key(), it.value().toByteArray());
-        else
-            mimeData->setData(it.key(), it.value().toString().toUtf8());
-    }
-
-    drag->setMimeData(mimeData);
-    if (pixmapLoader.isReady()) {
+    drag->setMimeData(createMimeData());
+    if (pixmapLoader.isReady())
         drag->setPixmap(QPixmap::fromImage(pixmapLoader.image()));
-    }
 
     drag->setHotSpot(hotSpot.toPoint());
     emit q->dragStarted();

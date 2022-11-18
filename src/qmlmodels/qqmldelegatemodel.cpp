@@ -931,9 +931,9 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
             proxyContext->setContextObject(nullptr);
         }
 
-        if (incubatorPriv->requiredProperties().empty())
+        if (incubatorPriv->requiredProperties()->empty())
             return;
-        RequiredProperties &requiredProperties = incubatorPriv->requiredProperties();
+        RequiredProperties *requiredProperties = incubatorPriv->requiredProperties();
 
         auto qmlMetaObject = modelItemToIncubate->metaObject();
         // if a required property was not in the model, it might still be a static property of the

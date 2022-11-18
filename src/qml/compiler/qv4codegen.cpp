@@ -69,6 +69,28 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
     }
 }
 
+void Codegen::generateThrowException(const QString &type, const QString &text)
+{
+    RegisterScope scope(this);
+    Instruction::Construct construct;
+    if (text.isEmpty()) {
+        construct.argc = 0;
+        construct.argv = 0;
+    } else {
+        construct.argc = 1;
+        Instruction::LoadRuntimeString load;
+        load.stringId = registerString(text);
+        bytecodeGenerator->addInstruction(load);
+        construct.argv = Reference::fromAccumulator(this).storeOnStack().stackSlot();
+    }
+    Reference r = referenceForName(type, false);
+    r = r.storeOnStack();
+    construct.func = r.stackSlot();
+    bytecodeGenerator->addInstruction(construct);
+    Instruction::ThrowException throwException;
+    bytecodeGenerator->addInstruction(throwException);
+}
+
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
                  CodegenWarningInterface *interface, bool storeSourceLocations)
     : _module(nullptr),
@@ -2141,8 +2163,10 @@ Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
             break;
         if (!argc && !it->next && !hasSpread) {
             // avoid copy for functions taking a single argument
-            if (e.isStackSlot())
+            if (e.isStackSlot()) {
+                e.tdzCheck();
                 return { 1, e.stackSlot(), hasSpread };
+            }
         }
         (void) e.storeOnStack(calldata + argc);
         ++argc;
@@ -2560,6 +2584,7 @@ bool Codegen::visit(FunctionExpression *ast)
 Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, const SourceLocation &accessLocation)
 {
     Context::ResolvedName resolved = _context->resolveName(name, accessLocation);
+    bool throwsReferenceError = false;
 
     if (resolved.type == Context::ResolvedName::Local || resolved.type == Context::ResolvedName::Stack
         || resolved.type == Context::ResolvedName::Import) {
@@ -2572,6 +2597,8 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
             Q_ASSERT(_interface);
             _interface->reportVarUsedBeforeDeclaration(
                     name, url().toLocalFile(), resolved.declarationLocation, accessLocation);
+            if (resolved.type == Context::ResolvedName::Stack && resolved.requiresTDZCheck)
+                throwsReferenceError = true;
         }
 
         if (resolved.isInjected && accessLocation.isValid()) {
@@ -2600,6 +2627,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         r.requiresTDZCheck = resolved.requiresTDZCheck;
         r.name = name; // used to show correct name at run-time when TDZ check fails.
         r.sourceLocation = accessLocation;
+        r.throwsReferenceError = throwsReferenceError;
         return r;
     }
 
@@ -4411,6 +4439,28 @@ Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
     return slot;
 }
 
+void Codegen::Reference::tdzCheck(bool requiresCheck, bool throwsReferenceError) const {
+    if (throwsReferenceError) {
+        codegen->generateThrowException(QStringLiteral("ReferenceError"),
+                                        name + QStringLiteral(" is not defined"));
+        return;
+    }
+    if (!requiresCheck)
+        return;
+    Instruction::DeadTemporalZoneCheck check;
+    check.name = codegen->registerString(name);
+    codegen->bytecodeGenerator->addInstruction(check);
+}
+
+void Codegen::Reference::tdzCheckStackSlot(Moth::StackSlot slot, bool requiresCheck, bool throwsReferenceError) const {
+    if (!requiresCheck)
+        return;
+    Instruction::LoadReg load;
+    load.reg = slot;
+    codegen->bytecodeGenerator->addInstruction(load);
+    tdzCheck(true, throwsReferenceError);
+}
+
 Codegen::Reference Codegen::Reference::storeRetainAccumulator() const
 {
     if (storeWipesAccumulator()) {
@@ -4447,20 +4497,18 @@ bool Codegen::Reference::storeWipesAccumulator() const
 
 void Codegen::Reference::storeAccumulator() const
 {
-    if (isReferenceToConst) {
-        // throw a type error
-        RegisterScope scope(codegen);
-        Reference r = codegen->referenceForName(QStringLiteral("TypeError"), false);
-        r = r.storeOnStack();
-        Instruction::Construct construct;
-        construct.func = r.stackSlot();
-        construct.argc = 0;
-        construct.argv = 0;
-        codegen->bytecodeGenerator->addInstruction(construct);
-        Instruction::ThrowException throwException;
-        codegen->bytecodeGenerator->addInstruction(throwException);
+    if (throwsReferenceError) {
+        codegen->generateThrowException(QStringLiteral("ReferenceError"),
+                                        name + QStringLiteral(" is not defined"));
         return;
     }
+
+    if (isReferenceToConst) {
+        // throw a type error
+        codegen->generateThrowException(QStringLiteral("TypeError"));
+        return;
+    }
+
     switch (type) {
     case Super:
         Q_UNREACHABLE_RETURN();
@@ -4531,29 +4579,13 @@ void Codegen::Reference::storeAccumulator() const
 
 void Codegen::Reference::loadInAccumulator() const
 {
-    auto tdzCheck = [this](bool requiresCheck){
-        if (!requiresCheck)
-            return;
-        Instruction::DeadTemporalZoneCheck check;
-        check.name = codegen->registerString(name);
-        codegen->bytecodeGenerator->addInstruction(check);
-    };
-    auto tdzCheckStackSlot = [this, tdzCheck](Moth::StackSlot slot, bool requiresCheck){
-        if (!requiresCheck)
-            return;
-        Instruction::LoadReg load;
-        load.reg = slot;
-        codegen->bytecodeGenerator->addInstruction(load);
-        tdzCheck(true);
-    };
-
     switch (type) {
     case Accumulator:
         return;
     case Super:
         Q_UNREACHABLE_RETURN();
     case SuperProperty:
-        tdzCheckStackSlot(property, subscriptRequiresTDZCheck);
+        tdzCheckStackSlot(property, subscriptRequiresTDZCheck, false);
         Instruction::LoadSuperProperty load;
         load.property = property.stackSlot();
         codegen->bytecodeGenerator->addInstruction(load);
@@ -4600,7 +4632,7 @@ QT_WARNING_POP
         Instruction::LoadReg load;
         load.reg = stackSlot();
         codegen->bytecodeGenerator->addInstruction(load);
-        tdzCheck(requiresTDZCheck);
+        tdzCheck(requiresTDZCheck, throwsReferenceError);
     } return;
     case ScopedLocal: {
         if (!scope) {
@@ -4613,7 +4645,7 @@ QT_WARNING_POP
             load.scope = scope;
             codegen->bytecodeGenerator->addInstruction(load);
         }
-        tdzCheck(requiresTDZCheck);
+        tdzCheck(requiresTDZCheck, throwsReferenceError);
         return;
     }
     case Name:
@@ -4655,7 +4687,7 @@ QT_WARNING_POP
         return;
     case Member:
         propertyBase.loadInAccumulator();
-        tdzCheck(requiresTDZCheck);
+        tdzCheck(requiresTDZCheck, throwsReferenceError);
 
         if (sourceLocation.isValid())
             codegen->bytecodeGenerator->setLocation(sourceLocation);
@@ -4691,12 +4723,12 @@ QT_WARNING_POP
         Instruction::LoadImport load;
         load.index = index;
         codegen->bytecodeGenerator->addInstruction(load);
-        tdzCheck(requiresTDZCheck);
+        tdzCheck(requiresTDZCheck, throwsReferenceError);
     } return;
     case Subscript: {
-        tdzCheckStackSlot(elementBase, requiresTDZCheck);
+        tdzCheckStackSlot(elementBase, requiresTDZCheck, throwsReferenceError);
         elementSubscript.loadInAccumulator();
-        tdzCheck(subscriptRequiresTDZCheck);
+        tdzCheck(subscriptRequiresTDZCheck, false);
         Instruction::LoadElement load;
         load.base = elementBase;
         codegen->bytecodeGenerator->addInstruction(load);

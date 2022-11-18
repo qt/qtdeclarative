@@ -39,8 +39,8 @@ public:
     static QQuickStackElement *fromObject(QObject *object, QQuickStackView *view, QString *error);
 
     bool load(QQuickStackView *parent);
-    void incubate(QObject *object, RequiredProperties &requiredProperties);
-    void initialize(RequiredProperties &requiredProperties);
+    void incubate(QObject *object, RequiredProperties *requiredProperties);
+    void initialize(RequiredProperties *requiredProperties);
 
     void setIndex(int index);
     void setView(QQuickStackView *view);

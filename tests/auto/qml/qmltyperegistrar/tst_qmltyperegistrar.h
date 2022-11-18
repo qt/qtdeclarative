@@ -527,6 +527,7 @@ private slots:
     void immediateNames();
     void derivedFromForeignPrivate();
     void methodReturnType();
+    void hasIsConstantInParameters();
 
 #ifdef QT_QUICK_LIB
     void foreignRevisionedProperty();

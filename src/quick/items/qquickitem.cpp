@@ -2315,6 +2315,7 @@ QQuickItem::QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent)
 QQuickItem::~QQuickItem()
 {
     Q_D(QQuickItem);
+    d->inDestructor = true;
 
     if (d->windowRefCount > 1)
         d->windowRefCount = 1; // Make sure window is set to null in next call to derefWindow().
@@ -2323,9 +2324,9 @@ QQuickItem::~QQuickItem()
     else if (d->window)
         d->derefWindow();
 
-    // XXX todo - optimize
-    while (!d->childItems.isEmpty())
-        d->childItems.constFirst()->setParentItem(nullptr);
+    for (QQuickItem *child : std::as_const(d->childItems))
+        child->setParentItem(nullptr);
+    d->childItems.clear();
 
     d->notifyChangeListeners(QQuickItemPrivate::AllChanges, [this](const QQuickItemPrivate::ChangeListener &change){
         QQuickAnchorsPrivate *anchor = change.listener->anchorPrivate();
@@ -2620,6 +2621,12 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
     \e {QObject parent}. An item's visual parent may not necessarily be the
     same as its object parent. See \l {Concepts - Visual Parent in Qt Quick}
     for more details.
+
+    \note The notification signal for this property gets emitted during destruction
+    of the visual parent. C++ signal handlers cannot assume that items in the
+    visual parent hierarchy are still fully constructed. Use \l qobject_cast to
+    verify that items in the parent hierarchy can be used safely as the expected
+    type.
 */
 QQuickItem *QQuickItem::parentItem() const
 {
@@ -2676,9 +2683,8 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
         const bool wasVisible = isVisible();
         op->removeChild(this);
-        if (wasVisible) {
+        if (wasVisible && !op->inDestructor)
             emit oldParentItem->visibleChildrenChanged();
-        }
     } else if (d->window) {
         QQuickWindowPrivate::get(d->window)->parentlessItems.remove(this);
     }
@@ -2756,8 +2762,9 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 
     d->itemChange(ItemParentHasChanged, d->parentItem);
 
-    emit parentChanged(d->parentItem);
-    if (isVisible() && d->parentItem)
+    if (!d->inDestructor)
+        emit parentChanged(d->parentItem);
+    if (isVisible() && d->parentItem && !QQuickItemPrivate::get(d->parentItem)->inDestructor)
         emit d->parentItem->visibleChildrenChanged();
 }
 
@@ -2932,9 +2939,12 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     Q_Q(QQuickItem);
 
     Q_ASSERT(child);
-    Q_ASSERT(childItems.contains(child));
-    childItems.removeOne(child);
-    Q_ASSERT(!childItems.contains(child));
+    if (!inDestructor) {
+        // if we are getting destroyed, then the destructor will clear the list
+        Q_ASSERT(childItems.contains(child));
+        childItems.removeOne(child);
+        Q_ASSERT(!childItems.contains(child));
+    }
 
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
 
@@ -2948,12 +2958,15 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
         setHasHoverInChild(false);
 
     childPrivate->recursiveRefFromEffectItem(-extra.value().recursiveEffectRefCount);
-    markSortedChildrenDirty(child);
-    dirty(QQuickItemPrivate::ChildrenChanged);
+    if (!inDestructor) {
+        markSortedChildrenDirty(child);
+        dirty(QQuickItemPrivate::ChildrenChanged);
+    }
 
     itemChange(QQuickItem::ItemChildRemovedChange, child);
 
-    emit q->childrenChanged();
+    if (!inDestructor)
+        emit q->childrenChanged();
 }
 
 void QQuickItemPrivate::refWindow(QQuickWindow *c)
@@ -3187,6 +3200,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , hasCursorHandler(false)
     , maybeHasSubsceneDeliveryAgent(true)
     , subtreeTransformChangedEnabled(true)
+    , inDestructor(false)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -5235,6 +5249,13 @@ void QQuickItem::componentComplete()
         d->addToDirtyList();
         QQuickWindowPrivate::get(d->window)->dirtyItem(this);
     }
+
+#if QT_CONFIG(accessibility)
+    if (d->isAccessible && d->effectiveVisible) {
+        QAccessibleEvent ev(this, QAccessible::ObjectShow);
+        QAccessible::updateAccessibility(&ev);
+    }
+#endif
 }
 
 QQuickStateGroup *QQuickItemPrivate::_states()
@@ -6291,6 +6312,12 @@ void QQuickItem::setOpacity(qreal newOpacity)
     the parent's \c visible property. It does not change, for example, if this
     item moves off-screen, or if the \l opacity changes to 0.
 
+    \note The notification signal for this property gets emitted during destruction
+    of the visual parent. C++ signal handlers cannot assume that items in the
+    visual parent hierarchy are still fully constructed. Use \l qobject_cast to
+    verify that items in the parent hierarchy can be used safely as the expected
+    type.
+
     \sa opacity, enabled
 */
 bool QQuickItem::isVisible() const
@@ -6422,9 +6449,11 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
         QAccessible::updateAccessibility(&ev);
     }
 #endif
-    emit q->visibleChanged();
-    if (childVisibilityChanged)
-        emit q->visibleChildrenChanged();
+    if (!inDestructor) {
+        emit q->visibleChanged();
+        if (childVisibilityChanged)
+            emit q->visibleChildrenChanged();
+    }
 
     return true;    // effective visibility DID change
 }

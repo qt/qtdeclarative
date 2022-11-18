@@ -70,7 +70,7 @@ public:
 
     void forceCompletion(QQmlInstantiationInterrupt &i);
     void incubate(QQmlInstantiationInterrupt &i);
-    RequiredProperties &requiredProperties();
+    RequiredProperties *requiredProperties();
     bool hadTopLevelRequiredProperties() const;
 };
 

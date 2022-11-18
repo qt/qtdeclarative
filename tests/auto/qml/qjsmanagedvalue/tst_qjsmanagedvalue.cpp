@@ -121,13 +121,13 @@ void tst_QJSManagedValue::toString()
     {
         QJSManagedValue undefined(eng.toManagedValue(QVariant()));
         QCOMPARE(undefined.toString(), QStringLiteral("undefined"));
-        QCOMPARE(qjsvalue_cast<QString>(undefined), QString());
+        QCOMPARE(qjsvalue_cast<QString>(undefined), QStringLiteral("undefined"));
     }
 
     {
         QJSManagedValue null(eng.evaluate(QStringLiteral("null")), &eng);
         QCOMPARE(null.toString(), QStringLiteral("null"));
-        QCOMPARE(qjsvalue_cast<QString>(null), QString());
+        QCOMPARE(qjsvalue_cast<QString>(null), QStringLiteral("null"));
     }
 
     {

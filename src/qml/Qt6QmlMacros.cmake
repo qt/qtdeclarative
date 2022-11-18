@@ -375,7 +375,7 @@ function(qt6_add_qml_module target)
         target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
     endif()
 
-    if(NOT arg_TYPEINFO)
+    if(NOT arg_TYPEINFO AND NOT arg_NO_GENERATE_QMLTYPES)
         set(arg_TYPEINFO ${target}.qmltypes)
     endif()
 
@@ -489,11 +489,16 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
         QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
         QT_QML_MODULE_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
-        QT_QML_MODULE_TYPEINFO "${arg_TYPEINFO}"
 
         # TODO: Check how this is used by qt6_android_generate_deployment_settings()
         QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}"
     )
+
+    if(arg_TYPEINFO)
+        set_target_properties(${target} PROPERTIES
+            QT_QML_MODULE_TYPEINFO "${arg_TYPEINFO}"
+        )
+    endif()
 
     # Executables don't have a plugin target, so no need to export the properties.
     if(NOT backing_target_type STREQUAL "EXECUTABLE" AND NOT is_android_executable)
@@ -1744,7 +1749,7 @@ function(qt6_add_qml_plugin target)
         # file have sensible indenting
         set(qt_qml_plugin_constructor_content
         "volatile auto registration = &${register_types_function_name};
-        Q_UNUSED(registration);"
+        Q_UNUSED(registration)"
         )
 
         set(generated_cpp_file
@@ -2996,6 +3001,7 @@ function(qt6_generate_deploy_qml_app_script)
     # for imported QML modules).
     set(no_value_options
         NO_UNSUPPORTED_PLATFORM_ERROR
+        NO_TRANSLATIONS
         MACOS_BUNDLE_POST_BUILD
         DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
     )
@@ -3003,7 +3009,18 @@ function(qt6_generate_deploy_qml_app_script)
         TARGET
         FILENAME_VARIABLE
     )
-    set(multi_value_options "")
+    set(qt_deploy_runtime_dependencies_options
+        # These options are forwarded as is to qt_deploy_runtime_dependencies.
+        PRE_INCLUDE_REGEXES
+        PRE_EXCLUDE_REGEXES
+        POST_INCLUDE_REGEXES
+        POST_EXCLUDE_REGEXES
+        POST_INCLUDE_FILES
+        POST_EXCLUDE_FILES
+    )
+    set(multi_value_options
+        ${qt_deploy_runtime_dependencies_options}
+    )
     cmake_parse_arguments(PARSE_ARGV 0 arg
         "${no_value_options}" "${single_value_options}" "${multi_value_options}"
     )
@@ -3033,30 +3050,27 @@ function(qt6_generate_deploy_qml_app_script)
             calling qt_generate_deploy_qml_app_script().")
     endif()
 
-    # Create a file name that will be unique for this target and the combination
-    # of arguments passed to this command. This allows the project to call us
-    # multiple times with different arguments for the same target (e.g. to
-    # create deployment scripts for different scenarios).
+    # Generate a descriptive deploy script name.
     string(MAKE_C_IDENTIFIER "${arg_TARGET}" target_id)
-    string(SHA1 args_hash "${ARGV}")
-    string(SUBSTRING "${args_hash}" 0 10 short_hash)
-    _qt_internal_get_deploy_impl_dir(deploy_impl_dir)
-    set(file_name "${deploy_impl_dir}/deploy_qml_app_${target_id}_${short_hash}")
-    get_cmake_property(is_multi_config GENERATOR_IS_MULTI_CONFIG)
-    if(is_multi_config)
-        string(APPEND file_name "-$<CONFIG>")
-    endif()
-    set(${arg_FILENAME_VARIABLE} "${file_name}" PARENT_SCOPE)
-
-    # This will be changed to TRUE in some future Qt version, when
-    # qt_deploy_runtime_dependencies can handle Linux.
-    set(desktop_linux_runtime_libs_deployment_supported FALSE)
+    set(deploy_script_name "qml_app_${target_id}")
 
     if(QT6_IS_SHARED_LIBS_BUILD)
         set(qt_build_type_string "shared Qt libs")
     else()
         set(qt_build_type_string "static Qt libs")
     endif()
+
+    set(common_deploy_args "")
+    if(arg_NO_TRANSLATIONS)
+        string(APPEND common_deploy_args "    NO_TRANSLATIONS\n")
+    endif()
+
+    # Forward the arguments that are exactly the same for qt_deploy_runtime_dependencies.
+    foreach(var IN LISTS qt_deploy_runtime_dependencies_options)
+        if(NOT "${arg_${var}}" STREQUAL "")
+            list(APPEND common_deploy_args ${var} ${arg_${var}})
+        endif()
+    endforeach()
 
     if(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD)
         # TODO: Handle non-bundle applications if possible.
@@ -3068,14 +3082,17 @@ function(qt6_generate_deploy_qml_app_script)
             )
         endif()
 
-        file(GENERATE OUTPUT "${file_name}" CONTENT "
-include(${QT_DEPLOY_SUPPORT})
+        qt6_generate_deploy_script(
+            TARGET ${arg_TARGET}
+            NAME ${deploy_script_name}
+            FILENAME_VARIABLE file_name
+            CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
     qt_deploy_runtime_dependencies(
         EXECUTABLE $<TARGET_FILE_NAME:${arg_TARGET}>.app
         ADDITIONAL_MODULES \${plugins_found}
-    )
+    ${common_deploy_args})
 endif()")
         if(arg_MACOS_BUNDLE_POST_BUILD)
             # We must not deploy the runtime dependencies, otherwise we interfere
@@ -3094,25 +3111,30 @@ endif()")
         endif()
 
     elseif(WIN32 AND QT6_IS_SHARED_LIBS_BUILD)
-        file(GENERATE OUTPUT "${file_name}" CONTENT "
-include(${QT_DEPLOY_SUPPORT})
+        qt6_generate_deploy_script(
+            TARGET ${arg_TARGET}
+            NAME ${deploy_script_name}
+            FILENAME_VARIABLE file_name
+            CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 qt_deploy_runtime_dependencies(
-    EXECUTABLE ${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:${arg_TARGET}>
+    EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
-)")
-    elseif(LINUX AND NOT CMAKE_CROSSCOMPILING AND desktop_linux_runtime_libs_deployment_supported)
-        # TODO: This branch will only be enabled once qt_deploy_runtime_dependencies can handle
-        # desktop Linux.
-        file(GENERATE OUTPUT "${file_name}" CONTENT "
-include(${QT_DEPLOY_SUPPORT})
+${common_deploy_args})")
+    elseif(UNIX AND NOT APPLE AND NOT ANDROID AND NOT CMAKE_CROSSCOMPILING
+            AND QT6_IS_SHARED_LIBS_BUILD)
+        qt6_generate_deploy_script(
+            TARGET ${arg_TARGET}
+            NAME ${deploy_script_name}
+            FILENAME_VARIABLE file_name
+            CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 qt_deploy_runtime_dependencies(
-EXECUTABLE ${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:${arg_TARGET}>
-ADDITIONAL_MODULES \${plugins_found}
-GENERATE_QT_CONF
-)")
+    EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
+    ADDITIONAL_MODULES \${plugins_found}
+    GENERATE_QT_CONF
+${common_deploy_args})")
     elseif((arg_NO_UNSUPPORTED_PLATFORM_ERROR OR
             QT_INTERNAL_NO_UNSUPPORTED_PLATFORM_ERROR)
         AND (arg_DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
@@ -3126,8 +3148,11 @@ GENERATE_QT_CONF
         # But for it to work cleanly, projects will have to enable both
         # NO_UNSUPPORTED_PLATFORM_ERROR and DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
         # conditionally per platform.
-        file(GENERATE OUTPUT "${file_name}" CONTENT "
-include(${QT_DEPLOY_SUPPORT})
+        qt6_generate_deploy_script(
+            TARGET ${arg_TARGET}
+            NAME ${deploy_script_name}
+            FILENAME_VARIABLE file_name
+            CONTENT "
 _qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
 qt_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
 ")
@@ -3142,13 +3167,18 @@ qt_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
             "this target platform (${CMAKE_SYSTEM_NAME}, ${qt_build_type_string})."
         )
     else()
-        file(GENERATE OUTPUT "${file_name}" CONTENT "
+        qt6_generate_deploy_script(
+            TARGET ${arg_TARGET}
+            NAME ${deploy_script_name}
+            FILENAME_VARIABLE file_name
+            CONTENT "
 include(${QT_DEPLOY_SUPPORT})
 _qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
 _qt_internal_show_skip_qml_runtime_deploy_message()
 ")
     endif()
 
+    set(${arg_FILENAME_VARIABLE} ${file_name} PARENT_SCOPE)
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
@@ -3239,8 +3269,9 @@ function(qt6_query_qml_module target)
     endif()
 
     # This should always be set to something non-empty
+    # unless we've explicitly said NO_GENERATE_QMLTYPES
     get_target_property(typeinfo ${target} QT_QML_MODULE_TYPEINFO)
-    if(arg_TYPEINFO)
+    if(arg_TYPEINFO AND typeinfo)
         set(${arg_TYPEINFO} "${output_dir}/${typeinfo}" PARENT_SCOPE)
     endif()
 

@@ -1274,6 +1274,23 @@ void QQuickTextPrivate::ensureDoc()
     }
 }
 
+void QQuickTextPrivate::updateDocumentText()
+{
+    ensureDoc();
+#if QT_CONFIG(textmarkdownreader)
+    if (markdownText)
+        extra->doc->setMarkdown(text);
+    else
+#endif
+#if QT_CONFIG(texthtmlparser)
+        extra->doc->setHtml(text);
+#else
+        extra->doc->setPlainText(text);
+#endif
+    extra->doc->clearResources();
+    rightToLeftText = extra->doc->toPlainText().isRightToLeft();
+}
+
 /*!
     \qmltype Text
     \instantiates QQuickText
@@ -1704,14 +1721,7 @@ void QQuickText::setText(const QString &n)
     d->text = n;
     if (isComponentComplete()) {
         if (d->richText) {
-            d->ensureDoc();
-#if QT_CONFIG(textmarkdownreader)
-            if (d->markdownText)
-                d->extra->doc->setMarkdownText(n);
-            else
-#endif
-                d->extra->doc->setText(n);
-            d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
+            d->updateDocumentText();
         } else {
             d->clearFormats();
             d->rightToLeftText = d->text.isRightToLeft();
@@ -2194,9 +2204,7 @@ void QQuickText::setTextFormat(TextFormat format)
 
     if (isComponentComplete()) {
         if (!wasRich && d->richText) {
-            d->ensureDoc();
-            d->extra->doc->setText(d->text);
-            d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
+            d->updateDocumentText();
         } else {
             d->clearFormats();
             d->rightToLeftText = d->text.isRightToLeft();
@@ -2758,14 +2766,7 @@ void QQuickText::componentComplete()
     Q_D(QQuickText);
     if (d->updateOnComponentComplete) {
         if (d->richText) {
-            d->ensureDoc();
-#if QT_CONFIG(textmarkdownreader)
-            if (d->markdownText)
-                d->extra->doc->setMarkdownText(d->text);
-            else
-#endif
-                d->extra->doc->setText(d->text);
-            d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
+            d->updateDocumentText();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }

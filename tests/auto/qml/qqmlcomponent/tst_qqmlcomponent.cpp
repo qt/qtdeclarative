@@ -136,6 +136,11 @@ private slots:
     void qmlPropertySignalExists();
     void componentTypes();
     void boundComponent();
+    void loadFromModule_data();
+    void loadFromModule();
+    void loadFromModuleFailures_data();
+    void loadFromModuleFailures();
+    void loadFromModuleRequired();
 
 private:
     QQmlEngine engine;
@@ -1279,6 +1284,104 @@ void tst_qqmlcomponent::boundComponent()
         QVERIFY(component.errorString().contains(
                 QLatin1String("Cannot instantiate bound inline component in different file")));
     }
+}
+
+void tst_qqmlcomponent::loadFromModule_data()
+{
+    using namespace Qt::StringLiterals;
+
+    QTest::addColumn<QString>("uri");
+    QTest::addColumn<QString>("typeName");
+    QTest::addColumn<QString>("classNameRe");
+
+    QTest::addRow("Item") << u"QtQuick"_s << u"Item"_s << u"QQuickItem"_s;
+#if defined(HAS_CONTROLS)
+    QTest::addRow("Button") << u"QtQuick.Controls"_s << u"Button"_s << u"Button_QMLTYPE_\\d+"_s;
+    QTest::addRow("Basic.Button") << u"QtQuick.Controls.Basic"_s << u"Button"_s << u"Button_QMLTYPE_\\d+"_s;
+#endif
+
+    QTest::addRow("IC") << u"test"_s << u"TestComponentWithIC"_s << u"TestComponentWithIC"_s; // sanity check for next test
+    QTest::addRow("IC") << u"test"_s << u"TestComponentWithIC.InnerIC"_s << u"InnerIC"_s;
+}
+
+void tst_qqmlcomponent::loadFromModule()
+{
+    QFETCH(QString, uri);
+    QFETCH(QString, typeName);
+    QFETCH(QString, classNameRe);
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QCOMPARE(component.progress(), 0);
+    QSignalSpy progressSpy(&component, &QQmlComponent::progressChanged);
+    component.loadFromModule(uri, typeName);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    // verify that we changed the progress correctly to 1
+    QVERIFY(!progressSpy.isEmpty() || progressSpy.wait());
+    QCOMPARE(progressSpy.last().at(0).toDouble(), 1.0);
+
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QRegularExpression classNameMatcher(classNameRe);
+    const char *name = object->metaObject()->className();
+    QVERIFY2(classNameMatcher.match(name).hasMatch(),
+             name);
+}
+
+void tst_qqmlcomponent::loadFromModuleFailures_data()
+{
+
+    QTest::addColumn<QString>("uri");
+    QTest::addColumn<QString>("typeName");
+    QTest::addColumn<QString>("errorMsg");
+
+    QTest::addRow("noSuchModule") << "Does.Not.Exist"
+                                  << "Type"
+                                  << "No module named \"Does.Not.Exist\" found";
+    QTest::addRow("noSuchType") << "QtQml"
+                                << "NoSuchType"
+                                << "Module \"QtQml\" contains no type named \"NoSuchType\"";
+    QTest::addRow("CppSingleton") << u"QtQuick"_s
+                                  << u"Application"_s
+                                  << u"Application is a singleton, and cannot be loaded"_s;
+}
+
+void tst_qqmlcomponent::loadFromModuleFailures()
+{
+    QFETCH(QString, uri);
+    QFETCH(QString, typeName);
+    QFETCH(QString, errorMsg);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QSignalSpy errorSpy(&component, &QQmlComponent::statusChanged);
+    component.loadFromModule(uri, typeName);
+    QVERIFY(!errorSpy.isEmpty());
+    QCOMPARE(errorSpy.first().first().value<QQmlComponent::Status>(),
+             QQmlComponent::Error);
+    QVERIFY(!component.errors().isEmpty());
+    QCOMPARE(component.errors().constFirst().description(),
+             errorMsg);
+}
+
+struct SingleRequiredProperty : QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int i MEMBER i REQUIRED)
+
+    int i = 42;
+};
+
+void tst_qqmlcomponent::loadFromModuleRequired()
+{
+
+    QQmlEngine engine;
+    qmlRegisterType<SingleRequiredProperty>("qqmlcomponenttest", 1, 0, "SingleRequiredProperty");
+    QQmlComponent component(&engine, "qqmlcomponenttest", "SingleRequiredProperty");
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

@@ -124,6 +124,7 @@ private slots:
     void viewport();
 
     void qobject_castOnDestruction();
+    void signalsOnDestruction();
 
 private:
     QQmlEngine engine;
@@ -4004,6 +4005,54 @@ void tst_QQuickItem::qobject_castOnDestruction()
         QVERIFY(!object->isQuickItemType());
     });
 }
+
+/*
+    Items that are getting destroyed should not emit property change notifications.
+*/
+void tst_QQuickItem::signalsOnDestruction()
+{
+    QQuickWindow window;
+    window.show();
+
+    // visual children, but not QObject children
+    std::unique_ptr<QQuickItem> parent(new QQuickItem(window.contentItem()));
+    std::unique_ptr<QQuickItem> child(new QQuickItem);
+    std::unique_ptr<QQuickItem> grandChild(new QQuickItem);
+
+    QSignalSpy childrenSpy(parent.get(), &QQuickItem::childrenChanged);
+    QSignalSpy visibleChildrenSpy(parent.get(), &QQuickItem::visibleChildrenChanged);
+    QSignalSpy childParentSpy(child.get(), &QQuickItem::parentChanged);
+    QSignalSpy childChildrenSpy(child.get(), &QQuickItem::childrenChanged);
+    QSignalSpy childVisibleChildrenSpy(child.get(), &QQuickItem::visibleChildrenChanged);
+    QSignalSpy grandChildParentSpy(grandChild.get(), &QQuickItem::parentChanged);
+
+    child->setParentItem(parent.get());
+    QCOMPARE(childrenSpy.count(), 1);
+    QCOMPARE(visibleChildrenSpy.count(), 1);
+    QCOMPARE(childParentSpy.count(), 1);
+    QCOMPARE(childChildrenSpy.count(), 0);
+    QCOMPARE(childVisibleChildrenSpy.count(), 0);
+
+    grandChild->setParentItem(child.get());
+    QCOMPARE(childrenSpy.count(), 1);
+    QCOMPARE(visibleChildrenSpy.count(), 1);
+    QCOMPARE(childParentSpy.count(), 1);
+    QCOMPARE(childChildrenSpy.count(), 1);
+    QCOMPARE(childVisibleChildrenSpy.count(), 1);
+    QCOMPARE(grandChildParentSpy.count(), 1);
+
+    parent.reset();
+
+    QVERIFY(!child->parentItem());
+    QVERIFY(grandChild->parentItem());
+    QCOMPARE(childrenSpy.count(), 1);
+    QCOMPARE(visibleChildrenSpy.count(), 1);
+    QCOMPARE(childParentSpy.count(), 2);
+    QCOMPARE(childChildrenSpy.count(), 1);
+    QCOMPARE(childVisibleChildrenSpy.count(), 1);
+    QCOMPARE(grandChildParentSpy.count(), 1);
+}
+
 
 QTEST_MAIN(tst_QQuickItem)
 

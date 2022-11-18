@@ -24,6 +24,8 @@
 using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
 
+using namespace Qt::StringLiterals;
+
 #define LOAD_TREEVIEW(fileName) \
     view->setSource(testFileUrl(fileName)); \
     view->show(); \
@@ -1111,7 +1113,7 @@ void tst_qquicktreeview::sortTreeModelDynamic()
 
     // Now change the text in one of the items. This will trigger
     // a sort for only one of the parents in the model.
-    proxyModel.setData(treeView->modelIndex(0, row), u"xxx"_qs, Qt::DisplayRole);
+    proxyModel.setData(treeView->modelIndex(0, row), u"xxx"_s, Qt::DisplayRole);
 
     for (int row = 0; row < treeView->rows(); ++row) {
         const auto index = treeView->modelIndex(0, row);

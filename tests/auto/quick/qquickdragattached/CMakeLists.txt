@@ -1,0 +1,11 @@
+qt_internal_add_test(tst_qquickdragattached
+    SOURCES
+        tst_qquickdragattached.cpp
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::Gui
+        Qt::GuiPrivate
+        Qt::Network
+        Qt::QmlPrivate
+        Qt::QuickPrivate
+)

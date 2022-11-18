@@ -462,9 +462,12 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     // resolve enumerations (which can potentially create new child scopes)
     // before resolving the type fully
     const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.type(u"int"_s).scope;
+    const QQmlJSScope::ConstPtr arrayType = tempTypes.cppNames.type(u"Array"_s).scope;
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
-        if (!it->scope.factory())
+        if (!it->scope.factory()) {
             QQmlJSScope::resolveEnums(it->scope, intType);
+            QQmlJSScope::resolveList(it->scope, arrayType);
+        }
     }
 
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {

@@ -121,6 +121,17 @@ public:
         Public
     };
 
+    /*!
+       \internal
+       A non-const parameter is passed either by pointer or by value, depending on its access
+       semantics. For types with reference access semantics, they can be const and will be passed
+       then as const pointer. Const references are treated like values (i.e. non-const).
+     */
+    enum Constness {
+        NonConst = 0,
+        Const,
+    };
+
     /*! \internal
 
         Represents a relative JavaScript function/expression index within a type
@@ -164,19 +175,26 @@ public:
             result.append(type.toStrongRef());
         return result;
     }
-    void setParameterTypes(const QList<QSharedPointer<const QQmlJSScope>> &types)
+
+    QList<Constness> parameterTypeQualifiers() const { return m_paramTypeQualifiers; }
+
+    void setParameterTypes(const QList<QSharedPointer<const QQmlJSScope>> &types,
+                           const QList<Constness> &flags)
     {
         Q_ASSERT(types.size() == m_paramNames.size());
+        Q_ASSERT(flags.size() == m_paramNames.size());
         m_paramTypes.clear();
+        m_paramTypeQualifiers = flags;
         for (const auto &type : types)
             m_paramTypes.append(type);
     }
-    void addParameter(const QString &name, const QString &typeName,
+    void addParameter(const QString &name, const QString &typeName, const Constness &flag,
                       const QSharedPointer<const QQmlJSScope> &type = {})
     {
         m_paramNames.append(name);
         m_paramTypeNames.append(typeName);
         m_paramTypes.append(type);
+        m_paramTypeQualifiers.append(flag);
     }
 
     int methodType() const { return m_methodType; }
@@ -212,16 +230,12 @@ public:
 
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
-        return a.m_name == b.m_name
-                && a.m_returnTypeName == b.m_returnTypeName
-                && a.m_returnType == b.m_returnType
-                && a.m_paramNames == b.m_paramNames
-                && a.m_paramTypeNames == b.m_paramTypeNames
-                && a.m_paramTypes == b.m_paramTypes
-                && a.m_annotations == b.m_annotations
-                && a.m_methodType == b.m_methodType
-                && a.m_methodAccess == b.m_methodAccess
-                && a.m_revision == b.m_revision
+        return a.m_name == b.m_name && a.m_returnTypeName == b.m_returnTypeName
+                && a.m_returnType == b.m_returnType && a.m_paramNames == b.m_paramNames
+                && a.m_paramTypeNames == b.m_paramTypeNames && a.m_paramTypes == b.m_paramTypes
+                && a.m_paramTypeQualifiers == b.m_paramTypeQualifiers
+                && a.m_annotations == b.m_annotations && a.m_methodType == b.m_methodType
+                && a.m_methodAccess == b.m_methodAccess && a.m_revision == b.m_revision
                 && a.m_isConstructor == b.m_isConstructor;
     }
 
@@ -259,6 +273,7 @@ private:
     QStringList m_paramNames;
     QStringList m_paramTypeNames;
     QList<QWeakPointer<const QQmlJSScope>> m_paramTypes;
+    QList<Constness> m_paramTypeQualifiers;
     QList<QQmlJSAnnotation> m_annotations;
 
     Type m_methodType = Signal;

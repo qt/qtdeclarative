@@ -95,6 +95,7 @@ public:
     FormatOptions formatOptions;
     Updates updateOptions = Update::Default;
     AttributesSequence attributesSequence = AttributesSequence::Normalize;
+    bool objectsSpacing = false;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(LineWriterOptions::Updates)
 

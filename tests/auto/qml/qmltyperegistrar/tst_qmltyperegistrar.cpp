@@ -415,4 +415,25 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     r.write(output);
 }
 
+void tst_qmltyperegistrar::hasIsConstantInParameters()
+{
+    QVERIFY(qmltypesData.contains(R"(        Signal {
+            name: "mySignal"
+            Parameter { name: "myObject"; type: "QObject"; isPointer: true }
+            Parameter { name: "myConstObject"; type: "QObject"; isPointer: true; isConstant: true }
+            Parameter { name: "myConstObject2"; type: "QObject"; isPointer: true; isConstant: true }
+            Parameter { name: "myObject2"; type: "QObject"; isPointer: true }
+            Parameter { name: "myConstObject3"; type: "QObject"; isPointer: true; isConstant: true }
+        }
+)"));
+
+    QVERIFY(qmltypesData.contains(R"(Signal {
+            name: "myVolatileSignal"
+            Parameter { name: "a"; type: "volatile QObject"; isPointer: true; isConstant: true }
+            Parameter { name: "b"; type: "volatile QObject"; isPointer: true; isConstant: true }
+            Parameter { name: "nonConst"; type: "volatile QObject"; isPointer: true }
+        }
+)"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

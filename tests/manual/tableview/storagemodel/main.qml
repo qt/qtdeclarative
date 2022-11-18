@@ -1,10 +1,10 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import Qt.labs.qmlmodels 1.0
-import StorageModel 0.1
+import QtQuick
+import QtQuick.Window
+import Qt.labs.qmlmodels
+import StorageModel
 
 Window {
     id: window
@@ -22,6 +22,7 @@ Window {
         model: StorageModel { }
         columnSpacing: 1
         rowSpacing: 1
+        resizableColumns: true
         delegate: DelegateChooser {
             role: "type"
             DelegateChoice {

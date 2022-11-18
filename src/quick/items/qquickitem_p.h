@@ -493,6 +493,7 @@ public:
     // set true if this item or any child wants QQuickItemPrivate::transformChanged() to visit all children
     // (e.g. when parent has ItemIsViewport and child has ItemObservesViewport)
     quint32 subtreeTransformChangedEnabled:1;
+    quint32 inDestructor:1; // has entered ~QQuickItem
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,

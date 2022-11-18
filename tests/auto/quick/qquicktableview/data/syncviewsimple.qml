@@ -13,6 +13,9 @@ Item {
     property alias tableViewV: tableViewV
     property alias tableViewHV: tableViewHV
 
+    property real delegateWidth: 30
+    property real delegateHeight: 60
+
     Column {
         spacing: 10
         TableView {
@@ -89,8 +92,8 @@ Item {
             objectName: "tableViewDelegate"
             color: "lightgray"
             border.width: 1
-            implicitWidth: 30
-            implicitHeight: 60
+            implicitWidth: delegateWidth
+            implicitHeight: delegateHeight
 
             Text {
                 anchors.centerIn: parent

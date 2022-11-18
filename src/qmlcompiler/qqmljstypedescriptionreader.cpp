@@ -8,11 +8,13 @@
 #include <QtQml/private/qqmljsengine_p.h>
 
 #include <QtCore/qdir.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS;
 using namespace QQmlJS::AST;
+using namespace Qt::StringLiterals;
 
 QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char('.'))
 {
@@ -424,6 +426,7 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
 {
     QString name;
     QString type;
+    bool isConstant = false;
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -440,6 +443,8 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
             type = readStringBinding(script);
         } else if (id == QLatin1String("isPointer")) {
             // ### unhandled
+        } else if (id == QLatin1String("isConstant")) {
+            isConstant = true;
         } else if (id == QLatin1String("isReadonly")) {
             // ### unhandled
         } else if (id == QLatin1String("isList")) {
@@ -450,7 +455,8 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
         }
     }
 
-    metaMethod->addParameter(name, type);
+    metaMethod->addParameter(name, type,
+                             isConstant ? QQmlJSMetaMethod::Const : QQmlJSMetaMethod::NonConst);
 }
 
 QString QQmlJSTypeDescriptionReader::readStringBinding(UiScriptBinding *ast)

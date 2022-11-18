@@ -278,6 +278,14 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("forWithLet")
             << "forWithLet.qml"
             << "forWithLet.formatted.qml" << QStringList {} << RunOption::OnCopy;
+
+    QTest::newRow("objects spacing (no changes)")
+            << "objectsSpacing.qml"
+            << "objectsSpacing.formatted.qml" << QStringList { "--objects-spacing" } << RunOption::OnCopy;
+
+    QTest::newRow("normalize + objects spacing")
+            << "normalizedObjectsSpacing.qml"
+            << "normalizedObjectsSpacing.formatted.qml" << QStringList { "-n", "--objects-spacing" } << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()

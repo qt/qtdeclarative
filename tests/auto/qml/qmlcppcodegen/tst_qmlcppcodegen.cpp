@@ -141,6 +141,9 @@ private slots:
     void inaccessibleProperty();
     void typePropagationLoop();
     void signatureIgnored();
+    void listAsArgument();
+    void letAndConst();
+    void signalIndexMismatch();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2749,6 +2752,46 @@ void tst_QmlCppCodegen::signatureIgnored()
     QCOMPARE(ignored->property("m").toInt(), 77);
     QCOMPARE(ignored->property("n").toInt(), 67);
 }
+
+void tst_QmlCppCodegen::listAsArgument()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/listAsArgument.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("i").toInt(), 4);
+    QCOMPARE(o->property("j").toInt(), 2);
+    QCOMPARE(o->property("i1").toInt(), 2);
+    QCOMPARE(o->property("i2").toInt(), 4);
+    QCOMPARE(o->property("d").value<QObject *>()->objectName(), u"this one"_s);
+}
+
+void tst_QmlCppCodegen::letAndConst()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/letAndConst.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"ab"_s);
+}
+
+void tst_QmlCppCodegen::signalIndexMismatch()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c1(&engine, QUrl(u"qrc:/qt/qml/TestTypes/signalIndexMismatch.qml"_s));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> item(c1.create());
+    const auto visualIndexBeforeMoveList = item->property("visualIndexBeforeMove").toList();
+    const auto visualIndexAfterMoveList = item->property("visualIndexAfterMove").toList();
+
+    QCOMPARE(visualIndexBeforeMoveList, QList<QVariant>({ 0, 1, 2 }));
+    QCOMPARE(visualIndexAfterMoveList, QList<QVariant>({ 0, 1, 2 }));
+};
 
 QTEST_MAIN(tst_QmlCppCodegen)
 

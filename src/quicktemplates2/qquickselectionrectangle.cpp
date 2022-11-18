@@ -305,11 +305,13 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
     QQuickDragHandler *dragHandler = new QQuickDragHandler();
     dragHandler->setTarget(nullptr);
     dragHandler->setParentItem(handleItem);
+    dragHandler->setGrabPermissions(QQuickPointerHandler::CanTakeOverFromAnything);
 
     QQuickHoverHandler *hoverHandler = new QQuickHoverHandler();
     hoverHandler->setTarget(nullptr);
     hoverHandler->setParentItem(handleItem);
     hoverHandler->setCursorShape(Qt::SizeFDiagCursor);
+    hoverHandler->setBlocking(true);
 
     QObject::connect(dragHandler, &QQuickDragHandler::activeChanged, [this, corner, handleItem, dragHandler]() {
         if (dragHandler->active()) {

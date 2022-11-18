@@ -5,10 +5,6 @@ import QtQuick 2.12
 
 Rectangle {
     id: root
-    property variant centroid : pinchHandler.centroid
-    property real scale: pinchHandler.scale
-    property int pointCount: 0
-    property bool pinchActive: pinchHandler.active
     width: 240; height: 320
 
     Rectangle {

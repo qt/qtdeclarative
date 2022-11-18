@@ -18,7 +18,6 @@ global CMake properties:
 \ingroup cmake-global-properties-qtqml
 
 \title QT_QMLLLINTER_TARGETS_FOLDER
-\target cmake-global-property-QT_QMLLINTER_TARGETS_FOLDER
 
 \brief Sets the FOLDER property for targets that belong to the QML linter.
 
@@ -52,7 +51,6 @@ CMake source file properties:
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_INTERNAL_TYPE
-\target cmake-source-file-property-QT_QML_INTERNAL_TYPE
 
 \summary {Marks a QML file as providing an internal type.}
 
@@ -69,7 +67,6 @@ Set this property to \c TRUE to indicate that the \c{.qml} file provides an inte
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SINGLETON_TYPE
-\target cmake-source-file-property-QT_QML_SINGLETON_TYPE
 
 \summary {Marks a QML file as providing a singleton type.}
 
@@ -92,7 +89,6 @@ how to set the \c QT_QML_SINGLETON_TYPE property.
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_CACHEGEN
-\target cmake-source-file-property-QT_QML_SKIP_CACHEGEN
 
 \summary {Excludes a file from being compiled to byte code.}
 
@@ -111,7 +107,6 @@ The file will still be added to the \c target as a resource in uncompiled form
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_QMLDIR_ENTRY
-\target cmake-source-file-property-QT_QML_SKIP_QMLDIR_ENTRY
 
 \summary {Excludes a file from being added as a type to the QML module's typeinfo file.}
 
@@ -130,7 +125,6 @@ the \c{.qml} file from being added as a type to the QML module's typeinfo file
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_QMLLINT
-\target cmake-source-file-property-QT_QML_SKIP_QMLLINT
 
 \summary {Prevents a file from being included in automatic qmllint processing.}
 
@@ -148,7 +142,6 @@ Set this property to \c TRUE to prevent the file from being included in
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SOURCE_TYPENAME
-\target cmake-source-file-property-QT_QML_SOURCE_TYPENAME
 
 \summary {Overrides the type name provided by the file.}
 
@@ -165,7 +158,6 @@ Use this property to override the \c QML type name provided by this file.
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SOURCE_VERSIONS
-\target cmake-source-file-property-QT_QML_SOURCE_VERSIONS
 
 \summary {Specifies a custom set of versions for a type.}
 
@@ -184,7 +176,6 @@ version after the \c{.0} release, specify those versions using this property.
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QMLTC_FILE_BASENAME
-\target cmake-source-file-property-QT_QMLTC_FILE_BASENAME
 
 \summary {Specifies a non-default .h and .cpp file name.}
 
@@ -202,7 +193,6 @@ conflicting file names.
 \ingroup cmake-source-file-properties-qtqml
 
 \title QT_QML_SKIP_TYPE_COMPILER
-\target cmake-source-file-property-QT_QML_SKIP_TYPE_COMPILER
 
 \summary {Excludes a file from being compiled to C++ using qmltc.}
 

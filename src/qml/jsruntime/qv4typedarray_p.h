@@ -80,7 +80,7 @@ namespace Heap {
     Member(class, NoMark, uint, arrayType)
 
 DECLARE_HEAP_OBJECT(TypedArray, Object) {
-    DECLARE_MARKOBJECTS(TypedArray);
+    DECLARE_MARKOBJECTS(TypedArray)
     using Type = TypedArrayType;
 
     void init(Type t);

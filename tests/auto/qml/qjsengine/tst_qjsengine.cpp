@@ -268,6 +268,11 @@ private slots:
     void staticInNestedClasses();
     void callElement();
 
+    void tdzViolations_data();
+    void tdzViolations();
+
+    void coerceValue();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -5690,6 +5695,118 @@ void tst_QJSEngine::callElement()
         array[0](array.reverse()) ? "a" : "b";
     )"_s;
     QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
+}
+
+void tst_QJSEngine::tdzViolations_data()
+{
+    QTest::addColumn<QString>("type");
+    QTest::addRow("let") << u"let"_s;
+    QTest::addRow("const") << u"const"_s;
+}
+
+void tst_QJSEngine::tdzViolations()
+{
+    QFETCH(QString, type);
+    type.resize(8, u' '); // pad with some spaces, so that the columns match.
+
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+
+    const QString program1 = uR"(
+        (function() {
+            a = 5;
+            %1 a = 1;
+            return a;
+        })();
+    )"_s.arg(type);
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                ":3:13 Variable \"a\" is used before its declaration at 4:22.");
+
+    const QJSValue result1 = engine.evaluate(program1);
+    QVERIFY(result1.isError());
+    QCOMPARE(result1.toString(), u"ReferenceError: a is not defined"_s);
+
+    const QString program2 = uR"(
+        (function() {
+            function stringify(x) { return x + "" }
+            var c = "";
+            for (var a = 0; a < 10; ++a) {
+                if (a > 0) {
+                    c += stringify(b);
+                }
+                %1 b = 10;
+            }
+            return c;
+        })();
+    )"_s.arg(type);
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                ":7:36 Variable \"b\" is used before its declaration at 9:26.");
+
+    const QJSValue result2 = engine.evaluate(program2);
+    QVERIFY(result2.isError());
+    QCOMPARE(result2.toString(), u"ReferenceError: b is not defined"_s);
+
+    const QString program3 = uR"(
+        (function() {
+            var a = 10;
+            switch (a) {
+            case 1:
+                %1 b = 5;
+            case 10:
+                console.log(b);
+            }
+        })();
+    )"_s.arg(type);
+
+    const QJSValue result3 = engine.evaluate(program3);
+    QVERIFY(result3.isError());
+    QCOMPARE(result3.toString(), u"ReferenceError: b is not defined"_s);
+}
+
+class WithToString : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE int toString() const { return 29; }
+};
+
+struct UnknownToJS
+{
+    int thing = 13;
+};
+
+void tst_QJSEngine::coerceValue()
+{
+    const UnknownToJS u;
+    QMetaType::registerConverter<UnknownToJS, QTypeRevision>([](const UnknownToJS &u) {
+        return QTypeRevision::fromMinorVersion(u.thing);
+    });
+    QTypeRevision w;
+    QVERIFY(QMetaType::convert(QMetaType::fromType<UnknownToJS>(),
+                               &u, QMetaType::fromType<QTypeRevision>(), &w));
+    QCOMPARE(w, QTypeRevision::fromMinorVersion(13));
+
+
+    QJSEngine engine;
+    WithToString withToString;
+    const int i = 7;
+    const QString a = QStringLiteral("5.25");
+
+    QCOMPARE((engine.coerceValue<int, int>(i)), i);
+    QVERIFY((engine.coerceValue<int, QJSValue>(i)).strictlyEquals(QJSValue(i)));
+    QVERIFY((engine.coerceValue<int, QJSManagedValue>(i)).strictlyEquals(
+             QJSManagedValue(QJSPrimitiveValue(i), &engine)));
+    QCOMPARE((engine.coerceValue<QVariant, int>(QVariant(i))), i);
+    QCOMPARE((engine.coerceValue<int, QVariant>(i)), QVariant(i));
+    QCOMPARE((engine.coerceValue<WithToString *, QString>(&withToString)), QStringLiteral("29"));
+    QCOMPARE((engine.coerceValue<WithToString *, const WithToString *>(&withToString)), &withToString);
+    QCOMPARE((engine.coerceValue<QString, double>(a)), 5.25);
+    QCOMPARE((engine.coerceValue<double, QString>(5.25)), a);
+    QCOMPARE((engine.coerceValue<UnknownToJS, QTypeRevision>(u)), w);
 }
 
 QTEST_MAIN(tst_QJSEngine)

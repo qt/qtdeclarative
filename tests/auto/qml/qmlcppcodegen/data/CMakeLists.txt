@@ -107,6 +107,8 @@ set(qml_files
     jsmoduleimport.qml
     layouts.qml
     library.js
+    letAndConst.qml
+    listAsArgument.qml
     listIndices.qml
     listPropertyAsModel.qml
     listlength.qml
@@ -141,6 +143,7 @@ set(qml_files
     shifts.qml
     signal.qml
     signalHandler.qml
+    signalIndexMismatch.qml
     signatureIgnored.qml
     specificParent.qml
     stringArg.qml

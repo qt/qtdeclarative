@@ -13,6 +13,11 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
+
+if(TARGET Qt::QuickControls2)
+    list(APPEND test_data data/dummyImportControls.qml)
+endif()
+
 qt_internal_add_test(tst_qqmlcomponent
     SOURCES
         tst_qqmlcomponent.cpp
@@ -25,6 +30,19 @@ qt_internal_add_test(tst_qqmlcomponent
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
+)
+
+if(TARGET Qt::QuickControls2)
+    target_compile_definitions(tst_qqmlcomponent PRIVATE HAS_CONTROLS)
+endif()
+
+qt_add_qml_module(
+    tst_qqmlcomponent
+    URI test
+    VERSION 1.0
+    AUTO_RESOURCE_PREFIX
+    QML_FILES
+        "data/TestComponentWithIC.qml"
 )
 
 # Resources:

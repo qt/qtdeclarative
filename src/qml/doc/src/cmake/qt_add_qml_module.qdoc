@@ -337,39 +337,12 @@ While processing QML_FILES, the following source file properties are respected:
 
 \section1 Arguments
 
+\section2 Required arguments
+
 The \c target specifies the name of the backing target for the QML module.
 By default, it is created as a shared library if Qt was built as shared
 libraries, or as a static library otherwise. This choice can be explicitly
 overridden with the \c STATIC or \c SHARED options.
-
-The plugin target associated with the QML module can be specified using the
-\c PLUGIN_TARGET argument. The \c PLUGIN_TARGET can be the same as the backing
-\c target, in which case there will be no separate backing target.
-If \c PLUGIN_TARGET is not given, it defaults to \c target with \c plugin
-appended. For example, a backing target called \c mymodule would have a default
-plugin name of \c mymoduleplugin. The plugin target's name will be used to
-populate a \c{plugin} line in the generated
-\l{Module Definition qmldir Files}{qmldir} file. Therefore, you must not try to
-change the plugin's output name by setting target properties like
-\c OUTPUT_NAME or any of its related properties.
-
-The backing \c target and the plugin target (if different) will be created by
-the command, unless they already exist. Projects should generally let them be
-created by the command so that they are created as the appropriate target type.
-If the backing \c target is a static library, the plugin will also be created
-as a static library. If the backing \c target is a shared library, the plugin
-will be created as a module library. If an existing \c target is passed in and
-it is an executable target, there will be no plugin. If you intend to always
-link directly to the backing target and do not need a plugin, it can be
-disabled by adding the \c NO_PLUGIN option. Specifying both \c NO_PLUGIN and
-\c PLUGIN_TARGET is an error.
-
-In certain situations, the project may want to delay creating the plugin target
-until after the call. The \c NO_CREATE_PLUGIN_TARGET option can be given in
-that situation. The project is then expected to call
-\l{qt6_add_qml_plugin}{qt_add_qml_plugin()} on the plugin target once it has
-been created. When  \c NO_CREATE_PLUGIN_TARGET is given, \c PLUGIN_TARGET must
-also be provided to explicitly name the plugin target.
 
 Every QML module must define a \c URI. It should be specified in dotted URI
 notation, such as \c{QtQuick.Layouts}. It must not contain anything other than
@@ -385,23 +358,44 @@ component may be appended, but will be ignored. A list of earlier major
 versions the module provides types for can also optionally be given after the
 \c PAST_MAJOR_VERSIONS keyword (see below).
 See \l{qtqml-modules-identifiedmodules.html}{Identified Modules} for further
-in-depth discussion of the module URI and version numbering.
+in-depth discussion of the module URI and version numbering,
+\l{Registering past major versions} for registering past major versions, and
+\l{Keeping module versions in sync} for keeping module versions in sync.
 
-A list of additional major versions the module provides may be given using the
-\c PAST_MAJOR_VERSIONS keyword. For each of those versions and each QML file
-without a \c QT_QML_SOURCE_VERSIONS setting an additional entry in the
-\l{Module Definition qmldir Files}{qmldir} file will be generated to specify
-the extra version. Furthermore, the generated module registration code will
-register the past major versions using \l{qmlRegisterModule()} on the C++ side.
-The module registration code is automatically generated for your QML module,
-unless you specify \c{NO_GENERATE_QMLTYPES} (but use of this option is strongly
-discouraged). Usage of \c PAST_MAJOR_VERSIONS adds some overhead when your
-module is imported. You should increment the major version of your module as
-rarely as possible. Once you can rely on all QML files importing this module to
-omit the version in their imports, you can safely omit \c{PAST_MAJOR_VERSIONS}.
-All the QML files will then import the latest version of your module. If you
-have to support versioned imports, consider supporting only a limited number of
-past major versions.
+\section2 Adding sources and resources to the module
+
+\c SOURCES specifies a list of non-QML sources to be added to the backing
+target. It is provided as a convenience and is equivalent to adding the sources
+to the backing target with the built-in \c{target_sources()} CMake command.
+
+\c QML_FILES lists the \c{.qml}, \c{.js} and \c{.mjs} files for the module.
+These will be automatically \l{qmlcachegen-auto}{compiled into bytecode} and
+embedded in the backing target unless the \c NO_CACHEGEN option is given.
+The uncompiled file is always stored in the embedded resources of the backing
+target, even if \c NO_CACHEGEN is specified. Unless the \c NO_LINT option is
+given, the uncompiled files will also be
+\l{Linting QML sources}{processed by \c qmllint} via a separate custom build
+target. The files will also be used to populate type information in the
+generated \l{Module Definition qmldir Files}{qmldir} file by default.
+\c NO_GENERATE_QMLDIR can be given to disable the automatic generation of the
+\c qmldir file. This should normally be avoided, but for cases where the
+project needs to provide its own \c qmldir file, this option can be used.
+
+\note See \l{qt6_target_qml_sources}{qt_target_qml_sources()} for further details on
+how to add qmlfiles after \c qt_add_qml_module() was called.
+For example, you may wish to add files conditionally based on an if statement
+expression, or from subdirectories that will only be added if certain criteria
+are met.
+Furthermore, files added with \l{qt6_target_qml_sources}{qt_target_qml_sources()}
+also can specify if they should be skipped for the linting,
+\l{qmlcachegen-auto}{bytecode compilation} or \c qmldir file generation.
+
+\c RESOURCES lists any other files needed by the module, such as images
+referenced from the QML code. These files will be added as compiled-in
+resources (see \l RESOURCE_PREFIX for an explanation of the base point they
+will be located under). If needed, their relative location can
+be controlled by setting the \c QT_RESOURCE_ALIAS source property, just as for
+\c{.qml} files (see \l{qmlcachegen-auto}{Caching compiled QML sources}).
 
 \target RESOURCE_PREFIX
 \c RESOURCE_PREFIX is intended to encapsulate a namespace for the project and
@@ -428,67 +422,29 @@ under the \c RESOURCE_PREFIX instead. This can be achieved by specifying the
 \c NO_RESOURCE_TARGET_PATH option, which may only be used if the backing target
 is an executable.
 
-\target OUTPUT_DIRECTORY
-\c OUTPUT_DIRECTORY specifies where the plugin library, \c qmldir and typeinfo
-files are generated. When this keyword is not given, the default value will be
-the target path (formed from the \c URI) appended to the value of the
-\l QT_QML_OUTPUT_DIRECTORY variable.
-If that variable is not defined, the default depends on the type of backing
-target. For executables, the value will be the target path appended to
-\c{${CMAKE_CURRENT_BINARY_DIR}}, whereas for other targets it will be just
-\c{${CMAKE_CURRENT_BINARY_DIR}}. When the structure of the source tree
-matches the structure of QML module target paths (which is highly recommended),
-\l QT_QML_OUTPUT_DIRECTORY often isn't needed. In order to match the structure
-of the target paths, you have to call your directories \e exactly like the
-segments of your module URI. For example, if your module URI is
-\c{MyUpperCaseThing.mylowercasething}, you need to put this in a directory
-called \c{MyUpperCaseThing/mylowercasething/}.
+\section2 Registering past major versions
 
-The need for specifying the \c OUTPUT_DIRECTORY keyword should be rare, but if
-it is used, it is likely that the caller will also need to add to the
-\l IMPORT_PATH to ensure that \l{qmllint-auto}{linting},
-\l{qmlcachegen-auto}{cached compilation} of qml sources,
-\l{qt6_import_qml_plugins}{automatic importing} of plugins in static builds,
-and \l{qt_deploy_qml_imports}{deploying imported QML modules} for non-static
-builds all work correctly.
+\c PAST_MAJOR_VERSIONS contains a list of additional major version that the module
+provides. For each of those versions and each QML file
+without a \c QT_QML_SOURCE_VERSIONS setting an additional entry in the
+\l{Module Definition qmldir Files}{qmldir} file will be generated to specify
+the extra version. Furthermore, the generated module registration code will
+register the past major versions using \l{qmlRegisterModule()} on the C++ side.
+The module registration code is automatically generated for your QML module,
+unless you specify \c{NO_GENERATE_QMLTYPES} (but use of this option is strongly
+discouraged). Usage of \c PAST_MAJOR_VERSIONS adds some overhead when your
+module is imported. You should increment the major version of your module as
+rarely as possible. Once you can rely on all QML files importing this module to
+omit the version in their imports, you can safely omit \c{PAST_MAJOR_VERSIONS}.
+All the QML files will then import the latest version of your module. If you
+have to support versioned imports, consider supporting only a limited number of
+past major versions.
 
-\target NO_GENERATE_PLUGIN_SOURCE
-By default, \c{qt_add_qml_module()} will auto-generate a \c{.cpp} file that
-implements the plugin class named by the \c CLASS_NAME argument. The generated
-\c{.cpp} file will be automatically added to the plugin target as a source file
-to be compiled. If the project wants to provide its own implementation of the
-plugin class, the \c NO_GENERATE_PLUGIN_SOURCE option should be given. Where no
-\c CLASS_NAME is provided, it defaults to the \c URI with dots replaced by
-underscores, then \c Plugin appended. Unless the QML module has no plugin, the
-class name will be recorded as a \c classname line in the generated
-\l{Module Definition qmldir Files}{qmldir} file.
-
-\target NO_PLUGIN_OPTIONAL
-If the \c NO_PLUGIN_OPTIONAL keyword is given, then the plugin is recorded in
-the generated \c qmldir file as non-optional. If all of a QML module's
-functionality is implemented in its backing target and the plugin target is
-separate, then the plugin can be optional, which is the default and recommended
-arrangement. The auto-generated plugin source file satisfies this requirement.
-Where a project provides its own \c{.cpp} implementation for the plugin, that
-would normally mean the \c NO_PLUGIN_OPTIONAL keyword is also needed because
-the plugin will almost certainly contain functionality that the QML module
-requires.
-
-Type registration is automatically performed for the backing target's C++
-sources that are processed by AUTOMOC. This will generate a typeinfo file in the
-\l{OUTPUT_DIRECTORY}{output directory}, the file name being the \c target name
-with \c{.qmltypes} appended. This file name can be changed using the
-\c TYPEINFO option if desired, but this should not normally be necessary.
-The file name is also recorded as a \c typeinfo entry in the generated
-\l{Module Definition qmldir Files}{qmldir} file. Automatic type registration
-can be disabled using the \c NO_GENERATE_QMLTYPES option, in which case no
-typeinfo file will be generated, but the project will still be expected to
-generate a typeinfo file and place it in the same directory as the generated
-\c qmldir file.
+\section2 Declaring module dependencies
 
 \c IMPORTS provides a list of other QML modules that this module imports. Each
 module listed here will be added as an \c{import} entry in the generated
-\l{Module Definition qmldir Files}{qmldir} file. If a QML file imports the
+\l{Module Definition qmldir Files}{qmldir} file. If a QML file imports
 this module, it also imports all the modules listed under \c{IMPORTS}.
 Optionally, a version can be specified by appending it after a slash, such as
 \c{QtQuick/2.0}. Omitting the version will cause the greatest version available
@@ -520,7 +476,25 @@ for the default import.
 \c DEPENDENCIES provides a list of other QML modules that this module depends
 on, but doesn't necessarily import. It would typically be used for dependencies
 that only exist at the C++ level, such as a module registering a class to QML
-which is a subclass of one defined in another module. The module version of the
+which is a subclass of one defined in another module.
+
+For example, if one would like to subclass \c QQuickItem as following:
+
+\badcode
+class MyItem: public QQuickItem { ... };
+\endcode
+
+then one has to make sure that the module containing \c QQuickItem, called
+\c Quick, is declared as a dependency via the \c DEPENDENCIES option. Not doing
+so might result in errors during type compilation with
+\l{QML Type Compiler}{qmltc} or during binding and function compilation to C++
+with \l{qmlcachegen-auto}{qmlcachegen}.
+
+\note Adding the module to \c DEPENDENCIES is not necessary if the module
+is already imported via the \c IMPORTS option. The recommended way is to
+use the lighter alternative \c DEPENDENCIES over \c IMPORTS.
+
+The module version of the
 dependencies must be specified along with the module name, in the same form as
 used for \c IMPORTS and \c OPTIONAL_IMPORTS. Each module listed here will be
 added as a \c{depends} entry in the generated
@@ -531,34 +505,6 @@ added as a \c{depends} entry in the generated
 that this one depends on can be found. The other modules must have their
 \c qmldir file under their own target path below one of the search paths.
 
-\c SOURCES specifies a list of non-QML sources to be added to the backing
-target. It is provided as a convenience and is equivalent to adding the sources
-to the backing target with the built-in \c{target_sources()} CMake command.
-
-\c QML_FILES lists the \c{.qml}, \c{.js} and \c{.mjs} files for the module.
-These will be automatically \l{qmlcachegen-auto}{compiled into bytecode} and
-embedded in the backing target unless the \c NO_CACHEGEN option is given.
-The uncompiled file is always stored in the embedded resources of the backing
-target, even if \c NO_CACHEGEN is specified. Unless the \c NO_LINT option is
-given, the uncompiled files will also be
-\l{Linting QML sources}{processed by \c qmllint} via a separate custom build
-target. The files will also be used to populate type information in the
-generated \l{Module Definition qmldir Files}{qmldir} file.
-See \l{qt6_target_qml_sources}{qt_target_qml_sources()} for further details on
-the source file properties that can be set on these files or if files need to
-be added to the backing target after this command has been called.
-
-\c RESOURCES lists any other files needed by the module, such as images
-referenced from the QML code. These files will be added as compiled-in
-resources (see \l RESOURCE_PREFIX for an explanation of the base point they
-will be located under). If needed, their relative location can
-be controlled by setting the \c QT_RESOURCE_ALIAS source property, just as for
-\c{.qml} files (see \l{qmlcachegen-auto}{Caching compiled QML sources}).
-
-\c NO_GENERATE_QMLDIR can be given to disable the automatic generation of the
-\c qmldir file. This should normally be avoided, but for cases where the
-project needs to provide its own \c qmldir file, this option can be used.
-
 If the backing target is a static library and that static library will be
 installed, \c OUTPUT_TARGETS should be given to provide a variable in which to
 store a list of additional targets that will also need to be installed.
@@ -566,10 +512,105 @@ These additional targets are generated internally by \c{qt_add_qml_module()}
 and are referenced by the backing target's linking requirements as part of
 ensuring that resources are set up and loaded correctly.
 
-The \c DESIGNER_SUPPORTED keyword should be given if the QML module supports
+\section2 Targets and plugin targets
+
+\c PLUGIN_TARGET specifies the plugin target associated with the QML module.
+The \c PLUGIN_TARGET can be the same as the backing
+\c target, in which case there will be no separate backing target.
+If \c PLUGIN_TARGET is not given, it defaults to \c target with \c plugin
+appended. For example, a backing target called \c mymodule would have a default
+plugin name of \c mymoduleplugin. The plugin target's name will be used to
+populate a \c{plugin} line in the generated
+\l{Module Definition qmldir Files}{qmldir} file. Therefore, you must not try to
+change the plugin's output name by setting target properties like
+\c OUTPUT_NAME or any of its related properties.
+
+The backing \c target and the plugin target (if different) will be created by
+the command, unless they already exist. Projects should generally let them be
+created by the command so that they are created as the appropriate target type.
+If the backing \c target is a static library, the plugin will also be created
+as a static library. If the backing \c target is a shared library, the plugin
+will be created as a module library. If an existing \c target is passed in and
+it is an executable target, there will be no plugin. If you intend to always
+link directly to the backing target and do not need a plugin, it can be
+disabled by adding the \c NO_PLUGIN option. Specifying both \c NO_PLUGIN and
+\c PLUGIN_TARGET is an error.
+
+In certain situations, the project may want to delay creating the plugin target
+until after the call. The \c NO_CREATE_PLUGIN_TARGET option can be given in
+that situation. The project is then expected to call
+\l{qt6_add_qml_plugin}{qt_add_qml_plugin()} on the plugin target once it has
+been created. When  \c NO_CREATE_PLUGIN_TARGET is given, \c PLUGIN_TARGET must
+also be provided to explicitly name the plugin target.
+
+\target NO_GENERATE_PLUGIN_SOURCE
+By default, \c{qt_add_qml_module()} will auto-generate a \c{.cpp} file that
+implements the plugin class named by the \c CLASS_NAME argument. The generated
+\c{.cpp} file will be automatically added to the plugin target as a source file
+to be compiled. If the project wants to provide its own implementation of the
+plugin class, the \c NO_GENERATE_PLUGIN_SOURCE option should be given. Where no
+\c CLASS_NAME is provided, it defaults to the \c URI with dots replaced by
+underscores, then \c Plugin appended. Unless the QML module has no plugin, the
+class name will be recorded as a \c classname line in the generated
+\l{Module Definition qmldir Files}{qmldir} file.
+
+\target NO_PLUGIN_OPTIONAL
+If the \c NO_PLUGIN_OPTIONAL keyword is given, then the plugin is recorded in
+the generated \c qmldir file as non-optional. If all of a QML module's
+functionality is implemented in its backing target and the plugin target is
+separate, then the plugin can be optional, which is the default and recommended
+arrangement. The auto-generated plugin source file satisfies this requirement.
+Where a project provides its own \c{.cpp} implementation for the plugin, that
+would normally mean the \c NO_PLUGIN_OPTIONAL keyword is also needed because
+the plugin will almost certainly contain functionality that the QML module
+requires.
+
+\section2 Automatic type registration
+
+Type registration is automatically performed for the backing target's C++
+sources that are processed by AUTOMOC. This will generate a typeinfo file in the
+\l{OUTPUT_DIRECTORY}{output directory}, the file name being the \c target name
+with \c{.qmltypes} appended. This file name can be changed using the
+\c TYPEINFO option if desired, but this should not normally be necessary.
+The file name is also recorded as a \c typeinfo entry in the generated
+\l{Module Definition qmldir Files}{qmldir} file. Automatic type registration
+can be disabled using the \c NO_GENERATE_QMLTYPES option, in which case no
+typeinfo file will be generated, but the project will still be expected to
+generate a typeinfo file and place it in the same directory as the generated
+\c qmldir file.
+
+\target OUTPUT_DIRECTORY
+\c OUTPUT_DIRECTORY specifies where the plugin library, \c qmldir and typeinfo
+files are generated. When this keyword is not given, the default value will be
+the target path (formed from the \c URI) appended to the value of the
+\l QT_QML_OUTPUT_DIRECTORY variable.
+If that variable is not defined, the default depends on the type of backing
+target. For executables, the value will be the target path appended to
+\c{${CMAKE_CURRENT_BINARY_DIR}}, whereas for other targets it will be just
+\c{${CMAKE_CURRENT_BINARY_DIR}}. When the structure of the source tree
+matches the structure of QML module target paths (which is highly recommended),
+\l QT_QML_OUTPUT_DIRECTORY often isn't needed. In order to match the structure
+of the target paths, you have to call your directories \e exactly like the
+segments of your module URI. For example, if your module URI is
+\c{MyUpperCaseThing.mylowercasething}, you need to put this in a directory
+called \c{MyUpperCaseThing/mylowercasething/}.
+
+The need for specifying the \c OUTPUT_DIRECTORY keyword should be rare, but if
+it is used, it is likely that the caller will also need to add to the
+\l IMPORT_PATH to ensure that \l{qmllint-auto}{linting},
+\l{qmlcachegen-auto}{cached compilation} of qml sources,
+\l{qt6_import_qml_plugins}{automatic importing} of plugins in static builds,
+and \l{qt_deploy_qml_imports}{deploying imported QML modules} for non-static
+builds all work correctly.
+
+\section2 Qt Quick Designer compatibility
+
+\c DESIGNER_SUPPORTED should be given if the QML module supports
 Qt Quick Designer. When present, the generated \c qmldir file will contain
 a \c designersupported line. See \l{Module Definition qmldir Files} for how
 this affects the way Qt Quick Designer handles the plugin.
+
+\section2 Keeping module versions in sync
 
 The \c FOLLOW_FOREIGN_VERSIONING keyword relates to base types of your own
 C++-defined QML types that live in different QML modules. Typically, the
@@ -585,8 +626,12 @@ with other modules you're basing types on. In that case you might want your cust
 types to not expose properties from a module's base type version greater than the one being
 imported.
 
+\section2 C++ namespaces of generated code
+
 If a namespace is given with the \c NAMESPACE keyword, the plugin and registration
 code will be generated into a C++ namespace of this name.
+
+\section2 qmlimportscanner and NO_IMPORT_SCAN
 
 For static Qt builds, \c{qmlimportscanner} is run at configure time to scan the
 \c{.qml} files of a QML module and identify the QML imports it uses (see
@@ -598,6 +643,8 @@ to provide the information needed by deployment scripts (see
 responsibility of ensuring all required plugins are instantiated and linked for
 static builds. For non-static builds the project must manually work out
 and deploy all QML modules used by an executable target.
+
+\section2 Arguments for qmltc
 
 \target ENABLE_TYPE_COMPILER
 \c ENABLE_TYPE_COMPILER can be used to compile \c{.qml} files to C++ source code

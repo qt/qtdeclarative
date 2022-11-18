@@ -5,11 +5,38 @@ import QtQuick 2.12
 
 Rectangle {
     id: whiteRect
-    property real scale: -1.0
+    property real pinchScale: -1.0
     property int activeCount : 0
     property int deactiveCount : 0
     width: 320; height: 320
     color: "white"
+
+    PointHandler {
+        id: ph1
+        acceptedDevices: PointerDevice.TouchScreen
+        target: Rectangle {
+            parent: whiteRect
+            color: "cyan"
+            x: ph1.point.position.x - 3
+            y: ph1.point.position.y - 3
+            width: 6; height: 6; radius: 3
+        }
+    }
+
+    PointHandler {
+        id: ph2
+        acceptedDevices: PointerDevice.TouchScreen
+        target: Rectangle {
+            parent: whiteRect
+            color: "lightgreen"
+            x: ph2.point.position.x - 3
+            y: ph2.point.position.y - 3
+            width: 6; height: 6; radius: 3
+        }
+    }
+
+    Text { color: "magenta"; z: 1; text: "scale: " + blackRect.scale}
+
     Rectangle {
         id: blackRect
         objectName: "blackrect"
@@ -18,8 +45,7 @@ Rectangle {
         x: 50
         width: 100
         height: 100
-        opacity: (whiteRect.width-blackRect.x+whiteRect.height-blackRect.y-199)/200
-        Text { color: "white"; text: "opacity: " + blackRect.opacity + "\nscale: " + blackRect.scale}
+
         Rectangle {
             color: "red"
             width: 6; height: 6; radius: 3
@@ -38,13 +64,13 @@ Rectangle {
             xAxis.maximum: 140
             yAxis.maximum: 170
             onActiveChanged: {
-                whiteRect.scale = pincharea.scale
+                whiteRect.pinchScale = pincharea.scale
                 if (active) ++activeCount
                 else ++deactiveCount;
             }
 
             onUpdated: {
-                whiteRect.scale = pincharea.scale
+                whiteRect.pinchScale = pincharea.scale
                 //whiteRect.pointCount = pincharea.pointCount
             }
          }

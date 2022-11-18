@@ -17,7 +17,9 @@ using namespace Qt::StringLiterals;
 
 bool qIsReferenceTypeList(const QQmlJSMetaProperty &p)
 {
-    return p.isList() && p.type()->isReferenceType();
+    if (QQmlJSScope::ConstPtr type = p.type())
+        return type->isListProperty();
+    return false;
 }
 
 Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
@@ -295,7 +297,7 @@ void QmltcCompiler::compileType(
     }
 
     // compilation stub:
-    current.externalCtor.body << u"Q_UNUSED(engine);"_s;
+    current.externalCtor.body << u"Q_UNUSED(engine)"_s;
     if (documentRoot || inlineComponent) {
         current.externalCtor.body << u"// document root:"_s;
         // if it's document root, we want to create our QQmltcObjectCreationBase
@@ -397,12 +399,12 @@ void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
                               u"Q_ENUM(%1)"_s.arg(e.name()));
 }
 
-static QList<QmltcVariable>
-compileMethodParameters(const QStringList &names,
-                        const QList<QSharedPointer<const QQmlJSScope>> &types,
-                        bool allowUnnamed = false)
+static QList<QmltcVariable> compileMethodParameters(
+        const QStringList &names, const QList<QSharedPointer<const QQmlJSScope>> &types,
+        const QList<QQmlJSMetaMethod::Constness> &parameterQualifiers, bool allowUnnamed = false)
 {
     Q_ASSERT(names.size() == types.size());
+    Q_ASSERT(parameterQualifiers.size() == types.size());
 
     QList<QmltcVariable> parameters;
     const auto size = names.size();
@@ -438,8 +440,12 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
     const auto returnType = figureReturnType(m);
     const auto paramNames = m.parameterNames();
     const auto paramTypes = m.parameterTypes();
+    const auto paramFlags = m.parameterTypeQualifiers();
+
     Q_ASSERT(paramNames.size() == paramTypes.size()); // assume verified
-    const QList<QmltcVariable> compiledParams = compileMethodParameters(paramNames, paramTypes);
+    Q_ASSERT(paramFlags.size() == paramTypes.size());
+    const QList<QmltcVariable> compiledParams =
+            compileMethodParameters(paramNames, paramTypes, paramFlags);
     const auto methodType = QQmlJSMetaMethod::Type(m.methodType());
 
     QStringList code;
@@ -474,6 +480,7 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
 void QmltcCompiler::compileExtraListMethods(QmltcType &current, const QQmlJSMetaProperty &p)
 {
     QmltcPropertyData data(p);
+    const QString valueType = p.type()->valueType()->internalName() + u'*';
     const QString variableName = data.read + u"()"_s;
     const QStringList ownershipWarning = {
         u"\\note {This method does not change the ownership of its argument."_s,
@@ -490,7 +497,7 @@ void QmltcCompiler::compileExtraListMethods(QmltcType &current, const QQmlJSMeta
         append.comments << ownershipWarning;
         append.returnType = u"void"_s;
         append.name = u"%1Append"_s.arg(data.read);
-        append.parameterList.emplaceBack(u"%1*"_s.arg(p.type()->internalName()), u"toBeAppended"_s);
+        append.parameterList.emplaceBack(valueType, u"toBeAppended"_s);
 
         append.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
         append.body
@@ -519,7 +526,7 @@ void QmltcCompiler::compileExtraListMethods(QmltcType &current, const QQmlJSMeta
     {
         QmltcMethod at{};
         at.comments.emplaceBack(u"\\brief Access an element in %1."_s.arg(data.read));
-        at.returnType = u"%1*"_s.arg(p.type()->internalName());
+        at.returnType = valueType;
         at.name = u"%1At"_s.arg(data.read);
         at.parameterList.emplaceBack(u"qsizetype"_s, u"position"_s, QString());
 
@@ -553,7 +560,7 @@ void QmltcCompiler::compileExtraListMethods(QmltcType &current, const QQmlJSMeta
         replace.returnType = u"void"_s;
         replace.name = u"%1Replace"_s.arg(data.read);
         replace.parameterList.emplaceBack(u"qsizetype"_s, u"position"_s, QString());
-        replace.parameterList.emplaceBack(u"%1*"_s.arg(p.type()->internalName()), u"element"_s,
+        replace.parameterList.emplaceBack(valueType, u"element"_s,
                                           QString());
 
         replace.body << u"auto q_qmltc_localList = %1;"_s.arg(variableName);
@@ -593,8 +600,9 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
     const QString underlyingType = getUnderlyingType(p);
     if (qIsReferenceTypeList(p)) {
         const QString storageName = variableName + u"_storage";
-        current.variables.emplaceBack(u"QList<" + p.type()->internalName() + u"*>", storageName,
-                                      QString());
+        current.variables.emplaceBack(
+                    u"QList<" + p.type()->valueType()->internalName() + u"*>", storageName,
+                    QString());
         current.baselineCtor.initializerList.emplaceBack(variableName + u"(" + underlyingType
                                                          + u"(this, std::addressof(" + storageName
                                                          + u")))");
@@ -898,6 +906,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         } else {
             setter.parameterList = compileMethodParameters(methods.at(0).parameterNames(),
                                                            methods.at(0).parameterTypes(),
+                                                           methods.at(0).parameterTypeQualifiers(),
                                                            /* allow unnamed = */ true);
         }
 
@@ -1631,7 +1640,8 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
 
         const QString signalReturnType = figureReturnType(signal);
         const QList<QmltcVariable> slotParameters = compileMethodParameters(
-                signal.parameterNames(), signal.parameterTypes(), /* allow unnamed = */ true);
+                signal.parameterNames(), signal.parameterTypes(), signal.parameterTypeQualifiers(),
+                /* allow unnamed = */ true);
 
         // SignalHander specific:
         QmltcMethod slotMethod {};

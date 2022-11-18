@@ -759,14 +759,14 @@ void QQmlBindPrivate::decodeBinding(
 
         QQmlProperty property(q, propertyName);
         if (property.isValid()) {
-            if (!immediateState->creator) {
-                immediateState->completePending = true;
-                immediateState->creator = std::make_unique<QQmlObjectCreator>(
+            if (!immediateState->hasCreator()) {
+                immediateState->setCompletePending(true);
+                immediateState->initCreator(
                             deferredData->context->parent(), deferredData->compilationUnit,
                             contextData);
-                immediateState->creator->beginPopulateDeferred(deferredData->context);
+                immediateState->creator()->beginPopulateDeferred(deferredData->context);
             }
-            immediateState->creator->populateDeferredBinding(
+            immediateState->creator()->populateDeferredBinding(
                         property, deferredData->deferredIdx, binding);
         } else {
             qmlWarning(q).nospace() << "Unknown name " << propertyName
@@ -882,10 +882,10 @@ void QQmlBindPrivate::buildBindEntries(QQmlBind *q, QQmlComponentPrivate::Deferr
                     decodeBinding(q, QString(), deferredData, *it, &constructionState);
 
 
-                if (constructionState.creator.get()) {
+                if (constructionState.hasCreator()) {
                     ++ep->inProgressCreations;
-                    constructionState.creator->finalizePopulateDeferred();
-                    constructionState.appendErrors(constructionState.creator->errors);
+                    constructionState.creator()->finalizePopulateDeferred();
+                    constructionState.appendCreatorErrors();
                     deferredState->push_back(std::move(constructionState));
                 }
             } else {

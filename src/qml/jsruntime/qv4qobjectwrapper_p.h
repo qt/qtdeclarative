@@ -63,7 +63,7 @@ private:
     Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper)
 
 DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
-    DECLARE_MARKOBJECTS(QObjectMethod);
+    DECLARE_MARKOBJECTS(QObjectMethod)
 
     QV4QPointer<QObject> qObj;
     QQmlPropertyData *methods;

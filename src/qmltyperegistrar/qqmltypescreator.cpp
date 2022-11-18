@@ -143,6 +143,9 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
 
     bool isList = false;
     bool isPointer = false;
+    // This is a best effort approach (like isPointer) and will not return correct results in the
+    // presence of typedefs.
+    bool isConstant = false;
 
     auto handleList = [&](QLatin1String list) {
         if (!type.startsWith(list) || !type.endsWith(QLatin1Char('>')))
@@ -168,6 +171,10 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
             isPointer = true;
             type = type.left(type.size() - 1);
         }
+        if (type.startsWith(u"const ")) {
+            isConstant = true;
+            type = type.sliced(strlen("const "));
+        }
     }
 
     if (type == QLatin1String("qreal")) {
@@ -192,6 +199,8 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
         m_qml.writeScriptBinding(QLatin1String("isList"), trueString);
     if (isPointer)
         m_qml.writeScriptBinding(QLatin1String("isPointer"), trueString);
+    if (isConstant)
+        m_qml.writeScriptBinding(QLatin1String("isConstant"), trueString);
 }
 
 void QmlTypesCreator::writeProperties(const QJsonArray &properties)

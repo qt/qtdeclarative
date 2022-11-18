@@ -2169,14 +2169,6 @@ void tst_qquicktext::embeddedImages()
     QFETCH(QUrl, qmlfile);
     QFETCH(QString, error);
 
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
-    if (qstrcmp(QTest::currentDataTag(), "remote") == 0
-        || qstrcmp(QTest::currentDataTag(), "remote-error") == 0
-        || qstrcmp(QTest::currentDataTag(), "remote-relative") == 0) {
-        QSKIP("Remote tests cause occasional hangs in the CI system -- QTBUG-45655");
-    }
-#endif
-
     TestHTTPServer server;
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(testFile("http"));
@@ -3606,11 +3598,11 @@ void tst_qquicktext::fontSizeMode()
     // and text is NOT wrapped
     myText->setVAlign(QQuickText::AlignBottom);
     myText->setFontSizeMode(QQuickText::Fit);
-    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(QQuickTest::qWaitForPolish(myText));
 
     int baselineOffset = myText->baselineOffset();
     myText->setHeight(myText->height() * 2);
-    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(QQuickTest::qWaitForPolish(myText));
     QVERIFY(myText->baselineOffset() > baselineOffset);
 
     // Growing height needs to update the baselineOffset when AlignBottom is used
@@ -3619,11 +3611,11 @@ void tst_qquicktext::fontSizeMode()
     myText->setFontSizeMode(QQuickText::Fit);
     myText->setWrapMode(QQuickText::NoWrap);
     myText->resetMaximumLineCount();
-    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(QQuickTest::qWaitForPolish(myText));
 
     baselineOffset = myText->baselineOffset();
     myText->setHeight(myText->height() * 2);
-    QVERIFY(QQuickTest::qWaitForItemPolished(myText));
+    QVERIFY(QQuickTest::qWaitForPolish(myText));
     QVERIFY(myText->baselineOffset() > baselineOffset);
 
     // Check baselineOffset for the HorizontalFit case

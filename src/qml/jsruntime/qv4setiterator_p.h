@@ -30,7 +30,7 @@ namespace Heap {
     Member(class, NoMark, quint32, setNextIndex)
 
 DECLARE_HEAP_OBJECT(SetIteratorObject, Object) {
-    DECLARE_MARKOBJECTS(SetIteratorObject);
+    DECLARE_MARKOBJECTS(SetIteratorObject)
     void init(Object *obj, QV4::ExecutionEngine *engine)
     {
         Object::init();

@@ -379,8 +379,35 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
         return *type;
     }
 
+    const auto findListType = [&](const QString &prefix, const QString &postfix)
+            -> ImportedScope<ConstPtr> {
+        if (name.startsWith(prefix) && name.endsWith(postfix)) {
+            const qsizetype prefixLength = prefix.length();
+            const QString &elementName
+                    = name.mid(prefixLength, name.length() - prefixLength - postfix.length());
+            const ImportedScope<ConstPtr> element
+                    = findType(elementName, contextualTypes, usedTypes);
+            if (element.scope) {
+                useType();
+                return { element.scope->listType(), element.revision };
+            }
+        }
+
+        return {};
+    };
+
     switch (contextualTypes.context()) {
     case ContextualTypes::INTERNAL: {
+        if (const auto listType = findListType(u"QList<"_s, u">"_s);
+                listType.scope && !listType.scope->isReferenceType()) {
+            return listType;
+        }
+
+        if (const auto listType = findListType(u"QQmlListProperty<"_s, u">"_s);
+                listType.scope && listType.scope->isReferenceType())  {
+            return listType;
+        }
+
         // look for c++ namescoped enums!
         const auto colonColon = name.lastIndexOf(QStringLiteral("::"));
         if (colonColon == -1)
@@ -407,6 +434,10 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
             useType();
             return inlineComponent;
         }
+
+        if (const auto listType = findListType(u"list<"_s, u">"_s); listType.scope)
+            return listType;
+
         break;
     }
     }
@@ -417,6 +448,11 @@ QTypeRevision QQmlJSScope::resolveType(
         const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &context,
         QSet<QString> *usedTypes)
 {
+    if (self->accessSemantics() == AccessSemantics::Sequence
+            && self->internalName().startsWith(u"QQmlListProperty<"_s)) {
+        self->setIsListProperty(true);
+    }
+
     const QString baseTypeName = self->baseTypeName();
     const auto baseType = findType(baseTypeName, context, usedTypes);
     if (!self->m_baseType.scope && !baseTypeName.isEmpty())
@@ -447,13 +483,16 @@ QTypeRevision QQmlJSScope::resolveType(
             continue;
 
         if (const auto type = findType(typeName, context, usedTypes); type.scope) {
-            it->setType(type.scope);
+            it->setType(it->isList() ? type.scope->listType() : type.scope);
             continue;
         }
 
         const auto enumeration = self->m_enumerations.find(typeName);
-        if (enumeration != self->m_enumerations.end())
-            it->setType(enumeration->type());
+        if (enumeration != self->m_enumerations.end()) {
+            it->setType(it->isList()
+                        ? enumeration->type()->listType()
+                        : QQmlJSScope::ConstPtr(enumeration->type()));
+        }
     }
 
     for (auto it = self->m_methods.begin(), end = self->m_methods.end(); it != end; ++it) {
@@ -467,6 +506,9 @@ QTypeRevision QQmlJSScope::resolveType(
         QList<QSharedPointer<const QQmlJSScope>> paramTypes = it->parameterTypes();
         if (paramTypes.size() < paramTypeNames.size())
             paramTypes.resize(paramTypeNames.size());
+        QList<QQmlJSMetaMethod::Constness> paramQualifiers = it->parameterTypeQualifiers();
+        if (paramQualifiers.size() < paramTypeNames.size())
+            paramQualifiers.resize(paramTypeNames.size());
 
         for (int i = 0, length = paramTypes.size(); i < length; ++i) {
             auto &paramType = paramTypes[i];
@@ -477,7 +519,7 @@ QTypeRevision QQmlJSScope::resolveType(
             }
         }
 
-        it->setParameterTypes(paramTypes);
+        it->setParameterTypes(paramTypes, paramQualifiers);
     }
 
     return baseType.revision;
@@ -540,6 +582,7 @@ QTypeRevision QQmlJSScope::resolveTypes(
                                const QQmlJSScope::ContextualTypes &contextualTypes,
                                QSet<QString> *usedTypes) {
         resolveEnums(self, contextualTypes.intType());
+        resolveList(self, contextualTypes.arrayType());
         return resolveType(self, contextualTypes, usedTypes);
     };
     return resolveTypesInternal(resolveAll, updateChildScope, self, contextualTypes, usedTypes);
@@ -568,6 +611,40 @@ void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::
         enumScope->m_internalName = self->internalName() + QStringLiteral("::") + it->name();
         it->setType(QQmlJSScope::ConstPtr(enumScope));
     }
+}
+
+void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType)
+{
+    if (self->listType() || self->accessSemantics() == AccessSemantics::Sequence)
+        return;
+
+    Q_ASSERT(!arrayType.isNull());
+    QQmlJSScope::Ptr listType = QQmlJSScope::create();
+    listType->setAccessSemantics(AccessSemantics::Sequence);
+    listType->setValueTypeName(self->internalName());
+
+    if (self->isComposite()) {
+        // There is no internalName for this thing. Just set the value type right away
+        listType->setInternalName(u"QQmlListProperty<>"_s);
+        listType->m_valueType = QQmlJSScope::ConstPtr(self);
+    } else if (self->isReferenceType()) {
+        listType->setInternalName(u"QQmlListProperty<%2>"_s.arg(self->internalName()));
+        // Do not set a filePath on the list type, so that we have to generalize it
+        // even in direct mode.
+    } else {
+        listType->setInternalName(u"QList<%2>"_s.arg(self->internalName()));
+        listType->setFilePath(self->filePath());
+    }
+
+    const QQmlJSImportedScope element = {self, QTypeRevision()};
+    const QQmlJSImportedScope array = {arrayType, QTypeRevision()};
+    QQmlJSScope::ContextualTypes contextualTypes(
+                QQmlJSScope::ContextualTypes::INTERNAL, { { self->internalName(), element }, },
+                QQmlJSScope::ConstPtr(), arrayType);
+    QQmlJSScope::resolveTypes(listType, contextualTypes);
+
+    Q_ASSERT(listType->valueType() == self);
+    self->m_listType = listType;
 }
 
 void QQmlJSScope::resolveGeneralizedGroup(
@@ -1003,6 +1080,7 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
     m_importer->m_globalWarnings.append(typeReader.errors());
     scope->setInternalName(internalName());
     QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames().intType());
+    QQmlJSScope::resolveList(scope, m_importer->builtinInternalNames().arrayType());
 
     if (m_isSingleton && !scope->isSingleton()) {
         m_importer->m_globalWarnings.append(
@@ -1054,7 +1132,10 @@ bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
             return true;
     }
 
-    return internalName() == u"QVariant"_s || internalName() == u"QJSValue"_s;
+    if (internalName() == u"QVariant"_s || internalName() == u"QJSValue"_s)
+        return true;
+
+    return isListProperty() && valueType()->canAssign(derived);
 }
 
 bool QQmlJSScope::isInCustomParserParent() const

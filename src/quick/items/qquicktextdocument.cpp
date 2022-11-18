@@ -65,7 +65,10 @@ QQuickTextDocumentWithImageResources::QQuickTextDocumentWithImageResources(QQuic
 {
     setUndoRedoEnabled(false);
     documentLayout()->registerHandler(QTextFormat::ImageObject, this);
-    connect(this, SIGNAL(baseUrlChanged(QUrl)), this, SLOT(reset()));
+    connect(this, &QTextDocument::baseUrlChanged, [this]() {
+        clearResources();
+        markContentsDirty(0, characterCount());
+    });
 }
 
 QQuickTextDocumentWithImageResources::~QQuickTextDocumentWithImageResources()
@@ -149,12 +152,6 @@ QImage QQuickTextDocumentWithImageResources::image(const QTextImageFormat &forma
     return res.value<QImage>();
 }
 
-void QQuickTextDocumentWithImageResources::reset()
-{
-    clearResources();
-    markContentsDirty(0, characterCount());
-}
-
 QQuickPixmap *QQuickTextDocumentWithImageResources::loadPixmap(
         QQmlContext *context, const QUrl &url)
 {
@@ -189,25 +186,6 @@ void QQuickTextDocumentWithImageResources::clearResources()
     m_resources.clear();
     outstanding = 0;
 }
-
-void QQuickTextDocumentWithImageResources::setText(const QString &text)
-{
-    clearResources();
-
-#if QT_CONFIG(texthtmlparser)
-    setHtml(text);
-#else
-    setPlainText(text);
-#endif
-}
-
-#if QT_CONFIG(textmarkdownreader)
-void QQuickTextDocumentWithImageResources::setMarkdownText(const QString &text)
-{
-    clearResources();
-    QTextDocument::setMarkdown(text);
-}
-#endif
 
 QSet<QUrl> QQuickTextDocumentWithImageResources::errors;
 

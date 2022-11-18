@@ -94,6 +94,8 @@ private slots:
     void validators();
     void inputMethods();
 
+    void inputMethodQueryEnterKeyType();
+
     void signal_accepted();
     void signal_editingfinished();
     void signal_textEdited();
@@ -2300,6 +2302,36 @@ void tst_qquicktextinput::inputMethods()
     input->setReadOnly(true);
     QGuiApplication::sendEvent(input, &enabledQueryEvent);
     QCOMPARE(enabledQueryEvent.value(Qt::ImEnabled).toBool(), false);
+}
+
+void tst_qquicktextinput::inputMethodQueryEnterKeyType()
+{
+    QQuickView view(testFileUrl("focusReason.qml"));
+
+    QQuickTextInput *first = view.rootObject()->findChild<QQuickTextInput *>("first");
+    QQuickTextInput *second = view.rootObject()->findChild<QQuickTextInput *>("second");
+    QQuickTextInput *third = view.rootObject()->findChild<QQuickTextInput *>("third");
+    QVERIFY(first && second && third);
+
+    first->setActiveFocusOnTab(true);
+    second->setActiveFocusOnTab(true);
+    third->setActiveFocusOnTab(true);
+
+    view.show();
+
+    QVariant enterTypeFirst = first->inputMethodQuery(Qt::ImEnterKeyType);
+    QVariant enterTypeSecond = second->inputMethodQuery(Qt::ImEnterKeyType);
+    QVariant enterTypeThird = third->inputMethodQuery(Qt::ImEnterKeyType);
+#ifdef Q_OS_ANDROID
+    // QTBUG-61652
+    // EnterKey is changed to EnterKeyNext if the focus can be moved to item below
+    QCOMPARE(enterTypeFirst.value<Qt::EnterKeyType>(), Qt::EnterKeyNext);
+    QCOMPARE(enterTypeSecond.value<Qt::EnterKeyType>(), Qt::EnterKeyNext);
+#else
+    QCOMPARE(enterTypeFirst.value<Qt::EnterKeyType>(), Qt::EnterKeyDefault);
+    QCOMPARE(enterTypeSecond.value<Qt::EnterKeyType>(), Qt::EnterKeyDefault);
+#endif
+    QCOMPARE(enterTypeThird.value<Qt::EnterKeyType>(), Qt::EnterKeyDefault);
 }
 
 void tst_qquicktextinput::signal_accepted()
