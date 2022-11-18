@@ -134,6 +134,7 @@ private slots:
     void notNotString();
     void inaccessibleProperty();
     void typePropagationLoop();
+    void nullComparison();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2461,6 +2462,21 @@ void tst_QmlCppCodegen::typePropagationLoop()
 
     QCOMPARE(o->property("j").toInt(), 3);
 }
+
+void tst_QmlCppCodegen::nullComparison()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/nullComparison.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("v").toInt(), 1);
+    QCOMPARE(o->property("w").toInt(), 3);
+    QCOMPARE(o->property("x").toInt(), 1);
+    QCOMPARE(o->property("y").toInt(), 5);
+};
 
 QTEST_MAIN(tst_QmlCppCodegen)
 

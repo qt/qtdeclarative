@@ -117,6 +117,7 @@ set(qml_files
     notEqualsInt.qml
     notNotString.qml
     nullAccess.qml
+    nullComparison.qml
     objectInVar.qml
     outOfBounds.qml
     overriddenMember.qml
