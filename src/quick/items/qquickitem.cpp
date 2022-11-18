@@ -6410,10 +6410,8 @@ void QQuickItem::setEnabled(bool e)
 
 bool QQuickItemPrivate::calcEffectiveVisible() const
 {
-    // XXX todo - Should the effective visible of an element with no parent just be the current
-    // effective visible?  This would prevent pointless re-processing in the case of an element
-    // moving to/from a no-parent situation, but it is different from what graphics view does.
-    return explicitVisible && (!parentItem || QQuickItemPrivate::get(parentItem)->effectiveVisible);
+    // An item is visible if it is a child of a visible parent, and not explicitly hidden.
+    return explicitVisible && parentItem && QQuickItemPrivate::get(parentItem)->effectiveVisible;
 }
 
 bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)

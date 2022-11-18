@@ -4036,7 +4036,7 @@ void tst_QQuickItem::signalsOnDestruction()
     // Visual children, but not QObject children.
     // Note: QQuickItem's visible property defaults to true after creation, as visual
     // items are always expected to be added to a visual hierarchy. So for the sake
-    // of this test we first add, and then remove the item from a parent. This explicily
+    // of this test we first add, and then remove the item from a parent. This explicitly
     // sets the effective visibility to false.
     std::unique_ptr<QQuickItem> parent(new QQuickItem(window.contentItem()));
     QVERIFY(parent->isVisible());
@@ -4044,15 +4044,11 @@ void tst_QQuickItem::signalsOnDestruction()
     child->setVisible(childVisible);
     child->setParentItem(parent.get());
     child->setParentItem(nullptr);
-    QEXPECT_FAIL("Both visible", "Item without parent should not be visible", Continue);
-    QEXPECT_FAIL("Child visible", "Item without parent should not be visible", Continue);
     QVERIFY(!child->isVisible());
     std::unique_ptr<QQuickItem> grandChild(new QQuickItem);
     grandChild->setVisible(grandChildVisible);
     grandChild->setParentItem(child.get());
     grandChild->setParentItem(nullptr);
-    QEXPECT_FAIL("Both visible", "Item without parent should not be visible", Continue);
-    QEXPECT_FAIL("Grand child visible", "Item without parent should not be visible", Continue);
     QVERIFY(!grandChild->isVisible());
 
     QSignalSpy childrenSpy(parent.get(), &QQuickItem::childrenChanged);
@@ -4070,8 +4066,6 @@ void tst_QQuickItem::signalsOnDestruction()
         ++expectedChildVisibleCount;
     QCOMPARE(visibleChildrenSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childParentSpy.count(), 1);
-    QEXPECT_FAIL("Both visible", "Child added to visible parent should emit", Continue);
-    QEXPECT_FAIL("Child visible", "Child added to visible parent should emit", Continue);
     QCOMPARE(childVisibleSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childChildrenSpy.count(), 0);
     QCOMPARE(childVisibleChildrenSpy.count(), 0);
@@ -4080,16 +4074,12 @@ void tst_QQuickItem::signalsOnDestruction()
     QCOMPARE(childrenSpy.count(), 1);
     QCOMPARE(visibleChildrenSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childParentSpy.count(), 1);
-    QEXPECT_FAIL("Both visible", "Child added to visible parent should emit", Continue);
-    QEXPECT_FAIL("Child visible", "Child added to visible parent should emit", Continue);
     QCOMPARE(childVisibleSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childChildrenSpy.count(), 1);
     if (grandChildVisible && childVisible)
         ++expectedGrandChildVisibleCount;
     QCOMPARE(childVisibleChildrenSpy.count(), expectedGrandChildVisibleCount);
     QCOMPARE(grandChildParentSpy.count(), 1);
-    QEXPECT_FAIL("Both visible", "Visible grand child added to visible child should emit", Continue);
-    QEXPECT_FAIL("Grand child visible", "Adding visible grand child to hidden child should not emit", Continue);
     QCOMPARE(grandChildVisibleSpy.count(), expectedGrandChildVisibleCount);
 
     parent.reset();
@@ -4102,16 +4092,11 @@ void tst_QQuickItem::signalsOnDestruction()
     QCOMPARE(childChildrenSpy.count(), 1);
     if (childVisible)
         ++expectedChildVisibleCount;
-    QEXPECT_FAIL("Both visible", "Items without (grand) parent should not be visible on screen", Continue);
-    QEXPECT_FAIL("Child visible", "Items without (grand) parent should not be visible on screen", Continue);
     QCOMPARE(childVisibleSpy.count(), expectedChildVisibleCount);
     if (childVisible && grandChildVisible)
         ++expectedGrandChildVisibleCount;
-    QEXPECT_FAIL("Both visible", "Items without (grand) parent should not be visible on screen", Continue);
     QCOMPARE(childVisibleChildrenSpy.count(), expectedGrandChildVisibleCount);
     QCOMPARE(grandChildParentSpy.count(), 1);
-    QEXPECT_FAIL("Both visible", "Items without (grand) parent should not be visible on screen", Continue);
-    QEXPECT_FAIL("Grand child visible", "Items without (grand) parent should not be visible on screen", Continue);
     QCOMPARE(grandChildVisibleSpy.count(), expectedGrandChildVisibleCount);
 }
 
@@ -4142,9 +4127,7 @@ void tst_QQuickItem::visibleChanged()
     QCOMPARE(parentItemSpy.count(), 0);
     QCOMPARE(childItemSpy.count(), 0);
     QVERIFY(!loaderChild->parentItem());
-    QEXPECT_FAIL("", "QTBUG-108213", Continue);
     QCOMPARE(loaderChildSpy.count(), 1);
-    QEXPECT_FAIL("", "QTBUG-108213", Continue);
     QCOMPARE(loaderChild->isVisible(), false);
 
     delete parentItem.data();
@@ -4153,7 +4136,6 @@ void tst_QQuickItem::visibleChanged()
     QVERIFY(!childItem->parentItem());
 
     QCOMPARE(parentItemSpy.count(), 0);
-    QEXPECT_FAIL("", "QTBUG-108213", Continue);
     QCOMPARE(childItemSpy.count(), 1);
 }
 
