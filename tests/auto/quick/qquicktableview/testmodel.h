@@ -159,6 +159,17 @@ public:
         insertRow(row, QModelIndex());
     }
 
+    Qt::ItemFlags flags(const QModelIndex &index) const override
+    {
+        Q_UNUSED(index)
+        return m_flags;
+    }
+
+    void setFlags(Qt::ItemFlags flags)
+    {
+        m_flags = flags;
+    }
+
 signals:
     void rowCountChanged();
     void columnCountChanged();
@@ -168,6 +179,7 @@ private:
     int m_columns = 0;
     bool m_dataCanBeFetched = false;
     QHash<int, QString> modelData;
+    Qt::ItemFlags m_flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
 };
 
 #define TestModelAsVariant(...) QVariant::fromValue(QSharedPointer<TestModel>(new TestModel(__VA_ARGS__)))

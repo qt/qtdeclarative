@@ -53,7 +53,7 @@ ApplicationWindow {
                         id: flickingMode
                         checkable: true
                         checked: true
-                        text: "Enable flicking"
+                        text: "Interactive"
                     }
 
                     CheckBox {
@@ -126,6 +126,36 @@ ApplicationWindow {
                         checked: false
                         text: "Highlight row/col"
                     }
+
+                    ComboBox {
+                        id: selectionCombo
+                        model: [
+                            "SelectionDisabled",
+                            "SelectCells",
+                            "SelectRows",
+                            "SelectColumns",
+                        ]
+                    }
+                    ComboBox {
+                        id: selectionModeCombo
+                        model: [
+                            "Auto",
+                            "Drag",
+                            "PressAndHold",
+                        ]
+                    }
+                    ComboBox {
+                        id: editCombo
+                        currentIndex: 2
+                        model: [
+                            "NoEditTriggers",
+                            "SingleTapped",
+                            "DoubleTapped",
+                            "SelectedTapped",
+                            "EditKeyPressed",
+                            "AnyKeyPressed",
+                        ]
+                    }
                 }
             }
 
@@ -156,7 +186,7 @@ ApplicationWindow {
                         id: marginsSpinBox
                         from: 0
                         to: 100
-                        value: 1
+                        value: 0
                         editable: true
                     }
                 }
@@ -231,36 +261,6 @@ ApplicationWindow {
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
                 ColumnLayout {
-                    RadioButton {
-                        id: selectionDisabled
-                        text: "SelectionDisabled"
-                    }
-                    RadioButton {
-                        id: selectCells
-                        text: "SelectCells"
-                        checked: true
-                    }
-                    RadioButton {
-                        id: selectRows
-                        text: "SelectRows"
-                    }
-                    RadioButton {
-                        id: selectColumns
-                        text: "SelectColumns"
-                    }
-                    Label {
-                        width: parent.width
-                        font.pixelSize: 10
-                        text: "(SelectionMode: " + (tableView.interactive ? "PressAndHold)" : "Drag)")
-                    }
-                }
-            }
-
-            GroupBox {
-                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
-                Layout.rightMargin: menu.menuMargin
-                Layout.leftMargin: menu.menuMargin
-                ColumnLayout {
                     Button {
                         text: "Current to top-left"
                         enabled: currentIndex.valid
@@ -312,6 +312,35 @@ ApplicationWindow {
                 Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
                 Layout.rightMargin: menu.menuMargin
                 Layout.leftMargin: menu.menuMargin
+                ColumnLayout {
+                    Button {
+                        text: "Open editor"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            tableView.edit(currentIndex, true)
+                        }
+                    }
+                    Button {
+                        text: "Close editor"
+                        enabled: currentIndex.valid
+                        onClicked: {
+                            tableView.closeEditor()
+                        }
+                    }
+                    Button {
+                        text: "Set current index"
+                        onClicked: {
+                            let index = tableView.modelIndex(1, 1);
+                            tableView.selectionModel.setCurrentIndex(index, ItemSelectionModel.NoUpdate)
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
+                Layout.minimumWidth: menu.availableWidth - (menu.menuMargin * 2)
+                Layout.rightMargin: menu.menuMargin
+                Layout.leftMargin: menu.menuMargin
                 Layout.bottomMargin: menu.menuMargin
                 ColumnLayout {
                     Button {
@@ -327,6 +356,11 @@ ApplicationWindow {
                             topHeader.contentX += tableView.width * 1.2
                             leftHeader.contentY += tableView.height * 1.2
                         }
+                    }
+
+                    Button {
+                        text: "ForceLayout()"
+                        onClicked: tableView.forceLayout()
                     }
                 }
             }
@@ -354,8 +388,8 @@ ApplicationWindow {
         delegate: Rectangle {
             implicitHeight: topHeader.height
             implicitWidth: 20
-            color: "lightgray"
-            Text {
+            color: window.palette.alternateBase
+            Label {
                 anchors.centerIn: parent
                 visible: drawText.checked
                 text: column
@@ -388,8 +422,8 @@ ApplicationWindow {
         delegate: Rectangle {
             implicitHeight: 50
             implicitWidth: leftHeader.width
-            color: "lightgray"
-            Text {
+            color: window.palette.alternateBase
+            Label {
                 anchors.centerIn: parent
                 visible: drawText.checked
                 text: row
@@ -411,6 +445,8 @@ ApplicationWindow {
         anchors.right: parent.right
         anchors.top: topHeader.bottom
         anchors.bottom: parent.bottom
+        anchors.topMargin: 1
+        anchors.leftMargin: 1
         anchors.rightMargin: 10
         anchors.bottomMargin: 10
 
@@ -428,10 +464,26 @@ ApplicationWindow {
             resizableRows: resizableRowsEnabled.checked
             resizableColumns: resizableColumnsEnabled.checked
             animate: enableAnimation.checked
-            selectionBehavior: selectCells.checked ? TableView.SelectCells
-                                                   : selectColumns.checked ? TableView.SelectColumns
-                                                   : selectRows.checked ? TableView.SelectRows
-                                                   : TableView.SelectionDisabled
+            selectionBehavior: {
+                switch (selectionCombo.currentText) {
+                case "SelectCells": return TableView.SelectCells
+                case "SelectRows": return TableView.SelectRows
+                case "SelectColumns": return TableView.SelectColumns
+                }
+                return TableView.SelectionDisabled
+            }
+            editTriggers: {
+                switch (editCombo.currentText) {
+                case "NoEditTriggers": return TableView.NoEditTriggers
+                case "SingleTapped": return TableView.SingleTapped
+                case "DoubleTapped": return TableView.DoubleTapped
+                case "SelectedTapped": return TableView.SelectedTapped
+                case "EditKeyPressed": return TableView.EditKeyPressed
+                case "AnyKeyPressed": return TableView.AnyKeyPressed
+                }
+                return TableView.SelectionDisabled
+            }
+
             leftMargin: marginsSpinBox.value
             topMargin: marginsSpinBox.value
             rightMargin: marginsSpinBox.value
@@ -451,6 +503,13 @@ ApplicationWindow {
 
     SelectionRectangle {
         target: tableView
+        selectionMode: {
+            switch (selectionModeCombo.currentText) {
+            case "Drag": return SelectionRectangle.Drag
+            case "PressAndHold": return SelectionRectangle.PressAndHold
+            }
+            return SelectionRectangle.Auto
+        }
     }
 
     Component {
@@ -459,14 +518,14 @@ ApplicationWindow {
             id: delegate
             implicitWidth: useLargeCells.checked ? 1000 : 50
             implicitHeight: useLargeCells.checked ? 1000 : 30
-            border.width: current ? 2 : 0
-            border.color: "darkgreen"
+            border.width: current ? 3 : 0
+            border.color: window.palette.highlight
             property var randomColor: Qt.rgba(0.6 + (0.4 * Math.random()), 0.6 + (0.4 * Math.random()), 0.6 + (0.4 * Math.random()), 1)
-            color: selected ? "lightgreen"
+            color: selected ? window.palette.highlight
                             : (highlightCurrentRow.checked && (row === tableView.currentRow || column === tableView.currentColumn)) ? "lightgray"
                             : useRandomColor.checked ? randomColor
                             : model.display === "added" ? "lightblue"
-                            : "white"
+                            : window.palette.window.lighter(1.3)
 
             required property bool selected
             required property bool current
@@ -480,11 +539,26 @@ ApplicationWindow {
                 visible: useSubRect.checked
             }
 
-            Text {
+            Label {
                 anchors.centerIn: parent
                 visible: drawText.checked
                 text: model.display
             }
+
+            TableView.editDelegate: TextField {
+                horizontalAlignment: TextInput.AlignHCenter
+                verticalAlignment: TextInput.AlignVCenter
+                text: display
+
+                TableView.onCommit: {
+                    let modelIndex = TableView.view.modelIndex(column, row)
+                    TableView.view.model.setData(modelIndex, text, Qt.DisplayRole)
+                }
+
+                Component.onCompleted: {
+                    selectAll()
+                }
+           }
         }
     }
 

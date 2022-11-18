@@ -9,6 +9,7 @@
 #include <QtQuick/private/qquicktableview_p_p.h>
 #include <QtQuick/private/qquickloader_p.h>
 #include <QtQuick/private/qquickdraghandler_p.h>
+#include <QtQuick/private/qquicktextinput_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -42,6 +43,7 @@ Q_DECLARE_METATYPE(QMarginsF);
 #define LOAD_TABLEVIEW(fileName) \
     view->setSource(testFileUrl(fileName)); \
     view->show(); \
+    view->requestActivate(); \
     QVERIFY(QTest::qWaitForWindowActive(view)); \
     GET_QML_TABLEVIEW(tableView)
 
@@ -249,6 +251,19 @@ private slots:
     void dragFromCellCenter();
     void tapOnResizeArea_data();
     void tapOnResizeArea();
+    void editUsingEditTriggers_data();
+    void editUsingEditTriggers();
+    void editUsingTab();
+    void editOnNonEditableCell_data();
+    void editOnNonEditableCell();
+    void noEditDelegate_data();
+    void noEditDelegate();
+    void editAndCloseEditor();
+    void editWarning_noEditDelegate();
+    void editWarning_invalidIndex();
+    void editWarning_nonEditableModelItem();
+    void attachedPropertiesOnEditDelegate();
+    void requiredPropertiesOnEditDelegate();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -6363,6 +6378,679 @@ void tst_QQuickTableView::tapOnResizeArea()
         QVERIFY(!tableView->selectionModel()->currentIndex().isValid());
     else
         QCOMPARE(tableView->selectionModel()->currentIndex(), model.index(1, 1));
+}
+
+void tst_QQuickTableView::editUsingEditTriggers_data()
+{
+    QTest::addColumn<QQuickTableView::EditTriggers>("editTriggers");
+    QTest::addColumn<bool>("interactive");
+
+    // We need to test both with and without interactive, since SingleTapped
+    // actions will happen already on press in a TableView that is not interactive!
+    for (bool interactive : {true, false}) {
+        QTest::newRow("NoEditTriggers") << QQuickTableView::EditTriggers(QQuickTableView::NoEditTriggers) << interactive;
+        QTest::newRow("SingleTapped") << QQuickTableView::EditTriggers(QQuickTableView::SingleTapped) << interactive;
+        QTest::newRow("DoubleTapped") << QQuickTableView::EditTriggers(QQuickTableView::DoubleTapped) << interactive;
+        QTest::newRow("SelectedTapped") << QQuickTableView::EditTriggers(QQuickTableView::SelectedTapped) << interactive;
+        QTest::newRow("EditKeyPressed") << QQuickTableView::EditTriggers(QQuickTableView::EditKeyPressed) << interactive;
+        QTest::newRow("AnyKeyPressed") << QQuickTableView::EditTriggers(QQuickTableView::EditKeyPressed) << interactive;
+        QTest::newRow("DoubleTapped | EditKeyPressed")
+                << QQuickTableView::EditTriggers(QQuickTableView::DoubleTapped | QQuickTableView::EditKeyPressed) << interactive;
+        QTest::newRow("SingleTapped | AnyKeyPressed")
+                << QQuickTableView::EditTriggers(QQuickTableView::SingleTapped | QQuickTableView::AnyKeyPressed) << interactive;
+    }
+}
+
+void tst_QQuickTableView::editUsingEditTriggers()
+{
+    // Check that you can start to edit in TableView
+    // using the available edit triggers.
+    QFETCH(QQuickTableView::EditTriggers, editTriggers);
+    QFETCH(bool, interactive);
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setInteractive(interactive);
+    tableView->forceActiveFocus();
+
+    QCOMPARE(tableView->editTriggers(), QQuickTableView::DoubleTapped | QQuickTableView::EditKeyPressed);
+    tableView->setEditTriggers(editTriggers);
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+
+    const QPoint cell1(1, 1);
+    const QPoint cell2(2, 1);
+    const QModelIndex index1 = tableView->modelIndex(cell1);
+    const QModelIndex index2 = tableView->modelIndex(cell2);
+    const auto item1 = tableView->itemAtCell(cell1);
+    const auto item2 = tableView->itemAtCell(cell2);
+    QVERIFY(item1);
+    QVERIFY(item2);
+
+    QQuickWindow *window = tableView->window();
+
+    const QPoint localPos = QPoint(item1->width() - 1, item1->height() - 1);
+    const QPoint localPosOutside = QPoint(tableView->contentWidth() + 10, tableView->contentHeight() + 10);
+    const QPoint tapPos1 = window->contentItem()->mapFromItem(item1, localPos).toPoint();
+    const QPoint tapPos2 = window->contentItem()->mapFromItem(item2, localPos).toPoint();
+    const QPoint tapOutsideContentItem = window->contentItem()->mapFromItem(item2, localPosOutside).toPoint();
+
+    if (editTriggers & QQuickTableView::SingleTapped) {
+        // edit cell 1
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+        const auto editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // edit cell 2 (without closing the previous edit session first)
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+        const auto editItem2 = tableView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem2);
+        QVERIFY(editItem2->hasActiveFocus());
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index2);
+
+        // single tap outside content item should close the editor
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapOutsideContentItem);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+    }
+
+    if (editTriggers & QQuickTableView::DoubleTapped) {
+        // edit cell 1
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+        const auto editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // edit cell 2 (without closing the previous edit session first)
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+        const auto editItem2 = tableView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem2);
+        QVERIFY(editItem2->hasActiveFocus());
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index2);
+
+        // single tap outside the edit item should close the editor
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+
+        if (!(editTriggers & QQuickTableView::SingleTapped)) {
+            // single tap on a cell should not open the editor
+            QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+            QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+            QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        }
+
+        // single tap outside content item should make sure editing ends
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapOutsideContentItem);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::SelectedTapped) {
+        // select cell first, then tap on it
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+        const auto editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // tap on a non-selected cell. This should close the editor, and move
+        // the current index, but not begin to edit the cell.
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+
+        // tap on a non-selected cell while no editor is active
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+    }
+
+    if (editTriggers & QQuickTableView::EditKeyPressed) {
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Return);
+        const auto editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // Pressing escape should close the editor
+        QTest::keyClick(window, Qt::Key_Escape);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+
+        // Pressing Enter to open the editor again
+        QTest::keyClick(window, Qt::Key_Enter);
+        const auto editItem2 = tableView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem2);
+        QVERIFY(editItem2->hasActiveFocus());
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // single tap outside the edit item should close the editor
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::AnyKeyPressed) {
+        // Pressing key x should start to edit. And in case of AnyKeyPressed, we
+        // also replay the key event to the focus object.
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_X);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+        auto textInput1 = tableView->property(kEditItem).value<QQuickTextInput *>();
+        QVERIFY(textInput1);
+        QVERIFY(textInput1->hasActiveFocus());
+        QCOMPARE(textInput1->text(), "x");
+
+        // Pressing escape should close the editor
+        QTest::keyClick(window, Qt::Key_Escape);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+
+        // Pressing enter should also start to edit. But this is a
+        // special case, we don't replay enter into the focus object.
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Enter);
+        QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+        QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+        auto textInput2 = tableView->property(kEditItem).value<QQuickTextInput *>();
+        QVERIFY(textInput2);
+        QVERIFY(textInput2->hasActiveFocus());
+        QCOMPARE(textInput2->text(), "1");
+
+        if (!(editTriggers & QQuickTableView::SingleTapped)) {
+            // single tap outside the edit item should close the editor
+            QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+            QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+            QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        }
+
+        // single tap outside content item should make sure editing ends
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapOutsideContentItem);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers == QQuickTableView::NoEditTriggers) {
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Return);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_X);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+}
+
+void tst_QQuickTableView::editUsingTab()
+{
+    // Check that the you can commit and start to edit
+    // the next cell by pressing tab and backtab.
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->forceActiveFocus();
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell1(1, 1);
+    const QPoint cell2(2, 1);
+    const QModelIndex index1 = tableView->modelIndex(cell1);
+    const QModelIndex index2 = tableView->modelIndex(cell2);
+
+    QQuickWindow *window = tableView->window();
+
+    // Edit cell 1
+    tableView->edit(index1);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+    const QQuickItem *editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem1);
+
+    // Press Tab to edit cell 2
+    QTest::keyClick(window, Qt::Key_Tab);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index2);
+    const QQuickItem *editItem2 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem2);
+
+    // Press Backtab to edit cell 1
+    QTest::keyClick(window, Qt::Key_Backtab);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+    const QQuickItem *editItem3 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem3);
+}
+
+void tst_QQuickTableView::editOnNonEditableCell_data()
+{
+    QTest::addColumn<QQuickTableView::EditTriggers>("editTriggers");
+
+    QTest::newRow("SingleTapped") << QQuickTableView::EditTriggers(QQuickTableView::SingleTapped);
+    QTest::newRow("DoubleTapped") << QQuickTableView::EditTriggers(QQuickTableView::DoubleTapped);
+    QTest::newRow("SelectedTapped") << QQuickTableView::EditTriggers(QQuickTableView::SelectedTapped);
+    QTest::newRow("EditKeyPressed") << QQuickTableView::EditTriggers(QQuickTableView::EditKeyPressed);
+    QTest::newRow("AnyKeyPressed") << QQuickTableView::EditTriggers(QQuickTableView::EditKeyPressed);
+}
+
+void tst_QQuickTableView::editOnNonEditableCell()
+{
+    // Check that the user cannot edit a non-editable cell from the edit triggers.
+    // Note: we don't want TableView to print out warnings in this case, since
+    // the user is not doing anything wrong. We only want to print out warnings if
+    // the application is calling edit() explicitly on a cell that cannot be edited
+    // (separate test below).
+    QFETCH(QQuickTableView::EditTriggers, editTriggers);
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    auto model = TestModel(4, 4);
+    // set flags that exclude Qt::ItemIsEditable
+    model.setFlags(Qt::ItemIsEnabled);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setEditTriggers(editTriggers);
+    tableView->forceActiveFocus();
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell(1, 1);
+    const QModelIndex index1 = tableView->modelIndex(cell);
+    const auto item = tableView->itemAtCell(cell);
+    QVERIFY(item);
+
+    QQuickWindow *window = tableView->window();
+
+    const QPoint localPos = QPoint(item->width() - 1, item->height() - 1);
+    const QPoint tapPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+
+    if (editTriggers & QQuickTableView::SingleTapped) {
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::DoubleTapped) {
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::SelectedTapped) {
+        // select cell first, then tap on it
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::EditKeyPressed) {
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Return);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::AnyKeyPressed) {
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_X);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+}
+
+void tst_QQuickTableView::noEditDelegate_data()
+{
+    QTest::addColumn<QQuickTableView::EditTriggers>("editTriggers");
+
+    QTest::newRow("NoEditTriggers") << QQuickTableView::EditTriggers(QQuickTableView::NoEditTriggers);
+    QTest::newRow("SingleTapped") << QQuickTableView::EditTriggers(QQuickTableView::SingleTapped);
+    QTest::newRow("DoubleTapped") << QQuickTableView::EditTriggers(QQuickTableView::DoubleTapped);
+    QTest::newRow("SelectedTapped") << QQuickTableView::EditTriggers(QQuickTableView::SelectedTapped);
+    QTest::newRow("EditKeyPressed") << QQuickTableView::EditTriggers(QQuickTableView::EditKeyPressed);
+    QTest::newRow("AnyKeyPressed") << QQuickTableView::EditTriggers(QQuickTableView::EditKeyPressed);
+}
+
+void tst_QQuickTableView::noEditDelegate()
+{
+    // Check that you cannot start to edit if
+    // no edit delegate has been set.
+    QFETCH(QQuickTableView::EditTriggers, editTriggers);
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setEditTriggers(editTriggers);
+    tableView->forceActiveFocus();
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+
+    const QPoint cell(1, 1);
+    const QModelIndex index1 = tableView->modelIndex(cell);
+    const auto item = tableView->itemAtCell(cell);
+    QVERIFY(item);
+
+    QQuickWindow *window = tableView->window();
+
+    const QPoint localPos = QPoint(item->width() - 1, item->height() - 1);
+    const QPoint tapPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+
+    if (editTriggers & QQuickTableView::SingleTapped) {
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::DoubleTapped) {
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::SelectedTapped) {
+        // select cell first, then tap on it
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::EditKeyPressed) {
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Return);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTableView::AnyKeyPressed) {
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_X);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers == QQuickTableView::NoEditTriggers) {
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Return);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_X);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+}
+
+void tst_QQuickTableView::editAndCloseEditor()
+{
+    // Check that the application can call edit() and closeEditor()
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->forceActiveFocus();
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell1(1, 1);
+    const QPoint cell2(2, 2);
+    const QModelIndex index1 = tableView->modelIndex(cell1);
+    const QModelIndex index2 = tableView->modelIndex(cell2);
+
+    // Edit cell 1
+    tableView->edit(index1);
+    QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
+    const QQuickItem *editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem1);
+    QVERIFY(editItem1->hasActiveFocus());
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+
+    // Edit cell 2
+    tableView->edit(index2);
+    QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+    const QQuickItem *editItem2 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem2);
+    QVERIFY(editItem2->hasActiveFocus());
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index2);
+
+    // Close the editor
+    tableView->closeEditor();
+    QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+}
+
+void tst_QQuickTableView::editWarning_noEditDelegate()
+{
+    // Check that the TableView will print out a warning if the
+    // application calls edit() on a cell that has no editDelegate.
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*cannot edit: no TableView.editDelegate set!"));
+    tableView->edit(tableView->modelIndex(1, 1));
+}
+
+void tst_QQuickTableView::editWarning_invalidIndex()
+{
+    // Check that the TableView will print out a warning if the
+    // application calls edit() on an invalid index.
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*cannot edit: index is not valid!"));
+    tableView->edit(tableView->modelIndex(-1, -1));
+}
+
+void tst_QQuickTableView::editWarning_nonEditableModelItem()
+{
+    // Check that the TableView will print out a warning if the
+    // application calls edit() on cell that cannot, according
+    // to the model flags, be edited.
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+    // set flags that exclude Qt::ItemIsEditable
+    model.setFlags(Qt::ItemIsEnabled);
+
+    WAIT_UNTIL_POLISHED;
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*cannot edit:.*flags.*Qt::ItemIsEditable"));
+    tableView->edit(tableView->modelIndex(1, 1));
+}
+
+void tst_QQuickTableView::attachedPropertiesOnEditDelegate()
+{
+    // Check that the TableView.commit signal is emitted when
+    // the user presses enter or return, but not when e.g pressing escape.
+    // Also check that TableView.view is correct.
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->forceActiveFocus();
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell(1, 1);
+    const QModelIndex index = tableView->modelIndex(cell);
+    QQuickWindow *window = tableView->window();
+
+    // Open the edit
+    tableView->edit(index);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index);
+    QQuickItem *editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem1);
+    const auto attached1 = getAttachedObject(editItem1);
+    QVERIFY(attached1);
+    QSignalSpy commitSpy1(attached1, &QQuickTableViewAttached::commit);
+
+    // Check that TableView has been assigned to TableView.view
+    QCOMPARE(attached1->view(), tableView);
+
+    // Accept and close the edit, check commit signal
+    QTest::keyClick(window, Qt::Key_Enter);
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QCOMPARE(commitSpy1.count(), 1);
+
+    // Repeat once more, but use Key_Return to accept instead
+    tableView->edit(index);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index);
+    QQuickItem *editItem2 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem2);
+    const auto attached2 = getAttachedObject(editItem2);
+    QVERIFY(attached2);
+    QSignalSpy commitSpy2(attached2, &QQuickTableViewAttached::commit);
+
+    QTest::keyClick(window, Qt::Key_Return);
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QCOMPARE(commitSpy1.count(), 1);
+    QCOMPARE(commitSpy2.count(), 1);
+
+    // Repeat once more, but use Key_Escape instead.
+    // This should close the edit, but without an accepted signal.
+    tableView->edit(index);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index);
+    QQuickItem *editItem3 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem3);
+    const auto attached3 = getAttachedObject(editItem3);
+    QVERIFY(editItem3);
+    QSignalSpy commitSpy3(attached3, &QQuickTableViewAttached::commit);
+
+    QTest::keyClick(window, Qt::Key_Escape);
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QCOMPARE(commitSpy3.count(), 0);
+
+    // Repeat once more, but tap outside the edit item.
+    // This should close the edit, but without an accepted signal.
+    tableView->edit(index);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index);
+    QQuickItem *editItem4 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem4);
+    const auto attached4 = getAttachedObject(editItem4);
+    QVERIFY(editItem4);
+    QSignalSpy commitSpy4(attached4, &QQuickTableViewAttached::commit);
+
+    const QPoint tapPos = window->contentItem()->mapFromItem(editItem4, QPointF(-10, -10)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QCOMPARE(commitSpy4.count(), 0);
+}
+
+void tst_QQuickTableView::requiredPropertiesOnEditDelegate()
+{
+    // Check that all expected required properties on the edit
+    // delegate (like row, column, current) has correct values.
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    TestModel model(4, 4);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    const char kEditItem[] = "editItem";
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell(1, 1);
+    const QModelIndex index1 = tableView->modelIndex(cell);
+    const QModelIndex index2 = tableView->modelIndex(2, 2);
+
+    tableView->edit(index1);
+
+    auto textInput = tableView->property(kEditItem).value<QQuickTextInput *>();
+    QVERIFY(textInput);
+    // Check that "text: display" in the edit delegate works
+    QCOMPARE(textInput->text(), "1");
+
+    QCOMPARE(textInput->property("current").toBool(), true);
+    QCOMPARE(textInput->property("selected").toBool(), false);
+    selectionModel.select(index1, QItemSelectionModel::Select);
+    QCOMPARE(textInput->property("selected").toBool(), true);
+    selectionModel.setCurrentIndex(index2, QItemSelectionModel::Select);
+    QCOMPARE(textInput->property("current").toBool(), false);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

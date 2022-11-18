@@ -372,6 +372,11 @@ public:
     QQuickTableViewHoverHandler *hoverHandler = nullptr;
     QQuickTableViewResizeHandler *resizeHandler = nullptr;
 
+    QQmlTableInstanceModel *editModel = nullptr;
+    QQuickItem *editItem = nullptr;
+    QPersistentModelIndex editIndex;
+    QQuickTableView::EditTriggers editTriggers = QQuickTableView::DoubleTapped | QQuickTableView::EditKeyPressed;
+
 #ifdef QT_DEBUG
     QString forcedIncubationMode = qEnvironmentVariable("QT_TABLEVIEW_INCUBATION_MODE");
 #endif
@@ -475,6 +480,7 @@ public:
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
 
     void updateCursor();
+    void updateEditItem();
 
     QTypeRevision resolveImportVersion();
     void createWrapperModel();
@@ -546,6 +552,8 @@ public:
     void setCurrentIndexFromTap(const QPointF &pos);
     void setCurrentIndex(const QPoint &cell);
     bool setCurrentIndexFromKeyEvent(QKeyEvent *e);
+    bool canEdit(const QModelIndex tappedIndex, bool warn);
+    bool editFromKeyEvent(QKeyEvent *e);
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;

@@ -203,6 +203,12 @@ public:
         return true;
     }
 
+    Qt::ItemFlags flags(const QModelIndex &index) const override
+    {
+        Q_UNUSED(index)
+        return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+    }
+
 signals:
     void rowCountChanged();
     void columnCountChanged();
