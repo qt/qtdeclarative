@@ -891,7 +891,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                     QObject *arg = *reinterpret_cast<QObject **>(a[0]);
                                     if (const auto *wrap = sv->as<QV4::QObjectWrapper>())
                                         needActivate = wrap->object() != arg;
-                                    else
+                                    else if (arg != nullptr || !sv->isNull())
                                         needActivate = true;
                                     if (needActivate)
                                         writeProperty(id, arg);
