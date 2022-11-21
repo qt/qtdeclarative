@@ -213,7 +213,8 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
-    if (QQmlData *d = QQmlData::get(o)) {
+    QObjectPrivate *p = QObjectPrivate::get(o);
+    if (QQmlData *d = QQmlData::get(p)) {
         if (d->ownContext) {
             for (QQmlRefPointer<QQmlContextData> lc = d->ownContext->linkedContext(); lc;
                  lc = lc->linkedContext()) {
@@ -230,6 +231,12 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 
         if (d->outerContext && d->outerContext->contextObject() == o)
             d->outerContext->setContextObject(nullptr);
+
+        if (d->hasVMEMetaObject || d->hasInterceptorMetaObject) {
+            p->metaObject->objectDestroyed(o);
+            p->metaObject = nullptr;
+            d->hasVMEMetaObject = d->hasInterceptorMetaObject = false;
+        }
 
         // Mark this object as in the process of deletion to
         // prevent it resolving in bindings
