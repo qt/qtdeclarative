@@ -1279,15 +1279,15 @@ QPlatformBackingStoreRhiConfig QQuickWidgetPrivate::rhiConfig() const
     return config;
 }
 
-QRhiTexture *QQuickWidgetPrivate::texture() const
+QWidgetPrivate::TextureData QQuickWidgetPrivate::texture() const
 {
     Q_Q(const QQuickWidget);
     if (!q->isWindow() && q->internalWinId()) {
         qWarning() << "QQuickWidget cannot be used as a native child widget."
                    << "Consider setting Qt::AA_DontCreateNativeWidgetSiblings";
-        return 0;
+        return {};
     }
-    return outputTexture;
+    return { outputTexture, nullptr };
 }
 
 QPlatformTextureList::Flags QQuickWidgetPrivate::textureListFlags()

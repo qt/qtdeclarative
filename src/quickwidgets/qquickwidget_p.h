@@ -63,7 +63,7 @@ public:
     void handleContextCreationFailure(const QSurfaceFormat &format);
 
     QPlatformBackingStoreRhiConfig rhiConfig() const override;
-    QRhiTexture *texture() const override;
+    TextureData texture() const override;
     QPlatformTextureList::Flags textureListFlags() override;
     QImage grabFramebuffer() override;
 
