@@ -485,7 +485,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
         }
     }
 
-    for (const auto &val : qAsConst(import.objects)) {
+    for (const auto &val : std::as_const(import.objects)) {
         // Otherwise we have already done it in localFile2ScopeTree()
         if (!val.scope.factory() && val.scope->baseType().isNull()) {
 

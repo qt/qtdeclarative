@@ -418,7 +418,7 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
         if (outerType == contextualTypes.types().constEnd())
             break;
 
-        for (const auto &innerType : qAsConst(outerType->scope->m_childScopes)) {
+        for (const auto &innerType : std::as_const(outerType->scope->m_childScopes)) {
             if (innerType->m_internalName == name) {
                 useType();
                 return { innerType, outerType->revision };
