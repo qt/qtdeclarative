@@ -122,6 +122,8 @@ public:
     static bool calcHoverEnabled(const QQuickItem *item);
 #endif
 
+    static void warnIfCustomizationNotSupported(QObject *control, QQuickItem *item, const QString &propertyName);
+
     virtual void cancelContentItem();
     virtual void executeContentItem(bool complete = false);
 

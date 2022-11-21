@@ -28,6 +28,8 @@ T.TextArea {
     placeholderTextColor: control.palette.placeholderText
     verticalAlignment: TextInput.AlignTop
 
+    readonly property bool __notCustomizable: true
+
     PlaceholderText {
         id: placeholder
         x: control.leftPadding
@@ -45,5 +47,7 @@ T.TextArea {
 
     background: Rectangle {
         color: control.palette.light
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }

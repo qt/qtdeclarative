@@ -17,6 +17,8 @@ T.DialogButtonBox {
     padding: 6
     alignment: Qt.AlignRight
 
+    readonly property bool __notCustomizable: true
+
     delegate: Button { }
 
     contentItem: ListView {

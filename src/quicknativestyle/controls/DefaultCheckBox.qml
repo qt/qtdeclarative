@@ -11,6 +11,7 @@ T.CheckBox {
     id: control
 
     readonly property bool nativeIndicator: indicator instanceof NativeStyle.StyleItem
+    readonly property bool __notCustomizable: true
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)

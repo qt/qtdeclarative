@@ -70,6 +70,7 @@ void QQuickIndicatorButton::setIndicator(QQuickItem *indicator)
     const qreal oldImplicitIndicatorHeight = implicitIndicatorHeight();
 
     QQuickControl *par = static_cast<QQuickControl *>(parent());
+    QQuickControlPrivate::warnIfCustomizationNotSupported(par, indicator, QStringLiteral("indicator"));
 
     QQuickControlPrivate::get(par)->removeImplicitSizeListener(d->indicator);
     QQuickControlPrivate::hideOldItem(d->indicator);

@@ -15,6 +15,8 @@ T.SpinBox {
     spacing: 2
     rightPadding: up.implicitIndicatorWidth + spacing
 
+    readonly property bool __notCustomizable: true
+
     validator: IntValidator {
         locale: control.locale.name
         bottom: Math.min(control.from, control.to)

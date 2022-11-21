@@ -433,6 +433,8 @@ void QQuickTextField::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, background, QStringLiteral("background"));
+
     if (!d->background.isExecuting())
         d->cancelBackground();
 

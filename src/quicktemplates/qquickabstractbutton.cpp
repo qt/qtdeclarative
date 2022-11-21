@@ -743,6 +743,8 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, indicator, QStringLiteral("indicator"));
+
     if (!d->indicator.isExecuting())
         d->cancelIndicator();
 

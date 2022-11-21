@@ -16,6 +16,8 @@ T.Slider {
                              implicitHandleHeight + topPadding + bottomPadding,
                             control.vertical ? 90 : 0 /* minimum */ )
 
+    readonly property bool __notCustomizable: true
+
     background: NativeStyle.Slider {
         control: control
         subControl: NativeStyle.Slider.Groove
@@ -25,6 +27,8 @@ T.Slider {
         // also use a different background color before, and
         // after, the handle.
         useNinePatchImage: false
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     handle: NativeStyle.Slider {
@@ -33,5 +37,7 @@ T.Slider {
         x: control.leftPadding + (control.horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))
         useNinePatchImage: false
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }

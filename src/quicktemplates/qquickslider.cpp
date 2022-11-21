@@ -549,6 +549,8 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, handle, QStringLiteral("handle"));
+
     if (!d->handle.isExecuting())
         d->cancelHandle();
 

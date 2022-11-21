@@ -23,6 +23,8 @@ T.Dialog {
 
     padding: 6
 
+    readonly property bool __notCustomizable: true
+
     background: Rectangle {
         color: control.palette.window
         border.color: control.palette.mid

@@ -252,6 +252,8 @@ void QQuickDialog::setHeader(QQuickItem *header)
     if (oldHeader == header)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, header, QStringLiteral("header"));
+
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldHeader)) {
         QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::accepted, d, &QQuickDialogPrivate::handleAccept);
         QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::rejected, d, &QQuickDialogPrivate::handleReject);
@@ -299,6 +301,8 @@ void QQuickDialog::setFooter(QQuickItem *footer)
     QQuickItem *oldFooter = d->popupItem->footer();
     if (oldFooter == footer)
         return;
+
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, footer, QStringLiteral("footer"));
 
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldFooter)) {
         QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::accepted, d, &QQuickDialogPrivate::handleAccept);

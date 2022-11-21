@@ -28,6 +28,7 @@ T.TreeViewDelegate {
     required property int row
     required property var model
     readonly property real __contentIndent: !isTreeNode ? 0 : (depth * indentation) + (indicator ? indicator.width + spacing : 0)
+    readonly property bool __notCustomizable: true
 
     indicator: Item {
         // Create an area that is big enough for the user to

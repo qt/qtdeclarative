@@ -10,6 +10,7 @@ T.SpinBox {
 
     property bool nativeIndicators: up.indicator.hasOwnProperty("_qt_default")
                                     && down.indicator.hasOwnProperty("_qt_default")
+    readonly property bool __notCustomizable: true
 
     implicitWidth: Math.max(contentItem.implicitWidth + leftInset + rightInset,
                             90 /* minimum */ )
@@ -47,6 +48,8 @@ T.SpinBox {
         validator: control.validator
         inputMethodHints: control.inputMethodHints
 
+        readonly property bool __ignoreNotCustomizable: true
+
         // Since the indicators are embedded inside the TextField we need to avoid that
         // the TextField consumes mouse events for that area.
         // We achieve that by setting a containmentMask
@@ -73,6 +76,7 @@ T.SpinBox {
         implicitWidth: upAndDown.implicitWidth
         implicitHeight: (upAndDown.implicitHeight >> 1)
         property bool _qt_default
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     down.indicator: Item {
@@ -82,7 +86,11 @@ T.SpinBox {
         implicitWidth: upAndDown.implicitWidth
         implicitHeight: upAndDown.implicitHeight >> 1
         property bool _qt_default
+        readonly property bool __ignoreNotCustomizable: true
     }
 
-    background: Item {} // No background, the TextField will cover the whole control
+    // No background, the TextField will cover the whole control
+    background: Item {
+        readonly property bool __ignoreNotCustomizable: true
+    }
 }

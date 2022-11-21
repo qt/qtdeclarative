@@ -161,6 +161,8 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
     if (d->label == label)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, label, QStringLiteral("label"));
+
     if (!d->label.isExecuting())
         d->cancelLabel();
 

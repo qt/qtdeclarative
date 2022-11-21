@@ -395,6 +395,9 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
     if (contentItem == item)
         return;
 
+    if (notify)
+        warnIfCustomizationNotSupported(q, item, QStringLiteral("contentItem"));
+
     if (!contentItem.isExecuting())
         cancelContentItem();
 
@@ -608,6 +611,39 @@ QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
     }
 
     return QLocale();
+}
+
+/*!
+    \internal
+
+    Warns if \a control has a \c __notCustomizable property which is set to \c true,
+    unless \a item has an \c __ignoreNotCustomizable property.
+
+    If \c __notCustomizable is \c true, it means that the style that provides the
+    control does not support customization.  If \c __ignoreNotCustomizable is true,
+    it means that the item is an internal implementation detail and shouldn't be
+    subject to the warning.
+
+    We take a QObject for \c control instead of QQuickControl or QQuickItem
+    because not all relevant types derive from QQuickControl - e.g. TextField,
+    TextArea, QQuickIndicatorButton, etc.
+*/
+void QQuickControlPrivate::warnIfCustomizationNotSupported(QObject *control, QQuickItem *item, const QString &propertyName)
+{
+    static const bool ignoreWarnings = [](){
+        return qEnvironmentVariableIntValue("QT_QUICK_CONTROLS_IGNORE_CUSTOMIZATION_WARNINGS");
+    }();
+    if (ignoreWarnings)
+        return;
+
+    if (!control->property("__notCustomizable").toBool()
+            || (item && item->property("__ignoreNotCustomizable").toBool()))
+        return;
+
+    qmlWarning(item ? item : control).nospace() << "The current style does not support customization of this control "
+        << "(property: " << propertyName << " item: " << item << "). "
+        "Please customize a non-native style (such as Basic, Fusion, Material, etc). For more information, see: "
+        "https://doc.qt.io/qt-6/qtquickcontrols2-customize.html#customization-reference";
 }
 
 void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
@@ -1536,6 +1572,8 @@ void QQuickControl::setBackground(QQuickItem *background)
     Q_D(QQuickControl);
     if (d->background == background)
         return;
+
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, background, QStringLiteral("background"));
 
     if (!d->background.isExecuting())
         d->cancelBackground();

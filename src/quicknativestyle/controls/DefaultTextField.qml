@@ -11,6 +11,7 @@ T.TextField {
     id: control
 
     readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __notCustomizable: true
 
     implicitWidth: implicitBackgroundWidth + leftInset + rightInset
                    || Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding
@@ -49,5 +50,7 @@ T.TextField {
         control: control
         contentWidth: Math.max(control.contentWidth, placeholder.implicitWidth)
         contentHeight: control.contentHeight
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }

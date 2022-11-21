@@ -17,6 +17,9 @@ T.ScrollView {
     rightPadding: ScrollBar.vertical.visible ? ScrollBar.vertical.width : 0
     bottomPadding: ScrollBar.horizontal.visible ? ScrollBar.horizontal.height : 0
 
+    // Don't set __notCustomizable here, because it would require special-casing
+    // setFlickable's call to setContentItem.
+
     ScrollBar.vertical: ScrollBar {
         parent: control
         x: control.mirrored ? 0 : control.width - width

@@ -8,6 +8,8 @@ import QtQuick.Shapes
 T.SelectionRectangle {
     id: control
 
+    readonly property bool __notCustomizable: true
+
     topLeftHandle: Item {
         width: 20
         height: 20

@@ -14,6 +14,8 @@ NativeStyle.DefaultButton {
         contentHeight: contentItem.implicitHeight
         useNinePatchImage: false
         overrideState: NativeStyle.StyleItem.NeverHovered
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     NativeStyle.Button {
@@ -39,5 +41,7 @@ NativeStyle.DefaultButton {
         text: control.text
         font: control.font
         color: control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }

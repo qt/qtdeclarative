@@ -618,6 +618,8 @@ void QQuickDial::setHandle(QQuickItem *handle)
     if (handle == d->handle)
         return;
 
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, handle, QStringLiteral("handle"));
+
     if (!d->handle.isExecuting())
         d->cancelHandle();
 

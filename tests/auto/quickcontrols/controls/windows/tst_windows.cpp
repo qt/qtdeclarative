@@ -8,6 +8,12 @@ int main(int argc, char *argv[])
 {
     QTEST_SET_MAIN_SOURCE_PATH
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+    // We have tst_customization::override and its controlNotCustomizable check
+    // to ensure that customizing native styles results in warnings,
+    // rather than having to ignore specific warnings for each control we customize in tests.
+    // We also have the various test_default/test_empty test functions to check
+    // that a "default-constructed" control doesn't result in any warnings.
+    qputenv("QT_QUICK_CONTROLS_IGNORE_CUSTOMIZATION_WARNINGS", "1");
     QQuickStyle::setStyle("Windows");
     return quick_test_main(argc, argv, "tst_controls::Windows", TST_CONTROLS_DATA);
 }

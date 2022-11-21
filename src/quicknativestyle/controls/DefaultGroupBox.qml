@@ -10,6 +10,7 @@ T.GroupBox {
     id: control
 
     readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __notCustomizable: true
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding,
@@ -22,6 +23,7 @@ T.GroupBox {
         property point labelPos : control.__nativeBackground
                                   ? background.labelPos
                                   : Qt.point(0,0)
+        readonly property bool __ignoreNotCustomizable: true
         x: labelPos.x + background.x
         y: labelPos.y + background.y - (__nativeBackground ? background.groupBoxPadding.top : 0)
         width: children[0].implicitWidth
@@ -49,5 +51,7 @@ T.GroupBox {
         control: control
         contentWidth: contentItem.implicitWidth
         contentHeight: contentItem.implicitHeight
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }

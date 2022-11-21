@@ -10,6 +10,7 @@ T.Dial {
     id: control
 
     readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __notCustomizable: true
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding,

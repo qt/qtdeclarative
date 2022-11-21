@@ -328,31 +328,60 @@ void tst_customization::override_data()
     QTest::addColumn<QStringList>("delegates");
     QTest::addColumn<QString>("nonDeferred");
     QTest::addColumn<bool>("identify");
+    QTest::addColumn<bool>("controlNotCustomizable");
+
+    static const bool controlCustomizable = false;
 
     // NOTE: delegates with IDs prevent deferred execution
 
     // default delegates with IDs, override with custom delegates with no IDs
-    for (const ControlInfo &control : ControlInfos)
-        QTest::newRow(qPrintable("identified:" + control.type)) << "identified" << control.type << control.delegates << "identified" << false;
+    for (const ControlInfo &control : ControlInfos) {
+        QTest::newRow(qPrintable("identified:" + control.type)) << "identified" << control.type << control.delegates
+            << "identified" << false << controlCustomizable;
+    }
 
     // default delegates with no IDs, override with custom delegates with IDs
-    for (const ControlInfo &control : ControlInfos)
-        QTest::newRow(qPrintable("simple:" + control.type)) << "simple" << control.type << control.delegates << "" << true;
+    for (const ControlInfo &control : ControlInfos) {
+        QTest::newRow(qPrintable("simple:" + control.type)) << "simple" << control.type << control.delegates
+            << "" << true << controlCustomizable;
+    }
 
     // default delegates with IDs, override with custom delegates with IDs
-    for (const ControlInfo &control : ControlInfos)
-        QTest::newRow(qPrintable("overidentified:" + control.type)) << "identified" << control.type << control.delegates << "identified" << true;
+    for (const ControlInfo &control : ControlInfos) {
+        QTest::newRow(qPrintable("overidentified:" + control.type)) << "identified" << control.type << control.delegates
+            << "identified" << true << controlCustomizable;
+    }
 
-#ifndef Q_OS_MACOS // QTBUG-65671
+    // Some styles don't support customization. Their fallbacks may, though,
+    // so only warn about the controls that that style provides.
+    const QHash<QString, QStringList> nonCustomizableControls = {
+        {
+            "macOS",
+            {
+                "Button", "CheckBox", "ComboBox", "Dial",  "Dialog", "DialogButtonBox", "Frame", "GroupBox",
+                "ProgressBar", "RadioButton", "SelectionRectangle", "Slider",
+                "SpinBox", "TextArea", "TextField", "TreeViewDelegate"
+                // TODO: ScrollView, ScrollBar
+            }
+        },
+        {
+            "Windows",
+            {
+                "Button", "CheckBox", "ComboBox", "Frame", "GroupBox", "ProgressBar", "RadioButton",
+                "SelectionRectangle", "Slider", "SpinBox", "TextArea", "TextField"
+                // TODO: ScrollView
+            }
+        }
+    };
 
     // test that the built-in styles don't have undesired IDs in their delegates
     const QStringList styles = QQuickStylePrivate::builtInStyles();
     for (const QString &style : styles) {
-        for (const ControlInfo &control : ControlInfos)
-            QTest::newRow(qPrintable(style + ":" + control.type)) << style << control.type << control.delegates << "" << false;
+        for (const ControlInfo &control : ControlInfos) {
+            QTest::newRow(qPrintable(style + ":" + control.type)) << style << control.type << control.delegates
+                << "" << false << nonCustomizableControls.value(style).contains(control.type);
+        }
     }
-
-#endif
 }
 
 void tst_customization::override()
@@ -362,6 +391,7 @@ void tst_customization::override()
     QFETCH(QStringList, delegates);
     QFETCH(QString, nonDeferred);
     QFETCH(bool, identify);
+    QFETCH(bool, controlNotCustomizable);
 
     QQuickStyle::setStyle(style);
 
@@ -370,6 +400,17 @@ void tst_customization::override()
     for (const QString &delegate : delegates) {
         QString id = identify ? QString("id: %1;").arg(delegate) : QString();
         qml += QString("%1: Item { %2 objectName: '%3-%1-%4-override' } ").arg(delegate).arg(id.replace(".", "")).arg(type.toLower()).arg(style);
+    }
+
+    for (int i = 0; i < delegates.size(); ++i) {
+        static const QString nonCustomizableWarning = ".*The current style does not support customization of this control.*";
+        if (controlNotCustomizable) {
+            // If the control can't be customized, ensure that we inform the user of that by checking that a warning is issued.
+            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(nonCustomizableWarning));
+        } else {
+            // By failing on warnings, we are notified when a control is made non-customizable without also updating this test.
+            QTest::failOnWarning(QRegularExpression(nonCustomizableWarning));
+        }
     }
 
     QString error;
