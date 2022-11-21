@@ -208,6 +208,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 #if QT_CONFIG(qml_debug)
     delete profiler;
 #endif
+    qDeleteAll(cachedValueTypeInstances);
 }
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)

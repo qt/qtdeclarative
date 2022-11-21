@@ -62,7 +62,7 @@ class Q_QML_PRIVATE_EXPORT QQmlGadgetPtrWrapper : public QObject
 public:
     static QQmlGadgetPtrWrapper *instance(QQmlEngine *engine, QMetaType type);
 
-    QQmlGadgetPtrWrapper(QQmlValueType *valueType, QObject *parent);
+    QQmlGadgetPtrWrapper(QQmlValueType *valueType, QObject *parent = nullptr);
     ~QQmlGadgetPtrWrapper();
 
     void read(QObject *obj, int idx);
