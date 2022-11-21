@@ -656,7 +656,7 @@ public:
             // NB: This acquires the lock on QQmlMetaTypeData. If we had a QQmlEngine here,
             //     we could use QQmlGadgetPtrWrapper::instance() to avoid this.
             if (const QQmlValueType *valueType = QQmlMetaType::valueType(type))
-                metaObject = valueType->metaObject();
+                metaObject = valueType->staticMetaObject();
             else
                 return QVariant();
         }
