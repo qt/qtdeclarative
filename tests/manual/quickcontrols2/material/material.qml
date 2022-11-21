@@ -1,5 +1,6 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+import QtCore
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -11,7 +12,21 @@ ApplicationWindow {
     height: screen.desktopAvailableHeight * 0.8
     visible: true
 
-    Material.theme: darkThemeSwitch.checked ? Material.Dark : Material.Light
+    Material.theme: settings.theme
+
+    Settings {
+        id: settings
+
+        property alias windowX: window.x
+        property alias windowY: window.y
+        property alias windowWidth: window.width
+        property alias windowHeight: window.height
+
+        property int theme: darkThemeSwitch.checked ? Material.Dark : Material.Light
+        property string variant: denseSwitch.checked ? "Dense" : "Normal"
+
+        property alias currentControlIndex: listView.currentIndex
+    }
 
     Shortcut {
         sequences: ["Esc", "Back"]
@@ -57,22 +72,18 @@ ApplicationWindow {
             Switch {
                 id: darkThemeSwitch
                 text: "Dark"
+                checked: settings.theme === Material.Dark
             }
 
             Switch {
                 id: denseSwitch
                 text: "Dense"
+                checked: settings.variant === "Dense"
 
                 ToolTip.text: "Requires restart"
                 ToolTip.visible: hovered
             }
         }
-    }
-
-    function showPageForControl(controlName, index) {
-        listView.currentIndex = index
-        stackView.replace("qrc:/pages/" + controlName + "Page.qml")
-        drawer.close()
     }
 
     Drawer {
@@ -84,25 +95,32 @@ ApplicationWindow {
         ListView {
             id: listView
             focus: true
-            currentIndex: -1
+            currentIndex: settings.currentControlIndex
             anchors.fill: parent
-
             model: ["Button", "DelayButton", "RoundButton"]
             delegate: ItemDelegate {
                 width: listView.width
                 text: modelData
                 highlighted: ListView.isCurrentItem
-                onClicked: window.showPageForControl(modelData, index)
+                onClicked: listView.currentIndex = index
             }
 
             ScrollIndicator.vertical: ScrollIndicator { }
+
+            // Need to wait until our count is non-zero before setting a default currentIndex.
+            // This also allows us to use an alias for the settings property.
+            Component.onCompleted: if (currentIndex === -1) currentIndex = 0
+
+            onCurrentIndexChanged: {
+                if (currentIndex >= 0 && currentIndex < count)
+                    stackView.replace("qrc:/pages/" + model[currentIndex] + "Page.qml")
+                drawer.close()
+            }
         }
     }
 
     StackView {
         id: stackView
         anchors.fill: parent
-
-        Component.onCompleted: window.showPageForControl("Button", 0)
     }
 }
