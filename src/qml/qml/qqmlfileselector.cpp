@@ -163,10 +163,7 @@ QQmlFileSelector* QQmlFileSelector::get(QQmlEngine* engine)
 
     if (qobject_cast<QQmlApplicationEngine *>(engine)) {
         auto *appEnginePrivate = static_cast<QQmlApplicationEnginePrivate *>(enginePrivate);
-        if (!appEnginePrivate->isInitialized) {
-            appEnginePrivate->init();
-            appEnginePrivate->isInitialized = true;
-        }
+        appEnginePrivate->ensureInitialized();
     }
 
     const QUrl nonEmptyInvalid(QLatin1String(":"));

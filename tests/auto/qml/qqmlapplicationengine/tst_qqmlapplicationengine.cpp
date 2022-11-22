@@ -50,12 +50,12 @@ void tst_qqmlapplicationengine::basicLoading()
 {
     int size = 0;
 
-    QQmlApplicationEngine *test = new QQmlApplicationEngine(testFileUrl("basicTest.qml"));
+    auto test = std::make_unique<QQmlApplicationEngine>(testFileUrl("basicTest.qml"));
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
-    QSignalSpy objectCreated(test, SIGNAL(objectCreated(QObject*,QUrl)));
+    QSignalSpy objectCreated(test.get(), &QQmlApplicationEngine::objectCreated);
     test->load(testFileUrl("basicTest.qml"));
     QCOMPARE(objectCreated.size(), size);//one less than rootObjects().size() because we missed the first one
     QCOMPARE(test->rootObjects().size(), ++size);
@@ -69,7 +69,11 @@ void tst_qqmlapplicationengine::basicLoading()
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
-    delete test;
+    test->loadFromModule("QtQuick", "Rectangle");
+    QCOMPARE(objectCreated.size(), size);
+    QCOMPARE(test->rootObjects().size(), ++size);
+    QVERIFY(test->rootObjects()[size -1]);
+    QCOMPARE(test->rootObjects()[size -1]->metaObject()->className(), "QQuickRectangle");
 }
 
 // make sure we resolve a relative URL to an absolute one, otherwise things
