@@ -263,10 +263,9 @@ private:
     }
 
     template<typename K>
-    void setNamedProperty(const K &key, int index, QQmlPropertyData *data, bool isOverride)
+    void setNamedProperty(const K &key, int index, QQmlPropertyData *data)
     {
         stringCache.insert(key, qMakePair(index, data));
-        _hasPropertyOverrides |= isOverride;
     }
 
 private:
@@ -311,7 +310,6 @@ private:
     int methodIndexCacheStart = 0;
     int signalHandlerIndexCacheStart = 0;
     int _jsFactoryMethodIndex = -1;
-    bool _hasPropertyOverrides = false;
 };
 
 // Returns this property cache's metaObject.  May be null if it hasn't been created yet.
