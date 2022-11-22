@@ -872,4 +872,85 @@ TestCase {
         let item = createTemporaryObject(data.component, testCase)
         verify(item)
     }
+
+    Component {
+        id: sliderTickMarks
+        Slider {
+        }
+    }
+
+    function test_sliderTickMarks_data() {
+        return [
+            { // 1000 / 100 == 10 tick marks
+                to: 1000,
+                from: 0,
+                stepSize: 100,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: true
+            },
+            { // 10 / 1 == 10 tick marks
+                to: 10,
+                from: 0,
+                stepSize: 1,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: true
+            },
+            { // Should still be within the default backgrounds width/height ratio
+                to: 50,
+                from: 10,
+                stepSize: 1,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: true
+            },
+            { // Math.abs(.0 - 10.0) % 3 != 0 (aka not divisible)
+                to: 10,
+                from: 0,
+                stepSize: 3,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: false
+            },
+            { // Math.abs(0 - 810.0) % 100 != 0 (aka not divisible)
+                to: 810,
+                from: 0,
+                stepSize: 100,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: false
+            },
+            { // stepSize isn't positive
+                to: 10,
+                from: 0,
+                stepSize: -1,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: false
+            },
+            { // stepSize isn't positive
+                to: 10,
+                from: 0,
+                stepSize: 0,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: false
+            },
+            { // Number of tick marks would exceed the default width/height ratio
+                to: 100,
+                from: 10,
+                stepSize: 1,
+                snapMode: Slider.SnapAlways,
+                expectTickmarks: false
+            },
+            { // snapMode != Slider.SnapAlways
+                to: 10,
+                from: 0,
+                stepSize: 1,
+                snapMode: Slider.NoSnap,
+                expectTickmarks: false
+            }
+        ]
+    }
+
+    function test_sliderTickMarks(data) {
+        let params = {to: data.to, from: data.from, stepSize: data.stepSize, snapMode: data.snapMode}
+        let item = createTemporaryObject(sliderTickMarks, testCase, params)
+        verify(item)
+        compare(item["__isDiscrete"], data.expectTickmarks)
+    }
 }
