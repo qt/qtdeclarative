@@ -67,7 +67,7 @@ for(dep, qt_module_deps) {
         } else {
             metatypes_filename = $$lower($$replace($${infixed_module_name}, $$QT_LIBINFIX, ''))$${ABI}_$${build_type}_metatypes.json
         }
-        metatypes_filepath = $$[QT_INSTALL_LIBS]/metatypes/$${metatypes_filename}
+        metatypes_filepath = $$[QT_INSTALL_ARCHDATA]/metatypes/$${metatypes_filename}
         exists($${metatypes_filepath}) {
             QML_FOREIGN_METATYPES += $${metatypes_filepath}
             break()
