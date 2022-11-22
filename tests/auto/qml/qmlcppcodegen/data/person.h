@@ -54,6 +54,8 @@ signals:
     void barzlesChanged();
     void dataChanged();
 
+    void ambiguous(int a = 9);
+
 private:
     QString m_name;
     int m_shoeSize;

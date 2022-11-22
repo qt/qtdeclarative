@@ -152,6 +152,7 @@ private slots:
     void namespaceWithEnum();
     void enumProblems();
     void enumConversion();
+    void ambiguousSignals();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2824,7 +2825,7 @@ void tst_QmlCppCodegen::nullComparison()
     QCOMPARE(o->property("w").toInt(), 3);
     QCOMPARE(o->property("x").toInt(), 1);
     QCOMPARE(o->property("y").toInt(), 5);
-};
+}
 
 void tst_QmlCppCodegen::consoleObject()
 {
@@ -2915,6 +2916,22 @@ void tst_QmlCppCodegen::enumConversion()
     QCOMPARE(o->property("test").toInt(), 0x04);
     QCOMPARE(o->property("test_1").toBool(), true);
 };
+
+void tst_QmlCppCodegen::ambiguousSignals()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/ambiguousSignals.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"tomorrow"_s);
+    Person *p = qobject_cast<Person *>(o.data());
+    QVERIFY(p);
+    emit p->ambiguous(12);
+    QCOMPARE(o->objectName(), u"12foo"_s);
+    emit p->ambiguous();
+    QCOMPARE(o->objectName(), u"9foo"_s);
+}
 
 QTEST_MAIN(tst_QmlCppCodegen)
 

@@ -169,6 +169,8 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         } else {
             const auto methods = m_objectType->methods(signalName);
             for (const auto &method : methods) {
+                if (method.isCloned())
+                    continue;
                 if (method.methodType() == QQmlJSMetaMethod::Signal) {
                     function.isSignalHandler = true;
                     const auto arguments = method.parameters();
