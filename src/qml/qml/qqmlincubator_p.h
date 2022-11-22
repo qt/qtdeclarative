@@ -52,6 +52,14 @@ public:
 
 
     QPointer<QObject> result;
+    enum HadTopLevelRequired : bool {No = 0, Yes = 1};
+    /* TODO: unify with Creator pointer once QTBUG-108760 is implemented
+       though we don't acutally own the properties here; if we ever end up
+       with a use case for async incubation of C++ types, we however could
+       not rely on the component to still exist during incubation, and
+       would need to store a copy of the required properties instead
+    */
+    QTaggedPointer<RequiredProperties, HadTopLevelRequired> requiredPropertiesFromComponent;
     QQmlGuardedContextData rootContext;
     QQmlEnginePrivate *enginePriv;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
@@ -70,6 +78,7 @@ public:
 
     void forceCompletion(QQmlInstantiationInterrupt &i);
     void incubate(QQmlInstantiationInterrupt &i);
+    void incubateCppBasedComponent(QQmlComponent *component, QQmlContext *context);
     RequiredProperties *requiredProperties();
     bool hadTopLevelRequiredProperties() const;
 };

@@ -1406,6 +1406,14 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context, QQmlC
     incubator.clear();
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> p(incubator.d);
 
+    if (d->loadedType.isValid()) {
+        // there isn't really an incubation process for C++ backed types
+        // so just create the object and signal that we are ready
+
+        p->incubateCppBasedComponent(this, context);
+        return;
+    }
+
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(d->engine);
 
     p->compilationUnit = d->compilationUnit;
