@@ -35,7 +35,7 @@ bool QWidgetPlatformMessageDialog::show(Qt::WindowFlags flags, Qt::WindowModalit
 {
     QSharedPointer<QMessageDialogOptions> options = QPlatformMessageDialogHelper::options();
     m_dialog->setWindowTitle(options->windowTitle());
-    m_dialog->setIcon(static_cast<QMessageBox::Icon>(options->icon()));
+    m_dialog->setIcon(static_cast<QMessageBox::Icon>(options->standardIcon()));
     m_dialog->setText(options->text());
     m_dialog->setInformativeText(options->informativeText());
 #if QT_CONFIG(textedit)
