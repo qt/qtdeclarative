@@ -8,6 +8,7 @@ set(cpp_sources
     dynamicmeta.h
     gadgetwithenum.h
     invisible.h
+    multiforeign.h
     objectwithmethod.h
     person.cpp person.h
     state.h
@@ -119,6 +120,7 @@ set(qml_files
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml
+    multiforeign.qml
     noBindingLoop.qml
     noQQmlData.qml
     nonNotifyable.qml

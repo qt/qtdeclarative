@@ -33,7 +33,7 @@ public:
     explicit QQmlJSTypeDescriptionReader(QString fileName, QString data)
         : m_fileName(std::move(fileName)), m_source(std::move(data)) {}
 
-    bool operator()(QHash<QString, QQmlJSExportedScope> *objects, QStringList *dependencies);
+    bool operator()(QList<QQmlJSExportedScope> *objects, QStringList *dependencies);
 
     QString errorMessage() const { return m_errorMessage; }
     QString warningMessage() const { return m_warningMessage; }
@@ -73,7 +73,7 @@ private:
     QString m_source;
     QString m_errorMessage;
     QString m_warningMessage;
-    QHash<QString, QQmlJSExportedScope> *m_objects = nullptr;
+    QList<QQmlJSExportedScope> *m_objects = nullptr;
     QStringList *m_dependencies = nullptr;
 };
 

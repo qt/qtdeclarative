@@ -147,6 +147,7 @@ private slots:
     void callWithSpread();
     void nullComparison();
     void consoleObject();
+    void multiForeign();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2857,6 +2858,16 @@ void tst_QmlCppCodegen::consoleObject()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::multiForeign()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/multiforeign.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"not here and not there"_s);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

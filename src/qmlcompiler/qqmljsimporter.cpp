@@ -35,7 +35,7 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
 }
 
 void QQmlJSImporter::readQmltypes(
-        const QString &filename, QHash<QString, QQmlJSExportedScope> *objects,
+        const QString &filename, QList<QQmlJSExportedScope> *objects,
         QList<QQmlDirParser::Import> *dependencies)
 {
     const QFileInfo fileInfo(filename);
@@ -198,7 +198,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
                                reader.typeNamespace(), it.key(), it->version, QTypeRevision()));
     }
     for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
-        result.objects.insert(it.key(), it.value());
+        result.objects.append(it.value());
 
     const auto scripts = reader.scripts();
     for (const auto &script : scripts) {
@@ -224,7 +224,7 @@ QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
             for (const auto &entry : resources) {
                 const QString name = QFileInfo(entry.resourcePath).baseName();
                 if (name.front().isUpper()) {
-                    import.objects.insert(name, {
+                    import.objects.append({
                         localFile2ScopeTree(entry.filePath),
                         { QQmlJSScope::Export(QString(), name, QTypeRevision(), QTypeRevision()) }
                     });
@@ -244,12 +244,21 @@ QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
         QDir::NoFilter
     };
     while (it.hasNext()) {
-        it.next();
-        if (!it.fileName().front().isUpper())
-            continue; // Non-uppercase names cannot be imported anyway.
+        QString name = it.nextFileInfo().completeBaseName();
 
-        const QString name = QFileInfo(it.filePath()).baseName();
-        import.objects.insert(name, {
+        // Non-uppercase names cannot be imported anyway.
+        if (!name.front().isUpper())
+            continue;
+
+        // .ui.qml is fine
+        if (name.endsWith(u".ui"))
+            name = name.chopped(3);
+
+        // Names with dots in them cannot be imported either.
+        if (name.contains(u'.'))
+            continue;
+
+        import.objects.append({
                 localFile2ScopeTree(it.filePath()),
                 { QQmlJSScope::Export(QString(), name, QTypeRevision(), QTypeRevision()) }
         });
@@ -415,9 +424,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     }
 
     // add objects
-    for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
-        const auto &val = it.value();
-
+    for (const auto &val : import.objects) {
         const QString cppName = isComposite(val.scope)
                 ? prefixedName(anonPrefix, internalName(val.scope))
                 : internalName(val.scope);
@@ -470,9 +477,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
         }
     }
 
-    for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
-        const auto &val = it.value();
-
+    for (const auto &val : qAsConst(import.objects)) {
         // Otherwise we have already done it in localFile2ScopeTree()
         if (!val.scope.factory() && val.scope->baseType().isNull()) {
 
@@ -546,10 +551,22 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
     const QQmlJSScope::Import builtinImport(
                 QString(), QStringLiteral("QML"), QTypeRevision::fromVersion(1, 0), false, true);
 
-    const QQmlJSScope::ConstPtr intType = result.objects[u"int"_s].scope;
-    Q_ASSERT(intType);
+    QQmlJSScope::ConstPtr intType;
+    QQmlJSScope::ConstPtr arrayType;
 
-    const QQmlJSScope::ConstPtr arrayType = result.objects[u"Array"_s].scope;
+    for (const QQmlJSExportedScope &exported : result.objects) {
+        if (exported.scope->internalName() == u"int"_s) {
+            intType = exported.scope;
+            if (!arrayType.isNull())
+                break;
+        } else if (exported.scope->internalName() == u"Array"_s) {
+            arrayType = exported.scope;
+            if (!intType.isNull())
+                break;
+        }
+    }
+
+    Q_ASSERT(intType);
     Q_ASSERT(arrayType);
 
     m_builtins = AvailableTypes(ImportedTypes(

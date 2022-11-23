@@ -246,7 +246,7 @@ bool QmltypesReader::parse()
     QQmlJSTypeDescriptionReader reader(qmltypesFilePtr()->canonicalFilePath(),
                                        qmltypesFilePtr()->code());
     QStringList dependencies;
-    QHash<QString, QQmlJSExportedScope> objects;
+    QList<QQmlJSExportedScope> objects;
     m_isValid = reader(&objects, &dependencies);
     for (const auto &obj : std::as_const(objects))
         insertComponent(obj.scope, obj.exports);

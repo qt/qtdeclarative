@@ -31,8 +31,7 @@ QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char
 }
 
 bool QQmlJSTypeDescriptionReader::operator()(
-        QHash<QString, QQmlJSExportedScope> *objects,
-        QStringList *dependencies)
+        QList<QQmlJSExportedScope> *objects, QStringList *dependencies)
 {
     Engine engine;
 
@@ -260,7 +259,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 
     if (metaObjectRevisions)
         checkMetaObjectRevisions(metaObjectRevisions, &exports);
-    m_objects->insert(scope->internalName(), {scope, exports});
+    m_objects->append({scope, exports});
 }
 
 void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
