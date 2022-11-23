@@ -264,6 +264,12 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties)
 
 void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &type)
 {
+    const auto writeFlag = [this](const QLatin1String &name, const QJsonObject &obj) {
+        const auto flag = obj.find(name);
+        if (flag != obj.constEnd() && flag->toBool())
+            m_qml.writeBooleanBinding(name, true);
+    };
+
     for (const QJsonValue method : methods) {
         const QJsonObject obj = method.toObject();
         const QString name = obj[QLatin1String("name")].toString();
@@ -276,12 +282,11 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
         if (revision != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(revision.value().toInt()));
         writeType(obj, QLatin1String("returnType"));
-        const auto isConstructor = obj.find(QLatin1String("isConstructor"));
-        if (isConstructor != obj.constEnd() && isConstructor->toBool())
-            m_qml.writeScriptBinding(QLatin1String("isConstructor"), QLatin1String("true"));
-        const auto isJavaScriptFunction = obj.find(QLatin1String("isJavaScriptFunction"));
-        if (isJavaScriptFunction != obj.constEnd() && isJavaScriptFunction->toBool())
-            m_qml.writeScriptBinding(QLatin1String("isJavaScriptFunction"), QLatin1String("true"));
+
+        writeFlag(QLatin1String("isCloned"), obj);
+        writeFlag(QLatin1String("isConstructor"), obj);
+        writeFlag(QLatin1String("isJavaScriptFunction"), obj);
+
         for (qsizetype i = 0, end = arguments.size(); i != end; ++i) {
             const QJsonObject obj = arguments[i].toObject();
             if (i == 0 && end == 1 &&

@@ -7,4 +7,5 @@ Member {
     default property list<Parameter> parameters
     property int revision: 0
     property string type
+    property bool isCloned: false
 }

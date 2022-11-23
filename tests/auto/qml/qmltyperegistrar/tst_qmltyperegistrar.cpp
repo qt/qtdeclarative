@@ -415,6 +415,16 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     r.write(output);
 }
 
+void tst_qmltyperegistrar::clonedSignal()
+{
+    QVERIFY(qmltypesData.contains(R"(Signal {
+            name: "clonedSignal"
+            Parameter { name: "i"; type: "int" }
+        })"));
+
+    QVERIFY(qmltypesData.contains(R"(Signal { name: "clonedSignal"; isCloned: true })"));
+}
+
 void tst_qmltyperegistrar::hasIsConstantInParameters()
 {
     QVERIFY(qmltypesData.contains(R"(        Signal {

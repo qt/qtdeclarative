@@ -226,6 +226,9 @@ public:
     int revision() const { return m_revision; }
     void setRevision(int r) { m_revision = r; }
 
+    bool isCloned() const { return m_isCloned; }
+    void setIsCloned(bool isCloned) { m_isCloned= isCloned; }
+
     bool isConstructor() const { return m_isConstructor; }
     void setIsConstructor(bool isConstructor) { m_isConstructor = isConstructor; }
 
@@ -295,6 +298,7 @@ private:
     Access m_methodAccess = Public;
     int m_revision = 0;
     RelativeFunctionIndex m_jsFunctionIndex = RelativeFunctionIndex::Invalid;
+    bool m_isCloned = false;
     bool m_isConstructor = false;
     bool m_isJavaScriptFunction = false;
     bool m_isImplicitQmlPropertyChangeSignal = false;

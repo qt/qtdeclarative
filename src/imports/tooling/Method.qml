@@ -11,4 +11,5 @@ Member {
     property bool isList: false
     property bool isPointer: false
     property bool isJavaScriptFunction: false
+    property bool isCloned: false
 }

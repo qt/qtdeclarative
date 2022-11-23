@@ -292,6 +292,8 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
                 metaMethod.setReturnTypeName(readStringBinding(script));
             } else if (name == QLatin1String("revision")) {
                 metaMethod.setRevision(readIntBinding(script));
+            } else if (name == QLatin1String("isCloned")) {
+                metaMethod.setIsCloned(true);
             } else if (name == QLatin1String("isConstructor")) {
                 metaMethod.setIsConstructor(true);
             } else if (name == QLatin1String("isJavaScriptFunction")) {
@@ -305,7 +307,7 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, type, revision, isPointer, isList, "
-                              "isConstructor, and "
+                              "isCloned, isConstructor, and "
                               "isJavaScriptFunction in script bindings."));
             }
         } else {

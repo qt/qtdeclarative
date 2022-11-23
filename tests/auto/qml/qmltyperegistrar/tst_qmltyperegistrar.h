@@ -493,6 +493,14 @@ private:
     int m_foo = 12;
 };
 
+class ClonedSignal : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+signals:
+    void clonedSignal(int i = 7);
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -538,6 +546,7 @@ private slots:
     void typeInModuleMajorVersionZero();
     void resettableProperty();
     void duplicateExportWarnings();
+    void clonedSignal();
 
 private:
     QByteArray qmltypesData;
