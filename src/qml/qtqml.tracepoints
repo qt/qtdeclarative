@@ -1,9 +1,9 @@
 {
 namespace QV4 {
-class ExecutionEngine;
+struct ExecutionEngine;
 namespace CompiledData {
-class CompilationUnit;
-class Object;
+struct CompilationUnit;
+struct Object;
 } // CompiledData
 } // QV4
 class QQmlEngine;
