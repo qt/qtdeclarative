@@ -1530,10 +1530,11 @@ void QQuickShaderEffectImpl::propertyChanged(int mappedId)
     const auto &v(m_shaders[type].shaderInfo.variables[idx]);
     auto &vd(m_shaders[type].varData[idx]);
 
+    QVariant oldValue = vd.value;
     vd.value = getValueFromProperty(m_item, m_itemMetaObject, v.name, vd.propertyIndex);
 
     if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
-        QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
+        QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(oldValue));
         if (source) {
             if (m_item->window())
                 QQuickItemPrivate::get(source)->derefWindow();
