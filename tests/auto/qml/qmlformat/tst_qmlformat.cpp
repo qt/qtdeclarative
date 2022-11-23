@@ -290,6 +290,14 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("ids new lines")
             << "checkIdsNewline.qml"
             << "checkIdsNewline.formatted.qml" << QStringList { "-n" } << RunOption::OnCopy;
+
+    QTest::newRow("functions spacing (no changes)")
+            << "functionsSpacing.qml"
+            << "functionsSpacing.formatted.qml" << QStringList { "--functions-spacing" } << RunOption::OnCopy;
+
+    QTest::newRow("normalize + functions spacing")
+            << "normalizedFunctionsSpacing.qml"
+            << "normalizedFunctionsSpacing.formatted.qml" << QStringList { "-n", "--functions-spacing" } << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
