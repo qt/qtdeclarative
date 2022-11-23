@@ -18,14 +18,14 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickDial
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-input
+    \ingroup qtquickcontrols-input
     \brief Circular dial that is rotated to set a value.
 
     The Dial is similar to a traditional dial knob that is found on devices
     such as stereos or industrial equipment. It allows the user to specify a
     value within a range.
 
-    \image qtquickcontrols2-dial-no-wrap.gif
+    \image qtquickcontrols-dial-no-wrap.gif
 
     The value of the dial is set with the \l value property. The range is
     set with the \l from and \l to properties. To enable or disable wrapping,
@@ -535,12 +535,12 @@ void QQuickDial::setInputMode(QQuickDial::InputMode mode)
     the \l to position will result in the handle being positioned at the
     \l from position, and vice versa:
 
-    \image qtquickcontrols2-dial-wrap.gif
+    \image qtquickcontrols-dial-wrap.gif
 
     When this property is \c false, it's not possible to drag the dial across
     the from and to values.
 
-    \image qtquickcontrols2-dial-no-wrap.gif
+    \image qtquickcontrols-dial-no-wrap.gif
 
     The default value is \c false.
 */

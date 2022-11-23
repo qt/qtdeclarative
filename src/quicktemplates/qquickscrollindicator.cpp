@@ -16,10 +16,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickScrollIndicator
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-indicators
+    \ingroup qtquickcontrols-indicators
     \brief Vertical or horizontal non-interactive scroll indicator.
 
-    \image qtquickcontrols2-scrollindicator.gif
+    \image qtquickcontrols-scrollindicator.gif
 
     ScrollIndicator is a non-interactive indicator that indicates the current scroll
     position. A scroll indicator can be either \l vertical or \l horizontal, and can
@@ -75,7 +75,7 @@ QT_BEGIN_NAMESPACE
     to either direction, establish a two-way binding between the active states as
     presented by the following example:
 
-    \snippet qtquickcontrols2-scrollindicator-active.qml 1
+    \snippet qtquickcontrols-scrollindicator-active.qml 1
 
     \section1 Non-attached Scroll Indicators
 
@@ -86,9 +86,9 @@ QT_BEGIN_NAMESPACE
     indicate how far the user has scrolled over the text (using \l MouseArea
     instead of \l Flickable):
 
-    \snippet qtquickcontrols2-scrollindicator-non-attached.qml 1
+    \snippet qtquickcontrols-scrollindicator-non-attached.qml 1
 
-    \image qtquickcontrols2-scrollindicator-non-attached.png
+    \image qtquickcontrols-scrollindicator-non-attached.png
 
     \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}
 */

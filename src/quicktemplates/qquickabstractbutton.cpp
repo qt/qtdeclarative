@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickAbstractButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-buttons
+    \ingroup qtquickcontrols-buttons
     \brief Abstract base type providing functionality common to buttons.
 
     AbstractButton provides the interface for controls with button-like
@@ -806,10 +806,10 @@ void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
 
     \table
     \header \li Display \li Result
-    \row \li \c AbstractButton.IconOnly \li \image qtquickcontrols2-button-icononly.png
-    \row \li \c AbstractButton.TextOnly \li \image qtquickcontrols2-button-textonly.png
-    \row \li \c AbstractButton.TextBesideIcon \li \image qtquickcontrols2-button-textbesideicon.png
-    \row \li \c AbstractButton.TextUnderIcon \li \image qtquickcontrols2-button-textundericon.png
+    \row \li \c AbstractButton.IconOnly \li \image qtquickcontrols-button-icononly.png
+    \row \li \c AbstractButton.TextOnly \li \image qtquickcontrols-button-textonly.png
+    \row \li \c AbstractButton.TextBesideIcon \li \image qtquickcontrols-button-textbesideicon.png
+    \row \li \c AbstractButton.TextUnderIcon \li \image qtquickcontrols-button-textundericon.png
     \endtable
 
     \sa {Control::}{spacing}, {Control::}{padding}

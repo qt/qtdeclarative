@@ -15,14 +15,14 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickPageIndicator
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-indicators
+    \ingroup qtquickcontrols-indicators
     \brief Indicates the currently active page.
 
     PageIndicator is used to indicate the currently active page
     in a container of multiple pages. PageIndicator consists of
     delegate items that present pages.
 
-    \image qtquickcontrols2-pageindicator.png
+    \image qtquickcontrols-pageindicator.png
 
     \code
     Column {
@@ -226,7 +226,7 @@ void QQuickPageIndicator::setCurrentIndex(int index)
     reacts to presses and automatically changes the \l {currentIndex}{current index}
     appropriately.
 
-    \snippet qtquickcontrols2-pageindicator-interactive.qml 1
+    \snippet qtquickcontrols-pageindicator-interactive.qml 1
 
     \note Page indicators are typically quite small (in order to avoid
     distracting the user from the actual content of the user interface). They

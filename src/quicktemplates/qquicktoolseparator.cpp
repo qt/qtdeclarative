@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickToolSeparator
     \inqmlmodule QtQuick.Controls
     \since 5.8
-    \ingroup qtquickcontrols2-separators
+    \ingroup qtquickcontrols-separators
     \brief Separates a group of items in a toolbar from adjacent items.
 
     ToolSeparator is used to visually distinguish between groups of items in a
@@ -21,9 +21,9 @@ QT_BEGIN_NAMESPACE
     vertical toolbars by setting the \l orientation property to \c Qt.Vertical
     or \c Qt.Horizontal, respectively.
 
-    \image qtquickcontrols2-toolseparator.png
+    \image qtquickcontrols-toolseparator.png
 
-    \snippet qtquickcontrols2-toolseparator.qml 1
+    \snippet qtquickcontrols-toolseparator.qml 1
 
     \sa {Customizing ToolSeparator}, {Separator Controls}
 */

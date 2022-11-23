@@ -1,0 +1,31 @@
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquickcontrols-basic.html
+    \title Basic Style
+
+    The Basic style is a basic all-round style.
+
+    The Basic style is a simple and light-weight style that offers the maximum
+    performance for Qt Quick Controls. It is built with a minimal amount of Qt
+    Quick primitives, and keeps animations and transitions to the minimum.
+
+    \image qtquickcontrols-basic.png
+
+    The style is selected by default when running Qt Quick Controls applications.
+    It is built into the module's resources, so by default it is shipped with
+    any application that depends on the Qt Quick Controls module
+
+    \note The Basic style is used as a fallback for other styles. If a style
+    does not implement a certain control, the Basic style implementation of
+    that control is selected.
+
+    \b {See also} \l {Material Style}, \l {Universal Style}
+
+    \section1 Related Information
+
+    \list
+      \li \l{Styling Qt Quick Controls}
+    \endlist
+*/

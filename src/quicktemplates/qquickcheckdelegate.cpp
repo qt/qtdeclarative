@@ -15,10 +15,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickCheckDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-delegates
+    \ingroup qtquickcontrols-delegates
     \brief Item delegate with a check indicator that can be toggled on or off.
 
-    \image qtquickcontrols2-checkdelegate.gif
+    \image qtquickcontrols-checkdelegate.gif
 
     CheckDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Check delegates are typically used to select one or more
@@ -85,7 +85,7 @@ QQuickCheckDelegate::QQuickCheckDelegate(QQuickItem *parent)
 
     In the animation below, the first checkdelegate is tri-state:
 
-    \image qtquickcontrols2-checkdelegate-tristate.gif
+    \image qtquickcontrols-checkdelegate-tristate.gif
 
     The default is \c false, i.e., the delegate has only two states.
 */

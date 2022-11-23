@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickFrame
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols-containers
     \brief Visual frame for a logical group of controls.
 
     Frame is used to layout a logical group of controls together within a
@@ -28,9 +28,9 @@ QT_BEGIN_NAMESPACE
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    \image qtquickcontrols2-frame.png
+    \image qtquickcontrols-frame.png
 
-    \snippet qtquickcontrols2-frame.qml 1
+    \snippet qtquickcontrols-frame.qml 1
 
     \sa {Customizing Frame}, {Container Controls}
 */

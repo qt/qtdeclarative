@@ -14,10 +14,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-buttons
+    \ingroup qtquickcontrols-buttons
     \brief Push-button that can be clicked to perform a command or answer a question.
 
-    \image qtquickcontrols2-button.gif
+    \image qtquickcontrols-button.gif
 
     Button presents a push-button control that can be pushed or clicked by
     the user. Buttons are normally used to perform an action, or to answer
@@ -71,7 +71,7 @@ QFont QQuickButton::defaultFont() const
 
     This property holds whether the button is highlighted.
 
-    \image qtquickcontrols2-button-highlighted.gif
+    \image qtquickcontrols-button-highlighted.gif
 
     A button can be highlighted in order to draw the user's attention towards
     it. It has no effect on keyboard interaction.
@@ -99,7 +99,7 @@ void QQuickButton::setHighlighted(bool highlighted)
 
     This property holds whether the button is flat.
 
-    \image qtquickcontrols2-button-flat.gif
+    \image qtquickcontrols-button-flat.gif
 
     A flat button typically does not draw a background unless it is pressed or checked.
 

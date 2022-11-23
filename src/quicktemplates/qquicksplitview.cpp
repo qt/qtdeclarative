@@ -20,8 +20,8 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickSplitView
     \inqmlmodule QtQuick.Controls
     \since 5.13
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Lays out items with a draggable splitter between each item.
 
     SplitView is a control that lays out items horizontally or vertically with
@@ -1180,7 +1180,7 @@ bool QQuickSplitView::isResizing() const
     To change the size of the handle for mouse and touch events without
     changing its visual size, use a \l {Item::}{containmentMask}:
 
-    \snippet qtquickcontrols2-splitview-handle-containmentmask.qml 1
+    \snippet qtquickcontrols-splitview-handle-containmentmask.qml 1
 
     \sa {Customizing SplitView}
 */

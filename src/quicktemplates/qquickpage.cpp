@@ -15,14 +15,14 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickPage
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Styled page control with support for a header and footer.
 
     Page is a container control which makes it convenient to add
     a \l header and \l footer item to a page.
 
-    \image qtquickcontrols2-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.png
 
     Items declared as children of a Page are:
     \list

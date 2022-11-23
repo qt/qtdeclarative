@@ -1,8 +1,8 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
-include($QT_INSTALL_DOCS/config/exampleurl-qtquickcontrols2.qdocconf)
+include($QT_INSTALL_DOCS/config/exampleurl-qtquickcontrols.qdocconf)
 include(manifest-meta.qdocconf)
 
-moduleheader            = QtQuickControls2
+moduleheader            = QtQuickControls
 
 project                 = QtQuickControls
 description             = Qt Quick Controls Reference Documentation
@@ -34,21 +34,21 @@ depends = qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtsql qtwidgets qtlabspla
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.
 # \example controls/tabs
-exampledirs += ../../../examples/quickcontrols2 \
-               ../../quicktemplates2 \
+exampledirs += ../../../examples/quickcontrols \
+               ../../quicktemplates \
                ../ \
                snippets
 
 examples.fileextensions += "*.conf"
 
-examplesinstallpath = quickcontrols2
+examplesinstallpath = quickcontrols
 
-headerdirs += ../../quicktemplates2 \
+headerdirs += ../../quicktemplates \
               ..
 
-sourcedirs += ../../quicktemplates2 \
+sourcedirs += ../../quicktemplates \
               .. \
-              ../../quicktemplates2/doc/src \
+              ../../quicktemplates/doc/src \
               src
 
 # Exclude .qml files from the doc build to prevent conflicts with .qml files

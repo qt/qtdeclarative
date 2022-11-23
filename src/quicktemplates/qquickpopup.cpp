@@ -28,8 +28,8 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
 //!     \instantiates QQuickPopup
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-popups
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-popups
+    \ingroup qtquickcontrols-focusscopes
     \brief Base type of popup-like user interface controls.
 
     Popup is the base type of popup-like user interface controls. It can be
@@ -78,7 +78,7 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
 
     The following diagram illustrates the layout of a popup within a window:
 
-    \image qtquickcontrols2-popup.png
+    \image qtquickcontrols-popup.png
 
     The \l implicitWidth and \l implicitHeight of a popup are typically based
     on the implicit sizes of the background and the content item plus any insets
@@ -181,7 +181,7 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
     Another way to center a popup in the window regardless of its parent item
     is to use \l {anchors.centerIn}:
 
-    \snippet qtquickcontrols2-popup.qml centerIn
+    \snippet qtquickcontrols-popup.qml centerIn
 
     To ensure that the popup is positioned within the bounds of the enclosing
     window, the \l margins property can be set to a non-negative value.
@@ -662,7 +662,7 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
 
     It is also possible to center the popup in the window by using \l Overlay:
 
-    \snippet qtquickcontrols2-popup.qml centerIn
+    \snippet qtquickcontrols-popup.qml centerIn
 
     This makes it easy to center a popup in the window from any component.
 
@@ -2107,7 +2107,7 @@ void QQuickPopup::resetClosePolicy()
     Nine transform origins are available, as shown in the image below.
     The default transform origin is \c Popup.Center.
 
-    \image qtquickcontrols2-popup-transformorigin.png
+    \image qtquickcontrols-popup-transformorigin.png
 
     \sa enter, exit, Item::transformOrigin
 */

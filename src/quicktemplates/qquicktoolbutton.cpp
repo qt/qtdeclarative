@@ -15,15 +15,15 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickToolButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-buttons
+    \ingroup qtquickcontrols-buttons
     \brief Button with a look suitable for a ToolBar.
 
     ToolButton is functionally similar to \l Button, but provides a look that
     is more suitable within a \l ToolBar.
 
-    \image qtquickcontrols2-toolbar.png
+    \image qtquickcontrols-toolbar.png
 
-    \snippet qtquickcontrols2-toolbar.qml 1
+    \snippet qtquickcontrols-toolbar.qml 1
 
     ToolButton inherits its API from AbstractButton. For instance, you can set
     \l {AbstractButton::text}{text}, display an \l {Icons in Qt Quick Controls}{icon},

@@ -15,10 +15,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickCheckBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-buttons
+    \ingroup qtquickcontrols-buttons
     \brief Check button that can be toggled on or off.
 
-    \image qtquickcontrols2-checkbox.gif
+    \image qtquickcontrols-checkbox.gif
 
     CheckBox presents an option button that can be toggled on (checked) or
     off (unchecked). Check boxes are typically used to select one or more
@@ -54,12 +54,12 @@ QT_BEGIN_NAMESPACE
     Hierarchical checkbox groups can be managed with a non-exclusive
     \l ButtonGroup.
 
-    \image qtquickcontrols2-checkbox-group.png
+    \image qtquickcontrols-checkbox-group.png
 
     The following example illustrates how the combined check state of
     children can be bound to the check state of the parent checkbox:
 
-    \snippet qtquickcontrols2-checkbox-group.qml 1
+    \snippet qtquickcontrols-checkbox-group.qml 1
 
     \sa {Customizing CheckBox}, ButtonGroup, {Button Controls}
 */
@@ -98,7 +98,7 @@ QQuickCheckBox::QQuickCheckBox(QQuickItem *parent)
 
     In the animation below, the first checkbox is tri-state:
 
-    \image qtquickcontrols2-checkbox-tristate.gif
+    \image qtquickcontrols-checkbox-tristate.gif
 
     The default is \c false, i.e., the checkbox has only two states.
 */

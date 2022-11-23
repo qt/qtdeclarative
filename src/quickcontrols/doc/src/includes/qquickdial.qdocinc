@@ -9,5 +9,5 @@ the value of the dial.
 The following image illustrates the directions in which the various input modes
 track movement:
 
-\image qtquickcontrols2-dial-inputmode.png
+\image qtquickcontrols-dial-inputmode.png
 //! [inputMode]

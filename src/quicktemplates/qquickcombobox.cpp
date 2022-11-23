@@ -35,11 +35,11 @@ Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calcu
 //!     \instantiates QQuickComboBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-input
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-input
+    \ingroup qtquickcontrols-focusscopes
     \brief Combined button and popup list for selecting options.
 
-    \image qtquickcontrols2-combobox.gif
+    \image qtquickcontrols-combobox.gif
 
     ComboBox is a combined button and popup list. It provides a means of
     presenting a list of options to the user in a way that takes up the
@@ -63,7 +63,7 @@ Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calcu
     The following example demonstrates appending content to an editable
     combo box by reacting to the \l accepted signal.
 
-    \snippet qtquickcontrols2-combobox-accepted.qml combobox
+    \snippet qtquickcontrols-combobox-accepted.qml combobox
 
     \section1 ComboBox's Popup
 
@@ -71,12 +71,12 @@ Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calcu
     event is propagated to items lower in the stacking order. To prevent the
     popup from closing, set its \l {Popup::}{closePolicy}:
 
-    \snippet qtquickcontrols2-combobox-popup.qml closePolicy
+    \snippet qtquickcontrols-combobox-popup.qml closePolicy
 
     To prevent event propagation, set its \l {Popup::}{modal} property to
     \c true:
 
-    \snippet qtquickcontrols2-combobox-popup.qml modal
+    \snippet qtquickcontrols-combobox-popup.qml modal
 
     \section1 ComboBox Model Roles
 
@@ -96,7 +96,7 @@ Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calcu
 
     For example:
 
-    \snippet qtquickcontrols2-combobox-valuerole.qml file
+    \snippet qtquickcontrols-combobox-valuerole.qml file
 
     \note If ComboBox is assigned a data model that has multiple named roles, but
     \l textRole is not defined, ComboBox is unable to visualize it and throws a
@@ -140,7 +140,7 @@ Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calcu
     You can handle this signal in order to add the newly entered
     item to the model, for example:
 
-    \snippet qtquickcontrols2-combobox-accepted.qml combobox
+    \snippet qtquickcontrols-combobox-accepted.qml combobox
 
     Before the signal is emitted, a check is done to see if the string
     exists in the model. If it does, \l currentIndex will be set to its index,
@@ -1805,7 +1805,7 @@ void QQuickComboBox::setImplicitContentWidthPolicy(QQuickComboBox::ImplicitConte
 
     \include qquickcombobox.qdocinc functions-after-component-completion
     For example:
-    \snippet qtquickcontrols2-combobox-textat.qml textat
+    \snippet qtquickcontrols-combobox-textat.qml textat
 
     \sa textRole
 */
@@ -1838,7 +1838,7 @@ QString QQuickComboBox::textAt(int index) const
 
     \include qquickcombobox.qdocinc functions-after-component-completion
     For example:
-    \snippet qtquickcontrols2-combobox-find.qml find
+    \snippet qtquickcontrols-combobox-find.qml find
 
     \sa textRole
 */

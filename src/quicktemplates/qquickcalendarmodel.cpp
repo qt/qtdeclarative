@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
     instances. It is typically used as a model for a ListView that uses
     MonthGrid as a delegate.
 
-    \snippet qtquickcontrols2-calendarmodel.qml 1
+    \snippet qtquickcontrols-calendarmodel.qml 1
 
     In addition to the \c index property, a list of model data roles
     are available in the context of each delegate:

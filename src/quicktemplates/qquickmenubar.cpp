@@ -22,16 +22,16 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickMenuBar
     \inqmlmodule QtQuick.Controls
     \since 5.10
-    \ingroup qtquickcontrols2-menus
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-menus
+    \ingroup qtquickcontrols-focusscopes
     \brief Provides a window menu bar.
 
-    \image qtquickcontrols2-menubar.png
+    \image qtquickcontrols-menubar.png
 
     MenuBar consists of drop-down menus, and is normally located at the top
     edge of the window.
 
-    \quotefromfile qtquickcontrols2-menubar.qml
+    \quotefromfile qtquickcontrols-menubar.qml
     \skipuntil begin
     \printto skipfrom
     \skipuntil skipto

@@ -18,5 +18,5 @@ OTHER_FILES += \
 RESOURCES += \
     texteditor.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/texteditor
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/texteditor
 INSTALLS += target

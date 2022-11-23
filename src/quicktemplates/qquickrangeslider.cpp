@@ -16,11 +16,11 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickRangeSlider
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-input
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-input
+    \ingroup qtquickcontrols-focusscopes
     \brief Used to select a range of values by sliding two handles along a track.
 
-    \image qtquickcontrols2-rangeslider.gif
+    \image qtquickcontrols-rangeslider.gif
 
     RangeSlider is used to select a range specified by two values, by sliding
     each handle along a track.

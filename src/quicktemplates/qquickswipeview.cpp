@@ -14,14 +14,14 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickSwipeView
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-navigation
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-navigation
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Enables the user to navigate pages by swiping sideways.
 
     SwipeView provides a swipe-based navigation model.
 
-    \image qtquickcontrols2-swipeview.gif
+    \image qtquickcontrols-swipeview.gif
 
     SwipeView is populated with a set of pages. One page is visible at a time.
     The user can navigate between the pages by swiping sideways. Notice that
@@ -29,7 +29,7 @@ QT_BEGIN_NAMESPACE
     with PageIndicator, to give the user a visual clue that there are multiple
     pages.
 
-    \snippet qtquickcontrols2-swipeview-indicator.qml 1
+    \snippet qtquickcontrols-swipeview-indicator.qml 1
 
     As shown above, SwipeView is typically populated with a static set of
     pages that are defined inline as children of the view. It is also possible

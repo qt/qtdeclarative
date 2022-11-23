@@ -12,15 +12,15 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickMenuSeparator
     \inqmlmodule QtQuick.Controls
     \since 5.8
-    \ingroup qtquickcontrols2-separators
+    \ingroup qtquickcontrols-separators
     \brief Separates a group of items in a menu from adjacent items.
 
     MenuSeparator is used to visually distinguish between groups of items in a
     menu by separating them with a line.
 
-    \image qtquickcontrols2-menuseparator.png
+    \image qtquickcontrols-menuseparator.png
 
-    \quotefromfile qtquickcontrols2-menuseparator-custom.qml
+    \quotefromfile qtquickcontrols-menuseparator-custom.qml
     \skipto import QtQuick
     \printuntil import QtQuick.Controls
     \skipto Menu

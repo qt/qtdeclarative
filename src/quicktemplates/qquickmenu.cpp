@@ -41,11 +41,11 @@ static const int SUBMENU_DELAY = 225;
 //!     \instantiates QQuickMenu
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-menus
-    \ingroup qtquickcontrols2-popups
+    \ingroup qtquickcontrols-menus
+    \ingroup qtquickcontrols-popups
     \brief Menu popup that can be used as a context menu or popup menu.
 
-    \image qtquickcontrols2-menu.png
+    \image qtquickcontrols-menu.png
 
     Menu has two main use cases:
     \list
@@ -154,7 +154,7 @@ static const int SUBMENU_DELAY = 225;
     code shows how you can implement a "Recent Files" submenu, where the items
     come from a list of files stored in settings:
 
-    \snippet qtquickcontrols2-menu-instantiator.qml menu
+    \snippet qtquickcontrols-menu-instantiator.qml menu
 
     \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls}
 */

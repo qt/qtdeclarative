@@ -14,10 +14,10 @@ QT_BEGIN_NAMESPACE
     \inherits ItemDelegate
     \inqmlmodule QtQuick.Controls
     \since 6.3
-    \ingroup qtquickcontrols2-delegates
+    \ingroup qtquickcontrols-delegates
     \brief A delegate that can be assigned to a TreeView.
 
-    \image qtquickcontrols2-treeviewdelegate.png
+    \image qtquickcontrols-treeviewdelegate.png
 
     A TreeViewDelegate is a delegate that can be assigned to the
     \l {TableView::delegate} {delegate property} of a \l TreeView.

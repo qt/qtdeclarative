@@ -15,10 +15,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickRadioDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-delegates
+    \ingroup qtquickcontrols-delegates
     \brief Exclusive item delegate with a radio indicator that can be toggled on or off.
 
-    \image qtquickcontrols2-radiodelegate.gif
+    \image qtquickcontrols-radiodelegate.gif
 
     RadioDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Radio delegates are typically used to select one option

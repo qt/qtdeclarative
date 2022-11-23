@@ -12,5 +12,5 @@ RESOURCES += \
     qtquickcontrols2.conf \
     musicplayer.qml
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/imagine/musicplayer
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/imagine/musicplayer
 INSTALLS += target

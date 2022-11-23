@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickGroupBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols-containers
     \brief Visual frame and title for a logical group of controls.
 
     GroupBox is used to layout a logical group of controls together, within
@@ -31,22 +31,22 @@ QT_BEGIN_NAMESPACE
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    \image qtquickcontrols2-groupbox.png
+    \image qtquickcontrols-groupbox.png
 
-    \snippet qtquickcontrols2-groupbox.qml 1
+    \snippet qtquickcontrols-groupbox.qml 1
 
     \section2 Checkable GroupBox
 
     Even though GroupBox has no built-in check box, it is straightforward
     to create a checkable GroupBox by pairing it with a CheckBox.
 
-    \image qtquickcontrols2-groupbox-checkable.png
+    \image qtquickcontrols-groupbox-checkable.png
 
     It is a common pattern to enable or disable the groupbox's children when
     its checkbox is toggled on or off, but it is up to the application to decide
     on the behavior of the checkbox.
 
-    \snippet qtquickcontrols2-groupbox-checkable.qml 1
+    \snippet qtquickcontrols-groupbox-checkable.qml 1
 
     \sa CheckBox, {Customizing GroupBox}, {Container Controls}
 */

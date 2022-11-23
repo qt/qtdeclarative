@@ -64,5 +64,5 @@ RESOURCES += \
     ToolBar.qml \
     +Material/ToolBar.qml
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/gallery
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/gallery
 INSTALLS += target

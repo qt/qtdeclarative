@@ -21,14 +21,14 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickToolTip
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-popups
+    \ingroup qtquickcontrols-popups
     \brief Provides tool tips for any control.
 
     A tool tip is a short piece of text that informs the user of a control's
     function. It is typically placed above or below the parent control. The
     tip text can be any \l{Rich Text Processing}{rich text} formatted string.
 
-    \image qtquickcontrols2-tooltip.png
+    \image qtquickcontrols-tooltip.png
 
     \section2 Attached Tool Tips
 
@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
     specify \l text and \l {visible}{visibility} via attached properties.
     The following example illustrates this approach:
 
-    \snippet qtquickcontrols2-tooltip.qml 1
+    \snippet qtquickcontrols-tooltip.qml 1
 
     Under normal circumstances, there is only one tool tip visible at a time.
     In order to save resources, all items that use the ToolTip attached property
@@ -63,14 +63,14 @@ QT_BEGIN_NAMESPACE
     interval is reached. In this example, the tool tip hides as soon as the
     button is released.
 
-    \snippet qtquickcontrols2-tooltip-pressandhold.qml 1
+    \snippet qtquickcontrols-tooltip-pressandhold.qml 1
 
     With pointer devices, however, it might be desired to show a tool tip as
     a result of hovering a button for a while. The following example presents
     how to show a tool tip after hovering a button for a second, and hide it
     after a timeout of five seconds.
 
-    \snippet qtquickcontrols2-tooltip-hover.qml 1
+    \snippet qtquickcontrols-tooltip-hover.qml 1
 
     \section2 Custom Tool Tips
 
@@ -81,9 +81,9 @@ QT_BEGIN_NAMESPACE
     API is available. The following example presents a tool tip that presents
     the value of a slider when the handle is dragged.
 
-    \image qtquickcontrols2-tooltip-slider.png
+    \image qtquickcontrols-tooltip-slider.png
 
-    \snippet qtquickcontrols2-tooltip-slider.qml 1
+    \snippet qtquickcontrols-tooltip-slider.qml 1
 
     \sa {Customizing ToolTip}, {Popup Controls},
     {QtQuick.Controls::Popup::closePolicy}{closePolicy}

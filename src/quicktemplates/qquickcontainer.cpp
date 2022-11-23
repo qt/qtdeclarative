@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickContainer
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols-containers
     \brief Abstract base type providing functionality common to containers.
 
     Container is the base type of container-like user interface controls that

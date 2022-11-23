@@ -27,8 +27,8 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickApplicationWindow
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Styled top-level window with support for a header and footer.
 
     ApplicationWindow is a \l Window which makes it convenient to add
@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
     and run it by using \l QQmlApplicationEngine.  In this way you can control
     the window's properties, appearance and layout from QML.
 
-    \image qtquickcontrols2-applicationwindow-wireframe.png
+    \image qtquickcontrols-applicationwindow-wireframe.png
 
     \qml
     import QtQuick.Controls 2.12

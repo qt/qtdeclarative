@@ -17,8 +17,8 @@ Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
 //!     \instantiates QQuickPane
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Provides a background matching with the application style and theme.
 
     Pane provides a background color that matches with the application style
@@ -36,9 +36,9 @@ Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
     implicit size of its contained item. This makes it particularly suitable
     for use together with layouts.
 
-    \image qtquickcontrols2-pane.png
+    \image qtquickcontrols-pane.png
 
-    \snippet qtquickcontrols2-pane.qml 1
+    \snippet qtquickcontrols-pane.qml 1
 
     Sometimes there might be two items within the pane:
 

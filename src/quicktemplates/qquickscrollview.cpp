@@ -15,23 +15,23 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickScrollView
     \inqmlmodule QtQuick.Controls
     \since 5.9
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Scrollable view.
 
     ScrollView provides scrolling for user-defined content. It can be used to
     either replace a \l Flickable, or to decorate an existing one.
 
-    \image qtquickcontrols2-scrollview.png
+    \image qtquickcontrols-scrollview.png
 
     The first example demonstrates the simplest usage of ScrollView.
 
-    \snippet qtquickcontrols2-scrollview.qml file
+    \snippet qtquickcontrols-scrollview.qml file
 
     The second example illustrates using an existing \l Flickable, that is,
     a \l ListView.
 
-    \snippet qtquickcontrols2-scrollview-listview.qml file
+    \snippet qtquickcontrols-scrollview-listview.qml file
 
     \note As of Qt-6.0, ScrollView automatically clips its contents if you
     don't use a Flickable as a child. If this is not wanted, you can
@@ -67,24 +67,24 @@ QT_BEGIN_NAMESPACE
     bar policies so that the horizontal scroll bar is always off, and the vertical
     scroll bar is always on.
 
-    \snippet qtquickcontrols2-scrollview-policy.qml file
+    \snippet qtquickcontrols-scrollview-policy.qml file
 
     \section2 Touch vs. Mouse Interaction
 
     On touch, ScrollView enables flicking and makes the scroll bars non-interactive.
 
-    \image qtquickcontrols2-scrollindicator.gif
+    \image qtquickcontrols-scrollindicator.gif
 
     When interacted with a mouse device, flicking is disabled and the scroll bars
     are interactive.
 
-    \image qtquickcontrols2-scrollbar.gif
+    \image qtquickcontrols-scrollbar.gif
 
     Scroll bars can be made interactive on touch, or non-interactive when interacted
     with a mouse device, by setting the \l {ScrollBar::}{interactive} property explicitly
     to \c true or \c false, respectively.
 
-    \snippet qtquickcontrols2-scrollview-interactive.qml file
+    \snippet qtquickcontrols-scrollview-interactive.qml file
 
     \sa ScrollBar, ScrollIndicator, {Customizing ScrollView}, {Container Controls},
         {Focus Management in Qt Quick Controls}

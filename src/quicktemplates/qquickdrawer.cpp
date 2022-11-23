@@ -21,14 +21,14 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickDrawer
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-navigation
-    \ingroup qtquickcontrols2-popups
+    \ingroup qtquickcontrols-navigation
+    \ingroup qtquickcontrols-popups
     \brief Side panel that can be opened and closed using a swipe gesture.
 
     Drawer provides a swipe-based side panel, similar to those often used in
     touch interfaces to provide a central location for navigation.
 
-    \image qtquickcontrols2-drawer.gif
+    \image qtquickcontrols-drawer.gif
 
     Drawer can be positioned at any of the four edges of the content item.
     The drawer above is positioned against the left edge of the window. The

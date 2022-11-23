@@ -11,5 +11,5 @@ RESOURCES += \
     qml/qml.qrc \
     qtquickcontrols2.conf
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/imagine/automotive
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/imagine/automotive
 INSTALLS += target

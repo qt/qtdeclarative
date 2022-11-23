@@ -1,0 +1,19 @@
+// Copyright (C) 2021 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example eventcalendar
+    \keyword Qt Quick Controls - Event Calendar
+    \title Qt Quick Controls - Event Calendar
+    \ingroup qtquickcontrols-examples
+    \brief A simple event calendar.
+
+    \image qtquickcalendar-eventcalendar.png
+
+    The Event Calendar example is a simple application that shows how to use
+    \l DayOfWeekRow, \l WeekNumberColumn, and \l MonthGrid to create a calendar.
+    It uses an in-memory SQL database to populate the calendar with events.
+    The example uses the \l {Material Style}{Material style}.
+
+    \include examples-run.qdocinc
+*/

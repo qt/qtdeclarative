@@ -15,10 +15,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickSlider
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-input
+    \ingroup qtquickcontrols-input
     \brief Used to select a value by sliding a handle along a track.
 
-    \image qtquickcontrols2-slider.gif
+    \image qtquickcontrols-slider.gif
 
     Slider is used to select a value by sliding a handle along a track.
 
@@ -425,9 +425,9 @@ void QQuickSlider::setStepSize(qreal step)
     \table
     \header
         \row \li \b Value \li \b Example
-        \row \li \c Slider.NoSnap \li \image qtquickcontrols2-slider-nosnap.gif
-        \row \li \c Slider.SnapAlways \li \image qtquickcontrols2-slider-snapalways.gif
-        \row \li \c Slider.SnapOnRelease \li \image qtquickcontrols2-slider-snaponrelease.gif
+        \row \li \c Slider.NoSnap \li \image qtquickcontrols-slider-nosnap.gif
+        \row \li \c Slider.SnapAlways \li \image qtquickcontrols-slider-snapalways.gif
+        \row \li \c Slider.SnapOnRelease \li \image qtquickcontrols-slider-snaponrelease.gif
     \endtable
 
     \sa stepSize

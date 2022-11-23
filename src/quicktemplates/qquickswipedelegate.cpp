@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickSwipeDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-delegates
+    \ingroup qtquickcontrols-delegates
     \brief Swipable item delegate.
 
     SwipeDelegate presents a view item that can be swiped left or right to
@@ -34,7 +34,7 @@ QT_BEGIN_NAMESPACE
     In the following example, SwipeDelegate is used in a \l ListView to allow
     items to be removed from it by swiping to the left:
 
-    \snippet qtquickcontrols2-swipedelegate.qml 1
+    \snippet qtquickcontrols-swipedelegate.qml 1
 
     SwipeDelegate inherits its API from \l ItemDelegate, which is inherited
     from AbstractButton. For instance, you can set \l {AbstractButton::text}{text},
@@ -52,12 +52,12 @@ QT_BEGIN_NAMESPACE
     any position for \c swipe.left or \c swipe.right, the following will
     occur:
 
-    \image qtquickcontrols2-swipedelegate.gif
+    \image qtquickcontrols-swipedelegate.gif
 
     If \c swipe.left and \c swipe.right are anchored to the left and
     right of the \l {Control::}{background} item (respectively), they'll behave like this:
 
-    \image qtquickcontrols2-swipedelegate-leading-trailing.gif
+    \image qtquickcontrols-swipedelegate-leading-trailing.gif
 
     When using \c swipe.left and \c swipe.right, the control cannot be
     swiped past the left and right edges. To achieve this type of "wrapping"
@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
     example, in the image below, we set \c swipe.behind and then swipe the
     control repeatedly in both directions:
 
-    \image qtquickcontrols2-swipedelegate-behind.gif
+    \image qtquickcontrols-swipedelegate-behind.gif
 
     \sa {Customizing SwipeDelegate}, {Delegate Controls}, {Qt Quick Controls 2 - Swipe to Remove}{Swipe to Remove Example}
 */
@@ -1164,7 +1164,7 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
         \li This property holds the transition that is applied when a swipe is released,
             or \l swipe.open() or \l swipe.close() is called.
 
-            \snippet qtquickcontrols2-swipedelegate-transition.qml 1
+            \snippet qtquickcontrols-swipedelegate-transition.qml 1
 
             This property was added in Qt Quick Controls 2.2.
     \endtable

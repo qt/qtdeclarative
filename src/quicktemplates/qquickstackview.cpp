@@ -22,12 +22,12 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickStackView
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-navigation
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-navigation
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Provides a stack-based navigation model.
 
-    \image qtquickcontrols2-stackview-wireframe.png
+    \image qtquickcontrols-stackview-wireframe.png
 
     StackView can be used with a set of inter-linked information pages. For
     example, an email application with separate views to list the latest emails,
@@ -102,7 +102,7 @@ QT_BEGIN_NAMESPACE
     In the following animation, three \l Label controls are pushed onto a
     stack view with the \l push() function:
 
-    \image qtquickcontrols2-stackview-push.gif
+    \image qtquickcontrols-stackview-push.gif
 
     The stack now contains the following items: \c [A, B, C].
 
@@ -115,7 +115,7 @@ QT_BEGIN_NAMESPACE
     Continuing on from the example above, the topmost item on the stack is
     removed with a call to \l pop():
 
-    \image qtquickcontrols2-stackview-pop.gif
+    \image qtquickcontrols-stackview-pop.gif
 
     The stack now contains the following items: \c [A, B].
 
@@ -136,7 +136,7 @@ QT_BEGIN_NAMESPACE
     In the following animation, we unwind the stack to the first item by
     calling \c pop(null):
 
-    \image qtquickcontrols2-stackview-unwind.gif
+    \image qtquickcontrols-stackview-unwind.gif
 
     The stack now contains a single item: \c [A].
 
@@ -144,7 +144,7 @@ QT_BEGIN_NAMESPACE
 
     In the following animation, we \l replace the topmost item with \c D:
 
-    \image qtquickcontrols2-stackview-replace.gif
+    \image qtquickcontrols-stackview-replace.gif
 
     The stack now contains the following items: \c [A, B, D].
 
@@ -1280,9 +1280,9 @@ QQuickStackView::Status QQuickStackViewAttached::status() const
           of items visible, consider customizing the \l transitions so that the
           items underneath can be seen.
 
-    \image qtquickcontrols2-stackview-visible.png
+    \image qtquickcontrols-stackview-visible.png
 
-    \snippet qtquickcontrols2-stackview-visible.qml 1
+    \snippet qtquickcontrols-stackview-visible.qml 1
 */
 bool QQuickStackViewAttached::isVisible() const
 {

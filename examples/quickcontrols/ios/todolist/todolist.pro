@@ -38,5 +38,5 @@ RESOURCES += \
         ToggleCompletedTasksPage.qml \
         qmldir
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/ios/todolist
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/ios/todolist
 INSTALLS += target

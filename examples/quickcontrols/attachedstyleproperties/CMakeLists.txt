@@ -7,7 +7,7 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/attachedstyleproperties")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/attachedstyleproperties")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml QuickControls2)
 qt_standard_project_setup()

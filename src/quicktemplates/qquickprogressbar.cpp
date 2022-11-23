@@ -12,10 +12,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickProgressBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-indicators
+    \ingroup qtquickcontrols-indicators
     \brief Indicates the progress of an operation.
 
-    \image qtquickcontrols2-progressbar.gif
+    \image qtquickcontrols-progressbar.gif
 
     ProgressBar indicates the progress of an operation. The value should be updated
     regularly. The range is defined by \l from and \l to, which both can contain any value.
@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
     for example, when unable to determine the size of the item being downloaded,
     or if the download progress gets interrupted due to a network disconnection.
 
-    \image qtquickcontrols2-progressbar-indeterminate.gif
+    \image qtquickcontrols-progressbar-indeterminate.gif
 
     \code
     ProgressBar {
@@ -196,7 +196,7 @@ qreal QQuickProgressBar::visualPosition() const
     A progress bar in indeterminate mode displays that an operation is in progress, but it
     doesn't show how much progress has been made.
 
-    \image qtquickcontrols2-progressbar-indeterminate.gif
+    \image qtquickcontrols-progressbar-indeterminate.gif
 */
 bool QQuickProgressBar::isIndeterminate() const
 {

@@ -15,10 +15,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickRadioButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-buttons
+    \ingroup qtquickcontrols-buttons
     \brief Exclusive radio button that can be toggled on or off.
 
-    \image qtquickcontrols2-radiobutton.gif
+    \image qtquickcontrols-radiobutton.gif
 
     RadioButton presents an option button that can be toggled on (checked) or
     off (unchecked). Radio buttons are typically used to select one option

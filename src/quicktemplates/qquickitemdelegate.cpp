@@ -15,10 +15,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickItemDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-delegates
+    \ingroup qtquickcontrols-delegates
     \brief Basic item delegate that can be used in various views and controls.
 
-    \image qtquickcontrols2-itemdelegate.gif
+    \image qtquickcontrols-itemdelegate.gif
 
     ItemDelegate presents a standard view item. It can be used as a delegate
     in various views and controls, such as \l ListView and \l ComboBox.
@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
     \l {AbstractButton::text}{text}, display an \l {Icons in Qt Quick Controls}{icon},
     and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
 
-    \snippet qtquickcontrols2-itemdelegate.qml 1
+    \snippet qtquickcontrols-itemdelegate.qml 1
 
     \sa {Customizing ItemDelegate}, {Delegate Controls}
 */

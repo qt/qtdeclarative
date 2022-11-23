@@ -1,0 +1,22 @@
+// Copyright (C) 2022 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example ios/todolist
+    \keyword Qt Quick Controls - To Do List
+    \title Qt Quick Controls - To Do List
+    \keyword Qt Quick Controls 2 - To Do List
+    \ingroup qtquickcontrols-examples
+    \brief To do list application for iOS.
+
+    This example demonstrates how to create a simple to do list application for
+    iOS using the \l {iOS Style}.
+
+    \image qtquickcontrols-todolist.png
+
+    The example also shows how an in-memory SQL database can be created and
+    used purely through QML, without needing C++, through the use of
+    \l {Qt Quick Local Storage QML Types}{LocalStorage}.
+
+    \include examples-run.qdocinc
+*/

@@ -6,5 +6,5 @@ SOURCES += swipetoremove.cpp
 
 RESOURCES += swipetoremove.qml
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/swipetoremove
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/swipetoremove
 INSTALLS += target

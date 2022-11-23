@@ -7,7 +7,7 @@
 /*!
     \qmltype HorizontalHeaderView
     \inqmlmodule QtQuick.Controls
-    \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols-containers
     \inherits TableView
     \brief Provides a horizontal header view to accompany a \l TableView.
 
@@ -15,7 +15,7 @@
     To add a horizontal header to a TableView, bind the
     \l {HorizontalHeaderView::syncView} {syncView} property to the TableView:
 
-    \snippet qtquickcontrols2-headerview-simple.qml horizontal
+    \snippet qtquickcontrols-headerview-simple.qml horizontal
 
     The header displays data from the {syncView}'s model by default, but can
     also have its own model. If the model is a QAbstractTableModel, then
@@ -26,7 +26,7 @@
 /*!
     \qmltype VerticalHeaderView
     \inqmlmodule QtQuick.Controls
-    \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols-containers
     \inherits TableView
     \brief Provides a vertical header view to accompany a \l TableView.
 
@@ -34,7 +34,7 @@
     To add a vertical header to a TableView, bind the
     \l {VerticalHeaderView::syncView} {syncView} property to the TableView:
 
-    \snippet qtquickcontrols2-headerview-simple.qml vertical
+    \snippet qtquickcontrols-headerview-simple.qml vertical
 
     The header displays data from the {syncView}'s model by default, but can
     also have its own model. If the model is a QAbstractTableModel, then

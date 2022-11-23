@@ -1,0 +1,13 @@
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \group qtquickcontrols-examples
+    \ingroup all-examples
+    \keyword Qt Quick Controls Examples
+    \title Qt Quick Controls Examples
+    \keyword Qt Quick Controls 2 Examples
+    \brief A collection of examples for \l {Qt Quick Controls}
+
+    These examples demonstrate creating user interfaces using \l {Qt Quick Controls}.
+*/

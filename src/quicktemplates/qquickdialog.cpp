@@ -14,8 +14,8 @@ QT_BEGIN_NAMESPACE
     \inherits Popup
 //!     \instantiates QQuickDialog
     \inqmlmodule QtQuick.Controls
-    \ingroup qtquickcontrols2-dialogs
-    \ingroup qtquickcontrols2-popups
+    \ingroup qtquickcontrols-dialogs
+    \ingroup qtquickcontrols-popups
     \brief Popup dialog with standard buttons and a title, used for short-term interaction with the user.
     \since 5.8
 
@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
     with the user. Similarly to \l ApplicationWindow and \l Page, Dialog is organized
     into three sections: \l header, \l {Popup::}{contentItem}, and \l footer.
 
-    \image qtquickcontrols2-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.png
 
     By default, Dialogs have \l {QQuickItem::}{focus}.
 
@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
     \l {DialogButtonBox::}{accepted()} and \l {DialogButtonBox::}{rejected()}
     signals of the button box are connected to the respective signals in Dialog.
 
-    \snippet qtquickcontrols2-dialog.qml 1
+    \snippet qtquickcontrols-dialog.qml 1
 
     \section1 Modal Dialogs
 
@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     interacting with the dialog and close it before they can access any
     other content in the same window.
 
-    \snippet qtquickcontrols2-dialog-modal.qml 1
+    \snippet qtquickcontrols-dialog-modal.qml 1
 
     \section1 Modeless Dialogs
 
@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     is allowed to interact with both the dialog and the other content in
     the same window.
 
-    \snippet qtquickcontrols2-dialog-modeless.qml 1
+    \snippet qtquickcontrols-dialog-modeless.qml 1
 
     \sa DialogButtonBox, {Popup Controls}
 */
@@ -323,7 +323,7 @@ void QQuickDialog::setFooter(QQuickItem *footer)
 
     This property holds a combination of standard buttons that are used by the dialog.
 
-    \snippet qtquickcontrols2-dialog.qml 1
+    \snippet qtquickcontrols-dialog.qml 1
 
     The buttons will be positioned in the appropriate order for the user's platform.
 

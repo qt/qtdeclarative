@@ -27,13 +27,13 @@ using namespace Qt::StringLiterals;
 //!     \instantiates QQuickTextArea
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-input
+    \ingroup qtquickcontrols-input
     \brief Multi-line text input area.
 
     TextArea is a multi-line text editor. TextArea extends TextEdit with
     a \l {placeholderText}{placeholder text} functionality, and adds decoration.
 
-    \image qtquickcontrols2-textarea.png
+    \image qtquickcontrols-textarea.png
 
     \code
     TextArea {
@@ -53,9 +53,9 @@ using namespace Qt::StringLiterals;
     If you want to make a TextArea scrollable, for example, when it covers
     an entire application page, it can be placed inside a \l ScrollView.
 
-    \image qtquickcontrols2-textarea-scrollable.png
+    \image qtquickcontrols-textarea-scrollable.png
 
-    \snippet qtquickcontrols2-textarea-scrollable.qml 1
+    \snippet qtquickcontrols-textarea-scrollable.qml 1
 
     A TextArea that is placed inside a \l ScrollView does the following:
 

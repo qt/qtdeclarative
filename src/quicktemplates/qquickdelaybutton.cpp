@@ -16,10 +16,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickDelayButton
     \inqmlmodule QtQuick.Controls
     \since 5.9
-    \ingroup qtquickcontrols2-buttons
+    \ingroup qtquickcontrols-buttons
     \brief Check button that triggers when held down long enough.
 
-    \image qtquickcontrols2-delaybutton.gif
+    \image qtquickcontrols-delaybutton.gif
 
     DelayButton is a checkable button that incorporates a delay before the
     button becomes \l {AbstractButton::}{checked} and the \l activated()

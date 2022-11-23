@@ -27,10 +27,10 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup input
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-focusscopes
     \brief Allows the user to select from a set of preset values.
 
-    \image qtquickcontrols2-spinbox.png
+    \image qtquickcontrols-spinbox.png
 
     SpinBox allows the user to choose an integer value by clicking the up
     or down indicator buttons, or by pressing up or down on the keyboard.
@@ -40,25 +40,25 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     By default, SpinBox provides discrete values in the range of \c [0-99]
     with a \l stepSize of \c 1.
 
-    \snippet qtquickcontrols2-spinbox.qml 1
+    \snippet qtquickcontrols-spinbox.qml 1
 
     \section2 Custom Values
 
-    \image qtquickcontrols2-spinbox-textual.png
+    \image qtquickcontrols-spinbox-textual.png
 
     Even though SpinBox works on integer values, it can be customized to
     accept arbitrary input values. The following snippet demonstrates how
     \l validator, \l textFromValue and \l valueFromText can be used to
     customize the default behavior.
 
-    \snippet qtquickcontrols2-spinbox-textual.qml 1
+    \snippet qtquickcontrols-spinbox-textual.qml 1
 
     In the same manner, SpinBox can be customized to accept floating point
     numbers:
 
-    \image qtquickcontrols2-spinbox-double.png
+    \image qtquickcontrols-spinbox-double.png
 
-    \snippet qtquickcontrols2-spinbox-double.qml 1
+    \snippet qtquickcontrols-spinbox-double.qml 1
 
     \sa Tumbler, {Customizing SpinBox}, {Focus Management in Qt Quick Controls}
 */

@@ -25,18 +25,18 @@ using namespace Qt::StringLiterals;
 //!     \instantiates QQuickTextField
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-input
+    \ingroup qtquickcontrols-input
     \brief Single-line text input field.
 
     TextField is a single line text editor. TextField extends TextInput with
     a \l {placeholderText}{placeholder text} functionality, and adds decoration.
 
     \table
-    \row \li \image qtquickcontrols2-textfield-normal.png
+    \row \li \image qtquickcontrols-textfield-normal.png
          \li A text field in its normal state.
-    \row \li \image qtquickcontrols2-textfield-focused.png
+    \row \li \image qtquickcontrols-textfield-focused.png
          \li A text field that has active focus.
-    \row \li \image qtquickcontrols2-textfield-disabled.png
+    \row \li \image qtquickcontrols-textfield-disabled.png
          \li A text field that is disabled.
     \endtable
 

@@ -13,16 +13,16 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickRoundButton
     \inqmlmodule QtQuick.Controls
     \since 5.8
-    \ingroup qtquickcontrols2-buttons
+    \ingroup qtquickcontrols-buttons
     \brief A push-button control with rounded corners that can be clicked by the user.
 
-    \image qtquickcontrols2-roundbutton.png
+    \image qtquickcontrols-roundbutton.png
 
     RoundButton is identical to \l Button, except that it has a \l radius property
     which allows the corners to be rounded without having to customize the
     \l background.
 
-    \snippet qtquickcontrols2-roundbutton.qml 1
+    \snippet qtquickcontrols-roundbutton.qml 1
 
     \sa {Customizing RoundButton}, {Button Controls}
 */

@@ -31,7 +31,7 @@ QT_BEGIN_NAMESPACE
     \l triggered by the user via menu items, toolbar buttons, or keyboard shortcuts.
     A \l checkable Action toggles its \l checked state when triggered.
 
-    \snippet qtquickcontrols2-action.qml action
+    \snippet qtquickcontrols-action.qml action
 
     Action is commonly used to implement application commands that can be invoked
     via menu items, toolbar buttons, and keyboard shortcuts. Since the user expects
@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
     example, when declaring buttons and menu items in \c .ui.qml files, actions can
     be declared elsewhere and assigned from the outside.
 
-    \snippet qtquickcontrols2-action.qml toolbutton
+    \snippet qtquickcontrols-action.qml toolbutton
 
     When an action is paired with buttons and menu items, the \c enabled, \c checkable,
     and \c checked states are synced automatically. For example, in a word processor,
@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     default. An action-specific \c text or \c icon can be overridden for a specific
     control by specifying \c text or \c icon directly on the control.
 
-    \snippet qtquickcontrols2-action.qml menuitem
+    \snippet qtquickcontrols-action.qml menuitem
 
     Since Action presents a user interface action, it is intended to be assigned to
     a \l MenuItem, \l ToolButton, or any other control that inherits \l AbstractButton.

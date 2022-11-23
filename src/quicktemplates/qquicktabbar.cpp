@@ -13,20 +13,20 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickTabBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-navigation
-    \ingroup qtquickcontrols2-containers
-    \ingroup qtquickcontrols2-focusscopes
+    \ingroup qtquickcontrols-navigation
+    \ingroup qtquickcontrols-containers
+    \ingroup qtquickcontrols-focusscopes
     \brief Allows the user to switch between different views or subtasks.
 
     TabBar provides a tab-based navigation model.
 
-    \image qtquickcontrols2-tabbar-wireframe.png
+    \image qtquickcontrols-tabbar-wireframe.png
 
     TabBar is populated with TabButton controls, and can be used together with
     any layout or container control that provides \c currentIndex -property,
     such as \l StackLayout or \l SwipeView
 
-    \snippet qtquickcontrols2-tabbar.qml 1
+    \snippet qtquickcontrols-tabbar.qml 1
 
     As shown above, TabBar is typically populated with a static set of tab buttons
     that are defined inline as children of the tab bar. It is also possible to
@@ -45,18 +45,18 @@ QT_BEGIN_NAMESPACE
     The following example illustrates how to keep each tab button at their
     implicit size instead of being resized to fit the tabbar:
 
-    \borderedimage qtquickcontrols2-tabbar-explicit.png
+    \borderedimage qtquickcontrols-tabbar-explicit.png
 
-    \snippet qtquickcontrols2-tabbar-explicit.qml 1
+    \snippet qtquickcontrols-tabbar-explicit.qml 1
 
     \section2 Flickable Tabs
 
     If the total width of the buttons exceeds the available width of the tab bar,
     it automatically becomes flickable.
 
-    \image qtquickcontrols2-tabbar-flickable.png
+    \image qtquickcontrols-tabbar-flickable.png
 
-    \snippet qtquickcontrols2-tabbar-flickable.qml 1
+    \snippet qtquickcontrols-tabbar-flickable.qml 1
 
     \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls},
         {Focus Management in Qt Quick Controls}

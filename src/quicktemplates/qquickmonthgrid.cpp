@@ -21,15 +21,15 @@ QT_BEGIN_NAMESPACE
     calculated for a given \l month and \l year, using the specified
     \l {Control::locale}{locale}.
 
-    \image qtquickcontrols2-monthgrid.png
-    \snippet qtquickcontrols2-monthgrid.qml 1
+    \image qtquickcontrols-monthgrid.png
+    \snippet qtquickcontrols-monthgrid.qml 1
 
     MonthGrid can be used as a standalone control, but it is most often
     used in conjunction with DayOfWeekRow and WeekNumberColumn. Regardless
     of the use case, positioning of the grid is left to the user.
 
-    \image qtquickcontrols2-monthgrid-layout.png
-    \snippet qtquickcontrols2-monthgrid-layout.qml 1
+    \image qtquickcontrols-monthgrid-layout.png
+    \snippet qtquickcontrols-monthgrid-layout.qml 1
 
     The visual appearance of MonthGrid can be changed by
     implementing a \l {delegate}{custom delegate}.
@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
     To localize days, use \l {Locale::toString()}{Locale.toString()}.
     For example, to display day numbers in an Arabic locale:
 
-    \snippet qtquickcontrols2-monthgrid-localization.qml 1
+    \snippet qtquickcontrols-monthgrid-localization.qml 1
 
     \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
 */

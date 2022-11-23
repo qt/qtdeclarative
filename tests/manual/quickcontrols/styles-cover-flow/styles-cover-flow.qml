@@ -27,13 +27,13 @@ Window {
         anchors.leftMargin: 130
         anchors.rightMargin: 130
         model: ListModel {
-            ListElement { source: "qtquickcontrols2-basic.png"; dark: false }
-            ListElement { source: "qtquickcontrols2-fusion.png"; dark: false }
-            ListElement { source: "qtquickcontrols2-universal-light.png"; dark: false }
-            ListElement { source: "qtquickcontrols2-universal-dark.png"; dark: true }
-            ListElement { source: "qtquickcontrols2-material-dark.png"; dark: true }
-            ListElement { source: "qtquickcontrols2-imagine.png"; dark: false }
-            ListElement { source: "qtquickcontrols2-material-light.png"; dark: false }
+            ListElement { source: "qtquickcontrols-basic.png"; dark: false }
+            ListElement { source: "qtquickcontrols-fusion.png"; dark: false }
+            ListElement { source: "qtquickcontrols-universal-light.png"; dark: false }
+            ListElement { source: "qtquickcontrols-universal-dark.png"; dark: true }
+            ListElement { source: "qtquickcontrols-material-dark.png"; dark: true }
+            ListElement { source: "qtquickcontrols-imagine.png"; dark: false }
+            ListElement { source: "qtquickcontrols-material-light.png"; dark: false }
         }
 
         highlightRangeMode: PathView.StrictlyEnforceRange

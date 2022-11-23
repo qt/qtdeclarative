@@ -12,10 +12,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickBusyIndicator
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-indicators
+    \ingroup qtquickcontrols-indicators
     \brief Indicates background activity, for example, while content is being loaded.
 
-    \image qtquickcontrols2-busyindicator.gif
+    \image qtquickcontrols-busyindicator.gif
 
     The busy indicator should be used to indicate activity while content is
     being loaded or the UI is blocked waiting for a resource to become available.

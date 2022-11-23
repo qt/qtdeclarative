@@ -14,13 +14,13 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickMenuBarItem
     \inqmlmodule QtQuick.Controls
     \since 5.10
-    \ingroup qtquickcontrols2-menus
+    \ingroup qtquickcontrols-menus
     \brief Presents a drop-down menu within a MenuBar.
 
     MenuBarItem presents a Menu within a MenuBar. The respective drop-down menu
     is shown when a MenuBarItem is \l triggered via keyboard, mouse, or touch.
 
-    \image qtquickcontrols2-menubar.png
+    \image qtquickcontrols-menubar.png
 
     MenuBarItem is used as a default \l {MenuBar::}{delegate} type for MenuBar.
     Notice that it is not necessary to declare MenuBarItem instances by hand when

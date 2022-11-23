@@ -30,5 +30,5 @@ resources.prefix = chapter4/
 RESOURCES += resources \
     qtquickcontrols2.conf
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/chattutorial/chapter4
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/chattutorial/chapter4
 INSTALLS += target

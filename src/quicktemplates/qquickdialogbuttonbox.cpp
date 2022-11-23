@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
     \inherits Container
 //!     \instantiates QQuickDialogButtonBox
     \inqmlmodule QtQuick.Controls
-    \ingroup qtquickcontrols2-dialogs
+    \ingroup qtquickcontrols-dialogs
     \brief A button box used in dialogs.
     \since 5.8
 
@@ -53,13 +53,13 @@ QT_BEGIN_NAMESPACE
     the standard buttons (e.g. \uicontrol OK, \uicontrol Cancel, \uicontrol Save)
     and let the button box setup the buttons.
 
-    \image qtquickcontrols2-dialogbuttonbox.png
+    \image qtquickcontrols-dialogbuttonbox.png
 
-    \snippet qtquickcontrols2-dialogbuttonbox.qml 1
+    \snippet qtquickcontrols-dialogbuttonbox.qml 1
 
     Alternatively, buttons and their roles can be specified by hand:
 
-    \snippet qtquickcontrols2-dialogbuttonbox-attached.qml 1
+    \snippet qtquickcontrols-dialogbuttonbox-attached.qml 1
 
     You can also mix and match normal buttons and standard buttons.
 
@@ -546,7 +546,7 @@ void QQuickDialogButtonBox::resetAlignment()
 
     This property holds a combination of standard buttons that are used by the button box.
 
-    \snippet qtquickcontrols2-dialogbuttonbox.qml 1
+    \snippet qtquickcontrols-dialogbuttonbox.qml 1
 
     The buttons will be positioned in the appropriate order for the user's platform.
 
@@ -808,7 +808,7 @@ QQuickDialogButtonBox *QQuickDialogButtonBoxAttached::buttonBox() const
 
     This attached property holds the role of each button in a button box.
 
-    \snippet qtquickcontrols2-dialogbuttonbox-attached.qml 1
+    \snippet qtquickcontrols-dialogbuttonbox-attached.qml 1
 
     Available values:
     \value DialogButtonBox.InvalidRole The button is invalid.

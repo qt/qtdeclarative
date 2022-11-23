@@ -24,5 +24,5 @@ QML_DESIGNER_IMPORT_PATH = $$PWD/designer
 OTHER_FILES += \
     designer/Backend/*.qml
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/contactlist
+target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols/contactlist
 INSTALLS += target

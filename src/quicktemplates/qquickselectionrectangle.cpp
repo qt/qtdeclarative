@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
     \ingroup utilities
     \brief Used to select table cells inside a TableView.
 
-    \image qtquickcontrols2-selectionrectangle.png
+    \image qtquickcontrols-selectionrectangle.png
 
     SelectionRectangle is used for selecting table cells in a TableView. It lets
     the user start a selection by doing a pointer drag inside the viewport, or by
@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
     The following example shows how you can make a SelectionRectangle target
     a TableView:
 
-    \snippet qtquickcontrols2-selectionrectangle.qml 0
+    \snippet qtquickcontrols-selectionrectangle.qml 0
 
     \note A SelectionRectangle itself is not shown as part of a selection. Only the
     delegates (like topLeftHandle and bottomRightHandle) are used.

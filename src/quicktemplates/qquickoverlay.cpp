@@ -679,7 +679,7 @@ QQuickOverlay *QQuickOverlayAttached::overlay() const
     For example, to change the color of the background dimming for a modal
     popup, the following code can be used:
 
-    \snippet qtquickcontrols2-overlay-modal.qml 1
+    \snippet qtquickcontrols-overlay-modal.qml 1
 
     \sa Popup::modal
 */
@@ -711,7 +711,7 @@ void QQuickOverlayAttached::setModal(QQmlComponent *modal)
     For example, to change the color of the background dimming for a modeless
     popup, the following code can be used:
 
-    \snippet qtquickcontrols2-overlay-modeless.qml 1
+    \snippet qtquickcontrols-overlay-modeless.qml 1
 
     \sa Popup::dim
 */

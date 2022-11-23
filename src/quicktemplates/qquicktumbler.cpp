@@ -20,10 +20,10 @@ Q_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
 //!     \instantiates QQuickTumbler
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-input
+    \ingroup qtquickcontrols-input
     \brief Spinnable wheel of items that can be selected.
 
-    \image qtquickcontrols2-tumbler-wrap.gif
+    \image qtquickcontrols-tumbler-wrap.gif
 
     \code
     Tumbler {
@@ -52,7 +52,7 @@ Q_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
     long as there are more items in the model than there are visible items;
     that is, when \l count is greater than \l visibleItemCount:
 
-    \snippet qtquickcontrols2-tumbler-timePicker.qml tumbler
+    \snippet qtquickcontrols-tumbler-timePicker.qml tumbler
 
     \sa {Customizing Tumbler}, {Input Controls}
 */

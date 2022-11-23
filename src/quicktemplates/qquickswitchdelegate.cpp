@@ -13,10 +13,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickSwitchDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-delegates
+    \ingroup qtquickcontrols-delegates
     \brief Item delegate with a switch indicator that can be toggled on or off.
 
-    \image qtquickcontrols2-switchdelegate.gif
+    \image qtquickcontrols-switchdelegate.gif
 
     SwitchDelegate presents an item delegate that can be toggled on (checked) or
     off (unchecked). Switch delegates are typically used to select one or more

@@ -2,7 +2,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     message(FATAL_ERROR "MyStyle should be built as part of the 'attachedstyleproperties' project, and not in isolation.")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/attachedstyleproperties")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/attachedstyleproperties")
 
 qt_add_qml_module(MyStyle
     URI MyStyle

@@ -17,7 +17,7 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickMenuItem
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-menus
+    \ingroup qtquickcontrols-menus
     \brief Presents an item within a Menu.
 
     MenuItem is a convenience type that implements the AbstractButton API,

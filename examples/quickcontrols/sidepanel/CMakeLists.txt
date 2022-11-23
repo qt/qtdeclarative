@@ -10,7 +10,7 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/sidepanel")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/sidepanel")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick)
 
@@ -30,8 +30,8 @@ qt_add_qml_module(sidepanelexample
         "images/qt-logo@3x.png"
         "images/qt-logo@4x.png"
         "qtquickcontrols2.conf"
-        "doc/images/qtquickcontrols2-sidepanel-landscape.png"
-        "doc/images/qtquickcontrols2-sidepanel-portrait.png"
+        "doc/images/qtquickcontrols-sidepanel-landscape.png"
+        "doc/images/qtquickcontrols-sidepanel-portrait.png"
 )
 
 target_link_libraries(sidepanelexample PUBLIC

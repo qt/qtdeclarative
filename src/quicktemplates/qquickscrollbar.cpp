@@ -19,10 +19,10 @@ QT_BEGIN_NAMESPACE
 //!     \instantiates QQuickScrollBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
-    \ingroup qtquickcontrols2-indicators
+    \ingroup qtquickcontrols-indicators
     \brief Vertical or horizontal interactive scroll bar.
 
-    \image qtquickcontrols2-scrollbar.gif
+    \image qtquickcontrols-scrollbar.gif
 
     ScrollBar is an interactive bar that can be used to scroll to a specific
     position. A scroll bar can be either \l vertical or \l horizontal, and can
@@ -94,7 +94,7 @@ QT_BEGIN_NAMESPACE
     to either direction, establish a two-way binding between the active states
     as presented by the following example:
 
-    \snippet qtquickcontrols2-scrollbar-active.qml 1
+    \snippet qtquickcontrols-scrollbar-active.qml 1
 
     \section1 Non-attached Scroll Bars
 
@@ -104,9 +104,9 @@ QT_BEGIN_NAMESPACE
     following example, horizontal and vertical scroll bars are used to
     scroll over the text without using \l Flickable:
 
-    \snippet qtquickcontrols2-scrollbar-non-attached.qml 1
+    \snippet qtquickcontrols-scrollbar-non-attached.qml 1
 
-    \image qtquickcontrols2-scrollbar-non-attached.png
+    \image qtquickcontrols-scrollbar-non-attached.png
 
     When using a non-attached ScrollBar, the following must be done manually:
 
@@ -590,9 +590,9 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
     \table
     \header
         \row \li \b Value \li \b Example
-        \row \li \c ScrollBar.NoSnap \li \image qtquickcontrols2-scrollbar-nosnap.gif
-        \row \li \c ScrollBar.SnapAlways \li \image qtquickcontrols2-scrollbar-snapalways.gif
-        \row \li \c ScrollBar.SnapOnRelease \li \image qtquickcontrols2-scrollbar-snaponrelease.gif
+        \row \li \c ScrollBar.NoSnap \li \image qtquickcontrols-scrollbar-nosnap.gif
+        \row \li \c ScrollBar.SnapAlways \li \image qtquickcontrols-scrollbar-snapalways.gif
+        \row \li \c ScrollBar.SnapOnRelease \li \image qtquickcontrols-scrollbar-snaponrelease.gif
     \endtable
 
     \sa stepSize
@@ -656,7 +656,7 @@ void QQuickScrollBar::resetInteractive()
 
     The following example keeps the vertical scroll bar always visible:
 
-    \snippet qtquickcontrols2-scrollbar-policy.qml 1
+    \snippet qtquickcontrols-scrollbar-policy.qml 1
 */
 QQuickScrollBar::Policy QQuickScrollBar::policy() const
 {
