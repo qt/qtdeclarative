@@ -58,6 +58,14 @@ ApplicationWindow {
                 id: darkThemeSwitch
                 text: "Dark"
             }
+
+            Switch {
+                id: denseSwitch
+                text: "Dense"
+
+                ToolTip.text: "Requires restart"
+                ToolTip.visible: hovered
+            }
         }
     }
 
