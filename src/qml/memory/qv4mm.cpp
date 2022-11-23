@@ -177,7 +177,7 @@ struct MemorySegment {
 
         size_t pageSize = WTF::pageSize();
         size = (size + pageSize - 1) & ~(pageSize - 1);
-#if (!defined(Q_OS_LINUX) && !defined(Q_OS_WIN)) || defined(Q_OS_ANDROID)
+#if !defined(Q_OS_LINUX) && !defined(Q_OS_WIN)
         // Linux and Windows zero out pages that have been decommitted and get committed again.
         // unfortunately that's not true on other OSes (e.g. BSD based ones), so zero out the
         // memory before decommit, so that we can be sure that all chunks we allocate will be
