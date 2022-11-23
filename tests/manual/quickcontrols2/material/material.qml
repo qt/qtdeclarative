@@ -11,6 +11,8 @@ ApplicationWindow {
     height: screen.desktopAvailableHeight * 0.8
     visible: true
 
+    Material.theme: darkThemeSwitch.checked ? Material.Dark : Material.Light
+
     Shortcut {
         sequences: ["Esc", "Back"]
         onActivated: openDrawerAction.trigger()
@@ -32,6 +34,8 @@ ApplicationWindow {
             spacing: 20
             anchors.fill: parent
 
+            Material.theme: Material.Dark
+
             ToolButton {
                 action: openDrawerAction
             }
@@ -44,6 +48,15 @@ ApplicationWindow {
                 horizontalAlignment: Qt.AlignHCenter
                 verticalAlignment: Qt.AlignVCenter
                 Layout.fillWidth: true
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            Switch {
+                id: darkThemeSwitch
+                text: "Dark"
             }
         }
     }
