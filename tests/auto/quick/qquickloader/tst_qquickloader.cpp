@@ -906,9 +906,9 @@ void tst_QQuickLoader::asynchronous()
     QFETCH(QStringList, expectedWarnings);
 
     QQmlEngine engine;
-    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QScopedPointer<PeriodicIncubationController> controller(new PeriodicIncubationController);
     QQmlIncubationController *previous = engine.incubationController();
-    engine.setIncubationController(controller);
+    engine.setIncubationController(controller.data());
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
@@ -945,9 +945,9 @@ void tst_QQuickLoader::asynchronous()
 void tst_QQuickLoader::asynchronous_clear()
 {
     QQmlEngine engine;
-    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QScopedPointer<PeriodicIncubationController> controller(new PeriodicIncubationController);
     QQmlIncubationController *previous = engine.incubationController();
-    engine.setIncubationController(controller);
+    engine.setIncubationController(controller.data());
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
@@ -993,9 +993,9 @@ void tst_QQuickLoader::asynchronous_clear()
 void tst_QQuickLoader::simultaneousSyncAsync()
 {
     QQmlEngine engine;
-    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QScopedPointer<PeriodicIncubationController> controller(new PeriodicIncubationController);
     QQmlIncubationController *previous = engine.incubationController();
-    engine.setIncubationController(controller);
+    engine.setIncubationController(controller.data());
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("simultaneous.qml"));
@@ -1025,9 +1025,9 @@ void tst_QQuickLoader::simultaneousSyncAsync()
 void tst_QQuickLoader::asyncToSync1()
 {
     QQmlEngine engine;
-    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QScopedPointer<PeriodicIncubationController> controller(new PeriodicIncubationController);
     QQmlIncubationController *previous = engine.incubationController();
-    engine.setIncubationController(controller);
+    engine.setIncubationController(controller.data());
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
@@ -1057,9 +1057,9 @@ void tst_QQuickLoader::asyncToSync1()
 void tst_QQuickLoader::asyncToSync2()
 {
     QQmlEngine engine;
-    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QScopedPointer<PeriodicIncubationController> controller(new PeriodicIncubationController);
     QQmlIncubationController *previous = engine.incubationController();
-    engine.setIncubationController(controller);
+    engine.setIncubationController(controller.data());
     delete previous;
 
     QQmlComponent component(&engine, testFileUrl("asynchronous.qml"));
@@ -1089,9 +1089,9 @@ void tst_QQuickLoader::asyncToSync2()
 void tst_QQuickLoader::loadedSignal()
 {
     QQmlEngine engine;
-    PeriodicIncubationController *controller = new PeriodicIncubationController;
+    QScopedPointer<PeriodicIncubationController> controller(new PeriodicIncubationController);
     QQmlIncubationController *previous = engine.incubationController();
-    engine.setIncubationController(controller);
+    engine.setIncubationController(controller.data());
     delete previous;
 
     {
