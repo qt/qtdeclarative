@@ -461,13 +461,25 @@ void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDev
 
 void QQuickTapHandler::connectPreRenderSignal(bool conn)
 {
+    // disconnect pre-existing connection, if any
+    disconnect(m_preRenderSignalConnection);
+
     auto par = parentItem();
-    if (!par)
+    if (!par || !par->window())
         return;
-    if (conn)
-        connect(par->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
-    else
-        disconnect(par->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
+
+    /*
+        Note: beforeSynchronizing is emitted from the SG thread, and the
+        timeHeldChanged signal can be used to do arbitrary things in user QML.
+
+        But the docs say the GUI thread is blockd, and "Therefore, it is safe
+        to access GUI thread thread data in a slot or lambda that is connected
+        with Qt::DirectConnection." We use the default AutoConnection just in case.
+    */
+    if (conn) {
+        m_preRenderSignalConnection = connect(par->window(), &QQuickWindow::beforeSynchronizing,
+                                              this, &QQuickTapHandler::updateTimeHeld);
+    }
 }
 
 void QQuickTapHandler::updateTimeHeld()
