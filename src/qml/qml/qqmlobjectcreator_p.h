@@ -53,7 +53,30 @@ struct RequiredPropertyInfo
     QVector<AliasToRequiredInfo> aliasesToRequired;
 };
 
-class RequiredProperties : public QHash<const QQmlPropertyData *, RequiredPropertyInfo> {};
+struct RequiredPropertyKey
+{
+    RequiredPropertyKey() = default;
+    RequiredPropertyKey(const QObject *object, const QQmlPropertyData *data)
+        : object(object)
+        , data(data)
+    {}
+
+    const QObject *object = nullptr;
+    const QQmlPropertyData *data = nullptr;
+
+private:
+    friend size_t qHash(const RequiredPropertyKey &key, size_t seed = 0)
+    {
+        return qHashMulti(seed, key.object, key.data);
+    }
+
+    friend bool operator==(const RequiredPropertyKey &a, const RequiredPropertyKey &b)
+    {
+        return a.object == b.object && a.data == b.data;
+    }
+};
+
+class RequiredProperties : public QHash<RequiredPropertyKey, RequiredPropertyInfo> {};
 
 struct DeferredQPropertyBinding {
     QObject *target = nullptr;

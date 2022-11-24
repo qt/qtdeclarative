@@ -1036,7 +1036,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
                 state.ensureRequiredPropertyStorage();
                 RequiredPropertyInfo info;
                 info.propertyName = propertyData->name(rv);
-                state.addPendingRequiredProperty(propertyData, info);
+                state.addPendingRequiredProperty(rv, propertyData, info);
             }
         }
     }
@@ -1147,7 +1147,7 @@ QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
             Q_ASSERT(data && data->propertyCache);
             targetProp = data->propertyCache->property(targetProp->coreIndex());
         }
-        auto it = requiredProperties->find(targetProp);
+        auto it = requiredProperties->find({createdComponent, targetProp});
         if (it != requiredProperties->end()) {
             if (wasInRequiredProperties)
                 *wasInRequiredProperties = true;
