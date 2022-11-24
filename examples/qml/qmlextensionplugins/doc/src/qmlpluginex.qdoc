@@ -18,8 +18,8 @@
     \else
         \section1 Using CMake
     \endif
-        \badcode
-            cmake -DCMAKE_PREFIX_PATH=path/to/Qt/6.4.0/your_platform -S <source-dir> -B <build-dir> -G Ninja
+        \badcode \QtVersion
+            cmake -DCMAKE_PREFIX_PATH=path/to/Qt/\1/your_platform -S <source-dir> -B <build-dir> -G Ninja
             cd path/to/build/dir
             ninja
             qml -I imports plugins.qml
