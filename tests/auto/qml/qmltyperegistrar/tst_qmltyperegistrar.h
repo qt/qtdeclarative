@@ -182,7 +182,7 @@ class DerivedFromForeign : public QTimeLine
     Q_OBJECT
     QML_ELEMENT
 public:
-    DerivedFromForeign(QObject *parent) : QTimeLine(1000, parent) {}
+    DerivedFromForeign(QObject *parent = nullptr) : QTimeLine(1000, parent) { }
 };
 
 class ExtensionA : public QObject

@@ -1365,6 +1365,7 @@ class TimeProvider: public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(TimeProvider)
+    QML_UNCREATABLE("")
     Q_PROPERTY(QTime time READ time WRITE setTime NOTIFY timeChanged)
 
 public:

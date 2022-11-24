@@ -33,6 +33,7 @@ class NoDefaultConstructorType : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
+    QML_UNCREATABLE("")
     NoDefaultConstructorType() = delete;
 };
 

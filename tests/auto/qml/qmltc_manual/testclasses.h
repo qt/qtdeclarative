@@ -50,6 +50,7 @@ class HelloWorld : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(HelloWorld);
+    QML_UNCREATABLE("")
     Q_PROPERTY(QString hello READ getHello WRITE setHello BINDABLE bindableHello)
     Q_PROPERTY(QString greeting READ getGreeting WRITE setGreeting BINDABLE bindableGreeting)
 
