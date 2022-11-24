@@ -106,6 +106,7 @@ set(qml_files
     imports/QmlBench/Globals.qml
     importsFromImportPath.qml
     infinities.qml
+    infinitiesToInt.qml
     invisibleBase.qml
     invisibleTypes.qml
     invisibleListElementType.qml

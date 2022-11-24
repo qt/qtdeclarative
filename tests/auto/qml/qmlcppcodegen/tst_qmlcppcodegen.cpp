@@ -157,6 +157,7 @@ private slots:
     void lengthAccessArraySequenceCompat();
     void storeElementSideEffects();
     void numbersInJsPrimitive();
+    void infinitiesToInt();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3022,6 +3023,25 @@ void tst_QmlCppCodegen::numbersInJsPrimitive()
                     Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
     }
     QCOMPARE(asStrings, convertToStrings(stored));
+}
+
+void tst_QmlCppCodegen::infinitiesToInt()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/infinitiesToInt.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    const char *props[] = {"a", "b", "c"};
+    for (const char *prop : props) {
+        const QVariant i = o->property(prop);
+        QCOMPARE(i.metaType(), QMetaType::fromType<int>());
+        bool ok = false;
+        QCOMPARE(i.toInt(&ok), 0);
+        QVERIFY(ok);
+    }
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
