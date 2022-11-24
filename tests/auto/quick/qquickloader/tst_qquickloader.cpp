@@ -112,6 +112,7 @@ private slots:
     void noEngine();
 
     void stackOverflow();
+    void boundComponent();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1534,6 +1535,15 @@ void tst_QQuickLoader::stackOverflow()
     const QString message = url.toString() + QStringLiteral(": Maximum call stack size exceeded.");
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(message));
     QScopedPointer<QObject> o(component.create());
+}
+
+void tst_QQuickLoader::boundComponent()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("boundComponent.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QCOMPARE(o->objectName(), QStringLiteral("loaded"));
 }
 
 QTEST_MAIN(tst_QQuickLoader)

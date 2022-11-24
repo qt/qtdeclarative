@@ -639,7 +639,8 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
         item->setParentItem(q);
     }
     if (obj) {
-        QQml_setParent_noEvent(itemContext, obj);
+        if (itemContext)
+            QQml_setParent_noEvent(itemContext, obj);
         QQml_setParent_noEvent(obj, q);
         itemContext = nullptr;
     }
@@ -722,14 +723,22 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
         return;
 
     QQmlContext *creationContext = component->creationContext();
-    if (!creationContext) creationContext = qmlContext(q);
-    itemContext = new QQmlContext(creationContext);
-    itemContext->setContextObject(q);
+    if (!creationContext)
+        creationContext = qmlContext(q);
+
+    QQmlComponentPrivate *cp = QQmlComponentPrivate::get(component);
+    QQmlContext *context = [&](){
+        if (cp->isBound())
+            return creationContext;
+        itemContext = new QQmlContext(creationContext);
+        itemContext->setContextObject(q);
+        return itemContext;
+    }();
 
     delete incubator;
     incubator = new QQuickLoaderIncubator(this, asynchronous ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested);
 
-    component->create(*incubator, itemContext);
+    component->create(*incubator, context);
 
     if (incubator && incubator->status() == QQmlIncubator::Loading)
         updateStatus();
