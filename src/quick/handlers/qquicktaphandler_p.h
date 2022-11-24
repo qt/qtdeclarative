@@ -103,6 +103,7 @@ private:
     QBasicTimer m_longPressTimer;
     QBasicTimer m_doubleTapTimer;
     QEventPoint m_singleTapReleasedPoint;
+    QMetaObject::Connection m_preRenderSignalConnection;
     Qt::MouseButton m_singleTapReleasedButton;
     int m_tapCount = 0;
     int m_longPressThreshold = -1;
