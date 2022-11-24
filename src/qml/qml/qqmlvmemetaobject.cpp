@@ -346,16 +346,26 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
     return false;
 }
 
+static QMetaObject *stringCastMetaObject(QObject *o, const QMetaObject *top)
+{
+    for (const QMetaObject *mo = top; mo; mo = mo->superClass()) {
+        if (o->qt_metacast(mo->className()) == o)
+            return const_cast<QMetaObject *>(mo);
+    }
+    return nullptr;
+}
 
 QMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObject *o)
 {
-    Q_UNUSED(o);
     if (!metaObject)
         metaObject = cache->createMetaObject();
 
+    if (Q_UNLIKELY(metaObject.tag() == MetaObjectInvalid))
+        return stringCastMetaObject(o, metaObject.data());
+
     // ### Qt7: The const_cast is only due to toDynamicMetaObject having the wrong return type.
     //          It should be const QMetaObject *. Fix this.
-    return const_cast<QMetaObject *>(metaObject);
+    return const_cast<QMetaObject *>(metaObject.data());
 }
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
