@@ -42,6 +42,33 @@ private:
     int m_foo = 0;
 };
 
+struct ConstructibleFromQReal
+{
+    Q_GADGET
+    Q_PROPERTY(qreal foo MEMBER m_foo CONSTANT)
+
+    QML_VALUE_TYPE(constructibleFromQReal)
+    QML_CONSTRUCTIBLE_VALUE
+
+public:
+    ConstructibleFromQReal() = default;
+    Q_INVOKABLE ConstructibleFromQReal(qreal foo) : m_foo(foo) {}
+
+    qreal foo() const { return m_foo; }
+
+private:
+    friend bool operator==(const ConstructibleFromQReal &a, const ConstructibleFromQReal &b)
+    {
+        if (qIsNaN(a.m_foo) && qIsNaN(b.m_foo))
+            return true;
+        if (qIsInf(a.m_foo) && qIsInf(b.m_foo))
+            return (a.m_foo > 0) == (b.m_foo > 0);
+        return qFuzzyCompare(a.m_foo, b.m_foo);
+    }
+
+    qreal m_foo = 0;
+};
+
 struct StructuredValueType
 {
     Q_GADGET

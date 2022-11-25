@@ -144,7 +144,7 @@ static bool fromMatchingType(
         // At this point, s should be a builtin type. For builtin types
         // the QMetaType converters are good enough.
         if (QMetaType::convert(sourceMetaType, s.constData(), parameterType, parameter.data())) {
-            callConstructor(mo, i, s.data(), metaType, data);
+            callConstructor(mo, i, parameter.data(), metaType, data);
             return true;
         }
     }

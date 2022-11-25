@@ -15,6 +15,14 @@ MyTypeObject {
     property constructible c3
     property constructible c4
 
+    property constructibleFromQReal cr1: 11.25
+    property constructibleFromQReal cr2: Infinity
+    property constructibleFromQReal cr3: -Infinity
+    property constructibleFromQReal cr4: NaN
+    property constructibleFromQReal cr5: 0
+    property constructibleFromQReal cr6: -112.5
+    property constructibleFromQReal cr7: 50
+
     property list<point> ps: [{x: 1, y: 2}, {x: 3, y: 4}, {x: 55, y: Qt.locale("en_AU")}]
     property list<size> ss: [{width: 5, height: 6}, {width: 7, height: 8}, {height: 99}]
     property list<constructible> cs: [1, 2, 3, 4, 5, {}]
