@@ -344,6 +344,7 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
 
         QCOMPARE(pinchHandler->active(), true);
         // scale we got was 1.1729088738267854364, but keep some slack
+        qCDebug(lcPointerTests) << "pinch scale" << pinchHandler->scale() << "expected 1.173";
         QVERIFY(withinBounds(1.163, pinchHandler->scale(), 1.183));
         // should not rotate
         QCOMPARE(root->rotation(), 0.);
