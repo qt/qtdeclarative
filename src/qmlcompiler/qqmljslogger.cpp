@@ -274,7 +274,7 @@ void QQmlJSLogger::log(const QString &message, LoggerWarningId id,
     default: break;
     }
 
-    if (srcLocation.isValid() && !m_code.isEmpty() && showContext)
+    if (srcLocation.length > 0 && !m_code.isEmpty() && showContext)
         printContext(overrideFileName, srcLocation);
 
     if (suggestion.has_value())
