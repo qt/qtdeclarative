@@ -18,6 +18,13 @@ TestCase {
         RoundButton { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(roundButton, testCase)
+        verify(control)
+    }
+
     function test_radius() {
         var control = createTemporaryObject(roundButton, testCase);
         verify(control);

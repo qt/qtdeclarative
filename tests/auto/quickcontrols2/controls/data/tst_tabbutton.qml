@@ -28,6 +28,13 @@ TestCase {
         }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(tabButton, testCase)
+        verify(control)
+    }
+
     function test_autoExclusive() {
         var container = createTemporaryObject(repeater, testCase)
 

@@ -23,6 +23,13 @@ TestCase {
         Menu { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(menuItem, testCase)
+        verify(control)
+    }
+
     function test_baseline() {
         var control = createTemporaryObject(menuItem, testCase)
         verify(control)

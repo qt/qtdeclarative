@@ -156,6 +156,13 @@ TestCase {
         }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(scrollView, testCase)
+        verify(control)
+    }
+
     function test_scrollBars() {
         var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200})
         verify(control)

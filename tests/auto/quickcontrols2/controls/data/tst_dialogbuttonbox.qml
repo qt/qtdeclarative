@@ -29,6 +29,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(buttonBox, testCase)
         verify(control)
         compare(control.count, 0)

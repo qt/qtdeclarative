@@ -35,6 +35,13 @@ TestCase {
         }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(scrollIndicator, testCase)
+        verify(control)
+    }
+
     function test_attach() {
         var container = createTemporaryObject(flickable, testCase)
         verify(container)

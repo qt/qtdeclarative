@@ -20,6 +20,12 @@ TestCase {
     property bool handleWasDragged: false
 
     Component {
+        id: defaultSelectionRectangle
+
+        SelectionRectangle {}
+    }
+
+    Component {
         id: handleComp
         Rectangle {
             id: handle
@@ -85,6 +91,13 @@ TestCase {
     Component {
         id: signalSpy
         SignalSpy { }
+    }
+
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(defaultSelectionRectangle, testCase)
+        verify(control)
     }
 
     function test_set_target() {

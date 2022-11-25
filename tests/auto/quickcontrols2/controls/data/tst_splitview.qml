@@ -112,6 +112,12 @@ TestCase {
     }
 
     Component {
+        id: defaultSplitView
+
+        SplitView {}
+    }
+
+    Component {
         id: splitViewComponent
 
         SplitView {
@@ -124,6 +130,13 @@ TestCase {
         id: rectangleComponent
 
         Rectangle {}
+    }
+
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(defaultSplitView, testCase)
+        verify(control)
     }
 
     function test_addItemsAfterCompletion() {

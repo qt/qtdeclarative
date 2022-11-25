@@ -17,6 +17,13 @@ TestCase {
         ToolSeparator {}
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(toolSeparator, testCase)
+        verify(control)
+    }
+
     function test_size() {
         var control = createTemporaryObject(toolSeparator, testCase);
         verify(control);

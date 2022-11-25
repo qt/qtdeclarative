@@ -30,6 +30,13 @@ TestCase {
 
     Component { id: withRequired; Item { required property int i }}
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(stackView, testCase)
+        verify(control)
+    }
+
     function test_initialItem() {
         var control1 = createTemporaryObject(stackView, testCase)
         verify(control1)

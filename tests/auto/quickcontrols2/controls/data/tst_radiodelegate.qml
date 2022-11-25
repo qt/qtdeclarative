@@ -21,6 +21,8 @@ TestCase {
     // TODO: data-fy tst_radiobutton (rename to tst_radio?) so we don't duplicate its tests here?
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(radioDelegate, testCase);
         verify(control);
         verify(!control.checked);

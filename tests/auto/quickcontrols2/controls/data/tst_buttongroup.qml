@@ -47,6 +47,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var group = createTemporaryObject(buttonGroup, testCase)
         verify(group)
         compare(group.buttons.length, 0)

@@ -23,6 +23,13 @@ TestCase {
         MouseArea { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(pageIndicator, testCase)
+        verify(control)
+    }
+
     function test_count() {
         var control = createTemporaryObject(pageIndicator, testCase)
         verify(control)

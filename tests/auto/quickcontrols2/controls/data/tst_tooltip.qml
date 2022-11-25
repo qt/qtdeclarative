@@ -37,6 +37,13 @@ TestCase {
         target: ToolTip.toolTip
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(toolTip, testCase)
+        verify(control)
+    }
+
     function test_properties_data() {
         return [
             {tag: "text", property: "text", defaultValue: "", setValue: "Hello", signalName: "textChanged"},

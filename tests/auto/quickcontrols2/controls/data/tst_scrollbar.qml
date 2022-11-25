@@ -20,6 +20,12 @@ TestCase {
     }
 
     Component {
+        id: defaultScrollBar
+
+        ScrollBar {}
+    }
+
+    Component {
         id: scrollBar
         ScrollBar {
             padding: 0
@@ -44,6 +50,13 @@ TestCase {
             boundsBehavior: Flickable.StopAtBounds
             flickableDirection: Flickable.HorizontalAndVerticalFlick
         }
+    }
+
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(defaultScrollBar, testCase)
+        verify(control)
     }
 
     function test_attach() {

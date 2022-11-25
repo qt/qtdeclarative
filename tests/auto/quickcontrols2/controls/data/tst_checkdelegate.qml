@@ -21,6 +21,8 @@ TestCase {
     // TODO: data-fy tst_checkbox (rename to tst_check?) so we don't duplicate its tests here?
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(checkDelegate, testCase);
         verify(control);
         verify(!control.checked);

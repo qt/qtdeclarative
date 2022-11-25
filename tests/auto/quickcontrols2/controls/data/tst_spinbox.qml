@@ -30,6 +30,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 

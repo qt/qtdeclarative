@@ -37,6 +37,13 @@ TestCase {
         SignalSpy { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(defaultGrid, testCase)
+        verify(control)
+    }
+
     function test_locale() {
         var control = delegateGrid.createObject(testCase, {month: 0, year: 2013})
 

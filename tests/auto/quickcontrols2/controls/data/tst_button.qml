@@ -30,6 +30,15 @@ TestCase {
         SignalSpy { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(button, testCase)
+        verify(control)
+        compare(control.highlighted, false)
+        compare(control.flat, false)
+    }
+
     function test_text() {
         var control = createTemporaryObject(button, testCase)
         verify(control)

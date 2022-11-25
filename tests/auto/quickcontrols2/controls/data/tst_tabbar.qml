@@ -54,6 +54,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(tabBar, testCase)
         verify(control)
         compare(control.count, 0)

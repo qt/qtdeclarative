@@ -51,6 +51,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var group = createTemporaryObject(actionGroup, testCase)
         verify(group)
         compare(group.actions.length, 0)

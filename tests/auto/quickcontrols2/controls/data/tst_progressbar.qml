@@ -18,6 +18,13 @@ TestCase {
         ProgressBar { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(progressBar, testCase)
+        verify(control)
+    }
+
     function test_value() {
         var control = createTemporaryObject(progressBar, testCase)
         verify(control)

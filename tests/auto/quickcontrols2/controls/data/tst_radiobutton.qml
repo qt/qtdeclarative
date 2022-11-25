@@ -25,6 +25,13 @@ TestCase {
         }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(radioButton, testCase)
+        verify(control)
+    }
+
     function test_text() {
         var control = createTemporaryObject(radioButton, testCase)
         verify(control)

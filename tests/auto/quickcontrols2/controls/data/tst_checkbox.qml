@@ -25,6 +25,15 @@ TestCase {
         }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(checkBox, testCase)
+        verify(control)
+        compare(control.tristate, false)
+        compare(control.checkState, Qt.Unchecked)
+    }
+
     function test_text() {
         var control = createTemporaryObject(checkBox, testCase)
         verify(control)

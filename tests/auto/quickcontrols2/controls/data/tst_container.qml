@@ -24,6 +24,14 @@ TestCase {
         Rectangle { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(container, testCase)
+        verify(control)
+        compare(control.count, 0)
+    }
+
     function test_implicitSize() {
         var control = createTemporaryObject(container, testCase)
         verify(control)

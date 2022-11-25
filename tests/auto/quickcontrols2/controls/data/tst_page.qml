@@ -70,6 +70,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(page, testCase)
         verify(control)
 
@@ -79,6 +81,8 @@ TestCase {
     }
 
     function test_empty() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(page, testCase)
         verify(control)
 

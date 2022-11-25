@@ -14,6 +14,12 @@ TestCase {
     name: "AbstractButton"
 
     Component {
+        id: defaultComponent
+
+        AbstractButton {}
+    }
+
+    Component {
         id: button
         AbstractButton {
             width: 100
@@ -34,6 +40,13 @@ TestCase {
     Component {
         id: signalSpy
         SignalSpy { }
+    }
+
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(defaultComponent, testCase)
+        verify(control)
     }
 
     function test_text() {

@@ -53,6 +53,8 @@ TestCase {
     }
 
     function test_empty() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(groupBox, testCase)
         verify(control)
 

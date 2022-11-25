@@ -30,6 +30,8 @@ TestCase {
     }
 
     function test_creation() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(textField, testCase)
         verify(control)
     }

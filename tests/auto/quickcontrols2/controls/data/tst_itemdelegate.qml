@@ -18,6 +18,13 @@ TestCase {
         ItemDelegate { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(itemDelegate, testCase)
+        verify(control)
+    }
+
     function test_baseline() {
         var control = createTemporaryObject(itemDelegate, testCase)
         verify(control)

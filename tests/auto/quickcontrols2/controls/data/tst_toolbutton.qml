@@ -23,6 +23,13 @@ TestCase {
         ToolButton { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(toolButton, testCase)
+        verify(control)
+    }
+
     function test_text() {
         var control = createTemporaryObject(toolButton, testCase)
         verify(control)

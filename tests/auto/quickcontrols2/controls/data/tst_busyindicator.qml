@@ -23,6 +23,14 @@ TestCase {
         MouseArea { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(busyIndicator, testCase)
+        verify(control)
+        compare(control.running, true)
+    }
+
     function test_running() {
         var control = createTemporaryObject(busyIndicator, testCase)
         verify(control)

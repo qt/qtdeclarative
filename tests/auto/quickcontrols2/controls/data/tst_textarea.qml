@@ -69,6 +69,8 @@ TestCase {
     }
 
     function test_creation() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(textArea, testCase)
         verify(control)
     }

@@ -28,6 +28,8 @@ TestCase {
     }
 
     function test_instance() {
+        failOnWarning(/.?/)
+
         var dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
         compare(dial.value, 0.0);

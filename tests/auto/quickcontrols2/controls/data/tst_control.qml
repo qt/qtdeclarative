@@ -34,6 +34,15 @@ TestCase {
         SignalSpy { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(component, testCase)
+        verify(control)
+        compare(control.background, null)
+        compare(control.contentItem, null)
+    }
+
     function test_padding() {
         var control = createTemporaryObject(component, testCase)
         verify(control)

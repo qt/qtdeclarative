@@ -36,6 +36,8 @@ TestCase {
     }
 
     function test_creation() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(label, testCase)
         verify(control)
     }

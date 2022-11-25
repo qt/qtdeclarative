@@ -28,6 +28,13 @@ TestCase {
         SignalSpy { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(swipeView, testCase)
+        verify(control)
+    }
+
     function test_current() {
         var control = createTemporaryObject(swipeView, testCase)
 

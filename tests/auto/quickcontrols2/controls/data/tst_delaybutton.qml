@@ -14,6 +14,12 @@ TestCase {
     name: "DelayButton"
 
     Component {
+        id: defaultComponent
+
+        DelayButton {}
+    }
+
+    Component {
         id: delayButton
         DelayButton {
             delay: 200
@@ -30,6 +36,13 @@ TestCase {
     Component {
         id: signalSpy
         SignalSpy { }
+    }
+
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(defaultComponent, testCase)
+        verify(control)
     }
 
     function test_mouse() {

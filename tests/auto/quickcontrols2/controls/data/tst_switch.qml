@@ -25,6 +25,13 @@ TestCase {
         }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(swtch, testCase)
+        verify(control)
+    }
+
     function test_text() {
         var control = createTemporaryObject(swtch, testCase)
         verify(control)

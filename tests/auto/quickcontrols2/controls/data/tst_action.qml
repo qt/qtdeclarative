@@ -24,6 +24,13 @@ TestCase {
         SignalSpy { }
     }
 
+    function test_empty() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(component, testCase)
+        verify(control)
+    }
+
     function test_enabled() {
         var action = createTemporaryObject(component, testCase)
         verify(action)

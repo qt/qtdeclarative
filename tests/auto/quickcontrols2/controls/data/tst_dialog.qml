@@ -43,6 +43,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(dialog, testCase)
         verify(control)
         verify(control.header)

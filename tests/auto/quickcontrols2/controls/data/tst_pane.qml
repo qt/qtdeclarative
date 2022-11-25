@@ -66,6 +66,8 @@ TestCase {
     }
 
     function test_empty() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(pane, testCase)
         verify(control)
 

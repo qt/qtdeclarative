@@ -22,6 +22,12 @@ TestCase {
     property Item tumblerView: null
 
     Component {
+        id: defaultTumbler
+
+        Tumbler {}
+    }
+
+    Component {
         id: tumblerComponent
 
         Tumbler {
@@ -105,6 +111,13 @@ TestCase {
 
     property Component noAttachedPropertiesDelegate: Text {
         text: modelData
+    }
+
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(defaultTumbler, testCase)
+        verify(control)
     }
 
     function test_wrapWithoutAttachedProperties() {

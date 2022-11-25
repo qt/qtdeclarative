@@ -18,6 +18,13 @@ TestCase {
         WeekNumberColumn { }
     }
 
+    function test_defaults() {
+        failOnWarning(/.?/)
+
+        let control = createTemporaryObject(component, testCase)
+        verify(control)
+    }
+
     function test_locale() {
         var control = component.createObject(testCase)
 

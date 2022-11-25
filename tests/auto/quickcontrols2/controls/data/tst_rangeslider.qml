@@ -43,6 +43,8 @@ TestCase {
     }
 
     function test_defaults() {
+        failOnWarning(/.?/)
+
         var control = createTemporaryObject(sliderComponent, testCase)
         verify(control)
 
