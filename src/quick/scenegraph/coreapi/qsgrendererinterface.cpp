@@ -137,6 +137,17 @@ QT_BEGIN_NAMESPACE
     that is associated with the window and its QQuickRenderControl. The value is
     null when the window is not associated with a QQuickRenderControl. This value
     was introduced in Qt 6.4.
+
+    \value GraphicsQueueFamilyIndexResource The resource is a pointer to the
+    graphics queue family index used by the scenegraph, when applicable. With
+    Vulkan, this is a pointer to a \c uint32_t index value. This value was
+    introduced in Qt 6.6.
+
+    \value GraphicsQueueIndexResource The resource is a pointer to the graphics
+    queue index (uint32_t) used by the scenegraph, when applicable. With
+    Vulkan, this is a pointer to a \c uint32_t index value, which in practice
+    is the index of the VkQueue reported for \c CommandQueueResource. This
+    value was introduced in Qt 6.6.
  */
 
 /*!
