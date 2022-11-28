@@ -394,8 +394,10 @@ void QQmlIncubatorPrivate::incubateCppBasedComponent(QQmlComponent *component, Q
     }
     q->setInitialState(object.get());
     if (requiredPropertiesFromComponent && !requiredPropertiesFromComponent->isEmpty()) {
-        for (auto unsetRequiredProperty: std::as_const(*requiredPropertiesFromComponent))
+        for (const RequiredPropertyInfo &unsetRequiredProperty :
+             std::as_const(*requiredPropertiesFromComponent)) {
             errors << QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
+        }
     } else {
         compPriv->completeCreate();
         result = object.release();
