@@ -148,6 +148,7 @@ private slots:
     void nullComparison();
     void consoleObject();
     void multiForeign();
+    void namespaceWithEnum();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2868,6 +2869,16 @@ void tst_QmlCppCodegen::multiForeign()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), u"not here and not there"_s);
+}
+
+void tst_QmlCppCodegen::namespaceWithEnum()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/namespaceWithEnum.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("i").toInt(), 2);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
