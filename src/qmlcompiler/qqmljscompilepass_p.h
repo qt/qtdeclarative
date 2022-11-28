@@ -37,8 +37,20 @@ public:
 
     using SourceLocationTable = QV4::Compiler::Context::SourceLocationTable;
 
+    struct VirtualRegister
+    {
+        QQmlJSRegisterContent content;
+        bool canMove = false;
+
+    private:
+        friend bool operator==(const VirtualRegister &a, const VirtualRegister &b)
+        {
+            return a.content == b.content && a.canMove == b.canMove;
+        }
+    };
+
     // map from register index to expected type
-    using VirtualRegisters = QFlatMap<int, QQmlJSRegisterContent>;
+    using VirtualRegisters = QFlatMap<int, VirtualRegister>;
 
     struct InstructionAnnotation
     {
@@ -78,7 +90,7 @@ public:
         {
             auto it = registers.find(Accumulator);
             Q_ASSERT(it != registers.end());
-            return it.value();
+            return it.value().content;
         };
 
         const QQmlJSRegisterContent &accumulatorOut() const
@@ -105,7 +117,7 @@ public:
         void addReadRegister(int registerIndex, const QQmlJSRegisterContent &reg)
         {
             Q_ASSERT(isRename() || reg.isConversion());
-            m_readRegisters[registerIndex] = reg;
+            m_readRegisters[registerIndex].content = reg;
         }
 
         void addReadAccumulator(const QQmlJSRegisterContent &reg)
@@ -122,7 +134,13 @@ public:
         QQmlJSRegisterContent readRegister(int registerIndex) const
         {
             Q_ASSERT(m_readRegisters.contains(registerIndex));
-            return m_readRegisters[registerIndex];
+            return m_readRegisters[registerIndex].content;
+        }
+
+        bool canMoveReadRegister(int registerIndex) const
+        {
+            auto it = m_readRegisters.find(registerIndex);
+            return it != m_readRegisters.end() && it->second.canMove;
         }
 
         QQmlJSRegisterContent readAccumulator() const
@@ -185,11 +203,11 @@ protected:
     {
         State state;
         for (int i = 0, end = function->argumentTypes.size(); i < end; ++i) {
-            state.registers[FirstArgument + i] = function->argumentTypes.at(i);
-            Q_ASSERT(state.registers[FirstArgument + i].isValid());
+            state.registers[FirstArgument + i].content = function->argumentTypes.at(i);
+            Q_ASSERT(state.registers[FirstArgument + i].content.isValid());
         }
         for (int i = 0, end = function->registerTypes.size(); i != end; ++i)
-            state.registers[firstRegisterIndex() + i] = function->registerTypes[i];
+            state.registers[firstRegisterIndex() + i].content = function->registerTypes[i];
         return state;
     }
 
@@ -202,8 +220,10 @@ protected:
         newState.registers = oldState.registers;
 
         // Usually the initial accumulator type is the output of the previous instruction, but ...
-        if (oldState.changedRegisterIndex() != InvalidRegister)
-            newState.registers[oldState.changedRegisterIndex()] = oldState.changedRegister();
+        if (oldState.changedRegisterIndex() != InvalidRegister) {
+            newState.registers[oldState.changedRegisterIndex()].content
+                    = oldState.changedRegister();
+        }
 
         if (instruction == annotations.constEnd())
             return newState;

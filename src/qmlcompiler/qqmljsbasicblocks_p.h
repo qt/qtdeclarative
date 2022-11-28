@@ -69,6 +69,7 @@ private:
     void populateBasicBlocks();
     void populateReaderLocations();
     void adjustTypes();
+    bool canMove(int instructionOffset, const RegisterAccess &access) const;
 
     InstructionAnnotations m_annotations;
     QFlatMap<int, BasicBlock> m_basicBlocks;

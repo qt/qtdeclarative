@@ -237,6 +237,9 @@ protected:
     void generateEnumLookup(int index);
 
     QString registerVariable(int index) const;
+    QString consumedRegisterVariable(int index) const;
+    QString consumedAccumulatorVariableIn() const;
+
     QString changedRegisterVariable() const;
     QQmlJSRegisterContent registerType(int index) const;
 

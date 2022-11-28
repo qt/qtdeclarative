@@ -320,10 +320,10 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                      end = blockInstr->second.readRegisters.constEnd();
                      readIt != end; ++readIt) {
                     if (!blockInstr->second.isRename && containsAny(
-                                readIt->second.conversionOrigins(), access.trackedTypes)) {
-                        Q_ASSERT(readIt->second.isConversion());
+                                readIt->second.content.conversionOrigins(), access.trackedTypes)) {
+                        Q_ASSERT(readIt->second.content.isConversion());
                         access.typeReaders[blockInstr.key()]
-                                = readIt->second.conversionResult();
+                                = readIt->second.content.conversionResult();
                     }
                     if (registerActive && readIt->first == writtenRegister)
                         access.registerReadersAndConversions[blockInstr.key()] = conversions;
@@ -400,11 +400,41 @@ void QQmlJSBasicBlocks::populateReaderLocations()
     }
 }
 
+bool QQmlJSBasicBlocks::canMove(int instructionOffset, const RegisterAccess &access) const
+{
+    if (access.registerReadersAndConversions.size() != 1)
+        return false;
+    const auto basicBlockForInstruction = [this](int instruction) {
+        auto block = m_basicBlocks.lower_bound(instruction);
+        if (block == m_basicBlocks.end() || block.key() == instruction)
+            return block;
+        Q_ASSERT(block.key() > instruction);
+        if (block == m_basicBlocks.begin())
+            return m_basicBlocks.end();
+        return --block;
+    };
+    return basicBlockForInstruction(instructionOffset)
+            == basicBlockForInstruction(access.registerReadersAndConversions.begin().key());
+}
+
 void QQmlJSBasicBlocks::adjustTypes()
 {
-    using NewVirtualRegisters = NewFlatMap<int, QQmlJSRegisterContent>;
+    using NewVirtualRegisters = NewFlatMap<int, VirtualRegister>;
 
     QHash<int, QList<int>> liveConversions;
+    QHash<int, QList<int>> movableReads;
+
+    const auto handleRegisterReadersAndConversions
+            = [&](QHash<int, RegisterAccess>::const_iterator it) {
+        for (auto conversions = it->registerReadersAndConversions.constBegin(),
+             end = it->registerReadersAndConversions.constEnd(); conversions != end;
+             ++conversions) {
+            if (conversions->isEmpty() && canMove(it.key(), it.value()))
+                movableReads[conversions.key()].append(it->trackedRegister);
+            for (int conversion : *conversions)
+                liveConversions[conversion].append(it->trackedRegister);
+        }
+    };
 
     // Handle the array definitions first.
     // Changing the array type changes the expected element types.
@@ -426,23 +456,16 @@ void QQmlJSBasicBlocks::adjustTypes()
         // QQmlJSTypePropagator.
         if (QQmlJSScope::ConstPtr valueType = it->trackedTypes[0]->valueType()) {
             m_typeResolver->adjustTrackedType(
-                    m_typeResolver->containedType(annotation.readRegisters.begin().value()),
+                    m_typeResolver->containedType(annotation.readRegisters.begin().value().content),
                     valueType);
         }
 
-        for (const QList<int> &conversions : std::as_const(it->registerReadersAndConversions)) {
-            for (int conversion : conversions)
-                liveConversions[conversion].append(it->trackedRegister);
-        }
-
+        handleRegisterReadersAndConversions(it);
         m_readerLocations.erase(it);
     }
 
     for (auto it = m_readerLocations.begin(), end = m_readerLocations.end(); it != end; ++it) {
-        for (const QList<int> &conversions : std::as_const(it->registerReadersAndConversions)) {
-            for (int conversion : conversions)
-                liveConversions[conversion].append(it->trackedRegister);
-        }
+        handleRegisterReadersAndConversions(it);
 
         // There is always one first occurrence of any tracked type. Conversions don't change
         // the type.
@@ -469,16 +492,19 @@ void QQmlJSBasicBlocks::adjustTypes()
             if (!liveConversions[i.key()].contains(conversion.key()))
                 continue;
 
-            QQmlJSScope::ConstPtr conversionResult = conversion->second.conversionResult();
-            const auto conversionOrigins = conversion->second.conversionOrigins();
+            QQmlJSScope::ConstPtr conversionResult = conversion->second.content.conversionResult();
+            const auto conversionOrigins = conversion->second.content.conversionOrigins();
             QQmlJSScope::ConstPtr newResult;
             for (const auto &origin : conversionOrigins)
                 newResult = m_typeResolver->merge(newResult, origin);
             m_typeResolver->adjustTrackedType(conversionResult, newResult);
-            transformRegister(conversion->second);
+            transformRegister(conversion->second.content);
             newRegisters.appendOrdered(conversion);
         }
         i->second.typeConversions = newRegisters.take();
+
+        for (int movable : std::as_const(movableReads[i.key()]))
+            i->second.readRegisters[movable].canMove = true;
     }
 }
 
@@ -500,8 +526,9 @@ void QQmlJSBasicBlocks::populateBasicBlocks()
             for (auto it = instruction.readRegisters.begin(), end = instruction.readRegisters.end();
                  it != end; ++it) {
                 if (!instruction.isRename) {
-                    Q_ASSERT(it->second.isConversion());
-                    for (const QQmlJSScope::ConstPtr &origin : it->second.conversionOrigins()) {
+                    Q_ASSERT(it->second.content.isConversion());
+                    for (const QQmlJSScope::ConstPtr &origin :
+                         it->second.content.conversionOrigins()) {
                         if (!writtenTypes.contains(origin))
                             block.readTypes.append(origin);
                     }
