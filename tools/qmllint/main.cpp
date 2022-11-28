@@ -66,7 +66,8 @@ All warnings can be set to three levels:
     parser.addOption(silentOption);
 
     QCommandLineOption jsonOption(QStringList() << "json",
-                                  QLatin1String("Write output as JSON to file"),
+                                  QLatin1String("Write output as JSON to file (or use the special "
+                                                "filename '-'  to write to stdout)"),
                                   QLatin1String("file"), QString());
     parser.addOption(jsonOption);
 
