@@ -28,12 +28,8 @@ static QList<QUrl> toUrlList(const QStringList &paths)
 {
     QList<QUrl> urls;
     urls.reserve(paths.size());
-    for (const QString &path : paths) {
-        QUrl url = QUrl(path);
-        if (url.scheme().isEmpty())
-            url = QUrl::fromLocalFile(path);
-        urls += url;
-    }
+    for (const QString &path : paths)
+        urls += QUrl::fromLocalFile(path);
     return urls;
 }
 

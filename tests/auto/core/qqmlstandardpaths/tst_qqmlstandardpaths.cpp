@@ -113,9 +113,7 @@ void tst_qqmlstandardpaths::standardLocations()
 #endif
             QVERIFY2(!path.isEmpty(), qPrintable(QString::fromLatin1(
                 "Path for %1 received from QStandardPaths::standardLocations is empty").arg(locationName)));
-            QUrl url = QUrl(path);
-            if (url.scheme().isEmpty())
-                url = QUrl::fromLocalFile(path);
+            QUrl url = QUrl::fromLocalFile(path);
             QVERIFY(!url.isEmpty());
             QVERIFY(url.isValid());
             standardLocationUrls.append(url);
