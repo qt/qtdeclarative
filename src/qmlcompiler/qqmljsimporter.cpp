@@ -58,7 +58,15 @@ void QQmlJSImporter::readQmltypes(
     }
 
     QFile file(filename);
-    file.open(QFile::ReadOnly);
+    if (!file.open(QFile::ReadOnly)) {
+        m_warnings.append({
+                              QStringLiteral("QML types file cannot be opened: ") + filename,
+                              QtWarningMsg,
+                              QQmlJS::SourceLocation()
+                          });
+        return;
+    }
+
     QQmlJSTypeDescriptionReader reader { filename, QString::fromUtf8(file.readAll()) };
     QStringList dependencyStrings;
     auto succ = reader(objects, &dependencyStrings);
