@@ -4,22 +4,25 @@
 #include <private/qqmlengine_p.h>
 
 #include <qtest.h>
-#include <QDebug>
+
 #include <QQmlEngine>
-#include <QFontDatabase>
-#include <QFileInfo>
 #include <QQmlComponent>
+#include <QtQuick/QQuickItem>
+
+#include <QCryptographicHash>
+#include <QDebug>
 #include <QDesktopServices>
 #include <QDir>
-#include <QCryptographicHash>
-#include <QtQuick/QQuickItem>
+#include <QFileInfo>
+#include <QFont>
+#include <QFontDatabase>
+#include <QMatrix4x4>
+#include <QQuaternion>
 #include <QSignalSpy>
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
-#include <QQuaternion>
-#include <QMatrix4x4>
-#include <QFont>
+
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <private/qglobal_p.h>
 

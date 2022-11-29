@@ -18,18 +18,18 @@
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 
+#include <QtCore/QCborArray>
+#include <QtCore/QCborMap>
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
-#include <QtCore/QPair>
-#include <QtCore/QScopeGuard>
-#include <QtCore/QMutexLocker>
-#include <QtCore/QCborMap>
-#include <QtCore/QCborArray>
-#include <QtCore/QJsonValue>
 #include <QtCore/QJsonDocument>
+#include <QtCore/QJsonValue>
+#include <QtCore/QMutexLocker>
+#include <QtCore/QPair>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QScopeGuard>
 #include <QtCore/QtGlobal>
 
 QT_BEGIN_NAMESPACE
