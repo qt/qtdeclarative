@@ -1298,7 +1298,7 @@ private:
     \endcode
 
     \since 6.5
-    \sa QQmlComponent::load
+    \sa loadUrl()
  */
 void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
                                    QQmlComponent::CompilationMode mode)
