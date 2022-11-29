@@ -23,6 +23,7 @@ qt6_add_qml_module(testCppTypes
     SOURCES
         commontypes.h
 )
+qt_autogen_tools_initial_setup(testCppTypesplugin)
 
 qt_internal_add_test(tst_qv4debugger
     SOURCES
