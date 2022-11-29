@@ -5,7 +5,6 @@
     \example swipetoremove
     \keyword Qt Quick Controls - Swipe to Remove
     \title Qt Quick Controls - Swipe to Remove
-    \keyword Qt Quick Controls 2 - Swipe to Remove
     \ingroup qtquickcontrols-examples
     \brief Demonstrates removal of list items by swipe gesture.
 
@@ -13,12 +12,15 @@
     removal of list items by swiping. This UI pattern is often used in touch
     user interfaces.
 
-    \image qtquickcontrols-swipetoremove.png
+    \image qtquickcontrols-swipetoremove.png "Screen shot of the app"
 
     Each list item can be swiped to the left, which reveals a label on the
     \l {SwipeDelegate::swipe}{right} side indicating that the item will be
-    removed if the swipe is completed. The following snippet contains the
-    implementation of the side item.
+    removed if the swipe is completed.
+
+    \image qtquickcontrols-swipetoremove.gif "Animation of the app working"
+
+    The following snippet contains the implementation of the side item.
 
     \snippet swipetoremove/swipetoremove.qml delegate
 
