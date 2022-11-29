@@ -1331,8 +1331,8 @@ void tst_qqmlcomponent::loadFromModule()
 
 struct CallVerifyingIncubtor : QQmlIncubator
 {
-    void setInitialState(QObject *) { setInitialStateCalled = true; }
-    void statusChanged(QQmlIncubator::Status status) { lastStatus = status; }
+    void setInitialState(QObject *) override { setInitialStateCalled = true; }
+    void statusChanged(QQmlIncubator::Status status) override { lastStatus = status; }
 
     QQmlIncubator::Status lastStatus = QQmlIncubator::Null;
     bool setInitialStateCalled = false;
