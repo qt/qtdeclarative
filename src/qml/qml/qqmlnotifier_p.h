@@ -172,12 +172,15 @@ void QQmlNotifierEndpoint::disconnect()
     if (next) next->prev = prev;
     if (prev) *prev = next;
 
-    if (sourceSignal != -1) {
+    if (sourceSignal != -1 && needsConnectNotify) {
         QObject * const obj = senderAsObject();
         Q_ASSERT(obj);
         QObjectPrivate * const priv = QObjectPrivate::get(obj);
-        if (needsConnectNotify)
-            priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
+
+        // In some degenerate cases an object being destructed might be unable
+        // to produce a metaObject(). Therefore we check here.
+        if (const QMetaObject *mo = obj->metaObject())
+            priv->disconnectNotify(QMetaObjectPrivate::signal(mo, sourceSignal));
     }
 
     setSender(0x0);
