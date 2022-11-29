@@ -1184,7 +1184,8 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
                     + conversion(content.storedType(), m_typeResolver->varType(), var) + u";\n"_s;
             args += u", "_s + argName + u".data()"_s;
             types += u", "_s + argName + u".metaType()"_s;
-        } else if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())) {
+        } else if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())
+                   && !m_typeResolver->registerContains(content, m_typeResolver->varType())) {
             args += u", "_s + var + u".data()"_s;
             types += u", "_s + var + u".metaType()"_s;
         } else {
