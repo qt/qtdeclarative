@@ -1190,6 +1190,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("EnumAccessCpp") << QStringLiteral("EnumAccessCpp.qml");
     QTest::newRow("qtquickdialog") << QStringLiteral("qtquickdialog.qml");
     QTest::newRow("callBase") << QStringLiteral("callBase.qml");
+    QTest::newRow("propertyWithOn") << QStringLiteral("switcher.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -247,7 +247,6 @@ protected:
     void checkRequiredProperties();
     void processPropertyTypes();
     void processPropertyBindingObjects();
-    void checkSignals();
     void flushPendingSignalParameters();
 
     QQmlJSScope::ConstPtr scopeById(const QString &id, const QQmlJSScope::ConstPtr &current);
@@ -315,13 +314,15 @@ protected:
     QVector<QQmlJSScope::Ptr> m_objectDefinitionScopes;
 
     QHash<QQmlJSScope::Ptr, QVector<WithVisibilityScope<QString>>> m_propertyBindings;
-    QHash<QQmlJSScope::Ptr, QVector<WithVisibilityScope<QPair<QString, QStringList>>>> m_signals;
 
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
     QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
     QQmlJS::SourceLocation m_pendingSignalHandler;
 
 private:
+    void checkSignal(
+            const QQmlJSScope::ConstPtr &signalScope, const QQmlJS::SourceLocation &location,
+            const QString &handlerName, const QStringList &handlerParameters);
     void importBaseModules();
     void resolveAliasesAndIds();
     void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);

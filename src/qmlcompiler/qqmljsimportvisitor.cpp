@@ -421,7 +421,6 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     processDefaultProperties();
     processPropertyTypes();
     processPropertyBindings();
-    checkSignals();
     processPropertyBindingObjects();
     checkRequiredProperties();
 
@@ -918,165 +917,159 @@ void QQmlJSImportVisitor::processPropertyBindings()
     }
 }
 
-void QQmlJSImportVisitor::checkSignals()
+void QQmlJSImportVisitor::checkSignal(
+        const QQmlJSScope::ConstPtr &signalScope, const QQmlJS::SourceLocation &location,
+        const QString &handlerName, const QStringList &handlerParameters)
 {
-    for (auto it = m_signals.constBegin(); it != m_signals.constEnd(); ++it) {
-        for (const auto &scopeAndPair : it.value()) {
-            const auto location = scopeAndPair.dataLocation;
-            const auto &pair = scopeAndPair.data;
-            const auto signal = QQmlJSUtils::signalName(pair.first);
+    const auto signal = QQmlJSUtils::signalName(handlerName);
 
-            const QQmlJSScope::ConstPtr signalScope = it.key();
-            std::optional<QQmlJSMetaMethod> signalMethod;
-            const auto setSignalMethod = [&](const QQmlJSScope::ConstPtr &scope,
-                                             const QString &name) {
-                const auto methods = scope->methods(name, QQmlJSMetaMethod::Signal);
-                if (!methods.isEmpty())
-                    signalMethod = methods[0];
-            };
+    std::optional<QQmlJSMetaMethod> signalMethod;
+    const auto setSignalMethod = [&](const QQmlJSScope::ConstPtr &scope,
+                                     const QString &name) {
+        const auto methods = scope->methods(name, QQmlJSMetaMethod::Signal);
+        if (!methods.isEmpty())
+            signalMethod = methods[0];
+    };
 
-            if (signal.has_value()) {
-                if (signalScope->hasMethod(*signal)) {
-                    setSignalMethod(signalScope, *signal);
-                } else if (auto p = QQmlJSUtils::changeHandlerProperty(signalScope, *signal);
-                           p.has_value()) {
-                    // we have a change handler of the form "onXChanged" where 'X'
-                    // is a property name
+    if (signal.has_value()) {
+        if (signalScope->hasMethod(*signal)) {
+            setSignalMethod(signalScope, *signal);
+        } else if (auto p = QQmlJSUtils::changeHandlerProperty(signalScope, *signal);
+                   p.has_value()) {
+            // we have a change handler of the form "onXChanged" where 'X'
+            // is a property name
 
-                    // NB: qqmltypecompiler prefers signal to bindable
-                    if (auto notify = p->notify(); !notify.isEmpty()) {
-                        setSignalMethod(signalScope, notify);
-                    } else {
-                        Q_ASSERT(!p->bindable().isEmpty());
-                        signalMethod = QQmlJSMetaMethod {}; // use dummy in this case
-                    }
-                }
-            }
-
-            if (!signalMethod.has_value()) { // haven't found anything
-                std::optional<FixSuggestion> fix;
-
-                // There is a small chance of suggesting this fix for things that are not actually
-                // QtQml/Connections elements, but rather some other thing that is also called
-                // "Connections". However, I guess we can live with this.
-                if (signalScope->baseTypeName() == QStringLiteral("Connections")) {
-
-                    // Cut to the end of the line to avoid hairy issues with pre-existing function()
-                    // and the colon.
-                    const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
-                            - location.offset;
-
-                    fix = FixSuggestion { { FixSuggestion::Fix {
-                            QStringLiteral("Implicitly defining %1 as signal handler in "
-                                           "Connections is deprecated. Create a function "
-                                           "instead")
-                                    .arg(pair.first),
-                            QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
-                                                   location.startColumn),
-                            QStringLiteral("function %1(%2) { ... }")
-                                    .arg(pair.first, pair.second.join(u", ")) } } };
-                }
-
-                m_logger->log(QStringLiteral("no matching signal found for handler \"%1\"")
-                                      .arg(pair.first),
-                              qmlUnqualified, location, true, true, fix);
-
-                continue;
-            }
-
-            const auto signalParameters = signalMethod->parameters();
-            QHash<QString, qsizetype> parameterNameIndexes;
-            // check parameter positions and also if signal is suitable for onSignal handler
-            for (int i = 0, end = signalParameters.size(); i < end; ++i) {
-                auto &p = signalParameters[i];
-                parameterNameIndexes[p.name()] = i;
-
-                auto signalName = [&]() {
-                    if (signal)
-                        return u" called %1"_s.arg(*signal);
-                    return QString();
-                };
-                auto type = p.type();
-                if (!type) {
-                    m_logger->log(
-                            QStringLiteral(
-                                    "Type %1 of parameter %2 in signal%3 was not found, but is "
-                                    "required to compile %4. Did you add all import paths?")
-                                    .arg(p.typeName(), p.name(), signalName(), pair.first),
-                            qmlSignalParameters, location);
-                    continue;
-                }
-
-                if (type->isComposite())
-                    continue;
-
-                // only accept following parameters for non-composite types:
-                // * QObjects by pointer (nonconst*, const*, const*const,*const)
-                // * Value types by value (QFont, int)
-                // * Value types by const ref (const QFont&, const int&)
-
-                auto parameterName = [&]() {
-                    if (p.name().isEmpty())
-                        return QString();
-                    return u" called %1"_s.arg(p.name());
-                };
-                switch (type->accessSemantics()) {
-                case QQmlJSScope::AccessSemantics::Reference:
-                    if (!p.isPointer())
-                        m_logger->log(QStringLiteral("Type %1 of parameter%2 in signal%3 should be "
-                                                     "passed by pointer to be able to compile %4. ")
-                                              .arg(p.typeName(), parameterName(), signalName(),
-                                                   pair.first),
-                                      qmlSignalParameters, location);
-                    break;
-                case QQmlJSScope::AccessSemantics::Value:
-                case QQmlJSScope::AccessSemantics::Sequence:
-                    if (p.isPointer())
-                        m_logger->log(
-                                QStringLiteral(
-                                        "Type %1 of parameter%2 in signal%3 should be passed by "
-                                        "value or const reference to be able to compile %4. ")
-                                        .arg(p.typeName(), parameterName(), signalName(),
-                                             pair.first),
-                                qmlSignalParameters, location);
-                    break;
-                case QQmlJSScope::AccessSemantics::None:
-                    m_logger->log(
-                            QStringLiteral("Type %1 of parameter%2 in signal%3 required by the "
-                                           "compilation of %4 cannot be used. ")
-                                    .arg(p.typeName(), parameterName(), signalName(), pair.first),
-                            qmlSignalParameters, location);
-                    break;
-                }
-            }
-
-            if (pair.second.size() > signalParameters.size()) {
-                m_logger->log(QStringLiteral("Signal handler for \"%2\" has more formal"
-                                             " parameters than the signal it handles.")
-                                      .arg(pair.first),
-                              qmlSignalParameters, location);
-                continue;
-            }
-
-            for (qsizetype i = 0; i < pair.second.size(); i++) {
-                const QStringView handlerParameter = pair.second.at(i);
-                auto it = parameterNameIndexes.constFind(handlerParameter.toString());
-                if (it == parameterNameIndexes.constEnd())
-                    continue;
-                const qsizetype j = *it;
-
-                if (j == i)
-                    continue;
-
-                m_logger->log(QStringLiteral("Parameter %1 to signal handler for \"%2\""
-                                             " is called \"%3\". The signal has a parameter"
-                                             " of the same name in position %4.")
-                                      .arg(i + 1)
-                                      .arg(pair.first, handlerParameter)
-                                      .arg(j + 1),
-                              qmlSignalParameters, location);
+            // NB: qqmltypecompiler prefers signal to bindable
+            if (auto notify = p->notify(); !notify.isEmpty()) {
+                setSignalMethod(signalScope, notify);
+            } else {
+                Q_ASSERT(!p->bindable().isEmpty());
+                signalMethod = QQmlJSMetaMethod {}; // use dummy in this case
             }
         }
+    }
+
+    if (!signalMethod.has_value()) { // haven't found anything
+        std::optional<FixSuggestion> fix;
+
+        // There is a small chance of suggesting this fix for things that are not actually
+        // QtQml/Connections elements, but rather some other thing that is also called
+        // "Connections". However, I guess we can live with this.
+        if (signalScope->baseTypeName() == QStringLiteral("Connections")) {
+
+            // Cut to the end of the line to avoid hairy issues with pre-existing function()
+            // and the colon.
+            const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
+                    - location.offset;
+
+            fix = FixSuggestion { { FixSuggestion::Fix {
+                    QStringLiteral("Implicitly defining %1 as signal handler in "
+                                   "Connections is deprecated. Create a function "
+                                   "instead")
+                            .arg(handlerName),
+                    QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
+                                           location.startColumn),
+                    QStringLiteral("function %1(%2) { ... }")
+                            .arg(handlerName, handlerParameters.join(u", ")) } } };
+        }
+
+        m_logger->log(QStringLiteral("no matching signal found for handler \"%1\"")
+                              .arg(handlerName),
+                      qmlUnqualified, location, true, true, fix);
+        return;
+    }
+
+    const auto signalParameters = signalMethod->parameters();
+    QHash<QString, qsizetype> parameterNameIndexes;
+    // check parameter positions and also if signal is suitable for onSignal handler
+    for (int i = 0, end = signalParameters.size(); i < end; i++) {
+        auto &p = signalParameters[i];
+        parameterNameIndexes[p.name()] = i;
+
+        auto signalName = [&]() {
+            if (signal)
+                return u" called %1"_s.arg(*signal);
+            return QString();
+        };
+        auto type = p.type();
+        if (!type) {
+            m_logger->log(
+                    QStringLiteral(
+                            "Type %1 of parameter %2 in signal%3 was not found, but is "
+                            "required to compile %4. Did you add all import paths?")
+                            .arg(p.typeName(), p.name(), signalName(), handlerName),
+                    qmlSignalParameters, location);
+            continue;
+        }
+
+        if (type->isComposite())
+            continue;
+
+        // only accept following parameters for non-composite types:
+        // * QObjects by pointer (nonconst*, const*, const*const,*const)
+        // * Value types by value (QFont, int)
+        // * Value types by const ref (const QFont&, const int&)
+
+        auto parameterName = [&]() {
+            if (p.name().isEmpty())
+                return QString();
+            return u" called %1"_s.arg(p.name());
+        };
+        switch (type->accessSemantics()) {
+        case QQmlJSScope::AccessSemantics::Reference:
+            if (!p.isPointer())
+                m_logger->log(QStringLiteral("Type %1 of parameter%2 in signal%3 should be "
+                                             "passed by pointer to be able to compile %4. ")
+                                      .arg(p.typeName(), parameterName(), signalName(),
+                                           handlerName),
+                              qmlSignalParameters, location);
+            break;
+        case QQmlJSScope::AccessSemantics::Value:
+        case QQmlJSScope::AccessSemantics::Sequence:
+            if (p.isPointer())
+                m_logger->log(
+                        QStringLiteral(
+                                "Type %1 of parameter%2 in signal%3 should be passed by "
+                                "value or const reference to be able to compile %4. ")
+                                .arg(p.typeName(), parameterName(), signalName(),
+                                     handlerName),
+                        qmlSignalParameters, location);
+            break;
+        case QQmlJSScope::AccessSemantics::None:
+            m_logger->log(
+                    QStringLiteral("Type %1 of parameter%2 in signal%3 required by the "
+                                   "compilation of %4 cannot be used. ")
+                            .arg(p.typeName(), parameterName(), signalName(), handlerName),
+                    qmlSignalParameters, location);
+            break;
+        }
+    }
+
+    if (handlerParameters.size() > signalParameters.size()) {
+        m_logger->log(QStringLiteral("Signal handler for \"%2\" has more formal"
+                                     " parameters than the signal it handles.")
+                              .arg(handlerName),
+                      qmlSignalParameters, location);
+        return;
+    }
+
+    for (qsizetype i = 0, end = handlerParameters.size(); i < end; i++) {
+        const QStringView handlerParameter = handlerParameters.at(i);
+        auto it = parameterNameIndexes.constFind(handlerParameter.toString());
+        if (it == parameterNameIndexes.constEnd())
+            continue;
+        const qsizetype j = *it;
+
+        if (j == i)
+            continue;
+
+        m_logger->log(QStringLiteral("Parameter %1 to signal handler for \"%2\""
+                                     " is called \"%3\". The signal has a parameter"
+                                     " of the same name in position %4.")
+                              .arg(i + 1)
+                              .arg(handlerName, handlerParameter)
+                              .arg(j + 1),
+                      qmlSignalParameters, location);
     }
 }
 
@@ -2006,19 +1999,21 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         prefix.clear();
     }
 
-    auto name = group->name;
+    auto name = group->name.toString();
 
     if (id && id->name.toString() == u"anchors")
         m_logger->log(u"Using anchors here"_s, qmlControlsSanity,
                       scriptBinding->firstSourceLocation());
 
+    // This is a preliminary check.
+    // Even if the name starts with "on", it might later turn out not to be a signal.
     const auto signal = QQmlJSUtils::signalName(name);
 
-    if (!signal.has_value()) {
+    if (!signal.has_value() || m_currentScope->hasProperty(name)) {
         m_propertyBindings[m_currentScope].append(
-                { m_savedBindingOuterScope, group->firstSourceLocation(), name.toString() });
+                { m_savedBindingOuterScope, group->firstSourceLocation(), name });
         // ### TODO: report Invalid parse status as a warning/error
-        auto result = parseBindingExpression(name.toString(), scriptBinding->statement);
+        auto result = parseBindingExpression(name, scriptBinding->statement);
         m_thisScriptBindingIsJavaScript = (result == BindingExpressionParseResult::Script);
     } else {
         const auto statement = scriptBinding->statement;
@@ -2034,9 +2029,6 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         m_logger->log(u"Declared signal handler \"%1\""_s.arg(name), qmlControlsSanity,
                       scriptBinding->firstSourceLocation());
 
-        m_signals[m_currentScope].append({ m_savedBindingOuterScope, group->firstSourceLocation(),
-                                           qMakePair(name.toString(), signalParameters) });
-
         QQmlJSMetaMethod scopeSignal;
         const auto methods = m_currentScope->methods(*signal, QQmlJSMetaMethod::Signal);
         if (!methods.isEmpty())
@@ -2049,24 +2041,40 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         m_signalHandlers.insert(firstSourceLocation,
                                 { scopeSignal.parameterNames(), hasMultilineStatementBody });
 
-        const QString stringName = name.toString();
         // NB: calculate runtime index right away to avoid miscalculation due to
         // losing real AST traversal order
-        const auto index = addFunctionOrExpression(m_currentScope, stringName);
-        const auto createBinding = [scope = m_currentScope, signalName = *signal, index, stringName,
-                                    firstSourceLocation]() {
+        const auto index = addFunctionOrExpression(m_currentScope, name);
+        const auto createBinding = [
+                this,
+                scope = m_currentScope,
+                signalName = *signal,
+                index,
+                name,
+                firstSourceLocation,
+                groupLocation = group->firstSourceLocation(),
+                signalParameters]() {
             // when encountering a signal handler, add it as a script binding
             Q_ASSERT(scope->isFullyResolved());
             QQmlJSMetaPropertyBinding::ScriptBindingKind kind =
                     QQmlJSMetaPropertyBinding::Script_Invalid;
             const auto methods = scope->methods(signalName, QQmlJSMetaMethod::Signal);
-            if (!methods.isEmpty())
+            if (!methods.isEmpty()) {
                 kind = QQmlJSMetaPropertyBinding::Script_SignalHandler;
-            else if (QQmlJSUtils::changeHandlerProperty(scope, signalName).has_value())
+                checkSignal(scope, groupLocation, name, signalParameters);
+            } else if (QQmlJSUtils::changeHandlerProperty(scope, signalName).has_value()) {
                 kind = QQmlJSMetaPropertyBinding::Script_ChangeHandler;
-            // ### TODO: needs an error if kind is still Invalid
+                checkSignal(scope, groupLocation, name, signalParameters);
+            } else if (scope->hasProperty(name)) {
+                // Not a signal handler after all.
+                // We can see this now because the type is fully resolved.
+                kind = QQmlJSMetaPropertyBinding::Script_PropertyBinding;
+                m_signalHandlers.remove(firstSourceLocation);
+            } else {
+                // We already know it's bad, but let's allow checkSignal() to do its thing.
+                checkSignal(scope, groupLocation, name, signalParameters);
+            }
 
-            QQmlJSMetaPropertyBinding binding(firstSourceLocation, stringName);
+            QQmlJSMetaPropertyBinding binding(firstSourceLocation, name);
             binding.setScriptBinding(index, kind);
             return binding;
         };
