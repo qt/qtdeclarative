@@ -472,6 +472,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 
     The translation of the gesture \l centroid. It is \c (0, 0) when the
     gesture begins.
+
+    \note On some touchpads, such as on a \macos trackpad, native gestures do
+    not generate any translation values, and this property stays at \c (0, 0).
 */
 
 QT_END_NAMESPACE
