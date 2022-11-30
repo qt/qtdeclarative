@@ -162,3 +162,8 @@ bool TestModel::removeRows(int position, int count, const QModelIndex &parent)
     return true;
 }
 
+Qt::ItemFlags TestModel::flags(const QModelIndex &index) const
+{
+    Q_UNUSED(index)
+    return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+}

@@ -39,6 +39,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTreeViewDelegate : public QQuickIte
     Q_PROPERTY(int depth READ depth WRITE setDepth NOTIFY depthChanged REQUIRED FINAL)
     Q_PROPERTY(bool current READ current WRITE setCurrent NOTIFY currentChanged REQUIRED FINAL REVISION(6, 4))
     Q_PROPERTY(bool selected READ selected WRITE setSelected NOTIFY selectedChanged REQUIRED FINAL REVISION(6, 4))
+    Q_PROPERTY(bool editing READ editing WRITE setEditing NOTIFY editingChanged REQUIRED FINAL REVISION(6, 5))
 
     QML_NAMED_ELEMENT(TreeViewDelegate)
     QML_ADDED_IN_VERSION(6, 3)
@@ -64,6 +65,9 @@ public:
     bool selected() const;
     void setSelected(bool selected);
 
+    bool editing() const;
+    void setEditing(bool editing);
+
     int depth() const;
     void setDepth(int depth);
 
@@ -88,6 +92,7 @@ Q_SIGNALS:
     void rightMarginChanged();
     Q_REVISION(6, 4) void currentChanged();
     Q_REVISION(6, 4) void selectedChanged();
+    Q_REVISION(6, 5) void editingChanged();
 
 protected:
     QFont defaultFont() const override;

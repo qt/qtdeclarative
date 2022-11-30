@@ -43,6 +43,8 @@ public:
     Q_INVOKABLE bool insertRows(int position, int count, const QModelIndex &parent) override;
     Q_INVOKABLE bool removeRows(int position, int count, const QModelIndex &parent) override;
 
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
+
 private:
     QVector<TreeItem *> m_rootItems;
     int m_columnCount = 2;

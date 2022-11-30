@@ -237,6 +237,7 @@ void tst_qquicktreeviewdelegate::checkPropertiesChildren()
         QCOMPARE(childItem->depth(), row <= 4 ? 1 : 2);
         QCOMPARE(childItem->current(), false);
         QCOMPARE(childItem->selected(), false);
+        QCOMPARE(childItem->editing(), false);
         QCOMPARE(childItem->leftPadding(), childItem->leftMargin() + (childItem->depth() * childItem->indentation()) + childItem->indicator()->width() + childItem->spacing());
         QCOMPARE(childItem->indicator()->x(), childItem->leftMargin() + (childItem->depth() * childItem->indentation()));
     }
@@ -254,6 +255,7 @@ void tst_qquicktreeviewdelegate::checkCurrentIndex()
     QVERIFY(item);
     QVERIFY(!item->current());
     QVERIFY(!item->selected());
+    QVERIFY(!item->editing());
     QVERIFY(!treeView->hasActiveFocus());
 
     // Click on the label
@@ -262,12 +264,14 @@ void tst_qquicktreeviewdelegate::checkCurrentIndex()
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
     QVERIFY(item->current());
     QVERIFY(!item->selected());
+    QVERIFY(!item->editing());
     QVERIFY(treeView->hasActiveFocus());
 
     // Select the cell
     treeView->selectionModel()->setCurrentIndex(treeView->modelIndex(cell), QItemSelectionModel::Select);
     QVERIFY(item->current());
     QVERIFY(item->selected());
+    QVERIFY(!item->editing());
 }
 
 void tst_qquicktreeviewdelegate::checkClickedSignal_data()

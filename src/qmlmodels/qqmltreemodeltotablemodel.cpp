@@ -164,6 +164,11 @@ QVariant QQmlTreeModelToTableModel::headerData(int section, Qt::Orientation orie
     return m_model->headerData(section, orientation, role);
 }
 
+Qt::ItemFlags QQmlTreeModelToTableModel::flags(const QModelIndex &index) const
+{
+    return m_model->flags(mapToModel(index));
+}
+
 int QQmlTreeModelToTableModel::depthAtRow(int row) const
 {
     if (row < 0 || row >= m_items.size())

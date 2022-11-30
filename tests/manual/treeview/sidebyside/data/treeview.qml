@@ -80,6 +80,8 @@ ApplicationWindow {
             anchors.topMargin: 100
             clip: true
 
+            selectionModel: ItemSelectionModel {}
+
             model: useFileSystemModel.checked ? fileSystemModel : testModel
             delegate: useCustomDelegate.checked ? customDelegate : treeViewDelegate
         }

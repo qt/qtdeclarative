@@ -57,5 +57,40 @@ T.TreeViewDelegate {
         text: control.model.display
         elide: Text.ElideRight
         color: control.highlighted ? control.palette.highlightedText : control.palette.buttonText
+        visible: !control.editing
     }
+
+    // The edit delegate is a separate component, and doesn't need
+    // to follow the same strict rules that are applied to a control.
+    // qmllint disable attached-property-reuse
+    // qmllint disable controls-sanity
+    TableView.editDelegate: FocusScope {
+        width: parent.width
+        height: parent.height
+
+        readonly property int __role: {
+            let model = control.treeView.model
+            let index = control.treeView.modelIndex(column, row)
+            let editText = model.data(index, Qt.EditRole)
+            return editText !== undefined ? Qt.EditRole : Qt.DisplayRole
+        }
+
+        TextField {
+            id: textField
+            x: control.contentItem.x
+            y: (parent.height - height) / 2
+            width: control.contentItem.width
+            text: control.treeView.model.data(control.treeView.modelIndex(column, row), __role)
+            focus: true
+        }
+
+        TableView.onCommit: {
+            let index = TableView.view.modelIndex(column, row)
+            TableView.view.model.setData(index, textField.text, __role)
+        }
+
+        Component.onCompleted: textField.selectAll()
+    }
+    // qmllint enable attached-property-reuse
+    // qmllint enable controls-sanity
 }

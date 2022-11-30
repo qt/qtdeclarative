@@ -162,6 +162,14 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty bool QtQuick.Controls::TreeViewDelegate::editing
+    \since 6.5
+
+    This property holds if the delegate is being
+    \l {Editing cells}{edited.}
+*/
+
+/*!
     \qmlproperty real QtQuick.Controls::TreeViewDelegate::indentation
 
     This property holds the space a child is indented horizontally
@@ -210,6 +218,7 @@ public:
     bool m_expanded = false;
     bool m_current = false;
     bool m_selected = false;
+    bool m_editing = false;
     bool m_hasChildren = false;
     bool m_pressOnTopOfIndicator = false;
     int m_depth = 0;
@@ -415,6 +424,21 @@ void QQuickTreeViewDelegate::setSelected(bool selected)
 
     d->m_selected = selected;
     emit selectedChanged();
+}
+
+bool QQuickTreeViewDelegate::editing() const
+{
+    return d_func()->m_editing;
+}
+
+void QQuickTreeViewDelegate::setEditing(bool editing)
+{
+    Q_D(QQuickTreeViewDelegate);
+    if (d->m_editing == editing)
+        return;
+
+    d->m_editing = editing;
+    emit editingChanged();
 }
 
 int QQuickTreeViewDelegate::depth() const
