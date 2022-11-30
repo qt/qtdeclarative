@@ -5,6 +5,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 
 #include <QtQmlModels/private/qqmltreemodeltotablemodel_p_p.h>
 
@@ -77,6 +78,14 @@
     \endlist
 
     See also \l {Required Properties}.
+
+    By default, TreeView \l {toggleExpanded()}{toggles} the expanded state
+    of a row when you double tap on it. Since this is in conflict with
+    double tapping to edit a cell, TreeView sets \l editTriggers to
+    \c TableView.EditKeyPressed by default (which is different from TableView,
+    which uses \c {TableView.EditKeyPressed | TableView.DoubleTapped}.
+    If you change \l editTriggers to also contain \c TableView.DoubleTapped,
+    toggling the expanded state with a double tap will be disabled.
 
     \note A TreeView only accepts a model that inherits \l QAbstractItemModel.
 */
@@ -386,6 +395,7 @@ QQuickTreeView::QQuickTreeView(QQuickItem *parent)
     Q_D(QQuickTreeView);
 
     setSelectionBehavior(SelectRows);
+    setEditTriggers(EditKeyPressed);
 
     // Note: QQuickTableView will only ever see the table model m_treeModelToTableModel, and
     // never the actual tree model that is assigned to us by the application.
@@ -393,6 +403,18 @@ QQuickTreeView::QQuickTreeView(QQuickItem *parent)
     d->QQuickTableViewPrivate::setModelImpl(modelAsVariant);
     QObjectPrivate::connect(&d->m_treeModelToTableModel, &QAbstractItemModel::dataChanged,
                             d, &QQuickTreeViewPrivate::dataChangedCallback);
+
+    auto tapHandler = new QQuickTapHandler(this);
+    tapHandler->setAcceptedModifiers(Qt::NoModifier);
+    connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, tapHandler]{
+        if (!pointerNavigationEnabled())
+            return;
+        if (editTriggers() & DoubleTapped)
+            return;
+
+        const int row = cellAtPosition(tapHandler->point().pressPosition()).y();
+        toggleExpanded(row);
+    });
 }
 
 QQuickTreeView::~QQuickTreeView()

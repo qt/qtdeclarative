@@ -274,7 +274,6 @@ QQuickTreeViewDelegate::QQuickTreeViewDelegate(QQuickItem *parent)
 
     auto tapHandler = new QQuickTapHandler(this);
     tapHandler->setAcceptedModifiers(Qt::NoModifier);
-    QObjectPrivate::connect(tapHandler, &QQuickTapHandler::doubleTapped, d_func(), &QQuickTreeViewDelegatePrivate::toggleExpanded);
     QObjectPrivate::connect(this, &QQuickAbstractButton::indicatorChanged, d, &QQuickTreeViewDelegatePrivate::updateIndicatorPointerHandlers);
 
     // Since we override mousePressEvent to avoid QQuickAbstractButton from blocking

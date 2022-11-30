@@ -134,10 +134,6 @@ ApplicationWindow {
             required property int hasChildren
             required property int depth
 
-            TapHandler {
-                onTapped: treeView.toggleExpanded(row)
-            }
-
             Text {
                 id: indicator
                 visible: root.isTreeNode && root.hasChildren
