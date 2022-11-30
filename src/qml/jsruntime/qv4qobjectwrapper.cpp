@@ -2622,17 +2622,13 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
 
 bool QMetaObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 {
-    Q_ASSERT(a->as<QMetaObjectWrapper>());
-    QMetaObjectWrapper *aMetaObject = a->as<QMetaObjectWrapper>();
-    QMetaObjectWrapper *bMetaObject = b->as<QMetaObjectWrapper>();
-    if (!bMetaObject)
-        return true;
-    return aMetaObject->metaObject() == bMetaObject->metaObject();
+    const QMetaObjectWrapper *aMetaObject = a->as<QMetaObjectWrapper>();
+    Q_ASSERT(aMetaObject);
+    const QMetaObjectWrapper *bMetaObject = b->as<QMetaObjectWrapper>();
+    return bMetaObject && aMetaObject->metaObject() == bMetaObject->metaObject();
 }
 
 DEFINE_OBJECT_VTABLE(QMetaObjectWrapper);
-
-
 
 
 void Heap::QmlSignalHandler::init(QObject *object, int signalIndex)

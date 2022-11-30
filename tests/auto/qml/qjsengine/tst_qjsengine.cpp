@@ -1036,6 +1036,7 @@ void tst_QJSEngine::newQMetaObject() {
         QCOMPARE(metaObject.toQMetaObject(), &TestQMetaObject::staticMetaObject);
 
         QVERIFY(metaObject.strictlyEquals(engine.newQMetaObject<TestQMetaObject>()));
+        QVERIFY(!metaObject.strictlyEquals(engine.newArray()));
 
 
         {
