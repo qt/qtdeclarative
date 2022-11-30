@@ -2046,7 +2046,7 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
     }
 
     const QQmlMetaObject mo = QQmlMetaType::rawMetaObjectForType(metaType);
-    if (!mo.isNull()) {
+    if (!mo.isNull() && v.metaType().flags().testFlag(QMetaType::PointerToQObject)) {
         QObject *obj = QQmlMetaType::toQObject(v);
 
         if (obj != nullptr && !QQmlMetaObject::canConvert(obj, mo)) {

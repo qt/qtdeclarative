@@ -938,12 +938,38 @@ public:
     Q_INVOKABLE void method_overload2(QString a) { invoke(36); m_actuals << a; }
     Q_INVOKABLE void method_overload2() { invoke(37); }
 
+    Q_PROPERTY(QFont someFont READ someFont WRITE setSomeFont NOTIFY someFontChanged);
+    QFont someFont() { return m_someFont; }
+    void setSomeFont(const QFont &f)
+    {
+        if (f == m_someFont)
+            return;
+        m_someFont = f;
+        emit someFontChanged();
+    }
+    Q_INVOKABLE void method_gadget(QFont f)
+    {
+        invoke(40);
+        m_actuals << f;
+    }
+    Q_INVOKABLE void method_qobject(QObject *o)
+    {
+        invoke(41);
+        m_actuals << QVariant::fromValue(o);
+    }
+
 private:
     friend class MyInvokableBaseObject;
     void invoke(int idx) { if (m_invoked != -1) m_invokedError = true; m_invoked = idx;}
     int m_invoked;
     bool m_invokedError;
     QVariantList m_actuals;
+
+    QFont m_someFont;
+
+public:
+Q_SIGNALS:
+    void someFontChanged();
 };
 
 MyInvokableBaseObject::~MyInvokableBaseObject() {}
