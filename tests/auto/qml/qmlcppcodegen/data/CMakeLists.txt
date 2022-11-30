@@ -4,6 +4,7 @@ set(cpp_sources
     cppbaseclass.h
     dynamicmeta.h
     enumProperty.h
+    enumproblems.h
     gadgetwithenum.h
     invisible.h
     objectwithmethod.h
@@ -72,6 +73,7 @@ set(qml_files
     enumConversion.qml
     enumInvalid.qml
     enumLookup.qml
+    enumProblems.qml
     enumScope.qml
     enumsInOtherObject.qml
     enumsUser.qml

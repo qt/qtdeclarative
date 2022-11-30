@@ -278,10 +278,30 @@ public:
     {
         using namespace Qt::StringLiterals;
 
-        QString suffix;
-        if (m_semantics == AccessSemantics::Reference)
-            suffix = u" *"_s;
-        return m_internalName + suffix;
+        switch (m_semantics) {
+        case AccessSemantics::Reference:
+            return m_internalName + " *"_L1;
+        case AccessSemantics::Value:
+        case AccessSemantics::Sequence:
+            break;
+        case AccessSemantics::None:
+            // If we got a namespace, it might still be a regular type, exposed as namespace.
+            // We may need to travel the inheritance chain all the way up to QObject to
+            // figure this out, since all other types may be exposed the same way.
+            for (QQmlJSScope::ConstPtr base = baseType(); base; base = base->baseType()) {
+                switch (base->accessSemantics()) {
+                case AccessSemantics::Reference:
+                    return m_internalName + " *"_L1;
+                case AccessSemantics::Value:
+                case AccessSemantics::Sequence:
+                    return m_internalName;
+                case AccessSemantics::None:
+                    break;
+                }
+            }
+            break;
+        }
+        return m_internalName;
     }
 
     // This returns a more user readable version of internalName / baseTypeName
