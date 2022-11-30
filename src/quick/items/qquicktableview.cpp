@@ -714,7 +714,12 @@
 
     \note In order for a cell to be editable, the \l delegate needs an
     \l {TableView::editDelegate}{edit delegate} attached, and the model
-    needs to return \c Qt::ItemIsEditable from \l QAbstractItemModel::flags().
+    needs to return \c Qt::ItemIsEditable from \l QAbstractItemModel::flags()
+    (exemplified underneath).
+    If you still cannot edit a cell after activating one of the specified
+    triggers, you can, as a help, try to call \l edit() explicitly (e.g
+    from a Button/TapHandler). Doing so will print out a warning explaining
+    why the cell cannot be edited.
 
     \code
     Qt::ItemFlags QAbstractItemModelSubClass::flags(const QModelIndex &index) const override
