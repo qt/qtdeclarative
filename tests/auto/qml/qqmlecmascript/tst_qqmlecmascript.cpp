@@ -411,6 +411,7 @@ private slots:
     void functionAsDefaultArgument();
 
     void internalClassParentGc();
+    void methodTypeMismatch();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -3482,6 +3483,19 @@ void tst_qqmlecmascript::callQtInvokables()
        ==> overload 38 should win
     */
     QCOMPARE(o->invoked(), 38);
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_gadget(object.someFont)",
+                           QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 40);
+    QCOMPARE(o->actuals(), QVariantList() << QVariant(o->someFont()));
+
+    o->reset();
+    QVERIFY(EVALUATE_ERROR("object.method_gadget(123)"));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals(), QVariantList());
 }
 
 void tst_qqmlecmascript::resolveClashingProperties()
@@ -10257,6 +10271,69 @@ void tst_qqmlecmascript::internalClassParentGc()
     QScopedPointer root(component.create());
     QVERIFY(root);
     QCOMPARE(root->objectName(), "3");
+}
+
+void tst_qqmlecmascript::methodTypeMismatch()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("methodTypeMismatch.qml"));
+
+    QScopedPointer<MyInvokableObject> object(new MyInvokableObject());
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(o, qPrintable(component.errorString()));
+    o->setProperty("object", QVariant::fromValue(object.get()));
+
+    auto mo = o->metaObject();
+    QVERIFY(mo);
+
+    auto method = mo->method(mo->indexOfMethod("callWithFont()"));
+    QVERIFY(method.isValid());
+    QVERIFY(method.invoke(o.get()));
+    QCOMPARE(object->actuals(), QVariantList() << QVariant(object->someFont()));
+
+    QRegularExpression argumentConversionErrorMatcher("Could not convert argument 0");
+    QRegularExpression argumentConversionErrorMatcher2(".*/methodTypeMismatch.qml");
+    QRegularExpression typeErrorMatcher(
+            ".*/methodTypeMismatch\\.qml:..: TypeError: Passing incompatible arguments to C\\+\\+ "
+            "functions from JavaScript is not allowed.");
+
+    QTest::ignoreMessage(QtWarningMsg, argumentConversionErrorMatcher);
+    QTest::ignoreMessage(QtWarningMsg, argumentConversionErrorMatcher2);
+    QTest::ignoreMessage(QtWarningMsg, typeErrorMatcher);
+    object->reset();
+    method = mo->method(mo->indexOfMethod("callWithInt()"));
+    QVERIFY(method.isValid());
+    QVERIFY(method.invoke(o.get()));
+    QCOMPARE(object->actuals().size(),
+             0); // actuals() should not contain reinterpret_cast<QFont>(123) !!!
+
+    QTest::ignoreMessage(QtWarningMsg, argumentConversionErrorMatcher);
+    QTest::ignoreMessage(QtWarningMsg, argumentConversionErrorMatcher2);
+    QTest::ignoreMessage(QtWarningMsg, typeErrorMatcher);
+    object->reset();
+    method = mo->method(mo->indexOfMethod("callWithInt2()"));
+    QVERIFY(method.isValid());
+    QVERIFY(method.invoke(o.get()));
+    QCOMPARE(object->actuals().size(),
+             0); // actuals() should not contain reinterpret_cast<QFont>(0) !!!
+
+    QTest::ignoreMessage(QtWarningMsg, argumentConversionErrorMatcher);
+    QTest::ignoreMessage(QtWarningMsg, argumentConversionErrorMatcher2);
+    QTest::ignoreMessage(QtWarningMsg, typeErrorMatcher);
+    object->reset();
+    method = mo->method(mo->indexOfMethod("callWithNull()"));
+    QVERIFY(method.isValid());
+    QVERIFY(method.invoke(o.get()));
+    QCOMPARE(object->actuals().size(),
+             0); // actuals() should not contain reinterpret_cast<QFont>(nullptr) !!!
+
+    // make sure that null is still accepted by functions accepting, e.g., a QObject*!
+    object->reset();
+    method = mo->method(mo->indexOfMethod("callWithAllowedNull()"));
+    QVERIFY(method.isValid());
+    QVERIFY(method.invoke(o.get()));
+    QCOMPARE(object->actuals(), QVariantList() << QVariant::fromValue((QObject *)nullptr));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
