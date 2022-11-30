@@ -41,6 +41,9 @@ void QQmlJSShadowCheck::run(
 
 void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)
 {
+    if (!m_state.readsRegister(Accumulator))
+        return; // enum lookup cannot be shadowed.
+
     auto accumulatorIn = m_state.registers.find(Accumulator);
     if (accumulatorIn != m_state.registers.end())
         checkShadowing(accumulatorIn.value(), m_jsUnitGenerator->stringForIndex(nameIndex));
@@ -48,6 +51,9 @@ void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)
 
 void QQmlJSShadowCheck::generate_GetLookup(int index)
 {
+    if (!m_state.readsRegister(Accumulator))
+        return; // enum lookup cannot be shadowed.
+
     auto accumulatorIn = m_state.registers.find(Accumulator);
     if (accumulatorIn != m_state.registers.end())
         checkShadowing(accumulatorIn.value(), m_jsUnitGenerator->lookupName(index));

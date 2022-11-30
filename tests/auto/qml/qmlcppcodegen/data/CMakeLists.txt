@@ -6,6 +6,7 @@ set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     dynamicmeta.h
+    enumproblems.h
     gadgetwithenum.h
     invisible.h
     multiforeign.h
@@ -76,6 +77,7 @@ set(qml_files
     dynamicscene.qml
     enumInvalid.qml
     enumLookup.qml
+    enumProblems.qml
     enumScope.qml
     enumsInOtherObject.qml
     enumsUser.qml

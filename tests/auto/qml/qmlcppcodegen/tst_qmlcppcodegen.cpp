@@ -2,6 +2,7 @@
 
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
+#include <data/enumproblems.h>
 #include <data/objectwithmethod.h>
 
 #include <QtQml/private/qqmlengine_p.h>
@@ -149,6 +150,7 @@ private slots:
     void consoleObject();
     void multiForeign();
     void namespaceWithEnum();
+    void enumProblems();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2879,6 +2881,25 @@ void tst_QmlCppCodegen::namespaceWithEnum()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("i").toInt(), 2);
+}
+
+void tst_QmlCppCodegen::enumProblems()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumProblems.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> outer(c.create());
+    QVERIFY(!outer.isNull());
+    QObject *inner = outer->property("o").value<QObject *>();
+    QVERIFY(inner);
+
+    Foo *bar = inner->property("bar").value<Foo *>();
+    QVERIFY(bar);
+    QCOMPARE(bar->type(), Foo::Component);
+
+    Foo *fighter = inner->property("fighter").value<Foo *>();
+    QVERIFY(fighter);
+    QCOMPARE(fighter->type(), Foo::Fighter);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

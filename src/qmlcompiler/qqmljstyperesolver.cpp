@@ -996,6 +996,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
 {
     QQmlJSRegisterContent result;
 
+    // If we got a plain type reference we have to check the enums of the _scope_.
+    if (equals(type, metaObjectType()))
+        return {};
+
     if (equals(type, jsValueType())) {
         QQmlJSMetaProperty prop;
         prop.setPropertyName(name);
