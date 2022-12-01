@@ -76,6 +76,8 @@ public:
         };
         using PendingImportPtr = std::shared_ptr<PendingImport>;
 
+        void importQmldirScripts(const PendingImportPtr &import, const QQmlTypeLoaderQmldirContent &qmldir, const QUrl &qmldirUrl);
+
     protected:
         bool addImport(const QV4::CompiledData::Import *import, QQmlImports::ImportFlags,
                        QList<QQmlError> *errors);

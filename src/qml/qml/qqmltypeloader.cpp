@@ -479,6 +479,46 @@ bool QQmlTypeLoader::Blob::fetchQmldir(const QUrl &url, PendingImportPtr import,
     return true;
 }
 
+/*!
+ * \internal
+ * Import any qualified scripts of for \a import as listed in \a qmldir.
+ * Precondition is that \a import is actually qualified.
+ */
+void QQmlTypeLoader::Blob::importQmldirScripts(
+        const QQmlTypeLoader::Blob::PendingImportPtr &import,
+        const QQmlTypeLoaderQmldirContent &qmldir, const QUrl &qmldirUrl)
+{
+    const auto qmldirScripts = qmldir.scripts();
+    for (const QQmlDirParser::Script &script : qmldirScripts) {
+        const QUrl scriptUrl = qmldirUrl.resolved(QUrl(script.fileName));
+        QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
+        addDependency(blob.data());
+        scriptImported(blob, import->location, script.nameSpace, import->qualifier);
+    }
+}
+
+template<typename URL>
+void postProcessQmldir(
+        QQmlTypeLoader::Blob *self,
+        const QQmlTypeLoader::Blob::PendingImportPtr &import, const QString &qmldirFilePath,
+        const URL &qmldirUrl)
+{
+    const QQmlTypeLoaderQmldirContent qmldir = self->typeLoader()->qmldirContent(qmldirFilePath);
+    if (!import->qualifier.isEmpty())
+        self->importQmldirScripts(import, qmldir, QUrl(qmldirUrl));
+
+    if (qmldir.plugins().isEmpty()) {
+        // If the qmldir does not register a plugin, we might still have declaratively
+        // registered types (if we are dealing with an application instead of a library)
+        // We should use module name given in the qmldir rather than the one given by the
+        // import since the import may be a directory import.
+        auto module = QQmlMetaType::typeModule(qmldir.typeNamespace(), import->version);
+        if (!module)
+            QQmlMetaType::qmlRegisterModuleTypes(qmldir.typeNamespace());
+        // else: If the module already exists, the types must have been already registered
+    }
+}
+
 bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
     QString qmldirIdentifier = data->urlString();
@@ -504,20 +544,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
     // Release this reference at destruction
     m_qmldirs << data;
 
-    if (!import->qualifier.isEmpty()) {
-        // Does this library contain any qualified scripts?
-        QUrl libraryUrl(qmldirUrl);
-        const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirIdentifier);
-        const auto qmldirScripts = qmldir.scripts();
-        for (const QQmlDirParser::Script &script : qmldirScripts) {
-            QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
-            QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
-            addDependency(blob.data());
-
-            scriptImported(blob, import->location, script.nameSpace, import->qualifier);
-        }
-    }
-
+    postProcessQmldir(this, import, qmldirIdentifier, qmldirUrl);
     return true;
 }
 
@@ -563,9 +590,16 @@ bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImpo
     if (version.hasMajorVersion())
         import->version = version;
 
-    if (flags & QQmlImports::ImportIncomplete)
+    if (flags & QQmlImports::ImportIncomplete) {
         if (!fetchQmldir(qmldirUrl, import, 1, errors))
             return false;
+    } else {
+        const QString qmldirFilePath = QQmlFile::urlToLocalFileOrQrc(qmldirUrl);
+        if (!loadImportDependencies(import, qmldirFilePath, import->flags, errors))
+            return false;
+
+        postProcessQmldir(this, import, qmldirFilePath, qmldirUrl);
+    }
 
     return true;
 }
@@ -613,27 +647,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
             return false;
         }
 
-        const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirFilePath);
-        if (!import->qualifier.isEmpty()) {
-            // Does this library contain any qualified scripts?
-            QUrl libraryUrl(qmldirUrl);
-            const auto qmldirScripts = qmldir.scripts();
-            for (const QQmlDirParser::Script &script : qmldirScripts) {
-                QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
-                QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
-                addDependency(blob.data());
-
-                scriptImported(blob, import->location, script.nameSpace, import->qualifier);
-            }
-        }
-        if (!qmldir.plugins().size()) {
-            // If the qmldir does not register a plugin, we might still have declaratively
-            // registered types (if we are dealing with an application instead of a library)
-            auto module = QQmlMetaType::typeModule(import->uri, import->version);
-            // If the module already exists, the types must have been already registered
-            if (!module)
-                QQmlMetaType::qmlRegisterModuleTypes(import->uri);
-        }
+        postProcessQmldir(this, import, qmldirFilePath, qmldirUrl);
         return true;
     });
 

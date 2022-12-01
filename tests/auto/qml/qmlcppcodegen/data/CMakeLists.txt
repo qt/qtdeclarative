@@ -27,6 +27,8 @@ set(qml_files
     Cycle1.qml
     Cycle2.qml
     Cycle3.qml
+    CxxTypeFromDir.qml
+    CxxTypeFromImplicit.qml
     Dummy.qml
     Enums.qml
     Foozle.qml
@@ -177,6 +179,7 @@ set(qml_files
     unstoredUndefined.qml
     unusedAttached.qml
     urlString.qml
+    usingCxxTypesFromFileImports.qml
     valueTypeLists.qml
     valueTypeProperty.qml
     variantlist.qml

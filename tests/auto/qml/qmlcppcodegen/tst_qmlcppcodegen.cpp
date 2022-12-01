@@ -153,6 +153,7 @@ private slots:
     void enumProblems();
     void enumConversion();
     void ambiguousSignals();
+    void fileImportsContainCxxTypes();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2931,6 +2932,16 @@ void tst_QmlCppCodegen::ambiguousSignals()
     QCOMPARE(o->objectName(), u"12foo"_s);
     emit p->ambiguous();
     QCOMPARE(o->objectName(), u"9foo"_s);
+}
+
+void tst_QmlCppCodegen::fileImportsContainCxxTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/usingCxxTypesFromFileImports.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"horst guenther"_s);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
