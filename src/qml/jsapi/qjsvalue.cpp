@@ -633,20 +633,7 @@ QJSPrimitiveValue QJSValue::toPrimitive() const
         return *string;
 
     const QV4::Value val = QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this));
-    if (val.isUndefined())
-        return QJSPrimitiveUndefined();
-    if (val.isNull())
-        return QJSPrimitiveNull();
-    if (val.isBoolean())
-        return val.toBoolean();
-    if (val.isInteger())
-        return val.integerValue();
-    if (val.isDouble())
-        return val.doubleValue();
-
-    bool ok;
-    const QString result = val.toQString(&ok);
-    return ok ? QJSPrimitiveValue(result) : QJSPrimitiveValue(QJSPrimitiveUndefined());
+    return QV4::ExecutionEngine::createPrimitive(&val);
 }
 
 /*!

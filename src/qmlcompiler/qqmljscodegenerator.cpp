@@ -2942,8 +2942,20 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
         return u"qjsvalue_cast<"_s + castTargetName(to) + u">("_s + variable + u')';
     }
 
-    if (m_typeResolver->equals(to, jsPrimitiveType))
-        return u"QJSPrimitiveValue("_s + variable + u')';
+    if (m_typeResolver->equals(to, jsPrimitiveType)) {
+        // null and undefined have been handled above already
+        Q_ASSERT(!m_typeResolver->equals(from, m_typeResolver->nullType()));
+        Q_ASSERT(!m_typeResolver->equals(from, m_typeResolver->voidType()));
+
+        if (m_typeResolver->equals(from, m_typeResolver->boolType())
+                || m_typeResolver->equals(from, m_typeResolver->intType())
+                || m_typeResolver->equals(from, m_typeResolver->realType())
+                || m_typeResolver->equals(from, m_typeResolver->stringType())) {
+            return u"QJSPrimitiveValue("_s + variable + u')';
+        } else if (m_typeResolver->isNumeric(from)) {
+            return u"QJSPrimitiveValue(double("_s + variable + u"))"_s;
+        }
+    }
 
     if (m_typeResolver->equals(to, jsValueType))
         return u"aotContext->engine->toScriptValue("_s + variable + u')';
@@ -2998,7 +3010,7 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
 
     if (!retrieveFromPrimitive(from, u"x"_s).isEmpty()) {
         const QString retrieve = retrieveFromPrimitive(
-                    to, u"QJSPrimitiveValue("_s + variable + u')');
+                    to, conversion(from, m_typeResolver->jsPrimitiveType(), variable));
         if (!retrieve.isEmpty())
             return retrieve;
     }

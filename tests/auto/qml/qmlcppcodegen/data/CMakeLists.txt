@@ -5,6 +5,7 @@ set(cpp_sources
     ambiguous.h
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
+    druggeljug.h
     dynamicmeta.h
     enumproblems.h
     enumProperty.h
@@ -139,6 +140,7 @@ set(qml_files
     notNotString.qml
     nullAccess.qml
     nullComparison.qml
+    numbersInJsPrimitive.qml
     objectInVar.qml
     outOfBounds.qml
     overriddenMember.qml

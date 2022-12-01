@@ -156,6 +156,7 @@ private slots:
     void fileImportsContainCxxTypes();
     void lengthAccessArraySequenceCompat();
     void storeElementSideEffects();
+    void numbersInJsPrimitive();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2969,6 +2970,51 @@ void tst_QmlCppCodegen::lengthAccessArraySequenceCompat()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("length").toInt(), 100);
+}
+
+static QList<QString> convertToStrings(const QList<int> &ints)
+{
+    QList<QString> strings;
+    for (int i : ints)
+        strings.append(QString::number(i));
+    return strings;
+}
+
+void tst_QmlCppCodegen::numbersInJsPrimitive()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/numbersInJsPrimitive.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    const QList<int> zeroes  = {0, 0, 0, 0};
+    const QList<int> written = {39, 40, 41, 42};
+    const QList<int> stored  = {1334, 1335, 1336, 1337};
+    QStringList asStrings(4);
+
+    for (int i = 0; i < 4; ++i) {
+        QMetaObject::invokeMethod(
+                    o.data(), "readValueAsString",
+                    Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+    }
+    QCOMPARE(asStrings, convertToStrings(zeroes));
+
+    QMetaObject::invokeMethod(o.data(), "writeValues");
+    for (int i = 0; i < 4; ++i) {
+        QMetaObject::invokeMethod(
+                    o.data(), "readValueAsString",
+                    Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+    }
+    QCOMPARE(asStrings, convertToStrings(written));
+
+    QMetaObject::invokeMethod(o.data(), "storeValues");
+    for (int i = 0; i < 4; ++i) {
+        QMetaObject::invokeMethod(
+                    o.data(), "readValueAsString",
+                    Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+    }
+    QCOMPARE(asStrings, convertToStrings(stored));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
