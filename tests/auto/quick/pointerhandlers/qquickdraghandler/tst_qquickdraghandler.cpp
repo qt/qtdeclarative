@@ -141,7 +141,7 @@ void tst_DragHandler::touchDrag()
         dragHandler->setDragThreshold(dragThreshold);
     }
 
-    QSignalSpy translationChangedSpy(dragHandler, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy(dragHandler, &QQuickDragHandler::translationChanged);
     QSignalSpy centroidChangedSpy(dragHandler, SIGNAL(centroidChanged()));
     QSignalSpy xDeltaSpy(dragHandler->xAxis(), &QQuickDragAxis::activeValueChanged);
 
@@ -189,6 +189,8 @@ void tst_DragHandler::touchDrag()
     QCOMPARE(dragHandler->activeTranslation().x(), dragThreshold + 20);
     QCOMPARE(dragHandler->persistentTranslation().y(), 0);
     QCOMPARE(dragHandler->activeTranslation().y(), 0);
+    QCOMPARE(translationChangedSpy.size(), 1);
+    QCOMPARE(translationChangedSpy.first().first().value<QVector2D>(), QVector2D(dragThreshold + 20, 0));
     QVERIFY(dragHandler->centroid().velocity().x() > 0);
     QCOMPARE(centroidChangedSpy.size(), 4);
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
@@ -285,7 +287,7 @@ void tst_DragHandler::mouseDrag()
     QVERIFY(dragHandler);
     dragHandler->setAcceptedButtons(acceptedButtons); // QTBUG-76875
 
-    QSignalSpy translationChangedSpy(dragHandler, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy(dragHandler, &QQuickDragHandler::translationChanged);
     QSignalSpy centroidChangedSpy(dragHandler, SIGNAL(centroidChanged()));
     QSignalSpy xDeltaSpy(dragHandler->xAxis(), &QQuickDragAxis::activeValueChanged);
 
@@ -352,9 +354,11 @@ void tst_DragHandler::mouseDrag()
     QTest::mouseRelease(window, static_cast<Qt::MouseButton>(int(dragButton)), Qt::NoModifier, p1);
     QTRY_VERIFY(!dragHandler->active());
     QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
-    if (shouldDrag)
-        QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.size(), shouldDrag ? 1 : 0);
+    if (shouldDrag) {
+        QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
+        QCOMPARE(translationChangedSpy.first().first().value<QVector2D>(), QVector2D(dragThreshold + 20, 0));
+    }
     QCOMPARE(xDeltaSpy.size(), shouldDrag ? 1 : 0);
     QCOMPARE(centroidChangedSpy.size(), shouldDrag ? 5 : 0);
 #if QT_CONFIG(cursor)
@@ -390,7 +394,7 @@ void tst_DragHandler::mouseDragThreshold()
         dragHandler->setDragThreshold(dragThreshold);
     }
 
-    QSignalSpy translationChangedSpy(dragHandler, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy(dragHandler, &QQuickDragHandler::translationChanged);
     QSignalSpy centroidChangedSpy(dragHandler, SIGNAL(centroidChanged()));
     QSignalSpy xDeltaSpy(dragHandler->xAxis(), &QQuickDragAxis::activeValueChanged);
 
@@ -416,6 +420,8 @@ void tst_DragHandler::mouseDragThreshold()
     QTest::mouseMove(window, p1);
     QTRY_VERIFY(dragHandler->active());
     QCOMPARE(translationChangedSpy.size(), dragThreshold ? 0 : 1);
+    if (!dragThreshold)
+        QCOMPARE(translationChangedSpy.first().first().value<QVector2D>(), QVector2D(2, 0));
     QCOMPARE(xDeltaSpy.size(), dragThreshold ? 0 : 1);
     QCOMPARE(centroidChangedSpy.size(), 3);
 #if QT_DEPRECATED_SINCE(6, 2)
@@ -442,6 +448,9 @@ QT_WARNING_POP
 #endif
     QCOMPARE(dragHandler->activeTranslation().x(), dragThreshold + (dragThreshold ? 20 : 21));
     QCOMPARE(dragHandler->activeTranslation().y(), 0.0);
+    QCOMPARE(translationChangedSpy.size(), dragThreshold ? 1 : 2);
+    QCOMPARE(translationChangedSpy.first().first().value<QVector2D>(),
+             QVector2D(dragThreshold ? dragThreshold + 20 : 2, 0));
     QVERIFY(dragHandler->centroid().velocity().x() > 0);
     QCOMPARE(centroidChangedSpy.size(), 4);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
@@ -586,7 +595,7 @@ void tst_DragHandler::touchDragMulti()
     QVERIFY(ball1);
     QQuickDragHandler *dragHandler1 = ball1->findChild<QQuickDragHandler*>();
     QVERIFY(dragHandler1);
-    QSignalSpy translationChangedSpy1(dragHandler1, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy1(dragHandler1, &QQuickDragHandler::translationChanged);
     QSignalSpy centroidChangedSpy1(dragHandler1, SIGNAL(centroidChanged()));
     QSignalSpy xDeltaSpy1(dragHandler1->xAxis(), &QQuickDragAxis::activeValueChanged);
 
@@ -594,7 +603,7 @@ void tst_DragHandler::touchDragMulti()
     QVERIFY(ball2);
     QQuickDragHandler *dragHandler2 = ball2->findChild<QQuickDragHandler*>();
     QVERIFY(dragHandler2);
-    QSignalSpy translationChangedSpy2(dragHandler2, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy2(dragHandler2, &QQuickDragHandler::translationChanged);
     QSignalSpy centroidChangedSpy2(dragHandler1, SIGNAL(centroidChanged()));
     QSignalSpy yDeltaSpy2(dragHandler2->yAxis(), &QQuickDragAxis::activeValueChanged);
 
@@ -702,6 +711,10 @@ QT_WARNING_POP
     QCOMPARE(xDeltaSpy1.first().first().toReal(), dragThreshold + 20);
     QCOMPARE(yDeltaSpy2.size(), 1);
     QCOMPARE(yDeltaSpy2.first().first().toReal(), dragThreshold + 20);
+    QCOMPARE(translationChangedSpy1.size(), 1);
+    QCOMPARE(translationChangedSpy1.first().first().value<QVector2D>(), QVector2D(dragThreshold + 20, 0));
+    QCOMPARE(translationChangedSpy2.size(), 1);
+    QCOMPARE(translationChangedSpy2.first().first().value<QVector2D>(), QVector2D(0, dragThreshold + 20));
     touchSeq.release(1, p1, window).stationary(2).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!dragHandler1->active());

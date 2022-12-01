@@ -97,6 +97,78 @@ void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
 }
 
 /*!
+    \readonly
+    \qmlproperty real QtQuick::PinchHandler::activeScale
+
+    The scale factor while the pinch gesture is being performed.
+    It is 1.0 when the gesture begins, increases as the touchpoints are spread
+    apart, and decreases as the touchpoints are brought together.
+    If \l target is not null, its \l {Item::scale}{scale} will be automatically
+    multiplied by this value.
+    Otherwise, bindings can be used to do arbitrary things with this value.
+
+    \sa QtQuick::PinchHandler::scaleAxis.activeValue
+*/
+
+void QQuickPinchHandler::setActiveScale(qreal scale)
+{
+    if (scale == activeScale())
+        return;
+
+    qreal delta = scale / m_scaleAxis.activeValue();
+    m_scaleAxis.updateValue(scale, m_scaleAxis.m_startValue * scale, delta);
+    emit scaleChanged(delta);
+}
+
+/*!
+    \qmlsignal QtQuick::PinchHandler::scaleChanged(qreal delta)
+
+    The \c scaleChanged signal is emitted when \l activeScale (and therefore
+    \l persistentScale) changes. The \a delta value gives the multiplicative
+    change in scale. For example, if the user moves fingers to change the pinch
+    distance so that \c activeScale changes from 2 to 2.5, \c
+    scaleChanged(1.25) will be emitted. You can use that to incrementally
+    change the scale of an item:
+
+    \snippet pointerHandlers/pinchHandlerScaleOrRotationChanged.qml 0
+
+    \note If you set the \l persistentScale property directly, \c delta is \c 1.
+*/
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::PinchHandler::scale
+    \deprecated [6.5] Use persistentScale
+*/
+
+/*!
+    \readonly
+    \qmlproperty real QtQuick::PinchHandler::persistentScale
+
+    The scale factor that will automatically be set on the \l target if it is not null.
+    Otherwise, bindings can be used to do arbitrary things with this value.
+    While the pinch gesture is being performed, it is continuously multiplied by
+    \l activeScale; after the gesture ends, it stays the same; and when the next
+    pinch gesture begins, it begins to be multiplied by activeScale again.
+
+    It's possible to set this property, as a way of synchronizing the basis
+    scale with a scale that was set in some other way, for example by another
+    handler. If you set this property directly, \c activeScale does not change,
+    and \c scaleChanged(1) is emitted.
+
+    \sa QtQuick::PinchHandler::scaleAxis.persistentValue
+*/
+
+void QQuickPinchHandler::setPersistentScale(qreal rot)
+{
+    if (rot == persistentScale())
+        return;
+
+    m_scaleAxis.updateValue(m_scaleAxis.activeValue(), rot);
+    emit scaleChanged(1);
+}
+
+/*!
     \qmlproperty real QtQuick::PinchHandler::minimumRotation
 
     The minimum acceptable \l {Item::rotation}{rotation} to be applied
@@ -124,6 +196,136 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
 
     m_rotationAxis.setMaximum(maximumRotation);
     emit maximumRotationChanged();
+}
+
+/*!
+    \qmlsignal QtQuick::PinchHandler::rotationChanged(qreal delta)
+
+    The \c rotationChanged signal is emitted when \l activeRotation (and
+    therefore \l persistentRotation) changes. The \a delta value gives the
+    additive change in rotation. For example, if the user moves fingers to
+    change the pinch distance so that \c activeRotation changes from 10 to 30
+    degrees, \c rotationChanged(20) will be emitted. You can use that to
+    incrementally change the rotation of an item:
+
+    \snippet pointerHandlers/pinchHandlerScaleOrRotationChanged.qml 0
+
+    \note If you set the \l persistentRotation property directly, \c delta is \c 0.
+*/
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::PinchHandler::rotation
+    \deprecated [6.5] Use activeRotation
+*/
+
+/*!
+    \readonly
+    \qmlproperty real QtQuick::PinchHandler::activeRotation
+
+    The rotation of the pinch gesture in degrees, with positive values clockwise.
+    It is \c 0 when the gesture begins. If \l target is not null, this will be
+    automatically added to its \l {Item::rotation}{rotation}. Otherwise,
+    bindings can be used to do arbitrary things with this value.
+
+    \sa QtQuick::PinchHandler::rotationAxis.activeValue
+*/
+
+void QQuickPinchHandler::setActiveRotation(qreal rot)
+{
+    if (rot == activeRotation())
+        return;
+
+    qreal delta = rot - m_rotationAxis.activeValue();
+    m_rotationAxis.updateValue(rot, m_rotationAxis.m_startValue + rot, delta);
+    emit rotationChanged(delta);
+}
+
+/*!
+    \readonly
+    \qmlproperty real QtQuick::PinchHandler::persistentRotation
+
+    The rotation to be applied to the \l target if it is not null.
+    Otherwise, bindings can be used to do arbitrary things with this value.
+    While the pinch gesture is being performed, \l activeRotation is continuously
+    added; after the gesture ends, it stays the same; and when the next
+    pinch gesture begins, it begins to be modified by activeRotation again.
+
+    \sa QtQuick::PinchHandler::rotationAxis.persistentValue
+
+    It's possible to set this property, as a way of synchronizing the basis
+    rotation with a rotation that was set in some other way, for example by
+    another handler. If you set this property directly, \c activeRotation does
+    not change, and \c rotationChanged(0) is emitted.
+*/
+
+void QQuickPinchHandler::setPersistentRotation(qreal rot)
+{
+    if (rot == persistentRotation())
+        return;
+
+    m_rotationAxis.updateValue(m_rotationAxis.activeValue(), rot);
+    emit rotationChanged(0);
+}
+
+/*!
+    \qmlsignal QtQuick::PinchHandler::translationChanged(QVector2D delta)
+
+    The \c translationChanged signal is emitted when \l activeTranslation (and
+    therefore \l persistentTranslation) changes. The \a delta vector gives the
+    change in translation. You can use that to incrementally change the
+    position of an item:
+
+    \snippet pointerHandlers/pinchHandlerNullTarget.qml 0
+
+    \note If you set the \l persistentTranslation property directly,
+    \c delta is \c {0, 0}.
+*/
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::PinchHandler::translation
+    \deprecated [6.5] Use activeTranslation
+*/
+/*!
+    \readonly
+    \qmlproperty QPointF QtQuick::PinchHandler::activeTranslation
+
+    The translation of the cluster of points while the pinch gesture is being
+    performed. It is \c {0, 0} when the gesture begins, and increases as the
+    event point(s) are dragged downward and to the right. After the gesture
+    ends, it stays the same; and when the next pinch gesture begins, it is
+    reset to \c {0, 0} again.
+
+    \note On some touchpads, such as on a \macos trackpad, native gestures do
+    not generate any translation values, and this property stays at \c (0, 0).
+*/
+
+/*!
+    \qmlproperty QPointF QtQuick::PinchHandler::persistentTranslation
+
+    The translation to be applied to the \l target if it is not \c null.
+    Otherwise, bindings can be used to do arbitrary things with this value.
+    While the pinch gesture is being performed, \l activeTranslation is
+    continuously added to it; after the gesture ends, it stays the same.
+
+    It's possible to set this property, as a way of synchronizing the basis
+    translation with a translation that was set in some other way, for example
+    by another handler. If you set this property directly, \c activeTranslation
+    does not change, and \c translationChanged({0, 0}) is emitted.
+
+    \note On some touchpads, such as on a \macos trackpad, native gestures do
+    not generate any translation values, and this property stays at \c (0, 0).
+*/
+
+void QQuickPinchHandler::setPersistentTranslation(const QPointF &trans)
+{
+    if (trans == persistentTranslation())
+        return;
+
+    m_xAxis.updateValue(m_xAxis.activeValue(), trans.x());
+    m_yAxis.updateValue(m_yAxis.activeValue(), trans.y());
+    emit translationChanged({});
 }
 
 bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
@@ -221,7 +423,7 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \c maximum is the maximum acceptable scale.
     If \c enabled is true, scaling is allowed.
     \c activeValue is the same as \l {QtQuick::PinchHandler::activeScale}.
-    \c persistentValue is the same as \l {QtQuick::PinchHandler::scale}.
+    \c persistentValue is the same as \l {QtQuick::PinchHandler::persistentScale}.
 
     The \c activeValueChanged signal is emitted when \c activeValue (and therefore
     \c persistentValue) changes, to provide the multiplier for the incremental change.
@@ -249,8 +451,8 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \c minimum is the minimum acceptable rotation.
     \c maximum is the maximum acceptable rotation.
     If \c enabled is true, rotation is allowed.
-    \c activeValue is the same as \l {QtQuick::PinchHandler::rotation}.
-    \c persistentValue holds the accumulated value across multiple gestures.
+    \c activeValue is the same as \l {QtQuick::PinchHandler::activeRotation}.
+    \c persistentValue is the same as \l {QtQuick::PinchHandler::persistentRotation}.
 
     The \c activeValueChanged signal is emitted when \c activeValue (and therefore
     \c persistentValue) changes, to provide the increment by which it changed.
@@ -324,11 +526,10 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
             emit updated();
             return;
         case Qt::ZoomNativeGesture:
-            m_scaleAxis.updateValue(1 + gesture->value(), m_scaleAxis.m_startValue * (1 + gesture->value()));
+            setActiveScale(1 + gesture->value());
             break;
         case Qt::RotateNativeGesture:
-            m_rotationAxis.updateValue(m_rotationAxis.m_activeValue + gesture->value(),
-                                       m_rotationAxis.m_startValue + m_rotationAxis.m_activeValue + gesture->value());
+            setActiveRotation(m_rotationAxis.activeValue() + gesture->value());
             break;
         default:
             // Nothing of interest (which is unexpected, because wantsPointerEvent() should have returned false)
@@ -461,17 +662,14 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
             activeScale = dist / m_startDistance;
             activeScale = qBound(m_scaleAxis.minimum() / m_scaleAxis.m_startValue, activeScale,
                                  m_scaleAxis.maximum() / m_scaleAxis.m_startValue);
-            m_scaleAxis.updateValue(activeScale, m_scaleAxis.m_startValue * activeScale,
-                                    activeScale / m_scaleAxis.activeValue());
+            setActiveScale(activeScale);
         }
 
         // 2. rotate
         if (m_rotationAxis.enabled()) {
             QVector<PointData> newAngles = angles(centroid().scenePosition());
             const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
-            m_rotationAxis.updateValue(m_rotationAxis.m_activeValue + angleDelta,
-                                       m_rotationAxis.m_startValue + m_rotationAxis.m_activeValue + angleDelta,
-                                       angleDelta);
+            setActiveRotation(m_rotationAxis.m_activeValue + angleDelta);
             m_startAngles = std::move(newAngles);
         }
 
@@ -484,10 +682,10 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
         const QPointF centroidParentPos = target()->parentItem()->mapFromScene(centroid().scenePosition());
         // 3. Drag/translate
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(centroid().sceneGrabPosition());
-        auto activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
+        auto activeTranslation = centroidParentPos - centroidStartParentPos;
         // apply rotation + scaling around the centroid - then apply translation.
         QPointF pos = QQuickItemPrivate::get(target())->adjustedPosForTransform(centroidParentPos,
-                                                                                startPos(), activeTranslation,
+                                                                                startPos(), QVector2D(activeTranslation),
                                                                                 m_scaleAxis.m_startValue,
                                                                                 m_scaleAxis.persistentValue() / m_scaleAxis.m_startValue,
                                                                                 m_rotationAxis.m_startValue,
@@ -502,18 +700,22 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
         else
             pos.ry() -= qreal(activeTranslation.y());
 
-        m_xAxis.updateValue(activeTranslation.x(), pos.x(), activeTranslation.x() - m_xAxis.activeValue());
-        m_yAxis.updateValue(activeTranslation.y(), pos.y(), activeTranslation.y() - m_yAxis.activeValue());
+        const QVector2D delta(activeTranslation.x() - m_xAxis.activeValue(),
+                              activeTranslation.y() - m_yAxis.activeValue());
+        m_xAxis.updateValue(activeTranslation.x(), pos.x(), delta.x());
+        m_yAxis.updateValue(activeTranslation.y(), pos.y(), delta.y());
+        emit translationChanged(delta);
         target()->setPosition(QPointF(m_xAxis.persistentValue(), m_yAxis.persistentValue()));
         target()->setRotation(m_rotationAxis.persistentValue());
         target()->setScale(m_scaleAxis.persistentValue());
     } else {
         auto activeTranslation = centroid().scenePosition() - centroid().scenePressPosition();
         auto accumulated = QPointF(m_xAxis.m_startValue, m_yAxis.m_startValue) + activeTranslation;
-        m_xAxis.updateValue(activeTranslation.x(), accumulated.x(),
-                            activeTranslation.x() - m_xAxis.activeValue());
-        m_yAxis.updateValue(activeTranslation.y(), accumulated.y(),
-                            activeTranslation.y() - m_yAxis.activeValue());
+        const QVector2D delta(activeTranslation.x() - m_xAxis.activeValue(),
+                              activeTranslation.y() - m_yAxis.activeValue());
+        m_xAxis.updateValue(activeTranslation.x(), accumulated.x(), delta.x());
+        m_yAxis.updateValue(activeTranslation.y(), accumulated.y(), delta.y());
+        emit translationChanged(delta);
     }
 
     qCDebug(lcPinchHandler) << "centroid" << centroid().scenePressPosition() << "->"  << centroid().scenePosition()
@@ -536,50 +738,6 @@ QPointF QQuickPinchHandler::startPos()
 
     A point exactly in the middle of the currently-pressed touch points.
     The \l target will be rotated around this point.
-*/
-
-/*!
-    \readonly
-    \qmlproperty real QtQuick::PinchHandler::scale
-
-    The scale factor that will automatically be set on the \l target if it is not null.
-    Otherwise, bindings can be used to do arbitrary things with this value.
-    While the pinch gesture is being performed, it is continuously multiplied by
-    \l activeScale; after the gesture ends, it stays the same; and when the next
-    pinch gesture begins, it begins to be multiplied by activeScale again.
-*/
-
-/*!
-    \readonly
-    \qmlproperty real QtQuick::PinchHandler::activeScale
-
-    The scale factor while the pinch gesture is being performed.
-    It is 1.0 when the gesture begins, increases as the touchpoints are spread
-    apart, and decreases as the touchpoints are brought together.
-    If \l target is not null, its \l {Item::scale}{scale} will be automatically
-    multiplied by this value.
-    Otherwise, bindings can be used to do arbitrary things with this value.
-*/
-
-/*!
-    \readonly
-    \qmlproperty real QtQuick::PinchHandler::rotation
-
-    The rotation of the pinch gesture in degrees, with positive values clockwise.
-    It is 0 when the gesture begins. If \l target is not null, this will be
-    automatically applied to its \l {Item::rotation}{rotation}. Otherwise,
-    bindings can be used to do arbitrary things with this value.
-*/
-
-/*!
-    \readonly
-    \qmlproperty QVector2D QtQuick::PinchHandler::translation
-
-    The translation of the gesture \l centroid. It is \c (0, 0) when the
-    gesture begins.
-
-    \note On some touchpads, such as on a \macos trackpad, native gestures do
-    not generate any translation values, and this property stays at \c (0, 0).
 */
 
 QT_END_NAMESPACE

@@ -273,7 +273,7 @@ void tst_FlickableInterop::touchDragSlider()
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);
     QSignalSpy tappedSpy(knob->parent(), SIGNAL(tapped()));
-    QSignalSpy translationChangedSpy(drag, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy(drag, &QQuickDragHandler::translationChanged);
 
     // Drag the slider in the allowed (vertical) direction
     tappedSpy.clear();
@@ -353,7 +353,7 @@ void tst_FlickableInterop::mouseDragSlider()
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);
     QSignalSpy tappedSpy(knob->parent(), SIGNAL(tapped()));
-    QSignalSpy translationChangedSpy(drag, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy(drag, &QQuickDragHandler::translationChanged);
 
     // Drag the slider
     tappedSpy.clear();
@@ -411,7 +411,7 @@ void tst_FlickableInterop::touchDragFlickableBehindSlider()
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);
     QSignalSpy tappedSpy(knob->parent(), SIGNAL(tapped()));
-    QSignalSpy translationChangedSpy(drag, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy(drag, &QQuickDragHandler::translationChanged);
 
     // Button is no longer pressed if touchpoint goes beyond dragThreshold,
     // because Flickable steals the grab
@@ -457,7 +457,7 @@ void tst_FlickableInterop::mouseDragFlickableBehindSlider()
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);
     QSignalSpy tappedSpy(knob->parent(), SIGNAL(tapped()));
-    QSignalSpy translationChangedSpy(drag, SIGNAL(translationChanged()));
+    QSignalSpy translationChangedSpy(drag, &QQuickDragHandler::translationChanged);
 
     // Button is no longer pressed if touchpoint goes beyond dragThreshold,
     // because Flickable steals the grab

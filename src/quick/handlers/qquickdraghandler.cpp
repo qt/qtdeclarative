@@ -290,7 +290,7 @@ void QQuickDragHandler::setPersistentTranslation(const QVector2D &trans)
 
     m_xAxis.updateValue(m_xAxis.activeValue(), trans.x());
     m_yAxis.updateValue(m_yAxis.activeValue(), trans.y());
-    emit translationChanged();
+    emit translationChanged({});
 }
 
 void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
@@ -304,7 +304,7 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
 
     qCDebug(lcDragHandler) << "translation: delta" << delta
                            << "active" << trans << "accumulated" << persistentTranslation();
-    emit translationChanged();
+    emit translationChanged(delta);
 }
 
 /*!

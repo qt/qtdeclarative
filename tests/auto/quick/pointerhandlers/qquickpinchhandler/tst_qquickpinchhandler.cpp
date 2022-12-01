@@ -225,6 +225,7 @@ void tst_QQuickPinchHandler::scale()
     QQuickItem *blackRect = (hasTarget ? pinchHandler->target() : pinchHandler->parentItem());
     QVERIFY(blackRect != nullptr);
     QSignalSpy grabChangedSpy(pinchHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition, QEventPoint)));
+    QSignalSpy scaleChangedSpy(pinchHandler, &QQuickPinchHandler::scaleChanged);
     if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
 
     QPoint p0(80, 80);
@@ -263,6 +264,7 @@ void tst_QQuickPinchHandler::scale()
 
     // move the same point even further and observe the change in scale
     for (int i = 0; i < 2; ++i) {
+        qreal lastScale = pinchHandler->activeScale();
         p1 += pd;
         pinchSequence.stationary(0).move(1, p1, &window).commit();
         QQuickTouchUtils::flush(&window);
@@ -270,13 +272,18 @@ void tst_QQuickPinchHandler::scale()
         line.setP2(p1);
         qreal expectedScale = line.length() / startLength;
         qCDebug(lcPointerTests) << "pinchScale" << root->property("pinchScale").toReal()
-                                << "expected" << expectedScale << "; target scale" << blackRect->scale();
+                                << "expected" << expectedScale << "; target scale" << blackRect->scale()
+                                << "increments" << scaleChangedSpy.size()
+                                << "multiplier" << scaleChangedSpy.last().first().toReal();
         QVERIFY(qFloatDistance(root->property("pinchScale").toReal(), expectedScale) < 10);
         QVERIFY(qFloatDistance(blackRect->scale(), expectedScale) < 10);
         QCOMPARE(pinchHandler->scale(), root->property("pinchScale").toReal());
         QCOMPARE(pinchHandler->scale(), pinchHandler->activeScale()); // in sync for the first gesture
         QCOMPARE(pinchHandler->scaleAxis()->persistentValue(), pinchHandler->activeScale());
         QCOMPARE(pinchHandler->scaleAxis()->activeValue(), pinchHandler->activeScale());
+        const qreal expectedIncrement = pinchHandler->activeScale() / lastScale;
+        QCOMPARE(scaleChangedSpy.size(), i + 1);
+        QCOMPARE(scaleChangedSpy.last().first().toReal(), expectedIncrement);
         QPointF expectedCentroid = p0 + (p1 - p0) / 2;
         QCOMPARE(pinchHandler->centroid().scenePosition(), expectedCentroid);
     }
@@ -315,15 +322,21 @@ void tst_QQuickPinchHandler::scale()
         line.setP2(p1);
         qreal expectedActiveScale = line.length() / startLength;
         qCDebug(lcPointerTests) << i << "activeScale" << pinchHandler->activeScale()
-                                << "expected" << expectedActiveScale << "; scale" << pinchHandler->scale();
+                                << "expected" << expectedActiveScale << "; scale" << pinchHandler->scale()
+                                << "increments" << scaleChangedSpy.size()
+                                << "multiplier" << scaleChangedSpy.last().first().toReal();
         QVERIFY(qFloatDistance(pinchHandler->activeScale(), expectedActiveScale) < 10);
         QCOMPARE(pinchHandler->scale(), root->property("pinchScale").toReal());
         QCOMPARE(pinchHandler->scaleAxis()->persistentValue(), root->property("pinchScale").toReal());
         QCOMPARE_NE(pinchHandler->scale(), pinchHandler->activeScale()); // not in sync anymore
         QCOMPARE(pinchHandler->scaleAxis()->activeValue(), pinchHandler->activeScale());
+        const qreal expectedIncrement = pinchHandler->scale() / lastScale;
+        QCOMPARE(scaleChangedSpy.size(), i + 3);
+        QCOMPARE(scaleChangedSpy.last().first().toReal(), expectedIncrement);
     }
 
     // scale beyond maximumScale
+    lastScale = pinchHandler->activeScale();
     p1 = QPoint(310, 310);
     pinchSequence.stationary(0).move(1, p1, &window).commit();
     QQuickTouchUtils::flush(&window);
@@ -331,6 +344,9 @@ void tst_QQuickPinchHandler::scale()
     QCOMPARE(blackRect->scale(), qreal(4));
     QCOMPARE(pinchHandler->scale(), qreal(4)); // limited by maximumScale
     QCOMPARE(pinchHandler->scaleAxis()->persistentValue(), 4);
+    const qreal expectedIncrement = pinchHandler->activeScale() / lastScale;
+    QCOMPARE(scaleChangedSpy.size(), 5);
+    QCOMPARE(scaleChangedSpy.last().first().toReal(), expectedIncrement);
     pinchSequence.release(0, p0, &window).release(1, p1, &window).commit();
     QQuickTouchUtils::flush(&window);
     QCOMPARE(pinchHandler->active(), false);
@@ -530,6 +546,7 @@ void tst_QQuickPinchHandler::pan()
 
     QQuickPinchHandler *pinchHandler = window->rootObject()->findChild<QQuickPinchHandler*>("pinchHandler");
     QVERIFY(pinchHandler != nullptr);
+    QSignalSpy translationChangedSpy(pinchHandler, &QQuickPinchHandler::translationChanged);
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root != nullptr);
@@ -578,6 +595,8 @@ void tst_QQuickPinchHandler::pan()
         // blackrect starts at 50,50
         QCOMPARE(blackRect->x(), 50.0);
         QCOMPARE(blackRect->y(), 50.0);
+        QCOMPARE(translationChangedSpy.size(), 1);
+        QCOMPARE(translationChangedSpy.first().first().value<QVector2D>(), QVector2D(0, 0));
 
         p0 += QPoint(10, 0);
         p1 += QPoint(10, 0);
@@ -586,6 +605,8 @@ void tst_QQuickPinchHandler::pan()
         QCOMPARE(pinchHandler->centroid().scenePosition(), QPointF(90 + dragThreshold + 11, 90));
         QCOMPARE(blackRect->x(), 60.0);
         QCOMPARE(blackRect->y(), 50.0);
+        QCOMPARE(translationChangedSpy.size(), 2);
+        QCOMPARE(translationChangedSpy.last().first().value<QVector2D>(), QVector2D(10, 0));
 
         p0 += QPoint(0, 10);
         p1 += QPoint(0, 10);
@@ -594,6 +615,8 @@ void tst_QQuickPinchHandler::pan()
         QCOMPARE(pinchHandler->centroid().scenePosition(), QPointF(90 + dragThreshold + 11, 90 + 10));
         QCOMPARE(blackRect->x(), 60.0);
         QCOMPARE(blackRect->y(), 60.0);
+        QCOMPARE(translationChangedSpy.size(), 3);
+        QCOMPARE(translationChangedSpy.last().first().value<QVector2D>(), QVector2D(0, 10));
 
         p0 += QPoint(10, 10);
         p1 += QPoint(10, 10);
@@ -603,6 +626,8 @@ void tst_QQuickPinchHandler::pan()
         QCOMPARE(pinchHandler->centroid().scenePosition(), QPointF(90 + dragThreshold + 21, 90 + 20));
         QCOMPARE(blackRect->x(), 70.0);
         QCOMPARE(blackRect->y(), 70.0);
+        QCOMPARE(translationChangedSpy.size(), 4);
+        QCOMPARE(translationChangedSpy.last().first().value<QVector2D>(), QVector2D(10, 10));
     }
 
     // pan x beyond bound
@@ -613,6 +638,8 @@ void tst_QQuickPinchHandler::pan()
 
     QCOMPARE(blackRect->x(), 140.0);
     QCOMPARE(blackRect->y(), 170.0);
+    QCOMPARE(translationChangedSpy.size(), 5);
+    QCOMPARE(translationChangedSpy.last().first().value<QVector2D>(), QVector2D(100, 100));
 
     QTest::touchEvent(window, touchscreen).release(0, p0, window).release(1, p1, window);
     QQuickTouchUtils::flush(window);

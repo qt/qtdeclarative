@@ -28,45 +28,73 @@ using namespace Qt::StringLiterals;
 class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
+
+    Q_PROPERTY(QQuickDragAxis *scaleAxis READ scaleAxis CONSTANT)
     Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged)
     Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged)
+#if QT_DEPRECATED_SINCE(6, 5)
+    Q_PROPERTY(qreal scale READ scale NOTIFY updated)
+#endif
+    Q_PROPERTY(qreal activeScale READ activeScale NOTIFY scaleChanged)
+    Q_PROPERTY(qreal persistentScale READ persistentScale WRITE setPersistentScale NOTIFY scaleChanged)
+
+    Q_PROPERTY(QQuickDragAxis *rotationAxis READ rotationAxis CONSTANT)
     Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged)
     Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
-    Q_PROPERTY(qreal scale READ scale NOTIFY updated)
-    Q_PROPERTY(qreal activeScale READ activeScale NOTIFY updated)
+#if QT_DEPRECATED_SINCE(6, 5)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
-    Q_PROPERTY(QVector2D translation READ translation NOTIFY updated)
+#endif
+    Q_PROPERTY(qreal activeRotation READ activeRotation NOTIFY rotationChanged)
+    Q_PROPERTY(qreal persistentRotation READ persistentRotation WRITE setPersistentRotation NOTIFY rotationChanged)
+
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
-    Q_PROPERTY(QQuickDragAxis * scaleAxis READ scaleAxis CONSTANT)
-    Q_PROPERTY(QQuickDragAxis * rotationAxis READ rotationAxis CONSTANT)
+#if QT_DEPRECATED_SINCE(6, 5)
+    Q_PROPERTY(QVector2D translation READ translation NOTIFY updated)
+#endif
+    Q_PROPERTY(QPointF activeTranslation READ activeTranslation NOTIFY translationChanged REVISION(6, 5))
+    Q_PROPERTY(QPointF persistentTranslation READ persistentTranslation WRITE setPersistentTranslation NOTIFY translationChanged REVISION(6, 5))
+
     QML_NAMED_ELEMENT(PinchHandler)
     QML_ADDED_IN_VERSION(2, 12)
 
 public:
     explicit QQuickPinchHandler(QQuickItem *parent = nullptr);
 
-    qreal minimumScale() const { return m_scaleAxis.minimum(); }
-    void setMinimumScale(qreal minimumScale);
-
-    qreal maximumScale() const { return m_scaleAxis.maximum(); }
-    void setMaximumScale(qreal maximumScale);
-
-    qreal minimumRotation() const { return m_rotationAxis.minimum(); }
-    void setMinimumRotation(qreal minimumRotation);
-
-    qreal maximumRotation() const { return m_rotationAxis.maximum(); }
-    void setMaximumRotation(qreal maximumRotation);
-
-    QVector2D translation() const { return QVector2D(QPointF(m_xAxis.activeValue(), m_yAxis.activeValue())); }
-    qreal scale() const { return m_scaleAxis.m_accumulatedValue; }
-    qreal activeScale() const { return m_scaleAxis.m_activeValue; }
-    qreal rotation() const { return m_rotationAxis.m_accumulatedValue; }
-
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
+#if QT_DEPRECATED_SINCE(6, 5)
+    QVector2D translation() const { return QVector2D(activeTranslation()); }
+#endif
+    QPointF activeTranslation() const { return QPointF(m_xAxis.activeValue(), m_yAxis.activeValue()); }
+    QPointF persistentTranslation() const { return QPointF(m_xAxis.persistentValue(), m_yAxis.persistentValue()); }
+    void setPersistentTranslation(const QPointF &trans);
+
     QQuickDragAxis *scaleAxis() { return &m_scaleAxis; }
+    qreal minimumScale() const { return m_scaleAxis.minimum(); }
+    void setMinimumScale(qreal minimumScale);
+    qreal maximumScale() const { return m_scaleAxis.maximum(); }
+    void setMaximumScale(qreal maximumScale);
+#if QT_DEPRECATED_SINCE(6, 5)
+    qreal scale() const { return persistentScale(); }
+#endif
+    qreal activeScale() const { return m_scaleAxis.activeValue(); }
+    void setActiveScale(qreal scale);
+    qreal persistentScale() const { return m_scaleAxis.persistentValue(); }
+    void setPersistentScale(qreal scale);
+
     QQuickDragAxis *rotationAxis() { return &m_rotationAxis; }
+    qreal minimumRotation() const { return m_rotationAxis.minimum(); }
+    void setMinimumRotation(qreal minimumRotation);
+    qreal maximumRotation() const { return m_rotationAxis.maximum(); }
+    void setMaximumRotation(qreal maximumRotation);
+#if QT_DEPRECATED_SINCE(6, 5)
+    qreal rotation() const { return activeRotation(); }
+#endif
+    qreal activeRotation() const { return m_rotationAxis.activeValue(); }
+    void setActiveRotation(qreal rot);
+    qreal persistentRotation() const { return m_rotationAxis.persistentValue(); }
+    void setPersistentRotation(qreal rot);
 
 Q_SIGNALS:
     void minimumScaleChanged();
@@ -74,6 +102,9 @@ Q_SIGNALS:
     void minimumRotationChanged();
     void maximumRotationChanged();
     void updated();
+    Q_REVISION(6, 5) void scaleChanged(qreal delta);
+    Q_REVISION(6, 5) void rotationChanged(qreal delta);
+    Q_REVISION(6, 5) void translationChanged(QVector2D delta);
 
 protected:
     bool wantsPointerEvent(QPointerEvent *event) override;

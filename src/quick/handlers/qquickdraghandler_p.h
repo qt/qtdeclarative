@@ -65,7 +65,7 @@ public:
     void enforceConstraints();
 
 Q_SIGNALS:
-    void translationChanged();
+    void translationChanged(QVector2D delta);
     Q_REVISION(2, 14) void snapModeChanged();
 
 protected:
