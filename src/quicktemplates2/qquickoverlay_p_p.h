@@ -23,9 +23,9 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickPopup;
-class QQuickDrawer;
 
-class QQuickOverlayPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_AUTOTEST_EXPORT QQuickOverlayPrivate : public QQuickItemPrivate,
+                                               public QQuickItemChangeListener
 {
 public:
     Q_DECLARE_PUBLIC(QQuickOverlay)
@@ -51,7 +51,7 @@ public:
     void setMouseGrabberPopup(QQuickPopup *popup);
 
     QList<QQuickPopup *> stackingOrderPopups() const;
-    QList<QQuickDrawer *> stackingOrderDrawers() const;
+    QList<QQuickPopup *> stackingOrderDrawers() const;
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
 
@@ -60,7 +60,9 @@ public:
     QQmlComponent *modal = nullptr;
     QQmlComponent *modeless = nullptr;
     QList<QQuickPopup *> allPopups;
-    QList<QQuickDrawer *> allDrawers;
+    // Store drawers as QQuickPopup instead of QQuickDrawer because they're no longer
+    // QQuickDrawer by the time removePopup is called.
+    QList<QQuickPopup *> allDrawers;
     QPointer<QQuickPopup> mouseGrabberPopup;
 };
 

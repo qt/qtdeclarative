@@ -92,6 +92,8 @@ private slots:
 
     void topEdgeScreenEdge();
 
+    void bookkeepingInOverlay();
+
     void touchOutsideOverlay();
 
 private:
@@ -1364,6 +1366,31 @@ void tst_QQuickDrawer::topEdgeScreenEdge()
 
     QVERIFY(QMetaObject::invokeMethod(drawer, "open"));
     QTRY_COMPARE(drawer->position(), 1.0);
+}
+
+void tst_QQuickDrawer::bookkeepingInOverlay()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("window.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(!root.isNull(), qPrintable(component.errorString()));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(root.get());
+    QVERIFY(window);
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+#ifdef QT_BUILD_INTERNAL
+    QQuickOverlayPrivate *overlayD = QQuickOverlayPrivate::get(overlay);
+    QVERIFY(!overlayD->stackingOrderDrawers().isEmpty());
+#endif
+
+    delete drawer;
+#ifdef QT_BUILD_INTERNAL
+    QVERIFY(overlayD->stackingOrderDrawers().isEmpty());
+#endif
 }
 
 void tst_QQuickDrawer::touchOutsideOverlay() // QTBUG-103811
