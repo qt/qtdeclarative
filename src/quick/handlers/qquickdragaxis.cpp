@@ -9,10 +9,8 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcDragAxis, "qt.quick.pointer.dragaxis")
 
-QQuickDragAxis::QQuickDragAxis(QQuickPointerHandler *handler, const QString &propertyName,
-                               bool boundedActiveValue, qreal initValue)
-  : QObject(handler), m_accumulatedValue(initValue), m_propertyName(propertyName),
-    m_boundedActiveValue(boundedActiveValue)
+QQuickDragAxis::QQuickDragAxis(QQuickPointerHandler *handler, const QString &propertyName, qreal initValue)
+  : QObject(handler), m_accumulatedValue(initValue), m_propertyName(propertyName)
 {
 }
 
@@ -56,7 +54,7 @@ void QQuickDragAxis::updateValue(qreal activeValue, qreal accumulatedValue, qrea
     if (!m_enabled)
         return;
 
-    m_activeValue = m_boundedActiveValue ? qBound(m_minimum, activeValue, m_maximum) : activeValue;
+    m_activeValue = activeValue;
     m_accumulatedValue = qBound(m_minimum, accumulatedValue, m_maximum);
     qCDebug(lcDragAxis) << parent() << m_propertyName << "values: active" << activeValue
                         << "accumulated" << m_accumulatedValue << "delta" << delta;

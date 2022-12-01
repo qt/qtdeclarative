@@ -116,8 +116,8 @@ protected:
 private:
     QQuickDragAxis m_xAxis = {this, u"x"_s};
     QQuickDragAxis m_yAxis = {this, u"y"_s};
-    QQuickDragAxis m_scaleAxis = {this, u"scale"_s, true, 1};
-    QQuickDragAxis m_rotationAxis = {this, u"rotation"_s, true};
+    QQuickDragAxis m_scaleAxis = {this, u"scale"_s, 1};
+    QQuickDragAxis m_rotationAxis = {this, u"rotation"_s};
 
     // internal
     qreal m_startDistance = 0;

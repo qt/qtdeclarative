@@ -403,8 +403,12 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
         QVERIFY(withinBounds(1.163, pinchHandler->scale(), 1.183));
         // should not rotate
         QCOMPARE(root->rotation(), 0);
-        QCOMPARE(pinchHandler->rotation(), 0);
-        QCOMPARE(pinchHandler->rotationAxis()->activeValue(), 0);
+        // rotation should be 0, but could be something tiny
+        qCDebug(lcPointerTests) << "pinch scale expected zero:" << pinchHandler->rotation()
+                                << pinchHandler->rotationAxis()->activeValue()
+                                << pinchHandler->rotationAxis()->persistentValue();
+        QCOMPARE_LE(qAbs(pinchHandler->rotation()), 0.001);
+        QCOMPARE(pinchHandler->rotationAxis()->activeValue(), pinchHandler->rotation());
         QCOMPARE(pinchHandler->rotationAxis()->persistentValue(), 0);
 
         for (int i = 0; i < 5;++i) {
@@ -489,8 +493,8 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     QVERIFY(qAbs(target->position().x() - expectedPos.x()) < 0.001);
     QVERIFY(qAbs(target->position().y() - expectedPos.y()) < 0.001);
     QCOMPARE(pinchHandler->scale(), expectedScale);
-    QCOMPARE(pinchHandler->activeScale(), expectedScale);
-    QCOMPARE(pinchHandler->scaleAxis()->activeValue(), expectedScale);
+    QCOMPARE(pinchHandler->activeScale(), scale);
+    QCOMPARE(pinchHandler->scaleAxis()->activeValue(), scale);
     QCOMPARE(pinchHandler->translation(), QVector2D());
     QCOMPARE(pinchHandler->rotation(), 0);
     QCOMPARE(pinchHandler->rotationAxis()->persistentValue(), 0);

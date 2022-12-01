@@ -38,7 +38,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragAxis : public QObject
 
 public:
     QQuickDragAxis(QQuickPointerHandler *handler, const QString &propertyName,
-                   bool boundedActiveValue = false, qreal initValue = 0);
+                   qreal initValue = 0);
 
     qreal minimum() const { return m_minimum; }
     void setMinimum(qreal minimum);
@@ -73,7 +73,6 @@ private:
     qreal m_accumulatedValue = 0;
     QString m_propertyName;
     bool m_enabled = true;
-    bool m_boundedActiveValue = false;
 
     friend class QQuickDragHandler;
     friend class QQuickPinchHandler;
