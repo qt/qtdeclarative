@@ -43,8 +43,8 @@ Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
     A native platform file dialog is currently available on the following platforms:
 
     \list
-    \li iOS
     \li Android
+    \li iOS
     \li Linux (when running with the GTK+ platform theme)
     \li macOS
     \li Windows

@@ -51,6 +51,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
     A native platform folder dialog is currently available on the following platforms:
 
     \list
+    \li Android
     \li iOS
     \li Linux (when running with the GTK+ platform theme)
     \li macOS

@@ -64,8 +64,9 @@ QT_BEGIN_NAMESPACE
     A native platform message dialog is currently available on the following platforms:
 
     \list
-    \li iOS
     \li Android
+    \li iOS
+    \li macOS
     \endlist
 
     \input includes/widgets.qdocinc 1

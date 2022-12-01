@@ -51,6 +51,7 @@ using namespace Qt::StringLiterals;
     A native platform file dialog is currently available on the following platforms:
 
     \list
+    \li Android
     \li iOS
     \li Linux (when running with the GTK+ platform theme)
     \li macOS
