@@ -2622,6 +2622,9 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     } else if (metaType == QMetaType::fromType<QJSValue>()) {
         QJSValuePrivate::setValue(reinterpret_cast<QJSValue*>(data), value.asReturnedValue());
         return true;
+    } else if (metaType == QMetaType::fromType<QJSPrimitiveValue>()) {
+        *reinterpret_cast<QJSPrimitiveValue *>(data) = createPrimitive(&value);
+        return true;
     } else if (!isPointer) {
         if (QQmlValueTypeProvider::createValueType(value, metaType, data))
             return true;
@@ -2632,6 +2635,21 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         if (result.metaType() == metaType) {
             metaType.destruct(data);
             metaType.construct(data, result.constData());
+            return true;
+        }
+    }
+
+    if (const QV4::ArrayObject *array = value.as<ArrayObject>()) {
+        QSequentialIterable iterable;
+        if (QMetaType::view(
+                    metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable)) {
+            const QMetaType elementMetaType = iterable.valueMetaType();
+            QVariant element(elementMetaType);
+            for (qsizetype i = 0, end = array->getLength(); i < end; ++i) {
+                if (!metaTypeFromJS(array->get(i), elementMetaType, element.data()))
+                    element = QVariant(elementMetaType);
+                iterable.addValue(element, QSequentialIterable::AtEnd);
+            }
             return true;
         }
     }

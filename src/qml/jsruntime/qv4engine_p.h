@@ -746,8 +746,27 @@ public:
             QMetaType type, const void *ptr,
             Heap::Object *parent = nullptr, int property = -1, uint flags = 0);
 
+
     static void setMaxCallDepth(int maxCallDepth) { s_maxCallDepth = maxCallDepth; }
     static int maxCallDepth() { return s_maxCallDepth; }
+
+    template<typename Value>
+    static QJSPrimitiveValue createPrimitive(const Value &v)
+    {
+        if (v->isUndefined())
+            return QJSPrimitiveValue(QJSPrimitiveUndefined());
+        if (v->isNull())
+            return QJSPrimitiveValue(QJSPrimitiveNull());
+        if (v->isBoolean())
+            return QJSPrimitiveValue(v->toBoolean());
+        if (v->isInteger())
+            return QJSPrimitiveValue(v->integerValue());
+        if (v->isDouble())
+            return QJSPrimitiveValue(v->doubleValue());
+        bool ok;
+        const QString result = v->toQString(&ok);
+        return ok ? QJSPrimitiveValue(result) : QJSPrimitiveValue(QJSPrimitiveUndefined());
+    }
 
 private:
     template<int Frames>
