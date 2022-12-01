@@ -6909,6 +6909,13 @@ void tst_QQuickTableView::editAndCloseEditor()
     const QModelIndex index1 = tableView->modelIndex(cell1);
     const QModelIndex index2 = tableView->modelIndex(cell2);
 
+    const auto cellItem1 = tableView->itemAtCell(tableView->cellAtIndex(index1));
+    const auto cellItem2 = tableView->itemAtCell(tableView->cellAtIndex(index2));
+    QVERIFY(cellItem1);
+    QVERIFY(cellItem2);
+    QCOMPARE(cellItem1->property("editing").toBool(), false);
+    QCOMPARE(cellItem2->property("editing").toBool(), false);
+
     // Edit cell 1
     tableView->edit(index1);
     QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
@@ -6916,6 +6923,9 @@ void tst_QQuickTableView::editAndCloseEditor()
     QVERIFY(editItem1);
     QVERIFY(editItem1->hasActiveFocus());
     QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+    QCOMPARE(editItem1->parentItem(), cellItem1);
+    QCOMPARE(editItem1->property("editing").toBool(), true);
+    QCOMPARE(cellItem1->property("editing").toBool(), true);
 
     // Edit cell 2
     tableView->edit(index2);
@@ -6924,12 +6934,17 @@ void tst_QQuickTableView::editAndCloseEditor()
     QVERIFY(editItem2);
     QVERIFY(editItem2->hasActiveFocus());
     QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index2);
+    QCOMPARE(editItem2->parentItem(), cellItem2);
+    QCOMPARE(editItem2->property("editing").toBool(), true);
+    QCOMPARE(cellItem2->property("editing").toBool(), true);
+    QCOMPARE(cellItem1->property("editing").toBool(), false);
 
     // Close the editor
     tableView->closeEditor();
     QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
     QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
     QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QCOMPARE(cellItem2->property("editing").toBool(), false);
 }
 
 void tst_QQuickTableView::editWarning_noEditDelegate()
@@ -7094,6 +7109,7 @@ void tst_QQuickTableView::requiredPropertiesOnEditDelegate()
 
     QCOMPARE(textInput->property("current").toBool(), true);
     QCOMPARE(textInput->property("selected").toBool(), false);
+    QCOMPARE(textInput->property("editing").toBool(), true);
     selectionModel.select(index1, QItemSelectionModel::Select);
     QCOMPARE(textInput->property("selected").toBool(), true);
     selectionModel.setCurrentIndex(index2, QItemSelectionModel::Select);

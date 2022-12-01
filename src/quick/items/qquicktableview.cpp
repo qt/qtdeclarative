@@ -179,6 +179,11 @@
     }
     \endcode
 
+    If the \l {TableView::delegate}{TableView delegate} has a property
+    \c {required property bool editing} defined, it will be set to \c true
+    for the delegate being edited. See the documentation for
+    \l editDelegate for an example on how to use it.
+
     \sa TableView::editDelegate, TableView::commit, editTriggers, edit(), closeEditor()
 
     \section1 Overlays and underlays
@@ -1296,8 +1301,8 @@
     \qmlattachedproperty Component QtQuick::TableView::editDelegate
 
     This attached property holds the edit delegate. It's instantiated
-    when editing begins, and will be resized and placed at the same location
-    as the cell it edits. It supports the same required properties as the
+    when editing begins, and parented to the delegate it edits. It
+    supports the same required properties as the
     \l {\l delegate}{TableView delegate}, including \c index, \c row and \c column.
     Properties of the model, like \c display and \c edit, are also available
     (depending on the \l {QAbstractItemModel::roleNames()}{role names} exposed
@@ -1321,6 +1326,17 @@
     (e.g if the user presses Qt.Key_Escape), the signal will not be emitted.
     In any case will \l {Component::destruction}{destruction()} be emitted in the end.
 
+    While the edit delegate is showing, the cell underneath will still be visible, and
+    therefore shine through if the edit delegate is translucent, or otherwise doesn't
+    cover the whole cell. If this is not wanted, you can either let the root item
+    of the edit delegate be a solid \l Rectangle, or hide some of the items
+    inside the \l {TableView::delegate}{TableView delegate.}. The latter can be done
+    by defining a property \c {required property bool editing} inside it, that you
+    bind to the \l visible property of some of the child items.
+    The following snippet shows how to do that:
+
+    \snippet qml/tableview/editdelegate.qml 1
+
     When the edit delegate is instantiated, it will call \l QQuickItem::forceActiveFocus()
     on the first item inside the delegate that has \l QQuickItem::activeFocusOnTab set to
     \c true. You can override this by calling \l QQuickItem::forceActiveFocus() explicitly
@@ -1341,6 +1357,7 @@ static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEd
 static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
 static const char* kRequiredProperty_selected = "selected";
 static const char* kRequiredProperty_current = "current";
+static const char* kRequiredProperty_editing = "editing";
 
 QQuickTableViewPrivate::EdgeRange::EdgeRange()
     : startIndex(kEdgeIndexNotSet)
@@ -1376,6 +1393,16 @@ QQuickTableViewPrivate::QQuickTableViewPrivate()
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
 {
+    if (editItem) {
+        QQuickItem *cellItem = editItem->parentItem();
+        Q_ASSERT(cellItem);
+        editModel->dispose(editItem);
+        tableModel->release(cellItem, QQmlInstanceModel::NotReusable);
+    }
+
+    if (editModel)
+        delete editModel;
+
     for (auto *fxTableItem : loadedItems) {
         if (auto item = fxTableItem->item) {
             if (fxTableItem->ownItem)
@@ -1385,11 +1412,6 @@ QQuickTableViewPrivate::~QQuickTableViewPrivate()
         }
         delete fxTableItem;
     }
-
-    if (editItem)
-        editModel->dispose(editItem);
-    if (editModel)
-        delete editModel;
 
     if (tableModel)
         delete tableModel;
@@ -3797,6 +3819,7 @@ bool QQuickTableViewPrivate::updateTable()
         return !loadRequest.isActive();
 
     loadAndUnloadVisibleEdges();
+    updateEditItem();
 
     return !loadRequest.isActive();
 }
@@ -3912,8 +3935,10 @@ void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
         const bool selected = selectedInSelectionModel(cell);
         const bool current = currentInSelectionModel(cell);
         QQuickItem *item = loadedTableItem(cell)->item;
+        const bool editing = editIndex == q_func()->modelIndex(cell);
         setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), cellIndex, item, false);
         setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), cellIndex, item, false);
+        setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(editing), cellIndex, item, false);
     }
 }
 
@@ -3991,6 +4016,7 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     const bool selected = selectedInSelectionModel(cell);
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
+    setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), modelIndex, item, true);
 
     if (auto attached = getAttachedObject(object))
         attached->setView(q);
@@ -4011,6 +4037,7 @@ void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
     const bool selected = selectedInSelectionModel(cell);
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, false);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
+    // Note: the edit item will never be reused, so no reason to set kRequiredProperty_editing
 
     if (auto item = qobject_cast<QQuickItem*>(object))
         QQuickItemPrivate::get(item)->setCulled(false);
@@ -5045,25 +5072,23 @@ void QQuickTableViewPrivate::updateCursor()
 void QQuickTableViewPrivate::updateEditItem()
 {
     Q_Q(QQuickTableView);
-    Q_ASSERT(editIndex.isValid());
-    Q_ASSERT(editItem);
+
+    if (!editItem)
+        return;
 
     const QPoint cell = q->cellAtIndex(editIndex);
     auto cellItem = q->itemAtCell(cell);
-
-    if (cellItem) {
-        editItem->setX(cellItem->x());
-        editItem->setY(cellItem->y());
-        editItem->setWidth(cellItem->width());
-        editItem->setHeight(cellItem->height());
-        // Temporarily hide the tableview delegate so that it
-        // doesn't shine through if the edit delegate is semi-transparent.
-        QQuickItemPrivate::get(cellItem)->setCulled(true);
-    } else {
-        // 'Hide' the edit item, without losing active focus. Simply
-        // culling it will not work, since some platforms (macOS) will
-        // overlay the focus item with a focus rect.
-        editItem->setX(q->contentWidth() + 10000);
+    if (!cellItem) {
+        // The delegate item that is being edited has left the viewport. But since we
+        // added an extra reference to it when editing began, the delegate item has
+        // not been unloaded! It's therefore still on the content item (outside the
+        // viewport), but its position will no longer be updated until the row and column
+        // it's a part of enters the viewport again. To avoid glitches related to the
+        // item showing up on wrong places (e.g after resizing a column in front of it),
+        // we move it far out of the viewport. This way it will be "hidden", but continue
+        // to have edit focus. When the row and column that it's a part of are eventually
+        // flicked back in again, a relayout will move it back to the correct place.
+        editItem->parentItem()->setX(-editItem->width() - 10000);
     }
 }
 
@@ -5965,7 +5990,16 @@ void QQuickTableView::edit(const QModelIndex &index)
             // early on, so that we can use it in setRequiredProperty.
             d->editIndex = modelIndex(d->cellAtModelIndex(serializedModelIndex));
             d->editItem = qmlobject_cast<QQuickItem*>(object);
+            if (!d->editItem)
+                return;
+            // Initialize required properties
             d->initItemCallback(serializedModelIndex, object);
+            const auto cellItem = itemAtCell(cellAtIndex(d->editIndex));
+            Q_ASSERT(cellItem);
+            d->editItem->setParentItem(cellItem);
+            // Move the cell item to the top of the other items, to ensure
+            // that e.g a focus frame ends up on top of all the cells
+            cellItem->setZ(2);
         });
     }
 
@@ -6002,8 +6036,12 @@ void QQuickTableView::edit(const QModelIndex &index)
         return;
     }
 
-    d->editItem->setZ(2);
-    d->updateEditItem();
+    // Reference the cell item once more, so that it doesn't
+    // get reused or deleted if it leaves the viewport.
+    d->model->object(cellIndex, QQmlIncubator::Synchronous);
+
+    // Inform the delegate, and the edit delegate, that they're being edited
+    d->setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(true), cellIndex, cellItem, false);
 
     // Find the first child inside the delegate that wants focus. But
     // we only transfer focus if the edit item didn't already set
@@ -6031,16 +6069,19 @@ void QQuickTableView::closeEditor()
     if (!d->editItem)
         return;
 
+    QQuickItem *cellItem = d->editItem->parentItem();
     d->editModel->release(d->editItem, QQmlInstanceModel::NotReusable);
     d->editItem = nullptr;
+
+    cellItem->setZ(1);
+    const int cellIndex = d->modelIndexToCellIndex(d->editIndex);
+    d->setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), cellIndex, cellItem, false);
+    // Remove the extra reference we sat on the cell item from edit()
+    d->model->release(cellItem, QQmlInstanceModel::NotReusable);
 
     if (d->editIndex.isValid()) {
         // Note: we can have an invalid editIndex, even when we
         // have an editItem, if the model has changed (e.g been reset)!
-        const QPoint cell = cellAtIndex(d->editIndex);
-        if (auto cellItem = itemAtCell(cell))
-            QQuickItemPrivate::get(cellItem)->setCulled(false);
-
         d->editIndex = QModelIndex();
     }
 }

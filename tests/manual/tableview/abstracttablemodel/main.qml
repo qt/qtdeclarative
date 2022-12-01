@@ -529,6 +529,7 @@ ApplicationWindow {
 
             required property bool selected
             required property bool current
+            required property bool editing
 
             Rectangle {
                 x: positionSubRect.x
@@ -541,23 +542,18 @@ ApplicationWindow {
 
             Label {
                 anchors.centerIn: parent
-                visible: drawText.checked
+                visible: drawText.checked && !editing
                 text: model.display
             }
 
             TableView.editDelegate: TextField {
+                anchors.fill: parent
                 horizontalAlignment: TextInput.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
                 text: display
 
-                TableView.onCommit: {
-                    let modelIndex = TableView.view.modelIndex(column, row)
-                    TableView.view.model.setData(modelIndex, text, Qt.DisplayRole)
-                }
-
-                Component.onCompleted: {
-                    selectAll()
-                }
+                TableView.onCommit: display = text
+                Component.onCompleted: selectAll()
            }
         }
     }

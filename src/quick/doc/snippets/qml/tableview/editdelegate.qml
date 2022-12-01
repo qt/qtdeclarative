@@ -36,17 +36,60 @@ Window {
             }
 
             TableView.editDelegate: TextField {
+                anchors.fill: parent
                 text: display
                 horizontalAlignment: TextInput.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
                 Component.onCompleted: selectAll()
 
                 TableView.onCommit: {
-                    let index = TableView.view.modelIndex(column, row)
-                    TableView.view.model.setData(index, text, Qt.DisplayRole)
+                    display = text
+                    // display = text is short-hand for:
+                    // let index = TableView.view.modelIndex(column, row)
+                    // TableView.view.model.setData(index, text, Qt.DisplayRole)
                 }
             }
         }
     }
 //![0]
+
+    TableView {
+        id: tableView1
+        anchors.fill: parent
+        clip: true
+
+        model: TableModel {
+            TableModelColumn { display: "name" }
+            rows: [ { "name": "Harry" }, { "name": "Hedwig" } ]
+        }
+
+        selectionModel: ItemSelectionModel {}
+
+//![1]
+        delegate: Rectangle {
+            implicitWidth: 100
+            implicitHeight: 50
+
+            required property bool editing
+
+            Text {
+                id: textField
+                anchors.fill: parent
+                anchors.margins: 5
+                text: display
+                visible: !editing
+            }
+
+            TableView.editDelegate: TextField {
+                x: textField.x
+                y: textField.y
+                width: textField.width
+                height: textField.height
+                text: display
+                TableView.onCommit: display = text
+            }
+        }
+//![1]
+    }
+
 }

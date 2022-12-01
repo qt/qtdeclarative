@@ -24,6 +24,8 @@ Item {
             implicitWidth: 100
             implicitHeight: 50
 
+            required property bool editing
+
             Text {
                 anchors.centerIn: parent
                 text: display
@@ -31,6 +33,7 @@ Item {
 
             TableView.editDelegate: TextInput {
                 id: editRoot
+                anchors.fill: parent
                 text: display
                 horizontalAlignment: TextInput.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
@@ -38,6 +41,7 @@ Item {
 
                 required property bool current
                 required property bool selected
+                required property bool editing
 
                 Component.onCompleted: {
                     tableView.editItem = editRoot
