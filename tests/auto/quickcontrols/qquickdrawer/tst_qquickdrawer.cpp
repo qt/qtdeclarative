@@ -17,7 +17,7 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
-#include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
@@ -89,6 +89,8 @@ private slots:
     void slider();
 
     void topEdgeScreenEdge();
+
+    void bookkeepingInOverlay();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice;
@@ -1360,6 +1362,31 @@ void tst_QQuickDrawer::topEdgeScreenEdge()
 
     QVERIFY(QMetaObject::invokeMethod(drawer, "open"));
     QTRY_COMPARE(drawer->position(), 1.0);
+}
+
+void tst_QQuickDrawer::bookkeepingInOverlay()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("window.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(!root.isNull(), qPrintable(component.errorString()));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(root.get());
+    QVERIFY(window);
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+#ifdef QT_BUILD_INTERNAL
+    QQuickOverlayPrivate *overlayD = QQuickOverlayPrivate::get(overlay);
+    QVERIFY(!overlayD->stackingOrderDrawers().isEmpty());
+#endif
+
+    delete drawer;
+#ifdef QT_BUILD_INTERNAL
+    QVERIFY(overlayD->stackingOrderDrawers().isEmpty());
+#endif
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)
