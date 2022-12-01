@@ -18,7 +18,7 @@ project.
 
 \preliminarycmakecommand
 
-\include cmake-qml-qt-finalize-target-warning.cmake
+\include cmake-qml-qt-finalize-target-warning.qdocinc
 
 \section1 Synopsis
 
