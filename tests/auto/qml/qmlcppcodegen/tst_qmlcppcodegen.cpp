@@ -151,6 +151,7 @@ private slots:
     void multiForeign();
     void namespaceWithEnum();
     void enumProblems();
+    void enumConversion();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2901,6 +2902,19 @@ void tst_QmlCppCodegen::enumProblems()
     QVERIFY(fighter);
     QCOMPARE(fighter->type(), Foo::Fighter);
 }
+
+void tst_QmlCppCodegen::enumConversion()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumConversion.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("test").toInt(), 0x04);
+    QCOMPARE(o->property("test_1").toBool(), true);
+};
 
 QTEST_MAIN(tst_QmlCppCodegen)
 
