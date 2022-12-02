@@ -578,8 +578,13 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (d->pen && d->pen->isValid()) {
         rectangle->setPenColor(d->pen->color());
-        rectangle->setPenWidth(d->pen->width());
-        rectangle->setAligned(d->pen->pixelAligned());
+        qreal penWidth = d->pen->width();
+        if (d->pen->pixelAligned()) {
+            qreal dpr = window() ? window()->effectiveDevicePixelRatio() : 1.0;
+            penWidth = qRound(penWidth * dpr) / dpr; // Ensures integer width after dpr scaling
+        }
+        rectangle->setPenWidth(penWidth);
+        rectangle->setAligned(false); // width rounding already done, so the Node should not do it
     } else {
         rectangle->setPenWidth(0);
     }
