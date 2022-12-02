@@ -57,33 +57,23 @@ void Object::simplifyRequiredProperties() {
     }
 }
 
-bool Parameter::init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName,
-                     const QString &typeName)
+bool Parameter::initType(
+        QV4::CompiledData::ParameterType *paramType,
+        const QString &typeName, int typeNameIndex,
+        QV4::CompiledData::ParameterType::Flag listFlag)
 {
-    return init(this, stringGenerator, stringGenerator->registerString(parameterName), stringGenerator->registerString(typeName));
-}
-
-bool Parameter::init(QV4::CompiledData::Parameter *param, const QV4::Compiler::JSUnitGenerator *stringGenerator,
-                     int parameterNameIndex, int typeNameIndex)
-{
-    param->nameIndex = parameterNameIndex;
-    return initType(&param->type, stringGenerator, typeNameIndex);
-}
-
-bool Parameter::initType(QV4::CompiledData::ParameterType *paramType, const QV4::Compiler::JSUnitGenerator *stringGenerator, int typeNameIndex)
-{
-    const QString typeName = stringGenerator->stringForIndex(typeNameIndex);
     auto builtinType = stringToBuiltinType(typeName);
     if (builtinType == QV4::CompiledData::BuiltinType::InvalidBuiltin) {
         if (typeName.isEmpty()) {
-            paramType->set(false, 0);
+            paramType->set(listFlag, 0);
             return false;
         }
         Q_ASSERT(quint32(typeNameIndex) < (1u << 31));
-        paramType->set(false, typeNameIndex);
+        paramType->set(listFlag, typeNameIndex);
     } else {
         Q_ASSERT(quint32(builtinType) < (1u << 31));
-        paramType->set(true, static_cast<quint32>(builtinType));
+        paramType->set(listFlag | QV4::CompiledData::ParameterType::Builtin,
+                       static_cast<quint32>(builtinType));
     }
     return true;
 }
@@ -982,17 +972,18 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 
         QQmlJS::AST::UiParameterList *p = node->parameters;
         while (p) {
-            const QString memberType = asString(p->type);
-
-            if (memberType.isEmpty()) {
+            if (!p->type) {
                 recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected parameter type"));
                 return false;
             }
 
             Parameter *param = New<Parameter>();
-            if (!param->init(jsGenerator, p->name.toString(), memberType)) {
+            param->nameIndex = registerString(p->name.toString());
+            if (!Parameter::initType(
+                        &param->type, [this](const QString &str) { return registerString(str); },
+                        p->type)) {
                 QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
-                errStr.append(memberType);
+                errStr.append(p->type->toString());
                 recordError(node->typeToken, errStr);
                 return false;
             }
@@ -1103,8 +1094,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
 
-        QString returnTypeName = funDecl->typeAnnotation ? funDecl->typeAnnotation->type->toString() : QString();
-        Parameter::initType(&f->returnType, jsGenerator, registerString(returnTypeName));
+        const auto idGenerator = [this](const QString &str) { return registerString(str); };
+
+        Parameter::initType(
+                    &f->returnType, idGenerator,
+                    funDecl->typeAnnotation ? funDecl->typeAnnotation->type : nullptr);
 
         const QQmlJS::AST::BoundNames formals = funDecl->formals ? funDecl->formals->formals() : QQmlJS::AST::BoundNames();
         int formalsCount = formals.size();
@@ -1112,7 +1106,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
 
         int i = 0;
         for (const auto &arg : formals) {
-            f->formals[i].init(jsGenerator, arg.id, arg.typeName());
+            Parameter *functionParameter = &f->formals[i];
+            functionParameter->nameIndex = registerString(arg.id);
+            Parameter::initType(
+                        &functionParameter->type, idGenerator,
+                        arg.typeAnnotation.isNull() ? nullptr : arg.typeAnnotation->type);
             ++i;
         }
 

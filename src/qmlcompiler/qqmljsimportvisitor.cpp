@@ -1500,7 +1500,14 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         method.setMethodName(publicMember->name.toString());
         while (param) {
             method.addParameter(
-                    QQmlJSMetaParameter(param->name.toString(), buildName(param->type)));
+                    QQmlJSMetaParameter(
+                            param->name.toString(),
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+                            param->type ? param->type->toString() : QString()
+#else
+                            buildName(param->type)
+#endif
+                        ));
             param = param->next;
         }
         m_currentScope->addOwnMethod(method);
@@ -1652,7 +1659,9 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         if (const auto *formals = parseTypes ? fexpr->formals : nullptr) {
             const auto parameters = formals->formals();
             for (const auto &parameter : parameters) {
-                const QString type = parameter.typeName();
+                const QString type = parameter.typeAnnotation
+                        ? parameter.typeAnnotation->type->toString()
+                        : QString();
                 if (type.isEmpty()) {
                     formalsFullyTyped = false;
                     method.addParameter(QQmlJSMetaParameter(parameter.id, QStringLiteral("var")));

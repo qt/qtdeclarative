@@ -174,7 +174,7 @@ struct Context {
     QSet<QString> usedVariables;
     QQmlJS::AST::FormalParameterList *formals = nullptr;
     QQmlJS::AST::BoundNames arguments;
-    QString returnType;
+    QQmlJS::AST::Type *returnType = nullptr;
     QStringList locals;
     QStringList moduleRequests;
     QVector<ImportEntry> importEntries;

@@ -704,10 +704,12 @@ template <typename ObjectContainer>
 inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const QV4::CompiledData::ParameterType &param,
                                                                            QString *customTypeName)
 {
+    const quint32 typeId = param.typeNameIndexOrBuiltinType();
     if (param.indexIsBuiltinType()) {
         // built-in type
-        return metaTypeForPropertyType(
-                static_cast<QV4::CompiledData::BuiltinType>(param.typeNameIndexOrBuiltinType()));
+        if (param.isList())
+            return listTypeForPropertyType(QV4::CompiledData::BuiltinType(typeId));
+        return metaTypeForPropertyType(QV4::CompiledData::BuiltinType(typeId));
     }
 
     // lazily resolved type
@@ -721,17 +723,20 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
         return QMetaType();
 
     if (!qmltype.isComposite()) {
-        const QMetaType typeId = qmltype.typeId();
+        const QMetaType typeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
         if (!typeId.isValid() && qmltype.isInlineComponentType()) {
             const int objectId = qmltype.inlineComponentId();
-            return objectContainer->typeIdsForComponent(objectId).id;
+            const auto typeIds = objectContainer->typeIdsForComponent(objectId);
+            return param.isList() ? typeIds.listId : typeIds.id;
         } else {
             return typeId;
         }
     }
 
-    if (selfReference)
-        return objectContainer->typeIdsForComponent().id;
+    if (selfReference) {
+        const auto typeIds = objectContainer->typeIdsForComponent();
+        return param.isList() ? typeIds.listId : typeIds.id;
+    }
 
     QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
     Q_ASSERT(tdata);
@@ -739,7 +744,7 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
 
     auto compilationUnit = tdata->compilationUnit();
 
-    return compilationUnit->typeIds.id;
+    return param.isList() ? compilationUnit->typeIds.listId : compilationUnit->typeIds.id;
 }
 
 template <typename ObjectContainer>

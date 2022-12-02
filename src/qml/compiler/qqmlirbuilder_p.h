@@ -200,13 +200,36 @@ struct Parameter : public QV4::CompiledData::Parameter
 {
     Parameter *next;
 
-    bool init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName, const QString &typeName);
-    static bool init(QV4::CompiledData::Parameter *param, const QV4::Compiler::JSUnitGenerator *stringGenerator,
-                     int parameterNameIndex, int typeNameIndex);
-    static bool initType(QV4::CompiledData::ParameterType *paramType,
-                         const QV4::Compiler::JSUnitGenerator *stringGenerator, int typeNameIndex);
+    template<typename IdGenerator>
+    static bool initType(
+            QV4::CompiledData::ParameterType *type, const IdGenerator &idGenerator,
+            const QQmlJS::AST::Type *annotation)
+    {
+        using Flag = QV4::CompiledData::ParameterType::Flag;
+
+        if (!annotation)
+            return initType(type, QString(), idGenerator(QString()), Flag::NoFlag);
+
+        const QString typeId = annotation->typeId->toString();
+        const QString typeArgument =
+                annotation->typeArgument ? annotation->typeArgument->toString() : QString();
+
+        if (typeArgument.isEmpty())
+            return initType(type, typeId, idGenerator(typeId), Flag::NoFlag);
+
+        if (typeId == QLatin1String("list"))
+            return initType(type, typeArgument, idGenerator(typeArgument), Flag::List);
+
+        const QString annotationString = annotation->toString();
+        return initType(type, annotationString, idGenerator(annotationString), Flag::NoFlag);
+    }
 
     static QV4::CompiledData::BuiltinType stringToBuiltinType(const QString &typeName);
+
+private:
+    static bool initType(
+            QV4::CompiledData::ParameterType *paramType, const QString &typeName,
+            int typeNameIndex, QV4::CompiledData::ParameterType::Flag listFlag);
 };
 
 struct Signal

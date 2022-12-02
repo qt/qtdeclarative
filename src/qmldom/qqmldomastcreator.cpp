@@ -376,7 +376,11 @@ public:
             while (args) {
                 MethodParameter param;
                 param.name = args->name.toString();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+                param.typeName = args->type ? args->type->toString() : QString();
+#else
                 param.typeName = toString(args->type);
+#endif
                 index_type idx = index_type(mInfo.parameters.size());
                 mInfo.parameters.append(param);
                 auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
@@ -841,7 +845,13 @@ public:
     bool visit(AST::UiParameterList *el) override
     { // currently not used...
         MethodParameter p {
-            el->name.toString(), toString(el->type), false, false, false, {}, {}, {}
+            el->name.toString(),
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+            el->type ? el->type->toString() : QString(),
+#else
+            toString(el->type),
+#endif
+            false, false, false, {}, {}, {}
         };
         return true;
     }

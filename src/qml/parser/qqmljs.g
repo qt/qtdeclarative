@@ -1131,10 +1131,10 @@ UiParameterListOpt: UiParameterList;
     } break;
 ./
 
-UiParameterList: QmlIdentifier T_COLON UiPropertyType;
+UiParameterList: QmlIdentifier T_COLON Type;
 /.
     case $rule_number: {
-        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(3).UiQualifiedId->finish(), stringRef(1));
+        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(3).Type, stringRef(1));
         node->identifierToken = loc(1);
         node->colonToken = loc(2);
         node->propertyTypeToken = loc(3);
@@ -1142,20 +1142,20 @@ UiParameterList: QmlIdentifier T_COLON UiPropertyType;
     } break;
 ./
 
-UiParameterList: UiPropertyType QmlIdentifier;
+UiParameterList: Type QmlIdentifier;
 /.
     case $rule_number: {
-        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiQualifiedId->finish(), stringRef(2));
+        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).Type, stringRef(2));
         node->propertyTypeToken = loc(1);
         node->identifierToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
 
-UiParameterList: UiParameterList T_COMMA QmlIdentifier T_COLON UiPropertyType;
+UiParameterList: UiParameterList T_COMMA QmlIdentifier T_COLON Type;
 /.
     case $rule_number: {
-        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, sym(5).UiQualifiedId->finish(), stringRef(3));
+        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, sym(5).Type, stringRef(3));
         node->propertyTypeToken = loc(5);
         node->commaToken = loc(2);
         node->identifierToken = loc(3);
@@ -1164,10 +1164,10 @@ UiParameterList: UiParameterList T_COMMA QmlIdentifier T_COLON UiPropertyType;
     } break;
 ./
 
-UiParameterList: UiParameterList T_COMMA UiPropertyType QmlIdentifier;
+UiParameterList: UiParameterList T_COMMA Type QmlIdentifier;
 /.
     case $rule_number: {
-        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, sym(3).UiQualifiedId->finish(), stringRef(4));
+        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, sym(3).Type, stringRef(4));
         node->propertyTypeToken = loc(3);
         node->commaToken = loc(2);
         node->identifierToken = loc(4);
