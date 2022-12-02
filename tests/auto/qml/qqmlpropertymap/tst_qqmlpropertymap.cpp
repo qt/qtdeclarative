@@ -23,6 +23,7 @@ private slots:
 
     void insert();
     void insertMany();
+    void insertDuplicate();
     void operatorInsert();
     void operatorValue();
     void clear();
@@ -189,6 +190,34 @@ void tst_QQmlPropertyMap::insertMany()
     QCOMPARE(map.keys().size(), 5);
     QCOMPARE(map.value(QStringLiteral("foobar")).toInt(), 12);
     QCOMPARE(map.value(QStringLiteral("key1")).toInt(), 100);
+}
+
+void tst_QQmlPropertyMap::insertDuplicate()
+{
+    QHash<QString, QVariant> values;
+    values.insert(QLatin1String("key2"), 200);
+    values.insert(QLatin1String("key1"), "Hello World");
+
+    auto expectedCount = values.count();
+
+    QQmlPropertyMap map;
+    map.insert(values);
+    QCOMPARE(map.keys().size(), expectedCount);
+
+    map.insert(QStringLiteral("key2"), 24);
+    QCOMPARE(map.keys().size(), expectedCount);
+    QCOMPARE(map.value(QStringLiteral("key2")).toInt(), 24);
+
+    map.insert(QString(), QVariant("Empty1"));
+    QCOMPARE(map.keys().size(), ++expectedCount);
+    map.insert(QString(), QVariant("Empty2"));
+    QCOMPARE(map.keys().size(), expectedCount);
+
+    QHash<QString, QVariant> emptyKeyMap;
+    emptyKeyMap.insert(QString(), 200);
+    emptyKeyMap.insert(QString(), 400);
+    map.insert(emptyKeyMap);
+    QCOMPARE(map.keys().size(), expectedCount);
 }
 
 void tst_QQmlPropertyMap::operatorInsert()
