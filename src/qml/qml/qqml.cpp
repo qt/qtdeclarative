@@ -998,7 +998,7 @@ static bool initValueLookup(QV4::Lookup *l, QV4::ExecutableCompilationUnit *comp
     const QByteArray name = compilationUnit->runtimeStrings[l->nameIndex]->toQString().toUtf8();
     const int coreIndex = metaObject->indexOfProperty(name.constData());
     QMetaType lookupType = metaObject->property(coreIndex).metaType();
-    if (type.isValid() && lookupType != type)
+    if (!isTypeCompatible(type, lookupType))
         return false;
     l->qgadgetLookup.metaObject = quintptr(metaObject) + 1;
     l->qgadgetLookup.coreIndex = coreIndex;

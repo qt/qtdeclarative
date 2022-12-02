@@ -3,6 +3,7 @@ set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     dynamicmeta.h
+    enumProperty.h
     gadgetwithenum.h
     invisible.h
     objectwithmethod.h
@@ -68,6 +69,7 @@ set(qml_files
     deadStoreLoop.qml
     dialog.qml
     dynamicscene.qml
+    enumConversion.qml
     enumInvalid.qml
     enumLookup.qml
     enumScope.qml

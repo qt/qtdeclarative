@@ -137,6 +137,7 @@ private slots:
     void nullComparison();
     void signalIndexMismatch();
     void callWithSpread();
+    void enumConversion();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2503,6 +2504,19 @@ void tst_QmlCppCodegen::callWithSpread()
     QTest::ignoreMessage(QtCriticalMsg, "That is great!");
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+};
+
+void tst_QmlCppCodegen::enumConversion()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/enumConversion.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("test").toInt(), 0x04);
+    QCOMPARE(o->property("test_1").toBool(), true);
 };
 
 QTEST_MAIN(tst_QmlCppCodegen)
