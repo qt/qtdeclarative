@@ -22,6 +22,8 @@ qt6_add_qml_module(testCppTypes
     URI TestTypes
     SOURCES
         commontypes.h
+    AUTO_RESOURCE_PREFIX
+    OUTPUT_DIRECTORY TestTypes
 )
 qt_autogen_tools_initial_setup(testCppTypesplugin)
 
