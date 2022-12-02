@@ -2779,6 +2779,13 @@ void tst_QmlCppCodegen::listAsArgument()
     QCOMPARE(o->property("i1").toInt(), 2);
     QCOMPARE(o->property("i2").toInt(), 4);
     QCOMPARE(o->property("d").value<QObject *>()->objectName(), u"this one"_s);
+
+    int singleInt = 0;
+    QList<int> moreInts;
+    QMetaObject::invokeMethod(o.data(), "returnInts1", Q_RETURN_ARG(QList<int>, moreInts));
+    QCOMPARE(moreInts, QList<int>({5, 4, 3, 2, 1}));
+    QMetaObject::invokeMethod(o.data(), "selectSecondInt", Q_RETURN_ARG(int, singleInt), Q_ARG(QList<int>, moreInts));
+    QCOMPARE(singleInt, 4);
 }
 
 void tst_QmlCppCodegen::letAndConst()

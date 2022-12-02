@@ -675,7 +675,7 @@ bool ScanFunctions::enterFunction(
             _context->isGenerator = true;
 
         if (expr->typeAnnotation)
-            _context->returnType = expr->typeAnnotation->type->toString();
+            _context->returnType = expr->typeAnnotation->type;
     }
 
 

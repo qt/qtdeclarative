@@ -221,14 +221,28 @@ int QV4::Compiler::JSUnitGenerator::registerTranslation(const QV4::CompiledData:
 
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
+    const auto registerTypeStrings = [this](QQmlJS::AST::Type *type) {
+        if (!type)
+            return;
+
+        if (type->typeArgument) {
+            registerString(type->typeArgument->toString());
+            registerString(type->typeId->toString());
+        }
+        registerString(type->toString());
+    };
+
     registerString(module->fileName);
     registerString(module->finalUrl);
     for (Context *f : std::as_const(module->functions)) {
         registerString(f->name);
-        registerString(f->returnType);
+        registerTypeStrings(f->returnType);
         for (int i = 0; i < f->arguments.size(); ++i) {
             registerString(f->arguments.at(i).id);
-            registerString(f->arguments.at(i).typeName());
+            if (const QQmlJS::AST::TypeAnnotation *annotation
+                    = f->arguments.at(i).typeAnnotation.data()) {
+                registerTypeStrings(annotation->type);
+            }
         }
         for (int i = 0; i < f->locals.size(); ++i)
             registerString(f->locals.at(i));
@@ -414,7 +428,9 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->formalsOffset = currentOffset;
     currentOffset += function->nFormals * sizeof(CompiledData::Parameter);
 
-    QmlIR::Parameter::initType(&function->returnType, this, getStringId(irFunction->returnType));
+    const auto idGenerator = [this](const QString &str) { return getStringId(str); };
+
+    QmlIR::Parameter::initType(&function->returnType, idGenerator, irFunction->returnType);
 
     function->sizeOfLocalTemporalDeadZone = irFunction->sizeOfLocalTemporalDeadZone;
     function->sizeOfRegisterTemporalDeadZone = irFunction->sizeOfRegisterTemporalDeadZone;
@@ -446,8 +462,10 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     // write formals
     CompiledData::Parameter *formals = (CompiledData::Parameter *)(f + function->formalsOffset);
     for (int i = 0; i < irFunction->arguments.size(); ++i) {
-        QmlIR::Parameter::init(&formals[i], this, getStringId(irFunction->arguments.at(i).id),
-                               getStringId(irFunction->arguments.at(i).typeName()));
+        auto *formal = &formals[i];
+        formal->nameIndex = getStringId(irFunction->arguments.at(i).id);
+        if (QQmlJS::AST::TypeAnnotation *annotation = irFunction->arguments.at(i).typeAnnotation.data())
+            QmlIR::Parameter::initType(&formal->type, idGenerator, annotation->type);
     }
 
     // write locals

@@ -844,7 +844,7 @@ struct QML_PARSER_EXPORT BoundName
         : id(id), typeAnnotation(typeAnnotation, type)
     {}
     BoundName() = default;
-    QString typeName() const { return typeAnnotation ? typeAnnotation->type->toString() : QString(); }
+
     bool isInjected() const { return typeAnnotation.tag() == Injected; }
 };
 
@@ -3269,11 +3269,11 @@ class QML_PARSER_EXPORT UiParameterList: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(UiParameterList)
 
-    UiParameterList(UiQualifiedId *t, QStringView n):
+    UiParameterList(Type *t, QStringView n):
         type (t), name (n), next (this)
         { kind = K; }
 
-    UiParameterList(UiParameterList *previous, UiQualifiedId *t, QStringView n):
+    UiParameterList(UiParameterList *previous, Type *t, QStringView n):
         type (t), name (n)
     {
         kind = K;
@@ -3300,7 +3300,7 @@ public:
     }
 
 // attributes
-    UiQualifiedId *type;
+    Type *type;
     QStringView name;
     UiParameterList *next;
     SourceLocation commaToken;

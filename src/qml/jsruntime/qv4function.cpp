@@ -139,12 +139,16 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
     QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine->qmlEngine());
 
     auto findMetaType = [&](const CompiledData::ParameterType &param) {
+        const quint32 type = param.typeNameIndexOrBuiltinType();
         if (param.indexIsBuiltinType()) {
+            if (param.isList()) {
+                return QQmlPropertyCacheCreatorBase::listTypeForPropertyType(
+                            QV4::CompiledData::BuiltinType(type));
+            }
             return QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(
-                        QV4::CompiledData::BuiltinType(param.typeNameIndexOrBuiltinType()));
+                        QV4::CompiledData::BuiltinType(type));
         }
 
-        const quint32 type = param.typeNameIndexOrBuiltinType();
         if (type == 0)
             return QMetaType();
 
@@ -152,18 +156,21 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         if (!qmltype.isValid())
             return QMetaType();
 
-        const QMetaType metaType = qmltype.typeId();
+        const QMetaType metaType = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
         if (metaType.isValid())
             return metaType;
 
         if (!qmltype.isComposite()) {
-            return qmltype.isInlineComponentType()
-                    ? unit->typeIdsForComponent(qmltype.inlineComponentId()).id
-                    : QMetaType();
+            if (!qmltype.isInlineComponentType())
+                return QMetaType();
+            const CompositeMetaTypeIds typeIds
+                    = unit->typeIdsForComponent(qmltype.inlineComponentId());
+            return param.isList() ? typeIds.listId : typeIds.id;
         }
 
-        return enginePrivate->typeLoader.getType(
-                    qmltype.sourceUrl())->compilationUnit()->typeIds.id;
+        const CompositeMetaTypeIds typeIds = enginePrivate->typeLoader.getType(
+                    qmltype.sourceUrl())->compilationUnit()->typeIds;
+        return param.isList() ? typeIds.listId : typeIds.id;
     };
 
     for (quint16 i = 0; i < nFormals; ++i)
