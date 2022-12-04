@@ -886,10 +886,9 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
 
             if (runningJob->data && runningJob->data->specialDevice) {
                 int frameCount;
-                int const frame = runningJob->data ? runningJob->data->frame : 0;
                 if (!readImage(url, runningJob->data->specialDevice, &image, &errorStr, &readSize, &frameCount,
                                runningJob->requestRegion, runningJob->requestSize,
-                               runningJob->providerOptions, nullptr, frame)) {
+                               runningJob->providerOptions, nullptr, runningJob->data->frame)) {
                     errorCode = QQuickPixmapReply::Loading;
                 } else if (runningJob->data) {
                     runningJob->data->frameCount = frameCount;
