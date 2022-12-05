@@ -103,6 +103,9 @@ QQmlIncubatorPrivate::~QQmlIncubatorPrivate()
 
 void QQmlIncubatorPrivate::clear()
 {
+    // reset the tagged pointer
+    if (requiredPropertiesFromComponent)
+        requiredPropertiesFromComponent = decltype(requiredPropertiesFromComponent){};
     compilationUnit.reset();
     if (next.isInList()) {
         next.remove();
@@ -371,6 +374,37 @@ finishIncubate:
     } else if (!creator.isNull()) {
         vmeGuard.guard(creator.data());
     }
+}
+
+/*!
+    \internal
+    This is used to mimic the behavior of incubate when the
+    Component we want to incubate refers to a creatable
+    QQmlType (i.e., it is the result of loadFromModule).
+ */
+void QQmlIncubatorPrivate::incubateCppBasedComponent(QQmlComponent *component, QQmlContext *context)
+{
+    auto compPriv = QQmlComponentPrivate::get(component);
+    Q_ASSERT(compPriv->loadedType.isCreatable());
+    std::unique_ptr<QObject> object(component->beginCreate(context));
+    component->setInitialProperties(object.get(), initialProperties);
+    if (auto props = compPriv->state.requiredProperties()) {
+        requiredPropertiesFromComponent = props;
+        requiredPropertiesFromComponent.setTag(HadTopLevelRequired::Yes);
+    }
+    q->setInitialState(object.get());
+    if (requiredPropertiesFromComponent && !requiredPropertiesFromComponent->isEmpty()) {
+        for (const RequiredPropertyInfo &unsetRequiredProperty :
+             std::as_const(*requiredPropertiesFromComponent)) {
+            errors << QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
+        }
+    } else {
+        compPriv->completeCreate();
+        result = object.release();
+        progress = QQmlIncubatorPrivate::Completed;
+    }
+    changeStatus(calculateStatus());
+
 }
 
 /*!
@@ -672,12 +706,18 @@ setInitialProperties can mark properties set there as no longer required.
 */
 RequiredProperties *QQmlIncubatorPrivate::requiredProperties()
 {
-    return creator->requiredProperties();
+    if (creator)
+        return creator->requiredProperties();
+    else
+        return requiredPropertiesFromComponent.data();
 }
 
 bool QQmlIncubatorPrivate::hadTopLevelRequiredProperties() const
 {
-    return creator->componentHadTopLevelRequiredProperties();
+    if (creator)
+        return creator->componentHadTopLevelRequiredProperties();
+    else
+        return requiredPropertiesFromComponent.tag() == HadTopLevelRequired::Yes;
 }
 
 /*!

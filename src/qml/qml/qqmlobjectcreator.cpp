@@ -694,8 +694,9 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
                 QQmlData *data = QQmlData::get(targetObject);
                 Q_ASSERT(data && data->propertyCache);
                 targetProperty = data->propertyCache->property(targetIndex.coreIndex());
+                sharedState->requiredProperties.remove({targetObject, targetProperty});
             }
-            sharedState->requiredProperties.remove(targetProperty);
+            sharedState->requiredProperties.remove({_bindingTarget, property});
         }
 
 
@@ -1563,7 +1564,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
             postHocRequired.erase(postHocIt);
         if (isContextObject)
             sharedState->hadTopLevelRequiredProperties = true;
-        sharedState->requiredProperties.insert(propertyData,
+        sharedState->requiredProperties.insert({_qobject, propertyData},
                                                RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
 
     }
@@ -1623,7 +1624,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         if (isContextObject)
             sharedState->hadTopLevelRequiredProperties = true;
         sharedState->requiredProperties.insert(
-                propertyData,
+                {_qobject, propertyData},
                 RequiredPropertyInfo {
                         name, compilationUnit->finalUrl(), _compiledObject->location, {} });
     }
@@ -1654,7 +1655,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
             if (isContextObject)
                 sharedState->hadTopLevelRequiredProperties = true;
             sharedState->requiredProperties.insert(
-                    propertyData,
+                    {_qobject, propertyData},
                     RequiredPropertyInfo {
                             name, compilationUnit->finalUrl(), _compiledObject->location, {} });
         }
@@ -1687,7 +1688,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         const QQmlPropertyData *const targetProperty = targetDData->propertyCache->property(coreIndex);
         if (!targetProperty)
             continue;
-        auto it = sharedState->requiredProperties.find(targetProperty);
+        auto it = sharedState->requiredProperties.find({target, targetProperty});
         if (it != sharedState->requiredProperties.end())
             it->aliasesToRequired.push_back(
                     AliasToRequiredInfo {

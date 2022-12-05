@@ -78,6 +78,8 @@ public:
         return false;
     }
 
+    void invalidate() { metaObject.setTag(MetaObjectInvalid); }
+
     QObject *object = nullptr;
     QQmlPropertyCache::ConstPtr cache;
 
@@ -103,7 +105,9 @@ protected:
     }
 
     QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
-    const QMetaObject *metaObject = nullptr;
+
+    enum MetaObjectValidity { MetaObjectValid, MetaObjectInvalid };
+    QTaggedPointer<const QMetaObject, MetaObjectValidity> metaObject;
 
 private:
     bool doIntercept(QMetaObject::Call c, int id, void **a);

@@ -27,6 +27,7 @@ Window {
 
             delegate: ItemDelegate {
                 id: root
+
                 text: "Item " + (index + 1)
                 width: parent.width
 

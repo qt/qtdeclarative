@@ -11,7 +11,7 @@ if(TARGET Qt::Quick)
     add_subdirectory(quick)
 endif()
 if(TARGET Qt::QuickTemplates2)
-    add_subdirectory(quickcontrols2)
+    add_subdirectory(quickcontrols)
 endif()
 
 qt_examples_build_end()

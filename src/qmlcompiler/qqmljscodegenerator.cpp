@@ -35,6 +35,15 @@ using namespace Qt::StringLiterals;
         m_body += u"// "_s + QStringLiteral(#function) + u'\n'; \
     }
 
+
+static bool isTypeStorable(const QQmlJSTypeResolver *resolver, const QQmlJSScope::ConstPtr &type)
+{
+    return !type.isNull()
+            && !resolver->equals(type, resolver->nullType())
+            && !resolver->equals(type, resolver->emptyListType())
+            && !resolver->equals(type, resolver->voidType());
+}
+
 QString QQmlJSCodeGenerator::castTargetName(const QQmlJSScope::ConstPtr &type) const
 {
     return type->augmentedInternalName();
@@ -73,14 +82,6 @@ QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
 
     reject(u"retrieving the metaObject of a composite type without using an instance."_s);
     return QString();
-}
-
-static bool isTypeStorable(const QQmlJSTypeResolver *resolver, const QQmlJSScope::ConstPtr &type)
-{
-    return !type.isNull()
-            && !resolver->equals(type, resolver->nullType())
-            && !resolver->equals(type, resolver->emptyListType())
-            && !resolver->equals(type, resolver->voidType());
 }
 
 QQmlJSAotFunction QQmlJSCodeGenerator::run(
@@ -1183,7 +1184,8 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
                     + conversion(content.storedType(), m_typeResolver->varType(), var) + u";\n"_s;
             args += u", "_s + argName + u".data()"_s;
             types += u", "_s + argName + u".metaType()"_s;
-        } else if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())) {
+        } else if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())
+                   && !m_typeResolver->registerContains(content, m_typeResolver->varType())) {
             args += u", "_s + var + u".data()"_s;
             types += u", "_s + var + u".metaType()"_s;
         } else {
@@ -1471,6 +1473,88 @@ bool QQmlJSCodeGenerator::inlineMathMethod(const QString &name, int argc, int ar
     return true;
 }
 
+static QString messageTypeForMethod(const QString &method)
+{
+    if (method == u"log" || method == u"debug")
+        return u"QtDebugMsg"_s;
+    if (method == u"info")
+        return u"QtInfoMsg"_s;
+    if (method == u"warn")
+        return u"QtWarningMsg"_s;
+    if (method == u"error")
+        return u"QtCriticalMsg"_s;
+    return QString();
+}
+
+bool QQmlJSCodeGenerator::inlineConsoleMethod(const QString &name, int argc, int argv)
+{
+    const QString type = messageTypeForMethod(name);
+    if (type.isEmpty())
+        return false;
+
+    addInclude(u"qloggingcategory.h"_s);
+
+    m_body += u"{\n";
+    m_body += u"    bool firstArgIsCategory = false;\n";
+    const QQmlJSRegisterContent firstArg = argc > 0 ? registerType(argv) : QQmlJSRegisterContent();
+
+    // We could check for internalName == "QQmlLoggingCategory" here, but we don't want to
+    // because QQmlLoggingCategory is not a builtin. Tying the specific internal name and
+    // intheritance hierarchy in here would be fragile.
+    // TODO: We could drop the check for firstArg in some cases if we made some base class
+    //       of QQmlLoggingCategory a builtin.
+    const bool firstArgIsReference = argc > 0
+            && m_typeResolver->containedType(firstArg)->isReferenceType();
+
+    if (firstArgIsReference) {
+        m_body += u"    QObject *firstArg = ";
+        m_body += conversion(
+                    firstArg.storedType(),
+                    m_typeResolver->genericType(firstArg.storedType()),
+                    registerVariable(argv));
+        m_body += u";\n";
+    }
+
+    m_body += u"    const QLoggingCategory *category = aotContext->resolveLoggingCategory(";
+    m_body += firstArgIsReference ? u"firstArg" : u"nullptr";
+    m_body += u", &firstArgIsCategory);\n";
+    m_body += u"    if (category && category->isEnabled(" + type + u")) {\n";
+
+    m_body += u"        const QString message = ";
+    if (argc > 0) {
+        const QString firstArgStringConversion = conversion(
+                    registerType(argv).storedType(),
+                    m_typeResolver->stringType(), registerVariable(argv));
+        if (firstArgIsReference) {
+            m_body += u"(firstArgIsCategory ? QString() : (" + firstArgStringConversion;
+            if (argc > 1)
+                m_body += u".append(QLatin1Char(' ')))).append(";
+            else
+                m_body += u"))";
+        } else {
+            m_body += firstArgStringConversion;
+            if (argc > 1)
+                m_body += u".append(QLatin1Char(' ')).append(";
+        }
+
+        for (int i = 1; i < argc; ++i) {
+            if (i > 1)
+                m_body += u".append(QLatin1Char(' ')).append("_s;
+            m_body += conversion(
+                        registerType(argv + i).storedType(),
+                        m_typeResolver->stringType(), registerVariable(argv + i)) + u')';
+        }
+    } else {
+        m_body += u"QString()";
+    }
+    m_body += u";\n";
+
+    m_body += u"        aotContext->writeToConsole(" + type + u", message, category);\n";
+    m_body += u"    }\n";
+    m_body += u"}\n";
+    return true;
+}
+
 void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int argc, int argv)
 {
     INJECT_TRACE_INFO(generate_CallPropertyLookup);
@@ -1486,6 +1570,11 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
                     m_jsUnitGenerator->lookupNameIndex(index));
         if (m_typeResolver->equals(m_typeResolver->originalContainedType(baseType), mathObject())) {
             if (inlineMathMethod(name, argc, argv))
+                return;
+        }
+
+        if (m_typeResolver->equals(m_typeResolver->originalContainedType(baseType), consoleObject())) {
+            if (inlineConsoleMethod(name, argc, argv))
                 return;
         }
 
@@ -2459,9 +2548,18 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
 
     const auto primitive = m_typeResolver->jsPrimitiveType();
     if (m_typeResolver->equals(lhsType, rhsType) && !m_typeResolver->equals(lhsType, primitive)) {
-        m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
-                             registerVariable(lhs) + (invert ? u" != "_s : u" == "_s)
-                             + m_state.accumulatorVariableIn);
+        if (isTypeStorable(m_typeResolver, lhsType)) {
+            m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
+                                 registerVariable(lhs) + (invert ? u" != "_s : u" == "_s)
+                                 + m_state.accumulatorVariableIn);
+        } else if (m_typeResolver->equals(lhsType, m_typeResolver->emptyListType())) {
+            // We cannot compare two empty lists, because we don't know whether it's
+            // the same  instance or not. "[] === []" is false, but "var a = []; a === a" is true;
+            reject(u"comparison of two empty lists"_s);
+        } else {
+            // null === null and  undefined === undefined
+            m_body += invert ? u"false"_s : u"true"_s;
+        }
     } else {
         m_body += conversion(
                     m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
@@ -2896,6 +2994,11 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
                     to, u"QJSPrimitiveValue("_s + variable + u')');
         if (!retrieve.isEmpty())
             return retrieve;
+    }
+
+    if (from->isReferenceType() && m_typeResolver->equals(to, m_typeResolver->stringType())) {
+        return u"aotContext->engine->coerceValue<"_s + castTargetName(from) + u", "
+                + castTargetName(to) + u">("_s + variable + u')';
     }
 
     // TODO: add more conversions

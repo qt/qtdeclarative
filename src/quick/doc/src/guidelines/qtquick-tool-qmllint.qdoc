@@ -129,9 +129,9 @@ that take precedence over the warning levels in settings.
 
 \section2 Scripting
 
-qmllint can output JSON via the \c{--json} option which will return valid JSON
+qmllint can write or output JSON via the \c{--json <file>} option which will return valid JSON
 with warning messages, file and line location of warnings, and their severity
-level.
+level. Use the special filename '-' to write to stdout instead of a file.
 This can be used to more easily integrate qmllint in your pre-commit hooks or
 CI testing.
 

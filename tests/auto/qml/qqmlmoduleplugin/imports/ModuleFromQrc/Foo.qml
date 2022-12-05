@@ -1,2 +1,2 @@
-import QtQml
+import QML
 QtObject {}

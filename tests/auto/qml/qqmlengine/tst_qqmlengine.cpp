@@ -904,6 +904,7 @@ void tst_qqmlengine::qtqmlModule()
     QQmlEngine e;
     QQmlComponent c(&e, testFile);
     if (expectedError.isEmpty()) {
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
         QScopedPointer<QObject> o(c.create());
         QVERIFY(o);
     } else {

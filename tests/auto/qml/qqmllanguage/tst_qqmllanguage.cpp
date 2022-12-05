@@ -400,6 +400,8 @@ private slots:
     void signalInlineComponentArg();
     void functionSignatureEnforcement();
     void importPrecedence();
+    void nullIsNull();
+    void multiRequired();
 
 private:
     QQmlEngine engine;
@@ -7726,6 +7728,29 @@ void tst_qqmllanguage::importPrecedence()
     QScopedPointer<QObject> o2(c2.create());
     QVERIFY(!o2.isNull());
     QCOMPARE(o2->property("theAgent").value<QObject *>(), nullptr);
+}
+
+void tst_qqmllanguage::nullIsNull()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("nullIsNull.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->property("someProperty").value<QObject*>() != nullptr);
+    QTRY_COMPARE(o->property("someProperty").value<QObject*>(), nullptr);
+}
+
+void tst_qqmllanguage::multiRequired()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("multiRequired.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o.isNull());
+    QCOMPARE(c.errorString(),
+             qPrintable(url.toString() + ":5 Required property description was not initialized\n"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

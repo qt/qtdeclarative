@@ -1,0 +1,39 @@
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquickcontrols-separators.html
+    \title Separator Controls
+    \ingroup qtquickcontrols-guidelines
+    \brief Guidelines for separator controls
+
+    Qt Quick Controls offers a selection of separators.
+
+    \annotatedlist qtquickcontrols-separators
+
+    Each type of separator has its own specific use case. The following
+    sections offer guidelines for choosing the appropriate type of separator,
+    depending on the use case.
+
+    \section1 MenuSeparator Control
+
+    \image qtquickcontrols-menuseparator.png
+
+    \l MenuSeparator should be used to separate items (typically MenuItem
+    controls) in a Menu. Grouping related menu items together makes it easier
+    for the user to interact with the menu. For example, a typical desktop
+    user interface might have \c Undo and \c Redo items in one group, and
+    \c Cut, \c Copy and \c Paste in another.
+
+    \section1 ToolSeparator Control
+
+    \image qtquickcontrols-toolseparator.png
+
+    \l ToolSeparator should be used to separate items (typically ToolButton
+    controls) in a ToolBar. It can be used in horizontal or vertical toolbars.
+
+    \section1 Related Information
+    \list
+    \li \l {Qt Quick Controls Guidelines}
+    \endlist
+*/

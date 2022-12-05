@@ -19,6 +19,7 @@ class Q_QML_EXPORT QQmlApplicationEngine : public QQmlEngine
 public:
     QQmlApplicationEngine(QObject *parent = nullptr);
     QQmlApplicationEngine(const QUrl &url, QObject *parent = nullptr);
+    QQmlApplicationEngine(QAnyStringView uri, QAnyStringView typeName, QObject *parent = nullptr);
     QQmlApplicationEngine(const QString &filePath, QObject *parent = nullptr);
     ~QQmlApplicationEngine() override;
 
@@ -27,6 +28,7 @@ public:
 public Q_SLOTS:
     void load(const QUrl &url);
     void load(const QString &filePath);
+    void loadFromModule(QAnyStringView uri, QAnyStringView typeName);
     void setInitialProperties(const QVariantMap &initialProperties);
     void setExtraFileSelectors(const QStringList &extraFileSelectors);
     void loadData(const QByteArray &data, const QUrl &url = QUrl());

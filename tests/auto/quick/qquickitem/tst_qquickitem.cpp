@@ -8,6 +8,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickview.h>
 #include "private/qquickfocusscope_p.h"
+#include "private/qquickrectangle_p.h"
 #include "private/qquickitem_p.h"
 #include <QtGui/private/qevent_p.h>
 #include <qpa/qwindowsysteminterface.h>
@@ -225,6 +226,8 @@ private slots:
     void receivesLocaleChangeEvent();
     void polishLoopDetection_data();
     void polishLoopDetection();
+
+    void objectCastInDestructor();
 
 private:
 
@@ -1091,7 +1094,9 @@ void tst_qquickitem::setParentItem()
 
 void tst_qquickitem::visible()
 {
+    QQuickWindow window;
     QQuickItem *root = new QQuickItem;
+    root->setParentItem(window.contentItem());
 
     QQuickItem *child1 = new QQuickItem;
     child1->setParentItem(root);
@@ -2433,6 +2438,28 @@ void tst_qquickitem::receivesLocaleChangeEvent()
 
     QTRY_COMPARE(child1->localeChangeEventCount, 1);
     QCOMPARE(child2->localeChangeEventCount, 1);
+}
+
+void tst_qquickitem::objectCastInDestructor()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("objectCastInDestructor.qml"));
+    view.show();
+
+    QQuickItem *item = view.findChild<QQuickItem *>("testRectangle");
+    QVERIFY(item);
+    bool destroyed = false;
+    connect(item, &QObject::destroyed, [&]{
+        destroyed = true;
+        QCOMPARE(qobject_cast<QQuickItem *>(item), nullptr);
+        QCOMPARE(qobject_cast<QQuickRectangle *>(item), nullptr);
+    });
+
+    QQuickItem *loader = view.findChild<QQuickItem *>("loader");
+    QVERIFY(loader);
+    loader->setProperty("active", false);
+
+    QVERIFY(QTest::qWaitFor([&destroyed]{ return destroyed; }));
 }
 
 QTEST_MAIN(tst_qquickitem)

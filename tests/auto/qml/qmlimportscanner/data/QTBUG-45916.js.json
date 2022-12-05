@@ -7,17 +7,27 @@
         "pluginIsOptional": true,
         "relativePath": "QtQuick",
         "type": "module",
-        "prefer":":/qt-project.org/imports/QtQuick/"
+        "prefer": ":/qt-project.org/imports/QtQuick/"
+    },
+    {
+        "classname": "QtQmlMetaPlugin",
+        "linkTarget": "Qt6::QmlMeta",
+        "name": "QtQml",
+        "plugin": "qmlmetaplugin",
+        "pluginIsOptional": true,
+        "relativePath": "QtQml",
+        "type": "module",
+        "prefer": ":/qt-project.org/imports/QtQml/"
     },
     {
         "classname": "QtQmlPlugin",
         "linkTarget": "Qt6::qmlplugin",
-        "name": "QtQml",
+        "name": "QtQml.Base",
         "plugin": "qmlplugin",
         "pluginIsOptional": true,
-        "relativePath": "QtQml",
+        "relativePath": "QtQml/Base",
         "type": "module",
-        "prefer":":/qt-project.org/imports/QtQml/"
+        "prefer": ":/qt-project.org/imports/QtQml/Base/"
     },
     {
         "classname": "QtQmlModelsPlugin",
@@ -27,7 +37,7 @@
         "pluginIsOptional": true,
         "relativePath": "QtQml/Models",
         "type": "module",
-        "prefer":":/qt-project.org/imports/QtQml/Models/"
+        "prefer": ":/qt-project.org/imports/QtQml/Models/"
     },
     {
         "classname": "QtQmlWorkerScriptPlugin",
@@ -37,6 +47,6 @@
         "pluginIsOptional": true,
         "relativePath": "QtQml/WorkerScript",
         "type": "module",
-        "prefer":":/qt-project.org/imports/QtQml/WorkerScript/"
+        "prefer": ":/qt-project.org/imports/QtQml/WorkerScript/"
     }
 ]

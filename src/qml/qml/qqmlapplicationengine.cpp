@@ -23,6 +23,14 @@ QQmlApplicationEnginePrivate::~QQmlApplicationEnginePrivate()
 {
 }
 
+void QQmlApplicationEnginePrivate::ensureInitialized()
+{
+    if (!isInitialized) {
+        init();
+        isInitialized = true;
+    }
+}
+
 void QQmlApplicationEnginePrivate::cleanUp()
 {
     Q_Q(QQmlApplicationEngine);
@@ -81,10 +89,7 @@ void QQmlApplicationEnginePrivate::startLoad(const QUrl &url, const QByteArray &
 {
     Q_Q(QQmlApplicationEngine);
 
-    if (!isInitialized) {
-        init();
-        isInitialized = true;
-    }
+    ensureInitialized();
 
     if (url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("qrc")) {
         QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(url));
@@ -101,11 +106,19 @@ void QQmlApplicationEnginePrivate::startLoad(const QUrl &url, const QByteArray &
     else
         c->loadUrl(url);
 
-    if (!c->isLoading()) {
-        finishLoad(c);
-        return;
-    }
-    QObject::connect(c, &QQmlComponent::statusChanged, q, [this, c] { this->finishLoad(c); });
+    ensureLoadingFinishes(c);
+}
+
+void QQmlApplicationEnginePrivate::startLoad(QAnyStringView uri, QAnyStringView type)
+{
+    Q_Q(QQmlApplicationEngine);
+
+    _q_loadTranslations(); //Translations must be loaded before the QML file is
+    QQmlComponent *c = new QQmlComponent(q, q);
+
+    ensureInitialized();
+    c->loadFromModule(uri, type);
+    ensureLoadingFinishes(c);
 }
 
 void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
@@ -140,6 +153,16 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
     }
 
     c->deleteLater();
+}
+
+void QQmlApplicationEnginePrivate::ensureLoadingFinishes(QQmlComponent *c)
+{
+    Q_Q(QQmlApplicationEngine);
+    if (!c->isLoading()) {
+        finishLoad(c);
+        return;
+    }
+    QObject::connect(c, &QQmlComponent::statusChanged, q, [this, c] { this->finishLoad(c); });
 }
 
 /*!
@@ -249,6 +272,18 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QUrl &url, QObject *parent)
 }
 
 /*!
+  Create a new QQmlApplicationEngine and loads the QML type specified by
+  \a uri and \a typeName
+  This is provided as a convenience,  and is the same as using the empty constructor and calling
+  loadFromModule afterwards.
+*/
+QQmlApplicationEngine::QQmlApplicationEngine(QAnyStringView uri, QAnyStringView typeName, QObject *parent)
+    : QQmlApplicationEngine(parent)
+{
+    loadFromModule(uri, typeName);
+}
+
+/*!
   Create a new QQmlApplicationEngine and loads the QML file at the given
   \a filePath, which must be a local file path. If a relative path is
   given then it will be interpreted as relative to the working directory of the
@@ -299,6 +334,30 @@ void QQmlApplicationEngine::load(const QString &filePath)
 {
     Q_D(QQmlApplicationEngine);
     d->startLoad(QUrl::fromUserInput(filePath, QLatin1String("."), QUrl::AssumeLocalFile));
+}
+
+/*!
+    Loads the QML type \a typeName from the module specified by \a uri.
+    If the type originates from a QML file located at a  remote url,
+    the type will be loaded asynchronously.
+    Listen to the \l {QQmlApplicationEngine::objectCreated()}{objectCreated}
+    signal to determine when the object tree is ready.
+
+    If an error occurs, the \l {QQmlApplicationEngine::objectCreated()}{objectCreated}
+    signal is emitted with a null pointer as parameter and error messages are printed
+    with qWarning.
+
+    \code
+    QQmlApplicationEngine engine;
+    engine.loadFromModule("QtQuick", "Rectangle");
+    \endcode
+
+    \sa QQmlComponent::loadFromModule
+ */
+void QQmlApplicationEngine::loadFromModule(QAnyStringView uri, QAnyStringView typeName)
+{
+    Q_D(QQmlApplicationEngine);
+    d->startLoad(uri, typeName);
 }
 
 /*!

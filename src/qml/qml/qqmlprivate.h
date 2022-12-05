@@ -634,6 +634,14 @@ namespace QQmlPrivate
         void storeNameSloppy(uint nameIndex, void *value, QMetaType type) const;
         QJSValue javaScriptGlobalProperty(uint nameIndex) const;
 
+        const QLoggingCategory *resolveLoggingCategory(QObject *wrapper, bool *ok) const;
+
+        void writeToConsole(
+                QtMsgType type, const QString &message,
+                const QLoggingCategory *loggingCategory) const;
+
+        QString objectToString(QObject *object) const;
+
         // All of these lookup functions should be used as follows:
         //
         // while (!fooBarLookup(...)) {

@@ -308,7 +308,7 @@ developers to follow these tips:
 With this in place, your application's UI should scale depending
 on the display resolution on offer.
 
-\image qtquickcontrols2-gallery-welcome.png
+\image qtquickcontrols-gallery-welcome.png
 
 \section2 Related Information
 

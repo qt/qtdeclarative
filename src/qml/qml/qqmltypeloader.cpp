@@ -647,18 +647,19 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
         return false;
     }
 
-    if (
+    // If there is a qmldir we cannot see, yet, then we have to wait.
+    // The qmldir might contain import directives.
+    if (qmldirResult != QQmlImportDatabase::QmldirInterceptedToRemote && (
             // Major version of module already registered:
             // We believe that the registration is complete.
             QQmlMetaType::typeModule(import->uri, import->version)
 
             // Otherwise, try to register further module types.
-            || (qmldirResult != QQmlImportDatabase::QmldirInterceptedToRemote
-                && QQmlMetaType::qmlRegisterModuleTypes(import->uri))
+            || QQmlMetaType::qmlRegisterModuleTypes(import->uri)
 
             // Otherwise, there is no way to register any further types.
             // Try with any module of that name.
-            || QQmlMetaType::latestModuleVersion(import->uri).isValid()) {
+            || QQmlMetaType::latestModuleVersion(import->uri).isValid())) {
 
         if (!m_importCache->addLibraryImport(
                     importDatabase, import->uri, import->qualifier, import->version,

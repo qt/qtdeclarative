@@ -705,18 +705,20 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const b
                                 + scope->internalName() + u'.' + method.methodName() + u"()"_s;
             }
 
-            const auto paramTypeNames = method.parameterTypeNames();
-            const auto paramTypes = method.parameterTypes();
-            for (qsizetype i = 0; i < paramTypeNames.size(); i++) {
-                if (paramTypeNames[i].isEmpty())
+            const auto parameters = method.parameters();
+            for (qsizetype i = 0; i < parameters.size(); i++) {
+                auto &parameter = parameters[i];
+                const QString typeName = parameter.typeName();
+                const QSharedPointer<const QQmlJSScope> type = parameter.type();
+                if (typeName.isEmpty())
                     continue;
-                if (paramTypes[i].isNull()) {
-                    missingTypes[paramTypeNames[i]] << u"parameter %1 of "_s.arg(i + 1)
+                if (type.isNull()) {
+                    missingTypes[typeName] << u"parameter %1 of "_s.arg(i + 1)
                                     + scope->internalName() + u'.' + method.methodName() + u"()"_s;
                     continue;
                 }
-                if (!paramTypes[i]->isFullyResolved()) {
-                    partiallyResolvedTypes[paramTypeNames[i]] << u"parameter %1 of "_s.arg(i + 1)
+                if (!type->isFullyResolved()) {
+                    partiallyResolvedTypes[typeName] << u"parameter %1 of "_s.arg(i + 1)
                                     + scope->internalName() + u'.' + method.methodName() + u"()"_s;
                     continue;
                 }

@@ -139,7 +139,7 @@ void TestQmlformat::initTestCase()
     // Optional chains are not permitted on the left-hand-side in assignments
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/optionalChaining.LHS.qml";
     // object literal with = assignements
-    m_invalidFiles << "tests/auto/quickcontrols2/controls/data/tst_scrollbar.qml";
+    m_invalidFiles << "tests/auto/quickcontrols/controls/data/tst_scrollbar.qml";
 
     // These files rely on exact formatting
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon1.qml";
@@ -286,6 +286,18 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("normalize + objects spacing")
             << "normalizedObjectsSpacing.qml"
             << "normalizedObjectsSpacing.formatted.qml" << QStringList { "-n", "--objects-spacing" } << RunOption::OnCopy;
+
+    QTest::newRow("ids new lines")
+            << "checkIdsNewline.qml"
+            << "checkIdsNewline.formatted.qml" << QStringList { "-n" } << RunOption::OnCopy;
+
+    QTest::newRow("functions spacing (no changes)")
+            << "functionsSpacing.qml"
+            << "functionsSpacing.formatted.qml" << QStringList { "--functions-spacing" } << RunOption::OnCopy;
+
+    QTest::newRow("normalize + functions spacing")
+            << "normalizedFunctionsSpacing.qml"
+            << "normalizedFunctionsSpacing.formatted.qml" << QStringList { "-n", "--functions-spacing" } << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()

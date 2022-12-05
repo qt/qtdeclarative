@@ -57,6 +57,8 @@ Q_SIGNALS:
     // void cWeirdSignal(const QVariant &);
     void cWeirdSignal(QVariant);
     void dSignal(QString, int);
+
+    void signalWithEnum(Qt::MouseButtons buttons, Qt::MouseButton button);
 };
 
 #endif // TYPEWITHPROPERTIES_H

@@ -131,6 +131,12 @@ public:
             const QUrl &url, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous,
             QObject *parent = nullptr) const;
 
+    Q_INVOKABLE QQmlComponent *createComponent(const QString &moduleUri,
+                                               const QString &typeName, QObject *parent) const;
+    Q_INVOKABLE QQmlComponent *createComponent(const QString &moduleUri, const QString &typeName,
+            QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous,
+            QObject *parent = nullptr) const;
+
     Q_INVOKABLE QJSValue binding(const QJSValue &function) const;
     Q_INVOKABLE void callLater(QQmlV4Function *args);
 
@@ -155,6 +161,12 @@ private:
     QQmlEngine *qmlEngine() const { return m_engine->qmlEngine(); }
     QJSEngine *jsEngine() const { return m_engine->jsEngine(); }
     QV4::ExecutionEngine *v4Engine() const { return m_engine; }
+
+    struct Contexts {
+        QQmlRefPointer<QQmlContextData> context;
+        QQmlRefPointer<QQmlContextData> effectiveContext;
+    };
+    Contexts getContexts() const;
 
     QQmlPlatform *m_platform = nullptr;
     QQmlApplication *m_application = nullptr;

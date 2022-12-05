@@ -45,9 +45,10 @@ public:
        \param location: The location where an error occurred.
      */
     IssueLocationWithContext(QStringView code, const QQmlJS::SourceLocation &location) {
-        int before = qMax(0,code.lastIndexOf(QLatin1Char('\n'), location.offset));
+        qsizetype before = qMax(0, code.lastIndexOf(QLatin1Char('\n'), location.offset));
 
-        if (before != 0) before++;
+        if (before != 0 && before < location.offset)
+            before++;
 
         m_beforeText = code.mid(before, location.offset - before);
         m_issueText = code.mid(location.offset, location.length);
@@ -130,6 +131,7 @@ extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlInvalidLintDirectiv
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUseProperFunction;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlAccessSingleton;
 extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlTopLevelComponent;
+extern const Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId qmlUncreatableType;
 
 struct Message : public QQmlJS::DiagnosticMessage
 {

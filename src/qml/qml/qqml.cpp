@@ -21,11 +21,14 @@
 #include <private/qv4errorobject_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlfinalizer_p.h>
+#include <private/qqmlloggingcategory_p.h>
 
 #include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcQml);
+Q_DECLARE_LOGGING_CATEGORY(lcJs);
 
 /*!
    \internal
@@ -1237,6 +1240,56 @@ QJSValue AOTCompiledContext::javaScriptGlobalProperty(uint nameIndex) const
     QV4::ScopedString name(scope, compilationUnit->runtimeStrings[nameIndex]);
     QV4::ScopedObject global(scope, scope.engine->globalObject);
     return QJSValuePrivate::fromReturnedValue(global->get(name->toPropertyKey()));
+}
+
+const QLoggingCategory *AOTCompiledContext::resolveLoggingCategory(QObject *wrapper, bool *ok) const
+{
+    if (wrapper) {
+        // We have to check this here because you may pass a plain QObject that only
+        // turns out to be a QQmlLoggingCategory at run time.
+        if (QQmlLoggingCategory *qQmlLoggingCategory
+                = qobject_cast<QQmlLoggingCategory *>(wrapper)) {
+            QLoggingCategory *loggingCategory = qQmlLoggingCategory->category();
+            *ok = true;
+            if (!loggingCategory) {
+                engine->handle()->throwError(
+                            QStringLiteral("A QmlLoggingCatgory was provided without a valid name"));
+            }
+            return loggingCategory;
+        }
+    }
+
+    *ok = false;
+    return qmlEngine() ? &lcQml() : &lcJs();
+}
+
+void AOTCompiledContext::writeToConsole(
+        QtMsgType type, const QString &message, const QLoggingCategory *loggingCategory) const
+{
+    Q_ASSERT(loggingCategory->isEnabled(type));
+
+    const QV4::CppStackFrame *frame = engine->handle()->currentStackFrame;
+    Q_ASSERT(frame);
+
+    QMessageLogger logger(qUtf8Printable(frame->source()), frame->lineNumber(),
+                          qUtf8Printable(frame->function()), loggingCategory->categoryName());
+
+    switch (type) {
+    case QtDebugMsg:
+        logger.debug("%s", qUtf8Printable(message));
+        break;
+    case QtInfoMsg:
+        logger.info("%s", qUtf8Printable(message));
+        break;
+    case QtWarningMsg:
+        logger.warning("%s", qUtf8Printable(message));
+        break;
+    case QtCriticalMsg:
+        logger.critical("%s", qUtf8Printable(message));
+        break;
+    default:
+        break;
+    }
 }
 
 bool AOTCompiledContext::callQmlContextPropertyLookup(

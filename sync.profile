@@ -24,13 +24,13 @@
     "QtLabsQmlModels" => "$basedir/src/labs/models",
     "QtLabsSharedImage" => "$basedir/src/labs/sharedimage",
     "QtQmlXmlListModel" => "$basedir/src/qmlxmllistmodel",
-    "QtQuickControls2" => "$basedir/src/quickcontrols2",
-    "QtQuickControls2Impl" => "$basedir/src/quickcontrols2impl",
+    "QtQuickControls2" => "$basedir/src/quickcontrols",
+    "QtQuickControls2Impl" => "$basedir/src/quickcontrolsimpl",
     "QtQuickControlsTestUtils" => "$basedir/src/quickcontrolstestutils",
-    "QtQuickDialogs2" => "$basedir/src/quickdialogs2/quickdialogs2",
-    "QtQuickDialogs2Utils" => "$basedir/src/quickdialogs2/quickdialogs2utils",
-    "QtQuickDialogs2QuickImpl" => "$basedir/src/quickdialogs2/quickdialogs2quickimpl",
-    "QtQuickTemplates2" => "$basedir/src/quicktemplates2"
+    "QtQuickDialogs2" => "$basedir/src/quickdialogs/quickdialogs",
+    "QtQuickDialogs2Utils" => "$basedir/src/quickdialogs/quickdialogsutils",
+    "QtQuickDialogs2QuickImpl" => "$basedir/src/quickdialogs/quickdialogsquickimpl",
+    "QtQuickTemplates2" => "$basedir/src/quicktemplates"
 );
 %inject_headers = (
     "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],

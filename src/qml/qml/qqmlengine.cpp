@@ -208,11 +208,13 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 #if QT_CONFIG(qml_debug)
     delete profiler;
 #endif
+    qDeleteAll(cachedValueTypeInstances);
 }
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
-    if (QQmlData *d = QQmlData::get(o)) {
+    QObjectPrivate *p = QObjectPrivate::get(o);
+    if (QQmlData *d = QQmlData::get(p)) {
         if (d->ownContext) {
             for (QQmlRefPointer<QQmlContextData> lc = d->ownContext->linkedContext(); lc;
                  lc = lc->linkedContext()) {
@@ -229,6 +231,23 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 
         if (d->outerContext && d->outerContext->contextObject() == o)
             d->outerContext->setContextObject(nullptr);
+
+        if (d->hasVMEMetaObject || d->hasInterceptorMetaObject) {
+            // This is somewhat dangerous because another thread might concurrently
+            // try to resolve the dynamic metaobject. In practice this will then
+            // lead to either the code path that still returns the interceptor
+            // metaobject or the code path that returns the string casted one. Both
+            // is fine if you cannot actually touch the object itself. Since the
+            // other thread is obviously not synchronized to this one, it can't.
+            //
+            // In particular we do this when delivering the frameSwapped() signal
+            // in QQuickWindow. The handler for frameSwapped() is written in a way
+            // that is thread safe as long as QQuickWindow's dtor hasn't finished.
+            // QQuickWindow's dtor does synchronize with the render thread, but it
+            // runs _after_ qdeclarativeelement_destructor.
+            static_cast<QQmlInterceptorMetaObject *>(p->metaObject)->invalidate();
+            d->hasVMEMetaObject = d->hasInterceptorMetaObject = false;
+        }
 
         // Mark this object as in the process of deletion to
         // prevent it resolving in bindings

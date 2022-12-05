@@ -6,8 +6,10 @@ set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     dynamicmeta.h
+    enumproblems.h
     gadgetwithenum.h
     invisible.h
+    multiforeign.h
     objectwithmethod.h
     person.cpp person.h
     state.h
@@ -54,9 +56,11 @@ set(qml_files
     blockComments.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
+    callWithSpread.qml
     childobject.qml
     colorAsVariant.qml
     colorString.qml
+    consoleObject.qml
     componentReturnType.qml
     compositeTypeMethod.qml
     compositesingleton.qml
@@ -73,6 +77,7 @@ set(qml_files
     dynamicscene.qml
     enumInvalid.qml
     enumLookup.qml
+    enumProblems.qml
     enumScope.qml
     enumsInOtherObject.qml
     enumsUser.qml
@@ -117,6 +122,8 @@ set(qml_files
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml
+    multiforeign.qml
+    namespaceWithEnum.qml
     noBindingLoop.qml
     noQQmlData.qml
     nonNotifyable.qml
@@ -124,6 +131,7 @@ set(qml_files
     notEqualsInt.qml
     notNotString.qml
     nullAccess.qml
+    nullComparison.qml
     objectInVar.qml
     outOfBounds.qml
     overriddenMember.qml

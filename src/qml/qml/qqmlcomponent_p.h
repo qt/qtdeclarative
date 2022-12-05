@@ -110,7 +110,9 @@ public:
 
         inline void ensureRequiredPropertyStorage();
         inline RequiredProperties *requiredProperties();
-        inline void addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info);
+        inline void addPendingRequiredProperty(
+                const QObject *object, const QQmlPropertyData *propData,
+                const RequiredPropertyInfo &info);
         inline bool hasUnsetRequiredProperties() const;
         inline void clearRequiredProperties();
 
@@ -193,10 +195,11 @@ inline RequiredProperties *QQmlComponentPrivate::ConstructionState::requiredProp
         return m_creatorOrRequiredProperties.asT2();
 }
 
-inline void QQmlComponentPrivate::ConstructionState::addPendingRequiredProperty(const QQmlPropertyData *propData, const RequiredPropertyInfo &info)
+inline void QQmlComponentPrivate::ConstructionState::addPendingRequiredProperty(
+        const QObject *object, const QQmlPropertyData *propData, const RequiredPropertyInfo &info)
 {
     Q_ASSERT(requiredProperties());
-    requiredProperties()->insert(propData, info);
+    requiredProperties()->insert({object, propData}, info);
 }
 
 inline bool QQmlComponentPrivate::ConstructionState::hasUnsetRequiredProperties() const {

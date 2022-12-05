@@ -19,6 +19,8 @@
 
 #include "qsgbatchrenderer_p.h"
 
+#include <QtCore/qrandom.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QSGBatchRenderer
@@ -182,6 +184,8 @@ private:
             QRhiGraphicsPipeline *ps = nullptr;
         } box;
     } m_overdrawVis;
+
+    QRandomGenerator m_randomGenerator;
 
     friend class Fade;
     friend class PipelineCache;

@@ -23,6 +23,7 @@ QT_REQUIRE_CONFIG(quick_tableview);
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQml/private/qqmlnullablevalue_p.h>
 #include <QtQml/private/qqmlfinalizer_p.h>
+#include <QtQml/private/qqmlguard_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +63,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(SelectionBehavior selectionBehavior READ selectionBehavior WRITE setSelectionBehavior NOTIFY selectionBehaviorChanged REVISION(6, 4) FINAL)
     Q_PROPERTY(bool resizableColumns READ resizableColumns WRITE setResizableColumns NOTIFY resizableColumnsChanged REVISION(6, 5) FINAL)
     Q_PROPERTY(bool resizableRows READ resizableRows WRITE setResizableRows NOTIFY resizableRowsChanged REVISION(6, 5) FINAL)
+    Q_PROPERTY(EditTriggers editTriggers READ editTriggers WRITE setEditTriggers NOTIFY editTriggersChanged REVISION(6, 5) FINAL)
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -89,6 +91,17 @@ public:
         SelectColumns
     };
     Q_ENUM(SelectionBehavior)
+
+    enum EditTrigger {
+        NoEditTriggers = 0x0,
+        SingleTapped = 0x1,
+        DoubleTapped = 0x2,
+        SelectedTapped = 0x4,
+        EditKeyPressed = 0x8,
+        AnyKeyPressed = 0x10,
+    };
+    Q_DECLARE_FLAGS(EditTriggers, EditTrigger)
+    Q_FLAG(EditTriggers)
 
     QQuickTableView(QQuickItem *parent = nullptr);
     ~QQuickTableView() override;
@@ -156,6 +169,9 @@ public:
     bool resizableRows() const;
     void setResizableRows(bool enabled);
 
+    EditTriggers editTriggers() const;
+    void setEditTriggers(EditTriggers editTriggers);
+
     Q_INVOKABLE void forceLayout();
     Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
     Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
@@ -194,6 +210,9 @@ public:
     Q_REVISION(6, 5) Q_INVOKABLE void clearRowHeights();
     Q_REVISION(6, 5) Q_INVOKABLE qreal explicitRowHeight(int row) const;
 
+    Q_REVISION(6, 5) Q_INVOKABLE void edit(const QModelIndex &index);
+    Q_REVISION(6, 5) Q_INVOKABLE void closeEditor();
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:
@@ -222,6 +241,7 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void selectionBehaviorChanged();
     Q_REVISION(6, 5) void resizableColumnsChanged();
     Q_REVISION(6, 5) void resizableRowsChanged();
+    Q_REVISION(6, 5) void editTriggersChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -247,6 +267,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickTableView *view READ view NOTIFY viewChanged)
+    Q_PROPERTY(QQmlComponent *editDelegate READ editDelegate WRITE setEditDelegate NOTIFY editDelegateChanged)
 
 public:
     QQuickTableViewAttached(QObject *parent)
@@ -260,18 +281,31 @@ public:
         Q_EMIT viewChanged();
     }
 
+    QQmlComponent *editDelegate() const { return m_editDelegate; }
+    void setEditDelegate(QQmlComponent *newEditDelegate)
+    {
+        if (m_editDelegate == newEditDelegate)
+            return;
+        m_editDelegate = newEditDelegate;
+        emit editDelegateChanged();
+    }
+
 Q_SIGNALS:
     void viewChanged();
     void pooled();
     void reused();
+    void editDelegateChanged();
+    void commit();
 
 private:
     QPointer<QQuickTableView> m_view;
+    QQmlGuard<QQmlComponent> m_editDelegate;
 
     friend class QQuickTableViewPrivate;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::PositionMode)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::EditTriggers)
 
 QT_END_NAMESPACE
 

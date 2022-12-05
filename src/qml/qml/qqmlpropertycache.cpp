@@ -217,8 +217,7 @@ void QQmlPropertyCache::appendProperty(const QString &name, QQmlPropertyData::Fl
     int index = propertyIndexCache.size();
     propertyIndexCache.append(data);
 
-    setNamedProperty(name, index + propertyOffset(), propertyIndexCache.data() + index,
-                     overrideResult == ValidOverride);
+    setNamedProperty(name, index + propertyOffset(), propertyIndexCache.data() + index);
 }
 
 void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flags flags,
@@ -255,11 +254,9 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     QString handlerName = QLatin1String("on") + name;
     handlerName[2] = handlerName.at(2).toUpper();
 
-    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex,
-                     overrideResult == ValidOverride);
+    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex);
     setNamedProperty(handlerName, signalHandlerIndex + signalOffset(),
-                     signalHandlerIndexCache.data() + signalHandlerIndex,
-                     overrideResult == ValidOverride);
+                     signalHandlerIndexCache.data() + signalHandlerIndex);
 }
 
 void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flags flags,
@@ -286,8 +283,7 @@ void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flag
     int methodIndex = methodIndexCache.size();
     methodIndexCache.append(data);
 
-    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex,
-                     overrideResult == ValidOverride);
+    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex);
 }
 
 void QQmlPropertyCache::appendEnum(const QString &name, const QVector<QQmlEnumValue> &values)
@@ -452,11 +448,11 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 if (handleOverride(methodName, data, (old = it->second)) == InvalidOverride)
                     continue;
             }
-            setNamedProperty(methodName, ii, data, (old != nullptr));
+            setNamedProperty(methodName, ii, data);
 
             if (data->isSignal()) {
                 QHashedString on(QLatin1String("on") % methodName.at(0).toUpper() % QStringView{methodName}.mid(1));
-                setNamedProperty(on, ii, sigdata, (old != nullptr));
+                setNamedProperty(on, ii, sigdata);
                 ++signalHandlerIndex;
             }
         } else {
@@ -465,7 +461,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 if (handleOverride(methodName, data, (old = it->second)) == InvalidOverride)
                     continue;
             }
-            setNamedProperty(methodName, ii, data, (old != nullptr));
+            setNamedProperty(methodName, ii, data);
 
             if (data->isSignal()) {
                 int length = methodName.length();
@@ -479,7 +475,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 str[length + 2] = '\0';
 
                 QHashedString on(QString::fromLatin1(str.data()));
-                setNamedProperty(on, ii, data, (old != nullptr));
+                setNamedProperty(on, ii, data);
                 ++signalHandlerIndex;
             }
         }
@@ -527,14 +523,14 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 if (handleOverride(propName, data, (old = it->second)) == InvalidOverride)
                     continue;
             }
-            setNamedProperty(propName, ii, data, (old != nullptr));
+            setNamedProperty(propName, ii, data);
         } else {
             QHashedCStringRef propName(str, cptr - str);
             if (StringCache::mapped_type *it = stringCache.value(propName)) {
                 if (handleOverride(propName, data, (old = it->second)) == InvalidOverride)
                     continue;
             }
-            setNamedProperty(propName, ii, data, (old != nullptr));
+            setNamedProperty(propName, ii, data);
         }
 
         bool isGadget = true;
@@ -582,7 +578,6 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
     methodIndexCache.clear();
     signalHandlerIndexCache.clear();
 
-    _hasPropertyOverrides = false;
     argumentsCache = nullptr;
 
     int pc = metaObject->propertyCount();

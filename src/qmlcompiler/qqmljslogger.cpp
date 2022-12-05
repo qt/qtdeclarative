@@ -56,6 +56,8 @@ const LoggerWarningId qmlInvalidLintDirective { "invalid-lint-directive" };
 const LoggerWarningId qmlUseProperFunction { "use-proper-function" };
 const LoggerWarningId qmlAccessSingleton { "access-singleton-via-object" };
 const LoggerWarningId qmlTopLevelComponent { "top-level-component" };
+const LoggerWarningId qmlUncreatableType { "uncreatable-type" };
+
 
 const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
 {
@@ -172,7 +174,10 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                 QStringLiteral("Warn if a singleton is accessed via an object"), QtWarningMsg },
         QQmlJSLogger::Category {
             qmlTopLevelComponent.name().toString(), QStringLiteral("TopLevelComponent"),
-            QStringLiteral("Fail when a top level Component are encountered"), QtWarningMsg }
+            QStringLiteral("Fail when a top level Component are encountered"), QtWarningMsg },
+        QQmlJSLogger::Category {
+            qmlUncreatableType.name().toString(), QStringLiteral("UncreatableType"),
+            QStringLiteral("Warn if uncreatable types are created"), QtWarningMsg }
     };
 
     return cats;
@@ -269,7 +274,7 @@ void QQmlJSLogger::log(const QString &message, LoggerWarningId id,
     default: break;
     }
 
-    if (srcLocation.isValid() && !m_code.isEmpty() && showContext)
+    if (srcLocation.length > 0 && !m_code.isEmpty() && showContext)
         printContext(overrideFileName, srcLocation);
 
     if (suggestion.has_value())

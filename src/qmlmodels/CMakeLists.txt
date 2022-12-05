@@ -11,6 +11,8 @@ qt_internal_add_qml_module(QmlModels
     DESIGNER_SUPPORTED
     PLUGIN_TARGET modelsplugin
     CLASS_NAME QtQmlModelsPlugin
+    DEPENDENCIES
+        QtQml.Base/auto
     SOURCES
         qqmlchangeset.cpp qqmlchangeset_p.h
         qqmlmodelsmodule.cpp qqmlmodelsmodule_p.h

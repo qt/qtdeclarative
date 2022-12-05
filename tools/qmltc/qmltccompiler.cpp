@@ -165,11 +165,6 @@ void QmltcCompiler::compileType(
         QmltcType &current, const QQmlJSScope::ConstPtr &type,
         std::function<void(QmltcType &, const QQmlJSScope::ConstPtr &)> compileElements)
 {
-    if (type->isSingleton()) {
-        recordError(type->sourceLocation(), u"Singleton types are not supported"_s);
-        return;
-    }
-
     Q_ASSERT(!type->internalName().isEmpty());
     current.cppType = type->internalName();
     Q_ASSERT(!type->baseType()->internalName().isEmpty());
@@ -182,6 +177,7 @@ void QmltcCompiler::compileType(
     const bool documentRoot = (type == rootType);
     const bool inlineComponent = type->isInlineComponent();
     const bool isAnonymous = !documentRoot || type->internalName().at(0).isLower();
+    const bool isSingleton = type->isSingleton();
 
     QmltcCodeGenerator generator { m_url, m_visitor };
 
@@ -231,7 +227,7 @@ void QmltcCompiler::compileType(
 
     // add special member functions
     current.baselineCtor.access = QQmlJSMetaMethod::Protected;
-    if (documentRoot || inlineComponent) {
+    if (documentRoot || inlineComponent || isSingleton) {
         current.externalCtor.access = QQmlJSMetaMethod::Public;
     } else {
         current.externalCtor.access = QQmlJSMetaMethod::Protected;
@@ -318,6 +314,23 @@ void QmltcCompiler::compileType(
                         + u"(creator, engine, QQmlData::get(parent)->outerContext);";
     }
 
+    if (isSingleton) {
+        // see https://doc.qt.io/qt-6/qqmlengine.html#QML_SINGLETON for context
+        current.mocCode.append(u"QML_SINGLETON"_s);
+        auto &staticCreate = current.staticCreate.emplace();
+        staticCreate.comments
+                << u"Used by the engine for singleton creation."_s
+                << u"See also \\l {https://doc.qt.io/qt-6/qqmlengine.html#QML_SINGLETON}."_s;
+        staticCreate.type = QQmlJSMetaMethod::StaticMethod;
+        staticCreate.access = QQmlJSMetaMethod::Public;
+        staticCreate.name = u"create"_s;
+        staticCreate.returnType = u"%1 *"_s.arg(current.cppType);
+        QmltcVariable jsEngine(u"QJSEngine*"_s, u"jsEngine"_s);
+        staticCreate.parameterList = { engine, jsEngine };
+        staticCreate.body << u"Q_UNUSED(jsEngine);"_s
+                          << u"%1 *result = new %1(engine, nullptr);"_s.arg(current.cppType)
+                          << u"return result;"_s;
+    }
     auto postponedQmlContextSetup = generator.generate_initCode(current, type);
     generator.generate_endInitCode(current, type);
     generator.generate_setComplexBindingsCode(current, type);
@@ -399,23 +412,20 @@ void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
                               u"Q_ENUM(%1)"_s.arg(e.name()));
 }
 
-static QList<QmltcVariable> compileMethodParameters(
-        const QStringList &names, const QList<QSharedPointer<const QQmlJSScope>> &types,
-        const QList<QQmlJSMetaMethod::Constness> &parameterQualifiers, bool allowUnnamed = false)
+static QList<QmltcVariable>
+compileMethodParameters(const QList<QQmlJSMetaParameter> &parameterInfos, bool allowUnnamed = false)
 {
-    Q_ASSERT(names.size() == types.size());
-    Q_ASSERT(parameterQualifiers.size() == types.size());
-
     QList<QmltcVariable> parameters;
-    const auto size = names.size();
+    const auto size = parameterInfos.size();
     parameters.reserve(size);
     for (qsizetype i = 0; i < size; ++i) {
-        Q_ASSERT(types[i]); // assume verified
-        QString name = names[i];
+        const auto &p = parameterInfos[i];
+        Q_ASSERT(p.type()); // assume verified
+        QString name = p.name();
         Q_ASSERT(allowUnnamed || !name.isEmpty()); // assume verified
         if (name.isEmpty() && allowUnnamed)
             name = u"unnamed_" + QString::number(i);
-        parameters.emplaceBack(types[i]->augmentedInternalName(), name, QString());
+        parameters.emplaceBack(p.type()->augmentedInternalName(), name, QString());
     }
     return parameters;
 }
@@ -438,14 +448,8 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
                                   const QQmlJSScope::ConstPtr &owner)
 {
     const auto returnType = figureReturnType(m);
-    const auto paramNames = m.parameterNames();
-    const auto paramTypes = m.parameterTypes();
-    const auto paramFlags = m.parameterTypeQualifiers();
 
-    Q_ASSERT(paramNames.size() == paramTypes.size()); // assume verified
-    Q_ASSERT(paramFlags.size() == paramTypes.size());
-    const QList<QmltcVariable> compiledParams =
-            compileMethodParameters(paramNames, paramTypes, paramFlags);
+    const QList<QmltcVariable> compiledParams = compileMethodParameters(m.parameters());
     const auto methodType = QQmlJSMetaMethod::Type(m.methodType());
 
     QStringList code;
@@ -904,9 +908,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
             setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(underlyingType),
                                              aliasName + u"_", u""_s);
         } else {
-            setter.parameterList = compileMethodParameters(methods.at(0).parameterNames(),
-                                                           methods.at(0).parameterTypes(),
-                                                           methods.at(0).parameterTypeQualifiers(),
+            setter.parameterList = compileMethodParameters(methods.at(0).parameters(),
                                                            /* allow unnamed = */ true);
         }
 
@@ -1639,9 +1641,8 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         const QString slotName = newSymbol(signalName + u"_slot");
 
         const QString signalReturnType = figureReturnType(signal);
-        const QList<QmltcVariable> slotParameters = compileMethodParameters(
-                signal.parameterNames(), signal.parameterTypes(), signal.parameterTypeQualifiers(),
-                /* allow unnamed = */ true);
+        const QList<QmltcVariable> slotParameters =
+                compileMethodParameters(signal.parameters(), /* allow unnamed = */ true);
 
         // SignalHander specific:
         QmltcMethod slotMethod {};

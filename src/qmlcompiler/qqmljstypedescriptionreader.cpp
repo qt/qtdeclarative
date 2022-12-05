@@ -31,8 +31,7 @@ QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char
 }
 
 bool QQmlJSTypeDescriptionReader::operator()(
-        QHash<QString, QQmlJSExportedScope> *objects,
-        QStringList *dependencies)
+        QList<QQmlJSExportedScope> *objects, QStringList *dependencies)
 {
     Engine engine;
 
@@ -212,7 +211,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else if (name == QLatin1String("isSingleton")) {
                 scope->setIsSingleton(readBoolBinding(script));
             } else if (name == QLatin1String("isCreatable")) {
-                scope->setIsCreatable(readBoolBinding(script));
+                scope->setCreatableFlag(readBoolBinding(script));
             } else if (name == QLatin1String("isComposite")) {
                 scope->setIsComposite(readBoolBinding(script));
             } else if (name == QLatin1String("hasCustomParser")) {
@@ -260,7 +259,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 
     if (metaObjectRevisions)
         checkMetaObjectRevisions(metaObjectRevisions, &exports);
-    m_objects->insert(scope->internalName(), {scope, exports});
+    m_objects->append({scope, exports});
 }
 
 void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
@@ -455,8 +454,9 @@ void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSM
         }
     }
 
-    metaMethod->addParameter(name, type,
-                             isConstant ? QQmlJSMetaMethod::Const : QQmlJSMetaMethod::NonConst);
+    QQmlJSMetaParameter p(name, type);
+    p.setTypeQualifier(isConstant ? QQmlJSMetaParameter::Const : QQmlJSMetaParameter::NonConst);
+    metaMethod->addParameter(std::move(p));
 }
 
 QString QQmlJSTypeDescriptionReader::readStringBinding(UiScriptBinding *ast)

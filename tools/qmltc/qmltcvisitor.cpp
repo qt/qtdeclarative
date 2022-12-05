@@ -103,7 +103,10 @@ void QmltcVisitor::findCppIncludes()
 
         // look in type's base type
         auto base = type->baseType();
-        Q_ASSERT(base || !type->isComposite());
+        if (!base && type->isComposite())
+            // in this case, qqmljsimportvisitor would have already print an error message
+            // about the missing type, so just return silently without crashing
+            return;
         if (!base || visitType(base))
             return;
         addCppInclude(base);
@@ -156,9 +159,9 @@ void QmltcVisitor::findCppIncludes()
             for (const QQmlJSMetaMethod &m : methods) {
                 findInType(m.returnType());
 
-                const auto parameters = m.parameterTypes();
+                const auto parameters = m.parameters();
                 for (const auto &param : parameters)
-                    findInType(param);
+                    findInType(param.type());
             }
         }
 

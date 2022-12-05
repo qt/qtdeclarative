@@ -346,16 +346,26 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
     return false;
 }
 
+static QMetaObject *stringCastMetaObject(QObject *o, const QMetaObject *top)
+{
+    for (const QMetaObject *mo = top; mo; mo = mo->superClass()) {
+        if (o->qt_metacast(mo->className()) != nullptr)
+            return const_cast<QMetaObject *>(mo);
+    }
+    return nullptr;
+}
 
 QMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObject *o)
 {
-    Q_UNUSED(o);
     if (!metaObject)
         metaObject = cache->createMetaObject();
 
+    if (Q_UNLIKELY(metaObject.tag() == MetaObjectInvalid))
+        return stringCastMetaObject(o, metaObject->superClass());
+
     // ### Qt7: The const_cast is only due to toDynamicMetaObject having the wrong return type.
     //          It should be const QMetaObject *. Fix this.
-    return const_cast<QMetaObject *>(metaObject);
+    return const_cast<QMetaObject *>(metaObject.data());
 }
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
@@ -891,7 +901,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                     QObject *arg = *reinterpret_cast<QObject **>(a[0]);
                                     if (const auto *wrap = sv->as<QV4::QObjectWrapper>())
                                         needActivate = wrap->object() != arg;
-                                    else
+                                    else if (arg != nullptr || !sv->isNull())
                                         needActivate = true;
                                     if (needActivate)
                                         writeProperty(id, arg);

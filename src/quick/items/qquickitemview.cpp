@@ -1353,7 +1353,7 @@ qreal QQuickItemView::maxYExtent() const
 {
     Q_D(const QQuickItemView);
     if (d->layoutOrientation() == Qt::Horizontal)
-        return height();
+        return QQuickFlickable::maxYExtent();
 
     if (d->vData.maxExtentDirty) {
         d->maxExtent = d->maxExtentForAxis(d->vData, false);
@@ -1381,7 +1381,7 @@ qreal QQuickItemView::maxXExtent() const
 {
     Q_D(const QQuickItemView);
     if (d->layoutOrientation() == Qt::Vertical)
-        return width();
+        return QQuickFlickable::maxXExtent();
 
     if (d->hData.maxExtentDirty) {
         d->maxExtent = d->maxExtentForAxis(d->hData, true);

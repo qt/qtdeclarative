@@ -173,8 +173,18 @@ void QmlTypesClassDescription::collect(
         }
     }
 
+    // If the local type is a namespace the result can only be a namespace,
+    // no matter what the foreign type is.
+    const bool isNamespace = classDef->value(QLatin1String("namespace")).toBool();
+
     if (!foreignTypeName.isEmpty()) {
-        if (const QJsonObject *other = findType(foreign, foreignTypeName)) {
+        const QJsonObject *other = findType(foreign, foreignTypeName);
+
+        // We can re-use a type with own QML_* macros as target of QML_FOREIGN
+        if (!other)
+            other = findType(types, foreignTypeName);
+
+        if (other) {
             classDef = other;
 
             // Default properties are always local.
@@ -245,6 +255,9 @@ void QmlTypesClassDescription::collect(
     if (!sequenceValueType.isEmpty()) {
         isCreatable = false;
         accessSemantics = QLatin1String("sequence");
+    } else if (isNamespace) {
+        isCreatable = false;
+        accessSemantics = QLatin1String("none");
     } else if (classDef && classDef->value(QLatin1String("object")).toBool()) {
         accessSemantics = QLatin1String("reference");
     } else {

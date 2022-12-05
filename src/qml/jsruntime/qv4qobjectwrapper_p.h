@@ -194,6 +194,9 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
 
+    static QString objectToString(
+            ExecutionEngine *engine, const QMetaObject *metaObject, QObject *object);
+
 protected:
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);

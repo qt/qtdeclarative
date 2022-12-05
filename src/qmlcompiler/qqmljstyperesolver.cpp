@@ -42,6 +42,10 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_listPropertyType = builtinTypes.type(u"QQmlListProperty<QObject>"_s).scope;
     m_qObjectListType = builtinTypes.type(u"QObjectList"_s).scope;
 
+    QQmlJSScope::Ptr emptyType = QQmlJSScope::create();
+    emptyType->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
+    m_emptyType = emptyType;
+
     QQmlJSScope::Ptr emptyListType = QQmlJSScope::create();
     emptyListType->setInternalName(u"void*"_s);
     emptyListType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
@@ -150,6 +154,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeForConst(QV4::ReturnedValue rv) co
 
     if (value.isNull())
         return nullType();
+
+    if (value.isEmpty())
+        return emptyType();
 
     return {};
 }
@@ -988,6 +995,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
                                                      const QString &name) const
 {
     QQmlJSRegisterContent result;
+
+    // If we got a plain type reference we have to check the enums of the _scope_.
+    if (equals(type, metaObjectType()))
+        return {};
 
     if (equals(type, jsValueType())) {
         QQmlJSMetaProperty prop;

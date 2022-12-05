@@ -124,7 +124,9 @@ private slots:
     void viewport();
 
     void qobject_castOnDestruction();
+    void signalsOnDestruction_data();
     void signalsOnDestruction();
+    void visibleChanged();
 
 private:
     QQmlEngine engine;
@@ -4009,50 +4011,133 @@ void tst_QQuickItem::qobject_castOnDestruction()
 /*
     Items that are getting destroyed should not emit property change notifications.
 */
+void tst_QQuickItem::signalsOnDestruction_data()
+{
+    QTest::addColumn<bool>("childVisible");
+    QTest::addColumn<bool>("grandChildVisible");
+
+    QTest::addRow("Both visible") << true << true;
+    QTest::addRow("Child visible") << true << false;
+    QTest::addRow("Grand child visible") << false << true;
+    QTest::addRow("Both hidden") << false << false;
+}
+
 void tst_QQuickItem::signalsOnDestruction()
 {
+    QFETCH(bool, childVisible);
+    QFETCH(bool, grandChildVisible);
+
     QQuickWindow window;
     window.show();
 
-    // visual children, but not QObject children
+    int expectedChildVisibleCount = 0;
+    int expectedGrandChildVisibleCount = 0;
+
+    // Visual children, but not QObject children.
+    // Note: QQuickItem's visible property defaults to true after creation, as visual
+    // items are always expected to be added to a visual hierarchy. So for the sake
+    // of this test we first add, and then remove the item from a parent. This explicitly
+    // sets the effective visibility to false.
     std::unique_ptr<QQuickItem> parent(new QQuickItem(window.contentItem()));
+    QVERIFY(parent->isVisible());
     std::unique_ptr<QQuickItem> child(new QQuickItem);
+    child->setVisible(childVisible);
+    child->setParentItem(parent.get());
+    child->setParentItem(nullptr);
+    QVERIFY(!child->isVisible());
     std::unique_ptr<QQuickItem> grandChild(new QQuickItem);
+    grandChild->setVisible(grandChildVisible);
+    grandChild->setParentItem(child.get());
+    grandChild->setParentItem(nullptr);
+    QVERIFY(!grandChild->isVisible());
 
     QSignalSpy childrenSpy(parent.get(), &QQuickItem::childrenChanged);
     QSignalSpy visibleChildrenSpy(parent.get(), &QQuickItem::visibleChildrenChanged);
     QSignalSpy childParentSpy(child.get(), &QQuickItem::parentChanged);
+    QSignalSpy childVisibleSpy(child.get(), &QQuickItem::visibleChanged);
     QSignalSpy childChildrenSpy(child.get(), &QQuickItem::childrenChanged);
     QSignalSpy childVisibleChildrenSpy(child.get(), &QQuickItem::visibleChildrenChanged);
     QSignalSpy grandChildParentSpy(grandChild.get(), &QQuickItem::parentChanged);
+    QSignalSpy grandChildVisibleSpy(grandChild.get(), &QQuickItem::visibleChanged);
 
     child->setParentItem(parent.get());
     QCOMPARE(childrenSpy.count(), 1);
-    QCOMPARE(visibleChildrenSpy.count(), 1);
+    if (childVisible)
+        ++expectedChildVisibleCount;
+    QCOMPARE(visibleChildrenSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childParentSpy.count(), 1);
+    QCOMPARE(childVisibleSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childChildrenSpy.count(), 0);
     QCOMPARE(childVisibleChildrenSpy.count(), 0);
 
     grandChild->setParentItem(child.get());
     QCOMPARE(childrenSpy.count(), 1);
-    QCOMPARE(visibleChildrenSpy.count(), 1);
+    QCOMPARE(visibleChildrenSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childParentSpy.count(), 1);
+    QCOMPARE(childVisibleSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childChildrenSpy.count(), 1);
-    QCOMPARE(childVisibleChildrenSpy.count(), 1);
+    if (grandChildVisible && childVisible)
+        ++expectedGrandChildVisibleCount;
+    QCOMPARE(childVisibleChildrenSpy.count(), expectedGrandChildVisibleCount);
     QCOMPARE(grandChildParentSpy.count(), 1);
+    QCOMPARE(grandChildVisibleSpy.count(), expectedGrandChildVisibleCount);
 
     parent.reset();
 
     QVERIFY(!child->parentItem());
     QVERIFY(grandChild->parentItem());
     QCOMPARE(childrenSpy.count(), 1);
-    QCOMPARE(visibleChildrenSpy.count(), 1);
+    QCOMPARE(visibleChildrenSpy.count(), expectedChildVisibleCount);
     QCOMPARE(childParentSpy.count(), 2);
     QCOMPARE(childChildrenSpy.count(), 1);
-    QCOMPARE(childVisibleChildrenSpy.count(), 1);
+    if (childVisible)
+        ++expectedChildVisibleCount;
+    QCOMPARE(childVisibleSpy.count(), expectedChildVisibleCount);
+    if (childVisible && grandChildVisible)
+        ++expectedGrandChildVisibleCount;
+    QCOMPARE(childVisibleChildrenSpy.count(), expectedGrandChildVisibleCount);
     QCOMPARE(grandChildParentSpy.count(), 1);
+    QCOMPARE(grandChildVisibleSpy.count(), expectedGrandChildVisibleCount);
 }
 
+void tst_QQuickItem::visibleChanged()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("visiblechanged.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
+    QVERIFY(root);
+
+    QPointer<QQuickItem> parentItem = root->findChild<QQuickItem *>("parentItem");
+    QPointer<QQuickItem> childItem = root->findChild<QQuickItem *>("childItem");
+    QPointer<QQuickItem> loader = root->findChild<QQuickItem *>("loader");
+    QPointer<QQuickItem> loaderChild = root->findChild<QQuickItem *>("loaderChild");
+    QVERIFY(parentItem);
+    QVERIFY(childItem);
+    QVERIFY(loader);
+    QVERIFY(loaderChild);
+
+    QSignalSpy parentItemSpy(parentItem.data(), &QQuickItem::visibleChanged);
+    QSignalSpy childItemSpy(childItem.data(), &QQuickItem::visibleChanged);
+    QSignalSpy loaderChildSpy(loaderChild.data(), &QQuickItem::visibleChanged);
+
+    loader->setProperty("active", false);
+    QCOMPARE(parentItemSpy.count(), 0);
+    QCOMPARE(childItemSpy.count(), 0);
+    QVERIFY(!loaderChild->parentItem());
+    QCOMPARE(loaderChildSpy.count(), 1);
+    QCOMPARE(loaderChild->isVisible(), false);
+
+    delete parentItem.data();
+    QVERIFY(!parentItem);
+    QVERIFY(childItem);
+    QVERIFY(!childItem->parentItem());
+
+    QCOMPARE(parentItemSpy.count(), 0);
+    QCOMPARE(childItemSpy.count(), 1);
+}
 
 QTEST_MAIN(tst_QQuickItem)
 

@@ -101,6 +101,13 @@ public:
         if constexpr (std::is_same_v<T, QJSManagedValue>)
             return toManagedValue(value);
 
+        if constexpr (std::is_same_v<T, QString>) {
+            if (targetType.flags() & QMetaType::PointerToQObject) {
+                return convertQObjectToString(
+                            *reinterpret_cast<QObject *const *>(value.constData()));
+            }
+        }
+
         if (sourceType == QMetaType::fromType<QJSValue>())
             return fromScriptValue<T>(*reinterpret_cast<const QJSValue *>(value.constData()));
 
@@ -147,6 +154,11 @@ public:
 
         if constexpr (std::is_same_v<To, QVariant>)
             return QVariant::fromValue(from);
+
+        if constexpr (std::is_same_v<To, QString>
+                && std::is_base_of_v<QObject, std::remove_const_t<std::remove_pointer_t<To>>>) {
+            return convertQObjectToString(from);
+        }
 
         if constexpr (std::is_same_v<To, std::remove_const_t<std::remove_pointer_t<To>> const *>) {
             using nonConstTo = std::remove_const_t<std::remove_pointer_t<To>> *;
@@ -220,6 +232,7 @@ private:
 
     bool convertVariant(const QVariant &value, QMetaType metaType, void *ptr);
     bool convertMetaType(QMetaType fromType, const void *from, QMetaType toType, void *to);
+    QString convertQObjectToString(QObject *object);
 
     template<typename T>
     friend inline T qjsvalue_cast(const QJSValue &);

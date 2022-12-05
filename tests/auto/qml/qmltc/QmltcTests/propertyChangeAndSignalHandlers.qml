@@ -53,4 +53,16 @@ Item {
             dChangedCount4 = value / 2;
         }
     }
+
+    TypeWithProperties {
+        id: five
+
+        property int mouseButtonA
+        property int mouseButtonB
+        // check if enums/flags can be compiled when used as signal parameters, instead of throwing asserts
+        onSignalWithEnum: function (a, b) {
+            mouseButtonA = a
+            mouseButtonB = b
+        }
+    }
 }

@@ -30,12 +30,15 @@ class Q_QML_PRIVATE_EXPORT QQmlApplicationEnginePrivate : public QQmlEnginePriva
 public:
     QQmlApplicationEnginePrivate(QQmlEngine *e);
     ~QQmlApplicationEnginePrivate();
+    void ensureInitialized();
     void init();
     void cleanUp();
 
     void startLoad(const QUrl &url, const QByteArray &data = QByteArray(), bool dataFlag = false);
+    void startLoad(QAnyStringView uri, QAnyStringView type);
     void _q_loadTranslations();
     void finishLoad(QQmlComponent *component);
+    void ensureLoadingFinishes(QQmlComponent *component);
     QList<QObject *> objects;
     QVariantMap initialProperties;
     QStringList extraFileSelectors;

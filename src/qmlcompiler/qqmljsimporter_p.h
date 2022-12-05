@@ -115,7 +115,7 @@ private:
         bool isStaticModule = false;
         bool isSystemModule = false;
 
-        QHash<QString, QQmlJSExportedScope> objects;
+        QList<QQmlJSExportedScope> objects;
         QHash<QString, QQmlJSExportedScope> scripts;
         QList<QQmlDirParser::Import> imports;
         QList<QQmlDirParser::Import> dependencies;
@@ -130,7 +130,7 @@ private:
     void importDependencies(const QQmlJSImporter::Import &import, AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision(), bool isDependency = false);
-    void readQmltypes(const QString &filename, QHash<QString, QQmlJSExportedScope> *objects,
+    void readQmltypes(const QString &filename, QList<QQmlJSExportedScope> *objects,
                       QList<QQmlDirParser::Import> *dependencies);
     Import readQmldir(const QString &dirname);
     Import readDirectory(const QString &directory);

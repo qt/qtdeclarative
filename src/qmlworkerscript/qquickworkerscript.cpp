@@ -119,11 +119,16 @@ public:
     QMutex m_lock;
     QWaitCondition m_wait;
 
-    QHash<int, QV4::ExecutionEngine *> workers;
+    // ExecutionEngines are owned by the worker script and created and deleted
+    // in the worker thread. QQuickWorkerScript instances, however, belong to
+    // the main thread. They are only inserted as place holders when creating
+    // the worker script.
+    QHash<int, QBiPointer<QV4::ExecutionEngine, QQuickWorkerScript>> workers;
 
     int m_nextId;
 
     static QV4::ReturnedValue method_sendMessage(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    QV4::ExecutionEngine *workerEngine(int id);
 
 signals:
     void stopThread();
@@ -177,7 +182,8 @@ bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
         WorkerRemoveEvent *workerEvent = static_cast<WorkerRemoveEvent *>(event);
         auto itr = workers.find(workerEvent->workerId());
         if (itr != workers.end()) {
-            delete itr.value();
+            if (itr->isT1())
+                delete itr->asT1();
             workers.erase(itr);
         }
         return true;
@@ -186,9 +192,26 @@ bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
     }
 }
 
+QV4::ExecutionEngine *QQuickWorkerScriptEnginePrivate::workerEngine(int id)
+{
+    const auto it = workers.find(id);
+    if (it == workers.end())
+        return nullptr;
+    if (it->isT1())
+        return it->asT1();
+
+    QQuickWorkerScript *owner = it->asT2();
+    auto *engine = new QV4::ExecutionEngine;
+    WorkerScript *script = workerScriptExtension(engine);
+    script->owner = owner;
+    script->p = this;
+    *it = engine;
+    return engine;
+}
+
 void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &data)
 {
-    QV4::ExecutionEngine *engine = workers.value(id);
+    QV4::ExecutionEngine *engine = workerEngine(id);
     if (!engine)
         return;
 
@@ -222,7 +245,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
 
     QString fileName = QQmlFile::urlToLocalFileOrQrc(url);
 
-    QV4::ExecutionEngine *engine = workers.value(id);
+    QV4::ExecutionEngine *engine = workerEngine(id);
     if (!engine)
         return;
 
@@ -384,25 +407,25 @@ WorkerScript::WorkerScript(QV4::ExecutionEngine *engine)
 int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 {
     const int id = d->m_nextId++;
-    auto *engine = new QV4::ExecutionEngine;
 
     d->m_lock.lock();
-    d->workers.insert(id, engine);
+    d->workers.insert(id, owner);
     d->m_lock.unlock();
-
-    WorkerScript *script = workerScriptExtension(engine);
-    script->owner = owner;
-    script->p = d;
 
     return id;
 }
 
 void QQuickWorkerScriptEngine::removeWorkerScript(int id)
 {
-    if (QV4::ExecutionEngine *engine = d->workers.value(id)) {
+    const auto it = d->workers.find(id);
+    if (it == d->workers.end())
+        return;
+
+    if (it->isT1()) {
+        QV4::ExecutionEngine *engine = it->asT1();
         workerScriptExtension(engine)->owner = nullptr;
-        QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
     }
+    QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
 }
 
 void QQuickWorkerScriptEngine::executeUrl(int id, const QUrl &url)
@@ -418,14 +441,16 @@ void QQuickWorkerScriptEngine::sendMessage(int id, const QByteArray &data)
 void QQuickWorkerScriptEngine::run()
 {
     d->m_lock.lock();
-
     d->m_wait.wakeAll();
-
     d->m_lock.unlock();
 
     exec();
 
-    qDeleteAll(d->workers);
+    for (auto it = d->workers.begin(), end = d->workers.end(); it != end; ++it) {
+        if (it->isT1())
+            delete it->asT1();
+    }
+
     d->workers.clear();
 }
 

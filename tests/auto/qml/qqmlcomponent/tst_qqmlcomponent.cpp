@@ -138,6 +138,7 @@ private slots:
     void boundComponent();
     void loadFromModule_data();
     void loadFromModule();
+    void loadFromModuleThenCreateWithIncubator();
     void loadFromModuleFailures_data();
     void loadFromModuleFailures();
     void loadFromModuleRequired();
@@ -1326,6 +1327,29 @@ void tst_qqmlcomponent::loadFromModule()
     const char *name = object->metaObject()->className();
     QVERIFY2(classNameMatcher.match(name).hasMatch(),
              name);
+}
+
+struct CallVerifyingIncubtor : QQmlIncubator
+{
+    void setInitialState(QObject *) { setInitialStateCalled = true; }
+    void statusChanged(QQmlIncubator::Status status) { lastStatus = status; }
+
+    QQmlIncubator::Status lastStatus = QQmlIncubator::Null;
+    bool setInitialStateCalled = false;
+};
+
+void tst_qqmlcomponent::loadFromModuleThenCreateWithIncubator()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine);
+    comp.loadFromModule("QtQuick", "Rectangle");
+    CallVerifyingIncubtor incubator;
+    comp.create(incubator);
+    std::unique_ptr<QObject> object { incubator.object() };
+    QVERIFY(incubator.setInitialStateCalled);
+    QVERIFY(incubator.isReady());
+    QCOMPARE(incubator.lastStatus, QQmlIncubator::Ready);
+    QCOMPARE(object->metaObject()->className(), "QQuickRectangle");
 }
 
 void tst_qqmlcomponent::loadFromModuleFailures_data()

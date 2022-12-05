@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsimportvisitor_p.h"
+#include "qqmljsmetatypes_p.h"
 #include "qqmljsresourcefilemapper_p.h"
 
 #include <QtCore/qfileinfo.h>
@@ -982,7 +983,10 @@ void QQmlJSImportVisitor::checkSignals()
                 continue;
             }
 
-            const QStringList signalParameters = signalMethod->parameterNames();
+            const auto signalParameters = signalMethod->parameters();
+            QHash<QString, qsizetype> parameterNameIndexes;
+            for (int i = 0; i < signalParameters.size(); i++)
+                parameterNameIndexes[signalParameters[i].name()] = i;
 
             if (pair.second.size() > signalParameters.size()) {
                 m_logger->log(QStringLiteral("Signal handler for \"%2\" has more formal"
@@ -994,8 +998,12 @@ void QQmlJSImportVisitor::checkSignals()
 
             for (qsizetype i = 0; i < pair.second.size(); i++) {
                 const QStringView handlerParameter = pair.second.at(i);
-                const qsizetype j = signalParameters.indexOf(handlerParameter);
-                if (j == i || j < 0)
+                auto it = parameterNameIndexes.constFind(handlerParameter.toString());
+                if (it == parameterNameIndexes.constEnd())
+                    continue;
+                const qsizetype j = *it;
+
+                if (j == i)
                     continue;
 
                 m_logger->log(QStringLiteral("Parameter %1 to signal handler for \"%2\""
@@ -1339,12 +1347,23 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
         const QTypeRevision revision = QQmlJSScope::resolveTypes(
                     m_currentScope, m_rootScopeImports, &m_usedTypes);
-        if (isRoot) {
-            if (auto base = m_currentScope->baseType();
-                base && base->internalName() == u"QQmlComponent") {
+        if (auto base = m_currentScope->baseType(); base) {
+            if (isRoot && base->internalName() == u"QQmlComponent") {
                 m_logger->log(u"Qml top level type cannot be 'Component'."_s, qmlTopLevelComponent,
                               definition->qualifiedTypeNameId->identifierToken, true, true);
                 return false;
+            }
+            if (base->isSingleton() && m_currentScope->isComposite()) {
+                m_logger->log(u"Singleton Type %1 is not creatable."_s.arg(
+                                      m_currentScope->baseTypeName()),
+                              qmlUncreatableType, definition->qualifiedTypeNameId->identifierToken,
+                              true, true);
+
+            } else if (!base->isCreatable()) {
+                // composite type m_currentScope is allowed to be uncreatable, but it cannot be the base of anything else
+                m_logger->log(u"Type %1 is not creatable."_s.arg(m_currentScope->baseTypeName()),
+                              qmlUncreatableType, definition->qualifiedTypeNameId->identifierToken,
+                              true, true);
             }
         }
         if (m_nextIsInlineComponent) {
@@ -1418,8 +1437,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         method.setMethodType(QQmlJSMetaMethod::Signal);
         method.setMethodName(publicMember->name.toString());
         while (param) {
-            method.addParameter(param->name.toString(), buildName(param->type),
-                                QQmlJSMetaMethod::NonConst);
+            method.addParameter(
+                    QQmlJSMetaParameter(param->name.toString(), buildName(param->type)));
             param = param->next;
         }
         m_currentScope->addOwnMethod(method);
@@ -1574,11 +1593,10 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
                 const QString type = parameter.typeName();
                 if (type.isEmpty()) {
                     formalsFullyTyped = false;
-                    method.addParameter(parameter.id, QStringLiteral("var"),
-                                        QQmlJSMetaMethod::NonConst);
+                    method.addParameter(QQmlJSMetaParameter(parameter.id, QStringLiteral("var")));
                 }  else {
                     anyFormalTyped = true;
-                    method.addParameter(parameter.id, type, QQmlJSMetaMethod::NonConst);
+                    method.addParameter(QQmlJSMetaParameter(parameter.id, type));
                 }
             }
         }

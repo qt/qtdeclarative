@@ -502,24 +502,17 @@ QTypeRevision QQmlJSScope::resolveType(
             it->setReturnType(returnType.scope);
         }
 
-        const auto paramTypeNames = it->parameterTypeNames();
-        QList<QSharedPointer<const QQmlJSScope>> paramTypes = it->parameterTypes();
-        if (paramTypes.size() < paramTypeNames.size())
-            paramTypes.resize(paramTypeNames.size());
-        QList<QQmlJSMetaMethod::Constness> paramQualifiers = it->parameterTypeQualifiers();
-        if (paramQualifiers.size() < paramTypeNames.size())
-            paramQualifiers.resize(paramTypeNames.size());
-
-        for (int i = 0, length = paramTypes.size(); i < length; ++i) {
-            auto &paramType = paramTypes[i];
-            const auto paramTypeName = paramTypeNames[i];
-            if (!paramType && !paramTypeName.isEmpty()) {
-                const auto type = findType(paramTypeName, context, usedTypes);
-                paramType = type.scope;
+        auto parameters = it->parameters();
+        for (int i = 0, length = parameters.size(); i < length; ++i) {
+            auto &parameter = parameters[i];
+            if (const QString typeName = parameter.typeName();
+                !parameter.type() && !typeName.isEmpty()) {
+                const auto type = findType(typeName, context, usedTypes);
+                parameter.setType({ type.scope });
             }
         }
 
-        it->setParameterTypes(paramTypes, paramQualifiers);
+        it->setParameters(parameters);
     }
 
     return baseType.revision;
@@ -595,8 +588,21 @@ void QQmlJSScope::resolveNonEnumTypes(
     resolveTypesInternal(resolveType, updateChildScope, self, contextualTypes, usedTypes);
 }
 
+/*!
+    \internal
+    Resolves all enums of self.
+
+    Some enums happen to have an alias, e.g. when an enum is used as a flag, the enum will exist in
+   two versions, once as enum (e.g. Qt::MouseButton) and once as a flag (e.g. Qt::MouseButtons). In
+   this case, normally only the flag is exposed to the qt metatype system and tools like qmltc will
+   have troubles when encountering the enum in signal parameters etc. To solve this problem,
+   resolveEnums() will create a QQmlJSMetaEnum copy for the alias in case the 'self'-scope already
+   does not have an enum called like the alias.
+ */
 void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType)
 {
+    // temporary hash to avoid messing up m_enumerations while iterators are active on it
+    QHash<QString, QQmlJSMetaEnum> toBeAppended;
     for (auto it = self->m_enumerations.begin(), end = self->m_enumerations.end(); it != end;
          ++it) {
         if (it->type())
@@ -609,8 +615,18 @@ void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::
         enumScope->m_baseType.scope = intType;
         enumScope->m_semantics = AccessSemantics::Value;
         enumScope->m_internalName = self->internalName() + QStringLiteral("::") + it->name();
+        if (QString alias = it->alias(); !alias.isEmpty()
+            && self->m_enumerations.constFind(alias) == self->m_enumerations.constEnd()) {
+            auto aliasScope = QQmlJSScope::clone(enumScope);
+            aliasScope->m_internalName = self->internalName() + QStringLiteral("::") + alias;
+            QQmlJSMetaEnum cpy(*it);
+            cpy.setType(QQmlJSScope::ConstPtr(aliasScope));
+            toBeAppended.insert(alias, cpy);
+        }
         it->setType(QQmlJSScope::ConstPtr(enumScope));
     }
+    // no more iterators active on m_enumerations, so it can be changed safely now
+    self->m_enumerations.insert(toBeAppended);
 }
 
 void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType)
@@ -1173,4 +1189,38 @@ QQmlJSScope::InlineComponentOrDocumentRootName QQmlJSScope::enclosingInlineCompo
     return RootDocumentNameType();
 }
 
+/*!
+   \internal
+   Returns true if the current type is creatable by checking all the required base classes.
+   "Uncreatability" is only inherited from base types for composite types (in qml) and not for non-composite types (c++).
+
+   For the exact definition:
+   A type is uncreatable if and only if one of its composite base type or its first non-composite base type matches
+   following criteria:
+   \list
+   \li the base type is a singleton, or
+   \li the base type is an attached type, or
+   \li the base type is a C++ type with the QML_UNCREATABLE or QML_ANONYMOUS macro, or
+   \li the base type is a type without default constructor (in that case, it really needs QML_UNCREATABLE or QML_ANONYMOUS)
+   \endlist
+ */
+bool QQmlJSScope::isCreatable() const
+{
+    auto isCreatableNonRecursive = [](const QQmlJSScope *scope) {
+        return scope->hasCreatableFlag() && !scope->isSingleton() && scope->scopeType() == QMLScope;
+    };
+
+    for (const QQmlJSScope* scope = this; scope; scope = scope->baseType().get()) {
+        if (!scope->isComposite()) {
+            // just check the first nonComposite (c++) base for isCreatableNonRecursive() and then stop
+            return isCreatableNonRecursive(scope);
+        } else {
+            // check all composite (qml) bases for isCreatableNonRecursive().
+            if (isCreatableNonRecursive(scope))
+                return true;
+        }
+    }
+    // no uncreatable bases found
+    return false;
+}
 QT_END_NAMESPACE

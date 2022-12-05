@@ -1036,7 +1036,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
                 state.ensureRequiredPropertyStorage();
                 RequiredPropertyInfo info;
                 info.propertyName = propertyData->name(rv);
-                state.addPendingRequiredProperty(propertyData, info);
+                state.addPendingRequiredProperty(rv, propertyData, info);
             }
         }
     }
@@ -1147,7 +1147,7 @@ QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
             Q_ASSERT(data && data->propertyCache);
             targetProp = data->propertyCache->property(targetProp->coreIndex());
         }
-        auto it = requiredProperties->find(targetProp);
+        auto it = requiredProperties->find({createdComponent, targetProp});
         if (it != requiredProperties->end()) {
             if (wasInRequiredProperties)
                 *wasInRequiredProperties = true;
@@ -1298,7 +1298,7 @@ private:
     \endcode
 
     \since 6.5
-    \sa QQmlComponent::load
+    \sa loadUrl()
  */
 void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
                                    QQmlComponent::CompilationMode mode)
@@ -1405,6 +1405,14 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context, QQmlC
 
     incubator.clear();
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> p(incubator.d);
+
+    if (d->loadedType.isValid()) {
+        // there isn't really an incubation process for C++ backed types
+        // so just create the object and signal that we are ready
+
+        p->incubateCppBasedComponent(this, context);
+        return;
+    }
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(d->engine);
 

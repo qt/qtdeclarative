@@ -272,6 +272,7 @@ private slots:
     void tdzViolations();
 
     void coerceValue();
+    void callWithSpreadOnElement();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -1035,6 +1036,7 @@ void tst_QJSEngine::newQMetaObject() {
         QCOMPARE(metaObject.toQMetaObject(), &TestQMetaObject::staticMetaObject);
 
         QVERIFY(metaObject.strictlyEquals(engine.newQMetaObject<TestQMetaObject>()));
+        QVERIFY(!metaObject.strictlyEquals(engine.newArray()));
 
 
         {
@@ -5782,6 +5784,14 @@ struct UnknownToJS
 void tst_QJSEngine::coerceValue()
 {
     const UnknownToJS u;
+    QMetaType::registerConverter<UnknownToJS, int>([](const UnknownToJS &u) {
+        return u.thing;
+    });
+    int v = 0;
+    QVERIFY(QMetaType::convert(QMetaType::fromType<UnknownToJS>(), &u,
+                               QMetaType::fromType<int>(), &v));
+    QCOMPARE(v, 13);
+
     QMetaType::registerConverter<UnknownToJS, QTypeRevision>([](const UnknownToJS &u) {
         return QTypeRevision::fromMinorVersion(u.thing);
     });
@@ -5806,7 +5816,24 @@ void tst_QJSEngine::coerceValue()
     QCOMPARE((engine.coerceValue<WithToString *, const WithToString *>(&withToString)), &withToString);
     QCOMPARE((engine.coerceValue<QString, double>(a)), 5.25);
     QCOMPARE((engine.coerceValue<double, QString>(5.25)), a);
+    QCOMPARE((engine.coerceValue<UnknownToJS, int>(u)), v); // triggers valueOf on a VariantObject
     QCOMPARE((engine.coerceValue<UnknownToJS, QTypeRevision>(u)), w);
+}
+
+void tst_QJSEngine::callWithSpreadOnElement()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+
+    const QString program = uR"(
+        let f = console.error;
+        const data = [f, ["That is great!"]]
+        data[0](...data[1]);
+    )"_s;
+
+    QTest::ignoreMessage(QtCriticalMsg, "That is great!");
+    const QJSValue result = engine.evaluate(program);
+    QVERIFY(!result.isError());
 }
 
 QTEST_MAIN(tst_QJSEngine)

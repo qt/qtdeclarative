@@ -236,7 +236,7 @@ void ControlsNativeValidatorPass::run(const QQmlSA::Element &element)
                     emitWarning(QStringLiteral("Not allowed to override \"%1\" because native "
                                                "styles cannot be customized: See "
                                                "https://doc-snapshots.qt.io/qt6-dev/"
-                                               "qtquickcontrols2-customize.html#customization-"
+                                               "qtquickcontrols-customize.html#customization-"
                                                "reference for more information.")
                                         .arg(propertyName),
                                 quickControlsNativeCustomize, element->sourceLocation());

@@ -212,7 +212,7 @@ public:
             return *it;
 
         if (QQmlValueType *valueType = QQmlMetaType::valueType(type)) {
-            QQmlGadgetPtrWrapper *instance = new QQmlGadgetPtrWrapper(valueType, q_func());
+            QQmlGadgetPtrWrapper *instance = new QQmlGadgetPtrWrapper(valueType);
             cachedValueTypeInstances.insert(typeIndex, instance);
             return instance;
         }

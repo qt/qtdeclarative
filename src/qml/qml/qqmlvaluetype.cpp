@@ -11,20 +11,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlValueType::QQmlValueType(QMetaType type, const QMetaObject *gadgetMetaObject)
-    : metaType(type)
-{
-    QMetaObjectBuilder builder(gadgetMetaObject);
-
-    // This is required for calling readOnGadget() on properties from this metaObject.
-    builder.setFlags(PropertyAccessInStaticMetaCall);
-
-    dynamicMetaObject = builder.toMetaObject();
-}
-
 QQmlValueType::~QQmlValueType()
 {
-    ::free(dynamicMetaObject);
+    ::free(m_dynamicMetaObject);
 }
 
 QQmlGadgetPtrWrapper *QQmlGadgetPtrWrapper::instance(QQmlEngine *engine, QMetaType type)
@@ -54,7 +43,7 @@ void QQmlGadgetPtrWrapper::read(QObject *obj, int idx)
     QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
 }
 
-void QQmlGadgetPtrWrapper::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags)
+void QQmlGadgetPtrWrapper::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags) const
 {
     Q_ASSERT(m_gadgetPtr);
     int status = -1;
@@ -62,16 +51,16 @@ void QQmlGadgetPtrWrapper::write(QObject *obj, int idx, QQmlPropertyData::WriteF
     QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
 }
 
-QVariant QQmlGadgetPtrWrapper::value()
+QVariant QQmlGadgetPtrWrapper::value() const
 {
     Q_ASSERT(m_gadgetPtr);
-    return QVariant(QMetaType(metaTypeId()), m_gadgetPtr);
+    return QVariant(metaType(), m_gadgetPtr);
 }
 
 void QQmlGadgetPtrWrapper::setValue(const QVariant &value)
 {
     Q_ASSERT(m_gadgetPtr);
-    Q_ASSERT(metaTypeId() == value.userType());
+    Q_ASSERT(metaType() == value.metaType());
     const QQmlValueType *type = valueType();
     type->destruct(m_gadgetPtr);
     type->construct(m_gadgetPtr, value.constData());
@@ -80,7 +69,7 @@ void QQmlGadgetPtrWrapper::setValue(const QVariant &value)
 int QQmlGadgetPtrWrapper::metaCall(QMetaObject::Call type, int id, void **argv)
 {
     Q_ASSERT(m_gadgetPtr);
-    const QMetaObject *metaObject = valueType()->metaObject();
+    const QMetaObject *metaObject = valueType()->staticMetaObject();
     QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &metaObject, &id);
     metaObject->d.static_metacall(static_cast<QObject *>(m_gadgetPtr), type, id, argv);
     return id;
@@ -94,7 +83,16 @@ const QQmlValueType *QQmlGadgetPtrWrapper::valueType() const
 
 QMetaObject *QQmlValueType::toDynamicMetaObject(QObject *)
 {
-    return dynamicMetaObject;
+    if (!m_dynamicMetaObject) {
+        QMetaObjectBuilder builder(m_staticMetaObject);
+
+        // Do not set PropertyAccessInStaticMetaCall here. QQmlGadgetPtrWrapper likes to
+        // to intercept the metacalls since it needs to use its gadgetPtr.
+        // For QQmlValueType::metaObject() we use the base type that has the flag.
+
+        m_dynamicMetaObject = builder.toMetaObject();
+    }
+    return m_dynamicMetaObject;
 }
 
 void QQmlValueType::objectDestroyed(QObject *)

@@ -2,6 +2,7 @@
 
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
+#include <data/enumproblems.h>
 #include <data/objectwithmethod.h>
 
 #include <QtQml/private/qqmlengine_p.h>
@@ -144,6 +145,12 @@ private slots:
     void listAsArgument();
     void letAndConst();
     void signalIndexMismatch();
+    void callWithSpread();
+    void nullComparison();
+    void consoleObject();
+    void multiForeign();
+    void namespaceWithEnum();
+    void enumProblems();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2791,7 +2798,109 @@ void tst_QmlCppCodegen::signalIndexMismatch()
 
     QCOMPARE(visualIndexBeforeMoveList, QList<QVariant>({ 0, 1, 2 }));
     QCOMPARE(visualIndexAfterMoveList, QList<QVariant>({ 0, 1, 2 }));
+}
+
+void tst_QmlCppCodegen::callWithSpread()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/callWithSpread.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(QtCriticalMsg, "That is great!");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::nullComparison()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/nullComparison.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("v").toInt(), 1);
+    QCOMPARE(o->property("w").toInt(), 3);
+    QCOMPARE(o->property("x").toInt(), 1);
+    QCOMPARE(o->property("y").toInt(), 5);
 };
+
+void tst_QmlCppCodegen::consoleObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/consoleObject.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtInfoMsg, "b 4.55");
+    QTest::ignoreMessage(QtWarningMsg, "b 4.55");
+    QTest::ignoreMessage(QtCriticalMsg, "b 4.55");
+
+    // Unfortunately we cannot check the logging category with QTest::ignoreMessage
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtDebugMsg, "b 4.55");
+    QTest::ignoreMessage(QtInfoMsg, "b 4.55");
+    QTest::ignoreMessage(QtWarningMsg, "b 4.55");
+    QTest::ignoreMessage(QtCriticalMsg, "b 4.55");
+
+    const QRegularExpression re(u"QQmlComponentAttached\\(0x[0-9a-f]+\\) b 4\\.55"_s);
+    QTest::ignoreMessage(QtDebugMsg, re);
+    QTest::ignoreMessage(QtDebugMsg, re);
+    QTest::ignoreMessage(QtInfoMsg, re);
+    QTest::ignoreMessage(QtWarningMsg, re);
+    QTest::ignoreMessage(QtCriticalMsg, re);
+
+    QTest::ignoreMessage(QtDebugMsg, "a undefined b false null 7");
+    QTest::ignoreMessage(QtDebugMsg, "");
+    QTest::ignoreMessage(QtDebugMsg, "4");
+    QTest::ignoreMessage(QtDebugMsg, "");
+
+    const QRegularExpression re2(u"QQmlComponentAttached\\(0x[0-9a-f]+\\)"_s);
+    QTest::ignoreMessage(QtDebugMsg, re2);
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::multiForeign()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/multiforeign.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"not here and not there"_s);
+}
+
+void tst_QmlCppCodegen::namespaceWithEnum()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/namespaceWithEnum.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("i").toInt(), 2);
+}
+
+void tst_QmlCppCodegen::enumProblems()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumProblems.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> outer(c.create());
+    QVERIFY(!outer.isNull());
+    QObject *inner = outer->property("o").value<QObject *>();
+    QVERIFY(inner);
+
+    Foo *bar = inner->property("bar").value<Foo *>();
+    QVERIFY(bar);
+    QCOMPARE(bar->type(), Foo::Component);
+
+    Foo *fighter = inner->property("fighter").value<Foo *>();
+    QVERIFY(fighter);
+    QCOMPARE(fighter->type(), Foo::Fighter);
+}
 
 QTEST_MAIN(tst_QmlCppCodegen)
 

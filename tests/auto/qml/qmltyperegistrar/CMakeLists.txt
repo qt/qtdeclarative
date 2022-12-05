@@ -80,6 +80,7 @@ qt_add_qml_module(tst-qmltyperegistrar-with-dashes
     AUTO_RESOURCE_PREFIX
     SOURCES
         foo.cpp foo.h
+    OUTPUT_DIRECTORY Module-With-Dashes
 )
 qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashesplugin)
 

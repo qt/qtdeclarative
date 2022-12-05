@@ -55,7 +55,6 @@
 #include "justanimationonalias.h"
 #include "behaviorandanimation.h"
 #include "behaviorandanimationonalias.h"
-#include "singletonuser.h"
 #include "bindingsthroughids.h"
 #include "localimport_context.h"
 #include "neighbors_context.h"
@@ -80,6 +79,7 @@
 #include "inlinecomponentsfromdifferentfiles.h"
 
 #include "testprivateproperty.h"
+#include "singletons.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -1983,16 +1983,6 @@ void tst_qmltc::behaviorAndAnimationOnAlias()
     QTRY_VERIFY(created.widthAlias() == 10);
 }
 
-void tst_qmltc::singletonUser()
-{
-    QQmlEngine e;
-    QSKIP("Singleton types are not supported yet");
-    PREPEND_NAMESPACE(singletonUser) created(&e);
-
-    QCOMPARE(created.number(), 42);
-    QCOMPARE(created.message(), "hello");
-}
-
 void tst_qmltc::bindingsThroughIds()
 {
     QQmlEngine e;
@@ -2389,6 +2379,15 @@ void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
 
     created.changeProperties3(22);
     QCOMPARE(created.cChangedCount3(), 22);
+
+    TypeWithProperties *five = qobject_cast<TypeWithProperties *>(ctx->objectForName("five"));
+    QVERIFY(five);
+    const Qt::MouseButtons a = Qt::RightButton | Qt::MiddleButton;
+    const Qt::MouseButton b = Qt::LeftButton;
+    emit five->signalWithEnum(a, b);
+
+    QCOMPARE(Qt::MouseButton(five->property("mouseButtonA").toInt()), a);
+    QCOMPARE(Qt::MouseButtons(five->property("mouseButtonB").toInt()), b);
 }
 
 void tst_qmltc::valueTypeListProperty()
@@ -3065,5 +3064,64 @@ void tst_qmltc::inlineComponentsFromDifferentFiles()
                      .value<QObject *>()
                      ->property("objName"),
              u"IC1"_s);
+}
+
+void tst_qmltc::singletons()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(singletons) createdByQmltc(&e);
+    // make sure also that singletons are not shared between engines
+    QQmlEngine e2;
+    PREPEND_NAMESPACE(singletons) createdByQmltcSecondEngine(&e2);
+
+    QQmlComponent component(&e);
+    component.loadUrl(QUrl("qrc:/qt/qml/QmltcTests/singletons.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> createdByComponent(component.create());
+
+    // read default value, write one of the singletons and check that all singletons were written!
+    {
+        QCOMPARE(createdByQmltc.cppSingleton1(), 42);
+        QCOMPARE(createdByQmltcSecondEngine.cppSingleton1(), 42);
+        QCOMPARE(createdByComponent->property("cppSingleton1"), 42);
+
+        QCOMPARE(createdByQmltc.cppSingleton2(), 42);
+        QCOMPARE(createdByQmltcSecondEngine.cppSingleton2(), 42);
+        QCOMPARE(createdByComponent->property("cppSingleton2"), 42);
+
+        // change the singletonvalue
+        createdByQmltc.writeSingletonType();
+
+        QCOMPARE(createdByComponent->property("cppSingleton1"), 100);
+        QCOMPARE(createdByQmltcSecondEngine.cppSingleton1(), 42);
+        QCOMPARE(createdByQmltc.cppSingleton1(), 100);
+
+        QCOMPARE(createdByComponent->property("cppSingleton2"), 100);
+        QCOMPARE(createdByQmltcSecondEngine.cppSingleton2(), 42);
+        QCOMPARE(createdByQmltc.cppSingleton2(), 100);
+    }
+
+    // same schema for singletons defined in qml
+    {
+        QCOMPARE(createdByQmltc.qmlSingleton1(), 42);
+        QCOMPARE(createdByQmltcSecondEngine.qmlSingleton1(), 42);
+        QCOMPARE(createdByComponent->property("qmlSingleton1"), 42);
+
+        QCOMPARE(createdByQmltc.qmlSingleton2(), 42);
+        QCOMPARE(createdByQmltcSecondEngine.qmlSingleton2(), 42);
+        QCOMPARE(createdByComponent->property("qmlSingleton2"), 42);
+
+        // change the singletonvalue
+        createdByQmltc.writeSingletonThing();
+
+        // read the others to see if value can be found in all instances
+        QCOMPARE(createdByQmltc.qmlSingleton1(), 100);
+        QCOMPARE(createdByQmltcSecondEngine.qmlSingleton1(), 42);
+        QCOMPARE(createdByComponent->property("qmlSingleton1"), 100);
+
+        QCOMPARE(createdByQmltc.qmlSingleton2(), 100);
+        QCOMPARE(createdByQmltcSecondEngine.qmlSingleton2(), 42);
+        QCOMPARE(createdByComponent->property("qmlSingleton2"), 100);
+    }
 }
 QTEST_MAIN(tst_qmltc)

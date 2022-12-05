@@ -189,7 +189,8 @@ public:
             isVolatile(false),
             global(false),
             qmlGlobal(false),
-            throwsReferenceError(false)
+            throwsReferenceError(false),
+            subscriptLoadedForCall(false)
         {}
 
         Reference(const Reference &) = default;
@@ -371,6 +372,7 @@ public:
         quint32 global:1;
         quint32 qmlGlobal:1;
         quint32 throwsReferenceError:1;
+        quint32 subscriptLoadedForCall:1;
         QQmlJS::SourceLocation sourceLocation = QQmlJS::SourceLocation();
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainJumpLabel;
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainTargetLabel;

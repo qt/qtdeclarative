@@ -1,0 +1,24 @@
+// Copyright (C) 2018 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquickcontrols-focus.html
+    \keyword Focus Management in Qt Quick Controls 2
+    \title Focus Management in Qt Quick Controls
+    \brief Overview of focus handling with Qt Quick Controls
+
+    Qt Quick Controls follows the standard
+    \l {Keyboard Focus in Qt Quick}{Qt Quick focus system}, while also
+    providing some added convenience. For example, the
+    \l {Control::}{focusPolicy} property can be used to control the ways in
+    which a control receives focus.
+
+    \section1 Focus Scope Controls
+
+    Qt Quick Controls offers a selection of controls that act as
+    \l {Acquiring Focus and Focus Scopes}{focus scopes}:
+
+    \annotatedlist qtquickcontrols-focusscopes
+
+    \sa {Keyboard Focus in Qt Quick}
+*/

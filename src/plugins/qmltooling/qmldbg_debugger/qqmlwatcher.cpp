@@ -40,7 +40,6 @@ private:
     int m_id;
     QQmlWatcher *m_watch;
     QObject *m_object;
-    bool m_isGadget;
     int m_debugId;
     QMetaProperty m_property;
 
@@ -52,7 +51,6 @@ QQmlWatchProxy::QQmlWatchProxy(int id, QQmlExpression *exp, int debugId, QQmlWat
       m_id(id),
       m_watch(parent),
       m_object(nullptr),
-      m_isGadget(false),
       m_debugId(debugId),
       m_expr(exp)
 {
@@ -66,7 +64,6 @@ QQmlWatchProxy::QQmlWatchProxy(int id, QObject *object, int debugId, const QMeta
       m_id(id),
       m_watch(parent),
       m_object(object),
-      m_isGadget(typeid(*m_object) == typeid(QQmlGadgetPtrWrapper)),
       m_debugId(debugId),
       m_property(prop),
       m_expr(nullptr)
@@ -84,8 +81,6 @@ void QQmlWatchProxy::notifyValueChanged()
     QVariant v;
     if (m_expr)
         v = m_expr->evaluate();
-    else if (m_isGadget)
-        v = static_cast<QQmlGadgetPtrWrapper *>(m_object)->readOnGadget(m_property);
     else
         v = m_property.read(m_object);
     emit m_watch->propertyChanged(m_id, m_debugId, m_property, v);

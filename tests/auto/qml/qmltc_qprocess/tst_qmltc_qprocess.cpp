@@ -49,6 +49,7 @@ private slots:
     void warningsAsErrors();
     void invalidAliasRevision();
     void topLevelComponent();
+    void dashesInFilename();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -189,9 +190,25 @@ void tst_qmltc_qprocess::inlineComponent()
 
 void tst_qmltc_qprocess::singleton()
 {
-    const auto errors = runQmltc(u"SingletonThing.qml"_s, false);
-    QEXPECT_FAIL("", "qmltc does not support singletons at the moment", Continue);
-    QVERIFY(!errors.contains(u"Singleton types are not supported"_s));
+    {
+        const auto errors = runQmltc(u"singletonUncreatable.qml"_s, false);
+        QVERIFY(errors.contains("singletonUncreatable.qml:3:1: Type UncreatableType is not "
+                                "creatable. [uncreatable-type]"));
+    }
+    {
+        const auto errors = runQmltc(u"uncreatable.qml"_s, false);
+        QVERIFY(errors.contains(
+                "uncreatable.qml:5:5: Type UncreatableType is not creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:6:5: Singleton Type SingletonThing is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:7:5: Singleton Type SingletonType is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:9:18: Singleton Type SingletonThing is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(errors.contains("uncreatable.qml:14:18: Singleton Type SingletonType is not "
+                                "creatable. [uncreatable-type]"));
+        QVERIFY(!errors.contains("NotSingletonType"));
+    }
 }
 
 void tst_qmltc_qprocess::warningsAsErrors()
@@ -212,6 +229,15 @@ void tst_qmltc_qprocess::topLevelComponent()
         const auto errors = runQmltc(u"ComponentType.qml"_s, false);
         QVERIFY(errors.contains(
                 u"ComponentType.qml:2:1: Qml top level type cannot be 'Component'. [top-level-component]"_s));
+    }
+}
+
+void tst_qmltc_qprocess::dashesInFilename()
+{
+    {
+        const auto errors = runQmltc(u"kebab-case.qml"_s, false);
+        QVERIFY(errors.contains(
+                u"The given QML filename is unsuited for type compilation: the name must consist of letters, digits and underscores, starting with a letter or an underscore and ending in '.qml'!"_s));
     }
 }
 

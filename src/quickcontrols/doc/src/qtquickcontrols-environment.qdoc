@@ -1,0 +1,54 @@
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquickcontrols-environment.html
+    \title Supported Environment Variables in Qt Quick Controls
+
+    This page contains a list of all environment variables that Qt Quick Controls
+    supports. The environment variables are primarily meant for testing purposes, but
+    they can also be used to set system-wide defaults.
+
+    \table
+        \header
+            \li Variable
+            \li Description
+        \row
+            \li \c QT_QUICK_CONTROLS_STYLE
+            \li Specifies the default \l {Styling Qt Quick Controls}{Qt Quick Controls style}.
+                The value can be either one of the built-in styles, for example \c "Material",
+                or a custom style such as \c "MyStyle".
+        \row
+            \li \c QT_QUICK_CONTROLS_FALLBACK_STYLE
+            \li Specifies a fallback style for \l {Creating a Custom Style}{custom styles}.
+                The value can be one of the built-in styles, for example \c "Material",
+        \row
+            \li \c QT_QUICK_CONTROLS_CONF
+            \li Specifies the location of the \l {Qt Quick Controls configuration file}.
+                By default, the configuration file is loaded from the application's
+                resources in \c ":/qtquickcontrols2.conf".
+        \row
+            \li \c QT_QUICK_CONTROLS_HOVER_ENABLED
+            \li Specifies whether Qt Quick Controls use \l {Control::hoverEnabled}{hover effects}.
+                The value can be set to \c 0 or \c 1 to disable or enable hover effects, respectively.
+     \endtable
+
+    \l {Imagine style} specific environment variables:
+
+    \include qquickimaginestyle.qdocinc env
+
+    \l {Material style} specific environment variables:
+
+    \include qquickmaterialstyle.qdocinc env
+
+    \l {Universal style} specific environment variables:
+
+    \include qquickuniversalstyle.qdocinc env
+
+    \section1 Related Information
+
+    \list
+      \li \l{Styling Qt Quick Controls}
+      \li \l{Qt Quick Controls Configuration File}
+    \endlist
+*/

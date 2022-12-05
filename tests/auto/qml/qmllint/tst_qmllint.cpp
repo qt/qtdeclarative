@@ -1184,6 +1184,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("enumsOfScrollBar") << QStringLiteral("enumsOfScrollBar.qml");
     QTest::newRow("optionalChainingCall") << QStringLiteral("optionalChainingCall.qml");
     QTest::newRow("EnumAccessCpp") << QStringLiteral("EnumAccessCpp.qml");
+    QTest::newRow("qtquickdialog") << QStringLiteral("qtquickdialog.qml");
 }
 
 void TestQmllint::cleanQmlCode()

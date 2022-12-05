@@ -69,7 +69,6 @@ private slots:
     void justAnimationOnAlias();
     void behaviorAndAnimation();
     void behaviorAndAnimationOnAlias();
-    void singletonUser();
     void bindingsThroughIds();
     void contextHierarchy_rootBaseIsQml();
     void contextHierarchy_childBaseIsQml();
@@ -90,4 +89,5 @@ private slots:
     void inlineComponents();
     void aliases();
     void inlineComponentsFromDifferentFiles();
+    void singletons();
 };

@@ -151,6 +151,36 @@
 
     \snippet qml/tableview/tableviewwithprovider.qml 0
 
+    \section1 Editing cells
+
+    You can let the user edit table cells by providing an edit delegate. The
+    edit delegate will be instantiated according to the \l editTriggers, which
+    by default is when the user double taps on a cell, or presses e.g
+    \l Qt.Key_Enter or \l Qt.Key_Return. The edit delegate is set using
+    \l {TableView::editDelegate}, which is an attached property that you set
+    on the \l delegate. The following snippet shows how to do that:
+
+    \snippet qml/tableview/editdelegate.qml 0
+
+    If the user presses Qt.Key_Enter or Qt.Key_Return while the edit delegate
+    is active, TableView will emit the \l TableView::commit signal to the edit
+    delegate, so that it can write back the changed data to the model.
+
+    \note In order for a cell to be editable, the model needs to override
+    \l QAbstractItemModel::flags(), and return \c Qt::ItemIsEditable.
+    This flag is not enabled in QAbstractItemModel by default.
+    The override could for example look like this:
+
+    \code
+    Qt::ItemFlags QAbstractItemModelSubClass::flags(const QModelIndex &index) const override
+    {
+        Q_UNUSED(index)
+        return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+    }
+    \endcode
+
+    \sa TableView::editDelegate, TableView::commit, editTriggers, edit(), closeEditor()
+
     \section1 Overlays and underlays
 
     All new items that are instantiated from the delegate are parented to the
@@ -633,6 +663,58 @@
 */
 
 /*!
+    \qmlproperty enumeration QtQuick::TableView::editTriggers
+    \since 6.5
+
+    This property holds the different ways the user can start to edit a cell.
+    It can be a combination of the following values:
+
+    \default TableView.DoubleTapped | TableView.EditKeyPressed.
+    \value TableView.NoEditTriggers - the user cannot trigger editing of cells.
+        When this value is set, TableView will neither \e {open or close}
+        the edit delegate as a response to any user interaction.
+        But the application can call \l edit() and \l closeEditor() manually.
+    \value TableView.SingleTapped - the user can edit a cell by single tapping it.
+    \value TableView.DoubleTapped - the user can edit a cell by double tapping it.
+    \value TableView.SelectedTapped - the user can edit the
+        \l {QItemSelectionModel::currentIndex()}{current cell} by tapping it.
+    \value TableView.EditKeyPressed - the user can edit the
+        \l {QItemSelectionModel::currentIndex()}{current cell} by pressing one
+        of the edit keys. The edit keys are decided by the OS, but are normally
+        \c Qt.Key_Enter and \c Qt.Key_Return.
+    \value TableView.AnyKeyPressed - the user can edit the
+        \l {TableView::current}{current cell} by pressing any key, other
+        than the cell navigation keys. The pressed key is also sent to the
+        focus object inside the \l {TableView::editDelegate}{edit delegate}.
+
+    For \c TableView.SelectedTapped, \c TableView.EditKeyPressed, and
+    \c TableView.AnyKeyPressed to have any effect, TableView needs to have a
+    \l {selectionModel}{selection model} assigned, since they depend on a
+    \l {QItemSelectionModel::currentIndex()}{current index} being set. To be
+    able to receive any key events at all, TableView will also need to have
+    \l QQuickItem::activeFocus.
+
+    When editing a cell, the user can press \c Qt.Key_Tab or \c Qt.Key_Backtab
+    to \l {TableView::commit}{commit} the data, and move editing to the next
+    cell. This behavior can be disabled by setting
+    \l QQuickItem::activeFocusOnTab on TableView to \c false.
+
+    \note In order for a cell to be editable, the \l delegate needs an
+    \l {TableView::editDelegate}{edit delegate} attached, and the model
+    needs to return \c Qt::ItemIsEditable from \l QAbstractItemModel::flags().
+
+    \code
+    Qt::ItemFlags QAbstractItemModelSubClass::flags(const QModelIndex &index) const override
+    {
+        Q_UNUSED(index)
+        return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+    }
+    \endcode
+
+    \sa TableView::editDelegate, TableView::commit, {Editing cells}
+*/
+
+/*!
     \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, PositionMode mode, point offset, rect subRect)
 
     Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
@@ -1088,6 +1170,34 @@
 */
 
 /*!
+    \qmlmethod QtQuick::TableView::edit(QModelIndex modelIndex)
+    \since 6.5
+
+    This function starts an editing session for the cell that represents
+    \a modelIndex. If the user is already editing another cell, that session ends.
+
+    Normally you can specify the different ways of starting an edit session by
+    using \l editTriggers instead. If that isn't sufficient, you can use this
+    function. To take full control over cell editing and keep TableView from
+    interfering, set editTriggers to \c TableView.NoEditTriggers.
+
+    \note The \l {ItemSelectionModel::currentIndex}{current index} in the
+    \l {selectionModel}{selection model} will also change to \a modelIndex.
+
+    \sa closeEditor(), editTriggers, TableView::editDelegate, {Editing cells}
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::closeEditor()
+    \since 6.5
+
+    If the user is editing a cell, calling this function will
+    stop the editing, and destroy the edit delegate instance.
+
+    \sa edit(), TableView::editDelegate, {Editing cells}
+*/
+
+/*!
     \qmlattachedproperty TableView QtQuick::TableView::view
 
     This attached property holds the view that manages the delegate instance.
@@ -1123,6 +1233,66 @@
     This signal is emitted only if the \l reuseItems property is \c true.
 
     \sa {Reusing items}, reuseItems, pooled
+*/
+
+/*!
+    \qmlattachedsignal QtQuick::TableView::commit
+    This signal is emitted by the \l {TableView::editDelegate}{edit delegate}
+
+    This attached signal is emitted when the \l {TableView::editDelegate}{edit delegate}
+    is active, and the user presses \l Qt.Key_Enter or \l Qt.Key_Return. It will also
+    be emitted if TableView has \l QQuickItem::activeFocusOnTab set, and the user
+    presses Qt.Key_Tab or Qt.Key_Backtab.
+
+    This signal will \e not be emitted if editing ends because of reasons other
+    than the ones mentioned. This includes e.g if the user presses
+    Qt.Key_Escape, taps outside the delegate, the row or column being
+    edited is deleted, or if the application calls \l closeEditor().
+
+    Upon receiving the signal, the edit delegate should write any modified data
+    back to the model.
+
+    \note This property should be attached to the
+    \l {TableView::editDelegate}{edit delegate}, and not to the \l delegate.
+
+    \sa TableView::editDelegate, editTriggers, {Editing cells}
+*/
+
+/*!
+    \qmlattachedproperty Component QtQuick::TableView::editDelegate
+
+    This attached property holds the edit delegate. It's instantiated
+    when editing begins, and will be resized and placed at the same location
+    as the cell it edits. It supports the same required properties as the
+    \l {\l delegate}{TableView delegate}, including \c index, \c row and \c column.
+    Properties of the model, like \c display and \c edit, are also available
+    (depending on the \l {QAbstractItemModel::roleNames()}{role names} exposed
+    by the model).
+
+    Editing starts when the actions specified by \l editTriggers are met, and
+    the current cell is editable.
+
+    \note In order for a cell to be editable, the model needs to override
+    \l QAbstractItemModel::flags(), and return \c Qt::ItemIsEditable.
+
+    You can also open and close the edit delegate manually by calling \l edit()
+    and \l closeEditor(), respectively. The \c Qt::ItemIsEditable flag will
+    then be ignored.
+
+    Editing ends when the user presses \c Qt.Key_Enter or \c Qt.Key_Return
+    (and also \c Qt.Key_Tab or \c Qt.Key_Backtab, if TableView has
+    \l QQuickItem::activeFocusOnTab set). In that case, the \l TableView::commit
+    signal will be emitted, so that the edit delegate can respond by writing any
+    modified data back to the model. If editing ends because of other reasons
+    (e.g if the user presses Qt.Key_Escape), the signal will not be emitted.
+    In any case will \l {Component::destruction}{destruction()} be emitted in the end.
+
+    When the edit delegate is instantiated, it will call \l QQuickItem::forceActiveFocus()
+    on the first item inside the delegate that has \l QQuickItem::activeFocusOnTab set to
+    \c true. You can override this by calling \l QQuickItem::forceActiveFocus() explicitly
+    on some other item inside the delegate from \l {Component::completed()}{Component.completed()}.
+
+    \sa editTriggers, TableView::commit, edit(), closeEditor(), {Editing cells}
 */
 
 QT_BEGIN_NAMESPACE
@@ -1182,6 +1352,11 @@ QQuickTableViewPrivate::~QQuickTableViewPrivate()
         delete fxTableItem;
     }
 
+    if (editItem)
+        editModel->dispose(editItem);
+    if (editModel)
+        delete editModel;
+
     if (tableModel)
         delete tableModel;
 }
@@ -1221,7 +1396,10 @@ void QQuickTableViewPrivate::dumpTable() const
 void QQuickTableViewPrivate::setRequiredProperty(const char *property,
     const QVariant &value, int serializedModelIndex, QObject *object, bool init)
 {
-    if (!qobject_cast<QQmlTableInstanceModel *>(model)) {
+    Q_Q(QQuickTableView);
+
+    QQmlTableInstanceModel *tableInstanceModel = qobject_cast<QQmlTableInstanceModel *>(model);
+    if (!tableInstanceModel) {
         // TableView only supports using required properties when backed by
         // a QQmlTableInstanceModel. This is almost always the case, except
         // if you assign it an ObjectModel or a DelegateModel (which are really
@@ -1234,21 +1412,47 @@ void QQuickTableViewPrivate::setRequiredProperty(const char *property,
     const QString propertyName = QString::fromUtf8(property);
 
     if (init) {
-        const bool wasRequired = model->setRequiredProperty(serializedModelIndex, propertyName, value);
+        bool wasRequired = false;
+        if (object == editItem) {
+            // Special case: the item that we should write to belongs to the edit
+            // model rather than 'model' (which is used for normal delegate items).
+            wasRequired = editModel->setRequiredProperty(serializedModelIndex, propertyName, value);
+        } else {
+            wasRequired = tableInstanceModel->setRequiredProperty(serializedModelIndex, propertyName, value);
+        }
         if (wasRequired) {
             QStringList propertyList = object->property(kRequiredProperties).toStringList();
             object->setProperty(kRequiredProperties, propertyList << propertyName);
         }
     } else {
-        const QStringList propertyList = object->property(kRequiredProperties).toStringList();
-        if (!propertyList.contains(propertyName)) {
-            // We only write to properties that are required
-            return;
+        {
+            const QStringList propertyList = object->property(kRequiredProperties).toStringList();
+            if (propertyList.contains(propertyName)) {
+                const auto metaObject = object->metaObject();
+                const int propertyIndex = metaObject->indexOfProperty(property);
+                const auto metaProperty = metaObject->property(propertyIndex);
+                metaProperty.write(object, value);
+            }
         }
-        const auto metaObject = object->metaObject();
-        const int propertyIndex = metaObject->indexOfProperty(property);
-        const auto metaProperty = metaObject->property(propertyIndex);
-        metaProperty.write(object, value);
+
+        if (editItem) {
+            // Whenever we're told to update a required property for a table item that has the
+            // same model index as the edit item, we also mirror that update to the edit item.
+            // As such, this function is never called for the edit item directly (except the
+            // first time when it needs to be initialized).
+            Q_TABLEVIEW_ASSERT(object != editItem, "");
+            const QModelIndex modelIndex = q->modelIndex(cellAtModelIndex(serializedModelIndex));
+            if (modelIndex == editIndex) {
+                const QStringList propertyList = editItem->property(kRequiredProperties).toStringList();
+                if (propertyList.contains(propertyName)) {
+                    const auto metaObject = editItem->metaObject();
+                    const int propertyIndex = metaObject->indexOfProperty(property);
+                    const auto metaProperty = metaObject->property(propertyIndex);
+                    metaProperty.write(editItem, value);
+                }
+            }
+        }
+
     }
 }
 
@@ -2891,6 +3095,9 @@ void QQuickTableViewPrivate::processLoadRequest()
             emit q->bottomRowChanged();
             break;
         }
+
+        if (editIndex.isValid())
+            updateEditItem();
     }
 
     loadRequest.markAsDone();
@@ -2993,6 +3200,8 @@ void QQuickTableViewPrivate::processRebuildTable()
         if (edgesBeforeRebuild.bottom() != q->bottomRow())
             emit q->bottomRowChanged();
 
+        if (editIndex.isValid())
+            updateEditItem();
         updateCurrentRowAndColumn();
 
         qCDebug(lcTableViewDelegateLifecycle()) << "current table:" << tableLayoutToString();
@@ -3729,7 +3938,9 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
 {
     Q_Q(QQuickTableView);
 
-    auto item = static_cast<QQuickItem*>(object);
+    auto item = qobject_cast<QQuickItem*>(object);
+    if (!item)
+        return;
 
     item->setParentItem(q->contentItem());
     item->setZ(1);
@@ -3759,6 +3970,9 @@ void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
     const bool selected = selectedInSelectionModel(cell);
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, false);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
+
+    if (auto item = qobject_cast<QQuickItem*>(object))
+        QQuickItemPrivate::get(item)->setCulled(false);
 
     if (auto attached = getAttachedObject(object))
         emit attached->reused();
@@ -4053,8 +4267,14 @@ void QQuickTableViewPrivate::rowsInsertedCallback(const QModelIndex &parent, int
 
 void QQuickTableViewPrivate::rowsRemovedCallback(const QModelIndex &parent, int, int)
 {
+    Q_Q(QQuickTableView);
+
     if (parent != QModelIndex())
         return;
+
+    // If editIndex was a part of the removed rows, it will now be invalid.
+    if (!editIndex.isValid() && editItem)
+        q->closeEditor();
 
     scheduleRebuildTable(RebuildOption::ViewportOnly | RebuildOption::CalculateNewContentHeight);
 }
@@ -4074,8 +4294,14 @@ void QQuickTableViewPrivate::columnsInsertedCallback(const QModelIndex &parent, 
 
 void QQuickTableViewPrivate::columnsRemovedCallback(const QModelIndex &parent, int, int)
 {
+    Q_Q(QQuickTableView);
+
     if (parent != QModelIndex())
         return;
+
+    // If editIndex was a part of the removed columns, it will now be invalid.
+    if (!editIndex.isValid() && editItem)
+        q->closeEditor();
 
     scheduleRebuildTable(RebuildOption::ViewportOnly | RebuildOption::CalculateNewContentWidth);
 }
@@ -4098,6 +4324,8 @@ void QQuickTableViewPrivate::fetchMoreData()
 
 void QQuickTableViewPrivate::modelResetCallback()
 {
+    Q_Q(QQuickTableView);
+    q->closeEditor();
     scheduleRebuildTable(RebuildOption::All);
 }
 
@@ -4306,6 +4534,7 @@ void QQuickTableViewPrivate::init()
     Q_Q(QQuickTableView);
 
     q->setFlag(QQuickItem::ItemIsFocusScope);
+    q->setActiveFocusOnTab(true);
 
     positionXAnimation.setTargetObject(q);
     positionXAnimation.setProperty(QStringLiteral("contentX"));
@@ -4328,50 +4557,112 @@ void QQuickTableViewPrivate::init()
     // being hovered/dragged. For those cases, we fall back to setting the current index
     // on tap instead. A double tap on a resize area should also revert the section size
     // back to its implicit size.
-    static bool currentIndexChangedOnPress = false;
-
     QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, q, tapHandler] {
-        currentIndexChangedOnPress = false;
-        if (!pointerNavigationEnabled || !tapHandler->isPressed())
+        if (!tapHandler->isPressed())
             return;
+
         positionXAnimation.stop();
         positionYAnimation.stop();
-        if (keyNavigationEnabled)
-            q->forceActiveFocus(Qt::MouseFocusReason);
+
+        if (!q->isInteractive())
+            handleTap(tapHandler->point().pressPosition());
+    });
+
+    QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, [this, q, tapHandler] {
         if (q->isInteractive())
-            return;
-        if (resizableRows && hoverHandler->m_row != -1)
-            return;
-        if (resizableColumns && hoverHandler->m_column != -1)
-            return;
-        if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
-            return;
-
-        clearSelection();
-        setCurrentIndexFromTap(tapHandler->point().pressPosition());
-        currentIndexChangedOnPress = true;
+            handleTap(tapHandler->point().pressPosition());
     });
 
-    QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, [this, tapHandler] {
-        if (!pointerNavigationEnabled || currentIndexChangedOnPress)
-            return;
-        if (resizableRows && hoverHandler->m_row != -1)
-            return;
-        if (resizableColumns && hoverHandler->m_column != -1)
-            return;
-
-        clearSelection();
-        setCurrentIndexFromTap(tapHandler->point().pressPosition());
-    });
-
-    QObject::connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, q] {
+    QObject::connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, q, tapHandler] {
         const bool resizeRow = resizableRows && hoverHandler->m_row != -1;
         const bool resizeColumn = resizableColumns && hoverHandler->m_column != -1;
-        if (resizeRow)
-            q->setRowHeight(hoverHandler->m_row, -1);
-        if (resizeColumn)
-            q->setColumnWidth(hoverHandler->m_column, -1);
+
+        if (resizeRow || resizeColumn) {
+            if (resizeRow)
+                q->setRowHeight(hoverHandler->m_row, -1);
+            if (resizeColumn)
+                q->setColumnWidth(hoverHandler->m_column, -1);
+        } else if (editTriggers & QQuickTableView::DoubleTapped) {
+            const QPointF pos = tapHandler->point().pressPosition();
+            const QPoint cell = q->cellAtPosition(pos);
+            const QModelIndex index = q->modelIndex(cell);
+            if (canEdit(index, false))
+                q->edit(index);
+        }
     });
+}
+
+void QQuickTableViewPrivate::handleTap(const QPointF &pos)
+{
+    Q_Q(QQuickTableView);
+
+    if (keyNavigationEnabled)
+        q->forceActiveFocus(Qt::MouseFocusReason);
+
+    if (resizableRows && hoverHandler->m_row != -1)
+        return;
+    if (resizableColumns && hoverHandler->m_column != -1)
+        return;
+    if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
+        return;
+
+    QModelIndex prevIndex;
+    if (selectionModel) {
+        prevIndex = selectionModel->currentIndex();
+        if (pointerNavigationEnabled) {
+            clearSelection();
+            setCurrentIndexFromTap(pos);
+        }
+    }
+
+    if (editTriggers != QQuickTableView::NoEditTriggers)
+        q->closeEditor();
+
+    const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(pos));
+    if (canEdit(tappedIndex, false)) {
+        if (editTriggers & QQuickTableView::SingleTapped)
+            q->edit(tappedIndex);
+        else if ((editTriggers & QQuickTableView::SelectedTapped) && tappedIndex == prevIndex)
+            q->edit(tappedIndex);
+    }
+}
+
+bool QQuickTableViewPrivate::canEdit(const QModelIndex tappedIndex, bool warn)
+{
+    // Check that a call to edit(tappedIndex) would not
+    // result in warnings being printed.
+    Q_Q(QQuickTableView);
+
+    if (!tappedIndex.isValid()) {
+        if (warn)
+            qmlWarning(q) << "cannot edit: index is not valid!";
+        return false;
+    }
+
+    if (auto const qaim = model->abstractItemModel()) {
+        if (!(qaim->flags(tappedIndex) & Qt::ItemIsEditable)) {
+            if (warn)
+                qmlWarning(q) << "cannot edit: QAbstractItemModel::flags(index) doesn't contain Qt::ItemIsEditable";
+            return false;
+        }
+    }
+
+    const QPoint cell = q->cellAtIndex(tappedIndex);
+    const QQuickItem *cellItem = q->itemAtCell(cell);
+    if (!cellItem) {
+        if (warn)
+            qmlWarning(q) << "cannot edit: the cell to edit is not inside the viewport!";
+        return false;
+    }
+
+    auto attached = getAttachedObject(cellItem);
+    if (!attached || !attached->editDelegate()) {
+        if (warn)
+            qmlWarning(q) << "cannot edit: no TableView.editDelegate set!";
+        return false;
+    }
+
+    return true;
 }
 
 void QQuickTableViewPrivate::syncViewportPosRecursive()
@@ -4426,9 +4717,20 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
 {
     Q_Q(QQuickTableView);
 
+    if (!selectionModel || !selectionModel->model())
+        return false;
+
     const QModelIndex currentIndex = selectionModel->currentIndex();
     const QPoint currentCell = q->cellAtIndex(currentIndex);
     const bool select = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
+
+    if (!q->activeFocusOnTab()) {
+        switch (e->key()) {
+        case Qt::Key_Tab:
+        case Qt::Key_Backtab:
+            return false;
+        }
+    }
 
     if (!cellIsValid(currentCell)) {
         switch (e->key()) {
@@ -4610,6 +4912,60 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
     return true;
 }
 
+bool QQuickTableViewPrivate::editFromKeyEvent(QKeyEvent *e)
+{
+    Q_Q(QQuickTableView);
+
+    if (editTriggers == QQuickTableView::NoEditTriggers)
+        return false;
+    if (!selectionModel || !selectionModel->model())
+        return false;
+
+    const QModelIndex index = selectionModel->currentIndex();
+    const QPoint cell = q->cellAtIndex(index);
+    const QQuickItem *cellItem = q->itemAtCell(cell);
+    if (!cellItem)
+        return false;
+
+    auto attached = getAttachedObject(cellItem);
+    if (!attached || !attached->editDelegate())
+        return false;
+
+    const bool anyKeyAccepted = editTriggers & QQuickTableView::AnyKeyPressed;
+    bool editKeyPressed = false;
+    if (editTriggers & QQuickTableView::EditKeyPressed) {
+        switch (e->key()) {
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+#ifndef Q_OS_MACOS
+        case Qt::Key_F2:
+#endif
+            editKeyPressed = true;
+            break;
+        }
+    }
+
+    if (!(editKeyPressed || anyKeyAccepted))
+        return false;
+
+    if (!canEdit(index, false)) {
+        // If canEdit() returns false at this point (e.g because currentIndex is not
+        // editable), we still want to eat the key event, to keep a consistent behavior
+        // when some cells are editable, but others not.
+        return true;
+    }
+
+    q->edit(index);
+
+    if (editIndex.isValid() && anyKeyAccepted && !editKeyPressed) {
+        // Replay the key event to the focus object (which should at this point
+        // be the edit item, or an item inside the edit item).
+        QGuiApplication::sendEvent(QGuiApplication::focusObject(), e);
+    }
+
+    return true;
+}
+
 void QQuickTableViewPrivate::updateCursor()
 {
     int row = resizableRows ? hoverHandler->m_row : -1;
@@ -4642,6 +4998,31 @@ void QQuickTableViewPrivate::updateCursor()
     } else if (m_cursorSet) {
         qApp->restoreOverrideCursor();
         m_cursorSet = false;
+    }
+}
+
+void QQuickTableViewPrivate::updateEditItem()
+{
+    Q_Q(QQuickTableView);
+    Q_ASSERT(editIndex.isValid());
+    Q_ASSERT(editItem);
+
+    const QPoint cell = q->cellAtIndex(editIndex);
+    auto cellItem = q->itemAtCell(cell);
+
+    if (cellItem) {
+        editItem->setX(cellItem->x());
+        editItem->setY(cellItem->y());
+        editItem->setWidth(cellItem->width());
+        editItem->setHeight(cellItem->height());
+        // Temporarily hide the tableview delegate so that it
+        // doesn't shine through if the edit delegate is semi-transparent.
+        QQuickItemPrivate::get(cellItem)->setCulled(true);
+    } else {
+        // 'Hide' the edit item, without losing active focus. Simply
+        // culling it will not work, since some platforms (macOS) will
+        // overlay the focus item with a focus rect.
+        editItem->setX(q->contentWidth() + 10000);
     }
 }
 
@@ -4790,6 +5171,8 @@ QVariant QQuickTableView::model() const
 void QQuickTableView::setModel(const QVariant &newModel)
 {
     Q_D(QQuickTableView);
+
+    closeEditor();
     d->setModelImpl(newModel);
 
     if (d->selectionModel)
@@ -4811,6 +5194,22 @@ void QQuickTableView::setDelegate(QQmlComponent *newDelegate)
     d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
 
     emit delegateChanged();
+}
+
+QQuickTableView::EditTriggers QQuickTableView::editTriggers() const
+{
+    return d_func()->editTriggers;
+}
+
+void QQuickTableView::setEditTriggers(QQuickTableView::EditTriggers editTriggers)
+{
+    Q_D(QQuickTableView);
+    if (editTriggers == d->editTriggers)
+        return;
+
+    d->editTriggers = editTriggers;
+
+    emit editTriggersChanged();
 }
 
 bool QQuickTableView::reuseItems() const
@@ -5500,6 +5899,111 @@ void QQuickTableView::forceLayout()
     d_func()->forceLayout(true);
 }
 
+void QQuickTableView::edit(const QModelIndex &index)
+{
+    Q_D(QQuickTableView);
+
+    if (!d->canEdit(index, true))
+        return;
+
+    if (d->editIndex == index)
+        return;
+
+    if (!d->tableModel)
+        return;
+
+    if (!d->editModel) {
+        d->editModel = new QQmlTableInstanceModel(qmlContext(this));
+        d->editModel->useImportVersion(d->resolveImportVersion());
+        QObject::connect(d->editModel, &QQmlInstanceModel::initItem,
+                         [this, d] (int serializedModelIndex, QObject *object) {
+            // initItemCallback will call setRequiredProperty for each required property in the
+            // delegate, both for this class, but also also for any subclasses. setRequiredProperty
+            // is currently dependent of the QQmlTableInstanceModel that was used to create the object
+            // in order to initialize required properties, so we need to set the editItem variable
+            // early on, so that we can use it in setRequiredProperty.
+            d->editIndex = modelIndex(d->cellAtModelIndex(serializedModelIndex));
+            d->editItem = qmlobject_cast<QQuickItem*>(object);
+            d->initItemCallback(serializedModelIndex, object);
+        });
+    }
+
+    if (d->selectionModel)
+        d->selectionModel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+
+    if (d->editIndex.isValid())
+        closeEditor();
+
+    const auto cellItem = itemAtCell(cellAtIndex(index));
+    Q_ASSERT(cellItem);
+    const auto attached = d->getAttachedObject(cellItem);
+    Q_ASSERT(attached);
+
+    d->editModel->setModel(d->tableModel->model());
+    d->editModel->setDelegate(attached->editDelegate());
+
+    const int cellIndex = d->modelIndexToCellIndex(index);
+    QObject* object = d->editModel->object(cellIndex, QQmlIncubator::Synchronous);
+    if (!object) {
+        d->editIndex = QModelIndex();
+        d->editItem = nullptr;
+        qmlWarning(this) << "cannot edit: TableView.editDelegate could not be instantiated!";
+        return;
+    }
+
+    // Note: at this point, editIndex and editItem has been set from initItem!
+
+    if (!d->editItem) {
+        qmlWarning(this) << "cannot edit: TableView.editDelegate is not an Item!";
+        d->editItem = nullptr;
+        d->editIndex = QModelIndex();
+        d->editModel->release(object, QQmlInstanceModel::NotReusable);
+        return;
+    }
+
+    d->editItem->setZ(2);
+    d->updateEditItem();
+
+    // Find the first child inside the delegate that wants focus. But
+    // we only transfer focus if the edit item didn't already set
+    // it to some other internal item explicitly upon construction.
+    QObject *focusObject = d->editItem->window()->focusObject();
+    QQuickItem *focusItem = qobject_cast<QQuickItem *>(focusObject);
+    if (!d->editItem->isAncestorOf(focusItem)) {
+        QQuickItem *newFocusItem = d->editItem;
+        if (!newFocusItem->activeFocusOnTab())
+            newFocusItem = d->editItem->nextItemInFocusChain(true);
+        if (newFocusItem == d->editItem || d->editItem->isAncestorOf(newFocusItem)) {
+            // Set activeFocusOnTab to false to ensure that QQuickTableView::keyPressEvent()
+            // receives the tab keys, instead of QQuickItemPrivate::focusNextPrev().
+            // TableView knows better which cell is next in the focus chain.
+            newFocusItem->setActiveFocusOnTab(false);
+            newFocusItem->forceActiveFocus(Qt::MouseFocusReason);
+        }
+    }
+}
+
+void QQuickTableView::closeEditor()
+{
+    Q_D(QQuickTableView);
+
+    if (!d->editItem)
+        return;
+
+    d->editModel->release(d->editItem, QQmlInstanceModel::NotReusable);
+    d->editItem = nullptr;
+
+    if (d->editIndex.isValid()) {
+        // Note: we can have an invalid editIndex, even when we
+        // have an editItem, if the model has changed (e.g been reset)!
+        const QPoint cell = cellAtIndex(d->editIndex);
+        if (auto cellItem = itemAtCell(cell))
+            QQuickItemPrivate::get(cellItem)->setCulled(false);
+
+        d->editIndex = QModelIndex();
+    }
+}
+
 QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickTableViewAttached(obj);
@@ -5564,7 +6068,7 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickTableView);
 
-    if (!d->keyNavigationEnabled || !d->selectionModel || !d->selectionModel->model()) {
+    if (!d->keyNavigationEnabled) {
         QQuickFlickable::keyPressEvent(e);
         return;
     }
@@ -5572,24 +6076,38 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
     if (d->tableSize.isEmpty())
         return;
 
-    const QModelIndex currentIndex = d->selectionModel->currentIndex();
-    const QPoint currentCell = cellAtIndex(currentIndex);
-
-    if (!d->cellIsValid(currentCell)) {
-        switch (e->key()) {
-        case Qt::Key_Up:
-        case Qt::Key_Down:
-        case Qt::Key_Left:
-        case Qt::Key_Right:
-            // Special case: the current index doesn't map to a cell in the view (perhaps
-            // because it isn't set yet). In that case, we set it to be the top-left cell.
-            const QModelIndex topLeftIndex = modelIndex(leftColumn(), topRow());
-            d->selectionModel->setCurrentIndex(topLeftIndex, QItemSelectionModel::NoUpdate);
+    if (d->editIndex.isValid()) {
+        // While editing, we limit the keys that we
+        // handle to not interfere with editing.
+        if (d->editTriggers != QQuickTableView::NoEditTriggers) {
+            switch (e->key()) {
+            case Qt::Key_Enter:
+            case Qt::Key_Return:
+                if (auto attached = d->getAttachedObject(d->editItem))
+                    emit attached->commit();
+                closeEditor();
+                break;
+            case Qt::Key_Escape:
+                closeEditor();
+                break;
+            case Qt::Key_Tab:
+            case Qt::Key_Backtab:
+                if (activeFocusOnTab()) {
+                    if (auto attached = d->getAttachedObject(d->editItem))
+                        emit attached->commit();
+                    if (d->setCurrentIndexFromKeyEvent(e))
+                        edit(d->selectionModel->currentIndex());
+                }
+                break;
+            }
         }
         return;
     }
 
     if (d->setCurrentIndexFromKeyEvent(e))
+        return;
+
+    if (d->editFromKeyEvent(e))
         return;
 
     QQuickFlickable::keyPressEvent(e);

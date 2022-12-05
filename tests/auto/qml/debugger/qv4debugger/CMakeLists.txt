@@ -13,6 +13,20 @@ file(GLOB_RECURSE test_data_glob
         data/*)
 list(APPEND test_data ${test_data_glob})
 
+qt_add_library(testCppTypes STATIC)
+qt_autogen_tools_initial_setup(testCppTypes)
+target_link_libraries(testCppTypes PRIVATE Qt::Qml Qt::QmlPrivate Qt::Quick)
+
+qt6_add_qml_module(testCppTypes
+    VERSION 1.0
+    URI TestTypes
+    SOURCES
+        commontypes.h
+    AUTO_RESOURCE_PREFIX
+    OUTPUT_DIRECTORY TestTypes
+)
+qt_autogen_tools_initial_setup(testCppTypesplugin)
+
 qt_internal_add_test(tst_qv4debugger
     SOURCES
         ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4datacollector.cpp ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4datacollector.h
@@ -28,6 +42,7 @@ qt_internal_add_test(tst_qv4debugger
         Qt::Network
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
+        testCppTypesplugin
     TESTDATA ${test_data}
 )
 

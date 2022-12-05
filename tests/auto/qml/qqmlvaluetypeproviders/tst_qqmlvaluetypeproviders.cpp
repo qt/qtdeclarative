@@ -268,7 +268,7 @@ void tst_qqmlvaluetypeproviders::structured()
         QTest::ignoreMessage(QtWarningMsg, warning);
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(
-                             url.toString()  + QStringLiteral(":36: Error: Cannot assign QJSValue "
+                             url.toString()  + QStringLiteral(":44: Error: Cannot assign QJSValue "
                                                               "to ConstructibleValueType")));
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(
@@ -327,6 +327,21 @@ void tst_qqmlvaluetypeproviders::structured()
     structured.setC(12);
     structured.setP(QPointF(7, 8));
     QCOMPARE(t->structured(), structured);
+
+    QCOMPARE(o->property("cr1").value<ConstructibleFromQReal>(),
+             ConstructibleFromQReal(11.25));
+    QCOMPARE(o->property("cr2").value<ConstructibleFromQReal>(),
+             ConstructibleFromQReal(std::numeric_limits<qreal>::infinity()));
+    QCOMPARE(o->property("cr3").value<ConstructibleFromQReal>(),
+             ConstructibleFromQReal(-std::numeric_limits<qreal>::infinity()));
+    QCOMPARE(o->property("cr4").value<ConstructibleFromQReal>(),
+             ConstructibleFromQReal(std::numeric_limits<qreal>::quiet_NaN()));
+    QCOMPARE(o->property("cr5").value<ConstructibleFromQReal>(),
+             ConstructibleFromQReal(0));
+    QCOMPARE(o->property("cr6").value<ConstructibleFromQReal>(),
+             ConstructibleFromQReal(-112.5));
+    QCOMPARE(o->property("cr7").value<ConstructibleFromQReal>(),
+             ConstructibleFromQReal(50));
 }
 
 void tst_qqmlvaluetypeproviders::recursive()

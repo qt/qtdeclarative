@@ -9,6 +9,11 @@ qt_internal_add_test(tst_qmltc_qprocess
         Qt::Qml
         Qt::QuickTestUtilsPrivate
 )
+
+# special setup for singleton files:
+set_source_files_properties(data/SingletonThing.qml data/singletonUncreatable.qml
+    PROPERTIES QT_QML_SINGLETON_TYPE true)
+
 qt6_add_qml_module(tst_qmltc_qprocess
     VERSION 1.0
     URI QmltcQProcessTests
@@ -23,6 +28,8 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/invalidAliasRevision.qml
         data/ComponentType.qml
         data/inlineComponentWithEnum.qml
+        data/singletonUncreatable.qml
+        data/uncreatable.qml
 )
 
 set(common_libraries
@@ -36,9 +43,6 @@ set(common_libraries
 # use PUBLIC everywhere to simplify the build of the test binary
 target_include_directories(tst_qmltc_qprocess PUBLIC cpptypes/)
 target_link_libraries(tst_qmltc_qprocess PUBLIC ${common_libraries})
-
-# special setup for singleton files:
-set_source_files_properties(SingletonThing.qml PROPERTIES QT_QML_SINGLETON_TYPE true)
 
 add_dependencies(tst_qmltc_qprocess Qt::qmltc)
 

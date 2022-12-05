@@ -920,6 +920,12 @@ bool QJSEngine::convertMetaType(QMetaType fromType, const void *from, QMetaType 
     return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromData(fromType, from), toType, to);
 }
 
+QString QJSEngine::convertQObjectToString(QObject *object)
+{
+    return QV4::QObjectWrapper::objectToString(
+                handle(), object ? object->metaObject() : nullptr, object);
+}
+
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
 
     Creates a QJSValue with the given \a value.

@@ -726,6 +726,10 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
                 .writeRegion(u"idColon", u":")
                 .space()
                 .writeRegion(u"id", idStr());
+        if (ow.lineWriter.options().attributesSequence
+            == LineWriterOptions::AttributesSequence::Normalize) {
+            ow.ensureNewline(2);
+        }
         if (myId)
             myId.writeOutPost(ow);
     }
@@ -938,8 +942,13 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
+    bool first = true;
     for (auto &method : methodList) {
+        if (!first && ow.lineWriter.options().functionsSpacing) {
+            ow.newline();
+        }
         ow.ensureNewline();
+        first = false;
         method.writeOut(ow);
         ow.ensureNewline();
     }
@@ -981,7 +990,7 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    bool first = true;
+    first = true;
     for (auto c : field(self, Fields::children).values()) {
         if (!first && ow.lineWriter.options().objectsSpacing) {
             ow.newline().newline();

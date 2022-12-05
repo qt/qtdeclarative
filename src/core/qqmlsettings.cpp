@@ -173,9 +173,9 @@ QT_BEGIN_NAMESPACE
     It's often useful to have settings available to every QML file as a
     singleton. For an example of this, see the
     \l {Qt Quick Controls - To Do List}{To Do List example}. Specifically,
-    \l {https://code.qt.io/cgit/qt/qtdeclarative.git/tree/examples/quickcontrols2/ios/todolist/AppSettings.qml}
+    \l {https://code.qt.io/cgit/qt/qtdeclarative.git/tree/examples/quickcontrols/ios/todolist/AppSettings.qml}
     {AppSettings.qml} is the singleton, and in the
-    \l {https://code.qt.io/cgit/qt/qtdeclarative.git/tree/examples/quickcontrols2/ios/todolist/CMakeLists.txt}
+    \l {https://code.qt.io/cgit/qt/qtdeclarative.git/tree/examples/quickcontrols/ios/todolist/CMakeLists.txt}
     {CMakeLists.txt file},
     the \c QT_QML_SINGLETON_TYPE property is set to \c TRUE for that file via
     \c set_source_files_properties.

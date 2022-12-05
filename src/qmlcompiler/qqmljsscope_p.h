@@ -352,10 +352,30 @@ public:
     {
         using namespace Qt::StringLiterals;
 
-        QString suffix;
-        if (m_semantics == AccessSemantics::Reference)
-            suffix = u" *"_s;
-        return m_internalName + suffix;
+        switch (m_semantics) {
+        case AccessSemantics::Reference:
+            return m_internalName + " *"_L1;
+        case AccessSemantics::Value:
+        case AccessSemantics::Sequence:
+            break;
+        case AccessSemantics::None:
+            // If we got a namespace, it might still be a regular type, exposed as namespace.
+            // We may need to travel the inheritance chain all the way up to QObject to
+            // figure this out, since all other types may be exposed the same way.
+            for (QQmlJSScope::ConstPtr base = baseType(); base; base = base->baseType()) {
+                switch (base->accessSemantics()) {
+                case AccessSemantics::Reference:
+                    return m_internalName + " *"_L1;
+                case AccessSemantics::Value:
+                case AccessSemantics::Sequence:
+                    return m_internalName;
+                case AccessSemantics::None:
+                    break;
+                }
+            }
+            break;
+        }
+        return m_internalName;
     }
 
     // This returns a more user readable version of internalName / baseTypeName
@@ -508,7 +528,8 @@ public:
     }
 
     bool isSingleton() const { return m_flags & Singleton; }
-    bool isCreatable() const { return m_flags & Creatable; }
+    bool isCreatable() const;
+    bool hasCreatableFlag() const { return m_flags & Creatable; }
     /*!
      * \internal
      *
@@ -522,7 +543,7 @@ public:
     bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
     bool extensionIsNamespace() const { return m_flags & HasExtensionNamespace; }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
-    void setIsCreatable(bool v) { m_flags.setFlag(Creatable, v); }
+    void setCreatableFlag(bool v) { m_flags.setFlag(Creatable, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
     void setIsScript(bool v) { m_flags.setFlag(Script, v); }
     void setHasCustomParser(bool v)
@@ -758,7 +779,7 @@ private:
     QString m_extensionTypeName;
     QQmlJSScope::WeakConstPtr m_extensionType;
 
-    Flags m_flags;
+    Flags m_flags = Creatable; // all types are marked as creatable by default.
     AccessSemantics m_semantics = AccessSemantics::Reference;
 
     QQmlJS::SourceLocation m_sourceLocation;

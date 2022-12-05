@@ -1,0 +1,46 @@
+// Copyright (C) 2017 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquickcontrols-navigation.html
+    \title Navigation Controls
+    \ingroup qtquickcontrols-guidelines
+    \brief Guidelines for navigation controls
+
+    Qt Quick Controls offers a selection of navigation models.
+
+    \annotatedlist qtquickcontrols-navigation
+
+    The following sections offer guidelines for choosing the appropriate type
+    of navigation model, depending on the use case.
+
+    \section1 StackView Control
+
+    \image qtquickcontrols-stackview-wireframe.png
+
+    \l StackView provides a stack-based navigation model which can be used
+    with a set of interlinked pages. StackView works according to a last-in
+    first-out principle: the page pushed last on the stack is the one visible.
+    Popping a page removes the last page and makes the previous one visible.
+
+    \section1 SwipeView Control
+
+    \image qtquickcontrols-swipeview-wireframe.png
+
+    \l SwipeView provides a navigation model that simplifies horizontal paged
+    scrolling. The page indicator on the bottom shows which is the presently
+    active page.
+
+    \section1 TabBar Control
+
+    \image qtquickcontrols-tabbar-wireframe.png
+
+    \l TabBar is a bar with icons or text that allows the user to switch
+    between different subtasks, views, or modes.
+
+    \section1 TabButton Control
+
+    \image qtquickcontrols-tabbutton.png
+
+    \l TabButton is a button with a layout suitable for a TabBar control.
+*/
