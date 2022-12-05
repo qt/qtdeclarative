@@ -43,6 +43,7 @@ qt_add_qml_module(
     AUTO_RESOURCE_PREFIX
     QML_FILES
         "data/TestComponentWithIC.qml"
+        "data/withAot.qml"
 )
 
 # Resources:

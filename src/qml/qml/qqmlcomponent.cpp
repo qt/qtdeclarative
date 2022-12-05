@@ -626,8 +626,12 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    const QUrl url = QDir::isAbsolutePath(fileName) ? QUrl::fromLocalFile(fileName) : QUrl(fileName);
-    d->loadUrl(url, mode);
+    if (fileName.startsWith(u':'))
+        d->loadUrl(QUrl(QLatin1String("qrc") + fileName), mode);
+    else if (QDir::isAbsolutePath(fileName))
+        d->loadUrl(QUrl::fromLocalFile(fileName), mode);
+    else
+        d->loadUrl(QUrl(fileName), mode);
 }
 
 /*!
