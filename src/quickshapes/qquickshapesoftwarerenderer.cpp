@@ -144,10 +144,8 @@ void QQuickShapeSoftwareRenderer::endSync(bool)
 
 void QQuickShapeSoftwareRenderer::setNode(QQuickShapeSoftwareRenderNode *node)
 {
-    if (m_node != node) {
-        m_node = node;
-        m_accDirty |= DirtyList;
-    }
+    m_node = node;
+    m_accDirty |= DirtyList;
 }
 
 void QQuickShapeSoftwareRenderer::updateNode()
