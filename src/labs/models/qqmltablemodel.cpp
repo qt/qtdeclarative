@@ -1050,6 +1050,12 @@ bool QQmlTableModel::validateRowIndex(const char *functionName, const char *argu
     return true;
 }
 
+Qt::ItemFlags QQmlTableModel::flags(const QModelIndex &index) const
+{
+    Q_UNUSED(index)
+    return Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qqmltablemodel_p.cpp"
