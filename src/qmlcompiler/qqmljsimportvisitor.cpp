@@ -558,15 +558,6 @@ void QQmlJSImportVisitor::processDefaultProperties()
         }
 
         const QQmlJSMetaProperty defaultProp = parentScope->property(defaultPropertyName);
-
-        if (it.value().size() > 1
-                && !defaultProp.isList()
-                && !defaultProp.type()->isListProperty()) {
-            m_logger->log(
-                    QStringLiteral("Cannot assign multiple objects to a default non-list property"),
-                    qmlNonListProperty, it.value().constFirst()->sourceLocation());
-        }
-
         auto propType = defaultProp.type();
         const auto handleUnresolvedDefaultProperty = [&](const QQmlJSScope::ConstPtr &) {
             // Property type is not fully resolved we cannot tell any more than this
@@ -576,10 +567,20 @@ void QQmlJSImportVisitor::processDefaultProperties()
                                   .arg(defaultProp.typeName()),
                           qmlMissingProperty, it.value().constFirst()->sourceLocation());
         };
+
         if (propType.isNull()) {
             handleUnresolvedDefaultProperty(propType);
             continue;
         }
+
+        if (it.value().size() > 1
+                && !defaultProp.isList()
+                && !propType->isListProperty()) {
+            m_logger->log(
+                    QStringLiteral("Cannot assign multiple objects to a default non-list property"),
+                    qmlNonListProperty, it.value().constFirst()->sourceLocation());
+        }
+
         if (!isTypeResolved(propType, handleUnresolvedDefaultProperty))
             continue;
 

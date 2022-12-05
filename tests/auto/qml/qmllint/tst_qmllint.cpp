@@ -665,6 +665,10 @@ void TestQmllint::dirtyQmlCode_data()
                                 "Cannot assign to default property of incompatible type") } },
                         { Message { QStringLiteral(
                                 "Cannot assign to non-existent default property") } } };
+    QTest::newRow("DefaultPropertyLookupInUnknownType")
+        << QStringLiteral("unknownParentDefaultPropertyCheck.qml")
+        << Result { { Message {  QStringLiteral(
+                "Alien was not found. Did you add all import paths?") } } };
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
             << Result { { Message { QStringLiteral(
