@@ -13,10 +13,12 @@
 #include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <private/qqmlcomponent_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
 #include <private/qv4qmlcontext_p.h>
-#include <private/qv4scopedvalue_p.h>
 #include <private/qv4qmlcontext_p.h>
+#include <private/qv4scopedvalue_p.h>
+#include <private/qv4executablecompilationunit_p.h>
 #include <qcolor.h>
 #include <qsignalspy.h>
 
@@ -142,6 +144,7 @@ private slots:
     void loadFromModuleFailures_data();
     void loadFromModuleFailures();
     void loadFromModuleRequired();
+    void loadFromQrc();
 
 private:
     QQmlEngine engine;
@@ -1406,6 +1409,18 @@ void tst_qqmlcomponent::loadFromModuleRequired()
 
     QScopedPointer<QObject> root(component.create());
     QVERIFY(!root);
+}
+
+void tst_qqmlcomponent::loadFromQrc()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QStringLiteral(":/qt/qml/test/data/withAot.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QQmlComponentPrivate *p = QQmlComponentPrivate::get(&component);
+    QVERIFY(p);
+    QVERIFY(p->compilationUnit);
+    QVERIFY(p->compilationUnit->aotCompiledFunctions);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
