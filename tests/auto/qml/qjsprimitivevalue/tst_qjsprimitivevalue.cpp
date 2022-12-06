@@ -20,6 +20,20 @@ private slots:
 
     void toFromVariant();
 
+    void ctor_invalid();
+    void ctor_undefinedWithEngine();
+    void ctor_boolWithEngine();
+    void ctor_intWithEngine();
+    void ctor_stringWithEngine();
+    void ctor_copyAndAssignWithEngine();
+    void toString();
+    void toNumber();
+    void toBoolean();
+    void toVariant();
+    void equals();
+    void strictlyEquals();
+    void stringAndUrl();
+
 private:
     QJSEngine engine;
 
@@ -326,6 +340,593 @@ void tst_QJSPrimitiveValue::toFromVariant()
         else
             QCOMPARE(fromVar, operand);
     }
+}
+
+void tst_QJSPrimitiveValue::ctor_invalid()
+{
+    QJSPrimitiveValue v;
+    QCOMPARE(v.type(), QJSPrimitiveValue::Undefined);
+}
+
+void tst_QJSPrimitiveValue::ctor_undefinedWithEngine()
+{
+    QJSEngine eng;
+    QJSPrimitiveValue v(eng.toPrimitiveValue(QVariant()));
+    QCOMPARE(v.type(), QJSPrimitiveValue::Undefined);
+}
+
+void tst_QJSPrimitiveValue::ctor_boolWithEngine()
+{
+    QJSEngine eng;
+    QJSPrimitiveValue v(eng.toPrimitiveValue(false));
+    QCOMPARE(v.type(), QJSPrimitiveValue::Boolean);
+    QCOMPARE(v.toBoolean(), false);
+}
+
+void tst_QJSPrimitiveValue::ctor_intWithEngine()
+{
+    QJSEngine eng;
+    QJSPrimitiveValue v(eng.toPrimitiveValue(int(1)));
+    QCOMPARE(v.type(), QJSPrimitiveValue::Integer);
+    QCOMPARE(v.toInteger(), 1);
+}
+
+void tst_QJSPrimitiveValue::ctor_stringWithEngine()
+{
+    QJSEngine eng;
+    QJSPrimitiveValue v(eng.toPrimitiveValue(QStringLiteral("ciao")));
+    QCOMPARE(v.type(), QJSPrimitiveValue::String);
+    QCOMPARE(v.toString(), QStringLiteral("ciao"));
+}
+
+void tst_QJSPrimitiveValue::ctor_copyAndAssignWithEngine()
+{
+    QJSEngine eng;
+    // copy constructor, operator=
+
+    QJSPrimitiveValue v(eng.toPrimitiveValue(1.0));
+    QJSPrimitiveValue v2(v);
+    QCOMPARE(v2.strictlyEquals(v), true);
+
+    QJSPrimitiveValue v3(v);
+    QCOMPARE(v3.strictlyEquals(v), true);
+    QCOMPARE(v3.strictlyEquals(v2), true);
+
+    QJSPrimitiveValue v4(eng.toPrimitiveValue(2.0));
+    QCOMPARE(v4.strictlyEquals(v), false);
+    v3 = QJSPrimitiveValue(v4);
+    QCOMPARE(v3.strictlyEquals(v), false);
+    QCOMPARE(v3.strictlyEquals(v4), true);
+
+    v2 = QJSPrimitiveValue();
+    QCOMPARE(v2.strictlyEquals(v), false);
+    QCOMPARE(v.toDouble(), 1.0);
+
+    QJSPrimitiveValue v5(v);
+    QCOMPARE(v5.strictlyEquals(v), true);
+    v = QJSPrimitiveValue();
+    QCOMPARE(v5.strictlyEquals(v), false);
+    QCOMPARE(v5.toDouble(), 1.0);
+}
+
+void tst_QJSPrimitiveValue::toString()
+{
+    QJSEngine eng;
+
+    {
+        QJSPrimitiveValue undefined(eng.toPrimitiveValue(QVariant()));
+        QCOMPARE(undefined.toString(), QStringLiteral("undefined"));
+        QCOMPARE(qjsvalue_cast<QString>(undefined), QStringLiteral("undefined"));
+    }
+
+    {
+        QJSPrimitiveValue null((QJSPrimitiveNull()));
+        QCOMPARE(null.toString(), QStringLiteral("null"));
+        QCOMPARE(qjsvalue_cast<QString>(null), QStringLiteral("null"));
+    }
+
+    {
+        QJSPrimitiveValue falskt(eng.toPrimitiveValue(false));
+        QCOMPARE(falskt.toString(), QStringLiteral("false"));
+        QCOMPARE(qjsvalue_cast<QString>(falskt), QStringLiteral("false"));
+
+        QJSPrimitiveValue sant(eng.toPrimitiveValue(true));
+        QCOMPARE(sant.toString(), QStringLiteral("true"));
+        QCOMPARE(qjsvalue_cast<QString>(sant), QStringLiteral("true"));
+    }
+    {
+        QJSPrimitiveValue number(eng.toPrimitiveValue(123));
+        QCOMPARE(number.toString(), QStringLiteral("123"));
+        QCOMPARE(qjsvalue_cast<QString>(number), QStringLiteral("123"));
+    }
+    {
+        QJSPrimitiveValue number(eng.toPrimitiveValue(6.37e-8));
+        QCOMPARE(number.toString(), QStringLiteral("6.37e-8"));
+    }
+    {
+        QJSPrimitiveValue number(eng.toPrimitiveValue(-6.37e-8));
+        QCOMPARE(number.toString(), QStringLiteral("-6.37e-8"));
+
+        QJSPrimitiveValue str(eng.toPrimitiveValue(QStringLiteral("ciao")));
+        QCOMPARE(str.toString(), QStringLiteral("ciao"));
+        QCOMPARE(qjsvalue_cast<QString>(str), QStringLiteral("ciao"));
+    }
+
+    QJSPrimitiveValue inv((QJSPrimitiveUndefined()));
+    QCOMPARE(inv.toString(), QStringLiteral("undefined"));
+
+    // Type cannot be represented in QJSPrimitiveValue, and is converted to string.
+    QJSPrimitiveValue variant(eng.toPrimitiveValue(QPoint(10, 20)));
+    QCOMPARE(variant.type(), QJSPrimitiveValue::String);
+    QCOMPARE(variant.toString(), QStringLiteral("QPoint(10, 20)"));
+    variant = eng.toPrimitiveValue(QUrl());
+    QCOMPARE(variant.type(), QJSPrimitiveValue::String);
+    QVERIFY(variant.toString().isEmpty());
+
+    {
+        QByteArray hello = QByteArrayLiteral("Hello World");
+        QJSPrimitiveValue jsValue(eng.toPrimitiveValue(hello));
+        QCOMPARE(jsValue.toString(), QString::fromUtf8(hello));
+    }
+}
+
+void tst_QJSPrimitiveValue::toNumber()
+{
+    QJSEngine eng;
+
+    QJSPrimitiveValue undefined(eng.toPrimitiveValue(QVariant()));
+    QCOMPARE(qIsNaN(undefined.toDouble()), true);
+    QCOMPARE(qIsNaN(qjsvalue_cast<qreal>(undefined)), true);
+
+    QJSPrimitiveValue null((QJSPrimitiveNull()));
+    QCOMPARE(null.toDouble(), 0.0);
+    QCOMPARE(qjsvalue_cast<qreal>(null), 0.0);
+
+    {
+        QJSPrimitiveValue falskt(eng.toPrimitiveValue(false));
+        QCOMPARE(falskt.toDouble(), 0.0);
+        QCOMPARE(qjsvalue_cast<qreal>(falskt), 0.0);
+
+        QJSPrimitiveValue sant(eng.toPrimitiveValue(true));
+        QCOMPARE(sant.toDouble(), 1.0);
+        QCOMPARE(qjsvalue_cast<qreal>(sant), 1.0);
+
+        QJSPrimitiveValue number(eng.toPrimitiveValue(123.0));
+        QCOMPARE(number.toDouble(), 123.0);
+        QCOMPARE(qjsvalue_cast<qreal>(number), 123.0);
+
+        QJSPrimitiveValue str(eng.toPrimitiveValue(QStringLiteral("ciao")));
+        QCOMPARE(qIsNaN(str.toDouble()), true);
+        QCOMPARE(qIsNaN(qjsvalue_cast<qreal>(str)), true);
+
+        QJSPrimitiveValue str2(eng.toPrimitiveValue(QStringLiteral("123")));
+        QCOMPARE(str2.toDouble(), 123.0);
+        QCOMPARE(qjsvalue_cast<qreal>(str2), 123.0);
+    }
+
+    QJSPrimitiveValue inv((QJSPrimitiveUndefined()));
+    QVERIFY(qIsNaN(inv.toDouble()));
+    QVERIFY(qIsNaN(qjsvalue_cast<qreal>(inv)));
+
+    // V2 constructors
+    {
+        QJSPrimitiveValue falskt(false);
+        QCOMPARE(falskt.toDouble(), 0.0);
+        QCOMPARE(qjsvalue_cast<qreal>(falskt), 0.0);
+
+        QJSPrimitiveValue sant(true);
+        QCOMPARE(sant.toDouble(), 1.0);
+        QCOMPARE(qjsvalue_cast<qreal>(sant), 1.0);
+
+        QJSPrimitiveValue number(123.0);
+        QCOMPARE(number.toDouble(), 123.0);
+        QCOMPARE(qjsvalue_cast<qreal>(number), 123.0);
+
+        QJSPrimitiveValue number2(int(0x43211234));
+        QCOMPARE(number2.toDouble(), 1126240820.0);
+
+        QJSPrimitiveValue str(QStringLiteral("ciao"));
+        QCOMPARE(qIsNaN(str.toDouble()), true);
+        QCOMPARE(qIsNaN(qjsvalue_cast<qreal>(str)), true);
+
+        QJSPrimitiveValue str2(QStringLiteral("123"));
+        QCOMPARE(str2.toDouble(), 123.0);
+        QCOMPARE(qjsvalue_cast<qreal>(str2), 123.0);
+    }
+}
+
+void tst_QJSPrimitiveValue::toBoolean()
+{
+    QJSEngine eng;
+
+    QJSPrimitiveValue undefined(eng.toPrimitiveValue(QVariant()));
+    QCOMPARE(undefined.type(), QJSPrimitiveValue::Undefined);
+    QCOMPARE(undefined.toBoolean(), false);
+    QCOMPARE(qjsvalue_cast<bool>(undefined), false);
+
+    QJSPrimitiveValue null((QJSPrimitiveNull()));
+    QCOMPARE(null.type(), QJSPrimitiveValue::Null);
+    QCOMPARE(null.toBoolean(), false);
+    QCOMPARE(qjsvalue_cast<bool>(null), false);
+
+    {
+        QJSPrimitiveValue falskt = eng.toPrimitiveValue(false);
+        QCOMPARE(falskt.type(), QJSPrimitiveValue::Boolean);
+        QCOMPARE(falskt.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(falskt), false);
+
+        QJSPrimitiveValue sant(eng.toPrimitiveValue(true));
+        QCOMPARE(sant.type(), QJSPrimitiveValue::Boolean);
+        QCOMPARE(sant.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(sant), true);
+
+        QJSPrimitiveValue number(eng.toPrimitiveValue(0.0));
+        QCOMPARE(number.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(number), false);
+
+        QJSPrimitiveValue number2(eng.toPrimitiveValue(qQNaN()));
+        QCOMPARE(number2.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(number2), false);
+
+        QJSPrimitiveValue number3(eng.toPrimitiveValue(123.0));
+        QCOMPARE(number3.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(number3), true);
+
+        QJSPrimitiveValue number4(eng.toPrimitiveValue(-456.0));
+        QCOMPARE(number4.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(number4), true);
+
+        QJSPrimitiveValue str(eng.toPrimitiveValue(QStringLiteral("")));
+        QCOMPARE(str.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(str), false);
+
+        QJSPrimitiveValue str2(eng.toPrimitiveValue(QStringLiteral("123")));
+        QCOMPARE(str2.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(str2), true);
+    }
+
+    QJSPrimitiveValue inv((QJSPrimitiveUndefined()));
+    QCOMPARE(inv.toBoolean(), false);
+    QCOMPARE(qjsvalue_cast<bool>(inv), false);
+
+    // V2 constructors
+    {
+        QJSPrimitiveValue falskt(false);
+        QCOMPARE(falskt.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(falskt), false);
+
+        QJSPrimitiveValue sant(true);
+        QCOMPARE(sant.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(sant), true);
+
+        QJSPrimitiveValue number(0.0);
+        QCOMPARE(number.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(number), false);
+
+        QJSPrimitiveValue number2(qQNaN());
+        QCOMPARE(number2.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(number2), false);
+
+        QJSPrimitiveValue number3(123.0);
+        QCOMPARE(number3.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(number3), true);
+
+        QJSPrimitiveValue number4(-456.0);
+        QCOMPARE(number4.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(number4), true);
+
+        QJSPrimitiveValue number5(0x43211234);
+        QCOMPARE(number5.toBoolean(), true);
+
+        QJSPrimitiveValue str(QStringLiteral(""));
+        QCOMPARE(str.toBoolean(), false);
+        QCOMPARE(qjsvalue_cast<bool>(str), false);
+
+        QJSPrimitiveValue str2(QStringLiteral("123"));
+        QCOMPARE(str2.toBoolean(), true);
+        QCOMPARE(qjsvalue_cast<bool>(str2), true);
+    }
+}
+
+void tst_QJSPrimitiveValue::toVariant()
+{
+    QJSEngine eng;
+
+    {
+        QJSPrimitiveValue undefined(eng.toPrimitiveValue(QVariant()));
+        QCOMPARE(undefined.toVariant(), QVariant());
+        QCOMPARE(qjsvalue_cast<QVariant>(undefined), QVariant());
+    }
+
+    {
+        QJSPrimitiveValue null((QJSPrimitiveNull()));
+        QCOMPARE(null.toVariant(), QVariant::fromValue(nullptr));
+        QCOMPARE(qjsvalue_cast<QVariant>(null), QVariant::fromValue(nullptr));
+    }
+
+    {
+        QJSPrimitiveValue number(eng.toPrimitiveValue(123.0));
+        QCOMPARE(number.toVariant(), QVariant(123.0));
+        QCOMPARE(qjsvalue_cast<QVariant>(number), QVariant(123.0));
+
+        QJSPrimitiveValue intNumber(eng.toPrimitiveValue(qint32(123)));
+        QCOMPARE(intNumber.toVariant().typeId(), QVariant((qint32)123).typeId());
+        QCOMPARE((qjsvalue_cast<QVariant>(intNumber)).typeId(),
+                 QVariant(qint32(123)).typeId());
+
+        QJSPrimitiveValue falskt(eng.toPrimitiveValue(false));
+        QCOMPARE(falskt.toVariant(), QVariant(false));
+        QCOMPARE(qjsvalue_cast<QVariant>(falskt), QVariant(false));
+
+        QJSPrimitiveValue sant(eng.toPrimitiveValue(true));
+        QCOMPARE(sant.toVariant(), QVariant(true));
+        QCOMPARE(qjsvalue_cast<QVariant>(sant), QVariant(true));
+
+        QJSPrimitiveValue str(eng.toPrimitiveValue(QStringLiteral("ciao")));
+        QCOMPARE(str.toVariant(), QVariant(QStringLiteral("ciao")));
+        QCOMPARE(qjsvalue_cast<QVariant>(str), QVariant(QStringLiteral("ciao")));
+    }
+
+    {
+        QDateTime dateTime = QDate(1980, 10, 4).startOfDay();
+        QJSPrimitiveValue dateObject(eng.toPrimitiveValue(dateTime));
+        QVariant var = dateObject.toVariant();
+        QCOMPARE(var, (eng.coerceValue<QDateTime, QString>(dateTime)));
+        QCOMPARE(dateObject.toVariant(), var);
+    }
+
+    {
+        QRegularExpression rx = QRegularExpression(QStringLiteral("[0-9a-z]+"));
+        QJSPrimitiveValue rxObject(eng.toPrimitiveValue(rx));
+        QCOMPARE(rxObject.type(), QJSPrimitiveValue::String);
+        QVariant var = rxObject.toVariant();
+        QCOMPARE(var, u'/' + rx.pattern() + u'/');
+    }
+
+    {
+        QJSPrimitiveValue inv;
+        QCOMPARE(inv.toVariant(), QVariant());
+        QCOMPARE(inv.toVariant(), QVariant());
+        QCOMPARE(qjsvalue_cast<QVariant>(inv), QVariant());
+    }
+
+    // V2 constructors
+    {
+        QJSPrimitiveValue number(123.0);
+        QCOMPARE(number.toVariant(), QVariant(123.0));
+        QCOMPARE(number.toVariant(), QVariant(123.0));
+        QCOMPARE(qjsvalue_cast<QVariant>(number), QVariant(123.0));
+
+        QJSPrimitiveValue falskt(false);
+        QCOMPARE(falskt.toVariant(), QVariant(false));
+        QCOMPARE(falskt.toVariant(), QVariant(false));
+        QCOMPARE(qjsvalue_cast<QVariant>(falskt), QVariant(false));
+
+        QJSPrimitiveValue sant(true);
+        QCOMPARE(sant.toVariant(), QVariant(true));
+        QCOMPARE(sant.toVariant(), QVariant(true));
+        QCOMPARE(qjsvalue_cast<QVariant>(sant), QVariant(true));
+
+        QJSPrimitiveValue str(QStringLiteral("ciao"));
+        QCOMPARE(str.toVariant(), QVariant(QStringLiteral("ciao")));
+        QCOMPARE(str.toVariant(), QVariant(QStringLiteral("ciao")));
+        QCOMPARE(qjsvalue_cast<QVariant>(str), QVariant(QStringLiteral("ciao")));
+
+        QJSPrimitiveValue undef((QJSPrimitiveUndefined()));
+        QCOMPARE(undef.toVariant(), QVariant());
+        QCOMPARE(undef.toVariant(), QVariant());
+        QCOMPARE(qjsvalue_cast<QVariant>(undef), QVariant());
+
+        QJSPrimitiveValue nil((QJSPrimitiveNull()));
+        QCOMPARE(nil.toVariant(), QVariant::fromValue(nullptr));
+        QCOMPARE(nil.toVariant(), QVariant::fromValue(nullptr));
+        QCOMPARE(qjsvalue_cast<QVariant>(nil), QVariant::fromValue(nullptr));
+    }
+}
+
+void tst_QJSPrimitiveValue::equals()
+{
+    QJSEngine eng;
+    QObject temp;
+
+    QVERIFY(QJSPrimitiveValue().equals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue num(eng.toPrimitiveValue(123));
+    QVERIFY(num.equals(eng.toPrimitiveValue(123)));
+    QVERIFY(!num.equals(eng.toPrimitiveValue(321)));
+    QVERIFY(num.equals(eng.toPrimitiveValue(QStringLiteral("123"))));
+    QVERIFY(!num.equals(eng.toPrimitiveValue(QStringLiteral("321"))));
+    QVERIFY(!num.equals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue str(eng.toPrimitiveValue(QStringLiteral("123")));
+    QVERIFY(str.equals(eng.toPrimitiveValue(QStringLiteral("123"))));
+    QVERIFY(!str.equals(eng.toPrimitiveValue(QStringLiteral("321"))));
+    QVERIFY(str.equals(eng.toPrimitiveValue(123)));
+    QVERIFY(!str.equals(eng.toPrimitiveValue(321)));
+    QCOMPARE(str.equals(QJSPrimitiveValue()), false);
+
+    QJSPrimitiveValue num2(123);
+    QVERIFY(num2.equals(QJSPrimitiveValue(123)));
+    QVERIFY(!num2.equals(QJSPrimitiveValue(321)));
+    QVERIFY(num2.equals(QStringLiteral("123")));
+    QVERIFY(!num2.equals(QStringLiteral("321")));
+    QVERIFY(!num2.equals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue str2(QStringLiteral("123"));
+    QVERIFY(str2.equals(QStringLiteral("123")));
+    QVERIFY(!str2.equals(QStringLiteral("321")));
+    QVERIFY(str2.equals(QJSPrimitiveValue(123)));
+    QVERIFY(!str2.equals(QJSPrimitiveValue(321)));
+    QVERIFY(!str2.equals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue date1(eng.toPrimitiveValue(QDate(2000, 1, 1).startOfDay()));
+    QJSPrimitiveValue date2(eng.toPrimitiveValue(QDate(1999, 1, 1).startOfDay()));
+    QCOMPARE(date1.equals(date2), false);
+    QCOMPARE(date1.equals(date1), true);
+    QCOMPARE(date2.equals(date2), true);
+
+    QJSPrimitiveValue undefined(eng.toPrimitiveValue(QVariant()));
+    QJSPrimitiveValue null((QJSPrimitiveNull()));
+    QCOMPARE(undefined.equals(undefined), true);
+    QCOMPARE(null.equals(null), true);
+    QCOMPARE(undefined.equals(null), true);
+    QCOMPARE(null.equals(undefined), true);
+    QVERIFY(undefined.equals(QJSPrimitiveValue()));
+    QVERIFY(null.equals(QJSPrimitiveValue()));
+    QVERIFY(!null.equals(num));
+    QVERIFY(!undefined.equals(num));
+
+    QJSPrimitiveValue sant(eng.toPrimitiveValue(true));
+    QVERIFY(sant.equals(eng.toPrimitiveValue(1)));
+    QVERIFY(sant.equals(eng.toPrimitiveValue(QStringLiteral("1"))));
+    QVERIFY(sant.equals(sant));
+    QVERIFY(!sant.equals(eng.toPrimitiveValue(0)));
+    QVERIFY(!sant.equals(undefined));
+    QVERIFY(!sant.equals(null));
+
+    QJSPrimitiveValue falskt(eng.toPrimitiveValue(false));
+    QVERIFY(falskt.equals(eng.toPrimitiveValue(0)));
+    QVERIFY(falskt.equals(eng.toPrimitiveValue(QStringLiteral("0"))));
+    QVERIFY(falskt.equals(falskt));
+    QVERIFY(!falskt.equals(sant));
+    QVERIFY(!falskt.equals(undefined));
+    QVERIFY(!falskt.equals(null));
+
+    {
+        QJSPrimitiveValue var1(eng.toPrimitiveValue(QVariant::fromValue(QPoint(1, 2))));
+        QJSPrimitiveValue var2(eng.toPrimitiveValue(QVariant::fromValue(QPoint(1, 2))));
+        QVERIFY(var1.equals(var2));
+    }
+    {
+        QJSPrimitiveValue var1(eng.toPrimitiveValue(QVariant::fromValue(QPoint(1, 2))));
+        QJSPrimitiveValue var2(eng.toPrimitiveValue(QVariant::fromValue(QPoint(3, 4))));
+        QVERIFY(!var1.equals(var2));
+    }
+}
+
+void tst_QJSPrimitiveValue::strictlyEquals()
+{
+    QJSEngine eng;
+    QObject temp;
+
+    QVERIFY(QJSPrimitiveValue().strictlyEquals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue num(eng.toPrimitiveValue(123));
+    QVERIFY(num.strictlyEquals(eng.toPrimitiveValue(123)));
+    QVERIFY(!num.strictlyEquals(eng.toPrimitiveValue(321)));
+    QVERIFY(!num.strictlyEquals(eng.toPrimitiveValue(QStringLiteral("123"))));
+    QVERIFY(!num.strictlyEquals(eng.toPrimitiveValue(QStringLiteral("321"))));
+    QVERIFY(!num.strictlyEquals(QJSPrimitiveValue()));
+    QVERIFY(!QJSPrimitiveValue().strictlyEquals(num));
+
+    QJSPrimitiveValue str(eng.toPrimitiveValue(QStringLiteral("123")));
+    QVERIFY(str.strictlyEquals(eng.toPrimitiveValue(QStringLiteral("123"))));
+    QVERIFY(!str.strictlyEquals(eng.toPrimitiveValue(QStringLiteral("321"))));
+    QVERIFY(!str.strictlyEquals(eng.toPrimitiveValue(123)));
+    QVERIFY(!str.strictlyEquals(eng.toPrimitiveValue(321)));
+    QVERIFY(!str.strictlyEquals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue num2(123);
+    QVERIFY(num2.strictlyEquals(QJSPrimitiveValue(123)));
+    QVERIFY(!num2.strictlyEquals(QJSPrimitiveValue(321)));
+    QVERIFY(!num2.strictlyEquals(QStringLiteral("123")));
+    QVERIFY(!num2.strictlyEquals(QStringLiteral("321")));
+    QVERIFY(!num2.strictlyEquals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue str2(QStringLiteral("123"));
+    QVERIFY(str2.strictlyEquals(QStringLiteral("123")));
+    QVERIFY(!str2.strictlyEquals(QStringLiteral("321")));
+    QVERIFY(!str2.strictlyEquals(QJSPrimitiveValue(123)));
+    QVERIFY(!str2.strictlyEquals(QJSPrimitiveValue(321)));
+    QVERIFY(!str2.strictlyEquals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue date1(eng.toPrimitiveValue(QDate(2000, 1, 1).startOfDay()));
+    QJSPrimitiveValue date2(eng.toPrimitiveValue(QDate(1999, 1, 1).startOfDay()));
+    QCOMPARE(date1.strictlyEquals(date2), false);
+    QCOMPARE(date1.strictlyEquals(date1), true);
+    QCOMPARE(date2.strictlyEquals(date2), true);
+    QVERIFY(!date1.strictlyEquals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue undefined(eng.toPrimitiveValue(QVariant()));
+    QJSPrimitiveValue null((QJSPrimitiveNull()));
+    QCOMPARE(undefined.strictlyEquals(undefined), true);
+    QCOMPARE(null.strictlyEquals(null), true);
+    QCOMPARE(undefined.strictlyEquals(null), false);
+    QCOMPARE(null.strictlyEquals(undefined), false);
+    QVERIFY(!null.strictlyEquals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue sant(eng.toPrimitiveValue(true));
+    QVERIFY(!sant.strictlyEquals(eng.toPrimitiveValue(1)));
+    QVERIFY(!sant.strictlyEquals(eng.toPrimitiveValue(QStringLiteral("1"))));
+    QVERIFY(sant.strictlyEquals(sant));
+    QVERIFY(!sant.strictlyEquals(eng.toPrimitiveValue(0)));
+    QVERIFY(!sant.strictlyEquals(undefined));
+    QVERIFY(!sant.strictlyEquals(null));
+    QVERIFY(!sant.strictlyEquals(QJSPrimitiveValue()));
+
+    QJSPrimitiveValue falskt(eng.toPrimitiveValue(false));
+    QVERIFY(!falskt.strictlyEquals(eng.toPrimitiveValue(0)));
+    QVERIFY(!falskt.strictlyEquals(eng.toPrimitiveValue(QStringLiteral("0"))));
+    QVERIFY(falskt.strictlyEquals(falskt));
+    QVERIFY(!falskt.strictlyEquals(sant));
+    QVERIFY(!falskt.strictlyEquals(undefined));
+    QVERIFY(!falskt.strictlyEquals(null));
+    QVERIFY(!falskt.strictlyEquals(QJSPrimitiveValue()));
+
+    QVERIFY(!QJSPrimitiveValue(false).strictlyEquals(QJSPrimitiveValue(123)));
+    QVERIFY(!QJSPrimitiveValue(QJSPrimitiveUndefined()).strictlyEquals(QJSPrimitiveValue(123)));
+    QVERIFY(!QJSPrimitiveValue(QJSPrimitiveNull()).strictlyEquals(QJSPrimitiveValue(123)));
+    QVERIFY(!QJSPrimitiveValue(false).strictlyEquals({QStringLiteral("ciao")}));
+    QVERIFY(!QJSPrimitiveValue(QJSPrimitiveUndefined()).strictlyEquals({QStringLiteral("ciao")}));
+    QVERIFY(!QJSPrimitiveValue(QJSPrimitiveNull()).strictlyEquals({QStringLiteral("ciao")}));
+    QVERIFY(eng.toPrimitiveValue(QStringLiteral("ciao")).strictlyEquals(QJSPrimitiveValue(QStringLiteral("ciao"))));
+    QVERIFY(QJSPrimitiveValue(QStringLiteral("ciao")).strictlyEquals(eng.toPrimitiveValue(QStringLiteral("ciao"))));
+    QVERIFY(!QJSPrimitiveValue(QStringLiteral("ciao")).strictlyEquals(QJSPrimitiveValue(123)));
+    QVERIFY(!QJSPrimitiveValue(QStringLiteral("ciao")).strictlyEquals(eng.toPrimitiveValue(123)));
+    QVERIFY(!QJSPrimitiveValue(123).strictlyEquals({QStringLiteral("ciao")}));
+    QVERIFY(!QJSPrimitiveValue(123).strictlyEquals(eng.toPrimitiveValue(QStringLiteral("ciao"))));
+    QVERIFY(!eng.toPrimitiveValue(123).strictlyEquals(QJSPrimitiveValue(QStringLiteral("ciao"))));
+
+    {
+        QJSPrimitiveValue var1(eng.toPrimitiveValue(QVariant(QStringList() << QStringLiteral("a"))));
+        QJSPrimitiveValue var2(eng.toPrimitiveValue(QVariant(QStringList() << QStringLiteral("a"))));
+        QVERIFY(var1.strictlyEquals(var2));
+    }
+    {
+        QJSPrimitiveValue var1(eng.toPrimitiveValue(QVariant(QStringList() << QStringLiteral("a"))));
+        QJSPrimitiveValue var2(eng.toPrimitiveValue(QVariant(QStringList() << QStringLiteral("b"))));
+        QVERIFY(!var1.strictlyEquals(var2));
+    }
+    {
+        QJSPrimitiveValue var1(eng.toPrimitiveValue(QVariant::fromValue(QPoint(1, 2))));
+        QJSPrimitiveValue var2(eng.toPrimitiveValue(QVariant::fromValue(QPoint(1, 2))));
+        QVERIFY(var1.strictlyEquals(var2));
+    }
+    {
+        QJSPrimitiveValue var1(eng.toPrimitiveValue(QVariant::fromValue(QPoint(1, 2))));
+        QJSPrimitiveValue var2(eng.toPrimitiveValue(QVariant::fromValue(QPoint(3, 4))));
+        QVERIFY(!var1.strictlyEquals(var2));
+    }
+}
+
+void tst_QJSPrimitiveValue::stringAndUrl()
+{
+    QJSEngine engine;
+    const QString string = QStringLiteral("http://example.com/something.html");
+    const QUrl url(string);
+
+    const QJSPrimitiveValue urlValue(engine.toPrimitiveValue(url));
+    QCOMPARE(urlValue.type(), QJSPrimitiveValue::String);
+    QCOMPARE(urlValue.toString(), string);
+    QCOMPARE(engine.fromPrimitiveValue<QUrl>(urlValue), url);
+
+    const QJSPrimitiveValue stringValue(engine.toPrimitiveValue(string));
+    QCOMPARE(stringValue.toString(), string);
+    QCOMPARE(engine.fromPrimitiveValue<QUrl>(stringValue), url);
+
+    const QJSPrimitiveValue immediateStringValue(string);
+    QCOMPARE(immediateStringValue.toString(), string);
+    QCOMPARE(engine.fromPrimitiveValue<QUrl>(immediateStringValue), url);
 }
 
 QTEST_MAIN(tst_QJSPrimitiveValue)

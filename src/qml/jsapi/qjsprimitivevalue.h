@@ -119,6 +119,9 @@ public:
 
     constexpr Type type() const { return Type(d.type()); }
 
+    // Prevent casting from Type to int
+    QJSPrimitiveValue(Type) = delete;
+
     Q_IMPLICIT constexpr QJSPrimitiveValue() noexcept = default;
     Q_IMPLICIT constexpr QJSPrimitiveValue(QJSPrimitiveUndefined undefined) noexcept : d(undefined) {}
     Q_IMPLICIT constexpr QJSPrimitiveValue(QJSPrimitiveNull null) noexcept : d(null) {}

@@ -792,6 +792,13 @@ QJSValue QJSEngine::globalObject() const
     return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 
+QJSPrimitiveValue QJSEngine::createPrimitive(QMetaType type, const void *ptr)
+{
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->metaTypeToJS(type, ptr));
+    return QV4::ExecutionEngine::createPrimitive(v);
+}
+
 QJSManagedValue QJSEngine::createManaged(QMetaType type, const void *ptr)
 {
     QJSManagedValue result(m_v4Engine);
@@ -817,6 +824,26 @@ QJSValue QJSEngine::create(int typeId, const void *ptr)
     return create(type, ptr);
 }
 #endif
+
+bool QJSEngine::convertPrimitive(const QJSPrimitiveValue &value, QMetaType type, void *ptr)
+{
+    switch (value.type()) {
+    case QJSPrimitiveValue::Undefined:
+        return QV4::ExecutionEngine::metaTypeFromJS(QV4::Value::undefinedValue(), type, ptr);
+    case QJSPrimitiveValue::Null:
+        return QV4::ExecutionEngine::metaTypeFromJS(QV4::Value::nullValue(), type, ptr);
+    case QJSPrimitiveValue::Boolean:
+        return QV4::ExecutionEngine::metaTypeFromJS(QV4::Value::fromBoolean(value.toBoolean()), type, ptr);
+    case QJSPrimitiveValue::Integer:
+        return QV4::ExecutionEngine::metaTypeFromJS(QV4::Value::fromInt32(value.toInteger()), type, ptr);
+    case QJSPrimitiveValue::Double:
+        return QV4::ExecutionEngine::metaTypeFromJS(QV4::Value::fromDouble(value.toDouble()), type, ptr);
+    case QJSPrimitiveValue::String:
+        return convertString(value.toString(), type, ptr);
+    }
+
+    Q_UNREACHABLE_RETURN(false);
+}
 
 bool QJSEngine::convertManaged(const QJSManagedValue &value, int type, void *ptr)
 {
