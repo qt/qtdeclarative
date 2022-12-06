@@ -999,6 +999,48 @@ QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId)
     return d->singletonInstance<QJSValue>(type);
 }
 
+
+/*!
+  \fn template<typename T> T QQmlEngine::singletonInstance(QAnyStringView uri, QAnyStringView typeName)
+
+  \overload
+  Returns the instance of a singleton type named \a typeName from the module specified by \a uri.
+
+  This method can be used as an alternative to calling qmlTypeId followed by the id based overload of
+  singletonInstance. This is convenient when one only needs to do a one time setup of a
+  singleton; if repeated access to the singleton is required, caching its typeId will allow
+  faster subsequent access via the
+  \l {QQmlEngine::singletonInstance(int qmlTypeId)}{type-id based overload}.
+
+  The template argument \e T may be either QJSValue or a pointer to a QObject-derived
+  type and depends on how the singleton was registered. If no instance of \e T has been
+  created yet, it is created now. If \a typeName does not represent a valid singleton
+  type, either a default constructed QJSValue or a \c nullptr is returned.
+
+  \snippet code/src_qml_qqmlengine.cpp 5
+
+  \sa QML_SINGLETON, qmlRegisterSingletonType(), qmlTypeId()
+  \since 6.5
+*/
+template<>
+QJSValue QQmlEngine::singletonInstance<QJSValue>(QAnyStringView uri, QAnyStringView typeName)
+{
+    Q_D(QQmlEngine);
+
+    auto loadHelper = QQml::makeRefPointer<LoadHelper>(&d->typeLoader, uri);
+
+    auto [moduleStatus, type] = loadHelper->resolveType(typeName);
+
+    if (moduleStatus == LoadHelper::ResolveTypeResult::NoSuchModule)
+        return {};
+    if (!type.isValid())
+        return {};
+    if (!type.isSingleton())
+        return {};
+
+    return d->singletonInstance<QJSValue>(type);
+}
+
 /*!
   Refreshes all binding expressions that use strings marked for translation.
 
@@ -1976,8 +2018,38 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 
 void hasJsOwnershipIndicator(QQmlGuardImpl *) {};
 
+LoadHelper::LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri)
+    : QQmlTypeLoader::Blob({}, QQmlDataBlob::QmlFile, loader)
+    , m_uri(uri.toString())
+
+{
+    auto import = std::make_shared<PendingImport>();
+    import->uri = uri.toString();
+    QList<QQmlError> errorList;
+    Blob::addImport(import, &errorList);
+}
+
+LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
+{
+    QQmlType type;
+    QQmlTypeModule *module = QQmlMetaType::typeModule(m_uri, QTypeRevision{});
+    if (!module)
+        return {ResolveTypeResult::NoSuchModule, type};
+    type = module->type(typeName.toString(), {});
+    if (type.isValid())
+        return {ResolveTypeResult::ModuleFound, type};
+    QTypeRevision versionReturn;
+    QList<QQmlError> errors;
+    QQmlImportNamespace *ns_return = nullptr;
+    m_importCache->resolveType(typeName.toString(), &type, &versionReturn,
+                               &ns_return,
+                               &errors);
+    return {ResolveTypeResult::ModuleFound, type};
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qqmlengine_p.cpp"
 
 #include "moc_qqmlengine.cpp"
+

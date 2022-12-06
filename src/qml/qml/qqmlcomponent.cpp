@@ -1238,51 +1238,6 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     return a;
 }
 
-struct LoadHelper final : QQmlTypeLoader::Blob
-{
-    LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri)
-        : QQmlTypeLoader::Blob({}, QQmlDataBlob::QmlFile, loader)
-        , m_uri(uri.toString())
-
-    {
-        auto import = std::make_shared<PendingImport>();
-        import->uri = uri.toString();
-        QList<QQmlError> errorList;
-        Blob::addImport(import, &errorList);
-    }
-
-    struct ResolveTypeResult
-    {
-        enum Status { NoSuchModule, ModuleFound } status;
-        QQmlType type;
-    };
-
-    ResolveTypeResult resolveType(QAnyStringView typeName)
-    {
-        QQmlType type;
-        QQmlTypeModule *module = QQmlMetaType::typeModule(m_uri, QTypeRevision{});
-        if (!module)
-            return {ResolveTypeResult::NoSuchModule, type};
-        type = module->type(typeName.toString(), {});
-        if (type.isValid())
-            return {ResolveTypeResult::ModuleFound, type};
-        QTypeRevision versionReturn;
-        QList<QQmlError> errors;
-        QQmlImportNamespace *ns_return = nullptr;
-        m_importCache->resolveType(typeName.toString(), &type, &versionReturn,
-                                   &ns_return,
-                                   &errors);
-        return {ResolveTypeResult::ModuleFound, type};
-    }
-
-protected:
-    void dataReceived(const SourceCodeData &) override { Q_UNREACHABLE(); }
-    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *) override { Q_UNREACHABLE(); }
-
-private:
-    QString m_uri;
-};
-
 /*!
     Load the QQmlComponent for \a typeName in the module \a uri.
     If the type is implemented via a QML file, \a mode is used to

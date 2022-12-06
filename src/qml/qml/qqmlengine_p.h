@@ -378,6 +378,26 @@ T QQmlEnginePrivate::singletonInstance(const QQmlType &type) {
     return qobject_cast<T>(singletonInstance<QJSValue>(type).toQObject());
 }
 
+struct LoadHelper final : QQmlTypeLoader::Blob
+{
+    LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri);
+
+    struct ResolveTypeResult
+    {
+        enum Status { NoSuchModule, ModuleFound } status;
+        QQmlType type;
+    };
+
+    ResolveTypeResult resolveType(QAnyStringView typeName);
+
+protected:
+    void dataReceived(const SourceCodeData &) final { Q_UNREACHABLE(); }
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *) final { Q_UNREACHABLE(); }
+
+private:
+    QString m_uri;
+};
+
 
 QT_END_NAMESPACE
 

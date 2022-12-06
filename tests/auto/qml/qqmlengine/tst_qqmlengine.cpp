@@ -16,11 +16,16 @@
 #include <QQmlExpression>
 #include <QQmlIncubationController>
 #include <QTemporaryDir>
+ #include <QQmlEngineExtensionPlugin>
 #include <private/qqmlengine_p.h>
 #include <private/qqmltypedata_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <QQmlAbstractUrlInterceptor>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+
+#include "declarativelyregistered.h"
+
+Q_IMPORT_QML_PLUGIN(OnlyDeclarativePlugin)
 
 class tst_qqmlengine : public QQmlDataTest
 {
@@ -1148,6 +1153,8 @@ void tst_qqmlengine::singletonInstance()
         QObject *instance = value.toQObject();
         QVERIFY(instance);
         QCOMPARE(instance->metaObject()->className(), "CppSingleton");
+
+        QCOMPARE(engine.singletonInstance<CppSingleton *>("Test", "CppSingleton"), instance);
     }
 
     {
@@ -1217,6 +1224,20 @@ void tst_qqmlengine::singletonInstance()
         QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: Registered object must live in the same thread as the engine it was registered with");
         auto noSinglePtr = engineB.singletonInstance<CppSingleton *>(id);
         QVERIFY(!noSinglePtr);
+    }
+
+    // test the case where we haven't loaded the module yet
+    {
+        auto singleton = engine.singletonInstance<PurelyDeclarativeSingleton *>("OnlyDeclarative", "PurelyDeclarativeSingleton");
+        QVERIFY(singleton);
+        // requesting the singleton twice yields the same result
+        auto again = engine.singletonInstance<PurelyDeclarativeSingleton *>("OnlyDeclarative", "PurelyDeclarativeSingleton");
+        QCOMPARE(again, singleton);
+
+        // different engines -> different singletons
+        QQmlEngine engine2;
+        auto differentEngine = engine2.singletonInstance<PurelyDeclarativeSingleton *>("OnlyDeclarative", "PurelyDeclarativeSingleton");
+        QCOMPARE_NE(differentEngine, singleton);
     }
 
     {

@@ -42,3 +42,10 @@ void wrapper4(int typeId) {
     QJSValue instance = engine.singletonInstance<QJSValue>(typeId);
 //! [4]
 }
+
+void wrapper5() {
+///! [5]
+    QQmlEngine engine;
+    MySingleton *singleton = engine.singletonInstance<MySingleton *>("mymodule", "MySingleton");
+///! [5]
+}

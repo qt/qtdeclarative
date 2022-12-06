@@ -126,6 +126,9 @@ public:
     template<typename T>
     T singletonInstance(int qmlTypeId);
 
+    template<typename T>
+    T singletonInstance(QAnyStringView moduleName, QAnyStringView typeName);
+
     void captureProperty(QObject *object, const QMetaProperty &property) const;
 
 public Q_SLOTS:
@@ -158,6 +161,15 @@ Q_QML_EXPORT QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId);
 template<typename T>
 T QQmlEngine::singletonInstance(int qmlTypeId) {
     return qobject_cast<T>(singletonInstance<QJSValue>(qmlTypeId).toQObject());
+}
+
+template<>
+Q_QML_EXPORT QJSValue QQmlEngine::singletonInstance<QJSValue>(QAnyStringView uri, QAnyStringView typeName);
+
+template<typename T>
+T QQmlEngine::singletonInstance(QAnyStringView uri, QAnyStringView typeName)
+{
+    return qobject_cast<T>(singletonInstance<QJSValue>(uri, typeName).toQObject());
 }
 
 QT_END_NAMESPACE

@@ -26,6 +26,20 @@ qt_internal_add_test(tst_qqmlengine
     TESTDATA ${test_data}
 )
 
+
+qt_add_library(tst_qqmlengine_qml STATIC)
+qt_autogen_tools_initial_setup(tst_qqmlengine_qml)
+qt_add_qml_module(tst_qqmlengine_qml
+    URI OnlyDeclarative
+    VERSION 1.0
+    SOURCES
+        "declarativelyregistered.h"
+        "declarativelyregistered.cpp"
+)
+
+qt_autogen_tools_initial_setup(tst_qqmlengine_qmlplugin)
+target_link_libraries(tst_qqmlengine PRIVATE tst_qqmlengine_qmlplugin)
+
 # Resources:
 set(qmake_immediate_resource_files
     "data/qrcurls.js"
