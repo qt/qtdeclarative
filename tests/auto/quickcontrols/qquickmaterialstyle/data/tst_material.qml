@@ -157,7 +157,7 @@ TestCase {
         compare(control.Material.primary, Material.color(Material.Indigo))
         compare(control.Material.accent, Material.color(Material.Pink))
         compare(control.Material.foreground, "#dd000000")
-        compare(control.Material.background, "#fafafa")
+        compare(control.Material.background, "#fffbfe")
         compare(control.Material.theme, Material.Light)
         // This doesn't propagate but we check its default anyway.
         compare(control.Material.roundedScale, Material.FullScale)
@@ -474,7 +474,7 @@ TestCase {
         compare(styledChildWindow.Material.theme, Material.Light)
         compare(unstyledChildWindow.Material.theme, Material.Dark)
         // Make sure that the colors actually changed.
-        compare(parentWindow.Material.background, Qt.color("#303030"))
+        compare(parentWindow.Material.background, Qt.color("#1c1b1f"))
         compare(control.Material.background, parentWindow.Material.background)
         verify(styledChildWindow.Material.background !== parentWindow.Material.background)
         compare(unstyledChildWindow.Material.background, parentWindow.Material.background)

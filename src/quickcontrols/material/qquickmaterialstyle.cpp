@@ -358,9 +358,8 @@ static bool globalBackgroundCustom = true;
 // 1) The theme needs access to it to determine font sizes.
 // 2) There can only be one variant used for the whole application.
 static QQuickMaterialStyle::Variant globalVariant = QQuickMaterialStyle::Normal;
-
-static const QRgb backgroundColorLight = 0xFFFAFAFA;
-static const QRgb backgroundColorDark = 0xFF303030;
+static const QRgb backgroundColorLight = 0xFFFFFBFE;
+static const QRgb backgroundColorDark = 0xFF1C1B1F;
 static const QRgb dialogColorLight = 0xFFFFFFFF;
 static const QRgb dialogColorDark = 0xFF424242;
 static const QRgb primaryTextColorLight = 0xDD000000;
