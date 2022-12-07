@@ -60,10 +60,14 @@ public:
     void setFont(Scope scope, const QFont &font);
     void setPalette(Scope scope, const QPalette &palette);
 
+    void setUsePlatformPalette(const bool enable) { preferPlatformTheme = enable; }
+    bool usePlatformPalette() { return preferPlatformTheme; }
+
 private:
     Q_DISABLE_COPY(QQuickTheme)
     Q_DECLARE_PRIVATE(QQuickTheme)
     QScopedPointer<QQuickThemePrivate> d_ptr;
+    bool preferPlatformTheme = false;
 };
 
 QT_END_NAMESPACE

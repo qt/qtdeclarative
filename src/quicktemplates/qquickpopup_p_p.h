@@ -95,6 +95,7 @@ public:
     void createOverlay();
     void destroyOverlay();
     void toggleOverlay();
+    void updateContentPalettes(const QPalette& parentPalette);
     virtual void showOverlay();
     virtual void hideOverlay();
     virtual void resizeOverlay();

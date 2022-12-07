@@ -111,10 +111,29 @@ QFont QQuickTheme::font(Scope scope)
 QPalette QQuickTheme::palette(Scope scope)
 {
     const QPalette *palette = nullptr;
-    if (QQuickTheme *theme = instance())
-        palette = QQuickThemePrivate::get(theme)->palettes[scope].data();
-    else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-        palette = theme->palette(platformPalette(scope));
+
+    if (auto theme = instance()) {
+        if (theme->usePlatformPalette()) {
+            if (auto platformTheme = QGuiApplicationPrivate::platformTheme()) {
+                palette = platformTheme->palette(platformPalette(scope));
+                // In case, if palettes are provided through configuration file
+                // (qtquickcontrols2.conf), then respect configuration palette
+                // and resolve it with platform palette
+                if (palette) {
+                    QQuickThemePrivate *p = QQuickThemePrivate::get(theme);
+                    if (p->defaultPalette && p->defaultPalette->resolveMask() != 0) {
+                        QPalette defPalette = *p->defaultPalette;
+                        defPalette.resolve(*palette);
+                        if (scope == System)
+                            defPalette.setResolveMask(0);
+                        return defPalette;
+                    }
+                }
+            }
+        } else {
+            palette = QQuickThemePrivate::get(theme)->palettes[scope].data();
+        }
+    }
 
     if (palette) {
         QPalette f = *palette;

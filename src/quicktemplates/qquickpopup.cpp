@@ -820,6 +820,15 @@ void QQuickPopupPrivate::toggleOverlay()
         createOverlay();
 }
 
+void QQuickPopupPrivate::updateContentPalettes(const QPalette& parentPalette)
+{
+    // Inherit parent palette to all child objects
+    inheritPalette(parentPalette);
+
+    // Inherit parent palette to items within popup (such as headers and footers)
+    QQuickItemPrivate::get(popupItem)->updateChildrenPalettes(parentPalette);
+}
+
 void QQuickPopupPrivate::showOverlay()
 {
     // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
