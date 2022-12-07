@@ -1165,6 +1165,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("BindingTypeMismatch") << QStringLiteral("bindingTypeMismatch.qml");
     QTest::newRow("template literal (substitution)") << QStringLiteral("templateStringSubstitution.qml");
     QTest::newRow("enumsOfScrollBar") << QStringLiteral("enumsOfScrollBar.qml");
+    QTest::newRow("callBase") << QStringLiteral("callBase.qml");
 }
 
 void TestQmllint::cleanQmlCode()
