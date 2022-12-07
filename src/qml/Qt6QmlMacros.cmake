@@ -2988,8 +2988,6 @@ endif()
 
 endfunction()
 
-# This function is currently in Technical Preview.
-# Its signature and behavior might change.
 function(qt6_generate_deploy_qml_app_script)
     # We take the target using a TARGET keyword instead of as the first
     # positional argument so that we have a consistent signature with the

@@ -9,8 +9,6 @@
 
 cmake_minimum_required(VERSION 3.16...3.21)
 
-# This function is currently in Technical Preview.
-# Its signature and behavior might change.
 function(qt_deploy_qml_imports)
     set(no_value_options
         NO_QT_IMPORTS
