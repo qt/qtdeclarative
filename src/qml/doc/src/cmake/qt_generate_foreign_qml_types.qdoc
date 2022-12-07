@@ -12,8 +12,6 @@
 
 \include cmake-find-package-qml.qdocinc
 
-\preliminarycmakecommand
-
 \section1 Synopsis
 
 \badcode

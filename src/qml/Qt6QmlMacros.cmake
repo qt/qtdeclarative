@@ -2287,8 +2287,6 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
-# This function is currently in Technical Preview.
-# It's signature and behavior might change.
 function(qt6_generate_foreign_qml_types source_target destination_qml_target)
     qt6_extract_metatypes(${source_target})
     get_target_property(target_metatypes_json_file ${source_target}
@@ -3187,8 +3185,6 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endmacro()
 endif()
 
-# This function is currently in Technical Preview.
-# Its signature and behavior might change.
 function(qt6_query_qml_module target)
 
     if(NOT TARGET ${target})

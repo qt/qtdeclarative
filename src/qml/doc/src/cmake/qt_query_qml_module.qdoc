@@ -13,7 +13,6 @@
 \include cmake-find-package-qml.qdocinc
 
 \cmakecommandsince 6.3
-\preliminarycmakecommand
 
 \section1 Synopsis
 
