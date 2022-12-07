@@ -3,6 +3,8 @@
 
 #include <QtCore/qregularexpression.h>
 #include <QtGui/qpalette.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtTest/qtest.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
@@ -210,11 +212,31 @@ void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme_data()
     QTest::addColumn<QString>("fallbackStyle");
     QTest::addColumn<QColor>("expectedContentItemColor");
 
+    QTest::addRow("style=ResourceStyle,fallbackStyle=Material")
+        << QString::fromLatin1("ResourceStyle")
+        << QString::fromLatin1("Material") << QColor("salmon");
+
+    // A button's contentItem property will reflect the inactive button color,
+    // when the button is not shown.
+    // => read that color from the platform theme's ButtonPalette.
+    // => fall back to the SystemPalette, if no ButtonPalette is available
+    // => skip data row, if no platform theme is found
+    QPlatformTheme *platformTheme = QGuiApplicationPrivate::platformTheme();
+    if (!platformTheme) {
+        qWarning() << "No platform theme available from QGuiApplicationPrivate::platformTheme()";
+        return;
+    }
+
+    const QPalette *buttonPalette = platformTheme->palette(QPlatformTheme::ButtonPalette);
+
+    if (!buttonPalette) {
+        qWarning() << "No ButtonPalette found. Falling back to SystemPalette.";
+        buttonPalette = platformTheme->palette(QPlatformTheme::SystemPalette);
+    }
+
     QTest::addRow("style=Fusion,fallbackStyle=Material")
         << QString::fromLatin1("Fusion") << QString::fromLatin1("Material")
-        << qt_fusionPalette().buttonText().color();
-    QTest::addRow("style=ResourceStyle,fallbackStyle=Material")
-        << QString::fromLatin1("ResourceStyle") << QString::fromLatin1("Material") << QColor("salmon");
+        << buttonPalette->color(QPalette::Inactive, QPalette::ButtonText);
 }
 
 void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme()

@@ -8,11 +8,11 @@
 
 QT_BEGIN_NAMESPACE
 
-extern QPalette qt_fusionPalette();
-
 void QQuickFusionTheme::initialize(QQuickTheme *theme)
 {
-    theme->setPalette(QQuickTheme::System, qt_fusionPalette());
+    // Enable platform palettes for fusion theme.
+    if (theme)
+        theme->setUsePlatformPalette(true);
 }
 
 QT_END_NAMESPACE

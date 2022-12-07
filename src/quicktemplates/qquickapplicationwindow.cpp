@@ -137,7 +137,7 @@ public:
 
         // And cover one special case
         for (auto &&popup : q_func()->findChildren<QQuickPopup *>())
-            QQuickPopupPrivate::get(popup)->inheritPalette(parentPalette);
+            QQuickPopupPrivate::get(popup)->updateContentPalettes(parentPalette);
     }
 
     QQuickDeferredPointer<QQuickItem> background;
