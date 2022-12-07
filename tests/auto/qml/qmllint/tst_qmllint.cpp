@@ -1189,6 +1189,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("optionalChainingCall") << QStringLiteral("optionalChainingCall.qml");
     QTest::newRow("EnumAccessCpp") << QStringLiteral("EnumAccessCpp.qml");
     QTest::newRow("qtquickdialog") << QStringLiteral("qtquickdialog.qml");
+    QTest::newRow("callBase") << QStringLiteral("callBase.qml");
 }
 
 void TestQmllint::cleanQmlCode()
