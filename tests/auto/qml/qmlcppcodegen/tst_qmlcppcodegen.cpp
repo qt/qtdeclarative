@@ -155,6 +155,7 @@ private slots:
     void ambiguousSignals();
     void fileImportsContainCxxTypes();
     void lengthAccessArraySequenceCompat();
+    void storeElementSideEffects();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2917,6 +2918,21 @@ void tst_QmlCppCodegen::enumConversion()
     QVERIFY(o);
     QCOMPARE(o->property("test").toInt(), 0x04);
     QCOMPARE(o->property("test_1").toBool(), true);
+}
+
+void tst_QmlCppCodegen::storeElementSideEffects()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/storeElementSideEffects.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    const QJSValue prop = o->property("myItem").value<QJSValue>();
+    QVERIFY(prop.isArray());
+    QCOMPARE(prop.property(0).toInt(), 10);
 };
 
 void tst_QmlCppCodegen::ambiguousSignals()
