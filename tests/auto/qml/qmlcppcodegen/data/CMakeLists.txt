@@ -161,6 +161,7 @@ set(qml_files
     signalIndexMismatch.qml
     signatureIgnored.qml
     specificParent.qml
+    storeElementSideEffects.qml
     stringArg.qml
     stringLength.qml
     stringToByteArray.qml
