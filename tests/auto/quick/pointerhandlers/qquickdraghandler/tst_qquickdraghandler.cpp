@@ -295,7 +295,7 @@ void tst_DragHandler::mouseDrag()
     p1 += QPoint(dragThreshold, 0);
     QTest::mouseMove(window, p1);
     if (shouldDrag) {
-//        QTRY_VERIFY(dragHandler->centroid().velocity().x() > 0); // TODO QTBUG-33891
+        QVERIFY(dragHandler->centroid().velocity().x() > 0);
         QCOMPARE(centroidChangedSpy.size(), 2);
         QVERIFY(!dragHandler->active());
 #if QT_CONFIG(cursor)
@@ -329,7 +329,7 @@ void tst_DragHandler::mouseDrag()
         QCOMPARE(dragHandler->activeTranslation().x(), dragThreshold + 20.0);
         QCOMPARE(dragHandler->persistentTranslation().y(), 0.0);
         QCOMPARE(dragHandler->activeTranslation().y(), 0.0);
-//        QVERIFY(dragHandler->centroid().velocity().x() > 0); // TODO QTBUG-33891
+        QVERIFY(dragHandler->centroid().velocity().x() > 0);
         QCOMPARE(centroidChangedSpy.size(), 4);
 #if QT_CONFIG(cursor)
         QCOMPARE(window->cursor().shape(), Qt::ClosedHandCursor);
