@@ -39,12 +39,12 @@ public:
         //update();
     }
 
-signals:
+Q_SIGNALS:
     void easingCurveChanged();
     void easingCurveCodeChanged(const QString &code);
 
 
-public slots:
+public Q_SLOTS:
     void setEasingCurve(const QEasingCurve &easingCurve);
     void setPreset(const QString &name);
     void setEasingCurve(const QString &code);

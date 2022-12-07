@@ -11,7 +11,7 @@ class CommandListener : public QObject {
 public:
     void readCommand();
 
-signals:
+Q_SIGNALS:
     void command(const QString &command);
 };
 

@@ -27,16 +27,16 @@ public:
         if (a==m_container)
             return;
         m_container = a;
-        emit containerChanged();
+        Q_EMIT containerChanged();
     }
     void setItemType(const QString &a) {
         if (a==m_itemType)
             return;
         m_itemType = a;
-        emit itemTypeChanged();
+        Q_EMIT itemTypeChanged();
     }
 
-signals:
+Q_SIGNALS:
     void containerChanged();
     void itemTypeChanged();
 

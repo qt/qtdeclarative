@@ -18,7 +18,7 @@ class QmlProfilerClient : public QQmlProfilerClient
 public:
     QmlProfilerClient(QQmlDebugConnection *connection, QmlProfilerData *data);
 
-signals:
+Q_SIGNALS:
     void enabledChanged(bool enabled);
     void error(const QString &error);
 

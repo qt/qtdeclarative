@@ -71,9 +71,9 @@ public:
     const QLspSpecification::InitializeParams &clientInfo() const;
     const QLspSpecification::InitializeResult &serverInfo() const;
 
-public slots:
+public Q_SLOTS:
     void receiveData(const QByteArray &d);
-signals:
+Q_SIGNALS:
     void runStatusChanged(RunStatus);
     void clientInitialized(QLanguageServer *server);
     void shutdown();

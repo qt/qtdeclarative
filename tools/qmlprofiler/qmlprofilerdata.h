@@ -45,7 +45,7 @@ public:
     void complete();
     bool save(const QString &filename);
 
-signals:
+Q_SIGNALS:
     void error(QString);
     void stateChanged();
     void dataReady();

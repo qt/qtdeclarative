@@ -88,7 +88,7 @@ public:
     void setBuildPathsForRootUrl(QByteArray url, const QStringList &paths);
     void removeRootUrls(const QList<QByteArray> &urls);
     QQmlToolingSettings *settings();
-signals:
+Q_SIGNALS:
     void updatedSnapshot(const QByteArray &url);
 private:
     void indexDirectory(const QString &path, int depthLeft);

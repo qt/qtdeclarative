@@ -23,7 +23,7 @@ public:
     QmlLintSuggestions(QLanguageServer *server, QmlLsp::QQmlCodeModel *codeModel);
 
     QString name() const override { return QLatin1StringView("QmlLint Suggestions"); }
-public slots:
+public Q_SLOTS:
     void diagnose(const QByteArray &uri);
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,

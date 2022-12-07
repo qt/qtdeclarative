@@ -23,7 +23,7 @@ public:
     void removeDirectory(const QString &file);
     bool watchesDirectory(const QString &file) const;
 
-signals:
+Q_SIGNALS:
     void fileChanged(const QString &path);
     void directoryChanged(const QString &path);
 

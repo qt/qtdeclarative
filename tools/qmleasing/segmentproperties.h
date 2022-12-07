@@ -28,11 +28,7 @@ public:
         invalidate();
     }
 
-signals:
-
-public slots:
-
-private slots:
+private Q_SLOTS:
     void c1Updated();
     void c2Updated();
     void pUpdated();

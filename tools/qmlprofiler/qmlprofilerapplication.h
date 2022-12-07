@@ -37,7 +37,7 @@ public:
     void notifyTraceStarted();
     void outputData();
 
-signals:
+Q_SIGNALS:
     void readyForCommand();
 
 private:

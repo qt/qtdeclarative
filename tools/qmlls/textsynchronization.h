@@ -19,7 +19,7 @@ public:
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
 
-public slots:
+public Q_SLOTS:
     void didOpenTextDocument(const QLspSpecification::DidOpenTextDocumentParams &params);
     void didDidChangeTextDocument(const QLspSpecification::DidChangeTextDocumentParams &params);
     void didCloseTextDocument(const QLspSpecification::DidCloseTextDocumentParams &params);

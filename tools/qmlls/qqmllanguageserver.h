@@ -47,7 +47,7 @@ public:
     QmlLintSuggestions *lint();
     WorkspaceHandlers *worspace();
 
-public slots:
+public Q_SLOTS:
     void exit();
     void errorExit();
 

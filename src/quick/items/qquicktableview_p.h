@@ -288,7 +288,7 @@ public:
         if (m_editDelegate == newEditDelegate)
             return;
         m_editDelegate = newEditDelegate;
-        emit editDelegateChanged();
+        Q_EMIT editDelegateChanged();
     }
 
 Q_SIGNALS:

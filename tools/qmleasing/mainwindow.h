@@ -19,9 +19,7 @@ public:
 
     void showQuickView();
 
-signals:
-
-public slots:
+public Q_SLOTS:
     void textEditTextChanged();
     void importData(int result);
 
