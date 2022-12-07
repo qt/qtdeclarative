@@ -144,6 +144,7 @@ set(qml_files
     signalHandler.qml
     signalIndexMismatch.qml
     specificParent.qml
+    storeElementSideEffects.qml
     stringLength.qml
     stringToByteArray.qml
     testlogger.js

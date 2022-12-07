@@ -666,6 +666,10 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
         addReadAccumulator(jsValue);
         addReadRegister(base, jsValue);
         addReadRegister(index, jsValue);
+
+        // Writing to a JS array can have side effects all over the place since it's
+        // passed by reference.
+        m_state.setHasSideEffects(true);
         return;
     }
 
