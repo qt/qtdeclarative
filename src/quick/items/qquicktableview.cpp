@@ -5008,8 +5008,21 @@ bool QQuickTableViewPrivate::editFromKeyEvent(QKeyEvent *e)
     if (!attached || !attached->editDelegate())
         return false;
 
-    const bool anyKeyAccepted = editTriggers & QQuickTableView::AnyKeyPressed;
+    bool anyKeyAccepted = false;
     bool editKeyPressed = false;
+
+    if (editTriggers & QQuickTableView::AnyKeyPressed) {
+        switch (e->key()) {
+        case Qt::Key_Shift:
+        case Qt::Key_Alt:
+        case Qt::Key_Control:
+        case Qt::Key_Meta:
+            break;
+        default:
+            anyKeyAccepted = true;
+        }
+    }
+
     if (editTriggers & QQuickTableView::EditKeyPressed) {
         switch (e->key()) {
         case Qt::Key_Return:

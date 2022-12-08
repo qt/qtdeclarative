@@ -6619,6 +6619,16 @@ void tst_QQuickTableView::editUsingEditTriggers()
         QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
         QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
 
+        // Pressing a modifier key alone should not open the editor
+        QTest::keyClick(window, Qt::Key_Shift);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QTest::keyClick(window, Qt::Key_Control);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QTest::keyClick(window, Qt::Key_Alt);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QTest::keyClick(window, Qt::Key_Meta);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+
         // Pressing enter should also start to edit. But this is a
         // special case, we don't replay enter into the focus object.
         tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
