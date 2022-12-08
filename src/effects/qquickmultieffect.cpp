@@ -1526,6 +1526,7 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
         QQmlComponent blurComponent(engine, QUrl(QStringLiteral("qrc:/data/BlurItem.qml")));
         for (int i = m_blurEffects.size(); i < itemsAmount; i++) {
             auto blurEffect = qobject_cast<QQuickShaderEffect*>(blurComponent.create());
+            blurEffect->setParent(q);
             blurEffect->setParentItem(q);
             blurEffect->setVisible(false);
             auto sourceVariant = QVariant::fromValue<QQuickItem*>(blurEffect);
