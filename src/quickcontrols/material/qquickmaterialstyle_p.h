@@ -32,6 +32,8 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(int elevation READ elevation WRITE setElevation RESET resetElevation NOTIFY elevationChanged FINAL)
     Q_PROPERTY(RoundedScale roundedScale READ roundedScale WRITE setRoundedScale RESET resetRoundedScale
         NOTIFY roundedScaleChanged FINAL)
+    Q_PROPERTY(ContainerStyle containerStyle READ containerStyle WRITE setContainerStyle RESET resetContainerStyle
+        NOTIFY containerStyleChanged FINAL)
 
     Q_PROPERTY(QColor primaryColor READ primaryColor NOTIFY primaryChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL) // TODO: remove?
@@ -148,11 +150,17 @@ public:
         FullScale = 0xFF // For full we use half the height of the item.
     };
 
+    enum class ContainerStyle {
+        Filled,
+        Outlined
+    };
+
     Q_ENUM(Theme)
     Q_ENUM(Variant)
     Q_ENUM(Color)
     Q_ENUM(Shade)
     Q_ENUM(RoundedScale)
+    Q_ENUM(ContainerStyle)
 
     explicit QQuickMaterialStyle(QObject *parent = nullptr);
 
@@ -201,6 +209,10 @@ public:
     RoundedScale roundedScale() const;
     void setRoundedScale(RoundedScale roundedScale);
     void resetRoundedScale();
+
+    ContainerStyle containerStyle() const;
+    void setContainerStyle(ContainerStyle containerStyle);
+    void resetContainerStyle();
 
     QColor primaryColor() const;
     QColor accentColor() const;
@@ -276,6 +288,7 @@ Q_SIGNALS:
     void toolBarColorChanged();
     void toolTextColorChanged();
     void roundedScaleChanged();
+    void containerStyleChanged();
 
 protected:
     void attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent) override;
@@ -317,6 +330,7 @@ private:
     uint m_background = 0;
     int m_elevation = 0;
     RoundedScale m_roundedScale = RoundedScale::NotRounded;
+    ContainerStyle m_containerStyle = ContainerStyle::Filled;
 };
 
 QT_END_NAMESPACE

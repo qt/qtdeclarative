@@ -829,6 +829,25 @@ void QQuickMaterialStyle::resetRoundedScale()
     setRoundedScale(RoundedScale::NotRounded);
 }
 
+QQuickMaterialStyle::ContainerStyle QQuickMaterialStyle::containerStyle() const
+{
+    return m_containerStyle;
+}
+
+void QQuickMaterialStyle::setContainerStyle(ContainerStyle containerStyle)
+{
+    if (m_containerStyle == containerStyle)
+        return;
+
+    m_containerStyle = containerStyle;
+    emit containerStyleChanged();
+}
+
+void QQuickMaterialStyle::resetContainerStyle()
+{
+    setContainerStyle(ContainerStyle::Filled);
+}
+
 QColor QQuickMaterialStyle::primaryColor() const
 {
     if (m_customPrimary)

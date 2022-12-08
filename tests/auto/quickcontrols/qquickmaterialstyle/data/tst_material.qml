@@ -161,6 +161,7 @@ TestCase {
         compare(control.Material.theme, Material.Light)
         // This doesn't propagate but we check its default anyway.
         compare(control.Material.roundedScale, Material.FullScale)
+        compare(control.Material.containerStyle, Material.Filled)
     }
 
     function test_set() {

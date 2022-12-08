@@ -20,6 +20,7 @@
         \li \l {material-primary-attached-prop}{\b primary} : color
         \li \l {material-theme-attached-prop}{\b theme} : enumeration
         \li \l {material-roundedScale-attached-prop}{\b roundedScale} : enumeration
+        \li \l {material-containerStyle-attached-prop}{\b containerStyle} : enumeration
     \endlist
 
     \section1 Attached Methods
@@ -376,6 +377,24 @@
     This property was added in Qt 6.5.
 
     See also: \l {Material Style: Shape}.
+
+    \endstyleproperty
+
+    \styleproperty {Material.containerStyle} {enumeration} {material-containerStyle-attached-prop}
+    \target material-containerStyle-attached-prop
+    This attached property holds the style of the container used by the
+    target control. The property can be attached to any window or item, but
+    only TextField and TextArea support it by default.
+
+    The default value is control-specific.
+
+    Available scales:
+    \value Material.Filled Square corners
+    \value Material.Outlined Extra small rounded corners
+
+    This property was added in Qt 6.5.
+
+    See also: \l {Material Style: Text Field Containers}.
 
     \endstyleproperty
 
