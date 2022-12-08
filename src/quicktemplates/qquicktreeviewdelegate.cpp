@@ -99,7 +99,7 @@ QT_BEGIN_NAMESPACE
 
     \note If you want to disable the default behavior that occurs when the
     user clicks on the delegate (like changing the current index), you can set
-    {QQuickTableView::pointerNavigationEnabled}{pointerNavigationEnabled} to \c false.
+    \l {QQuickTableView::pointerNavigationEnabled}{pointerNavigationEnabled} to \c false.
 
     \sa TreeView
 */
