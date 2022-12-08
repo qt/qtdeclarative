@@ -4,6 +4,7 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/attachedstyleproperties")
 
+qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(MyStyle
     URI MyStyle
     IMPORTS

@@ -28,7 +28,7 @@ target_link_libraries(chattutorial-chapter5 PRIVATE
     Qt::Sql
 )
 
-# Resources:
+qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(chattutorial-chapter5
     URI chapter5
     QML_FILES

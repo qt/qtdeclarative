@@ -437,13 +437,16 @@ function(qt6_add_qml_module target)
         # In that case, we assume the user knows what they want.
         set(arg_RESOURCE_PREFIX "/")
     else()
-        message(WARNING
-            "Neither RESOURCE_PREFIX nor AUTO_RESOURCE_PREFIX are specified for ${target}. "
-            "The resource root directory, ':/', is used as prefix. If this is what you want, "
-            "specify '/' as RESOURCE_PREFIX. The recommended resource directory to be used as "
-            "prefix is ':/qt/qml/'. Specify AUTO_RESOURCE_PREFIX to use it."
+        __qt_internal_setup_policy(QTP0001 "6.5.0"
+"':/qt/qml/' is the default resource prefix for QML modules. \
+Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         )
-        set(arg_RESOURCE_PREFIX "/")
+        qt6_policy(GET QTP0001 use_auto_prefix_policy)
+        if ("${use_auto_prefix_policy}" STREQUAL "NEW")
+            set(arg_RESOURCE_PREFIX "/qt/qml")
+        else()
+            set(arg_RESOURCE_PREFIX "/")
+        endif()
     endif()
 
     if(arg_NO_RESOURCE_TARGET_PATH)

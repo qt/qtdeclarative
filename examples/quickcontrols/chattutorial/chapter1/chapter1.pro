@@ -6,7 +6,7 @@ CONFIG += c++11
 SOURCES += main.cpp
 
 resources.files = main.qml
-resources.prefix = chapter1/
+resources.prefix = qt/qml/chapter1/
 RESOURCES += resources \
     qtquickcontrols2.conf
 

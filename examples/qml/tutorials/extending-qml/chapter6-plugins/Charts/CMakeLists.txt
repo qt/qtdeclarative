@@ -1,6 +1,7 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
+qt6_policy(SET QTP0001 NEW)
 qt6_add_qml_module(chartsplugin
     URI "Charts"
     PLUGIN_TARGET chartsplugin

@@ -9,4 +9,5 @@ qt_add_qml_module(BackingFirst
         Neighbor.h
     QML_FILES
         DoSomething.qml
+    RESOURCE_PREFIX /
 )

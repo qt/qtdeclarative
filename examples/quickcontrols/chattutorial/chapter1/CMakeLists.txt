@@ -25,6 +25,7 @@ target_link_libraries(chattutorial-chapter1 PRIVATE
     Qt::Quick
 )
 
+qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(chattutorial-chapter1
     URI chapter1
     QML_FILES

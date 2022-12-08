@@ -8,5 +8,6 @@ qt_add_qml_module(duck_trick
     VERSION 1.0
     QML_FILES
       Trick.qml
+    RESOURCE_PREFIX /
 )
 
