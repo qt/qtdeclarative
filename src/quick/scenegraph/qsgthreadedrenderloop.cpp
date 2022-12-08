@@ -411,7 +411,7 @@ bool QSGRenderThread::event(QEvent *e)
                 cd->rhi->makeThreadLocalNativeContextCurrent(); // for custom GL rendering before/during/after sync
                 cd->syncSceneGraph();
                 sgrc->endSync();
-                cd->renderSceneGraph(ce->window->size());
+                cd->renderSceneGraph();
                 *ce->image = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
                 cd->rhi->endFrame(cd->swapchain, QRhi::SkipPresent);
             }
@@ -733,7 +733,7 @@ void QSGRenderThread::syncAndRender()
         if (!syncRequested) // else this was already done in sync()
             rhi->makeThreadLocalNativeContextCurrent();
 
-        d->renderSceneGraph(windowSize, cd->swapchain->currentPixelSize());
+        d->renderSceneGraph();
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();

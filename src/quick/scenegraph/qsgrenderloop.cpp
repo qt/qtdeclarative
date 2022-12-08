@@ -642,7 +642,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                               QQuickProfiler::SceneGraphRenderLoopSync);
     Q_TRACE(QSG_render_entry);
 
-    cd->renderSceneGraph(window->size(), effectiveOutputSize);
+    cd->renderSceneGraph();
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
@@ -744,7 +744,7 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
     cd->rhi->beginFrame(cd->swapchain);
     cd->rhi->makeThreadLocalNativeContextCurrent(); // for custom GL rendering before/during/after sync
     cd->syncSceneGraph();
-    cd->renderSceneGraph(window->size());
+    cd->renderSceneGraph();
     QImage image = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(cd->rhi, cd->swapchain->currentFrameCommandBuffer());
     cd->rhi->endFrame(cd->swapchain, QRhi::SkipPresent);
 

@@ -134,7 +134,7 @@ public:
     void forcePolish();
     void invalidateFontData(QQuickItem *item);
     void syncSceneGraph();
-    void renderSceneGraph(const QSize &size, const QSize &surfaceSize = QSize());
+    void renderSceneGraph();
 
     bool isRenderable() const;
 

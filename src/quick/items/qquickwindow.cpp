@@ -584,7 +584,7 @@ void QQuickWindowPrivate::emitAfterRenderPassRecording(void *ud)
     emit w->afterRenderPassRecording();
 }
 
-void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfaceSize)
+void QQuickWindowPrivate::renderSceneGraph()
 {
     Q_Q(QQuickWindow);
     if (!renderer)
@@ -646,16 +646,15 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
         pixelSize = redirect.rt.renderTarget->pixelSize();
     else if (redirect.rt.paintDevice)
         pixelSize = QSize(redirect.rt.paintDevice->width(), redirect.rt.paintDevice->height());
-    else if (surfaceSize.isEmpty())
-        pixelSize = size * devicePixelRatio;
-    else
-        pixelSize = surfaceSize;
-    QSize logicalSize = pixelSize / devicePixelRatio;
+    else if (rhi)
+        pixelSize = swapchain->currentPixelSize();
+    else // software or other backend
+        pixelSize = q->size() * devicePixelRatio;
 
     renderer->setDevicePixelRatio(devicePixelRatio);
     renderer->setDeviceRect(QRect(QPoint(0, 0), pixelSize));
     renderer->setViewportRect(QRect(QPoint(0, 0), pixelSize));
-    renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), logicalSize), matrixFlags);
+    renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), pixelSize / devicePixelRatio), matrixFlags);
 
     context->renderNextFrame(renderer);
 

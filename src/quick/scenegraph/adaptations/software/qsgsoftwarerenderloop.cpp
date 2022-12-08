@@ -139,7 +139,7 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
     if (softwareRenderer)
         softwareRenderer->setBackingStore(m_backingStores[window]);
 
-    cd->renderSceneGraph(window->size());
+    cd->renderSceneGraph();
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();

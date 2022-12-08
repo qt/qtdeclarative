@@ -1335,7 +1335,7 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
     wd->setCustomCommandBuffer(cb);
     wd->polishItems();
     wd->syncSceneGraph();
-    wd->renderSceneGraph(window->size());
+    wd->renderSceneGraph();
     wd->setCustomCommandBuffer(nullptr);
 
     QImage image = grabAndBlockInCurrentFrame(rhi, cb, texture.data());
@@ -1432,7 +1432,7 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
     wd->setCustomCommandBuffer(cb);
     wd->polishItems();
     wd->syncSceneGraph();
-    wd->renderSceneGraph(window->size());
+    wd->renderSceneGraph();
     wd->setCustomCommandBuffer(nullptr);
 
     QImage image = grabAndBlockInCurrentFrame(rhi, cb, texture.data());

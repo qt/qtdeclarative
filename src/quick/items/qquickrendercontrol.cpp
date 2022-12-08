@@ -427,7 +427,7 @@ void QQuickRenderControl::render()
         cd->setCustomCommandBuffer(d->cb);
     }
 
-    cd->renderSceneGraph(d->window->size());
+    cd->renderSceneGraph();
 }
 
 /*!

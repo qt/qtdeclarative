@@ -294,7 +294,7 @@ bool QSGSoftwareRenderThread::event(QEvent *e)
             rc->initialize(nullptr);
             wd->syncSceneGraph();
             rc->endSync();
-            wd->renderSceneGraph(wme->window->size());
+            wd->renderSceneGraph();
             *wme->image = backingStore->handle()->toImage();
         }
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - WM_Grab - waking gui to handle result");
@@ -473,7 +473,7 @@ void QSGSoftwareRenderThread::syncAndRender()
         auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(wd->renderer);
         if (softwareRenderer)
             softwareRenderer->setBackingStore(backingStore);
-        wd->renderSceneGraph(exposedWindow->size());
+        wd->renderSceneGraph();
 
         Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,

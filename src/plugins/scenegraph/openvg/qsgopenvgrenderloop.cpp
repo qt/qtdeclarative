@@ -196,7 +196,7 @@ void QSGOpenVGRenderLoop::renderWindow(QQuickWindow *window)
     vgTranslate(0.0f, window->size().height());
     vgScale(1.0, -1.0);
 
-    cd->renderSceneGraph(window->size());
+    cd->renderSceneGraph();
 
     if (profileFrames)
         renderTime = renderTimer.nsecsElapsed();
