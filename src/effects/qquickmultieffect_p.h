@@ -33,7 +33,6 @@ class Q_QUICKEFFECTS_PRIVATE_EXPORT QQuickMultiEffect : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(bool hideSource READ hideSource WRITE setHideSource NOTIFY hideSourceChanged)
     Q_PROPERTY(bool autoPaddingEnabled READ autoPaddingEnabled WRITE setAutoPaddingEnabled NOTIFY autoPaddingEnabledChanged)
     Q_PROPERTY(QRectF paddingRect READ paddingRect WRITE setPaddingRect NOTIFY paddingRectChanged)
     Q_PROPERTY(qreal brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
@@ -62,6 +61,7 @@ class Q_QUICKEFFECTS_PRIVATE_EXPORT QQuickMultiEffect : public QQuickItem
     Q_PROPERTY(QRectF itemRect READ itemRect NOTIFY itemRectChanged)
     Q_PROPERTY(QString fragmentShader READ fragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QString vertexShader READ vertexShader NOTIFY vertexShaderChanged)
+    Q_PROPERTY(bool hasProxySource READ hasProxySource NOTIFY hasProxySourceChanged)
     QML_NAMED_ELEMENT(MultiEffect)
     QML_ADDED_IN_VERSION(6, 5)
 
@@ -71,9 +71,6 @@ public:
 
     QQuickItem *source() const;
     void setSource(QQuickItem *item);
-
-    bool hideSource() const;
-    void setHideSource(bool hide);
 
     bool autoPaddingEnabled() const;
     void setAutoPaddingEnabled(bool enabled);
@@ -153,12 +150,12 @@ public:
     QRectF itemRect() const;
     QString fragmentShader() const;
     QString vertexShader() const;
+    bool hasProxySource() const;
 
 Q_SIGNALS:
     void shaderChanged();
     void itemSizeChanged();
     void sourceChanged();
-    void hideSourceChanged();
     void autoPaddingEnabledChanged();
     void paddingRectChanged();
     void brightnessChanged();
@@ -187,6 +184,7 @@ Q_SIGNALS:
     void itemRectChanged();
     void fragmentShaderChanged();
     void vertexShaderChanged();
+    void hasProxySourceChanged();
 
 protected:
     void componentComplete() override;

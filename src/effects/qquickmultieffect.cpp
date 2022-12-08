@@ -8,6 +8,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
+
 /*!
     \qmltype MultiEffect
     \instantiates QQuickMultiEffect
@@ -46,9 +48,10 @@ QQuickMultiEffect::~QQuickMultiEffect()
 /*!
     \qmlproperty Item QtQuick::MultiEffect::source
 
-    Source item for the effect. This does not need to be ShaderEffectSource
-    or have \c {layer.enabled} set to \c true as QuickMultiEffect will
-    internally generate a ShaderEffectSource as the texture source.
+    This property holds the item to be used as a source for the effect.
+    If needed, MultiEffect will internally generate a ShaderEffectSource
+    as the texture source.
+    \sa hasProxySource
 */
 QQuickItem *QQuickMultiEffect::source() const
 {
@@ -60,29 +63,6 @@ void QQuickMultiEffect::setSource(QQuickItem *item)
 {
     Q_D(QQuickMultiEffect);
     d->setSource(item);
-}
-
-/*!
-    \qmlproperty bool QtQuick::MultiEffect::hideSource
-
-    When enabled, source item is hidden. This is often preferred when the
-    effect item replaces the source item. Another option is to set the source
-    item's \e visibility property to \c false, but that disables also user
-    interaction (for example, events from a MouseArea). Therefore, hiding the
-    the source item may be preferred.
-
-    By default, this property is set to \c true.
-*/
-bool QQuickMultiEffect::hideSource() const
-{
-    Q_D(const QQuickMultiEffect);
-    return d->hideSource();
-}
-
-void QQuickMultiEffect::setHideSource(bool hide)
-{
-    Q_D(QQuickMultiEffect);
-    d->setHideSource(hide);
 }
 
 /*!
@@ -668,6 +648,7 @@ QRectF QQuickMultiEffect::itemRect() const
 
 /*!
     \qmlproperty string QtQuick::MultiEffect::fragmentShader
+    \readonly
 
     Read-only access to filename of the currently used fragment shader.
 */
@@ -679,6 +660,7 @@ QString QQuickMultiEffect::fragmentShader() const
 
 /*!
     \qmlproperty string QtQuick::MultiEffect::vertexShader
+    \readonly
 
     Read-only access to filename of the currently used vertex shader.
 */
@@ -688,6 +670,20 @@ QString QQuickMultiEffect::vertexShader() const
     return d->vertexShader();
 }
 
+/*!
+    \qmlproperty bool QtQuick::MultiEffect::hasProxySource
+    \readonly
+
+    Returns true when the MultiEffect internally creates \l ShaderEffectSource
+    for the \l source item and false when \l source item is used as-is.
+    For example when source is \l Image element or \l Item with \c layer.enabled
+    set to \c true, this additional proxy source is not needed.
+*/
+bool QQuickMultiEffect::hasProxySource() const
+{
+    Q_D(const QQuickMultiEffect);
+    return d->hasProxySource();
+}
 
 // *** protected ***
 
@@ -755,29 +751,11 @@ void QQuickMultiEffectPrivate::setSource(QQuickItem *item)
 
     m_sourceItem = item;
     if (m_shaderSource)
-        m_shaderSource->setSourceItem(m_sourceItem);
+        m_shaderSource->setInput(m_sourceItem);
 
     updateSourcePadding();
     q->update();
     Q_EMIT q->sourceChanged();
-}
-
-bool QQuickMultiEffectPrivate::hideSource() const
-{
-    return m_hideSource;
-}
-
-void QQuickMultiEffectPrivate::setHideSource(bool hide)
-{
-    Q_Q(QQuickMultiEffect);
-    if (hide == m_hideSource)
-        return;
-
-    m_hideSource = hide;
-    if (m_shaderSource)
-        m_shaderSource->setHideSource(m_hideSource);
-    q->update();
-    Q_EMIT q->hideSourceChanged();
 }
 
 bool QQuickMultiEffectPrivate::autoPaddingEnabled() const
@@ -1285,6 +1263,11 @@ QString QQuickMultiEffectPrivate::vertexShader() const
     return m_vertShader;
 }
 
+bool QQuickMultiEffectPrivate::hasProxySource() const
+{
+    return m_shaderSource && m_shaderSource->isActive();
+}
+
 // This initializes the component. It will be ran once, when
 // the component is ready and it has a valid size.
 void QQuickMultiEffectPrivate::initialize()
@@ -1300,16 +1283,16 @@ void QQuickMultiEffectPrivate::initialize()
         return;
 
     m_shaderEffect = new QQuickShaderEffect(q);
-    m_shaderSource = new QQuickShaderEffectSource(q);
+    m_shaderSource = new QGfxSourceProxy(q);
+    QObject::connect(m_shaderSource, &QGfxSourceProxy::outputChanged, q, [this] { proxyOutputChanged(); });
+    QObject::connect(m_shaderSource, &QGfxSourceProxy::activeChanged, q, &QQuickMultiEffect::hasProxySourceChanged);
 
     m_shaderEffect->setParentItem(q);
     m_shaderEffect->setSize(q->size());
 
     m_shaderSource->setParentItem(q);
     m_shaderSource->setSize(q->size());
-    m_shaderSource->setSourceItem(m_sourceItem);
-    m_shaderSource->setHideSource(m_hideSource);
-    m_shaderSource->setVisible(false);
+    m_shaderSource->setInput(m_sourceItem);
 
     updateCenterOffset();
     updateMaskThresholdSpread();
@@ -1319,7 +1302,7 @@ void QQuickMultiEffectPrivate::initialize()
     updateShadowOffset();
 
     // Create properties
-    auto sourceVariant = QVariant::fromValue<QQuickItem*>(m_shaderSource);
+    auto sourceVariant = QVariant::fromValue<QQuickItem*>(m_shaderSource->output());
     m_shaderEffect->setProperty("src", sourceVariant);
     m_shaderEffect->setProperty("brightness", m_brightness);
     m_shaderEffect->setProperty("contrast", m_contrast);
@@ -1498,11 +1481,13 @@ void QQuickMultiEffectPrivate::updateEffectShaders()
         m_shaderEffect->setVertexShader(vs);
         Q_EMIT q->vertexShaderChanged();
     }
-    if (shaderChanged)
+    if (shaderChanged) {
+        qCDebug(lcQuickEffect) << this << "Shaders: " << m_fragShader << m_vertShader;
         Q_EMIT q->shaderChanged();
+    }
 }
 
-void QQuickMultiEffectPrivate::updateBlurLevel()
+void QQuickMultiEffectPrivate::updateBlurLevel(bool forceUpdate)
 {
     int blurLevel = 0;
     if ((m_blurEnabled || m_shadowEnabled) && m_blurMax > 0) {
@@ -1514,7 +1499,7 @@ void QQuickMultiEffectPrivate::updateBlurLevel()
             blurLevel = 1;
     }
 
-    if (blurLevel != m_blurLevel || (blurLevel > 0 && m_blurEffects.isEmpty())) {
+    if (blurLevel != m_blurLevel || (blurLevel > 0 && m_blurEffects.isEmpty()) || forceUpdate) {
         // Blur level has changed or blur items need to be
         // initially created.
         updateBlurItemsAmount(blurLevel);
@@ -1564,7 +1549,7 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
         auto *blurEffect = m_blurEffects[i];
         auto sourceItem = (i >= itemsAmount) ?
                     static_cast<QQuickItem *>(dummyShaderSource) : (i == 0) ?
-                        static_cast<QQuickItem *>(m_shaderSource) :
+                        static_cast<QQuickItem *>(m_shaderSource->output()) :
                         static_cast<QQuickItem *>(m_blurEffects[i - 1]);
         auto sourceVariant = QVariant::fromValue<QQuickItem*>(sourceItem);
         blurEffect->setProperty("source", sourceVariant);
@@ -1619,9 +1604,32 @@ void QQuickMultiEffectPrivate::updateSourcePadding()
     }
 
     updateShadowOffset();
+    updateProxyActiveCheck();
     Q_EMIT q->paddingRectChanged();
     Q_EMIT q->itemRectChanged();
     Q_EMIT q->itemSizeChanged();
+}
+
+void QQuickMultiEffectPrivate::proxyOutputChanged()
+{
+    if (!m_shaderSource)
+        return;
+
+    auto sourceVariant = QVariant::fromValue<QQuickItem*>(m_shaderSource->output());
+    m_shaderEffect->setProperty("src", sourceVariant);
+
+    // Force updating the blur items since the source output has changed
+    updateBlurLevel(true);
+    updateBlurItemSizes();
+    updateSourcePadding();
+}
+
+void QQuickMultiEffectPrivate::updateProxyActiveCheck()
+{
+    if (!m_shaderSource)
+        return;
+
+    m_shaderSource->polish();
 }
 
 QT_END_NAMESPACE

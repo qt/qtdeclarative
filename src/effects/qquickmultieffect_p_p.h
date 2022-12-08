@@ -21,11 +21,11 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 
 #include <private/qquickmultieffect_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qgfxsourceproxy_p.h>
 #include <QtCore/qvector.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickShaderEffectSource;
 class QQuickShaderEffect;
 
 class QQuickMultiEffectPrivate : public QQuickItemPrivate
@@ -38,9 +38,6 @@ public:
 
     QQuickItem *source() const;
     void setSource(QQuickItem *item);
-
-    bool hideSource() const;
-    void setHideSource(bool hide);
 
     bool autoPaddingEnabled() const;
     void setAutoPaddingEnabled(bool enabled);
@@ -120,6 +117,7 @@ public:
     QRectF itemRect() const;
     QString fragmentShader() const;
     QString vertexShader() const;
+    bool hasProxySource() const;
 
     void handleGeometryChange(const QRectF &newGeometry, const QRectF &oldGeometry);
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
@@ -136,17 +134,18 @@ public:
     void updateShadowBlurWeights();
     void updateBlurItemSizes();
     void updateEffectShaders();
-    void updateBlurLevel();
+    void updateBlurLevel(bool forceUpdate = false);
     void updateBlurItemsAmount(int blurLevel);
     void updateSourcePadding();
+    void updateProxyActiveCheck();
+    void proxyOutputChanged();
 
 private:
     bool m_initialized = false;
     QQuickItem *m_sourceItem = nullptr;
-    QQuickShaderEffectSource *m_shaderSource = nullptr;
+    QGfxSourceProxy *m_shaderSource = nullptr;
     QQuickShaderEffect *m_shaderEffect = nullptr;
     QVector<QQuickShaderEffect *> m_blurEffects;
-    bool m_hideSource = true;
     bool m_autoPaddingEnabled = true;
     QRectF m_paddingRect;
     qreal m_brightness = 0.0;

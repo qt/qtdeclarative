@@ -15,6 +15,7 @@ qt_internal_add_qml_module(QuickEffectsPrivate
     INTERNAL_MODULE
     SOURCES
         qquickmultieffect.cpp qquickmultieffect_p.h qquickmultieffect_p_p.h
+        qgfxsourceproxy.cpp qgfxsourceproxy_p.h
         qtquickeffectsglobal_p.h
     DEFINES
         QT_NO_INTEGER_EVENT_COORDINATES
