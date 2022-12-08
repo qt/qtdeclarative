@@ -27,5 +27,6 @@ qt_add_qml_module(cmake_test
     URI duck
     VERSION 1.0
     QML_FILES main.qml
+    RESOURCE_PREFIX /
 )
 

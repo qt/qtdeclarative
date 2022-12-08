@@ -28,7 +28,7 @@ resources.files = \
     images/Hans_Gude@3x.png \
     images/Hans_Gude@4x.png \
     main.qml
-resources.prefix = chapter5/
+resources.prefix = qt/qml/chapter5/
 RESOURCES += resources \
     qtquickcontrols2.conf
 

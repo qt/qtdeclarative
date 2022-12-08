@@ -29,4 +29,5 @@ qt_add_qml_module(qqc_test
         "resources with space/main.qml"
     RESOURCES
         main.cpp
+    RESOURCE_PREFIX /
 )

@@ -8,5 +8,6 @@ qt_add_qml_module(duck_tick
     VERSION 1.0
     QML_FILES
       Tick.qml
+    RESOURCE_PREFIX /
 )
 

@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     connectToDatabase();
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/chapter4/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/qt/qml/chapter4/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 
