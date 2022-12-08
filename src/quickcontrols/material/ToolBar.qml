@@ -9,7 +9,7 @@ import QtQuick.Controls.Material.impl
 T.ToolBar {
     id: control
 
-    Material.elevation: 4
+    Material.elevation: 0
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)
