@@ -17,19 +17,22 @@ T.Button {
 
     topInset: 6
     bottomInset: 6
-    padding: 12
-    horizontalPadding: padding - 4
-    spacing: 6
+    verticalPadding: 14
+    // https://m3.material.io/components/buttons/specs#256326ad-f934-40e7-b05f-0bcb41aa4382
+    leftPadding: !flat ? (!hasIcon ? 24 : 16) : 12
+    rightPadding: !flat ? 24 : (!hasIcon ? 12 : 16)
+    spacing: 8
 
     icon.width: 24
     icon.height: 24
     icon.color: !enabled ? Material.hintTextColor :
-        flat && highlighted ? Material.accentColor :
+        (control.flat && control.highlighted) || (control.checked && !control.highlighted) ? Material.accentColor :
         highlighted ? Material.primaryHighlightedTextColor : Material.foreground
 
-    Material.elevation: flat ? control.down || (enabled && control.hovered) ? 2 : 0
-                             : control.down ? 8 : 2
-    Material.background: flat ? "transparent" : undefined
+    readonly property bool hasIcon: icon.name.length > 0 || icon.source.toString().length > 0
+
+    Material.elevation: control.down ? 8 : 2
+    Material.roundedScale: Material.FullScale
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -40,7 +43,7 @@ T.Button {
         text: control.text
         font: control.font
         color: !control.enabled ? control.Material.hintTextColor :
-            control.flat && control.highlighted ? control.Material.accentColor :
+            (control.flat && control.highlighted) || (control.checked && !control.highlighted) ? control.Material.accentColor :
             control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.foreground
     }
 
@@ -48,32 +51,22 @@ T.Button {
         implicitWidth: 64
         implicitHeight: control.Material.buttonHeight
 
-        radius: 2
-        color: !control.enabled ? control.Material.buttonDisabledColor :
-                control.highlighted ? (control.checked ? control.Material.highlightedCheckedButtonColor :
-                control.Material.highlightedButtonColor) : control.Material.buttonColor
-
-        PaddedRectangle {
-            y: parent.height - 4
-            width: parent.width
-            height: 4
-            radius: 2
-            topPadding: -2
-            clip: true
-            visible: control.checkable && (!control.highlighted || control.flat)
-            color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
-        }
+        radius: control.Material.roundedScale === Material.FullScale ? height / 2 : control.Material.roundedScale
+        color: control.Material.buttonColor(control.Material.theme, control.Material.background,
+            control.Material.accent, control.enabled, control.flat, control.highlighted, control.checked)
 
         // The layer is disabled when the button color is transparent so you can do
         // Material.background: "transparent" and get a proper flat button without needing
         // to set Material.elevation as well
-        layer.enabled: control.enabled && control.Material.buttonColor.a > 0
-        layer.effect: ElevationEffect {
+        layer.enabled: control.enabled && color.a > 0 && !control.flat
+        layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
+            roundedScale: control.background.radius
         }
 
         Ripple {
-            clipRadius: 2
+            clip: true
+            clipRadius: parent.radius
             width: parent.width
             height: parent.height
             pressed: control.pressed

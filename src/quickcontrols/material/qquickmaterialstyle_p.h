@@ -30,6 +30,8 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QVariant foreground READ foreground WRITE setForeground RESET resetForeground NOTIFY foregroundChanged FINAL)
     Q_PROPERTY(QVariant background READ background WRITE setBackground RESET resetBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(int elevation READ elevation WRITE setElevation RESET resetElevation NOTIFY elevationChanged FINAL)
+    Q_PROPERTY(RoundedScale roundedScale READ roundedScale WRITE setRoundedScale RESET resetRoundedScale
+        NOTIFY roundedScaleChanged FINAL)
 
     Q_PROPERTY(QColor primaryColor READ primaryColor NOTIFY primaryChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL) // TODO: remove?
@@ -43,10 +45,6 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor iconColor READ iconColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor iconDisabledColor READ iconDisabledColor NOTIFY themeChanged FINAL)
-    Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY buttonColorChanged FINAL)
-    Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY buttonDisabledColorChanged FINAL)
-    Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY buttonColorChanged FINAL)
-    Q_PROPERTY(QColor highlightedCheckedButtonColor READ highlightedCheckedButtonColor NOTIFY buttonColorChanged FINAL REVISION(6, 2))
     Q_PROPERTY(QColor frameColor READ frameColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor rippleColor READ rippleColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor highlightedRippleColor READ highlightedRippleColor NOTIFY themeOrAccentChanged FINAL)
@@ -134,10 +132,21 @@ public:
         ShadeA700,
     };
 
+    enum class RoundedScale {
+        NotRounded,
+        ExtraSmallScale = 4,
+        SmallScale = 8,
+        MediumScale = 12,
+        LargeScale = 16,
+        ExtraLargeScale = 28,
+        FullScale = 0xFF // For full we use half the height of the item.
+    };
+
     Q_ENUM(Theme)
     Q_ENUM(Variant)
     Q_ENUM(Color)
     Q_ENUM(Shade)
+    Q_ENUM(RoundedScale)
 
     explicit QQuickMaterialStyle(QObject *parent = nullptr);
 
@@ -183,6 +192,10 @@ public:
     void resetElevation();
     void elevationChange();
 
+    RoundedScale roundedScale() const;
+    void setRoundedScale(RoundedScale roundedScale);
+    void resetRoundedScale();
+
     QColor primaryColor() const;
     QColor accentColor() const;
     QColor backgroundColor() const;
@@ -195,11 +208,8 @@ public:
     QColor dividerColor() const;
     QColor iconColor() const;
     QColor iconDisabledColor() const;
-    QColor buttonColor() const;
-    QColor buttonDisabledColor() const;
-    QColor highlightedButtonColor() const;
-    QColor highlightedCheckedButtonColor() const;
-    QColor highlightedButtonDisabledColor() const;
+    Q_INVOKABLE QColor buttonColor(Theme theme, const QVariant &background, const QVariant &accent,
+        bool enabled, bool flat, bool highlighted, bool checked) const;
     QColor frameColor() const;
     QColor rippleColor() const;
     QColor highlightedRippleColor() const;
@@ -249,12 +259,11 @@ Q_SIGNALS:
     void themeOrAccentChanged();
 
     void primaryHighlightedTextColorChanged();
-    void buttonColorChanged();
-    void buttonDisabledColorChanged();
     void dialogColorChanged();
     void tooltipColorChanged();
     void toolBarColorChanged();
     void toolTextColorChanged();
+    void roundedScaleChanged();
 
 protected:
     void attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent) override;
@@ -265,7 +274,7 @@ private:
 
     QColor backgroundColor(Shade shade) const;
     QColor accentColor(Shade shade) const;
-    QColor buttonColor(bool highlighted, bool checked = false) const;
+
     Shade themeShade() const;
 
     // These reflect whether a color value was explicitly set on the specific
@@ -295,6 +304,7 @@ private:
     uint m_foreground = 0;
     uint m_background = 0;
     int m_elevation = 0;
+    RoundedScale m_roundedScale = RoundedScale::NotRounded;
 };
 
 QT_END_NAMESPACE

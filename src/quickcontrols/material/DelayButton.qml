@@ -43,7 +43,8 @@ T.DelayButton {
         implicitHeight: control.Material.buttonHeight
 
         radius: 2
-        color: !control.enabled ? control.Material.buttonDisabledColor : control.Material.buttonColor
+        color: control.Material.buttonColor(control.Material.theme, control.Material.background,
+            control.Material.accent, control.enabled, false /*flat*/, false /*highlighted*/, false /*checked*/)
 
         PaddedRectangle {
             y: parent.height - 4
@@ -65,7 +66,7 @@ T.DelayButton {
             }
         }
 
-        layer.enabled: control.enabled && control.Material.buttonColor.a > 0
+        layer.enabled: control.enabled && color.a > 0 && !control.flat
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
         }
