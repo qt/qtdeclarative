@@ -406,8 +406,10 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
     Geometry objects are constructed by default with DrawTriangleStrip as
     the drawing mode.
 
-    The attribute structure is assumed to be POD and the geometry object
-    assumes this will not go away. There is no memory management involved.
+    \note \a attributes and the \l Attribute objects referenced by it must
+          stay valid for the entire lifetime of the QSGGeometry.
+          QSGGeometry stores a reference to \a attributes and does not delete
+          the \l Attribute objects.
  */
 
 QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
