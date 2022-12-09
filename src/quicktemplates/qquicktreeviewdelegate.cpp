@@ -101,6 +101,23 @@ QT_BEGIN_NAMESPACE
     user clicks on the delegate (like changing the current index), you can set
     \l {QQuickTableView::pointerNavigationEnabled}{pointerNavigationEnabled} to \c false.
 
+    \section2 Editing nodes in the tree
+    TreeViewDelegate has a default \l {TableView::editDelegate}{edit delegate}
+    assigned. If \l TreeView has \l {TableView::editTriggers}{edit triggers}
+    set, and the \l {TableView::model}{model} has support for
+    \l {Editing cells} {editing model items}, then the user can activate any of
+    the edit triggers to edit the text of the \l {TableView::current}{current}
+    tree node.
+
+    The default edit delegate will try to use the \c {Qt.EditRole} to read and
+    write data to the \l {TableView::model}{model}.
+    If \l QAbstractItemModel::data() returns an empty string for this role, then
+    \c {Qt.DisplayRole} will be used instead.
+
+    You can always assign your own custom edit delegate to
+    \l {TableView::editDelegate}{TableView.editDelegate} if you have needs
+    outside what the default edit delegate offers.
+
     \sa TreeView
 */
 
