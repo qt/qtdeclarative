@@ -77,6 +77,7 @@ public:
 
     QSGRhiShaderEffectNode *m_node;
     QSGMaterialType *m_materialType = nullptr;
+    void *m_materialTypeCacheKey = nullptr;
     QSGRhiShaderLinker m_linker;
     QVector<QSGTextureProvider *> m_textureProviders; // [binding] = QSGTextureProvider
     bool m_geometryUsesTextureSubRect = false;
@@ -98,8 +99,6 @@ public:
     QRectF updateNormalizedTextureSubRect(bool supportsAtlasTextures) override;
     void syncMaterial(SyncData *syncData) override;
     void preprocess() override;
-
-    static void cleanupMaterialTypeCache(void *materialTypeCacheKey);
 
 private Q_SLOTS:
     void handleTextureChange();
