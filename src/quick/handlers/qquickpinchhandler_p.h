@@ -30,18 +30,18 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_OBJECT
 
     Q_PROPERTY(QQuickDragAxis *scaleAxis READ scaleAxis CONSTANT)
+#if QT_DEPRECATED_SINCE(6, 5)
     Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged)
     Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged)
-#if QT_DEPRECATED_SINCE(6, 5)
     Q_PROPERTY(qreal scale READ scale NOTIFY updated)
 #endif
     Q_PROPERTY(qreal activeScale READ activeScale NOTIFY scaleChanged)
     Q_PROPERTY(qreal persistentScale READ persistentScale WRITE setPersistentScale NOTIFY scaleChanged)
 
     Q_PROPERTY(QQuickDragAxis *rotationAxis READ rotationAxis CONSTANT)
+#if QT_DEPRECATED_SINCE(6, 5)
     Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged)
     Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
-#if QT_DEPRECATED_SINCE(6, 5)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
 #endif
     Q_PROPERTY(qreal activeRotation READ activeRotation NOTIFY rotationChanged)
@@ -71,11 +71,11 @@ public:
     void setPersistentTranslation(const QPointF &trans);
 
     QQuickDragAxis *scaleAxis() { return &m_scaleAxis; }
+#if QT_DEPRECATED_SINCE(6, 5)
     qreal minimumScale() const { return m_scaleAxis.minimum(); }
     void setMinimumScale(qreal minimumScale);
     qreal maximumScale() const { return m_scaleAxis.maximum(); }
     void setMaximumScale(qreal maximumScale);
-#if QT_DEPRECATED_SINCE(6, 5)
     qreal scale() const { return persistentScale(); }
 #endif
     qreal activeScale() const { return m_scaleAxis.activeValue(); }
@@ -84,11 +84,11 @@ public:
     void setPersistentScale(qreal scale);
 
     QQuickDragAxis *rotationAxis() { return &m_rotationAxis; }
+#if QT_DEPRECATED_SINCE(6, 5)
     qreal minimumRotation() const { return m_rotationAxis.minimum(); }
     void setMinimumRotation(qreal minimumRotation);
     qreal maximumRotation() const { return m_rotationAxis.maximum(); }
     void setMaximumRotation(qreal maximumRotation);
-#if QT_DEPRECATED_SINCE(6, 5)
     qreal rotation() const { return activeRotation(); }
 #endif
     qreal activeRotation() const { return m_rotationAxis.activeValue(); }

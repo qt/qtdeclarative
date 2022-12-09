@@ -66,8 +66,10 @@ QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
     d_func()->acceptedButtons = Qt::NoButton;
 }
 
+#if QT_DEPRECATED_SINCE(6, 5)
 /*!
     \qmlproperty real QtQuick::PinchHandler::minimumScale
+    \deprecated [6.5] Use scaleAxis.minimum
 
     The minimum acceptable \l {Item::scale}{scale} to be applied
     to the \l target.
@@ -83,6 +85,7 @@ void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
 
 /*!
     \qmlproperty real QtQuick::PinchHandler::maximumScale
+    \deprecated [6.5] Use scaleAxis.maximum
 
     The maximum acceptable \l {Item::scale}{scale} to be applied
     to the \l target.
@@ -95,6 +98,7 @@ void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
     m_scaleAxis.setMaximum(maximumScale);
     emit maximumScaleChanged();
 }
+#endif
 
 /*!
     \readonly
@@ -168,8 +172,10 @@ void QQuickPinchHandler::setPersistentScale(qreal rot)
     emit scaleChanged(1);
 }
 
+#if QT_DEPRECATED_SINCE(6, 5)
 /*!
     \qmlproperty real QtQuick::PinchHandler::minimumRotation
+    \deprecated [6.5] Use rotationAxis.minimum
 
     The minimum acceptable \l {Item::rotation}{rotation} to be applied
     to the \l target.
@@ -185,6 +191,7 @@ void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
 
 /*!
     \qmlproperty real QtQuick::PinchHandler::maximumRotation
+    \deprecated [6.5] Use rotationAxis.maximum
 
     The maximum acceptable \l {Item::rotation}{rotation} to be applied
     to the \l target.
@@ -197,6 +204,7 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
     m_rotationAxis.setMaximum(maximumRotation);
     emit maximumRotationChanged();
 }
+#endif
 
 /*!
     \qmlsignal QtQuick::PinchHandler::rotationChanged(qreal delta)
