@@ -25,3 +25,7 @@ android
 # QTBUG-100991
 [selectionOnFocusOut]
 android
+
+# QTBUG-108346
+[pasteHtmlIntoMarkdown]
+ubuntu-20.04
