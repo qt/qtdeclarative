@@ -148,15 +148,30 @@ static const int SUBMENU_DELAY = 225;
     menu to go outside of the window (to animate it moving into view, for
     example), set the margins property to \c -1.
 
-    \section1 Dynamically generating menu items
+    \section1 Dynamically Generating Menu Items
 
-    You can dynamically generate menu items with \l Instantiator. The following
-    code shows how you can implement a "Recent Files" submenu, where the items
-    come from a list of files stored in settings:
+    You can dynamically create menu items with \l Instantiator or
+    \l {Dynamic QML Object Creation from JavaScript} {dynamic object creation}.
+
+    \section2 Using Instantiator
+
+    You can dynamically generate menu items with \l Instantiator. The
+    following code shows how you can implement a "Recent Files" submenu,
+    where the items come from a list of files stored in settings:
 
     \snippet qtquickcontrols-menu-instantiator.qml menu
 
-    \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls}
+    \section2 Using Dynamic Object Creation
+
+    You can also dynamically load a component from a QML file using
+    \l {QtQml::Qt::createComponent()} {Qt.createComponent()}. Once the component
+    is ready, you can call its \l {Component::createObject()} {createObject()}
+    method to create an instance of that component.
+
+    \snippet qtquickcontrols-menu-createObject.qml createObject
+
+    \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls},
+        {Dynamic QML Object Creation from JavaScript}
 */
 
 /*!
