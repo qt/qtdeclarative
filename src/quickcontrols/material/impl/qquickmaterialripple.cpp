@@ -227,7 +227,6 @@ void QQuickMaterialRipple::setClipRadius(qreal radius)
         return;
 
     m_clipRadius = radius;
-    setClip(!qFuzzyIsNull(radius));
     update();
 }
 
@@ -323,8 +322,7 @@ QSGNode *QQuickMaterialRipple::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
     QQuickItemPrivate *d = QQuickItemPrivate::get(this);
     QQuickDefaultClipNode *clipNode = d->clipNode();
     if (clipNode) {
-        // TODO: QTBUG-51894
-        // clipNode->setRadius(m_clipRadius);
+        clipNode->setRadius(m_clipRadius);
         clipNode->setRect(boundingRect());
         clipNode->update();
     }

@@ -486,8 +486,6 @@ void QQuickMaterialStyle::themeChange()
     emit themeChanged();
     emit themeOrAccentChanged();
     emit primaryHighlightedTextColor();
-    emit buttonColorChanged();
-    emit buttonDisabledColorChanged();
     emit dialogColorChanged();
     emit tooltipColorChanged();
     emit toolBarColorChanged();
@@ -619,7 +617,6 @@ void QQuickMaterialStyle::accentChange()
 {
     emit accentChanged();
     emit themeOrAccentChanged();
-    emit buttonColorChanged();
 }
 
 QVariant QQuickMaterialStyle::foreground() const
@@ -753,7 +750,6 @@ void QQuickMaterialStyle::resetBackground()
 void QQuickMaterialStyle::backgroundChange()
 {
     emit backgroundChanged();
-    emit buttonColorChanged();
     emit dialogColorChanged();
     emit tooltipColorChanged();
     emit toolBarColorChanged();
@@ -781,7 +777,25 @@ void QQuickMaterialStyle::resetElevation()
 void QQuickMaterialStyle::elevationChange()
 {
     emit elevationChanged();
-    emit buttonDisabledColorChanged();
+}
+
+QQuickMaterialStyle::RoundedScale QQuickMaterialStyle::roundedScale() const
+{
+    return m_roundedScale;
+}
+
+void QQuickMaterialStyle::setRoundedScale(RoundedScale roundedScale)
+{
+    if (m_roundedScale == roundedScale)
+        return;
+
+    m_roundedScale = roundedScale;
+    emit roundedScaleChanged();
+}
+
+void QQuickMaterialStyle::resetRoundedScale()
+{
+    setRoundedScale(RoundedScale::NotRounded);
 }
 
 QColor QQuickMaterialStyle::primaryColor() const
@@ -874,9 +888,24 @@ QColor QQuickMaterialStyle::iconDisabledColor() const
     return QColor::fromRgba(m_theme == Light ? iconDisabledColorLight : iconDisabledColorDark);
 }
 
-QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool checked) const
+QColor QQuickMaterialStyle::buttonColor(Theme theme, const QVariant &background, const QVariant &accent,
+    bool enabled, bool flat, bool highlighted, bool checked) const
 {
+    if (flat)
+        return Qt::transparent;
+
+    if (!enabled) {
+        return QColor::fromRgba(m_theme == Light
+            ? raisedButtonDisabledColorLight : raisedButtonDisabledColorDark);
+    }
+
+    // We don't use theme (and other arguments) here even though we pass it in, as it's
+    // simpler to just re-use themeShade. We still need the arguments because they allow
+    // us to be re-called whenever they change.
     Shade shade = themeShade();
+    Q_UNUSED(theme);
+    Q_UNUSED(background);
+    Q_UNUSED(accent);
 
     QColor color = Qt::transparent;
 
@@ -891,37 +920,13 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool checked) const
             // A highlighted + checked button should become darker.
             color = accentColor(checked ? Shade100 : shade);
         }
-    } else if (elevation() > 0) {
+    } else {
+        // Even if the elevation is zero, it should still have a background if it's not flat.
         color = QColor::fromRgba(m_theme == Light ? raisedButtonColorLight
                                                   : raisedButtonColorDark);
     }
 
     return color;
-}
-
-QColor QQuickMaterialStyle::buttonColor() const
-{
-    return buttonColor(false);
-}
-
-QColor QQuickMaterialStyle::buttonDisabledColor() const
-{
-    if (elevation() > 0) {
-        return QColor::fromRgba(m_theme == Light ? raisedButtonDisabledColorLight
-                                                 : raisedButtonDisabledColorDark);
-    } else {
-        return Qt::transparent;
-    }
-}
-
-QColor QQuickMaterialStyle::highlightedButtonColor() const
-{
-    return buttonColor(true);
-}
-
-QColor QQuickMaterialStyle::highlightedCheckedButtonColor() const
-{
-    return buttonColor(true, true);
 }
 
 QColor QQuickMaterialStyle::frameColor() const
@@ -1168,8 +1173,8 @@ int QQuickMaterialStyle::touchTarget() const
 
 int QQuickMaterialStyle::buttonHeight() const
 {
-    // https://material.io/guidelines/components/buttons.html#buttons-style
-    return globalVariant == Dense ? 32 : 36;
+    // https://m3.material.io/components/buttons/specs#256326ad-f934-40e7-b05f-0bcb41aa4382
+    return globalVariant == Dense ? 32 : 40;
 }
 
 int QQuickMaterialStyle::delegateHeight() const

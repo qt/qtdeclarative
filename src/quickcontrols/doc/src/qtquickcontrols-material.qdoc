@@ -19,6 +19,7 @@
         \li \l {material-foreground-attached-prop}{\b foreground} : color
         \li \l {material-primary-attached-prop}{\b primary} : color
         \li \l {material-theme-attached-prop}{\b theme} : enumeration
+        \li \l {material-roundedScale-attached-prop}{\b roundedScale} : enumeration
     \endlist
 
     \section1 Attached Methods
@@ -352,6 +353,29 @@
             \li
                 \image qtquickcontrols-material-theme.png
     \endtable
+
+    \endstyleproperty
+
+    \styleproperty {Material.roundedScale} {enumeration} {material-roundedScale-attached-prop}
+    \target material-roundedScale-attached-prop
+    This attached property holds the radius of rounded corners used on the
+    target control. The property can be attached to any window or item, but
+    only some controls support it.
+
+    The default value is control-specific.
+
+    Available scales:
+    \value Material.NotRounded Square corners
+    \value Material.ExtraSmallScale Extra small rounded corners
+    \value Material.SmallScale Small rounded corners
+    \value Material.MediumScale Medium rounded corners
+    \value Material.LargeScale Large rounded corners
+    \value Material.ExtraLargeScale Extra large rounded corners
+    \value Material.FullScale Fully rounded corners
+
+    This property was added in Qt 6.5.
+
+    See also: \l {Material Style: Shape}.
 
     \endstyleproperty
 

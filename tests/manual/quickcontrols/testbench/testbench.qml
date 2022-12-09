@@ -430,8 +430,8 @@ Ui.ApplicationWindow {
                             Label {
                                 text: statesAsString.length > 0 ? statesAsString : "normal"
 
-                                // 4 is the most states for any element (Button)
-                                Layout.preferredHeight: (fontMetrics.lineSpacing) * (rootDelegate.maxStateCombinations + 1)
+                                // Ensure that each row of the Flow has the same height for the labels.
+                                Layout.preferredHeight: fontMetrics.lineSpacing * rootDelegate.maxStateCombinations
                             }
 
                             ControlContainer {

@@ -28,8 +28,7 @@ T.RoundButton {
         flat && highlighted ? Material.accentColor :
         highlighted ? Material.primaryHighlightedTextColor : Material.foreground
 
-    Material.elevation: flat ? control.down || control.hovered ? 2 : 0
-                             : control.down ? 12 : 6
+    Material.elevation: control.down ? 8 : 2
     Material.background: flat ? "transparent" : undefined
 
     contentItem: IconLabel {
@@ -51,8 +50,8 @@ T.RoundButton {
         implicitHeight: control.Material.buttonHeight
 
         radius: control.radius
-        color: !control.enabled ? control.Material.buttonDisabledColor
-            : control.checked || control.highlighted ? control.Material.highlightedButtonColor : control.Material.buttonColor
+        color: control.Material.buttonColor(control.Material.theme, control.Material.background,
+            control.Material.accent, control.enabled, control.flat, control.highlighted, false /*checked*/)
 
         Rectangle {
             width: parent.width
@@ -73,7 +72,7 @@ T.RoundButton {
         // The layer is disabled when the button color is transparent so that you can do
         // Material.background: "transparent" and get a proper flat button without needing
         // to set Material.elevation as well
-        layer.enabled: control.enabled && control.Material.buttonColor.a > 0
+        layer.enabled: control.enabled && color.a > 0 && !control.flat
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
         }
