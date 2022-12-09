@@ -173,7 +173,6 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
     if (qmljs.isEmpty())
         return;
     DomItem newCurrent = m_currentEnv.makeCopy(DomItem::CopyOption::EnvConnected).item();
-    int iFile = 0;
     for (const QString &file : qmljs) {
         if (indexCancelled())
             return;
@@ -186,7 +185,6 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
             newCurrent.loadPendingDependencies();
             newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         }
-        ++iFile;
         {
             QMutexLocker l(&m_mutex);
             ++m_indexDoneCost;
