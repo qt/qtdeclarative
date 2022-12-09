@@ -2120,11 +2120,9 @@ void QQuickFlickable::setContentWidth(qreal w)
         d->contentItem->setWidth(w);
     d->hData.markExtentsDirty();
     // Make sure that we're entirely in view.
-    if ((!d->pressed && !d->hData.moving && !d->vData.moving) || d->hData.dragging) {
-        d->hData.contentPositionChangedExternallyDuringDrag = d->hData.dragging;
+    if (!d->pressed && !d->hData.moving && !d->vData.moving) {
         d->fixupMode = QQuickFlickablePrivate::Immediate;
         d->fixupX();
-        d->hData.contentPositionChangedExternallyDuringDrag = false;
     } else if (!d->pressed && d->hData.fixingUp) {
         d->fixupMode = QQuickFlickablePrivate::ExtentChanged;
         d->fixupX();
@@ -2151,11 +2149,9 @@ void QQuickFlickable::setContentHeight(qreal h)
         d->contentItem->setHeight(h);
     d->vData.markExtentsDirty();
     // Make sure that we're entirely in view.
-    if ((!d->pressed && !d->hData.moving && !d->vData.moving) || d->vData.dragging) {
-        d->vData.contentPositionChangedExternallyDuringDrag = d->vData.dragging;
+    if (!d->pressed && !d->hData.moving && !d->vData.moving) {
         d->fixupMode = QQuickFlickablePrivate::Immediate;
         d->fixupY();
-        d->vData.contentPositionChangedExternallyDuringDrag = false;
     } else if (!d->pressed && d->vData.fixingUp) {
         d->fixupMode = QQuickFlickablePrivate::ExtentChanged;
         d->fixupY();
