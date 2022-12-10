@@ -35,7 +35,7 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 public:
     QQuickAnimatedImagePrivate()
       : playing(true), paused(false), oldPlaying(false), padding(0)
-      , presetCurrentFrame(0), speed(1.0), currentSourceSize(0, 0), movie(nullptr)
+      , presetCurrentFrame(0), speed(1.0), movie(nullptr)
 #if QT_CONFIG(qml_network)
       , reply(nullptr), redirectCount(0)
 #endif
@@ -51,7 +51,6 @@ public:
     unsigned padding: 29;
     int presetCurrentFrame;
     qreal speed;
-    QSize currentSourceSize;
     QMovie *movie;
 #if QT_CONFIG(qml_network)
     QNetworkReply *reply;

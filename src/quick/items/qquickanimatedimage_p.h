@@ -36,8 +36,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnimatedImage : public QQuickImage
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
     Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged REVISION(2, 11))
 
-    // read-only for AnimatedImage
-    Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
     QML_NAMED_ELEMENT(AnimatedImage)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -61,7 +59,6 @@ public:
 
     // Extends QQuickImage's src property
     void setSource(const QUrl&) override;
-    virtual QSize sourceSize();
 
 Q_SIGNALS:
     void playingChanged();

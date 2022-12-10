@@ -26,8 +26,10 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
         QUrl requestedUrl;
         QQuickPixmap *pixmap = nullptr;
         if (engine && !movie->fileName().isEmpty()) {
-            requestedUrl.setUrl(QString::fromUtf8("quickanimatedimage://%1#%2")
+            requestedUrl.setUrl(QString::fromUtf8("quickanimatedimage://%1#%2x%3#%4")
                                 .arg(movie->fileName())
+                                .arg(movie->scaledSize().width())
+                                .arg(movie->scaledSize().height())
                                 .arg(current));
         }
         if (!requestedUrl.isEmpty()) {
@@ -289,14 +291,14 @@ void QQuickAnimatedImage::load()
         }
 
         d->setImage(QImage());
+        if (sourceSize() != d->oldSourceSize) {
+            d->oldSourceSize = sourceSize();
+            emit sourceSizeChanged();
+        }
+
         d->status = Null;
         emit statusChanged(d->status);
 
-        d->currentSourceSize = QSize(0, 0);
-        if (d->currentSourceSize != d->oldSourceSize) {
-            d->oldSourceSize = d->currentSourceSize;
-            emit sourceSizeChanged();
-        }
         if (isPlaying() != d->oldPlaying)
             emit playingChanged();
     } else {
@@ -337,7 +339,6 @@ void QQuickAnimatedImage::load()
 
 void QQuickAnimatedImage::movieRequestFinished()
 {
-
     Q_D(QQuickAnimatedImage);
 
 #if QT_CONFIG(qml_network)
@@ -363,19 +364,21 @@ void QQuickAnimatedImage::movieRequestFinished()
         qmlWarning(this) << "Error Reading Animated Image File "
                          << (context ? context->resolvedUrl(d->url) : d->url).toString();
         d->setMovie(nullptr);
+
         d->setImage(QImage());
+        if (sourceSize() != d->oldSourceSize) {
+            d->oldSourceSize = sourceSize();
+            emit sourceSizeChanged();
+        }
+
         if (d->progress != 0) {
             d->progress = 0;
             emit progressChanged(d->progress);
         }
+
         d->status = Error;
         emit statusChanged(d->status);
 
-        d->currentSourceSize = QSize(0, 0);
-        if (d->currentSourceSize != d->oldSourceSize) {
-            d->oldSourceSize = d->currentSourceSize;
-            emit sourceSizeChanged();
-        }
         if (isPlaying() != d->oldPlaying)
             emit playingChanged();
         return;
@@ -386,9 +389,6 @@ void QQuickAnimatedImage::movieRequestFinished()
     if (d->cache)
         d->movie->setCacheMode(QMovie::CacheAll);
     d->movie->setSpeed(qRound(d->speed * 100.0));
-
-    d->status = Ready;
-    emit statusChanged(d->status);
 
     if (d->progress != 1.0) {
         d->progress = 1.0;
@@ -406,21 +406,19 @@ void QQuickAnimatedImage::movieRequestFinished()
     }
 
     QQuickPixmap *pixmap = d->infoForCurrentFrame(qmlEngine(this));
-    if (pixmap)
+    if (pixmap) {
         d->setPixmap(*pixmap);
+        if (sourceSize() != d->oldSourceSize) {
+            d->oldSourceSize = sourceSize();
+            emit sourceSizeChanged();
+        }
+    }
+
+    d->status = Ready;
+    emit statusChanged(d->status);
 
     if (isPlaying() != d->oldPlaying)
         emit playingChanged();
-
-    if (d->movie)
-        d->currentSourceSize = d->movie->currentPixmap().size();
-    else
-        d->currentSourceSize = QSize(0, 0);
-
-    if (d->currentSourceSize != d->oldSourceSize) {
-        d->oldSourceSize = d->currentSourceSize;
-        emit sourceSizeChanged();
-    }
 }
 
 void QQuickAnimatedImage::movieUpdate()
@@ -466,12 +464,6 @@ void QQuickAnimatedImage::onCacheChanged()
     }
 }
 
-QSize QQuickAnimatedImage::sourceSize()
-{
-    Q_D(QQuickAnimatedImage);
-    return d->currentSourceSize;
-}
-
 void QQuickAnimatedImage::componentComplete()
 {
     QQuickItem::componentComplete(); // NOT QQuickImage
@@ -482,6 +474,7 @@ void QQuickAnimatedImagePrivate::setMovie(QMovie *m)
 {
     if (movie == m)
         return;
+
     Q_Q(QQuickAnimatedImage);
     const int oldFrameCount = q->frameCount();
 
@@ -489,7 +482,14 @@ void QQuickAnimatedImagePrivate::setMovie(QMovie *m)
         movie->disconnect();
         movie->deleteLater();
     }
+
     movie = m;
+
+    qDeleteAll(frameMap);
+    frameMap.clear();
+
+    if (movie)
+        movie->setScaledSize(sourcesize);
 
     if (oldFrameCount != q->frameCount())
         emit q->frameCountChanged();
