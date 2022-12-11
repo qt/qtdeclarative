@@ -781,6 +781,7 @@ public:
     virtual QPixmap standardPixmap(StandardPixmap standardPixmap, const QStyleOption *opt = nullptr) const = 0;
     virtual QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *option = nullptr) const = 0;
     virtual QPixmap generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &pixmap, const QStyleOption *opt) const = 0;
+    virtual void polish() { }
 
     static QRect visualRect(Qt::LayoutDirection direction, const QRect &boundingRect, const QRect &logicalRect);
     static QPoint visualPos(Qt::LayoutDirection direction, const QRect &boundingRect, const QPoint &logicalPos);

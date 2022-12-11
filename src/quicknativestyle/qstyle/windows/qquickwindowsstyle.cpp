@@ -15,6 +15,9 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qtextstream.h>
 #include <QtGui/qpixmapcache.h>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qstylehints.h>
 #include <private/qmath_p.h>
 #include <qmath.h>
 #include <QtGui/qpainterpath.h>
@@ -25,6 +28,7 @@
 #include <private/qguiapplication_p.h>
 #include <private/qhighdpiscaling_p.h>
 #include <qpa/qplatformnativeinterface.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #if 0 && QT_CONFIG(animation)
 //#include <private/qstyleanimation_p.h>
@@ -179,6 +183,15 @@ QWindowsStyle::QWindowsStyle(QWindowsStylePrivate &dd) : QCommonStyle(dd)
 {
 }
 
+void QWindowsStyle::timerEvent(QTimerEvent* event)
+{
+    // Update palette in style object through palette timer timeout and this timer
+    // will be triggered during ApplicationPaletteChange event
+    if (event->timerId() == paletteTimer.timerId()) {
+        paletteTimer.stop();
+        refreshPalette();
+    }
+}
 
 /*! Destroys the QWindowsStyle object. */
 QWindowsStyle::~QWindowsStyle()
@@ -2336,6 +2349,26 @@ QSize QWindowsStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, 
         sz = QCommonStyle::sizeFromContents(ct, opt, csz);
     }
     return sz;
+}
+
+void QWindowsStyle::refreshPalette()
+{
+    // Update system palette in the theme (quick)
+    // Since windows style doesn't support dark appearance,
+    // light palette will always be set in the quick theme
+    QPalette pal;
+    using QWindowsApplication = QNativeInterface::Private::QWindowsApplication;
+    if (auto nativeWindowsApp = dynamic_cast<QWindowsApplication *>(QGuiApplicationPrivate::platformIntegration()))
+        nativeWindowsApp->lightSystemPalette(pal);
+    QQuickTheme::instance()->setPalette(QQuickTheme::System, pal);
+}
+
+void QWindowsStyle::polish()
+{
+    // The timer used here compresses ApplicationPaletteChange event and get triggered once
+    // this event has been propagated for all items.
+    if (!paletteTimer.isActive())
+        paletteTimer.start(0, this);
 }
 
 /*!
