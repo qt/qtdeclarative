@@ -4,7 +4,9 @@
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtGui/qguiapplication.h>
-
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qstylehints.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include "qquicknativestyle.h"
@@ -109,6 +111,8 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
             style = new QMacStyle;
 #elif defined(Q_OS_WINDOWS)
             style = new QWindowsXPStyle;
+            if (QGuiApplication::styleHints()->appearance() == Qt::Appearance::Dark)
+                qobject_cast<QWindowsStyle *>(style)->refreshPalette();
 #else
             style = new QCommonStyle;
 #endif

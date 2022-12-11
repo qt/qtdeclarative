@@ -254,8 +254,11 @@ void QQuickStyleItem::itemChange(QQuickItem::ItemChange change, const QQuickItem
 
 bool QQuickStyleItem::event(QEvent *event)
 {
-    if (event->type() == QEvent::ApplicationPaletteChange)
+    if (event->type() == QEvent::ApplicationPaletteChange) {
         markImageDirty();
+        if (auto *style = QQuickStyleItem::style())
+            style->polish();
+    }
 
     return QQuickItem::event(event);
 }
