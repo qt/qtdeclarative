@@ -13,6 +13,7 @@ set(cpp_sources
     multiforeign.h
     objectwithmethod.h
     person.cpp person.h
+    sequencetypeexample.cpp sequencetypeexample.h
     state.h
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
@@ -21,6 +22,7 @@ set(cpp_sources
 
 set(qml_files
     AccessModelMethodsFromOutside.qml
+    ArraySequenceLengthInterop.qml
     BadType.qml
     BaseMember.qml
     BindingExpression.qml

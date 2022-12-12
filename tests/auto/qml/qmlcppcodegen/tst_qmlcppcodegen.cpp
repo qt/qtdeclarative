@@ -154,6 +154,7 @@ private slots:
     void enumConversion();
     void ambiguousSignals();
     void fileImportsContainCxxTypes();
+    void lengthAccessArraySequenceCompat();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2942,6 +2943,16 @@ void tst_QmlCppCodegen::fileImportsContainCxxTypes()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), u"horst guenther"_s);
+}
+
+void tst_QmlCppCodegen::lengthAccessArraySequenceCompat()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/ArraySequenceLengthInterop.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("length").toInt(), 100);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
