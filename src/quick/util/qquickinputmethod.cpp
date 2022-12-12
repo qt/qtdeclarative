@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype InputMethod
-    \inqmlmodule QtQuick.
+    \inqmlmodule QtQuick
 
     \brief Provides access to \l QInputMethod for QML applications.
 

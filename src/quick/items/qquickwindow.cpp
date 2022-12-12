@@ -2339,7 +2339,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 /*!
     \qmltype CloseEvent
     \instantiates QQuickCloseEvent
-    \inqmlmodule QtQuick.Window
+    \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \brief Notification that a \l Window is about to be closed.
     \since 5.1
