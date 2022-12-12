@@ -15,11 +15,12 @@
 // We mean it.
 //
 
-#include "qquickitem.h"
-#include "qevent.h"
-#include "qquicksinglepointhandler_p.h"
 #include <QtCore/qbasictimer.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtGui/qevent.h>
+#include <QtQuick/qquickitem.h>
+
+#include "qquicksinglepointhandler_p.h"
 
 QT_BEGIN_NAMESPACE
 

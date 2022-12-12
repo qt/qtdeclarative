@@ -15,8 +15,9 @@
 // We mean it.
 //
 
-#include "qquickitem.h"
-#include "qevent.h"
+#include <QtGui/qevent.h>
+#include <QtQuick/qquickitem.h>
+
 #include "qquickhandlerpoint_p.h"
 #include "qquickpointerdevicehandler_p.h"
 

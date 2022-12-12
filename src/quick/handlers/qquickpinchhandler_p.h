@@ -15,8 +15,9 @@
 // We mean it.
 //
 
-#include "qquickitem.h"
-#include "qevent.h"
+#include <QtGui/qevent.h>
+#include <QtQuick/qquickitem.h>
+
 #include "qquickmultipointhandler_p.h"
 #include <private/qquicktranslate_p.h>
 #include "qquickdragaxis_p.h"
