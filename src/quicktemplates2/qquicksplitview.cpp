@@ -255,7 +255,7 @@ QT_BEGIN_NAMESPACE
 */
 
 Q_LOGGING_CATEGORY(qlcQQuickSplitView, "qt.quick.controls.splitview")
-Q_LOGGING_CATEGORY(qlcQQuickSplitViewMouse, "qt.quick.controls.splitview.mouse")
+Q_LOGGING_CATEGORY(qlcQQuickSplitViewPointer, "qt.quick.controls.splitview.pointer")
 Q_LOGGING_CATEGORY(qlcQQuickSplitViewState, "qt.quick.controls.splitview.state")
 
 void QQuickSplitViewPrivate::updateFillIndex()
@@ -930,7 +930,7 @@ void QQuickSplitViewPrivate::updateHandleVisibilities()
 
 void QQuickSplitViewPrivate::updateHoveredHandle(QQuickItem *hoveredItem)
 {
-    qCDebug(qlcQQuickSplitViewMouse) << "updating hovered handle after" << hoveredItem << "was hovered";
+    qCDebug(qlcQQuickSplitViewPointer) << "updating hovered handle after" << hoveredItem << "was hovered";
 
     const int oldHoveredHandleIndex = m_hoveredHandleIndex;
     m_hoveredHandleIndex = m_handleItems.indexOf(hoveredItem);
@@ -943,16 +943,16 @@ void QQuickSplitViewPrivate::updateHoveredHandle(QQuickItem *hoveredItem)
         QQuickSplitHandleAttached *oldHoveredHandleAttached = qobject_cast<QQuickSplitHandleAttached*>(
             qmlAttachedPropertiesObject<QQuickSplitHandleAttached>(oldHoveredHandle, true));
         QQuickSplitHandleAttachedPrivate::get(oldHoveredHandleAttached)->setHovered(false);
-        qCDebug(qlcQQuickSplitViewMouse) << "handle item at index" << oldHoveredHandleIndex << "is no longer hovered";
+        qCDebug(qlcQQuickSplitViewPointer) << "handle item at index" << oldHoveredHandleIndex << "is no longer hovered";
     }
 
     if (m_hoveredHandleIndex != -1) {
         QQuickSplitHandleAttached *handleAttached = qobject_cast<QQuickSplitHandleAttached*>(
             qmlAttachedPropertiesObject<QQuickSplitHandleAttached>(hoveredItem, true));
         QQuickSplitHandleAttachedPrivate::get(handleAttached)->setHovered(true);
-        qCDebug(qlcQQuickSplitViewMouse) << "handle item at index" << m_hoveredHandleIndex << "is now hovered";
+        qCDebug(qlcQQuickSplitViewPointer) << "handle item at index" << m_hoveredHandleIndex << "is now hovered";
     } else {
-        qCDebug(qlcQQuickSplitViewMouse) << "either there is no hovered item or" << hoveredItem << "is not a handle";
+        qCDebug(qlcQQuickSplitViewPointer) << "either there is no hovered item or" << hoveredItem << "is not a handle";
     }
 }
 
@@ -1021,7 +1021,7 @@ void QQuickSplitViewPrivate::handlePress(const QPointF &point)
 
         setResizing(true);
 
-        qCDebug(qlcQQuickSplitViewMouse).nospace() << "handled press -"
+        qCDebug(qlcQQuickSplitViewPointer).nospace() << "handled press -"
             << " left/top index=" << m_pressedHandleIndex << ","
             << " size before press=" << m_leftOrTopItemSizeBeforePress << ","
             << " item=" << leftOrTopItem
@@ -1411,27 +1411,50 @@ void QQuickSplitView::hoverLeaveEvent(QHoverEvent *event)
 bool QQuickSplitView::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickSplitView);
-    qCDebug(qlcQQuickSplitViewMouse) << "childMouseEventFilter called with" << item << event;
+    qCDebug(qlcQQuickSplitViewPointer) << "childMouseEventFilter called with" << item << event;
 
-    if (event->type() == QEvent::MouseButtonPress) {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-        const QPointF point = mapFromItem(item, mouseEvent->position());
-        d->handlePress(point);
+    if (Q_LIKELY(event->isPointerEvent())) {
+        auto *pointerEvent = static_cast<QPointerEvent *>(event);
+        const auto &eventPoint = pointerEvent->points().first();
+        const QPointF point = mapFromItem(item, eventPoint.position());
 
-        // Keep the mouse grab if this item belongs to the handle,
-        // otherwise this event can be stolen e.g. Flickable if we're inside it.
-        if (d->m_pressedHandleIndex != -1)
-            item->setKeepMouseGrab(true);
-    }
-    else if (event->type() == QEvent::MouseButtonRelease) {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-        const QPointF point = mapFromItem(item, mouseEvent->position());
-        d->handleRelease(point);
-    }
-    else if (event->type() == QEvent::MouseMove) {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-        const QPointF point = mapFromItem(item, mouseEvent->position());
-        d->handleMove(point);
+        switch (event->type()) {
+        case QEvent::MouseButtonPress:
+            d->handlePress(point);
+            // Keep the mouse grab if this item belongs to the handle,
+            // otherwise this event can be stolen e.g. Flickable if we're inside it.
+            if (d->m_pressedHandleIndex != -1)
+                item->setKeepMouseGrab(true);
+            break;
+        case QEvent::MouseButtonRelease:
+            d->handleRelease(point);
+            break;
+        case QEvent::MouseMove:
+            d->handleMove(point);
+            break;
+        case QEvent::TouchBegin:
+            if (pointerEvent->pointCount() == 1) {
+                d->handlePress(point);
+                // We filter the event on behalf of item, but we want the item
+                // to be the exclusive grabber so that we can continue to filter
+                // touch events for it.
+                if (d->m_pressedHandleIndex != -1) {
+                    item->setKeepTouchGrab(true);
+                    pointerEvent->setExclusiveGrabber(eventPoint, item);
+                }
+            }
+            break;
+        case QEvent::TouchEnd:
+            if (pointerEvent->pointCount() == 1)
+                d->handleRelease(point);
+            break;
+        case QEvent::TouchUpdate:
+            if (pointerEvent->pointCount() == 1)
+                d->handleMove(point);
+            break;
+        default:
+            break;
+        }
     }
 
     // If this event belongs to the handle, filter it. (d->m_pressedHandleIndex != -1) means that

@@ -2591,7 +2591,6 @@ TestCase {
         touch.move(0, control, handleCenter.x + 100, handleCenter.y).commit()
         verify(firstHandle.SplitHandle.pressed)
         let firstItem = control.itemAt(0)
-        expectFail("", "broken, QTBUG-105312")
         compare(firstItem.width, 125)
 
         touch.release(0, control, handleCenter.x + 100, handleCenter.y).commit()
