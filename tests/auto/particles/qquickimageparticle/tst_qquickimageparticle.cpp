@@ -217,46 +217,50 @@ void tst_qquickimageparticle::test_deformed()
 
 void tst_qquickimageparticle::test_tabled()
 {
-    QQuickView* view = createView(testFileUrl("tabled.qml"), 600);
-    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
-    ensureAnimTime(600, system->m_animation);
+    #if defined(Q_OS_LINUX)
+        QSKIP("Crashing on Ubuntu 22.04: QTBUG-107707");
+    #else
+        QQuickView* view = createView(testFileUrl("tabled.qml"), 600);
+        QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+        ensureAnimTime(600, system->m_animation);
 
-    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
-    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
-        if (d->t == -1)
-            continue; //Particle data unused
+        QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
+        for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
+            if (d->t == -1)
+                continue; //Particle data unused
 
-        QCOMPARE(d->x, 0.f);
-        QCOMPARE(d->y, 0.f);
-        QCOMPARE(d->vx, 0.f);
-        QCOMPARE(d->vy, 0.f);
-        QCOMPARE(d->ax, 0.f);
-        QCOMPARE(d->ay, 0.f);
-        QCOMPARE(d->lifeSpan, 0.5f);
-        QCOMPARE(d->size, 32.f);
-        QCOMPARE(d->endSize, 32.f);
-        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
-        QCOMPARE(d->color.r, (uchar)255);
-        QCOMPARE(d->color.g, (uchar)255);
-        QCOMPARE(d->color.b, (uchar)255);
-        QCOMPARE(d->color.a, (uchar)255);
-        QCOMPARE(d->xx, 1.0f);
-        QCOMPARE(d->xy, 0.0f);
-        QCOMPARE(d->yy, 1.0f);
-        QCOMPARE(d->yx, 0.0f);
-        QCOMPARE(d->rotation, 0.0f);
-        QCOMPARE(d->rotationVelocity, 0.0f);
-        QCOMPARE(d->autoRotate, (uchar)0);
-        QCOMPARE(d->animX, 0.0f);
-        QCOMPARE(d->animY, 0.0f);
-        QCOMPARE(d->animWidth, 1.0f);
-        QCOMPARE(d->animHeight, 1.0f);
-        QCOMPARE(d->frameDuration, 1.0f);
-        QCOMPARE(d->frameCount, 1.0f);
-        QCOMPARE(d->animT, -1.0f);
-        //TODO: This performance level doesn't alter particleData, but goes straight to shaders. Find something to test
-    }
-    delete view;
+            QCOMPARE(d->x, 0.f);
+            QCOMPARE(d->y, 0.f);
+            QCOMPARE(d->vx, 0.f);
+            QCOMPARE(d->vy, 0.f);
+            QCOMPARE(d->ax, 0.f);
+            QCOMPARE(d->ay, 0.f);
+            QCOMPARE(d->lifeSpan, 0.5f);
+            QCOMPARE(d->size, 32.f);
+            QCOMPARE(d->endSize, 32.f);
+            QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
+            QCOMPARE(d->color.r, (uchar)255);
+            QCOMPARE(d->color.g, (uchar)255);
+            QCOMPARE(d->color.b, (uchar)255);
+            QCOMPARE(d->color.a, (uchar)255);
+            QCOMPARE(d->xx, 1.0f);
+            QCOMPARE(d->xy, 0.0f);
+            QCOMPARE(d->yy, 1.0f);
+            QCOMPARE(d->yx, 0.0f);
+            QCOMPARE(d->rotation, 0.0f);
+            QCOMPARE(d->rotationVelocity, 0.0f);
+            QCOMPARE(d->autoRotate, (uchar)0);
+            QCOMPARE(d->animX, 0.0f);
+            QCOMPARE(d->animY, 0.0f);
+            QCOMPARE(d->animWidth, 1.0f);
+            QCOMPARE(d->animHeight, 1.0f);
+            QCOMPARE(d->frameDuration, 1.0f);
+            QCOMPARE(d->frameCount, 1.0f);
+            QCOMPARE(d->animT, -1.0f);
+            //TODO: This performance level doesn't alter particleData, but goes straight to shaders. Find something to test
+        }
+        delete view;
+    #endif
 }
 
 
