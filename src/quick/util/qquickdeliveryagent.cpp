@@ -2450,8 +2450,11 @@ bool QQuickDeliveryAgentPrivate::sendFilteredPointerEventImpl(QPointerEvent *eve
                     if (filteringParent->childMouseEventFilter(receiver, &filteringParentTouchEvent)) {
                         qCDebug(lcTouch) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
                         skipDelivery.append(filteringParent);
-                        for (auto point : filteringParentTouchEvent.points())
-                            event->setExclusiveGrabber(point, filteringParent);
+                        for (auto point : filteringParentTouchEvent.points()) {
+                            const QQuickItem *exclusiveGrabber = qobject_cast<const QQuickItem *>(event->exclusiveGrabber(point));
+                            if (!exclusiveGrabber || !exclusiveGrabber->keepTouchGrab())
+                                event->setExclusiveGrabber(point, filteringParent);
+                        }
                         return true;
                     } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents)) &&
                                !filteringParent->acceptTouchEvents()) {
