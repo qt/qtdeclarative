@@ -1,0 +1,91 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+    \example filesystemexplorer
+    \meta category {Application Examples}
+    \meta tags {quickcontrols, layout, styling, treeview}
+    \title Modern File System Explorer
+    \ingroup qtquickcontrols-examples
+    \brief A QML app utilizing customized Qt Quick Controls to display text files from a filesystem.
+
+    In this example, a modern layout is used that consists of three major components. There is an
+    icon-based \e {Sidebar} to the left, followed by a resizable TreeView displaying the file system
+    from a QFileSystemModel, and finally the TextArea displaying the selected text files.
+    There is a common look and feel across all operating systems. We accomplish this by using
+    customized quick controls and frameless windows, with our own window decorations.
+
+    \image qtquickcontrols-filesystemexplorer.jpg
+
+    \include examples-run.qdocinc
+
+    \section1 Modern layout and colors
+
+    To begin with, we are providing the colors throughout a singleton QML object. In this way,
+    we can provide more structured control over the appearance of the application.
+
+    \quotefromfile filesystemexplorer/qml/Colors.qml
+    \skipto pragma
+    \printuntil }
+
+    Since we do not want to rely on the operating system's window decoration and instead want to
+    provide our own, we use the \c FramelessWindowHint flag inside the ApplicationWindow.
+    In order to achieve an equivalent interaction with the window, we override the \c background
+    property of our customized MenuBar and display some information text as well as interaction
+    possibilities for dragging or closing the application. \l {Inline Components} have been used
+    to simplify this process.
+
+    \quotefromfile filesystemexplorer/qml/MyMenuBar.qml
+    \skipto /^\s{4}background: Rectangle {$/
+    \printto InteractionButton {
+
+    The \e {Sidebar} on the left includes checkable navigation buttons on top and one-shot buttons on
+    the bottom. A ButtonGroup and a Container are used to ensure that only one entry is active at
+    any given time. It is then possible to provide different views using a property alias for the
+    current position, along with a StackLayout.
+
+    This technique allows us to simply extend the functionality by adding another button and the
+    corresponding element inside the StackLayout.
+
+    \quotefromfile filesystemexplorer/Main.qml
+    \skipto StackLayout {
+    \printuntil /^\s{20}\}$/
+
+    The StackLayout includes, besides some simple information text, the \e {FileSystemView}. This
+    custom component displays files and folders and populates it with data from a
+    \l {Using C++ Models with Qt Quick Views}{C++ model}. We can then select the files and
+    read them accordingly.
+
+    \quotefromfile filesystemexplorer/filesystemmodel.cpp
+    \skipto readFile
+    \printuntil /^\s{0}\}$/
+
+    By using a SplitView, we are able to dynamically share the space between the StackLayout and
+    the ScrollView. Our ScrollView contains an embedded TextArea that displays the opened file. Using
+    this method, we can resize the view vertically and enable scrolling within the TextArea.
+
+    \quotefromfile filesystemexplorer/Main.qml
+    \skipuntil SplitView
+    \dots
+    \skipto ScrollView {
+    \printuntil /^\s{16}\}$/
+
+    \section1 Custom components
+
+    For a better understanding of the customization process, investigate
+    \l {Customizing a Control} {this} article first. We are using reusable and
+    customized components throughout this example.
+
+    For example, the \e {MyMenu} component customizes Menu's \c background property
+    as well as its delegates' \c contentItem and \c background properties.
+
+    \quotefile filesystemexplorer/qml/MyMenu.qml
+
+    Another example is the customization of the ScrollIndicator inside
+    the \e {FileSystemView}, which additionally uses customized animations. Here we
+    also override the \c contentItem.
+
+    \quotefromfile filesystemexplorer/qml/FileSystemView.qml
+    \skipto ScrollIndicator.vertical
+    \printuntil /^\s{8}\}$/
+
+*/

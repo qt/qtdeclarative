@@ -1,0 +1,12 @@
+module FileSystemModule
+
+Main 1.0 Main.qml
+Icon 1.0 qml/Icon.qml
+About 1.0 qml/About.qml
+MyMenu 1.0 qml/MyMenu.qml
+Sidebar 1.0 qml/Sidebar.qml
+MyMenuBar 1.0 qml/MyMenuBar.qml
+singleton Colors 1.0 qml/Colors.qml
+ResizeButton 1.0 qml/ResizeButton.qml
+FileSystemView 1.0 qml/FileSystemView.qml
+WindowDragHandler 1.0 qml/WindowDragHandler.qml

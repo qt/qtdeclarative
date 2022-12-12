@@ -1,0 +1,6 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'>
+    <line x1="00" y1="100" x2="100" y2="00" stroke="black" stroke-width="3" />
+    <line x1="20" y1="100" x2="100" y2="20" stroke="black" stroke-width="3" />
+    <line x1="40" y1="100" x2="100" y2="40" stroke="black" stroke-width="3" />
+    <line x1="60" y1="100" x2="100" y2="60" stroke="black" stroke-width="3" />
+</svg>
