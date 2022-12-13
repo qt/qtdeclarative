@@ -8,16 +8,14 @@ import QtQuick.Controls.impl
 
 T.SpinBox {
     id: control
-    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            contentItem.implicitWidth + 2 * padding +
-                            up.implicitIndicatorWidth +
-                            down.implicitIndicatorWidth)
-    implicitHeight: Math.max(implicitContentHeight + topPadding + bottomPadding,
-                             implicitBackgroundHeight,
-                             up.implicitIndicatorHeight,
-                             down.implicitIndicatorHeight)
 
-    padding: 0
+    // Note: the width of the indicators are calculated into the padding
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding,
+                             up.implicitIndicatorHeight, down.implicitIndicatorHeight)
+
     leftPadding: control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0)
     rightPadding: control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0)
 
@@ -42,6 +40,7 @@ T.SpinBox {
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+        clip: width < implicitWidth
     }
 
     up.indicator: NinePatchImage {

@@ -10,18 +10,16 @@ import QtQuick.Controls.Fusion.impl
 T.SpinBox {
     id: control
 
+    // Note: the width of the indicators are calculated into the padding
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            contentItem.implicitWidth + 2 * padding +
-                            Math.max(up.implicitIndicatorWidth,
-                                     down.implicitIndicatorWidth))
-    implicitHeight: Math.max(implicitContentHeight + topPadding + bottomPadding,
-                             implicitBackgroundHeight,
-                             up.implicitIndicatorHeight +
-                             down.implicitIndicatorHeight)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding,
+                             up.implicitIndicatorHeight + down.implicitIndicatorHeight)
 
     padding: 4
-    leftPadding: padding + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
-    rightPadding: padding + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
+    leftPadding: padding + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : 0)
+    rightPadding: padding + (!control.mirrored ? (up.indicator ? up.indicator.width : 0) : 0)
 
     validator: IntValidator {
         locale: control.locale.name
@@ -43,6 +41,7 @@ T.SpinBox {
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+        clip: width < implicitWidth
     }
 
     up.indicator: PaddedRectangle {

@@ -8,16 +8,13 @@ import QtQuick.Templates as T
 T.SpinBox {
     id: control
 
+    // Note: the width of the indicators are calculated into the padding
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            contentItem.implicitWidth + 2 * padding +
-                            up.implicitIndicatorWidth +
-                            down.implicitIndicatorWidth)
-    implicitHeight: Math.max(implicitContentHeight + topPadding + bottomPadding,
-                             implicitBackgroundHeight,
-                             up.implicitIndicatorHeight,
-                             down.implicitIndicatorHeight)
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding,
+                             up.implicitIndicatorHeight, down.implicitIndicatorHeight)
 
-    padding: 6
     leftPadding: padding + (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
     rightPadding: padding + (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
 
@@ -30,6 +27,8 @@ T.SpinBox {
     contentItem: TextInput {
         z: 2
         text: control.displayText
+        clip: width < implicitWidth
+        padding: 6
 
         font: control.font
         color: control.palette.text
@@ -43,10 +42,8 @@ T.SpinBox {
         inputMethodHints: control.inputMethodHints
 
         Rectangle {
-            x: -6 - (control.down.indicator ? 1 : 0)
-            y: -6
-            width: control.width - (control.up.indicator ? control.up.indicator.width - 1 : 0) - (control.down.indicator ? control.down.indicator.width - 1 : 0)
-            height: control.height
+            width: parent.width
+            height: parent.height
             visible: control.activeFocus
             color: "transparent"
             border.color: control.palette.highlight

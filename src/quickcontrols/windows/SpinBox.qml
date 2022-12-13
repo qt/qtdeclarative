@@ -12,17 +12,14 @@ T.SpinBox {
                                     && down.indicator.hasOwnProperty("_qt_default")
     readonly property bool __notCustomizable: true
 
-    implicitWidth: Math.max(contentItem.implicitWidth + leftInset + rightInset,
-                            90 /* minimum */ )
-    implicitHeight: Math.max(contentItem.implicitHeight, up.implicitIndicatorHeight + down.implicitIndicatorHeight)
-                    + topInset + bottomInset
+    // Note: the indicators are inside the contentItem
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                            contentItem.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding,
+                             up.implicitIndicatorHeight + down.implicitIndicatorHeight)
 
     spacing: 2
-
-    leftPadding: 0
-    topPadding: 0
-    rightPadding: rightInset
-    bottomPadding: 0
 
     validator: IntValidator {
         locale: control.locale.name
@@ -38,15 +35,18 @@ T.SpinBox {
         selectedTextColor: control.palette.highlightedText
         horizontalAlignment: Qt.AlignLeft
         verticalAlignment: Qt.AlignVCenter
+        implicitWidth: Math.max(90 /* minimum */, contentWidth + leftPadding + rightPadding)
 
         topPadding: 0
         bottomPadding: 0
         leftPadding: 10
-        rightPadding: 10
+        rightPadding: up.indicator.width + 10
 
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+
+        clip: width < implicitWidth
 
         readonly property bool __ignoreNotCustomizable: true
 
