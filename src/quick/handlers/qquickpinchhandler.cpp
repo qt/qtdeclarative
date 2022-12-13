@@ -720,7 +720,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
                             << ", distance" << m_startDistance << "->" << dist
                             << ", scale" << m_scaleAxis.m_startValue << "->" << m_scaleAxis.m_accumulatedValue
                             << ", rotation" << m_rotationAxis.m_startValue << "->" << m_rotationAxis.m_accumulatedValue
-                            << ", translation" << translation() << " from " << event->device()->type();
+                            << ", translation" << persistentTranslation()
+                            << " from " << event->device()->type();
 
     emit updated();
 }
