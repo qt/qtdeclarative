@@ -490,10 +490,14 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
                                                      (pinchPos.y() - target->y()) * (expectedScale - 1) );
     QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
                                                Qt::BeginNativeGesture, pinchPos, pinchPos);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
     QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, touchpad,
                                                             Qt::ZoomNativeGesture, scale - 1, pinchPos, pinchPos);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
     QTRY_COMPARE(target->scale(), expectedScale);
     QCOMPARE(pinchHandler->active(), true);
+    qCDebug(lcPointerTests) << "centroid: local" << pinchHandler->centroid().position()
+                            << "scene" << pinchHandler->centroid().scenePosition();
     QCOMPARE(pinchHandler->centroid().position().toPoint(), pinchLocalPos.toPoint());
     QCOMPARE(pinchHandler->centroid().scenePosition().toPoint(), pinchPos.toPoint());
     QVERIFY(qAbs(target->position().x() - expectedPos.x()) < 0.001);
@@ -530,6 +534,8 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
                                                             Qt::ZoomNativeGesture, reverseScale - 1, pinchPos, pinchPos);
     QTRY_COMPARE(target->scale(), 1);
     QCOMPARE(pinchHandler->active(), true);
+    qCDebug(lcPointerTests) << "centroid: local" << pinchHandler->centroid().position()
+                            << "scene" << pinchHandler->centroid().scenePosition();
     QCOMPARE(pinchHandler->centroid().position().toPoint(), pinchLocalPos.toPoint());
     QCOMPARE(pinchHandler->centroid().scenePosition().toPoint(), pinchPos.toPoint());
     QCOMPARE(pinchHandler->persistentScale(), 1);

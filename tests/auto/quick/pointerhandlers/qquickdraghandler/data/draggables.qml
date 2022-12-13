@@ -29,7 +29,9 @@ Item {
                 color: "white"
                 anchors.centerIn: parent
                 horizontalAlignment: Text.AlignHCenter
-                text: ball.objectName + "\n" + dragHandler.centroid.position.x.toFixed(1) + "," + dragHandler.centroid.position.y.toFixed(1)
+                text: ball.objectName + "\n"
+                      + dragHandler.centroid.position.x.toFixed(1) + "," + dragHandler.centroid.position.y.toFixed(1) + "\n"
+                      + ball.x.toFixed(1) + "," + ball.y.toFixed(1)
             }
         }
     }

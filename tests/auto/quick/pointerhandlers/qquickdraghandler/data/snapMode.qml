@@ -9,6 +9,26 @@ Item {
     width: 640
     height: 480
 
+    Instantiator {
+        model: 3
+        // non-interfering, just for visual monitoring of points
+        delegate: PointHandler {
+            id: ph
+            required property int index
+            objectName: "ph" + index
+            parent: root
+
+            target: Rectangle {
+                parent: root
+                visible: ph.active
+                x: ph.point.position.x - width / 2
+                y: ph.point.position.y - height / 2
+                width: 10; height: width; radius: width / 2
+                color: Qt.rgba(1, 0.33 * ph.index, 1 - 0.3 * ph.index)
+            }
+        }
+    }
+
     Rectangle {
         id: rect1
         objectName: "rect1"

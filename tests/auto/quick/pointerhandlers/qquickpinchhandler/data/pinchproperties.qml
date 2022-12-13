@@ -73,6 +73,14 @@ Rectangle {
                 whiteRect.pinchScale = pincharea.scale
                 //whiteRect.pointCount = pincharea.pointCount
             }
-         }
-     }
- }
+        }
+    }
+
+    Rectangle {
+        color: "transparent"; border.color: "green"
+        width: 12; height: 12; radius: 6; border.width: 2
+        visible: pincharea.active
+        x: pincharea.centroid.scenePosition.x - radius
+        y: pincharea.centroid.scenePosition.y - radius
+    }
+}
