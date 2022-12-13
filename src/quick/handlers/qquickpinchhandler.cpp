@@ -159,8 +159,6 @@ void QQuickPinchHandler::setActiveScale(qreal scale)
     scale with a scale that was set in some other way, for example by another
     handler. If you set this property directly, \c activeScale does not change,
     and \c scaleChanged(1) is emitted.
-
-    \sa QtQuick::PinchHandler::scaleAxis.persistentValue
 */
 
 void QQuickPinchHandler::setPersistentScale(qreal rot)
@@ -258,8 +256,6 @@ void QQuickPinchHandler::setActiveRotation(qreal rot)
     While the pinch gesture is being performed, \l activeRotation is continuously
     added; after the gesture ends, it stays the same; and when the next
     pinch gesture begins, it begins to be modified by activeRotation again.
-
-    \sa QtQuick::PinchHandler::rotationAxis.persistentValue
 
     It's possible to set this property, as a way of synchronizing the basis
     rotation with a rotation that was set in some other way, for example by
@@ -370,7 +366,6 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \qmlproperty real QtQuick::PinchHandler::xAxis.maximum
     \qmlproperty bool QtQuick::PinchHandler::xAxis.enabled
     \qmlproperty real QtQuick::PinchHandler::xAxis.activeValue
-    \qmlproperty real QtQuick::PinchHandler::xAxis.persistentValue
 
     \c xAxis controls the constraints for horizontal translation of the \l target item.
 
@@ -378,8 +373,8 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \c maximum is the maximum acceptable x coordinate of the translation.
     If \c enabled is true, horizontal dragging is allowed.
 
-    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
-    \c persistentValue) changes, to provide the increment by which it changed.
+    The \c activeValueChanged signal is emitted when \c activeValue changes, to
+    provide the increment by which it changed.
     This is intended for incrementally adjusting one property via multiple handlers.
 
     \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0
@@ -396,7 +391,6 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \qmlproperty real QtQuick::PinchHandler::yAxis.maximum
     \qmlproperty bool QtQuick::PinchHandler::yAxis.enabled
     \qmlproperty real QtQuick::PinchHandler::yAxis.activeValue
-    \qmlproperty real QtQuick::PinchHandler::yAxis.persistentValue
 
     \c yAxis controls the constraints for vertical translation of the \l target item.
 
@@ -404,8 +398,8 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \c maximum is the maximum acceptable y coordinate of the translation.
     If \c enabled is true, vertical dragging is allowed.
 
-    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
-    \c persistentValue) changes, to provide the increment by which it changed.
+    The \c activeValueChanged signal is emitted when \c activeValue changes, to
+    provide the increment by which it changed.
     This is intended for incrementally adjusting one property via multiple handlers.
 
     \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0
@@ -422,7 +416,6 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \qmlproperty real QtQuick::PinchHandler::scaleAxis.maximum
     \qmlproperty bool QtQuick::PinchHandler::scaleAxis.enabled
     \qmlproperty real QtQuick::PinchHandler::scaleAxis.activeValue
-    \qmlproperty real QtQuick::PinchHandler::scaleAxis.persistentValue
 
     \c scaleAxis controls the constraints for setting the \l {QtQuick::Item::scale}{scale}
     of the \l target item according to the distance between the touchpoints.
@@ -431,10 +424,9 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \c maximum is the maximum acceptable scale.
     If \c enabled is true, scaling is allowed.
     \c activeValue is the same as \l {QtQuick::PinchHandler::activeScale}.
-    \c persistentValue is the same as \l {QtQuick::PinchHandler::persistentScale}.
 
-    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
-    \c persistentValue) changes, to provide the multiplier for the incremental change.
+    The \c activeValueChanged signal is emitted when \c activeValue changes, to
+    provide the multiplier for the incremental change.
     This is intended for incrementally adjusting one property via multiple handlers.
 
     \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0
@@ -451,7 +443,6 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \qmlproperty real QtQuick::PinchHandler::rotationAxis.maximum
     \qmlproperty bool QtQuick::PinchHandler::rotationAxis.enabled
     \qmlproperty real QtQuick::PinchHandler::rotationAxis.activeValue
-    \qmlproperty real QtQuick::PinchHandler::rotationAxis.persistentValue
 
     \c rotationAxis controls the constraints for setting the \l {QtQuick::Item::rotation}{rotation}
     of the \l target item according to the rotation of the group of touchpoints.
@@ -460,10 +451,9 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
     \c maximum is the maximum acceptable rotation.
     If \c enabled is true, rotation is allowed.
     \c activeValue is the same as \l {QtQuick::PinchHandler::activeRotation}.
-    \c persistentValue is the same as \l {QtQuick::PinchHandler::persistentRotation}.
 
-    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
-    \c persistentValue) changes, to provide the increment by which it changed.
+    The \c activeValueChanged signal is emitted when \c activeValue changes, to
+    provide the increment by which it changed.
     This is intended for incrementally adjusting one property via multiple handlers.
 
     \snippet pointerHandlers/pinchHandlerAxisValueDeltas.qml 0

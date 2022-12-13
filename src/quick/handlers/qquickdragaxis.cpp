@@ -59,7 +59,6 @@ void QQuickDragAxis::updateValue(qreal activeValue, qreal accumulatedValue, qrea
     qCDebug(lcDragAxis) << parent() << m_propertyName << "values: active" << activeValue
                         << "accumulated" << m_accumulatedValue << "delta" << delta;
     emit activeValueChanged(delta);
-    emit persistentValueChanged();
 }
 
 QT_END_NAMESPACE
