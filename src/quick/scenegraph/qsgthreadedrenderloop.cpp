@@ -149,17 +149,19 @@ public:
 class WMSyncEvent : public WMWindowEvent
 {
 public:
-    WMSyncEvent(QQuickWindow *c, bool inExpose, bool force)
+    WMSyncEvent(QQuickWindow *c, bool inExpose, bool force, const QRhiSwapChainProxyData &scProxyData)
         : WMWindowEvent(c, WM_RequestSync)
         , size(c->size())
         , dpr(float(c->effectiveDevicePixelRatio()))
         , syncInExpose(inExpose)
         , forceRenderPass(force)
+        , scProxyData(scProxyData)
     {}
     QSize size;
     float dpr;
     bool syncInExpose;
     bool forceRenderPass;
+    QRhiSwapChainProxyData scProxyData;
 };
 
 
@@ -315,6 +317,7 @@ public:
     QQuickWindow *window; // Will be 0 when window is not exposed
     QSize windowSize;
     float dpr = 1;
+    QRhiSwapChainProxyData scProxyData;
     int rhiSampleCount = 1;
     bool rhiDeviceLost = false;
     bool rhiDoomed = false;
@@ -353,6 +356,7 @@ bool QSGRenderThread::event(QEvent *e)
         window = se->window;
         windowSize = se->size;
         dpr = se->dpr;
+        scProxyData = se->scProxyData;
 
         pendingUpdate |= SyncRequest;
         if (se->syncInExpose) {
@@ -635,6 +639,7 @@ void QSGRenderThread::syncAndRender()
     // signals and want to do graphics stuff already there.
     const bool hasValidSwapChain = (cd->swapchain && windowSize.width() > 0 && windowSize.height() > 0);
     if (hasValidSwapChain) {
+        cd->swapchain->setProxyData(scProxyData);
         // always prefer what the surface tells us, not the QWindow
         const QSize effectiveOutputSize = cd->swapchain->surfacePixelSize();
         // An update request could still be delivered right before we get an
@@ -909,6 +914,7 @@ void QSGRenderThread::ensureRhi()
             cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
         }
         cd->swapchain->setWindow(window);
+        cd->swapchain->setProxyData(scProxyData);
         QSGRhiSupport::instance()->applySwapChainFormat(cd->swapchain);
         qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d. Alpha channel requested = %s.",
                 rhiSampleCount, alpha ? "yes" : "no");
@@ -1274,6 +1280,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
             QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
             if (!w->thread->offscreenSurface)
                 w->thread->offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
+            w->thread->scProxyData = QRhi::updateSwapChainProxyData(rhiSupport->rhiBackend(), window);
             window->installEventFilter(this);
         }
 
@@ -1578,10 +1585,13 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 
     emit window->afterAnimating();
 
+    const QRhiSwapChainProxyData scProxyData =
+            QRhi::updateSwapChainProxyData(QSGRhiSupport::instance()->rhiBackend(), window);
+
     qCDebug(QSG_LOG_RENDERLOOP, "- lock for sync");
     w->thread->mutex.lock();
     m_lockedForSync = true;
-    w->thread->postEvent(new WMSyncEvent(window, inExpose, w->forceRenderPass));
+    w->thread->postEvent(new WMSyncEvent(window, inExpose, w->forceRenderPass, scProxyData));
     w->forceRenderPass = false;
 
     qCDebug(QSG_LOG_RENDERLOOP, "- wait for sync");
