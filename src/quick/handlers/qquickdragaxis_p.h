@@ -31,7 +31,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragAxis : public QObject
     Q_PROPERTY(qreal maximum READ maximum WRITE setMaximum NOTIFY maximumChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(qreal activeValue READ activeValue NOTIFY activeValueChanged REVISION(6, 5))
-    Q_PROPERTY(qreal persistentValue READ persistentValue NOTIFY persistentValueChanged REVISION(6, 5))
     QML_NAMED_ELEMENT(DragAxis)
     QML_ADDED_IN_VERSION(2, 12)
     QML_UNCREATABLE("DragAxis is only available as a grouped property of DragHandler or PinchHandler.")
@@ -63,7 +62,6 @@ Q_SIGNALS:
     void maximumChanged();
     void enabledChanged();
     Q_REVISION(6, 5) void activeValueChanged(qreal delta);
-    Q_REVISION(6, 5) void persistentValueChanged();
 
 private:
     qreal m_minimum = std::numeric_limits<qreal>::lowest();

@@ -313,7 +313,6 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     \qmlproperty real QtQuick::DragHandler::xAxis.maximum
     \qmlproperty bool QtQuick::DragHandler::xAxis.enabled
     \qmlproperty real QtQuick::DragHandler::xAxis.activeValue
-    \qmlproperty real QtQuick::DragHandler::xAxis.persistentValue
 
     \c xAxis controls the constraints for horizontal dragging.
 
@@ -323,10 +322,9 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     applied to the \l {PointerHandler::target} {target}.
     If \c enabled is true, horizontal dragging is allowed.
     \c activeValue is the same as \l {QtQuick::DragHandler::activeTranslation}{activeTranslation.x}.
-    \c persistentValue is the same as \l {QtQuick::DragHandler::persistentTranslation}{persistentTranslation.x}.
 
-    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
-    \c persistentValue) changes, to provide the increment by which it changed.
+    The \c activeValueChanged signal is emitted when \c activeValue changes, to
+    provide the increment by which it changed.
     This is intended for incrementally adjusting one property via multiple handlers.
 */
 
@@ -336,7 +334,6 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     \qmlproperty real QtQuick::DragHandler::yAxis.maximum
     \qmlproperty bool QtQuick::DragHandler::yAxis.enabled
     \qmlproperty real QtQuick::DragHandler::yAxis.activeValue
-    \qmlproperty real QtQuick::DragHandler::yAxis.persistentValue
 
     \c yAxis controls the constraints for vertical dragging.
 
@@ -346,10 +343,9 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     applied to the \l {PointerHandler::target} {target}.
     If \c enabled is true, vertical dragging is allowed.
     \c activeValue is the same as \l {QtQuick::DragHandler::activeTranslation}{activeTranslation.y}.
-    \c persistentValue is the same as \l {QtQuick::DragHandler::persistentTranslation}{persistentTranslation.y}.
 
-    The \c activeValueChanged signal is emitted when \c activeValue (and therefore
-    \c persistentValue) changes, to provide the increment by which it changed.
+    The \c activeValueChanged signal is emitted when \c activeValue changes, to
+    provide the increment by which it changed.
     This is intended for incrementally adjusting one property via multiple handlers:
 
     \snippet pointerHandlers/rotateViaWheelOrDrag.qml 0
