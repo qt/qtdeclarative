@@ -1932,6 +1932,9 @@ void QQuickItemViewPrivate::layout()
         transitioner->resetTargetLists();
     }
 
+    if (!currentItem)
+        updateCurrent(currentIndex);
+
     runDelayedRemoveTransition = false;
     inLayout = false;
 }
