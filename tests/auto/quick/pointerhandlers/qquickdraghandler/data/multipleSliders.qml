@@ -10,6 +10,26 @@ Rectangle {
     objectName: "root"
     color: "#222222"
 
+    Instantiator {
+        model: 3
+        // non-interfering, just for visual monitoring of points
+        delegate: PointHandler {
+            id: ph
+            required property int index
+            objectName: "ph" + index
+            parent: root
+
+            target: Rectangle {
+                parent: root
+                visible: ph.active
+                x: ph.point.position.x - width / 2
+                y: ph.point.position.y - height / 2
+                width: 10; height: width; radius: width / 2
+                color: Qt.rgba(1, 0.33 * ph.index, 1 - 0.3 * ph.index)
+            }
+        }
+    }
+
     Grid {
         objectName: "grid"
         anchors.fill: parent

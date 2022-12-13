@@ -816,7 +816,7 @@ void tst_DragHandler::touchDragMultiSliders()
             expectedEndPosition = startPoints[sli].toPoint();
         qCDebug(lcPointerTests) << "slider " << knobs[sli]->objectName() << "started @" << startPoints[sli]
             << "tried to move by" << movements[sli] << "ended up @" << endPosition << "expected" << expectedEndPosition;
-        QTRY_COMPARE(endPosition, expectedEndPosition);
+        QCOMPARE(endPosition, expectedEndPosition);
     }
 
     // Release
