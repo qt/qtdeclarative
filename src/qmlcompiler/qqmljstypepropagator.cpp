@@ -1,6 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
+#include "qqmljsscope_p.h"
 #include "qqmljstypepropagator_p.h"
 
 #include "qqmljsutils_p.h"
@@ -1831,11 +1832,19 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
                         m_typeResolver->jsPrimitiveType());
             addReadRegister(lhs, primitive);
             addReadAccumulator(primitive);
+            return;
         }
     }
 
+    // null, void vs variant and vice versa
+    if (canCompareWithVar(m_typeResolver, lhsRegister, accumulatorIn)) {
+        addReadRegister(lhs, lhsRegister);
+        addReadAccumulator(accumulatorIn);
+        return;
+    }
+
     // Otherwise they're both casted to QJSValue.
-    // TODO: We can add more specializations here: void/void null/null object/null etc
+    // TODO: We can add more specializations here: object/null etc
 
     const QQmlJSRegisterContent jsval = m_typeResolver->globalType(m_typeResolver->jsValueType());
     addReadRegister(lhs, jsval);

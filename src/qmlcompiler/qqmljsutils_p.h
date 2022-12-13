@@ -17,6 +17,7 @@
 #include <private/qtqmlcompilerexports_p.h>
 
 #include "qqmljslogger_p.h"
+#include "qqmljsregistercontent_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsmetatypes_p.h"
 
@@ -365,6 +366,10 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     static std::variant<QString, QQmlJS::DiagnosticMessage>
     sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath);
 };
+
+bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithVar(const QQmlJSTypeResolver *typeResolver,
+                                                    const QQmlJSRegisterContent &lhsContent,
+                                                    const QQmlJSRegisterContent &rhsContent);
 
 QT_END_NAMESPACE
 
