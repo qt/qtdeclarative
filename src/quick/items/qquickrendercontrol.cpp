@@ -509,7 +509,7 @@ void QQuickRenderControlPrivate::maybeUpdate()
   Reimplemented in subclasses to return the real window this render control
   is rendering into.
 
-  If \a offset in non-null, it is set to the offset of the control
+  If \a offset is non-null, it is set to the offset of the control
   inside the window.
 
   \note While not mandatory, reimplementing this function becomes essential for
@@ -521,7 +521,7 @@ void QQuickRenderControlPrivate::maybeUpdate()
 /*!
   Returns the real window that \a win is being rendered to, if any.
 
-  If \a offset in non-null, it is set to the offset of the rendering
+  If \a offset is non-null, it is set to the offset of the rendering
   inside its window.
 
  */
