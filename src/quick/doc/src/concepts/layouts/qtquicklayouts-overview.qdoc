@@ -6,95 +6,182 @@
     \title Qt Quick Layouts Overview
     \brief A set of APIs for arranging QML items in a user interface.
 
-    Qt Quick Layouts are items that are used to arrange items in a user interface. Since Qt Quick
-    Layouts also resize their items, they are well suited for resizable user interfaces.
+    Use Qt Quick Layouts to arrange items in a user interface. Qt Quick Layouts
+    resize their items, which makes them well suited for resizable user
+    interfaces.
 
-    \section1 Getting Started
+    \section1 Key features
 
-    The QML types can be imported into your application using the following import statement in your \c {.qml} file.
+    Some of the key features of Qt Quick Layouts are:
+
+    \list
+        \li \l{Layout::alignment}{Align} items with the
+            \l{Layout::alignment}{Layout.alignment} property.
+        \li Specify \l{Layout::fillWidth}{resizable items} with the
+            \l{Layout::fillWidth}{Layout.fillWidth} and
+            \l{Layout::fillHeight}{Layout.fillHeight} properties.
+        \li Set \l{Size constraints}{size constraints} with the
+            \l{Layout::minimumWidth}{Layout.minimumWidth},
+            \l{Layout::preferredWidth}{Layout.preferredWidth}, and
+            \l{Layout::maximumWidth}{Layout.maximumWidth} properties -- "Width"
+            can be replaced with "Height" for specifying similar constraints to
+            the height.
+        \li You can specify \l {RowLayout::spacing}{spacing} with
+            \l{RowLayout::spacing}{spacing},
+            \l{GridLayout::rowSpacing}{rowSpacing},
+            or \l{GridLayout::columnSpacing}{columnSpacing}.
+        \li Stretch items both horizontally and vertically with
+            \l{Layout::horizontalStretchFactor}{stretch factors}.
+    \endlist
+
+    In addition, GridLayout adds these features:
+    \list
+        \li \l{Layout::row}{Grid coordinates}, controlled by the
+            \l{Layout::row}{Layout.row} and \l{Layout::column}{Layout.column}
+            properties.
+        \li \l{GridLayout::flow}{Automatic grid coordinates} used together with
+            the \l{GridLayout::flow}{flow}, \l{GridLayout::rows}{rows}, and
+            \l{GridLayout::columns}{columns} properties.
+        \li \l{Layout::columnSpan}{Spans} across rows or columns, that you can
+            specify with the \l{Layout::rowSpan}{Layout.rowSpan} and
+            \l{Layout::columnSpan}{Layout.columnSpan} properties.
+    \endlist
+
+    \section1 Getting started
+
+    To get started using Qt Quick Layouts, import the QML types into your
+    application with the following import statement in your \c {.qml} file:
 
     \qml
     import QtQuick.Layouts
     \endqml
 
-    \section1 Key Features
+    The next step is to create a \l {A simple layout}{simple layout}. You can
+    also study the \l {Qt Quick Layouts - Basic Example}.
 
+    \section2 A simple layout
 
-    Some of the key features are:
-
-    \list
-        \li \l{Layout::alignment}{Alignment} of items can be specified with the
-            \l{Layout::alignment}{Layout.alignment} property
-        \li \l{Layout::fillWidth}{Resizable items} can be specified with the
-            \l{Layout::fillWidth}{Layout.fillWidth} and \l{Layout::fillHeight}{Layout.fillHeight}
-            properties.
-        \li \l{Size constraints} can be specified with
-            \l{Layout::minimumWidth}{Layout.minimumWidth},
-            \l{Layout::preferredWidth}{Layout.preferredWidth}, and
-            \l{Layout::maximumWidth}{Layout.maximumWidth}  properties ("Width" can be replaced
-            with "Height" for specifying similar constraints to the height).
-        \li \l{RowLayout::spacing}{Spacings} can be specified with \l{RowLayout::spacing}{spacing},
-            \l{GridLayout::rowSpacing}{rowSpacing} or \l{GridLayout::columnSpacing}{columnSpacing}
-    \endlist
-
-    In addition to the above features, GridLayout adds these features:
-    \list
-        \li \l{Layout::row}{Grid coordinates} can be specified with the \l{Layout::row}{Layout.row} and
-            \l{Layout::column}{Layout.column} properties.
-        \li \l{GridLayout::flow}{Automatic grid coordinates} used together with the
-            \l{GridLayout::flow}{flow}, \l{GridLayout::rows}{rows}, and
-            \l{GridLayout::columns}{columns} properties.
-        \li \l{Layout::columnSpan}{Spans} across rows or columns can be specified with the
-            \l{Layout::rowSpan}{Layout.rowSpan} and \l{Layout::columnSpan}{Layout.columnSpan}
-            properties.
-    \endlist
-
-
-    \section1 A Simple Layout
+    The intention of using a layout is to rearrange its children whenever the
+    layout changes size. This means the application must ensure that the layout
+    gets resized. In the following snippet, the \e RowLayout ensures that by
+    specifying \c{anchors.fill: parent}. However, you can also achieve this by
+    other means, such as specifying the \l{Item::width}{width} and
+    \l{Item::height}{height} properties. In the same snippet, the \e {orange
+    Rectangle} has a fixed size of \e 100 by \e 150 pixels, and the \e {plum
+    Rectangle} will expand to occupy all the space it gets allocated.
 
     \snippet qml/layout-simple.qml 1
+    \target simple-layout-snippet
 
-    As the intention of using a layout is to rearrange its children whenever the layout changes
-    size, the application should make sure that the layout gets resized. In the above snippet the
-    RowLayout ensures that by specifying \c{anchors.fill: parent}. However, it can also be by other
-    means, such as directly specifying \l{Item::width}{width} and \l{Item::height}{height}
-    properties. In the same snippet, the \c azure Rectangle has a fixed size of \c{(100, 150)}
-    pixels, and the \c plum Rectangle will expand to occupy all the space it gets allocated.
+    Layouts are responsible for their children's geometry.
+    This includes properties such as \l{Item::width}{width},
+    \l{Item::height}{height}, \l{Item::x}{x}, \l{Item::y}{y},
+    \l{Item::anchors}{anchors}), etc.
 
-    \note A layout is responsible for its children's geometry. You should
-    therefore not specify \l{Item::width}{width}, \l{Item::height}{height}, \l{Item::x}{x},
-    \l{Item::y}{y} or any other properties that might influence those properties (such as
-    \l{Item::anchors}{anchors}) on those items. Otherwise there would be a conflict of interest,
-    and the result is undefined. This is also the case if the child item is a layout. Therefore,
-    only layouts with no parent layout can have \c{anchors.fill: parent}.
+    \important Don't specify properties that influence the geometry of child
+    items in your application. Setting these properties on a child item causes
+    a conflict of interest, and the result is undefined. This also applies when
+    the child item is a layout. Therefore, only layouts with no parent layout
+    can have \c{anchors.fill: parent}.
 
-    All items in the layout will have 6 pixels of spacing between them:
+    \section3 Spacing
+    As seen in the \l {simple-layout-snippet}{previous snippet}, the \e spacing
+    for the \e RowLayout is set to \e 6. This ensures that all items in the
+    layout have 6 pixels of spacing between them:
 
     \snippet qml/layout-simple.qml spacing
 
+    If you omit specifying a spacing value, the layout will use a default of
+    \e 5 pixels. The spacing, as well as the \e implicitWidth of any children,
+    contributes to the \e implicitWidth of the layout. This is important to
+    keep in mind if you rely on default behavior, as it may impact your layout
+    design. For example, the two \e {ColumnLayout}s both set
+    \e {Layout.fillWidth: true} in the following snippet. It's natural to think
+    that they would both get the same width. However, because of the default 5
+    pixel spacing between the items in the inner \e RowLayout, the
+    \e implicitWidth of the first \e ColumnLayout becomes larger, leaving less
+    room for the second one. For example:
 
-    \section2 Size Constraints
+    \snippet qml/layout_with_default_spacing.qml layout-with-default-spacing
+
+    This snippet will produce a layout that looks like this:
+
+    \image layout-with-default-spacing.png "A QML layout with default spacing"
+
+    To ensure equal size of these two columns, you can either
+    \list a
+        \li set the spacing of the \e RowLayout to \c 0, or
+        \li set \e preferredWidth to equal values on both \e {ColumnLayout}s.
+    \endlist
+
+    \section2 Specifying preferred size
+    For each item, the effective preferred size may come from one of several
+    candidate properties. For determining the effective preferred size, an item
+    queries these candidate properties in the following order, and will use the
+    first candidate with a valid width or height.
+
+    \table
+    \header
+        \li Candidate properties
+        \li Description
+    \row
+        \li \l{Layout::preferredWidth}{Layout.preferredWidth} or
+            \l{Layout::preferredHeight}{Layout.preferredHeight}
+        \li These properties are supposed to be modified by the application if
+            the default implicit size does not give the optimal arrangement.
+    \row
+        \li \l{Item::implicitWidth}{implicitWidth} or
+            \l{Item::implicitHeight}{implicitHeight}.
+        \li These properties are supposed to be supplied by each item to give a
+            meaningful ideal size. For example, the size needed to display all
+            the contents of a \l Text type. An implicit width or height of \c 0
+            is interpreted as invalid.
+    \endtable
+
+    An item can specify \l{Layout::preferredWidth}{Layout.preferredWidth}
+    without having to specify
+    \l{Layout::preferredHeight}{Layout.preferredHeight}. In such cases, the
+    effective preferred height is determined from the
+    \l{Item::implicitHeight}{implicitHeight}.
+
+    \note If you don't specify neither preferredWidth nor implicitWidth,
+    the Layout will query \l width as an ultimate value for the effective
+    preferred width. However, you shouldn't rely on \l width as a source for
+    the effective preferred width, as that may cause unexpected behavior.
+    For instance, changing the \l{Item::width}{width} or
+    \l{Item::height}{height} properties won't trigger a layout rearrangement,
+    or the layout might use the actual width and height -- not the width and
+    height specified in your QML file -- when forced to do a full rebuild.
+
+    \section2 Size constraints
 
     Since an item can be resized by its layout, the layout needs to know the
     \l{Layout::minimumWidth}{minimum}, \l{Layout::preferredWidth}{preferred},
-    and \l{Layout::maximumWidth}{maximum} sizes of all items where \l{Layout::fillWidth}{Layout.fillWidth} or
-    \l{Layout::fillHeight}{Layout.fillHeight} is set to \c true.
+    and \l{Layout::maximumWidth}{maximum} sizes of all items where
+    \l{Layout::fillWidth}{Layout.fillWidth} or
+    \l{Layout::fillHeight}{Layout.fillHeight} is set to \e true.
 
-    The \l{Layout::preferredWidth}{preferred} width and height is the \e actual width and
-    height of an item if the layout is not bound to a specific size itself. If the layout is set
-    to a specific size, it will distribute additional space based on the ratio of preferred sizes
-    of its items (taking minimum and maximum sizes into account).
+    The \l{Layout::preferredWidth}{preferred} width and height is the \e actual
+    width and height of an item, if the layout is not bound to a specific size
+    itself. If the layout is set to a specific size, it distributes additional
+    space based on the ratio of preferred sizes of its items, while taking
+    minimum and maximum sizes into account. The preferred and implicit sizes
+    act as ratios and weights when all items set \e fillWidth and
+    \e fillHeight.
 
-    For instance, the following will produce a layout with two rectangles lying side-by-side that
-    stretches horizontally. The azure rectangle can be resized from 50x150 to 300x150, and the plum
-    rectangle can be resized from 100x100 to ∞x100. As long as the minimum and maximum width of each
-    item is not reached, the plum rectangle will have two times the width of the azure one.
+    For instance, the following produces a layout with two rectangles lying
+    side-by-side that stretches horizontally. The \e {orange Rectangle} can be
+    resized from 50x150 to 300x150, and the \e {plum Rectangle} can be resized
+    from 100x100 to ∞x100. As long as the minimum and maximum width of each
+    item isn't exceeded, the plum rectangle will have twice the width of the
+    orange one.
 
     \snippet qml/windowconstraints.qml rowlayout
 
     \image rowlayout-minimum.png "RowLayout at its minimum"
 
-    Combining each item's constraints will give these implicit constraints to the layout element:
+    Combining each item's constraints gives these implicit constraints to the
+    layout element:
 
     \table
     \header
@@ -114,69 +201,56 @@
         \li 150
     \endtable
 
-    Thus, the layout cannot be narrower than 156 or be taller or shorter than 150 without breaking
-    any of the constraints of its child items.
+    Thus, the layout cannot be narrower than 156, nor can it be taller or
+    shorter than 150, without breaking any of the constraints of its child items.
 
-    \section2 Specifying Preferred Size
-    For each item, the effective preferred size may come from one of several candidate properties.
-    For determining the effective preferred size, it will query these candidate properties in the
-    following order, and use the first candidate with a valid width or height.
-
-    \table
-    \header
-        \li Candidate properties
-        \li Description
-    \row
-        \li \l{Layout::preferredWidth}{Layout.preferredWidth} or
-            \l{Layout::preferredHeight}{Layout.preferredHeight}
-        \li These properties are supposed to be modified by the application if the default implicit
-            size does not give the optimal arrangement.
-    \row
-        \li \l{Item::implicitWidth}{implicitWidth} or \l{Item::implicitHeight}{implicitHeight}
-        \li These properties are supposed to be supplied by each item to give a meaningful ideal size,
-            for example the size needed to display all the contents of a \l Text type.
-            An implicit width or height of \c 0 is interpreted as invalid.
-    \row
-        \li \l{Item::width}{width} and \l{Item::height}{height}
-        \li If none of the above properties are valid, the layout will resort to the
-            \l{Item::width}{width} and \l{Item::height}{height} properties.
-    \endtable
-
-    An item can specify \l{Layout::preferredWidth}{Layout.preferredWidth} without having to specify
-    \l{Layout::preferredHeight}{Layout.preferredHeight}. In this case, the effective preferred
-    height will be determined from the \l{Item::implicitHeight}{implicitHeight} (or ultimately
-    \l{Item::height}{height}).
-
-    \note Resorting to \l{Item::width}{width} or \l{Item::height}{height} properties is only
-    provided as a final fallback. If you want to override the preferred size, it is recommended to
-    use \l{Layout::preferredWidth}{Layout.preferredWidth} or
-    \l{Layout::preferredHeight}{Layout.preferredHeight}. Relying on the \l{Item::width}{width} or
-    \l{Item::height}{height} properties for specifying the preferred size might give some
-    unexpected behavior. For instance, changing the \l{Item::width}{width} or
-    \l{Item::height}{height} properties won't trigger a layout rearrangement. Also, when the layout
-    is forced to do a full rebuild it might use the actual width and height, and not the width and
-    height specified in the QML file.
-
-
-    \section1 Connecting Windows and Layouts
-    You can just use normal anchoring concepts to ensure that the layout will follow the window
-    resizing.
+    \section1 Connecting windows and layouts
+    You can use normal anchoring concepts to ensure that your layout follows
+    the window resizing.
 
     \snippet qml/windowconstraints.qml anchoring
 
-    The size constraints of layouts can be used to ensure that the window cannot be resized beyond
-    the layout constraints. You can take the size constraints from the layout and set these
-    constraints on the minimumWidth, minimumHeight, maximumWidth, and maximumHeight of the Window
-    element. The following code ensures that the window cannot be resized beyond the constraints of
-    the layout:
+    You can rely on the size constraints of layouts to ensure that the window
+    cannot be resized beyond the layout constraints. You can take the size
+    constraints from the layout and set these constraints on the \e minimumWidth,
+    \e minimumHeight, \e maximumWidth, and \e maximumHeight of the
+    \l [Qml]{Window} element. The following code ensures that the window cannot
+    be resized beyond the constraints of the layout:
 
     \snippet qml/windowconstraints.qml bindconstraints
 
-    \note Since layout.Layout.maximumWidth is infinite in this case, we cannot bind that to the
-    maximumWidth property of Window, since that is an integer number. We therefore set a fixed
-    maximum width to 1000.
+    \note Because \e {layout.Layout.maximumWidth} is infinite in this case, we
+    cannot bind that to the \e maximumWidth property of Window, as that is an
+    integer number. Therefore, the maximum width is set to a fixed value of
+    \c 1000.
 
-    Finally, you usually want the initial size of the window to be the layout's implicit size:
+    Finally, set the initial size of the window to be the layout's implicit
+    size:
 
     \snippet qml/windowconstraints.qml binddefaultsize
+
+    \section1 Spanning and stretching Items
+
+    Use \l {Layout::columnSpan}{spans} in a GridLayout to make child items
+    occupy more than one cell. For example, you may have a GridLayout with six
+    cells across two rows. The top row contains the \e {Item}s item1, item2,
+    and item3. The bottom row contains the \e Item item4, which specifies
+    \e {columnSpan: 3} and \e {alignment: Qt.AlignHCenter}. This places item4
+    in the middle of the three cells that make up the bottom row. The following
+    snippet serves as an example:
+
+    \snippet qml/gridlayout_with_span.qml gridlayout-with-span
+
+    The size of rows and columns are given implicitly by their contents.
+    For example, a Button may impact the width of the column it's in, or the
+    height of the row it's in. This means GridLayout doesn't have uniform
+    distribution. Because of this, you can't use a span to stretch a layout.
+    To manipulate the stretch of an item or layout, use
+    \l {Layout::horizontalStretchFactor}{stretchFactor}s and/or size hints
+    instead.
+
+    \note When setting implicit or preferred sizes, don't bind the respective
+    properties to the width or height of the layout itself or items it depends
+    on for its size calculations, as this can cause cyclic dependencies that
+    are hard to track down.
 */
