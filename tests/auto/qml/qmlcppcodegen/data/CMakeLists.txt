@@ -18,6 +18,7 @@ set(cpp_sources
     state.h
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
+    wrapwithvariant.h
     withlength.h
 )
 
@@ -189,6 +190,7 @@ set(qml_files
     valueTypeLists.qml
     valueTypeProperty.qml
     variantlist.qml
+    equalityVarAndNonStorable.qml
     versionmismatch.qml
     voidfunction.qml
 )

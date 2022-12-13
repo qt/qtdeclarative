@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljscodegenerator_p.h"
+#include "qqmljsmetatypes_p.h"
+#include "qqmljsregistercontent_p.h"
+#include "qqmljsscope_p.h"
+#include "qqmljsutils_p.h"
 
 #include <private/qqmljstypepropagator_p.h>
 
@@ -875,6 +879,60 @@ void QQmlJSCodeGenerator::generateOutputVariantConversion(const QQmlJSScope::Con
     // If we could store the type directly, we would not wrap it in a QVariant.
     // Therefore, our best bet here is metaTypeFromName().
     m_body += changedRegisterVariable() + u".convert("_s + metaTypeFromName(target) + u");\n"_s;
+}
+
+void QQmlJSCodeGenerator::generateVariantEqualityComparison(
+        const QQmlJSRegisterContent &nonStorableContent, const QString &registerName, bool invert)
+{
+    const auto nonStorableType = m_typeResolver->containedType(nonStorableContent);
+    QQmlJSScope::ConstPtr comparedType =
+            m_typeResolver->equals(nonStorableType, m_typeResolver->nullType())
+            ? m_typeResolver->nullType()
+            : m_typeResolver->voidType();
+
+    // The common operations for both nulltype and voidtype
+    m_body += u"if ("_s + registerName
+            + u".metaType() == QMetaType::fromType<QJSPrimitiveValue>()) {\n"_s
+            + m_state.accumulatorVariableOut + u" = "_s
+            + conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
+                         u"static_cast<const QJSPrimitiveValue *>("_s + registerName
+                                 + u".constData())"_s + u"->type() "_s
+                                 + (invert ? u"!="_s : u"=="_s)
+                                 + (m_typeResolver->equals(comparedType, m_typeResolver->nullType())
+                                            ? u"QJSPrimitiveValue::Null"_s
+                                            : u"QJSPrimitiveValue::Undefined"_s))
+            + u";\n} else if ("_s + registerName
+            + u".metaType() == QMetaType::fromType<QJSValue>()) {\n"_s
+            + m_state.accumulatorVariableOut + u" = "_s
+            + conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
+                         (invert ? u"!"_s : QString()) + u"static_cast<const QJSValue *>("_s
+                                 + registerName + u".constData())"_s + u"->"_s
+                                 + (m_typeResolver->equals(comparedType, m_typeResolver->nullType())
+                                            ? u"isNull()"_s
+                                            : u"isUndefined()"_s))
+            + u";\n}"_s;
+
+    // Generate nullType specific operations (the case when variant contains QObject * or
+    // std::nullptr_t)
+    if (m_typeResolver->equals(nonStorableType, m_typeResolver->nullType())) {
+        m_body += u"else if ("_s + registerName
+                + u".metaType().flags().testFlag(QMetaType::PointerToQObject)) {\n"_s
+                + m_state.accumulatorVariableOut + u" = "_s
+                + conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
+                             u"*static_cast<QObject *const *>("_s + registerName
+                                     + u".constData())"_s + (invert ? u"!="_s : u"=="_s)
+                                     + u" nullptr"_s)
+                + u";\n} else if ("_s + registerName
+                + u".metaType() == QMetaType::fromType<std::nullptr_t>()) {\n"_s
+                + m_state.accumulatorVariableOut + u" = "_s + (invert ? u"false"_s : u"true"_s)
+                + u";\n}\n"_s;
+    }
+
+    // fallback case (if variant contains a different type, then it is not null or undefined)
+    m_body += u"else {\n"_s + m_state.accumulatorVariableOut + u" = "_s
+            + (invert ? (registerName + u".isValid() ? true : false"_s)
+                      : (registerName + u".isValid() ? false : true"_s))
+            + u";}\n"_s;
 }
 
 void QQmlJSCodeGenerator::rejectIfNonQObjectOut(const QString &error)
@@ -2546,6 +2604,8 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             return true;
         if (m_typeResolver->isNumeric(m_state.accumulatorIn()) && lhsContent.isEnumeration())
             return true;
+        if (canCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn()))
+            return true;
         return false;
     };
 
@@ -2557,10 +2617,9 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
     const QQmlJSScope::ConstPtr lhsType = lhsContent.storedType();
     const QQmlJSScope::ConstPtr rhsType = m_state.accumulatorIn().storedType();
 
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-
     const auto primitive = m_typeResolver->jsPrimitiveType();
     if (m_typeResolver->equals(lhsType, rhsType) && !m_typeResolver->equals(lhsType, primitive)) {
+        m_body += m_state.accumulatorVariableOut + u" = "_s;
         if (isTypeStorable(m_typeResolver, lhsType)) {
             m_body += conversion(m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
                                  consumedRegisterVariable(lhs) + (invert ? u" != "_s : u" == "_s)
@@ -2573,7 +2632,19 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             // null === null and  undefined === undefined
             m_body += invert ? u"false"_s : u"true"_s;
         }
+    } else if (canCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn())) {
+        // Determine which side is holding a storable type
+        if (const auto registerVariableName = registerVariable(lhs);
+            !registerVariableName.isEmpty()) {
+            // lhs register holds var type
+            generateVariantEqualityComparison(m_state.accumulatorIn(), registerVariableName,
+                                              invert);
+        } else {
+            // lhs content is not storable and rhs is var type
+            generateVariantEqualityComparison(lhsContent, m_state.accumulatorVariableIn, invert);
+        }
     } else {
+        m_body += m_state.accumulatorVariableOut + u" = "_s;
         m_body += conversion(
                     m_typeResolver->boolType(), m_state.accumulatorOut().storedType(),
                     (invert ? u"!"_s : QString())

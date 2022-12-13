@@ -158,6 +158,7 @@ private slots:
     void storeElementSideEffects();
     void numbersInJsPrimitive();
     void infinitiesToInt();
+    void equalityVarAndNonStorable();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3043,6 +3044,27 @@ void tst_QmlCppCodegen::infinitiesToInt()
         QVERIFY(ok);
     }
 }
+
+void tst_QmlCppCodegen::equalityVarAndNonStorable()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c1(&engine, QUrl(u"qrc:/qt/qml/TestTypes/equalityVarAndNonStorable.qml"_s));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> object(c1.create());
+    QVERIFY(!object.isNull() && !c1.isError());
+    QVERIFY(!object->property("aIsNull").toBool());
+    QVERIFY(object->property("aIsNotNull").toBool());
+    QVERIFY(object->property("aIsNotUndefined").toBool());
+    QVERIFY(object->property("objectIsNotNull").toBool());
+    QVERIFY(!object->property("typedArrayIsNull").toBool());
+    QVERIFY(object->property("isUndefined").toBool());
+    QVERIFY(!object->property("derivedIsNull").toBool());
+    QVERIFY(object->property("jsValueIsNull").toBool());
+    QVERIFY(object->property("jsValueIsDefined").toBool());
+    QVERIFY(object->property("jsValueIsUndefined").toBool());
+};
 
 QTEST_MAIN(tst_QmlCppCodegen)
 

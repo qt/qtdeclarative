@@ -7,6 +7,8 @@
 
 #include <algorithm>
 
+QT_BEGIN_NAMESPACE
+
 using namespace Qt::StringLiterals;
 
 /*! \internal
@@ -194,3 +196,30 @@ QQmlJSUtils::sourceDirectoryPath(const QQmlJSImporter *importer, const QString &
     }
     return sourceDirPaths[0];
 }
+
+/*! \internal
+
+    Utility method that checks if one of the registers is var, and the other can be
+    efficiently compared to it
+*/
+bool canCompareWithVar(const QQmlJSTypeResolver *typeResolver,
+                       const QQmlJSRegisterContent &lhsContent,
+                       const QQmlJSRegisterContent &rhsContent)
+{
+    Q_ASSERT(typeResolver);
+    const auto varType = typeResolver->varType();
+    const auto nullType = typeResolver->nullType();
+    const auto voidType = typeResolver->voidType();
+
+    // Use containedType() because nullptr is not a stored type.
+    const auto lhsType = typeResolver->containedType(lhsContent);
+    const auto rhsType = typeResolver->containedType(rhsContent);
+
+    return (typeResolver->equals(lhsType, varType)
+            && (typeResolver->equals(rhsType, nullType) || typeResolver->equals(rhsType, voidType)))
+            || (typeResolver->equals(rhsType, varType)
+                && (typeResolver->equals(lhsType, nullType)
+                    || typeResolver->equals(lhsType, voidType)));
+}
+
+QT_END_NAMESPACE

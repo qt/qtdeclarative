@@ -263,6 +263,8 @@ private:
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
     void generateOutputVariantConversion(const QQmlJSScope::ConstPtr &containedType);
+    void generateVariantEqualityComparison(const QQmlJSRegisterContent &nonStorable,
+                                           const QString &registerName, bool invert);
     void rejectIfNonQObjectOut(const QString &error);
 
     QString eqIntExpression(int lhsConst);
