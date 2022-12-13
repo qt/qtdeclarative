@@ -25,7 +25,7 @@ Window {
     //! [anchoring]
         spacing: 6
         Rectangle {
-            color: 'azure'
+            color: 'orange'
             Layout.fillWidth: true
             Layout.minimumWidth: 50
             Layout.preferredWidth: 100
