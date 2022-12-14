@@ -345,17 +345,15 @@ QSharedPointer<QQuickItemGrabResult> QQuickItem::grabToImage(const QSize &target
  *
  * If the grab could not be initiated, the function returns \c false.
  *
- * The following snippet shows how to grab an item and store the results to
- * a file.
+ * The following snippet shows how to grab an item and store the results in
+ * a file:
  *
- * \snippet qml/itemGrab.qml grab-source
- * \snippet qml/itemGrab.qml grab-to-file
+ * \snippet qml/item/itemGrab.qml grab-to-file
  *
  * The following snippet shows how to grab an item and use the results in
- * another image element.
+ * another image element:
  *
- * \snippet qml/itemGrab.qml grab-image-target
- * \snippet qml/itemGrab.qml grab-to-cache
+ * \snippet qml/item/itemGrab.qml grab-to-image
  *
  * \note This function will render the item to an offscreen surface and
  * copy that surface from the GPU's memory into the CPU's memory, which can
