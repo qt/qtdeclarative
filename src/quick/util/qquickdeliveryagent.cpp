@@ -1371,6 +1371,11 @@ bool QQuickDeliveryAgentPrivate::isMouseEvent(const QPointerEvent *ev)
     }
 }
 
+bool QQuickDeliveryAgentPrivate::isMouseOrWheelEvent(const QPointerEvent *ev)
+{
+    return isMouseEvent(ev) || ev->type() == QEvent::Wheel;
+}
+
 bool QQuickDeliveryAgentPrivate::isHoverEvent(const QPointerEvent *ev)
 {
     switch (ev->type()) {
