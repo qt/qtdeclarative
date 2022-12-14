@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 qtHaveModule(qmltest): SUBDIRS += qmltest
 SUBDIRS += qml
-qtHaveModule(quick): SUBDIRS += quick quickcontrols2
+qtHaveModule(quick): SUBDIRS += quick quickcontrols
 
