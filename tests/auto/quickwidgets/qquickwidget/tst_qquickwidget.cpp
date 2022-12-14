@@ -11,6 +11,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
@@ -125,6 +126,8 @@ private slots:
     void synthMouseFromTouch_data();
     void synthMouseFromTouch();
     void touchTapMouseArea();
+    void touchTapButton();
+    void touchMultipleWidgets();
     void tabKey();
     void resizeOverlay();
     void controls();
@@ -648,6 +651,71 @@ void tst_qquickwidget::touchTapMouseArea()
     QTest::touchEvent(&window, device).release(0, p1, &window);
     QTRY_COMPARE(ma->pressed(), false);
     QVERIFY(rootItem->property("wasClicked").toBool());
+}
+
+void tst_qquickwidget::touchTapButton()
+{
+    QWidget window;
+    QQuickWidget *quick = new QQuickWidget;
+    quick->setSource(testFileUrl("button.qml"));
+
+    QHBoxLayout hbox;
+    hbox.addWidget(quick);
+    window.setLayout(&hbox);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickItem *rootItem = quick->rootObject();
+    QVERIFY(rootItem);
+    QQuickButton *button = rootItem->findChild<QQuickButton *>("button");
+    QVERIFY(button);
+
+    const QPoint point = quick->mapTo(&window, button->mapToScene(button->boundingRect().center()).toPoint());
+    QTest::touchEvent(&window, device).press(0, point, &window).commit();
+    QTRY_VERIFY(rootItem->property("wasPressed").toBool());
+    QTest::touchEvent(&window, device).release(0, point, &window).commit();
+    QTRY_VERIFY(rootItem->property("wasReleased").toBool());
+    QTRY_VERIFY(rootItem->property("wasClicked").toBool());
+}
+
+void tst_qquickwidget::touchMultipleWidgets()
+{
+    QWidget window;
+    QQuickWidget *leftQuick = new QQuickWidget;
+    leftQuick->setSource(testFileUrl("button.qml"));
+    QQuickWidget *rightQuick = new QQuickWidget;
+    rightQuick->setSource(testFileUrl("button.qml"));
+
+    QHBoxLayout hbox;
+    hbox.addWidget(leftQuick);
+    hbox.addWidget(rightQuick);
+    window.setLayout(&hbox);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickItem *leftRootItem = leftQuick->rootObject();
+    QQuickItem *rightRootItem = rightQuick->rootObject();
+    QVERIFY(leftRootItem);
+    QVERIFY(rightRootItem);
+    QQuickButton *leftButton = leftRootItem->findChild<QQuickButton *>("button");
+    QQuickButton *rightButton = rightRootItem->findChild<QQuickButton *>("button");
+    QVERIFY(leftButton);
+    QVERIFY(rightButton);
+
+    const QPoint leftPoint = leftQuick->mapTo(&window, leftButton->mapToScene(
+                                              leftButton->boundingRect().center()).toPoint());
+    const QPoint rightPoint = rightQuick->mapTo(&window, rightButton->mapToScene(
+                                                rightButton->boundingRect().center()).toPoint());
+    QTest::touchEvent(&window, device).press(0, leftPoint, &window).commit();
+    QTRY_VERIFY(leftRootItem->property("wasPressed").toBool());
+    QTest::touchEvent(&window, device).press(1, rightPoint, &window).commit();
+    QTRY_VERIFY(rightRootItem->property("wasPressed").toBool());
+    QTest::touchEvent(&window, device).release(1, rightPoint, &window).commit();
+    QTRY_VERIFY(rightRootItem->property("wasReleased").toBool());
+    QVERIFY(rightRootItem->property("wasClicked").toBool());
+    QTest::touchEvent(&window, device).release(0, leftPoint, &window).commit();
+    QTRY_VERIFY(leftRootItem->property("wasReleased").toBool());
+    QVERIFY(leftRootItem->property("wasClicked").toBool());
 }
 
 void tst_qquickwidget::tabKey()
