@@ -613,6 +613,7 @@ QQuickWidget::QQuickWidget(QWidget *parent)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
+    setAttribute(Qt::WA_AcceptTouchEvents);
     d_func()->init();
 }
 
@@ -1623,9 +1624,23 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
     case QEvent::TouchUpdate:
-    case QEvent::TouchCancel:
+    case QEvent::TouchCancel: {
         // Touch events only have local and global positions, no need to map.
-        return QCoreApplication::sendEvent(d->offscreenWindow, e);
+        bool res = QCoreApplication::sendEvent(d->offscreenWindow, e);
+        if (e->isAccepted() && e->type() == QEvent::TouchBegin) {
+            // If the TouchBegin got accepted, then make sure all points that have
+            // an exclusive grabber are also accepted so that the widget code for
+            // delivering touch events make this widget an implicit grabber of those
+            // points.
+            QPointerEvent *pointerEvent = static_cast<QPointerEvent *>(e);
+            auto deliveredPoints = pointerEvent->points();
+            for (auto &point : deliveredPoints) {
+                if (pointerEvent->exclusiveGrabber(point))
+                    point.setAccepted(true);
+            }
+        }
+        return res;
+    }
 
     case QEvent::FocusAboutToChange:
         return QCoreApplication::sendEvent(d->offscreenWindow, e);
