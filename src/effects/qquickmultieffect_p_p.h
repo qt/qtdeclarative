@@ -160,8 +160,8 @@ private:
     bool m_shadowEnabled = false;
     qreal m_shadowOpacity = 1.0;
     qreal m_shadowBlur = 1.0;
-    qreal m_shadowHorizontalOffset = 10.0;
-    qreal m_shadowVerticalOffset = 10.0;
+    qreal m_shadowHorizontalOffset = 0.0;
+    qreal m_shadowVerticalOffset = 0.0;
     QColor m_shadowColor = { 0, 0, 0, 255 };
     qreal m_shadowScale = 1.0;
     bool m_maskEnabled = false;
