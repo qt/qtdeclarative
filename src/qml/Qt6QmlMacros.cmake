@@ -1713,6 +1713,8 @@ function(qt6_add_qml_plugin target)
             PROPERTIES
             LIBRARY_OUTPUT_NAME "${plugin_output_name}"
         )
+        set_property(TARGET "${target}"
+                     PROPERTY _qt_android_apply_arch_suffix_called_from_qt_impl TRUE)
         qt6_android_apply_arch_suffix(${target})
     endif()
 
