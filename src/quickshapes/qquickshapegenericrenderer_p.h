@@ -63,6 +63,7 @@ public:
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
+    void setTriangulationScale(qreal scale) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
     Flags flags() const override { return SupportsAsync; }
@@ -80,12 +81,14 @@ public:
                                 VertexContainerType *fillVertices,
                                 IndexContainerType *fillIndices,
                                 QSGGeometry::Type *indexType,
-                                bool supportsElementIndexUint);
+                                bool supportsElementIndexUint,
+                                qreal triangulationScale);
     static void triangulateStroke(const QPainterPath &path,
                                   const QPen &pen,
                                   const Color4ub &strokeColor,
                                   VertexContainerType *strokeVertices,
-                                  const QSize &clipSize);
+                                  const QSize &clipSize,
+                                  qreal triangulationScale);
 
 private:
     void maybeUpdateAsyncItem();
@@ -120,6 +123,7 @@ private:
     int m_accDirty;
     void (*m_asyncCallback)(void *);
     void *m_asyncCallbackData;
+    float m_triangulationScale = 1.0;
 };
 
 class QQuickShapeFillRunnable : public QObject, public QRunnable
@@ -135,6 +139,7 @@ public:
     QPainterPath path;
     QQuickShapeGenericRenderer::Color4ub fillColor;
     bool supportsElementIndexUint;
+    qreal triangulationScale;
 
     // output
     QQuickShapeGenericRenderer::VertexContainerType fillVertices;
@@ -159,6 +164,7 @@ public:
     QPen pen;
     QQuickShapeGenericRenderer::Color4ub strokeColor;
     QSize clipSize;
+    qreal triangulationScale;
 
     // output
     QQuickShapeGenericRenderer::VertexContainerType strokeVertices;
