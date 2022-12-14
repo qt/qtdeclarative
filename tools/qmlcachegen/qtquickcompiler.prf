@@ -77,6 +77,7 @@ for(res, QMLCACHE_RESOURCE_FILES) {
 defineReplace(qmlCacheOutputName) {
     name = $$absolute_path($$1, $$OUT_PWD)
     name = $$relative_path($$name, $$_PRO_FILE_PWD_)
+    contains(name, ^\\.\\..*): name = $$relative_path($$1, $$OUT_PWD)
     name = $$replace(name, \\.qml$, _qml)
     name = $$replace(name, \\.js$, _js)
     name = $$replace(name, \\.mjs$, _mjs)
