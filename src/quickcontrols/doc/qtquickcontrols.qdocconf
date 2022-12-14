@@ -2,7 +2,7 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 include($QT_INSTALL_DOCS/config/exampleurl-qtquickcontrols.qdocconf)
 include(manifest-meta.qdocconf)
 
-moduleheader            = QtQuickControls
+moduleheader            = QtQuickControls2
 
 project                 = QtQuickControls
 description             = Qt Quick Controls Reference Documentation
