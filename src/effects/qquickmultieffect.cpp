@@ -1580,11 +1580,15 @@ void QQuickMultiEffectPrivate::updateSourcePadding()
         // Set the source size
         m_shaderSource->setSize(m_shaderEffect->size());
 
+        // When m_sourceItem is set and has size, use that as the base size.
+        // When effect is used as a component in Item "layer.effect", source
+        // doesn't have a size and then we follow the effect item size.
+        const qreal baseWidth = m_sourceItem && m_sourceItem->width() > 0 ? m_sourceItem->width() : q->width();
+        const qreal baseHeight = m_sourceItem && m_sourceItem->height() > 0 ? m_sourceItem->height() : q->height();
+
         // Set the source rect
-        const qreal baseWidth = m_sourceItem ? m_sourceItem->width() : 1;
-        const qreal baseHeight = m_sourceItem ? m_sourceItem->height() : 1;
-        const qreal widthMultiplier = baseWidth / q->width();
-        const qreal heightMultiplier = baseHeight / q->height();
+        const qreal widthMultiplier = q->width() > 0 ? baseWidth / q->width() : 1.0;
+        const qreal heightMultiplier = q->height() > 0 ? baseHeight / q->height() : 1.0;
         const qreal xPadding = itemPadding * widthMultiplier;
         const qreal yPadding = itemPadding * heightMultiplier;
         QRectF rect = QRectF(m_paddingRect.x() * widthMultiplier,
