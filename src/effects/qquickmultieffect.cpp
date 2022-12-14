@@ -390,7 +390,7 @@ void QQuickMultiEffect::setShadowBlur(qreal shadowBlur)
     item center.
 
     The value ranges from -inf to inf. By default, the property is set
-    to \c 10.0.
+    to \c 0.0.
 
     \note When moving shadow position away from center and adding
     shadowBlur, you possibly also need to increase the paddingRect
@@ -414,8 +414,8 @@ void QQuickMultiEffect::setShadowHorizontalOffset(qreal offset)
     This property defines the vertical offset of the shadow from the
     item center.
 
-    The value ranges from -inf to inf. By default,
-    the property is set to \c 10.0.
+    The value ranges from -inf to inf. By default, the property is set
+    to \c 0.0.
 
     \note When moving shadow position away from center and adding
     shadowBlur, you possibly also need to increase the paddingRect
