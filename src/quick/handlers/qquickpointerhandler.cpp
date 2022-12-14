@@ -660,10 +660,8 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
             setActive(false);
         for (int i = 0; i < event->pointCount(); ++i) {
             auto &pt = event->point(i);
-            if (event->exclusiveGrabber(pt) == this && pt.state() != QEventPoint::Stationary) {
+            if (event->exclusiveGrabber(pt) == this && pt.state() != QEventPoint::Stationary)
                 event->setExclusiveGrabber(pt, nullptr);
-                onGrabChanged(this, QPointingDevice::CancelGrabExclusive, event, pt);
-            }
         }
     }
     d->currentEvent = nullptr;

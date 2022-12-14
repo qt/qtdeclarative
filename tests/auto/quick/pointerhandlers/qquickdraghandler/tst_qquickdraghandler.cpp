@@ -49,6 +49,7 @@ private slots:
     void touchPinchAndMouseMove();
     void unsuitableEventDuringDrag();
     void underModalLayer();
+    void interruptedByIrrelevantButton();
 
 private:
     void sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta, QPoint pixelDelta, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, bool inverted);
@@ -1058,6 +1059,70 @@ void tst_DragHandler::underModalLayer() // QTBUG-78258
     QTest::mouseMove(window, p1);
     QVERIFY(!dragHandler->active());
     QTest::mouseRelease(window, Qt::LeftButton);
+}
+
+void tst_DragHandler::interruptedByIrrelevantButton() // QTBUG-102201
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("draggables.qml")));
+
+    QQuickItem *ball = window.rootObject()->childItems().first();
+    QVERIFY(ball);
+    QQuickDragHandler *dragHandler = ball->findChild<QQuickDragHandler*>();
+    QVERIFY(dragHandler);
+
+    QCOMPARE(dragHandler->acceptedButtons(), Qt::LeftButton); // the default
+
+    QSignalSpy translationChangedSpy(dragHandler, &QQuickDragHandler::translationChanged);
+    QSignalSpy cancelSpy(dragHandler, &QQuickDragHandler::canceled);
+    QSignalSpy activeSpy(dragHandler, &QQuickDragHandler::activeChanged);
+    QSignalSpy grabSpy(dragHandler, &QQuickDragHandler::grabChanged);
+
+    QPoint p1 = ball->mapToScene(ball->clipRect().center()).toPoint();
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
+    QCOMPARE(grabSpy.size(), 1); // passive grab
+    p1 += QPoint(dragThreshold + 1, 0);
+    QTest::mouseMove(&window, p1);
+    QVERIFY(dragHandler->active());
+    QCOMPARE(activeSpy.size(), 1);
+    QCOMPARE(grabSpy.size(), 2); // exclusive grab
+    QCOMPARE(translationChangedSpy.size(), 0);
+    p1 += QPoint(1, 0);
+    QTest::mouseMove(&window, p1);
+    QCOMPARE(translationChangedSpy.size(), 1);
+
+    // Left button is already held, now press right button too (chording)
+    QTest::mousePress(&window, Qt::RightButton, Qt::NoModifier, p1);
+    // DragHandler will ungrab and deactivate, but not cancel
+    QCOMPARE(dragHandler->active(), false);
+    QCOMPARE(translationChangedSpy.size(), 1);
+    QCOMPARE(cancelSpy.size(), 0);
+    QCOMPARE(activeSpy.size(), 2);
+    QCOMPARE_GT(grabSpy.size(), 2); // lost grabs
+
+    // Release right button: no change in state
+    QTest::mouseRelease(&window, Qt::RightButton, Qt::NoModifier, p1);
+    QCOMPARE(dragHandler->active(), false);
+    QCOMPARE(translationChangedSpy.size(), 1);
+    QCOMPARE(cancelSpy.size(), 0);
+    QCOMPARE(activeSpy.size(), 2);
+    auto grabChangedCount = grabSpy.size();
+
+    // But the left button is still held, and it's possible to resume dragging
+    p1 += QPoint(dragThreshold + 1, 0);
+    QTest::mouseMove(&window, p1);
+    QCOMPARE_GT(grabSpy.size(), grabChangedCount); // re-grabbed
+    p1 += QPoint(1, 0);
+    QTest::mouseMove(&window, p1);
+    QVERIFY(dragHandler->active());
+    QCOMPARE(activeSpy.size(), 3);
+    QCOMPARE(translationChangedSpy.size(), 2);
+
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p1);
+    QVERIFY(!dragHandler->active());
+    QCOMPARE(activeSpy.size(), 4);
+    QCOMPARE(cancelSpy.size(), 0); // none of this caused a canceled() signal
 }
 
 QTEST_MAIN(tst_DragHandler)
