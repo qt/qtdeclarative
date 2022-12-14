@@ -88,6 +88,7 @@ private slots:
     void implicitSize_data();
     void implicitSize();
     void implicitSizeChangeRewrap();
+    void implicitSizeMaxLineCount();
     void dependentImplicitSizes();
     void contentSize();
     void implicitSizeBinding_data();
@@ -2375,6 +2376,20 @@ void tst_qquicktext::implicitSize()
     QCOMPARE(textObject->height(), textObject->implicitHeight());
 
     delete textObject;
+}
+
+void tst_qquicktext::implicitSizeMaxLineCount()
+{
+    QScopedPointer<QQuickText> textObject(new QQuickText);
+
+    textObject->setText("1st line");
+    const auto referenceWidth = textObject->implicitWidth();
+
+    textObject->setText(textObject->text() + "\n2nd long long long long long line");
+    QCOMPARE_GT(textObject->implicitWidth(), referenceWidth);
+
+    textObject->setMaximumLineCount(1);
+    QCOMPARE_EQ(textObject->implicitWidth(), referenceWidth);
 }
 
 void tst_qquicktext::dependentImplicitSizes()
