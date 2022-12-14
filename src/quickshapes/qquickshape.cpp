@@ -1003,6 +1003,7 @@ void QQuickShapePrivate::sync()
     const int count = sp.size();
     bool countChanged = false;
     renderer->beginSync(count, &countChanged);
+    renderer->setTriangulationScale(triangulationScale);
 
     for (int i = 0; i < count; ++i) {
         QQuickShapePath *p = sp[i];

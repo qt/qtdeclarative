@@ -13,8 +13,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const qreal TRI_SCALE = 1;
-
 struct ColoredVertex // must match QSGGeometry::ColoredPoint2D
 {
     float x, y;
@@ -198,15 +196,22 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
     d.syncDirty |= DirtyFillGradient;
 }
 
+void QQuickShapeGenericRenderer::setTriangulationScale(qreal scale)
+{
+    // No dirty, this is called at the start of every sync. Just store the value.
+    m_triangulationScale = scale;
+}
+
 void QQuickShapeFillRunnable::run()
 {
-    QQuickShapeGenericRenderer::triangulateFill(path, fillColor, &fillVertices, &fillIndices, &indexType, supportsElementIndexUint);
+    QQuickShapeGenericRenderer::triangulateFill(path, fillColor, &fillVertices, &fillIndices, &indexType,
+                                                supportsElementIndexUint, triangulationScale);
     emit done(this);
 }
 
 void QQuickShapeStrokeRunnable::run()
 {
-    QQuickShapeGenericRenderer::triangulateStroke(path, pen, strokeColor, &strokeVertices, clipSize);
+    QQuickShapeGenericRenderer::triangulateStroke(path, pen, strokeColor, &strokeVertices, clipSize, triangulationScale);
     emit done(this);
 }
 
@@ -286,6 +291,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 r->path = d.path;
                 r->fillColor = d.fillColor;
                 r->supportsElementIndexUint = supportsElementIndexUint;
+                r->triangulationScale = m_triangulationScale;
                 // Unlikely in practice but in theory m_sp could be
                 // resized. Therefore, capture 'i' instead of 'd'.
                 QObject::connect(r, &QQuickShapeFillRunnable::done, qApp, [this, i](QQuickShapeFillRunnable *r) {
@@ -310,7 +316,9 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 pathWorkThreadPool->start(r);
 #endif
             } else {
-                triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices, &d.indexType, supportsElementIndexUint);
+                triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices, &d.indexType,
+                                supportsElementIndexUint,
+                                m_triangulationScale);
             }
         }
 
@@ -325,6 +333,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 r->pen = d.pen;
                 r->strokeColor = d.strokeColor;
                 r->clipSize = QSize(m_item->width(), m_item->height());
+                r->triangulationScale = m_triangulationScale;
                 QObject::connect(r, &QQuickShapeStrokeRunnable::done, qApp, [this, i](QQuickShapeStrokeRunnable *r) {
                     if (!r->orphaned && i < m_sp.size()) {
                         ShapePathData &d(m_sp[i]);
@@ -344,7 +353,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
 #endif
             } else {
                 triangulateStroke(d.path, d.pen, d.strokeColor, &d.strokeVertices,
-                                  QSize(m_item->width(), m_item->height()));
+                                  QSize(m_item->width(), m_item->height()), m_triangulationScale);
             }
         }
     }
@@ -368,21 +377,22 @@ void QQuickShapeGenericRenderer::maybeUpdateAsyncItem()
 // the stroke/fill triangulation functions may be invoked either on the gui
 // thread or some worker thread and must thus be self-contained.
 void QQuickShapeGenericRenderer::triangulateFill(const QPainterPath &path,
-                                                    const Color4ub &fillColor,
-                                                    VertexContainerType *fillVertices,
-                                                    IndexContainerType *fillIndices,
-                                                    QSGGeometry::Type *indexType,
-                                                    bool supportsElementIndexUint)
+                                                 const Color4ub &fillColor,
+                                                 VertexContainerType *fillVertices,
+                                                 IndexContainerType *fillIndices,
+                                                 QSGGeometry::Type *indexType,
+                                                 bool supportsElementIndexUint,
+                                                 qreal triangulationScale)
 {
     const QVectorPath &vp = qtVectorPathForPath(path);
 
-    QTriangleSet ts = qTriangulate(vp, QTransform::fromScale(TRI_SCALE, TRI_SCALE), 1, supportsElementIndexUint);
+    QTriangleSet ts = qTriangulate(vp, QTransform::fromScale(triangulationScale, triangulationScale), 1, supportsElementIndexUint);
     const int vertexCount = ts.vertices.size() / 2; // just a qreal vector with x,y hence the / 2
     fillVertices->resize(vertexCount);
     ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(fillVertices->data());
     const qreal *vsrc = ts.vertices.constData();
     for (int i = 0; i < vertexCount; ++i)
-        vdst[i].set(vsrc[i * 2] / TRI_SCALE, vsrc[i * 2 + 1] / TRI_SCALE, fillColor);
+        vdst[i].set(vsrc[i * 2] / triangulationScale, vsrc[i * 2 + 1] / triangulationScale, fillColor);
 
     size_t indexByteSize;
     if (ts.indices.type() == QVertexIndexVector::UnsignedShort) {
@@ -400,14 +410,15 @@ void QQuickShapeGenericRenderer::triangulateFill(const QPainterPath &path,
 }
 
 void QQuickShapeGenericRenderer::triangulateStroke(const QPainterPath &path,
-                                                      const QPen &pen,
-                                                      const Color4ub &strokeColor,
-                                                      VertexContainerType *strokeVertices,
-                                                      const QSize &clipSize)
+                                                   const QPen &pen,
+                                                   const Color4ub &strokeColor,
+                                                   VertexContainerType *strokeVertices,
+                                                   const QSize &clipSize,
+                                                   qreal triangulationScale)
 {
     const QVectorPath &vp = qtVectorPathForPath(path);
     const QRectF clip(QPointF(0, 0), clipSize);
-    const qreal inverseScale = 1.0 / TRI_SCALE;
+    const qreal inverseScale = 1.0 / triangulationScale;
 
     QTriangulatingStroker stroker;
     stroker.setInvScale(inverseScale);
