@@ -1,4 +1,3 @@
-
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
@@ -89,11 +88,15 @@ private slots:
     void dimmerContainmentMask();
     void shrinkPopupThatWasLargerThanWindow_data();
     void shrinkPopupThatWasLargerThanWindow();
+    void mirroredCombobox();
+    void rotatedCombobox();
 
 private:
     static bool hasWindowActivation();
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
+
+using namespace Qt::StringLiterals;
 
 tst_QQuickPopup::tst_QQuickPopup()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
@@ -1926,6 +1929,155 @@ void tst_QQuickPopup::shrinkPopupThatWasLargerThanWindow()
     QVERIFY2(popup->height() < window->height(), qPrintable(QString::fromLatin1(
         "Expected popup's height (%1) to be less than the window's height (%2)")
             .arg(popup->height()).arg(window->height())));
+}
+
+void tst_QQuickPopup::mirroredCombobox()
+{
+#ifdef Q_OS_ANDROID
+    // Android screens might be pretty small, such that additional
+    // repositioning (apart from the mirroring) will happen to the
+    // popups and mess up the expected positions below.
+    QSKIP("Skipping test for Android.");
+#endif
+    QStringList nativeStyles;
+    nativeStyles.append(u"macOS"_s);
+    nativeStyles.append(u"iOS"_s);
+    nativeStyles.append(u"Windows"_s);
+    if (nativeStyles.contains(QQuickStyle::name()))
+        QSKIP("Skipping test for native styles: they might rearrange their combobox the way they "
+              "want.");
+
+    QQuickControlsApplicationHelper helper(this, "mirroredCombobox.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    {
+        QQuickComboBox *comboBox = window->findChild<QQuickComboBox *>("first");
+        QVERIFY(comboBox);
+        QQuickPopup *popup = comboBox->popup();
+        QVERIFY(popup);
+        popup->open();
+        QTRY_COMPARE(popup->isVisible(), true);
+        const QPointF popupPos(popup->contentItem()->mapToItem(comboBox->parentItem(),
+                                                               popup->contentItem()->position()));
+        const QSizeF popupSize(popup->contentItem()->size());
+
+        // ignore popup.{top,bottom}Padding() as not included in popup->contentItem()->size()
+        // some styles prefer to draw the popup "over" (in z-axis direction) the combobox to hide
+        // the combobox
+        const bool styleDrawsPopupOverCombobox =
+                comboBox->position().y() - popupSize.height() + comboBox->size().height()
+                == popupPos.y();
+        // some styles prefer to draw the popup below (in y-axis direction) the combobox
+        const bool styleDrawsPopupBelowCombobox =
+                comboBox->position().y() - popupSize.height() + comboBox->topPadding()
+                == popupPos.y();
+
+        QVERIFY(styleDrawsPopupOverCombobox || styleDrawsPopupBelowCombobox);
+
+        popup->close();
+    }
+
+    {
+        QQuickComboBox *comboBox = window->findChild<QQuickComboBox *>("second");
+        QVERIFY(comboBox);
+        QQuickPopup *popup = comboBox->popup();
+        QVERIFY(popup);
+        popup->open();
+        QTRY_COMPARE(popup->isVisible(), true);
+        const QPointF popupPos(popup->contentItem()->mapToItem(comboBox->parentItem(),
+                                                               popup->contentItem()->position()));
+
+        // some styles prefer to draw the popup "over" (in z-axis direction) the combobox to hide
+        // the combobox
+        const bool styleDrawsPopupOverCombobox = comboBox->position().y() + comboBox->topPadding()
+                        + popup->topPadding() + popup->bottomPadding()
+                == popupPos.y();
+        // some styles prefer to draw the popup above (in y-axis direction) the combobox
+        const bool styleDrawsPopupAboveCombobox =
+                comboBox->position().y() + comboBox->height() - comboBox->topPadding()
+                == popupPos.y();
+
+        QVERIFY(styleDrawsPopupOverCombobox || styleDrawsPopupAboveCombobox);
+
+        popup->close();
+    }
+}
+
+void tst_QQuickPopup::rotatedCombobox()
+{
+#ifdef Q_OS_ANDROID
+    // Android screens might be pretty small, such that additional
+    // repositioning (apart from the rotating) will happen to the
+    // popups and mess up the expected positions below.
+    QSKIP("Skipping test for Android.");
+#endif
+    QStringList nativeStyles;
+    nativeStyles.append(u"macOS"_s);
+    nativeStyles.append(u"iOS"_s);
+    nativeStyles.append(u"Windows"_s);
+    if (nativeStyles.contains(QQuickStyle::name()))
+        QSKIP("Skipping test for native styles: they might rearrange their combobox the way they "
+              "want.");
+
+    QQuickControlsApplicationHelper helper(this, "rotatedCombobox.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    {
+        QQuickComboBox *comboBox = window->findChild<QQuickComboBox *>("first");
+        QVERIFY(comboBox);
+        QQuickPopup *popup = comboBox->popup();
+        QVERIFY(popup);
+        popup->open();
+        QTRY_COMPARE(popup->isVisible(), true);
+        const QPointF popupPos(popup->contentItem()->mapToItem(comboBox->parentItem(),
+                                                               popup->contentItem()->position()));
+        const QSizeF popupSize(popup->contentItem()->size());
+
+        // ignore popup.{left,right}Padding() as not included in popup->contentItem()->size()
+        // some styles prefer to draw the popup "over" (in z-axis direction) the combobox to hide
+        // the combobox
+        const bool styleDrawsPopupOverCombobox =
+                comboBox->position().x() - popupSize.width() + comboBox->width() == popupPos.x();
+        // some styles prefer to draw the popup right (in x-axis direction) of the combobox
+        const bool styleDrawsPopupBelowCombobox =
+                comboBox->position().x() - popupSize.width() - comboBox->leftPadding()
+                == popupPos.x();
+
+        QVERIFY(styleDrawsPopupOverCombobox || styleDrawsPopupBelowCombobox);
+    }
+
+    {
+        QQuickComboBox *comboBox = window->findChild<QQuickComboBox *>("second");
+        QVERIFY(comboBox);
+        QQuickPopup *popup = comboBox->popup();
+        QVERIFY(popup);
+        popup->open();
+        QTRY_COMPARE(popup->isVisible(), true);
+        const QPointF popupPos(popup->contentItem()->mapToItem(comboBox->parentItem(),
+                                                               popup->contentItem()->position()));
+
+        // some styles prefer to draw the popup "over" (in z-axis direction) the combobox to hide
+        // the combobox
+        const bool styleDrawsPopupOverCombobox = comboBox->position().x() + comboBox->leftPadding()
+                        + popup->leftPadding() + popup->rightPadding()
+                == popupPos.x();
+        // some styles prefer to draw the popup left (in y-axis direction) of the combobox
+        const bool styleDrawsPopupAboveCombobox =
+                comboBox->position().x() + comboBox->width() - comboBox->leftPadding()
+                == popupPos.x();
+
+        QVERIFY(styleDrawsPopupOverCombobox || styleDrawsPopupAboveCombobox);
+
+        popup->close();
+    }
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
