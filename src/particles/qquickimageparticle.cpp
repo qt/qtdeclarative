@@ -766,6 +766,7 @@ void QQuickImageParticle::sceneGraphInvalidated()
     m_material = nullptr;
     delete m_outgoingNode;
     m_outgoingNode = nullptr;
+    m_apiChecked = false;
 }
 
 void QQuickImageParticle::setImage(const QUrl &image)
@@ -1072,6 +1073,12 @@ void QQuickImageParticle::reset()
     QQuickParticlePainter::reset();
     m_pleaseReset = true;
     update();
+}
+
+
+void QQuickImageParticle::invalidateSceneGraph()
+{
+    reset();
 }
 
 void QQuickImageParticle::createEngine()
