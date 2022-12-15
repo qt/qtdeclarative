@@ -316,6 +316,7 @@ void QQuickSpriteEngine::startAssemblingImage()
         return;
     m_loaded = false;
     m_errorsPrinted = false;
+    m_sprites.clear();
 
     //This could also trigger the start of the image loading in Sprites, however that currently happens in Sprite::setSource
 

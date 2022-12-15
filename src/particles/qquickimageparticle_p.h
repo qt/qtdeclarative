@@ -359,6 +359,8 @@ private Q_SLOTS:
     void spritesUpdate(qreal time = 0 );
     void mainThreadFetchImageData();
     void finishBuildParticleNodes(QSGNode **n);
+    void invalidateSceneGraph();
+
 private:
     struct ImageData {
         QUrl source;
