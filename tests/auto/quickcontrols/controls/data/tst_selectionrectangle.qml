@@ -189,7 +189,7 @@ TestCase {
         compare(draggingSpy.count, 2)
 
         // Remove selection
-        mouseClick(tableView, 1, 1, Qt.LeftButton)
+        mouseClick(tableView, tableView.width - 1, tableView.height - 1, Qt.LeftButton)
         verify(!tableView.selectionModel.hasSelection)
         compare(draggingSpy.count, 2)
         compare(activeSpy.count, 2)
