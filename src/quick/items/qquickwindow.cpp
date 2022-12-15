@@ -3880,7 +3880,7 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
     graphics API based on the platform and other conditions, set \a api to
     QSGRendererInterface::Unknown.
 
-    \since 5.8
+    \since 6.0
  */
 void QQuickWindow::setGraphicsApi(QSGRendererInterface::GraphicsApi api)
 {
