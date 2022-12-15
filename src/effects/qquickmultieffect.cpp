@@ -1316,7 +1316,6 @@ void QQuickMultiEffectPrivate::initialize()
     m_shaderEffect->setProperty("shadowBlur", m_shadowBlur);
     m_shaderEffect->setProperty("shadowColor", m_shadowColor);
     m_shaderEffect->setProperty("shadowScale", 1.0 / m_shadowScale);
-    m_shaderEffect->setProperty("maskEnabled", m_maskEnabled);
     auto maskSourceVariant = QVariant::fromValue<QQuickItem*>(m_maskSourceItem);
     m_shaderEffect->setProperty("maskSrc", maskSourceVariant);
     m_shaderEffect->setProperty("maskInverted", float(m_maskInverted));
@@ -1333,14 +1332,23 @@ void QQuickMultiEffectPrivate::initialize()
 
 void QQuickMultiEffectPrivate::updateMaskThresholdSpread()
 {
-    m_maskThresholdSpread = QVector4D(
-                m_maskThresholdLow,
-                m_maskSpreadLow + 1.0,
-                m_maskThresholdUp,
-                m_maskSpreadUp + 1.0
-                );
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("mask", m_maskThresholdSpread);
+    if (!m_shaderEffect)
+        return;
+
+    // Calculate threshold and spread values for mask
+    // smoothstep, keeping always edge0 < edge1.
+    const qreal c0 = 0.0001;
+    const qreal c1 = 1.0 - c0;
+    const qreal mt1 = m_maskThresholdLow + c0;
+    const qreal ms1 = m_maskSpreadLow + 1.0;
+    const qreal mt2 = c1 - m_maskThresholdUp;
+    const qreal ms2 = m_maskSpreadUp + 1.0;
+    const QVector4D maskThresholdSpread = QVector4D(
+                mt1 * ms1 - (ms1 - c1),
+                mt1 * ms1,
+                mt2 * ms2 - (ms2 - c1),
+                mt2 * ms2);
+    m_shaderEffect->setProperty("mask", maskThresholdSpread);
 }
 
 void QQuickMultiEffectPrivate::updateCenterOffset()

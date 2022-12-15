@@ -105,8 +105,8 @@ void main() {
 
 #if defined(MASK)
     float alphaMask = texture(maskSrc, texCoord).a;
-    float m1 = smoothstep(mask[0] * mask[1] - (mask[1] - 0.999), mask[0] * mask[1], alphaMask);
-    float m2 = smoothstep((1.0 - mask[2]) * mask[3] - (mask[3] - 0.999), (1.0 - mask[2]) * mask[3], (1.0 - alphaMask));
+    float m1 = smoothstep(mask[0], mask[1], alphaMask);
+    float m2 = smoothstep(mask[2], mask[3], (1.0 - alphaMask));
     float mm = m1 * m2;
     color *= (1.0 - maskInverted) * mm + maskInverted * (1.0 - mm);
 #endif // MASK
