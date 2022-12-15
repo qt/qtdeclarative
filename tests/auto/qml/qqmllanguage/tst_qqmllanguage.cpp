@@ -2286,6 +2286,16 @@ void tst_qqmllanguage::aliasProperties()
         QQmlComponent component(&engine, testFileUrl("alias.18.qml"));
         VERIFY_ERRORS("alias.18.errors.txt");
     }
+
+    // Binding on deep alias
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.19.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+        QCOMPARE(object->property("height").toInt(), 960);
+    }
 }
 
 // QTBUG-13374 Test that alias properties and signals can coexist
