@@ -900,8 +900,6 @@ void QQuickMultiEffectPrivate::setBlurEnabled(bool enabled)
     updateSourcePadding();
     updateBlurLevel();
     updateEffectShaders();
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("blurEnabled", m_blurEnabled);
 
     q->update();
     Q_EMIT q->blurEnabledChanged();
@@ -920,8 +918,6 @@ void QQuickMultiEffectPrivate::setBlur(qreal blur)
 
     m_blur = blur;
     updateBlurWeights();
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("blur", m_blur);
 
     q->update();
     Q_EMIT q->blurChanged();
@@ -945,8 +941,6 @@ void QQuickMultiEffectPrivate::setBlurMax(int blurMax)
     updateBlurWeights();
     updateShadowBlurWeights();
     updateEffectShaders();
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("blurMax", m_blurMax);
 
     q->update();
     Q_EMIT q->blurMaxChanged();
@@ -968,8 +962,6 @@ void QQuickMultiEffectPrivate::setBlurMultiplier(qreal blurMultiplier)
     updateBlurItemSizes();
     updateBlurWeights();
     updateShadowBlurWeights();
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("blurMultiplier", m_blurMultiplier);
 
     q->update();
     Q_EMIT q->blurMultiplierChanged();
@@ -990,8 +982,6 @@ void QQuickMultiEffectPrivate::setShadowEnabled(bool enabled)
     updateSourcePadding();
     updateBlurLevel();
     updateEffectShaders();
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("shadowEnabled", m_shadowEnabled);
 
     q->update();
     Q_EMIT q->shadowEnabledChanged();
@@ -1028,8 +1018,6 @@ void QQuickMultiEffectPrivate::setShadowBlur(qreal shadowBlur)
 
     m_shadowBlur = shadowBlur;
     updateShadowBlurWeights();
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("shadowBlur", m_shadowBlur);
 
     q->update();
     Q_EMIT q->shadowBlurChanged();
@@ -1122,8 +1110,6 @@ void QQuickMultiEffectPrivate::setMaskEnabled(bool enabled)
 
     m_maskEnabled = enabled;
     updateEffectShaders();
-    if (m_shaderEffect)
-        m_shaderEffect->setProperty("maskEnabled", m_maskEnabled);
 
     q->update();
     Q_EMIT q->maskEnabledChanged();
@@ -1299,6 +1285,7 @@ void QQuickMultiEffectPrivate::initialize()
     updateBlurWeights();
     updateShadowBlurWeights();
     updateColorizeColor();
+    updateShadowColor();
     updateShadowOffset();
 
     // Create properties
@@ -1307,19 +1294,10 @@ void QQuickMultiEffectPrivate::initialize()
     m_shaderEffect->setProperty("brightness", m_brightness);
     m_shaderEffect->setProperty("contrast", m_contrast);
     m_shaderEffect->setProperty("saturation", m_saturation);
-    m_shaderEffect->setProperty("blurEnabled", m_blurEnabled);
-    m_shaderEffect->setProperty("blur", m_blur);
-    m_shaderEffect->setProperty("blurMax", m_blurMax);
-    m_shaderEffect->setProperty("blurMultiplier", m_blurMultiplier);
-    m_shaderEffect->setProperty("shadowEnabled", m_shadowEnabled);
-    m_shaderEffect->setProperty("shadowOpacity", m_shadowOpacity);
-    m_shaderEffect->setProperty("shadowBlur", m_shadowBlur);
-    m_shaderEffect->setProperty("shadowColor", m_shadowColor);
     m_shaderEffect->setProperty("shadowScale", 1.0 / m_shadowScale);
     auto maskSourceVariant = QVariant::fromValue<QQuickItem*>(m_maskSourceItem);
     m_shaderEffect->setProperty("maskSrc", maskSourceVariant);
     m_shaderEffect->setProperty("maskInverted", float(m_maskInverted));
-    m_shaderEffect->setProperty("centerOffset", m_centerOffset);
 
     updateBlurLevel();
     updateBlurItemSizes();
@@ -1357,9 +1335,9 @@ void QQuickMultiEffectPrivate::updateCenterOffset()
         return;
 
     const qreal scale = 1.0 / m_shadowScale;
-    m_centerOffset = QVector2D((1.0 - scale) * (0.5 + 0.5 * (m_paddingRect.x() - m_paddingRect.width()) / m_shaderEffect->width()),
-                               (1.0 - scale) * (0.5 + 0.5 * (m_paddingRect.y() - m_paddingRect.height()) / m_shaderEffect->height()));
-    m_shaderEffect->setProperty("centerOffset", m_centerOffset);
+    QVector2D centerOffset((1.0 - scale) * (0.5 + 0.5 * (m_paddingRect.x() - m_paddingRect.width()) / m_shaderEffect->width()),
+                           (1.0 - scale) * (0.5 + 0.5 * (m_paddingRect.y() - m_paddingRect.height()) / m_shaderEffect->height()));
+    m_shaderEffect->setProperty("centerOffset", centerOffset);
 }
 
 void QQuickMultiEffectPrivate::updateShadowOffset()

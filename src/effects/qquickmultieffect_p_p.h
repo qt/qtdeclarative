@@ -176,7 +176,6 @@ private:
     QString m_vertShader;
     QString m_fragShader;
 
-    QVector2D m_centerOffset;
     QVector4D m_blurWeight1;
     QVector2D m_blurWeight2;
     QVector4D m_shadowBlurWeight1;
