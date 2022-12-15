@@ -207,15 +207,36 @@ bool QQmlAbstractBinding::setTarget(
                      valueType ? valueType->coreIndex() : -1);
 }
 
+static const QQmlPropertyData *getObjectPropertyData(QObject *object, int coreIndex)
+{
+    QQmlData *data = QQmlData::get(object, true);
+    if (!data)
+        return nullptr;
+
+    if (!data->propertyCache) {
+        data->propertyCache = QQmlMetaType::propertyCache(object);
+        if (!data->propertyCache)
+            return nullptr;
+    }
+
+    const QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
+    Q_ASSERT(propertyData);
+    return propertyData;
+}
+
 bool QQmlAbstractBinding::setTarget(
         QObject *object, int coreIndex, bool coreIsAlias, int valueTypeIndex)
 {
-    m_target = object;
-
-    if (!object) {
+    auto invalidate = [this]() {
+        m_target = nullptr;
         m_targetIndex = QQmlPropertyIndex();
         return false;
-    }
+    };
+
+    if (!object)
+        return invalidate();
+
+    m_target = object;
 
     for (bool isAlias = coreIsAlias; isAlias;) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
@@ -223,21 +244,26 @@ bool QQmlAbstractBinding::setTarget(
         int aValueTypeIndex;
         if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
             // can't resolve id (yet)
-            m_target = nullptr;
-            m_targetIndex = QQmlPropertyIndex();
-            return false;
+            return invalidate();
         }
-        if (valueTypeIndex == -1)
-            valueTypeIndex = aValueTypeIndex;
 
-        QQmlData *data = QQmlData::get(object, false);
-        if (!data || !data->propertyCache) {
-            m_target = nullptr;
-            m_targetIndex = QQmlPropertyIndex();
-            return false;
+        const QQmlPropertyData *propertyData = getObjectPropertyData(object, coreIndex);
+        if (!propertyData)
+            return invalidate();
+
+        if (aValueTypeIndex != -1) {
+            if (propertyData->propType().flags().testFlag(QMetaType::PointerToQObject)) {
+                // deep alias
+                propertyData->readProperty(object, &object);
+                coreIndex = aValueTypeIndex;
+                valueTypeIndex = -1;
+                propertyData = getObjectPropertyData(object, coreIndex);
+                if (!propertyData)
+                    return invalidate();
+            } else {
+                valueTypeIndex = aValueTypeIndex;
+            }
         }
-        const QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
-        Q_ASSERT(propertyData);
 
         m_target = object;
         isAlias = propertyData->isAlias();
