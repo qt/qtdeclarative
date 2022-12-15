@@ -318,6 +318,15 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
     hoverHandler->setCursorShape(Qt::SizeFDiagCursor);
     hoverHandler->setBlocking(true);
 
+    // Add a dummy TapHandler that blocks the user from being
+    // able to tap on a tap handler underneath the handle.
+    QQuickTapHandler *tapHandler = new QQuickTapHandler();
+    tapHandler->setTarget(nullptr);
+    tapHandler->setParentItem(handleItem);
+    // Set a dummy gesture policy so that the tap handler
+    // will get an exclusive grab already on press
+    tapHandler->setGesturePolicy(QQuickTapHandler::DragWithinBounds);
+
     QObject::connect(dragHandler, &QQuickDragHandler::activeChanged, [this, corner, handleItem, dragHandler]() {
         if (dragHandler->active()) {
             const QPointF localPos = dragHandler->centroid().position();
