@@ -29,7 +29,7 @@ Item {
         blurEnabled: true
         blur: switcher.inAnimation
         blurMax: 32
-        blurMultiplier: 1.0
+        blurMultiplier: 0.5
         opacity: switcher.outAnimation
         colorizeColor: "#f0d060"
         colorize: switcher.inAnimation
@@ -61,7 +61,7 @@ Item {
         blurEnabled: true
         blur: switcher.outAnimation * 2
         blurMax: 32
-        blurMultiplier: 1.0
+        blurMultiplier: 0.5
         opacity: switcher.inAnimation * 3.0 - 1.0
 
         colorizeColor: "#f0d060"

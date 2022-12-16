@@ -17,7 +17,7 @@ Item {
         blurEnabled: true
         blur: switcher.inAnimation * 4
         blurMax: 32
-        blurMultiplier: 1.0
+        blurMultiplier: 0.5
         opacity: switcher.outAnimation
         saturation: -switcher.inAnimation * 2
     }
@@ -27,7 +27,7 @@ Item {
         blurEnabled: true
         blur: switcher.outAnimation * 4
         blurMax: 32
-        blurMultiplier: 1.0
+        blurMultiplier: 0.5
         opacity: switcher.inAnimation
         saturation: -switcher.outAnimation * 2
     }
