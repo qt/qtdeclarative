@@ -4830,7 +4830,7 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
         return false;
     }
 
-    auto beginMoveCurrentIndex = [=](){
+    auto beginMoveCurrentIndex = [&](){
         if (!select) {
             clearSelection();
         } else if (selectionRectangle().isEmpty()) {
@@ -4842,7 +4842,7 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
         }
     };
 
-    auto endMoveCurrentIndex = [=](const QPoint &cell){
+    auto endMoveCurrentIndex = [&](const QPoint &cell){
         if (select) {
             if (polishScheduled)
                 forceLayout(true);
