@@ -96,6 +96,8 @@ private slots:
 
     void touchOutsideOverlay();
 
+    void destroyWhileVisible();
+
 private:
     QScopedPointer<QPointingDevice> touchDevice;
 };
@@ -1428,6 +1430,18 @@ void tst_QQuickDrawer::touchOutsideOverlay() // QTBUG-103811
     QQuickTouchUtils::flush(&window);
     QVERIFY(closedSpy.size() == 1 || closedSpy.wait());
     QCOMPARE(drawer->isOpened(), false);
+}
+
+void tst_QQuickDrawer::destroyWhileVisible()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("itemPartialOverlayModal.qml")));
+    auto *drawer = window.rootObject()->findChild<QQuickDrawer*>();
+    QVERIFY(drawer);
+
+    drawer->open();
+    QTRY_VERIFY(drawer->isOpened());
+    // don't crash here when the drawer closes with an exit transition
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)

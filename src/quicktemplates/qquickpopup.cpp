@@ -949,6 +949,7 @@ QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
 QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
+    d->inDestructor = true;
     setParentItem(nullptr);
 
     // If the popup is destroyed before the exit transition finishes,
@@ -1722,7 +1723,8 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     if (parent) {
         QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
         QQuickItemPrivate::get(d->parentItem)->addItemChangeListener(d, QQuickItemPrivate::Destroyed);
-    } else {
+    } else if (!d->inDestructor) {
+        // NOTE: if setParentItem is called from the dtor, this bypasses virtual dispatch and calls QQuickPopup::close() directly
         close();
     }
     d->setWindow(parent ? parent->window() : nullptr);
