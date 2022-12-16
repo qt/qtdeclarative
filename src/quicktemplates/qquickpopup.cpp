@@ -1673,6 +1673,7 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
         QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
         QQuickItemPrivate::get(d->parentItem)->addItemChangeListener(d, QQuickItemPrivate::Destroyed);
     } else {
+        // NOTE: if setParentItem is called from the dtor, this bypasses virtual dispatch and calls QQuickPopup::close() directly
         close();
     }
     d->setWindow(parent ? parent->window() : nullptr);
