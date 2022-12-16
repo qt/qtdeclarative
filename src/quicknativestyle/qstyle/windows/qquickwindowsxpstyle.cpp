@@ -532,6 +532,7 @@ bool QWindowsXPStylePrivate::swapAlphaChannel(const QRect &rect, bool allPixels)
     return valueChange;
 }
 
+#if 0
 enum TransformType { SimpleTransform, HighDpiScalingTransform, ComplexTransform };
 
 static inline TransformType transformType(const QTransform &transform, qreal devicePixelRatio)
@@ -551,6 +552,7 @@ static inline bool isFullyOpaque(const XPThemeData &themeData)
 {
     return themeData.theme == QWindowsXPStylePrivate::TaskDialogTheme && themeData.partId == TDLG_PRIMARYPANEL;
 }
+#endif
 
 /*! \internal
     Main theme drawing function.

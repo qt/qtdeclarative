@@ -30,13 +30,6 @@ public:
     QWindowsXPStyle(QWindowsXPStylePrivate &dd);
     ~QWindowsXPStyle() override;
 
-/*
-    void polish(QApplication*) override;
-    void unpolish(QApplication*) override;
-    void polish(QWidget*) override;
-    void unpolish(QWidget*) override;
-    void polish(QPalette&) override;
-*/
     void drawPrimitive(PrimitiveElement pe, const QStyleOption *option, QPainter *p) const override;
     void drawControl(ControlElement element, const QStyleOption *option, QPainter *p) const override;
     QRect subElementRect(SubElement r, const QStyleOption *option) const override;

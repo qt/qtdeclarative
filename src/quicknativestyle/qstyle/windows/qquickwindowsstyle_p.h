@@ -35,15 +35,7 @@ class QWindowsStyle : public QCommonStyle
 public:
     QWindowsStyle();
     ~QWindowsStyle() override;
-/*
-    void polish(QApplication*) override;
-    void unpolish(QApplication*) override;
 
-    void polish(QWidget*) override;
-    void unpolish(QWidget*) override;
-
-    void polish(QPalette &) override;
-*/
     void drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p) const override;
     void drawControl(ControlElement element, const QStyleOption *opt, QPainter *p) const override;
     void drawComplexControl(ComplexControl cc, const QStyleOptionComplex *opt, QPainter *p) const override;
