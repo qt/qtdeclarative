@@ -217,6 +217,12 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \e{Elements in the Qt.labs module are not guaranteed to remain compatible
     in future versions.}
 
+    \note Some features in FolderListModel depend on \l QFileSystemWatcher. If \l QFileSystemWatcher
+    is disabled, the folder set using \c setFolder is not watched for changes, which results in
+    signals typically emitted on directory changes (like directoryUpdated or directoryChanged) not
+    being emitted without manually calling \c setFolder again. For more information, see
+    \l{Qt Configure Options}.
+
     \qml
     import Qt.labs.folderlistmodel
     \endqml
