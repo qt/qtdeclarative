@@ -132,7 +132,7 @@ public:
     void getBlurWeights(float blurLod, QVector4D &blurWeight1, QVector2D &blurWeight2);
     void updateBlurWeights();
     void updateShadowBlurWeights();
-    void updateBlurItemSizes();
+    void updateBlurItemSizes(bool forceUpdate = false);
     void updateEffectShaders();
     void updateBlurLevel(bool forceUpdate = false);
     void updateBlurItemsAmount(int blurLevel);
@@ -175,6 +175,7 @@ private:
     int m_blurLevel = 0;
     QString m_vertShader;
     QString m_fragShader;
+    QSizeF m_firstBlurItemSize;
 
     QVector4D m_blurWeight1;
     QVector2D m_blurWeight2;

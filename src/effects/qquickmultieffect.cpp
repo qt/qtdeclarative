@@ -959,7 +959,7 @@ void QQuickMultiEffectPrivate::setBlurMultiplier(qreal blurMultiplier)
 
     m_blurMultiplier = blurMultiplier;
     updateSourcePadding();
-    updateBlurItemSizes();
+    updateBlurItemSizes(true);
     updateBlurWeights();
     updateShadowBlurWeights();
 
@@ -1414,16 +1414,27 @@ void QQuickMultiEffectPrivate::updateShadowBlurWeights()
     m_shaderEffect->setProperty("shadowBlurWeight2", m_shadowBlurWeight2);
 }
 
-void QQuickMultiEffectPrivate::updateBlurItemSizes()
+void QQuickMultiEffectPrivate::updateBlurItemSizes(bool forceUpdate)
 {
-    Q_Q(QQuickMultiEffect);
-    if (m_blurEffects.isEmpty())
+    if (m_blurEffects.isEmpty() || !m_shaderSource || !m_sourceItem)
         return;
+
+    // First blur item size to be half of th source item
+    // extended size, rounded to next divisible by 16.
+    QSizeF sourceSize = itemRect().size();
+    QSizeF firstItemSize(std::ceil(sourceSize.width() / 32) * 16,
+                         std::ceil(sourceSize.height() / 32) * 16);
+
+    if (!forceUpdate && m_firstBlurItemSize == firstItemSize)
+        return;
+
+    qCDebug(lcQuickEffect) << "Source size:" << sourceSize;
+    m_firstBlurItemSize = firstItemSize;
+
     for (int i = 0; i < m_blurEffects.size(); i++) {
         auto *blurEffect = m_blurEffects[i];
-        const QSizeF firstItemSize = QSizeF(std::ceil(q->width() / 64) * 64,
-                                            std::ceil(q->height() / 64) * 64);
         QSizeF itemSize = (i == 0) ? firstItemSize : m_blurEffects[i - 1]->size() * 0.5;
+        qCDebug(lcQuickEffect) << "Blur item" << i << ":" << itemSize;
         blurEffect->setSize(itemSize);
 
         const QVector2D offset((1.0 + m_blurMultiplier) / itemSize.width(),
@@ -1489,6 +1500,9 @@ void QQuickMultiEffectPrivate::updateBlurLevel(bool forceUpdate)
         // Blur level has changed or blur items need to be
         // initially created.
         updateBlurItemsAmount(blurLevel);
+        // When the level grows, new items must be resized
+        if (blurLevel > m_blurLevel)
+            updateBlurItemSizes(true);
     }
     m_blurLevel = blurLevel;
 }
@@ -1514,7 +1528,6 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
             auto blurEffect = qobject_cast<QQuickShaderEffect*>(blurComponent.create());
             blurEffect->setParent(q);
             blurEffect->setParentItem(q);
-            blurEffect->setVisible(false);
             auto sourceVariant = QVariant::fromValue<QQuickItem*>(blurEffect);
             QString sourceProperty = QStringLiteral("blurSrc%1").arg(i + 1);
             m_shaderEffect->setProperty(sourceProperty.toUtf8(), sourceVariant);
@@ -1550,7 +1563,7 @@ void QQuickMultiEffectPrivate::updateSourcePadding()
         return;
 
     const bool blurItemsNeeded = (m_blurEnabled || m_shadowEnabled) && (m_blurMax > 0);
-    const int itemPadding = m_autoPaddingEnabled && blurItemsNeeded ? 0.8 * m_blurMax * (1.0 + m_blurMultiplier) : 0;
+    const int itemPadding = m_autoPaddingEnabled && blurItemsNeeded ? m_blurMax * (1.0 + m_blurMultiplier) : 0;
 
     // Set the shader effect size
     if (m_paddingRect != QRectF() || itemPadding > 0) {
@@ -1596,6 +1609,7 @@ void QQuickMultiEffectPrivate::updateSourcePadding()
 
     updateShadowOffset();
     updateProxyActiveCheck();
+    updateBlurItemSizes();
     Q_EMIT q->paddingRectChanged();
     Q_EMIT q->itemRectChanged();
     Q_EMIT q->itemSizeChanged();
