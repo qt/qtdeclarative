@@ -488,6 +488,12 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
 
 bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
+    auto cleanup = qScopeGuard([this] {
+        popupItem->setKeepMouseGrab(false);
+        popupItem->setKeepTouchGrab(false);
+        pressPoint = QPointF();
+        touchId = -1;
+    });
     if (pressPoint.isNull())
         return false;
     if (!popupItem->keepMouseGrab() && !popupItem->keepTouchGrab()) {
@@ -547,14 +553,8 @@ bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, 
         }
     }
 
-    bool wasGrabbed = popupItem->keepMouseGrab() || popupItem->keepTouchGrab();
-    popupItem->setKeepMouseGrab(false);
-    popupItem->setKeepTouchGrab(false);
-
-    pressPoint = QPointF();
-    touchId = -1;
-
-    return wasGrabbed;
+    // the cleanup() lambda will run before return
+    return popupItem->keepMouseGrab() || popupItem->keepTouchGrab();
 }
 
 void QQuickDrawerPrivate::handleUngrab()
