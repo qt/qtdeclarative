@@ -216,8 +216,8 @@ public:
         LoadInitalTable,
         VerifyTable,
         LayoutTable,
-        LoadAndUnloadAfterLayout,
         CancelOvershoot,
+        UpdateContentSize,
         PreloadColumns,
         PreloadRows,
         MovePreloadedItemsToPool,
@@ -485,6 +485,7 @@ public:
     void updateCursor();
 #endif
     void updateEditItem();
+    void updateContentSize();
 
     QTypeRevision resolveImportVersion();
     void createWrapperModel();
