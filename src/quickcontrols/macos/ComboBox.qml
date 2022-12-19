@@ -28,5 +28,6 @@ NativeStyle.DefaultComboBox {
         verticalAlignment: Text.AlignVCenter
 
         readonly property Item __focusFrameControl: control
+        readonly property bool __ignoreNotCustomizable: true
     }
 }

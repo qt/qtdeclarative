@@ -1713,6 +1713,9 @@ QQuickItem *QQuickPopup::background() const
 void QQuickPopup::setBackground(QQuickItem *background)
 {
     Q_D(QQuickPopup);
+    // The __notCustomizable property won't be on "this" when the popup item's setBackground function
+    // is called, so it won't warn. That's why we do a check here.
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, background, QStringLiteral("background"));
     d->popupItem->setBackground(background);
 }
 
@@ -1745,6 +1748,8 @@ QQuickItem *QQuickPopup::contentItem() const
 void QQuickPopup::setContentItem(QQuickItem *item)
 {
     Q_D(QQuickPopup);
+    // See comment in setBackground for why we do this.
+    QQuickControlPrivate::warnIfCustomizationNotSupported(this, item, QStringLiteral("background"));
     d->popupItem->setContentItem(item);
 }
 

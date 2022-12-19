@@ -44,6 +44,8 @@ T.SpinBox {
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     NativeStyle.SpinBox {
@@ -60,6 +62,8 @@ T.SpinBox {
         y: (parent.height / 2) - height
         implicitWidth: upAndDown.width
         implicitHeight: upAndDown.height / 2
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     down.indicator: Item {
@@ -67,5 +71,7 @@ T.SpinBox {
         y: up.indicator.y + upAndDown.height / 2
         implicitWidth: upAndDown.width
         implicitHeight: upAndDown.height / 2
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }
