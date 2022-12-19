@@ -168,8 +168,8 @@ public:
         LoadInitalTable,
         VerifyTable,
         LayoutTable,
-        LoadAndUnloadAfterLayout,
         CancelOvershoot,
+        UpdateContentSize,
         PreloadColumns,
         PreloadRows,
         MovePreloadedItemsToPool,
@@ -416,6 +416,7 @@ public:
     void adjustViewportXAccordingToAlignment();
     void adjustViewportYAccordingToAlignment();
     void cancelOvershootAfterLayout();
+    void updateContentSize();
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
 
