@@ -22,5 +22,7 @@ T.Dial {
     background: NativeStyle.Dial {
         control: control
         useNinePatchImage: false
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }

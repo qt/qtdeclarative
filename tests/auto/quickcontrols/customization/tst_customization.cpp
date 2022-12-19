@@ -76,6 +76,8 @@ static const ControlInfo ControlInfos[] = {
     { "Tumbler", QStringList() << "background" << "contentItem" }
 };
 
+static const QString nonCustomizableWarning = ".*The current style does not support customization of this control.*";
+
 class tst_customization : public QQmlDataTest
 {
     Q_OBJECT
@@ -97,6 +99,11 @@ private slots:
     void override();
 
     void comboPopup();
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_WINDOWS)
+    void noCustomizationWarningsForDefaultControls_data();
+    void noCustomizationWarningsForDefaultControls();
+#endif
 
 private:
     void reset();
@@ -403,7 +410,6 @@ void tst_customization::override()
     }
 
     for (int i = 0; i < delegates.size(); ++i) {
-        static const QString nonCustomizableWarning = ".*The current style does not support customization of this control.*";
         if (controlNotCustomizable) {
             // If the control can't be customized, ensure that we inform the user of that by checking that a warning is issued.
             QTest::ignoreMessage(QtWarningMsg, QRegularExpression(nonCustomizableWarning));
@@ -550,6 +556,34 @@ void tst_customization::comboPopup()
         QCOMPARE(popup->property("wasCompleted"), QVariant(true));
     }
 }
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_WINDOWS)
+void tst_customization::noCustomizationWarningsForDefaultControls_data()
+{
+    QTest::addColumn<QString>("style");
+
+#ifdef Q_OS_MACOS
+    QTest::addRow("macOS") << "macOS";
+#elif defined(Q_OS_WINDOWS)
+    QTest::addRow("Windows") << "Windows";
+#endif
+}
+
+void tst_customization::noCustomizationWarningsForDefaultControls()
+{
+    QFETCH(QString, style);
+
+    QQuickStyle::setStyle(style);
+
+    QTest::failOnWarning(QRegularExpression(nonCustomizableWarning));
+
+    for (const ControlInfo &controlInfo : ControlInfos) {
+        QString errorMessage;
+        QScopedPointer<QObject> control(createControl(controlInfo.type, {}, &errorMessage));
+        QVERIFY2(control, qPrintable(errorMessage));
+    }
+}
+#endif
 
 QTEST_MAIN(tst_customization)
 

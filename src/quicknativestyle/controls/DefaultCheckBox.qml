@@ -28,6 +28,8 @@ T.CheckBox {
         contentWidth: contentItem.implicitWidth
         contentHeight: contentItem.implicitHeight
         useNinePatchImage: false
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     contentItem: CheckLabel {
@@ -55,5 +57,7 @@ T.CheckBox {
             else
                 indicator && mirrored ? indicator.width + spacing : 0
         }
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }
