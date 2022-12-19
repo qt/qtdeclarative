@@ -688,8 +688,6 @@ Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
 #define Q_TABLEVIEW_ASSERT(cond, output) Q_ASSERT((cond) || [&](){ dumpTable(); qWarning() << "output:" << output; return false;}())
 
 static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEdge, Qt::BottomEdge };
-static const int kEdgeIndexNotSet = -2;
-static const int kEdgeIndexAtEnd = -3;
 
 static const char* kRequiredProperty = "_qt_isrequiredpropery_selected";
 
@@ -2340,11 +2338,6 @@ void QQuickTableViewPrivate::processRebuildTable()
 
     if (rebuildState == RebuildState::LayoutTable) {
         layoutAfterLoadingInitialTable();
-        if (!moveToNextRebuildState())
-            return;
-    }
-
-    if (rebuildState == RebuildState::LoadAndUnloadAfterLayout) {
         loadAndUnloadVisibleEdges();
         if (!moveToNextRebuildState())
             return;
@@ -2360,6 +2353,12 @@ void QQuickTableViewPrivate::processRebuildTable()
     if (rebuildState == RebuildState::CancelOvershootTopLeft) {
         cancelOvershootTopLeft();
         loadAndUnloadVisibleEdges();
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::UpdateContentSize) {
+        updateContentSize();
         if (!moveToNextRebuildState())
             return;
     }
@@ -2607,23 +2606,31 @@ void QQuickTableViewPrivate::loadInitialTable()
     loadAndUnloadVisibleEdges();
 }
 
+void QQuickTableViewPrivate::updateContentSize()
+{
+    const bool allColumnsLoaded = atTableEnd(Qt::LeftEdge) && atTableEnd(Qt::RightEdge);
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded) {
+        updateAverageColumnWidth();
+        updateContentWidth();
+    }
+
+    const bool allRowsLoaded = atTableEnd(Qt::TopEdge) && atTableEnd(Qt::BottomEdge);
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded) {
+        updateAverageRowHeight();
+        updateContentHeight();
+    }
+
+    updateExtents();
+}
+
 void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
 {
     clearEdgeSizeCache();
     relayoutTableItems();
     syncLoadedTableRectFromLoadedTable();
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded()) {
-        updateAverageColumnWidth();
-        updateContentWidth();
-    }
+    updateContentSize();
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded()) {
-        updateAverageRowHeight();
-        updateContentHeight();
-    }
-
-    updateExtents();
     adjustViewportXAccordingToAlignment();
     adjustViewportYAccordingToAlignment();
 }

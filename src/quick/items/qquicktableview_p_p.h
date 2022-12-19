@@ -71,6 +71,8 @@ Q_DECLARE_LOGGING_CATEGORY(lcTableViewDelegateLifecycle)
 
 static const qreal kDefaultRowHeight = 50;
 static const qreal kDefaultColumnWidth = 50;
+static const int kEdgeIndexNotSet = -2;
+static const int kEdgeIndexAtEnd = -3;
 
 class FxTableItem;
 class QQuickTableSectionSizeProviderPrivate;
@@ -201,9 +203,9 @@ public:
         LoadInitalTable,
         VerifyTable,
         LayoutTable,
-        LoadAndUnloadAfterLayout,
         CancelOvershootBottomRight,
         CancelOvershootTopLeft,
+        UpdateContentSize,
         PreloadColumns,
         PreloadRows,
         MovePreloadedItemsToPool,
@@ -400,6 +402,9 @@ public:
 
     int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex);
     int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge);
+    inline bool atTableEnd(Qt::Edge edge) {
+        return nextVisibleEdgeIndexAroundLoadedTable(edge) == kEdgeIndexAtEnd;
+    }
     bool allColumnsLoaded();
     bool allRowsLoaded();
     inline int edgeToArrayIndex(Qt::Edge edge);
@@ -440,6 +445,8 @@ public:
     void cancelOvershootTopLeft();
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
+
+    void updateContentSize();
 
     QTypeRevision resolveImportVersion();
     void createWrapperModel();
