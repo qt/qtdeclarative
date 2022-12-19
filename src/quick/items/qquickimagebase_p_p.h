@@ -44,6 +44,9 @@ public:
 
     virtual bool updateDevicePixelRatio(qreal targetDevicePixelRatio);
 
+    void setStatus(QQuickImageBase::Status value);
+    void setProgress(qreal value);
+
     QQuickPixmap pix;
     QQuickImageBase::Status status;
     QUrl url;

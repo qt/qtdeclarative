@@ -219,10 +219,7 @@ void QQuickImagePrivate::setImage(const QImage &image)
 {
     Q_Q(QQuickImage);
     pix.setImage(image);
-
     q->pixmapChange();
-    status = pix.isNull() ? QQuickImageBase::Null : QQuickImageBase::Ready;
-
     q->update();
 }
 
@@ -230,10 +227,7 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
 {
     Q_Q(QQuickImage);
     pix.setPixmap(pixmap);
-
     q->pixmapChange();
-    status = pix.isNull() ? QQuickImageBase::Null : QQuickImageBase::Ready;
-
     q->update();
 }
 
