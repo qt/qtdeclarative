@@ -11,7 +11,7 @@ project(text_manual_test LANGUAGES CXX)
 #
 # It happens because targets are added using non-internal API which do not call
 # qt_autogen_tools_initial_setup.
-if(QT_SUPERBUILD)
+if(QT_SUPERBUILD OR QT_BUILDING_QT)
     return()
 endif()
 
