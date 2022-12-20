@@ -146,7 +146,9 @@ public:
     void toBoolean(std::function<void(RegisterID)> continuation)
     {
         urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerConvertible_Shift), ScratchRegister);
-        auto needsConversion = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
+        auto needsConversion = branch32(
+                    NotEqual, TrustedImm32(Value::IsIntegerConvertible_Value), ScratchRegister);
+
         continuation(AccumulatorRegister);
         Jump done = jump();
 
@@ -164,8 +166,10 @@ public:
 
     void toNumber()
     {
-        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister);
-        auto isNumber = branch32(GreaterThanOrEqual, ScratchRegister, TrustedImm32(Value::QT_Int));
+        move(TrustedImm64(Value::NumberMask), ScratchRegister);
+        and64(AccumulatorRegister, ScratchRegister);
+        move(TrustedImm64(Value::NumberDiscriminator), ScratchRegister2);
+        auto isNumber = branch64(GreaterThanOrEqual, ScratchRegister, ScratchRegister2);
 
         move(AccumulatorRegister, registerForArg(0));
         callHelper(toNumberHelper);
@@ -232,7 +236,8 @@ public:
     void isNullOrUndefined()
     {
         move(AccumulatorRegister, ScratchRegister);
-        compare64(Equal, ScratchRegister, TrustedImm32(0), AccumulatorRegister);
+        move(TrustedImm64(Value::ManagedMask), ScratchRegister2);
+        compare64(Equal, ScratchRegister, ScratchRegister2, AccumulatorRegister);
         Jump isUndef = branch32(NotEqual, TrustedImm32(0), AccumulatorRegister);
 
         // not undefined
@@ -246,7 +251,7 @@ public:
     Jump isIntOrBool()
     {
         urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerOrBool_Shift), ScratchRegister);
-        return branch32(Equal, TrustedImm32(3), ScratchRegister);
+        return branch32(Equal, TrustedImm32(Value::IsIntegerOrBool_Value), ScratchRegister);
     }
 
     void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
@@ -280,7 +285,7 @@ public:
     void encodeDoubleIntoAccumulator(FPRegisterID src)
     {
         moveDoubleTo64(src, AccumulatorRegister);
-        move(TrustedImm64(Value::NaNEncodeMask), ScratchRegister);
+        move(TrustedImm64(Value::EncodeMask), ScratchRegister);
         xor64(ScratchRegister, AccumulatorRegister);
     }
 
@@ -319,7 +324,8 @@ public:
     Jump unopIntPath(std::function<Jump(void)> fastPath)
     {
         urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerConvertible_Shift), ScratchRegister);
-        Jump accNotIntConvertible = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
+        Jump accNotIntConvertible = branch32(
+                    NotEqual, TrustedImm32(Value::IsIntegerConvertible_Value), ScratchRegister);
 
         // both integer
         Jump failure = fastPath();
@@ -449,8 +455,12 @@ public:
 
     void toNumber()
     {
-        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::QuickType_Shift - 32), ScratchRegister);
-        auto isNumber = branch32(GreaterThanOrEqual, ScratchRegister, TrustedImm32(Value::QT_Int));
+        and32(TrustedImm32(Value::NumberMask >> Value::Tag_Shift),
+              AccumulatorRegisterTag, ScratchRegister);
+        auto isNumber = branch32(
+                    GreaterThanOrEqual, ScratchRegister,
+                    TrustedImm32(Value::NumberDiscriminator >> Value::Tag_Shift));
+
 
         if (ArgInRegCount < 2) {
             subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister); // stack alignment
@@ -599,7 +609,7 @@ public:
     Jump isIntOrBool()
     {
         urshift32(AccumulatorRegisterTag, TrustedImm32(Value::IsIntegerOrBool_Shift - 32), ScratchRegister);
-        return branch32(Equal, TrustedImm32(3), ScratchRegister);
+        return branch32(Equal, TrustedImm32(Value::IsIntegerOrBool_Value), ScratchRegister);
     }
 
     void pushValue(ReturnedValue v)
@@ -630,7 +640,8 @@ public:
     {
         urshift32(AccumulatorRegisterTag, TrustedImm32(Value::IsIntegerConvertible_Shift - 32),
                   ScratchRegister);
-        auto needsConversion = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
+        auto needsConversion = branch32(
+                    NotEqual, TrustedImm32(Value::IsIntegerConvertible_Value), ScratchRegister);
         continuation(AccumulatorRegisterValue);
         Jump done = jump();
 
@@ -707,7 +718,7 @@ public:
     void encodeDoubleIntoAccumulator(FPRegisterID src)
     {
         moveDoubleToInts(src, AccumulatorRegisterValue, AccumulatorRegisterTag);
-        xor32(TrustedImm32(Value::NaNEncodeMask >> 32), AccumulatorRegisterTag);
+        xor32(TrustedImm32(Value::EncodeMask >> 32), AccumulatorRegisterTag);
     }
 
     void pushValueAligned(ReturnedValue v)

@@ -12,7 +12,7 @@ QV4::Heap::StringOrSymbol *QV4::PropertyKey::toStringOrSymbol(QV4::ExecutionEngi
 {
     if (isArrayIndex())
         return Value::fromUInt32(asArrayIndex()).toString(e);
-    return static_cast<Heap::StringOrSymbol *>(asStringOrSymbol());
+    return asStringOrSymbol();
 }
 
 bool QV4::PropertyKey::isString() const {
@@ -21,7 +21,7 @@ bool QV4::PropertyKey::isString() const {
 }
 
 bool QV4::PropertyKey::isSymbol() const {
-    Heap::Base *s = asStringOrSymbol();
+    Heap::StringOrSymbol *s = asStringOrSymbol();
     return s && !s->internalClass->vtable->isString && s->internalClass->vtable->isStringOrSymbol;
 }
 
