@@ -27,11 +27,6 @@ T.RadioButton {
         contentWidth: contentItem.implicitWidth
         contentHeight: contentItem.implicitHeight
         useNinePatchImage: false
-//        Component.onCompleted: {
-//            var f = indicator.font(control)
-//            control.font.pixelSize = f.pixelSize
-//            print(f)
-//        }
 
         readonly property bool __ignoreNotCustomizable: true
     }

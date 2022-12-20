@@ -6,7 +6,6 @@ import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultScrollBar {
     id: controlRoot
-    font.pixelSize: background.styleFont(controlRoot).pixelSize
 
     contentItem: NativeStyle.ScrollBar {
         control: controlRoot
