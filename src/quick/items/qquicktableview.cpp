@@ -1345,10 +1345,9 @@
 
     \snippet qml/tableview/editdelegate.qml 1
 
-    When the edit delegate is instantiated, it will call \l QQuickItem::forceActiveFocus()
-    on the first item inside the delegate that has \l QQuickItem::activeFocusOnTab set to
-    \c true. You can override this by calling \l QQuickItem::forceActiveFocus() explicitly
-    on some other item inside the delegate from \l {Component::completed()}{Component.completed()}.
+    When the edit delegate is instantiated, TableView will call \l QQuickItem::forceActiveFocus()
+    on it. If you want active focus to be set on a child of the edit delegate instead, let
+    the edit delegate be a \l FocusScope.
 
     \sa editTriggers, TableView::commit, edit(), closeEditor(), {Editing cells}
 */
@@ -5046,34 +5045,33 @@ bool QQuickTableViewPrivate::editFromKeyEvent(QKeyEvent *e)
     if (!attached || !attached->editDelegate())
         return false;
 
-    bool anyKeyAccepted = false;
+    bool anyKeyPressed = false;
     bool editKeyPressed = false;
 
-    if (editTriggers & QQuickTableView::AnyKeyPressed) {
-        switch (e->key()) {
-        case Qt::Key_Shift:
-        case Qt::Key_Alt:
-        case Qt::Key_Control:
-        case Qt::Key_Meta:
-            break;
-        default:
-            anyKeyAccepted = true;
-        }
-    }
-
-    if (editTriggers & QQuickTableView::EditKeyPressed) {
-        switch (e->key()) {
-        case Qt::Key_Return:
-        case Qt::Key_Enter:
+    switch (e->key()) {
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
 #ifndef Q_OS_MACOS
-        case Qt::Key_F2:
+    case Qt::Key_F2:
 #endif
-            editKeyPressed = true;
-            break;
-        }
+        anyKeyPressed = true;
+        editKeyPressed = true;
+        break;
+    case Qt::Key_Shift:
+    case Qt::Key_Alt:
+    case Qt::Key_Control:
+    case Qt::Key_Meta:
+    case Qt::Key_Tab:
+    case Qt::Key_Backtab:
+        break;
+    default:
+        anyKeyPressed = true;
     }
 
-    if (!(editKeyPressed || anyKeyAccepted))
+    const bool anyKeyAccepted = anyKeyPressed && (editTriggers & QQuickTableView::AnyKeyPressed);
+    const bool editKeyAccepted = editKeyPressed && (editTriggers & QQuickTableView::EditKeyPressed);
+
+    if (!(editKeyAccepted || anyKeyAccepted))
         return false;
 
     if (!canEdit(index, false)) {
@@ -6114,22 +6112,16 @@ void QQuickTableView::edit(const QModelIndex &index)
     // Inform the delegate, and the edit delegate, that they're being edited
     d->setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(true), cellIndex, cellItem, false);
 
-    // Find the first child inside the delegate that wants focus. But
-    // we only transfer focus if the edit item didn't already set
-    // it to some other internal item explicitly upon construction.
-    QObject *focusObject = d->editItem->window()->focusObject();
-    QQuickItem *focusItem = qobject_cast<QQuickItem *>(focusObject);
-    if (!d->editItem->isAncestorOf(focusItem)) {
-        QQuickItem *newFocusItem = d->editItem;
-        if (!newFocusItem->activeFocusOnTab())
-            newFocusItem = d->editItem->nextItemInFocusChain(true);
-        if (newFocusItem == d->editItem || d->editItem->isAncestorOf(newFocusItem)) {
-            // Set activeFocusOnTab to false to ensure that QQuickTableView::keyPressEvent()
-            // receives the tab keys, instead of QQuickItemPrivate::focusNextPrev().
-            // TableView knows better which cell is next in the focus chain.
-            newFocusItem->setActiveFocusOnTab(false);
-            newFocusItem->forceActiveFocus(Qt::MouseFocusReason);
-        }
+    // Transfer focus to the edit item
+    d->editItem->forceActiveFocus(Qt::MouseFocusReason);
+
+    // Install an event filter on the focus object to handle Enter and Tab.
+    // Note that the focusObject doesn't need to be the editItem itself, in
+    // case the editItem is a FocusScope.
+    if (QObject *focusObject = d->editItem->window()->focusObject()) {
+        QQuickItem *focusItem = qobject_cast<QQuickItem *>(focusObject);
+        if (focusItem == d->editItem || d->editItem->isAncestorOf(focusItem))
+            focusItem->installEventFilter(this);
     }
 }
 
@@ -6232,28 +6224,6 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
     if (d->editIndex.isValid()) {
         // While editing, we limit the keys that we
         // handle to not interfere with editing.
-        if (d->editTriggers != QQuickTableView::NoEditTriggers) {
-            switch (e->key()) {
-            case Qt::Key_Enter:
-            case Qt::Key_Return:
-                if (auto attached = d->getAttachedObject(d->editItem))
-                    emit attached->commit();
-                closeEditor();
-                break;
-            case Qt::Key_Escape:
-                closeEditor();
-                break;
-            case Qt::Key_Tab:
-            case Qt::Key_Backtab:
-                if (activeFocusOnTab()) {
-                    if (auto attached = d->getAttachedObject(d->editItem))
-                        emit attached->commit();
-                    if (d->setCurrentIndexFromKeyEvent(e))
-                        edit(d->selectionModel->currentIndex());
-                }
-                break;
-            }
-        }
         return;
     }
 
@@ -6264,6 +6234,42 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         return;
 
     QQuickFlickable::keyPressEvent(e);
+}
+
+bool QQuickTableView::eventFilter(QObject *obj, QEvent *event)
+{
+    Q_D(QQuickTableView);
+
+    if (event->type() == QEvent::KeyPress) {
+        Q_ASSERT(d->editItem);
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        switch (keyEvent->key()) {
+        case Qt::Key_Enter:
+        case Qt::Key_Return:
+            if (auto attached = d->getAttachedObject(d->editItem))
+                emit attached->commit();
+            closeEditor();
+            return true;
+        case Qt::Key_Tab:
+        case Qt::Key_Backtab:
+            if (activeFocusOnTab()) {
+                if (auto attached = d->getAttachedObject(d->editItem))
+                    emit attached->commit();
+                closeEditor();
+                if (d->setCurrentIndexFromKeyEvent(keyEvent)) {
+                    const QModelIndex currentIndex = d->selectionModel->currentIndex();
+                    if (d->canEdit(currentIndex, false))
+                        edit(currentIndex);
+                }
+                return true;
+            }
+        case Qt::Key_Escape:
+            closeEditor();
+            return true;
+        }
+    }
+
+    return QQuickFlickable::eventFilter(obj, event);
 }
 
 bool QQuickTableView::alternatingRows() const
