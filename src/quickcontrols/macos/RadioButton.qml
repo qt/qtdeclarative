@@ -8,5 +8,4 @@ NativeStyle.DefaultRadioButton {
     id: control
     readonly property Item __focusFrameTarget: indicator
     readonly property Item __focusFrameStyleItem: indicator
-    font.pixelSize: indicator.styleFont(control).pixelSize
 }
