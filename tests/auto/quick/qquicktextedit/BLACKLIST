@@ -1,3 +1,10 @@
+# QTBUG-109488 temporary fix
+[largeTextObservesViewport]
+linux
+windows
+android
+darwin
+
 [mouseSelection]
 opensuse-leap
 
