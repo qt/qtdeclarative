@@ -102,6 +102,7 @@ void NoisyShader::updateSampledImage(RenderState &state, int binding, QSGTexture
     Q_UNUSED(binding);
 
     NoisyMaterial *mat = static_cast<NoisyMaterial *>(newMaterial);
+    mat->state.texture->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = mat->state.texture;
 }
 
