@@ -45,7 +45,7 @@ Item {
 
                 Component.onCompleted: {
                     tableView.editItem = editRoot
-                    tableView.editIndex = tableView.modelIndex(column, row)
+                    tableView.editIndex = tableView.modelIndex(row, column)
                     selectAll()
                 }
 
