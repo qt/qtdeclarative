@@ -13,6 +13,7 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
+#include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
 class tst_StyleImports : public QQmlDataTest
 {
@@ -34,6 +35,9 @@ private slots:
 
     void fallbackStyleShouldNotOverwriteTheme_data();
     void fallbackStyleShouldNotOverwriteTheme();
+
+    void attachedTypesAvailable_data();
+    void attachedTypesAvailable();
 };
 
 tst_StyleImports::tst_StyleImports()
@@ -239,6 +243,54 @@ void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme()
     // For example: the Fusion style provides Button.qml, so the Button's text color
     // should be that of QPalette::ButtonText from QQuickFusionTheme.
     QCOMPARE(contentItem->color(), expectedContentItemColor);
+}
+
+void tst_StyleImports::attachedTypesAvailable_data()
+{
+    QTest::addColumn<QString>("import");
+
+    // QtQuick.Controls import.
+    QTest::newRow("Controls") << "";
+
+    const QStringList styles = testStyles();
+    for (const QString &styleImport : styles)
+        QTest::newRow(qPrintable(styleImport)) << styleImport;
+}
+
+void tst_StyleImports::attachedTypesAvailable()
+{
+    QFETCH(QString, import);
+
+    // If it's QtQuick.Controls, don't prepend anything.
+    if (!import.isEmpty())
+        import.prepend(QLatin1Char('.'));
+
+    // Should not warn about missing types.
+    QTest::failOnWarning(QRegularExpression(".?"));
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(QString::fromLatin1(R"(
+        import QtQuick
+        import QtQuick.Controls%1
+
+        Item {
+            SplitView {
+                handle: Rectangle {
+                    opacity: SplitHandle.hovered || SplitHandle.pressed ? 1.0 : 0.0
+                }
+                Item {} // Need these to ensure the handle is actually created, otherwise we won't get warnings.
+                Item {}
+            }
+
+            Dialog {
+                anchors.centerIn: Overlay.overlay
+            }
+        }
+    )").arg(import).toLatin1(), QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_StyleImports)

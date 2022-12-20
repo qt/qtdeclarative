@@ -12,8 +12,6 @@ qt_internal_add_qml_module(QuickControls2
     DESIGNER_SUPPORTED
     CLASS_NAME QtQuickControls2Plugin
     PLUGIN_TARGET qtquickcontrols2plugin
-    IMPORTS
-        QtQuick.Controls.impl/auto
     OPTIONAL_IMPORTS
         QtQuick.Controls.Fusion/auto
         QtQuick.Controls.Material/auto
