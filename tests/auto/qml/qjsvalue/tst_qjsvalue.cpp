@@ -2782,7 +2782,6 @@ void tst_QJSValue::jsvalueArrayToSequenceType()
     QCOMPARE(instanceCount, 0);
 }
 
-struct QJSValuePrivateAccess : public QJSValuePrivate { using QJSValuePrivate::setRawValue; };
 void tst_QJSValue::deleteFromDifferentThread()
 {
 #if !QT_CONFIG(thread)
@@ -2793,7 +2792,7 @@ void tst_QJSValue::deleteFromDifferentThread()
     QV4::PersistentValueStorage storage(engine->handle());
     QCOMPARE(storage.firstPage, nullptr);
     QJSValue jsval;
-    QJSValuePrivateAccess::setRawValue(&jsval, storage.allocate());
+    QJSValuePrivate::adoptPersistentValue(&jsval, storage.allocate());
     QVERIFY(storage.firstPage != nullptr);
 
     QMutex mutex;

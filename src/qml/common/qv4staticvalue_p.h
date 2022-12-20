@@ -17,6 +17,8 @@
 #include <qjsnumbercoercion.h>
 
 #include <QtCore/private/qnumeric_p.h>
+#include <private/qtqmlglobal_p.h>
+
 #include <cstring>
 
 #ifdef QT_NO_DEBUG
@@ -35,8 +37,14 @@ namespace QV4 {
 // It will be returned in rax on x64, [eax,edx] on x86 and [r0,r1] on arm
 typedef quint64 ReturnedValue;
 
+namespace Heap {
+struct Base;
+}
+
 struct StaticValue
 {
+    using HeapBasePtr = Heap::Base *;
+
     StaticValue() = default;
     constexpr StaticValue(quint64 val) : _val(val) {}
 
@@ -56,21 +64,31 @@ struct StaticValue
     Value &asValue();
 
     /*
-        We use 8 bytes for a value and a different variant of NaN boxing. A Double
-        NaN (actually -qNaN) is indicated by a number that has the top 13 bits set, and for a
-        signalling NaN it is the top 14 bits. The other values are usually set to 0 by the
-        processor, and are thus free for us to store other data. We keep pointers in there for
-        managed objects, and encode the other types using the free space given to use by the unused
-        bits for NaN values. This also works for pointers on 64 bit systems, as they all currently
-        only have 48 bits of addressable memory. (Note: we do leave the lower 49 bits available for
-        pointers.)
+        We use 8 bytes for a value. In order to store all possible values we employ a variant of NaN
+        boxing. A "special" Double is indicated by a number that has the 11 exponent bits set to 1.
+        Those can be NaN, positive or negative infinity. We only store one variant of NaN: The sign
+        bit has to be off and the bit after the exponent ("quiet bit") has to be on. However, since
+        the exponent bits are enough to identify special doubles, we can use a different bit as
+        discriminator to tell us how the rest of the bits (including quiet and sign) are to be
+        interpreted. This bit is bit 48. If set, we have an unmanaged value, which includes the
+        special doubles and various other values. If unset, we have a managed value, and all of the
+        other bits can be used to assemble a pointer.
 
-        We xor Doubles with (0xffff8000 << 32). That has the effect that no doubles will
-        get encoded with bits 63-49 all set to 0. We then use bit 48 to distinguish between
-        managed/undefined (0), or Null/Int/Bool/Empty (1). So, storing a 49 bit pointer will leave
-        the top 15 bits 0, which is exactly the 'natural' representation of pointers. If bit 49 is
-        set, bit 48 indicates Empty (0) or integer-convertible (1). Then the 3 bit below that are
-        used to encode Null/Int/Bool.
+        On 32bit systems the pointer can just live in the lower 4 bytes. On 64 bit systems the lower
+        48 bits can be used for verbatim pointer bits. However, since all our heap objects are
+        aligned to 32 bytes, we can use the 5 least significant bits of the pointer to store, e.g.
+        pointer tags on android. The same holds for the 3 bits between the double exponent and
+        bit 48.
+
+        With that out of the way, we can use the other bits to store different values.
+
+        We xor Doubles with (0x7ff48000 << 32). That has the effect that any double with all the
+        exponent bits set to 0 is one of our special doubles. Those special doubles then get the
+        other two bits in the mask (Special and Number) set to 1, as they cannot have 1s in those
+        positions to begin with.
+
+        We dedicate further bits to integer-convertible and bool-or-int. With those bits we can
+        describe all values we need to store.
 
         Undefined is encoded as a managed pointer with value 0. This is the same as a nullptr.
 
@@ -78,34 +96,31 @@ struct StaticValue
         0 = always 0
         1 = always 1
         x = stored value
-        a,b,c,d = specific bit values, see notes
+        y = stored value, shifted to different position
+        a = xor-ed bits, where at least one bit is set
+        b = xor-ed bits
 
         32109876 54321098 76543210 98765432 10987654 32109876 54321098 76543210 |
         66665555 55555544 44444444 33333333 33222222 22221111 11111100 00000000 | JS Value
         ------------------------------------------------------------------------+--------------
         00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 | Undefined
-        00000000 0000000x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Managed (heap pointer)
-        a0000000 0000bc00 00000000 00000000 00000000 00000000 00000000 00000000 | NaN/Inf
-        dddddddd ddddddxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | double
-        00000000 00000010 00000000 00000000 00000000 00000000 00000000 00000000 | empty (non-sparse array hole)
-        00000000 00000010 10000000 00000000 00000000 00000000 00000000 00000000 | Null
-        00000000 00000011 00000000 00000000 00000000 00000000 00000000 0000000x | Bool
-        00000000 00000011 10000000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
-
-        Notes:
-        - a: xor-ed signbit, always 1 for NaN
-        - bc, xor-ed values: 11 = inf, 10 = sNaN, 01 = qNaN, 00 = boxed value
-        - d: xor-ed bits, where at least one bit is set, so: (val >> (64-14)) > 0
-        - Undefined maps to C++ nullptr, so the "default" initialization is the same for both C++
-          and JS
-        - Managed has the left 15 bits set to 0, so: (val >> (64-15)) == 0
-        - empty, Null, Bool, and Int have the left 14 bits set to 0, and bit 49 set to 1,
-          so: (val >> (64-15)) == 1
-        - Null, Bool, and Int have bit 48 set, indicating integer-convertible
-        - xoring _val with NaNEncodeMask will convert to a double in "natural" representation, where
-          any non double results in a NaN
-        - on 32bit we can use the fact that addresses are 32bits wide, so the tag part (bits 32 to
-          63) are zero. No need to shift.
+        y0000000 0000yyy0 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxyyyyy | Managed (heap pointer)
+        00000000 00001101 10000000 00000000 00000000 00000000 00000000 00000000 | NaN
+        00000000 00000101 10000000 00000000 00000000 00000000 00000000 00000000 | +Inf
+        10000000 00000101 10000000 00000000 00000000 00000000 00000000 00000000 | -Inf
+        xaaaaaaa aaaaxbxb bxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | double
+        00000000 00000001 00000000 00000000 00000000 00000000 00000000 00000000 | empty (non-sparse array hole)
+        00000000 00000011 00000000 00000000 00000000 00000000 00000000 00000000 | Null
+        00000000 00000011 10000000 00000000 00000000 00000000 00000000 0000000x | Bool
+        00000000 00000011 11000000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
+        ^             ^^^ ^^
+        |             ||| ||
+        |             ||| |+-> Number
+        |             ||| +--> Int or Bool
+        |             ||+----> Unmanaged
+        |             |+-----> Integer compatible
+        |             +------> Special double
+        +--------------------> Double sign, also used for special doubles
     */
 
     quint64 _val;
@@ -121,10 +136,10 @@ struct StaticValue
     static inline int valueOffset() { return 4; }
     static inline int tagOffset() { return 0; }
 #endif
-    static inline constexpr quint64 tagValue(quint32 tag, quint32 value) { return quint64(tag) << 32 | value; }
-    QV4_NEARLY_ALWAYS_INLINE constexpr void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
+    static inline constexpr quint64 tagValue(quint32 tag, quint32 value) { return quint64(tag) << Tag_Shift | value; }
+    QV4_NEARLY_ALWAYS_INLINE constexpr void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << Tag_Shift | value; }
     QV4_NEARLY_ALWAYS_INLINE constexpr quint32 value() const { return _val & quint64(~quint32(0)); }
-    QV4_NEARLY_ALWAYS_INLINE constexpr quint32 tag() const { return _val >> 32; }
+    QV4_NEARLY_ALWAYS_INLINE constexpr quint32 tag() const { return _val >> Tag_Shift; }
     QV4_NEARLY_ALWAYS_INLINE constexpr void setTag(quint32 tag) { setTagValue(tag, value()); }
 
     QV4_NEARLY_ALWAYS_INLINE constexpr int int_32() const
@@ -133,96 +148,133 @@ struct StaticValue
     }
     QV4_NEARLY_ALWAYS_INLINE constexpr void setInt_32(int i)
     {
-        setTagValue(quint32(ValueTypeInternal::Integer), quint32(i));
+        setTagValue(quint32(QuickType::Integer), quint32(i));
     }
     QV4_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
 
     QV4_NEARLY_ALWAYS_INLINE constexpr void setEmpty()
     {
-        setTagValue(quint32(ValueTypeInternal::Empty), 0);
+        setTagValue(quint32(QuickType::Empty), 0);
     }
 
-    // ### Fix for 32 bit (easiest solution is to set highest bit to 1 for mananged/undefined/integercompatible
-    // and use negative numbers here
-    enum QuickType {
-        QT_ManagedOrUndefined = 0,
-        QT_ManagedOrUndefined1 = 1,
-        QT_ManagedOrUndefined2 = 2,
-        QT_ManagedOrUndefined3 = 3,
-        QT_Empty = 4,
-        QT_Null = 5,
-        QT_Bool = 6,
-        QT_Int = 7
-        // all other values are doubles
+    enum class TagBit {
+        // s: sign bit
+        // e: double exponent bit
+        // u: upper 3 bits if managed
+        // m: bit 48, denotes "unmanaged" if 1
+        // p: significant pointer bits (some re-used for non-managed)
+        //                  seeeeeeeeeeeuuumpppp
+        SpecialNegative = 0b10000000000000000000 << 12,
+        SpecialQNaN     = 0b00000000000010000000 << 12,
+        Special         = 0b00000000000001000000 << 12,
+        IntCompat       = 0b00000000000000100000 << 12,
+        Unmanaged       = 0b00000000000000010000 << 12,
+        IntOrBool       = 0b00000000000000001000 << 12,
+        Number          = 0b00000000000000000100 << 12,
     };
+
+    static inline constexpr quint64 tagBitMask(TagBit bit) { return quint64(bit) << Tag_Shift; }
 
     enum Type {
-        Undefined_Type = 0,
-        Managed_Type = 1,
-        Empty_Type = 4,
-        Null_Type = 5,
-        Boolean_Type = 6,
-        Integer_Type = 7,
-        Double_Type = 8
+        // Managed, Double and undefined are not directly encoded
+        Managed_Type   = 0,
+        Double_Type    = 1,
+        Undefined_Type = 2,
+
+        Empty_Type     = quint32(TagBit::Unmanaged),
+        Null_Type      = Empty_Type   | quint32(TagBit::IntCompat),
+        Boolean_Type   = Null_Type    | quint32(TagBit::IntOrBool),
+        Integer_Type   = Boolean_Type | quint32(TagBit::Number)
     };
 
-    inline Type type() const {
-        auto t = quickType();
-        if (t < QT_Empty)
-            return _val ? Managed_Type : Undefined_Type;
-        if (t > QT_Int)
+    enum {
+        Tag_Shift = 32,
+
+        IsIntegerConvertible_Shift = 48,
+        IsIntegerConvertible_Value =  3, // Unmanaged | IntCompat after shifting
+
+        IsIntegerOrBool_Shift = 47,
+        IsIntegerOrBool_Value =  7, // Unmanaged | IntCompat | IntOrBool after shifting
+    };
+
+    static_assert(IsIntegerConvertible_Value ==
+            (quint32(TagBit::IntCompat) | quint32(TagBit::Unmanaged))
+                >> (IsIntegerConvertible_Shift - Tag_Shift));
+
+    static_assert(IsIntegerOrBool_Value ==
+            (quint32(TagBit::IntOrBool) | quint32(TagBit::IntCompat) | quint32(TagBit::Unmanaged))
+                >> (IsIntegerOrBool_Shift - Tag_Shift));
+
+    static constexpr quint64 ExponentMask  = 0b0111111111110000ull << 48;
+
+    static constexpr quint64 Top1Mask      = 0b1000000000000000ull << 48;
+    static constexpr quint64 Upper3Mask    = 0b0000000000001110ull << 48;
+    static constexpr quint64 Lower5Mask    = 0b0000000000011111ull;
+
+    static constexpr quint64 ManagedMask   = ExponentMask | quint64(TagBit::Unmanaged) << Tag_Shift;
+    static constexpr quint64 DoubleMask    = ManagedMask  | quint64(TagBit::Special)   << Tag_Shift;
+    static constexpr quint64 NumberMask    = ManagedMask  | quint64(TagBit::Number)    << Tag_Shift;
+    static constexpr quint64 IntOrBoolMask = ManagedMask  | quint64(TagBit::IntOrBool) << Tag_Shift;
+    static constexpr quint64 IntCompatMask = ManagedMask  | quint64(TagBit::IntCompat) << Tag_Shift;
+
+    static constexpr quint64 EncodeMask    = DoubleMask | NumberMask;
+
+    static constexpr quint64 DoubleDiscriminator
+            = ((quint64(TagBit::Unmanaged) | quint64(TagBit::Special)) << Tag_Shift);
+    static constexpr quint64 NumberDiscriminator
+            = ((quint64(TagBit::Unmanaged) | quint64(TagBit::Number)) << Tag_Shift);
+
+    // Things we can immediately determine by just looking at the upper 4 bytes.
+    enum class QuickType : quint32 {
+        // Managed takes precedence over all others. That is, other bits may be set if it's managed.
+        // However, since all others include the Unmanaged bit, we can still check them with simple
+        // equality operations.
+        Managed   = Managed_Type,
+
+        Empty     = Empty_Type,
+        Null      = Null_Type,
+        Boolean   = Boolean_Type,
+        Integer   = Integer_Type,
+
+        PlusInf   = quint32(TagBit::Number) | quint32(TagBit::Special) | quint32(TagBit::Unmanaged),
+        MinusInf  = PlusInf | quint32(TagBit::SpecialNegative),
+        NaN       = PlusInf | quint32(TagBit::SpecialQNaN),
+        MinusNaN  = NaN | quint32(TagBit::SpecialNegative), // Can happen with UMinus on NaN
+        // All other values are doubles
+    };
+
+    // Aliases for easier porting. Remove those when possible
+    using ValueTypeInternal = QuickType;
+    enum {
+        QT_Empty              = Empty_Type,
+        QT_Null               = Null_Type,
+        QT_Bool               = Boolean_Type,
+        QT_Int                = Integer_Type,
+        QuickType_Shift       = Tag_Shift,
+    };
+
+    inline Type type() const
+    {
+        const quint64 masked = _val & DoubleMask;
+        if (masked >= DoubleDiscriminator)
             return Double_Type;
-        return static_cast<Type>(t);
+
+        // Any bit set in the exponent would have been caught above, as well as both bits being set.
+        // None of them being set as well as only Special being set means "managed".
+        // Only Unmanaged being set means "unmanaged". That's all remaining options.
+        if (masked != tagBitMask(TagBit::Unmanaged)) {
+            Q_ASSERT((_val & tagBitMask(TagBit::Unmanaged)) == 0);
+            return isUndefined() ? Undefined_Type : Managed_Type;
+        }
+
+        const Type ret = Type(tag());
+        Q_ASSERT(
+                ret == Empty_Type ||
+                ret == Null_Type ||
+                ret == Boolean_Type ||
+                ret == Integer_Type);
+        return ret;
     }
-
-    // Shared between 32-bit and 64-bit encoding
-    enum {
-        Tag_Shift = 32
-    };
-
-    // Used only by 64-bit encoding
-    static const quint64 NaNEncodeMask = 0xfffc000000000000ull;
-    enum {
-        IsDouble_Shift = 64-14,
-        IsManagedOrUndefined_Shift = 64-15,
-        IsIntegerConvertible_Shift = 64-15,
-        IsIntegerOrBool_Shift = 64-16,
-        QuickType_Shift = 64 - 17,
-        IsPositiveIntShift = 31
-    };
-
-    static const quint64 Immediate_Mask_64 = 0x00020000u; // bit 49
-
-    enum class ValueTypeInternal_64 {
-        Empty            = Immediate_Mask_64 | 0,
-        Null             = Immediate_Mask_64 | 0x08000u,
-        Boolean          = Immediate_Mask_64 | 0x10000u,
-        Integer          = Immediate_Mask_64 | 0x18000u
-    };
-
-    // Used only by 32-bit encoding
-    enum Masks {
-        SilentNaNBit           =                  0x00040000,
-        NotDouble_Mask         =                  0x7ffa0000,
-    };
-    static const quint64 Immediate_Mask_32 = NotDouble_Mask | 0x00020000u | SilentNaNBit;
-
-    enum class ValueTypeInternal_32 {
-        Empty            = Immediate_Mask_32 | 0,
-        Null             = Immediate_Mask_32 | 0x08000u,
-        Boolean          = Immediate_Mask_32 | 0x10000u,
-        Integer          = Immediate_Mask_32 | 0x18000u
-    };
-
-    enum {
-        Managed_Type_Internal = 0
-    };
-
-    using ValueTypeInternal = ValueTypeInternal_64;
-
-    enum {
-        NaN_Mask = 0x7ff80000,
-    };
 
     inline quint64 quickType() const { return (_val >> QuickType_Shift); }
 
@@ -232,34 +284,52 @@ struct StaticValue
     inline bool isBoolean() const { return tag() == quint32(ValueTypeInternal::Boolean); }
     inline bool isInteger() const { return tag() == quint32(ValueTypeInternal::Integer); }
     inline bool isNullOrUndefined() const { return isNull() || isUndefined(); }
-    inline bool isNumber() const { return quickType() >= QT_Int; }
-
     inline bool isUndefined() const { return _val == 0; }
-    inline bool isDouble() const { return (_val >> IsDouble_Shift); }
+
+    inline bool isDouble() const
+    {
+        // If any of the flipped exponent bits are 1, it's a regular double, and the masked tag is
+        // larger than Unmanaged | Special.
+        //
+        // If all (flipped) exponent bits are 0:
+        // 1. If Unmanaged bit is 0, it's managed
+        // 2. If the Unmanaged bit it is 1, and the Special bit is 0, it's not a special double
+        // 3. If both are 1, it is a special double and the masked tag equals Unmanaged | Special.
+
+        return (_val & DoubleMask) >= DoubleDiscriminator;
+    }
+
+    inline bool isNumber() const
+    {
+        // If any of the flipped exponent bits are 1, it's a regular double, and the masked tag is
+        // larger than Unmanaged | Number.
+        //
+        // If all (flipped) exponent bits are 0:
+        // 1. If Unmanaged bit is 0, it's managed
+        // 2. If the Unmanaged bit it is 1, and the Number bit is 0, it's not number
+        // 3. If both are 1, it is a number and masked tag equals Unmanaged | Number.
+
+        return (_val & NumberMask) >= NumberDiscriminator;
+    }
+
+    inline bool isManagedOrUndefined() const { return (_val & ManagedMask) == 0; }
+
+    // If any other bit is set in addition to the managed mask, it's not undefined.
     inline bool isManaged() const
     {
-#if QT_POINTER_SIZE == 4
-        return value() && tag() == Managed_Type_Internal;
-#else
-        return _val && ((_val >> IsManagedOrUndefined_Shift) == 0);
-#endif
-    }
-    inline bool isManagedOrUndefined() const
-    {
-#if QT_POINTER_SIZE == 4
-        return tag() == Managed_Type_Internal;
-#else
-        return ((_val >> IsManagedOrUndefined_Shift) == 0);
-#endif
+        return isManagedOrUndefined() && !isUndefined();
     }
 
-    inline bool isIntOrBool() const {
-        return (_val >> IsIntegerOrBool_Shift) == 3;
+    inline bool isIntOrBool() const
+    {
+        // It's an int or bool if all the exponent bits are 0,
+        // and the "int or bool" bit as well as the "umanaged" bit are set,
+        return (_val >> IsIntegerOrBool_Shift) == IsIntegerOrBool_Value;
     }
 
     inline bool integerCompatible() const {
         Q_ASSERT(!isEmpty());
-        return (_val >> IsIntegerConvertible_Shift) == 1;
+        return (_val >> IsIntegerConvertible_Shift) == IsIntegerConvertible_Value;
     }
 
     static inline bool integerCompatible(StaticValue a, StaticValue b) {
@@ -272,36 +342,45 @@ struct StaticValue
 
     inline bool isNaN() const
     {
-        return (tag() & 0x7ffc0000  ) == 0x00040000;
+        switch (QuickType(tag())) {
+        case QuickType::NaN:
+        case QuickType::MinusNaN:
+            return true;
+        default:
+            return false;
+        }
     }
 
     inline bool isPositiveInt() const {
-#if QT_POINTER_SIZE == 4
         return isInteger() && int_32() >= 0;
-#else
-        return (_val >> IsPositiveIntShift) == (quint64(ValueTypeInternal::Integer) << 1);
-#endif
     }
 
     QV4_NEARLY_ALWAYS_INLINE double doubleValue() const {
         Q_ASSERT(isDouble());
         double d;
-        StaticValue v = *this;
-        v._val ^= NaNEncodeMask;
-        memcpy(&d, &v._val, 8);
+        const quint64 unmasked = _val ^ EncodeMask;
+        memcpy(&d, &unmasked, 8);
         return d;
     }
 
     QV4_NEARLY_ALWAYS_INLINE void setDouble(double d) {
-        if (qt_is_nan(d))
-            d = qt_qnan();
-        memcpy(&_val, &d, 8);
-        _val ^= NaNEncodeMask;
+        if (qt_is_nan(d)) {
+            // We cannot store just any NaN. It has to be a NaN with only the quiet bit
+            // set in the upper bits of the mantissa and the sign bit off.
+            // qt_qnan() happens to produce such a thing via std::numeric_limits,
+            // but this is actually not guaranteed. Therefore, we make our own.
+            _val = (quint64(QuickType::NaN) << Tag_Shift);
+            Q_ASSERT(isNaN());
+        } else {
+            memcpy(&_val, &d, 8);
+            _val ^= EncodeMask;
+        }
+
         Q_ASSERT(isDouble());
     }
 
     inline bool isInt32() {
-        if (tag() == quint32(ValueTypeInternal::Integer))
+        if (tag() == quint32(QuickType::Integer))
             return true;
         if (isDouble()) {
             double d = doubleValue();
@@ -319,7 +398,7 @@ struct StaticValue
     }
 
     double asDouble() const {
-        if (tag() == quint32(ValueTypeInternal::Integer))
+        if (tag() == quint32(QuickType::Integer))
             return int_32();
         return doubleValue();
     }
@@ -335,7 +414,7 @@ struct StaticValue
     inline bool tryIntegerConversion() {
         bool b = integerCompatible();
         if (b)
-            setTagValue(quint32(ValueTypeInternal::Integer), value());
+            setTagValue(quint32(QuickType::Integer), value());
         return b;
     }
 
@@ -373,11 +452,11 @@ struct StaticValue
     constexpr ReturnedValue asReturnedValue() const { return _val; }
     constexpr static StaticValue fromReturnedValue(ReturnedValue val) { return {val}; }
 
-    inline static constexpr StaticValue emptyValue() { return { tagValue(quint32(ValueTypeInternal::Empty), 0) }; }
-    static inline constexpr StaticValue fromBoolean(bool b) { return { tagValue(quint32(ValueTypeInternal::Boolean), b) }; }
-    static inline constexpr StaticValue fromInt32(int i) { return { tagValue(quint32(ValueTypeInternal::Integer), quint32(i)) }; }
+    inline static constexpr StaticValue emptyValue() { return { tagValue(quint32(QuickType::Empty), 0) }; }
+    static inline constexpr StaticValue fromBoolean(bool b) { return { tagValue(quint32(QuickType::Boolean), b) }; }
+    static inline constexpr StaticValue fromInt32(int i) { return { tagValue(quint32(QuickType::Integer), quint32(i)) }; }
     inline static constexpr StaticValue undefinedValue() { return { 0 }; }
-    static inline constexpr StaticValue nullValue() { return { tagValue(quint32(ValueTypeInternal::Null), 0) }; }
+    static inline constexpr StaticValue nullValue() { return { tagValue(quint32(QuickType::Null), 0) }; }
 
     static inline StaticValue fromDouble(double d)
     {
@@ -390,7 +469,7 @@ struct StaticValue
     {
         StaticValue v;
         if (i < uint(std::numeric_limits<int>::max())) {
-            v.setTagValue(quint32(ValueTypeInternal::Integer), i);
+            v.setTagValue(quint32(QuickType::Integer), i);
         } else {
             v.setDouble(i);
         }
@@ -415,6 +494,119 @@ struct StaticValue
     {
         return static_cast<uint>(toInt32(d));
     }
+
+    // While a value containing a Heap::Base* is not actually static, we still implement
+    // the setting and retrieving of heap pointers here in order to have the encoding
+    // scheme completely in one place.
+
+#if QT_POINTER_SIZE == 8
+
+    // All pointer shifts are from more significant to less significant bits.
+    // When encoding, we shift right by that amount. When decoding, we shift left.
+    // Negative numbers mean shifting the other direction. 0 means no shifting.
+    //
+    // The IA64 and Sparc64 cases are mostly there to demonstrate the idea. Sparc64
+    // and IA64 are not officially supported, but we can expect more platforms with
+    // similar "problems" in the future.
+    enum PointerShift {
+#if defined(Q_OS_ANDROID) && defined(Q_PROCESSOR_ARM_64)
+        // Android on arm64 uses the top byte to store pointer tags.
+        // Move it to Upper3 and Lower5.
+        Top1Shift   = 0,
+        Upper3Shift = 12,
+        Lower5Shift = 56,
+#elif defined(Q_PROCESSOR_IA64)
+        // On ia64, bits 63-61 in a 64-bit pointer are used to store the virtual region
+        // number. We can move those to Upper3.
+        Top1Shift   = 0,
+        Upper3Shift = 12,
+        Lower5Shift = 0,
+#elif defined(Q_PROCESSOR_SPARC_64)
+        // Sparc64 wants to use 52 bits for pointers.
+        // Upper3 can stay where it is, bit48 moves to the top bit.
+        Top1Shift   = -15,
+        Upper3Shift = 0,
+        Lower5Shift = 0,
+#elif 0 // TODO: Once we need 5-level page tables, add the appropriate check here.
+        // With 5-level page tables (as possible on linux) we need 57 address bits.
+        // Upper3 can stay where it is, bit48 moves to the top bit, the rest moves to Lower5.
+        Top1Shift   = -15,
+        Upper3Shift = 0,
+        Lower5Shift = 52,
+#else
+        Top1Shift   = 0,
+        Upper3Shift = 0,
+        Lower5Shift = 0
+#endif
+    };
+
+    template<int Offset, quint64 Mask>
+    static constexpr quint64 movePointerBits(quint64 val)
+    {
+        if constexpr (Offset > 0)
+            return (val & ~Mask) | ((val & Mask) >> Offset);
+        if constexpr (Offset < 0)
+            return (val & ~Mask) | ((val & Mask) << -Offset);
+        return val;
+    }
+
+    template<int Offset, quint64 Mask>
+    static constexpr quint64 storePointerBits(quint64 val)
+    {
+        constexpr quint64 OriginMask = movePointerBits<-Offset, Mask>(Mask);
+        return movePointerBits<Offset, OriginMask>(val);
+    }
+
+    template<int Offset, quint64 Mask>
+    static constexpr quint64 retrievePointerBits(quint64 val)
+    {
+        return movePointerBits<-Offset, Mask>(val);
+    }
+
+    QML_NEARLY_ALWAYS_INLINE HeapBasePtr m() const
+    {
+        Q_ASSERT(!(_val & ManagedMask));
+
+        // Re-assemble the pointer from its fragments.
+        const quint64 tmp = retrievePointerBits<Top1Shift, Top1Mask>(
+                            retrievePointerBits<Upper3Shift, Upper3Mask>(
+                            retrievePointerBits<Lower5Shift, Lower5Mask>(_val)));
+
+        HeapBasePtr b;
+        memcpy(&b, &tmp, 8);
+        return b;
+    }
+    QML_NEARLY_ALWAYS_INLINE void setM(HeapBasePtr b)
+    {
+        quint64 tmp;
+        memcpy(&tmp, &b, 8);
+
+        // Has to be aligned to 32 bytes
+        Q_ASSERT(!(tmp & Lower5Mask));
+
+        // Encode the pointer.
+        _val = storePointerBits<Top1Shift, Top1Mask>(
+               storePointerBits<Upper3Shift, Upper3Mask>(
+               storePointerBits<Lower5Shift, Lower5Mask>(tmp)));
+    }
+#elif QT_POINTER_SIZE == 4
+    QML_NEARLY_ALWAYS_INLINE HeapBasePtr m() const
+    {
+        Q_STATIC_ASSERT(sizeof(HeapBasePtr) == sizeof(quint32));
+        HeapBasePtr b;
+        quint32 v = value();
+        memcpy(&b, &v, 4);
+        return b;
+    }
+    QML_NEARLY_ALWAYS_INLINE void setM(HeapBasePtr b)
+    {
+        quint32 v;
+        memcpy(&v, &b, 4);
+        setTagValue(quint32(QuickType::Managed), v);
+    }
+#else
+#  error "unsupported pointer size"
+#endif
 };
 Q_STATIC_ASSERT(std::is_trivial_v<StaticValue>);
 

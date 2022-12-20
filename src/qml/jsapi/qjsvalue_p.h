@@ -27,61 +27,163 @@
 
 QT_BEGIN_NAMESPACE
 
-// QJSValue::d is a QV4::ReturnedValue, but we don't want to expose that in the public header.
-// We use the lower bits of the managed pointer to hide a QString* or a QV4::Value* in there.
-Q_STATIC_ASSERT(sizeof(QV4::ReturnedValue) == sizeof(quint64));
-Q_STATIC_ASSERT(alignof(QV4::Value) >= 4);
-Q_STATIC_ASSERT(alignof(QString) >= 4);
-
-enum PointerMask: quintptr {
-    IsV4Value = 0x0,
-    IsString = 0x1
-};
-
 class QJSValuePrivate
 {
-    static const QV4::Value *managedValue(const QV4::Value &v)
-    {
-        const quintptr m = quintptr(v.m());
-        return (m & IsString) ? nullptr : reinterpret_cast<QV4::Value *>(m);
-    }
+    static constexpr quint64 s_tagBits = 3; // 3 bits mask
+    static constexpr quint64 s_tagMask = (1 << s_tagBits) - 1;
 
-    static QV4::Value *managedValue(QV4::Value &v)
-    {
-        quintptr m = quintptr(v.m());
-        return (m & IsString) ? nullptr : reinterpret_cast<QV4::Value *>(m);
-    }
-
-    static const QString *qstring(const QV4::Value &v)
-    {
-        const quintptr m = quintptr(v.m());
-        return (m & IsString) ? reinterpret_cast<QString *>(m & ~IsString) : nullptr;
-    }
-
-    static QV4::ReturnedValue encode(QString string)
-    {
-        const quintptr m = quintptr(new QString(std::move(string))) | IsString;
-        return encodeRawValue(m);
-    }
-
-    static QV4::ReturnedValue encode(const QV4::Value &managedValue)
-    {
-        QV4::Value *m = managedValue.as<QV4::Managed>()->engine()
-                ->memoryManager->m_persistentValues->allocate();
-        *m = managedValue;
-        return encodeRawValue(quintptr(m));
-    }
-
-    static QV4::ReturnedValue encodeRawValue(quintptr m)
-    {
-        return QV4::Value::fromHeapObject(reinterpret_cast<QV4::Heap::Base *>(m)).asReturnedValue();
-    }
+    static constexpr quint64 s_pointerBit = 0x1;
 
 public:
+    enum class Kind {
+        Undefined   = 0x0,
+        Null        = 0x2,
+        IntValue    = 0x4,
+        BoolValue   = 0x6,
+        DoublePtr   = 0x0 | s_pointerBit,
+        QV4ValuePtr = 0x2 | s_pointerBit,
+        QStringPtr  = 0x4 | s_pointerBit,
+    };
 
-    static void setRawValue(QJSValue *jsval, QV4::Value *m)
+    static_assert(quint64(Kind::Undefined)   <= s_tagMask);
+    static_assert(quint64(Kind::Null)        <= s_tagMask);
+    static_assert(quint64(Kind::IntValue)    <= s_tagMask);
+    static_assert(quint64(Kind::BoolValue)   <= s_tagMask);
+    static_assert(quint64(Kind::DoublePtr)   <= s_tagMask);
+    static_assert(quint64(Kind::QV4ValuePtr) <= s_tagMask);
+    static_assert(quint64(Kind::QStringPtr)  <= s_tagMask);
+
+    static Kind tag(quint64 raw) { return Kind(raw & s_tagMask); }
+
+#if QT_POINTER_SIZE == 4
+    static void *pointer(quint64 raw)
     {
-        jsval->d = encodeRawValue(quintptr(m));
+        Q_ASSERT(quint64(tag(raw)) & s_pointerBit);
+        return reinterpret_cast<void *>(raw >> 32);
+    }
+
+    static quint64 encodePointer(void *pointer, Kind tag)
+    {
+        Q_ASSERT(quint64(tag) & s_pointerBit);
+        return (quint64(quintptr(pointer)) << 32) | quint64(tag);
+    }
+#else
+    static constexpr quint64 s_minAlignment = 1 << s_tagBits;
+    static_assert(alignof(double)     >= s_minAlignment);
+    static_assert(alignof(QV4::Value) >= s_minAlignment);
+    static_assert(alignof(QString)    >= s_minAlignment);
+
+    static void *pointer(quint64 raw)
+    {
+        Q_ASSERT(quint64(tag(raw)) & s_pointerBit);
+        return reinterpret_cast<void *>(raw & ~s_tagMask);
+    }
+
+    static quint64 encodePointer(void *pointer, Kind tag)
+    {
+        Q_ASSERT(quint64(tag) & s_pointerBit);
+        return quintptr(pointer) | quint64(tag);
+    }
+#endif
+
+    static quint64 encodeUndefined()
+    {
+        return quint64(Kind::Undefined);
+    }
+
+    static quint64 encodeNull()
+    {
+        return quint64(Kind::Null);
+    }
+
+    static int intValue(quint64 v)
+    {
+        Q_ASSERT(tag(v) == Kind::IntValue);
+        return v >> 32;
+    }
+
+    static quint64 encode(int intValue)
+    {
+        return (quint64(intValue) << 32) | quint64(Kind::IntValue);
+    }
+
+    static quint64 encode(uint uintValue)
+    {
+        return (uintValue < uint(std::numeric_limits<int>::max()))
+                ? encode(int(uintValue))
+                : encode(double(uintValue));
+    }
+
+    static bool boolValue(quint64 v)
+    {
+        Q_ASSERT(tag(v) == Kind::BoolValue);
+        return v >> 32;
+    }
+
+    static quint64 encode(bool boolValue)
+    {
+        return (quint64(boolValue) << 32) | quint64(Kind::BoolValue);
+    }
+
+    static double *doublePtr(quint64 v)
+    {
+        Q_ASSERT(tag(v) == Kind::DoublePtr);
+        return static_cast<double *>(pointer(v));
+    }
+
+    static quint64 encode(double doubleValue)
+    {
+        return encodePointer(new double(doubleValue), Kind::DoublePtr);
+    }
+
+    static QV4::Value *qv4ValuePtr(quint64 v)
+    {
+        Q_ASSERT(tag(v) == Kind::QV4ValuePtr);
+        return static_cast<QV4::Value *>(pointer(v));
+    }
+
+    static quint64 encode(const QV4::Value &qv4Value)
+    {
+        switch (qv4Value.type()) {
+        case QV4::StaticValue::Boolean_Type:
+            return encode(qv4Value.booleanValue());
+        case QV4::StaticValue::Integer_Type:
+            return encode(qv4Value.integerValue());
+        case QV4::StaticValue::Managed_Type: {
+            QV4::Value *m = qv4Value.as<QV4::Managed>()->engine()
+                    ->memoryManager->m_persistentValues->allocate();
+            Q_ASSERT(m);
+            *m = qv4Value;
+            return encodePointer(m, Kind::QV4ValuePtr);
+        }
+        case QV4::StaticValue::Double_Type:
+            return encode(qv4Value.doubleValue());
+        case QV4::StaticValue::Null_Type:
+            return encodeNull();
+        case QV4::StaticValue::Empty_Type:
+            Q_UNREACHABLE();
+            break;
+        case QV4::StaticValue::Undefined_Type:
+            break;
+        }
+
+        return encodeUndefined();
+    }
+
+    static QString *qStringPtr(quint64 v)
+    {
+        Q_ASSERT(tag(v) == Kind::QStringPtr);
+        return static_cast<QString *>(pointer(v));
+    }
+
+    static quint64 encode(QString stringValue)
+    {
+        return encodePointer(new QString(std::move(stringValue)), Kind::QStringPtr);
+    }
+
+    static quint64 encode(QLatin1String stringValue)
+    {
+        return encodePointer(new QString(std::move(stringValue)), Kind::QStringPtr);
     }
 
     static QJSValue fromReturnedValue(QV4::ReturnedValue d)
@@ -94,49 +196,73 @@ public:
     template<typename T>
     static const T *asManagedType(const QJSValue *jsval)
     {
-        const QV4::Value v = QV4::Value::fromReturnedValue(jsval->d);
-        if (!v.isManaged())
-            return nullptr;
-        if (const QV4::Value *value = managedValue(v))
-            return value->as<T>();
+        if (tag(jsval->d) == Kind::QV4ValuePtr) {
+            if (const QV4::Value *value = qv4ValuePtr(jsval->d))
+                return value->as<T>();
+        }
         return nullptr;
     }
 
     // This is a move operation and transfers ownership.
     static QV4::Value *takeManagedValue(QJSValue *jsval)
     {
-        QV4::Value v = QV4::Value::fromReturnedValue(jsval->d);
-        if (!v.isManaged())
-            return nullptr;
-        if (QV4::Value *value = managedValue(v)) {
-            setValue(jsval, QV4::Encode::undefined());
-            return value;
+        if (tag(jsval->d) == Kind::QV4ValuePtr) {
+            if (QV4::Value *value = qv4ValuePtr(jsval->d)) {
+                jsval->d = encodeUndefined();
+                return value;
+            }
         }
         return nullptr;
     }
 
     static QV4::ReturnedValue asPrimitiveType(const QJSValue *jsval)
     {
-        const QV4::Value v = QV4::Value::fromReturnedValue(jsval->d);
-        return v.isManaged() ? QV4::Encode::undefined() : v.asReturnedValue();
+        switch (tag(jsval->d)) {
+        case Kind::BoolValue:
+            return QV4::Encode(boolValue(jsval->d));
+        case Kind::IntValue:
+            return QV4::Encode(intValue(jsval->d));
+        case Kind::DoublePtr:
+            return QV4::Encode(*doublePtr(jsval->d));
+        case Kind::Null:
+            return QV4::Encode::null();
+        case Kind::Undefined:
+        case Kind::QV4ValuePtr:
+        case Kind::QStringPtr:
+            break;
+        }
+
+        return QV4::Encode::undefined();
     }
 
     // Beware: This only returns a non-null string if the QJSValue actually holds one.
     //         QV4::Strings are kept as managed values. Retrieve those with getValue().
     static const QString *asQString(const QJSValue *jsval)
     {
-        const QV4::Value v = QV4::Value::fromReturnedValue(jsval->d);
-        return v.isManaged() ? qstring(v) : nullptr;
+        if (tag(jsval->d) == Kind::QStringPtr) {
+            if (const QString *string = qStringPtr(jsval->d))
+                return string;
+        }
+        return nullptr;
     }
 
     static QV4::ReturnedValue asReturnedValue(const QJSValue *jsval)
     {
-        const QV4::Value v = QV4::Value::fromReturnedValue(jsval->d);
-        if (!v.isManaged())
-            return v.asReturnedValue();
-
-        if (const QV4::Value *value = managedValue(v))
-            return value->asReturnedValue();
+        switch (tag(jsval->d)) {
+        case Kind::BoolValue:
+            return QV4::Encode(boolValue(jsval->d));
+        case Kind::IntValue:
+            return QV4::Encode(intValue(jsval->d));
+        case Kind::DoublePtr:
+            return QV4::Encode(*doublePtr(jsval->d));
+        case Kind::Null:
+            return QV4::Encode::null();
+        case Kind::QV4ValuePtr:
+            return qv4ValuePtr(jsval->d)->asReturnedValue();
+        case Kind::Undefined:
+        case Kind::QStringPtr:
+            break;
+        }
 
         return QV4::Encode::undefined();
     }
@@ -146,21 +272,23 @@ public:
         jsval->d = encode(std::move(s));
     }
 
-    static void setValue(QJSValue *jsval, const QV4::Value &v)
+    // Only use this with an existing persistent value.
+    // Ownership is transferred to the QJSValue.
+    static void adoptPersistentValue(QJSValue *jsval, QV4::Value *v)
     {
-        jsval->d = v.isManaged() ? encode(v) : v.asReturnedValue();
+        jsval->d = encodePointer(v, Kind::QV4ValuePtr);
     }
 
-    static void adoptValue(QJSValue *jsval, QV4::Value *v)
+    static void setValue(QJSValue *jsval, const QV4::Value &v)
     {
-        jsval->d = v->isManaged() ? encodeRawValue(quintptr(v)) : v->asReturnedValue();
+        jsval->d = encode(v);
     }
 
     // Moves any QString onto the V4 heap, changing the value to reflect that.
     static void manageStringOnV4Heap(QV4::ExecutionEngine *e, QJSValue *jsval)
     {
         if (const QString *string = asQString(jsval)) {
-            jsval->d = encode(e->newString(*string)->asReturnedValue());
+            jsval->d = encode(QV4::Value::fromHeapObject(e->newString(*string)));
             delete string;
         }
     }
@@ -179,17 +307,15 @@ public:
             qWarning("JSValue can't be reassigned to another engine.");
             return QV4::Encode::undefined();
         }
-        return jsval.d;
+        return asPrimitiveType(&jsval);
     }
 
     static QV4::ExecutionEngine *engine(const QJSValue *jsval)
     {
-        const QV4::Value v = QV4::Value::fromReturnedValue(jsval->d);
-        if (!v.isManaged())
-            return nullptr;
-
-        if (const QV4::Value *m = managedValue(v))
-            return QV4::PersistentValueStorage::getEngine(m);
+        if (tag(jsval->d) == Kind::QV4ValuePtr) {
+            if (const QV4::Value *value = qv4ValuePtr(jsval->d))
+                return QV4::PersistentValueStorage::getEngine(value);
+        }
 
         return nullptr;
     }
@@ -202,19 +328,25 @@ public:
 
     static void free(QJSValue *jsval)
     {
-        QV4::Value v = QV4::Value::fromReturnedValue(jsval->d);
-        if (!v.isManaged())
+        switch (tag(jsval->d)) {
+        case Kind::Undefined:
+        case Kind::Null:
+        case Kind::IntValue:
+        case Kind::BoolValue:
             return;
-
-        if (const QString *m = qstring(v)) {
-            delete m;
+        case Kind::DoublePtr:
+            delete doublePtr(jsval->d);
             return;
+        case Kind::QStringPtr:
+            delete qStringPtr(jsval->d);
+            return;
+        case Kind::QV4ValuePtr:
+            break;
         }
 
         // We need a mutable value for free(). It needs to write to the actual memory.
-        Q_ASSERT(!(quintptr(v.m()) & IsString));
-        QV4::Value *m = reinterpret_cast<QV4::Value *>(v.m());
-        Q_ASSERT(m); // Otherwise it would have been undefined, that is !v.isManaged() above.
+        QV4::Value *m = qv4ValuePtr(jsval->d);
+        Q_ASSERT(m); // Otherwise it would have been undefined above.
         if (QV4::ExecutionEngine *e = QV4::PersistentValueStorage::getEngine(m)) {
             if (QJSEngine *jsEngine = e->jsEngine()) {
                 if (jsEngine->thread() != QThread::currentThread()) {

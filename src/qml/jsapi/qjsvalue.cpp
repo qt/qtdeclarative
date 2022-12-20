@@ -178,61 +178,59 @@ using namespace QV4;
 /*!
   Constructs a new QJSValue with a boolean \a value.
 */
-QJSValue::QJSValue(bool value) : d(QV4::Encode(value))
+QJSValue::QJSValue(bool value) : d(QJSValuePrivate::encode(value))
 {
 }
 
 /*!
   Constructs a new QJSValue with a number \a value.
 */
-QJSValue::QJSValue(int value) : d(QV4::Encode(value))
+QJSValue::QJSValue(int value) : d(QJSValuePrivate::encode(value))
 {
 }
 
 /*!
   Constructs a new QJSValue with a number \a value.
 */
-QJSValue::QJSValue(uint value) : d(QV4::Encode(value))
+QJSValue::QJSValue(uint value) : d(QJSValuePrivate::encode(value))
 {
 }
 
 /*!
   Constructs a new QJSValue with a number \a value.
 */
-QJSValue::QJSValue(double value) : d(QV4::Encode(value))
+QJSValue::QJSValue(double value) : d(QJSValuePrivate::encode(value))
 {
 }
 
 /*!
   Constructs a new QJSValue with a string \a value.
 */
-QJSValue::QJSValue(const QString& value)
+QJSValue::QJSValue(const QString &value) : d(QJSValuePrivate::encode(value))
 {
-    QJSValuePrivate::setString(this, QString(value));
 }
 
 /*!
   Constructs a new QJSValue with a special \a value.
 */
-QJSValue::QJSValue(SpecialValue value) : d(value == NullValue ? QV4::Encode::null() : 0)
+QJSValue::QJSValue(SpecialValue value)
+    : d(value == NullValue ? QJSValuePrivate::encodeNull() : QJSValuePrivate::encodeUndefined())
 {
 }
 
 /*!
   Constructs a new QJSValue with a string \a value.
 */
-QJSValue::QJSValue(const QLatin1String &value)
+QJSValue::QJSValue(const QLatin1String &value) : d(QJSValuePrivate::encode(value))
 {
-    QJSValuePrivate::setString(this, QString(value));
 }
 
 /*!
   Constructs a new QJSValue with a string \a value.
 */
 #ifndef QT_NO_CAST_FROM_ASCII
-QJSValue::QJSValue(const char *value)
+QJSValue::QJSValue(const char *value) : d(QJSValuePrivate::encode(QString::fromUtf8(value)))
 {
-    QJSValuePrivate::setString(this, QString(QString::fromUtf8(value)));
 }
 #endif
 
@@ -243,12 +241,24 @@ QJSValue::QJSValue(const char *value)
   true), then only a reference to the underlying object is copied into
   the new script value (i.e., the object itself is not copied).
 */
-QJSValue::QJSValue(const QJSValue &other) : d(0)
+QJSValue::QJSValue(const QJSValue &other) : d(other.d)
 {
-    if (const QString *string = QJSValuePrivate::asQString(&other))
-        QJSValuePrivate::setString(this, *string);
-    else
-        QJSValuePrivate::setValue(this, QJSValuePrivate::asReturnedValue(&other));
+    switch (QJSValuePrivate::tag(d)) {
+    case QJSValuePrivate::Kind::Undefined:
+    case QJSValuePrivate::Kind::Null:
+    case QJSValuePrivate::Kind::IntValue:
+    case QJSValuePrivate::Kind::BoolValue:
+        return;
+    case QJSValuePrivate::Kind::DoublePtr:
+        d = QJSValuePrivate::encode(*QJSValuePrivate::doublePtr(d));
+        return;
+    case QJSValuePrivate::Kind::QV4ValuePtr:
+        d = QJSValuePrivate::encode(*QJSValuePrivate::qv4ValuePtr(d));
+        return;
+    case QJSValuePrivate::Kind::QStringPtr:
+        d = QJSValuePrivate::encode(*QJSValuePrivate::qStringPtr(d));
+        break;
+    }
 }
 
 /*!
@@ -279,7 +289,7 @@ QJSValue::~QJSValue()
 */
 bool QJSValue::isBool() const
 {
-    return QV4::Value::fromReturnedValue(d).isBoolean();
+    return QJSValuePrivate::tag(d) == QJSValuePrivate::Kind::BoolValue;
 }
 
 /*!
@@ -290,7 +300,15 @@ bool QJSValue::isBool() const
 */
 bool QJSValue::isNumber() const
 {
-    return QV4::Value::fromReturnedValue(d).isNumber();
+    switch (QJSValuePrivate::tag(d)) {
+    case QJSValuePrivate::Kind::IntValue:
+    case QJSValuePrivate::Kind::DoublePtr:
+        return true;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 /*!
@@ -299,7 +317,7 @@ bool QJSValue::isNumber() const
 */
 bool QJSValue::isNull() const
 {
-    return QV4::Value::fromReturnedValue(d).isNull();
+    return QJSValuePrivate::tag(d) == QJSValuePrivate::Kind::Null;
 }
 
 /*!
@@ -310,11 +328,17 @@ bool QJSValue::isNull() const
 */
 bool QJSValue::isString() const
 {
-    if (QJSValuePrivate::asQString(this))
+    switch (QJSValuePrivate::tag(d)) {
+    case QJSValuePrivate::Kind::QStringPtr:
         return true;
+    case QJSValuePrivate::Kind::QV4ValuePtr: {
+        return QJSValuePrivate::qv4ValuePtr(d)->isString();
+    }
+    default:
+        break;
+    }
 
-    // String is managed
-    return QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this)).isString();
+    return false;
 }
 
 /*!
@@ -323,14 +347,16 @@ bool QJSValue::isString() const
 */
 bool QJSValue::isUndefined() const
 {
-    if (QJSValuePrivate::asQString(this))
-        return false;
-    QV4::Value v = QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this));
-    if (v.isUndefined())
+    switch (QJSValuePrivate::tag(d)) {
+    case QJSValuePrivate::Kind::Undefined:
         return true;
-    if (!v.isManaged())
-        return false;
-    return v.managed() == nullptr;
+    case QJSValuePrivate::Kind::QV4ValuePtr:
+        return QJSValuePrivate::qv4ValuePtr(d)->isUndefined();
+    default:
+        break;
+    }
+
+    return false;
 }
 
 /*!
@@ -867,22 +893,22 @@ QJSValue::QJSValue(QJSPrimitiveValue &&value)
 {
     switch (value.type()) {
     case QJSPrimitiveValue::Undefined:
-        d = QV4::Encode::undefined();
+        d = QJSValuePrivate::encodeUndefined();
         return;
     case QJSPrimitiveValue::Null:
-        d = QV4::Encode::null();
+        d = QJSValuePrivate::encodeNull();
         return;
     case QJSPrimitiveValue::Boolean:
-        d = QV4::Encode(value.asBoolean());
+        d = QJSValuePrivate::encode(value.asBoolean());
         return;
     case QJSPrimitiveValue::Integer:
-        d = QV4::Encode(value.asInteger());
+        d = QJSValuePrivate::encode(value.asInteger());
         return;
     case QJSPrimitiveValue::Double:
-        d = QV4::Encode(value.asDouble());
+        d = QJSValuePrivate::encode(value.asDouble());
         return;
     case QJSPrimitiveValue::String:
-        QJSValuePrivate::setString(this, value.asString());
+        d = QJSValuePrivate::encode(value.asString());
         return;
     }
 
@@ -894,10 +920,11 @@ QJSValue::QJSValue(QJSManagedValue &&value)
     if (!value.d) {
         d = QV4::Encode::undefined();
     } else if (value.d->isManaged()) {
-        QJSValuePrivate::setRawValue(this, value.d);
+        // If it's managed, we can adopt the persistent value.
+        QJSValuePrivate::adoptPersistentValue(this, value.d);
         value.d = nullptr;
     } else {
-        d = value.d->asReturnedValue();
+        d = QJSValuePrivate::encode(*value.d);
         QV4::PersistentValueStorage::free(value.d);
         value.d = nullptr;
     }

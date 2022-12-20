@@ -36,7 +36,6 @@ namespace Heap {
 
 struct Q_QML_PRIVATE_EXPORT Value : public StaticValue
 {
-    using HeapBasePtr = Heap::Base *;
     using ManagedPtr = Managed *;
 
     Value() = default;
@@ -46,53 +45,6 @@ struct Q_QML_PRIVATE_EXPORT Value : public StaticValue
     {
         return {staticValue._val};
     }
-
-#if QT_POINTER_SIZE == 8
-    QML_NEARLY_ALWAYS_INLINE HeapBasePtr m() const
-    {
-        HeapBasePtr b;
-#ifdef __ia64
-// Restore bits 49-47 to bits 63-61, undoing the workaround explained in
-// setM below.
-        quint64 _tmp;
-
-        _tmp = _val & (7L << 47); // 0x3800000000000
-        _tmp = (_tmp << 14) | (_val ^ _tmp);
-        memcpy(&b, &_tmp, 8);
-#else
-        memcpy(&b, &_val, 8);
-#endif
-        return b;
-    }
-    QML_NEARLY_ALWAYS_INLINE void setM(HeapBasePtr b)
-    {
-        memcpy(&_val, &b, 8);
-#ifdef __ia64
-// On ia64, bits 63-61 in a 64-bit pointer are used to store the virtual region
-// number.  Since this implementation is not 64-bit clean, we move bits 63-61
-// to bits 49-47 and hope for the best.  This is undone in *m(), above.
-        _val |= ((_val & (7L << 61)) >> 14);
-        _val &= ((1L << 50)-1);
-#endif
-    }
-#elif QT_POINTER_SIZE == 4
-    QML_NEARLY_ALWAYS_INLINE HeapBasePtr m() const
-    {
-        Q_STATIC_ASSERT(sizeof(HeapBasePtr) == sizeof(quint32));
-        HeapBasePtr b;
-        quint32 v = value();
-        memcpy(&b, &v, 4);
-        return b;
-    }
-    QML_NEARLY_ALWAYS_INLINE void setM(HeapBasePtr b)
-    {
-        quint32 v;
-        memcpy(&v, &b, 4);
-        setTagValue(Managed_Type_Internal, v);
-    }
-#else
-#  error "unsupported pointer size"
-#endif
 
     inline bool isString() const;
     inline bool isStringOrSymbol() const;

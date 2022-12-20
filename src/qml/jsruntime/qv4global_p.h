@@ -19,12 +19,6 @@
 #include <private/qv4compilerglobal_p.h>
 #include <QString>
 
-#ifdef QT_NO_DEBUG
-#define QML_NEARLY_ALWAYS_INLINE Q_ALWAYS_INLINE
-#else
-#define QML_NEARLY_ALWAYS_INLINE inline
-#endif
-
 #include <qtqmlglobal.h>
 #include <private/qtqmlglobal_p.h>
 

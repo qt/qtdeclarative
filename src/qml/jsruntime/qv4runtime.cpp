@@ -2213,35 +2213,23 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
     Value *lhsGuard = nullptr;
     Value *rhsGuard = nullptr;
 
-  redo:
+ redo:
     if (lhs.asReturnedValue() == rhs.asReturnedValue())
         return !lhs.isNaN();
 
-    int lt = lhs.quickType();
-    int rt = rhs.quickType();
-    if (rt < lt) {
-        qSwap(lhs, rhs);
-        qSwap(lt, rt);
-    }
+    quint32 lt = lhs.quickType();
+    quint32 rt = rhs.quickType();
 
-    switch (lt) {
-    case QV4::Value::QT_ManagedOrUndefined:
+    // LHS: Check if managed
+    if ((lt & (Value::ManagedMask >> Value::Tag_Shift)) == 0) {
         if (lhs.isUndefined())
             return rhs.isNullOrUndefined();
-        Q_FALLTHROUGH();
-    case QV4::Value::QT_ManagedOrUndefined1:
-    case QV4::Value::QT_ManagedOrUndefined2:
-    case QV4::Value::QT_ManagedOrUndefined3:
-        // LHS: Managed
-        switch (rt) {
-        case QV4::Value::QT_ManagedOrUndefined:
+
+        // RHS: Check if managed
+        if ((rt & (Value::ManagedMask >> Value::Tag_Shift)) == 0) {
             if (rhs.isUndefined())
                 return false;
-            Q_FALLTHROUGH();
-        case QV4::Value::QT_ManagedOrUndefined1:
-        case QV4::Value::QT_ManagedOrUndefined2:
-        case QV4::Value::QT_ManagedOrUndefined3: {
-            // RHS: Managed
+
             Heap::Base *l = lhs.m();
             Heap::Base *r = rhs.m();
             Q_ASSERT(l);
@@ -2251,15 +2239,18 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
             if (l->internalClass->vtable->isStringOrSymbol) {
                 scope.set(&rhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(rhs), PREFERREDTYPE_HINT), r->internalClass->engine);
                 rhs = rhsGuard->asReturnedValue();
-                break;
+                goto redo;
             } else {
                 Q_ASSERT(r->internalClass->vtable->isStringOrSymbol);
                 scope.set(&lhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT), l->internalClass->engine);
                 lhs = lhsGuard->asReturnedValue();
-                break;
+                goto redo;
             }
             return false;
         }
+
+lhs_managed_and_rhs_not:
+        switch (rt) {
         case QV4::Value::QT_Empty:
             Q_UNREACHABLE();
         case QV4::Value::QT_Null:
@@ -2277,6 +2268,15 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
             }
         }
         goto redo;
+    } else if ((rt & (Value::ManagedMask >> Value::Tag_Shift)) == 0) {
+        if (rhs.isUndefined())
+            return lhs.isNull(); // Can't be undefined
+        qSwap(lhs, rhs);
+        qSwap(lt, rt);
+        goto lhs_managed_and_rhs_not;
+    }
+
+    switch (lt) {
     case QV4::Value::QT_Empty:
         Q_UNREACHABLE();
     case QV4::Value::QT_Null:
@@ -2284,13 +2284,10 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
     case QV4::Value::QT_Bool:
     case QV4::Value::QT_Int:
         switch (rt) {
-        case QV4::Value::QT_ManagedOrUndefined:
-        case QV4::Value::QT_ManagedOrUndefined1:
-        case QV4::Value::QT_ManagedOrUndefined2:
-        case QV4::Value::QT_ManagedOrUndefined3:
         case QV4::Value::QT_Empty:
-        case QV4::Value::QT_Null:
             Q_UNREACHABLE();
+        case QV4::Value::QT_Null:
+            return false;
         case QV4::Value::QT_Bool:
         case QV4::Value::QT_Int:
             return lhs.int_32() == rhs.int_32();
@@ -2298,8 +2295,17 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
             return lhs.int_32() == rhs.doubleValue();
         }
     default: // double
-        Q_ASSERT(rhs.isDouble());
-        return lhs.doubleValue() == rhs.doubleValue();
+        switch (rt) {
+        case QV4::Value::QT_Empty:
+            Q_UNREACHABLE();
+        case QV4::Value::QT_Null:
+            return false;
+        case QV4::Value::QT_Bool:
+        case QV4::Value::QT_Int:
+            return lhs.doubleValue() == rhs.int_32();
+        default: // double
+            return lhs.doubleValue() == rhs.doubleValue();
+        }
     }
 }
 
