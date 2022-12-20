@@ -9651,7 +9651,8 @@ void QQuickItemLayer::itemSiblingOrderChanged(QQuickItem *)
 void QQuickItemLayer::itemVisibilityChanged(QQuickItem *)
 {
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
-    Q_ASSERT(l);
+    if (!l)
+        return;
     l->setVisible(m_item->isVisible());
 }
 
@@ -9660,21 +9661,24 @@ void QQuickItemLayer::updateZ()
     if (!m_componentComplete || !m_enabled)
         return;
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
-    Q_ASSERT(l);
+    if (!l)
+        return;
     l->setZ(m_item->z());
 }
 
 void QQuickItemLayer::updateOpacity()
 {
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
-    Q_ASSERT(l);
+    if (!l)
+        return;
     l->setOpacity(m_item->opacity());
 }
 
 void QQuickItemLayer::updateGeometry()
 {
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
-    Q_ASSERT(l);
+    if (!l)
+        return;
     // Avoid calling QQuickImage::boundingRect() or other overrides
     // which may not be up-to-date at this time (QTBUG-104442, 104536)
     QRectF bounds = m_item->QQuickItem::boundingRect();
@@ -9689,7 +9693,8 @@ void QQuickItemLayer::updateMatrix()
     if (!m_componentComplete || !m_enabled)
         return;
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
-    Q_ASSERT(l);
+    if (!l)
+        return;
     QQuickItemPrivate *ld = QQuickItemPrivate::get(l);
     l->setScale(m_item->scale());
     l->setRotation(m_item->rotation());
