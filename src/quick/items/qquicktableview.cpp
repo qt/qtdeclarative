@@ -1133,13 +1133,18 @@
 */
 
 /*!
-    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(int column, int row)
+    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(int row, int column)
     \since 6.4
 
     Returns the \l QModelIndex that maps to \a column and \a row in the view.
 
     \a row and \a column should be the row and column in the view (table row and
     table column), and not a row and column in the model.
+
+    \note Because of an API incompatible change in Qt 6.4.0 and Qt 6.4.1, the
+    order of \c row and \c column was specified in the opposite order. If you
+    rely on the order to be \c {modelIndex(column, row)}, you can set the
+    environment variable \c QT_QUICK_TABLEVIEW_COMPAT_VERSION to \c 6.4
 
     \sa rowAtIndex(), columnAtIndex()
 */
@@ -1154,8 +1159,9 @@
     \endcode
 
     A cell is simply a \l point that combines row and column into
-    a single type. Note that \c point.x will map to the column, and
-    \c point.y will map to the row.
+    a single type.
+
+    \note \c {point.x} will map to the column, and \c {point.y} will map to the row.
 */
 
 /*!
@@ -1188,8 +1194,10 @@
     \endcode
 
     A cell is simply a \l point that combines row and column into
-    a single type. Note that \c point.x will map to the column, and
-    \c point.y will map to the row.
+    a single type.
+
+    \note that \c {point.x} will map to the column, and
+    \c {point.y} will map to the row.
 */
 
 /*!
@@ -4823,7 +4831,7 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
         case Qt::Key_Backtab:
             // Special case: the current index doesn't map to a cell in the view (perhaps
             // because it isn't set yet). In that case, we set it to be the top-left cell.
-            const QModelIndex topLeftIndex = q->modelIndex(leftColumn(), topRow());
+            const QModelIndex topLeftIndex = q->modelIndex(topRow(), leftColumn());
             selectionModel->setCurrentIndex(topLeftIndex, QItemSelectionModel::NoUpdate);
             return true;
         }
@@ -5967,9 +5975,18 @@ QPoint QQuickTableView::cellAtIndex(const QModelIndex &index) const
     return {index.column(), index.row()};
 }
 
-QModelIndex QQuickTableView::modelIndex(int column, int row) const
+QModelIndex QQuickTableView::modelIndex(int row, int column) const
 {
-    return modelIndex({column, row});
+    static bool compat6_4 = qEnvironmentVariable("QT_QUICK_TABLEVIEW_COMPAT_VERSION") == QStringLiteral("6.4");
+    if (compat6_4) {
+        // In Qt 6.4.0 and 6.4.1, a source incompatible change led to row and column
+        // being documented to be specified in the opposite order.
+        // QT_QUICK_TABLEVIEW_COMPAT_VERSION can therefore be set to force tableview
+        // to continue accepting calls to modelIndex(column, row).
+        return modelIndex({row, column});
+    } else {
+        return modelIndex({column, row});
+    }
 }
 
 int QQuickTableView::rowAtIndex(const QModelIndex &index) const
