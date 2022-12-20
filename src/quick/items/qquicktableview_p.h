@@ -248,6 +248,7 @@ protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void viewportMoved(Qt::Orientations orientation) override;
     void keyPressEvent(QKeyEvent *e) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 protected:
     QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent);

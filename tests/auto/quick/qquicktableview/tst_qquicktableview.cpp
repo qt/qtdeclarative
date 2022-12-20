@@ -256,6 +256,7 @@ private slots:
     void editUsingEditTriggers_data();
     void editUsingEditTriggers();
     void editUsingTab();
+    void editDelegateComboBox();
     void editOnNonEditableCell_data();
     void editOnNonEditableCell();
     void noEditDelegate_data();
@@ -6750,6 +6751,73 @@ void tst_QQuickTableView::editUsingTab()
     QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
     const QQuickItem *editItem3 = tableView->property(kEditItem).value<QQuickItem *>();
     QVERIFY(editItem3);
+}
+
+void tst_QQuickTableView::editDelegateComboBox()
+{
+    // Using a ComboBox as an edit delegate should be a quite common
+    // use case. So test that it works.
+    LOAD_TABLEVIEW("editdelegate_combobox.qml");
+
+    auto model = TestModel(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->forceActiveFocus();
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+    const char kCommitCount[] = "commitCount";
+    const char kComboFocusCount[] = "comboFocusCount";
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell1(1, 1);
+    const QPoint cell2(2, 1);
+    const QModelIndex index1 = tableView->modelIndex(cell1);
+    const QModelIndex index2 = tableView->modelIndex(cell2);
+
+    QQuickWindow *window = tableView->window();
+
+    // Edit cell 1
+    tableView->edit(index1);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index1);
+    const QQuickItem *editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem1);
+    QCOMPARE(tableView->property(kComboFocusCount).value<int>(), 1);
+
+    // Press Tab to edit cell 2
+    QTest::keyClick(window, Qt::Key_Tab);
+    QCOMPARE(tableView->property(kCommitCount).value<int>(), 1);
+    QCOMPARE(tableView->property(kEditIndex).value<QModelIndex>(), index2);
+    const QQuickItem *editItem2 = tableView->property(kEditItem).value<QQuickItem *>();
+    QVERIFY(editItem2);
+    QCOMPARE(tableView->property(kComboFocusCount).value<int>(), 2);
+
+    // Press Enter to commit
+    QTest::keyClick(window, Qt::Key_Enter);
+    QCOMPARE(tableView->property(kCommitCount).value<int>(), 2);
+    QCOMPARE(tableView->property(kComboFocusCount).value<int>(), 2);
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+
+    // Edit cell 1
+    tableView->edit(index1);
+    // Press escape to close editor
+    QTest::keyClick(window, Qt::Key_Escape);
+    QCOMPARE(tableView->property(kCommitCount).value<int>(), 2);
+    QCOMPARE(tableView->property(kComboFocusCount).value<int>(), 3);
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+
+    // Edit cell 2
+    tableView->edit(index2);
+    // Press space to open combo menu
+    QTest::keyClick(window, Qt::Key_Space);
+    // Press Enter to commit and close the editor
+    QTest::keyClick(window, Qt::Key_Enter);
+    QCOMPARE(tableView->property(kCommitCount).value<int>(), 3);
+    QCOMPARE(tableView->property(kComboFocusCount).value<int>(), 4);
+    QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
+    QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
 }
 
 void tst_QQuickTableView::editOnNonEditableCell_data()
