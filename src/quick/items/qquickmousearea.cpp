@@ -1045,13 +1045,43 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
             ungrabMouse();
         break;
     case ItemVisibleHasChanged:
-        if (d->effectiveEnable && d->enabled && hoverEnabled() && d->hovered != (isVisible() && isUnderMouse())) {
-            if (!d->hovered) {
-                QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
-                d->lastScenePos = d->window->mapFromGlobal(cursorPos.toPoint());
-                d->lastPos = mapFromScene(d->lastScenePos);
+        if (d->effectiveEnable && d->enabled && hoverEnabled()
+            && d->hovered != (isVisible() && isUnderMouse())) {
+            if (d->hovered) {
+                // If hovered but no longer under the mouse then un-hover.
+                setHovered(false);
+            } else {
+                // If under the mouse but not hovered then hover the QQuickMouseArea if it is
+                // marked as a hovered item under the windows QQuickDeliveryAgentPrivate instance.
+                // This is required as this QQuickMouseArea may be masked by another hoverable
+                // QQuickMouseArea higher up in the scenes z-index ordering.
+                QPointF globalPos{ QGuiApplicationPrivate::lastCursorPosition.toPoint() };
+                QPointF scenePos{ d->window->mapFromGlobal(globalPos) };
+
+                QQuickWindowPrivate *wd = QQuickWindowPrivate::get(d->window);
+                QQuickDeliveryAgentPrivate *dap = wd->deliveryAgentPrivate();
+
+                // If the QQuickDeliveryAgentPrivate has not already found a hovered leaf
+                // item then attempt to find one.
+                if (!dap->hoveredLeafItemFound) {
+                    dap->deliverHoverEvent(scenePos, scenePos, Qt::NoModifier,
+                                           QDateTime::currentSecsSinceEpoch());
+                }
+
+                // Now if the QQuickDeliveryAgentPrivate has found a hovered leaf item check
+                // that this QQuickMouseArea item was one of the hovered items.
+                if (dap->hoveredLeafItemFound) {
+                    for (auto hoverItem : dap->hoverItems) {
+                        if (hoverItem.first == this) {
+                            // Found a match so update the hover state.
+                            d->lastScenePos = scenePos;
+                            d->lastPos = mapFromScene(d->lastScenePos);
+                            setHovered(true);
+                            break;
+                        }
+                    }
+                }
             }
-            setHovered(!d->hovered);
         }
         if (d->pressed && (!isVisible())) {
             // This happens when the mouse area hides itself
