@@ -149,24 +149,28 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
 
     code.rawAppendToCpp(u""); // blank line
     code.rawAppendToCpp(u"QT_USE_NAMESPACE // avoid issues with QT_NAMESPACE");
-    if (!outNamespace.isEmpty()) {
-        code.rawAppendToHeader(u""); // blank line
-        code.rawAppendToHeader(u"namespace %1 {"_s.arg(outNamespace));
-        code.rawAppendToCpp(u""); // blank line
-        code.rawAppendToCpp(u"namespace %1 {"_s.arg(outNamespace));
+
+    code.rawAppendToHeader(u""); // blank line
+
+    const QStringList namespaces = outNamespace.split(u"::"_s);
+
+    for (const QString &currentNamespace : namespaces) {
+        code.rawAppendToHeader(u"namespace %1 {"_s.arg(currentNamespace));
+        code.rawAppendToCpp(u"namespace %1 {"_s.arg(currentNamespace));
     }
 }
 
 void QmltcCodeWriter::writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath,
                                         const QString &outNamespace)
 {
-    if (!outNamespace.isEmpty()) {
-        code.rawAppendToCpp(u"} // namespace %1"_s.arg(outNamespace));
-        code.rawAppendToCpp(u""); // blank line
-        code.rawAppendToHeader(u"} // namespace %1"_s.arg(outNamespace));
-        code.rawAppendToHeader(u""); // blank line
+    const QStringList namespaces = outNamespace.split(u"::"_s);
+
+    for (auto it = namespaces.crbegin(), end = namespaces.crend(); it != end; it++) {
+        code.rawAppendToCpp(u"} // namespace %1"_s.arg(*it));
+        code.rawAppendToHeader(u"} // namespace %1"_s.arg(*it));
     }
 
+    code.rawAppendToHeader(u""); // blank line
     code.rawAppendToHeader(u"#endif // %1_H"_s.arg(urlToMacro(sourcePath)));
     code.rawAppendToHeader(u""); // blank line
 }

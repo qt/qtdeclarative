@@ -664,10 +664,15 @@ function(qt6_add_qml_module target)
     endif()
 
     if (arg_ENABLE_TYPE_COMPILER)
+        if (DEFINED arg_TYPE_COMPILER_NAMESPACE AND NOT $<STREQUAL:"${arg_TYPE_COMPILER_NAMESPACE}","">)
+            set(qmltc_namespace ${arg_TYPE_COMPILER_NAMESPACE})
+        else()
+            string(REPLACE "." "::" qmltc_namespace "${arg_URI}")
+        endif()
         _qt_internal_target_enable_qmltc(${target}
             QML_FILES ${arg_QML_FILES}
             IMPORT_PATHS ${arg_IMPORT_PATH}
-            NAMESPACE ${arg_TYPE_COMPILER_NAMESPACE}
+            NAMESPACE ${qmltc_namespace}
         )
     endif()
 

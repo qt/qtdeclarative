@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 add_subdirectory(QmltcTests)
+add_subdirectory(NamespaceTest/Subfolder)
 
 set(test_sources
     nameconflict.h nameconflict.cpp
@@ -16,6 +17,7 @@ set(qmltc_module_libs
     # - Properly see C++ types exposed to QML in the engine (we need C++
     #   automatic type registration that comes from the plugin)
     qmltc_test_moduleplugin
+    qmltc_namespace_test_module
 )
 qt_internal_add_test(tst_qmltc_diskcache
     SOURCES ${test_sources}

@@ -53,7 +53,7 @@ void tst_qmltc_examples::app()
     QQmlEngine e;
     QQuickWindow window;
 
-    QScopedPointer<myApp> documentRoot(new myApp(&e));
+    QScopedPointer<QmltcExample::myApp> documentRoot(new QmltcExample::myApp(&e));
 
     documentRoot->setParentItem(window.contentItem());
     window.setHeight(documentRoot->height());

@@ -180,7 +180,6 @@ qt6_add_qml_module(qmltc_test_module
     LIBRARIES
         qmltc_test_module_translation_by_id
     ENABLE_TYPE_COMPILER
-    TYPE_COMPILER_NAMESPACE QmltcTest
 )
 
 qt_autogen_tools_initial_setup(qmltc_test_moduleplugin)

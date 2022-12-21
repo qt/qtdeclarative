@@ -82,6 +82,7 @@
 #include "singletons.h"
 #include "mysignals.h"
 #include "namespacedtypes.h"
+#include "type.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -103,7 +104,7 @@
 #    error "QMLTC_TESTS_DISABLE_CACHE is supposed to be defined and be equal to either 0 or 1"
 #endif
 
-#define PREPEND_NAMESPACE(name) ::QmltcTest::name // silent contract that the namespace is QmltcTest
+#define PREPEND_NAMESPACE(name) QmltcTests::name // silent contract that the namespace is QmltcTest
 
 using namespace Qt::StringLiterals;
 
@@ -1647,7 +1648,7 @@ void tst_qmltc::defaultAlias()
     QScopedPointer<QObject> fromEngine(c.create());
     QVERIFY2(fromEngine, qPrintable(c.errorString()));
 
-    auto *child = static_cast<QmltcTest::defaultAlias_QtObject *>(created.child());
+    auto *child = static_cast<PREPEND_NAMESPACE(defaultAlias_QtObject) *>(created.child());
     QVERIFY(fromEngine->property("child").canConvert<QObject *>());
     QObject *childFromEngine = fromEngine->property("child").value<QObject *>();
     QVERIFY(childFromEngine);
@@ -2653,23 +2654,23 @@ void tst_qmltc::appendToQQmlListProperty()
 }
 
 // test classes to access protected member typecount
-class myInlineComponentA : public QmltcTest::inlineComponents_A
+class myInlineComponentA : public PREPEND_NAMESPACE(inlineComponents_A)
 {
     friend class tst_qmltc;
 };
-class myInlineComponentB : public QmltcTest::inlineComponents_B
+class myInlineComponentB : public PREPEND_NAMESPACE(inlineComponents_B)
 {
     friend class tst_qmltc;
 };
-class myInlineComponentMyComponent : public QmltcTest::inlineComponents_MyComponent
+class myInlineComponentMyComponent : public PREPEND_NAMESPACE(inlineComponents_MyComponent)
 {
     friend class tst_qmltc;
 };
-class myInlineComponentAPlus : public QmltcTest::inlineComponents_APlus
+class myInlineComponentAPlus : public PREPEND_NAMESPACE(inlineComponents_APlus)
 {
     friend class tst_qmltc;
 };
-class myInlineComponentAPlusPlus : public QmltcTest::inlineComponents_APlusPlus
+class myInlineComponentAPlusPlus : public PREPEND_NAMESPACE(inlineComponents_APlusPlus)
 {
     friend class tst_qmltc;
 };
@@ -2730,10 +2731,10 @@ void tst_qmltc::inlineComponents()
 
     // test if nonrecursive components behave well
     {
-        auto *myMyComponentFromQmltc = (QmltcTest::inlineComponents_MyComponent_3 *)
-                                               createdByQmltc.myMyComponentComponent();
-        auto *myMyComponentFromQmltc2 = (QmltcTest::inlineComponents_MyComponent_4 *)
-                                                createdByQmltc.myMyComponentComponent2();
+        auto *myMyComponentFromQmltc = (PREPEND_NAMESPACE(
+                inlineComponents_MyComponent_3) *)createdByQmltc.myMyComponentComponent();
+        auto *myMyComponentFromQmltc2 = (PREPEND_NAMESPACE(
+                inlineComponents_MyComponent_4) *)createdByQmltc.myMyComponentComponent2();
         QVERIFY(myMyComponentFromQmltc);
         QVERIFY(myMyComponentFromQmltc2);
         auto *myMyComponentFromComponent =
@@ -2795,10 +2796,12 @@ void tst_qmltc::inlineComponents()
         QCOMPARE(myMyComponentFromQmltc->children().size(), 1);
         QCOMPARE(myMyComponentFromQmltc2->children().size(), 1);
         auto *childFromQmltc =
-                (QmltcTest::inlineComponents_MyComponent_Item *)myMyComponentFromQmltc->children()
+                (PREPEND_NAMESPACE(inlineComponents_MyComponent_Item) *)myMyComponentFromQmltc
+                        ->children()
                         .front();
         auto *childFromQmltc2 =
-                (QmltcTest::inlineComponents_MyComponent_Item *)myMyComponentFromQmltc2->children()
+                (PREPEND_NAMESPACE(inlineComponents_MyComponent_Item) *)myMyComponentFromQmltc2
+                        ->children()
                         .front();
 
         QVERIFY(childFromQmltc);
@@ -2855,15 +2858,18 @@ void tst_qmltc::inlineComponents()
 
     // test if recursive components are behaving well
     {
-        auto *myAFromQmltc = (QmltcTest::inlineComponents_A_1 *)createdByQmltc.myAComponent();
-        auto *innerBFromQmltc = (QmltcTest::inlineComponents_A_B *)myAFromQmltc->b();
+        auto *myAFromQmltc =
+                (PREPEND_NAMESPACE(inlineComponents_A_1) *)createdByQmltc.myAComponent();
+        auto *innerBFromQmltc = (PREPEND_NAMESPACE(inlineComponents_A_B) *)myAFromQmltc->b();
         QVERIFY(innerBFromQmltc);
-        auto *innerAFromQmltc = (QmltcTest::inlineComponents_A_B_A *)innerBFromQmltc->a();
+        auto *innerAFromQmltc = (PREPEND_NAMESPACE(inlineComponents_A_B_A) *)innerBFromQmltc->a();
         QVERIFY(innerAFromQmltc);
         constexpr bool typeNotCompiledAsQQmlComponent =
-                std::is_same_v<decltype(myAFromQmltc->b()), QmltcTest::inlineComponents_B *>;
+                std::is_same_v<decltype(myAFromQmltc->b()),
+                               PREPEND_NAMESPACE(inlineComponents_B) *>;
         constexpr bool typeNotCompiledAsQQmlComponent2 =
-                std::is_same_v<decltype(innerBFromQmltc->a()), QmltcTest::inlineComponents_A *>;
+                std::is_same_v<decltype(innerBFromQmltc->a()),
+                               PREPEND_NAMESPACE(inlineComponents_A) *>;
         QVERIFY(typeNotCompiledAsQQmlComponent);
         QVERIFY(typeNotCompiledAsQQmlComponent2);
 
@@ -2880,10 +2886,11 @@ void tst_qmltc::inlineComponents()
     // test if ids in inlineComponents are not getting mixed up with those from the root component
     {
         auto *conflictingComponentTomFromQmltc =
-                createdByQmltc.tom().value<QmltcTest::inlineComponents_ConflictingComponent_1 *>();
+                createdByQmltc.tom()
+                        .value<PREPEND_NAMESPACE(inlineComponents_ConflictingComponent_1) *>();
         auto *conflictingComponentJerryFromQmltc =
                 createdByQmltc.jerry()
-                        .value<QmltcTest::inlineComponents_ConflictingComponent_2 *>();
+                        .value<PREPEND_NAMESPACE(inlineComponents_ConflictingComponent_2) *>();
 
         auto *conflictingComponentTomFromComponent =
                 createdByComponent->property("tom").value<QObject *>();
@@ -2941,8 +2948,8 @@ void tst_qmltc::inlineComponents()
 
     // check that inline components are resolved in the correct order
     {
-        auto componentFromQmltc =
-                createdByQmltc.inlineComponentOrder().value<QmltcTest::inlineComponents_IC2_1 *>();
+        auto componentFromQmltc = createdByQmltc.inlineComponentOrder()
+                                          .value<PREPEND_NAMESPACE(inlineComponents_IC2_1) *>();
         auto componentFromComponent =
                 createdByComponent->property("inlineComponentOrder").value<QObject *>();
 
@@ -3191,6 +3198,14 @@ void tst_qmltc::cppNamespaces()
     QCOMPARE(createdByQmltc.myObject()->property("value"), 123);
     createdByQmltc.f();
     QCOMPARE(createdByQmltc.myObject()->property("value"), 55);
+}
+
+void tst_qmltc::namespacedName()
+{
+    // cmake script should be able to auto-fill the namespace of the generated modules, and to
+    // replace . with ::
+    NamespaceTest::Subfolder::Type *t;
+    Q_UNUSED(t);
 }
 
 QTEST_MAIN(tst_qmltc)

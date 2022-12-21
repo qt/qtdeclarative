@@ -655,4 +655,15 @@ with \l{QML Type Compiler}{qmltc}. Files with the source property
 C++ code resides. By default, no namespace is specified for user projects. The
 code generated from Qt's own sources is put under a QT_NAMESPACE namespace.
 
+\c TYPE_COMPILER_NAMESPACE argument allows to override the namespace in which
+\l{QML Type Compiler}{qmltc} generates code.
+By default, the namespace of the generated code follows the module
+hierarchy as depicted in the URI,
+e.g., \c MyModule for a module with URI \c MyModule or
+\c com::example::Module for URI \c com.example.MyModule.
+By specifying the \c TYPE_COMPILER_NAMESPACE option, the generated code
+can be put instead in a custom namespace, where different subnamespaces are to
+be separated by a "::", e.g. "MyNamespace::MySubnamespace" for the namespace MySubnamespace that
+is inside the MyNamespace. Apart from the "::", C++ namespace naming rules
+apply.
 */

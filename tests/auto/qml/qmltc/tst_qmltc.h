@@ -92,4 +92,5 @@ private slots:
     void singletons();
     void constSignalParameters();
     void cppNamespaces();
+    void namespacedName();
 };
