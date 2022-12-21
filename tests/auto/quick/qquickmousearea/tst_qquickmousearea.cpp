@@ -136,6 +136,7 @@ private slots:
     void settingHiddenInPressUngrabs();
     void negativeZStackingOrder();
     void containsMouseAndVisibility();
+    void containsMouseAndVisibilityMasked();
     void doubleClickToHide();
     void releaseFirstTouchAfterSecond();
 #if QT_CONFIG(tabletevent)
@@ -2402,6 +2403,54 @@ void tst_QQuickMouseArea::containsMouseAndVisibility()
     mouseArea->setVisible(true);
     QVERIFY(mouseArea->isVisible());
     QVERIFY(!mouseArea->hovered());
+}
+
+// QTBUG-109567
+void tst_QQuickMouseArea::containsMouseAndVisibilityMasked()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("containsMouseMasked.qml")));
+
+    QQuickMouseArea *mouseArea1 = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea1");
+    QVERIFY(mouseArea1 != nullptr);
+    QVERIFY(mouseArea1->isVisible());
+
+    QQuickMouseArea *mouseArea2 = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea2");
+    QVERIFY(mouseArea2 != nullptr);
+    QVERIFY(mouseArea2->isVisible());
+
+    QTest::mouseMove(&window, QPoint(window.width() / 2, window.height() / 2));
+
+    // Check that mouseArea" (i.e. the masking MouseArea) is the only hovered MouseArea.
+    QTRY_VERIFY(!mouseArea1->hovered());
+    QTRY_VERIFY(mouseArea2->hovered());
+
+    // Toggle the visibility of the masked MouseArea (mouseArea1).
+    mouseArea1->setVisible(false);
+    QVERIFY(!mouseArea1->isVisible());
+
+    mouseArea1->setVisible(true);
+    QVERIFY(mouseArea1->isVisible());
+
+    // Check that the masked MouseArea is not now hovered depite being under the mouse after
+    // changing the visibility to visible. mouseArea2 should be the only hovered MouseArea still.
+    QTRY_VERIFY(!mouseArea1->hovered());
+    QTRY_VERIFY(mouseArea2->hovered());
+
+    QTest::mouseMove(&window, QPoint(10, 10));
+
+    QTRY_VERIFY(mouseArea1->hovered());
+    QTRY_VERIFY(!mouseArea2->hovered());
+
+    // Toggle the visibility of the masked MouseArea (mouseArea1).
+    mouseArea1->setVisible(false);
+    QVERIFY(!mouseArea1->isVisible());
+
+    mouseArea1->setVisible(true);
+    QVERIFY(mouseArea1->isVisible());
+
+    QTRY_VERIFY(mouseArea1->hovered());
+    QTRY_VERIFY(!mouseArea2->hovered());
 }
 
 // QTBUG-35995 and QTBUG-102158
