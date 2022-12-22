@@ -67,7 +67,7 @@
         \li \c {required property bool expanded}
                 - Is \c true if the model item drawn by the delegate is expanded
                 in the view.
-        \li \c {required property int hasChildren}
+        \li \c {required property bool hasChildren}
                 - Is \c true if the model item drawn by the delegate has children
                 in the model.
         \li \c {required property int depth}
