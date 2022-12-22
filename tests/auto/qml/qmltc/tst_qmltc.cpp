@@ -77,6 +77,7 @@
 #include "repeatercrash.h"
 #include "aliases.h"
 #include "inlinecomponentsfromdifferentfiles.h"
+#include "helloexportedworld.h"
 
 #include "testprivateproperty.h"
 #include "singletons.h"
@@ -3206,6 +3207,13 @@ void tst_qmltc::namespacedName()
     // replace . with ::
     NamespaceTest::Subfolder::Type *t;
     Q_UNUSED(t);
+}
+
+void tst_qmltc::checkExportsAreCompiling()
+{
+    QQmlEngine e;
+    QmltcExportedTests::HelloExportedWorld w(&e);
+    QCOMPARE(w.myString(), u"Hello! I should be exported by qmltc"_s);
 }
 
 QTEST_MAIN(tst_qmltc)

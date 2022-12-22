@@ -20,7 +20,7 @@ struct QmltcCodeWriter
     static void writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath,
                                   const QString &outNamespace);
     static void write(QmltcOutputWrapper &code, const QmltcProgram &program);
-    static void write(QmltcOutputWrapper &code, const QmltcType &type);
+    static void write(QmltcOutputWrapper &code, const QmltcType &type, const QString &exportMacro);
     static void write(QmltcOutputWrapper &code, const QmltcEnum &enumeration);
     static void write(QmltcOutputWrapper &code, const QmltcMethod &method);
     static void write(QmltcOutputWrapper &code, const QmltcCtor &ctor);

@@ -99,6 +99,18 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "namespace")
     };
     parser.addOption(namespaceOption);
+    QCommandLineOption exportOption{ u"export"_s,
+                                     QCoreApplication::translate(
+                                             "main", "Export macro used in the generated C++ code"),
+                                     QCoreApplication::translate("main", "export") };
+    parser.addOption(exportOption);
+    QCommandLineOption exportIncludeOption{
+        u"exportInclude"_s,
+        QCoreApplication::translate(
+                "main", "Header defining the export macro to be used in the generated C++ code"),
+        QCoreApplication::translate("main", "exportInclude")
+    };
+    parser.addOption(exportIncludeOption);
 
     parser.process(app);
 
@@ -224,6 +236,8 @@ int main(int argc, char **argv)
     info.outputHFile = parser.value(outputHOption);
     info.resourcePath = firstQml(paths);
     info.outputNamespace = parser.value(namespaceOption);
+    info.exportMacro = parser.value(exportOption);
+    info.exportInclude = parser.value(exportIncludeOption);
 
     if (info.outputCppFile.isEmpty()) {
         fprintf(stderr, "An output C++ file is required. Pass one using --impl");

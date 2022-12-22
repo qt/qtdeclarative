@@ -209,7 +209,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
         code.rawAppendToHeader(u"class " + type.cppType + u";");
     // write all the types and their content
     for (const QmltcType &type : std::as_const(program.compiledTypes))
-        write(code, type);
+        write(code, type, program.exportMacro);
 
     // add typeCount definitions. after all types have been written down (so
     // they are now complete types as per C++). practically, this only concerns
@@ -251,10 +251,14 @@ static void dumpFunctions(QmltcOutputWrapper &code, const QList<QmltcMethod> &fu
     }
 }
 
-void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type,
+                            const QString &exportMacro)
 {
     const auto constructClassString = [&]() {
-        QString str = u"class " + type.cppType;
+        QString str = u"class "_s;
+        if (!exportMacro.isEmpty())
+            str.append(exportMacro).append(u" "_s);
+        str.append(type.cppType);
         QStringList nonEmptyBaseClasses;
         nonEmptyBaseClasses.reserve(type.baseClasses.size());
         std::copy_if(type.baseClasses.cbegin(), type.baseClasses.cend(),
@@ -340,7 +344,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
 
         // children
         for (const auto &child : std::as_const(type.children))
-            QmltcCodeWriter::write(code, child);
+            QmltcCodeWriter::write(code, child, exportMacro);
 
         // (non-visible) functions
         dumpFunctions(code, type.functions, std::not_fn(isUserVisibleFunction));

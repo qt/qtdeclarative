@@ -140,6 +140,8 @@ struct QmltcProgram
     QString cppPath; // C++ output .cpp path
     QString hPath; // C++ output .h path
     QString outNamespace;
+    QString exportMacro; // if not empty, the macro that should be used to export the generated
+                         // classes
     QSet<QString> includes; // non-default C++ include files
     QmltcMethod urlMethod; // returns QUrl of the QML document
 

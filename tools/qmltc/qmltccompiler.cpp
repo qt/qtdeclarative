@@ -142,8 +142,11 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     program.cppPath = m_info.outputCppFile;
     program.hPath = m_info.outputHFile;
     program.outNamespace = m_info.outputNamespace;
+    program.exportMacro = m_info.exportMacro;
     program.compiledTypes = compiledTypes;
     program.includes = m_visitor->cppIncludeFiles();
+    if (!m_info.exportMacro.isEmpty() && !m_info.exportInclude.isEmpty())
+        program.includes += (m_info.exportInclude);
     program.urlMethod = urlMethod;
 
     QmltcOutput out;

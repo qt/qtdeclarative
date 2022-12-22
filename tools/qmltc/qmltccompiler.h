@@ -25,6 +25,8 @@ struct QmltcCompilerInfo
     QString outputHFile;
     QString outputNamespace;
     QString resourcePath;
+    QString exportMacro;
+    QString exportInclude;
 };
 
 class QmltcCompiler

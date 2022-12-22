@@ -93,4 +93,5 @@ private slots:
     void constSignalParameters();
     void cppNamespaces();
     void namespacedName();
+    void checkExportsAreCompiling();
 };
