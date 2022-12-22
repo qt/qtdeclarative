@@ -44,12 +44,16 @@ T.TreeViewDelegate {
             control: control
             useNinePatchImage: false
         }
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     background: Rectangle {
         color: control.highlighted ? control.palette.highlight
                : (control.treeView.alternatingRows && control.row % 2 !== 0
                ? control.palette.alternateBase : control.palette.base)
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     contentItem: Label {
@@ -58,6 +62,8 @@ T.TreeViewDelegate {
         elide: Text.ElideRight
         color: control.highlighted ? control.palette.highlightedText : control.palette.buttonText
         visible: !control.editing
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 
     // The edit delegate is a separate component, and doesn't need

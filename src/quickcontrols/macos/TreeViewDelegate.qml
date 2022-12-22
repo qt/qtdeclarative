@@ -18,6 +18,8 @@ NativeStyle.DefaultTreeViewDelegate {
         // there are more than one column. But until Rectangle gains support
         // for corners with individual radii, we simplify it (QTBUG-48774)
         radius: control.row === control.treeView.currentRow && control.treeView.columns === 1 ? 5 : 0
+
+        readonly property bool __ignoreNotCustomizable: true
     }
 }
 
