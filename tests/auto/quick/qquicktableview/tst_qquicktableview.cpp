@@ -86,6 +86,7 @@ private slots:
     void checkPreload();
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
+    void checkZeroSizedTableView();
     void checkColumnWidthWithoutProvider();
     void checkColumnWidthAndRowHeightFunctions();
     void checkDelegateWithAnchors();
@@ -418,6 +419,43 @@ void tst_QQuickTableView::checkImplicitSizeDelegate()
         QCOMPARE(item->height(), 60);
     }
 }
+
+void tst_QQuickTableView::checkZeroSizedTableView()
+{
+    // Check that we don't load any delegates if TableView
+    // itself has zero size.
+    LOAD_TABLEVIEW("zerosizedtableview.qml");
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(tableViewPrivate->loadedItems.isEmpty());
+
+    // Resize TableView. This should load delegate. Since
+    // the delegate's implicitWidth is bound to TableView.width,
+    // we expect the delegates to now get the same width.
+    tableView->setWidth(200);
+    tableView->setHeight(100);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedItems.size(), 2);
+    const auto item = tableView->itemAtCell(0, 0);
+    QVERIFY(item);
+    QCOMPARE(item->width(), 200);
+
+    // Hide TableView again, and check that all items are
+    // unloaded, except the topLeft corner item.
+    tableView->setWidth(0);
+    tableView->setHeight(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedItems.size(), 1);
+}
+
 
 void tst_QQuickTableView::checkColumnWidthWithoutProvider()
 {
@@ -5703,7 +5741,7 @@ void tst_QQuickTableView::boundDelegateComponent()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
     QTest::ignoreMessage(
-            QtWarningMsg, qPrintable(QLatin1String("%1:14: ReferenceError: index is not defined")
+            QtWarningMsg, qPrintable(QLatin1String("%1:16: ReferenceError: index is not defined")
                                              .arg(url.toString())));
 
     QScopedPointer<QObject> o(c.create());
@@ -5734,7 +5772,7 @@ void tst_QQuickTableView::boundDelegateComponent()
     for (int i = 0; i < 3 * 2; ++i) {
         QTest::ignoreMessage(
                 QtWarningMsg,
-                qPrintable(QLatin1String("%1:50:21: ReferenceError: model is not defined")
+                qPrintable(QLatin1String("%1:54:21: ReferenceError: model is not defined")
                                    .arg(url.toString())));
     }
 

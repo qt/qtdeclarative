@@ -8,6 +8,8 @@ Item {
     objectName: "outer"
     TableView {
         id: tableView
+        width: 10
+        height: 10
         model: 1
         property string foo: "foo"
         delegate: Text {
@@ -19,6 +21,8 @@ Item {
 
     TableView {
         id: tableView2
+        width: 10
+        height: 10
         model: 1
         delegate: Text {
             required property int index

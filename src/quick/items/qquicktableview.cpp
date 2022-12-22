@@ -2964,6 +2964,12 @@ void QQuickTableViewPrivate::relayoutTableItems()
 {
     qCDebug(lcTableViewDelegateLifecycle);
 
+    if (viewportRect.isEmpty()) {
+        // This can happen if TableView was resized down to have a zero size
+        qCDebug(lcTableViewDelegateLifecycle()) << "Skipping relayout, viewport has zero size";
+        return;
+    }
+
     qreal nextColumnX = loadedTableOuterRect.x();
     qreal nextRowY = loadedTableOuterRect.y();
 
@@ -3490,6 +3496,11 @@ void QQuickTableViewPrivate::loadInitialTable()
 
     if (topLeft.x() == kEdgeIndexNotSet || topLeft.y() == kEdgeIndexNotSet) {
         qCDebug(lcTableViewDelegateLifecycle()) << "could not resolve top-left item, leaving table empty";
+        return;
+    }
+
+    if (viewportRect.isEmpty()) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "viewport has zero size, leaving table empty";
         return;
     }
 
