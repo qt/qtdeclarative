@@ -20,6 +20,7 @@ set(cpp_sources
 
     cpptypes/typewithmanyproperties.h
     cpptypes/singletontype.h cpptypes/singletontype.cpp
+    cpptypes/typewithnamespace.h cpptypes/typewithnamespace.cpp
     cpptypes/typewithsignal.h
 )
 
@@ -121,6 +122,7 @@ set(qml_sources
     SingletonThing.qml
     InlineComponentProvider.qml
     InlineComponentReexporter.qml
+    NamespacedTypes.qml
 
     badFile.qml
 )

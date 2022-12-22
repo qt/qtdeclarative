@@ -81,6 +81,7 @@
 #include "testprivateproperty.h"
 #include "singletons.h"
 #include "mysignals.h"
+#include "namespacedtypes.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -3180,6 +3181,16 @@ void tst_qmltc::constSignalParameters()
     fromQmltc.setObject(nullptr);
     emit fromQmltc.signalWithConstPointerToConst2(&myItem);
     QCOMPARE(fromQmltc.object(), &myItem);
+}
+
+void tst_qmltc::cppNamespaces()
+{
+    // see if qmltc works correctly with c++ namespaced types
+    QQmlEngine e;
+    PREPEND_NAMESPACE(NamespacedTypes) createdByQmltc(&e);
+    QCOMPARE(createdByQmltc.myObject()->property("value"), 123);
+    createdByQmltc.f();
+    QCOMPARE(createdByQmltc.myObject()->property("value"), 55);
 }
 
 QTEST_MAIN(tst_qmltc)
