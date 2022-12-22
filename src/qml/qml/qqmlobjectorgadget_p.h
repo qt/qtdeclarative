@@ -38,6 +38,7 @@ public:
     void metacall(QMetaObject::Call type, int index, void **argv) const;
 
     bool isNull() const { return ptr.isNull(); }
+    QObject *qObject() const { return ptr.isT1() ? ptr.asT1() : nullptr; }
 
 private:
     QBiPointer<QObject, void> ptr;

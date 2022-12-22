@@ -403,6 +403,9 @@ private slots:
     void nullIsNull();
     void multiRequired();
 
+    void objectAndGadgetMethodCallsRejectThisObject();
+    void objectAndGadgetMethodCallsAcceptThisObject();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -7761,6 +7764,89 @@ void tst_qqmllanguage::multiRequired()
     QVERIFY(o.isNull());
     QCOMPARE(c.errorString(),
              qPrintable(url.toString() + ":5 Required property description was not initialized\n"));
+}
+
+void tst_qqmllanguage::objectAndGadgetMethodCallsRejectThisObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("objectAndGadgetMethodCallsRejectThisObject.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    const QList<int> lines =  { 15, 19, 21, 22, 24, 25, 28, 31 };
+    for (int line : lines) {
+        const QString message
+                = ".*:%1: Calling C.. methods with 'this' objects different from the one "
+                  "they were retrieved from is broken, due to historical reasons. The "
+                  "original object is used as 'this' object. You can allow the given "
+                  "'this' object to be used by setting "
+                  "'pragma NativeMethodBehavior: AcceptThisObject'"_L1.arg(QString::number(line));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(message));
+    }
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("badRect"), QRectF(1, 2, 3, 4));
+    QCOMPARE(o->property("goodRect1"), QRectF(1, 2, 3, 4));
+    QCOMPARE(o->property("goodRect2"), QRectF(1, 2, 3, 4));
+
+    QCOMPARE(o->property("badString"), QStringLiteral("27"));
+    QCOMPARE(o->property("goodString1"), QStringLiteral("27"));
+    QCOMPARE(o->property("goodString2"), QStringLiteral("27"));
+    QCOMPARE(o->property("goodString3"), QStringLiteral("27"));
+
+    QVERIFY(o->property("goodString4").value<QString>().startsWith("QObject_QML_"_L1));
+    QVERIFY(o->property("badString2").value<QString>().startsWith("QObject_QML_"_L1));
+
+    QCOMPARE(o->property("badInt"), 5);
+    QCOMPARE(o->property("goodInt1"), 5);
+    QCOMPARE(o->property("goodInt2"), 5);
+    QCOMPARE(o->property("goodInt3"), 5);
+}
+
+void tst_qqmllanguage::objectAndGadgetMethodCallsAcceptThisObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("objectAndGadgetMethodCallsAcceptThisObject.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+                QtWarningMsg, QRegularExpression(
+                    "objectAndGadgetMethodCallsAcceptThisObject.qml:16: Error: "
+                    "Cannot call method QtObject::rect on QObject_QML_"));
+    QTest::ignoreMessage(
+                QtWarningMsg, QRegularExpression(
+                    "objectAndGadgetMethodCallsAcceptThisObject.qml:20: Error: "
+                    "Cannot call method BaseValueType::report on QObject_QML_"));
+    QTest::ignoreMessage(
+                QtWarningMsg, QRegularExpression(
+                    "objectAndGadgetMethodCallsAcceptThisObject.qml:26: Error: "
+                    "Cannot call method toString on QRectF"));
+    QTest::ignoreMessage(
+                QtWarningMsg, QRegularExpression(
+                    "objectAndGadgetMethodCallsAcceptThisObject.qml:29: Error: "
+                    "Cannot call method OriginalSingleton::mm on QObject_QML_"));
+
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("badRect"), QRectF());
+    QCOMPARE(o->property("goodRect1"), QRectF(1, 2, 3, 4));
+    QCOMPARE(o->property("goodRect2"), QRectF(1, 2, 3, 4));
+
+    QCOMPARE(o->property("badString"), QString());
+    QCOMPARE(o->property("goodString1"), QStringLiteral("27"));
+    QCOMPARE(o->property("goodString2"), QStringLiteral("27"));
+    QCOMPARE(o->property("goodString3"), QStringLiteral("28"));
+
+    QVERIFY(o->property("goodString4").value<QString>().startsWith("QtObject"_L1));
+    QCOMPARE(o->property("badString2"), QString());
+
+    QCOMPARE(o->property("badInt"), 0);
+    QCOMPARE(o->property("goodInt1"), 5);
+    QCOMPARE(o->property("goodInt2"), 5);
+    QCOMPARE(o->property("goodInt3"), 5);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -80,26 +80,23 @@ DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
         FunctionObject::destroy();
     }
 
-    void ensureMethodsCache(QObject *o);
+    void ensureMethodsCache(const QMetaObject *thisMeta);
+    QString name() const;
 
-    const QMetaObject *metaObject();
+    const QMetaObject *metaObject() const;
     QObject *object() const { return qObj.data(); }
     void setObject(QObject *o) { qObj = o; }
 
     bool isDetached() const;
     bool isAttachedTo(QObject *o) const;
 
-    void assertIntegrity(QObject *thisObject) const
-    {
-        // This implies that the metaobject matches.
-        // If the QObjectMethod is detached, we can only have gotten here via a lookup.
-        // The lookup checks that the QQmlPropertyCache matches.
-        // We can also call methods on standalone value type wrappers, without an object.
-        if (thisObject)
-            Q_ASSERT(isDetached() || isAttachedTo(thisObject));
-        else
-            Q_ASSERT(valueTypeWrapper || !isDetached());
-    }
+    enum ThisObjectMode {
+        Invalid,
+        Included,
+        Explicit,
+    };
+
+    QV4::Heap::QObjectMethod::ThisObjectMode checkThisObject(const QMetaObject *thisMeta) const;
 };
 
 struct QMetaObjectWrapper : FunctionObject {
@@ -373,8 +370,9 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object(); }
 
-    QV4::ReturnedValue method_toString(QV4::ExecutionEngine *engine, const QV4::Value *thisObject) const;
-    QV4::ReturnedValue method_destroy(QV4::ExecutionEngine *ctx, const QV4::Value *thisObject, const Value *args, int argc) const;
+    QV4::ReturnedValue method_toString(QV4::ExecutionEngine *engine, QObject *o) const;
+    QV4::ReturnedValue method_destroy(
+            QV4::ExecutionEngine *ctx, QObject *o, const Value *args, int argc) const;
 
     static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 

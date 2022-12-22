@@ -2305,6 +2305,7 @@ signals:
     void abcChanged(const QString &);
 
 public:
+    Q_INVOKABLE int mm() { return 5; }
     QString abc() const { return m_abc; }
     void setAbc(const QString &abc)
     {

@@ -1183,6 +1183,7 @@ struct Unit
                 = ListPropertyAssignReplaceIfDefault | ListPropertyAssignReplaceIfNotDefault,
         ComponentsBound = 0x200,
         FunctionSignaturesEnforced = 0x400,
+        NativeMethodsAcceptThisObject = 0x800,
     };
     quint32_le flags;
     quint32_le stringTableSize;

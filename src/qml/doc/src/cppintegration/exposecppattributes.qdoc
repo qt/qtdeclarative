@@ -448,6 +448,54 @@ be called according to the number and the types of arguments that are provided.
 Values returned from C++ methods are converted to JavaScript values when
 accessed from JavaScript expressions in QML.
 
+\section2 C++ methods and the 'this' object
+
+You may want to retrieve a C++ method from one object and call it on a different
+object. Consider the following example, within a QML module called \c{Example}:
+
+\table
+\row
+\li C++
+\li
+\code
+class Invokable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Invokable(QObject *parent = nullptr) : QObject(parent) {}
+
+    Q_INVOKABLE void invoke() { qDebug() << "invoked on " << objectName(); }
+};
+\endcode
+\row
+\li QML
+\li
+\qml
+import QtQml
+import Example
+
+Invokable {
+    objectName: "parent"
+    property Invokable child: Invokable {}
+    Component.onCompleted: child.invoke.call(this)
+}
+\endqml
+\endtable
+
+If you load the QML code from a suitable main.cpp, it should print
+"invoked on parent". However, due to a long standing bug, it doesn't.
+Historically, the 'this' object of C++-based methods is inseparably bound to
+the method. Changing this behavior for existing code would cause subtle errors
+since the 'this' object is implicit in many places. Since Qt 6.5 you can
+explicitly opt into the correct behavior and allow C++ methods to accept a
+'this' object. To do so, add the following pragma to your QML documents:
+
+\qml
+pragma NativeMethodBehavior: AcceptThisObject
+\endqml
+
+With this line added, the example above will work as expected.
 
 \section1 Exposing Signals
 
