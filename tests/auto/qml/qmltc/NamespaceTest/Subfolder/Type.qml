@@ -1,5 +1,5 @@
 import QtQuick
 
 Item {
-    property string data
+    property string data: "Hello from namespace"
 }

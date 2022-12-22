@@ -3205,8 +3205,9 @@ void tst_qmltc::namespacedName()
 {
     // cmake script should be able to auto-fill the namespace of the generated modules, and to
     // replace . with ::
-    NamespaceTest::Subfolder::Type *t;
-    Q_UNUSED(t);
+    QQmlEngine e;
+    NamespaceTest::Subfolder::Type t(&e);
+    QCOMPARE(t.data(), u"Hello from namespace"_s);
 }
 
 void tst_qmltc::checkExportsAreCompiling()
