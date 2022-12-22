@@ -49,6 +49,12 @@ void QQmlIRLoader::load()
         createPragma(type)->functionSignatureBehavior = value;
     };
 
+    const auto createNativeMethodPragma = [&](
+            Pragma::PragmaType type,
+            Pragma::NativeMethodBehaviorValue value) {
+        createPragma(type)->nativeMethodBehavior = value;
+    };
+
     if (unit->flags & QV4::CompiledData::Unit::IsSingleton)
         createPragma(Pragma::Singleton);
     if (unit->flags & QV4::CompiledData::Unit::IsStrict)
@@ -64,6 +70,9 @@ void QQmlIRLoader::load()
 
     if (unit->flags & QV4::CompiledData::Unit::FunctionSignaturesEnforced)
         createFunctionSignaturePragma(Pragma::FunctionSignatureBehavior, Pragma::Enforced);
+
+    if (unit->flags & QV4::CompiledData::Unit::NativeMethodsAcceptThisObject)
+        createNativeMethodPragma(Pragma::NativeMethodBehavior, Pragma::AcceptThisObject);
 
     for (uint i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *serializedObject = qmlUnit->objectAt(i);

@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
 Q_LOGGING_CATEGORY(lcOverloadResolution, "qt.qml.overloadresolution", QtWarningMsg)
+Q_LOGGING_CATEGORY(lcMethodBehavior, "qt.qml.method.behavior")
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build
@@ -2326,7 +2327,7 @@ void Heap::QObjectMethod::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope);
 }
 
-const QMetaObject *Heap::QObjectMethod::metaObject()
+const QMetaObject *Heap::QObjectMethod::metaObject() const
 {
     if (valueTypeWrapper)
         return valueTypeWrapper->metaObject();
@@ -2367,17 +2368,88 @@ bool Heap::QObjectMethod::isAttachedTo(QObject *o) const
     return true;
 }
 
-void Heap::QObjectMethod::ensureMethodsCache(QObject *o)
+Heap::QObjectMethod::ThisObjectMode Heap::QObjectMethod::checkThisObject(
+        const QMetaObject *thisMeta) const
+{
+    // Check that the metaobject matches.
+
+    if (!thisMeta) {
+        // You can only get a detached method via a lookup, and then you have a thisObject.
+        Q_ASSERT(valueTypeWrapper || qObj);
+        return Included;
+    }
+
+    const auto check = [&](const QMetaObject *included) {
+        const auto stackFrame = internalClass->engine->currentStackFrame;
+        if (stackFrame && !stackFrame->v4Function->executableCompilationUnit()
+                ->nativeMethodsAcceptThisObjects()) {
+            qCWarning(lcMethodBehavior,
+                      "%s:%d: Calling C++ methods with 'this' objects different from the one "
+                      "they were retrieved from is broken, due to historical reasons. The "
+                      "original object is used as 'this' object. You can allow the given "
+                      "'this' object to be used by setting "
+                      "'pragma NativeMethodBehavior: AcceptThisObject'",
+                      qPrintable(stackFrame->source()), stackFrame->lineNumber());
+            return Included;
+        }
+
+        // Find the base type the method belongs to.
+        int methodOffset = included->methodOffset();
+        while (true) {
+            if (included == thisMeta)
+                return Explicit;
+
+            if (methodOffset <= index)
+                return thisMeta->inherits(included) ? Explicit : Invalid;
+
+            methodOffset -= QMetaObjectPrivate::get(included)->methodCount;
+            included = included->superClass();
+            Q_ASSERT(included);
+        };
+
+        Q_UNREACHABLE_RETURN(Invalid);
+    };
+
+    if (QObject *o = object())
+        return check(o->metaObject());
+
+    if (valueTypeWrapper)
+        return check(valueTypeWrapper->metaObject());
+
+    // If the QObjectMethod is detached, we can only have gotten here via a lookup.
+    // The lookup checks that the QQmlPropertyCache matches.
+    return Explicit;
+}
+
+QString Heap::QObjectMethod::name() const
+{
+    if (index == QV4::QObjectMethod::DestroyMethod)
+        return QStringLiteral("destroy");
+    else if (index == QV4::QObjectMethod::ToStringMethod)
+        return QStringLiteral("toString");
+
+    const QMetaObject *mo = metaObject();
+    if (!mo)
+        return QString();
+
+    int methodOffset = mo->methodOffset();
+    while (methodOffset > index) {
+        mo = mo->superClass();
+        methodOffset -= QMetaObjectPrivate::get(mo)->methodCount;
+    }
+
+    return QLatin1String("%1::%2").arg(mo->className(), mo->method(index).name());
+}
+
+void Heap::QObjectMethod::ensureMethodsCache(const QMetaObject *thisMeta)
 {
     if (methods)
         return;
 
     const QMetaObject *mo = metaObject();
 
-    if (!mo) {
-        Q_ASSERT(o);
-        mo = o->metaObject();
-    }
+    if (!mo)
+        mo = thisMeta;
 
     Q_ASSERT(mo);
 
@@ -2420,29 +2492,20 @@ static QObject *qObject(const Value *v)
     return nullptr;
 }
 
-ReturnedValue QObjectMethod::method_toString(
-        ExecutionEngine *engine, const QV4::Value *thisObject) const
+ReturnedValue QObjectMethod::method_toString(ExecutionEngine *engine, QObject *o) const
 {
-    QObject *o = qObject(thisObject);
-
-    d()->assertIntegrity(o);
-
-    const QMetaObject *metaObject = d()->metaObject();
-    if (!metaObject && o)
-        metaObject = o->metaObject();
-
-    return engine->newString(QObjectWrapper::objectToString(
-                                 engine, metaObject, o ? o : d()->object()))->asReturnedValue();
+    return engine->newString(
+                QObjectWrapper::objectToString(
+                    engine, o ? o->metaObject() : d()->metaObject(), o))->asReturnedValue();
 }
 
-ReturnedValue QObjectMethod::method_destroy(ExecutionEngine *engine, const QV4::Value *thisObject, const Value *args, int argc) const
+ReturnedValue QObjectMethod::method_destroy(
+        ExecutionEngine *engine, QObject *o, const Value *args, int argc) const
 {
-    QObject *o = qObject(thisObject);
-    QObject *object = o ? o : d()->object();
-    if (!object)
+    if (!o)
         return Encode::undefined();
 
-    if (QQmlData::keepAliveDuringGarbageCollection(object))
+    if (QQmlData::keepAliveDuringGarbageCollection(o))
         return engine->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
     int delay = 0;
@@ -2450,9 +2513,9 @@ ReturnedValue QObjectMethod::method_destroy(ExecutionEngine *engine, const QV4::
         delay = args[0].toUInt32();
 
     if (delay > 0)
-        QTimer::singleShot(delay, object, SLOT(deleteLater()));
+        QTimer::singleShot(delay, o, SLOT(deleteLater()));
     else
-        object->deleteLater();
+        o->deleteLater();
 
     return Encode::undefined();
 }
@@ -2467,22 +2530,61 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
 {
     ExecutionEngine *v4 = engine();
 
-    if (d()->index == DestroyMethod)
-        return method_destroy(v4, thisObject, argv, argc);
-    else if (d()->index == ToStringMethod)
-        return method_toString(v4, thisObject);
+    const QMetaObject *thisMeta = nullptr;
 
     QObject *o = qObject(thisObject);
+    Heap::QQmlValueTypeWrapper *wrapper = nullptr;
+    if (o) {
+        thisMeta = o->metaObject();
+    } else if (const QQmlValueTypeWrapper *value = thisObject->as<QQmlValueTypeWrapper>()) {
+        wrapper = value->d();
+        thisMeta = wrapper->metaObject();
+    }
 
-    d()->assertIntegrity(o);
-    d()->ensureMethodsCache(o);
+    Heap::QObjectMethod::ThisObjectMode mode = Heap::QObjectMethod::Invalid;
+    if (o && o == d()->object()) {
+        mode = Heap::QObjectMethod::Explicit;
+        // Nothing to do; objects are the same. This should be common
+    } else if (wrapper && wrapper == d()->valueTypeWrapper) {
+        mode = Heap::QObjectMethod::Explicit;
+        // Nothing to do; gadgets are the same. This should be somewhat common
+    } else {
+        mode = d()->checkThisObject(thisMeta);
+        if (mode == Heap::QObjectMethod::Invalid) {
+            v4->throwError(QLatin1String("Cannot call method %1 on %2").arg(
+                           d()->name(), thisObject->toQStringNoThrow()));
+            return Encode::undefined();
+        }
+    }
 
-    QQmlObjectOrGadget object = d()->valueTypeWrapper
-            ? QQmlObjectOrGadget(d()->metaObject(), d()->valueTypeWrapper->gadgetPtr())
-            : QQmlObjectOrGadget(o ? o : d()->object());
+    QQmlObjectOrGadget object = [&](){
+        if (mode == Heap::QObjectMethod::Included) {
+            if (QObject *qObject = d()->qObj)
+                return QQmlObjectOrGadget(qObject);
+
+            wrapper = d()->valueTypeWrapper;
+            Q_ASSERT(wrapper);
+            return QQmlObjectOrGadget(wrapper->metaObject(), wrapper->gadgetPtr());
+        } else {
+            if (o)
+                return QQmlObjectOrGadget(o);
+
+            Q_ASSERT(wrapper);
+            if (!wrapper->enforcesLocation())
+                QV4::ReferenceObject::readReference(wrapper);
+            return QQmlObjectOrGadget(thisMeta, wrapper->gadgetPtr());
+        }
+    }();
 
     if (object.isNull())
         return Encode::undefined();
+
+    if (d()->index == DestroyMethod)
+        return method_destroy(v4, object.qObject(), argv, argc);
+    else if (d()->index == ToStringMethod)
+        return method_toString(v4, object.qObject());
+
+    d()->ensureMethodsCache(thisMeta);
 
     Scope scope(v4);
     JSCallData cData(thisObject, argv, argc);
@@ -2494,7 +2596,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     // The method might change the value.
     const auto doCall = [&](const auto &call) {
         if (!method->isConstant()) {
-            if (d()->valueTypeWrapper && d()->valueTypeWrapper->isReference()) {
+            if (wrapper && wrapper->isReference()) {
                 ScopedValue rv(scope, call());
                 d()->valueTypeWrapper->writeBack();
                 return rv->asReturnedValue();

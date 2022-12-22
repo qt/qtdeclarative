@@ -790,6 +790,8 @@ private:
             return Pragma::ListPropertyAssignBehavior;
         } else if constexpr (std::is_same_v<Argument, Pragma::FunctionSignatureBehaviorValue>) {
             return Pragma::FunctionSignatureBehavior;
+        } else if constexpr (std::is_same_v<Argument, Pragma::NativeMethodBehaviorValue>) {
+            return Pragma::NativeMethodBehavior;
         }
 
         Q_UNREACHABLE_RETURN(Pragma::PragmaType(-1));
@@ -831,6 +833,15 @@ private:
                 pragma->functionSignatureBehavior = Pragma::Enforced;
                 return true;
             }
+        } else if constexpr (std::is_same_v<Argument, Pragma::NativeMethodBehaviorValue>) {
+            if (value == "AcceptThisObject"_L1) {
+                pragma->nativeMethodBehavior = Pragma::AcceptThisObject;
+                return true;
+            }
+            if (value == "RejectThisObject"_L1) {
+                pragma->nativeMethodBehavior = Pragma::RejectThisObject;
+                return true;
+            }
         }
 
         return false;
@@ -854,6 +865,8 @@ private:
             return "component behavior"_L1;
         case Pragma::FunctionSignatureBehavior:
             return "function signature behavior"_L1;
+        case Pragma::NativeMethodBehavior:
+            return "native method behavior"_L1;
         default:
             break;
         }
@@ -878,6 +891,9 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
                 return false;
         } else if (node->name == QStringLiteral("FunctionSignatureBehavior")) {
             if (!PragmaParser<Pragma::FunctionSignatureBehaviorValue>::run(this, node, pragma))
+                return false;
+        } else if (node->name == QStringLiteral("NativeMethodBehavior")) {
+            if (!PragmaParser<Pragma::NativeMethodBehaviorValue>::run(this, node, pragma))
                 return false;
         } else {
             recordError(node->pragmaToken, QCoreApplication::translate(
@@ -1650,6 +1666,15 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                     break;
                 }
                 break;
+            case Pragma::NativeMethodBehavior:
+                switch (p->nativeMethodBehavior) {
+                case Pragma::AcceptThisObject:
+                    createdUnit->flags |= Unit::NativeMethodsAcceptThisObject;
+                    break;
+                case Pragma::RejectThisObject:
+                    // this is the default;
+                    break;
+                }
             }
         }
 
