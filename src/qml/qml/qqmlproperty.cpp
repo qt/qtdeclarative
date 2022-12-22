@@ -32,6 +32,7 @@
 #include <cmath>
 #include <QtQml/QQmlPropertyMap>
 #include <QtCore/private/qproperty_p.h>
+#include <QtCore/qsequentialiterable.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
@@ -1505,40 +1506,46 @@ bool QQmlPropertyPrivate::write(
         }
         if (!ok) {
             // the only other options are that they are assigning a single value
-            // to a sequence type property (eg, an int to a QList<int> property).
-            // or that we encountered an interface type
+            // or a QVariantList to a sequence type property (eg, an int to a
+            // QList<int> property) or that we encountered an interface type.
             // Note that we've already handled single-value assignment to QList<QUrl> properties.
-            if (variantMetaType == QMetaType::fromType<int>()
-                    && propertyMetaType == QMetaType::fromType<QList<int>>()) {
-                QList<int> list;
-                list << value.toInt();
-                v = QVariant::fromValue<QList<int> >(list);
-                ok = true;
-            } else if ((variantMetaType == QMetaType::fromType<double>()
-                        || variantMetaType == QMetaType::fromType<int>())
-                       && (propertyMetaType == QMetaType::fromType<QList<qreal>>())) {
-                QList<qreal> list;
-                list << value.toReal();
-                v = QVariant::fromValue<QList<qreal> >(list);
-                ok = true;
-            } else if (variantMetaType == QMetaType::fromType<bool>()
-                       && propertyMetaType == QMetaType::fromType<QList<bool>>()) {
-                QList<bool> list;
-                list << value.toBool();
-                v = QVariant::fromValue<QList<bool> >(list);
-                ok = true;
-            } else if (variantMetaType == QMetaType::fromType<QString>()
-                       && propertyMetaType == QMetaType::fromType<QList<QString>>()) {
-                QList<QString> list;
-                list << value.toString();
-                v = QVariant::fromValue<QList<QString> >(list);
-                ok = true;
-            } else if (variantMetaType == QMetaType::fromType<QString>()
-                       && propertyMetaType == QMetaType::fromType<QStringList>()) {
-                QStringList list;
-                list << value.toString();
-                v = QVariant::fromValue<QStringList>(list);
-                ok = true;
+            QSequentialIterable iterable;
+            v = QVariant(propertyMetaType);
+            if (QMetaType::view(
+                        propertyMetaType, v.data(),
+                        QMetaType::fromType<QSequentialIterable>(),
+                        &iterable)) {
+                const QMetaSequence metaContainer = iterable.metaContainer();
+                if (metaContainer.canAddValueAtEnd()) {
+                    const QMetaType elementMetaType = iterable.valueMetaType();
+                    void *container = iterable.mutableIterable();
+                    if (variantMetaType == elementMetaType) {
+                        metaContainer.addValueAtEnd(container, value.constData());
+                        ok = true;
+                    } else if (variantMetaType == QMetaType::fromType<QVariantList>()) {
+                        const QVariantList list = value.value<QVariantList>();
+                        for (const QVariant &valueElement : list) {
+                            if (valueElement.metaType() == elementMetaType) {
+                                metaContainer.addValueAtEnd(
+                                            container, valueElement.constData());
+                            } else {
+                                QVariant converted(elementMetaType);
+                                QMetaType::convert(
+                                            valueElement.metaType(), valueElement.constData(),
+                                            elementMetaType, converted.data());
+                                metaContainer.addValueAtEnd(
+                                            container, converted.constData());
+                            }
+                        }
+                        ok = true;
+                    } else {
+                        QVariant converted = value;
+                        if (converted.convert(elementMetaType)) {
+                            metaContainer.addValueAtEnd(container, converted.constData());
+                            ok = true;
+                        }
+                    }
+                }
             }
         }
 

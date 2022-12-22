@@ -116,6 +116,35 @@ public:
 
 QML_DECLARE_TYPE(MyAlwaysReplaceBehaviorContainer);
 
+class ListHolder : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QVariantList varList READ varList NOTIFY varListChanged)
+    Q_PROPERTY(QList<double> doubleList READ doubleList WRITE setDoubleList NOTIFY doubleListChanged)
+public:
+    explicit ListHolder(QObject *parent = nullptr) : QObject(parent) {}
+
+    QVariantList varList() const { return {1.1, 2.2, 3.3, 11, 5.25f, QStringLiteral("11")}; }
+
+    QList<double> doubleList() const { return m_doubleList; }
+
+    void setDoubleList(const QList<double> &newDoubleList)
+    {
+        if (m_doubleList == newDoubleList)
+            return;
+        m_doubleList = newDoubleList;
+        emit doubleListChanged();
+    }
+
+signals:
+    void varListChanged();
+    void doubleListChanged();
+
+private:
+    QList<double> m_doubleList;
+};
+
+
 class tst_qqmlproperty : public QQmlDataTest
 {
     Q_OBJECT
@@ -187,6 +216,7 @@ private slots:
     void constructFromPlainMetaObject();
 
     void bindToNonQObjectTarget();
+    void assignVariantList();
 private:
     QQmlEngine engine;
 };
@@ -2267,6 +2297,7 @@ void tst_qqmlproperty::initTestCase()
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");
     qmlRegisterType<MyReplaceIfNotDefaultBehaviorContainer>("Test",1,0,"MyReplaceIfNotDefaultBehaviorContainer");
     qmlRegisterType<MyAlwaysReplaceBehaviorContainer>("Test",1,0,"MyAlwaysReplaceBehaviorContainer");
+    qmlRegisterType<ListHolder>("Test", 1, 0, "ListHolder");
 }
 
 // QTBUG-60908
@@ -2511,6 +2542,18 @@ void tst_qqmlproperty::bindToNonQObjectTarget()
                          qPrintable(url.toString() + ":14:7: Unable to assign QFont to QObject*"));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmlproperty::assignVariantList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("assignVariantList.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    ListHolder *holder = qobject_cast<ListHolder *>(o.data());
+    const QList<double> doubleList = {1.1, 2.2, 3.3, 11, 5.25, 11};
+    QCOMPARE(holder->doubleList(), doubleList);
 }
 
 QTEST_MAIN(tst_qqmlproperty)
