@@ -2313,6 +2313,25 @@ bool DomItem::iterateDirectSubpaths(DirectVisitor v)
             [this, v](auto &&el) mutable { return el->iterateDirectSubpaths(*this, v); });
 }
 
+DomItem DomItem::subReferencesItem(const PathEls::PathComponent &c, QList<Path> paths)
+{
+    return subListItem(
+                List::fromQList<Path>(pathFromOwner().appendComponent(c), paths,
+                                      [](DomItem &list, const PathEls::PathComponent &p, Path &el) {
+                    return list.subReferenceItem(p, el);
+                }));
+}
+
+DomItem DomItem::subReferenceItem(const PathEls::PathComponent &c, Path referencedObject)
+{
+    if (domTypeIsOwningItem(internalKind())) {
+        return DomItem(m_top, m_owner, m_ownerPath, Reference(referencedObject, Path(c)));
+    } else {
+        return DomItem(m_top, m_owner, m_ownerPath,
+                       Reference(referencedObject, pathFromOwner().appendComponent(c)));
+    }
+}
+
 shared_ptr<DomTop> DomItem::topPtr()
 {
     if (m_top)
