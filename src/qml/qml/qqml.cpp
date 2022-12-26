@@ -712,6 +712,19 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
     }
 }
 
+QList<QTypeRevision> QQmlPrivate::revisionClassInfos(const QMetaObject *metaObject,
+                                                     const char *key)
+{
+    QList<QTypeRevision> revisions;
+    for (int index = indexOfOwnClassInfo(metaObject, key); index != -1;
+         index = indexOfOwnClassInfo(metaObject, key, index - 1)) {
+        revisions.push_back(QTypeRevision::fromEncodedVersion(
+                                QByteArray(metaObject->classInfo(index).value()).toInt()));
+    }
+    return revisions;
+}
+
+
 namespace QQmlPrivate {
 template<>
 void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(

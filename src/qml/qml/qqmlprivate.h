@@ -799,16 +799,7 @@ namespace QQmlPrivate
                                    QByteArray(metaObject->classInfo(index).value()).toInt());
     }
 
-    inline QList<QTypeRevision> revisionClassInfos(const QMetaObject *metaObject, const char *key)
-    {
-        QList<QTypeRevision> revisions;
-        for (int index = indexOfOwnClassInfo(metaObject, key); index != -1;
-             index = indexOfOwnClassInfo(metaObject, key, index - 1)) {
-            revisions.push_back(QTypeRevision::fromEncodedVersion(
-                          QByteArray(metaObject->classInfo(index).value()).toInt()));
-        }
-        return revisions;
-    }
+    Q_QML_EXPORT QList<QTypeRevision> revisionClassInfos(const QMetaObject *metaObject, const char *key);
 
     inline bool boolClassInfo(const QMetaObject *metaObject, const char *key,
                               bool defaultValue = false)
