@@ -2072,24 +2072,6 @@ inline DomItem DomBase::key(DomItem &self, QString name) const
     return res;
 }
 
-inline DomItem DomItem::subReferencesItem(const PathEls::PathComponent &c, QList<Path> paths)
-{
-    return subListItem(
-            List::fromQList<Path>(pathFromOwner().appendComponent(c), paths,
-                                  [](DomItem &list, const PathEls::PathComponent &p, Path &el) {
-                                      return list.subReferenceItem(p, el);
-                                  }));
-}
-
-inline DomItem DomItem::subReferenceItem(const PathEls::PathComponent &c, Path referencedObject)
-{
-    if (domTypeIsOwningItem(internalKind()))
-        return DomItem(m_top, m_owner, m_ownerPath, Reference(referencedObject, Path(c)));
-    else
-        return DomItem(m_top, m_owner, m_ownerPath,
-                       Reference(referencedObject, pathFromOwner().appendComponent(c)));
-}
-
 inline DomItem DomItem::subListItem(const List &list)
 {
     return DomItem(m_top, m_owner, m_ownerPath, list);
