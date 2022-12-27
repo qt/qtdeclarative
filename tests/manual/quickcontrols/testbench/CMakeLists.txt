@@ -91,7 +91,7 @@ qt_internal_add_resource(testbench "qml"
         ${qml_resource_files}
 )
 set(fonts_resource_files
-    "fonts/fontawesome.ttf"
+    "fonts/fontello.ttf"
 )
 
 qt_internal_add_resource(testbench "fonts"
