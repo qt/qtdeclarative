@@ -85,6 +85,8 @@ Ui.ApplicationWindow {
         property bool autoFixImagineAssets
         property alias imagineDirLastModified: assetFixer.assetDirectoryLastModified
 
+        property string lastSearchText
+
         Component.onCompleted: settingsLoaded = true
     }
 
@@ -119,7 +121,7 @@ Ui.ApplicationWindow {
 
             ToolButton {
                 text: "\uf0c9"
-                font.family: "fontawesome"
+                font.family: "fontello"
                 font.pixelSize: Qt.application.font.pixelSize * 1.6
                 onClicked: drawer.open()
             }
@@ -129,6 +131,22 @@ Ui.ApplicationWindow {
             TextField {
                 id: searchTextField
                 placeholderText: "Search"
+                text: settings.lastSearchText
+                onTextEdited: settings.lastSearchText = text
+            }
+
+            ToolButton {
+                text: "\ue801"
+                font.family: "fontello"
+                visible: searchTextField.length > 0
+                onClicked: searchTextField.clear()
+
+                Layout.leftMargin: -5
+            }
+
+            Label {
+                text: controlFolderListModel.count + " result(s)"
+                visible: searchTextField.length > 0
             }
 
             Item {
@@ -138,7 +156,7 @@ Ui.ApplicationWindow {
             ToolButton {
                 id: optionsMenuButton
                 text: "\ue800"
-                font.family: "FontAwesome"
+                font.family: "fontello"
                 font.pixelSize: Qt.application.font.pixelSize * 1.6
                 checked: optionsMenu.visible
                 checkable: true

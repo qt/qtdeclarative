@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     else
         QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
 
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
+    if (QFontDatabase::addApplicationFont(":/fonts/fontello.ttf") == -1) {
         qWarning() << "Failed to load fontawesome font";
     }
 
