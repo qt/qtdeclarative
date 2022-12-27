@@ -796,7 +796,7 @@ namespace QQmlPrivate
         const int index = indexOfOwnClassInfo(metaObject, key);
         return (index == -1) ? defaultValue
                              : QTypeRevision::fromEncodedVersion(
-                                   QByteArray(metaObject->classInfo(index).value()).toInt());
+                                   QLatin1StringView(metaObject->classInfo(index).value()).toInt());
     }
 
     Q_QML_EXPORT QList<QTypeRevision> revisionClassInfos(const QMetaObject *metaObject, const char *key);
@@ -805,8 +805,9 @@ namespace QQmlPrivate
                               bool defaultValue = false)
     {
         const int index = indexOfOwnClassInfo(metaObject, key);
-        return (index == -1) ? defaultValue
-                             : (QByteArray(metaObject->classInfo(index).value()) == "true");
+        if (index == -1)
+            return defaultValue;
+        return qstrcmp(metaObject->classInfo(index).value(), "true") == 0;
     }
 
     inline const char *classElementName(const QMetaObject *metaObject)

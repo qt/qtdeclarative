@@ -719,7 +719,7 @@ QList<QTypeRevision> QQmlPrivate::revisionClassInfos(const QMetaObject *metaObje
     for (int index = indexOfOwnClassInfo(metaObject, key); index != -1;
          index = indexOfOwnClassInfo(metaObject, key, index - 1)) {
         revisions.push_back(QTypeRevision::fromEncodedVersion(
-                                QByteArray(metaObject->classInfo(index).value()).toInt()));
+                                QLatin1StringView(metaObject->classInfo(index).value()).toInt()));
     }
     return revisions;
 }
