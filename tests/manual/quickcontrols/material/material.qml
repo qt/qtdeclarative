@@ -97,7 +97,7 @@ ApplicationWindow {
             focus: true
             currentIndex: settings.currentControlIndex
             anchors.fill: parent
-            model: ["Button", "DelayButton", "RoundButton", "Switch"]
+            model: ["Button", "DelayButton", "RoundButton", "Switch", "TextField"]
             delegate: ItemDelegate {
                 width: listView.width
                 text: modelData
