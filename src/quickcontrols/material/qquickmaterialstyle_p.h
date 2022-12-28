@@ -73,6 +73,7 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY toolTextColorChanged FINAL)
     Q_PROPERTY(QColor spinBoxDisabledIconColor READ spinBoxDisabledIconColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor sliderDisabledColor READ sliderDisabledColor NOTIFY themeChanged FINAL REVISION(2, 15))
+    Q_PROPERTY(QColor textFieldFilledContainerColor READ textFieldFilledContainerColor NOTIFY themeChanged FINAL)
 
     Q_PROPERTY(int touchTarget READ touchTarget CONSTANT FINAL)
     Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
@@ -82,6 +83,9 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(int menuItemHeight READ menuItemHeight CONSTANT FINAL)
     Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int switchDelegateVerticalPadding READ switchDelegateVerticalPadding CONSTANT FINAL)
+    Q_PROPERTY(int textFieldHeight READ textFieldHeight CONSTANT FINAL)
+    Q_PROPERTY(int textFieldHorizontalPadding READ textFieldHorizontalPadding CONSTANT FINAL)
+    Q_PROPERTY(int textFieldVerticalPadding READ textFieldVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int tooltipHeight READ tooltipHeight CONSTANT FINAL)
 
     QML_NAMED_ELEMENT(Material)
@@ -254,6 +258,7 @@ public:
     QColor toolTextColor() const;
     QColor spinBoxDisabledIconColor() const;
     QColor sliderDisabledColor() const;
+    QColor textFieldFilledContainerColor() const;
 
     Q_INVOKABLE QColor color(Color color, Shade shade = Shade500) const;
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
@@ -266,6 +271,9 @@ public:
     int menuItemHeight() const;
     int menuItemVerticalPadding() const;
     int switchDelegateVerticalPadding() const;
+    int textFieldHeight() const;
+    int textFieldHorizontalPadding() const;
+    int textFieldVerticalPadding() const;
     int tooltipHeight() const;
 
     static void initGlobals();

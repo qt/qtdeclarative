@@ -28,8 +28,10 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
     NO_PLUGIN_OPTIONAL
     SOURCES
         qquickmaterialbusyindicator.cpp qquickmaterialbusyindicator_p.h
+        qquickmaterialplaceholdertext.cpp qquickmaterialplaceholdertext_p.h
         qquickmaterialprogressbar.cpp qquickmaterialprogressbar_p.h
         qquickmaterialripple.cpp qquickmaterialripple_p.h
+        qquickmaterialtextcontainer.cpp qquickmaterialtextcontainer_p.h
     QML_FILES
         ${qml_files}
     DEFINES
@@ -38,8 +40,10 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickControls2ImplPrivate
+        Qt::Quick
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )

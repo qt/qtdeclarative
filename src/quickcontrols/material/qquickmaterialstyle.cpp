@@ -422,6 +422,8 @@ static const QRgb switchDisabledCheckedTrackColorLight = 0x1E1C1B1F;
 static const QRgb switchDisabledCheckedTrackColorDark = 0x1EE6E1E5;
 static const QRgb switchDisabledUncheckedIconColorLight = 0x611C1B1F;
 static const QRgb switchDisabledUncheckedIconColorDark = 0x61E6E1E5;
+static const QRgb textFieldFilledContainerColorLight = 0xFFE7E0EC;
+static const QRgb textFieldFilledContainerColorDark = 0xFF49454F;
 
 static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme theme)
 {
@@ -1158,6 +1160,11 @@ QColor QQuickMaterialStyle::sliderDisabledColor() const
     return QColor::fromRgba(m_theme == Light ? sliderDisabledColorLight : sliderDisabledColorDark);
 }
 
+QColor QQuickMaterialStyle::textFieldFilledContainerColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? textFieldFilledContainerColorLight : textFieldFilledContainerColorDark);
+}
+
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const
 {
     int count = sizeof(colors) / sizeof(colors[0]);
@@ -1296,6 +1303,21 @@ int QQuickMaterialStyle::switchDelegateVerticalPadding() const
 {
     // SwitchDelegate's indicator is much larger than the others due to the shadow,
     // so we must reduce its padding to ensure its implicitHeight is 40 when dense.
+    return globalVariant == Dense ? 4 : 8;
+}
+
+int QQuickMaterialStyle::textFieldHeight() const
+{
+    // filled: https://m3.material.io/components/text-fields/specs#8c032848-e442-46df-b25d-28f1315f234b
+    // outlined: https://m3.material.io/components/text-fields/specs#605e24f1-1c1f-4c00-b385-4bf50733a5ef
+    return globalVariant == Dense ? 44 : 56;
+}
+int QQuickMaterialStyle::textFieldHorizontalPadding() const
+{
+    return globalVariant == Dense ? 12 : 16;
+}
+int QQuickMaterialStyle::textFieldVerticalPadding() const
+{
     return globalVariant == Dense ? 4 : 8;
 }
 
