@@ -84,6 +84,9 @@ const uint DYNAMIC_VERTEX_INDEX_BUFFER_THRESHOLD = 4;
 const int VERTEX_BUFFER_BINDING = 0;
 const int ZORDER_BUFFER_BINDING = VERTEX_BUFFER_BINDING + 1;
 
+const float VIEWPORT_MIN_DEPTH = 0.0f;
+const float VIEWPORT_MAX_DEPTH = 1.0f;
+
 template <class Int>
 inline Int aligned(Int v, Int byteAlign)
 {
@@ -1833,6 +1836,12 @@ static inline int qsg_fixIndexCount(int iCount, int drawMode)
     }
 }
 
+static inline float calculateElementZOrder(const Element *e, qreal zRange)
+{
+    // Clamp the zOrder to within the min and max depth of the viewport.
+    return std::clamp(1.0f - float(e->order * zRange), VIEWPORT_MIN_DEPTH, VIEWPORT_MAX_DEPTH);
+}
+
 /* These parameters warrant some explanation...
  *
  * vaOffset: The byte offset into the vertex data to the location of the
@@ -1877,7 +1886,7 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
 
     if (useDepthBuffer()) {
         float *vzorder = (float *) *zData;
-        float zorder = 1.0f - e->order * m_zRange;
+        float zorder = calculateElementZOrder(e, m_zRange);
         for (int i=0; i<vCount; ++i)
             vzorder[i] = zorder;
         *zData += vCount * sizeof(float);
@@ -3321,7 +3330,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
         if (useDepthBuffer()) {
             m_current_projection_matrix(2, 2) = m_zRange;
-            m_current_projection_matrix(2, 3) = 1.0f - e->order * m_zRange;
+            m_current_projection_matrix(2, 3) = calculateElementZOrder(e, m_zRange);
         }
 
         QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
@@ -3696,7 +3705,9 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     bool renderOpaque = !debug_noopaque();
     bool renderAlpha = !debug_noalpha();
 
-    m_pstate.viewport = QRhiViewport(viewport.x(), deviceRect().bottom() - viewport.bottom(), viewport.width(), viewport.height());
+    m_pstate.viewport =
+            QRhiViewport(viewport.x(), deviceRect().bottom() - viewport.bottom(), viewport.width(),
+                         viewport.height(), VIEWPORT_MIN_DEPTH, VIEWPORT_MAX_DEPTH);
     m_pstate.clearColor = clearColor();
     m_pstate.dsClear = QRhiDepthStencilClearValue(1.0f, 0);
     m_pstate.viewportSet = false;
@@ -3939,7 +3950,7 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
     rd->m_projectionMatrix = projectionMatrix();
     if (useDepthBuffer()) {
         rd->m_projectionMatrix(2, 2) = m_zRange;
-        rd->m_projectionMatrix(2, 3) = 1.0f - e->order * m_zRange;
+        rd->m_projectionMatrix(2, 3) = calculateElementZOrder(e, m_zRange);
     }
 
     e->renderNode->prepare();
