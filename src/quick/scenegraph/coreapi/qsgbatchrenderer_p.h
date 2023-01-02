@@ -643,13 +643,11 @@ size_t qHash(const GraphicsPipelineStateKey &k, size_t seed = 0) noexcept;
 struct ShaderManagerShader
 {
     ~ShaderManagerShader() {
-        delete programRhi.program;
+        delete materialShader;
     }
-    struct {
-        QSGMaterialShader *program = nullptr;
-        QRhiVertexInputLayout inputLayout;
-        QVarLengthArray<QRhiGraphicsShaderStage, 2> shaderStages;
-    } programRhi;
+    QSGMaterialShader *materialShader = nullptr;
+    QRhiVertexInputLayout inputLayout;
+    QVarLengthArray<QRhiGraphicsShaderStage, 2> stages;
     float lastOpacity;
 };
 

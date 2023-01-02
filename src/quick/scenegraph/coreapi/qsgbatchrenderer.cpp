@@ -212,10 +212,10 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
     shader = new Shader;
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::BatchableVertexShader);
-    shader->programRhi.program = s;
-    shader->programRhi.inputLayout = calculateVertexInputLayout(s, geometry, true);
+    shader->materialShader = s;
+    shader->inputLayout = calculateVertexInputLayout(s, geometry, true);
     QSGMaterialShaderPrivate *sD = QSGMaterialShaderPrivate::get(s);
-    shader->programRhi.shaderStages = {
+    shader->stages = {
         { QRhiGraphicsShaderStage::Vertex, sD->shader(QShader::VertexStage), QShader::BatchableVertexShader },
         { QRhiGraphicsShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
     };
@@ -240,10 +240,10 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     shader = new Shader;
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::StandardShader);
-    shader->programRhi.program = s;
-    shader->programRhi.inputLayout = calculateVertexInputLayout(s, geometry, false);
+    shader->materialShader = s;
+    shader->inputLayout = calculateVertexInputLayout(s, geometry, false);
     QSGMaterialShaderPrivate *sD = QSGMaterialShaderPrivate::get(s);
-    shader->programRhi.shaderStages = {
+    shader->stages = {
         { QRhiGraphicsShaderStage::Vertex, sD->shader(QShader::VertexStage) },
         { QRhiGraphicsShaderStage::Fragment, sD->shader(QShader::FragmentStage) }
     };
@@ -272,14 +272,14 @@ void ShaderManager::invalidated()
 void ShaderManager::clearCachedRendererData()
 {
     for (ShaderManager::Shader *sms : std::as_const(stockShaders)) {
-        QSGMaterialShader *s = sms->programRhi.program;
+        QSGMaterialShader *s = sms->materialShader;
         if (s) {
             QSGMaterialShaderPrivate *sd = QSGMaterialShaderPrivate::get(s);
             sd->clearCachedRendererData();
         }
     }
     for (ShaderManager::Shader *sms : std::as_const(rewrittenShaders)) {
-        QSGMaterialShader *s = sms->programRhi.program;
+        QSGMaterialShader *s = sms->materialShader;
         if (s) {
             QSGMaterialShaderPrivate *sd = QSGMaterialShaderPrivate::get(s);
             sd->clearCachedRendererData();
@@ -2607,8 +2607,8 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
 
     // Build a new one. This is potentially expensive.
     QRhiGraphicsPipeline *ps = m_rhi->newGraphicsPipeline();
-    ps->setShaderStages(sms->programRhi.shaderStages.cbegin(), sms->programRhi.shaderStages.cend());
-    ps->setVertexInputLayout(sms->programRhi.inputLayout);
+    ps->setShaderStages(sms->stages.cbegin(), sms->stages.cend());
+    ps->setVertexInputLayout(sms->inputLayout);
     ps->setShaderResourceBindings(e->srb);
     ps->setRenderPassDescriptor(renderTarget().rpDesc);
 
@@ -2817,7 +2817,7 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
 {
     m_current_resource_update_batch = m_resourceUpdates;
 
-    QSGMaterialShader *shader = sms->programRhi.program;
+    QSGMaterialShader *shader = sms->materialShader;
     QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(shader);
     QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
 
@@ -3010,7 +3010,7 @@ void Renderer::updateMaterialStaticData(ShaderManager::Shader *sms,
                                         Batch *batch,
                                         bool *gstateChanged)
 {
-    QSGMaterialShader *shader = sms->programRhi.program;
+    QSGMaterialShader *shader = sms->materialShader;
     *gstateChanged = false;
     if (shader->flags().testFlag(QSGMaterialShader::UpdatesGraphicsPipelineState)) {
         // generate the public mini-state from m_gstate, invoke the material,
@@ -3083,9 +3083,9 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     if (!sms)
         return false;
 
-    Q_ASSERT(sms->programRhi.program);
+    Q_ASSERT(sms->materialShader);
     if (m_currentShader != sms)
-        setActiveRhiShader(sms->programRhi.program, sms);
+        setActiveRhiShader(sms->materialShader, sms);
 
     m_current_opacity = gn->inheritedOpacity();
     if (!qFuzzyCompare(sms->lastOpacity, float(m_current_opacity))) {
@@ -3093,7 +3093,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
         sms->lastOpacity = m_current_opacity;
     }
 
-    QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->programRhi.program);
+    QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->materialShader);
     const quint32 ubufSize = quint32(pd->masterUniformData.size());
     if (pd->ubufBinding >= 0) {
         bool ubufRebuild = false;
@@ -3261,9 +3261,9 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     if (!sms)
         return false;
 
-    Q_ASSERT(sms->programRhi.program);
+    Q_ASSERT(sms->materialShader);
     if (m_currentShader != sms)
-        setActiveRhiShader(sms->programRhi.program, sms);
+        setActiveRhiShader(sms->materialShader, sms);
 
     m_current_opacity = gn->inheritedOpacity();
     if (sms->lastOpacity != m_current_opacity) {
@@ -3273,7 +3273,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
 
     QMatrix4x4 rootMatrix = batch->root ? qsg_matrixForRoot(batch->root) : QMatrix4x4();
 
-    QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->programRhi.program);
+    QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->materialShader);
     const quint32 ubufSize = quint32(pd->masterUniformData.size());
     if (pd->ubufBinding >= 0) {
         quint32 totalUBufSize = 0;
@@ -4056,7 +4056,7 @@ size_t qHash(const GraphicsState &s, size_t seed) noexcept
 bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept
 {
     return a.state == b.state
-            && a.sms->programRhi.program == b.sms->programRhi.program
+            && a.sms->materialShader == b.sms->materialShader
             && a.renderTargetDescription == b.renderTargetDescription
             && a.srbLayoutDescription == b.srbLayoutDescription;
 }
@@ -4069,7 +4069,7 @@ bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
 size_t qHash(const GraphicsPipelineStateKey &k, size_t seed) noexcept
 {
     return qHash(k.state, seed)
-        ^ qHash(k.sms->programRhi.program)
+        ^ qHash(k.sms->materialShader)
         ^ k.extra.renderTargetDescriptionHash
         ^ k.extra.srbLayoutDescriptionHash;
 }
