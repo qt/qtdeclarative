@@ -166,8 +166,8 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE(handler->point().pressure(), 0.45);
     QCOMPARE(handler->point().rotation(), 15.6);
     QCOMPARE(handler->point().uniqueId().numericId(), stylusId);
-    QVERIFY(handler->point().velocity().x() > 0);
-    QVERIFY(handler->point().velocity().y() > 0);
+    QCOMPARE_GT(handler->point().velocity().x(), 0);
+    QCOMPARE_GT(handler->point().velocity().y(), 0);
     QCOMPARE(handler->translation(), QVector2D(deltaLocalDPI));
     QCOMPARE(translationSpy.size(), 2);
 
