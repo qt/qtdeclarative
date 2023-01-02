@@ -1981,6 +1981,25 @@ public slots:
     int slot1(int i, int j, int k) {return i+j+k;}
 };
 
+class ReadOnlyBindable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int x READ x WRITE setX BINDABLE bindableX)
+    Q_OBJECT_BINDABLE_PROPERTY(ReadOnlyBindable, int, _xProp)
+
+public:
+    ReadOnlyBindable(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+        setX(7);
+    }
+
+    int x() const { return _xProp.value(); }
+    void setX(int x) { _xProp.setValue(x); }
+    QBindable<int> bindableX() const { return &_xProp; }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
