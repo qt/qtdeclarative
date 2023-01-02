@@ -332,6 +332,10 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
     d->cleanupNodesOnShutdown();
 
+#if QT_CONFIG(quick_shadereffect)
+    QSGRhiShaderEffectNode::resetMaterialTypeCache(window);
+#endif
+
     if (data.rc) {
         data.rc->invalidate();
         delete data.rc;
@@ -797,6 +801,9 @@ void QSGGuiThreadRenderLoop::releaseResources(QQuickWindow *w)
     emit d->context->releaseCachedResourcesRequested();
     if (d->renderer)
         d->renderer->releaseCachedResources();
+#if QT_CONFIG(quick_shadereffect)
+    QSGRhiShaderEffectNode::garbageCollectMaterialTypeCache(w);
+#endif
 }
 
 void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)

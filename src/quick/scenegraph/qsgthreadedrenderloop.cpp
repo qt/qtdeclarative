@@ -387,6 +387,9 @@ bool QSGRenderThread::event(QEvent *e)
                     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- requesting renderer to release cached resources");
                     d->renderer->releaseCachedResources();
                 }
+#if QT_CONFIG(quick_shadereffect)
+                QSGRhiShaderEffectNode::garbageCollectMaterialTypeCache(window);
+#endif
             }
         }
         waitCondition.wakeOne();
@@ -481,6 +484,9 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
     if (wipeSG) {
         dd->cleanupNodesOnShutdown();
+#if QT_CONFIG(quick_shadereffect)
+        QSGRhiShaderEffectNode::resetMaterialTypeCache(window);
+#endif
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- persistent SG, avoiding cleanup");
         return;

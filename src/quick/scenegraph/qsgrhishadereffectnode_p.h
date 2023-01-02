@@ -100,6 +100,9 @@ public:
     void syncMaterial(SyncData *syncData) override;
     void preprocess() override;
 
+    static void resetMaterialTypeCache(void *materialTypeCacheKey);
+    static void garbageCollectMaterialTypeCache(void *materialTypeCacheKey);
+
 private Q_SLOTS:
     void handleTextureChange();
     void handleTextureProviderDestroyed(QObject *object);

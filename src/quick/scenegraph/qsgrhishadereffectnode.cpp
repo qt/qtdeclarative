@@ -146,7 +146,16 @@ struct QSGRhiShaderMaterialTypeCache
 {
     QSGMaterialType *ref(const QShader &vs, const QShader &fs);
     void unref(const QShader &vs, const QShader &fs);
-
+    void reset() {
+        for (auto it = m_types.begin(), end = m_types.end(); it != end; ++it)
+            delete it->type;
+        m_types.clear();
+        clearGraveyard();
+    }
+    void clearGraveyard() {
+        qDeleteAll(m_graveyard);
+        m_graveyard.clear();
+    }
     struct Key {
         QShader vs;
         QShader fs;
@@ -167,6 +176,7 @@ struct QSGRhiShaderMaterialTypeCache
         QSGMaterialType *type;
     };
     QHash<Key, MaterialType> m_types;
+    QVector<QSGMaterialType *> m_graveyard;
 };
 
 size_t qHash(const QSGRhiShaderMaterialTypeCache::Key &key, size_t seed = 0)
@@ -198,13 +208,25 @@ void QSGRhiShaderMaterialTypeCache::unref(const QShader &vs, const QShader &fs)
     auto it = m_types.find(k);
     if (it != m_types.end()) {
         if (!--it->ref) {
-            delete it->type;
+            m_graveyard.append(it->type);
             m_types.erase(it);
         }
     }
 }
 
 static QHash<void *, QSGRhiShaderMaterialTypeCache> shaderMaterialTypeCache;
+
+void QSGRhiShaderEffectNode::resetMaterialTypeCache(void *materialTypeCacheKey)
+{
+    QMutexLocker lock(&shaderMaterialTypeCacheMutex);
+    shaderMaterialTypeCache[materialTypeCacheKey].reset();
+}
+
+void QSGRhiShaderEffectNode::garbageCollectMaterialTypeCache(void *materialTypeCacheKey)
+{
+    QMutexLocker lock(&shaderMaterialTypeCacheMutex);
+    shaderMaterialTypeCache[materialTypeCacheKey].clearGraveyard();
+}
 
 class QSGRhiShaderEffectMaterialShader : public QSGMaterialShader
 {
