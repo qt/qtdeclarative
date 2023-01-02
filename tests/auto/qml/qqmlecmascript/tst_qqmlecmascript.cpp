@@ -414,6 +414,8 @@ private slots:
     void internalClassParentGc();
     void methodTypeMismatch();
 
+    void doNotCrashOnReadOnlyBindable();
+
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -10353,6 +10355,22 @@ void tst_qqmlecmascript::methodTypeMismatch()
     QVERIFY(method.isValid());
     QVERIFY(method.invoke(o.get()));
     QCOMPARE(object->actuals(), QVariantList() << QVariant::fromValue((QObject *)nullptr));
+}
+
+void tst_qqmlecmascript::doNotCrashOnReadOnlyBindable()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("readOnlyBindable.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+#ifndef QT_NO_DEBUG
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "setBinding: Could not set binding via bindable interface. "
+                "The QBindable is read-only.");
+#endif
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("x").toInt(), 7);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

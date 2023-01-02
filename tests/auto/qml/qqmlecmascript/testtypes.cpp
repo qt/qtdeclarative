@@ -541,6 +541,7 @@ void registerTypes()
 
     qmlRegisterType<Receiver>("Qt.test", 1,0, "Receiver");
     qmlRegisterType<Sender>("Qt.test", 1,0, "Sender");
+    qmlRegisterTypesAndRevisions<ReadOnlyBindable>("Qt.test", 1);
 }
 
 #include "testtypes.moc"
