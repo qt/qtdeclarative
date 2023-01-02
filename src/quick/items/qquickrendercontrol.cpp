@@ -197,6 +197,10 @@ void QQuickRenderControlPrivate::windowDestroyed()
 
         QQuickWindowPrivate::get(window)->animationController.reset();
 
+#if QT_CONFIG(quick_shadereffect)
+        QSGRhiShaderEffectNode::resetMaterialTypeCache(window);
+#endif
+
         window = nullptr;
     }
 }
