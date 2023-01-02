@@ -1945,7 +1945,7 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
     Example:
     \snippet qml/qsTranslate.qml 0
 
-    \sa {Internationalization and Localization with Qt Quick}
+    \sa {Internationalization with Qt}
 */
 ReturnedValue GlobalExtensions::method_qsTranslate(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
@@ -2006,7 +2006,7 @@ ReturnedValue GlobalExtensions::method_qsTranslate(const FunctionObject *b, cons
     Example:
     \snippet qml/qtTranslateNoOp.qml 0
 
-    \sa {Internationalization and Localization with Qt Quick}
+    \sa {Internationalization with Qt}
 */
 ReturnedValue GlobalExtensions::method_qsTranslateNoOp(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
@@ -2068,7 +2068,7 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
     Example:
     \snippet qml/qsTr.qml 0
 
-    \sa {Internationalization and Localization with Qt Quick}
+    \sa {Internationalization with Qt}
 */
 ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
@@ -2117,7 +2117,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
     Example:
     \snippet qml/qtTrNoOp.qml 0
 
-    \sa {Internationalization and Localization with Qt Quick}
+    \sa {Internationalization with Qt}
 */
 ReturnedValue GlobalExtensions::method_qsTrNoOp(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
@@ -2155,7 +2155,7 @@ ReturnedValue GlobalExtensions::method_qsTrNoOp(const FunctionObject *, const Va
     Creating binary translation (QM) files suitable for use with this function requires passing
     the \c -idbased option to the \c lrelease tool.
 
-    \sa QT_TRID_NOOP(), {Internationalization and Localization with Qt Quick}
+    \sa QT_TRID_NOOP(), {Internationalization with Qt}
 */
 ReturnedValue GlobalExtensions::method_qsTrId(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
@@ -2192,7 +2192,7 @@ ReturnedValue GlobalExtensions::method_qsTrId(const FunctionObject *b, const Val
     Example:
     \snippet qml/qtTrIdNoOp.qml 0
 
-    \sa qsTrId(), {Internationalization and Localization with Qt Quick}
+    \sa qsTrId(), {Internationalization with Qt}
 */
 ReturnedValue GlobalExtensions::method_qsTrIdNoOp(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
