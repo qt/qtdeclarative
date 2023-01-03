@@ -10,69 +10,66 @@ Rectangle {
     height: 480
     color: rootHover.hovered ? "#555" : "#444"
 
-    Component {
-        id: buttonsAndStuff
-        Column {
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: 8
+    component ButtonsAndStuff: Column {
+        anchors.fill: parent
+        anchors.margins: 8
+        spacing: 8
 
-            CheckBox {
-                id: hoverBlockingCB
-                text: "Button hover is blocking"
+        CheckBox {
+            id: hoverBlockingCB
+            text: "Button hover is blocking"
+        }
+
+        Rectangle {
+            objectName: "buttonWithMA"
+            width: parent.width
+            height: 30
+            color: buttonMA.pressed ? "lightsteelblue" : "#999"
+            border.color: buttonMA.containsMouse ? "cyan" : "transparent"
+
+            MouseArea {
+                id: buttonMA
+                objectName: "buttonMA"
+                hoverEnabled: true
+                cursorShape: Qt.UpArrowCursor
+                anchors.fill: parent
+                onClicked: console.log("clicked MA")
             }
 
-            Rectangle {
-                objectName: "buttonWithMA"
-                width: parent.width
-                height: 30
-                color: buttonMA.pressed ? "lightsteelblue" : "#999"
-                border.color: buttonMA.containsMouse ? "cyan" : "transparent"
+            Text {
+                anchors.centerIn: parent
+                text: "MouseArea"
+            }
+        }
 
-                MouseArea {
-                    id: buttonMA
-                    objectName: "buttonMA"
-                    hoverEnabled: true
-                    cursorShape: Qt.UpArrowCursor
-                    anchors.fill: parent
-                    onClicked: console.log("clicked MA")
-                }
+        Rectangle {
+            objectName: "buttonWithHH"
+            width: parent.width
+            height: 30
+            color: flash ? "#999" : "white"
+            border.color: buttonHH.hovered ? "cyan" : "transparent"
+            property bool flash: true
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "MouseArea"
-                }
+            HoverHandler {
+                id: buttonHH
+                objectName: "buttonHH"
+                acceptedDevices: PointerDevice.AllDevices
+                blocking: hoverBlockingCB.checked
+                cursorShape: tapHandler.pressed ? Qt.BusyCursor : Qt.PointingHandCursor
             }
 
-            Rectangle {
-                objectName: "buttonWithHH"
-                width: parent.width
-                height: 30
-                color: flash ? "#999" : "white"
-                border.color: buttonHH.hovered ? "cyan" : "transparent"
-                property bool flash: true
+            TapHandler {
+                id: tapHandler
+                onTapped: tapFlash.start()
+            }
 
-                HoverHandler {
-                    id: buttonHH
-                    objectName: "buttonHH"
-                    acceptedDevices: PointerDevice.AllDevices
-                    blocking: hoverBlockingCB.checked
-                    cursorShape: tapHandler.pressed ? Qt.BusyCursor : Qt.PointingHandCursor
-                }
+            Text {
+                anchors.centerIn: parent
+                text: "HoverHandler"
+            }
 
-                TapHandler {
-                    id: tapHandler
-                    onTapped: tapFlash.start()
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "HoverHandler"
-                }
-
-                FlashAnimation on flash {
-                    id: tapFlash
-                }
+            FlashAnimation on flash {
+                id: tapFlash
             }
         }
     }
@@ -135,9 +132,7 @@ Rectangle {
             cursorShape: Qt.OpenHandCursor
         }
 
-        Loader {
-            objectName: "topSidebarLoader"
-            sourceComponent: buttonsAndStuff
+        ButtonsAndStuff {
             anchors.fill: parent
         }
 
@@ -166,9 +161,7 @@ Rectangle {
             cursorShape: Qt.ClosedHandCursor
             anchors.fill: parent
 
-            Loader {
-                objectName: "bottomSidebarLoader"
-                sourceComponent: buttonsAndStuff
+            ButtonsAndStuff {
                 anchors.fill: parent
             }
         }
