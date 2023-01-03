@@ -60,6 +60,8 @@ Q_LOGGING_CATEGORY(lcMethodBehavior, "qt.qml.method.behavior")
 // so turn off the warnings for us to have a clean build
 QT_WARNING_DISABLE_GCC("-Wstrict-aliasing")
 
+using namespace Qt::StringLiterals;
+
 namespace QV4 {
 
 QPair<QObject *, int> QObjectMethod::extractQtMethod(const FunctionObject *function)
@@ -2438,7 +2440,8 @@ QString Heap::QObjectMethod::name() const
         methodOffset -= QMetaObjectPrivate::get(mo)->methodCount;
     }
 
-    return QLatin1String("%1::%2").arg(mo->className(), mo->method(index).name());
+    return "%1::%2"_L1.arg(QLatin1StringView{mo->className()},
+                           QLatin1StringView{mo->method(index).name()});
 }
 
 void Heap::QObjectMethod::ensureMethodsCache(const QMetaObject *thisMeta)
