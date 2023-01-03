@@ -55,6 +55,12 @@ void QQmlIRLoader::load()
         createPragma(type)->nativeMethodBehavior = value;
     };
 
+    const auto createValueTypePragma = [&](
+            Pragma::PragmaType type,
+            Pragma::ValueTypeBehaviorValue value) {
+        createPragma(type)->valueTypeBehavior = value;
+    };
+
     if (unit->flags & QV4::CompiledData::Unit::IsSingleton)
         createPragma(Pragma::Singleton);
     if (unit->flags & QV4::CompiledData::Unit::IsStrict)
@@ -73,6 +79,9 @@ void QQmlIRLoader::load()
 
     if (unit->flags & QV4::CompiledData::Unit::NativeMethodsAcceptThisObject)
         createNativeMethodPragma(Pragma::NativeMethodBehavior, Pragma::AcceptThisObject);
+
+    if (unit->flags & QV4::CompiledData::Unit::ValueTypesCopied)
+        createValueTypePragma(Pragma::ValueTypeBehavior, Pragma::Copy);
 
     for (uint i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *serializedObject = qmlUnit->objectAt(i);

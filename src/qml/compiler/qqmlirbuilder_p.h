@@ -407,6 +407,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         ComponentBehavior,
         FunctionSignatureBehavior,
         NativeMethodBehavior,
+        ValueTypeBehavior,
     };
 
     enum ListPropertyAssignBehaviorValue
@@ -434,6 +435,12 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         RejectThisObject
     };
 
+    enum ValueTypeBehaviorValue
+    {
+        Reference,
+        Copy
+    };
+
     PragmaType type;
 
     union {
@@ -441,6 +448,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         ComponentBehaviorValue componentBehavior;
         FunctionSignatureBehaviorValue functionSignatureBehavior;
         NativeMethodBehaviorValue nativeMethodBehavior;
+        ValueTypeBehaviorValue valueTypeBehavior;
     };
 
     QV4::CompiledData::Location location;

@@ -190,8 +190,10 @@ set(qml_files
     unusedAttached.qml
     urlString.qml
     usingCxxTypesFromFileImports.qml
+    valueTypeCopy.qml
     valueTypeLists.qml
     valueTypeProperty.qml
+    valueTypeReference.qml
     variantlist.qml
     versionmismatch.qml
     voidfunction.qml

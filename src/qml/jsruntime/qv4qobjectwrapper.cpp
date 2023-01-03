@@ -94,11 +94,20 @@ static QPair<QObject *, int> extractQtSignal(const Value &value)
     return qMakePair((QObject *)nullptr, -1);
 }
 
-static Heap::ReferenceObject::Flags referenceFlags(const QQmlPropertyData &property)
+static Heap::ReferenceObject::Flags referenceFlags(
+        ExecutionEngine *v4,
+        const QQmlPropertyData &property)
 {
-    return property.isWritable()
-            ? Heap::ReferenceObject::CanWriteBack
-            : Heap::ReferenceObject::NoFlag;
+    Heap::ReferenceObject::Flags flags = Heap::ReferenceObject::NoFlag;
+    if (CppStackFrame *stackFrame = v4->currentStackFrame) {
+        if (stackFrame->v4Function->executableCompilationUnit()->valueTypesAreCopied())
+            flags |= Heap::ReferenceObject::EnforcesLocation;
+    }
+
+    if (property.isWritable())
+        flags |= Heap::ReferenceObject::CanWriteBack;
+
+    return flags;
 }
 
 static ReturnedValue loadProperty(
@@ -170,7 +179,7 @@ static ReturnedValue loadProperty(
         property.readProperty(object, &v);
         return scope.engine->fromVariant(
                     v, wrapper, property.coreIndex(),
-                    referenceFlags(property) | Heap::ReferenceObject::IsVariant);
+                    referenceFlags(scope.engine, property) | Heap::ReferenceObject::IsVariant);
     }
 
     if (!propMetaType.isValid()) {
@@ -190,7 +199,7 @@ static ReturnedValue loadProperty(
             // Lazy loaded value type reference. Pass nullptr as data.
             return QQmlValueTypeWrapper::create(
                         v4, nullptr, valueTypeMetaObject, propMetaType, wrapper,
-                        property.coreIndex(), referenceFlags(property));
+                        property.coreIndex(), referenceFlags(scope.engine, property));
         }
     }
 
@@ -198,14 +207,15 @@ static ReturnedValue loadProperty(
     // Pass nullptr as data. It's lazy-loaded.
     QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(
                               v4, propMetaType, nullptr,
-                              wrapper, property.coreIndex(), referenceFlags(property)));
+                              wrapper, property.coreIndex(),
+                              referenceFlags(scope.engine, property)));
     if (!retn->isUndefined())
         return retn->asReturnedValue();
 
     QVariant v(propMetaType);
     property.readProperty(object, v.data());
     return scope.engine->fromVariant(
-                v, wrapper, property.coreIndex(), referenceFlags(property));
+                v, wrapper, property.coreIndex(), referenceFlags(scope.engine, property));
 }
 
 void QObjectWrapper::initializeBindings(ExecutionEngine *engine)

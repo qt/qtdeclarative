@@ -176,6 +176,11 @@ public:
         return data->flags & CompiledData::Unit::NativeMethodsAcceptThisObject;
     }
 
+    bool valueTypesAreCopied() const
+    {
+        return data->flags & CompiledData::Unit::ValueTypesCopied;
+    }
+
     int objectCount() const { return qmlData->nObjects; }
     const CompiledObject *objectAt(int index) const
     {

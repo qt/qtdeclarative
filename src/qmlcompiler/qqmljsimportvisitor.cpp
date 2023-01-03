@@ -2268,19 +2268,19 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
 {
-    // If a file uses pragma Strict, it expects to be compiled, so automatically
-    // enable compiler warnings unless the level is set explicitly already (e.g.
-    // by the user).
-    if (pragma->name == u"Strict"_s && !m_logger->wasCategoryChanged(qmlCompiler)) {
-        // TODO: the logic here is rather complicated and may be buggy
-        m_logger->setCategoryLevel(qmlCompiler, QtWarningMsg);
-        m_logger->setCategoryIgnored(qmlCompiler, false);
-    }
+    if (pragma->name == u"Strict"_s) {
+        // If a file uses pragma Strict, it expects to be compiled, so automatically
+        // enable compiler warnings unless the level is set explicitly already (e.g.
+        // by the user).
 
-    if (pragma->name == u"Singleton")
+        if (!m_logger->wasCategoryChanged(qmlCompiler)) {
+            // TODO: the logic here is rather complicated and may be buggy
+            m_logger->setCategoryLevel(qmlCompiler, QtWarningMsg);
+            m_logger->setCategoryIgnored(qmlCompiler, false);
+        }
+    } else if (pragma->name == u"Singleton") {
         m_rootIsSingleton = true;
-
-    if (pragma->name == u"ComponentBehavior") {
+    } else if (pragma->name == u"ComponentBehavior") {
         if (pragma->value == u"Bound") {
             m_scopesById.setComponentsAreBound(true);
         } else if (pragma->value == u"Unbound") {
@@ -2290,9 +2290,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
                     u"Unkonwn argument \"%s\" to pragma ComponentBehavior"_s.arg(pragma->value),
                     qmlSyntax, pragma->firstSourceLocation());
         }
-    }
-
-    if (pragma->name == u"FunctionSignatureBehavior") {
+    } else if (pragma->name == u"FunctionSignatureBehavior") {
         if (pragma->value == u"Enforced") {
             m_scopesById.setSignaturesAreEnforced(true);
         } else if (pragma->value == u"Ignored") {
@@ -2300,6 +2298,17 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
         } else {
             m_logger->log(
                     u"Unkonwn argument \"%s\" to pragma FunctionSignatureBehavior"_s
+                        .arg(pragma->value),
+                    qmlSyntax, pragma->firstSourceLocation());
+        }
+    } else if (pragma->name == u"ValueTypeBehavior") {
+        if (pragma->value == u"Copy") {
+            m_scopesById.setValueTypesAreCopied(true);
+        } else if (pragma->value == u"Reference") {
+            m_scopesById.setValueTypesAreCopied(false);
+        } else {
+            m_logger->log(
+                    u"Unkonwn argument \"%s\" to pragma ValueTypeBehavior"_s
                         .arg(pragma->value),
                     qmlSyntax, pragma->firstSourceLocation());
         }
