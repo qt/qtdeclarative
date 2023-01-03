@@ -956,24 +956,57 @@ QString QJSEngine::convertQObjectToString(QObject *object)
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
 
     Creates a QJSValue with the given \a value.
-    This works with any type \c{T} that has a \c{QMetaType}.
 
     \sa fromScriptValue(), coerceValue()
+*/
+
+/*! \fn template <typename T> QJSManagedValue QJSEngine::toManagedValue(const T &value)
+
+    Creates a QJSManagedValue with the given \a value.
+
+    \sa fromManagedValue(), coerceValue()
+*/
+
+/*! \fn template <typename T> QJSPrimitiveValue QJSEngine::toPrimitiveValue(const T &value)
+
+    Creates a QJSPrimitiveValue with the given \a value.
+
+    Since QJSPrimitiveValue can only hold int, bool, double, QString, and the
+    equivalents of JavaScript \c null and \c undefined, the value will be
+    coerced aggressively if you pass any other type.
+
+    \sa fromPrimitiveValue(), coerceValue()
 */
 
 /*! \fn template <typename T> T QJSEngine::fromScriptValue(const QJSValue &value)
 
     Returns the given \a value converted to the template type \c{T}.
-    This works with any type \c{T} that has a \c{QMetaType}.
 
     \sa toScriptValue(), coerceValue()
+*/
+
+/*! \fn template <typename T> T QJSEngine::fromManagedValue(const QJSManagedValue &value)
+
+    Returns the given \a value converted to the template type \c{T}.
+
+    \sa toManagedValue(), coerceValue()
+*/
+
+/*! \fn template <typename T> T QJSEngine::fromPrimitiveValue(const QJSPrimitiveValue &value)
+
+    Returns the given \a value converted to the template type \c{T}.
+
+    Since QJSPrimitiveValue can only hold int, bool, double, QString, and the
+    equivalents of JavaScript \c null and \c undefined, the value will be
+    coerced aggressively if you request any other type.
+
+    \sa toPrimitiveValue(), coerceValue()
 */
 
 /*! \fn template <typename T> T QJSEngine::fromVariant(const QVariant &value)
 
     Returns the given \a value converted to the template type \c{T}.
-    This works with any type \c{T} that has a \c{QMetaType}. The
-    conversion is done in JavaScript semantics. Those differ from
+    The conversion is done in JavaScript semantics. Those differ from
     qvariant_cast's semantics. There are a number of implicit
     conversions between JavaScript-equivalent types that are not
     performed by qvariant_cast by default.
@@ -984,8 +1017,7 @@ QString QJSEngine::convertQObjectToString(QObject *object)
 /*! \fn template <typename From, typename To> T QJSEngine::coerceValue(const From &from)
 
     Returns the given \a from converted to the template type \c{To}.
-    This works with any type \c{T} that has a \c{QMetaType}. The
-    conversion is done in JavaScript semantics. Those differ from
+    The conversion is done in JavaScript semantics. Those differ from
     qvariant_cast's semantics. There are a number of implicit
     conversions between JavaScript-equivalent types that are not
     performed by qvariant_cast by default. This method is a generalization of
