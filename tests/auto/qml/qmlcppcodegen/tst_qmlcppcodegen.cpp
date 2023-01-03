@@ -159,6 +159,7 @@ private slots:
     void numbersInJsPrimitive();
     void equalityVarAndNonStorable();
     void equalityQObjects();
+    void valueTypeBehavior();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3067,6 +3068,40 @@ void tst_QmlCppCodegen::equalityQObjects()
     QVERIFY(object->property("compareSameObjects").toBool());
     QVERIFY(object->property("compareDifferentObjects").toBool());
     QVERIFY(object->property("compareObjectWithNullObject").toBool());
+}
+
+static QRegularExpression bindingLoopMessage(const QUrl &url, char var)
+{
+    // The actual string depends on how many times QObject* was registered with what parameters.
+    return QRegularExpression(
+                "%1:4:1: QML [^:]+: Binding loop detected for property \"%2\""_L1
+                .arg(url.toString()).arg(QLatin1Char(var)));
+}
+
+void tst_QmlCppCodegen::valueTypeBehavior()
+{
+    QQmlEngine engine;
+
+    const QUrl copy(u"qrc:/qt/qml/TestTypes/valueTypeCopy.qml"_s);
+
+    QQmlComponent c1(&engine, copy);
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(copy, 'e'));
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(copy, 'f'));
+    QScopedPointer<QObject> o1(c1.create());
+    QVERIFY(!o1.isNull());
+    QCOMPARE(o1->property("e").toDouble(), 45.0);
+    QCOMPARE(o1->property("f").toDouble(), 1.0);
+
+    const QUrl reference(u"qrc:/qt/qml/TestTypes/valueTypeReference.qml"_s);
+    QQmlComponent c2(&engine, reference);
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(reference, 'e'));
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopMessage(reference, 'f'));
+    QScopedPointer<QObject> o2(c2.create());
+    QVERIFY(!o2.isNull());
+    QVERIFY(qIsNaN(o2->property("e").toDouble()));
+    QCOMPARE(o2->property("f").toDouble(), 5.0);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

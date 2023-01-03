@@ -792,6 +792,8 @@ private:
             return Pragma::FunctionSignatureBehavior;
         } else if constexpr (std::is_same_v<Argument, Pragma::NativeMethodBehaviorValue>) {
             return Pragma::NativeMethodBehavior;
+        } else if constexpr (std::is_same_v<Argument, Pragma::ValueTypeBehaviorValue>) {
+            return Pragma::ValueTypeBehavior;
         }
 
         Q_UNREACHABLE_RETURN(Pragma::PragmaType(-1));
@@ -842,6 +844,15 @@ private:
                 pragma->nativeMethodBehavior = Pragma::RejectThisObject;
                 return true;
             }
+        } else if constexpr (std::is_same_v<Argument, Pragma::ValueTypeBehaviorValue>) {
+            if (value == "Reference"_L1) {
+                pragma->valueTypeBehavior = Pragma::Reference;
+                return true;
+            }
+            if (value == "Copy"_L1) {
+                pragma->valueTypeBehavior = Pragma::Copy;
+                return true;
+            }
         }
 
         return false;
@@ -867,6 +878,8 @@ private:
             return "function signature behavior"_L1;
         case Pragma::NativeMethodBehavior:
             return "native method behavior"_L1;
+        case Pragma::ValueTypeBehavior:
+            return "value type behavior"_L1;
         default:
             break;
         }
@@ -879,21 +892,24 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
     Pragma *pragma = New<Pragma>();
 
     if (!node->name.isNull()) {
-        if (node->name == QStringLiteral("Singleton")) {
+        if (node->name == "Singleton"_L1) {
             pragma->type = Pragma::Singleton;
-        } else if (node->name == QStringLiteral("Strict")) {
+        } else if (node->name == "Strict"_L1) {
             pragma->type = Pragma::Strict;
-        } else if (node->name == QStringLiteral("ComponentBehavior")) {
+        } else if (node->name == "ComponentBehavior"_L1) {
             if (!PragmaParser<Pragma::ComponentBehaviorValue>::run(this, node, pragma))
                 return false;
-        } else if (node->name == QStringLiteral("ListPropertyAssignBehavior")) {
+        } else if (node->name == "ListPropertyAssignBehavior"_L1) {
             if (!PragmaParser<Pragma::ListPropertyAssignBehaviorValue>::run(this, node, pragma))
                 return false;
-        } else if (node->name == QStringLiteral("FunctionSignatureBehavior")) {
+        } else if (node->name == "FunctionSignatureBehavior"_L1) {
             if (!PragmaParser<Pragma::FunctionSignatureBehaviorValue>::run(this, node, pragma))
                 return false;
-        } else if (node->name == QStringLiteral("NativeMethodBehavior")) {
+        } else if (node->name == "NativeMethodBehavior"_L1) {
             if (!PragmaParser<Pragma::NativeMethodBehaviorValue>::run(this, node, pragma))
+                return false;
+        } else if (node->name == "ValueTypeBehavior"_L1) {
+            if (!PragmaParser<Pragma::ValueTypeBehaviorValue>::run(this, node, pragma))
                 return false;
         } else {
             recordError(node->pragmaToken, QCoreApplication::translate(
@@ -1675,6 +1691,17 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                     // this is the default;
                     break;
                 }
+                break;
+            case Pragma::ValueTypeBehavior:
+                switch (p->valueTypeBehavior) {
+                case Pragma::Copy:
+                    createdUnit->flags |= Unit::ValueTypesCopied;
+                    break;
+                case Pragma::Reference:
+                    //this is the default;
+                    break;
+                }
+                break;
             }
         }
 
