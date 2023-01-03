@@ -8013,7 +8013,7 @@ void tst_QQuickListView::flickBothDirections()
             listview->setContentHeight(contentHeight);
     }
 
-    flick(window, QPoint(100, 100), QPoint(25, 25), 50);
+    flick(window, QPoint(140, 140), QPoint(25, 25), 50);
     QVERIFY(listview->isMoving());
     QTRY_VERIFY(!listview->isMoving());
     QCOMPARE(listview->contentX(), targetPos.x());
