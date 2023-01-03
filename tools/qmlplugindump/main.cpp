@@ -236,7 +236,8 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
         if (ty.isSingleton())
             singletons.insert(ty.baseMetaObject());
         if (!ty.isComposite()) {
-            qmlTypesByCppName[ty.baseMetaObject()->className()].insert(ty);
+            if (const QMetaObject *mo = ty.baseMetaObject())
+                qmlTypesByCppName[mo->className()].insert(ty);
             collectReachableMetaObjects(QQmlEnginePrivate::get(engine), ty, &metas, info);
         } else {
             compositeTypes[ty.elementName()].append(ty);
