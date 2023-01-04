@@ -487,6 +487,22 @@ bool QQmlJSTypePropagator::isRestricted(const QString &propertyName) const
             restrictedKind = u"an unscoped enum"_s;
         }
     } else if (accumulatorIn.value().content.isMethod()) {
+        auto overloadSet = accumulatorIn.value().content.method();
+        auto potentiallyJSMethod = std::any_of(
+                    overloadSet.cbegin(), overloadSet.cend(),
+                    [](const QQmlJSMetaMethod &overload){
+            return overload.isJavaScriptFunction();
+        });
+        if (potentiallyJSMethod) {
+            /* JS global constructors like Number get detected as methods
+               However, they still have properties that can be accessed
+               e.g. Number.EPSILON. This also isn't restricted to constructor
+               functions, so use isJavaScriptFunction as an overapproximation.
+               That catches also QQmlV4Function, but we're purging uses of it
+               anyway.
+             */
+            return false;
+        }
         restrictedKind = u"a method"_s;
     }
 
