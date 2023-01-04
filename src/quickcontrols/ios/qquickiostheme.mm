@@ -31,7 +31,7 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
 #ifdef Q_OS_IOS
     window = qt_mac_toQColor(UIColor.systemGroupedBackgroundColor.CGColor);
     windowText = qt_mac_toQColor(UIColor.labelColor.CGColor);
-    background = qt_mac_toQColor(UIColor.systemBackgroundColor.CGColor);
+    background = qt_mac_toQColor(UIColor.secondarySystemGroupedBackgroundColor.CGColor);
     placeholderText = qt_mac_toQColor(UIColor.placeholderTextColor.CGColor);
     button = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
     disabledButton = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
@@ -43,7 +43,7 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     bool isDarkSystemTheme = QQuickStylePrivate::isDarkSystemTheme();
     window = isDarkSystemTheme ? QColor(qRgba(0, 0, 0, 255)) : QColor(qRgba(242, 242, 247, 255));
     windowText = isDarkSystemTheme ? QColor(Qt::white) : QColor(Qt::black);
-    background = isDarkSystemTheme ? QColor(Qt::black) : QColor(Qt::white);
+    background = isDarkSystemTheme ? QColor(qRgba(28, 28, 30, 255)) : QColor(Qt::white);
     placeholderText = isDarkSystemTheme ? QColor(qRgba(235, 235, 245, 77)) : QColor(qRgba(60, 60, 67, 77));
     button = isDarkSystemTheme ? QColor(qRgba(10, 132, 255, 255)) : QColor(qRgba(0, 122, 255, 255));
     disabledButton = isDarkSystemTheme ? QColor(qRgba(118, 118, 128, 61)) : QColor(qRgba(118, 118, 128, 31));

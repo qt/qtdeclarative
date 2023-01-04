@@ -42,6 +42,7 @@ set(qml_files
     "MenuItem.qml"
     "MenuSeparator.qml"
     "BusyIndicator.qml"
+    "ComboBox.qml"
 )
 
 set_source_files_properties(Slider.qml PROPERTIES
