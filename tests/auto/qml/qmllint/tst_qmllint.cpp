@@ -1218,6 +1218,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("callBase") << QStringLiteral("callBase.qml");
     QTest::newRow("propertyWithOn") << QStringLiteral("switcher.qml");
     QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml");
+    QTest::newRow("constructorProperty") << QStringLiteral("constructorProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()
