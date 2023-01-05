@@ -225,6 +225,7 @@ private slots:
     void returnError();
     void catchError();
     void mathMinMax();
+    void mathNegativeZero();
 
     void importModule();
     void importModuleRelative();
@@ -4929,6 +4930,18 @@ void tst_QJSEngine::mathMinMax()
     result = engine.evaluate("var a = .5; Math.max('0', 1, 2, 3.5 + a)");
     QCOMPARE(result.toNumber(), 4.0);
     QVERIFY(QV4::Value(QJSValuePrivate::asReturnedValue(&result)).isInteger());
+}
+
+void tst_QJSEngine::mathNegativeZero()
+{
+    QJSEngine engine;
+    QJSValue result = engine.evaluate("var a = 0; Object.is(-1*a, -0)");
+    QVERIFY(result.isBool());
+    QVERIFY(result.toBool());
+
+    result = engine.evaluate("var a = 0; Object.is(1*a, 0)");
+    QVERIFY(result.isBool());
+    QVERIFY(result.toBool());
 }
 
 void tst_QJSEngine::importModule()
