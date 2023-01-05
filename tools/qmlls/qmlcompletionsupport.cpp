@@ -169,8 +169,13 @@ static QList<ItemLocation> findLastItemsContaining(DomItem file, int line, int c
         qCWarning(complLog) << "no code";
     QList<ItemLocation> toDo;
     qsizetype targetPos = posAfterLineChar(code, line, character);
+    Q_ASSERT(targetPos >= 0);
     auto containsTarget = [targetPos](QQmlJS::SourceLocation l) {
-        return l.begin() <= targetPos && targetPos < l.end();
+        if constexpr (sizeof(qsizetype) <= sizeof(quint32)) {
+            return l.begin() <= quint32(targetPos) && quint32(targetPos) < l.end();
+        } else {
+            return l.begin() <= targetPos && targetPos < l.end();
+        }
     };
     if (containsTarget(t->info().fullRegion)) {
         ItemLocation loc;
