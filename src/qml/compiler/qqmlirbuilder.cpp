@@ -358,7 +358,7 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     QV4::CompiledData::Import *import = engine->pool()->New<QV4::CompiledData::Import>();
     import->type = QV4::CompiledData::Import::ImportLibrary;
     import->uriIndex = jsGenerator->registerString(uri);
-    import->version = IRBuilder::extractVersion(QStringView(version));
+    import->version = IRBuilder::extractVersion(version);
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.set(lineNumber, column);
     document->imports << import;
@@ -1025,7 +1025,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         if (memberType == QLatin1String("alias")) {
             return appendAlias(node);
         } else {
-            const QStringView &name = node->name;
+            QStringView name = node->name;
 
             Property *property = New<Property>();
             property->setIsReadOnly(node->isReadonly());
@@ -1038,7 +1038,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             else
                 property->setCustomType(registerString(memberType));
 
-            const QStringView &typeModifier = node->typeModifier;
+            QStringView typeModifier = node->typeModifier;
             if (typeModifier == QLatin1String("list")) {
                 property->setIsList(true);
             } else if (!typeModifier.isEmpty()) {
