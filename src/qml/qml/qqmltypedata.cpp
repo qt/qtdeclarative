@@ -463,7 +463,14 @@ void QQmlTypeData::done()
 
     // associate inline components to root component
     {
-        auto typeName = QStringView{finalUrlString()}.split(u'/').last().split(u'.').first().toString();
+        auto fileName = finalUrl().fileName();
+        QStringView typeName = [&]() {
+            // extract base name (QFileInfo::baseName would require constructing a QFileInfo)
+            auto dotIndex = fileName.indexOf(u'.');
+            if (dotIndex < 0)
+                return QStringView();
+            return QStringView(fileName).first(dotIndex);
+        }();
         // typeName can be empty if a QQmlComponent was constructed with an empty QUrl parameter
         if (!typeName.isEmpty() && typeName.at(0).isUpper() && !m_inlineComponentData.isEmpty()) {
             QHashedStringRef const hashedStringRef { typeName };
