@@ -20,8 +20,8 @@
 
 \badcode
 qt_generate_deploy_qml_app_script(
-    TARGET target
-    FILENAME_VARIABLE var_name
+    TARGET <target>
+    OUTPUT_SCRIPT <var>
     [NO_UNSUPPORTED_PLATFORM_ERROR]
     [NO_TRANSLATIONS]
     [DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM]
@@ -63,7 +63,7 @@ subdirectory below \c{qml}, which itself is relative to the base installation
 location.
 
 \c{qt_generate_deploy_qml_app_script()} generates a script whose name will be
-stored in the variable named by the \c{FILENAME_VARIABLE} option. That script
+stored in the variable named by the \c{OUTPUT_SCRIPT} option. That script
 is only written at CMake generate-time. It is intended to be used with the
 \l{install(SCRIPT)} command, which should come after the application's target
 has been installed using \l{install(TARGETS)}.
@@ -135,7 +135,7 @@ install(TARGETS MyApp
 
 qt_generate_deploy_qml_app_script(
     TARGET MyApp
-    FILENAME_VARIABLE deploy_script
+    OUTPUT_SCRIPT deploy_script
     MACOS_BUNDLE_POST_BUILD
     NO_UNSUPPORTED_PLATFORM_ERROR
     DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM

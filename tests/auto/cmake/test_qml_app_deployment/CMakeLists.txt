@@ -61,7 +61,7 @@ function(create_test_executable target)
 
     qt_generate_deploy_qml_app_script(
         TARGET ${target}
-        FILENAME_VARIABLE deploy_script
+        OUTPUT_SCRIPT deploy_script
         NO_UNSUPPORTED_PLATFORM_ERROR
         # Just to ensure that running the test from the build dir also works
         MACOS_BUNDLE_POST_BUILD
