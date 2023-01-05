@@ -12,10 +12,6 @@
 #include <QCryptographicHash>
 #include <cmath>
 
-#ifdef CONST
-#undef CONST
-#endif
-
 QT_USE_NAMESPACE
 
 using namespace Qt::StringLiterals;
