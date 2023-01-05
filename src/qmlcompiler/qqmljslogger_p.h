@@ -63,7 +63,7 @@ public:
        \param location: The location where an error occurred.
      */
     IssueLocationWithContext(QStringView code, const QQmlJS::SourceLocation &location) {
-        int before = qMax(0,code.lastIndexOf(QLatin1Char('\n'), location.offset));
+        quint32 before = qMax(0, code.lastIndexOf(QLatin1Char('\n'), location.offset));
 
         if (before != 0) before++;
 
