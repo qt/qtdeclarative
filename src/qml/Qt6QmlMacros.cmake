@@ -3005,6 +3005,10 @@ function(qt6_generate_deploy_qml_app_script)
     )
     set(single_value_options
         TARGET
+        OUTPUT_SCRIPT
+
+        # TODO: For backward compatibility / transitional use only,
+        # remove at some point
         FILENAME_VARIABLE
     )
     set(qt_deploy_runtime_dependencies_options
@@ -3028,8 +3032,25 @@ function(qt6_generate_deploy_qml_app_script)
     if(NOT arg_TARGET)
         message(FATAL_ERROR "TARGET must be specified")
     endif()
-    if(NOT arg_FILENAME_VARIABLE)
-        message(FATAL_ERROR "FILENAME_VARIABLE must be specified")
+
+    # TODO: Remove when FILENAME_VARIABLE is fully removed
+    # Handle the slow deprecation of FILENAME_VARIABLE
+    if(arg_FILENAME_VARIABLE)
+        if(arg_OUTPUT_SCRIPT AND NOT arg_FILENAME_VARIABLE STREQUAL arg_OUTPUT_SCRIPT)
+            message(FATAL_ERROR
+                "Both FILENAME_VARIABLE and OUTPUT_SCRIPT were given and were different. "
+                "Only one of the two should be used."
+            )
+        endif()
+        message(AUTHOR_WARNING
+            "The FILENAME_VARIABLE keyword is deprecated and will be removed soon. "
+            "Please use OUTPUT_SCRIPT instead.")
+        set(arg_OUTPUT_SCRIPT "${arg_FILENAME_VARIABLE}")
+        unset(arg_FILENAME_VARIABLE)
+    endif()
+
+    if(NOT arg_OUTPUT_SCRIPT)
+        message(FATAL_ERROR "OUTPUT_SCRIPT must be specified")
     endif()
 
     # Check that the target was defer-finalized, and not immediately finalized when using
@@ -3083,7 +3104,7 @@ function(qt6_generate_deploy_qml_app_script)
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
             NAME ${deploy_script_name}
-            FILENAME_VARIABLE file_name
+            OUTPUT_SCRIPT deploy_script
             CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
@@ -3103,7 +3124,7 @@ endif()")
                 -D "QT_DEPLOY_PREFIX=$<TARGET_PROPERTY:${arg_TARGET},BINARY_DIR>"
                 -D "__QT_DEPLOY_IMPL_DIR=${deploy_impl_dir}"
                 -D "__QT_DEPLOY_POST_BUILD=TRUE"
-                -P "${file_name}"
+                -P "${deploy_script}"
                 VERBATIM
             )
         endif()
@@ -3112,7 +3133,7 @@ endif()")
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
             NAME ${deploy_script_name}
-            FILENAME_VARIABLE file_name
+            OUTPUT_SCRIPT deploy_script
             CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 qt_deploy_runtime_dependencies(
@@ -3125,7 +3146,7 @@ ${common_deploy_args})")
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
             NAME ${deploy_script_name}
-            FILENAME_VARIABLE file_name
+            OUTPUT_SCRIPT deploy_script
             CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 qt_deploy_runtime_dependencies(
@@ -3149,7 +3170,7 @@ ${common_deploy_args})")
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
             NAME ${deploy_script_name}
-            FILENAME_VARIABLE file_name
+            OUTPUT_SCRIPT deploy_script
             CONTENT "
 _qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
 qt_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
@@ -3168,7 +3189,7 @@ qt_deploy_qml_imports(TARGET ${arg_TARGET} NO_QT_IMPORTS)
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
             NAME ${deploy_script_name}
-            FILENAME_VARIABLE file_name
+            OUTPUT_SCRIPT deploy_script
             CONTENT "
 include(${QT_DEPLOY_SUPPORT})
 _qt_internal_show_skip_runtime_deploy_message(\"${qt_build_type_string}\")
@@ -3176,7 +3197,7 @@ _qt_internal_show_skip_qml_runtime_deploy_message()
 ")
     endif()
 
-    set(${arg_FILENAME_VARIABLE} ${file_name} PARENT_SCOPE)
+    set(${arg_OUTPUT_SCRIPT} ${deploy_script} PARENT_SCOPE)
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
