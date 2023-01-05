@@ -33,6 +33,15 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
     int propertyIndex = property.index();
     int wasInProgress = enginePriv->inProgressCreations;
 
+    /* we don't want deferred properties to suddenly depend on arbitrary
+       other properties which might have trigerred the construction of
+       objects as a consequence of a read.
+     */
+    auto bindingStatus = QtPrivate::suspendCurrentBindingStatus();
+    auto cleanup = qScopeGuard([&](){
+        QtPrivate::restoreBindingStatus(bindingStatus);
+    });
+
     for (auto dit = ddata->deferredData.rbegin(); dit != ddata->deferredData.rend(); ++dit) {
         QQmlData::DeferredData *deferData = *dit;
 
@@ -106,6 +115,15 @@ void completeDeferred(QObject *object, const QString &property, QQuickUntypedDef
 
     QQmlData *data = QQmlData::get(object);
     if (data && !data->wasDeleted(object)) {
+        /* we don't want deferred properties to suddenly depend on arbitrary
+           other properties which might have trigerred the construction of
+           objects as a consequence of a read.
+         */
+        auto bindingStatus = QtPrivate::suspendCurrentBindingStatus();
+        auto cleanup = qScopeGuard([&](){
+            QtPrivate::restoreBindingStatus(bindingStatus);
+        });
+
         QQmlComponentPrivate::DeferredState localState = std::move(*state);
         delegate->clearDeferredState();
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
