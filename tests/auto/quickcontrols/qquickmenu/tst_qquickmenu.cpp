@@ -1877,7 +1877,7 @@ void tst_QQuickMenu::disableWhenTriggered()
 #endif
 
         QTRY_VERIFY(subMenu->isVisible());
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) and !defined(Q_OS_WEBOS)
         QVERIFY(menuItem->isHovered());
         QTRY_VERIFY(subMenu->contentItem()->property("contentHeight").toReal() > 0.0);
 #endif
