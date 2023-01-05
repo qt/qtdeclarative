@@ -310,6 +310,16 @@ void QQmlTypeData::done()
     }
 
     // Check all type dependencies for errors
+    auto createError = [&](const TypeReference &type , const QString &message) {
+        QList<QQmlError> errors = type.typeData ? type.typeData->errors() : QList<QQmlError>{};
+        QQmlError error;
+        error.setUrl(url());
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line()));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column()));
+        error.setDescription(message);
+        errors.prepend(error);
+        setError(errors);
+    };
     for (auto it = std::as_const(m_resolvedTypes).begin(), end = std::as_const(m_resolvedTypes).end(); it != end;
          ++it) {
         const TypeReference &type = *it;
@@ -318,33 +328,17 @@ void QQmlTypeData::done()
             auto containingType = type.type.containingType();
             auto objectId = containingType.lookupInlineComponentIdByName(type.type.pendingResolutionName());
             if (objectId < 0) { // can be any negative number if we tentatively resolved it in QQmlImport but it actually was not an inline component
-                const QString typeName = stringAt(it.key());
+                const QString &typeName = stringAt(it.key());
                 int lastDot = typeName.lastIndexOf(u'.');
-
-                QList<QQmlError> errors = type.typeData ? type.typeData->errors() : QList<QQmlError>{};
-                QQmlError error;
-                error.setUrl(url());
-                error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line()));
-                error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column()));
-                error.setDescription(QQmlTypeLoader::tr("Type %1 has no inline component type called %2").arg(QStringView{typeName}.left(lastDot), type.type.pendingResolutionName()));
-                errors.prepend(error);
-                setError(errors);
+                createError(type, QQmlTypeLoader::tr("Type %1 has no inline component type called %2").arg(QStringView{typeName}.left(lastDot), type.type.pendingResolutionName()));
                 return;
             } else {
                 type.type.setInlineComponentObjectId(objectId);
             }
         }
         if (type.typeData && type.typeData->isError()) {
-            const QString typeName = stringAt(it.key());
-
-            QList<QQmlError> errors = type.typeData->errors();
-            QQmlError error;
-            error.setUrl(url());
-            error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line()));
-            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column()));
-            error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
-            errors.prepend(error);
-            setError(errors);
+            const QString &typeName = stringAt(it.key());
+            createError(type, QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
             return;
         }
     }
@@ -356,14 +350,7 @@ void QQmlTypeData::done()
         if (type.typeData && type.typeData->isError()) {
             QString typeName = type.type.qmlTypeName();
 
-            QList<QQmlError> errors = type.typeData->errors();
-            QQmlError error;
-            error.setUrl(url());
-            error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line()));
-            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column()));
-            error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
-            errors.prepend(error);
-            setError(errors);
+            createError(type, QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
             return;
         }
     }
