@@ -34,6 +34,8 @@ private slots:
     void strictlyEquals();
     void stringAndUrl();
 
+    void negativeNullMult();
+
 private:
     QJSEngine engine;
 
@@ -927,6 +929,19 @@ void tst_QJSPrimitiveValue::stringAndUrl()
     const QJSPrimitiveValue immediateStringValue(string);
     QCOMPARE(immediateStringValue.toString(), string);
     QCOMPARE(engine.fromPrimitiveValue<QUrl>(immediateStringValue), url);
+}
+
+void tst_QJSPrimitiveValue::negativeNullMult()
+{
+    QJSPrimitiveValue zero(0);
+    QJSPrimitiveValue negative(-1);
+    QJSPrimitiveValue positive(1);
+
+    QCOMPARE((zero * negative).type(), QJSPrimitiveValue::Double);
+    QCOMPARE((negative * zero).type(), QJSPrimitiveValue::Double);
+
+    QCOMPARE((zero * positive).type(), QJSPrimitiveValue::Integer);
+    QCOMPARE((positive * zero).type(), QJSPrimitiveValue::Integer);
 }
 
 QTEST_MAIN(tst_QJSPrimitiveValue)

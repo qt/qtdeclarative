@@ -52,6 +52,9 @@ static inline QMLJS_READONLY ReturnedValue mul_int32(int a, int b)
     int result;
     if (Q_UNLIKELY(mul_overflow(a, b, &result)))
         return StaticValue::fromDouble(static_cast<double>(a) * b).asReturnedValue();
+    // need to handle the case where one number is negative and the other 0 ==> -0
+    if (((a < 0) xor (b < 0)) && (result == 0))
+        return StaticValue::fromDouble(-0.0).asReturnedValue();
     return StaticValue::fromInt32(result).asReturnedValue();
 }
 

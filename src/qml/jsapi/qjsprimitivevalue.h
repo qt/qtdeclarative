@@ -93,7 +93,11 @@ class QJSPrimitiveValue
         static constexpr double op(double lhs, double rhs) { return lhs * rhs; }
         static bool opOverflow(int lhs, int rhs, int *result)
         {
-            return qMulOverflow(lhs, rhs, result);
+            // compare mul_int32 in qv4math_p.h
+            auto hadOverflow = qMulOverflow(lhs, rhs, result);
+            if (((lhs < 0) xor (rhs < 0)) && (*result == 0))
+                return true; // result must be negative 0, does not fit into int
+            return hadOverflow;
         }
 
         using StringNaNOperators::op;
