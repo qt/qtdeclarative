@@ -314,11 +314,12 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
         // calling a Q_INVOKABLE function of a value type
         return QV4::QObjectMethod::create(engine->rootContext(), valueTypeWrapper, coreIndex);
     }
+
+    const QMetaObject *metaObject = valueTypeWrapper->metaObject();
+    int index = coreIndex;
+
     const auto wrapChar16 = [engine](char16_t c) {
         return engine->newString(QChar(c));
-    };
-    const auto wrapDate = [engine](const QDate &date) {
-        return engine->newDateObject(date.startOfDay(QTimeZone::UTC));
     };
     const auto wrapQObject = [engine](QObject *object) {
         return QObjectWrapper::wrap(engine, object);
@@ -332,11 +333,26 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     const auto wrapJsonArray = [engine](const QJsonArray &array) {
         return JsonObject::fromJsonArray(engine, array);
     };
+
+    const auto wrapQDateTime = [&](const QDateTime &dateTime) {
+        return engine->newDateObject(
+                    dateTime, valueTypeWrapper, index, referenceFlags(metaObject, index));
+    };
+    const auto wrapQDate = [&](QDate date) {
+        return engine->newDateObject(
+                    date, valueTypeWrapper, index, referenceFlags(metaObject, index));
+    };
+    const auto wrapQTime = [&](QTime time) {
+        return engine->newDateObject(
+                    time, valueTypeWrapper, index, referenceFlags(metaObject, index));
+    };
+
 #if QT_CONFIG(qml_locale)
     const auto wrapLocale = [engine](const QLocale &locale) {
         return QQmlLocale::wrap(engine, locale);
     };
 #endif
+
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     case metatype: { \
         cpptype v; \
@@ -345,8 +361,6 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
         return QV4::Encode(constructor(v)); \
     }
 
-    const QMetaObject *metaObject = valueTypeWrapper->metaObject();
-    int index = coreIndex;
     QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(
                 QMetaObject::ReadProperty, &metaObject, &index);
 
@@ -379,9 +393,9 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     VALUE_TYPE_LOAD(QMetaType::SChar, signed char, int);
     VALUE_TYPE_LOAD(QMetaType::QChar, QChar, engine->newString);
     VALUE_TYPE_LOAD(QMetaType::Char16, char16_t, wrapChar16);
-    VALUE_TYPE_LOAD(QMetaType::QDateTime, QDateTime, engine->newDateObject);
-    VALUE_TYPE_LOAD(QMetaType::QDate, QDate, wrapDate);
-    VALUE_TYPE_LOAD(QMetaType::QTime, QTime, engine->newDateObjectFromTime);
+    VALUE_TYPE_LOAD(QMetaType::QDateTime, QDateTime, wrapQDateTime);
+    VALUE_TYPE_LOAD(QMetaType::QDate, QDate, wrapQDate);
+    VALUE_TYPE_LOAD(QMetaType::QTime, QTime, wrapQTime);
 #if QT_CONFIG(regularexpression)
     VALUE_TYPE_LOAD(QMetaType::QRegularExpression, QRegularExpression, engine->newRegExpObject);
 #endif

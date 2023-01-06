@@ -17,6 +17,9 @@
 #include <QMatrix4x4>
 #include <QFont>
 #include <QColor>
+#include <QDateTime>
+#include <QDate>
+#include <QTime>
 #include <qqml.h>
 
 struct ConstructibleValueType
@@ -130,6 +133,11 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QVariant variant READ variant NOTIFY changed)
     Q_PROPERTY(ConstructibleValueType constructible READ constructible WRITE setConstructible NOTIFY constructibleChanged)
     Q_PROPERTY(StructuredValueType structured READ structured WRITE setStructured NOTIFY structuredChanged)
+
+    Q_PROPERTY(QDateTime aDateTime READ aDateTime WRITE setADateTime NOTIFY aDateTimeChanged)
+    Q_PROPERTY(QDate aDate READ aDate WRITE setADate NOTIFY aDateChanged)
+    Q_PROPERTY(QTime aTime READ aTime WRITE setATime NOTIFY aTimeChanged)
+    Q_PROPERTY(QVariant aVariant READ aVariant WRITE setAVariant NOTIFY aVariantChanged)
 
 public:
     MyTypeObject() :
@@ -251,6 +259,54 @@ public:
         emit structuredChanged();
     }
 
+    QDateTime aDateTime() const
+    {
+        return m_aDateTime;
+    }
+    void setADateTime(const QDateTime &newADateTime)
+    {
+        if (m_aDateTime == newADateTime)
+            return;
+        m_aDateTime = newADateTime;
+        emit aDateTimeChanged();
+    }
+
+    QDate aDate() const
+    {
+        return m_aDate;
+    }
+    void setADate(const QDate &newADate)
+    {
+        if (m_aDate == newADate)
+            return;
+        m_aDate = newADate;
+        emit aDateChanged();
+    }
+
+    QTime aTime() const
+    {
+        return m_aTime;
+    }
+    void setATime(const QTime &newATime)
+    {
+        if (m_aTime == newATime)
+            return;
+        m_aTime = newATime;
+        emit aTimeChanged();
+    }
+
+    QVariant aVariant() const
+    {
+        return m_aVariant;
+    }
+    void setAVariant(const QVariant &newAVariant)
+    {
+        if (m_aVariant == newAVariant)
+            return;
+        m_aVariant = newAVariant;
+        emit aVariantChanged();
+    }
+
 signals:
     void changed();
     void runScript();
@@ -258,11 +314,21 @@ signals:
     void constructibleChanged();
     void structuredChanged();
 
+    void aDateTimeChanged();
+    void aDateChanged();
+    void aTimeChanged();
+    void aVariantChanged();
+
 public slots:
     QSize method() { return QSize(13, 14); }
 private:
     ConstructibleValueType m_constructible;
     StructuredValueType m_structured;
+
+    QDateTime m_aDateTime;
+    QDate m_aDate;
+    QTime m_aTime;
+    QVariant m_aVariant;
 };
 
 void registerTypes();

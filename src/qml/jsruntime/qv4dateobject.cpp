@@ -302,7 +302,7 @@ static inline double currentTime()
 
 static inline double TimeClip(double t)
 {
-    if (! qt_is_finite(t) || fabs(t) > 8.64e15)
+    if (!qt_is_finite(t) || fabs(t) > Date::MaxDateVal)
         return qt_qnan();
 
     // +0 looks weird, but is correct. See ES6 20.3.1.15. We must not return -0.
@@ -614,17 +614,43 @@ static double getLocalTZA()
 
 DEFINE_OBJECT_VTABLE(DateObject);
 
-void Heap::DateObject::init(const QDateTime &when)
+quint64 Date::encode(double value)
 {
-    Object::init();
-    date = when.isValid() ? TimeClip(when.toMSecsSinceEpoch()) : qt_qnan();
+    if (std::isnan(value) || fabs(value) > MaxDateVal)
+        return InvalidDateVal;
+
+    // Do the addition in qint64. This way we won't overflow if value is negative
+    // and we will round value in the right direction.
+    // We know we can do this because we know we have more than one bit left in quint64.
+    const quint64 encoded = quint64(qint64(value) + qint64(MaxDateVal));
+
+    return encoded + Extra;
 }
 
-void Heap::DateObject::init(QTime time)
+quint64 Date::encode(const QDateTime &dateTime)
 {
-    Object::init();
+    return encode(dateTime.isValid() ? dateTime.toMSecsSinceEpoch() : qt_qnan());
+}
+
+void Date::init(double value)
+{
+    storage = encode(value);
+}
+
+void Date::init(const QDateTime &when)
+{
+    storage = encode(when) | HasQDate | HasQTime;
+}
+
+void Date::init(QDate date)
+{
+    storage = encode(date.startOfDay(QTimeZone::UTC)) | HasQDate;
+}
+
+void Date::init(QTime time, ExecutionEngine *engine)
+{
     if (!time.isValid()) {
-        date = qt_qnan();
+        storage = encode(qt_qnan()) | HasQTime;
         return;
     }
 
@@ -644,12 +670,41 @@ void Heap::DateObject::init(QTime time)
      */
     static const double d = MakeDay(1971, 3, 1);
     double t = MakeTime(time.hour(), time.minute(), time.second(), time.msec());
-    date = TimeClip(UTC(MakeDate(d, t), internalClass->engine->localTZA));
+    storage = encode(UTC(MakeDate(d, t), engine->localTZA)) | HasQTime;
+}
+
+QDate Date::toQDate() const
+{
+    return toQDateTime().date();
+}
+
+QTime Date::toQTime() const
+{
+    return toQDateTime().time();
+}
+
+QDateTime Date::toQDateTime() const
+{
+    return ToDateTime(operator double(), QTimeZone::LocalTime);
+}
+
+QVariant Date::toVariant() const
+{
+    switch (storage & (HasQDate | HasQTime)) {
+    case HasQDate:
+        return toQDate();
+    case HasQTime:
+        return toQTime();
+    case (HasQDate | HasQTime):
+        return toQDateTime();
+    default:
+        return QVariant();
+    }
 }
 
 QDateTime DateObject::toQDateTime() const
 {
-    return ToDateTime(date(), QTimeZone::LocalTime);
+    return d()->toQDateTime();
 }
 
 DEFINE_OBJECT_VTABLE(DateCtor);
@@ -678,7 +733,7 @@ ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, con
             if (String *s = arg->stringValue())
                 t = ParseString(s->toQString(), v4->localTZA);
             else
-                t = TimeClip(arg->toNumber());
+                t = arg->toNumber();
         }
     }
 
@@ -693,10 +748,10 @@ ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, con
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
-        t = TimeClip(UTC(t, v4->localTZA));
+        t = UTC(t, v4->localTZA);
     }
 
-    ReturnedValue o = Encode(v4->newDateObject(Value::fromDouble(t)));
+    ReturnedValue o = Encode(v4->newDateObject(t));
     if (!newTarget)
         return o;
     Scope scope(v4);
@@ -1069,7 +1124,7 @@ ReturnedValue DatePrototype::method_setTime(const FunctionObject *b, const Value
     double t = argc ? argv[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    self->setDate(TimeClip(t));
+    self->setDate(t);
     return Encode(self->date());
 }
 
@@ -1086,7 +1141,7 @@ ReturnedValue DatePrototype::method_setMilliseconds(const FunctionObject *b, con
     double ms = argc ? argv[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    self->setDate(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)), v4->localTZA)));
+    self->setDate(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)), v4->localTZA));
     return Encode(self->date());
 }
 
@@ -1103,7 +1158,7 @@ ReturnedValue DatePrototype::method_setUTCMilliseconds(const FunctionObject *b, 
     double ms = argc ? argv[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    self->setDate(TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
+    self->setDate(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)));
     return Encode(self->date());
 }
 
@@ -1123,7 +1178,7 @@ ReturnedValue DatePrototype::method_setSeconds(const FunctionObject *b, const Va
     double ms = (argc < 2) ? msFromTime(t) : argv[1].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms)), v4->localTZA));
+    t = UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms)), v4->localTZA);
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1138,7 +1193,7 @@ ReturnedValue DatePrototype::method_setUTCSeconds(const FunctionObject *b, const
     double t = self->date();
     double sec = argc ? argv[0].toNumber() : qt_qnan();
     double ms = (argc < 2) ? msFromTime(t) : argv[1].toNumber();
-    t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms)));
+    t = MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms));
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1162,7 +1217,7 @@ ReturnedValue DatePrototype::method_setMinutes(const FunctionObject *b, const Va
     double ms = (argc < 3) ? msFromTime(t) : argv[2].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms)), v4->localTZA));
+    t = UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms)), v4->localTZA);
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1178,7 +1233,7 @@ ReturnedValue DatePrototype::method_setUTCMinutes(const FunctionObject *b, const
     double min = argc ? argv[0].toNumber() : qt_qnan();
     double sec = (argc < 2) ? SecFromTime(t) : argv[1].toNumber();
     double ms = (argc < 3) ? msFromTime(t) : argv[2].toNumber();
-    t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms)));
+    t = MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms));
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1205,7 +1260,7 @@ ReturnedValue DatePrototype::method_setHours(const FunctionObject *b, const Valu
     double ms = (argc < 4) ? msFromTime(t) : argv[3].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms)), v4->localTZA));
+    t = UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms)), v4->localTZA);
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1222,7 +1277,7 @@ ReturnedValue DatePrototype::method_setUTCHours(const FunctionObject *b, const V
     double min = (argc < 2) ? MinFromTime(t) : argv[1].toNumber();
     double sec = (argc < 3) ? SecFromTime(t) : argv[2].toNumber();
     double ms = (argc < 4) ? msFromTime(t) : argv[3].toNumber();
-    t = TimeClip(MakeDate(Day(t), MakeTime(hour, min, sec, ms)));
+    t = MakeDate(Day(t), MakeTime(hour, min, sec, ms));
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1240,7 +1295,7 @@ ReturnedValue DatePrototype::method_setDate(const FunctionObject *b, const Value
     double date = argc ? argv[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t)), v4->localTZA));
+    t = UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t)), v4->localTZA);
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1258,7 +1313,7 @@ ReturnedValue DatePrototype::method_setUTCDate(const FunctionObject *b, const Va
     double date = argc ? argv[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    t = TimeClip(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t)));
+    t = MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t));
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1279,7 +1334,7 @@ ReturnedValue DatePrototype::method_setMonth(const FunctionObject *b, const Valu
     double date = (argc < 2) ? DateFromTime(t) : argv[1].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t)), v4->localTZA));
+    t = UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t)), v4->localTZA);
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1294,7 +1349,7 @@ ReturnedValue DatePrototype::method_setUTCMonth(const FunctionObject *b, const V
     double t = self->date();
     double month = argc ? argv[0].toNumber() : qt_qnan();
     double date = (argc < 2) ? DateFromTime(t) : argv[1].toNumber();
-    t = TimeClip(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t)));
+    t = MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t));
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1320,7 +1375,6 @@ ReturnedValue DatePrototype::method_setYear(const FunctionObject *b, const Value
             year += 1900;
         r = MakeDay(year, MonthFromTime(t), DateFromTime(t));
         r = UTC(MakeDate(r, TimeWithinDay(t)), v4->localTZA);
-        r = TimeClip(r);
     }
     self->setDate(r);
     return Encode(self->date());
@@ -1337,7 +1391,7 @@ ReturnedValue DatePrototype::method_setUTCFullYear(const FunctionObject *b, cons
     double year = argc ? argv[0].toNumber() : qt_qnan();
     double month = (argc < 2) ? MonthFromTime(t) : argv[1].toNumber();
     double date = (argc < 3) ? DateFromTime(t) : argv[2].toNumber();
-    t = TimeClip(MakeDate(MakeDay(year, month, date), TimeWithinDay(t)));
+    t = MakeDate(MakeDay(year, month, date), TimeWithinDay(t));
     self->setDate(t);
     return Encode(self->date());
 }
@@ -1363,7 +1417,7 @@ ReturnedValue DatePrototype::method_setFullYear(const FunctionObject *b, const V
     double date = (argc < 3) ? DateFromTime(t) : argv[2].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t)), v4->localTZA));
+    t = UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t)), v4->localTZA);
     self->setDate(t);
     return Encode(self->date());
 }

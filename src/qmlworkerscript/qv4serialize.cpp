@@ -357,7 +357,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerNumber:
         return QV4::Encode(popDouble(data));
     case WorkerDate:
-        return QV4::Encode(engine->newDateObject(QV4::Value::fromDouble(popDouble(data))));
+        return QV4::Encode(engine->newDateObject(popDouble(data)));
     case WorkerRegexp:
     {
         quint32 flags = headersize(header);

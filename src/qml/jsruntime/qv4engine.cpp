@@ -1016,24 +1016,35 @@ Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(size_t length)
     return memoryManager->allocate<ArrayBuffer>(length);
 }
 
-
-Heap::DateObject *ExecutionEngine::newDateObject(const Value &value)
+Heap::DateObject *ExecutionEngine::newDateObject(double dateTime)
 {
-    return memoryManager->allocate<DateObject>(value);
+    return memoryManager->allocate<DateObject>(dateTime);
 }
 
-Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
+Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dateTime)
 {
-    Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->allocate<DateObject>(dt));
-    return object->d();
+    return memoryManager->allocate<DateObject>(dateTime);
 }
 
-Heap::DateObject *ExecutionEngine::newDateObjectFromTime(QTime t)
+Heap::DateObject *ExecutionEngine::newDateObject(
+        QDate date, Heap::Object *parent, int index, uint flags)
 {
-    Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->allocate<DateObject>(t));
-    return object->d();
+    return memoryManager->allocate<DateObject>(
+                date, parent, index, Heap::ReferenceObject::Flags(flags));
+}
+
+Heap::DateObject *ExecutionEngine::newDateObject(
+        QTime time, Heap::Object *parent, int index, uint flags)
+{
+    return memoryManager->allocate<DateObject>(
+                time, parent, index, Heap::ReferenceObject::Flags(flags));
+}
+
+Heap::DateObject *ExecutionEngine::newDateObject(
+        QDateTime dateTime, Heap::Object *parent, int index, uint flags)
+{
+    return memoryManager->allocate<DateObject>(
+                dateTime, parent, index, Heap::ReferenceObject::Flags(flags));
 }
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
@@ -1772,12 +1783,17 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             case QMetaType::Char16:
                 return newString(QChar(*reinterpret_cast<const char16_t *>(ptr)))->asReturnedValue();
             case QMetaType::QDateTime:
-                return QV4::Encode(newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
+                return QV4::Encode(newDateObject(
+                                       *reinterpret_cast<const QDateTime *>(ptr),
+                                       container, property, flags));
             case QMetaType::QDate:
                 return QV4::Encode(newDateObject(
-                        reinterpret_cast<const QDate *>(ptr)->startOfDay(QTimeZone::UTC)));
+                                       *reinterpret_cast<const QDate *>(ptr),
+                                       container, property, flags));
             case QMetaType::QTime:
-                return QV4::Encode(newDateObjectFromTime(*reinterpret_cast<const QTime *>(ptr)));
+                return QV4::Encode(newDateObject(
+                                       *reinterpret_cast<const QTime *>(ptr),
+                                       container, property, flags));
 #if QT_CONFIG(regularexpression)
             case QMetaType::QRegularExpression:
                 return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegularExpression *>(ptr)));
