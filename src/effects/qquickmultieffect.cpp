@@ -11,9 +11,22 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 
 /*!
+    \qmlmodule QtQuick.Effects
+    \title Qt Quick Effects QML Types
+    \ingroup qmlmodules
+    \brief Provides QML types for applying one or more simple graphical effects to Qt Quick items.
+
+    To use the types in this module, import the module with the following line:
+
+    \qml
+    import QtQuick.Effects
+    \endqml
+*/
+
+/*!
     \qmltype MultiEffect
     \instantiates QQuickMultiEffect
-    \inqmlmodule QtQuick
+    \inqmlmodule QtQuick.Effects
     \inherits Item
     \ingroup qtquick-effects
     \brief Applies post-processing effect to an item.
