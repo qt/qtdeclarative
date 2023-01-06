@@ -9,6 +9,7 @@ MetaInfo {
             libraryIcon: "images/busyindicator-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Indicates activity while, for example, content is being loaded.")
         }
     }
 
@@ -22,6 +23,7 @@ MetaInfo {
             libraryIcon: "images/button-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A button with text.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Button\")" }
         }
@@ -37,6 +39,7 @@ MetaInfo {
             libraryIcon: "images/checkbox-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A checkbox with a text label.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Check Box\")" }
         }
@@ -52,6 +55,7 @@ MetaInfo {
             libraryIcon: "images/checkbox-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Presents items from a model as checkboxes.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Check Delegate\")" }
         }
@@ -67,6 +71,7 @@ MetaInfo {
             libraryIcon: "images/combobox-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("An editable drop-down list.")
         }
     }
 
@@ -80,6 +85,7 @@ MetaInfo {
             libraryIcon: "images/control-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("An abstract base type for UI controls.")
         }
     }
 
@@ -93,6 +99,7 @@ MetaInfo {
             libraryIcon: "images/delaybutton-icon.png"
             version: "2.2"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A button with a delay preventing accidental presses.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Delay Button\")" }
         }
@@ -108,6 +115,8 @@ MetaInfo {
             libraryIcon: "images/dial-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+
+            toolTip: qsTr("A circular dial that is rotated to set a value.")
         }
     }
 
@@ -121,6 +130,7 @@ MetaInfo {
             libraryIcon: "images/frame-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("An untitled container for a group of controls.")
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
@@ -137,6 +147,7 @@ MetaInfo {
             libraryIcon: "images/groupbox-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A titled container for a group of controls.")
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
@@ -154,6 +165,7 @@ MetaInfo {
             libraryIcon: "images/itemdelegate-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Presents a standard view item. It can be used as a delegate in various views and controls, such as ListView and ComboBox.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Item Delegate\")" }
         }
@@ -169,6 +181,7 @@ MetaInfo {
             libraryIcon: "images/label-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A text label.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Label\")" }
         }
@@ -184,6 +197,7 @@ MetaInfo {
             libraryIcon: "images/page-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A page with header and footer.")
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
@@ -200,6 +214,7 @@ MetaInfo {
             libraryIcon: "images/pageindicator-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Indicates the currently active page.")
 
             Property { name: "count"; type: "int"; value: 3 }
         }
@@ -215,6 +230,7 @@ MetaInfo {
             libraryIcon: "images/pane-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Provides a background matching the application style and theme.")
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
@@ -231,6 +247,7 @@ MetaInfo {
             libraryIcon: "images/progressbar-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A bar indicating the progress of an operation.")
 
             Property { name: "value"; type: "real"; value: 0.5 }
         }
@@ -246,6 +263,7 @@ MetaInfo {
             libraryIcon: "images/radiobutton-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("An option button that you can toggle on or off.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Radio Button\")" }
         }
@@ -261,6 +279,7 @@ MetaInfo {
             libraryIcon: "images/radiobutton-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Presents items from a model as radio buttons.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Radio Delegate\")" }
         }
@@ -276,6 +295,7 @@ MetaInfo {
             libraryIcon: "images/rangeslider-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A bar with adjustable start and end points.")
 
             Property { name: "first.value"; type: "real"; value: 0.25 }
             Property { name: "second.value"; type: "real"; value: 0.75 }
@@ -292,6 +312,8 @@ MetaInfo {
             libraryIcon: "images/roundbutton-icon.png"
             version: "2.1"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A round button with text.")
+
             Property { name: "text"; type: "string"; value: "+" }
         }
     }
@@ -306,6 +328,7 @@ MetaInfo {
             libraryIcon: "images/slider-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("An adjustable slider.")
 
             Property { name: "value"; type: "real"; value: 0.5 }
         }
@@ -321,6 +344,7 @@ MetaInfo {
             libraryIcon: "images/spinbox-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A box with an adjustable number.")
         }
     }
 
@@ -334,6 +358,7 @@ MetaInfo {
             libraryIcon: "images/scrollview-icon.png"
             version: "2.2"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A scrollable area.")
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
@@ -350,6 +375,7 @@ MetaInfo {
             libraryIcon: "images/stackview-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Provides a stack-based navigation for a set of pages.")
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
@@ -366,6 +392,7 @@ MetaInfo {
             libraryIcon: "images/itemdelegate-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Presents items from a model as items that you can swipe to expose more options.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Swipe Delegate\")" }
         }
@@ -381,6 +408,7 @@ MetaInfo {
             libraryIcon: "images/swipeview-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Provides a view where you can navigate pages by swiping.")
 
             Property { name: "width"; type: "int"; value: 200 }
             Property { name: "height"; type: "int"; value: 200 }
@@ -397,6 +425,7 @@ MetaInfo {
             libraryIcon: "images/switch-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A button that you can toggle on and off.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Switch\")" }
         }
@@ -412,6 +441,7 @@ MetaInfo {
             libraryIcon: "images/switch-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("Presents items from a model as toggle switches.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Switch Delegate\")" }
         }
@@ -427,6 +457,8 @@ MetaInfo {
             libraryIcon: "images/toolbar-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A tab-based navigation model.")
+
             Property { name: "width"; type: "int"; value: 240 }
         }
     }
@@ -441,6 +473,8 @@ MetaInfo {
             libraryIcon: "images/toolbutton-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A button suitable for a tab bar.")
+
             Property { name: "text"; type: "binding"; value: "qsTr(\"Tab Button\")" }
         }
     }
@@ -455,6 +489,7 @@ MetaInfo {
             libraryIcon: "images/textarea-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A multi-line text box.")
 
             Property { name: "placeholderText"; type: "binding"; value: "qsTr(\"Text Area\")" }
         }
@@ -470,6 +505,7 @@ MetaInfo {
             libraryIcon: "images/textfield-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A single-line text box.")
 
             Property { name: "placeholderText"; type: "binding"; value: "qsTr(\"Text Field\")" }
         }
@@ -485,6 +521,7 @@ MetaInfo {
             libraryIcon: "images/toolbar-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A row that can hold actions and buttons.")
 
             Property { name: "width"; type: "int"; value: 360 }
         }
@@ -500,6 +537,7 @@ MetaInfo {
             libraryIcon: "images/toolbutton-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A button suitable for a tool bar.")
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Tool Button\")" }
         }
@@ -515,6 +553,7 @@ MetaInfo {
             libraryIcon: "images/toolseparator-icon.png"
             version: "2.1"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A line to separate sections in a tool bar.")
         }
     }
 
@@ -528,6 +567,7 @@ MetaInfo {
             libraryIcon: "images/tumbler-icon.png"
             version: "2.0"
             requiredImport: "QtQuick.Controls"
+            toolTip: qsTr("A spinnable wheel of selectable items.")
 
             Property { name: "model"; type: "int"; value: "10" }
         }
