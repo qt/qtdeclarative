@@ -28,4 +28,9 @@ QtObject {
     property bool jsValueIsNull: wrapped.nullJsValue === null
     property bool jsValueIsDefined: wrapped.intJSValue !== null &&  undefined !==  wrapped.intJSValue
     property bool jsValueIsUndefined: wrapped.undefinedJsValue === undefined
+
+    // QJSPrimitiveType
+    property bool primitiveIsNull: wrapped.nullPrimitiveValue === null
+    property bool primitiveIsDefined: wrapped.intPrimitiveValue !== null &&  undefined !==  wrapped.intPrimitiveValue
+    property bool primitiveIsUndefined: wrapped.undefinedPrimitiveValue === undefined
 }

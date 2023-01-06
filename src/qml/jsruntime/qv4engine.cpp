@@ -1876,6 +1876,22 @@ QV4::ReturnedValue ExecutionEngine::fromData(
                 return QV4::QObjectWrapper::wrapConst(this, *reinterpret_cast<QObject* const *>(ptr));
             else
                 return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
+        } else if (metaType == QMetaType::fromType<QJSPrimitiveValue>()) {
+            const QJSPrimitiveValue *primitive = static_cast<const QJSPrimitiveValue *>(ptr);
+            switch (primitive->type()) {
+            case QJSPrimitiveValue::Boolean:
+                return Encode(primitive->asBoolean());
+            case QJSPrimitiveValue::Integer:
+                return Encode(primitive->asInteger());
+            case QJSPrimitiveValue::String:
+                return newString(primitive->asString())->asReturnedValue();
+            case QJSPrimitiveValue::Undefined:
+                return Encode::undefined();
+            case QJSPrimitiveValue::Null:
+                return Encode::null();
+            case QJSPrimitiveValue::Double:
+                return Encode(primitive->asDouble());
+            }
         }
 
         QV4::Scoped<Sequence> sequence(scope);

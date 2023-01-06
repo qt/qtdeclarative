@@ -16,6 +16,8 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 { struct ExecutionEngine; }
+
 struct QJSPrimitiveUndefined {};
 struct QJSPrimitiveNull {};
 
@@ -522,6 +524,7 @@ public:
 private:
     friend class QJSManagedValue;
     friend class QJSValue;
+    friend struct QV4::ExecutionEngine;
 
     constexpr bool asBoolean() const { return d.getBool(); }
     constexpr int asInteger() const { return d.getInt(); }

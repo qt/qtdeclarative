@@ -3062,6 +3062,11 @@ void tst_QmlCppCodegen::equalityVarAndNonStorable()
     QVERIFY(!object->property("typedArrayIsNull").toBool());
     QVERIFY(object->property("isUndefined").toBool());
     QVERIFY(!object->property("derivedIsNull").toBool());
+
+    QVERIFY(object->property("primitiveIsNull").toBool());
+    QVERIFY(object->property("primitiveIsDefined").toBool());
+    QVERIFY(object->property("primitiveIsUndefined").toBool());
+
     QVERIFY(object->property("jsValueIsNull").toBool());
     QVERIFY(object->property("jsValueIsDefined").toBool());
     QVERIFY(object->property("jsValueIsUndefined").toBool());
