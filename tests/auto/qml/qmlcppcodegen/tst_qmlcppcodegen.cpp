@@ -159,6 +159,7 @@ private slots:
     void numbersInJsPrimitive();
     void infinitiesToInt();
     void equalityVarAndNonStorable();
+    void equalityQObjects();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3065,6 +3066,22 @@ void tst_QmlCppCodegen::equalityVarAndNonStorable()
     QVERIFY(object->property("jsValueIsDefined").toBool());
     QVERIFY(object->property("jsValueIsUndefined").toBool());
 };
+
+void tst_QmlCppCodegen::equalityQObjects()
+{
+    QQmlEngine engine;
+    QQmlComponent c1(&engine, QUrl(u"qrc:/qt/qml/TestTypes/equalityQObjects.qml"_s));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+    QScopedPointer<QObject> object(c1.create());
+    QVERIFY(!object.isNull() && !c1.isError());
+
+    QVERIFY(object->property("derivedIsNotNull").toBool());
+    QVERIFY(object->property("nullObjectIsNull").toBool());
+    QVERIFY(object->property("nonNullObjectIsNotNull").toBool());
+    QVERIFY(object->property("compareSameObjects").toBool());
+    QVERIFY(object->property("compareDifferentObjects").toBool());
+    QVERIFY(object->property("compareObjectWithNullObject").toBool());
+}
 
 QTEST_MAIN(tst_QmlCppCodegen)
 

@@ -2606,6 +2606,8 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             return true;
         if (canCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn()))
             return true;
+        if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn()))
+            return true;
         return false;
     };
 
@@ -2643,6 +2645,13 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             // lhs content is not storable and rhs is var type
             generateVariantEqualityComparison(lhsContent, m_state.accumulatorVariableIn, invert);
         }
+    } else if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn())) {
+        m_body += m_state.accumulatorVariableOut + u" = "_s;
+        m_body += u'('
+                + (isTypeStorable(m_typeResolver, lhsContent.storedType())
+                           ? registerVariable(lhs)
+                           : m_state.accumulatorVariableIn)
+                + (invert ? u" != "_s : u" == "_s) + u"nullptr)"_s;
     } else {
         m_body += m_state.accumulatorVariableOut + u" = "_s;
         m_body += conversion(

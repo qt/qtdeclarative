@@ -90,6 +90,8 @@ set(qml_files
     enumScope.qml
     enumsInOtherObject.qml
     enumsUser.qml
+    equalityQObjects.qml
+    equalityVarAndNonStorable.qml
     equalsUndefined.qml
     excessiveParameters.qml
     extendedTypes.qml
@@ -190,7 +192,6 @@ set(qml_files
     valueTypeLists.qml
     valueTypeProperty.qml
     variantlist.qml
-    equalityVarAndNonStorable.qml
     versionmismatch.qml
     voidfunction.qml
 )

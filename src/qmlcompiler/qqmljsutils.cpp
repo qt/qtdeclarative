@@ -222,4 +222,24 @@ bool canCompareWithVar(const QQmlJSTypeResolver *typeResolver,
                     || typeResolver->equals(lhsType, voidType)));
 }
 
+/*! \internal
+
+    Utility method that checks if one of the registers is qobject, and the other can be
+    efficiently compared to it
+*/
+bool canCompareWithQObject(const QQmlJSTypeResolver *typeResolver,
+                           const QQmlJSRegisterContent &lhsContent,
+                           const QQmlJSRegisterContent &rhsContent)
+{
+    Q_ASSERT(typeResolver);
+    const auto lhsType = typeResolver->containedType(lhsContent);
+    const auto rhsType = typeResolver->containedType(rhsContent);
+    return (lhsType->isReferenceType()
+            && (rhsType->isReferenceType()
+                || typeResolver->equals(rhsType, typeResolver->nullType())))
+            || (rhsType->isReferenceType()
+                && (lhsType->isReferenceType()
+                    || typeResolver->equals(lhsType, typeResolver->nullType())));
+}
+
 QT_END_NAMESPACE
