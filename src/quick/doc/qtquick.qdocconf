@@ -74,10 +74,11 @@ exampledirs += \
 
 imagedirs += images
 
-# Add particles and shapes sources
+# Add particles, shapes and effects sources
 {headerdirs,sourcedirs} += \
     ../../particles \
-    ../../quickshapes
+    ../../quickshapes \
+    ../../effects
 
 # Add imports and plugins directories because of dependencies
 {headerdirs,sourcedirs} += \
