@@ -15,7 +15,11 @@ add_subdirectory(qjsprimitivevalue)
 add_subdirectory(qjsvalueiterator)
 add_subdirectory(qjsonbinding)
 add_subdirectory(qqmlfile)
-add_subdirectory(qqmlfileselector)
+
+if(NOT INTEGRITY)
+    # The INTEGRITY linker tends to crash on tst_qqmlfileselector
+    add_subdirectory(qqmlfileselector)
+endif()
 
 # Limit set of tests to run for static Qt builds.
 if(QT_BUILD_MINIMAL_STATIC_TESTS)
