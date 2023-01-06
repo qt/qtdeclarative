@@ -548,9 +548,11 @@ public:
     Heap::ArrayBuffer *newArrayBuffer(const QByteArray &array);
     Heap::ArrayBuffer *newArrayBuffer(size_t length);
 
-    Heap::DateObject *newDateObject(const Value &value);
-    Heap::DateObject *newDateObject(const QDateTime &dt);
-    Heap::DateObject *newDateObjectFromTime(QTime t);
+    Heap::DateObject *newDateObject(double dateTime);
+    Heap::DateObject *newDateObject(const QDateTime &dateTime);
+    Heap::DateObject *newDateObject(QDate date, Heap::Object *parent, int index, uint flags);
+    Heap::DateObject *newDateObject(QTime time, Heap::Object *parent, int index, uint flags);
+    Heap::DateObject *newDateObject(QDateTime dateTime, Heap::Object *parent, int index, uint flags);
 
     Heap::RegExpObject *newRegExpObject(const QString &pattern, int flags);
     Heap::RegExpObject *newRegExpObject(RegExp *re);

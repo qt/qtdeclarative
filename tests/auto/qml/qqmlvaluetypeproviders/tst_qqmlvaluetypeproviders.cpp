@@ -40,6 +40,7 @@ private slots:
     void changedSignal();
     void structured();
     void recursive();
+    void date();
 };
 
 void tst_qqmlvaluetypeproviders::initTestCase()
@@ -362,6 +363,20 @@ void tst_qqmlvaluetypeproviders::recursive()
 
     MyTypeObject *m = qobject_cast<MyTypeObject *>(o.data());
     QCOMPARE(m->structured().p().x(), 76);
+}
+
+void tst_qqmlvaluetypeproviders::date()
+{
+    QQmlEngine e;
+    QQmlComponent component(&e, testFileUrl("dateWriteBack.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("aDateTime").value<QDateTime>().date().day(), 14);
+    QCOMPARE(o->property("aDate").value<QDate>().month(), 9);
+    QCOMPARE(o->property("aTime").value<QTime>().hour(), 5);
+    QCOMPARE(o->property("aVariant").value<QDateTime>().time().minute(), 44);
 }
 
 QTEST_MAIN(tst_qqmlvaluetypeproviders)
