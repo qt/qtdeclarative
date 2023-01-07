@@ -98,7 +98,10 @@ public:
         unsigned char r, g, b, a;
         void set(float nx, float ny, uchar nr, uchar ng, uchar nb, uchar na) {
             x = nx; y = ny;
-            r = nr; g = ng, b = nb; a = na;
+            r = nr;
+            g = ng;
+            b = nb;
+            a = na;
         }
     };
 
