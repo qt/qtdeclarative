@@ -239,9 +239,6 @@ StackProperties stackPropertiesGeneric(qsizetype stackSize = 0)
     if (rc)
         qFatal("Cannot find stack base");
 
-    if (!stackBase)
-        qFatal("Invalid stack base");
-
 #  if Q_STACK_GROWTH_DIRECTION < 0
     stackBase = decrementStackPointer(stackBase, regionSize);
 #  endif
