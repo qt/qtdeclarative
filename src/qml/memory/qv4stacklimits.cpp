@@ -31,6 +31,8 @@
 #  include <unistd.h>
 #elif defined(Q_OS_INTEGRITY)
 #  include <INTEGRITY.h>
+#elif defined(Q_OS_WASM)
+#  include <emscripten/stack.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -212,6 +214,16 @@ StackProperties stackProperties()
 #else
     return createStackProperties(reinterpret_cast<void *>(status.stkbase), status.stksize);
 #endif
+}
+
+#elif defined(Q_OS_WASM)
+
+StackProperties stackProperties()
+{
+    const uintptr_t base = emscripten_stack_get_base();
+    const uintptr_t end = emscripten_stack_get_end();
+    const size_t size = base - end;
+    return createStackProperties(reinterpret_cast<void *>(base), size);
 }
 
 #else
