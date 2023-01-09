@@ -2352,6 +2352,11 @@ function(_qt_internal_qml_type_registration target)
     set(args_single NAMESPACE)
     set(args_multi  MANUAL_MOC_JSON_FILES)
 
+    get_target_property(skipped ${target} _qt_is_skipped_test)
+    if(skipped)
+        return()
+    endif()
+
     cmake_parse_arguments(PARSE_ARGV 1 arg
         "${args_option}" "${args_single}" "${args_multi}"
     )
