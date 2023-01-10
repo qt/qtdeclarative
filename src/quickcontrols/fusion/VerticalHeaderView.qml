@@ -7,7 +7,12 @@ import QtQuick.Templates as T
 T.VerticalHeaderView {
     id: control
 
-    implicitWidth: contentWidth
+    // The contentWidth of TableView will be zero at start-up, until the delegate
+    // items have been loaded. This means that even if the implicit width of
+    // VerticalHeaderView should be the same as the content width in the end, we
+    // need to ensure that it has at least a width of 1 at start-up, otherwise
+    // TableView won't bother loading any delegates at all.
+    implicitWidth: Math.max(1, contentWidth)
     implicitHeight: syncView ? syncView.height : 0
 
     delegate: Rectangle {
