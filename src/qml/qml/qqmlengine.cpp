@@ -1057,13 +1057,14 @@ void QQmlEngine::retranslate()
 }
 
 /*!
-  Returns the QQmlContext for the \a object, or 0 if no
+  Returns the QQmlContext for the \a object, or nullptr if no
   context has been set.
 
-  When the QQmlEngine instantiates a QObject, the context is
-  set automatically.
+  When the QQmlEngine instantiates a QObject, an internal context is assigned
+  to it automatically. Such internal contexts are read-only. You cannot set
+  context properties on them.
 
-  \sa qmlContext(), qmlEngine()
+  \sa qmlContext(), qmlEngine(), QQmlContext::setContextProperty()
   */
 QQmlContext *QQmlEngine::contextForObject(const QObject *object)
 {
