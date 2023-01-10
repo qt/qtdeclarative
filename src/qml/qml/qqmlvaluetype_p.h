@@ -19,6 +19,7 @@
 
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qmetatype_p.h>
+#include <private/qv4referenceobject_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
@@ -69,7 +70,8 @@ public:
     ~QQmlGadgetPtrWrapper();
 
     void read(QObject *obj, int idx);
-    void write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags) const;
+    void write(QObject *obj, int idx, QQmlPropertyData::WriteFlags flags,
+               int internalIndex = QV4::ReferenceObject::AllProperties) const;
     QVariant value() const;
     void setValue(const QVariant &value);
 

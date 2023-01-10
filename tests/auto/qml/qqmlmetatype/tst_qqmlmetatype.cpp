@@ -49,6 +49,8 @@ private slots:
 
     void enumsInRecursiveImport_data();
     void enumsInRecursiveImport();
+
+    void revertValueTypeAnimation();
 };
 
 class TestType : public QObject
@@ -709,6 +711,17 @@ void tst_qqmlmetatype::enumsInRecursiveImport()
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("color").toString(), QString("green"));
+}
+
+void tst_qqmlmetatype::revertValueTypeAnimation()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("animationOnValueType.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QTRY_COMPARE(o->property("letterSpacing").toDouble(), 24.0);
+    QCOMPARE(o->property("pointSize").toDouble(), 12.0);
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

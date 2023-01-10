@@ -73,7 +73,7 @@ DECLARE_HEAP_OBJECT(QQmlValueTypeWrapper, ReferenceObject) {
     bool setVariant(const QVariant &variant);
 
     bool readReference();
-    bool writeBack();
+    bool writeBack(int propertyIndex = QV4::ReferenceObject::AllProperties);
 
 private:
     void setMetaObject(const QMetaObject *metaObject) { m_metaObject = metaObject; }

@@ -110,6 +110,8 @@ struct ReferenceObject : public Object
     V4_NEEDS_DESTROY
 
 public:
+    static constexpr const int AllProperties = -1;
+
     template<typename HeapObject>
     static bool readReference(HeapObject *ref)
     {
@@ -131,7 +133,7 @@ public:
     }
 
     template<typename HeapObject>
-    static bool writeBack(HeapObject *ref)
+    static bool writeBack(HeapObject *ref, int internalIndex = AllProperties)
     {
         if (!ref->object() || !ref->canWriteBack())
             return false;
@@ -139,15 +141,15 @@ public:
         QV4::Scope scope(ref->internalClass->engine);
         QV4::ScopedObject object(scope, ref->object());
 
-        int flags = 0;
+        int flags = QQmlPropertyData::HasInternalIndex;
         int status = -1;
         if (ref->isVariant()) {
             QVariant variant = ref->toVariant();
-            void *a[] = { &variant, nullptr, &status, &flags };
+            void *a[] = { &variant, nullptr, &status, &flags, &internalIndex };
             return object->metacall(QMetaObject::WriteProperty, ref->property(), a);
         }
 
-        void *a[] = { ref->storagePointer(), nullptr, &status, &flags };
+        void *a[] = { ref->storagePointer(), nullptr, &status, &flags, &internalIndex };
         return object->metacall(QMetaObject::WriteProperty, ref->property(), a);
     }
 
