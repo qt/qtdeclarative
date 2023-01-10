@@ -149,7 +149,7 @@ void DocumentHandler::load(const QUrl &fileUrl)
         return;
     }
 
-    const QUrl path = QQmlFileSelector::get(engine)->selector()->select(fileUrl);
+    const QUrl path = engine->interceptUrl(fileUrl, QQmlAbstractUrlInterceptor::UrlString);
     const QString fileName = QQmlFile::urlToLocalFileOrQrc(path);
     if (QFile::exists(fileName)) {
         QMimeType mime = QMimeDatabase().mimeTypeForFile(fileName);
