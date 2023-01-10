@@ -76,9 +76,9 @@ public:
                 std::is_same<T, double>,
                 std::is_same<T, QString>>) {
             return QJSPrimitiveValue(value);
+        } else {
+            return createPrimitive(QMetaType::fromType<T>(), &value);
         }
-
-        return createPrimitive(QMetaType::fromType<T>(), &value);
     }
 
     template <typename T>
@@ -298,7 +298,7 @@ private:
     QJSPrimitiveValue createPrimitive(QMetaType type, const void *ptr);
     QJSManagedValue createManaged(QMetaType type, const void *ptr);
     QJSValue create(QMetaType type, const void *ptr);
-#if QT_VERSION < QT_VERSION_CHECK(7,0,0)
+#if QT_QML_REMOVED_SINCE(6, 5)
     QJSValue create(int id, const void *ptr); // only there for BC reasons
 #endif
 
@@ -341,8 +341,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QJSEngine::Extensions)
 template<typename T>
 T qjsvalue_cast(const QJSValue &value)
 {
-    T t;
-    if (QJSEngine::convertV2(value, QMetaType::fromType<T>(), &t))
+    if (T t; QJSEngine::convertV2(value, QMetaType::fromType<T>(), &t))
         return t;
     else if (value.isVariant())
         return qvariant_cast<T>(value.toVariant());
@@ -353,11 +352,8 @@ T qjsvalue_cast(const QJSValue &value)
 template<typename T>
 T qjsvalue_cast(const QJSManagedValue &value)
 {
-    {
-        T t;
-        if (QJSEngine::convertManaged(value, QMetaType::fromType<T>(), &t))
-            return t;
-    }
+    if (T t; QJSEngine::convertManaged(value, QMetaType::fromType<T>(), &t))
+        return t;
 
     return qvariant_cast<T>(value.toVariant());
 }
@@ -365,11 +361,8 @@ T qjsvalue_cast(const QJSManagedValue &value)
 template<typename T>
 T qjsvalue_cast(const QJSPrimitiveValue &value)
 {
-    {
-        T t;
-        if (QJSEngine::convertPrimitive(value, QMetaType::fromType<T>(), &t))
-            return t;
-    }
+    if (T t; QJSEngine::convertPrimitive(value, QMetaType::fromType<T>(), &t))
+        return t;
 
     return qvariant_cast<T>(value.toVariant());
 }

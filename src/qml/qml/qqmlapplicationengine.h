@@ -19,7 +19,8 @@ class Q_QML_EXPORT QQmlApplicationEngine : public QQmlEngine
 public:
     QQmlApplicationEngine(QObject *parent = nullptr);
     QQmlApplicationEngine(const QUrl &url, QObject *parent = nullptr);
-    QQmlApplicationEngine(QAnyStringView uri, QAnyStringView typeName, QObject *parent = nullptr);
+    explicit QQmlApplicationEngine(QAnyStringView uri, QAnyStringView typeName,
+                                   QObject *parent = nullptr);
     QQmlApplicationEngine(const QString &filePath, QObject *parent = nullptr);
     ~QQmlApplicationEngine() override;
 

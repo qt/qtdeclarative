@@ -53,8 +53,8 @@ public:
     QQmlComponent(QQmlEngine *, const QUrl &url, QObject *parent = nullptr);
     QQmlComponent(QQmlEngine *, const QUrl &url, CompilationMode mode, QObject *parent = nullptr);
 
-    QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, QObject *parent = nullptr);
-    QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, CompilationMode mode, QObject *parent = nullptr);
+    explicit QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, QObject *parent = nullptr);
+    explicit QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, CompilationMode mode, QObject *parent = nullptr);
 
     ~QQmlComponent() override;
 
