@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/shared">
+    <qresource prefix="/qt/qml/shared">
         <file>Button.qml</file>
         <file>CheckBox.qml</file>
         <file>FlickrRssModel.qml</file>
