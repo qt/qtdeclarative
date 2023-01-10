@@ -128,6 +128,7 @@ qt_internal_add_qml_module(Qml
         common/qv4staticvalue_p.h
         common/qv4stringtoarrayindex_p.h
         common/qqmltranslation.cpp common/qqmltranslation_p.h
+        compat/removed_api.cpp
         compiler/qqmlirbuilder.cpp compiler/qqmlirbuilder_p.h
         compiler/qv4bytecodegenerator.cpp compiler/qv4bytecodegenerator_p.h
         compiler/qv4bytecodehandler.cpp compiler/qv4bytecodehandler_p.h
@@ -420,6 +421,8 @@ qt_internal_add_qml_module(Qml
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
 )
+
+qt_update_ignore_pch_source(Qml "compat/removed_api.cpp")
 
 qt_internal_add_qml_module(QmlMeta
     URI "QtQml"
