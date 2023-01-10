@@ -175,10 +175,7 @@ void QQuickTextNodeEngine::addTextDecorations(const QVarLengthArray<TextDecorati
 
         {
             QRectF &rect = textDecoration.rect;
-            rect.setY(qRound(rect.y()
-                             + m_currentLine.ascent()
-                             + (m_currentLine.leadingIncluded() ? m_currentLine.leading() : qreal(0.0f))
-                             + offset));
+            rect.setY(qRound(rect.y() + m_currentLine.ascent() + offset));
             rect.setHeight(thickness);
         }
 
