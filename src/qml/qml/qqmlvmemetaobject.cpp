@@ -275,63 +275,72 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
 
         if (metaType.isValid()) {
             if (valueIndex != -1 && c == QMetaObject::WriteProperty) {
-                // TODO: handle intercepting bindable properties for value types?
-                QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
-                            data->context->engine(), metaType);
-                Q_ASSERT(valueType);
 
-                //
-                // Consider the following case:
-                //  color c = { 0.1, 0.2, 0.3 }
-                //  interceptor exists on c.r
-                //  write { 0.2, 0.4, 0.6 }
-                //
-                // The interceptor may choose not to update the r component at this
-                // point (for example, a behavior that creates an animation). But we
-                // need to ensure that the g and b components are updated correctly.
-                //
-                // So we need to perform a full write where the value type is:
-                //    r = old value, g = new value, b = new value
-                //
-                // And then call the interceptor which may or may not write the
-                // new value to the r component.
-                //
-                // This will ensure that the other components don't contain stale data
-                // and any relevant signals are emitted.
-                //
-                // To achieve this:
-                //   (1) Store the new value type as a whole (needed due to
-                //       aliasing between a[0] and static storage in value type).
-                //   (2) Read the entire existing value type from object -> valueType temp.
-                //   (3) Read the previous value of the component being changed
-                //       from the valueType temp.
-                //   (4) Write the entire new value type into the temp.
-                //   (5) Overwrite the component being changed with the old value.
-                //   (6) Perform a full write to the value type (which may emit signals etc).
-                //   (7) Issue the interceptor call with the new component value.
-                //
+                // If we didn't intend to change the property this interceptor cares about,
+                // then don't bother intercepting it. There may be an animation running on
+                // the property. We shouldn't disturb it.
+                const int changedProperty
+                        = (*static_cast<int *>(a[3]) & QQmlPropertyData::HasInternalIndex)
+                            ? *static_cast<int *>(a[4])
+                            : QV4::ReferenceObject::AllProperties;
+                if (changedProperty == QV4::ReferenceObject::AllProperties
+                        || changedProperty == valueIndex) {
+                    // TODO: handle intercepting bindable properties for value types?
+                    QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
+                                data->context->engine(), metaType);
+                    Q_ASSERT(valueType);
 
-                QMetaProperty valueProp = valueType->property(valueIndex);
-                QVariant newValue(metaType, a[0]);
+                    //
+                    // Consider the following case:
+                    //  color c = { 0.1, 0.2, 0.3 }
+                    //  interceptor exists on c.r
+                    //  write { 0.2, 0.4, 0.6 }
+                    //
+                    // The interceptor may choose not to update the r component at this
+                    // point (for example, a behavior that creates an animation). But we
+                    // need to ensure that the g and b components are updated correctly.
+                    //
+                    // So we need to perform a full write where the value type is:
+                    //    r = old value, g = new value, b = new value
+                    //
+                    // And then call the interceptor which may or may not write the
+                    // new value to the r component.
+                    //
+                    // This will ensure that the other components don't contain stale data
+                    // and any relevant signals are emitted.
+                    //
+                    // To achieve this:
+                    //   (1) Store the new value type as a whole (needed due to
+                    //       aliasing between a[0] and static storage in value type).
+                    //   (2) Read the entire existing value type from object -> valueType temp.
+                    //   (3) Read the previous value of the component being changed
+                    //       from the valueType temp.
+                    //   (4) Write the entire new value type into the temp.
+                    //   (5) Overwrite the component being changed with the old value.
+                    //   (6) Perform a full write to the value type (which may emit signals etc).
+                    //   (7) Issue the interceptor call with the new component value.
+                    //
 
-                valueType->read(object, id);
-                QVariant prevComponentValue = valueType->readOnGadget(valueProp);
+                    QMetaProperty valueProp = valueType->property(valueIndex);
+                    QVariant newValue(metaType, a[0]);
 
-                valueType->setValue(newValue);
-                QVariant newComponentValue = valueType->readOnGadget(valueProp);
+                    valueType->read(object, id);
+                    QVariant prevComponentValue = valueType->readOnGadget(valueProp);
 
-                // Don't apply the interceptor if the intercepted value has not changed
-                bool updated = false;
-                if (newComponentValue != prevComponentValue) {
+                    valueType->setValue(newValue);
+                    QVariant newComponentValue = valueType->readOnGadget(valueProp);
+
+                    // If the intercepted value seemingly has not changed, we still need to
+                    // invoke the interceptor. There may be a pending animation that will
+                    // change the value soon. Such an animation needs to be canceled if the
+                    // current value is explicitly set.
+                    // So, we cannot return here if prevComponentValue == newComponentValue.
                     valueType->writeOnGadget(valueProp, prevComponentValue);
                     valueType->write(object, id, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
 
                     vi->write(newComponentValue);
-                    updated = true;
-                }
-
-                if (updated)
                     return true;
+                }
             } else if (c == QMetaObject::WriteProperty) {
                 vi->write(QVariant(metaType, a[0]));
                 return true;
@@ -993,7 +1002,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);
 
                         if (c == QMetaObject::WriteProperty)
-                            valueType->write(target, coreIndex, {});
+                            valueType->write(target, coreIndex, QQmlPropertyData::HasInternalIndex,
+                                             valueTypePropertyIndex);
 
                         return rv;
                     } else {

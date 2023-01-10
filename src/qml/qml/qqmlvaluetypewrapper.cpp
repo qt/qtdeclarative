@@ -118,9 +118,9 @@ bool Heap::QQmlValueTypeWrapper::readReference()
     return enforcesLocation() || QV4::ReferenceObject::readReference(this);
 }
 
-bool Heap::QQmlValueTypeWrapper::writeBack()
+bool Heap::QQmlValueTypeWrapper::writeBack(int propertyIndex)
 {
-    return isAttachedToProperty() && QV4::ReferenceObject::writeBack(this);
+    return isAttachedToProperty() && QV4::ReferenceObject::writeBack(this, propertyIndex);
 }
 
 ReturnedValue QQmlValueTypeWrapper::create(
@@ -178,9 +178,12 @@ int QQmlValueTypeWrapper::virtualMetacall(
     switch (call) {
     case QMetaObject::ReadProperty:
         break;
-    case QMetaObject::InvokeMetaMethod:
     case QMetaObject::WriteProperty:
     case QMetaObject::ResetProperty:
+        if (wrapper->d()->object())
+            wrapper->d()->writeBack(index);
+        break;
+    case QMetaObject::InvokeMetaMethod:
     case QMetaObject::CustomCall:
         if (wrapper->d()->object())
             wrapper->d()->writeBack();
@@ -840,7 +843,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
     property.writeOnGadget(gadget, v);
 
     if (heapObject)
-        r->d()->writeBack();
+        r->d()->writeBack(pd.coreIndex());
 
     return true;
 }

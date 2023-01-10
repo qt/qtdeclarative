@@ -1271,29 +1271,31 @@ static void removeValuePropertyBinding(
 template<typename Op>
 bool changePropertyAndWriteBack(
             QObject *object, int coreIndex, QQmlGadgetPtrWrapper *wrapper,
-            QQmlPropertyData::WriteFlags flags, Op op)
+            QQmlPropertyData::WriteFlags flags, int internalIndex, Op op)
 {
     wrapper->read(object, coreIndex);
     const bool rv = op(wrapper);
-    wrapper->write(object, coreIndex, flags);
+    wrapper->write(object, coreIndex, flags, internalIndex);
     return rv;
 }
 
 template<typename Op>
 bool changeThroughGadgetPtrWrapper(
-            QObject *object, const QQmlPropertyData &core,
-            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags,
-            Op op)
+        QObject *object, const QQmlPropertyData &core,
+        const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags,
+        int internalIndex, Op op)
 {
     if (QQmlGadgetPtrWrapper *wrapper = context
             ? QQmlGadgetPtrWrapper::instance(context->engine(), core.propType())
             : nullptr) {
-        return changePropertyAndWriteBack(object, core.coreIndex(), wrapper, flags, op);
+        return changePropertyAndWriteBack(
+                    object, core.coreIndex(), wrapper, flags, internalIndex, op);
     }
 
     if (QQmlValueType *valueType = QQmlMetaType::valueType(core.propType())) {
         QQmlGadgetPtrWrapper wrapper(valueType, nullptr);
-        return changePropertyAndWriteBack(object, core.coreIndex(), &wrapper, flags, op);
+        return changePropertyAndWriteBack(
+                    object, core.coreIndex(), &wrapper, flags, internalIndex, op);
     }
 
     return false;
@@ -1309,8 +1311,9 @@ bool QQmlPropertyPrivate::writeValueProperty(
     if (!valueTypeData.isValid())
         return write(object, core, value, context, flags);
 
-    return changeThroughGadgetPtrWrapper(object, core, context, flags,
-                                         [&](QQmlGadgetPtrWrapper *wrapper) {
+    return changeThroughGadgetPtrWrapper(
+                object, core, context, flags | QQmlPropertyData::HasInternalIndex,
+                valueTypeData.coreIndex(), [&](QQmlGadgetPtrWrapper *wrapper) {
         return write(wrapper, valueTypeData, value, context, flags);
     });
 }
@@ -1324,8 +1327,9 @@ bool QQmlPropertyPrivate::resetValueProperty(
     if (!valueTypeData.isValid())
         return reset(object, core, flags);
 
-    return changeThroughGadgetPtrWrapper(object, core, context, flags,
-                                         [&](QQmlGadgetPtrWrapper *wrapper) {
+    return changeThroughGadgetPtrWrapper(
+                object, core, context, flags | QQmlPropertyData::HasInternalIndex,
+                valueTypeData.coreIndex(), [&](QQmlGadgetPtrWrapper *wrapper) {
         return reset(wrapper, valueTypeData, flags);
     });
 }

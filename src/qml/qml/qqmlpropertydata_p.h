@@ -28,7 +28,8 @@ public:
     enum WriteFlag {
         BypassInterceptor = 0x01,
         DontRemoveBinding = 0x02,
-        RemoveBindingOnAliasWrite = 0x04
+        RemoveBindingOnAliasWrite = 0x04,
+        HasInternalIndex = 0x8,
     };
     Q_DECLARE_FLAGS(WriteFlags, WriteFlag)
 
