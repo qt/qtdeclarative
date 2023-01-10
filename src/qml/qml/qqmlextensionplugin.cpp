@@ -7,6 +7,21 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \since 5.0
+    \inmodule QtQml
+    \class QQmlExtensionPlugin
+    \brief The QQmlExtensionPlugin class provides an abstract base for custom QML extension plugins
+           with custom type registration functions.
+
+    \ingroup plugins
+
+    \note If you need to write a plugin manually (which is rare) you should always use
+    \l{QQmlEngineExtensionPlugin}. QQmlExtensionPlugin only provides the registerTypes() and
+    unregisterTypes() functions in addition. You should not use them, but rather declare your
+    types with \l{QML_ELEMENT} and friends and have the build system take care of the registration.
+*/
+
+/*!
     \since 5.14
     \inmodule QtQml
     \class QQmlEngineExtensionPlugin
@@ -25,7 +40,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn void QQmlExtensionPlugin::registerTypes(const char *uri)
-    \internal
 
     Registers the QML types in the given \a uri. Subclasses should implement
     this to call qmlRegisterType() for all types which are provided by the extension
@@ -107,9 +121,10 @@ void QQmlExtensionPlugin::unregisterTypes()
 }
 
 /*!
-    \internal
-*/
-
+    Initializes the extension from the \a uri using the \a engine. Here an application
+    plugin might, for example, expose some data or objects to QML,
+    as context properties on the engine's root context.
+ */
 void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
     Q_UNUSED(engine);
