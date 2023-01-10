@@ -343,12 +343,26 @@
 */
 
 /*!
-  \internal
   \macro QML_EXTRA_VERSION(MAJOR, MINOR)
   \relates QQmlEngine
 
-  Declare that the type should also be available in version \c MAJOR.MINOR.
+  Declare that the type should also be available in version \a{MAJOR}.\a{MINOR}.
   This can be helpful if a type should be available in multiple major versions.
+
+  Types are automatically registered for:
+  \list
+  \li The major version they were introduced in, see \l{QML_ADDED_IN_VERSION}.
+  \li Any major versions any their members were introduced in.
+  \li The current major version of their module, unless they were
+      \l{QML_REMOVED_IN_VERSION} before that.
+  \endlist
+
+  Notably, they are not automatically registered in any \l{PAST_MAJOR_VERSIONS}
+  between the above. You can use QML_EXTRA_VERSION to manually register your
+  types in further major versions.
+
+  \note Keeping multiple \l{PAST_MAJOR_VERSIONS} around is computationally
+        expensive.
 
   \sa QML_ELEMENT, QML_ADDED_IN_MINOR_VERSION
 */
