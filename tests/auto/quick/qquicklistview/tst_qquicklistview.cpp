@@ -9691,7 +9691,7 @@ void tst_QQuickListView::touchCancel() // QTBUG-74679
     QPoint p1(300, 300);
     QTest::touchEvent(window.data(), touchDevice).press(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QTRY_VERIFY(mouseArea->pressed());
+    QTRY_VERIFY(mouseArea->isPressed());
     // and because Flickable filtered it, QQuickFlickablePrivate::pressed
     // should be true, but it's not easily tested here
 

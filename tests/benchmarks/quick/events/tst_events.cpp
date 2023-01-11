@@ -49,18 +49,18 @@ tst_events::tst_events()
 void tst_events::mousePressRelease()
 {
     QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea");
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 
     const QPoint localPos(100, 100);
     const QPoint globalPos = window.mapToGlobal(localPos);
     QBENCHMARK {
         QMouseEvent pressEvent(QEvent::MouseButtonPress, localPos, globalPos, Qt::LeftButton, Qt::LeftButton, {});
         window.handleEvent(&pressEvent);
-        QCOMPARE(mouseArea->pressed(), true);
+        QCOMPARE(mouseArea->isPressed(), true);
         QMouseEvent releaseEvent(QEvent::MouseButtonRelease, localPos, globalPos, Qt::LeftButton, Qt::LeftButton, {});
         window.handleEvent(&releaseEvent);
     }
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 }
 
 void tst_events::mouseMove()
@@ -70,43 +70,43 @@ void tst_events::mouseMove()
     const QPoint globalPos1 = window.mapToGlobal(localPos1);
     const QPoint localPos2(101, 100);
     const QPoint globalPos2 = window.mapToGlobal(localPos2);
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, localPos1, globalPos1, Qt::LeftButton, Qt::LeftButton, {});
     window.handleEvent(&pressEvent);
-    QCOMPARE(mouseArea->pressed(), true);
+    QCOMPARE(mouseArea->isPressed(), true);
     QMouseEvent moveEvent1(QEvent::MouseMove, localPos2, globalPos2, Qt::LeftButton, Qt::LeftButton, {});
     QMouseEvent moveEvent2(QEvent::MouseMove, localPos1, globalPos1, Qt::LeftButton, Qt::LeftButton, {});
     QBENCHMARK {
         window.handleEvent(&moveEvent1);
         window.handleEvent(&moveEvent2);
     }
-    QCOMPARE(mouseArea->pressed(), true);
+    QCOMPARE(mouseArea->isPressed(), true);
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, localPos1, globalPos1, Qt::LeftButton, Qt::LeftButton, {});
     window.handleEvent(&releaseEvent);
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 }
 
 void tst_events::touchToMousePressRelease()
 {
     QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea");
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 
     auto device = QTest::createTouchDevice();
     auto p = QPoint(80, 80);
 
     QBENCHMARK {
         QTest::touchEvent(&window, device).press(0, p, &window).commit();
-        QCOMPARE(mouseArea->pressed(), true);
+        QCOMPARE(mouseArea->isPressed(), true);
         QTest::touchEvent(&window, device).release(0, p, &window).commit();
     }
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 }
 
 void tst_events::touchToMousePressMove()
 {
     QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea");
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 
     auto device = QTest::createTouchDevice();
     auto p = QPoint(80, 80);
@@ -114,17 +114,17 @@ void tst_events::touchToMousePressMove()
 
     QTest::touchEvent(&window, device).press(0, p, &window).commit();
     QQuickTouchUtils::flush(&window);
-    QCOMPARE(mouseArea->pressed(), true);
+    QCOMPARE(mouseArea->isPressed(), true);
 
     QBENCHMARK {
         QTest::touchEvent(&window, device).move(0, p, &window).commit();
-        QCOMPARE(mouseArea->pressed(), true);
+        QCOMPARE(mouseArea->isPressed(), true);
         QTest::touchEvent(&window, device).move(0, p2, &window).commit();
     }
-    QCOMPARE(mouseArea->pressed(), true);
+    QCOMPARE(mouseArea->isPressed(), true);
     QTest::touchEvent(&window, device).release(0, p, &window).commit();
     QQuickTouchUtils::flush(&window);
-    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->isPressed(), false);
 }
 
 QTEST_MAIN(tst_events)

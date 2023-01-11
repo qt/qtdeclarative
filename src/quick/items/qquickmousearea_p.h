@@ -33,7 +33,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(qreal mouseX READ mouseX NOTIFY mouseXChanged)
     Q_PROPERTY(qreal mouseY READ mouseY NOTIFY mouseYChanged)
     Q_PROPERTY(bool containsMouse READ hovered NOTIFY hoveredChanged)
-    Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged)
+    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool scrollGestureEnabled READ isScrollGestureEnabled WRITE setScrollGestureEnabled NOTIFY scrollGestureEnabledChanged REVISION(2, 5))
     Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons NOTIFY pressedButtonsChanged)
@@ -66,7 +66,7 @@ public:
     void setScrollGestureEnabled(bool);
 
     bool hovered() const;
-    bool pressed() const;
+    bool isPressed() const;
     bool containsPress() const;
 
     Qt::MouseButtons pressedButtons() const;

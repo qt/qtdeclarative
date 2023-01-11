@@ -1948,7 +1948,7 @@ void tst_qquickflickable::nestedStopAtBounds()
     moveAndPress(&view, position);
     if (waitForPressDelay) {
         QVERIFY(innerFiltering);    // isPressed will never be true if the mouse area isn't enabled.
-        QTRY_VERIFY(mouseArea->pressed());
+        QTRY_VERIFY(mouseArea->isPressed());
     }
 
     axis += invert ? threshold * 2 : -threshold * 2;

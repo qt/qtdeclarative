@@ -1143,7 +1143,7 @@ bool QQuickMouseArea::hovered() const
     \qmlproperty bool QtQuick::MouseArea::pressed
     This property holds whether any of the \l acceptedButtons are currently pressed.
 */
-bool QQuickMouseArea::pressed() const
+bool QQuickMouseArea::isPressed() const
 {
     Q_D(const QQuickMouseArea);
     return d->pressed;

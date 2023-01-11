@@ -1470,7 +1470,7 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
 
     QCOMPARE(enterSpy1.size(), 1);
     QCOMPARE(enterSpy2.size(), 0);
-    QVERIFY(mouseArea1->pressed());
+    QVERIFY(mouseArea1->isPressed());
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
@@ -1484,7 +1484,7 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
 
     QVERIFY(mouseArea1->hovered());
     QVERIFY(mouseArea2->hovered());
-    QVERIFY(mouseArea2->pressed());
+    QVERIFY(mouseArea2->isPressed());
     QCOMPARE(enterSpy1.size(), 1);
     QCOMPARE(enterSpy2.size(), 1);
 
@@ -1501,14 +1501,14 @@ void tst_TouchMouse::hoverEnabled() // QTBUG-40856
 
     QCOMPARE(enterSpy1.size(), 1);
     QCOMPARE(enterSpy2.size(), 1);
-    QVERIFY(mouseArea1->pressed());
+    QVERIFY(mouseArea1->isPressed());
     QVERIFY(mouseArea1->hovered());
     QVERIFY(!mouseArea2->hovered());
 
     QTest::touchEvent(&window, device).release(0, p1, &window);
     QCOMPARE(clickSpy1.size(), 2);
     QVERIFY(mouseArea1->hovered());
-    QVERIFY(!mouseArea1->pressed());
+    QVERIFY(!mouseArea1->isPressed());
     QVERIFY(!mouseArea2->hovered());
 }
 
@@ -1589,7 +1589,7 @@ void tst_TouchMouse::oneTouchInsideAndOneOutside() // QTBUG-102996
     QPoint p1 = ma->mapToScene(ma->boundingRect().center()).toPoint();
     QTest::touchEvent(&window, device).press(1, p1);
     QQuickTouchUtils::flush(&window);
-    QVERIFY(ma->pressed());
+    QVERIFY(ma->isPressed());
 
     // Tap outside the MouseArea with a second finger
     QPoint p2(100, 100);
@@ -1597,7 +1597,7 @@ void tst_TouchMouse::oneTouchInsideAndOneOutside() // QTBUG-102996
     QQuickTouchUtils::flush(&window);
     QTest::touchEvent(&window, device).stationary(1).release(2, p2);
     QQuickTouchUtils::flush(&window);
-    QVERIFY(ma->pressed());
+    QVERIFY(ma->isPressed());
 
     // Press again outside the MouseArea with a second finger
     QTest::touchEvent(&window, device).stationary(1).press(2, p2);
@@ -1605,7 +1605,7 @@ void tst_TouchMouse::oneTouchInsideAndOneOutside() // QTBUG-102996
     // Release the first finger: MouseArea should be released
     QTest::touchEvent(&window, device).release(1, p1).stationary(2);
     QQuickTouchUtils::flush(&window);
-    QCOMPARE(ma->pressed(), false);
+    QCOMPARE(ma->isPressed(), false);
 
     // Release the second finger
     QTest::touchEvent(&window, device).release(2, p2);

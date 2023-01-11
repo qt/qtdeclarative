@@ -646,10 +646,10 @@ void tst_qquickwidget::touchTapMouseArea()
 
     QPoint p1 = QPoint(70, 70);
     QTest::touchEvent(&window, device).press(0, p1, &window);
-    QTRY_COMPARE(ma->pressed(), true);
+    QTRY_COMPARE(ma->isPressed(), true);
     QTest::touchEvent(&window, device).move(0, p1, &window);
     QTest::touchEvent(&window, device).release(0, p1, &window);
-    QTRY_COMPARE(ma->pressed(), false);
+    QTRY_COMPARE(ma->isPressed(), false);
     QVERIFY(rootItem->property("wasClicked").toBool());
 }
 
