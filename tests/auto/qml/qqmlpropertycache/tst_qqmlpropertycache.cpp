@@ -567,8 +567,8 @@ constexpr size_t sizeofOffsetsAndSizes(const T &)
 
 #define TEST_CLASS(Class) \
     QTest::newRow(#Class) \
-            << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_##Class) \
-            << int(sizeofOffsetsAndSizes(qt_meta_stringdata_##Class) / (sizeof(uint) * 2))
+            << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_CLASS##Class##ENDCLASS) \
+            << int(sizeofOffsetsAndSizes(qt_meta_stringdata_CLASS##Class##ENDCLASS) / (sizeof(uint) * 2))
 
 Q_DECLARE_METATYPE(const QMetaObject*);
 
