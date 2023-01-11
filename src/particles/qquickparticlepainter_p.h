@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickParticlePainter : public QQuickItem
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticlePainter : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)

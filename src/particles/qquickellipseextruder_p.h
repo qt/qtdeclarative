@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickEllipseExtruder : public QQuickParticleExtruder
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickEllipseExtruder : public QQuickParticleExtruder
 {
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)//###Use base class? If it's still box

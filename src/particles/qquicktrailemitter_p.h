@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickTrailEmitter : public QQuickParticleEmitter
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickTrailEmitter : public QQuickParticleEmitter
 {
     Q_OBJECT
     Q_PROPERTY(QString follow READ follow WRITE setFollow NOTIFY followChanged)

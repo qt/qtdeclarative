@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickParticlePainter;
 
-class QQuickTurbulenceAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickTurbulenceAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)

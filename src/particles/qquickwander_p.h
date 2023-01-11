@@ -28,7 +28,7 @@ struct WanderData{
     qreal y_var;
 };
 
-class QQuickWanderAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickWanderAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(qreal pace READ pace WRITE setPace NOTIFY paceChanged)

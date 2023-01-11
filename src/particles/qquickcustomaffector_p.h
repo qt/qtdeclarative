@@ -24,7 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCustomAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickCustomAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(bool relative READ relative WRITE setRelative NOTIFY relativeChanged)

@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickRectangleExtruder : public QQuickParticleExtruder
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickRectangleExtruder : public QQuickParticleExtruder
 {
     Q_OBJECT
     Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)

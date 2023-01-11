@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickFrictionAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickFrictionAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(qreal factor READ factor WRITE setFactor NOTIFY factorChanged)

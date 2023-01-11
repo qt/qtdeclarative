@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPointDirection : public QQuickDirection
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickPointDirection : public QQuickDirection
 {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)

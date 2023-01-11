@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickStochasticEngine;
 
-class QQuickSpriteGoalAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickSpriteGoalAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)

@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAgeAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickAgeAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(int lifeLeft READ lifeLeft WRITE setLifeLeft NOTIFY lifeLeftChanged)

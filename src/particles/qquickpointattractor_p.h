@@ -18,7 +18,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAttractorAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickAttractorAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)

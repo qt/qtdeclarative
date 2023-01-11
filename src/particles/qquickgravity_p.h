@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickGravityAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickGravityAffector : public QQuickParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)

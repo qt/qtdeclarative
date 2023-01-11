@@ -146,7 +146,7 @@ public:
     virtual ImageMaterialData *state() = 0;
 };
 
-class QQuickImageParticle : public QQuickParticlePainter
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickImageParticle : public QQuickParticlePainter
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ image WRITE setImage NOTIFY imageChanged)

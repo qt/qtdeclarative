@@ -19,7 +19,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickParticleGroup : public QQuickStochasticState, public QQmlParserStatus
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroup : public QQuickStochasticState,
+                                                            public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)

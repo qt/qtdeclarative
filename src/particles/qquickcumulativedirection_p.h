@@ -17,10 +17,11 @@
 #include "qquickdirection_p.h"
 #include <QQmlListProperty>
 #include <QtQml/qqml.h>
+#include <QtQuickParticles/private/qtquickparticlesexports_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickCumulativeDirection : public QQuickDirection
+class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickCumulativeDirection : public QQuickDirection
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuickDirection> directions READ directions)
