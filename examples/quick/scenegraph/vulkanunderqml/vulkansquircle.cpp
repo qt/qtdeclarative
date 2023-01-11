@@ -258,8 +258,6 @@ static inline VkDeviceSize aligned(VkDeviceSize v, VkDeviceSize byteAlign)
 
 void SquircleRenderer::init(int framesInFlight)
 {
-    qDebug("init");
-
     Q_ASSERT(framesInFlight <= 3);
     m_initialized = true;
 
