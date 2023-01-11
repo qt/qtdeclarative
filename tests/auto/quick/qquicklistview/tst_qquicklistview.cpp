@@ -8845,7 +8845,7 @@ void tst_QQuickListView::QTBUG_38209()
     listview->flick(0, 1000);
 
     // ensure we move more than just a couple pixels
-    QTRY_VERIFY(contentY - listview->contentY() > qreal(100.0));
+    QTRY_COMPARE_GE(contentY - listview->contentY(), 100);
 }
 
 void tst_QQuickListView::programmaticFlickAtBounds()
