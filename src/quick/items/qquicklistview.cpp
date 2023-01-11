@@ -1687,7 +1687,7 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
             updateHighlight();
             bottomItem = currentItem;
         }
-        qreal pos;
+        qreal pos = 0;
         bool isInBounds = -position() > maxExtent && -position() <= minExtent;
 
         if (header && !topItem && isInBounds) {
