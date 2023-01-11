@@ -578,10 +578,10 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
     Q_ASSERT(arrayType);
 
     m_builtins = AvailableTypes(ImportedTypes(
-                                    ImportedTypes::INTERNAL, std::move(builtins.cppNames.types()),
+                                    ImportedTypes::INTERNAL, builtins.cppNames.types(),
                                     intType, arrayType));
     m_builtins->qmlNames =
-            ImportedTypes(ImportedTypes::QML, std::move(builtins.qmlNames.types()),
+            ImportedTypes(ImportedTypes::QML, builtins.qmlNames.types(),
                           intType, arrayType);
 
     processImport(builtinImport, result, &(*m_builtins));
