@@ -21,7 +21,7 @@ T.VerticalHeaderView {
         implicitHeight: text.implicitHeight + (cellPadding * 2)
         color: control.Universal.background
 
-        Text {
+        Label {
             id: text
             text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole]
                                         : model[control.textRole])

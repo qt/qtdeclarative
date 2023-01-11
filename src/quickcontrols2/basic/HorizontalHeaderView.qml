@@ -19,7 +19,7 @@ T.HorizontalHeaderView {
         color: "#f6f6f6"
         border.color: "#e4e4e4"
 
-        Text {
+        Label {
             id: text
             text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole]
                                         : model[control.textRole])

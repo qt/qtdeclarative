@@ -29,7 +29,7 @@ T.VerticalHeaderView {
             }
         }
 
-        Text {
+        Label {
             id: text
             text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole]
                                         : model[control.textRole])
