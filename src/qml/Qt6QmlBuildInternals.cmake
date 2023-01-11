@@ -117,12 +117,12 @@ function(qt_internal_add_qml_module target)
         ${qml_module_internal_multi_args}
     )
 
-    qt_parse_all_arguments(arg "qt_internal_add_qml_module"
+    cmake_parse_arguments(PARSE_ARGV 1 arg
         "${option_args}"
         "${single_args}"
         "${multi_args}"
-        ${ARGN}
     )
+    _qt_internal_validate_all_args_are_parsed(arg)
 
     set(QT_QML_OUTPUT_DIRECTORY "${QT_BUILD_DIR}/${INSTALL_QMLDIR}")
     string(REPLACE "." "/" target_path ${arg_URI})

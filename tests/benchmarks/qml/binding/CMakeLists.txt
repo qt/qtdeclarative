@@ -12,7 +12,7 @@ qt_internal_add_benchmark(tst_binding
         testtypes.cpp testtypes.h
         tst_binding.cpp
     DEFINES
-        SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
+        SRCDIR="${CMAKE_CURRENT_SOURCE_DIR}"
     LIBRARIES
         Qt::Gui
         Qt::Qml

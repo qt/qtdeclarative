@@ -26,7 +26,7 @@ qt_internal_add_test(tst_dom_all
     DEFINES
         NO_QTEST_MAIN
         QT_DEPRECATED_WARNINGS
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../domdata\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/../domdata"
     LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate
@@ -36,5 +36,5 @@ qt_internal_add_test(tst_dom_all
 
 qt_internal_extend_target(tst_dom_all CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/domdata\\\"
+        QT_QMLTEST_DATADIR=":/domdata"
 )

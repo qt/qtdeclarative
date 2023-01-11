@@ -32,12 +32,12 @@ if(ANDROID OR IOS)
 
     qt_internal_extend_target(tst_ecmascripttests
         DEFINES
-            QT_QMLTEST_DATADIR=\\\":/test262\\\"
+            QT_QMLTEST_DATADIR=":/test262"
     )
 else()
     qt_internal_extend_target(tst_ecmascripttests
         DEFINES
-            QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/test262\\\"
+            QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/test262"
     )
 endif()
 

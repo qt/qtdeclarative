@@ -26,10 +26,10 @@ qt_internal_add_test(tst_linebylinelex
 
 qt_internal_extend_target(tst_linebylinelex CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/\\\"
+        QT_QMLTEST_DATADIR=":/"
 )
 
 qt_internal_extend_target(tst_linebylinelex CONDITION NOT ANDROID AND NOT IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/..\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/.."
 )

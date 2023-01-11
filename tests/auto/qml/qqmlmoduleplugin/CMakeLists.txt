@@ -92,12 +92,12 @@ qt_internal_add_resource(tst_qqmlmoduleplugin staticPlugin
 
 qt_internal_extend_target(tst_qqmlmoduleplugin CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/data\\\"
+        QT_QMLTEST_DATADIR=":/data"
 )
 
 qt_internal_extend_target(tst_qqmlmoduleplugin CONDITION NOT ANDROID AND NOT IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 add_subdirectory(plugin)
 add_subdirectory(plugin.2)

@@ -11,7 +11,7 @@ qt_internal_add_test(tst_qmllscompletions
         tst_qmllscompletions.cpp
     DEFINES
         QT_DEPRECATED_WARNINGS
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
     LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate
@@ -23,5 +23,5 @@ qt_internal_add_test(tst_qmllscompletions
 
 qt_internal_extend_target(tst_qmllscompletions CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/domdata\\\"
+        QT_QMLTEST_DATADIR=":/domdata"
 )
