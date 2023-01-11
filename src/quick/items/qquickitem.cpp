@@ -319,10 +319,10 @@ QVariant QQuickItemKeyFilter::inputMethodQuery(Qt::InputMethodQuery query) const
 }
 #endif // im
 
-void QQuickItemKeyFilter::shortcutOverride(QKeyEvent *event)
+void QQuickItemKeyFilter::shortcutOverrideEvent(QKeyEvent *event)
 {
     if (m_next)
-        m_next->shortcutOverride(event);
+        m_next->shortcutOverrideEvent(event);
     else
         event->ignore();
 }
@@ -1385,7 +1385,7 @@ QVariant QQuickKeysAttached::inputMethodQuery(Qt::InputMethodQuery query) const
 }
 #endif // im
 
-void QQuickKeysAttached::shortcutOverride(QKeyEvent *event)
+void QQuickKeysAttached::shortcutOverrideEvent(QKeyEvent *event)
 {
     Q_D(QQuickKeysAttached);
     QQuickKeyEvent &keyEvent = d->theKeyEvent;
@@ -5542,7 +5542,7 @@ void QQuickItemPrivate::deliverInputMethodEvent(QInputMethodEvent *e)
 void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
 {
     if (extra.isAllocated() && extra->keyHandler)
-        extra->keyHandler->shortcutOverride(event);
+        extra->keyHandler->shortcutOverrideEvent(event);
     else
         event->ignore();
 }

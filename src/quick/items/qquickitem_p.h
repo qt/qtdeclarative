@@ -720,7 +720,7 @@ public:
     virtual void inputMethodEvent(QInputMethodEvent *event, bool post);
     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;
 #endif
-    virtual void shortcutOverride(QKeyEvent *event);
+    virtual void shortcutOverrideEvent(QKeyEvent *event);
     virtual void componentComplete();
 
     bool m_processPost;
@@ -978,7 +978,7 @@ private:
     void inputMethodEvent(QInputMethodEvent *, bool post) override;
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
 #endif
-    void shortcutOverride(QKeyEvent *event) override;
+    void shortcutOverrideEvent(QKeyEvent *event) override;
     static QByteArray keyToSignal(int key);
 
     bool isConnected(const char *signalName) const;
