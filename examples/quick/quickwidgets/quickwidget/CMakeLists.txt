@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(quickwidget LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,16 +12,15 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/quickwidgets/quickwidget")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickWidgets Widgets)
 
+qt_standard_project_setup()
+
 qt_add_executable(quickwidget
+    WIN32
+    MACOSX_BUNDLE
     main.cpp
 )
 
-set_target_properties(quickwidget PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(quickwidget PUBLIC
+target_link_libraries(quickwidget PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Quick

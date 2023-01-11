@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(text LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,18 +12,17 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/text")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup()
+
 add_subdirectory("../shared" "shared")
 
 qt_add_executable(textexample
+    WIN32
+    MACOSX_BUNDLE
     main.cpp
 )
 
-set_target_properties(textexample PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(textexample PUBLIC
+target_link_libraries(textexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

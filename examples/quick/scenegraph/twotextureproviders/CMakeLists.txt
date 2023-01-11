@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(twotextureproviders LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,17 +12,14 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/scenegraph/twotextureprovid
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick ShaderTools)
 
-qt_add_executable(twotextureproviders
+qt_standard_project_setup()
+
+qt_add_executable(twotextureproviders WIN32 MACOSX_BUNDLE
     main.cpp
     xorblender.cpp xorblender.h
 )
 
-set_target_properties(twotextureproviders PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(twotextureproviders PUBLIC
+target_link_libraries(twotextureproviders PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

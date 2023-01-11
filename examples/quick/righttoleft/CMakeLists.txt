@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(righttoleft LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -13,6 +11,8 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/righttoleft")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+
+qt_standard_project_setup()
 
 add_subdirectory("../shared" "shared")
 
@@ -33,7 +33,7 @@ qt_add_qml_module(righttoleftexample
         "textalignment/textalignment.qml"
 )
 
-target_link_libraries(righttoleftexample PUBLIC
+target_link_libraries(righttoleftexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(customgeometry_declarative LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,17 +12,14 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/scenegraph/customgeometry")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick)
 
-qt_add_executable(customgeometry_declarative
+qt_standard_project_setup()
+
+qt_add_executable(customgeometry_declarative WIN32 MACOSX_BUNDLE
     beziercurve.cpp beziercurve.h
     main.cpp
 )
 
-set_target_properties(customgeometry_declarative PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(customgeometry_declarative PUBLIC
+target_link_libraries(customgeometry_declarative PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Quick

@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(stringlistmodel LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,11 +12,13 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/models/stringlistmodel")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup()
+
 qt_add_executable(stringlistmodelexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
-target_link_libraries(stringlistmodelexample PUBLIC
+target_link_libraries(stringlistmodelexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

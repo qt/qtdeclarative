@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(imageelements LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -13,6 +11,8 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/imageelements")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+
+qt_standard_project_setup()
 
 add_subdirectory("../shared" "shared")
 
@@ -22,7 +22,7 @@ qt_add_executable(imageelementsexample
     main.cpp
 )
 
-target_link_libraries(imageelementsexample PUBLIC
+target_link_libraries(imageelementsexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

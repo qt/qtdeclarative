@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(threadedanimation LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,17 +12,14 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/scenegraph/threadedanimatio
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_add_executable(threadedanimation
+qt_standard_project_setup()
+
+qt_add_executable(threadedanimation WIN32 MACOSX_BUNDLE
     main.cpp
     spinner.cpp spinner.h
 )
 
-set_target_properties(threadedanimation PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(threadedanimation PUBLIC
+target_link_libraries(threadedanimation PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

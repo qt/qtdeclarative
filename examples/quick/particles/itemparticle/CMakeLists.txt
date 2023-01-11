@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(itemparticle LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,13 +12,15 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/particles/itemparticle")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup()
+
 add_subdirectory("../../shared" "shared")
 
 qt_add_executable(itemparticleexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
-target_link_libraries(itemparticleexample PUBLIC
+target_link_libraries(itemparticleexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

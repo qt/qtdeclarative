@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(touchinteraction LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,18 +12,17 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/touchinteraction")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup()
+
 add_subdirectory("../shared" "shared")
 
 qt_add_executable(touchinteractionexample
+    WIN32
+    MACOSX_BUNDLE
     main.cpp
 )
 
-set_target_properties(touchinteractionexample PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(touchinteractionexample PUBLIC
+target_link_libraries(touchinteractionexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

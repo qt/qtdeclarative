@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(rendercontrol_opengl LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,13 +12,15 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/rendercontrol/rendercontrol
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui OpenGL Qml Quick)
 
+qt_standard_project_setup()
+
 qt_add_executable(rendercontrol_openglexample WIN32 MACOSX_BUNDLE
     cuberenderer.cpp cuberenderer.h
     main.cpp
     window_singlethreaded.cpp window_singlethreaded.h
 )
 
-target_link_libraries(rendercontrol_openglexample PUBLIC
+target_link_libraries(rendercontrol_openglexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::OpenGL

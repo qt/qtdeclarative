@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(vulkanunderqml LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,20 +12,19 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/scenegraph/vulkanunderqml")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_add_executable(vulkanunderqml
+qt_standard_project_setup()
+
+qt_add_executable(vulkanunderqml WIN32 MACOSX_BUNDLE
     main.cpp
     vulkansquircle.cpp vulkansquircle.h
 )
 
 set_target_properties(vulkanunderqml PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-
     # Prevent name clash with build subdirectory on case-insensitive file systems
     OUTPUT_NAME vulkanunderqmlapp
 )
 
-target_link_libraries(vulkanunderqml PUBLIC
+target_link_libraries(vulkanunderqml PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(externaldraganddrop LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,13 +12,12 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/externaldraganddrop")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_add_executable(externaldraganddropexample
-    main.cpp
-)
+qt_standard_project_setup()
 
-set_target_properties(externaldraganddropexample PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+qt_add_executable(externaldraganddropexample
+    WIN32
+    MACOSX_BUNDLE
+    main.cpp
 )
 
 qt_add_qml_module(externaldraganddropexample
@@ -32,7 +29,7 @@ qt_add_qml_module(externaldraganddropexample
         "externaldraganddrop.qml"
 )
 
-target_link_libraries(externaldraganddropexample PUBLIC
+target_link_libraries(externaldraganddropexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml
