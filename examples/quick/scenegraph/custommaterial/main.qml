@@ -45,8 +45,8 @@ Item {
         anchors.bottom: parent.bottom
         anchors.margins: 20
         wrapMode: Text.WordWrap
-        text: "This example shows how to create a custom material in C++ and use it in QML.\n"
+        text: qsTr("This example shows how to create a custom material in C++ and use it in QML.\n"
         + "The custom material uses a fragment shader that calculates the Mandelbrot set,"
-        + " and exposes the shader uniforms as QML properties."
+        + " and exposes the shader uniforms as QML properties.")
     }
 }

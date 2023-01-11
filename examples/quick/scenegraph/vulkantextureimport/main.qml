@@ -71,6 +71,6 @@ Rectangle {
         anchors.right: renderer.right
         anchors.margins: 20
         wrapMode: Text.WordWrap
-        text: "The squircle, using rendering code borrowed from the vulkanunderqml example, is rendered into a texture directly with Vulkan. The VkImage is then imported and used in a custom Qt Quick item."
+        text: qsTr("The squircle, using rendering code borrowed from the vulkanunderqml example, is rendered into a texture directly with Vulkan. The VkImage is then imported and used in a custom Qt Quick item.")
     }
 }
