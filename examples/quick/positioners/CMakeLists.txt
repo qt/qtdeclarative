@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(positioners LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -13,6 +11,8 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/positioners")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+
+qt_standard_project_setup()
 
 add_subdirectory("../shared" "shared")
 
@@ -32,7 +32,7 @@ qt_add_qml_module(positionersexample
         "positioners.qml"
 )
 
-target_link_libraries(positionersexample PUBLIC
+target_link_libraries(positionersexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

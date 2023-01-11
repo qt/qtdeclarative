@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(graph LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,7 +12,9 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/scenegraph/graph")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick)
 
-qt_add_executable(graph
+qt_standard_project_setup()
+
+qt_add_executable(graph WIN32 MACOSX_BUNDLE
     graph.cpp graph.h
     gridnode.cpp gridnode.h
     linenode.cpp linenode.h
@@ -23,14 +23,11 @@ qt_add_executable(graph
 )
 
 set_target_properties(graph PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-
     # Prevent name clash with build subdirectory on case-insensitive file systems
     OUTPUT_NAME graphapp
 )
 
-target_link_libraries(graph PUBLIC
+target_link_libraries(graph PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Quick

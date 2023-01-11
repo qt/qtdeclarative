@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(objectlistmodel LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,12 +12,14 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/models/objectlistmodel")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup()
+
 qt_add_executable(objectlistmodelexample WIN32 MACOSX_BUNDLE
     dataobject.cpp dataobject.h
     main.cpp
 )
 
-target_link_libraries(objectlistmodelexample PUBLIC
+target_link_libraries(objectlistmodelexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

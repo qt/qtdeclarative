@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(customrendernode LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,17 +12,14 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/scenegraph/customrendernode
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick ShaderTools)
 
-qt_add_executable(customrendernode
+qt_standard_project_setup()
+
+qt_add_executable(customrendernode WIN32 MACOSX_BUNDLE
     main.cpp
     customrender.cpp customrender.h
 )
 
-set_target_properties(customrendernode PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(customrendernode PUBLIC
+target_link_libraries(customrendernode PRIVATE
     Qt::Core
     Qt::GuiPrivate
     Qt::Qml

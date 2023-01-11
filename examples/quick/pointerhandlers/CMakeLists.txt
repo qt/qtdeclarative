@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(pointerhandlers LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,11 +12,13 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/pointerhandlers")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Svg)
 
+qt_standard_project_setup()
+
 add_subdirectory("../shared" "shared")
 
 qt_add_executable(pointerhandlersexample WIN32 MACOSX_BUNDLE main.cpp)
 
-target_link_libraries(pointerhandlersexample PUBLIC
+target_link_libraries(pointerhandlersexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(abstractitemmodel LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,12 +12,14 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/models/abstractitemmodel")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup()
+
 qt_add_executable(abstractitemmodelexample WIN32 MACOSX_BUNDLE
     main.cpp
     model.cpp model.h
 )
 
-target_link_libraries(abstractitemmodelexample PUBLIC
+target_link_libraries(abstractitemmodelexample PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml

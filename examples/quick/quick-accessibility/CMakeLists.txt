@@ -14,16 +14,15 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/quick-accessibility")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup()
+
 qt_add_executable(quick-accessibility
+    WIN32
+    MACOSX_BUNDLE
     main.cpp
 )
 
-set_target_properties(quick-accessibility PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(quick-accessibility PUBLIC
+target_link_libraries(quick-accessibility PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml
