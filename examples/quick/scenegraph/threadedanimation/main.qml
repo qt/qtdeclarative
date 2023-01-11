@@ -27,7 +27,7 @@ Rectangle {
     Text {
         id: blockingLabel
         color: blocker.running ? "red" : "black"
-        text: blocker.running ? "Blocked!" : "Not blocked"
+        text: blocker.running ? qsTr("Blocked!") : qsTr("Not blocked")
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: 100
@@ -86,7 +86,7 @@ Rectangle {
         id: label
         color: "black"
         wrapMode: Text.WordWrap
-        text: "This application shows two spinners. The one to the right is animated on the scene graph thread (when applicable) and the left one is using the normal Qt Quick animation system."
+        text: qsTr("This application shows two spinners. The one to the right is animated on the scene graph thread (when applicable) and the left one is using the normal Qt Quick animation system.")
         anchors.right: parent.right
         anchors.left: parent.left
         anchors.bottom: parent.bottom

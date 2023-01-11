@@ -32,7 +32,7 @@ Item {
         id: label
         color: "black"
         wrapMode: Text.WordWrap
-        text: "The background here is a squircle rendered with raw Vulkan using the beforeRendering() and beforeRenderPassRecording() signals in QQuickWindow. This text label and its border is rendered using QML"
+        text: qsTr("The background here is a squircle rendered with raw Vulkan using the beforeRendering() and beforeRenderPassRecording() signals in QQuickWindow. This text label and its border is rendered using QML")
         anchors.right: parent.right
         anchors.left: parent.left
         anchors.bottom: parent.bottom

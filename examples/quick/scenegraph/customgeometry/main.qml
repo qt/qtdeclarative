@@ -32,7 +32,7 @@ Item {
         width: parent.width - 40
         wrapMode: Text.WordWrap
 
-        text: "This curve is a custom scene graph item, implemented using line strips"
+        text: qsTr("This curve is a custom scene graph item, implemented using line strips")
     }
 }
 //! [4]

@@ -15,7 +15,7 @@ Item {
         anchors.fill: parent
 
         Text {
-            text: "Direct"
+            text: qsTr("Direct")
             color: 'white'
             SplitView.preferredWidth: root.width/2
 
@@ -26,7 +26,7 @@ Item {
         }
 
         Text {
-            text: "Layer"
+            text: qsTr("Layer")
             color: 'white'
             SplitView.preferredWidth: root.width/2
 
@@ -45,11 +45,11 @@ Item {
         anchors.bottom: parent.bottom
         anchors.margins: 20
         wrapMode: Text.WordWrap
-        text: "This example creates a custom scenegraph QSGRenderNode render node and " +
+        text: qsTr("This example creates a custom scenegraph QSGRenderNode render node and " +
               "demonstrates its use. The render node is placed in front of a red " +
               "rectangle, and behind a white rectangle. Rendering is demonstrated " +
               "directly into the scenegraph, and as a layered item. Opacity and " +
-              "rotation transform changes are exercised."
+              "rotation transform changes are exercised.")
 
         Rectangle {
             z:-1

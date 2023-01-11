@@ -51,7 +51,7 @@ Item {
         Text {
             anchors.centerIn: parent
             color: "black" // Qt.hsla(0.8, 0.8, 0.8);
-            text: "Qt\nQuick"
+            text: qsTr("Qt\nQuick")
 
             horizontalAlignment: Text.AlignHCenter
 
@@ -89,8 +89,6 @@ Item {
         anchors.bottom: parent.bottom
         anchors.margins: 20
         wrapMode: Text.WordWrap
-        text: "This example creates two animated items and sets 'layer.enabled: true' on both of them. " +
-              "This turns the items into texture providers and we can access their texture from C++ in a custom material. " +
-              "The XorBlender is a custom C++ item which uses performs an Xor blend between them."
+        text: qsTr("This example creates two animated items and sets 'layer.enabled: true' on both of them. This turns the items into texture providers and we can access their texture from C++ in a custom material. The XorBlender is a custom C++ item which uses performs an Xor blend between them.")
     }
 }
