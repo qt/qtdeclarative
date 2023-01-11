@@ -39,12 +39,12 @@ endif()
 
 qt_internal_extend_target(tst_qqmlinfo CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/data\\\"
+        QT_QMLTEST_DATADIR=":/data"
 )
 
 qt_internal_extend_target(tst_qqmlinfo CONDITION NOT ANDROID AND NOT IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
 set_target_properties(tst_qqmlinfo PROPERTIES

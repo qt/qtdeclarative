@@ -25,7 +25,7 @@ qt_internal_add_test(tst_fusion
     SOURCES
         tst_fusion.cpp
     DEFINES
-        TST_CONTROLS_DATA=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../data\\\"
+        TST_CONTROLS_DATA="${CMAKE_CURRENT_SOURCE_DIR}/../data"
     LIBRARIES
         Qt::Gui
         Qt::QuickControls2

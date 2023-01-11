@@ -34,15 +34,15 @@ qt_internal_add_test(tst_quicktestmainwithsetup
 
 qt_internal_extend_target(tst_quicktestmainwithsetup CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/data\\\"
+        QT_QMLTEST_DATADIR=":/data"
 )
 
 qt_internal_extend_target(tst_quicktestmainwithsetup CONDITION WEBOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"./data\\\"
+        QT_QMLTEST_DATADIR="./data"
 )
 
 qt_internal_extend_target(tst_quicktestmainwithsetup CONDITION NOT ANDROID AND NOT IOS AND NOT WEBOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )

@@ -25,7 +25,7 @@ qt_internal_add_test(tst_imagine
     SOURCES
         tst_imagine.cpp
     DEFINES
-        TST_CONTROLS_DATA=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../data\\\"
+        TST_CONTROLS_DATA="${CMAKE_CURRENT_SOURCE_DIR}/../data"
     LIBRARIES
         Qt::Gui
         Qt::QuickControls2

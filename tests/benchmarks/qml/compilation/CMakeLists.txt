@@ -11,7 +11,7 @@ qt_internal_add_benchmark(tst_compilation
     SOURCES
         tst_compilation.cpp
     DEFINES
-        SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
+        SRCDIR="${CMAKE_CURRENT_SOURCE_DIR}"
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui

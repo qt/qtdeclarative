@@ -31,10 +31,10 @@ qt6_add_qml_module(tst_qquicklistview2
 
 qt_internal_extend_target(tst_qquicklistview2 CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/data\\\"
+        QT_QMLTEST_DATADIR=":/data"
 )
 
 qt_internal_extend_target(tst_qquicklistview2 CONDITION NOT ANDROID AND NOT IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )

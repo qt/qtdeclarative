@@ -64,10 +64,10 @@ qt_internal_add_resource(tst_qqmlcomponent "qmake_immediate"
 
 qt_internal_extend_target(tst_qqmlcomponent CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\":/data\\\"
+        QT_QMLTEST_DATADIR=":/data"
 )
 
 qt_internal_extend_target(tst_qqmlcomponent CONDITION NOT ANDROID AND NOT IOS
     DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )

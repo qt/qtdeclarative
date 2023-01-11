@@ -13,7 +13,7 @@ qt_internal_add_benchmark(tst_qqmlcomponent_benchmark # special case avoid colli
         testtypes.cpp testtypes.h
         tst_qqmlcomponent.cpp
     DEFINES
-        SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
+        SRCDIR="${CMAKE_CURRENT_SOURCE_DIR}"
     LIBRARIES
         Qt::Gui
         Qt::Qml
