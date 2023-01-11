@@ -119,7 +119,12 @@ class tst_qquickstates : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickstates() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
+    tst_qquickstates() : QQmlDataTest(QT_QMLTEST_DATADIR)
+    {
+#ifdef QML_DISABLE_INTERNAL_DEFERRED_PROPERTIES
+    qputenv("QML_DISABLE_INTERNAL_DEFERRED_PROPERTIES", "1");
+#endif
+    }
 
 private:
     QByteArray fullDataPath(const QString &path) const;

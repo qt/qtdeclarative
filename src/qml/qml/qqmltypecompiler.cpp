@@ -18,6 +18,9 @@
 
 QT_BEGIN_NAMESPACE
 
+DEFINE_BOOL_CONFIG_OPTION(
+        disableInternalDeferredProperties, QML_DISABLE_INTERNAL_DEFERRED_PROPERTIES);
+
 Q_LOGGING_CATEGORY(lcQmlTypeCompiler, "qt.qml.typecompiler");
 
 QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData,
@@ -1110,10 +1113,13 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
                 COMPILE_EXCEPTION(binding, tr("You cannot assign an id to an object assigned "
                                               "to a deferred property."));
             }
-            isDeferred = true;
-        } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
-            if (!seenSubObjectWithId && binding->type() != Binding::Type_GroupProperty)
+            if (isExternal || !disableInternalDeferredProperties())
                 isDeferred = true;
+        } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
+            if (!seenSubObjectWithId && binding->type() != Binding::Type_GroupProperty) {
+                if (isExternal || !disableInternalDeferredProperties())
+                    isDeferred = true;
+            }
         }
 
         if (binding->type() >= Binding::Type_Object) {
