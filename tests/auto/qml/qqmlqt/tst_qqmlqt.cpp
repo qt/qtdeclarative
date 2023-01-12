@@ -909,7 +909,10 @@ void tst_qqmlqt::dateTimeFormattingVariants()
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning));
 
     warnings.clear();
-    if (method == QStringLiteral("formatTime") && variant.typeId() == QMetaType::QString) {
+
+    if (method == QStringLiteral("formatTime")
+            && variant.typeId() == QMetaType::QString
+            && QByteArrayView(QTest::currentDataTag()).endsWith("ISO")) {
         for (int i = 0; i < 4; ++i) {
             QTest::ignoreMessage(QtWarningMsg,
                                  "\"2011/05/31 11:16:39.755\" is a "
@@ -925,13 +928,18 @@ void tst_qqmlqt::dateTimeFormattingVariants()
                     QtWarningMsg,
                     QRegularExpression("formatting.qml:19: Error: Invalid argument passed to "
                                        "formatTime"));
-        } else {
-            QTest::ignoreMessage(QtWarningMsg,
-                                 QRegularExpression("Could not convert argument 0 at"));
-            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(method + "@"));
-            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
-                                     "TypeError: Passing incompatible arguments to "
-                                     "C.. functions from JavaScript is not allowed."));
+        } else if (method == "formatDate") {
+            // formatDate has special error handling as it parses the strings itself.
+            QTest::ignoreMessage(
+                    QtWarningMsg,
+                    QRegularExpression("formatting.qml:10: Error: Invalid argument passed to "
+                                       "formatDate"));
+        } else if (method == "formatDateTime") {
+            // formatDateTime has special error handling as it parses the strings itself.
+            QTest::ignoreMessage(
+                    QtWarningMsg,
+                    QRegularExpression("formatting.qml:29: Error: Invalid argument passed to "
+                                       "formatDateTime"));
         }
     }
 
@@ -1010,27 +1018,47 @@ void tst_qqmlqt::dateTimeFormattingVariants_data()
             << temporary.time().toString("H:m:s a")
             << temporary.time().toString("hh:mm:ss.zzz"));
 
-    QString string(QLatin1String("2011/05/31 11:16:39.755"));
-    temporary = QDateTime::fromString(string, "yyyy/MM/dd HH:mm:ss.zzz");
-    QTest::newRow("formatDate, qstring")
-        << "formatDate" << QVariant::fromValue(string)
+    const QString isoString(QLatin1String("2011/05/31 11:16:39.755"));
+    temporary = QDateTime::fromString(isoString, "yyyy/MM/dd HH:mm:ss.zzz");
+    const QString jsString = engine.coerceValue<QDateTime, QString>(temporary);
+    QTest::newRow("formatDate, qstring, ISO")
+        << "formatDate" << QVariant::fromValue(isoString)
         << (QStringList()
             << QLocale().toString(temporary.date(), QLocale::ShortFormat)
             << QLocale().toString(temporary.date(), QLocale::LongFormat)
             << temporary.date().toString("ddd MMMM d yy"));
-    QTest::newRow("formatDateTime, qstring")
-        << "formatDateTime" << QVariant::fromValue(string)
+    QTest::newRow("formatDate, qstring, JS")
+        << "formatDate" << QVariant::fromValue(jsString)
+        << (QStringList()
+            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.date(), QLocale::LongFormat)
+            << temporary.date().toString("ddd MMMM d yy"));
+    QTest::newRow("formatDateTime, qstring, ISO")
+        << "formatDateTime" << QVariant::fromValue(isoString)
         << (QStringList()
             << QLocale().toString(temporary, QLocale::ShortFormat)
             << QLocale().toString(temporary, QLocale::LongFormat)
             << temporary.toString("M/d/yy H:m:s a"));
-    QTest::newRow("formatTime, qstring")
-        << "formatTime" << QVariant::fromValue(string)
+    QTest::newRow("formatDateTime, qstring, JS")
+        << "formatDateTime" << QVariant::fromValue(jsString)
+        << (QStringList()
+            << QLocale().toString(temporary, QLocale::ShortFormat)
+            << QLocale().toString(temporary, QLocale::LongFormat)
+            << temporary.toString("M/d/yy H:m:s a"));
+    QTest::newRow("formatTime, qstring, ISO")
+        << "formatTime" << QVariant::fromValue(isoString)
         << (QStringList()
             << QLocale().toString(temporary.time(), QLocale::ShortFormat)
             << QLocale().toString(temporary.time(), QLocale::LongFormat)
             << temporary.time().toString("H:m:s a")
             << temporary.time().toString("hh:mm:ss.zzz"));
+    QTest::newRow("formatTime, qstring, JS")
+        << "formatTime" << QVariant::fromValue(jsString)
+        << (QStringList()
+            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.time(), QLocale::LongFormat)
+            << temporary.time().toString("H:m:s a")
+            << temporary.time().toString("hh:mm:ss.000")); // JS Date to string coercion drops milliseconds
 
     QColor color(Qt::red);
     temporary = QVariant::fromValue(color).toDateTime();
