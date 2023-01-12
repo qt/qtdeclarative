@@ -9,6 +9,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qobject.h>
+#include <QtCore/qtimezone.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsmanagedvalue.h>
 #include <QtQml/qqmldebug.h>
@@ -210,9 +211,41 @@ public:
         if constexpr (std::is_same_v<To, QVariant>)
             return QVariant::fromValue(from);
 
-        if constexpr (std::is_same_v<To, QString>
-                && std::is_base_of_v<QObject, std::remove_const_t<std::remove_pointer_t<From>>>) {
-            return convertQObjectToString(from);
+        if constexpr (std::is_same_v<To, QString>) {
+            if constexpr (std::is_base_of_v<QObject, std::remove_const_t<std::remove_pointer_t<From>>>)
+                return convertQObjectToString(from);
+        }
+
+        if constexpr (std::is_same_v<From, QDateTime>) {
+            if constexpr (std::is_same_v<To, QDate>)
+                return convertDateTimeToDate(from.toLocalTime());
+            if constexpr (std::is_same_v<To, QTime>)
+                return from.toLocalTime().time();
+            if constexpr (std::is_same_v<To, QString>)
+                return convertDateTimeToString(from.toLocalTime());
+        }
+
+        if constexpr (std::is_same_v<From, QDate>) {
+            if constexpr (std::is_same_v<To, QDateTime>)
+                return from.startOfDay(QTimeZone::UTC);
+            if constexpr (std::is_same_v<To, QTime>) {
+                // This is the current time zone offset, for better or worse
+                return coerceValue<QDateTime, QTime>(coerceValue<QDate, QDateTime>(from));
+            }
+            if constexpr (std::is_same_v<To, QString>)
+                return convertDateTimeToString(coerceValue<QDate, QDateTime>(from));
+        }
+
+        if constexpr (std::is_same_v<From, QTime>) {
+            if constexpr (std::is_same_v<To, QDate>) {
+                // Yes. April Fools' 1971. See qv4dateobject.cpp.
+                return from.isValid() ? QDate(1971, 4, 1) : QDate();
+            }
+
+            if constexpr (std::is_same_v<To, QDateTime>)
+                return QDateTime(coerceValue<QTime, QDate>(from), from, QTimeZone::LocalTime);
+            if constexpr (std::is_same_v<To, QString>)
+                return convertDateTimeToString(coerceValue<QTime, QDateTime>(from));
         }
 
         if constexpr (std::is_same_v<To, std::remove_const_t<std::remove_pointer_t<To>> const *>) {
@@ -289,7 +322,10 @@ private:
 
     bool convertVariant(const QVariant &value, QMetaType metaType, void *ptr);
     bool convertMetaType(QMetaType fromType, const void *from, QMetaType toType, void *to);
+
     QString convertQObjectToString(QObject *object);
+    QString convertDateTimeToString(const QDateTime &dateTime);
+    static QDate convertDateTimeToDate(const QDateTime &dateTime);
 
     template<typename T>
     friend inline T qjsvalue_cast(const QJSValue &);
