@@ -36,6 +36,8 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_byteArrayType = builtinTypes.type(u"QByteArray"_s).scope;
     m_urlType = builtinTypes.type(u"QUrl"_s).scope;
     m_dateTimeType = builtinTypes.type(u"QDateTime"_s).scope;
+    m_dateType = builtinTypes.type(u"QDate"_s).scope;
+    m_timeType = builtinTypes.type(u"QTime"_s).scope;
     m_variantListType = builtinTypes.type(u"QVariantList"_s).scope;
     m_varType = builtinTypes.type(u"QVariant"_s).scope;
     m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
@@ -710,6 +712,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
 
     if (isPrimitive(type) || equals(type, m_jsValueType)
             || equals(type, m_urlType) || equals(type, m_dateTimeType)
+            || equals(type, m_dateType) || equals(type, m_timeType)
             || equals(type, m_variantListType) || equals(type, m_varType)
             || equals(type, m_stringListType) || equals(type, m_emptyListType)
             || equals(type, m_byteArrayType)) {
@@ -947,6 +950,18 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
 
     if (equals(from, m_stringType) && equals(to, m_dateTimeType))
         return true;
+
+    for (const auto &originType : {m_dateTimeType, m_dateType, m_timeType}) {
+        if (!equals(from, originType))
+            continue;
+
+        for (const auto &targetType : {m_dateTimeType, m_dateType, m_timeType, m_stringType}) {
+            if (equals(to, targetType))
+                return true;
+        }
+
+        break;;
+    }
 
     if (equals(from, m_nullType)
             && to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {

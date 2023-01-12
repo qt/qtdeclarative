@@ -3100,6 +3100,25 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
         return variable + u".toUtf8()"_s;
     }
 
+    for (const auto &originType : {
+         m_typeResolver->dateTimeType(),
+         m_typeResolver->dateType(),
+         m_typeResolver->timeType()}) {
+        if (m_typeResolver->equals(from, originType)) {
+            for (const auto &targetType : {
+                 m_typeResolver->dateTimeType(),
+                 m_typeResolver->dateType(),
+                 m_typeResolver->timeType(),
+                 m_typeResolver->stringType()}) {
+                if (m_typeResolver->equals(to, targetType)) {
+                    return u"aotContext->engine->coerceValue<%1, %2>(%3)"_s.arg(
+                                originType->internalName(), targetType->internalName(), variable);
+                }
+            }
+            break;
+        }
+    }
+
     const auto retrieveFromPrimitive = [&](
             const QQmlJSScope::ConstPtr &type, const QString &expression) -> QString
     {

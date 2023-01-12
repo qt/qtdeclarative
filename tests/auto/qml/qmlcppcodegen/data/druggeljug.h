@@ -2,6 +2,7 @@
 #define DRUGGELJUG_H
 
 #include <QtCore/qobject.h>
+#include <QtCore/qdatetime.h>
 #include <qqmlregistration.h>
 
 #define STORE_FUNCTION(type, name, member, signal) \
@@ -29,6 +30,9 @@ class Druggeljug : public QObject
     Q_PROPERTY(qint64 myInt64 MEMBER m_myInt64 NOTIFY myInt64Changed FINAL)
     Q_PROPERTY(quint64 myUint64 MEMBER m_myUint64 NOTIFY myUint64Changed FINAL)
 
+    Q_PROPERTY(QTime myTime MEMBER m_myTime NOTIFY myTimeChanged)
+    Q_PROPERTY(QDate myDate MEMBER m_myDate NOTIFY myDateChanged)
+
 public:
     Druggeljug(QObject* parent = nullptr) : QObject(parent) {}
 
@@ -43,6 +47,9 @@ public:
     STORE_FUNCTION(qint64, storeMyInt64, m_myInt64, myInt64Changed)
     STORE_FUNCTION(quint64, storeMyUint64, m_myUint64, myUint64Changed)
 
+    QTime myTime() const { return m_myTime; }
+    QDate myDate() const { return m_myDate; }
+
 private:
     int m_myInt = 0;
     uint m_myUint = 0;
@@ -55,6 +62,9 @@ private:
     qint64 m_myInt64 = 0;
     quint64 m_myUint64 = 0;
 
+    QTime m_myTime = QTime(11, 55, 0);
+    QDate m_myDate = QDate(2017, 9, 3);
+
 signals:
     void myIntChanged(int);
     void myUintChanged(uint);
@@ -66,6 +76,8 @@ signals:
     void myUint32Changed(quint32);
     void myInt64Changed(qint64);
     void myUint64Changed(quint64);
+    void myTimeChanged();
+    void myDateChanged();
 };
 
 #endif

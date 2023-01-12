@@ -79,6 +79,7 @@ set(qml_files
     conversions2.qml
     curlygrouped.qml
     cycleHead.qml
+    dateConversions.qml
     deadShoeSize.qml
     deadStoreLoop.qml
     dialog.qml

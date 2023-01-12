@@ -1,5 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 
+#include "data/druggeljug.h"
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
 #include <data/enumproblems.h>
@@ -160,6 +161,7 @@ private slots:
     void infinitiesToInt();
     void equalityVarAndNonStorable();
     void equalityQObjects();
+    void dateConversions();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3086,6 +3088,41 @@ void tst_QmlCppCodegen::equalityQObjects()
     QVERIFY(object->property("compareSameObjects").toBool());
     QVERIFY(object->property("compareDifferentObjects").toBool());
     QVERIFY(object->property("compareObjectWithNullObject").toBool());
+}
+
+void tst_QmlCppCodegen::dateConversions()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/dateConversions.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    Druggeljug *ref = engine.singletonInstance<Druggeljug *>("TestTypes", "Druggeljug");
+
+    const QDateTime refDate = engine.coerceValue<QDate, QDateTime>(ref->myDate());
+    const QDateTime refTime = engine.coerceValue<QTime, QDateTime>(ref->myTime());
+
+    QCOMPARE(o->property("date").value<QDateTime>(), refDate);
+    QCOMPARE(o->property("time").value<QDateTime>(), refTime);
+
+    QCOMPARE(o->property("dateString").toString(), (engine.coerceValue<QDateTime, QString>(refDate)));
+    QCOMPARE(o->property("timeString").toString(), (engine.coerceValue<QDateTime, QString>(refTime)));
+
+    QMetaObject::invokeMethod(o.data(), "shuffle");
+
+    QCOMPARE(ref->myDate(), (engine.coerceValue<QDateTime, QDate>(refDate)));
+    QCOMPARE(ref->myTime(), (engine.coerceValue<QDateTime, QTime>(refTime)));
+
+    const QDate date = ref->myDate();
+    const QTime time = ref->myTime();
+
+    QCOMPARE(o->property("dateString").toString(), (engine.coerceValue<QDate, QString>(date)));
+    QCOMPARE(o->property("timeString").toString(), (engine.coerceValue<QTime, QString>(time)));
+
+    QMetaObject::invokeMethod(o.data(), "fool");
+
+    QCOMPARE(ref->myDate(), (engine.coerceValue<QTime, QDate>(time)));
+    QCOMPARE(ref->myTime(), (engine.coerceValue<QDate, QTime>(date)));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
