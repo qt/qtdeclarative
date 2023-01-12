@@ -1630,14 +1630,16 @@ static QVariant toVariant(
         return *ld->d()->locale;
 #endif
     if (const QV4::DateObject *d = value.as<DateObject>()) {
-        auto dt = d->toQDateTime();
-        // See ExecutionEngine::metaTypeFromJS()'s handling of QMetaType::Date:
-        if (metaType == QMetaType::fromType<QDate>()) {
-            const auto utc = dt.toUTC();
-            if (utc.date() != dt.date() && utc.addSecs(-1).date() == dt.date())
-                dt = utc;
-        }
-        return dt;
+        if (metaType == QMetaType::fromType<QDate>())
+            return DateObject::dateTimeToDate(d->toQDateTime());
+
+        if (metaType == QMetaType::fromType<QTime>())
+            return d->toQDateTime().time();
+
+        if (metaType == QMetaType::fromType<QString>())
+            return d->toString();
+
+        return d->toQDateTime();
     }
     if (const QV4::UrlObject *d = value.as<UrlObject>())
         return d->toQUrl();
@@ -2506,20 +2508,12 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         } break;
     case QMetaType::QDate:
         if (const QV4::DateObject *d = value.as<DateObject>()) {
-            // If the Date object was parse()d from a string with no time part
-            // or zone specifier it's really the UTC start of the relevant day,
-            // but it's here represented as a local time, which may fall in the
-            // preceding day. See QTBUG-92466 for the gory details.
-            QDateTime dt = d->toQDateTime();
-            const QDateTime utc = dt.toUTC();
-            if (utc.date() != dt.date() && utc.addMSecs(-1).date() == dt.date())
-                dt = utc;
-            // This may, of course, be The Wrong Thing if the date was
-            // constructed as a full local date-time that happens to coincide
-            // with the start of a UTC day; however, that would be an odd value
-            // to give to something that, apparently, someone thinks belongs in
-            // a QDate.
-            *reinterpret_cast<QDate *>(data) = dt.date();
+            *reinterpret_cast<QDate *>(data) = DateObject::dateTimeToDate(d->toQDateTime());
+            return true;
+        } break;
+    case QMetaType::QTime:
+        if (const QV4::DateObject *d = value.as<DateObject>()) {
+            *reinterpret_cast<QTime *>(data) = d->toQDateTime().time();
             return true;
         } break;
     case QMetaType::QUrl:

@@ -707,6 +707,11 @@ QDateTime DateObject::toQDateTime() const
     return d()->toQDateTime();
 }
 
+QString DateObject::toString() const
+{
+    return ToString(d()->date(), engine()->localTZA);
+}
+
 QString DateObject::dateTimeToString(const QDateTime &dateTime, ExecutionEngine *engine)
 {
     if (!dateTime.isValid())

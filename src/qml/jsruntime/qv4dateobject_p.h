@@ -203,6 +203,7 @@ struct DateObject: ReferenceObject {
     double date() const { return d()->date(); }
 
     Q_QML_PRIVATE_EXPORT QDateTime toQDateTime() const;
+    QString toString() const;
 
     static QString dateTimeToString(const QDateTime &dateTime, ExecutionEngine *engine);
     static QDate dateTimeToDate(const QDateTime &dateTime);
