@@ -5984,15 +5984,16 @@ void tst_QJSEngine::coerceDateTime()
         DateTimeHolder *holder = qobject_cast<DateTimeHolder *>(o.data());
         QVERIFY(holder);
 
+        const QJSValue jsDateTime = engine.toScriptValue(dateTime);
         holder->m_dateTime = dateTime;
         emit holder->dateTimeChanged();
 
-        QEXPECT_FAIL("", "QML produces QDateTime::toString()", Continue);
         QCOMPARE((engine.coerceValue<QDateTime, QString>(dateTime)), holder->m_string);
-
+        QCOMPARE(qjsvalue_cast<QString>(jsDateTime), holder->m_string);
         QCOMPARE((engine.coerceValue<QDateTime, QDate>(dateTime)), holder->m_date);
-
+        QCOMPARE(qjsvalue_cast<QDate>(jsDateTime), holder->m_date);
         QCOMPARE((engine.coerceValue<QDateTime, QTime>(dateTime)), holder->m_time);
+        QCOMPARE(qjsvalue_cast<QTime>(jsDateTime), holder->m_time);
     }
 
     {
@@ -6013,15 +6014,16 @@ void tst_QJSEngine::coerceDateTime()
         DateTimeHolder *holder = qobject_cast<DateTimeHolder *>(o.data());
         QVERIFY(holder);
 
+        const QJSValue jsDate = engine.toScriptValue(date);
         holder->m_date = date;
         emit holder->dateChanged();
 
         QCOMPARE((engine.coerceValue<QDate, QDateTime>(date)), holder->m_dateTime);
-
-        QEXPECT_FAIL("", "QML produces QDateTime::toString()", Continue);
+        QCOMPARE(qjsvalue_cast<QDateTime>(jsDate), holder->m_dateTime);
         QCOMPARE((engine.coerceValue<QDate, QString>(date)), holder->m_string);
-
+        QCOMPARE(qjsvalue_cast<QString>(jsDate), holder->m_string);
         QCOMPARE((engine.coerceValue<QDate, QTime>(date)), holder->m_time);
+        QCOMPARE(qjsvalue_cast<QTime>(jsDate), holder->m_time);
     }
 
     {
@@ -6042,15 +6044,16 @@ void tst_QJSEngine::coerceDateTime()
         DateTimeHolder *holder = qobject_cast<DateTimeHolder *>(o.data());
         QVERIFY(holder);
 
+        const QJSValue jsTime = engine.toScriptValue(time);
         holder->m_time = time;
         emit holder->timeChanged();
 
         QCOMPARE((engine.coerceValue<QTime, QDateTime>(time)), holder->m_dateTime);
-
-        QEXPECT_FAIL("", "QML produces QDateTime::toString()", Continue);
+        QCOMPARE(qjsvalue_cast<QDateTime>(jsTime), holder->m_dateTime);
         QCOMPARE((engine.coerceValue<QTime, QString>(time)), holder->m_string);
-
+        QCOMPARE(qjsvalue_cast<QString>(jsTime), holder->m_string);
         QCOMPARE((engine.coerceValue<QTime, QDate>(time)), holder->m_date);
+        QCOMPARE(qjsvalue_cast<QDate>(jsTime), holder->m_date);
     }
 }
 
