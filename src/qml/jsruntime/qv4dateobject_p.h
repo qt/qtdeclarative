@@ -207,6 +207,7 @@ struct DateObject: ReferenceObject {
 
     static QString dateTimeToString(const QDateTime &dateTime, ExecutionEngine *engine);
     static QDate dateTimeToDate(const QDateTime &dateTime);
+    static QDateTime stringToDateTime(const QString &string, ExecutionEngine *engine);
 };
 
 template<>

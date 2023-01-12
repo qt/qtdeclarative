@@ -757,6 +757,11 @@ QString formatDateTimeObjectUsingDateFormat(T formatThis, Qt::DateFormat format)
 }
 }
 
+static QTime dateTimeToTime(const QDateTime &dateTime)
+{
+    return dateTime.toLocalTime().time();
+}
+
 /*!
 \qmlmethod string Qt::formatDate(datetime date, variant format, variant localeFormatOption)
 
@@ -773,6 +778,36 @@ default locale.
 
 \sa Locale
 */
+static std::optional<QDate> dateFromString(const QString &string, QV4::ExecutionEngine *engine)
+{
+    {
+        const QDate date = QDate::fromString(string, Qt::ISODate);
+        if (date.isValid())
+            return date;
+    }
+
+    {
+        // For historical reasons, the string argument is parsed as datetime, not as only date
+        const QDateTime dateTime = QDateTime::fromString(string, Qt::ISODate);
+        if (dateTime.isValid()) {
+            qCWarning(lcRootProperties())
+                    << string << "is a date/time string being passed to formatDate()."
+                    << "You should only pass date strings to formatDate().";
+            return dateTime.date();
+        }
+    }
+
+    {
+        // Since we can coerce QDate to QString, allow the resulting string format here.
+        const QDateTime dateTime = DateObject::stringToDateTime(string, engine);
+        if (dateTime.isValid())
+            return DateObject::dateTimeToDate(dateTime);
+    }
+
+    engine->throwError(QStringLiteral("Invalid argument passed to formatDate(): %1").arg(string));
+    return std::nullopt;
+}
+
 QString QtObject::formatDate(const QDate &date, const QString &format) const
 {
     return date.toString(format);
@@ -783,11 +818,52 @@ QString QtObject::formatDate(const QDate &date, Qt::DateFormat format) const
     return formatDateTimeObjectUsingDateFormat(date, format);
 }
 
+QString QtObject::formatDate(const QDateTime &dateTime, const QString &format) const
+{
+    return DateObject::dateTimeToDate(dateTime).toString(format);
+}
+
+QString QtObject::formatDate(const QString &string, const QString &format) const
+{
+    if (const auto qDate = dateFromString(string, v4Engine()))
+        return formatDate(qDate.value(), format);
+
+    return QString();
+}
+
+QString QtObject::formatDate(const QDateTime &dateTime, Qt::DateFormat format) const
+{
+    return formatDateTimeObjectUsingDateFormat(DateObject::dateTimeToDate(dateTime), format);
+}
+
+QString QtObject::formatDate(const QString &string, Qt::DateFormat format) const
+{
+    if (const auto qDate = dateFromString(string, v4Engine()))
+        return formatDate(qDate.value(), format);
+
+    return QString();
+}
+
 #if QT_CONFIG(qml_locale)
 QString QtObject::formatDate(const QDate &date, const QLocale &locale,
                              QLocale::FormatType formatType) const
 {
     return locale.toString(date, formatType);
+}
+
+QString QtObject::formatDate(const QDateTime &dateTime, const QLocale &locale,
+                             QLocale::FormatType formatType) const
+{
+    return locale.toString(DateObject::dateTimeToDate(dateTime), formatType);
+}
+
+QString QtObject::formatDate(const QString &string, const QLocale &locale,
+                             QLocale::FormatType formatType) const
+{
+    if (const auto qDate = dateFromString(string, v4Engine()))
+        return locale.toString(qDate.value(), formatType);
+
+    return QString();
 }
 #endif
 
@@ -826,6 +902,13 @@ static std::optional<QTime> timeFromString(const QString &string, QV4::Execution
         }
     }
 
+    {
+        // Since we can coerce QTime to QString, allow the resulting string format here.
+        const QDateTime dateTime = DateObject::stringToDateTime(string, engine);
+        if (dateTime.isValid())
+            return dateTimeToTime(dateTime);
+    }
+
     engine->throwError(QStringLiteral("Invalid argument passed to formatTime(): %1").arg(string));
     return std::nullopt;
 }
@@ -833,6 +916,11 @@ static std::optional<QTime> timeFromString(const QString &string, QV4::Execution
 QString QtObject::formatTime(const QTime &time, const QString &format) const
 {
     return time.toString(format);
+}
+
+QString QtObject::formatTime(const QDateTime &dateTime, const QString &format) const
+{
+    return dateTimeToTime(dateTime).toString(format);
 }
 
 QString QtObject::formatTime(const QString &time, const QString &format) const
@@ -849,6 +937,11 @@ QString QtObject::formatTime(const QTime &time, Qt::DateFormat format) const
     return formatDateTimeObjectUsingDateFormat(time, format);
 }
 
+QString QtObject::formatTime(const QDateTime &dateTime, Qt::DateFormat format) const
+{
+    return formatDateTimeObjectUsingDateFormat(dateTimeToTime(dateTime), format);
+}
+
 QString QtObject::formatTime(const QString &time, Qt::DateFormat format) const
 {
     if (auto qTime = timeFromString(time, v4Engine()))
@@ -862,6 +955,12 @@ QString QtObject::formatTime(const QTime &time, const QLocale &locale,
                              QLocale::FormatType formatType) const
 {
     return locale.toString(time, formatType);
+}
+
+QString QtObject::formatTime(const QDateTime &dateTime, const QLocale &locale,
+                             QLocale::FormatType formatType) const
+{
+    return locale.toString(dateTimeToTime(dateTime), formatType);
 }
 
 QString QtObject::formatTime(const QString &time, const QLocale &locale,
@@ -972,9 +1071,37 @@ with the \a format values below to produce the following results:
 
     \sa Locale
 */
+static std::optional<QDateTime> dateTimeFromString(const QString &string, QV4::ExecutionEngine *engine)
+{
+    {
+        const QDateTime dateTime = QDateTime::fromString(string, Qt::ISODate);
+        if (dateTime.isValid())
+            return dateTime;
+    }
+
+    {
+        // Since we can coerce QDateTime to QString, allow the resulting string format here.
+        const QDateTime dateTime = DateObject::stringToDateTime(string, engine);
+        if (dateTime.isValid())
+            return dateTime;
+    }
+
+    engine->throwError(QStringLiteral("Invalid argument passed to formatDateTime(): %1").arg(string));
+    return std::nullopt;
+}
+
 QString QtObject::formatDateTime(const QDateTime &dateTime, const QString &format) const
 {
     return dateTime.toString(format);
+}
+
+QString QtObject::formatDateTime(const QString &string, const QString &format) const
+{
+
+    if (const auto qDateTime = dateTimeFromString(string, v4Engine()))
+        return formatDateTime(qDateTime.value(), format);
+
+    return QString();
 }
 
 QString QtObject::formatDateTime(const QDateTime &dateTime, Qt::DateFormat format) const
@@ -982,11 +1109,30 @@ QString QtObject::formatDateTime(const QDateTime &dateTime, Qt::DateFormat forma
     return formatDateTimeObjectUsingDateFormat(dateTime, format);
 }
 
+QString QtObject::formatDateTime(const QString &string, Qt::DateFormat format) const
+{
+
+    if (const auto qDateTime = dateTimeFromString(string, v4Engine()))
+        return formatDateTime(qDateTime.value(), format);
+
+    return QString();
+}
+
 #if QT_CONFIG(qml_locale)
 QString QtObject::formatDateTime(const QDateTime &dateTime, const QLocale &locale,
                                  QLocale::FormatType formatType) const
 {
     return locale.toString(dateTime, formatType);
+}
+
+QString QtObject::formatDateTime(const QString &string, const QLocale &locale,
+                                 QLocale::FormatType formatType) const
+{
+
+    if (const auto qDateTime = dateTimeFromString(string, v4Engine()))
+        return formatDateTime(qDateTime.value(), locale, formatType);
+
+    return QString();
 }
 #endif
 

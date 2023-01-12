@@ -719,6 +719,11 @@ QString DateObject::dateTimeToString(const QDateTime &dateTime, ExecutionEngine 
     return ToString(TimeClip(dateTime.toMSecsSinceEpoch()), engine->localTZA);
 }
 
+QDateTime DateObject::stringToDateTime(const QString &string, ExecutionEngine *engine)
+{
+    return ToDateTime(ParseString(string, engine->localTZA), QTimeZone::LocalTime);
+}
+
 QDate DateObject::dateTimeToDate(const QDateTime &dateTime)
 {
     // If the Date object was parse()d from a string with no time part
