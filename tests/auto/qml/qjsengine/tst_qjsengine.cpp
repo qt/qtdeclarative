@@ -29,6 +29,27 @@ using namespace Qt::StringLiterals;
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QObjectList)
 
+class DateTimeHolder : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QDateTime dateTime MEMBER m_dateTime NOTIFY dateTimeChanged)
+    Q_PROPERTY(QDate date MEMBER m_date NOTIFY dateChanged)
+    Q_PROPERTY(QTime time MEMBER m_time NOTIFY timeChanged)
+    Q_PROPERTY(QString string MEMBER m_string NOTIFY stringChanged)
+
+signals:
+    void dateTimeChanged();
+    void dateChanged();
+    void timeChanged();
+    void stringChanged();
+
+public:
+    QDateTime m_dateTime;
+    QDate m_date;
+    QTime m_time;
+    QString m_string;
+};
+
 class tst_QJSEngine : public QObject
 {
     Q_OBJECT
@@ -273,6 +294,10 @@ private slots:
     void tdzViolations();
 
     void coerceValue();
+
+    void coerceDateTime_data();
+    void coerceDateTime();
+
     void callWithSpreadOnElement();
 
 public:
@@ -286,6 +311,7 @@ signals:
 
 tst_QJSEngine::tst_QJSEngine()
 {
+    qmlRegisterType<DateTimeHolder>("Test", 1, 0, "DateTimeHolder");
 }
 
 tst_QJSEngine::~tst_QJSEngine()
@@ -5841,6 +5867,135 @@ void tst_QJSEngine::coerceValue()
     QCOMPARE((engine.coerceValue<double, QString>(5.25)), a);
     QCOMPARE((engine.coerceValue<UnknownToJS, int>(u)), v); // triggers valueOf on a VariantObject
     QCOMPARE((engine.coerceValue<UnknownToJS, QTypeRevision>(u)), w);
+}
+
+void tst_QJSEngine::coerceDateTime_data()
+{
+    QTest::addColumn<QDateTime>("dateTime");
+
+    QTest::newRow("invalid") << QDateTime();
+    QTest::newRow("now")     << QDateTime::currentDateTime();
+
+    QTest::newRow("denormal-March")      << QDateTime(QDate(2019, 3, 1), QTime(0, 0, 0, 1));
+    QTest::newRow("denormal-leap")       << QDateTime(QDate(2020, 2, 29), QTime(23, 59, 59, 999));
+    QTest::newRow("denormal-time")       << QDateTime(QDate(2020, 2, 29), QTime(0, 0));
+    QTest::newRow("October")             << QDateTime(QDate(2019, 10, 3), QTime(12, 0));
+    QTest::newRow("nonstandard-format")  << QDateTime::fromString("1991-08-25 20:57:08 GMT+0000", "yyyy-MM-dd hh:mm:ss t");
+    QTest::newRow("nonstandard-format2") << QDateTime::fromString("Sun, 25 Mar 2018 11:10:49 GMT", "ddd, d MMM yyyy hh:mm:ss t");
+
+    const QDate date(2009, 5, 12);
+    const QTime early(0, 0, 1);
+    const QTime late(23, 59, 59);
+    const int offset = (11 * 60 + 30) * 60;
+
+    QTest::newRow("Local time early") << QDateTime(date, early);
+    QTest::newRow("Local time late")  << QDateTime(date, late);
+    QTest::newRow("UTC early")        << QDateTime(date, early, QTimeZone::UTC);
+    QTest::newRow("UTC late")         << QDateTime(date, late, QTimeZone::UTC);
+    QTest::newRow("+11:30 early")     << QDateTime(date, early, QTimeZone::fromSecondsAheadOfUtc(offset));
+    QTest::newRow("+11:30 late")      << QDateTime(date, late, QTimeZone::fromSecondsAheadOfUtc(offset));
+    QTest::newRow("-11:30 early")     << QDateTime(date, early, QTimeZone::fromSecondsAheadOfUtc(-offset));
+    QTest::newRow("-11:30 late")      << QDateTime(date, late, QTimeZone::fromSecondsAheadOfUtc(-offset));
+
+    QTest::newRow("dt0") << QDateTime(QDate(1900,  1,  2), QTime( 8, 14));
+    QTest::newRow("dt1") << QDateTime(QDate(2000, 11, 22), QTime(10, 45));
+}
+
+void tst_QJSEngine::coerceDateTime()
+{
+    QFETCH(QDateTime, dateTime);
+    const QDate date = dateTime.date();
+    const QTime time = dateTime.time();
+
+
+    QQmlEngine engine;
+
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+            import Test
+            DateTimeHolder {
+                string: dateTime
+                date: dateTime
+                time: dateTime
+            }
+        )", QUrl(u"fromDateTime.qml"_s));
+
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+
+        DateTimeHolder *holder = qobject_cast<DateTimeHolder *>(o.data());
+        QVERIFY(holder);
+
+        holder->m_dateTime = dateTime;
+        emit holder->dateTimeChanged();
+
+        QEXPECT_FAIL("", "QML produces QDateTime::toString()", Continue);
+        QCOMPARE((engine.coerceValue<QDateTime, QString>(dateTime)), holder->m_string);
+
+        QCOMPARE((engine.coerceValue<QDateTime, QDate>(dateTime)), holder->m_date);
+
+        QCOMPARE((engine.coerceValue<QDateTime, QTime>(dateTime)), holder->m_time);
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+            import Test
+            DateTimeHolder {
+                dateTime: date
+                time: date
+                string: date
+            }
+        )", QUrl(u"fromDate.qml"_s));
+
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+
+        DateTimeHolder *holder = qobject_cast<DateTimeHolder *>(o.data());
+        QVERIFY(holder);
+
+        holder->m_date = date;
+        emit holder->dateChanged();
+
+        QCOMPARE((engine.coerceValue<QDate, QDateTime>(date)), holder->m_dateTime);
+
+        QEXPECT_FAIL("", "QML produces QDateTime::toString()", Continue);
+        QCOMPARE((engine.coerceValue<QDate, QString>(date)), holder->m_string);
+
+        QCOMPARE((engine.coerceValue<QDate, QTime>(date)), holder->m_time);
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData(R"(
+            import Test
+            DateTimeHolder {
+                dateTime: time
+                date: time
+                string: time
+            }
+        )", QUrl(u"fromTime.qml"_s));
+
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+
+        DateTimeHolder *holder = qobject_cast<DateTimeHolder *>(o.data());
+        QVERIFY(holder);
+
+        holder->m_time = time;
+        emit holder->timeChanged();
+
+        QCOMPARE((engine.coerceValue<QTime, QDateTime>(time)), holder->m_dateTime);
+
+        QEXPECT_FAIL("", "QML produces QDateTime::toString()", Continue);
+        QCOMPARE((engine.coerceValue<QTime, QString>(time)), holder->m_string);
+
+        QCOMPARE((engine.coerceValue<QTime, QDate>(time)), holder->m_date);
+    }
 }
 
 void tst_QJSEngine::callWithSpreadOnElement()

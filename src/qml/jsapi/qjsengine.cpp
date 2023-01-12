@@ -12,6 +12,7 @@
 #include "private/qv4globalobject_p.h"
 #include "private/qv4script_p.h"
 #include "private/qv4runtime_p.h"
+#include <private/qv4dateobject_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -951,6 +952,16 @@ QString QJSEngine::convertQObjectToString(QObject *object)
 {
     return QV4::QObjectWrapper::objectToString(
                 handle(), object ? object->metaObject() : nullptr, object);
+}
+
+QString QJSEngine::convertDateTimeToString(const QDateTime &dateTime)
+{
+    return QV4::DateObject::dateTimeToString(dateTime, handle());
+}
+
+QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
+{
+    return QV4::DateObject::dateTimeToDate(dateTime);
 }
 
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
