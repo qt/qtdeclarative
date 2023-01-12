@@ -3,8 +3,7 @@ QT_FOR_CONFIG += qml
 
 qtHaveModule(quick) {
     SUBDIRS += \
-        qmlextensionplugins \
-        xmlhttprequest
+        qmlextensionplugins
 }
 
 SUBDIRS += \
