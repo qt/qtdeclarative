@@ -14,6 +14,7 @@ Window {
     width: 640
     height: 480
     title: qsTr("HeaderView Test")
+    color: Qt.styleHints.appearance === Qt.Light ? palette.mid : palette.midlight
 
     TestTableModelWithHeader {
         id: tableModel
@@ -30,8 +31,8 @@ Window {
         model: tableModel
         rightMargin: 100
         bottomMargin: 100
-        columnSpacing: 4
-        rowSpacing: 4
+        columnSpacing: 1
+        rowSpacing: 1
         syncDirection: Qt.Vertical | Qt.Horizontal
         implicitWidth: parent.width + columnSpacing
         implicitHeight: parent.height + rowSpacing
@@ -39,7 +40,7 @@ Window {
         delegate: Rectangle {
             implicitWidth: 150
             implicitHeight: 50
-            color: "#e6ecf5"
+            color: tableView.palette.base
 
             CheckBox {
                 anchors.fill: parent
@@ -68,12 +69,17 @@ Window {
         clip: true
     }
 
-    ToolButton {
+    Rectangle {
         width: verticalHeader.width
         height: horizontalHeader.height
-        onClicked: {
-            horizontalHeader.contentX = 0
-            verticalHeader.contentY = 0
+        color: palette.base
+        ToolButton {
+            anchors.fill: parent
+            text: "<<"
+            onClicked: {
+                horizontalHeader.contentX = 0
+                verticalHeader.contentY = 0
+            }
         }
     }
 }
