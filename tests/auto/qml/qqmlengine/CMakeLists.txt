@@ -35,6 +35,10 @@ qt_add_qml_module(tst_qqmlengine_qml
     SOURCES
         "declarativelyregistered.h"
         "declarativelyregistered.cpp"
+    RESOURCE_PREFIX
+        "/"
+    OUTPUT_DIRECTORY
+        "OnlyDeclarative"
 )
 
 qt_autogen_tools_initial_setup(tst_qqmlengine_qmlplugin)
