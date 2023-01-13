@@ -65,6 +65,7 @@ private slots:
     void wheel();
     void parentDestroyed();
     void nested();
+    void nestedWheel();
     void modelessOnModalOnModeless();
     void grabber();
     void cursorShape();
@@ -1012,14 +1013,21 @@ void tst_QQuickPopup::wheel_data()
     QTest::newRow("ApplicationWindow:modeless") << "applicationwindow-wheel.qml" << false;
 }
 
-static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees)
+static bool sendWheelEvent(QQuickItem *item, const QPointF &localPos, int degrees)
 {
     QQuickWindow *window = item->window();
-    QWheelEvent wheelEvent(localPos, item->window()->mapToGlobal(localPos), QPoint(0, 0),
+    const QPoint scenePos = item->mapToScene(localPos).toPoint();
+    QWheelEvent wheelEvent(scenePos, window->mapToGlobal(scenePos), QPoint(0, 0),
                            QPoint(0, 8 * degrees), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase,
                            false);
     QSpontaneKeyEvent::setSpontaneous(&wheelEvent);
     return qGuiApp->notify(window, &wheelEvent);
+}
+
+static bool sendWheelEvent(QQuickItem *item, int degrees)
+{
+    const QPointF localPos = QPointF(item->width() / 2, item->height() / 2);
+    return sendWheelEvent(item, localPos, degrees);
 }
 
 void tst_QQuickPopup::wheel()
@@ -1052,7 +1060,7 @@ void tst_QQuickPopup::wheel()
         qreal oldContentValue = contentSlider->value();
         qreal oldPopupValue = popupSlider->value();
 
-        QVERIFY(sendWheelEvent(contentSlider, QPoint(contentSlider->width() / 2, contentSlider->height() / 2), 15));
+        QVERIFY(sendWheelEvent(contentSlider, 15));
 
         QVERIFY(!qFuzzyCompare(contentSlider->value(), oldContentValue)); // must have moved
         QVERIFY(qFuzzyCompare(popupSlider->value(), oldPopupValue)); // must not have moved
@@ -1068,7 +1076,7 @@ void tst_QQuickPopup::wheel()
         qreal oldContentValue = contentSlider->value();
         qreal oldPopupValue = popupSlider->value();
 
-        QVERIFY(sendWheelEvent(popupSlider, QPoint(popupSlider->width() / 2, popupSlider->height() / 2), 15));
+        QVERIFY(sendWheelEvent(popupSlider, 15));
 
         QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue)); // must not have moved
         QVERIFY(!qFuzzyCompare(popupSlider->value(), oldPopupValue)); // must have moved
@@ -1084,7 +1092,7 @@ void tst_QQuickPopup::wheel()
         qreal oldContentValue = contentSlider->value();
         qreal oldPopupValue = popupSlider->value();
 
-        QVERIFY(sendWheelEvent(popupSlider, QPoint(popupSlider->width() / 2, popupSlider->height() / 2), 15));
+        QVERIFY(sendWheelEvent(popupSlider, 15));
 
         QVERIFY(qFuzzyCompare(contentSlider->value(), oldContentValue)); // must not have moved
         QCOMPARE(qFuzzyCompare(popupSlider->value(), oldPopupValue), modal); // must not have moved unless modeless
@@ -1095,7 +1103,7 @@ void tst_QQuickPopup::wheel()
         qreal oldContentValue = contentSlider->value();
         qreal oldPopupValue = popupSlider->value();
 
-        QVERIFY(sendWheelEvent(QQuickOverlay::overlay(window), QPoint(0, 0), 15));
+        QVERIFY(sendWheelEvent(QQuickOverlay::overlay(window), QPointF(0, 0), 15));
 
         if (modal) {
             // the content below a modal overlay must not move
@@ -1143,6 +1151,36 @@ void tst_QQuickPopup::nested()
 
     QTRY_COMPARE(modelessPopup->isVisible(), false);
     QCOMPARE(modalPopup->isVisible(), true);
+}
+
+void tst_QQuickPopup::nestedWheel()
+{
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("nested-wheel.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
+    QVERIFY(modalPopup);
+
+    QQuickComboBox *comboBox = window->property("comboBox").value<QQuickComboBox *>();
+    QVERIFY(comboBox);
+
+    const QPoint comboBoxCenter = comboBox->mapToScene(
+        QPointF(comboBox->width() / 2, comboBox->height() / 2)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, comboBoxCenter);
+    QTRY_VERIFY(comboBox->popup()->isOpened());
+
+    QQuickItem *listView = comboBox->popup()->contentItem();
+    QVERIFY(listView);
+    QQuickItem *vbar = listView->findChild<QQuickItem *>("vbar");
+    QVERIFY(vbar);
+
+    const double startPosition = vbar->property("position").toDouble();
+    // wheel over the list view, verify that it scrolls
+    sendWheelEvent(listView, -30);
+    QTRY_COMPARE_GT(vbar->property("position").toDouble(), startPosition);
 }
 
 void tst_QQuickPopup::modelessOnModalOnModeless()

@@ -568,13 +568,17 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
 
         QQuickItem * const topItem = targetItems.first();
         const auto popups = d->stackingOrderPopups();
+        // Eat the event if receiver topItem is not a child of a popup before
+        // the first modal popup.
         for (const auto &popup : popups) {
-            if (!popup->overlayEvent(topItem, we))
-                continue;
             const QQuickItem *popupItem = popup->popupItem();
             if (!popupItem)
                 continue;
-            if (!popupItem->isAncestorOf(topItem))
+            // if we reach a popup that contains the item, deliver the event
+            if (popupItem->isAncestorOf(topItem))
+                break;
+            // if the popup doesn't contain the item but is modal, eat the event
+            if (popup->overlayEvent(topItem, we))
                 return true;
         }
         break;
