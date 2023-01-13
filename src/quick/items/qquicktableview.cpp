@@ -259,7 +259,11 @@
     to the \l selectionModel property. TableView will then use this model to manipulate
     the model's \l {ItemSelectionModel::currentIndex}{currentIndex}. You can
     disable keyboard navigation fully (in case you want to implement your own key
-    handlers) by setting \l keyNavigationEnabled to \c false.
+    handlers) by setting \l keyNavigationEnabled to \c false. Below is an
+    example that demonstrates how to use keyboard navigation together with
+    \c current and \c selected properties:
+
+    \snippet qml/tableview/keyboard-navigation.qml 0
 
     \section1 Copy and paste
 
