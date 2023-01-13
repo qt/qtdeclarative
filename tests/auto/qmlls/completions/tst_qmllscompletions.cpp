@@ -78,7 +78,7 @@ tst_QmllsCompletions::tst_QmllsCompletions()
     });
 
     m_qmllsPath =
-            QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath) + QLatin1String("/qmlls");
+            QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmlls");
 #ifdef Q_OS_WIN
     m_qmllsPath += QLatin1String(".exe");
 #endif
