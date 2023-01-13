@@ -214,16 +214,16 @@ int main(int argv, char *argc[])
             (parser.isSet(ignoreSettings) ? nullptr : &settings));
     if (parser.isSet(buildDirOption))
         qmlServer.codeModel()->setBuildPathsForRootUrl(QByteArray(), parser.values(buildDirOption));
-    StdinReader *r = new StdinReader;
-    QObject::connect(r, &StdinReader::receivedData, qmlServer.server(),
-                     &QLanguageServer::receiveData);
-    QObject::connect(r, &StdinReader::eof, &app, []() {
-        QTimer::singleShot(100, []() {
+    StdinReader r;
+    QObject::connect(&r, &StdinReader::receivedData,
+                     qmlServer.server(), &QLanguageServer::receiveData);
+    QObject::connect(&r, &StdinReader::eof, &app, [&app]() {
+        QTimer::singleShot(100, &app, []() {
             QCoreApplication::processEvents();
             QCoreApplication::exit();
         });
     });
-    QThreadPool::globalInstance()->start([r]() { r->run(); });
+    QThreadPool::globalInstance()->start([&r]() { r.run(); });
     app.exec();
     return qmlServer.returnValue();
 }
