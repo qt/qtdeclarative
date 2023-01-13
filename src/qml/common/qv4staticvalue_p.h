@@ -509,8 +509,13 @@ struct StaticValue
     // and IA64 are not officially supported, but we can expect more platforms with
     // similar "problems" in the future.
     enum PointerShift {
-#if defined(Q_OS_ANDROID) && defined(Q_PROCESSOR_ARM_64)
-        // Android on arm64 uses the top byte to store pointer tags.
+#if 0 && defined(Q_OS_ANDROID) && defined(Q_PROCESSOR_ARM_64)
+        // We used to assume that Android on arm64 uses the top byte to store pointer tags.
+        // However, at least currently, the pointer tags are only applied on new/malloc and
+        // delete/free, not on mmap() and munmap(). We manage the JS heap directly using
+        // mmap, so we don't have to preserve any tags.
+        //
+        // If this ever changes, here is how to preserve the top byte:
         // Move it to Upper3 and Lower5.
         Top1Shift   = 0,
         Upper3Shift = 12,
