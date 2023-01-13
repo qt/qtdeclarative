@@ -69,7 +69,13 @@ tst_QmllsCompletions::tst_QmllsCompletions()
     });
 
     connect(&m_server, &QProcess::readyReadStandardError, this,
-            [this]() { qWarning() << "LSPerr" << m_server.readAllStandardError(); });
+            [this]() {
+        QProcess::ProcessChannel tmp = m_server.readChannel();
+        m_server.setReadChannel(QProcess::StandardError);
+        while (m_server.canReadLine())
+            std::cerr << m_server.readLine().constData();
+        m_server.setReadChannel(tmp);
+    });
 
     m_qmllsPath =
             QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath) + QLatin1String("/qmlls");
