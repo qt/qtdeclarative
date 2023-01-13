@@ -74,20 +74,19 @@ QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, const QStringList &pl
 }
 
 QQmlJSLinter::Plugin::Plugin(QQmlJSLinter::Plugin &&plugin) noexcept
+    : m_name(std::move(plugin.m_name))
+    , m_description(std::move(plugin.m_description))
+    , m_version(std::move(plugin.m_version))
+    , m_author(std::move(plugin.m_author))
+    , m_categories(std::move(plugin.m_categories))
+    , m_instance(std::move(plugin.m_instance))
+    , m_loader(std::move(plugin.m_loader))
+    , m_isBuiltin(std::move(plugin.m_isBuiltin))
+    , m_isInternal(std::move(plugin.m_isInternal))
+    , m_isValid(std::move(plugin.m_isValid))
 {
-    m_name = plugin.m_name;
-    m_author = plugin.m_author;
-    m_description = plugin.m_description;
-    m_version = plugin.m_version;
-    m_instance = plugin.m_instance;
-    m_loader = plugin.m_loader;
-    m_isValid = plugin.m_isValid;
-    m_isBuiltin = plugin.m_isBuiltin;
-    m_isInternal = plugin.m_isInternal;
-    m_categories = plugin.m_categories;
-
     // Mark the old Plugin as invalid and make sure it doesn't delete the loader
-    plugin.m_loader = nullptr;
+    Q_ASSERT(!plugin.m_loader);
     plugin.m_instance = nullptr;
     plugin.m_isValid = false;
 }
@@ -95,7 +94,7 @@ QQmlJSLinter::Plugin::Plugin(QQmlJSLinter::Plugin &&plugin) noexcept
 #if QT_CONFIG(library)
 QQmlJSLinter::Plugin::Plugin(QString path)
 {
-    m_loader = new QPluginLoader(path);
+    m_loader = std::make_unique<QPluginLoader>(path);
     if (!parseMetaData(m_loader->metaData(), path))
         return;
 

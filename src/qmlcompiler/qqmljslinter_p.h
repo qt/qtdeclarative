@@ -97,7 +97,7 @@ public:
 
         QList<QQmlJSLogger::Category> m_categories;
         QQmlSA::LintPlugin *m_instance;
-        QPluginLoader *m_loader = nullptr;
+        std::unique_ptr<QPluginLoader> m_loader;
         bool m_isBuiltin;
         bool m_isInternal =
                 false; // Internal plugins are those developed and maintained inside the Qt project
