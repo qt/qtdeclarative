@@ -22,6 +22,7 @@ public:
         Vulkan,
         Metal,
         Null,
+        Direct3D12,
 
         OpenGLRhi = OpenGL,
         Direct3D11Rhi = Direct3D11,

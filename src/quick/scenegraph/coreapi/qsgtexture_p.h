@@ -58,6 +58,15 @@ public:
 
     void *nativeTexture() const override;
 };
+class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformD3D12 : public QNativeInterface::QSGD3D12Texture
+{
+public:
+    QSGTexturePlatformD3D12(QSGTexture *t) : m_texture(t) { }
+    QSGTexture *m_texture;
+
+    int nativeResourceState() const override;
+    void *nativeTexture() const override;
+};
 #endif
 
 #if defined(__OBJC__)
@@ -110,6 +119,7 @@ public:
 #endif
 #ifdef Q_OS_WIN
     QSGTexturePlatformD3D11 m_d3d11TextureAccessor;
+    QSGTexturePlatformD3D12 m_d3d12TextureAccessor;
 #endif
 #if defined(__OBJC__)
     QSGTexturePlatformMetal m_metalTextureAccessor;

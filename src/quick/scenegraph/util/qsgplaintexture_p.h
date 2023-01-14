@@ -53,7 +53,7 @@ public:
     void setTexture(QRhiTexture *texture);
     void setTextureFromNativeTexture(QRhi *rhi,
                                      quint64 nativeObjectHandle,
-                                     int nativeLayout,
+                                     int nativeLayoutOrState,
                                      uint nativeFormat,
                                      const QSize &size,
                                      QQuickWindow::CreateTextureOptions options,

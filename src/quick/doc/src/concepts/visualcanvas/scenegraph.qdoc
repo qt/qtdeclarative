@@ -1171,7 +1171,7 @@ with multiple windows.
 
   \row
    \li \c QSG_RHI_BACKEND
-   \li \c vulkan, \c metal, \c opengl, \c d3d11
+   \li \c vulkan, \c metal, \c opengl, \c d3d11, \c d3d12
    \li Requests the specific RHI backend. By default the targeted graphics API
    is chosen based on the platform, unless overridden by this variable or the
    equivalent C++ APIs. The defaults are currently Direct3D 11 for Windows,
@@ -1212,8 +1212,8 @@ with multiple windows.
   \endcode
 
   See QSGRendererInterface::GraphicsApi. The enum values \c OpenGL, \c Vulkan,
-  \c Metal, \c Direct3D11 are equivalent in effect to running with \c
-  QSG_RHI_BACKEND set to the equivalent string key.
+  \c Metal, \c Direct3D11, \c Direct3D12 are equivalent in effect to running
+  with \c QSG_RHI_BACKEND set to the equivalent string key.
 
   All QRhi backends will choose the system default GPU adapter or physical
   device, unless overridden by \c{QSG_RHI_PREFER_SOFTWARE_RENDERER} or a

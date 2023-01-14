@@ -48,7 +48,7 @@ public:
     int sampleCount = 1;
     struct NativeTexture {
         quint64 object;
-        int layout;
+        int layoutOrState;
         uint rhiFormat;
         uint rhiFlags;
     };

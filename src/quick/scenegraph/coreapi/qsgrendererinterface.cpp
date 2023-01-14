@@ -42,6 +42,7 @@ QT_BEGIN_NAMESPACE
     \value OpenVG OpenVG via EGL
     \value OpenGL OpenGL ES 2.0 or higher via a graphics abstraction layer. This value was introduced in Qt 5.14.
     \value Direct3D11 Direct3D 11 via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value Direct3D12 Direct3D 12 via a graphics abstraction layer. This value was introduced in Qt 6.6.
     \value Vulkan Vulkan 1.0 via a graphics abstraction layer. This value was introduced in Qt 5.14.
     \value Metal Metal via a graphics abstraction layer. This value was introduced in Qt 5.14.
     \value Null Null (no output) via a graphics abstraction layer. This value was introduced in Qt 5.14.
@@ -234,15 +235,12 @@ void *QSGRendererInterface::getResource(QQuickWindow *window, const char *resour
 bool QSGRendererInterface::isApiRhiBased(GraphicsApi api)
 {
     switch (api) {
-    case OpenGLRhi:
-        Q_FALLTHROUGH();
-    case Direct3D11Rhi:
-        Q_FALLTHROUGH();
-    case VulkanRhi:
-        Q_FALLTHROUGH();
-    case MetalRhi:
-        Q_FALLTHROUGH();
-    case NullRhi:
+    case OpenGL:
+    case Direct3D11:
+    case Direct3D12:
+    case Vulkan:
+    case Metal:
+    case Null:
         return true;
     default:
         return false;

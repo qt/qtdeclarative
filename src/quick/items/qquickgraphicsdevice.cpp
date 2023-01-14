@@ -93,11 +93,14 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromOpenGLContext(QOpenGLContext *con
 /*!
     \return a new QQuickGraphicsDevice describing a DXGI adapter and D3D feature level.
 
-    This factory function is suitable for Direct3D 11, particularly in
+    This factory function is suitable for Direct3D 11 and 12, particularly in
     combination with OpenXR. \a adapterLuidLow and \a adapterLuidHigh together
     specify a LUID, while a featureLevel specifies a \c{D3D_FEATURE_LEVEL_}
     value. \a featureLevel can be set to 0 if it is not intended to be
     specified, in which case the scene graph's defaults will be used.
+
+    \note With Direct 3D 12 \a featureLevel specifies the \c minimum feature
+    level passed on to D3D12CreateDevice().
  */
 #if defined(Q_OS_WIN) || defined(Q_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromAdapter(quint32 adapterLuidLow,
@@ -119,6 +122,10 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromAdapter(quint32 adapterLuidLow,
     This factory function is suitable for Direct3D 11. \a device is expected to
     be a \c{ID3D11Device*}, \a context is expected to be a
     \c{ID3D11DeviceContext*}.
+
+    It also supports Direct 3D 12, if that is the 3D API used at run time. With
+    D3D12 \a context is unused and can be set to null. \a device is expected to
+    be a \c{ID3D12Device*}.
 
     \note the resulting QQuickGraphicsDevice does not own any native resources,
     it merely contains references. It is the caller's responsibility to ensure

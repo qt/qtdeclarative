@@ -146,17 +146,17 @@ public:
     Q_DECLARE_FLAGS(TextureFromNativeTextureFlags, TextureFromNativeTextureFlag)
 
     QSGTexture *createTextureFromNativeTexture(quint64 nativeObjectHandle,
-                                               int nativeLayout,
+                                               int nativeLayoutOrState,
                                                uint nativeFormat,
                                                const QSize &size,
                                                QQuickWindow::CreateTextureOptions options,
                                                TextureFromNativeTextureFlags flags = {}) const;
     QSGTexture *createTextureFromNativeTexture(quint64 nativeObjectHandle,
-                                               int nativeLayout,
+                                               int nativeLayoutOrState,
                                                const QSize &size,
                                                QQuickWindow::CreateTextureOptions options,
                                                TextureFromNativeTextureFlags flags = {}) const {
-        return createTextureFromNativeTexture(nativeObjectHandle, nativeLayout, 0, size, options, flags);
+        return createTextureFromNativeTexture(nativeObjectHandle, nativeLayoutOrState, 0, size, options, flags);
     }
 
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;

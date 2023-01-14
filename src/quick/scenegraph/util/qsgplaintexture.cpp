@@ -67,7 +67,8 @@ void QSGPlainTexture::setTexture(QRhiTexture *texture) // RHI only
 
 void QSGPlainTexture::setTextureFromNativeTexture(QRhi *rhi,
                                                   quint64 nativeObjectHandle,
-                                                  int nativeLayout, uint nativeFormat,
+                                                  int nativeLayoutOrState,
+                                                  uint nativeFormat,
                                                   const QSize &size,
                                                   QQuickWindow::CreateTextureOptions options,
                                                   QQuickWindowPrivate::TextureFromNativeTextureFlags flags)
@@ -90,7 +91,7 @@ void QSGPlainTexture::setTextureFromNativeTexture(QRhi *rhi,
     QRhiTexture *t = rhi->newTexture(format, size, 1, texFlags);
 
     // ownership of the native object is never taken
-    t->createFrom({nativeObjectHandle, nativeLayout});
+    t->createFrom({nativeObjectHandle, nativeLayoutOrState});
 
     setTexture(t);
 }

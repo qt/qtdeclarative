@@ -50,19 +50,22 @@ void QSGRhiSupport::applySettings()
     if (m_requested.valid) {
         // explicit rhi backend request from C++ (e.g. via QQuickWindow)
         switch (m_requested.api) {
-        case QSGRendererInterface::OpenGLRhi:
+        case QSGRendererInterface::OpenGL:
             m_rhiBackend = QRhi::OpenGLES2;
             break;
-        case QSGRendererInterface::Direct3D11Rhi:
+        case QSGRendererInterface::Direct3D11:
             m_rhiBackend = QRhi::D3D11;
             break;
-        case QSGRendererInterface::VulkanRhi:
+        case QSGRendererInterface::Direct3D12:
+            m_rhiBackend = QRhi::D3D12;
+            break;
+        case QSGRendererInterface::Vulkan:
             m_rhiBackend = QRhi::Vulkan;
             break;
-        case QSGRendererInterface::MetalRhi:
+        case QSGRendererInterface::Metal:
             m_rhiBackend = QRhi::Metal;
             break;
-        case QSGRendererInterface::NullRhi:
+        case QSGRendererInterface::Null:
             m_rhiBackend = QRhi::Null;
             break;
         default:
@@ -79,6 +82,8 @@ void QSGRhiSupport::applySettings()
             m_rhiBackend = QRhi::OpenGLES2;
         } else if (rhiBackend == QByteArrayLiteral("d3d11") || rhiBackend == QByteArrayLiteral("d3d")) {
             m_rhiBackend = QRhi::D3D11;
+        } else if (rhiBackend == QByteArrayLiteral("d3d12")) {
+            m_rhiBackend = QRhi::D3D12;
         } else if (rhiBackend == QByteArrayLiteral("vulkan")) {
             m_rhiBackend = QRhi::Vulkan;
         } else if (rhiBackend == QByteArrayLiteral("metal")) {
@@ -508,7 +513,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromVulkan(uint format, QRh
 #endif
 
 #ifdef Q_OS_WIN
-QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromD3D11(uint format, QRhiTexture::Flags *flags)
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromDXGI(uint format, QRhiTexture::Flags *flags)
 {
     auto rhiFormat = QRhiTexture::UnknownFormat;
     bool sRGB = false;
@@ -655,15 +660,17 @@ QSGRendererInterface::GraphicsApi QSGRhiSupport::graphicsApi() const
 {
     switch (m_rhiBackend) {
     case QRhi::Null:
-        return QSGRendererInterface::NullRhi;
+        return QSGRendererInterface::Null;
     case QRhi::Vulkan:
-        return QSGRendererInterface::VulkanRhi;
+        return QSGRendererInterface::Vulkan;
     case QRhi::OpenGLES2:
-        return QSGRendererInterface::OpenGLRhi;
+        return QSGRendererInterface::OpenGL;
     case QRhi::D3D11:
-        return QSGRendererInterface::Direct3D11Rhi;
+        return QSGRendererInterface::Direct3D11;
+    case QRhi::D3D12:
+        return QSGRendererInterface::Direct3D12;
     case QRhi::Metal:
-        return QSGRendererInterface::MetalRhi;
+        return QSGRendererInterface::Metal;
     default:
         return QSGRendererInterface::Unknown;
     }
@@ -677,6 +684,7 @@ QSurface::SurfaceType QSGRhiSupport::windowSurfaceType() const
     case QRhi::OpenGLES2:
         return QSurface::OpenGLSurface;
     case QRhi::D3D11:
+    case QRhi::D3D12:
         return QSurface::Direct3DSurface;
     case QRhi::Metal:
         return QSurface::MetalSurface;
@@ -742,6 +750,19 @@ static const void *qsgrhi_d3d11_rifResource(QSGRendererInterface::Resource res, 
         return d3dnat->dev;
     case QSGRendererInterface::DeviceContextResource:
         return d3dnat->context;
+    default:
+        return nullptr;
+    }
+}
+
+static const void *qsgrhi_d3d12_rifResource(QSGRendererInterface::Resource res, const QRhiNativeHandles *nat)
+{
+    const QRhiD3D12NativeHandles *d3dnat = static_cast<const QRhiD3D12NativeHandles *>(nat);
+    switch (res) {
+    case QSGRendererInterface::DeviceResource:
+        return d3dnat->dev;
+    case QSGRendererInterface::CommandQueueResource:
+        return d3dnat->commandQueue;
     default:
         return nullptr;
     }
@@ -822,6 +843,8 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
 #ifdef Q_OS_WIN
     case QRhi::D3D11:
         return qsgrhi_d3d11_rifResource(res, nat);
+    case QRhi::D3D12:
+        return qsgrhi_d3d12_rifResource(res, nat);
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     case QRhi::Metal:
@@ -1197,6 +1220,31 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
                 rhi = QRhi::create(backend, &rhiParams, flags);
             }
         }
+    } else if (backend == QRhi::D3D12) {
+        QRhiD3D12InitParams rhiParams;
+        rhiParams.enableDebugLayer = debugLayer;
+        if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndContext) {
+            QRhiD3D12NativeHandles importDev;
+            importDev.dev = customDevD->u.deviceAndContext.device;
+            qCDebug(QSG_LOG_INFO, "Using existing native D3D12 device %p", importDev.dev);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else if (customDevD->type == QQuickGraphicsDevicePrivate::Type::Adapter) {
+            QRhiD3D12NativeHandles importDev;
+            importDev.adapterLuidLow = customDevD->u.adapter.luidLow;
+            importDev.adapterLuidHigh = customDevD->u.adapter.luidHigh;
+            importDev.minimumFeatureLevel = customDevD->u.adapter.featureLevel;
+            qCDebug(QSG_LOG_INFO, "Using D3D12 adapter LUID %u, %d and minimum feature level %d",
+                    importDev.adapterLuidLow, importDev.adapterLuidHigh, importDev.minimumFeatureLevel);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else {
+            rhi = QRhi::create(backend, &rhiParams, flags);
+            if (!rhi && !flags.testFlag(QRhi::PreferSoftwareRenderer)) {
+                qCDebug(QSG_LOG_INFO, "Failed to create a D3D device with default settings; "
+                                      "attempting to get a software rasterizer backed device instead");
+                flags |= QRhi::PreferSoftwareRenderer;
+                rhi = QRhi::create(backend, &rhiParams, flags);
+            }
+        }
     }
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
@@ -1508,7 +1556,8 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormat(uint nativeFormat, QRhiTex
 #endif
 #ifdef Q_OS_WIN
     case QRhi::D3D11:
-        return toRhiTextureFormatFromD3D11(nativeFormat, flags);
+    case QRhi::D3D12:
+        return toRhiTextureFormatFromDXGI(nativeFormat, flags);
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     case QRhi::Metal:

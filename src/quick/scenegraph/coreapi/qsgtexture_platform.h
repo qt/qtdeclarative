@@ -49,6 +49,17 @@ struct Q_QUICK_EXPORT QSGD3D11Texture
                                   const QSize &size,
                                   QQuickWindow::CreateTextureOptions options = {});
 };
+struct Q_QUICK_EXPORT QSGD3D12Texture
+{
+    QT_DECLARE_NATIVE_INTERFACE(QSGD3D12Texture, 1, QSGTexture)
+    virtual void *nativeTexture() const = 0;
+    virtual int nativeResourceState() const = 0;
+    static QSGTexture *fromNative(void *texture,
+                                  int resourceState,
+                                  QQuickWindow *window,
+                                  const QSize &size,
+                                  QQuickWindow::CreateTextureOptions options = {});
+};
 #endif
 
 #if defined(__OBJC__) || defined(Q_QDOC)

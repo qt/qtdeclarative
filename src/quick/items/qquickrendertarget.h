@@ -46,6 +46,7 @@ public:
 #if defined(Q_OS_WIN) || defined(Q_QDOC)
     static QQuickRenderTarget fromD3D11Texture(void *texture, uint format, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount = 1);
+    static QQuickRenderTarget fromD3D12Texture(void *texture, int resourceState, uint format, const QSize &pixelSize, int sampleCount = 1);
 #endif
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
