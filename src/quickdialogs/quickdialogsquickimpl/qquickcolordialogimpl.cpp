@@ -114,7 +114,9 @@ void QQuickColorDialogImplPrivate::eyeDropperEnter()
                 [this](QPoint pos) { eyeDropperPointerMoved(pos); }));
 
     if (m_eyeDropperWindow->setMouseGrabEnabled(true)) {
+#if QT_CONFIG(cursor)
         QGuiApplication::setOverrideCursor(Qt::CrossCursor);
+#endif
         m_eyeDropperWindow->installEventFilter(eyeDropperEventFilter.get());
         m_eyeDropperMode = true;
     }
@@ -140,7 +142,9 @@ void QQuickColorDialogImplPrivate::eyeDropperLeave(
 
     m_eyeDropperWindow->removeEventFilter(eyeDropperEventFilter.get());
     m_eyeDropperWindow->setMouseGrabEnabled(false);
+#if QT_CONFIG(cursor)
     QGuiApplication::restoreOverrideCursor();
+#endif
 
     m_eyeDropperMode = false;
     m_eyeDropperWindow.clear();

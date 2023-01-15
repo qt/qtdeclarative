@@ -315,7 +315,9 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
     QQuickHoverHandler *hoverHandler = new QQuickHoverHandler();
     hoverHandler->setTarget(nullptr);
     hoverHandler->setParentItem(handleItem);
+#if QT_CONFIG(cursor)
     hoverHandler->setCursorShape(Qt::SizeFDiagCursor);
+#endif
     hoverHandler->setBlocking(true);
 
     // Add a dummy TapHandler that blocks the user from being
@@ -339,12 +341,16 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
             m_draggedHandle = handleItem;
             updateHandles();
             updateDraggingState(true);
+#if QT_CONFIG(cursor)
             QGuiApplication::setOverrideCursor(Qt::SizeFDiagCursor);
+#endif
         } else {
             m_scrollTimer.stop();
             m_selectable->normalizeSelection();
             updateDraggingState(false);
+#if QT_CONFIG(cursor)
             QGuiApplication::restoreOverrideCursor();
+#endif
         }
     });
 
