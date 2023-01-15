@@ -79,7 +79,11 @@ bool QWidgetPlatformSystemTrayIcon::supportsMessages() const
 
 QPlatformMenu *QWidgetPlatformSystemTrayIcon::createMenu() const
 {
+#if QT_CONFIG(menu)
     return new QWidgetPlatformMenu;
+#else
+    return nullptr;
+#endif
 }
 
 QT_END_NAMESPACE
