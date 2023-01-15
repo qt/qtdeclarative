@@ -1239,6 +1239,7 @@ QQuickSplitViewAttached *QQuickSplitView::qmlAttachedProperties(QObject *object)
 */
 QVariant QQuickSplitView::saveState()
 {
+#if QT_CONFIG(cborstreamwriter)
     Q_D(QQuickSplitView);
     qCDebug(qlcQQuickSplitViewState) << "saving state for split items in" << this;
 
@@ -1281,6 +1282,9 @@ QVariant QQuickSplitView::saveState()
     const QByteArray byteArray = cborArray.toCborValue().toCbor();
     qCDebug(qlcQQuickSplitViewState) << "the resulting byte array is:" << byteArray;
     return QVariant(byteArray);
+#else
+    return QVariant();
+#endif
 }
 
 /*!
