@@ -305,7 +305,9 @@ public:
     bool alternatingRows = true;
     bool resizableColumns = false;
     bool resizableRows = false;
+#if QT_CONFIG(cursor)
     bool m_cursorSet = false;
+#endif
 
     // isTransposed is currently only used by HeaderView.
     // Consider making it public.
@@ -479,7 +481,9 @@ public:
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
 
+#if QT_CONFIG(cursor)
     void updateCursor();
+#endif
     void updateEditItem();
 
     QTypeRevision resolveImportVersion();

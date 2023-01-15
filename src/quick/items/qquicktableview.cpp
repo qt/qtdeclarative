@@ -5075,6 +5075,7 @@ bool QQuickTableViewPrivate::editFromKeyEvent(QKeyEvent *e)
     return true;
 }
 
+#if QT_CONFIG(cursor)
 void QQuickTableViewPrivate::updateCursor()
 {
     int row = resizableRows ? hoverHandler->m_row : -1;
@@ -5109,6 +5110,7 @@ void QQuickTableViewPrivate::updateCursor()
         m_cursorSet = false;
     }
 }
+#endif
 
 void QQuickTableViewPrivate::updateEditItem()
 {
@@ -6323,9 +6325,11 @@ QQuickTableViewHoverHandler::QQuickTableViewHoverHandler(QQuickTableView *view)
             return;
         m_row = -1;
         m_column = -1;
+#if QT_CONFIG(cursor)
         auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
         auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
         tableViewPrivate->updateCursor();
+#endif
     });
 }
 
@@ -6334,14 +6338,18 @@ void QQuickTableViewHoverHandler::handleEventPoint(QPointerEvent *event, QEventP
     QQuickHoverHandler::handleEventPoint(event, point);
 
     auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+#if QT_CONFIG(cursor)
     auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+#endif
 
     const QPoint cell = tableView->cellAtPosition(point.position(), true);
     const auto item = tableView->itemAtCell(cell);
     if (!item) {
         m_row = -1;
         m_column = -1;
+#if QT_CONFIG(cursor)
         tableViewPrivate->updateCursor();
+#endif
         return;
     }
 
@@ -6350,7 +6358,9 @@ void QQuickTableViewHoverHandler::handleEventPoint(QPointerEvent *event, QEventP
     const bool hoveringColumn = (itemPos.x() < margin() || itemPos.x() > item->width() - margin());
     m_row = hoveringRow ? itemPos.y() < margin() ? cell.y() - 1 : cell.y() : -1;
     m_column = hoveringColumn ? itemPos.x() < margin() ? cell.x() - 1 : cell.x() : -1;
+#if QT_CONFIG(cursor)
     tableViewPrivate->updateCursor();
+#endif
 }
 
 // ----------------------------------------------
@@ -6451,7 +6461,9 @@ void QQuickTableViewResizeHandler::updateState(QEventPoint &point)
 void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint &point)
 {
     auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+#if QT_CONFIG(cursor)
     auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+#endif
 
     switch (m_state) {
     case Listening:
@@ -6469,7 +6481,9 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
         m_columnStartWidth = tableView->columnWidth(m_column);
         m_rowStartY = point.position().y();
         m_rowStartHeight = tableView->rowHeight(m_row);
+#if QT_CONFIG(cursor)
         tableViewPrivate->updateCursor();
+#endif
         // fallthrough
     case Dragging: {
         const qreal distX = point.position().x() - m_columnStartX;
@@ -6481,7 +6495,9 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
         break; }
     case DraggingFinished: {
         tableView->setFiltersChildMouseEvents(true);
+#if QT_CONFIG(cursor)
         tableViewPrivate->updateCursor();
+#endif
         break; }
     }
 }
