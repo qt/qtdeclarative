@@ -8,7 +8,9 @@
 #include "qquickwindow_p.h"
 #include "qquickevents_p_p.h"
 #include "qquickmousearea_p.h"
+#if QT_CONFIG(draganddrop)
 #include "qquickdrag_p.h"
+#endif
 
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -2597,8 +2599,10 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
     // Special case for MouseArea, try to guess what it does with the event
     if (auto *mouseArea = qmlobject_cast<QQuickMouseArea *>(receiver)) {
         bool preventStealing = mouseArea->preventStealing();
+#if QT_CONFIG(draganddrop)
         if (mouseArea->drag() && mouseArea->drag()->target())
             preventStealing = true;
+#endif
         if (!preventStealing && receiverKeepsGrab) {
             receiverRelinquishGrab = !receiverDisabled
                     || (QQuickDeliveryAgentPrivate::isMouseEvent(event)
