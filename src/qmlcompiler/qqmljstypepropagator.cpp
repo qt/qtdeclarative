@@ -393,6 +393,18 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
         }
     }
 
+    if (!suggestion.has_value() && !m_function->addressableScopes.componentsAreBound()
+            && m_function->addressableScopes.existsAnywhereInDocument(name)) {
+        FixSuggestion::Fix bindComponents;
+        const QLatin1String replacement = "pragma ComponentBehavior: Bound"_L1;
+        bindComponents.replacementString = replacement + '\n'_L1;
+        bindComponents.message = "Set \"%1\" in order to use IDs "
+                                 "from outer components in nested components."_L1.arg(replacement);
+        bindComponents.cutLocation = QQmlJS::SourceLocation(0, 0, 1, 1);
+        bindComponents.isHint = false;
+        suggestion = FixSuggestion {{ bindComponents }};
+    }
+
     if (!suggestion.has_value()) {
         if (auto didYouMean =
                     QQmlJSUtils::didYouMean(name,

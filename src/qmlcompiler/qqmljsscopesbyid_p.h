@@ -25,6 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQmlJSScopesById
 {
 public:
+    bool componentsAreBound() const { return m_componentsAreBound; }
     void setComponentsAreBound(bool bound) { m_componentsAreBound = bound; }
 
     void setSignaturesAreEnforced(bool enforced) { m_signaturesAreEnforced = enforced; }
