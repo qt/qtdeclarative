@@ -304,7 +304,7 @@ public:
     QQmlJSScope::ConstPtr parentScope() const
     {
 QT_WARNING_PUSH
-#if defined(Q_CC_GNU_ONLY) && Q_CC_GNU < 1400
+#if defined(Q_CC_GNU_ONLY) && Q_CC_GNU < 1400 && Q_CC_GNU >= 1200
     QT_WARNING_DISABLE_GCC("-Wuse-after-free")
 #endif
         return QQmlJSScope::WeakConstPtr(m_parentScope).toStrongRef();
