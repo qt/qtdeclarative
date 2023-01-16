@@ -574,14 +574,10 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug
         debugger/qqmldebugservice.cpp debugger/qqmldebugservice_p.h
         debugger/qqmldebugservicefactory.cpp debugger/qqmldebugservicefactory_p.h
         debugger/qqmldebugserviceinterfaces.cpp
+        debugger/qqmldebugtranslationprotocol_p.h
         debugger/qqmlprofiler.cpp
         debugger/qqmlprofilerdefinitions_p.h
         jsruntime/qv4profiling.cpp
-)
-
-qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug AND QT_FEATURE_translation
-    SOURCES
-        debugger/qqmldebugtranslationprotocol_p.h
 )
 
 qt_internal_extend_target(Qml CONDITION UNIX
