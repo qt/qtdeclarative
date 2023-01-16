@@ -1264,6 +1264,12 @@ void TestQmllint::compilerWarnings_data()
             << Result { { { QStringLiteral(
                        "Functions without type annotations won't be compiled") } } }
             << true;
+    QTest::newRow("generalizedGroupHint")
+            << QStringLiteral("generalizedGroupHint.qml")
+            << Result { { { QStringLiteral(
+                       "Cannot resolve property type  for binding on myColor. "
+                       "You may want use ID-based grouped properties here.") } } }
+            << true;
 }
 
 void TestQmllint::compilerWarnings()
