@@ -42,8 +42,10 @@
 
 #include "private/qwidget_p.h"
 
+#if QT_CONFIG(graphicsview)
 #include <QtWidgets/qgraphicsscene.h>
 #include <QtWidgets/qgraphicsview.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
