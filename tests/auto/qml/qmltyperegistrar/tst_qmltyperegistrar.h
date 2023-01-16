@@ -536,6 +536,7 @@ private slots:
     void derivedFromForeignPrivate();
     void methodReturnType();
     void hasIsConstantInParameters();
+    void uncreatable();
 
 #ifdef QT_QUICK_LIB
     void foreignRevisionedProperty();

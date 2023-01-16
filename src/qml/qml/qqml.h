@@ -127,6 +127,7 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor)
 template<typename T>
 void qmlRegisterAnonymousTypesAndRevisions(const char *uri, int versionMajor)
 {
+    // Anonymous types are not creatable, no need to warn about missing acceptable constructors.
     QQmlPrivate::qmlRegisterTypeAndRevisions<T, void>(
             uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(), nullptr,
             nullptr, true);
@@ -756,14 +757,56 @@ inline int qmlRegisterAnonymousSequentialContainer(const char *uri, int versionM
     return QQmlPrivate::qmlregister(QQmlPrivate::SequentialContainerRegistration, &type);
 }
 
-template<class T, class Resolved, class Extended, bool Singleton, bool Interface, bool Sequence>
+template<class T, class Resolved, class Extended, bool Singleton, bool Interface, bool Sequence, bool Uncreatable>
 struct QmlTypeAndRevisionsRegistration;
 
 template<class T, class Resolved, class Extended>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false, false> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false, false, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *extension)
     {
+#if QT_DEPRECATED_SINCE(6, 4)
+        // ### Qt7: Remove the warnings, and leave only the static asserts below.
+        if constexpr (!QQmlPrivate::QmlMetaType<Resolved>::hasAcceptableCtors()) {
+            QQmlPrivate::qmlRegistrationWarning(QQmlPrivate::UnconstructibleType,
+                                                QMetaType::fromType<Resolved>());
+        }
+
+        if constexpr (!std::is_base_of_v<QObject, Resolved>
+                && QQmlTypeInfo<T>::hasAttachedProperties) {
+            QQmlPrivate::qmlRegistrationWarning(QQmlPrivate::NonQObjectWithAtached,
+                                                QMetaType::fromType<Resolved>());
+        }
+#else
+        static_assert(QQmlPrivate::QmlMetaType<Resolved>::hasAcceptableCtors(),
+                      "This type is neither a QObject, nor default- and copy-constructible, nor"
+                      "uncreatable.\n"
+                      "You should not use it as a QML type.");
+        static_assert(std::is_base_of_v<QObject, Resolved>
+                || !QQmlTypeInfo<Resolved>::hasAttachedProperties);
+#endif
+        QQmlPrivate::qmlRegisterTypeAndRevisions<Resolved, Extended>(
+                    uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
+                    qmlTypeIds, extension);
+    }
+};
+
+template<class T, class Resolved, class Extended>
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false, false, true> {
+    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
+                                         const QMetaObject *extension)
+    {
+#if QT_DEPRECATED_SINCE(6, 4)
+        // ### Qt7: Remove the warning, and leave only the static assert below.
+        if constexpr (!std::is_base_of_v<QObject, Resolved>
+                && QQmlTypeInfo<Resolved>::hasAttachedProperties) {
+            QQmlPrivate::qmlRegistrationWarning(QQmlPrivate::NonQObjectWithAtached,
+                                                QMetaType::fromType<Resolved>());
+        }
+#else
+        static_assert(std::is_base_of_v<QObject, Resolved>
+                || !QQmlTypeInfo<Resolved>::hasAttachedProperties);
+#endif
         QQmlPrivate::qmlRegisterTypeAndRevisions<Resolved, Extended>(
                     uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
                     qmlTypeIds, extension);
@@ -771,10 +814,11 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false, fals
 };
 
 template<class T, class Resolved>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, false, true> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, false, true, true> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *)
     {
+        // Sequences have to be anonymous for now, which implies uncreatable.
         QQmlPrivate::qmlRegisterSequenceAndRevisions<Resolved>(
                     uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
                     qmlTypeIds);
@@ -782,10 +826,35 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, false, true> {
 };
 
 template<class T, class Resolved, class Extended>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false, false> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false, false, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *extension)
     {
+#if QT_DEPRECATED_SINCE(6, 4)
+        // ### Qt7: Remove the warning, and leave only the static assert below.
+        if constexpr (!QQmlPrivate::QmlMetaType<Resolved>::hasAcceptableSingletonCtors()) {
+            QQmlPrivate::qmlRegistrationWarning(QQmlPrivate::UnconstructibleSingleton,
+                                                QMetaType::fromType<Resolved>());
+        }
+#else
+        static_assert(QQmlPrivate::QmlMetaType<Resolved>::hasAcceptableSingletonCtors(),
+                      "A singleton needs either a default constructor or, when adding a default "
+                      "constructor is infeasible, a public static "
+                      "create(QQmlEngine *, QJSEngine *) method");
+#endif
+
+        QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved, Extended, T>(
+                    uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
+                    qmlTypeIds, extension);
+    }
+};
+
+template<class T, class Resolved, class Extended>
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false, false, true> {
+    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
+                                         const QMetaObject *extension)
+    {
+        // An uncreatable singleton makes little sense? OK, you can still use the enums.
         QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved, Extended, T>(
                     uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
                     qmlTypeIds, extension);
@@ -793,7 +862,7 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false, false
 };
 
 template<class T, class Resolved>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true, false> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true, false, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *)
     {
@@ -811,7 +880,8 @@ void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QList<int> 
             typename QQmlPrivate::QmlExtended<T>::Type,
             QQmlPrivate::QmlSingleton<T>::Value,
             QQmlPrivate::QmlInterface<T>::Value,
-            QQmlPrivate::QmlSequence<T>::Value>
+            QQmlPrivate::QmlSequence<T>::Value,
+            QQmlPrivate::QmlUncreatable<T>::Value>
             ::registerTypeAndRevisions(uri, versionMajor, qmlTypeIds,
                                        QQmlPrivate::QmlExtendedNamespace<T>::metaObject()), ...);
 }

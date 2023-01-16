@@ -141,6 +141,31 @@ QObject *QQmlPrivate::qmlExtendedObject(QObject *object, int index)
     return static_cast<QObject *>(result);
 }
 
+void QQmlPrivate::qmlRegistrationWarning(
+        QQmlPrivate::QmlRegistrationWarning warning, QMetaType metaType)
+{
+    switch (warning) {
+    case UnconstructibleType:
+        qWarning()
+                << metaType.name()
+                << "is neither a QObject, nor default- and copy-constructible, nor uncreatable."
+                << "You should not use it as a QML type.";
+        break;
+    case UnconstructibleSingleton:
+        qWarning()
+                << "Singleton" << metaType.name()
+                << "needs either a default constructor or, when adding a default"
+                << "constructor is infeasible, a public static"
+                << "create(QQmlEngine *, QJSEngine *) method.";
+        break;
+    case NonQObjectWithAtached:
+        qWarning()
+                << metaType.name()
+                << "is not a QObject, but has attached properties. This won't work.";
+        break;
+    }
+}
+
 int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
                                      const char *uri, int versionMajor,
                                      int versionMinor, const char *qmlName,

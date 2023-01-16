@@ -880,6 +880,21 @@ namespace QQmlPrivate
     };
 
     template<class T, class = std::void_t<>>
+    struct QmlUncreatable
+    {
+        static constexpr bool Value = false;
+    };
+
+    template<class T>
+    struct QmlUncreatable<T, std::void_t<typename T::QmlIsUncreatable>>
+    {
+        static constexpr bool Value =
+                QmlTypeHasMarker<T, decltype(&T::qt_qmlMarker_uncreatable)>::value
+                && bool(T::QmlIsUncreatable::yes);
+    };
+
+
+    template<class T, class = std::void_t<>>
     struct QmlSingleton
     {
         static constexpr bool Value = false;
@@ -931,13 +946,47 @@ namespace QQmlPrivate
         static const QMetaObject *staticMetaObject() { return &T::staticMetaObject; }
     };
 
+    /*! \internal
+       For singletons: check that there is a static create method. It is needed by the engine to
+       initialize a singleton object in case T has no default constructor.
+
+       Using a default constructor is preferred over the static create method.
+    */
+    template<class T, class = std::void_t<>>
+    struct HasStaticCreate
+    {
+        static constexpr bool Value = false;
+    };
+
+    // std::is_member_pointer<&X::Y> returns false when Y is a static member, and
+    // sfinae takes care of the existence Y being a member of X
+    template<class T>
+    struct HasStaticCreate<
+            T,
+            typename std::enable_if<!std::is_member_pointer<decltype(&T::create)>::value
+                                    && std::is_invocable_r_v<T *, decltype(&T::create),
+                                                             QQmlEngine *, QJSEngine *>>::type>
+    {
+        static constexpr bool Value = true;
+    };
+
     template<class T>
     struct QmlMetaType
     {
+        static constexpr bool hasAcceptableSingletonCtors()
+        {
+            return std::is_default_constructible_v<T> || HasStaticCreate<T>::Value;
+        }
+
+
         static constexpr bool hasAcceptableCtors()
         {
-            return std::is_base_of_v<QObject, T>
-                    || (std::is_default_constructible_v<T> && std::is_copy_constructible_v<T>);
+            if constexpr (!std::is_default_constructible_v<T>)
+                return false;
+            else if constexpr (std::is_base_of_v<QObject, T>)
+                return true;
+            else
+                return std::is_copy_constructible_v<T>;
         }
 
         static QMetaType self()
@@ -999,22 +1048,6 @@ namespace QQmlPrivate
                                      QVector<int> *qmlTypeIds, const QMetaObject *extension,
                                      bool forceAnonymous = false)
     {
-#if QT_DEPRECATED_SINCE(6, 4)
-        // ### Qt7: Remove the warnings, and leave only the static asserts below.
-        if (!QmlMetaType<T>::hasAcceptableCtors()) {
-            qWarning() << QMetaType::fromType<T>().name()
-                       << "is neither a QObject, nor default- and copy-constructible."
-                       << "You should not use it as a QML type.";
-        }
-        if (!std::is_base_of_v<QObject, T> && QQmlTypeInfo<T>::hasAttachedProperties) {
-            qWarning() << QMetaType::fromType<T>().name()
-                       << "is not a QObject, but has attached properties. This won't work.";
-        }
-#else
-        static_assert(QmlMetaType<T>::hasAcceptableCtors());
-        static_assert(std::is_base_of_v<QObject, T> || !QQmlTypeInfo<T>::hasAttachedProperties);
-#endif
-
         RegisterTypeAndRevisions type = {
             3,
             QmlMetaType<T>::self(),
@@ -1102,6 +1135,14 @@ namespace QQmlPrivate
     }
 
     Q_QML_EXPORT QObject *qmlExtendedObject(QObject *, int);
+
+    enum QmlRegistrationWarning {
+        UnconstructibleType,
+        UnconstructibleSingleton,
+        NonQObjectWithAtached,
+    };
+
+    Q_QML_EXPORT void qmlRegistrationWarning(QmlRegistrationWarning warning, QMetaType type);
 
 } // namespace QQmlPrivate
 
