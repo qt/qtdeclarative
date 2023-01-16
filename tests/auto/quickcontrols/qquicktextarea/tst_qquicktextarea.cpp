@@ -86,9 +86,11 @@ void tst_QQuickTextArea::touchscreenDoesNotSelect()
 
     if (selectByMouse) {
         // press-drag-and-release from x1 to x2
-        int x1 = 10;
-        int x2 = 70;
-        int y = QFontMetrics(textEditObject->font()).height() / 2;
+        const int x1 = textEditObject->leftPadding();
+        const int x2 = textEditObject->width() / 2;
+        // Account for all styles by being aware of vertical padding.
+        // contentHeight / 2 should be half the line height considering that we only have one line of text.
+        const int y = textEditObject->topPadding() + textEditObject->contentHeight() / 2;
         QTest::touchEvent(&window, touchDevice.data()).press(0, QPoint(x1,y), &window);
         QTest::touchEvent(&window, touchDevice.data()).move(0, QPoint(x2,y), &window);
         QTest::touchEvent(&window, touchDevice.data()).release(0, QPoint(x2,y), &window);
