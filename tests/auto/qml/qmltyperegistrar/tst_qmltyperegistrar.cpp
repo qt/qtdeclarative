@@ -7,8 +7,10 @@
 #include <QtCore/qfile.h>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
+#include <QtQml/qqmlprivate.h>
 
 #include "hppheader.hpp"
+#include "UnregisteredTypes/uncreatable.h"
 
 void tst_qmltyperegistrar::initTestCase()
 {
@@ -444,6 +446,95 @@ void tst_qmltyperegistrar::hasIsConstantInParameters()
             Parameter { name: "nonConst"; type: "volatile QObject"; isPointer: true }
         }
 )"));
+}
+
+void tst_qmltyperegistrar::uncreatable()
+{
+    // "normal" constructible types
+    QVERIFY(QQmlPrivate::QmlMetaType<Creatable>::hasAcceptableCtors());
+    QVERIFY(QQmlPrivate::QmlMetaType<Creatable2>::hasAcceptableCtors());
+
+    // good singletons
+    QVERIFY(QQmlPrivate::QmlMetaType<SingletonCreatable>::hasAcceptableSingletonCtors());
+    QVERIFY(QQmlPrivate::QmlMetaType<SingletonCreatable2>::hasAcceptableSingletonCtors());
+    QVERIFY(QQmlPrivate::QmlMetaType<SingletonCreatable3>::hasAcceptableSingletonCtors());
+
+    // bad singletons
+    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable>::hasAcceptableSingletonCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable2>::hasAcceptableSingletonCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable3>::hasAcceptableSingletonCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable4>::hasAcceptableSingletonCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatableExtended>::hasAcceptableSingletonCtors());
+#if QT_DEPRECATED_SINCE(6, 4)
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "Singleton SingletonIncreatable needs either a default constructor or, "
+                "when adding a default constructor is infeasible, a public static "
+                "create(QQmlEngine *, QJSEngine *) method.");
+    qmlRegisterTypesAndRevisions<SingletonIncreatable>("A", 1);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "Singleton SingletonIncreatable2 needs either a default constructor or, "
+                "when adding a default constructor is infeasible, a public static "
+                "create(QQmlEngine *, QJSEngine *) method.");
+    qmlRegisterTypesAndRevisions<SingletonIncreatable2>("A", 1);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "Singleton SingletonIncreatable3 needs either a default constructor or, "
+                "when adding a default constructor is infeasible, a public static "
+                "create(QQmlEngine *, QJSEngine *) method.");
+    qmlRegisterTypesAndRevisions<SingletonIncreatable3>("A", 1);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "Singleton SingletonIncreatable4 needs either a default constructor or, "
+                "when adding a default constructor is infeasible, a public static "
+                "create(QQmlEngine *, QJSEngine *) method.");
+    qmlRegisterTypesAndRevisions<SingletonIncreatable4>("A", 1);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "Singleton SingletonIncreatableExtended needs either a default constructor or, "
+                "when adding a default constructor is infeasible, a public static "
+                "create(QQmlEngine *, QJSEngine *) method.");
+    qmlRegisterTypesAndRevisions<SingletonIncreatableExtended>("A", 1);
+#endif
+
+    // QML_UNCREATABLE types
+    QVERIFY(!QQmlPrivate::QmlMetaType<BadUncreatable>::hasAcceptableCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<BadUncreatableExtended>::hasAcceptableCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<GoodUncreatable>::hasAcceptableCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<UncreatableNeedsForeign>::hasAcceptableCtors());
+    QVERIFY(!QQmlPrivate::QmlMetaType<GoodUncreatableExtended>::hasAcceptableCtors());
+#if QT_DEPRECATED_SINCE(6, 4)
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "BadUncreatable is neither a QObject, nor default- and copy-constructible, "
+                "nor uncreatable. You should not use it as a QML type.");
+    qmlRegisterTypesAndRevisions<BadUncreatable>("A", 1);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "BadUncreatableExtended is neither a QObject, nor default- and copy-constructible, "
+                "nor uncreatable. You should not use it as a QML type.");
+    qmlRegisterTypesAndRevisions<BadUncreatableExtended>("A", 1);
+#endif
+
+    const auto oldHandler = qInstallMessageHandler(
+                [](QtMsgType, const QMessageLogContext &, const QString &message) {
+        QFAIL(qPrintable(message));
+    });
+    const auto guard = qScopeGuard([oldHandler](){qInstallMessageHandler(oldHandler); });
+
+    // These should not print any messages.
+
+    qmlRegisterTypesAndRevisions<Creatable>("A", 1);
+    qmlRegisterTypesAndRevisions<Creatable2>("A", 1);
+
+    qmlRegisterTypesAndRevisions<SingletonCreatable>("A", 1);
+    qmlRegisterTypesAndRevisions<SingletonCreatable2>("A", 1);
+    qmlRegisterTypesAndRevisions<SingletonCreatable3>("A", 1);
+
+    qmlRegisterTypesAndRevisions<GoodUncreatable>("A", 1);
+    qmlRegisterTypesAndRevisions<GoodUncreatable2>("A", 1);
+    qmlRegisterTypesAndRevisions<GoodUncreatableExtended>("A", 1);
 }
 
 QTEST_MAIN(tst_qmltyperegistrar)

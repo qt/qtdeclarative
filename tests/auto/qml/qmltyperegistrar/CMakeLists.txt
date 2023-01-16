@@ -8,6 +8,7 @@
 #####################################################################
 
 add_subdirectory(VersionZero)
+add_subdirectory(UnregisteredTypes)
 add_subdirectory(foreign)
 
 qt_manual_moc(moc_files OUTPUT_MOC_JSON_FILES json_list noextheader
@@ -39,6 +40,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         tst_qmltyperegistrarPrivate
         Qt::QmlTypeRegistrarPrivate
         tst_qmltyperegistrar_major_version_zero
+        UnregisteredTypes
 )
 
 qt_internal_extend_target(tst_qmltyperegistrar CONDITION TARGET Qt::Quick

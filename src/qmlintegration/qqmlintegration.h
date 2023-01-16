@@ -16,6 +16,8 @@ namespace QQmlPrivate {
     template<typename, typename> struct QmlInterface;
     template<class, class>
     struct QmlExtendedNamespace;
+    template<class, class>
+    struct QmlUncreatable;
 }
 
 template <typename T> class QList;
@@ -38,14 +40,24 @@ QT_END_NAMESPACE
     Q_CLASSINFO("QML.Element", "auto")
 
 #define QML_ANONYMOUS \
-    Q_CLASSINFO("QML.Element", "anonymous")
+    Q_CLASSINFO("QML.Element", "anonymous") \
+    enum class QmlIsUncreatable {yes = true}; \
+    template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlUncreatable; \
+    template<typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_uncreatable() {}
 
 #define QML_NAMED_ELEMENT(NAME) \
     Q_CLASSINFO("QML.Element", #NAME)
 
 #define QML_UNCREATABLE(REASON) \
     Q_CLASSINFO("QML.Creatable", "false") \
-    Q_CLASSINFO("QML.UncreatableReason", REASON)
+    Q_CLASSINFO("QML.UncreatableReason", REASON) \
+    enum class QmlIsUncreatable {yes = true}; \
+    template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlUncreatable; \
+    template<typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *); \
+    inline constexpr void qt_qmlMarker_uncreatable() {}
 
 #define QML_VALUE_TYPE(NAME) \
     Q_CLASSINFO("QML.Element", #NAME)
