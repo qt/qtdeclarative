@@ -264,6 +264,10 @@ TestCase {
             { target: menuItem, signalName: "triggered" })
         verify(menuItemTriggeredSpy.valid)
 
+        // Make sure the window has focus before continuing, otherwise this test will be
+        // flaky on webOS's QEMU
+        tryCompare(testCase.Window.window, "active", true)
+
         // Perform the shortcut; the Action should be triggered since the MenuItem is disabled.
         keySequence(StandardKey.Copy)
         compare(actionTriggeredSpy.count, 1)
