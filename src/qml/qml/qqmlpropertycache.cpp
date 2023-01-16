@@ -60,8 +60,6 @@ QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
         flags.type = QQmlPropertyData::Flags::QVariantType;
     } else if (propType < static_cast<int>(QMetaType::User)) {
         // nothing to do
-    } else if (propType == qMetaTypeId<QQmlBinding *>()) {
-        flags.type = QQmlPropertyData::Flags::QmlBindingType;
     } else if (propType == qMetaTypeId<QJSValue>()) {
         flags.type = QQmlPropertyData::Flags::QJSValueType;
     } else if (metaType.flags() & QMetaType::IsQmlList) {

@@ -42,7 +42,7 @@ public:
             QObjectDerivedType   = 2, // Property type is a QObject* derived type
             EnumType             = 3, // Property type is an enum
             QListType            = 4, // Property type is a QML list
-            QmlBindingType       = 5, // Property type is a QQmlBinding*
+            /*QmlBindingType       = 5; was: Property type is a QQmlBinding*; now unused */
             QJSValueType         = 6, // Property type is a QScriptValue
                                       // Gap, used to be V4HandleType
             VarPropertyType      = 8, // Property type is a "var" property of VMEMO
@@ -199,7 +199,6 @@ public:
     bool isQObject() const { return m_flags.type == Flags::QObjectDerivedType; }
     bool isEnum() const { return m_flags.type == Flags::EnumType; }
     bool isQList() const { return m_flags.type == Flags::QListType; }
-    bool isQmlBinding() const { return m_flags.type == Flags::QmlBindingType; }
     bool isQJSValue() const { return m_flags.type == Flags::QJSValueType; }
     bool isVarProperty() const { return m_flags.type == Flags::VarPropertyType; }
     bool isQVariant() const { return m_flags.type == Flags::QVariantType; }
@@ -445,7 +444,6 @@ void QQmlPropertyData::Flags::copyPropertyTypeFlags(QQmlPropertyData::Flags from
     case QObjectDerivedType:
     case EnumType:
     case QListType:
-    case QmlBindingType:
     case QJSValueType:
     case QVariantType:
         type = from.type;
