@@ -268,6 +268,17 @@ set_target_properties(someTarget PROPERTIES
 )
 \endcode
 
+Another important argument is \c{--direct-calls}. You can use it to enable the
+direct mode of \l{The QML Script Compiler} in case the QtQuick Compiler
+Extensions are installed. If the extensions are not installed, the argument is
+ignored. There is a shorthand called \c {QT_QMLCACHEGEN_DIRECT_CALLS} for it.
+
+\badcode
+set_target_properties(someTarget PROPERTIES
+    QT_QMLCACHEGEN_DIRECT_CALLS ON
+)
+\endcode
+
 \target qmllint-auto
 \section2 Linting QML sources
 
