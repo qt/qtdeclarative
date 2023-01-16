@@ -1021,6 +1021,16 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("duplicatedSignalName")
             << QStringLiteral("duplicatedPropertyName.qml")
             << Result{ { Message{ QStringLiteral("Duplicated signal name \"clicked\"."), 8, 5 } } };
+    QTest::newRow("missingComponentBehaviorBound")
+            << QStringLiteral("missingComponentBehaviorBound.qml")
+            << Result {
+                    {  Message{ QStringLiteral("Unqualified access"), 8, 31  } },
+                    {},
+                    {  Message{ QStringLiteral("Set \"pragma ComponentBehavior: Bound\" in "
+                                               "order to use IDs from outer components "
+                                               "in nested components."), 0, 0, QtInfoMsg } },
+                    Result::AutoFixable
+                };
 }
 
 void TestQmllint::dirtyQmlCode()
