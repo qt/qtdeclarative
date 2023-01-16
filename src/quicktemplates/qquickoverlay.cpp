@@ -556,6 +556,7 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
             d->handleRelease(d->window->contentItem(), event, nullptr);
         break;
 
+#if QT_CONFIG(wheelevent)
     case QEvent::Wheel: {
         // If the top item in the drawing-order is blocked by a modal popup, then
         // eat the event. There is no scenario where the top most item is blocked
@@ -583,6 +584,7 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         }
         break;
     }
+#endif
 
     default:
         break;
