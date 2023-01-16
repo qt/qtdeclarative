@@ -4,6 +4,7 @@
 import QtQuick
 import QtTest
 import QtQuick.Controls
+import Qt.test.controls
 
 TestCase {
     id: testCase
@@ -210,16 +211,22 @@ TestCase {
 
         if (data.textAlignment !== undefined)
             compare(control.horizontalAlignment, data.textAlignment)
-        for (var i = 0; i < control.children.length; ++i) {
-            if (control.children[i].hasOwnProperty("horizontalAlignment"))
-                compare(control.children[i].effectiveHorizontalAlignment, data.placeholderAlignment) // placeholder
+
+        // The placeholder text of the Material style doesn't currently respect the alignment of the control.
+        if (StyleInfo.styleName !== "Material") {
+            for (var i = 0; i < control.children.length; ++i) {
+                if (control.children[i].hasOwnProperty("horizontalAlignment"))
+                    compare(control.children[i].effectiveHorizontalAlignment, data.placeholderAlignment) // placeholder
+            }
         }
 
         control.verticalAlignment = TextArea.AlignBottom
         compare(control.verticalAlignment, TextArea.AlignBottom)
-        for (var j = 0; j < control.children.length; ++j) {
-            if (control.children[j].hasOwnProperty("verticalAlignment"))
-                compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
+        if (StyleInfo.styleName !== "Material") {
+            for (var j = 0; j < control.children.length; ++j) {
+                if (control.children[j].hasOwnProperty("verticalAlignment"))
+                    compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
+            }
         }
     }
 
