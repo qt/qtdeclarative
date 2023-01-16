@@ -517,6 +517,65 @@
 */
 
 /*!
+  \macro QML_SEQUENTIAL_CONTAINER(VALUE_TYPE)
+
+  This macro declares the enclosing or referenced type as a sequential container
+  managing a sequence of \a VALUE_TYPE elements. \a VALUE_TYPE can be an actual
+  \l{QML Value Types}{value type} or a pointer to an
+  \l{QML Object Types}{object type}. You will rarely be able to add this macro
+  to the actual container declaration since containers are usually templates.
+  You should use \l{QML_FOREIGN} to attach the type registration to a template
+  instantiation. Using this technique you can, for example, declare sequential
+  containers like this:
+
+  \code
+  class Person : public QObject
+  {
+    Q_OBJECT
+    QML_ELEMENT
+    [...]
+  };
+
+  class Thing
+  {
+    Q_GADGET
+    QML_VALUE_TYPE(thing)
+    [...]
+  };
+
+  class PersonListRegistration
+  {
+    Q_GADGET
+    QML_FOREIGN(QList<Person *>)
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(Person *)
+  };
+
+  class ThingListRegistration
+  {
+    Q_GADGET
+    QML_FOREIGN(std::vector<Thing>)
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(Thing)
+  };
+  \endcode
+
+  After this, you can use the respective containers like JavaScript arrays
+  in QML.
+
+  \note For \l{QML Value Types} \l{QList} is automatically registered as
+  sequential container. For \l{QML Object Types} \l{QQmlListProperty} is.
+  You don't have to add these registrations.
+
+  \note You cannot currently give the container a custom name. Any argument
+  passed to \l{QML_NAMED_ELEMENT} is ignored. The automatically registered
+  sequential containers are available under the familiar \e{list<...>} names,
+  for example \e{list<QtObject>} or \e{list<font>}.
+
+  \sa QML_ANONYMOUS, QML_FOREIGN()
+*/
+
+/*!
   \macro QML_DECLARE_TYPE()
   \relates QQmlEngine
 
