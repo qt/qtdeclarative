@@ -18,12 +18,13 @@
 #include "qquickimplicitsizeitem_p.h"
 #include "qquicktextinterface_p.h"
 #include <QtGui/qtextoption.h>
+#if QT_CONFIG(validator)
 #include <QtGui/qvalidator.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTextInputPrivate;
-class QValidator;
 class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT
@@ -51,7 +52,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem, pu
     Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged)
 
     Q_PROPERTY(int maximumLength READ maxLength WRITE setMaxLength NOTIFY maximumLengthChanged)
+#if QT_CONFIG(validator)
     Q_PROPERTY(QValidator* validator READ validator WRITE setValidator NOTIFY validatorChanged)
+#endif
     Q_PROPERTY(QString inputMask READ inputMask WRITE setInputMask NOTIFY inputMaskChanged)
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
 
@@ -195,8 +198,10 @@ public:
     int maxLength() const;
     void setMaxLength(int ml);
 
+#if QT_CONFIG(validator)
     QValidator * validator() const;
     void setValidator(QValidator* v);
+#endif
 
     QString inputMask() const;
     void setInputMask(const QString &im);
@@ -305,7 +310,9 @@ Q_SIGNALS:
     void cursorDelegateChanged();
     void overwriteModeChanged(bool overwriteMode);
     void maximumLengthChanged(int maximumLength);
+#if QT_CONFIG(validator)
     void validatorChanged();
+#endif
     void inputMaskChanged(const QString &inputMask);
     void echoModeChanged(QQuickTextInput::EchoMode echoMode);
     void passwordCharacterChanged();

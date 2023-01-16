@@ -32,7 +32,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
     Q_PROPERTY(int stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(bool editable READ isEditable WRITE setEditable NOTIFY editableChanged FINAL)
+#if QT_CONFIG(validator)
     Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL)
+#endif
     Q_PROPERTY(QJSValue textFromValue READ textFromValue WRITE setTextFromValue NOTIFY textFromValueChanged FINAL)
     Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
     Q_PROPERTY(QQuickIndicatorButton *up READ up CONSTANT FINAL)
@@ -66,8 +68,10 @@ public:
     bool isEditable() const;
     void setEditable(bool editable);
 
+#if QT_CONFIG(validator)
     QValidator *validator() const;
     void setValidator(QValidator *validator);
+#endif
 
     QJSValue textFromValue() const;
     void setTextFromValue(const QJSValue &callback);
@@ -101,7 +105,9 @@ Q_SIGNALS:
     void valueChanged();
     void stepSizeChanged();
     void editableChanged();
+#if QT_CONFIG(validator)
     void validatorChanged();
+#endif
     void textFromValueChanged();
     void valueFromTextChanged();
     // 2.2 (Qt 5.9)

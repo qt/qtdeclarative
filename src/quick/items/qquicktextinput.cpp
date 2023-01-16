@@ -996,6 +996,7 @@ void QQuickTextInput::setAutoScroll(bool b)
     emit autoScrollChanged(d->autoScroll);
 }
 
+#if QT_CONFIG(validator)
 /*!
     \qmlproperty Validator QtQuick::TextInput::validator
 
@@ -1022,19 +1023,12 @@ void QQuickTextInput::setAutoScroll(bool b)
 
 QValidator* QQuickTextInput::validator() const
 {
-#if !QT_CONFIG(validator)
-    return nullptr;
-#else
     Q_D(const QQuickTextInput);
     return d->m_validator;
-#endif // validator
 }
 
 void QQuickTextInput::setValidator(QValidator* v)
 {
-#if !QT_CONFIG(validator)
-    Q_UNUSED(v);
-#else
     Q_D(QQuickTextInput);
     if (d->m_validator == v)
         return;
@@ -1057,10 +1051,8 @@ void QQuickTextInput::setValidator(QValidator* v)
         d->checkIsValid();
 
     emit validatorChanged();
-#endif // validator
 }
 
-#if QT_CONFIG(validator)
 void QQuickTextInput::q_validatorChanged()
 {
     Q_D(QQuickTextInput);
