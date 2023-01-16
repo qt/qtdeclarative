@@ -48,7 +48,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(bool down READ isDown WRITE setDown RESET resetDown NOTIFY downChanged FINAL REVISION(2, 2))
     Q_PROPERTY(bool editable READ isEditable WRITE setEditable NOTIFY editableChanged FINAL REVISION(2, 2))
     Q_PROPERTY(QString editText READ editText WRITE setEditText RESET resetEditText NOTIFY editTextChanged FINAL REVISION(2, 2))
+#if QT_CONFIG(validator)
     Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL REVISION(2, 2))
+#endif
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION(2, 2))
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION(2, 2))
     Q_PROPERTY(bool acceptableInput READ hasAcceptableInput NOTIFY acceptableInputChanged FINAL REVISION(2, 2))
@@ -125,8 +127,10 @@ public:
     void setEditText(const QString &text);
     void resetEditText();
 
+#if QT_CONFIG(validator)
     QValidator *validator() const;
     void setValidator(QValidator *validator);
+#endif
 
     Qt::InputMethodHints inputMethodHints() const;
     void setInputMethodHints(Qt::InputMethodHints hints);
@@ -185,7 +189,9 @@ Q_SIGNALS:
     Q_REVISION(2, 2) void downChanged();
     Q_REVISION(2, 2) void editableChanged();
     Q_REVISION(2, 2) void editTextChanged();
+#if QT_CONFIG(validator)
     Q_REVISION(2, 2) void validatorChanged();
+#endif
     Q_REVISION(2, 2) void inputMethodHintsChanged();
     Q_REVISION(2, 2) void inputMethodComposingChanged();
     Q_REVISION(2, 2) void acceptableInputChanged();

@@ -296,7 +296,9 @@ public:
         bool selectTextByMouse = false;
         Qt::InputMethodHints inputMethodHints = Qt::ImhNone;
         QString editText;
+#if QT_CONFIG(validator)
         QValidator *validator = nullptr;
+#endif
     };
     QLazilyAllocated<ExtraData> extra;
 };
@@ -1495,6 +1497,7 @@ void QQuickComboBox::resetEditText()
     setEditText(QString());
 }
 
+#if QT_CONFIG(validator)
 /*!
     \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty Validator QtQuick.Controls::ComboBox::validator
@@ -1543,6 +1546,7 @@ void QQuickComboBox::setValidator(QValidator *validator)
 #endif
     emit validatorChanged();
 }
+#endif
 
 /*!
     \since QtQuick.Controls 2.2 (Qt 5.9)

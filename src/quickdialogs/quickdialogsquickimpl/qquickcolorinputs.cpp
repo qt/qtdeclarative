@@ -3,6 +3,8 @@
 
 #include "qquickcolorinputs_p.h"
 
+#include <QtCore/QRegularExpression>
+
 QT_BEGIN_NAMESPACE
 
 QQuickColorInputs::QQuickColorInputs() = default;

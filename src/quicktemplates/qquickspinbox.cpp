@@ -122,7 +122,9 @@ public:
     QString displayText;
     QQuickIndicatorButton *up = nullptr;
     QQuickIndicatorButton *down = nullptr;
+#if QT_CONFIG(validator)
     QValidator *validator = nullptr;
+#endif
     mutable QJSValue textFromValue;
     mutable QJSValue valueFromText;
     Qt::InputMethodHints inputMethodHints = Qt::ImhDigitsOnly;
@@ -548,6 +550,7 @@ void QQuickSpinBox::setEditable(bool editable)
     emit editableChanged();
 }
 
+#if QT_CONFIG(validator)
 /*!
     \qmlproperty Validator QtQuick.Controls::SpinBox::validator
 
@@ -583,6 +586,7 @@ void QQuickSpinBox::setValidator(QValidator *validator)
     d->validator = validator;
     emit validatorChanged();
 }
+#endif
 
 /*!
     \qmlproperty function QtQuick.Controls::SpinBox::textFromValue
