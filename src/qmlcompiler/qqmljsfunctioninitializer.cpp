@@ -213,9 +213,15 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
                     ? m_typeResolver->qObjectListType()
                     : propertyType;
         } else {
-            diagnose(u"Cannot resolve property type %1 for binding on %2"_s.arg(
-                         property.typeName(), propertyName),
-                     QtWarningMsg, bindingLocation, error);
+            QString message = u"Cannot resolve property type %1 for binding on %2."_s
+                    .arg(property.typeName(), propertyName);
+            if (m_objectType->isNameDeferred(propertyName)) {
+                // If the property doesn't exist but the name is deferred, then
+                // it's deferred via the presence of immediate names. Those are
+                // most commonly used to enable generalized grouped properties.
+                message += u" You may want use ID-based grouped properties here.";
+            }
+            diagnose(message, QtWarningMsg, bindingLocation, error);
         }
 
         if (!property.bindable().isEmpty() && !property.isPrivate())
