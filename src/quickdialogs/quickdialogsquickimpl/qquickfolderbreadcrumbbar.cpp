@@ -691,12 +691,15 @@ bool QQuickFolderBreadcrumbBar::event(QEvent *event)
 
 void QQuickFolderBreadcrumbBar::keyPressEvent(QKeyEvent *event)
 {
+#if QT_CONFIG(shortcut)
     Q_D(QQuickFolderBreadcrumbBar);
 
     if (event->matches(QKeySequence::Cancel) && d->textField->isVisible()) {
         d->toggleTextFieldVisibility();
         event->accept();
-    } else {
+    } else
+#endif
+    {
         QQuickContainer::keyPressEvent(event);
     }
 }
@@ -724,8 +727,10 @@ void QQuickFolderBreadcrumbBar::itemChange(QQuickItem::ItemChange change, const 
             // It's visible.
             d->handleTextFieldHidden();
 
+#if QT_CONFIG(shortcut)
             d->goUpShortcutId = QGuiApplicationPrivate::instance()->shortcutMap.addShortcut(
                 this, QKeySequence(Qt::ALT | Qt::Key_Up), Qt::WindowShortcut, QQuickShortcutContext::matcher);
+#endif
         } else {
             // It's hidden.
             // Hide the text field so that when the dialog gets opened again, it's not still visible.
@@ -739,10 +744,12 @@ void QQuickFolderBreadcrumbBar::itemChange(QQuickItem::ItemChange change, const 
             // We also need to ungrab the edit path shortcut when we're not visible.
             d->ungrabEditPathShortcut();
 
+#if QT_CONFIG(shortcut)
             if (d->goUpShortcutId != 0) {
                 QGuiApplicationPrivate::instance()->shortcutMap.removeShortcut(d->goUpShortcutId, this);
                 d->goUpShortcutId = 0;
             }
+#endif
         }
     }
 }
