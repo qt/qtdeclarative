@@ -530,10 +530,12 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
     while (!ch->isNull()) {
         if (*ch == QLatin1Char(';')) {
             auto entity = QStringView(textIn).mid(entityStart, entityLength);
+#if QT_CONFIG(texthtmlparser)
             const QString parsedEntity = QTextHtmlParser::parseEntity(entity);
             if (!parsedEntity.isNull())
                 textOut += parsedEntity;
             else
+#endif
                 qCWarning(lcStyledText) << "StyledText doesn't support entity" << entity;
             return;
         } else if (*ch == QLatin1Char(' ')) {
