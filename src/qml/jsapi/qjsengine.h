@@ -202,7 +202,7 @@ public:
             return QVariant::fromValue(from);
 
         if constexpr (std::is_same_v<To, QString>
-                && std::is_base_of_v<QObject, std::remove_const_t<std::remove_pointer_t<To>>>) {
+                && std::is_base_of_v<QObject, std::remove_const_t<std::remove_pointer_t<From>>>) {
             return convertQObjectToString(from);
         }
 
