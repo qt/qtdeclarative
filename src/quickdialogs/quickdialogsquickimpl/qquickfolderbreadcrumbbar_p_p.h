@@ -76,7 +76,9 @@ private:
     QQuickDeferredPointer<QQuickAbstractButton> upButton;
     QQuickDeferredPointer<QQuickTextField> textField;
     int editPathToggleShortcutId = 0;
+#if QT_CONFIG(shortcut)
     int goUpShortcutId = 0;
+#endif
     int upButtonSpacing = 0;
     bool repopulating = false;
 };

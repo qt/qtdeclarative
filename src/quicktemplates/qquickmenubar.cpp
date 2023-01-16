@@ -509,6 +509,7 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
         }
         break;
     default:
+#if QT_CONFIG(shortcut)
         if (!event->text().isEmpty() && event->modifiers() == Qt::NoModifier) {
             const QKeyCombination mnemonic(Qt::AltModifier, Qt::Key(event->key()));
             for (int i = 0; i < count(); ++i) {
@@ -520,6 +521,7 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
                 }
             }
         }
+#endif
         break;
     }
 }
