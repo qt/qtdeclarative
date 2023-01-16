@@ -158,8 +158,10 @@ QVariant QQuickHeaderViewBasePrivate::modelImpl() const
 {
     if (auto model = m_headerDataProxyModel.sourceModel())
         return QVariant::fromValue(model.data());
+#if QT_CONFIG(transposeproxymodel)
     if (auto model = m_transposeProxyModel.sourceModel())
         return QVariant::fromValue(model);
+#endif
     return QQuickTableViewPrivate::modelImpl();
 }
 
@@ -189,10 +191,12 @@ void QQuickHeaderViewBasePrivate::setModelImpl(const QVariant &newModel)
     // Case 1: newModel is QAbstractTableModel
     if (proxyModelSetter(q, m_headerDataProxyModel, newModel.value<QAbstractTableModel *>()))
         return;
+#if QT_CONFIG(transposeproxymodel)
     // Case 2: newModel is QAbstractItemModel but not QAbstractTableModel
     if (orientation() == Qt::Horizontal
         && proxyModelSetter(q, m_transposeProxyModel, newModel.value<QAbstractItemModel *>()))
         return;
+#endif
 
     QQuickTableViewPrivate::setModelImpl(newModel);
 }

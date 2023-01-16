@@ -17,7 +17,9 @@
 
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QPointer>
+#if QT_CONFIG(transposeproxymodel)
 #include <QtCore/QTransposeProxyModel>
+#endif
 #include <QtQuick/private/qquicktableview_p_p.h>
 #include <private/qquickheaderview_p.h>
 
@@ -71,7 +73,9 @@ public:
 
 protected:
     QHeaderDataProxyModel m_headerDataProxyModel;
+#if QT_CONFIG(transposeproxymodel)
     QTransposeProxyModel m_transposeProxyModel;
+#endif
     struct SectionSize
     {
         int section;
