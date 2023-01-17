@@ -251,13 +251,6 @@ static ReturnedValue loadProperty(
         property.readProperty(object, &v);
         return QV4::JsonObject::fromJsonArray(v4, v);
     }
-#if QT_CONFIG(qml_locale)
-    case QMetaType::QLocale: {
-        QLocale v;
-        property.readProperty(object, &v);
-        return QQmlLocale::wrap(v4, v);
-    }
-#endif
     case QMetaType::QStringList:
         return encodeSequence(QMetaSequence::fromContainer<QStringList>());
     case QMetaType::QVariantList:

@@ -437,7 +437,8 @@ QString QQuickSpinBoxPrivate::evaluateTextFromValue(int val) const
         QJSValue loc;
 #if QT_CONFIG(qml_locale)
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-        loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+        loc = QJSValuePrivate::fromReturnedValue(
+                v4->fromData(QMetaType::fromType<QLocale>(), &locale));
 #endif
         text = textFromValue.call(QJSValueList() << val << loc).toString();
     } else {
@@ -455,7 +456,8 @@ int QQuickSpinBoxPrivate::evaluateValueFromText(const QString &text) const
         QJSValue loc;
 #if QT_CONFIG(qml_locale)
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-        loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+        loc = QJSValuePrivate::fromReturnedValue(
+                v4->fromData(QMetaType::fromType<QLocale>(), &locale));
 #endif
         value = valueFromText.call(QJSValueList() << text << loc).toInt();
     } else {

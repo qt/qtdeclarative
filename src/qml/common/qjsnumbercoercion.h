@@ -13,9 +13,6 @@ class QJSNumberCoercion
 {
 public:
 
-#if QT_DEPRECATED_SINCE(6, 7)
-
-    QT_DEPRECATED_VERSION_6_7
     static constexpr bool isInteger(double d)
     {
         // Comparing d with itself checks for NaN and comparing d with the min and max values
@@ -27,8 +24,6 @@ public:
 
         return equals(static_cast<int>(d), d);
     }
-
-#endif
 
     static constexpr bool isArrayIndex(double d)
     {
