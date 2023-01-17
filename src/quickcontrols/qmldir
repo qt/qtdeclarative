@@ -1,0 +1,2 @@
+module QtQuick.Controls.IndirectBasic
+import QtQuick.Controls.Basic auto
