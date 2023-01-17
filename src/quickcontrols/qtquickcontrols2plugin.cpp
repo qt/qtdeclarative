@@ -38,6 +38,7 @@ private:
     bool customStyle = false;
     QString registeredStyleUri;
     QString registeredFallbackStyleUri;
+    QString rawFallbackStyleName;
 };
 
 static const char *qtQuickControlsUri = "QtQuick.Controls";
@@ -78,6 +79,58 @@ QtQuickControls2Plugin::~QtQuickControls2Plugin()
     // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
+/*!
+    \internal
+
+    If this function is called, it means QtQuick.Controls was imported,
+    and we're doing runtime style selection.
+
+    For example, where:
+    \list
+    \li styleName="Material"
+    \li rawFallbackStyleName=""
+    \li fallbackStyleName="Basic"
+    \li registeredStyleUri="QtQuick.Controls.Material"
+    \li rawFallbackStyleName is empty => parentModule="QtQuick.Controls.Material"
+    \li registeredFallbackStyleUri="QtQuick.Controls.Basic"
+    \endlist
+
+    The following registrations would be made:
+
+    qmlRegisterModuleImport("QtQuick.Controls.Material", "QtQuick.Controls.Basic")
+    qmlRegisterModuleImport("QtQuick.Controls", "QtQuick.Controls.Material")
+
+    As another example, where:
+    \list
+    \li styleName="Material"
+    \li rawFallbackStyleName="Fusion"
+    \li fallbackStyleName="Fusion"
+    \li registeredStyleUri="QtQuick.Controls.Material"
+    \li rawFallbackStyleName is not empty => parentModule="QtQuick.Controls"
+    \li registeredFallbackStyleUri="QtQuick.Controls.Fusion"
+    \endlist
+
+    The following registrations would be made:
+
+    qmlRegisterModuleImport("QtQuick.Controls", "QtQuick.Controls.Fusion")
+    qmlRegisterModuleImport("QtQuick.Controls", "QtQuick.Controls.Material")
+
+    In this case, the Material style imports a fallback (Basic) via the IMPORTS
+    section in its CMakeLists.txt, \e and the user specifies a different fallback
+    using an env var/.conf/C++. We want the user's fallback to take priority,
+    which means we have to place the user-specified fallback at a more immediate place,
+    and that place is as an import of QtQuick.Controls itself rather than as an
+    import of the current style, Material (as we did in the first example).
+
+    If the style to be imported is a custom style and no specific fallback was
+    selected, we need to indirectly import Basic, but we cannot import Basic through
+    the custom style since the versions don't match. For that case we have a
+    "QtQuick.Controls.IndirectBasic" which does nothing but import
+    QtQuick.Controls.Basic. Instead of QtQuick.Controls.Basic we import that one:
+
+    qmlRegisterModuleImport("QtQuick.Controls", "Some.Custom.Style")
+    qmlRegisterModuleImport("QtQuick.Controls", "QtQuick.Controls.IndirectBasic")
+*/
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
     qCDebug(lcQtQuickControls2Plugin) << "registerTypes() called with uri" << uri;
@@ -85,34 +138,71 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     // It's OK that the style is resolved more than once; some accessors like name() cause it to be called, for example.
     QQuickStylePrivate::init();
 
+    // The fallback style that was set via env var/.conf/C++.
+    rawFallbackStyleName = QQuickStylePrivate::fallbackStyle();
+    // The style that was set via env var/.conf/C++, or Basic if none was set.
     const QString styleName = QQuickStylePrivate::effectiveStyleName(QQuickStyle::name());
-    const QString fallbackStyleName = QQuickStylePrivate::effectiveStyleName(QQuickStylePrivate::fallbackStyle());
+    // The effective fallback style: rawFallbackStyleName, or Basic if empty.
+    const QString fallbackStyleName = QQuickStylePrivate::effectiveStyleName(rawFallbackStyleName);
     qCDebug(lcQtQuickControls2Plugin) << "style:" << QQuickStyle::name() << "effective style:" << styleName
-        << "fallback style:" << QQuickStylePrivate::fallbackStyle() << "effective fallback style:" << fallbackStyleName;
+        << "fallback style:" << rawFallbackStyleName << "effective fallback style:" << fallbackStyleName;
+
+    customStyle = QQuickStylePrivate::isCustomStyle();
+    // The URI of the current style. For built-in styles, the style name is appended to "QtQuick.Controls.".
+    // For custom styles that are embedded in resources, we need to remove the ":/" prefix.
+    registeredStyleUri = ::styleUri();
 
     // If the style is Basic, we don't need to register the fallback because the Basic style
     // provides all controls. Also, if we didn't return early here, we can get an infinite import loop
     // when the style is set to Basic.
     if (styleName != fallbackStyleName && styleName != QLatin1String("Basic")) {
+        // If no specific fallback is given, the fallback is of lower precedence than recursive
+        // imports of the main style (i.e. IMPORTS in a style's CMakeLists.txt).
+        // If a specific fallback is given, it is of higher precedence.
+
+        QString parentModule;
+        QString fallbackModule;
+
+        // The fallback style has to be a built-in style, so it will become "QtQuick.Controls.<fallback>".
         registeredFallbackStyleUri = ::fallbackStyleUri();
-        qCDebug(lcQtQuickControls2Plugin) << "calling qmlRegisterModuleImport() to register fallback style with"
-            << " uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny
-            << "import" << registeredFallbackStyleUri << "importMajor" << QQmlModuleImportAuto;
+
+        if (!rawFallbackStyleName.isEmpty()) {
+            parentModule = qtQuickControlsUri;
+            fallbackModule = registeredFallbackStyleUri;
+        } else if (customStyle) {
+            // Since we don't know the versioning scheme of custom styles, but we want the
+            // version of QtQuick.Controls to be propagated, we need to do our own indirection.
+            // QtQuick.Controls.IndirectBasic indirectly imports QtQuick.Controls.Basic
+            Q_ASSERT(registeredFallbackStyleUri == QLatin1String("QtQuick.Controls.Basic"));
+            parentModule = qtQuickControlsUri;
+            fallbackModule = QLatin1String("QtQuick.Controls.IndirectBasic");
+        } else {
+            parentModule = registeredStyleUri;
+            fallbackModule = registeredFallbackStyleUri;
+        }
+
+        qCDebug(lcQtQuickControls2Plugin)
+                << "calling qmlRegisterModuleImport() to register fallback style with"
+                << " uri \"" << parentModule << "\" moduleMajor" << QQmlModuleImportModuleAny
+                << "import" << fallbackModule << "importMajor" << QQmlModuleImportAuto;
+        // Whenever parentModule is imported, registeredFallbackStyleUri will be imported too.
         // The fallback style must be a built-in style, so we match the version number.
-        qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredFallbackStyleUri.toUtf8().constData(),
-            QQmlModuleImportAuto, QQmlModuleImportAuto);
+        qmlRegisterModuleImport(parentModule.toUtf8().constData(), QQmlModuleImportModuleAny,
+                                fallbackModule.toUtf8().constData(),
+                                QQmlModuleImportAuto, QQmlModuleImportAuto);
     }
 
     // If the user imports QtQuick.Controls 2.15, and they're using the Material style, we should import version 2.15.
     // However, if they import QtQuick.Controls 2.15, but are using a custom style, we want to use the latest version
     // number of their style.
-    customStyle = QQuickStylePrivate::isCustomStyle();
-    registeredStyleUri = ::styleUri();
-    const int importMajor = !customStyle ? QQmlModuleImportAuto : QQmlModuleImportLatest;
-    qCDebug(lcQtQuickControls2Plugin).nospace() << "calling qmlRegisterModuleImport() to register primary style with"
-        << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor
-        << " import " << registeredStyleUri << " importMajor " << importMajor;
-    qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredStyleUri.toUtf8().constData(), importMajor);
+    const int importMajor = customStyle ? QQmlModuleImportLatest : QQmlModuleImportAuto;
+    qCDebug(lcQtQuickControls2Plugin).nospace()
+            << "calling qmlRegisterModuleImport() to register primary style with"
+            << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor
+            << " import " << registeredStyleUri << " importMajor " << importMajor;
+    // When QtQuick.Controls is imported, the selected style will be imported too.
+    qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny,
+                            registeredStyleUri.toUtf8().constData(), importMajor);
 
     if (customStyle)
         QFileSelectorPrivate::addStatics(QStringList() << styleName);
@@ -122,15 +212,41 @@ void QtQuickControls2Plugin::unregisterTypes()
 {
     qCDebug(lcQtQuickControls2Plugin) << "unregisterTypes() called";
 
+    const int importMajor = customStyle ? QQmlModuleImportLatest : QQmlModuleImportAuto;
+    qCDebug(lcQtQuickControls2Plugin).nospace()
+            << "calling qmlUnregisterModuleImport() to unregister primary style with"
+            << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor
+            << " import " << registeredStyleUri << " importMajor " << importMajor;
+    qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny,
+                              registeredStyleUri.toUtf8().constData(), importMajor);
+
     if (!registeredFallbackStyleUri.isEmpty()) {
-        // We registered a fallback style, so now we need to unregister it.
-        qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredFallbackStyleUri.toUtf8().constData(),
-            QQmlModuleImportAuto, QQmlModuleImportAuto);
+        QString parentModule;
+        QString fallbackModule;
+
+        if (!rawFallbackStyleName.isEmpty()) {
+            parentModule = qtQuickControlsUri;
+            fallbackModule = registeredFallbackStyleUri;
+            rawFallbackStyleName.clear();
+        } else if (customStyle) {
+            parentModule = qtQuickControlsUri;
+            fallbackModule = QLatin1String("QtQuick.Controls.IndirectBasic");
+        } else {
+            parentModule = registeredStyleUri;
+            fallbackModule = registeredFallbackStyleUri;
+        }
+
+        qCDebug(lcQtQuickControls2Plugin)
+                << "calling qmlUnregisterModuleImport() to unregister fallback style with"
+                << " uri \"" << parentModule << "\" moduleMajor" << QQmlModuleImportModuleAny
+                << "import" << fallbackModule << "importMajor" << QQmlModuleImportAuto;
+        qmlUnregisterModuleImport(parentModule.toUtf8().constData(), QQmlModuleImportModuleAny,
+                                  fallbackModule.toUtf8().constData(),
+                                  QQmlModuleImportAuto, QQmlModuleImportAuto);
+
         registeredFallbackStyleUri.clear();
     }
 
-    const int importMajor = !customStyle ? QQmlModuleImportAuto : QQmlModuleImportLatest;
-    qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredStyleUri.toUtf8().constData(), importMajor);
     customStyle = false;
     registeredStyleUri.clear();
 }

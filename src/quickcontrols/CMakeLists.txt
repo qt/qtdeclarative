@@ -55,6 +55,13 @@ qt_internal_extend_target(qtquickcontrols2plugin
         Qt::QuickTemplates2Private
 )
 
+qt_internal_add_resource(qtquickcontrols2plugin "indirectBasic"
+    PREFIX
+        "/qt-project.org/imports/QtQuick/Controls/IndirectBasic"
+    FILES
+        qmldir
+)
+
 if(QT_FEATURE_quick_designer)
     add_subdirectory(designer)
 endif()
