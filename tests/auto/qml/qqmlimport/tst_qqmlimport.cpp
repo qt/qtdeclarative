@@ -431,18 +431,37 @@ void tst_QQmlImport::partialImportVersions()
     }
 }
 
+class NotItem : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Item)
+};
+
 void tst_QQmlImport::registerModuleImport()
 {
-    const auto isValid = [&]() {
+    enum Result { IsItem, IsNotItem, IsNull, IsInvalid };
+    const auto check = [&]() -> Result {
         QQmlEngine engine;
         engine.addImportPath(directory());
         QQmlComponent component(&engine);
         component.setData("import MyPluginSupported; Item {}", QUrl());
         if (!component.isReady())
-            return false;
+            return IsInvalid;
         QScopedPointer<QObject> obj(component.create());
-        return !obj.isNull();
+        if (obj.isNull())
+            return IsNull;
+        if (qobject_cast<NotItem *>(obj.data()))
+            return IsNotItem;
+        else if (qobject_cast<QQuickItem *>(obj.data()))
+            return IsItem;
+        return IsInvalid;
     };
+
+    const auto isValid = [&]() {
+        return check() == IsItem;
+    };
+
+    qmlRegisterTypesAndRevisions<NotItem>("ShadowQuick", 1);
 
     qmlRegisterModuleImport("MyPluginSupported", 2, "QtQuick");
     QVERIFY(isValid());
@@ -470,6 +489,20 @@ void tst_QQmlImport::registerModuleImport()
     QVERIFY(!isValid());
     qmlUnregisterModuleImport("MyPluginSupported", 1, "QtQuick");
     QVERIFY(!isValid());
+
+    qmlRegisterModuleImport("MyPluginSupported", 2, "ShadowQuick", 1);
+    qmlRegisterModuleImport("MyPluginSupported", 2, "QtQuick", 2);
+    QCOMPARE(check(), IsItem);
+
+    qmlUnregisterModuleImport("MyPluginSupported", 2, "ShadowQuick", 1);
+    qmlUnregisterModuleImport("MyPluginSupported", 2, "QtQuick", 2);
+
+    qmlRegisterModuleImport("MyPluginSupported", 2, "QtQuick", 2);
+    qmlRegisterModuleImport("MyPluginSupported", 2, "ShadowQuick", 1);
+    QCOMPARE(check(), IsNotItem);
+
+    qmlUnregisterModuleImport("MyPluginSupported", 2, "QtQuick", 2);
+    qmlUnregisterModuleImport("MyPluginSupported", 2, "ShadowQuick", 1);
 }
 
 void tst_QQmlImport::importDependenciesPrecedence()
