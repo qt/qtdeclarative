@@ -1309,6 +1309,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
     QTest::newRow("QQmlScriptString") << QStringLiteral("scriptstring.qml");
     QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
+    QTest::newRow("locale") << QStringLiteral("locale.qml");
 }
 
 void TestQmllint::cleanQmlCode()

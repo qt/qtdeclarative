@@ -1631,10 +1631,6 @@ static QVariant toVariant(const QV4::Value &value, QMetaType metaType, JSToQVari
             return str.at(0);
         return str;
     }
-#if QT_CONFIG(qml_locale)
-    if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
-        return *ld->d()->locale;
-#endif
     if (const QV4::DateObject *d = value.as<DateObject>()) {
         // NOTE: since we convert QTime to JS Date,
         //       round trip will change the variant type (to QDateTime)!
@@ -1864,10 +1860,6 @@ QV4::ReturnedValue ExecutionEngine::fromData(
                 return QV4::JsonObject::fromJsonObject(this, *reinterpret_cast<const QJsonObject *>(ptr));
             case QMetaType::QJsonArray:
                 return QV4::JsonObject::fromJsonArray(this, *reinterpret_cast<const QJsonArray *>(ptr));
-#if QT_CONFIG(qml_locale)
-            case QMetaType::QLocale:
-                return QQmlLocale::wrap(this, *reinterpret_cast<const QLocale*>(ptr));
-#endif
             case QMetaType::QPixmap:
             case QMetaType::QImage:
                 // Scarce value types
@@ -2648,15 +2640,6 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         }
         break;
     }
-#if QT_CONFIG(qml_locale)
-    case QMetaType::QLocale: {
-        if (const QV4::QQmlLocaleData *l = value.as<QQmlLocaleData>()) {
-            *reinterpret_cast<QLocale *>(data) = *l->d()->locale;
-            return true;
-        }
-        break;
-    }
-#endif
     default:
         break;
     }

@@ -120,6 +120,17 @@ public:
             ExecutionEngine *engine, const void *, const QMetaObject *metaObject, QMetaType type);
 
     QVariant toVariant() const;
+
+    template<typename ValueType>
+    ValueType *cast()
+    {
+        if (QMetaType::fromType<ValueType>() != d()->metaType())
+            return nullptr;
+        if (d()->isReference() && !readReferenceValue())
+            return nullptr;
+        return static_cast<ValueType *>(d()->gadgetPtr());
+    }
+
     bool toGadget(void *data) const;
     bool isEqual(const QVariant& value) const;
     int typeId() const;
