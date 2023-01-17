@@ -482,9 +482,20 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
                      [&](const QQmlSA::Element &scope) { return bindingType->inherits(scope); })
         == range.second) {
 
+        const bool bindingTypeIsComposite = bindingType->isComposite();
+        if (bindingTypeIsComposite && !bindingType->baseType()) {
+            /* broken module or missing import, there is nothing we
+               can really check here, as something is amiss. We
+               simply skip this binding, and assume that whatever
+               caused the breakage here will already cause another
+               warning somewhere else.
+             */
+            return;
+        }
         const QString bindingTypeName = QQmlJSScope::prettyName(
-                bindingType->isComposite() ? bindingType->baseType()->internalName()
-                                           : bindingType->internalName());
+                    bindingTypeIsComposite
+                    ? bindingType->baseType()->internalName()
+                    : bindingType->internalName());
         QStringList expectedTypeNames;
 
         for (auto it = range.first; it != range.second; it++)

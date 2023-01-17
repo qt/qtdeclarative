@@ -1897,6 +1897,7 @@ void TestQmllint::quickPlugin()
     runTest("pluginQuick_varPropClean.qml", Result::clean());
     runTest("pluginQuick_attachedClean.qml", Result::clean());
     runTest("pluginQuick_attachedIgnore.qml", Result::clean());
+    runTest("pluginQuick_noCrashOnUneresolved.qml", Result {}); // we don't care about the specific warnings
 }
 #endif
 
