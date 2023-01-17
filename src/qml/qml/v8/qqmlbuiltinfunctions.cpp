@@ -375,26 +375,10 @@ QVariant QtObject::quaternion(double scalar, double x, double y, double z) const
 }
 
 /*!
-    \qmlmethod matrix4x4 Qt::matrix4x4(real m11, real m12, real m13, real m14, real m21, real m22, real m23, real m24, real m31, real m32, real m33, real m34, real m41, real m42, real m43, real m44)
+    \qmlmethod matrix4x4 Qt::matrix4x4()
 
-    Returns a matrix4x4 with the specified values.
-
-    The arguments correspond to their positions in the matrix:
-
-    \table
-    \row \li \a m11 \li \a m12 \li \a m13 \li \a m14
-    \row \li \a m21 \li \a m22 \li \a m23 \li \a m24
-    \row \li \a m31 \li \a m32 \li \a m33 \li \a m34
-    \row \li \a m41 \li \a m42 \li \a m43 \li \a m44
-    \endtable
-
-    Alternatively, the function may be called with a single argument
-    where that argument is a JavaScript array which contains the sixteen
-    matrix values.
-
-    Finally, the function may be called with no arguments and the resulting
-    matrix will be the identity matrix.
-*/
+    Returns an identity matrix4x4.
+ */
 QVariant QtObject::matrix4x4() const
 {
     QVariant variant;
@@ -402,6 +386,21 @@ QVariant QtObject::matrix4x4() const
     return variant;
 }
 
+/*!
+    \qmlmethod matrix4x4 Qt::matrix4x4(var values)
+
+    Returns a matrix4x4 with the specified \a values. \a values is expected to
+    be a JavaScript array with 16 entries.
+
+    The array indices correspond to positions in the matrix as follows:
+
+    \table
+    \row \li 0  \li 1  \li 2  \li 3
+    \row \li 4  \li 5  \li 6  \li 7
+    \row \li 8  \li 9  \li 10 \li 11
+    \row \li 12 \li 13 \li 14 \li 15
+    \endtable
+*/
 QVariant QtObject::matrix4x4(const QJSValue &value) const
 {
     if (value.isObject()) {
@@ -415,6 +414,20 @@ QVariant QtObject::matrix4x4(const QJSValue &value) const
     return QVariant();
 }
 
+/*!
+    \qmlmethod matrix4x4 Qt::matrix4x4(real m11, real m12, real m13, real m14, real m21, real m22, real m23, real m24, real m31, real m32, real m33, real m34, real m41, real m42, real m43, real m44)
+
+    Returns a matrix4x4 with the specified values.
+
+    The arguments correspond to their positions in the matrix:
+
+    \table
+    \row \li \a m11 \li \a m12 \li \a m13 \li \a m14
+    \row \li \a m21 \li \a m22 \li \a m23 \li \a m24
+    \row \li \a m31 \li \a m32 \li \a m33 \li \a m34
+    \row \li \a m41 \li \a m42 \li \a m43 \li \a m44
+    \endtable
+*/
 QVariant QtObject::matrix4x4(double m11, double m12, double m13, double m14,
                              double m21, double m22, double m23, double m24,
                              double m31, double m32, double m33, double m34,
