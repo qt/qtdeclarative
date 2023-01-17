@@ -234,16 +234,14 @@ public Q_SLOTS:
     {
         Q_UNUSED(url);
         if (o) {
-            checkForWindow(o);
+            ++createdObjects;
             if (conf && qae)
                 for (PartialScene *ps : std::as_const(conf->completers))
                     if (o->inherits(ps->itemType().toUtf8().constData()))
                         contain(o, ps->container());
         }
-        if (haveWindow)
-            return;
 
-        if (! --expectedFileCount) {
+        if (!--expectedFileCount && !createdObjects) {
             printf("qml: Did not load any objects, exiting.\n");
             exit(2);
             QCoreApplication::exit(2);
@@ -262,11 +260,10 @@ public Q_SLOTS:
 
 private:
     void contain(QObject *o, const QUrl &containPath);
-    void checkForWindow(QObject *o);
 
 private:
-    bool haveWindow = false;
     int expectedFileCount;
+    int createdObjects = 0;
 };
 
 void LoadWatcher::contain(QObject *o, const QUrl &containPath)
@@ -276,23 +273,12 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
     if (!o2)
         return;
     o2->setParent(this);
-    checkForWindow(o2);
     bool success = false;
     int idx;
     if ((idx = o2->metaObject()->indexOfProperty("containedObject")) != -1)
         success = o2->metaObject()->property(idx).write(o2, QVariant::fromValue<QObject*>(o));
     if (!success)
         o->setParent(o2); // Set QObject parent, and assume container will react as needed
-}
-
-void LoadWatcher::checkForWindow(QObject *o)
-{
-#if defined(QT_GUI_LIB)
-    if (o->isWindowType() && o->inherits("QQuickWindow"))
-        haveWindow = true;
-#else
-    Q_UNUSED(o);
-#endif // QT_GUI_LIB
 }
 
 void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
