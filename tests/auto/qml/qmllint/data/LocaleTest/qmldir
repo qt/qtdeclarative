@@ -1,0 +1,3 @@
+module LocaleTest
+typeinfo localeTest.qmltypes
+depends QtQml

@@ -339,12 +339,6 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
                     time, valueTypeWrapper, index, referenceFlags(metaObject, index));
     };
 
-#if QT_CONFIG(qml_locale)
-    const auto wrapLocale = [engine](const QLocale &locale) {
-        return QQmlLocale::wrap(engine, locale);
-    };
-#endif
-
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     case metatype: { \
         cpptype v; \
@@ -397,9 +391,6 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     VALUE_TYPE_LOAD(QMetaType::QJsonValue, QJsonValue, wrapJsonValue);
     VALUE_TYPE_LOAD(QMetaType::QJsonObject, QJsonObject, wrapJsonObject);
     VALUE_TYPE_LOAD(QMetaType::QJsonArray, QJsonArray, wrapJsonArray);
-#if QT_CONFIG(qml_locale)
-    VALUE_TYPE_LOAD(QMetaType::QLocale, QLocale, wrapLocale);
-#endif
     case QMetaType::QPixmap:
     case QMetaType::QImage: {
         QVariant v(metaType);
