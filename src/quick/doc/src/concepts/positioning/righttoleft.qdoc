@@ -114,27 +114,25 @@ The painting of these icons can be mirrored with a dedicated \c mirror property:
 
 \section1 Default Layout Direction
 
-The \l {QtQml::Qt::application}{Qt.application.layoutDirection} property can be used to query the active layout direction of the
-application. It is based on QGuiApplication::layoutDirection(), which most commonly determines the layout
-direction from the active language translation file.
+Use the \l {QtQml::Qt::application}{Qt.application.layoutDirection} property
+to query the active layout direction of the application. It inherits
+QGuiApplication::layoutDirection(), which determines the layout direction from
+the active language translation file.
 
-To define the layout direction for a particular locale, declare the dedicated string literal
-\c QT_LAYOUT_DIRECTION in context \c QGuiApplication as either "LTR" or "RTL".
+To define the layout direction for a particular locale, declare the dedicated
+string literal \c QT_LAYOUT_DIRECTION in the context \c QGuiApplication as
+either \c LTR or \c RTL.
 
-You can do this by first introducing this line
+First, introduce this line somewhere in your QML source code:
 
 \code
 qsTr("QT_LAYOUT_DIRECTION","QGuiApplication");
 \endcode
 
-somewhere in your QML source code and calling \c lupdate to generate the translation source file.
+Then use \l {Using lupdate} to generate the translation source file.
 
-\code
-lupdate myapp.qml -ts myapp.ts
-\endcode
-
-This will append the following declaration to the translation file, where you can fill in either "LTR" or
-"RTL" as the translation for the locale.
+This appends the following declaration to the translation file, where you can
+enter either \c LTR or \c RTL as the translation for the locale.
 
 \code
 <context>
