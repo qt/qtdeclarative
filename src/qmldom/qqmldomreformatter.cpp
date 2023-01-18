@@ -301,6 +301,7 @@ protected:
         for (PatternPropertyList *it = ast; it; it = it->next) {
             PatternProperty *assignment = AST::cast<PatternProperty *>(it->property);
             if (assignment) {
+                preVisit(assignment);
                 bool isStringLike = AST::cast<StringLiteralPropertyName *>(assignment->name)
                         || cast<IdentifierPropertyName *>(assignment->name);
                 if (isStringLike)
@@ -316,6 +317,7 @@ protected:
                 accept(assignment->initializer);
                 if (it->next)
                     newLine();
+                postVisit(assignment);
                 continue;
             }
             PatternPropertyList *getterSetter = AST::cast<PatternPropertyList *>(it->next);
