@@ -298,6 +298,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("normalize + functions spacing")
             << "normalizedFunctionsSpacing.qml"
             << "normalizedFunctionsSpacing.formatted.qml" << QStringList { "-n", "--functions-spacing" } << RunOption::OnCopy;
+    QTest::newRow("dontRemoveComments")
+            << "dontRemoveComments.qml"
+            << "dontRemoveComments.formatted.qml" << QStringList {} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
