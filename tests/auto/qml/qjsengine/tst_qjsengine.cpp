@@ -264,6 +264,8 @@ private slots:
     void forOfAndGc();
     void staticInNestedClasses();
 
+    void spreadNoOverflow();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -5618,6 +5620,16 @@ void tst_QJSEngine::staticInNestedClasses()
     )"_s;
 
     QCOMPARE(engine.evaluate(program).toString(), u"a"_s);
+}
+
+void tst_QJSEngine::spreadNoOverflow()
+{
+    QJSEngine engine;
+
+    const QString program = QString::fromLatin1("var a = [] ;a.length =  555840;Math.max(...a)");
+    const QJSValue result = engine.evaluate(program);
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::RangeError);
 }
 
 QTEST_MAIN(tst_QJSEngine)
