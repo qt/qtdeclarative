@@ -40,6 +40,10 @@
     in a TableView. To create models with multiple columns, either use
     \l TableModel or a C++ model that inherits QAbstractItemModel.
 
+    A TableView does not include headers by default. You can add headers
+    using the \l HorizontalHeaderView and \l VerticalHeaderView from
+    Qt Quick Controls.
+
     \section1 Example Usage
 
     \section2 C++ Models
