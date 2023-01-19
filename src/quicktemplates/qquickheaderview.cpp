@@ -21,6 +21,9 @@
     also have its own model. If the model is a QAbstractTableModel, then
     the header will display the model's horizontal headerData(); otherwise,
     the model's data().
+
+    A HorizontalHeaderView will have
+    \l {resizableColumns}{TableView::resizableColumns} set to \c true by default.
 */
 
 /*!
@@ -40,6 +43,9 @@
     also have its own model. If the model is a QAbstractTableModel, then
     the header will display the model's vertical headerData(); otherwise,
     the model's data().
+
+    A VerticalHeaderView will have
+    \l {resizableRows}{TableView::resizableRows} set to \c true by default.
 */
 
 /*!
@@ -461,6 +467,7 @@ QQuickHorizontalHeaderView::QQuickHorizontalHeaderView(QQuickItem *parent)
     : QQuickHeaderViewBase(Qt::Horizontal, parent)
 {
     setFlickableDirection(FlickableDirection::HorizontalFlick);
+    setResizableColumns(true);
 }
 
 QQuickHorizontalHeaderView::~QQuickHorizontalHeaderView()
@@ -471,6 +478,7 @@ QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
     : QQuickHeaderViewBase(Qt::Vertical, parent)
 {
     setFlickableDirection(FlickableDirection::VerticalFlick);
+    setResizableRows(true);
 }
 
 QQuickVerticalHeaderView::~QQuickVerticalHeaderView()
