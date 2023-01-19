@@ -384,7 +384,7 @@ bool QQuickBoundaryRule::returnToBounds()
 }
 
 /*!
-    \qmlproperty qreal QtQuick::BoundaryRule::easing
+    \qmlproperty enumeration QtQuick::BoundaryRule::easing
 
     This property holds the easing curve to be applied in overshoot mode
     (whenever the \l minimum or \l maximum constraint is violated, while
