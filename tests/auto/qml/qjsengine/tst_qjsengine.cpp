@@ -274,6 +274,7 @@ private slots:
 
     void coerceValue();
     void callWithSpreadOnElement();
+    void spreadNoOverflow();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5857,6 +5858,16 @@ void tst_QJSEngine::callWithSpreadOnElement()
     QTest::ignoreMessage(QtCriticalMsg, "That is great!");
     const QJSValue result = engine.evaluate(program);
     QVERIFY(!result.isError());
+}
+
+void tst_QJSEngine::spreadNoOverflow()
+{
+    QJSEngine engine;
+
+    const QString program = QString::fromLatin1("var a = [] ;a.length =  555840;Math.max(...a)");
+    const QJSValue result = engine.evaluate(program);
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::RangeError);
 }
 
 QTEST_MAIN(tst_QJSEngine)
