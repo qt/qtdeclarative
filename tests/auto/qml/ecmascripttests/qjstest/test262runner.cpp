@@ -377,9 +377,7 @@ void Test262Runner::loadTestExpectations()
         return;
     }
 
-    int line = 0;
     while (!file.atEnd()) {
-        ++line;
         QByteArray line = file.readLine().trimmed();
         if (line.startsWith('#') || line.isEmpty())
             continue;
@@ -424,9 +422,7 @@ void Test262Runner::updateTestExpectations()
     QTemporaryFile updatedExpectations;
     updatedExpectations.open();
 
-    int line = 0;
     while (!file.atEnd()) {
-        ++line;
         QByteArray originalLine = file.readLine();
         QByteArray line = originalLine.trimmed();
         if (line.startsWith('#') || line.isEmpty()) {
