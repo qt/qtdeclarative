@@ -47,12 +47,12 @@ Item {
 
                 Component.onCompleted: {
                     tableView.editItem = editRoot
-                    tableView.editIndex = tableView.modelIndex(row, column)
+                    tableView.editIndex = tableView.index(row, column)
                 }
 
                 Component.onDestruction: {
                     tableView.editItem = null
-                    tableView.editIndex = tableView.modelIndex(-1, -1)
+                    tableView.editIndex = tableView.index(-1, -1)
                 }
 
                 ComboBox {

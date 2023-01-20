@@ -347,8 +347,8 @@ void QQuickTreeViewPrivate::updateSelection(const QRect &oldSelection, const QRe
     for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row) {
         if (oldRect.y() != -1 && oldRect.y() <= row && row <= oldRect.y() + oldRect.height())
             continue;
-        const QModelIndex startIndex = q->modelIndex(row, newRect.x());
-        const QModelIndex endIndex = q->modelIndex(row, newRect.x() + newRect.width());
+        const QModelIndex startIndex = q->index(row, newRect.x());
+        const QModelIndex endIndex = q->index(row, newRect.x() + newRect.width());
         selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
     }
 
@@ -360,15 +360,15 @@ void QQuickTreeViewPrivate::updateSelection(const QRect &oldSelection, const QRe
             if (oldRect.x() <= column && column <= oldRect.x() + oldRect.width())
                 continue;
             for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row)
-                selectionModel->select(q->modelIndex(row, column), QItemSelectionModel::Select);
+                selectionModel->select(q->index(row, column), QItemSelectionModel::Select);
         }
 
         // Unselect the rows inside oldRect that don't overlap with newRect
         for (int row = oldRect.y(); row <= oldRect.y() + oldRect.height(); ++row) {
             if (newRect.y() <= row && row <= newRect.y() + newRect.height())
                 continue;
-            const QModelIndex startIndex = q->modelIndex(row, oldRect.x());
-            const QModelIndex endIndex = q->modelIndex(row, oldRect.x() + oldRect.width());
+            const QModelIndex startIndex = q->index(row, oldRect.x());
+            const QModelIndex endIndex = q->index(row, oldRect.x() + oldRect.width());
             selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
         }
 
@@ -384,7 +384,7 @@ void QQuickTreeViewPrivate::updateSelection(const QRect &oldSelection, const QRe
             // performance. But large selections containing a lot of columns is not normally
             // the case for a treeview, so accept this potential corner case for now.
             for (int row = newRect.y(); row <= newRect.y() + newRect.height(); ++row)
-                selectionModel->select(q->modelIndex(row, column), QItemSelectionModel::Deselect);
+                selectionModel->select(q->index(row, column), QItemSelectionModel::Deselect);
         }
     }
 }
@@ -610,6 +610,7 @@ QPoint QQuickTreeView::cellAtIndex(const QModelIndex &index) const
     return QPoint(tableIndex.column(), tableIndex.row());
 }
 
+#if QT_DEPRECATED_SINCE(6, 4)
 QModelIndex QQuickTreeView::modelIndex(int row, int column) const
 {
     static const bool compat6_4 = qEnvironmentVariable("QT_QUICK_TABLEVIEW_COMPAT_VERSION") == QStringLiteral("6.4");
@@ -621,9 +622,13 @@ QModelIndex QQuickTreeView::modelIndex(int row, int column) const
         // to continue accepting calls to modelIndex(column, row).
         return modelIndex({row, column});
     } else {
+        qmlWarning(this) << "modelIndex(row, column) is deprecated. "
+                            "Use index(row, column) instead. For more information, see "
+                            "https://doc.qt.io/qt-6/qml-qtquick-tableview-obsolete.html";
         return modelIndex({column, row});
     }
 }
+#endif
 
 void QQuickTreeView::keyPressEvent(QKeyEvent *event)
 {
