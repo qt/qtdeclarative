@@ -859,18 +859,14 @@
 /*!
     \qmlmethod QModelIndex QtQuick::TableView::modelIndex(int column, int row)
     \since 6.4
+    \deprecated
 
-    Returns the \l QModelIndex that maps to \a column and \a row in the view.
+    Use \l index(row, column) instead.
 
-    \a row and \a column should be the row and column in the view (table row and
-    table column), and not a row and column in the model.
-
-    \note Because of an API incompatible change in Qt 6.4.0 and Qt 6.4.1, the
+    \note Because of an API incompatible change between Qt 6.4.0 and Qt 6.4.2, the
     order of \c row and \c column was specified in the opposite order. If you
     rely on the order to be \c {modelIndex(column, row)}, you can set the
     environment variable \c QT_QUICK_TABLEVIEW_COMPAT_VERSION to \c 6.4
-
-    \sa rowAtIndex(), columnAtIndex()
 */
 
 /*!
@@ -889,12 +885,28 @@
 */
 
 /*!
+    \qmlmethod QModelIndex QtQuick::TableView::index(int row, int column)
+    \since 6.4.3
+
+    Returns the \l QModelIndex that maps to \a row and \a column in the view.
+
+    \a row and \a column should be the row and column in the view (table row and
+    table column), and not a row and column in the model. For a plain
+    TableView, this is equivalent of calling \c {model.index(row, column).}
+    But for a subclass of TableView, like TreeView, where the data model is
+    wrapped inside an internal proxy model that flattens the tree structure
+    into a table, you need to use this function to resolve the model index.
+
+    \sa rowAtIndex(), columnAtIndex()
+*/
+
+/*!
     \qmlmethod int QtQuick::TableView::rowAtIndex(QModelIndex modelIndex)
     \since 6.4
 
     Returns the row in the view that maps to \a modelIndex in the model.
 
-    \sa columnAtIndex(), modelIndex()
+    \sa columnAtIndex(), index()
 */
 
 /*!
@@ -903,7 +915,7 @@
 
     Returns the column in the view that maps to \a modelIndex in the model.
 
-    \sa rowAtIndex(), modelIndex()
+    \sa rowAtIndex(), index()
 */
 
 /*!
@@ -4934,6 +4946,7 @@ QPoint QQuickTableView::cellAtIndex(const QModelIndex &index) const
     return {index.column(), index.row()};
 }
 
+#if QT_DEPRECATED_SINCE(6, 4)
 QModelIndex QQuickTableView::modelIndex(int row, int column) const
 {
     static bool compat6_4 = qEnvironmentVariable("QT_QUICK_TABLEVIEW_COMPAT_VERSION") == QStringLiteral("6.4");
@@ -4944,8 +4957,17 @@ QModelIndex QQuickTableView::modelIndex(int row, int column) const
         // to continue accepting calls to modelIndex(column, row).
         return modelIndex({row, column});
     } else {
+        qmlWarning(this) << "modelIndex(row, column) is deprecated. "
+                            "Use index(row, column) instead. For more information, see "
+                            "https://doc.qt.io/qt-6/qml-qtquick-tableview-obsolete.html";
         return modelIndex({column, row});
     }
+}
+#endif
+
+QModelIndex QQuickTableView::index(int row, int column) const
+{
+    return modelIndex({column, row});
 }
 
 int QQuickTableView::rowAtIndex(const QModelIndex &index) const
@@ -5050,7 +5072,7 @@ void QQuickTableView::keyPressEvent(QKeyEvent *e)
         case Qt::Key_Right:
             // Special case: the current index doesn't map to a cell in the view (perhaps
             // because it isn't set yet). In that case, we set it to be the top-left cell.
-            const QModelIndex topLeftIndex = modelIndex(leftColumn(), topRow());
+            const QModelIndex topLeftIndex = index(topRow(), leftColumn());
             d->selectionModel->setCurrentIndex(topLeftIndex, QItemSelectionModel::NoUpdate);
         }
         return;

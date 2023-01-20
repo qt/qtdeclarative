@@ -5058,7 +5058,7 @@ void tst_QQuickTableView::disablePointerNavigation()
     // Enable navigation, and try again
     tableView->setPointerNavigationEnabled(true);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(0, 0));
+    QCOMPARE(selectionModel.currentIndex(), tableView->index(0, 0));
     QVERIFY(item0_0->property("current").toBool());
     QCOMPARE(tableView->currentColumn(), cell0_0.x());
     QCOMPARE(tableView->currentRow(), cell0_0.y());

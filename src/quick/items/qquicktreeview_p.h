@@ -44,8 +44,12 @@ public:
     Q_REVISION(6, 4) Q_INVOKABLE void expandToIndex(const QModelIndex &index);
 
     Q_INVOKABLE QModelIndex modelIndex(const QPoint &cell) const override;
-    Q_INVOKABLE QModelIndex modelIndex(int row, int column) const override;
     Q_INVOKABLE QPoint cellAtIndex(const QModelIndex &index) const override;
+
+#if QT_DEPRECATED_SINCE(6, 4)
+    QT_DEPRECATED_VERSION_X_6_4("Use index(row, column) instead")
+    Q_REVISION(6, 4) Q_INVOKABLE QModelIndex modelIndex(int row, int column) const override;
+#endif
 
 Q_SIGNALS:
     void expanded(int row, int depth);
