@@ -22,7 +22,7 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 
-static QStringList testStyles()
+inline QStringList testStyles()
 {
     // It's not enough to check if the name is empty, because since Qt 6
     // we set an appropriate style for the platform if no style was specified.
@@ -33,7 +33,7 @@ static QStringList testStyles()
     return QStringList(QQuickStyle::name());
 }
 
-static int runTests(QObject *testObject, int argc, char *argv[])
+inline int runTests(QObject *testObject, int argc, char *argv[])
 {
     int res = 0;
     QTest::qInit(testObject, argc, argv);
