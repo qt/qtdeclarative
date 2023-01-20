@@ -183,6 +183,8 @@ public:
     Q_REVISION(6, 4) Q_INVOKABLE QPoint cellAtPosition(const QPointF &position, bool includeSpacing = false) const;
     Q_REVISION(6, 4) Q_INVOKABLE QPoint cellAtPosition(qreal x, qreal y, bool includeSpacing = false) const;
 #if QT_DEPRECATED_SINCE(6, 4)
+    QT_DEPRECATED_VERSION_X_6_4("Use index(row, column) instead")
+    Q_REVISION(6, 4) Q_INVOKABLE virtual QModelIndex modelIndex(int row, int column) const;
     QT_DEPRECATED_VERSION_X_6_4("Use cellAtPosition() instead")
     Q_INVOKABLE QPoint cellAtPos(const QPointF &position, bool includeSpacing = false) const;
     Q_INVOKABLE QPoint cellAtPos(qreal x, qreal y, bool includeSpacing = false) const;
@@ -196,8 +198,8 @@ public:
     Q_REVISION(6, 2) Q_INVOKABLE qreal implicitColumnWidth(int column) const;
     Q_REVISION(6, 2) Q_INVOKABLE qreal implicitRowHeight(int row) const;
 
+    Q_REVISION(6, 4) Q_INVOKABLE QModelIndex index(int row, int column) const;
     Q_REVISION(6, 4) Q_INVOKABLE virtual QModelIndex modelIndex(const QPoint &cell) const;
-    Q_REVISION(6, 4) Q_INVOKABLE virtual QModelIndex modelIndex(int row, int column) const;
     Q_REVISION(6, 4) Q_INVOKABLE virtual QPoint cellAtIndex(const QModelIndex &index) const;
     Q_REVISION(6, 4) Q_INVOKABLE int rowAtIndex(const QModelIndex &index) const;
     Q_REVISION(6, 4) Q_INVOKABLE int columnAtIndex(const QModelIndex &index) const;

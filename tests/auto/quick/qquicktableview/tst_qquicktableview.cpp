@@ -5358,7 +5358,7 @@ void tst_QQuickTableView::disablePointerNavigation()
     // Enable navigation, and try again
     tableView->setPointerNavigationEnabled(true);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(0, 0));
+    QCOMPARE(selectionModel.currentIndex(), tableView->index(0, 0));
     QVERIFY(item0_0->property("current").toBool());
     QCOMPARE(tableView->currentColumn(), cell0_0.x());
     QCOMPARE(tableView->currentRow(), cell0_0.y());
@@ -7075,7 +7075,7 @@ void tst_QQuickTableView::editWarning_noEditDelegate()
     WAIT_UNTIL_POLISHED;
 
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*cannot edit: no TableView.editDelegate set!"));
-    tableView->edit(tableView->modelIndex(1, 1));
+    tableView->edit(tableView->index(1, 1));
 }
 
 void tst_QQuickTableView::editWarning_invalidIndex()
@@ -7090,7 +7090,7 @@ void tst_QQuickTableView::editWarning_invalidIndex()
     WAIT_UNTIL_POLISHED;
 
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*cannot edit: index is not valid!"));
-    tableView->edit(tableView->modelIndex(-1, -1));
+    tableView->edit(tableView->index(-1, -1));
 }
 
 void tst_QQuickTableView::editWarning_nonEditableModelItem()
@@ -7108,7 +7108,7 @@ void tst_QQuickTableView::editWarning_nonEditableModelItem()
     WAIT_UNTIL_POLISHED;
 
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*cannot edit:.*flags.*Qt::ItemIsEditable"));
-    tableView->edit(tableView->modelIndex(1, 1));
+    tableView->edit(tableView->index(1, 1));
 }
 
 void tst_QQuickTableView::attachedPropertiesOnEditDelegate()
@@ -7214,7 +7214,7 @@ void tst_QQuickTableView::requiredPropertiesOnEditDelegate()
 
     const QPoint cell(1, 1);
     const QModelIndex index1 = tableView->modelIndex(cell);
-    const QModelIndex index2 = tableView->modelIndex(2, 2);
+    const QModelIndex index2 = tableView->index(2, 2);
 
     tableView->edit(index1);
 
