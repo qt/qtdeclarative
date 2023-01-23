@@ -72,7 +72,7 @@ qt_feature("quick-treeview" PRIVATE
     SECTION "Qt Quick"
     LABEL "TreeView item"
     PURPOSE "Provides the TreeView item."
-    CONDITION QT_FEATURE_qml_table_model
+    CONDITION QT_FEATURE_quick_tableview
 )
 qt_feature("quick-particles" PRIVATE
     SECTION "Qt Quick"
