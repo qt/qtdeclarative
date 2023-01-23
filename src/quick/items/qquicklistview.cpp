@@ -1443,7 +1443,9 @@ void QQuickListViewPrivate::updateFooter()
     } else if (visibleItems.size()) {
         if (footerPositioning == QQuickListView::PullBackFooter) {
             qreal viewPos = isContentFlowReversed() ? -position() : position() + size();
-            qreal clampedPos = qBound(originPosition() - footerSize() + size(), listItem->position(), lastPosition());
+            // using qBound() would throw an assert here, because max < min is a valid case
+            // here, if the list's delegates do not fill the whole view
+            qreal clampedPos = qMax(originPosition() - footerSize() + size(), qMin(listItem->position(), lastPosition()));
             listItem->setPosition(qBound(viewPos - footerSize(), clampedPos, viewPos));
         } else {
             qreal endPos = lastPosition();
@@ -1512,7 +1514,9 @@ void QQuickListViewPrivate::updateHeader()
             // Make sure the header is not shown if we absolutely do not have any plans to show it
             if (fixingUp && !headerNeedsSeparateFixup)
                 headerPosition = viewPos - headerSize();
-            qreal clampedPos = qBound(originPosition() - headerSize(), headerPosition, lastPosition() - size());
+            // using qBound() would throw an assert here, because max < min is a valid case
+            // here, if the list's delegates do not fill the whole view
+            qreal clampedPos = qMax(originPosition() - headerSize(), qMin(headerPosition, lastPosition() - size()));
             listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
         } else {
             qreal startPos = originPosition();
