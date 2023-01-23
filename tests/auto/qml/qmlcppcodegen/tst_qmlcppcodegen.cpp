@@ -2457,20 +2457,28 @@ void tst_QmlCppCodegen::badSequence()
     QScopedPointer<QObject> o(c.create());
 
     Person *self = qobject_cast<Person *>(o.data());
-    QVERIFY(self); QVERIFY(self->barzles().isEmpty());
+    QVERIFY(self);
+    QVERIFY(self->barzles().isEmpty());
+    QVERIFY(self->cousins().isEmpty());
 
     Person *other = o->property("other").value<Person *>();
     QVERIFY(other);
 
     QVERIFY(other->barzles().isEmpty());
+    QVERIFY(other->cousins().isEmpty());
 
     Barzle f1;
     Barzle f2;
     const QList<Barzle *> barzles { &f1, &f2 };
+    const QList<Person *> cousins { self, other };
 
     other->setBarzles(barzles);
     QCOMPARE(self->barzles(), barzles);
     QCOMPARE(self->property("l").toInt(), 2);
+
+    other->setCousins(cousins);
+    QCOMPARE(self->cousins(), cousins);
+    QCOMPARE(self->property("m").toInt(), 2);
 }
 
 void tst_QmlCppCodegen::enumLookup()

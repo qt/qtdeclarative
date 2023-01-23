@@ -85,3 +85,16 @@ QByteArray Person::data() const
 {
     return m_data;
 }
+
+QList<Person *> Person::cousins() const
+{
+    return m_cousins;
+}
+
+void Person::setCousins(const QList<Person *> &newCousins)
+{
+    if (m_cousins == newCousins)
+        return;
+    m_cousins = newCousins;
+    emit cousinsChanged();
+}

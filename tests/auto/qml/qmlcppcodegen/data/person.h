@@ -9,6 +9,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtCore/qproperty.h>
 
+// Intentionally opaque type
 class Barzle : public QObject {};
 
 class Person : public QObject
@@ -19,6 +20,7 @@ class Person : public QObject
     Q_PROPERTY(int pain READ pain CONSTANT FINAL)
     Q_PROPERTY(QVariantList things READ things WRITE setThings NOTIFY thingsChanged FINAL)
     Q_PROPERTY(QList<Barzle *> barzles READ barzles WRITE setBarzles NOTIFY barzlesChanged FINAL)
+    Q_PROPERTY(QList<Person *> cousins READ cousins WRITE setCousins NOTIFY cousinsChanged FINAL)
     Q_PROPERTY(QByteArray data READ data WRITE setData NOTIFY dataChanged FINAL)
     QML_ELEMENT
 public:
@@ -47,6 +49,9 @@ public:
     void setData(const QByteArray &data);
     QByteArray data() const;
 
+    QList<Person *> cousins() const;
+    void setCousins(const QList<Person *> &newCousins);
+
 signals:
     void nameChanged();
     void shoeSizeChanged();
@@ -56,15 +61,18 @@ signals:
 
     void ambiguous(int a = 9);
 
+    void cousinsChanged();
+
 private:
     QString m_name;
     int m_shoeSize;
     QVariantList m_things;
     QList<Barzle *> m_barzles;
+    QList<Person *> m_cousins;
     QProperty<QByteArray> m_data;
 };
 
-class FoozleListRegistration
+class BarzleListRegistration
 {
     Q_GADGET
     QML_FOREIGN(QList<Barzle *>)
@@ -72,5 +80,12 @@ class FoozleListRegistration
     QML_SEQUENTIAL_CONTAINER(Barzle *)
 };
 
+class PersonListRegistration
+{
+    Q_GADGET
+    QML_FOREIGN(QList<Person *>)
+    QML_ANONYMOUS
+    QML_SEQUENTIAL_CONTAINER(Person *)
+};
 
 #endif // PERSON_H

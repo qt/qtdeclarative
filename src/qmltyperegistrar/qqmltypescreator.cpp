@@ -50,8 +50,12 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (!collector.superClass.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("prototype"), enquote(collector.superClass));
 
-    if (!collector.sequenceValueType.isEmpty())
-        m_qml.writeScriptBinding(QLatin1String("valueType"), enquote(collector.sequenceValueType));
+    if (!collector.sequenceValueType.isEmpty()) {
+        const QString name = collector.sequenceValueType.endsWith('*'_L1)
+                ? collector.sequenceValueType.chopped(1)
+                : collector.sequenceValueType;
+        m_qml.writeScriptBinding(QLatin1String("valueType"), enquote(name));
+    }
 
     if (!collector.extensionType.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("extension"), enquote(collector.extensionType));
