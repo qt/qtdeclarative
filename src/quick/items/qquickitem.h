@@ -317,7 +317,8 @@ public:
     void polish();
 
 #if QT_DEPRECATED_SINCE(6, 5)
-    QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectFromItem") void mapFromItem(QQmlV4Function*) const;
+    QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectFromItem")
+    void mapFromItem(QQmlV4Function*) const;
 #endif
     Q_INVOKABLE QPointF mapFromItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -326,7 +327,8 @@ public:
     Q_INVOKABLE QRectF mapFromItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const;
 
 #if QT_DEPRECATED_SINCE(6, 5)
-    QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectToItem") void mapToItem(QQmlV4Function*) const;
+    QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectToItem")
+    void mapToItem(QQmlV4Function*) const;
 #endif
     Q_INVOKABLE QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -335,14 +337,16 @@ public:
     Q_INVOKABLE QRectF mapToItem(const QQuickItem *item, qreal x, qreal y, qreal width, qreal height) const;
 
 #if QT_DEPRECATED_SINCE(6, 5)
-    QT_DEPRECATED_VERSION_X_6_5("Use the typed overload") Q_REVISION(2, 7) void mapFromGlobal(QQmlV4Function*) const;
+    QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
+    Q_REVISION(2, 7) void mapFromGlobal(QQmlV4Function*) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE QPointF mapFromGlobal(qreal x, qreal y) const;
     // overload mainly exists for QML
     Q_REVISION(2, 7) Q_INVOKABLE QPointF mapFromGlobal(const QPointF &point) const;
 
 #if QT_DEPRECATED_SINCE(6, 5)
-    QT_DEPRECATED_VERSION_X_6_5("Use the typed overload") Q_REVISION(2, 7) void mapToGlobal(QQmlV4Function*) const;
+    QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
+    Q_REVISION(2, 7) void mapToGlobal(QQmlV4Function*) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE  QPointF mapToGlobal(qreal x, qreal y) const;
     // overload only exist for QML
