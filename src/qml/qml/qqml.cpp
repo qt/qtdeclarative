@@ -1573,8 +1573,19 @@ static void initTypeWrapperLookup(
         }
         scope.engine->throwTypeError();
     } else {
-        l->qmlContextPropertyGetter(l, context->engine->handle(), nullptr);
-        Q_ASSERT(l->qmlContextPropertyGetter == qmlContextPropertyGetter);
+        QV4::ExecutionEngine *v4 = context->engine->handle();
+        l->qmlContextPropertyGetter(l, v4, nullptr);
+        if (l->qmlContextPropertyGetter != qmlContextPropertyGetter) {
+            const QString error
+                    = QLatin1String(qmlContextPropertyGetter
+                                    == QV4::QQmlContextWrapper::lookupSingleton
+                        ? "%1 was a singleton at compile time, "
+                          "but is not a singleton anymore."
+                        : "%1 was not a singleton at compile time, "
+                          "but is a singleton now.")
+                    .arg(context->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+            v4->throwTypeError(error);
+        }
     }
 }
 

@@ -163,6 +163,7 @@ private slots:
     void equalityQObjects();
     void dateConversions();
     void valueTypeBehavior();
+    void invisibleSingleton();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3180,6 +3181,22 @@ void tst_QmlCppCodegen::valueTypeBehavior()
     QVERIFY(!o2.isNull());
     QVERIFY(qIsNaN(o2->property("e").toDouble()));
     QCOMPARE(o2->property("f").toDouble(), 5.0);
+}
+
+void tst_QmlCppCodegen::invisibleSingleton()
+{
+    QQmlEngine engine;
+    const QUrl copy(u"qrc:/qt/qml/TestTypes/hidden/Main.qml"_s);
+    QQmlComponent c(&engine, copy);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "qrc:/qt/qml/TestTypes/hidden/Main.qml:4:5: "
+                "Unable to assign [undefined] to QColor");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("c"), QVariant(QMetaType::fromName("QColor")));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

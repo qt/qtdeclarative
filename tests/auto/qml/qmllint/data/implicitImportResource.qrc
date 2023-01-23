@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>additionalImplicitImport.qml</file>
         <file alias="qmldir">Things/qmldir</file>
     </qresource>
 </RCC>

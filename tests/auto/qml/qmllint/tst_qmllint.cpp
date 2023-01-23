@@ -397,13 +397,29 @@ void TestQmllint::autoqmltypes()
 
 void TestQmllint::resources()
 {
-    callQmllint(testFile("resource.qml"), true, nullptr, {}, {}, { testFile("resource.qrc") });
-    callQmllint(testFile("badResource.qml"), false, nullptr, {}, {}, { testFile("resource.qrc") });
+    {
+        // We need to clear the import cache before we add a qrc file with different
+        // contents for the same paths.
+        const auto guard = qScopeGuard([this]() { m_linter.clearCache(); });
+
+        callQmllint(testFile("resource.qml"), true, nullptr, {}, {}, { testFile("resource.qrc") });
+        callQmllint(testFile("badResource.qml"), false, nullptr, {}, {}, { testFile("resource.qrc") });
+    }
+
+
     callQmllint(testFile("resource.qml"), false);
     callQmllint(testFile("badResource.qml"), true);
-    callQmllint(testFile("T/b.qml"), true, nullptr, {}, {}, { testFile("T/a.qrc") });
-    callQmllint(testFile("relPathQrc/Foo/Thing.qml"), true, nullptr, {}, {},
+
+    {
+        const auto guard = qScopeGuard([this]() { m_linter.clearCache(); });
+        callQmllint(testFile("T/b.qml"), true, nullptr, {}, {}, { testFile("T/a.qrc") });
+    }
+
+    {
+        const auto guard = qScopeGuard([this]() { m_linter.clearCache(); });
+        callQmllint(testFile("relPathQrc/Foo/Thing.qml"), true, nullptr, {}, {},
                 { testFile("relPathQrc/resources.qrc") });
+    }
 }
 
 void TestQmllint::dirtyQmlCode_data()
@@ -1367,13 +1383,13 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 
     if (type == LintFile) {
         lintResult = m_linter.lintFile(
-                lintedFile, nullptr, true, warnings ? &jsonOutput : nullptr,
+                lintedFile, nullptr, true, &jsonOutput,
                 defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths
                                                     : importPaths,
                 qmldirFiles, resources,
                 categories != nullptr ? *categories : QQmlJSLogger::defaultCategories());
     } else {
-        lintResult = m_linter.lintModule(fileToLint, true, warnings ? &jsonOutput : nullptr);
+        lintResult = m_linter.lintModule(fileToLint, true, &jsonOutput);
     }
 
     bool success = lintResult == QQmlJSLinter::LintSuccess;
@@ -1602,8 +1618,11 @@ void TestQmllint::settingsFile()
 
 void TestQmllint::additionalImplicitImport()
 {
+    // We're polluting the resource file system here, so let's clean up afterwards.
+    const auto guard = qScopeGuard([this]() {m_linter.clearCache(); });
     runTest("additionalImplicitImport.qml", Result::clean(), {}, {},
             { testFile("implicitImportResource.qrc") });
+
 }
 
 void TestQmllint::attachedPropertyReuse()

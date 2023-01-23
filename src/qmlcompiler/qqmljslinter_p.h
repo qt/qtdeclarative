@@ -128,6 +128,8 @@ public:
     void setPluginsEnabled(bool enablePlugins) { m_enablePlugins = enablePlugins; }
     bool pluginsEnabled() const { return m_enablePlugins; }
 
+    void clearCache() { m_importer.clearCache(); }
+
 private:
     void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
     void processMessages(QJsonArray &warnings);

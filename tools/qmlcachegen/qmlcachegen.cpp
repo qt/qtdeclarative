@@ -233,8 +233,14 @@ int main(int argc, char **argv)
             }
         } else {
             QStringList importPaths;
+
+            if (parser.isSet(resourceOption)) {
+                importPaths.append(QLatin1String(":/qt-project.org/imports"));
+                importPaths.append(QLatin1String(":/qt/qml"));
+            };
+
             if (parser.isSet(importPathOption))
-                importPaths = parser.values(importPathOption);
+                importPaths.append(parser.values(importPathOption));
 
             if (!parser.isSet(bareOption))
                 importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
