@@ -2473,6 +2473,7 @@ void tst_QmlCppCodegen::badSequence()
 
     other->setBarzles(barzles);
     QCOMPARE(self->barzles(), barzles);
+    QCOMPARE(self->property("l").toInt(), 2);
 }
 
 void tst_QmlCppCodegen::enumLookup()

@@ -733,6 +733,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
                 break;
             }
         }
+        return m_variantListType;
     }
 
     return m_varType;
