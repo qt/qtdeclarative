@@ -760,6 +760,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
             return type;
         if (const QQmlJSScope::ConstPtr valueType = type->valueType())
             return listType(genericType(valueType), UseQObjectList);
+        return m_variantListType;
     }
 
     return m_varType;
