@@ -178,3 +178,8 @@ Q_INVOKABLE QQmlComponent *QQuickControlsTestUtils::ComponentCreator::createComp
         qmlWarning(this) << "Failed to create component from the following data:\n" << data;
     return component.release();
 }
+
+QString QQuickControlsTestUtils::StyleInfo::styleName() const
+{
+    return QQuickStyle::name();
+}

@@ -65,6 +65,17 @@ namespace QQuickControlsTestUtils
     public:
         Q_INVOKABLE QQmlComponent *createComponent(const QByteArray &data);
     };
+
+    class StyleInfo : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(QString styleName READ styleName CONSTANT FINAL)
+        QML_ELEMENT
+        QML_SINGLETON
+
+    public:
+        QString styleName() const;
+    };
 }
 
 QT_END_NAMESPACE
