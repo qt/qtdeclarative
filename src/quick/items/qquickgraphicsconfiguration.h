@@ -50,11 +50,11 @@ private:
     void detach();
     QQuickGraphicsConfigurationPrivate *d;
     friend class QQuickGraphicsConfigurationPrivate;
+#ifndef QT_NO_DEBUG_STREAM
+    friend Q_QUICK_EXPORT QDebug operator<<(QDebug dbg, const QQuickGraphicsConfiguration &config);
+#endif
 };
 
-#ifndef QT_NO_DEBUG_STREAM
-Q_QUICK_EXPORT QDebug operator<<(QDebug dbg, const QQuickGraphicsConfiguration &config);
-#endif
 
 QT_END_NAMESPACE
 
