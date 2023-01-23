@@ -15,8 +15,6 @@ qt_internal_add_qml_module(QmlCore
         qqmlstandardpaths_p.h
         qqmlstandardpaths.cpp
         qqmlcoreglobal_p.h
-        qqmlsettings_p.h
-        qqmlsettings.cpp
     DEFINES
         QT_BUILD_QML_CORE_LIB
     PUBLIC_LIBRARIES
@@ -24,6 +22,12 @@ qt_internal_add_qml_module(QmlCore
         Qt::Qml
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
+)
+
+qt_internal_extend_target(QmlCore CONDITION QT_FEATURE_settings
+    SOURCES
+        qqmlsettings_p.h
+        qqmlsettings.cpp
 )
 
 qt_internal_add_docs(QmlCore

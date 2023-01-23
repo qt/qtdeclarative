@@ -3,7 +3,9 @@
 
 #include "qquickimaginestyle_p.h"
 
+#if QT_CONFIG(settings)
 #include <QtCore/qsettings.h>
+#endif
 #include <QtQuickControls2/private/qquickstyle_p.h>
 
 QT_BEGIN_NAMESPACE
