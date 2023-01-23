@@ -250,7 +250,9 @@ public:
     QQuickAnchorLine verticalCenter() const;
     QQuickAnchorLine baseline() const;
 
+#if QT_CONFIG(quick_shadereffect)
     QQuickItemLayer *layer() const;
+#endif
 
     void localizedTouchEvent(const QTouchEvent *event, bool isFiltering, QMutableTouchEvent *localized);
     bool hasPointerHandlers() const;

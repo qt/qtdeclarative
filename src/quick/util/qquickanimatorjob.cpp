@@ -7,7 +7,9 @@
 #include "qquickanimator_p.h"
 #include "qquickanimator_p_p.h"
 #include <private/qquickitem_p.h>
+#if QT_CONFIG(quick_shadereffect)
 #include <private/qquickshadereffect_p.h>
+#endif
 #include <private/qanimationgroupjob_p.h>
 
 #include <qcoreapplication.h>
@@ -575,6 +577,7 @@ void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
     m_opacityNode->setOpacity(m_value);
 }
 
+#if QT_CONFIG(quick_shadereffect)
 QQuickUniformAnimatorJob::QQuickUniformAnimatorJob()
 {
     m_isUniform = true;
@@ -616,6 +619,7 @@ void QQuickUniformAnimatorJob::invalidate()
 {
     m_effect = nullptr;
 }
+#endif
 
 QT_END_NAMESPACE
 

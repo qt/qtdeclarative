@@ -103,7 +103,7 @@ qt_feature("quick-repeater" PRIVATE
     PURPOSE "Provides the Repeater item."
     CONDITION QT_FEATURE_qml_delegate_model
 )
-qt_feature("quick-shadereffect" PRIVATE
+qt_feature("quick-shadereffect" PUBLIC
     SECTION "Qt Quick"
     LABEL "ShaderEffect item"
     PURPOSE "Provides Shader effects."

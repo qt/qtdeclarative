@@ -259,6 +259,7 @@ private:
     QSGOpacityNode *m_opacityNode;
 };
 
+#if QT_CONFIG(quick_shadereffect)
 class QQuickShaderEffect;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
@@ -281,6 +282,7 @@ private:
     QByteArray m_uniform;
     QQuickShaderEffect *m_effect = nullptr;
 };
+#endif
 
 QT_END_NAMESPACE
 
