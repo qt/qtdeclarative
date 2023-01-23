@@ -50,6 +50,8 @@ private slots:
     void isCurrentItem_DelegateModel();
     void isCurrentItem_NoRegressionWithDelegateModelGroups();
 
+    void pullbackSparseList();
+
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -906,6 +908,27 @@ void tst_QQuickListView2::isCurrentItem_NoRegressionWithDelegateModelGroups()
 
     QTRY_COMPARE(item0->property("isCurrent").toBool(), true);
     QCOMPARE(item3->property("isCurrent").toBool(), false);
+}
+
+void tst_QQuickListView2::pullbackSparseList() // QTBUG_104679
+{
+    // check if PullbackHeader crashes
+    QScopedPointer<QQuickView> window(createView());
+    QVERIFY(window);
+    window->setSource(testFileUrl("qtbug104679_header.qml"));
+    QVERIFY2(window->status() == QQuickView::Ready, qPrintable(QDebug::toString(window->errors())));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    // check if PullbackFooter crashes
+    window.reset(createView());
+    QVERIFY(window);
+    window->setSource(testFileUrl("qtbug104679_footer.qml"));
+    QVERIFY2(window->status() == QQuickView::Ready, qPrintable(QDebug::toString(window->errors())));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 }
 
 QTEST_MAIN(tst_QQuickListView2)
