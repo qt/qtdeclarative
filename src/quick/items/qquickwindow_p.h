@@ -255,6 +255,7 @@ public:
     uint hasActiveSwapchain : 1;
     uint hasRenderableSwapchain : 1;
     uint swapchainJustBecameRenderable : 1;
+    uint updatesEnabled : 1;
     bool pendingFontUpdate = false;
     bool windowEventDispatch = false;
 

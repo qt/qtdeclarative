@@ -1252,6 +1252,11 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         win.psTimeSampleCount = 0;
         m_windows << win;
         w = &m_windows.last();
+    } else {
+        if (!QQuickWindowPrivate::get(window)->updatesEnabled) {
+            qCDebug(QSG_LOG_RENDERLOOP, "- updatesEnabled is false, abort");
+            return;
+        }
     }
 
     // set this early as we'll be rendering shortly anyway and this avoids
@@ -1319,6 +1324,10 @@ void QSGThreadedRenderLoop::handleObscurity(Window *w)
 {
     qCDebug(QSG_LOG_RENDERLOOP) << "handleObscurity()" << w->window;
     if (w->thread->isRunning()) {
+        if (!QQuickWindowPrivate::get(w->window)->updatesEnabled) {
+            qCDebug(QSG_LOG_RENDERLOOP, "- updatesEnabled is false, abort");
+            return;
+        }
         w->thread->mutex.lock();
         w->thread->postEvent(new WMWindowEvent(w->window, WM_Obscure));
         w->thread->waitCondition.wait(&w->thread->mutex);
@@ -1356,6 +1365,10 @@ bool QSGThreadedRenderLoop::eventFilter(QObject *watched, QEvent *event)
 void QSGThreadedRenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
     qCDebug(QSG_LOG_RENDERLOOP) <<  "- update request" << window;
+    if (!QQuickWindowPrivate::get(window)->updatesEnabled) {
+        qCDebug(QSG_LOG_RENDERLOOP, "- updatesEnabled is false, abort");
+        return;
+    }
     Window *w = windowFor(m_windows, window);
     if (w)
         polishAndSync(w);
