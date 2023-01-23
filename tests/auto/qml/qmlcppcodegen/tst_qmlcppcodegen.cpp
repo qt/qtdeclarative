@@ -2482,6 +2482,12 @@ void tst_QmlCppCodegen::badSequence()
     other->setCousins(cousins);
     QCOMPARE(self->cousins(), cousins);
     QCOMPARE(self->property("m").toInt(), 2);
+
+    QQmlListProperty<Person> others
+            = self->property("others").value<QQmlListProperty<Person>>();
+    QCOMPARE(others.count(&others), 2);
+    QCOMPARE(others.at(&others, 0), cousins[0]);
+    QCOMPARE(others.at(&others, 1), cousins[1]);
 }
 
 void tst_QmlCppCodegen::enumLookup()
