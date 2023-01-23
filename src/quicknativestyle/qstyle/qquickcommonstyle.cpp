@@ -24,7 +24,9 @@
 #include <qtextformat.h>
 #include <qfileinfo.h>
 #include <qdir.h>
+#if QT_CONFIG(settings)
 #include <qsettings.h>
+#endif
 #include <qvariant.h>
 #include <qpixmapcache.h>
 #include <qmatrix4x4.h>

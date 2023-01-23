@@ -9,7 +9,9 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qset.h>
+#if QT_CONFIG(settings)
 #include <QtCore/qsettings.h>
+#endif
 #include <QtCore/qstandardpaths.h>
 
 using namespace Qt::StringLiterals;
@@ -21,6 +23,7 @@ void QQmlToolingSettings::addOption(const QString &name, QVariant defaultValue)
 
 bool QQmlToolingSettings::read(const QString &settingsFilePath)
 {
+#if QT_CONFIG(settings)
     if (!QFileInfo::exists(settingsFilePath))
         return false;
 
@@ -35,10 +38,14 @@ bool QQmlToolingSettings::read(const QString &settingsFilePath)
     m_currentSettingsPath = settingsFilePath;
 
     return true;
+#else
+    return false;
+#endif
 }
 
 bool QQmlToolingSettings::writeDefaults() const
 {
+#if QT_CONFIG(settings)
     const QString path = QFileInfo(u".%1.ini"_s.arg(m_toolName)).absoluteFilePath();
 
     QSettings settings(path, QSettings::IniFormat);
@@ -56,10 +63,14 @@ bool QQmlToolingSettings::writeDefaults() const
 
     qInfo() << "Wrote default settings to" << path;
     return true;
+#else
+    return false;
+#endif
 }
 
 bool QQmlToolingSettings::search(const QString &path)
 {
+#if QT_CONFIG(settings)
     QFileInfo fileInfo(path);
     QDir dir(fileInfo.isDir() ? path : fileInfo.dir());
 
@@ -105,6 +116,7 @@ bool QQmlToolingSettings::search(const QString &path)
     for (const QString &dir : std::as_const(dirs))
         m_seenDirectories[dir] = QString();
 
+#endif
     return false;
 }
 
