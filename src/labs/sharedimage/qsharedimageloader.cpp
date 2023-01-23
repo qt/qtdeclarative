@@ -130,7 +130,7 @@ QImage QSharedImageLoaderPrivate::load(const QString &path, QSharedImageLoader::
     if (path.isEmpty())
         return nil;
 
-    auto shm = std::make_unique<QSharedMemory>(q->key(path, params));
+    auto shm = std::make_unique<QSharedMemory>(QSharedMemory::legacyNativeKey(q->key(path, params)));
     bool locked = false;
 
     if (!shm->attach(QSharedMemory::ReadOnly)) {
