@@ -114,7 +114,9 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
     Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION(2, 11))
 
+#if QT_CONFIG(quick_shadereffect)
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
+#endif
 
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("ParentProperty", "parent")

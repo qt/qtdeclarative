@@ -59,11 +59,13 @@ public:
     QQuickRotationAnimator::RotationDirection direction;
 };
 
+#if QT_CONFIG(quick_shadereffect)
 class QQuickUniformAnimatorPrivate : public QQuickAnimatorPrivate
 {
 public:
     QString uniform;
 };
+#endif
 
 QT_END_NAMESPACE
 

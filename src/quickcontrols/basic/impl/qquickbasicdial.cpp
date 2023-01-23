@@ -5,6 +5,7 @@
 
 #include <QtCore/qmath.h>
 #include <QtGui/qpainter.h>
+#include <QtGui/qpainterpath.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE

@@ -22,6 +22,7 @@
 #include <private/qqmlbinding_p.h>
 #include <private/qquickstategroup_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qquicktext_p.h>
 #include <private/qdebug_p.h>
 
 #include <QtQuick/qquickitem.h>

@@ -8968,23 +8968,21 @@ QSGTextureProvider *QQuickItem::textureProvider() const
     \sa Window::palette, Popup::palette, ColorGroup, Palette, SystemPalette
 */
 
+#if QT_CONFIG(quick_shadereffect)
 /*!
     \property QQuickItem::layer
     \internal
   */
 QQuickItemLayer *QQuickItemPrivate::layer() const
 {
-#if QT_CONFIG(quick_shadereffect)
     if (!extra.isAllocated() || !extra->layer) {
         extra.value().layer = new QQuickItemLayer(const_cast<QQuickItem *>(q_func()));
         if (!componentComplete)
             extra->layer->classBegin();
     }
     return extra->layer;
-#else
-    return 0;
-#endif
 }
+#endif
 
 /*!
     \internal
