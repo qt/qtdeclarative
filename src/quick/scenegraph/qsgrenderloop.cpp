@@ -532,6 +532,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (!cd->isRenderable())
         return;
 
+    if (!cd->updatesEnabled)
+        return;
+
     if (!ensureRhi(window, data))
         return;
 

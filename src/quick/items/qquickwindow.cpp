@@ -688,6 +688,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , hasActiveSwapchain(false)
     , hasRenderableSwapchain(false)
     , swapchainJustBecameRenderable(false)
+    , updatesEnabled(true)
 {
 }
 
