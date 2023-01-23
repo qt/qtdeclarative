@@ -257,11 +257,17 @@
 
     In order to support keyboard navigation, you need to assign an \l ItemSelectionModel
     to the \l selectionModel property. TableView will then use this model to manipulate
-    the model's \l {ItemSelectionModel::currentIndex}{currentIndex}. You can
-    disable keyboard navigation fully (in case you want to implement your own key
-    handlers) by setting \l keyNavigationEnabled to \c false. Below is an
-    example that demonstrates how to use keyboard navigation together with
-    \c current and \c selected properties:
+    the model's \l {ItemSelectionModel::currentIndex}{currentIndex}.
+
+    It's the responsibility of the delegate to render itself as
+    \l {QQuickItemSelectionModel::currentIndex()}{current.} You can do this by adding a
+    property \c {required property bool current} to it, and let the appearance
+    depend on its state. The \c current property's value is set by the TableView.
+    You can also disable keyboard navigation fully (in case you want to implement your
+    own key handlers) by setting \l keyNavigationEnabled to \c false.
+
+    The following example demonstrates how you can use keyboard navigation together
+    with \c current and \c selected properties:
 
     \snippet qml/tableview/keyboard-navigation.qml 0
 
@@ -442,11 +448,32 @@
     \l {Item::}{implicitHeight}. The TableView lays out the items based on that
     information. Explicit width or height settings are ignored and overwritten.
 
+    Inside the delegate, you can optionally add one or more of the following
+    properties. TableView modifies the values of these properties to inform the
+    delegate which state it's in. This can be used by the delegate to render
+    itself differently according on its own state.
+
+    \list
+    \li required property bool current - \c true if the delegate is \l {current.}{Keyboard navigation}
+    \li required property bool selected - \c true if the delegate is \l {selected.}{Selecting items}
+    \li required property bool editing - \c true if the delegate is being \l {edited.}{Editing cells}
+    \endlist
+
+    The following example shows how to use these properties:
+    \code
+    delegate: Rectangle {
+        required property bool current
+        required property bool selected
+        border.width: current ? 1 : 0
+        color: selected ? palette.highlight : palette.base
+    }
+    \endcode
+
     \note Delegates are instantiated as needed and may be destroyed at any time.
     They are also reused if the \l reuseItems property is set to \c true. You
     should therefore avoid storing state information in the delegates.
 
-    \sa {Row heights and column widths}, {Reusing items}
+    \sa {Row heights and column widths}, {Reusing items}, {Required Properties}
 */
 
 /*!
