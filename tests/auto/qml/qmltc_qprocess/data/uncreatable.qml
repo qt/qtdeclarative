@@ -1,4 +1,5 @@
 import QtQuick
+import QmltcQProcessTests
 
 Item {
     // Illegal cases:

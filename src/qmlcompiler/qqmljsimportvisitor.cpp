@@ -364,22 +364,17 @@ void QQmlJSImportVisitor::importBaseModules()
                 m_importer->importDirectory(m_implicitImportDirectory);
         m_rootScopeImports.addTypes(std::move(fromDirectory));
 
-        QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper();
-
-        // In instances where a qmldir entry exists somewhere in the resource files, import that
-        // directory in order to allow for implicit imports of modules.
-        if (mapper) {
-            const QStringList filePaths = mapper->filePaths(QQmlJSResourceFileMapper::Filter {
-                    QString(), QStringList(),
-                    QQmlJSResourceFileMapper::Directory | QQmlJSResourceFileMapper::Recurse });
-            auto qmldirEntry =
-                    std::find_if(filePaths.constBegin(), filePaths.constEnd(),
-                                 [](const QString &path) { return path.endsWith(u"/qmldir"); });
-
-            if (qmldirEntry != filePaths.constEnd()) {
-                QQmlJSScope::ContextualTypes fromDirectory =
-                        m_importer->importDirectory(QFileInfo(*qmldirEntry).absolutePath());
-                m_rootScopeImports.addTypes(std::move(fromDirectory));
+        // Import all possible resource directories the file may belong to.
+        // This is somewhat fuzzy, but if you're mapping the same file to multiple resource
+        // locations, you're on your own anyway.
+        if (QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper()) {
+            const QStringList resourcePaths = mapper->resourcePaths(QQmlJSResourceFileMapper::Filter {
+                    m_logger->fileName(), QStringList(), QQmlJSResourceFileMapper::Resource });
+            for (const QString &path : resourcePaths) {
+                const qsizetype lastSlash = path.lastIndexOf(QLatin1Char('/'));
+                if (lastSlash == -1)
+                    continue;
+                m_rootScopeImports.addTypes(m_importer->importDirectory(path.first(lastSlash)));
             }
         }
     }

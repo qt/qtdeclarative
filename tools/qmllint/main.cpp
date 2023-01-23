@@ -221,8 +221,14 @@ All warnings can be set to three levels:
     bool useJson = parser.isSet(jsonOption);
 
     // use host qml import path as a sane default if not explicitly disabled
-    QStringList defaultImportPaths =
-            QStringList { QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDir::currentPath() };
+    QStringList defaultImportPaths = { QDir::currentPath() };
+
+    if (parser.isSet(resourceOption)) {
+        defaultImportPaths.append(QLatin1String(":/qt-project.org/imports"));
+        defaultImportPaths.append(QLatin1String(":/qt/qml"));
+    };
+
+    defaultImportPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
 
     QStringList qmlImportPaths =
             parser.isSet(qmlImportNoDefault) ? QStringList {} : defaultImportPaths;

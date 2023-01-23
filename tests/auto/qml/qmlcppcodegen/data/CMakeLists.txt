@@ -104,6 +104,8 @@ set(qml_files
     functionReturningVoid.qml
     functionTakingVar.qml
     globals.qml
+    hidden/Main.qml
+    hidden/Style.qml
     idAccess.qml
     immediateQuit.qml
     imports/QmlBench/Globals.qml
@@ -206,6 +208,9 @@ set(resource_files
 set_source_files_properties("shared/Slider.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Slider.qml"
 )
+
+set_source_files_properties("hidden/Style.qml"
+    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_library(codegen_test_module STATIC)
 qt_autogen_tools_initial_setup(codegen_test_module)

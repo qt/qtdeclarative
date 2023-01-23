@@ -141,9 +141,19 @@ int main(int argc, char **argv)
     if (implicitImportDirectory.isEmpty())
         return EXIT_FAILURE;
 
-    QStringList importPaths = parser.values(importPathOption);
+    QStringList importPaths;
+
+    if (parser.isSet(resourceOption)) {
+        importPaths.append(QLatin1String(":/qt-project.org/imports"));
+        importPaths.append(QLatin1String(":/qt/qml"));
+    };
+
+    if (parser.isSet(importPathOption))
+        importPaths.append(parser.values(importPathOption));
+
     if (!parser.isSet(bareOption))
         importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+
     QStringList qmldirFiles = parser.values(qmldirOption);
 
     QString outputCppFile;
