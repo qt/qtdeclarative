@@ -1,0 +1,9 @@
+//! [file]
+When \1 is paired with another container such as \l \2, it is
+necessary to make a two-way binding between the
+\l {Container::}{currentIndex} property
+of each control. To do this without breaking bindings, avoid setting
+\c currentIndex directly, and instead use
+\l {Container::}{setCurrentIndex()}, for example.
+See \l {Managing the Current Index} for more information.
+//! [file]
