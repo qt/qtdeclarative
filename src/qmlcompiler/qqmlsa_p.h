@@ -50,6 +50,10 @@ public:
                      QQmlJS::SourceLocation srcLocation = QQmlJS::SourceLocation());
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
     Element resolveLiteralType(const QQmlJSMetaPropertyBinding &binding);
+    Element resolveId(QAnyStringView id, const Element &context);
+
+    QString sourceCode(QQmlJS::SourceLocation location);
+
 
 private:
     std::unique_ptr<GenericPassPrivate> d; // PIMPL might be overkill

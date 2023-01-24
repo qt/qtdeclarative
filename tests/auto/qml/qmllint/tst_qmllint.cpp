@@ -1925,6 +1925,19 @@ void TestQmllint::quickPlugin()
     runTest("pluginQuick_attachedClean.qml", Result::clean());
     runTest("pluginQuick_attachedIgnore.qml", Result::clean());
     runTest("pluginQuick_noCrashOnUneresolved.qml", Result {}); // we don't care about the specific warnings
+
+    runTest("pluginQuick_propertyChangesParsed.qml",
+            Result { {
+                Message {
+                      u"Property \"myColor\" is custom-parsed in PropertyChanges. "
+                       "You should phrase this binding as \"foo.myColor: Qt.rgba(0.5, ...\""_s,
+                      12, 30
+                },
+                Message {
+                      u"Unknown property \"notThere\" in PropertyChanges."_s,
+                      13, 31
+                }
+            } });
 }
 #endif
 
