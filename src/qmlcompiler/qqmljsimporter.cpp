@@ -310,8 +310,14 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
 static bool isVersionAllowed(const QQmlJSScope::Export &exportEntry,
                              const QQmlJSScope::Import &importDescription)
 {
-    return !importDescription.version().isValid()
-            || exportEntry.version() <= importDescription.version();
+    const QTypeRevision importVersion = importDescription.version();
+    const QTypeRevision exportVersion = exportEntry.version();
+    if (!importVersion.hasMajorVersion())
+        return true;
+    if (importVersion.majorVersion() != exportVersion.majorVersion())
+        return false;
+    return !importVersion.hasMinorVersion()
+            || exportVersion.minorVersion() <= importVersion.minorVersion();
 }
 
 void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,

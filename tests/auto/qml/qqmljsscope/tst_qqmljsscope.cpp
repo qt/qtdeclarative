@@ -686,14 +686,12 @@ void tst_qqmljsscope::qualifiedName()
             return u""_s;
     };
 
-    QCOMPARE(root->childScopes().size(), 5);
-    QQmlJSScope::ConstPtr a = root->childScopes()[0];
-    QQmlJSScope::ConstPtr b = root->childScopes()[1];
-    QQmlJSScope::ConstPtr d = root->childScopes()[2];
-    QQmlJSScope::ConstPtr qualifiedA = root->childScopes()[3];
-    QQmlJSScope::ConstPtr qualifiedB = root->childScopes()[4];
+    QCOMPARE(root->childScopes().size(), 4);
+    QQmlJSScope::ConstPtr b = root->childScopes()[0];
+    QQmlJSScope::ConstPtr d = root->childScopes()[1];
+    QQmlJSScope::ConstPtr qualifiedA = root->childScopes()[2];
+    QQmlJSScope::ConstPtr qualifiedB = root->childScopes()[3];
 
-    QCOMPARE(qualifiedNameOf(a), "QualifiedNamesTests/A 5.0");
     QCOMPARE(qualifiedNameOf(b), "QualifiedNamesTests/B 5.0-6.0");
     QCOMPARE(qualifiedNameOf(d), "QualifiedNamesTests/D 6.0");
     QCOMPARE(qualifiedNameOf(qualifiedA), "QualifiedNamesTests/A 5.0");
