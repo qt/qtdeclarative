@@ -548,6 +548,7 @@ private slots:
     void resettableProperty();
     void duplicateExportWarnings();
     void clonedSignal();
+    void baseVersionInQmltypes();
 
 private:
     QByteArray qmltypesData;

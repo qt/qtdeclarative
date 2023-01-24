@@ -61,7 +61,7 @@ qt_internal_extend_target(tst_qmltyperegistrar CONDITION TARGET Qt::Quick
 
 # Simulate conditions that qt6_add_qml_module() would normally set up for us
 set_target_properties(tst_qmltyperegistrar PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_VERSION 1.1
     QT_QML_MODULE_PAST_MAJOR_VERSIONS 0
     QT_QML_MODULE_URI QmlTypeRegistrarTest
     QT_QML_MODULE_TYPEINFO tst_qmltyperegistrar.qmltypes
