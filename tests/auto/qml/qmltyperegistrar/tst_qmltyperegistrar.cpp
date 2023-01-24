@@ -537,4 +537,11 @@ void tst_qmltyperegistrar::uncreatable()
     qmlRegisterTypesAndRevisions<GoodUncreatableExtended>("A", 1);
 }
 
+void tst_qmltyperegistrar::baseVersionInQmltypes()
+{
+    // Since it has no QML_ADDED_IN_VERSION, WithMethod was added in .0 of the current version.
+    // The current version is 1.1, so it's 1.0.
+    QVERIFY(qmltypesData.contains("exports: [\"QmlTypeRegistrarTest/WithMethod 1.0\"]"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

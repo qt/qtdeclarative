@@ -454,7 +454,7 @@ void QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)
     creator.setForeignTypes(m_foreignTypes);
     creator.setReferencedTypes(m_referencedTypes);
     creator.setModule(m_module);
-    creator.setVersion(m_moduleVersion);
+    creator.setVersion(QTypeRevision::fromVersion(m_moduleVersion.majorVersion(), 0));
 
     creator.generate(pluginTypesFile);
 }
