@@ -32,14 +32,13 @@ public:
     void unregisterTypes() override;
 
 private:
-    bool registered;
 #if QT_CONFIG(shortcut)
     ShortcutContextMatcher originalContextMatcher;
 #endif
 };
 
 QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent)
-    : QQmlExtensionPlugin(parent), registered(false)
+    : QQmlExtensionPlugin(parent)
 {
     volatile auto registration = &qml_register_types_QtQuick_Templates;
     volatile auto initialization = &QQuickTemplates_initializeModule;
@@ -60,8 +59,6 @@ void QtQuickTemplates2Plugin::registerTypes(const char * /*uri*/)
     originalContextMatcher = qt_quick_shortcut_context_matcher();
     qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);
 #endif
-
-    registered = true;
 }
 
 void QtQuickTemplates2Plugin::unregisterTypes()
