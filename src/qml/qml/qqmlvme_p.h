@@ -20,6 +20,7 @@
 #include <QtCore/QStack>
 #include <QtCore/QString>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qdeadlinetimer.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qtypeinfo.h>
 
@@ -35,16 +36,15 @@ class QObject;
 class QQmlInstantiationInterrupt {
 public:
     inline QQmlInstantiationInterrupt();
-    inline QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs = 0);
-    inline QQmlInstantiationInterrupt(qint64 nsecs);
+    inline QQmlInstantiationInterrupt(std::atomic<bool> *runWhile,
+                                      QDeadlineTimer deadline = QDeadlineTimer::Forever);
+    inline QQmlInstantiationInterrupt(QDeadlineTimer deadline);
 
-    inline void reset();
     inline bool shouldInterrupt() const;
 private:
     enum Mode { None, Time, Flag };
     Mode mode;
-    QElapsedTimer timer;
-    qint64 nsecs = 0;
+    QDeadlineTimer deadline;
     std::atomic<bool> *runWhile = nullptr;
 };
 
@@ -89,20 +89,14 @@ QQmlInstantiationInterrupt::QQmlInstantiationInterrupt()
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs)
-    : mode(Flag), nsecs(nsecs), runWhile(runWhile)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, QDeadlineTimer deadline)
+    : mode(Flag), deadline(deadline), runWhile(runWhile)
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(qint64 nsecs)
-    : mode(Time), nsecs(nsecs)
+QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(QDeadlineTimer deadline)
+    : mode(Time), deadline(deadline)
 {
-}
-
-void QQmlInstantiationInterrupt::reset()
-{
-    if (mode == Time || nsecs)
-        timer.start();
 }
 
 bool QQmlInstantiationInterrupt::shouldInterrupt() const
@@ -111,9 +105,9 @@ bool QQmlInstantiationInterrupt::shouldInterrupt() const
     case None:
         return false;
     case Time:
-        return timer.nsecsElapsed() > nsecs;
+        return deadline.hasExpired();
     case Flag:
-        return !runWhile->load(std::memory_order_acquire) || (nsecs && timer.nsecsElapsed() > nsecs);
+        return !runWhile->load(std::memory_order_acquire) || deadline.hasExpired();
     }
     Q_UNREACHABLE_RETURN(false);
 }

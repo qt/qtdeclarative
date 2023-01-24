@@ -415,8 +415,8 @@ void QQmlIncubationController::incubateFor(int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlInstantiationInterrupt i(msecs * Q_INT64_C(1000000));
-    i.reset();
+    QDeadlineTimer deadline(msecs);
+    QQmlInstantiationInterrupt i(deadline);
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
@@ -439,8 +439,7 @@ void QQmlIncubationController::incubateWhile(std::atomic<bool> *flag, int msecs)
     if (!d || !d->incubatorCount)
         return;
 
-    QQmlInstantiationInterrupt i(flag, msecs * Q_INT64_C(1000000));
-    i.reset();
+    QQmlInstantiationInterrupt i(flag, msecs ? QDeadlineTimer(msecs) : QDeadlineTimer::Forever);
     do {
         static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
