@@ -178,7 +178,6 @@ public:
     Q_INVOKABLE void positionViewAtRow(int row, PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
     Q_INVOKABLE void positionViewAtColumn(int column, PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
-    Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
 
     Q_REVISION(6, 4) Q_INVOKABLE QPoint cellAtPosition(const QPointF &position, bool includeSpacing = false) const;
     Q_REVISION(6, 4) Q_INVOKABLE QPoint cellAtPosition(qreal x, qreal y, bool includeSpacing = false) const;
@@ -214,6 +213,13 @@ public:
 
     Q_REVISION(6, 5) Q_INVOKABLE void edit(const QModelIndex &index);
     Q_REVISION(6, 5) Q_INVOKABLE void closeEditor();
+
+    Q_REVISION(6, 5) Q_INVOKABLE QQuickItem *itemAtIndex(const QModelIndex &index) const;
+
+#if QT_DEPRECATED_SINCE(6, 5)
+    QT_DEPRECATED_VERSION_X_6_5("Use itemAtIndex(index(row, column)) instead")
+    Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
+#endif
 
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 

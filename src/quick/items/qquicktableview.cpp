@@ -879,8 +879,27 @@
 
 /*!
     \qmlmethod Item QtQuick::TableView::itemAtCell(int column, int row)
+    \deprecated
 
-    Convenience for calling \c{itemAtCell(Qt.point(column, row))}.
+    Use \l {itemAtIndex()}{itemAtIndex(index(row, column))} instead.
+*/
+
+/*!
+    \qmlmethod Item QtQuick::TableView::itemAtIndex(QModelIndex index)
+    \since 6.5
+
+    Returns the instantiated delegate item for the cell that represents
+    \a index. If the item is not \l {isRowLoaded()}{loaded}, the value
+    will be \c null.
+
+    \note only the items that are visible in the view are normally loaded.
+    As soon as a cell is flicked out of the view, the item inside will
+    either be unloaded or placed in the recycle pool. As such, the return
+    value should never be stored.
+
+    \note If the \l model is not a QAbstractItemModel, you can also use
+    \l {itemAtCell()}{itemAtCell(Qt.point(column, row))}. But be aware
+    that \c {point.x} maps to columns and \c {point.y} maps to rows.
 */
 
 /*!
@@ -5744,9 +5763,20 @@ QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
     return d->loadedItems.value(modelIndex)->item;
 }
 
+#if QT_DEPRECATED_SINCE(6, 5)
 QQuickItem *QQuickTableView::itemAtCell(int column, int row) const
 {
     return itemAtCell(QPoint(column, row));
+}
+#endif
+
+QQuickItem *QQuickTableView::itemAtIndex(const QModelIndex &index) const
+{
+    Q_D(const QQuickTableView);
+    const int serializedIndex = d->modelIndexToCellIndex(index);
+    if (!d->loadedItems.contains(serializedIndex))
+        return nullptr;
+    return d->loadedItems.value(serializedIndex)->item;
 }
 
 #if QT_DEPRECATED_SINCE(6, 4)

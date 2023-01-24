@@ -791,7 +791,7 @@ void tst_qquicktreeview::expandAndCollapsUsingDoubleClick()
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 
     // Expand the root by double clicking on the row
-    const auto item = treeView->itemAtCell(0, 0);
+    const auto item = treeView->itemAtIndex(treeView->index(0, 0));
     QVERIFY(item);
     const QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     const QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
