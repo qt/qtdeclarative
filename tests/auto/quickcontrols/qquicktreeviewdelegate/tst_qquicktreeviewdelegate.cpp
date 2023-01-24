@@ -91,7 +91,7 @@ void tst_qquicktreeviewdelegate::expandAndCollapsUsingDoubleClick()
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 
     // Expand the root by double clicking on the row
-    const auto item = treeView->itemAtCell(0, 0);
+    const auto item = treeView->itemAtIndex(treeView->index(0, 0));
     QVERIFY(item);
     const QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     const QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
@@ -128,7 +128,7 @@ void tst_qquicktreeviewdelegate::expandAndCollapseClickOnIndicator()
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 
     // Expand the root by clicking on the indicator
-    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtCell(0, 0));
+    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtIndex(treeView->index(0, 0)));
     QVERIFY(item);
     const auto indicator = item->indicator();
     const QPoint localPos = QPoint(indicator->width() / 2, indicator->height() / 2);
@@ -159,7 +159,7 @@ void tst_qquicktreeviewdelegate::pointerNavigationDisabled()
     QVERIFY(!treeView->isExpanded(0));
 
     // Try to expand the root by clicking on the indicator
-    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtCell(0, 0));
+    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtIndex(treeView->index(0, 0)));
     QVERIFY(item);
     const auto indicator = item->indicator();
     QPoint localPos = QPoint(indicator->width() / 2, indicator->height() / 2);
@@ -292,7 +292,7 @@ void tst_qquicktreeviewdelegate::checkClickedSignal()
     LOAD_TREEVIEW("unmodified.qml");
     treeView->setPointerNavigationEnabled(pointerNavigationEnabled);
 
-    const auto item = treeView->itemAtCell(0, 0);
+    const auto item = treeView->itemAtIndex(treeView->index(0, 0));
     QVERIFY(item);
 
     QSignalSpy clickedSpy(item, SIGNAL(clicked()));
@@ -323,7 +323,7 @@ void tst_qquicktreeviewdelegate::clearSelectionOnClick()
     QCOMPARE(treeView->selectionModel()->selectedIndexes().size(), 1);
 
     // Click on a cell. This should remove the selection
-    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtCell(0, 0));
+    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtIndex(treeView->index(0, 0)));
     QVERIFY(item);
     QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
@@ -348,8 +348,8 @@ void tst_qquicktreeviewdelegate::dragToSelect()
     QCOMPARE(treeView->selectionBehavior(), QQuickTableView::SelectRows);
 
     // Drag on from cell 0,0 to 0,1
-    const auto item0_0 = treeView->itemAtCell(0, 0);
-    const auto item0_1 = treeView->itemAtCell(0, 1);
+    const auto item0_0 = treeView->itemAtIndex(treeView->index(0, 0));
+    const auto item0_1 = treeView->itemAtIndex(treeView->index(1, 0));
     QVERIFY(item0_0);
     QVERIFY(item0_1);
 
@@ -385,7 +385,7 @@ void tst_qquicktreeviewdelegate::pressAndHoldToSelect()
     QCOMPARE(treeView->selectionBehavior(), QQuickTableView::SelectRows);
 
     // PressAndHold on cell 0,0
-    const auto item0_0 = treeView->itemAtCell(0, 0);
+    const auto item0_0 = treeView->itemAtIndex(treeView->index(0, 0));
     QVERIFY(item0_0);
 
     QQuickWindow *window = treeView->window();

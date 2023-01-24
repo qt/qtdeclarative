@@ -443,7 +443,7 @@ void tst_QQuickTableView::checkZeroSizedTableView()
     WAIT_UNTIL_POLISHED;
 
     QCOMPARE(tableViewPrivate->loadedItems.size(), 2);
-    const auto item = tableView->itemAtCell(0, 0);
+    const auto item = tableView->itemAtIndex(tableView->index(0, 0));
     QVERIFY(item);
     QCOMPARE(item->width(), 200);
 
@@ -4758,7 +4758,7 @@ void tst_QQuickTableView::clearSelectionOnTap()
     QCOMPARE(tableView->selectionModel()->selectedIndexes().size(), 1);
 
     // Click on a cell. This should remove the selection
-    const auto item = tableView->itemAtCell(0, 0);
+    const auto item = tableView->itemAtIndex(tableView->index(0, 0));
     QVERIFY(item);
     QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
@@ -5754,7 +5754,7 @@ void tst_QQuickTableView::boundDelegateComponent()
     QVERIFY(inner != nullptr);
     QQuickTableView *tableView = qobject_cast<QQuickTableView *>(inner);
     QVERIFY(tableView != nullptr);
-    QObject *item = tableView->itemAtCell(0, 0);
+    QObject *item = tableView->itemAtCell({0, 0});
     QVERIFY(item);
     QCOMPARE(item->objectName(), QLatin1String("fooouterundefined"));
 
@@ -5762,7 +5762,7 @@ void tst_QQuickTableView::boundDelegateComponent()
     QVERIFY(inner2 != nullptr);
     QQuickTableView *tableView2 = qobject_cast<QQuickTableView *>(inner2);
     QVERIFY(tableView2 != nullptr);
-    QObject *item2 = tableView2->itemAtCell(0, 0);
+    QObject *item2 = tableView2->itemAtCell({0, 0});
     QVERIFY(item2);
     QCOMPARE(item2->objectName(), QLatin1String("fooouter0"));
 
@@ -5784,7 +5784,7 @@ void tst_QQuickTableView::boundDelegateComponent()
     QVERIFY(innerTableView != nullptr);
     QCOMPARE(innerTableView->rows(), 3);
     for (int i = 0; i < 3; ++i)
-        QVERIFY(innerTableView->itemAtCell(0, i)->objectName().isEmpty());
+        QVERIFY(innerTableView->itemAtIndex(innerTableView->index(i, 0))->objectName().isEmpty());
 }
 
 void tst_QQuickTableView::setColumnWidth_data()
@@ -6161,7 +6161,7 @@ void tst_QQuickTableView::columnResizing()
     QSignalSpy currentIndexSpy(tableView->selectionModel(), &QItemSelectionModel::currentChanged);
     QSignalSpy selectionSpy(tableView->selectionModel(), &QItemSelectionModel::selectionChanged);
 
-    const auto item = tableView->itemAtCell(column, 0);
+    const auto item = tableView->itemAtIndex(tableView->index(0, column));
     QQuickWindow *window = item->window();
 
     const qreal columnStartWidth = tableView->columnWidth(column);
@@ -6212,7 +6212,7 @@ void tst_QQuickTableView::rowResizing()
     QSignalSpy currentIndexSpy(tableView->selectionModel(), &QItemSelectionModel::currentChanged);
     QSignalSpy selectionSpy(tableView->selectionModel(), &QItemSelectionModel::selectionChanged);
 
-    const auto item = tableView->itemAtCell(0, row);
+    const auto item = tableView->itemAtIndex(tableView->index(row, 0));
     QQuickWindow *window = item->window();
 
     const qreal rowStartHeight = tableView->rowHeight(row);
@@ -6265,7 +6265,7 @@ void tst_QQuickTableView::rowAndColumnResizing()
     QCOMPARE(tableView->explicitColumnWidth(rowAndColumn), -1);
     QCOMPARE(tableView->explicitRowHeight(rowAndColumn), -1);
 
-    const auto item = tableView->itemAtCell(rowAndColumn, rowAndColumn);
+    const auto item = tableView->itemAtIndex(tableView->index(rowAndColumn, rowAndColumn));
     QVERIFY(item);
 
     if (addDelegateDragHandler) {
@@ -6320,7 +6320,7 @@ void tst_QQuickTableView::columnResizingDisabled()
     const int row = 1;
     QCOMPARE(tableView->explicitRowHeight(row), -1);
 
-    const auto item = tableView->itemAtCell(0, row);
+    const auto item = tableView->itemAtIndex(tableView->index(row, 0));
     QQuickWindow *window = item->window();
 
     const QPoint localPos = QPoint(item->width() / 2, item->height());
@@ -6357,7 +6357,7 @@ void tst_QQuickTableView::rowResizingDisabled()
     const int row = 1;
     QCOMPARE(tableView->explicitRowHeight(row), -1);
 
-    const auto item = tableView->itemAtCell(0, row);
+    const auto item = tableView->itemAtIndex(tableView->index(row, 0));
     QQuickWindow *window = item->window();
 
     const QPoint localPos = QPoint(item->width() / 2, item->height());
@@ -6395,7 +6395,7 @@ void tst_QQuickTableView::dragFromCellCenter()
     const int row = 1;
     QCOMPARE(tableView->explicitRowHeight(row), -1);
 
-    const auto item = tableView->itemAtCell(0, row);
+    const auto item = tableView->itemAtIndex(tableView->index(row, 0));
     QQuickWindow *window = item->window();
 
     const QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
