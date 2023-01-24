@@ -25,3 +25,5 @@ qt_internal_extend_target(tst_qmlls CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=":/domdata"
 )
+
+add_dependencies(tst_qmlls qmlls)

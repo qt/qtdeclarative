@@ -1,8 +1,9 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmlcompletionsupport.h"
-#include "qqmllanguageserver.h"
+#include "qqmlcompletionsupport_p.h"
+#include "qqmllanguageserver_p.h"
+
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtCore/qthreadpool.h>
 #include <QtCore/private/qduplicatetracker_p.h>
@@ -46,7 +47,7 @@ void QmlCompletionSupport::registerHandlers(QLanguageServer *, QLanguageServerPr
                 req->completionParams = cParams;
                 {
                     QMutexLocker l(&m_mutex);
-                    m_completions.insert(req->completionParams.textDocument.uri, req);
+                    m_completions.insert(QString::fromUtf8(req->completionParams.textDocument.uri), req);
                 }
                 if (doc.snapshot.docVersion && *doc.snapshot.docVersion >= req->minVersion)
                     updatedSnapshot(QmlLsp::lspUriToQmlUrl(req->completionParams.textDocument.uri));
@@ -93,7 +94,7 @@ void QmlCompletionSupport::updatedSnapshot(const QByteArray &url)
     QList<CompletionRequest *> toCompl;
     {
         QMutexLocker l(&m_mutex);
-        for (auto [it, end] = m_completions.equal_range(url); it != end; ++it) {
+        for (auto [it, end] = m_completions.equal_range(QString::fromUtf8(url)); it != end; ++it) {
             if (doc.docVersion && it.value()->minVersion <= *doc.docVersion)
                 toCompl.append(it.value());
         }
@@ -102,7 +103,7 @@ void QmlCompletionSupport::updatedSnapshot(const QByteArray &url)
                               << (doc.docVersion ? (*doc.docVersion) : -1) << ", completing"
                               << m_completions.size() << "/" << m_completions.size();
         for (auto req : toCompl)
-            m_completions.remove(url, req);
+            m_completions.remove(QString::fromUtf8(url), req);
     }
     for (auto it = toCompl.rbegin(), end = toCompl.rend(); it != end; ++it) {
         CompletionRequest *req = *it;
@@ -280,7 +281,7 @@ CompletionContextStrings::CompletionContextStrings(QString code, qsizetype pos)
     m_lineStart = m_baseStart;
     while (m_lineStart != 0) {
         QChar c = code.at(m_lineStart - 1);
-        if (c == u'\n' || c == '\r')
+        if (c == u'\n' || c == u'\r')
             break;
         if (!c.isSpace())
             m_atLineStart = false;
@@ -487,14 +488,14 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
                             if (pInfo.defaultValue) {
                                 param << u"= " + pInfo.defaultValue->code();
                             }
-                            parameters.append(param.join(' '));
+                            parameters.append(param.join(u' '));
                         }
 
                         QString commentsStr;
 
                         if (!it->comments.regionComments.isEmpty()) {
-                            for (const Comment &c : it->comments.regionComments[0].preComments) {
-                                commentsStr += c.rawComment().toString().trimmed() + '\n';
+                            for (const Comment &c : it->comments.regionComments[QString()].preComments) {
+                                commentsStr += c.rawComment().toString().trimmed() + u'\n';
                             }
                         }
 

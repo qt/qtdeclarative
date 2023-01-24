@@ -1,15 +1,27 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#ifndef QQMLCODEMODEL_H
-#define QQMLCODEMODEL_H
+#ifndef QQMLCODEMODEL_P_H
+#define QQMLCODEMODEL_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qlanguageserver_p.h"
+#include "qtextdocument_p.h"
 
 #include <QObject>
 #include <QHash>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
-#include "qlanguageserver_p.h"
-#include "textdocument.h"
-#include "../shared/qqmltoolingsettings.h"
+#include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
 
 #include <functional>
 #include <memory>
@@ -125,4 +137,4 @@ private:
 
 } // namespace QmlLsp
 QT_END_NAMESPACE
-#endif // QQMLCODEMODEL_H
+#endif // QQMLCODEMODEL_P_H

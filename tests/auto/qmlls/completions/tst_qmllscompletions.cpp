@@ -11,7 +11,7 @@
 #include <QtCore/qstringlist.h>
 
 #include <QtTest/qtest.h>
-#include "../../../../tools/qmlls/lspcustomtypes.h"
+#include <QtQmlLS/private/qlspcustomtypes_p.h>
 
 #include <iostream>
 #include <variant>

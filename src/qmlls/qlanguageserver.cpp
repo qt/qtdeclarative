@@ -1,6 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include "qlanguageserver_p.h"
+
+#include "qlanguageserver_p_p.h"
+
 #include <QtLanguageServer/private/qlspnotifysignals_p.h>
 #include <QtJsonRpc/private/qjsonrpcprotocol_p_p.h>
 

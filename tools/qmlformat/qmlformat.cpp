@@ -19,7 +19,8 @@
 #    include <QCommandLineParser>
 #endif
 
-#include "../shared/qqmltoolingsettings.h"
+#include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
+
 
 using namespace QQmlJS::Dom;
 

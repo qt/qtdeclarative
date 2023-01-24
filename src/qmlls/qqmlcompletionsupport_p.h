@@ -1,11 +1,23 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef QMLCOMPLETIONSUPPORT_H
-#define QMLCOMPLETIONSUPPORT_H
+#ifndef QQMLCOMPLETIONSUPPORT_P_H
+#define QQMLCOMPLETIONSUPPORT_P_H
 
-#include "qlanguageserver.h"
-#include "qqmlcodemodel.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qlanguageserver_p.h"
+#include "qqmlcodemodel_p.h"
+
 #include <QtCore/qmutex.h>
 #include <QtCore/qhash.h>
 
@@ -44,4 +56,4 @@ private:
     QMultiHash<QString, CompletionRequest *> m_completions;
 };
 
-#endif // QMLCOMPLETIONSUPPORT_H
+#endif // QMLCOMPLETIONSUPPORT_P_H

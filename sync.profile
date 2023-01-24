@@ -15,6 +15,7 @@
     "QtQmlCompiler" => "$basedir/src/qmlcompiler",
     "QtQmlTypeRegistrar" => "$basedir/src/qmltyperegistrar/",
     "QtQmlDom" => "$basedir/src/qmldom",
+    "QtQmlLS" => "$basedir/src/qmlls",
     "QtQuickLayouts" => "$basedir/src/quicklayouts",
     "QtQmlLocalStorage" => "$basedir/src/qmllocalstorage",
     "QtLabsSettings" => "$basedir/src/labs/settings",

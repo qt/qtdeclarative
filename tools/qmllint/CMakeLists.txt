@@ -13,11 +13,10 @@ qt_internal_add_tool(${target_name}
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp
-        ../shared/qqmltoolingsettings.h
-        ../shared/qqmltoolingsettings.cpp
     LIBRARIES
         Qt::CorePrivate
         Qt::QmlCompilerPrivate
+        Qt::QmlToolingSettingsPrivate
 )
 qt_internal_return_unless_building_tools()
 

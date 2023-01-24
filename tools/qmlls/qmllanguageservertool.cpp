@@ -1,12 +1,13 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include "qqmllanguageserver.h"
+
+#include <QtQmlLS/private/qqmllanguageserver_p.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qcoreapplication.h>
-#include "../shared/qqmltoolingsettings.h"
+#include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>

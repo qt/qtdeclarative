@@ -1,13 +1,14 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include "qqmllanguageserver.h"
-#include "qqmlcodemodel.h"
+
+#include "qqmlcodemodel_p.h"
+#include "qtextdocument_p.h"
+
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qthreadpool.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
-#include "textdocument.h"
 
 #include <memory>
 #include <algorithm>
@@ -164,7 +165,8 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         for (const QString &child : dirs)
             addDirectory(dir.filePath(child), --depthLeft);
     }
-    const QStringList qmljs = dir.entryList(QStringList({ "*.qml", "*.js", "*.mjs" }), QDir::Files);
+    const QStringList qmljs =
+            dir.entryList(QStringList({ u"*.qml"_s, u"*.js"_s, u"*.mjs"_s }), QDir::Files);
     int progress = 0;
     {
         QMutexLocker l(&m_mutex);
@@ -553,14 +555,14 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
         m_settings->search(path);
         QString buildDir = QStringLiteral(u"buildDir");
         if (m_settings->isSet(buildDir))
-            buildPaths += m_settings->value(buildDir).toString().split(',', Qt::SkipEmptyParts);
+            buildPaths += m_settings->value(buildDir).toString().split(u',', Qt::SkipEmptyParts);
     }
     if (buildPaths.isEmpty()) {
         // default values
         buildPaths += buildPathsForRootUrl(QByteArray());
     }
     // env variable
-    QStringList envPaths = qEnvironmentVariable("QMLLS_BUILD_DIRS").split(',', Qt::SkipEmptyParts);
+    QStringList envPaths = qEnvironmentVariable("QMLLS_BUILD_DIRS").split(u',', Qt::SkipEmptyParts);
     buildPaths += envPaths;
     if (buildPaths.isEmpty()) {
         // heuristic to find build dir
@@ -682,8 +684,7 @@ QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
             << validDoc.field(Fields::code).value().toString() << "\n==========\n";
     } else {
         dbg << u"  validDoc:"
-            << (validDoc ? u"%1chars"_s.arg(
-                        validDoc.field(Fields::code).value().toString().size())
+            << (validDoc ? u"%1chars"_s.arg(validDoc.field(Fields::code).value().toString().size())
                          : u"*none*"_s)
             << "\n";
     }

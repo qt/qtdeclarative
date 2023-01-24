@@ -8,6 +8,7 @@ if (NOT QT_FEATURE_commandlineparser)
     message(FATAL_ERROR "QT_FEATURE_commandlineparser required to compile qmltyperegistrar")
 endif()
 
+add_subdirectory(qmltoolingsettings)
 add_subdirectory(qmltyperegistrar)
 add_subdirectory(qmlintegration)
 add_subdirectory(qml)
@@ -87,6 +88,10 @@ if(QT_FEATURE_qml_devtools)
     if(QT_FEATURE_qml_devtools AND QT_FEATURE_xmlstreamwriter)
         add_subdirectory(../tools/qmlcachegen qmlcachegen)
     endif()
+endif()
+
+if(QT_FEATURE_thread)
+    add_subdirectory(qmlls)
 endif()
 
 add_subdirectory(plugins)

@@ -1,8 +1,9 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include "textcursor.h"
-#include "textdocument.h"
-#include "textblock.h"
+
+#include "qtextcursor_p.h"
+#include "qtextdocument_p.h"
+#include "qtextblock_p.h"
 
 namespace Utils {
 
@@ -118,4 +119,4 @@ bool TextCursor::isNull() const
     return m_document == nullptr;
 }
 
-}
+} // namespace Utils

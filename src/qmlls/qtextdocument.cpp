@@ -1,8 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "textdocument.h"
-#include "textblock.h"
+#include "qtextdocument_p.h"
+#include "qtextblock_p.h"
 
 namespace Utils {
 
@@ -76,7 +76,7 @@ void TextDocument::setPlainText(const QString &text)
         block.textBlock.setPosition(blockStart);
         block.textBlock.setDocument(this);
 
-        int blockEnd = text.indexOf('\n', blockStart) + 1;
+        int blockEnd = text.indexOf(u'\n', blockStart) + 1;
         if (blockEnd == 0)
             blockEnd = text.size();
 

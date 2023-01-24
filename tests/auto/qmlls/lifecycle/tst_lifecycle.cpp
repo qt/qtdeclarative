@@ -8,7 +8,7 @@
 #include <QtJsonRpc/private/qjsonrpcprotocol_p.h>
 
 #include <QtLanguageServer/private/qlanguageserverprotocol_p.h>
-#include "qlanguageserver.h"
+#include <QtQmlLS/private/qlanguageserver_p.h>
 
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>

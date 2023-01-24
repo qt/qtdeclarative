@@ -1,7 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qqmltoolingsettings.h"
+#include "qqmltoolingsettings_p.h"
 
 #include <algorithm>
 
@@ -92,7 +92,8 @@ bool QQmlToolingSettings::search(const QString &path)
             break;
     }
 
-    if (const QString iniFile = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, u"%1.ini"_s.arg(m_toolName)); !iniFile.isEmpty()) {
+    if (const QString iniFile = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, u"%1.ini"_s.arg(m_toolName));
+        !iniFile.isEmpty()) {
         if (read(iniFile)) {
             for (const QString &dir : std::as_const(dirs))
                 m_seenDirectories[dir] = iniFile;

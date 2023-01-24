@@ -1,11 +1,11 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include "qqmllanguageserver.h"
 
-#include "textsynchronization.h"
+#include "qqmllanguageserver_p.h"
+#include "qtextsynchronization_p.h"
+#include "qlanguageserver_p.h"
+#include "qlspcustomtypes_p.h"
 
-#include "qlanguageserver.h"
-#include "lspcustomtypes.h"
 #include <QtCore/qdir.h>
 
 #include <iostream>

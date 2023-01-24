@@ -1,8 +1,9 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "workspace.h"
-#include "qqmllanguageserver.h"
+#include "qworkspace_p.h"
+#include "qqmllanguageserver_p.h"
+
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtLanguageServer/private/qlspnotifysignals_p.h>
 
@@ -78,14 +79,15 @@ void WorkspaceHandlers::setupCapabilities(const QLspSpecification::InitializePar
                                           QLspSpecification::InitializeResult &serverInfo)
 {
     if (!clientInfo.capabilities.workspace
-        || !clientInfo.capabilities.workspace->value("workspaceFolders").toBool(false))
+        || !clientInfo.capabilities.workspace->value(u"workspaceFolders"_s).toBool(false))
         return;
     WorkspaceFoldersServerCapabilities folders;
     folders.supported = true;
     folders.changeNotifications = true;
     if (!serverInfo.capabilities.workspace)
         serverInfo.capabilities.workspace = QJsonObject();
-    serverInfo.capabilities.workspace->insert("workspaceFolders", QTypedJson::toJsonValue(folders));
+    serverInfo.capabilities.workspace->insert(u"workspaceFolders"_s,
+                                              QTypedJson::toJsonValue(folders));
 }
 
 void WorkspaceHandlers::clientInitialized(QLanguageServer *server)
@@ -94,7 +96,8 @@ void WorkspaceHandlers::clientInitialized(QLanguageServer *server)
     const auto clientInfo = server->clientInfo();
     QList<Registration> registrations;
     if (clientInfo.capabilities.workspace
-        && clientInfo.capabilities.workspace->value("didChangeWatchedFiles")["dynamicRegistration"]
+        && clientInfo.capabilities.workspace
+                   ->value(u"didChangeWatchedFiles"_s)[u"dynamicRegistration"_s]
                    .toBool(false)) {
         const int watchAll =
                 int(WatchKind::Create) | int(WatchKind::Change) | int(WatchKind::Delete);
