@@ -1217,6 +1217,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("qtquickdialog") << QStringLiteral("qtquickdialog.qml");
     QTest::newRow("callBase") << QStringLiteral("callBase.qml");
     QTest::newRow("propertyWithOn") << QStringLiteral("switcher.qml");
+    QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml");
 }
 
 void TestQmllint::cleanQmlCode()
