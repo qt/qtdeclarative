@@ -29,6 +29,11 @@
             "name": "unexpected-var-type",
             "settingsName": "UnexpectedVarType",
             "description": "Warn about incompatible types being set on var properties"
+        },
+        {
+            "name": "property-changes-parsed",
+            "settingsName": "PropertyChangesParsed",
+            "description": "Warn about legacy PropertyChanges that rely on the custom parser"
         }
     ]
 }

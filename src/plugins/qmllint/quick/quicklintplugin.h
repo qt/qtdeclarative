@@ -139,6 +139,18 @@ private:
     QMultiHash<QString, QQmlSA::Element> m_expectedPropertyTypes;
 };
 
+class PropertyChangesValidatorPass : public QQmlSA::ElementPass
+{
+public:
+    PropertyChangesValidatorPass(QQmlSA::PassManager *manager);
+
+    bool shouldRun(const QQmlSA::Element &element) override;
+    void run(const QQmlSA::Element &element) override;
+
+private:
+    QQmlSA::Element m_propertyChanges;
+};
+
 QT_END_NAMESPACE
 
 #endif // QUICKLINTPLUGIN_H

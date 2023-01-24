@@ -1773,7 +1773,9 @@ QQmlJSImportVisitor::parseBindingExpression(const QString &name,
     }
 
     auto expr = exprStatement->expression;
-    QQmlJSMetaPropertyBinding binding(expr->firstSourceLocation(), name);
+    QQmlJSMetaPropertyBinding binding(
+                combine(expr->firstSourceLocation(), expr->lastSourceLocation()),
+                name);
 
     bool isUndefinedBinding = false;
 

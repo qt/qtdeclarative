@@ -4,6 +4,7 @@
 #include "quicklintplugin.h"
 
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -14,6 +15,7 @@ static constexpr LoggerWarningId quickAttachedPropertyType { "Quick.attached-pro
 static constexpr LoggerWarningId quickControlsNativeCustomize { "Quick.controls-native-customize" };
 static constexpr LoggerWarningId quickAnchorCombinations { "Quick.anchor-combinations" };
 static constexpr LoggerWarningId quickUnexpectedVarType { "Quick.unexpected-var-type" };
+static constexpr LoggerWarningId quickPropertyChangesParsed { "Quick.property-changes-parsed" };
 
 ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
         QQmlSA::PassManager *manager)
@@ -520,6 +522,7 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 
     if (hasQuick) {
         manager->registerElementPass(std::make_unique<AnchorsValidatorPass>(manager));
+        manager->registerElementPass(std::make_unique<PropertyChangesValidatorPass>(manager));
 
         auto forbiddenChildProperty =
                 std::make_unique<ForbiddenChildrenPropertyValidatorPass>(manager);
@@ -634,6 +637,56 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
     if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_s)
         || manager->hasImportedModule(u"QtQuick.Controls.Windows"_s))
         manager->registerElementPass(std::make_unique<ControlsNativeValidatorPass>(manager));
+}
+
+PropertyChangesValidatorPass::PropertyChangesValidatorPass(QQmlSA::PassManager *manager)
+    : QQmlSA::ElementPass(manager)
+{
+    m_propertyChanges = resolveType("QtQuick", "PropertyChanges");
+}
+
+bool PropertyChangesValidatorPass::shouldRun(const QQmlSA::Element &element)
+{
+    return !m_propertyChanges.isNull() && element->inherits(m_propertyChanges);
+}
+
+void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
+{
+    const QMultiHash<QString, QQmlJSMetaPropertyBinding> bindings = element->ownPropertyBindings();
+
+    const auto target = bindings.find(u"target"_s);
+    if (target == bindings.end())
+        return;
+
+    QString targetId = u"<id>"_s;
+    const QString targetBinding = sourceCode(target->sourceLocation());
+    const QQmlSA::Element targetElement = resolveId(targetBinding, element);
+    if (!targetElement.isNull())
+        targetId = targetBinding;
+
+    for (auto it = bindings.begin(), end = bindings.end(); it != end; ++it) {
+        const QString name = it->propertyName();
+        if (element->hasProperty(name))
+            continue;
+
+        const QQmlJS::SourceLocation bindingLocation = it->sourceLocation();
+        if (!targetElement->hasProperty(name)) {
+            emitWarning(
+                    "Unknown property \"%1\" in PropertyChanges."_L1.arg(name),
+                    quickPropertyChangesParsed, bindingLocation);
+            continue;
+        }
+
+        QString binding = sourceCode(bindingLocation);
+        if (binding.length() > 16)
+            binding = binding.left(13) + "..."_L1;
+
+        emitWarning(
+                "Property \"%1\" is custom-parsed in PropertyChanges. "
+                "You should phrase this binding as \"%2.%1: %3\""_L1
+                    .arg(name, targetId, binding),
+                quickPropertyChangesParsed, bindingLocation);
+    }
 }
 
 QT_END_NAMESPACE

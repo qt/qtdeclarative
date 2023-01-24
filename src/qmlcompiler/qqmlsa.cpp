@@ -49,6 +49,16 @@ Element GenericPass::resolveLiteralType(const QQmlJSMetaPropertyBinding &binding
     return binding.literalType(d->manager->m_typeResolver);
 }
 
+Element GenericPass::resolveId(QAnyStringView id, const Element &context)
+{
+    return d->manager->m_typeResolver->scopeForId(id.toString(), context);
+}
+
+QString GenericPass::sourceCode(QQmlJS::SourceLocation location)
+{
+    return d->manager->m_visitor->logger()->code().mid(location.offset, location.length);
+}
+
 /*!
  * \brief PassManager::registerElementPass registers ElementPass
           with the pass manager.
