@@ -52,11 +52,16 @@ options that align with the latest UI design trends. If these UI controls do not
 satisfy your application's needs, only then it is recommended to create a
 custom control.
 
+You can use the controls when you design UIs in Qt Design Studio. In addition,
+it provides timeline-based animations, visual effects, layouts, and a
+live-preview for prototyping applications.
 
 \section2 Related Information
 \list
 \li \l{Qt Quick Controls}
+\li \l{Customizing Qt Quick Controls}
 \li \l{Qt Quick}
+\li \l{Qt Design Studio Manual}
 \endlist
 
 \omit
@@ -146,7 +151,7 @@ specific file managed by the resource system. For example, if we wanted to give
  \li \l{The Qt Resource System}
 \endlist
 
-\section1 Separate UI from Logic
+\section1 Separate UI from Business Logic
 
 One of the key goals that most application developers want to achieve is to
 create a maintainable application. One of the ways to achieve this goal is
@@ -162,8 +167,8 @@ reasons why an application's UI should be written in QML:
  \li JavaScript can easily be used in QML to respond to events.
 \endlist
 
-Being a strongly typed language, C++ is best suited for an application's logic.
-Typically, such code performs tasks such as complex calculations
+Being a strongly typed language, C++ is best suited for an application's
+business logic. Typically, such code performs tasks such as complex calculations
 or data processing, which are faster in C++ than QML.
 
 Qt offers various approaches to integrate QML and C++ code in an application.
@@ -324,6 +329,22 @@ see \l {Choosing the Correct Integration Method Between C++ and QML}.
 \list
 \li \l{Integrating QML and C++}
 \li \l{Qt Quick Controls - Chat Tutorial}{Chat application tutorial}
+\endlist
+
+\section1 Using Qt Design Studio
+
+Qt Design Studio uses UI files that have the filename extension \e {.ui.qml}
+to separate the visual parts of the UI from the UI logic you implement in
+\e {.qml} files. You should edit UI files only in the \uicontrol {2D} view in
+Qt Design Studio. If you use some other tool to add code that Qt Design Studio
+does not support, it displays error messages. Fix the errors to enable visual
+editing of the UI files again. Typically, you should move the unsupported code
+to a \e {.qml} file.
+
+\section2 Related Information
+
+\list
+    \li \l{Qt Design Studio: UI Files}
 \endlist
 
 \section1 Using Qt Quick Layouts
