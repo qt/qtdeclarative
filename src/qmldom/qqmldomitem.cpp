@@ -333,6 +333,12 @@ DomItem DomItem::containingObject()
     return visitEl([this](auto &&el) { return el->containingObject(*this); });
 }
 
+/*!
+   \internal
+   \brief Returns the QmlObject that this belongs to.
+
+   qmlObject() might also return the object of a component if GoTo:MostLikely is used.
+ */
 DomItem DomItem::qmlObject(GoTo options, FilterUpOptions filterOptions)
 {
     if (DomItem res = filterUp([](DomType k, DomItem &) { return k == DomType::QmlObject; },
@@ -403,6 +409,10 @@ DomItem DomItem::globalScope()
     return DomItem();
 }
 
+/*!
+   \internal
+   \brief The owner of an element, for an qmlObject this is the containing qml file.
+ */
 DomItem DomItem::owner()
 {
     if (domTypeIsOwningItem(m_kind) || m_kind == DomType::Empty)
@@ -1883,6 +1893,14 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
     return true;
 }
 
+/*!
+   \internal
+   \brief Dereference DomItems pointing to other DomItems.
+
+   Dereferences DomItems with internalKind being References, Export and Id.
+   Also does multiple rounds of resolving for nested DomItems.
+   Prefer this over \l {DomItem::get}.
+ */
 DomItem DomItem::proceedToScope(ErrorHandler h, QList<Path> *visitedRefs)
 {
     // follow references, resolve exports
