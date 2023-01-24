@@ -197,6 +197,7 @@ set(qml_files
     variantlist.qml
     versionmismatch.qml
     voidfunction.qml
+    dummy_imports.qml
 )
 
 set(resource_files
