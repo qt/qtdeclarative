@@ -3,6 +3,7 @@
 
 #include "qworkspace_p.h"
 #include "qqmllanguageserver_p.h"
+#include "qqmllsutils_p.h"
 
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtLanguageServer/private/qlspnotifysignals_p.h>
@@ -24,18 +25,18 @@ void WorkspaceHandlers::registerHandlers(QLanguageServer *server, QLanguageServe
                          const QList<WorkspaceFolder> &removed = event.removed;
                          QList<QByteArray> toRemove;
                          for (const WorkspaceFolder &folder : removed) {
-                             toRemove.append(QmlLsp::lspUriToQmlUrl(folder.uri));
-                             m_codeModel->removeDirectory(
-                                     m_codeModel->url2Path(QmlLsp::lspUriToQmlUrl(folder.uri)));
+                             toRemove.append(QQmlLSUtils::lspUriToQmlUrl(folder.uri));
+                             m_codeModel->removeDirectory(m_codeModel->url2Path(
+                                     QQmlLSUtils::lspUriToQmlUrl(folder.uri)));
                          }
                          m_codeModel->removeRootUrls(toRemove);
                          const QList<WorkspaceFolder> &added = event.added;
                          QList<QByteArray> toAdd;
                          QStringList pathsToAdd;
                          for (const WorkspaceFolder &folder : added) {
-                             toAdd.append(QmlLsp::lspUriToQmlUrl(folder.uri));
-                             pathsToAdd.append(
-                                     m_codeModel->url2Path(QmlLsp::lspUriToQmlUrl(folder.uri)));
+                             toAdd.append(QQmlLSUtils::lspUriToQmlUrl(folder.uri));
+                             pathsToAdd.append(m_codeModel->url2Path(
+                                     QQmlLSUtils::lspUriToQmlUrl(folder.uri)));
                          }
                          m_codeModel->addRootUrls(toAdd);
                          m_codeModel->addDirectoriesToIndex(pathsToAdd, server);
@@ -47,7 +48,7 @@ void WorkspaceHandlers::registerHandlers(QLanguageServer *server, QLanguageServe
                          const QList<FileEvent> &changes = params.changes;
                          for (const FileEvent &change : changes) {
                              const QString filename =
-                                     m_codeModel->url2Path(QmlLsp::lspUriToQmlUrl(change.uri));
+                                     m_codeModel->url2Path(QQmlLSUtils::lspUriToQmlUrl(change.uri));
                              switch (FileChangeType(change.type)) {
                              case FileChangeType::Created:
                                  // m_codeModel->addFile(filename);
@@ -145,7 +146,7 @@ void WorkspaceHandlers::clientInitialized(QLanguageServer *server)
     QSet<QString> rootPaths;
     if (std::holds_alternative<QByteArray>(clientInfo.rootUri)) {
         QString path = m_codeModel->url2Path(
-                QmlLsp::lspUriToQmlUrl(std::get<QByteArray>(clientInfo.rootUri)));
+                QQmlLSUtils::lspUriToQmlUrl(std::get<QByteArray>(clientInfo.rootUri)));
         rootPaths.insert(path);
     } else if (clientInfo.rootPath && std::holds_alternative<QByteArray>(*clientInfo.rootPath)) {
         QString path = QString::fromUtf8(std::get<QByteArray>(*clientInfo.rootPath));
@@ -156,7 +157,7 @@ void WorkspaceHandlers::clientInitialized(QLanguageServer *server)
         && std::holds_alternative<QList<WorkspaceFolder>>(*clientInfo.workspaceFolders)) {
         for (const WorkspaceFolder &workspace :
              std::as_const(std::get<QList<WorkspaceFolder>>(*clientInfo.workspaceFolders))) {
-            const QUrl workspaceUrl(QString::fromUtf8(QmlLsp::lspUriToQmlUrl(workspace.uri)));
+            const QUrl workspaceUrl(QString::fromUtf8(QQmlLSUtils::lspUriToQmlUrl(workspace.uri)));
             rootPaths.insert(workspaceUrl.toLocalFile());
         }
     }

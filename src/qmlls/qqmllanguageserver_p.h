@@ -27,19 +27,6 @@ class QQmlToolingSettings;
 
 namespace QmlLsp {
 
-/*
- * The language server protocol calls "URI" what QML calls "URL".
- * According to RFC 3986, a URL is a special case of URI that not only
- * identifies a resource but also shows how to access it.
- * In QML, however, URIs are distinct from URLs. URIs are the
- * identifiers of modules, for example "QtQuick.Controls".
- * In order to not confuse the terms we interpret language server URIs
- * as URLs in the QML code model.
- * This method marks a point of translation between the terms, but does
- * not have to change the actual URI/URL.
- */
-inline QByteArray lspUriToQmlUrl(const QByteArray &uri) { return uri; }
-
 class QQmlLanguageServer : public QLanguageServerModule
 {
     Q_OBJECT

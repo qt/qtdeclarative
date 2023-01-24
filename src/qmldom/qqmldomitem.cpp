@@ -437,6 +437,14 @@ DomItem DomItem::universe()
     return DomItem(); // we should be in an empty DomItem already...
 }
 
+DomItem DomItem::containingFile()
+{
+    if (DomItem res = filterUp([](DomType k, DomItem &) { return k == DomType::QmlFile; },
+                               FilterUpOptions::ReturnOuter))
+        return res;
+    return DomItem();
+}
+
 DomItem DomItem::filterUp(function_ref<bool(DomType k, DomItem &)> filter, FilterUpOptions options)
 {
     DomItem it = *this;

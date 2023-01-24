@@ -743,6 +743,7 @@ public:
     DomItem top();
     DomItem environment();
     DomItem universe();
+    DomItem containingFile();
 
     DomItem qmlObject(GoTo option = GoTo::Strict,
                       FilterUpOptions options = FilterUpOptions::ReturnOuter);

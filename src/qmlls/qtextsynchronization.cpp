@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qtextsynchronization_p.h"
-#include "qqmllanguageserver_p.h"
+#include "qqmllsutils_p.h"
 #include "qtextdocument_p.h"
 
 using namespace QLspSpecification;
@@ -17,20 +17,20 @@ TextSynchronization::TextSynchronization(QmlLsp::QQmlCodeModel *codeModel, QObje
 
 void TextSynchronization::didCloseTextDocument(const DidCloseTextDocumentParams &params)
 {
-    m_codeModel->closeOpenFile(QmlLsp::lspUriToQmlUrl(params.textDocument.uri));
+    m_codeModel->closeOpenFile(QQmlLSUtils::lspUriToQmlUrl(params.textDocument.uri));
 }
 
 void TextSynchronization::didOpenTextDocument(const DidOpenTextDocumentParams &params)
 {
     const TextDocumentItem &item = params.textDocument;
-    const QString fileName = m_codeModel->url2Path(QmlLsp::lspUriToQmlUrl(item.uri));
-    m_codeModel->newOpenFile(QmlLsp::lspUriToQmlUrl(item.uri), item.version,
+    const QString fileName = m_codeModel->url2Path(QQmlLSUtils::lspUriToQmlUrl(item.uri));
+    m_codeModel->newOpenFile(QQmlLSUtils::lspUriToQmlUrl(item.uri), item.version,
                              QString::fromUtf8(item.text));
 }
 
 void TextSynchronization::didDidChangeTextDocument(const DidChangeTextDocumentParams &params)
 {
-    QByteArray url = QmlLsp::lspUriToQmlUrl(params.textDocument.uri);
+    QByteArray url = QQmlLSUtils::lspUriToQmlUrl(params.textDocument.uri);
     const QString fileName = m_codeModel->url2Path(url);
     auto openDoc = m_codeModel->openDocumentByUrl(url);
     std::shared_ptr<Utils::TextDocument> document = openDoc.textDocument;

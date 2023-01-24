@@ -235,6 +235,7 @@ AttachedInfo::Ptr AttachedInfo::find(AttachedInfo::Ptr self, Path p, AttachedInf
         Path removed = p.mid(0, self->path().length());
         if (removed != self->path())
             return nullptr;
+        p = p.dropFront(self->path().length());
     }
     AttachedInfo::Ptr res = self;
     Path rest = p;

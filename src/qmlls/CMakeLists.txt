@@ -16,6 +16,7 @@ qt_internal_add_module(QmlLSPrivate
         qtextsynchronization.cpp qtextsynchronization_p.h
         qqmlcompletionsupport_p.h qqmlcompletionsupport.cpp
         qqmlcodemodel_p.h qqmlcodemodel.cpp
+        qqmllsutils_p.h qqmllsutils.cpp
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

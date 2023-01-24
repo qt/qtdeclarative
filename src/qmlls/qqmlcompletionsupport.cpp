@@ -3,6 +3,7 @@
 
 #include "qqmlcompletionsupport_p.h"
 #include "qqmllanguageserver_p.h"
+#include "qqmllsutils_p.h"
 
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtCore/qthreadpool.h>
@@ -26,7 +27,7 @@ void QmlCompletionSupport::registerHandlers(QLanguageServer *, QLanguageServerPr
                            std::variant<QList<CompletionItem>, CompletionList, std::nullptr_t>,
                            std::variant<CompletionList, QList<CompletionItem>>> &&response) {
                 QmlLsp::OpenDocument doc = m_codeModel->openDocumentByUrl(
-                        QmlLsp::lspUriToQmlUrl(cParams.textDocument.uri));
+                        QQmlLSUtils::lspUriToQmlUrl(cParams.textDocument.uri));
                 if (!doc.textDocument) {
                     response.sendResponse(QList<CompletionItem>());
                     return;
@@ -50,7 +51,8 @@ void QmlCompletionSupport::registerHandlers(QLanguageServer *, QLanguageServerPr
                     m_completions.insert(QString::fromUtf8(req->completionParams.textDocument.uri), req);
                 }
                 if (doc.snapshot.docVersion && *doc.snapshot.docVersion >= req->minVersion)
-                    updatedSnapshot(QmlLsp::lspUriToQmlUrl(req->completionParams.textDocument.uri));
+                    updatedSnapshot(
+                            QQmlLSUtils::lspUriToQmlUrl(req->completionParams.textDocument.uri));
             });
     protocol->registerCompletionItemResolveRequestHandler(
             [](const QByteArray &, const CompletionItem &cParams,
@@ -114,99 +116,11 @@ void QmlCompletionSupport::updatedSnapshot(const QByteArray &url)
     }
 }
 
-struct ItemLocation
-{
-    int depth = -1;
-    DomItem domItem;
-    FileLocations::Tree fileLocation;
-};
-
 QString CompletionRequest::urlAndPos() const
 {
     return QString::fromUtf8(completionParams.textDocument.uri) + u":"
             + QString::number(completionParams.position.line) + u":"
             + QString::number(completionParams.position.character);
-}
-
-// return the position of 0 based line and char offsets, never goes to the "next" line, but might
-// return the position of the \n or \r that starts the next line (never the one that starts line)
-static qsizetype posAfterLineChar(QString code, int line, int character)
-{
-    int targetLine = line;
-    qsizetype i = 0;
-    while (i != code.size() && targetLine != 0) {
-        QChar c = code.at(i++);
-        if (c == u'\n') {
-            --targetLine;
-        }
-        if (c == u'\r') {
-            if (i != code.size() && code.at(i) == u'\n')
-                ++i;
-            --targetLine;
-        }
-    }
-    qsizetype leftChars = character;
-    while (i != code.size() && leftChars) {
-        QChar c = code.at(i);
-        if (c == u'\n' || c == u'\r')
-            break;
-        ++i;
-        if (!c.isLowSurrogate())
-            --leftChars;
-    }
-    return i;
-}
-
-static QList<ItemLocation> findLastItemsContaining(DomItem file, int line, int character)
-{
-    QList<ItemLocation> itemsFound;
-    std::shared_ptr<QmlFile> filePtr = file.ownerAs<QmlFile>();
-    if (!filePtr)
-        return itemsFound;
-    FileLocations::Tree t = filePtr->fileLocationsTree();
-    Q_ASSERT(t);
-    QString code = filePtr->code(); // do something more advanced wrt to changes wrt to this->code?
-    if (code.isEmpty())
-        qCWarning(complLog) << "no code";
-    QList<ItemLocation> toDo;
-    qsizetype targetPos = posAfterLineChar(code, line, character);
-    Q_ASSERT(targetPos >= 0);
-    auto containsTarget = [targetPos](QQmlJS::SourceLocation l) {
-        if constexpr (sizeof(qsizetype) <= sizeof(quint32)) {
-            return l.begin() <= quint32(targetPos) && quint32(targetPos) < l.end();
-        } else {
-            return l.begin() <= targetPos && targetPos < l.end();
-        }
-    };
-    if (containsTarget(t->info().fullRegion)) {
-        ItemLocation loc;
-        loc.depth = 0;
-        loc.domItem = file;
-        loc.fileLocation = t;
-        toDo.append(loc);
-    }
-    while (!toDo.isEmpty()) {
-        ItemLocation iLoc = toDo.last();
-        toDo.removeLast();
-        if (itemsFound.isEmpty() || itemsFound.constFirst().depth <= iLoc.depth) {
-            if (!itemsFound.isEmpty() && itemsFound.constFirst().depth < iLoc.depth)
-                itemsFound.clear();
-            itemsFound.append(iLoc);
-        }
-        auto subEls = iLoc.fileLocation->subItems();
-        for (auto it = subEls.begin(); it != subEls.end(); ++it) {
-            auto subLoc = std::static_pointer_cast<AttachedInfoT<FileLocations>>(it.value());
-            Q_ASSERT(subLoc);
-            if (containsTarget(subLoc->info().fullRegion)) {
-                ItemLocation subItem;
-                subItem.depth = iLoc.depth + 1;
-                subItem.domItem = iLoc.domItem.path(it.key());
-                subItem.fileLocation = subLoc;
-                toDo.append(subItem);
-            }
-        }
-    }
-    return itemsFound;
 }
 
 // finds the filter string, the base (for fully qualified accesses) and the whole string
@@ -584,12 +498,12 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (std::shared_ptr<DomEnvironment> envPtr = file.environment().ownerAs<DomEnvironment>())
         envPtr->clearReferenceCache();
-    qsizetype pos = posAfterLineChar(code, completionParams.position.line,
-                                     completionParams.position.character);
+    qsizetype pos = QQmlLSUtils::textOffsetFrom(code, completionParams.position.line,
+                                                completionParams.position.character);
     CompletionContextStrings ctx(code, pos);
-    QList<ItemLocation> itemsFound =
-            findLastItemsContaining(file, completionParams.position.line,
-                                    completionParams.position.character - ctx.filterChars().size());
+    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, completionParams.position.line,
+                                                         completionParams.position.character
+                                                                 - ctx.filterChars().size());
     if (itemsFound.size() > 1) {
         QStringList paths;
         for (auto &it : itemsFound)
