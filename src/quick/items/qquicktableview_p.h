@@ -174,7 +174,7 @@ public:
 
     Q_INVOKABLE void forceLayout();
     Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
-    Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtIndex(const QModelIndex &index, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
     Q_INVOKABLE void positionViewAtRow(int row, PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
     Q_INVOKABLE void positionViewAtColumn(int column, PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
@@ -219,6 +219,8 @@ public:
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use itemAtIndex(index(row, column)) instead")
     Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
+    QT_DEPRECATED_VERSION_X_6_5("Use positionViewAtIndex(index(row, column)) instead")
+    Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
 #endif
 
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
