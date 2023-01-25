@@ -2485,6 +2485,17 @@ void tst_QmlCppCodegen::badSequence()
     QCOMPARE(others.count(&others), 2);
     QCOMPARE(others.at(&others, 0), cousins[0]);
     QCOMPARE(others.at(&others, 1), cousins[1]);
+
+    QQmlListProperty<Person> momsCousins
+            = self->property("momsCousins").value<QQmlListProperty<Person>>();
+    QCOMPARE(momsCousins.count(&momsCousins), 2);
+    QCOMPARE(momsCousins.at(&momsCousins, 0), cousins[0]);
+    QCOMPARE(momsCousins.at(&momsCousins, 1), cousins[1]);
+
+    QQmlListProperty<Person> dadsCousins
+            = self->property("dadsCousins").value<QQmlListProperty<Person>>();
+    QCOMPARE(dadsCousins.count(&dadsCousins), 1);
+    QCOMPARE(dadsCousins.at(&dadsCousins, 0), other);
 }
 
 void tst_QmlCppCodegen::enumLookup()

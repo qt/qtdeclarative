@@ -1439,6 +1439,35 @@ static ConvertAndAssignResult tryConvertAndAssign(
     return {false, false};
 };
 
+template<typename Op>
+bool iterateQObjectContainer(QMetaType metaType, const void *data, Op op)
+{
+    QSequentialIterable iterable;
+    if (!QMetaType::convert(metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable))
+        return false;
+
+    const QMetaSequence metaSequence = iterable.metaContainer();
+
+    if (!metaSequence.hasConstIterator()
+            || !metaSequence.canGetValueAtConstIterator()
+            || !iterable.valueMetaType().flags().testFlag(QMetaType::PointerToQObject)) {
+        return false;
+    }
+
+    const void *container = iterable.constIterable();
+    void *it = metaSequence.constBegin(container);
+    const void *end = metaSequence.constEnd(container);
+    QObject *o = nullptr;
+    while (!metaSequence.compareConstIterator(it, end)) {
+        metaSequence.valueAtConstIterator(it, &o);
+        op(o);
+        metaSequence.advanceConstIterator(it, 1);
+    }
+    metaSequence.destroyConstIterator(it);
+    metaSequence.destroyConstIterator(end);
+    return true;
+}
+
 bool QQmlPropertyPrivate::write(
         QObject *object, const QQmlPropertyData &property, const QVariant &value,
         const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags)
@@ -1552,29 +1581,7 @@ bool QQmlPropertyPrivate::write(
                 const QList<QObject *> &list = qvariant_cast<QList<QObject *> >(value);
                 for (qsizetype ii = 0; ii < list.size(); ++ii)
                     doAppend(list.at(ii));
-            } else if (QSequentialIterable iterable;
-                       QMetaType::convert(variantMetaType, value.data(),
-                                          QMetaType::fromType<QSequentialIterable>(), &iterable)) {
-                const QMetaSequence metaContainer = iterable.metaContainer();
-                if (metaContainer.hasConstIterator()
-                        && metaContainer.canGetValueAtConstIterator()
-                        && iterable.valueMetaType().flags().testFlag(
-                            QMetaType::PointerToQObject)) {
-                    const void *container = iterable.constIterable();
-                    void *it = metaContainer.constBegin(container);
-                    const void *end = metaContainer.constEnd(container);
-                    QObject *o = nullptr;
-                    while (!metaContainer.compareConstIterator(it, end)) {
-                        metaContainer.valueAtConstIterator(it, &o);
-                        doAppend(o);
-                        metaContainer.advanceConstIterator(it, 1);
-                    }
-                    metaContainer.destroyConstIterator(it);
-                    metaContainer.destroyConstIterator(end);
-                } else {
-                    doAppend(QQmlMetaType::toQObject(value));
-                }
-            } else {
+            } else if (!iterateQObjectContainer(variantMetaType, value.data(), doAppend)) {
                 doAppend(QQmlMetaType::toQObject(value));
             }
         } else if (variantMetaType == propertyMetaType) {
@@ -1628,33 +1635,57 @@ bool QQmlPropertyPrivate::write(
                         propertyMetaType, v.data(),
                         QMetaType::fromType<QSequentialIterable>(),
                         &iterable)) {
-                const QMetaSequence metaContainer = iterable.metaContainer();
-                if (metaContainer.canAddValueAtEnd()) {
+                const QMetaSequence propertyMetaSequence = iterable.metaContainer();
+                if (propertyMetaSequence.canAddValueAtEnd()) {
                     const QMetaType elementMetaType = iterable.valueMetaType();
-                    void *container = iterable.mutableIterable();
+                    void *propertyContainer = iterable.mutableIterable();
+
                     if (variantMetaType == elementMetaType) {
-                        metaContainer.addValueAtEnd(container, value.constData());
+                        propertyMetaSequence.addValueAtEnd(propertyContainer, value.constData());
                         ok = true;
                     } else if (variantMetaType == QMetaType::fromType<QVariantList>()) {
                         const QVariantList list = value.value<QVariantList>();
                         for (const QVariant &valueElement : list) {
                             if (valueElement.metaType() == elementMetaType) {
-                                metaContainer.addValueAtEnd(
-                                            container, valueElement.constData());
+                                propertyMetaSequence.addValueAtEnd(
+                                            propertyContainer, valueElement.constData());
                             } else {
                                 QVariant converted(elementMetaType);
                                 QMetaType::convert(
                                             valueElement.metaType(), valueElement.constData(),
                                             elementMetaType, converted.data());
-                                metaContainer.addValueAtEnd(
-                                            container, converted.constData());
+                                propertyMetaSequence.addValueAtEnd(
+                                            propertyContainer, converted.constData());
                             }
                         }
                         ok = true;
+                    } else if (elementMetaType.flags().testFlag(QMetaType::PointerToQObject)) {
+                        const QMetaObject *elementMetaObject = elementMetaType.metaObject();
+                        Q_ASSERT(elementMetaObject);
+
+                        const auto doAppend = [&](QObject *o) {
+                            QObject *casted = elementMetaObject->cast(o);
+                            propertyMetaSequence.addValueAtEnd(propertyContainer, &casted);
+                        };
+
+                        if (variantMetaType.flags().testFlag(QMetaType::PointerToQObject)) {
+                            doAppend(*static_cast<QObject *const *>(value.data()));
+                            ok = true;
+                        } else if (variantMetaType == QMetaType::fromType<QQmlListReference>()) {
+                            const QQmlListReference *reference
+                                    = static_cast<const QQmlListReference *>(value.constData());
+                            Q_ASSERT(elementMetaObject);
+                            for (int i = 0, end = reference->size(); i < end; ++i)
+                                doAppend(reference->at(i));
+                            ok = true;
+                        } else if (!iterateQObjectContainer(
+                                       variantMetaType, value.data(), doAppend)) {
+                            doAppend(QQmlMetaType::toQObject(value));
+                        }
                     } else {
                         QVariant converted = value;
                         if (converted.convert(elementMetaType)) {
-                            metaContainer.addValueAtEnd(container, converted.constData());
+                            propertyMetaSequence.addValueAtEnd(propertyContainer, converted.constData());
                             ok = true;
                         }
                     }
