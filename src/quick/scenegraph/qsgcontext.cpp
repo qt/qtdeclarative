@@ -63,6 +63,10 @@ Q_LOGGING_CATEGORY(QSG_LOG_TIME_GLYPH,          "qt.scenegraph.time.glyph")
 // Timing inside the renderer base class
 Q_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERER,       "qt.scenegraph.time.renderer")
 
+// Applicable for render loops that install their own animation driver, such as
+// the 'threaded' loop. This env.var. is documented in the scenegraph docs.
+DEFINE_BOOL_CONFIG_OPTION(useElapsedTimerBasedAnimationDriver, QSG_USE_SIMPLE_ANIMATION_DRIVER);
+
 bool qsg_useConsistentTiming()
 {
     int use = -1;
@@ -76,21 +80,9 @@ bool qsg_useConsistentTiming()
 
 class QSGAnimationDriver : public QAnimationDriver
 {
-    Q_OBJECT
 public:
-    enum Mode {
-        VSyncMode,
-        TimerMode
-    };
-
     QSGAnimationDriver(QObject *parent)
         : QAnimationDriver(parent)
-        , m_time(0)
-        , m_vsync(0)
-        , m_mode(VSyncMode)
-        , m_lag(0)
-        , m_bad(0)
-        , m_good(0)
     {
         QScreen *screen = QGuiApplication::primaryScreen();
         if (screen) {
@@ -103,6 +95,35 @@ public:
         } else {
             m_vsync = 16.67f;
         }
+    }
+
+    float vsyncInterval() const { return m_vsync; }
+
+    virtual bool isVSyncDependent() const = 0;
+
+protected:
+    float m_vsync = 0;
+};
+
+// default as in default for the threaded render loop
+class QSGDefaultAnimationDriver : public QSGAnimationDriver
+{
+    Q_OBJECT
+public:
+    enum Mode {
+        VSyncMode,
+        TimerMode
+    };
+
+    QSGDefaultAnimationDriver(QObject *parent)
+        : QSGAnimationDriver(parent)
+        , m_time(0)
+        , m_mode(VSyncMode)
+        , m_lag(0)
+        , m_bad(0)
+        , m_good(0)
+    {
+        QScreen *screen = QGuiApplication::primaryScreen();
         if (screen && !qsg_useConsistentTiming()) {
             if (m_vsync <= 0)
                 m_mode = TimerMode;
@@ -192,16 +213,79 @@ public:
         advanceAnimation();
     }
 
-    float vsyncInterval() const { return m_vsync; } // this should always return something sane, regardless of m_mode
+    bool isVSyncDependent() const override
+    {
+        return true;
+    }
 
     double m_time;
-    float m_vsync;
     Mode m_mode;
     QElapsedTimer m_timer;
     QElapsedTimer m_wallTime;
     float m_lag;
     int m_bad;
     int m_good;
+};
+
+// Advance based on QElapsedTimer. (so like the TimerMode of QSGDefaultAnimationDriver)
+// Does not depend on vsync-based throttling.
+//
+// NB this is not the same as not installing a QAnimationDriver: the built-in
+// approach in QtCore is to rely on 16 ms timer events which are potentially a
+// lot less accurate.
+//
+// This has the benefits of:
+// - not needing any of the infrastructure for falling back to a
+//   QTimer when there are multiple windows,
+// - needing no heuristics trying determine if vsync-based throttling
+//   is missing or broken,
+// - being compatible with any kind of temporal drifts in vsync throttling
+//   which is reportedly happening in various environments and platforms
+//   still,
+// - not being tied to the primary screen's refresh rate, i.e. this is
+//   correct even if the window is on some secondary screen with a
+//   different refresh rate,
+// - not having to worry about the potential effects of variable refresh
+//   rate solutions,
+// - render thread animators work correctly regardless of vsync.
+//
+// On the downside, some animations might appear less smooth (compared to the
+// ideal single window case of QSGDefaultAnimationDriver).
+//
+class QSGElapsedTimerAnimationDriver : public QSGAnimationDriver
+{
+public:
+    QSGElapsedTimerAnimationDriver(QObject *parent)
+        : QSGAnimationDriver(parent)
+    {
+        qCDebug(QSG_LOG_INFO, "Animation Driver: using QElapsedTimer, thread %p %s",
+                QThread::currentThread(),
+                QThread::currentThread() == qGuiApp->thread() ? "(gui/main thread)" : "(render thread)");
+    }
+
+    void start() override
+    {
+        m_wallTime.restart();
+        QAnimationDriver::start();
+    }
+
+    qint64 elapsed() const override
+    {
+        return m_wallTime.elapsed();
+    }
+
+    void advance() override
+    {
+        advanceAnimation();
+    }
+
+    bool isVSyncDependent() const override
+    {
+        return false;
+    }
+
+private:
+    QElapsedTimer m_wallTime;
 };
 
 /*!
@@ -270,7 +354,10 @@ QSGShaderEffectNode *QSGContext::createShaderEffectNode(QSGRenderContext *)
  */
 QAnimationDriver *QSGContext::createAnimationDriver(QObject *parent)
 {
-    return new QSGAnimationDriver(parent);
+    if (useElapsedTimerBasedAnimationDriver())
+        return new QSGElapsedTimerAnimationDriver(parent);
+
+    return new QSGDefaultAnimationDriver(parent);
 }
 
 /*!
@@ -280,6 +367,14 @@ QAnimationDriver *QSGContext::createAnimationDriver(QObject *parent)
 float QSGContext::vsyncIntervalForAnimationDriver(QAnimationDriver *driver)
 {
     return static_cast<QSGAnimationDriver *>(driver)->vsyncInterval();
+}
+
+/*!
+    \return true if \a driver relies on vsync-based throttling in some form.
+ */
+bool QSGContext::isVSyncDependent(QAnimationDriver *driver)
+{
+    return static_cast<QSGAnimationDriver *>(driver)->isVSyncDependent();
 }
 
 QSize QSGContext::minimumFBOSize() const
