@@ -1054,6 +1054,9 @@ void QSGThreadedRenderLoop::animationStopped()
 
 void QSGThreadedRenderLoop::startOrStopAnimationTimer()
 {
+    if (!sg->isVSyncDependent(m_animation_driver))
+        return;
+
     int exposedWindows = 0;
     int unthrottledWindows = 0;
     int badVSync = 0;
@@ -1520,7 +1523,7 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
 
     const qint64 elapsedSinceLastMs = w->timeBetweenPolishAndSyncs.restart();
 
-    if (w->actualWindowFormat.swapInterval() != 0) {
+    if (w->actualWindowFormat.swapInterval() != 0 && sg->isVSyncDependent(m_animation_driver)) {
         w->psTimeAccumulator += elapsedSinceLastMs;
         w->psTimeSampleCount += 1;
         // cannot be too high because we'd then delay recognition of broken vsync at start
@@ -1627,10 +1630,13 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
                               QQuickProfiler::SceneGraphPolishAndSyncSync);
     Q_TRACE(QSG_animations_entry);
 
-    // Now is the time to advance the regular animations (as we are throttled to
-    // vsync due to the wait above), but this is only relevant when there is one
-    // single window. With multiple windows m_animation_timer is active, and
-    // advance() happens instead in response to a good old timer event, not here.
+    // Now is the time to advance the regular animations (as we are throttled
+    // to vsync due to the wait above), but this is only relevant when there is
+    // one single window. With multiple windows m_animation_timer is active,
+    // and advance() happens instead in response to a good old timer event, not
+    // here. (the above applies only when the QSGAnimationDriver reports
+    // isVSyncDependent() == true, if not then we always use the driver and
+    // just advance here)
     if (m_animation_timer == 0 && m_animation_driver->isRunning()) {
         qCDebug(QSG_LOG_RENDERLOOP, "- advancing animations");
         m_animation_driver->advance();
@@ -1674,6 +1680,7 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
     switch ((int) e->type()) {
 
     case QEvent::Timer: {
+        Q_ASSERT(sg->isVSyncDependent(m_animation_driver));
         QTimerEvent *te = static_cast<QTimerEvent *>(e);
         if (te->timerId() == m_animation_timer) {
             qCDebug(QSG_LOG_RENDERLOOP, "- ticking non-render thread timer");

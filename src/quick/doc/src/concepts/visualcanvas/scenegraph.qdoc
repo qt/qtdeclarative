@@ -319,6 +319,20 @@ same time this is exactly what can cause trouble if vsync-based throttling is
 not functioning as expected, because if what the render loop thinks is
 happening is not matching reality, incorrect animation pacing will occur.
 
+\note Starting from Qt 6.5, the threaded render loop offers the possibility of
+opting in to another animation driver, based solely on the elapsed time
+(QElapsedTimer). To enable this, set the \c{QSG_USE_SIMPLE_ANIMATION_DRIVER}
+environment variable to a non-zero value. This has the benefits of not needing
+any of the infrastructure for falling back to a QTimer when there are multiple
+windows, not needing heuristics trying determine if vsync-based throttling is
+missing or broken, being compatible with any kind of temporal drifts in vsync
+throttling, and not being tied to the primary screen's refresh rate, thus
+potentially working better in multi-screen setups. It also drives render
+thread animations (the \l Animator types) correctly even if vsync-based
+throttling is broken or disabled. On the other hand, animations may be
+perceived as less smooth with this approach. With compatibility in mind, it is
+offered as an opt-in feature at the moment.
+
 In summary, the \c threaded render loop is expected to provide smoother
 animations with less stutter as long as the following conditions are met:
 
@@ -410,8 +424,10 @@ situations.
 
 Remember however, that by design none of this helps render thread animations
 (the \l Animator types). In the absence of vsync-based blocking,
-\l{Animator}{animators} will advance incorrectly, faster than expected, even
-when the workarounds are activated for regular \l{Animation}{animations}.
+\l{Animator}{animators} will advance incorrectly by default, faster than
+expected, even when the workarounds are activated for regular
+\l{Animation}{animations}. If this becomes an issue, consider using the
+alternative animation driver by setting \c{QSG_USE_SIMPLE_ANIMATION_DRIVER}.
 
 \note Be aware that the rendering loop logic and event processing on the GUI
 (main) thread is not necessarily unthrottled even if waiting for vsync is
