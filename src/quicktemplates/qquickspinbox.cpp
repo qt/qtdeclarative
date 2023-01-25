@@ -352,13 +352,15 @@ bool QQuickSpinBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
 
     int oldValue = value;
     if (up->isPressed()) {
-        up->setPressed(false);
         if (repeatTimer <= 0 && ui && ui->contains(ui->mapFromItem(q, point)))
             q->increase();
+        // Retain pressed state until after increasing is done in case user code binds stepSize
+        // to up/down.pressed.
+        up->setPressed(false);
     } else if (down->isPressed()) {
-        down->setPressed(false);
         if (repeatTimer <= 0 && di && di->contains(di->mapFromItem(q, point)))
             q->decrease();
+        down->setPressed(false);
     }
     if (value != oldValue)
         emit q->valueModified();
@@ -890,16 +892,18 @@ void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
     switch (event->key()) {
     case Qt::Key_Up:
         if (d->upEnabled()) {
-            d->increase(true);
+            // Update the pressed state before increasing/decreasing in case user code binds
+            // stepSize to up/down.pressed.
             d->up->setPressed(true);
+            d->increase(true);
             event->accept();
         }
         break;
 
     case Qt::Key_Down:
         if (d->downEnabled()) {
-            d->decrease(true);
             d->down->setPressed(true);
+            d->decrease(true);
             event->accept();
         }
         break;
