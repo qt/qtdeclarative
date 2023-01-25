@@ -301,6 +301,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("dontRemoveComments")
             << "dontRemoveComments.qml"
             << "dontRemoveComments.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("ecmaScriptClassInQml")
+            << "ecmaScriptClassInQml.qml"
+            << "ecmaScriptClassInQml.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
