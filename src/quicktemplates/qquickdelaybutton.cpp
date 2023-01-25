@@ -156,7 +156,6 @@ void QQuickDelayButton::setDelay(int delay)
 
 /*!
     \qmlproperty real QtQuick.Controls::DelayButton::progress
-    \readonly
 
     This property holds the current progress as displayed by the progress
     indicator, in the range \c 0.0 - \c 1.0.
