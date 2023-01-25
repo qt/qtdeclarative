@@ -3770,14 +3770,15 @@ void tst_QQuickTableView::positionViewAtCellWithAnimation()
 
     QPoint cell(tableView->rightColumn(), tableView->bottomRow());
     const QRectF cellGeometry = tableViewPrivate->loadedTableItem(cell)->geometry();
-    const int modelIndex = tableViewPrivate->modelIndexAtCell(cell);
+    const int serializedIndex = tableViewPrivate->modelIndexAtCell(cell);
+    const QModelIndex index = tableView->index(cell.y(), cell.x());
 
-    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    QVERIFY(tableViewPrivate->loadedItems.contains(serializedIndex));
     QVERIFY(!tableViewPrivate->positionXAnimation.isRunning());
     QVERIFY(!tableViewPrivate->positionYAnimation.isRunning());
 
     // Animate the cell to the top left location in the view
-    tableView->positionViewAtCell(cell, QQuickTableView::AlignTop | QQuickTableView::AlignLeft);
+    tableView->positionViewAtIndex(index, QQuickTableView::AlignTop | QQuickTableView::AlignLeft);
 
     // Wait for animation to finish
     QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
@@ -3786,13 +3787,13 @@ void tst_QQuickTableView::positionViewAtCellWithAnimation()
     QTRY_COMPARE(tableViewPrivate->positionYAnimation.isRunning(), false);
 
     // Check that the cell is now placed in the top left corner
-    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    QVERIFY(tableViewPrivate->loadedItems.contains(serializedIndex));
     QPointF expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(0, 0));
     QCOMPARE(cellGeometry.x(), expectedPos.x());
     QCOMPARE(cellGeometry.y(), expectedPos.y());
 
     // Animate the cell to the top right location in the view
-    tableView->positionViewAtCell(cell, QQuickTableView::AlignTop | QQuickTableView::AlignRight);
+    tableView->positionViewAtIndex(index, QQuickTableView::AlignTop | QQuickTableView::AlignRight);
 
     // Wait for animation to finish
     QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
@@ -3800,13 +3801,13 @@ void tst_QQuickTableView::positionViewAtCellWithAnimation()
     QTRY_COMPARE(tableViewPrivate->positionXAnimation.isRunning(), false);
 
     // Check that the cell is now placed in the top right corner
-    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    QVERIFY(tableViewPrivate->loadedItems.contains(serializedIndex));
     expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(tableView->width(), 0));
     QCOMPARE(cellGeometry.right(), expectedPos.x());
     QCOMPARE(cellGeometry.y(), expectedPos.y());
 
     // Animate the cell to the bottom left location in the view
-    tableView->positionViewAtCell(cell, QQuickTableView::AlignBottom | QQuickTableView::AlignLeft);
+    tableView->positionViewAtIndex(index, QQuickTableView::AlignBottom | QQuickTableView::AlignLeft);
 
     // Wait for animation to finish
     QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
@@ -3815,7 +3816,7 @@ void tst_QQuickTableView::positionViewAtCellWithAnimation()
     QTRY_COMPARE(tableViewPrivate->positionYAnimation.isRunning(), false);
 
     // Check that the cell is now placed in the bottom left corner
-    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    QVERIFY(tableViewPrivate->loadedItems.contains(serializedIndex));
     expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(0, tableView->height()));
     QCOMPARE(cellGeometry.x(), expectedPos.x());
     QCOMPARE(cellGeometry.bottom(), expectedPos.y());
@@ -3829,7 +3830,7 @@ void tst_QQuickTableView::positionViewAtCellWithAnimation()
     QTRY_COMPARE(tableViewPrivate->positionXAnimation.isRunning(), false);
 
     // Check that the cell is now placed in the bottom right corner
-    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    QVERIFY(tableViewPrivate->loadedItems.contains(serializedIndex));
     expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(tableView->width(), tableView->height()));
     QCOMPARE(cellGeometry.right(), expectedPos.x());
     QCOMPARE(cellGeometry.bottom(), expectedPos.y());

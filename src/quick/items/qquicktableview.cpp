@@ -801,6 +801,16 @@
 */
 
 /*!
+    \qmlmethod QtQuick::TableView::positionViewAtIndex(QModelIndex index, PositionMode mode, point offset, rect subRect)
+
+    Convenience method for calling
+    \code
+    positionViewAtRow(index.row, mode & Qt.AlignVertical_Mask, offset.y, subRect)
+    positionViewAtColumn(index.column, mode & Qt.AlignVertical_Mask, offset.x, subRect)
+    \endcode
+*/
+
+/*!
     \qmlmethod bool QtQuick::TableView::isColumnLoaded(int column)
     \since 6.2
 
@@ -832,14 +842,9 @@
 
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtCell(int column, int row, PositionMode mode, point offset, rect subRect)
+    \deprecated
 
-    Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
-    that \a row and \a column is at the position specified by \a mode, \a offset and \a subRect.
-
-    Convenience for calling
-    \code
-    positionViewAtCell(Qt.point(column, row), mode, offset, subRect)
-    \endcode
+    Use \l {positionViewAtIndex()}{positionViewAtIndex(index(row, column), ...)} instead.
 */
 
 /*!
@@ -5736,9 +5741,35 @@ void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal 
 
 void QQuickTableView::positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset, const QRectF &subRect)
 {
-    positionViewAtCell(cell.x(), cell.y(), mode, offset, subRect);
+    PositionMode horizontalMode = mode & ~(AlignTop | AlignBottom | AlignVCenter);
+    PositionMode verticalMode = mode & ~(AlignLeft | AlignRight | AlignHCenter);
+    if (!horizontalMode && !verticalMode) {
+        qmlWarning(this) << "Unsupported mode:" << int(mode);
+        return;
+    }
+
+    if (horizontalMode)
+        positionViewAtColumn(cell.x(), horizontalMode, offset.x(), subRect);
+    if (verticalMode)
+        positionViewAtRow(cell.y(), verticalMode, offset.y(), subRect);
 }
 
+void QQuickTableView::positionViewAtIndex(const QModelIndex &index, PositionMode mode, const QPointF &offset, const QRectF &subRect)
+{
+    PositionMode horizontalMode = mode & ~(AlignTop | AlignBottom | AlignVCenter);
+    PositionMode verticalMode = mode & ~(AlignLeft | AlignRight | AlignHCenter);
+    if (!horizontalMode && !verticalMode) {
+        qmlWarning(this) << "Unsupported mode:" << int(mode);
+        return;
+    }
+
+    if (horizontalMode)
+        positionViewAtColumn(columnAtIndex(index), horizontalMode, offset.x(), subRect);
+    if (verticalMode)
+        positionViewAtRow(rowAtIndex(index), verticalMode, offset.y(), subRect);
+}
+
+#if QT_DEPRECATED_SINCE(6, 5)
 void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset, const QRectF &subRect)
 {
     PositionMode horizontalMode = mode & ~(AlignTop | AlignBottom | AlignVCenter);
@@ -5753,6 +5784,7 @@ void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode,
     if (verticalMode)
         positionViewAtRow(row, verticalMode, offset.y(), subRect);
 }
+#endif
 
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
 {
