@@ -692,4 +692,34 @@ TestCase {
         compare(control.displayText, "98")
         compare(control.contentItem.text, "98")
     }
+
+    function test_pressedBeforeIncrementOrDecrement(data) {
+        var control = createTemporaryObject(spinBox, testCase, {from: -8, to: 8, value: 0})
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        // up, down
+        control.stepSize = Qt.binding(() => control.up.pressed ? 2 : 1)
+        keyClick(Qt.Key_Up) // +2
+        compare(control.value, 2)
+        mouseClick(control.up.indicator) // +2
+        compare(control.value, 4)
+        keyClick(Qt.Key_Down) // -1
+        compare(control.value, 3)
+        mouseClick(control.down.indicator) // -1
+        compare(control.value, 2)
+
+        // down, up
+        control.stepSize = Qt.binding(() => control.down.pressed ? 2 : 1)
+        keyClick(Qt.Key_Down) // -2
+        compare(control.value, 0)
+        mouseClick(control.down.indicator) // -2
+        compare(control.value, -2)
+        keyClick(Qt.Key_Up) // +1
+        compare(control.value, -1)
+        mouseClick(control.up.indicator) // +1
+        compare(control.value, 0)
+    }
 }
