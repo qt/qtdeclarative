@@ -108,6 +108,7 @@ Creator.
         \b{Layouts and Views}
         \list
         \li \l{Qt Quick Layouts - Basic Example}
+        \li \l{Qt Quick Layouts - Responsive Layout Example}
         \li \l{Qt Quick Examples - Positioners}{Positioners}
         \li \l{Qt Quick Examples - Views}{Views}
         \li \l{Qt Quick Examples - Window and Screen}{Windows and Screen}

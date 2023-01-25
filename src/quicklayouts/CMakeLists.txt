@@ -15,6 +15,7 @@ qt_internal_add_qml_module(QuickLayouts
         qquicklayoutstyleinfo.cpp qquicklayoutstyleinfo_p.h
         qquicklinearlayout.cpp qquicklinearlayout_p.h
         qquickstacklayout.cpp qquickstacklayout_p.h
+        qquicklayoutitemproxy.cpp qquicklayoutitemproxy_p.h
         qquicklayoutglobal_p.h
     DEFINES
         QT_BUILD_QUICKLAYOUTS_LIB

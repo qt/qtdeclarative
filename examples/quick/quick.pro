@@ -7,6 +7,7 @@ SUBDIRS =   quick-accessibility \
             imageelements \
             keyinteraction \
             layouts \
+            responsivelayouts \
             localstorage \
             models \
             views \
