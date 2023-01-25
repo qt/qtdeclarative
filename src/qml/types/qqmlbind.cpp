@@ -757,7 +757,8 @@ void QQmlBindPrivate::decodeBinding(
         if (!immediateState)
             return;
 
-        QQmlProperty property(q, propertyName);
+        QQmlProperty property = QQmlPropertyPrivate::create(
+                    q, propertyName, contextData, QQmlPropertyPrivate::InitFlag::AllowSignal);
         if (property.isValid()) {
             if (!immediateState->creator) {
                 immediateState->completePending = true;

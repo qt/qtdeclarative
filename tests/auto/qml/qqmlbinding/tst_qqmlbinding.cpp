@@ -37,6 +37,7 @@ private slots:
     void bindNaNToInt();
     void intOverflow();
     void generalizedGroupedProperties();
+    void localSignalHandler();
 
 private:
     QQmlEngine engine;
@@ -570,6 +571,17 @@ void tst_qqmlbinding::generalizedGroupedProperties()
     QCOMPARE(root->objectName(), QStringLiteral("foo"));
     // root->property("i").toInt() is still unspecified.
     QCOMPARE(rootAttached->objectName(), QString());
+}
+
+void tst_qqmlbinding::localSignalHandler()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("bindingWithHandler.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    o->setProperty("input", QStringLiteral("abc"));
+    QCOMPARE(o->property("output").toString(), QStringLiteral("abc"));
 }
 
 QTEST_MAIN(tst_qqmlbinding)
