@@ -6,19 +6,19 @@
 \title Writing QML Modules
 \brief How to write a custom QML module.
 
-You can declare a QML module using the \l{qt_add_qml_module}
+You should declare a QML module using the \l{qt_add_qml_module}
 {CMake QML Module API} to:
 
 \list
 \li Generate \l {Module Definition qmldir Files}{qmldir} and
     \l {Type Description Files}{*.qmltypes files}.
 \li Register C++ types annotated with \l QML_ELEMENT.
-\li Invoke \l {Ahead-of-Time-Compilation}{qmlcachegen}.
-\li Provide modules both in the physical and in \l{The Qt Resource System}
-    {resource file system}.
-\li Use the pre-compiled versions of QML files.
-\li Bundle the module's files in the resource file system.
 \li Combine QML files and C++-based types in the same module.
+\li Invoke \l {Ahead-of-Time-Compilation}{qmlcachegen} on all
+    QML files.
+\li Use the pre-compiled versions of QML files inside the module.
+\li Provide the module both in the physical and in the
+    \l{The Qt Resource System}{resource file system}.
 \li Create a backing library and an optional plugin. Link the backing library
     into the application to avoid loading the plugin at run time.
 \endlist
@@ -128,8 +128,8 @@ information for OneMoreThing.qml. This means that OneMoreThing.qml is available
 in all major versions, from minor version 0.
 
 With this setup, the generated registration code will register the module
-\c versionsqmlRegisterModule() for each of the major versions. This way, all
-versions can be imported.
+\c versions using \l qmlRegisterModule() for each of the major versions. This
+way, all versions can be imported.
 
 
 \section1 Custom Directory Layouts
@@ -143,7 +143,7 @@ In more complex projects, this convention can be too limiting. You might for
 instance want to group all QML modules in one place to avoid polluting the
 project's root directory. Or you want to reuse a single module in multiple
 applications. For those cases, \c QT_QML_OUTPUT_DIRECTORY in combination with
-\c RESOURCE_PREFIX  and \l IMPORT_PATH can be used.
+\c RESOURCE_PREFIX or \c AUTO_RESOURCE_PREFIX and \l IMPORT_PATH can be used.
 
 To collect QML modules into a specific output directory, for example a
 subdirectory "qml" in the build directory \l QT_QML_OUTPUT_DIRECTORY, set the
@@ -240,7 +240,7 @@ in specific environments.
 
 If you bundle an \l {QQuickImageProvider}{image provider} in the QML module, you
 need to implement the \l {QQmlEngineExtensionPlugin::initializeEngine()}
-method. This, in turn, makes it necessary to write the own plugin. To support
+method. This, in turn, makes it necessary to write your own plugin. To support
 this use case, \l NO_GENERATE_PLUGIN_SOURCE can be used.
 
 Let's consider a module that provides its own plugin source:
