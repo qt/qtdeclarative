@@ -1,0 +1,211 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+
+\page qtqml-javascript-memory.html
+\title Memory Management in the JavaScript Engine
+\brief Describes how the JavaScript Engine manages memory.
+
+\section1 Introduction
+
+This document describes the \e dynamic memory management of the JavaScript
+Engine in QML. It is a rather technical, in depth description. You only need
+to read this if you care about the exact characteristics of JavaScript memory
+management in QML. In particular, it can be helpful if you're trying to
+optimize your application for maximum performance.
+
+\note By compiling your QML code to C++ using the \l{Qt Quick Compiler}
+you can avoid much of the JavaScript heap usage. The generated C++ code uses the
+familiar C++ stack and heap for storing objects and values. The
+\l{JavaScript Host Environment}, however, always uses some JavaScript-managed
+memory, no matter if you use it or not. If you use features that cannot be
+compiled to C++, the engine will fall back to interpretation or JIT compilation
+and use JavaScript objects stored on the JavaScript heap, though.
+
+\section1 Basic Principles
+
+The JavaScript engine in QML has a dedicated memory manager that requests
+address space in units of multiple pages from the operating system. Objects,
+strings, and other managed values created in JavaScript are then placed in this
+address space, using the JavaScript engine's own allocation scheme. The
+JavaScript engine does not use the C library's malloc() and free(), nor the
+default implementations of C++'s new and delete to allocate memory for
+JavaScript objects.
+
+Requests for address space are generally done with mmap() on Unix-like systems
+and with VirtualAlloc() on windows. There are several platform-specific
+implementations of those primitives. Address space reserved this way is not
+immediately committed to physical memory. Rather, the operating system notices
+when a page of memory is actually accessed and only then commits it. Therefore,
+the address space is practically free and having a lot of it gives the
+JavaScript memory manager the leverage it needs to place objects in an efficient
+way on the JavaScript heap. Furthermore, there are platform-specific techniques
+to tell the operating system that a chunk of address space, though still
+reserved, does not have to be mapped into physical memory for the time being.
+The operating system can then decommit the memory as needed and use it for other
+tasks. Crucially, most operating systems do not guarantee immediate action on
+such a decommit request. They will only decommit the memory when it is actually
+needed for something else. On Unix-like systems we generally use madvise() for
+this. Windows has specific flags to VirtualFree() to do the equivalent.
+
+\note There are memory profiling tools that do not understand this mechanism and
+over-report JavaScript memory usage.
+
+All values stored on the JavaScript heap are subject to garbage collection.
+None of the values are immediately "deleted" when they go out of scope or are
+otherwise "dropped". Only the garbage collector may remove values from the
+JavaScript heap and return memory (see \l{Garbage Collection} below for how
+this works).
+
+\section1 QObject-based Types
+
+QObject-based types, and in particular everything you can phrase as a QML
+element, are allocated on the C++ heap. Only a small wrapper around the pointer
+is placed on the JavaScript heap when a QObject is accessed from JavaScript.
+Such a wrapper, however, can own the QObject it points to. See
+\l{QJSEngine::ObjectOwnership}. If the wrapper owns the object, it will be
+deleted when the wrapper is garbage-collected. You can then also manually
+trigger the deletion by calling the destroy() method on it. destroy() internally
+calls \l{QObject::deleteLater()}. It will therefore not immediately delete the
+object, but wait for the next event loop iteration.
+
+QML-declared \e properties of objects are stored on the JavaScript heap. They
+live as long as the object they belong to lives. Afterwards they are removed the
+next time the garbage collector runs.
+
+\section1 Object Allocation
+
+In JavaScript, any structured type is an object. This includes function objects,
+arrays, regular expressions, date objects and much more. QML has a number of
+internal object types, such as the above mentioned QObject wrapper. Whenever
+an object is created, the memory manager locates some storage for it on the
+JavaScript heap.
+
+JavaScript strings are also managed values, but their string data is not
+allocated on the JavaScript heap. Similar to QObject wrappers, the heap objects
+for strings are just thin wrappers around a pointer to string data.
+
+When allocating memory for an object, the size of the object is first rounded up
+to 32 byte alignment. Each 32 byte piece of address space is called a "slot".
+For objects smaller than a "huge size" threshold, the memory manager performs
+a series of attempts to place the object in memory:
+\list
+\li The memory manager keeps linked lists of previously freed pieces of heap,
+    called "bins". Each bin holds pieces of heap with a fixed per-bin size in
+    slots. If the bin for the right size is not empty, it picks the first entry
+    and places the object there.
+\li The memory that hasn't been used yet is managed via a bumper allocator. A
+    bumper pointer points to the byte beyond the occupied address space. If
+    there is still enough unused address space, the bumper is increased
+    accordingly, and the object is placed in unused space.
+\li A separate bin is kept for previously freed pieces of heap of varying sizes
+    larger than the specific sizes mentioned above. The memory manager
+    traverses this list and tries to find a piece it can split to accommodate
+    the new object.
+\li The memory manager searches the lists of specifically sized bins
+    larger than the object to be allocated and tries to split one of those.
+\li Finally, if none of the above works, the memory manager reserves more
+    address space and allocates the object using the bumper allocator.
+\endlist
+
+Huge objects are handled by their own allocator. For each of those one or more
+separate memory pages are obtained from the OS and managed separately.
+
+Additionally, each new chunk of address space the memory manager obtains from
+the OS gets a header that holds a number of flags for each slot:
+\list
+\li \e{object}: The first slot occupied by an object is flagged with this bit.
+\li \e{extends}: Any further slots occupied by an object are flagged with this
+    bit.
+\li \e{mark}: When the garbage collector runs, it sets this bit if the object is
+    still in use.
+\endlist
+
+\section1 Internal Classes
+
+In order to minimize the required storage for metadata on what members
+an object holds, the JavaScript engine assigns an "internal class" to each
+object. Other JavaScript engines call this "hidden class" or "shape".
+Internal classes are deduplicated and kept in a tree. If a property is
+added to an object, the children of the current internal class are checked to
+see if the same object layout has occurred before. If so, we can use the
+resulting internal class right away. Otherwise we have to create a new one.
+
+Internal classes are stored in their own section of the JavaScript heap that
+otherwise works the same way as the general object allocation described above.
+This is because internal classes have to be kept alive while the objects using
+them are collected. Internal classes are then collected in a separate pass.
+
+The actual property attributes stored in internal classes are \e not kept on
+the JavaScript heap, though, but rather managed using new and delete.
+
+\section1 Garbage Collection
+
+The garbage collector used in the JavaScript engine is a non-moving,
+stop-the-world Mark and Sweep design. In the \e mark phase we traverse all the
+known places where live references to objects can be found. In particular:
+
+\list
+\li JavaScript globals
+\li Undeletable parts of QML and JavaScript compilation units
+\li The JavaScript stack
+\li The persistent value storage. This is where QJSValue and similar classes
+    keep references to JavaScript objects.
+\endlist
+
+For any object found in those places the mark bits are set recursively for
+anything it references.
+
+In the \e sweep phase the garbage collector then traverses the whole heap and
+frees any objects not marked before. The resulting released memory is sorted
+into the bins to be used for further allocations. If a chunk of address space
+is completely empty, it is decommitted, but the address space is retained
+(see \l{Basic Principles} above). If the memory usage grows again, the same
+address space is re-used.
+
+The garbage collector is triggered either manually by calling the gc() function
+or by a heuristic that takes the following aspects into account:
+
+\list
+\li The amount of memory managed by object on the JavaScript heap, but not
+    directly allocated on the JavaScript heap, such as strings and internal
+    class member data. A dynamic threshold is maintained for those. If it is
+    surpassed, the garbage collector runs and the threshold is increased. If
+    the amount of managed external memory falls far below the threshold, the
+    threshold is decreased.
+\li The total address space reserved. The internal memory allocation on the
+    JavaScript heap is only considered after at least some address space has
+    been reserved.
+\li The additional address space reservation since the last garbage collector
+    run. If the amount of address space is more than double the amount of
+    used memory after the last garbage collector run, we run the garbage
+    collector again.
+\endlist
+
+\section1 Analyzing Memory Usage
+
+In order to observe the development of both the address space and the number
+of objects allocated in it, it is best to use a specialized tool. The
+\l{Qt Creator: QML Profiler}{QML Profiler} provides a visualization that
+helps here. More generic tools cannot see what the JavaScript memory manager
+does within the address space it reserves and may not even notice that part
+of the address space is not committed to physical memory.
+
+Another way to debug memory usage are the
+\l{QLoggingCategory}{logging categories} \e{qt.qml.gc.statistics} and
+\e{qt.qml.gc.allocatorStats}. If you enable the \e{Debug} level for
+qt.qml.gc.statistics, the garbage collector will print some information every
+time it runs:
+
+\list
+\li How much total address space is reserved
+\li How much memory was in use before and after the garbage collection
+\li How many objects of various sizes were allocated so far
+\endlist
+
+The \e{Debug} level for qt.qml.gc.allocatorStats prints more detailed
+statistics that also include how the garbage collector was triggered, timings
+for the mark and sweep phases and a detailed breakdown of memory usage by bytes
+and chunks of address space.
+
+*/

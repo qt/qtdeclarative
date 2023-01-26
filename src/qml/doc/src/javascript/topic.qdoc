@@ -57,6 +57,10 @@ These limitations and extensions are documented in the description of the
 \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment} provided
 by the QML engine.
 
+There is also an in depth description of the
+\l{qtqml-javascript-memory.html}{memory management} employed by the JavaScript
+engine.
+
 \section1 Configuring the JavaScript engine
 
 For specific use cases you may want to override some of the parameters the
