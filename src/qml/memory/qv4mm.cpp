@@ -522,6 +522,14 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
     if (!m) {
         if (!forceAllocation)
             return nullptr;
+        if (nFree) {
+            // Save any remaining slots of the current chunk
+            // for later, smaller allocations.
+            size_t bin = binForSlots(nFree);
+            nextFree->freeData.next = freeBins[bin];
+            nextFree->freeData.availableSlots = nFree;
+            freeBins[bin] = nextFree;
+        }
         Chunk *newChunk = chunkAllocator->allocate();
         Q_V4_PROFILE_ALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
         chunks.push_back(newChunk);
