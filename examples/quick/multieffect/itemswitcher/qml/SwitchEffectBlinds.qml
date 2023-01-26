@@ -34,8 +34,8 @@ Item {
         anchors.fill: parent
         maskEnabled: true
         maskSource: mask
-        maskThresholdLow: switcher.inAnimation
-        maskSpreadLow: 0.4
+        maskThresholdMin: switcher.inAnimation
+        maskSpreadAtMin: 0.4
     }
     // Item coming in
     MultiEffect {
@@ -43,7 +43,7 @@ Item {
         anchors.fill: parent
         maskEnabled: true
         maskSource: mask
-        maskThresholdUp: switcher.inAnimation
-        maskSpreadUp: 0.4
+        maskThresholdMax: switcher.inAnimation
+        maskSpreadAtMax: 0.4
     }
 }

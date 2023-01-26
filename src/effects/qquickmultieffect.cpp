@@ -33,7 +33,7 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 
     The MultiEffect type applies a post-processing effect to \c source item.
     Compared to \c {Qt Graphical Effects} module, MultiEffect combines multiple
-    effects (blur, shadow, colorize etc.) into a single item and shader. This
+    effects (blur, shadow, colorization etc.) into a single item and shader. This
     makes it optimal for multiple effects.
 
     MultiEffect is designed especially for animated effects. There are several
@@ -192,44 +192,44 @@ void QQuickMultiEffect::setSaturation(qreal saturation)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::colorize
+    \qmlproperty real QtQuick::MultiEffect::colorization
 
     This property defines how much the source is colorized with the
-    colorizeColor.
+    colorizationColor.
 
-    The value ranges from 0.0 (no colorized) to 1.0 (fully colorized).
+    The value ranges from 0.0 (not colorized) to 1.0 (fully colorized).
     By default, the property is set to \c 0.0 (no change).
 */
-qreal QQuickMultiEffect::colorize() const
+qreal QQuickMultiEffect::colorization() const
 {
     Q_D(const QQuickMultiEffect);
-    return d->colorize();
+    return d->colorization();
 }
 
-void QQuickMultiEffect::setColorize(qreal colorize)
+void QQuickMultiEffect::setColorization(qreal colorization)
 {
     Q_D(QQuickMultiEffect);
-    d->setColorize(colorize);
+    d->setColorization(colorization);
 }
 
 /*!
-    \qmlproperty color QtQuick::MultiEffect::colorizeColor
+    \qmlproperty color QtQuick::MultiEffect::colorizationColor
 
     This property defines the RGBA color value which is used to
     colorize the source.
 
     By default, the property is set to \c  Qt.rgba(1.0, 0.0, 0.0, 1.0) (red).
 */
-QColor QQuickMultiEffect::colorizeColor() const
+QColor QQuickMultiEffect::colorizationColor() const
 {
     Q_D(const QQuickMultiEffect);
-    return d->colorizeColor();
+    return d->colorizationColor();
 }
 
-void QQuickMultiEffect::setColorizeColor(const QColor &color)
+void QQuickMultiEffect::setColorizationColor(const QColor &color)
 {
     Q_D(QQuickMultiEffect);
-    d->setColorizeColor(color);
+    d->setColorizationColor(color);
 }
 
 /*!
@@ -449,7 +449,7 @@ void QQuickMultiEffect::setShadowVerticalOffset(qreal offset)
 /*!
     \qmlproperty color QtQuick::MultiEffect::shadowColor
 
-    This property defines the RGBA color value which is used to colorize
+    This property defines the RGBA color value which is used for
     the shadow. It is useful for example when a shadow is used for
     simulating a glow effect.
 
@@ -533,7 +533,7 @@ void QQuickMultiEffect::setMaskSource(QQuickItem *item)
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskThresholdLow
+    \qmlproperty real QtQuick::MultiEffect::maskThresholdMin
 
     This property defines a lower threshold value for the mask pixels.
     The mask pixels that have an alpha value below this property are used
@@ -544,43 +544,43 @@ void QQuickMultiEffect::setMaskSource(QQuickItem *item)
     The value ranges from 0.0 (alpha value 0) to 1.0 (alpha value 255). By
     default, the property is set to \c 0.0.
 */
-qreal QQuickMultiEffect::maskThresholdLow() const
+qreal QQuickMultiEffect::maskThresholdMin() const
 {
     Q_D(const QQuickMultiEffect);
-    return d->maskThresholdLow();
+    return d->maskThresholdMin();
 }
 
-void QQuickMultiEffect::setMaskThresholdLow(qreal threshold)
+void QQuickMultiEffect::setMaskThresholdMin(qreal threshold)
 {
     Q_D(QQuickMultiEffect);
-    d->setMaskThresholdLow(threshold);
+    d->setMaskThresholdMin(threshold);
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskSpreadLow
+    \qmlproperty real QtQuick::MultiEffect::maskSpreadAtMin
 
     This property defines the smoothness of the mask edges near the
-    maskThresholdLow. Setting higher spread values softens the transition
+    maskThresholdMin. Setting higher spread values softens the transition
     from the transparent mask pixels towards opaque mask pixels by adding
     interpolated values between them.
 
     The value ranges from 0.0 (sharp mask edge) to 1.0 (smooth mask edge).
     By default, the property is set to \c 0.0.
 */
-qreal QQuickMultiEffect::maskSpreadLow() const
+qreal QQuickMultiEffect::maskSpreadAtMin() const
 {
     Q_D(const QQuickMultiEffect);
-    return d->maskSpreadLow();
+    return d->maskSpreadAtMin();
 }
 
-void QQuickMultiEffect::setMaskSpreadLow(qreal spread)
+void QQuickMultiEffect::setMaskSpreadAtMin(qreal spread)
 {
     Q_D(QQuickMultiEffect);
-    d->setMaskSpreadLow(spread);
+    d->setMaskSpreadAtMin(spread);
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskThresholdUp
+    \qmlproperty real QtQuick::MultiEffect::maskThresholdMax
 
     This property defines an upper threshold value for the mask pixels.
     The mask pixels that have an alpha value below this property are used
@@ -591,46 +591,46 @@ void QQuickMultiEffect::setMaskSpreadLow(qreal spread)
     The value ranges from 0.0 (alpha value 0) to 1.0 (alpha value 255). By
     default, the property is set to \c 1.0.
 */
-qreal QQuickMultiEffect::maskThresholdUp() const
+qreal QQuickMultiEffect::maskThresholdMax() const
 {
     Q_D(const QQuickMultiEffect);
-    return d->maskThresholdUp();
+    return d->maskThresholdMax();
 }
 
-void QQuickMultiEffect::setMaskThresholdUp(qreal threshold)
+void QQuickMultiEffect::setMaskThresholdMax(qreal threshold)
 {
     Q_D(QQuickMultiEffect);
-    d->setMaskThresholdUp(threshold);
+    d->setMaskThresholdMax(threshold);
 }
 
 /*!
-    \qmlproperty real QtQuick::MultiEffect::maskSpreadUp
+    \qmlproperty real QtQuick::MultiEffect::maskSpreadAtMax
 
     This property defines the smoothness of the mask edges near the
-    maskThresholdUp. Using higher spread values softens the transition
+    maskThresholdMax. Using higher spread values softens the transition
     from the transparent mask pixels towards opaque mask pixels by adding
     interpolated values between them.
 
     The value ranges from 0.0 (sharp mask edge) to 1.0 (smooth mask edge).
     By default, the property is set to \c 0.0.
 */
-qreal QQuickMultiEffect::maskSpreadUp() const
+qreal QQuickMultiEffect::maskSpreadAtMax() const
 {
     Q_D(const QQuickMultiEffect);
-    return d->maskSpreadUp();
+    return d->maskSpreadAtMax();
 }
 
-void QQuickMultiEffect::setMaskSpreadUp(qreal spread)
+void QQuickMultiEffect::setMaskSpreadAtMax(qreal spread)
 {
     Q_D(QQuickMultiEffect);
-    d->setMaskSpreadUp(spread);
+    d->setMaskSpreadAtMax(spread);
 }
 
 /*!
     \qmlproperty bool QtQuick::MultiEffect::maskInverted
 
     This property switches the mask to the opposite side; instead of
-    masking away the content outside maskThresholdLow and maskThresholdUp,
+    masking away the content outside maskThresholdMin and maskThresholdMax,
     content between them will get masked away.
 
     By default, the property is set to \c false.
@@ -862,40 +862,40 @@ void QQuickMultiEffectPrivate::setSaturation(qreal saturation)
     Q_EMIT q->saturationChanged();
 }
 
-qreal QQuickMultiEffectPrivate::colorize() const
+qreal QQuickMultiEffectPrivate::colorization() const
 {
-    return m_colorize;
+    return m_colorization;
 }
 
-void QQuickMultiEffectPrivate::setColorize(qreal colorize)
+void QQuickMultiEffectPrivate::setColorization(qreal colorization)
 {
     Q_Q(QQuickMultiEffect);
-    if (colorize == m_colorize)
+    if (colorization == m_colorization)
         return;
 
-    m_colorize = colorize;
-    updateColorizeColor();
+    m_colorization = colorization;
+    updateColorizationColor();
 
     q->update();
-    Q_EMIT q->colorizeChanged();
+    Q_EMIT q->colorizationChanged();
 }
 
-QColor QQuickMultiEffectPrivate::colorizeColor() const
+QColor QQuickMultiEffectPrivate::colorizationColor() const
 {
-    return m_colorizeColor;
+    return m_colorizationColor;
 }
 
-void QQuickMultiEffectPrivate::setColorizeColor(const QColor &color)
+void QQuickMultiEffectPrivate::setColorizationColor(const QColor &color)
 {
     Q_Q(QQuickMultiEffect);
-    if (color == m_colorizeColor)
+    if (color == m_colorizationColor)
         return;
 
-    m_colorizeColor = color;
-    updateColorizeColor();
+    m_colorizationColor = color;
+    updateColorizationColor();
 
     q->update();
-    Q_EMIT q->colorizeColorChanged();
+    Q_EMIT q->colorizationColorChanged();
 }
 
 bool QQuickMultiEffectPrivate::blurEnabled() const
@@ -1149,76 +1149,76 @@ void QQuickMultiEffectPrivate::setMaskSource(QQuickItem *item)
     Q_EMIT q->maskSourceChanged();
 }
 
-qreal QQuickMultiEffectPrivate::maskThresholdLow() const
+qreal QQuickMultiEffectPrivate::maskThresholdMin() const
 {
-    return m_maskThresholdLow;
+    return m_maskThresholdMin;
 }
 
-void QQuickMultiEffectPrivate::setMaskThresholdLow(qreal threshold)
+void QQuickMultiEffectPrivate::setMaskThresholdMin(qreal threshold)
 {
     Q_Q(QQuickMultiEffect);
-    if (threshold == m_maskThresholdLow)
+    if (threshold == m_maskThresholdMin)
         return;
 
-    m_maskThresholdLow = threshold;
+    m_maskThresholdMin = threshold;
     updateMaskThresholdSpread();
 
     q->update();
-    Q_EMIT q->maskThresholdLowChanged();
+    Q_EMIT q->maskThresholdMinChanged();
 }
 
-qreal QQuickMultiEffectPrivate::maskSpreadLow() const
+qreal QQuickMultiEffectPrivate::maskSpreadAtMin() const
 {
-    return m_maskSpreadLow;
+    return m_maskSpreadAtMin;
 }
 
-void QQuickMultiEffectPrivate::setMaskSpreadLow(qreal spread)
+void QQuickMultiEffectPrivate::setMaskSpreadAtMin(qreal spread)
 {
     Q_Q(QQuickMultiEffect);
-    if (spread == m_maskSpreadLow)
+    if (spread == m_maskSpreadAtMin)
         return;
 
-    m_maskSpreadLow = spread;
+    m_maskSpreadAtMin = spread;
     updateMaskThresholdSpread();
 
     q->update();
-    Q_EMIT q->maskSpreadLowChanged();
+    Q_EMIT q->maskSpreadAtMinChanged();
 }
 
-qreal QQuickMultiEffectPrivate::maskThresholdUp() const
+qreal QQuickMultiEffectPrivate::maskThresholdMax() const
 {
-    return m_maskThresholdUp;
+    return m_maskThresholdMax;
 }
 
-void QQuickMultiEffectPrivate::setMaskThresholdUp(qreal threshold)
+void QQuickMultiEffectPrivate::setMaskThresholdMax(qreal threshold)
 {
     Q_Q(QQuickMultiEffect);
-    if (threshold == m_maskThresholdUp)
+    if (threshold == m_maskThresholdMax)
         return;
 
-    m_maskThresholdUp = threshold;
+    m_maskThresholdMax = threshold;
     updateMaskThresholdSpread();
 
     q->update();
-    Q_EMIT q->maskThresholdUpChanged();
+    Q_EMIT q->maskThresholdMaxChanged();
 }
 
-qreal QQuickMultiEffectPrivate::maskSpreadUp() const
+qreal QQuickMultiEffectPrivate::maskSpreadAtMax() const
 {
-    return m_maskSpreadUp;
+    return m_maskSpreadAtMax;
 }
 
-void QQuickMultiEffectPrivate::setMaskSpreadUp(qreal spread)
+void QQuickMultiEffectPrivate::setMaskSpreadAtMax(qreal spread)
 {
     Q_Q(QQuickMultiEffect);
-    if (spread == m_maskSpreadUp)
+    if (spread == m_maskSpreadAtMax)
         return;
 
-    m_maskSpreadUp = spread;
+    m_maskSpreadAtMax = spread;
     updateMaskThresholdSpread();
 
     q->update();
-    Q_EMIT q->maskSpreadUpChanged();
+    Q_EMIT q->maskSpreadAtMaxChanged();
 }
 
 bool QQuickMultiEffectPrivate::maskInverted() const
@@ -1297,7 +1297,7 @@ void QQuickMultiEffectPrivate::initialize()
     updateMaskThresholdSpread();
     updateBlurWeights();
     updateShadowBlurWeights();
-    updateColorizeColor();
+    updateColorizationColor();
     updateShadowColor();
     updateShadowOffset();
 
@@ -1330,10 +1330,10 @@ void QQuickMultiEffectPrivate::updateMaskThresholdSpread()
     // smoothstep, keeping always edge0 < edge1.
     const qreal c0 = 0.0001;
     const qreal c1 = 1.0 - c0;
-    const qreal mt1 = m_maskThresholdLow + c0;
-    const qreal ms1 = m_maskSpreadLow + 1.0;
-    const qreal mt2 = c1 - m_maskThresholdUp;
-    const qreal ms2 = m_maskSpreadUp + 1.0;
+    const qreal mt1 = m_maskThresholdMin + c0;
+    const qreal ms1 = m_maskSpreadAtMin + 1.0;
+    const qreal mt2 = c1 - m_maskThresholdMax;
+    const qreal ms2 = m_maskSpreadAtMax + 1.0;
     const QVector4D maskThresholdSpread = QVector4D(
                 mt1 * ms1 - (ms1 - c1),
                 mt1 * ms1,
@@ -1362,15 +1362,15 @@ void QQuickMultiEffectPrivate::updateShadowOffset()
     m_shaderEffect->setProperty("shadowOffset", shadowOffset);
 }
 
-void QQuickMultiEffectPrivate::updateColorizeColor()
+void QQuickMultiEffectPrivate::updateColorizationColor()
 {
     if (!m_shaderEffect)
         return;
 
-    int alpha = std::clamp(int(m_colorizeColor.alpha() * m_colorize), 0, 255);
-    QColor colorizeColor = m_colorizeColor;
-    colorizeColor.setAlpha(alpha);
-    m_shaderEffect->setProperty("colorizeColor", colorizeColor);
+    int alpha = std::clamp(int(m_colorizationColor.alpha() * m_colorization), 0, 255);
+    QColor colorizationColor = m_colorizationColor;
+    colorizationColor.setAlpha(alpha);
+    m_shaderEffect->setProperty("colorizationColor", colorizationColor);
 }
 
 void QQuickMultiEffectPrivate::updateShadowColor()

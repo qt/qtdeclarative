@@ -29,10 +29,10 @@ Item {
             source: "images/smoke.png"
             visible: false
         }
-        maskThresholdLow: switcher.inAnimation * 0.6
-        maskSpreadLow: 0.1
-        maskThresholdUp: 1.0 - (switcher.inAnimation * 0.6)
-        maskSpreadUp: 0.1
+        maskThresholdMin: switcher.inAnimation * 0.6
+        maskSpreadAtMin: 0.1
+        maskThresholdMax: 1.0 - (switcher.inAnimation * 0.6)
+        maskSpreadAtMax: 0.1
 
         shadowEnabled: true
         shadowOpacity: 0.5
@@ -69,10 +69,10 @@ Item {
             source: "images/smoke.png"
             visible: false
         }
-        maskThresholdLow: switcher.outAnimation * 0.6
-        maskSpreadLow: 0.1
-        maskThresholdUp: 1.0 - (switcher.outAnimation * 0.6)
-        maskSpreadUp: 0.1
+        maskThresholdMin: switcher.outAnimation * 0.6
+        maskSpreadAtMin: 0.1
+        maskThresholdMax: 1.0 - (switcher.outAnimation * 0.6)
+        maskSpreadAtMax: 0.1
 
         shadowEnabled: true
         shadowOpacity: 0.5

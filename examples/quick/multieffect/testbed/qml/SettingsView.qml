@@ -11,9 +11,9 @@ Item {
     property real showAnimation: show ? 1 : 0
 
     function resetSettings() {
-        colorizeColorSelector.setValues(defaultSettings.colorizeColor.r,
-                                        defaultSettings.colorizeColor.g,
-                                        defaultSettings.colorizeColor.b);
+        colorizationColorSelector.setValues(defaultSettings.colorizationColor.r,
+                                        defaultSettings.colorizationColor.g,
+                                        defaultSettings.colorizationColor.b);
         shadowColorSelector.setValues(defaultSettings.shadowColor.r,
                                       defaultSettings.shadowColor.g,
                                       defaultSettings.shadowColor.b);
@@ -213,25 +213,25 @@ Item {
                     }
                 }
                 SettingsComponentSlider {
-                    text: qsTr("Colorize") + ": " + value.toFixed(3)
+                    text: qsTr("Colorization") + ": " + value.toFixed(3)
                     showCheckbox: true
-                    checked: settings.colorizeEnabled
+                    checked: settings.colorizationEnabled
                     onToggled: {
-                        settings.colorizeEnabled = checked;
+                        settings.colorizationEnabled = checked;
                     }
-                    value: settings.colorize
+                    value: settings.colorization
                     from: 0
                     to: 1
                     onMoved: {
-                        settings.colorize = value;
+                        settings.colorization = value;
                     }
                 }
                 SettingsComponentColorSelector {
-                    id: colorizeColorSelector
-                    text: qsTr("Colorize Color")
+                    id: colorizationColorSelector
+                    text: qsTr("Colorization Color")
                     width: settings.settingsViewWidth - 10
                     onValueChanged: {
-                        settings.colorizeColor = value;
+                        settings.colorizationColor = value;
                     }
                 }
             }
@@ -359,39 +359,39 @@ Item {
                     height: 20 * dp
                 }
                 SettingsComponentSlider {
-                    text: qsTr("Mask Lower Threshold") + ": " + value.toFixed(3)
-                    value: settings.maskThresholdLow
+                    text: qsTr("Mask Threshold Min") + ": " + value.toFixed(3)
+                    value: settings.maskThresholdMin
                     from: 0.0
                     to: 1.0
                     onMoved: {
-                        settings.maskThresholdLow = value;
+                        settings.maskThresholdMin = value;
                     }
                 }
                 SettingsComponentSlider {
-                    text: qsTr("Mask Lower Spread") + ": " + value.toFixed(3)
-                    value: settings.maskSpreadLow
+                    text: qsTr("Mask Spread At Min") + ": " + value.toFixed(3)
+                    value: settings.maskSpreadAtMin
                     from: 0.0
                     to: 1.0
                     onMoved: {
-                        settings.maskSpreadLow = value;
+                        settings.maskSpreadAtMin = value;
                     }
                 }
                 SettingsComponentSlider {
-                    text: qsTr("Mask Upper Threshold") + ": " + value.toFixed(3)
-                    value: settings.maskThresholdUp
+                    text: qsTr("Mask Threshold Max") + ": " + value.toFixed(3)
+                    value: settings.maskThresholdMax
                     from: 0.0
                     to: 1.0
                     onMoved: {
-                        settings.maskThresholdUp = value;
+                        settings.maskThresholdMax = value;
                     }
                 }
                 SettingsComponentSlider {
-                    text: qsTr("Mask Upper Spread") + ": " + value.toFixed(3)
-                    value: settings.maskSpreadUp
+                    text: qsTr("Mask Spread At Max") + ": " + value.toFixed(3)
+                    value: settings.maskSpreadAtMax
                     from: 0.0
                     to: 1.0
                     onMoved: {
-                        settings.maskSpreadUp = value;
+                        settings.maskSpreadAtMax = value;
                     }
                 }
             }

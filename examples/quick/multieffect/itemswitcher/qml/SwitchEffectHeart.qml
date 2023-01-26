@@ -31,8 +31,8 @@ Item {
         maskEnabled: true
         maskSource: mask
         maskInverted: true
-        maskThresholdLow: 0.5
-        maskSpreadLow: 0.0
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 0.0
     }
     // Item coming in
     MultiEffect {
@@ -40,9 +40,9 @@ Item {
         anchors.fill: parent
         maskEnabled: true
         maskSource: mask
-        maskThresholdLow: 0.5
-        maskSpreadLow: 0.0
-        colorizeColor: "red"
-        colorize: Math.max(0, 1.0 - switcher.inAnimation * 2)
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 0.0
+        colorizationColor: "red"
+        colorization: Math.max(0, 1.0 - switcher.inAnimation * 2)
     }
 }

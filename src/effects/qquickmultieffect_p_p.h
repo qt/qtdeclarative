@@ -54,11 +54,11 @@ public:
     qreal saturation() const;
     void setSaturation(qreal saturation);
 
-    qreal colorize() const;
-    void setColorize(qreal colorize);
+    qreal colorization() const;
+    void setColorization(qreal colorization);
 
-    QColor colorizeColor() const;
-    void setColorizeColor(const QColor &color);
+    QColor colorizationColor() const;
+    void setColorizationColor(const QColor &color);
 
     bool blurEnabled() const;
     void setBlurEnabled(bool enabled);
@@ -99,17 +99,17 @@ public:
     QQuickItem *maskSource() const;
     void setMaskSource(QQuickItem *item);
 
-    qreal maskThresholdLow() const;
-    void setMaskThresholdLow(qreal threshold);
+    qreal maskThresholdMin() const;
+    void setMaskThresholdMin(qreal threshold);
 
-    qreal maskSpreadLow() const;
-    void setMaskSpreadLow(qreal spread);
+    qreal maskSpreadAtMin() const;
+    void setMaskSpreadAtMin(qreal spread);
 
-    qreal maskThresholdUp() const;
-    void setMaskThresholdUp(qreal threshold);
+    qreal maskThresholdMax() const;
+    void setMaskThresholdMax(qreal threshold);
 
-    qreal maskSpreadUp() const;
-    void setMaskSpreadUp(qreal spread);
+    qreal maskSpreadAtMax() const;
+    void setMaskSpreadAtMax(qreal spread);
 
     bool maskInverted() const;
     void setMaskInverted(bool inverted);
@@ -125,7 +125,7 @@ public:
     void updateMaskThresholdSpread();
     void updateCenterOffset();
     void updateShadowOffset();
-    void updateColorizeColor();
+    void updateColorizationColor();
     void updateShadowColor();
     float calculateLod(float blurAmount);
     float blurWeight(float v);
@@ -151,8 +151,8 @@ private:
     qreal m_brightness = 0.0;
     qreal m_contrast = 0.0;
     qreal m_saturation = 0.0;
-    qreal m_colorize = 0.0;
-    QColor m_colorizeColor = { 255, 0, 0, 255 };
+    qreal m_colorization = 0.0;
+    QColor m_colorizationColor = { 255, 0, 0, 255 };
     bool m_blurEnabled = false;
     qreal m_blur = 0.0;
     int m_blurMax = 32;
@@ -166,10 +166,10 @@ private:
     qreal m_shadowScale = 1.0;
     bool m_maskEnabled = false;
     QQuickItem *m_maskSourceItem = nullptr;
-    qreal m_maskThresholdLow = 0.0;
-    qreal m_maskSpreadLow = 0.0;
-    qreal m_maskThresholdUp = 1.0;
-    qreal m_maskSpreadUp = 0.0;
+    qreal m_maskThresholdMin = 0.0;
+    qreal m_maskSpreadAtMin = 0.0;
+    qreal m_maskThresholdMax = 1.0;
+    qreal m_maskSpreadAtMax = 0.0;
     bool m_maskInverted = false;
 
     int m_blurLevel = 0;

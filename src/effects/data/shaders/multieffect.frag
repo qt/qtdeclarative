@@ -17,7 +17,7 @@ layout(std140, binding = 0) uniform buf {
     float contrast;
     float brightness;
     float saturation;
-    vec4 colorizeColor;
+    vec4 colorizationColor;
     vec4 blurWeight1;
     vec2 blurWeight2;
     vec4 mask;
@@ -74,11 +74,11 @@ void main() {
 #endif
 #endif // BLUR
 
-    // contrast, brightness, saturation and colorize
+    // contrast, brightness, saturation and colorization
     color.rgb = (color.rgb - 0.5 * color.a) * (1.0 + contrast) + 0.5 * color.a;
     color.rgb += brightness * color.a;
     float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-    color.rgb = gray * colorizeColor.rgb * colorizeColor.a + color.rgb * (1.0 - colorizeColor.a);
+    color.rgb = gray * colorizationColor.rgb * colorizationColor.a + color.rgb * (1.0 - colorizationColor.a);
     color.rgb = mix(vec3(gray), color.rgb, 1.0 + saturation);
 
 #if defined(SHADOW)

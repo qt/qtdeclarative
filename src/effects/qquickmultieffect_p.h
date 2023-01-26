@@ -38,8 +38,8 @@ class Q_QUICKEFFECTS_PRIVATE_EXPORT QQuickMultiEffect : public QQuickItem
     Q_PROPERTY(qreal brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
     Q_PROPERTY(qreal contrast READ contrast WRITE setContrast NOTIFY contrastChanged)
     Q_PROPERTY(qreal saturation READ saturation WRITE setSaturation NOTIFY saturationChanged)
-    Q_PROPERTY(qreal colorize READ colorize WRITE setColorize NOTIFY colorizeChanged)
-    Q_PROPERTY(QColor colorizeColor READ colorizeColor WRITE setColorizeColor NOTIFY colorizeColorChanged)
+    Q_PROPERTY(qreal colorization READ colorization WRITE setColorization NOTIFY colorizationChanged)
+    Q_PROPERTY(QColor colorizationColor READ colorizationColor WRITE setColorizationColor NOTIFY colorizationColorChanged)
     Q_PROPERTY(bool blurEnabled READ blurEnabled WRITE setBlurEnabled NOTIFY blurEnabledChanged)
     Q_PROPERTY(qreal blur READ blur WRITE setBlur NOTIFY blurChanged)
     Q_PROPERTY(int blurMax READ blurMax WRITE setBlurMax NOTIFY blurMaxChanged)
@@ -53,10 +53,10 @@ class Q_QUICKEFFECTS_PRIVATE_EXPORT QQuickMultiEffect : public QQuickItem
     Q_PROPERTY(qreal shadowScale READ shadowScale WRITE setShadowScale NOTIFY shadowScaleChanged)
     Q_PROPERTY(bool maskEnabled READ maskEnabled WRITE setMaskEnabled NOTIFY maskEnabledChanged)
     Q_PROPERTY(QQuickItem *maskSource READ maskSource WRITE setMaskSource NOTIFY maskSourceChanged)
-    Q_PROPERTY(qreal maskThresholdLow READ maskThresholdLow WRITE setMaskThresholdLow NOTIFY maskThresholdLowChanged)
-    Q_PROPERTY(qreal maskSpreadLow READ maskSpreadLow WRITE setMaskSpreadLow NOTIFY maskSpreadLowChanged)
-    Q_PROPERTY(qreal maskThresholdUp READ maskThresholdUp WRITE setMaskThresholdUp NOTIFY maskThresholdUpChanged)
-    Q_PROPERTY(qreal maskSpreadUp READ maskSpreadUp WRITE setMaskSpreadUp NOTIFY maskSpreadUpChanged)
+    Q_PROPERTY(qreal maskThresholdMin READ maskThresholdMin WRITE setMaskThresholdMin NOTIFY maskThresholdMinChanged)
+    Q_PROPERTY(qreal maskSpreadAtMin READ maskSpreadAtMin WRITE setMaskSpreadAtMin NOTIFY maskSpreadAtMinChanged)
+    Q_PROPERTY(qreal maskThresholdMax READ maskThresholdMax WRITE setMaskThresholdMax NOTIFY maskThresholdMaxChanged)
+    Q_PROPERTY(qreal maskSpreadAtMax READ maskSpreadAtMax WRITE setMaskSpreadAtMax NOTIFY maskSpreadAtMaxChanged)
     Q_PROPERTY(bool maskInverted READ maskInverted WRITE setMaskInverted NOTIFY maskInvertedChanged)
     Q_PROPERTY(QRectF itemRect READ itemRect NOTIFY itemRectChanged)
     Q_PROPERTY(QString fragmentShader READ fragmentShader NOTIFY fragmentShaderChanged)
@@ -87,11 +87,11 @@ public:
     qreal saturation() const;
     void setSaturation(qreal saturation);
 
-    qreal colorize() const;
-    void setColorize(qreal colorize);
+    qreal colorization() const;
+    void setColorization(qreal colorization);
 
-    QColor colorizeColor() const;
-    void setColorizeColor(const QColor &color);
+    QColor colorizationColor() const;
+    void setColorizationColor(const QColor &color);
 
     bool blurEnabled() const;
     void setBlurEnabled(bool enabled);
@@ -132,17 +132,17 @@ public:
     QQuickItem *maskSource() const;
     void setMaskSource(QQuickItem *item);
 
-    qreal maskThresholdLow() const;
-    void setMaskThresholdLow(qreal threshold);
+    qreal maskThresholdMin() const;
+    void setMaskThresholdMin(qreal threshold);
 
-    qreal maskSpreadLow() const;
-    void setMaskSpreadLow(qreal spread);
+    qreal maskSpreadAtMin() const;
+    void setMaskSpreadAtMin(qreal spread);
 
-    qreal maskThresholdUp() const;
-    void setMaskThresholdUp(qreal threshold);
+    qreal maskThresholdMax() const;
+    void setMaskThresholdMax(qreal threshold);
 
-    qreal maskSpreadUp() const;
-    void setMaskSpreadUp(qreal spread);
+    qreal maskSpreadAtMax() const;
+    void setMaskSpreadAtMax(qreal spread);
 
     bool maskInverted() const;
     void setMaskInverted(bool inverted);
@@ -161,8 +161,8 @@ Q_SIGNALS:
     void brightnessChanged();
     void contrastChanged();
     void saturationChanged();
-    void colorizeChanged();
-    void colorizeColorChanged();
+    void colorizationChanged();
+    void colorizationColorChanged();
     void blurEnabledChanged();
     void blurChanged();
     void blurMaxChanged();
@@ -176,10 +176,10 @@ Q_SIGNALS:
     void shadowScaleChanged();
     void maskEnabledChanged();
     void maskSourceChanged();
-    void maskThresholdLowChanged();
-    void maskSpreadLowChanged();
-    void maskThresholdUpChanged();
-    void maskSpreadUpChanged();
+    void maskThresholdMinChanged();
+    void maskSpreadAtMinChanged();
+    void maskThresholdMaxChanged();
+    void maskSpreadAtMaxChanged();
     void maskInvertedChanged();
     void itemRectChanged();
     void fragmentShaderChanged();
