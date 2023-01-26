@@ -15,12 +15,7 @@
 // We mean it.
 //
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 11, 0)
-# include <QtTest/qtest_global.h>
-# include <QtCore/private/qglobal_p.h>
-#else
 # include <QtTest/qttestglobal.h>
-#endif
 
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>

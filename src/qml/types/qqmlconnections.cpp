@@ -246,12 +246,10 @@ void QQmlConnections::connectSignals()
     if (d->bindings.isEmpty()) {
         connectSignalsToMethods();
     } else {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
         if (lcQmlConnections().isWarningEnabled()) {
             qmlWarning(this) << tr("Implicitly defined onFoo properties in Connections are deprecated. "
                                     "Use this syntax instead: function onFoo(<arguments>) { ... }");
         }
-#endif
         connectSignalsToBindings();
     }
 }
