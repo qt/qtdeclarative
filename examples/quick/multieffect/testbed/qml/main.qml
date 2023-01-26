@@ -85,8 +85,8 @@ Rectangle {
             brightness: settings.brightnessEnabled ? settings.brightness : 0
             contrast:  settings.contrastEnabled ? settings.contrast : 0
             saturation: settings.saturationEnabled ? settings.saturation : 0
-            colorizeColor: settings.colorizeColor
-            colorize: settings.colorizeEnabled ? settings.colorize : 0
+            colorizationColor: settings.colorizationColor
+            colorization: settings.colorizationEnabled ? settings.colorization : 0
             blurEnabled: settings.blurEnabled
             blur: settings.blur
             blurMax: settings.blurMax
@@ -100,10 +100,10 @@ Rectangle {
             shadowScale: settings.shadowScale
             maskEnabled: settings.maskEnabled
             maskInverted: settings.maskInverted
-            maskThresholdLow: settings.maskThresholdLow
-            maskSpreadLow: settings.maskSpreadLow
-            maskThresholdUp: settings.maskThresholdUp
-            maskSpreadUp: settings.maskSpreadUp
+            maskThresholdMin: settings.maskThresholdMin
+            maskSpreadAtMin: settings.maskSpreadAtMin
+            maskThresholdMax: settings.maskThresholdMax
+            maskSpreadAtMax: settings.maskSpreadAtMax
 
             onItemSizeChanged: {
                 warningsView.showSizeWarning();

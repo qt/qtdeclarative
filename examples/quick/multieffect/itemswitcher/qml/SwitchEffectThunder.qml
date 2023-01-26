@@ -31,17 +31,17 @@ Item {
         blurMax: 32
         blurMultiplier: 0.5
         opacity: switcher.outAnimation
-        colorizeColor: "#f0d060"
-        colorize: switcher.inAnimation
+        colorizationColor: "#f0d060"
+        colorization: switcher.inAnimation
 
         contrast: switcher.inAnimation
         brightness: switcher.inAnimation
 
         maskEnabled: true
         maskSource: maskImage
-        maskThresholdLow: switcher.inAnimation * 0.9
-        maskSpreadLow: 0.2
-        maskThresholdUp: 1.0
+        maskThresholdMin: switcher.inAnimation * 0.9
+        maskSpreadAtMin: 0.2
+        maskThresholdMax: 1.0
 
         shadowEnabled: true
         shadowColor: "#f04000"
@@ -64,16 +64,16 @@ Item {
         blurMultiplier: 0.5
         opacity: switcher.inAnimation * 3.0 - 1.0
 
-        colorizeColor: "#f0d060"
-        colorize: switcher.outAnimation
+        colorizationColor: "#f0d060"
+        colorization: switcher.outAnimation
         contrast: switcher.outAnimation
         brightness: switcher.outAnimation
 
         maskEnabled: true
         maskSource: maskImage
-        maskThresholdLow: switcher.outAnimation * 0.6
-        maskSpreadLow: 0.2
-        maskThresholdUp: 1.0
+        maskThresholdMin: switcher.outAnimation * 0.6
+        maskSpreadAtMin: 0.2
+        maskThresholdMax: 1.0
 
         shadowEnabled: true
         shadowColor: "#f04000"

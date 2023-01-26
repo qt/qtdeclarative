@@ -28,9 +28,9 @@ QtObject {
     property real contrast: 0.0
     property bool saturationEnabled: true
     property real saturation: 0.0
-    property bool colorizeEnabled: true
-    property color colorizeColor: Qt.rgba(1.0, 0.0, 0.0, 1.0)
-    property real colorize: 0.0
+    property bool colorizationEnabled: true
+    property color colorizationColor: Qt.rgba(1.0, 0.0, 0.0, 1.0)
+    property real colorization: 0.0
 
     property bool blurEnabled: true
     property real blur: 0.0
@@ -47,10 +47,10 @@ QtObject {
 
     property bool maskEnabled: true
     property bool maskInverted: false
-    property real maskThresholdLow: 0.0
-    property real maskSpreadLow: 0.0
-    property real maskThresholdUp: 1.0
-    property real maskSpreadUp: 0.0
+    property real maskThresholdMin: 0.0
+    property real maskSpreadAtMin: 0.0
+    property real maskThresholdMax: 1.0
+    property real maskSpreadAtMax: 0.0
 
     function reset() {
         autoPaddingEnabled = defaultSettings.autoPaddingEnabled;
@@ -62,9 +62,9 @@ QtObject {
         contrast = defaultSettings.contrast;
         saturationEnabled = defaultSettings.saturationEnabled;
         saturation = defaultSettings.saturation;
-        colorizeEnabled = defaultSettings.colorizeEnabled;
-        colorizeColor = defaultSettings.colorizeColor;
-        colorize = defaultSettings.colorize;
+        colorizationEnabled = defaultSettings.colorizationEnabled;
+        colorizationColor = defaultSettings.colorizationColor;
+        colorization = defaultSettings.colorization;
 
         blurEnabled = defaultSettings.blurEnabled;
         blur = defaultSettings.blur;
@@ -81,10 +81,10 @@ QtObject {
 
         maskEnabled = defaultSettings.maskEnabled;
         maskInverted = defaultSettings.maskInverted;
-        maskThresholdLow = defaultSettings.maskThresholdLow;
-        maskSpreadLow = defaultSettings.maskSpreadLow;
-        maskThresholdUp = defaultSettings.maskThresholdUp;
-        maskSpreadUp = defaultSettings.maskSpreadUp;
+        maskThresholdMin = defaultSettings.maskThresholdMin;
+        maskSpreadAtMin = defaultSettings.maskSpreadAtMin;
+        maskThresholdMax = defaultSettings.maskThresholdMax;
+        maskSpreadAtMax = defaultSettings.maskSpreadAtMax;
 
         rootItem.reseted();
     }

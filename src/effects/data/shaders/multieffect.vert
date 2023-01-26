@@ -18,7 +18,7 @@ layout(std140, binding = 0) uniform buf {
     float contrast;
     float brightness;
     float saturation;
-    vec4 colorizeColor;
+    vec4 colorizationColor;
     vec4 blurWeight1;
     vec2 blurWeight2;
     vec4 mask;
