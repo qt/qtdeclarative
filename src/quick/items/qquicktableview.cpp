@@ -6263,6 +6263,7 @@ bool QQuickTableView::eventFilter(QObject *obj, QEvent *event)
                 }
                 return true;
             }
+            break;
         case Qt::Key_Escape:
             closeEditor();
             return true;
