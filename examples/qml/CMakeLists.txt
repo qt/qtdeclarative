@@ -3,7 +3,6 @@
 
 add_subdirectory(referenceexamples)
 add_subdirectory(tutorials)
-qt_internal_add_example(shell)
 if(TARGET Qt::Quick)
     qt_internal_add_example(qmlextensionplugins)
     if (TARGET Qt::lupdate)
