@@ -45,6 +45,8 @@ set(qml_files
     "ComboBox.qml"
     "HorizontalHeaderView.qml"
     "VerticalHeaderView.qml"
+    "Dialog.qml"
+    "DialogButtonBox.qml"
 )
 
 set_source_files_properties(Slider.qml PROPERTIES

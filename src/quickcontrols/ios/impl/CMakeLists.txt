@@ -7,6 +7,7 @@
 
 set(qml_files
     "CursorDelegate.qml"
+    "DialogButtonBoxDelegate.qml"
 )
 
 qt_internal_add_qml_module(qtquickcontrols2iosstyleimplplugin
