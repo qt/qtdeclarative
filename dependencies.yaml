@@ -3,7 +3,7 @@ dependencies:
     ref: 3eb6b13c0b30263c6c4d17e1b8c4e5a2cbc73b9e
     required: true
   ../tqtc-qtimageformats:
-    ref: 71d0f680bdbfce46ea22fdceacbe73aab7753038
+    ref: 76b060bbaddba94264f55ab258669579e8fa8bb1
     required: false
   ../tqtc-qtshadertools:
     ref: d37add0564d0f358675da2ad39f0e5db2b071424
