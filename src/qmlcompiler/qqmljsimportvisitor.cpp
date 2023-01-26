@@ -1490,11 +1490,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             method.addParameter(
                     QQmlJSMetaParameter(
                             param->name.toString(),
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
                             param->type ? param->type->toString() : QString()
-#else
-                            buildName(param->type)
-#endif
                         ));
             param = param->next;
         }
@@ -1546,12 +1542,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QQmlJSMetaProperty prop;
         prop.setPropertyName(publicMember->name.toString());
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
-        // #if required for standalone DOM compilation against Qt 6.2
         prop.setIsWritable(!publicMember->isReadonly());
-#else
-        prop.setIsWritable(!publicMember->readonlyToken.isValid());
-#endif
         prop.setAliasExpression(aliasExpr);
         const auto type =
                 isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.type(typeName).scope;
@@ -1565,21 +1556,11 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             prop.setTypeName(typeName);
         }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
-        // #if required for standalone DOM compilation against Qt 6.2
         if (publicMember->isDefaultMember())
-#else
-        if (publicMember->defaultToken.isValid())
-#endif
             m_currentScope->setOwnDefaultPropertyName(prop.propertyName());
         prop.setIndex(m_currentScope->ownProperties().size());
         m_currentScope->insertPropertyIdentifier(prop);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
-        // #if required for standalone DOM compilation against Qt 6.2
         if (publicMember->isRequired())
-#else
-        if (publicMember->requiredToken.isValid())
-#endif
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
         BindingExpressionParseResult parseResult = BindingExpressionParseResult::Invalid;
@@ -1738,8 +1719,6 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView base,
                               QQmlJS::AST::ArgumentList *args)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
-    // #if required for standalone DOM compilation
     QStringView contextString;
     QStringView mainString;
     QStringView commentString;
@@ -1768,7 +1747,6 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
     QmlIR::tryGeneratingTranslationBindingBase(
                 base, args,
                 registerMainString, registerCommentString, registerContextString, finalizeBinding);
-#endif
 }
 
 QQmlJSImportVisitor::BindingExpressionParseResult

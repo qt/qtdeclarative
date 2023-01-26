@@ -32,10 +32,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
-#define Q_CONSTINIT
-#endif
-
 using namespace Qt::StringLiterals;
 
 namespace QQmlJS {
@@ -226,7 +222,7 @@ std::shared_ptr<OwningItem> DomUniverse::doCopy(DomItem &) const
 void DomUniverse::loadFile(DomItem &self, QString filePath, QString logicalPath, Callback callback,
                            LoadOptions loadOptions, std::optional<DomType> fileType)
 {
-    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, UTC),
+    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
              callback, loadOptions, fileType);
 }
 
@@ -1176,7 +1172,7 @@ void DomEnvironment::loadFile(DomItem &self, QString filePath, QString logicalPa
                               DomTop::Callback endCallback, LoadOptions loadOptions,
                               std::optional<DomType> fileType, ErrorHandler h)
 {
-    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, UTC),
+    loadFile(self, filePath, logicalPath, QString(), QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
              loadCallback, directDepsCallback, endCallback, loadOptions, fileType, h);
 }
 

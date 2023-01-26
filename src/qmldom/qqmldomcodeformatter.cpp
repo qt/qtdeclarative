@@ -1038,7 +1038,7 @@ void FormatPartialStatus::handleTokens()
     }
     // multi-line comment start?
     if (topState != StateType::MultilineCommentStart && topState != StateType::MultilineCommentCont
-        && currentStatus.lexerState.state.tokenKind == T_PARTIAL_COMMENT) {
+        && currentStatus.lexerState.state.tokenKind == QQmlJSGrammar::T_PARTIAL_COMMENT) {
         enterState(StateType::MultilineCommentStart);
     }
     currentStatus.finalIndent = currentIndent;
@@ -1060,10 +1060,10 @@ int indentForLineStartingWithToken(const FormatTextStatus &oldStatus, const Form
             return -1;
     }
     // don't touch multi-line strings at all
-    if (oldStatus.lexerState.state.tokenKind == T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL
-        || oldStatus.lexerState.state.tokenKind == T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL
-        || oldStatus.lexerState.state.tokenKind == T_PARTIAL_TEMPLATE_HEAD
-        || oldStatus.lexerState.state.tokenKind == T_PARTIAL_TEMPLATE_MIDDLE) {
+    if (oldStatus.lexerState.state.tokenKind == QQmlJSGrammar::T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL
+        || oldStatus.lexerState.state.tokenKind == QQmlJSGrammar::T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL
+        || oldStatus.lexerState.state.tokenKind == QQmlJSGrammar::T_PARTIAL_TEMPLATE_HEAD
+        || oldStatus.lexerState.state.tokenKind == QQmlJSGrammar::T_PARTIAL_TEMPLATE_MIDDLE) {
         return -1;
     }
 
@@ -1159,7 +1159,7 @@ int indentForLineStartingWithToken(const FormatTextStatus &oldStatus, const Form
 int FormatPartialStatus::indentLine()
 {
     Q_ASSERT(currentStatus.size() >= 1);
-    int firstToken = (lineTokens.isEmpty() ? T_NONE : tokenAt(0).lexKind);
+    int firstToken = (lineTokens.isEmpty() ? QQmlJSGrammar::T_NONE : tokenAt(0).lexKind);
     int indent = indentForLineStartingWithToken(initialStatus, options, firstToken);
     recalculateWithIndent(indent);
     return indent;
@@ -1168,7 +1168,7 @@ int FormatPartialStatus::indentLine()
 int FormatPartialStatus::indentForNewLineAfter() const
 {
     // should be just currentIndent?
-    int indent = indentForLineStartingWithToken(currentStatus, options, T_NONE);
+    int indent = indentForLineStartingWithToken(currentStatus, options, QQmlJSGrammar::T_NONE);
     if (indent < 0)
         return currentIndent;
     return indent;

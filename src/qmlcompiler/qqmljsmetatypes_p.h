@@ -24,9 +24,7 @@
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
-#    include <QtQml/private/qqmltranslation_p.h>
-#endif
+#include <QtQml/private/qqmltranslation_p.h>
 
 #include "qqmljsannotation_p.h"
 
@@ -730,9 +728,7 @@ public:
 
     QString regExpValue() const;
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     QQmlTranslation translationDataValue(QString qmlFileNameForContext = QStringLiteral("")) const;
-#endif
 
     QSharedPointer<const QQmlJSScope> literalType(const QQmlJSTypeResolver *resolver) const;
 

@@ -982,7 +982,7 @@ protected:
     bool visit(YieldExpression *) override { return true; }
     bool visit(ClassExpression *) override { return true; }
 
-    // Return false because we want to omit default function calls in accept0 implementation.
+    // Return false because we want to omit default function calls in accept0 implementation.
     bool visit(ClassDeclaration *ast) override
     {
         preVisit(ast);
@@ -1052,11 +1052,7 @@ protected:
     bool visit(ESModule *) override { return true; }
     bool visit(DebuggerStatement *) override { return true; }
     bool visit(Type *) override { return true; }
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     bool visit(TypeArgument *) override { return true; }
-#else
-    bool visit(TypeArgumentList *) override { return true; }
-#endif
     bool visit(TypeAnnotation *) override { return true; }
 
     // overridden to use BasicVisitor (and ensure warnings about new added AST)
@@ -1173,11 +1169,7 @@ protected:
     void endVisit(ESModule *) override { }
     void endVisit(DebuggerStatement *) override { }
     void endVisit(Type *) override { }
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     void endVisit(TypeArgument *) override { }
-#else
-    void endVisit(TypeArgumentList *) override { }
-#endif
     void endVisit(TypeAnnotation *) override { }
 
     void throwRecursionDepthError() override

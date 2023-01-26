@@ -430,8 +430,7 @@ QString QQmlPluginImporter::resolvePlugin(const QString &qmldirPluginPath, const
                 return absolutePath;
         }
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
-#    if defined(Q_OS_ANDROID)
+#if defined(Q_OS_ANDROID)
         if (qmldirPath.size() > 25 && qmldirPath.at(0) == QLatin1Char(':')
             && qmldirPath.at(1) == QLatin1Char('/')
             && qmldirPath.startsWith(QStringLiteral(":/android_rcc_bundle/qml/"),
@@ -452,7 +451,6 @@ QString QQmlPluginImporter::resolvePlugin(const QString &qmldirPluginPath, const
                 }
             }
         }
-#    endif
 #endif
     }
 

@@ -28,28 +28,6 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
-enum {
-    T_EOL = 2000,
-    T_PARTIAL_COMMENT = 2001,
-    T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL = 2002,
-    T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL = 2003,
-    T_PARTIAL_TEMPLATE_HEAD = 2004,
-    T_PARTIAL_TEMPLATE_MIDDLE = 2005,
-    T_NONE = 2006
-};
-#else
-constexpr auto T_NONE = QQmlJSGrammar::T_NONE;
-constexpr auto T_EOL = QQmlJSGrammar::T_EOL;
-constexpr auto T_PARTIAL_COMMENT = QQmlJSGrammar::T_PARTIAL_COMMENT;
-constexpr auto T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL =
-        QQmlJSGrammar::T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL;
-constexpr auto T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL =
-        QQmlJSGrammar::T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL;
-constexpr auto T_PARTIAL_TEMPLATE_HEAD = QQmlJSGrammar::T_PARTIAL_TEMPLATE_HEAD;
-constexpr auto T_PARTIAL_TEMPLATE_MIDDLE = QQmlJSGrammar::T_PARTIAL_TEMPLATE_MIDDLE;
-#endif
-
 class QMLDOM_EXPORT Token
 {
     Q_GADGET
@@ -83,7 +61,7 @@ public:
 
     int offset = 0;
     int length = 0;
-    int lexKind = T_NONE;
+    int lexKind = QQmlJSGrammar::T_NONE;
 };
 
 inline int operator==(const Token &t1, const Token &t2)
@@ -100,18 +78,7 @@ class QMLDOM_EXPORT Scanner
 public:
     struct QMLDOM_EXPORT State
     {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
         Lexer::State state {};
-#else
-        struct LState
-        {
-            int tokenKind = {};
-            friend QDebug operator<<(QDebug dbg, const LState &s)
-            {
-                return dbg << "tokenKind:" << s.tokenKind;
-            }
-        } state;
-#endif
         bool regexpMightFollow = true;
         bool isMultiline() const;
         bool isMultilineComment() const;

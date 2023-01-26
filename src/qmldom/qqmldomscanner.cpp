@@ -129,7 +129,7 @@ static void addLexToken(QList<Token> &tokens, int tokenKind, QQmlJS::Lexer &lexe
         tokens.append(Token(lexer.tokenStartColumn() - 1, 1, QQmlJSGrammar::T_PLUS));
         tokens.append(Token(lexer.tokenStartColumn(), lexer.tokenLength() - 1, tokenKind));
         return;
-    case T_PARTIAL_TEMPLATE_MIDDLE:
+    case QQmlJSGrammar::T_PARTIAL_TEMPLATE_MIDDLE:
         regexpMayFollow = true;
         tokens.append(Token(lexer.tokenStartColumn() - 1, 1, QQmlJSGrammar::T_PLUS));
         tokens.append(Token(lexer.tokenStartColumn(), lexer.tokenLength() - 1, tokenKind));
@@ -137,15 +137,14 @@ static void addLexToken(QList<Token> &tokens, int tokenKind, QQmlJS::Lexer &lexe
     case QQmlJSGrammar::T_MULTILINE_STRING_LITERAL:
     case QQmlJSGrammar::T_NO_SUBSTITUTION_TEMPLATE:
     case QQmlJSGrammar::T_STRING_LITERAL:
-    case T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL:
-    case T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL:
-    case T_PARTIAL_TEMPLATE_HEAD:
+    case QQmlJSGrammar::T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL:
+    case QQmlJSGrammar::T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL:
+    case QQmlJSGrammar::T_PARTIAL_TEMPLATE_HEAD:
         regexpMayFollow = (tokenKind == QQmlJSGrammar::T_TEMPLATE_MIDDLE
                            || tokenKind == QQmlJSGrammar::T_TEMPLATE_HEAD);
         break;
 
     case QQmlJSGrammar::T_VERSION_NUMBER:
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
         if (lexer.state().currentChar == u'.') {
             int offset = lexer.tokenStartColumn() - 1;
             int length = lexer.tokenLength();
@@ -157,7 +156,6 @@ static void addLexToken(QList<Token> &tokens, int tokenKind, QQmlJS::Lexer &lexe
             tokens.append(Token(offset, length, QQmlJSGrammar::T_NUMERIC_LITERAL));
             return;
         }
-#endif
         break;
 
     default:
@@ -251,7 +249,7 @@ bool Token::lexKindIsComment(int kind)
 {
     switch (kind) {
     case QQmlJSGrammar::T_COMMENT:
-    case T_PARTIAL_COMMENT:
+    case QQmlJSGrammar::T_PARTIAL_COMMENT:
         return true;
     default:
         break;
@@ -339,13 +337,13 @@ bool Token::lexKindIsIdentifier(int kind)
 bool Token::lexKindIsStringType(int kind)
 {
     switch (kind) {
-    case T_PARTIAL_TEMPLATE_MIDDLE:
+    case QQmlJSGrammar::T_PARTIAL_TEMPLATE_MIDDLE:
     case QQmlJSGrammar::T_MULTILINE_STRING_LITERAL:
     case QQmlJSGrammar::T_NO_SUBSTITUTION_TEMPLATE:
     case QQmlJSGrammar::T_STRING_LITERAL:
-    case T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL:
-    case T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL:
-    case T_PARTIAL_TEMPLATE_HEAD:
+    case QQmlJSGrammar::T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL:
+    case QQmlJSGrammar::T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL:
+    case QQmlJSGrammar::T_PARTIAL_TEMPLATE_HEAD:
         return true;
     default:
         break;
@@ -356,8 +354,8 @@ bool Token::lexKindIsStringType(int kind)
 bool Token::lexKindIsInvalid(int kind)
 {
     switch (kind) {
-    case T_NONE:
-    case T_EOL:
+    case QQmlJSGrammar::T_NONE:
+    case QQmlJSGrammar::T_EOL:
     case QQmlJSGrammar::EOF_SYMBOL:
     case QQmlJSGrammar::T_ERROR:
     case QQmlJSGrammar::T_FEED_JS_EXPRESSION:
@@ -398,11 +396,6 @@ QList<Token> Scanner::operator()(QStringView text, const Scanner::State &startSt
     _state = startState;
     QList<Token> tokens;
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
-    Q_ASSERT_X(false, "qmldomscanner",
-               "line by line (progressive lexing supported only when building against Qt6.5 or "
-               "higher)");
-#else
     {
         QQmlJS::Lexer lexer(nullptr, QQmlJS::Lexer::LexMode::LineByLine);
         lexer.setState(startState.state);
@@ -412,13 +405,12 @@ QList<Token> Scanner::operator()(QStringView text, const Scanner::State &startSt
         lexer.setCode(line, -1, _qmlMode, QQmlJS::Lexer::CodeContinuation::Continue);
         while (true) {
             int tokenKind = lexer.lex();
-            if (tokenKind == T_EOL || tokenKind == QQmlJSGrammar::EOF_SYMBOL)
+            if (tokenKind == QQmlJSGrammar::T_EOL || tokenKind == QQmlJSGrammar::EOF_SYMBOL)
                 break;
             addLexToken(tokens, tokenKind, lexer, _state.regexpMightFollow);
         }
         _state.state = lexer.state();
     }
-#endif
     return tokens;
 }
 
@@ -430,11 +422,11 @@ Scanner::State Scanner::state() const
 bool Scanner::State::isMultiline() const
 {
     switch (state.tokenKind) {
-    case T_PARTIAL_COMMENT:
-    case T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL:
-    case T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL:
-    case T_PARTIAL_TEMPLATE_HEAD:
-    case T_PARTIAL_TEMPLATE_MIDDLE:
+    case QQmlJSGrammar::T_PARTIAL_COMMENT:
+    case QQmlJSGrammar::T_PARTIAL_DOUBLE_QUOTE_STRING_LITERAL:
+    case QQmlJSGrammar::T_PARTIAL_SINGLE_QUOTE_STRING_LITERAL:
+    case QQmlJSGrammar::T_PARTIAL_TEMPLATE_HEAD:
+    case QQmlJSGrammar::T_PARTIAL_TEMPLATE_MIDDLE:
         return true;
     default:
         break;
@@ -445,7 +437,7 @@ bool Scanner::State::isMultiline() const
 bool Scanner::State::isMultilineComment() const
 {
     switch (state.tokenKind) {
-    case T_PARTIAL_COMMENT:
+    case QQmlJSGrammar::T_PARTIAL_COMMENT:
         return true;
     default:
         break;

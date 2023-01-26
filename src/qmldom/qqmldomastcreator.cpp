@@ -72,24 +72,8 @@ static QString typeToString(AST::Type *t)
     Q_ASSERT(t);
     QString res = toString(t->typeId);
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     if (UiQualifiedId *arg = t->typeArgument)
         res += u'<' + toString(arg) + u'>';
-#else
-    if (!t->typeArguments)
-        return res;
-    res += u"<";
-    bool first = true;
-    for (TypeArgumentList *tt = static_cast<TypeArgumentList *>(t->typeArguments);
-         tt; tt = tt->next) {
-        if (first)
-            first = false;
-        else
-            res += u",";
-        res += typeToString(tt->typeId);
-    }
-    res += u">";
-#endif
 
     return res;
 }
@@ -355,32 +339,20 @@ public:
             MethodInfo m;
             m.name = el->name.toString();
             m.typeName = toString(el->memberType);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
             m.isReadonly = el->isReadonly();
-#else
-            m.isReadonly = el->readonlyToken.isValid();
-#endif
             m.access = MethodInfo::Public;
             m.methodType = MethodInfo::Signal;
             m.isList = el->typeModifier == QLatin1String("list");
             MethodInfo *mPtr;
             Path p = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
             pushEl(p, *mPtr, el);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
             FileLocations::addRegion(nodeStack.last().fileLocations, u"signal", el->propertyToken());
-#else
-            FileLocations::addRegion(nodeStack.last().fileLocations, u"signal", el->propertyToken);
-#endif
             MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
             AST::UiParameterList *args = el->parameters;
             while (args) {
                 MethodParameter param;
                 param.name = args->name.toString();
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
                 param.typeName = args->type ? args->type->toString() : QString();
-#else
-                param.typeName = toString(args->type);
-#endif
                 index_type idx = index_type(mInfo.parameters.size());
                 mInfo.parameters.append(param);
                 auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
@@ -395,15 +367,9 @@ public:
             PropertyDefinition p;
             p.name = el->name.toString();
             p.typeName = toString(el->memberType);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
             p.isReadonly = el->isReadonly();
             p.isDefaultMember = el->isDefaultMember();
             p.isRequired = el->isRequired();
-#else
-            p.isReadonly = el->readonlyToken.isValid();
-            p.isDefaultMember = el->defaultToken.isValid();
-            p.isRequired = el->requiredToken.isValid();
-#endif
             p.isList = el->typeModifier == QLatin1String("list");
             if (!el->typeModifier.isEmpty())
                 p.typeName = el->typeModifier.toString() + QChar(u'<') + p.typeName + QChar(u'>');
@@ -411,34 +377,20 @@ public:
             Path pPathFromOwner =
                     current<QmlObject>().addPropertyDef(p, AddOption::KeepExisting, &pPtr);
             pushEl(pPathFromOwner, *pPtr, el);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
             FileLocations::addRegion(nodeStack.last().fileLocations, u"property",
                                      el->propertyToken());
-#else
-            FileLocations::addRegion(nodeStack.last().fileLocations, u"property",
-                                     el->propertyToken);
-#endif
             if (p.name == u"id")
                 qmlFile.addError(
                         myParseErrors()
                                 .warning(tr("id is a special attribute, that should not be "
                                             "used as property name"))
                                 .withPath(currentNodeEl().path));
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
             if (p.isDefaultMember)
                 FileLocations::addRegion(nodeStack.last().fileLocations, u"default",
                                          el->defaultToken());
             if (p.isRequired)
                 FileLocations::addRegion(nodeStack.last().fileLocations, u"required",
                                          el->requiredToken());
-#else
-            if (p.isDefaultMember)
-                FileLocations::addRegion(nodeStack.last().fileLocations, u"default",
-                                         el->defaultToken);
-            if (p.isRequired)
-                FileLocations::addRegion(nodeStack.last().fileLocations, u"required",
-                                         el->requiredToken);
-#endif
             if (el->statement) {
                 BindingType bType = BindingType::Normal;
                 SourceLocation loc = combineLocations(el->statement);
@@ -745,11 +697,7 @@ public:
                 pathFromOwner = comp.addId(idVal, AddOption::KeepExisting, &idPtr);
                 QRegularExpression idRe(QRegularExpression::anchoredPattern(
                         QStringLiteral(uR"([[:lower:]][[:lower:][:upper:]0-9_]*)")));
-#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
-                auto m = idRe.match(iExp->name);
-#else
                 auto m = idRe.matchView(iExp->name);
-#endif
                 if (!m.hasMatch()) {
                     qmlFile.addError(
                             myParseErrors()
@@ -846,11 +794,7 @@ public:
     { // currently not used...
         MethodParameter p {
             el->name.toString(),
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
             el->type ? el->type->toString() : QString(),
-#else
-            toString(el->type),
-#endif
             false, false, false, {}, {}, {}
         };
         return true;

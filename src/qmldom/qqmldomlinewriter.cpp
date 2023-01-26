@@ -140,11 +140,7 @@ QString LineWriter::eolToWrite() const
 template<typename String, typename ...Args>
 static QRegularExpressionMatch matchHelper(QRegularExpression &re, String &&s, Args &&...args)
 {
-#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
-    return re.match(s, args...);
-#else
     return re.matchView(s, args...);
-#endif
 }
 
 LineWriter &LineWriter::write(QStringView v, TextAddType tAdd)

@@ -10,19 +10,19 @@ instructions:
     variableName: CONFIGURE_ENV_PREFIX
     variableValue: "{{.Env.ENV_PREFIX}}"
   - type: ExecuteCommand
-    command: "curl -s http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.2-final-released/Qt/qtbase/qtbase-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z -o qtbase.7z"
+    command: "curl -s https://ci-files02-hki.ci.qt.io/packages/jenkins/archive/qt/6.5/6.5.0-beta2-released/Qt/qtbase/qtbase-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z -o qtbase.7z"
     ignoreExitCode: false
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
     userMessageOnFailure: >
-      download of http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.2-final-released/Qt/qtbase/qtbase-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z failed
+      download of https://ci-files02-hki.ci.qt.io/packages/jenkins/archive/qt/6.5/6.5.0-beta2-released/Qt/qtbase/qtbase-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z failed
   - type: ExecuteCommand
-    command: "curl -s http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.2-final-released/Qt/qtdeclarative/qtdeclarative-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z -o qtdeclarative.7z"
+    command: "curl -s https://ci-files02-hki.ci.qt.io/packages/jenkins/archive/qt/6.5/6.5.0-beta2-released/Qt/qtdeclarative/qtdeclarative-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z -o qtdeclarative.7z"
     ignoreExitCode: false
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
     userMessageOnFailure: >
-     Download of http://ci-files02-hki.intra.qt.io/packages/jenkins/archive/qt/6.3/6.3.2-final-released/Qt/qtdeclarative/qtdeclarative-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z failed
+     Download of https://ci-files02-hki.ci.qt.io/packages/jenkins/archive/qt/6.5/6.5.0-beta2-released/Qt/qtdeclarative/qtdeclarative-MacOS-MacOS_12-Clang-MacOS-MacOS_12-X86_64-ARM64.7z failed
   - type: ExecuteCommand
     command: "7za x  qtbase.7z"
     ignoreExitCode: false
@@ -43,21 +43,21 @@ instructions:
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
     userMessageOnFailure: >
-      configuration of qmldom standalone on Qt 6.3 failed
+      configuration of qmldom standalone on Qt 6.5 failed
   - type: ExecuteCommand
     command: "{{.Env.ENV_PREFIX}} cmake --build standalone63"
     ignoreExitCode: false
     maxTimeInSeconds: 3600
     maxTimeBetweenOutput: 1800
     userMessageOnFailure: >
-      Compilation of qmldom standalone on Qt 6.3 FAILED, see the log for details.
+      Compilation of qmldom standalone on Qt 6.5 FAILED, see the log for details.
   - type: ExecuteCommand
     command: "./standalone63/qmldomloadeditwrite"
     ignoreExitCode: false
     maxTimeInSeconds: 1800
     maxTimeBetweenOutput: 900
     userMessageOnFailure: >
-      Run of qmldom standalone on Qt 6.3 FAILED
+      Run of qmldom standalone on Qt 6.5 FAILED
 enable_if:
   condition: and
   conditions:

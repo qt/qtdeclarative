@@ -102,12 +102,7 @@ bool FieldFilter::addFilter(QString fFields)
     QRegularExpression fieldRe(QRegularExpression::anchoredPattern(QStringLiteral(
             uR"((?<op>[-+])?(?:(?<type>[a-zA-Z0-9_]*):)?(?<field>[a-zA-Z0-9_]*))")));
     for (const QString &fField : fFields.split(QLatin1Char(','))) {
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
-        QRegularExpressionMatch m = fieldRe.match(fField);
-#else
         QRegularExpressionMatch m = fieldRe.matchView(fField);
-#endif
         if (m.hasMatch()) {
             if (m.capturedView(u"op") == u"+") {
                 m_fieldFilterRemove.remove(m.captured(u"type"), m.captured(u"field"));

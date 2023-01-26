@@ -111,11 +111,9 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
 QQmlJSScope::ConstPtr
 QQmlJSTypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
 {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
     // #if required for standalone DOM compilation against Qt 6.2
     qCDebug(lcTypeResolver()).nospace()
             << "looking for object at " << location.line() << ':' << location.column();
-#endif
     return m_objectsByLocation[location];
 }
 
@@ -128,15 +126,11 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) const
 {
     const QString typeId = QmlIR::IRBuilder::asString(type->typeId);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     if (!type->typeArgument)
         return m_imports.type(typeId).scope;
     if (typeId == u"list"_s)
         return typeForName(type->typeArgument->toString())->listType();
     return QQmlJSScope::ConstPtr();
-#else
-    return m_imports.type(typeId).scope;
-#endif
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeForConst(QV4::ReturnedValue rv) const

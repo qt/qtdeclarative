@@ -53,7 +53,7 @@ indentAgain:
                 trailingSpace = m_options.stringTrailingSpace;
             } else {
                 const int kind =
-                        (fStatus().lineTokens.isEmpty() ? T_EOL
+                        (fStatus().lineTokens.isEmpty() ? Lexer::T_EOL
                                                         : fStatus().lineTokens.last().lexKind);
                 if (Token::lexKindIsComment(kind)) {
                     // a // comment...
