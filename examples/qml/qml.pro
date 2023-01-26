@@ -8,8 +8,7 @@ qtHaveModule(quick) {
 
 SUBDIRS += \
           referenceexamples \
-          tutorials \
-          shell
+          tutorials
 
 EXAMPLE_FILES = \
     dynamicscene \
