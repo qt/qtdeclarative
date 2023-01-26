@@ -59,7 +59,7 @@ struct Chunk {
         SlotSizeShift = 5,
         NumSlots = ChunkSize/SlotSize,
         BitmapSize = NumSlots/8,
-        HeaderSize = 4*BitmapSize,
+        HeaderSize = 3*BitmapSize,
         DataSize = ChunkSize - HeaderSize,
         AvailableSlots = DataSize/SlotSize,
 #if QT_POINTER_SIZE == 8
@@ -71,7 +71,6 @@ struct Chunk {
 #endif
         EntriesInBitmap = BitmapSize/sizeof(quintptr)
     };
-    quintptr grayBitmap[BitmapSize/sizeof(quintptr)];
     quintptr blackBitmap[BitmapSize/sizeof(quintptr)];
     quintptr objectBitmap[BitmapSize/sizeof(quintptr)];
     quintptr extendsBitmap[BitmapSize/sizeof(quintptr)];
@@ -152,7 +151,6 @@ struct Chunk {
 
     bool sweep(ClassDestroyStatsCallback classCountPtr);
     void resetBlackBits();
-    void collectGrayItems(QV4::MarkStack *markStack);
     bool sweep(ExecutionEngine *engine);
     void freeAll(ExecutionEngine *engine);
 
@@ -176,11 +174,6 @@ struct HeapItem {
         return reinterpret_cast<Chunk *>(reinterpret_cast<quintptr>(this) >> Chunk::ChunkShift << Chunk::ChunkShift);
     }
 
-    bool isGray() const {
-        Chunk *c = chunk();
-        std::ptrdiff_t index = this - c->realBase();
-        return Chunk::testBit(c->grayBitmap, index);
-    }
     bool isBlack() const {
         Chunk *c = chunk();
         std::ptrdiff_t index = this - c->realBase();

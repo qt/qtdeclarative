@@ -77,12 +77,6 @@ struct Q_QML_EXPORT Base {
         Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
         return Chunk::setBit(c->blackBitmap, h - c->realBase());
     }
-    inline void setGrayBit() {
-        const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
-        Chunk *c = h->chunk();
-        Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
-        return Chunk::setBit(c->grayBitmap, h - c->realBase());
-    }
 
     inline bool inUse() const {
         const HeapItem *h = reinterpret_cast<const HeapItem *>(this);

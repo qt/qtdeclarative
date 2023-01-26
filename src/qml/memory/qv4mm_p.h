@@ -22,10 +22,6 @@
 #include <private/qv4mmdefs_p.h>
 #include <QVector>
 
-#define QV4_MM_MAXBLOCK_SHIFT "QV4_MM_MAXBLOCK_SHIFT"
-#define QV4_MM_MAX_CHUNK_SIZE "QV4_MM_MAX_CHUNK_SIZE"
-#define QV4_MM_STATS "QV4_MM_STATS"
-
 #define MM_DEBUG 0
 
 QT_BEGIN_NAMESPACE
@@ -67,7 +63,6 @@ struct BlockAllocator {
     void sweep();
     void freeAll();
     void resetBlackBits();
-    void collectGrayItems(MarkStack *markStack);
 
     // bump allocations
     HeapItem *nextFree = nullptr;
@@ -89,7 +84,6 @@ struct HugeItemAllocator {
     void sweep(ClassDestroyStatsCallback classCountPtr);
     void freeAll();
     void resetBlackBits();
-    void collectGrayItems(MarkStack *markStack);
 
     size_t usedMem() const {
         size_t used = 0;
