@@ -171,7 +171,11 @@ void SignalTransition::connectTriggered()
     QV4::ExecutionEngine *jsEngine = QQmlEngine::contextForObject(this)->engine()->handle();
     QV4::Scope scope(jsEngine);
     QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
-    Q_ASSERT(qobjectSignal);
+    if (!qobjectSignal) {
+        m_signalExpression.take(nullptr);
+        return;
+    }
+
     QMetaMethod metaMethod = target->metaObject()->method(qobjectSignal->methodIndex());
     int signalIndex = QMetaObjectPrivate::signalIndex(metaMethod);
 
