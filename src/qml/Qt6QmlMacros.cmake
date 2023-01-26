@@ -2237,8 +2237,17 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
 
+    get_target_property(automoc_enabled ${destination_qml_target} AUTOMOC)
+    if(NOT automoc_enabled)
+        message(FATAL_ERROR "qt6_generate_foreign_qml_types requires AUTOMOC to be enabled "
+            "on target '${destination_qml_target}'.")
+    endif()
+
     set(registration_files_base ${source_target}_${destination_qml_target})
-    set(additional_sources ${registration_files_base}.cpp ${registration_files_base}.h)
+    set(additional_sources
+        "${CMAKE_CURRENT_BINARY_DIR}/${registration_files_base}.cpp"
+        "${CMAKE_CURRENT_BINARY_DIR}/${registration_files_base}.h"
+    )
 
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     add_custom_command(
@@ -2259,7 +2268,6 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
     )
 
     target_sources(${destination_qml_target} PRIVATE ${additional_sources})
-    qt6_wrap_cpp(${additional_sources} TARGET ${destination_qml_target})
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
