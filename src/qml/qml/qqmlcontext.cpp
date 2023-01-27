@@ -23,30 +23,44 @@ QT_BEGIN_NAMESPACE
     \brief The QQmlContext class defines a context within a QML engine.
     \inmodule QtQml
 
-    Contexts allow data to be exposed to the QML components instantiated by the
-    QML engine.
+    Contexts hold the objects identified by \e id in a QML document. You
+    can use \{nameForObject()} and \l{objectForName()} to retrieve them.
+
+    \note It is the responsibility of the creator to delete any QQmlContext it
+    constructs. If a QQmlContext is no longer needed, it must be destroyed
+    explicitly. The simplest way to ensure this is to give the QQmlContext a
+    \l{QObject::setParent()}{parent}.
+
+    \section2 The Context Hierarchy
+
+    Contexts form a hierarchy. The root of this hierarchy is the QML engine's
+    \l {QQmlEngine::rootContext()}{root context}. Each QML component creates its
+    own context when instantiated and some QML elements create extra contexts
+    for themselves.
+
+    While QML objects instantiated in a context are not strictly owned by that
+    context, their bindings are.  If a context is destroyed, the property bindings of
+    outstanding QML objects will stop evaluating.
+
+    \section2 Context Properties
+
+    Contexts also allow data to be exposed to the QML components instantiated
+    by the QML engine. Such data is invisible to any tooling, including the
+    \l{Qt Quick Compiler} and to future readers of the QML documents in
+    question. It will only be exposed if the QML component is instantiated in
+    the specific C++ context you are envisioning. In other places, different
+    context data may be exposed instead.
+
+    Instead of using the QML context to expose data to your QML components, you
+    should either create additional object properties to hold the data or use
+    \l{QML_SINGLETON}{singletons}. See
+    \l{qtqml-cppintegration-exposecppstate.html}{Exposing C++ State to QML} for
+    a detailed explanation.
 
     Each QQmlContext contains a set of properties, distinct from its QObject
     properties, that allow data to be explicitly bound to a context by name.  The
-    context properties are defined and updated by calling
-    QQmlContext::setContextProperty().  The following example shows a Qt model
-    being bound to a context and then accessed from a QML file.
-
-    \code
-    QQmlEngine engine;
-    QStringListModel modelData;
-    QQmlContext *context = new QQmlContext(engine.rootContext());
-    context->setContextProperty("myModel", &modelData);
-
-    QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; ListView { model: myModel }", QUrl());
-    QObject *window = component.create(context);
-    \endcode
-
-    \note It is the responsibility of the creator to delete any QQmlContext it
-    constructs. If the \c context object in the example is no longer needed when the
-    \c window component instance is destroyed, the \c context must be destroyed explicitly.
-    The simplest way to ensure this is to set \c window as the parent of \c context.
+    context properties can be defined and updated by calling
+    QQmlContext::setContextProperty().
 
     To simplify binding and maintaining larger data sets, a context object can be set
     on a QQmlContext.  All the properties of the context object are available
@@ -55,59 +69,17 @@ QT_BEGIN_NAMESPACE
     detected through the property's notify signal.  Setting a context object is both
     faster and easier than manually adding and maintaining context property values.
 
-    The following example has the same effect as the previous one, but it uses a context
-    object.
-
-    \code
-    class MyDataSet : public QObject {
-        // ...
-        Q_PROPERTY(QAbstractItemModel *myModel READ model NOTIFY modelChanged)
-        // ...
-    };
-
-    MyDataSet myDataSet;
-    QQmlEngine engine;
-    QQmlContext *context = new QQmlContext(engine.rootContext());
-    context->setContextObject(&myDataSet);
-
-    QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; ListView { model: myModel }", QUrl());
-    component.create(context);
-    \endcode
-
     All properties added explicitly by QQmlContext::setContextProperty() take
     precedence over the context object's properties.
 
-    \section2 The Context Hierarchy
+    Child contexts inherit the context properties of their parents; if a child
+    context sets a context property that already exists in its parent, the new
+    context property overrides that of the parent.
 
-    Contexts form a hierarchy. The root of this hierarchy is the QML engine's
-    \l {QQmlEngine::rootContext()}{root context}. Child contexts inherit
-    the context properties of their parents; if a child context sets a context property
-    that already exists in its parent, the new context property overrides that of the
-    parent.
-
-    The following example defines two contexts - \c context1 and \c context2.  The
-    second context overrides the "b" context property inherited from the first with a
-    new value.
-
-    \code
-    QQmlEngine engine;
-    QQmlContext *context1 = new QQmlContext(engine.rootContext());
-    QQmlContext *context2 = new QQmlContext(context1);
-
-    context1->setContextProperty("a", 9001);
-    context1->setContextProperty("b", 9001);
-
-    context2->setContextProperty("b", 42);
-    \endcode
-
-    While QML objects instantiated in a context are not strictly owned by that
-    context, their bindings are.  If a context is destroyed, the property bindings of
-    outstanding QML objects will stop evaluating.
-
-    \warning Setting the context object or adding new context properties after an object
-    has been created in that context is an expensive operation (essentially forcing all bindings
-    to reevaluate). Thus whenever possible you should complete "setup" of the context
+    \warning Setting the context object or adding new context properties after
+    an object has been created in that context is an expensive operation
+    (essentially forcing all bindings to re-evaluate). Thus, if you need to use
+    context properties, you should at least complete the "setup" of the context
     before using it to create any objects.
 
     \sa {qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
@@ -208,6 +180,9 @@ QObject *QQmlContext::contextObject() const
 
 /*!
     Set the context \a object.
+
+    \note You should not use context objects to inject values into your QML
+          components. Use singletons or regular object properties instead.
 */
 void QQmlContext::setContextObject(QObject *object)
 {
@@ -231,6 +206,9 @@ void QQmlContext::setContextObject(QObject *object)
 
 /*!
     Set a the \a value of the \a name property on this context.
+
+    \note You should not use context properties to inject values into your QML
+          components. Use singletons or regular object properties instead.
 */
 void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
 {
@@ -271,6 +249,9 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
     Set the \a value of the \a name property on this context.
 
     QQmlContext does \b not take ownership of \a value.
+
+    \note You should not use context properties to inject values into your QML
+          components. Use singletons or regular object properties instead.
 */
 void QQmlContext::setContextProperty(const QString &name, QObject *value)
 {
@@ -285,6 +266,9 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
     Setting all properties in one batch avoids unnecessary
     refreshing  expressions, and is therefore recommended
     instead of calling \l setContextProperty() for each individual property.
+
+    \note You should not use context properties to inject values into your QML
+          components. Use singletons or regular object properties instead.
 
     \sa QQmlContext::setContextProperty()
 */
