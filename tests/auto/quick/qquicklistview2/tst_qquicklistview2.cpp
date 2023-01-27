@@ -51,6 +51,7 @@ private slots:
     void isCurrentItem_NoRegressionWithDelegateModelGroups();
 
     void pullbackSparseList();
+    void highlightWithBound();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -929,6 +930,20 @@ void tst_QQuickListView2::pullbackSparseList() // QTBUG_104679
     window->resize(640, 480);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+}
+
+void tst_QQuickListView2::highlightWithBound()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("highlightWithBound.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QQuickListView *listView = qobject_cast<QQuickListView *>(o.data());
+    QVERIFY(listView);
+    QQuickItem *highlight = listView->highlightItem();
+    QVERIFY(highlight);
+    QCOMPARE(highlight->objectName(), QStringLiteral("highlight"));
 }
 
 QTEST_MAIN(tst_QQuickListView2)
