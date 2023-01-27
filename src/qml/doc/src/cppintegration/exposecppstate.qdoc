@@ -1,0 +1,66 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+\page qtqml-cppintegration-exposecppstate.html
+\title Exposing State from C++ to QML
+\brief Description of how to expose global state from C++ to QML
+
+It is often desirable to expose some properties from C++ to all QML elements in a
+particular component, all QML elements in a module, or even all QML elements
+overall. You can do this by introducing singletons or by adding properties to the
+root objects of select components.
+
+\section1 Using Singletons
+
+If you want to expose a number of global properties to all elements in a module
+or all elements overall, you can define a singleton in C++. To do this, add the
+\l{QML_ELEMENT} or \l{QML_NAMED_ELEMENT} macros and the \l{QML_SINGLETON} macro
+to a class containing the properties you want to expose as \l{Q_PROPERTY}
+declarations:
+
+\snippet qml/exposing-state/singleton.h 0
+
+Now you can access the \e thing property of the singleton from any QML code that
+imports this module:
+
+\snippet qml/exposing-state/useSingleton.qml 0
+
+If you have placed your QML files in the same directory as the module (which
+is highly recommended), the singleton is available from the implicit import
+within your module. You don't need to import anything explicitly. If not, or if
+you want to access the \e thing property from other modules, you do need to
+import the module the singleton belongs to.
+
+In order to set the value of the property from C++, you may need to retrieve the
+singleton instance. For this purpose you may use
+\l{QQmlEngine::singletonInstance}. The preferred way to do this is by giving a
+module and type name as parameters:
+
+\snippet qml/exposing-state/singleton.h 1
+
+\section1 Using Object Properties
+
+If you want to expose some properties to only the QML elements in a specific
+component, you can add them as regular properties to the root object of the
+component. In order to make sure they are actually set in all cases, you can
+make them \l{Required Properties}. You might write your QML component as
+follows:
+
+\snippet qml/exposing-state/RequiredProperties.qml 0
+
+We use an ID for the root element of the component and reference the property
+by ID and name from any inner objects. In order to safely make the ID of
+the root element available to any nested components, we use
+\l{ComponentBehavior}.
+
+Then, in C++, when you create an object from such a component, you need to make
+sure to call the \l{QQmlComponent::createWithInitialProperties},
+\l{QQmlApplicationEngine::setInitialProperties}, or
+\l{QQuickView::setInitialProperties} in order to initialize the properties. For
+example:
+
+\snippet qml/exposing-state/createWithInitialProperties.cpp 0
+
+This is assuming your module URI is \e MyModule and the module is available in
+the QML import path.
+*/
