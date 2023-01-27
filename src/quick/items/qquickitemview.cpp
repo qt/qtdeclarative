@@ -2447,17 +2447,14 @@ QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component,
 
     QQuickItem *item = nullptr;
     if (component) {
-        QQmlContext *creationContext = component->creationContext();
-        QQmlContext *context = new QQmlContext(
-                creationContext ? creationContext : qmlContext(q));
-        QObject *nobj = component->beginCreate(context);
-        if (nobj) {
-            QQml_setParent_noEvent(context, nobj);
+        QQmlContext *context = component->creationContext();
+        if (!context)
+            context = qmlContext(q);
+
+        if (QObject *nobj = component->beginCreate(context)) {
             item = qobject_cast<QQuickItem *>(nobj);
             if (!item)
                 delete nobj;
-        } else {
-            delete context;
         }
     } else if (createDefault) {
         item = new QQuickItem;
