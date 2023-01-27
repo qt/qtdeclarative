@@ -1,20 +1,7 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include <QtJsonRpc/private/qjsonrpcprotocol_p.h>
-#include <QtLanguageServer/private/qlanguageserverprotocol_p.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
-#include <QtCore/private/qduplicatetracker_p.h>
 
-#include <QtCore/qobject.h>
-#include <QtCore/qprocess.h>
-#include <QtCore/qlibraryinfo.h>
-#include <QtCore/qstringlist.h>
-
-#include <QtTest/qtest.h>
-#include <QtQmlLS/private/qlspcustomtypes_p.h>
-
-#include <iostream>
-#include <variant>
+#include "tst_qmlls_modules.h"
 
 // Check if QTest already has a QTEST_CHECKED macro
 #ifndef QTEST_CHECKED
@@ -30,36 +17,8 @@ QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
 
-class tst_QmllsCompletions : public QQmlDataTest
-{
-    using ExpectedCompletion = QPair<QString, CompletionItemKind>;
-    using ExpectedCompletions = QList<ExpectedCompletion>;
 
-    using ExpectedDocumentation = std::tuple<QString, QString, QString>;
-    using ExpectedDocumentations = QList<ExpectedDocumentation>;
-
-    Q_OBJECT
-public:
-    tst_QmllsCompletions();
-    void checkCompletions(QByteArray uri, int lineNr, int character, ExpectedCompletions expected,
-                          QStringList notExpected);
-private slots:
-    void initTestCase() final;
-    void completions_data();
-    void completions();
-    void function_documentations_data();
-    void function_documentations();
-    void buildDir();
-    void cleanupTestCase();
-
-private:
-    QProcess m_server;
-    QLanguageServerProtocol m_protocol;
-    QString m_qmllsPath;
-    QList<QByteArray> m_uriToClose;
-};
-
-tst_QmllsCompletions::tst_QmllsCompletions()
+tst_qmlls_modules::tst_qmlls_modules()
     : QQmlDataTest(QT_QMLTEST_DATADIR),
       m_protocol([this](const QByteArray &data) { m_server.write(data); })
 {
@@ -91,7 +50,7 @@ tst_QmllsCompletions::tst_QmllsCompletions()
     });
 }
 
-void tst_QmllsCompletions::initTestCase()
+void tst_qmlls_modules::initTestCase()
 {
     QQmlDataTest::initTestCase();
     if (!QFileInfo::exists(m_qmllsPath)) {
@@ -130,7 +89,7 @@ void tst_QmllsCompletions::initTestCase()
     }
 }
 
-void tst_QmllsCompletions::completions_data()
+void tst_qmlls_modules::completions_data()
 {
     QTest::addColumn<QByteArray>("uri");
     QTest::addColumn<int>("lineNr");
@@ -244,7 +203,7 @@ void tst_QmllsCompletions::completions_data()
             << QStringList({ u"foo"_s, u"import"_s, u"lala()"_s, u"width"_s });
 }
 
-void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int character,
+void tst_qmlls_modules::checkCompletions(QByteArray uri, int lineNr, int character,
                                             ExpectedCompletions expected, QStringList notExpected)
 {
     CompletionParams cParams;
@@ -337,7 +296,7 @@ void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int char
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
 }
 
-void tst_QmllsCompletions::completions()
+void tst_qmlls_modules::completions()
 {
     QFETCH(QByteArray, uri);
     QFETCH(int, lineNr);
@@ -348,7 +307,7 @@ void tst_QmllsCompletions::completions()
     QTEST_CHECKED(checkCompletions(uri, lineNr, character, expected, notExpected));
 }
 
-void tst_QmllsCompletions::function_documentations_data()
+void tst_qmlls_modules::function_documentations_data()
 {
     QTest::addColumn<QByteArray>("uri");
     QTest::addColumn<int>("lineNr");
@@ -370,7 +329,7 @@ documentedFunction(arg1, arg2 = "Qt"))"_s),
                };
 }
 
-void tst_QmllsCompletions::function_documentations()
+void tst_qmlls_modules::function_documentations()
 {
     QFETCH(QByteArray, uri);
     QFETCH(int, lineNr);
@@ -447,7 +406,7 @@ void tst_QmllsCompletions::function_documentations()
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
 }
 
-void tst_QmllsCompletions::buildDir()
+void tst_qmlls_modules::buildDir()
 {
     QString filePath = u"completions/fromBuildDir.qml"_s;
     QByteArray uri = testFileUrl(filePath).toString().toUtf8();
@@ -483,7 +442,7 @@ void tst_QmllsCompletions::buildDir()
                      }),
                      QStringList({ u"QtQuick"_s, u"vector4d"_s })));
 }
-void tst_QmllsCompletions::cleanupTestCase()
+void tst_qmlls_modules::cleanupTestCase()
 {
     for (const QByteArray &uri : m_uriToClose) {
         DidCloseTextDocumentParams closeP;
@@ -495,6 +454,6 @@ void tst_QmllsCompletions::cleanupTestCase()
     QCOMPARE(m_server.exitStatus(), QProcess::NormalExit);
 }
 
-QTEST_MAIN(tst_QmllsCompletions)
+QTEST_MAIN(tst_qmlls_modules)
 
-#include <tst_qmllscompletions.moc>
+#include <tst_qmlls_modules.moc>

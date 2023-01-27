@@ -4,6 +4,6 @@
 if (TARGET Qt::LanguageServerPrivate AND TARGET Qt::qmlls)
     add_subdirectory(qmlls)
     add_subdirectory(lifecycle)
-    add_subdirectory(completions)
+    add_subdirectory(modules)
     add_subdirectory(utils)
 endif()

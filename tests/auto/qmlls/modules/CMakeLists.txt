@@ -6,9 +6,10 @@ file(GLOB_RECURSE test_data_glob
     data)
 list(APPEND test_data ${test_data_glob})
 
-qt_internal_add_test(tst_qmllscompletions
+qt_internal_add_test(tst_qmlls_modules
     SOURCES
-        tst_qmllscompletions.cpp
+        tst_qmlls_modules.cpp
+        tst_qmlls_modules.h
     DEFINES
         QT_DEPRECATED_WARNINGS
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
@@ -22,9 +23,9 @@ qt_internal_add_test(tst_qmllscompletions
     TESTDATA ${test_data}
 )
 
-qt_internal_extend_target(tst_qmllscompletions CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qmlls_modules CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=":/domdata"
 )
 
-add_dependencies(tst_qmllscompletions qmlls)
+add_dependencies(tst_qmlls_modules qmlls)
