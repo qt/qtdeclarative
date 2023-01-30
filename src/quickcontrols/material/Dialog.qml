@@ -19,10 +19,17 @@ T.Dialog {
                              + (implicitHeaderHeight > 0 ? implicitHeaderHeight + spacing : 0)
                              + (implicitFooterHeight > 0 ? implicitFooterHeight + spacing : 0))
 
+    // https://m3.material.io/components/dialogs/specs#7dbad5e0-f001-4eae-a536-694aeca90ba6
     padding: 24
-    topPadding: 20
+    topPadding: 16
+    // https://m3.material.io/components/dialogs/guidelines#812cedf1-5c45-453f-97fc-7fd9bba7522b
+    modal: true
 
-    Material.elevation: 24
+    // https://m3.material.io/components/dialogs/specs#401a48c3-f50c-4fa9-b798-701f5adcf155
+    // Specs say level 3 (6 dp) is the default, yet the screenshots there show 0. Native Android defaults to non-zero.
+    Material.elevation: 6
+    // https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1
+    Material.roundedScale: Material.ExtraLargeScale
 
     enter: Transition {
         // grow_fade_in
@@ -37,12 +44,14 @@ T.Dialog {
     }
 
     background: Rectangle {
-        radius: 2
+        // FullScale doesn't make sense for Dialog.
+        radius: control.Material.roundedScale
         color: control.Material.dialogColor
 
         layer.enabled: control.Material.elevation > 0
-        layer.effect: ElevationEffect {
+        layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
+            roundedScale: control.background.radius
         }
     }
 
@@ -53,12 +62,12 @@ T.Dialog {
         padding: 24
         bottomPadding: 0
         // TODO: QPlatformTheme::TitleBarFont
-        font.bold: true
-        font.pixelSize: 16
+        // https://m3.material.io/components/dialogs/specs#401a48c3-f50c-4fa9-b798-701f5adcf155
+        font.pixelSize: 24
         background: PaddedRectangle {
-            radius: 2
+            radius: control.background.radius
             color: control.Material.dialogColor
-            bottomPadding: -2
+            bottomPadding: -radius
             clip: true
         }
     }
