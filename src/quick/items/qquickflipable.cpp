@@ -258,31 +258,15 @@ void QQuickFlipablePrivate::updateSide()
         sceneTransform.translate(-tp.x(), -tp.y());
     }
 
-    QPointF p1(0, 0);
-    QPointF p2(1, 0);
-    QPointF p3(1, 1);
+    const QVector3D origin(sceneTransform.map(QPointF(0, 0)));
+    const QVector3D right = QVector3D(sceneTransform.map(QPointF(1, 0))) - origin;
+    const QVector3D top = QVector3D(sceneTransform.map(QPointF(0, 1))) - origin;
 
-    QPointF scenep1 = sceneTransform.map(p1);
-    QPointF scenep2 = sceneTransform.map(p2);
-    QPointF scenep3 = sceneTransform.map(p3);
-#if 0
-    p1 = q->mapToParent(p1);
-    p2 = q->mapToParent(p2);
-    p3 = q->mapToParent(p3);
-#endif
+    wantBackYFlipped = right.x() < 0;
+    wantBackXFlipped = top.y() < 0;
 
-    qreal cross = (scenep1.x() - scenep2.x()) * (scenep3.y() - scenep2.y()) -
-                  (scenep1.y() - scenep2.y()) * (scenep3.x() - scenep2.x());
-
-    wantBackYFlipped = scenep1.x() >= scenep2.x();
-    wantBackXFlipped = scenep2.y() >= scenep3.y();
-
-    QQuickFlipable::Side newSide;
-    if (cross > 0) {
-        newSide = QQuickFlipable::Back;
-    } else {
-        newSide = QQuickFlipable::Front;
-    }
+    const QQuickFlipable::Side newSide =
+        QVector3D::crossProduct(top, right).z() > 0 ? QQuickFlipable::Back : QQuickFlipable::Front;
 
     if (newSide != current) {
         current = newSide;
