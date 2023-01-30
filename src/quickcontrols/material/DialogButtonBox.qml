@@ -22,6 +22,7 @@ T.DialogButtonBox {
     buttonLayout: T.DialogButtonBox.AndroidLayout
 
     Material.foreground: Material.accent
+    Material.roundedScale: Material.ExtraLargeScale
 
     delegate: Button { flat: true }
 
@@ -36,11 +37,11 @@ T.DialogButtonBox {
 
     background: PaddedRectangle {
         implicitHeight: control.Material.dialogButtonBoxHeight
-        radius: 2
+        radius: control.Material.roundedScale
         color: control.Material.dialogColor
         // Rounded corners should be only at the top or at the bottom
-        topPadding: control.position === T.DialogButtonBox.Footer ? -2 : 0
-        bottomPadding: control.position === T.DialogButtonBox.Header ? -2 : 0
+        topPadding: control.position === T.DialogButtonBox.Footer ? -radius : 0
+        bottomPadding: control.position === T.DialogButtonBox.Header ? -radius : 0
         clip: true
     }
 }
