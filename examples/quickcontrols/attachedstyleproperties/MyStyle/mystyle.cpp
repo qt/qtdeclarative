@@ -108,8 +108,6 @@ QColor MyStyle::toolBarColor() const
 
 QColor MyStyle::popupColor() const
 {
-//    const QColor winColor = windowColor();
-//    return m_theme == Light ? winColor.darker(120) : winColor.lighter(120);
     return windowColor().lighter(120);
 }
 
