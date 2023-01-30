@@ -87,7 +87,7 @@ Item {
             model: 5000
             delegate: Item {
                 height: 10
-                width: parent.width
+                width: ListView.view.width
                 Text {
                     anchors.fill: parent
                     text: index
