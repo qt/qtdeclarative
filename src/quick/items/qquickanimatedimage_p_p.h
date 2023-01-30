@@ -44,6 +44,7 @@ public:
 
     QQuickPixmap *infoForCurrentFrame(QQmlEngine *engine);
     void setMovie(QMovie *movie);
+    void clearCache();
 
     bool playing : 1;
     bool paused : 1;

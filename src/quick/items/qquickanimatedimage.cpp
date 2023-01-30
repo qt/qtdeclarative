@@ -47,6 +47,12 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
     return frameMap.value(current);
 }
 
+void QQuickAnimatedImagePrivate::clearCache()
+{
+    qDeleteAll(frameMap);
+    frameMap.clear();
+}
+
 /*!
     \qmltype AnimatedImage
     \instantiates QQuickAnimatedImage
@@ -117,8 +123,7 @@ QQuickAnimatedImage::~QQuickAnimatedImage()
         d->reply->deleteLater();
 #endif
     delete d->movie;
-    qDeleteAll(d->frameMap);
-    d->frameMap.clear();
+    d->clearCache();
 }
 
 /*!
@@ -268,9 +273,6 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
 #endif
 
     d->setImage(QImage());
-    qDeleteAll(d->frameMap);
-    d->frameMap.clear();
-
     d->oldPlaying = isPlaying();
     d->setMovie(nullptr);
     d->url = url;
@@ -425,10 +427,8 @@ void QQuickAnimatedImage::movieUpdate()
 {
     Q_D(QQuickAnimatedImage);
 
-    if (!d->cache) {
-        qDeleteAll(d->frameMap);
-        d->frameMap.clear();
-    }
+    if (!d->cache)
+        d->clearCache();
 
     if (d->movie) {
         d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
@@ -454,8 +454,7 @@ void QQuickAnimatedImage::onCacheChanged()
 {
     Q_D(QQuickAnimatedImage);
     if (!cache()) {
-        qDeleteAll(d->frameMap);
-        d->frameMap.clear();
+        d->clearCache();
         if (d->movie)
             d->movie->setCacheMode(QMovie::CacheNone);
     } else {
@@ -484,9 +483,7 @@ void QQuickAnimatedImagePrivate::setMovie(QMovie *m)
     }
 
     movie = m;
-
-    qDeleteAll(frameMap);
-    frameMap.clear();
+    clearCache();
 
     if (movie)
         movie->setScaledSize(sourcesize);
