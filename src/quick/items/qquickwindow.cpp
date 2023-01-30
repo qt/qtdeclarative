@@ -198,6 +198,8 @@ void QQuickWindow::showEvent(QShowEvent *)
 void QQuickWindow::hideEvent(QHideEvent *)
 {
     Q_D(QQuickWindow);
+    if (auto da = d->deliveryAgentPrivate())
+        da->handleWindowHidden(this);
     if (d->windowManager)
         d->windowManager->hide(this);
 }
