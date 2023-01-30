@@ -139,7 +139,7 @@ QTransform QQuickDesignerSupport::parentTransform(QQuickItem *referencedItem)
 
     QTransform parentTransform;
 
-    QQuickItemPrivate::get(referencedItem)->itemToParentTransform(parentTransform);
+    QQuickItemPrivate::get(referencedItem)->itemToParentTransform(&parentTransform);
 
     return parentTransform;
 }

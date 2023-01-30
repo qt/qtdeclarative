@@ -3063,7 +3063,7 @@ void QQuickItemPrivate::derefWindow()
 
 
 /*!
-Returns a transform that maps points from window space into item space.
+    Returns a transform that maps points from window space into item space.
 */
 QTransform QQuickItemPrivate::windowToItemTransform() const
 {
@@ -3072,21 +3072,21 @@ QTransform QQuickItemPrivate::windowToItemTransform() const
 }
 
 /*!
-Returns a transform that maps points from item space into window space.
+    Returns a transform that maps points from item space into window space.
 */
 QTransform QQuickItemPrivate::itemToWindowTransform() const
 {
     // item's parent must not be itself, otherwise calling itemToWindowTransform() on it is infinite recursion
     Q_ASSERT(!parentItem || QQuickItemPrivate::get(parentItem) != this);
     QTransform rv = parentItem ? QQuickItemPrivate::get(parentItem)->itemToWindowTransform() : QTransform();
-    itemToParentTransform(rv);
+    itemToParentTransform(&rv);
     return rv;
 }
 
 /*!
-Motifies \a t with this items local transform relative to its parent.
+    Modifies \a t with this item's local transform relative to its parent.
 */
-void QQuickItemPrivate::itemToParentTransform(QTransform &t) const
+void QQuickItemPrivate::itemToParentTransform(QTransform *t) const
 {
     /* Read the current x and y values. As this is an internal method,
        we don't care about it being usable in bindings. Instead, we
@@ -3098,21 +3098,21 @@ void QQuickItemPrivate::itemToParentTransform(QTransform &t) const
     qreal x = this->x.valueBypassingBindings();
     qreal y = this->y.valueBypassingBindings();
     if (x || y)
-        t.translate(x, y);
+        t->translate(x, y);
 
     if (!transforms.isEmpty()) {
-        QMatrix4x4 m(t);
+        QMatrix4x4 m(*t);
         for (int ii = transforms.size() - 1; ii >= 0; --ii)
             transforms.at(ii)->applyTo(&m);
-        t = m.toTransform();
+        *t = m.toTransform();
     }
 
     if (scale() != 1. || rotation() != 0.) {
         QPointF tp = computeTransformOrigin();
-        t.translate(tp.x(), tp.y());
-        t.scale(scale(), scale());
-        t.rotate(rotation());
-        t.translate(-tp.x(), -tp.y());
+        t->translate(tp.x(), tp.y());
+        t->scale(scale(), scale());
+        t->rotate(rotation());
+        t->translate(-tp.x(), -tp.y());
     }
 }
 

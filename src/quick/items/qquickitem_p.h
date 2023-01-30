@@ -563,7 +563,7 @@ public:
 
     QTransform windowToItemTransform() const;
     QTransform itemToWindowTransform() const;
-    void itemToParentTransform(QTransform &) const;
+    void itemToParentTransform(QTransform *) const;
     QTransform globalToWindowTransform() const;
     QTransform windowToGlobalTransform() const;
 
