@@ -202,9 +202,9 @@ QQmlJSUtils::sourceDirectoryPath(const QQmlJSImporter *importer, const QString &
     Utility method that checks if one of the registers is var, and the other can be
     efficiently compared to it
 */
-bool canCompareWithVar(const QQmlJSTypeResolver *typeResolver,
-                       const QQmlJSRegisterContent &lhsContent,
-                       const QQmlJSRegisterContent &rhsContent)
+bool canStrictlyCompareWithVar(const QQmlJSTypeResolver *typeResolver,
+                               const QQmlJSRegisterContent &lhsContent,
+                               const QQmlJSRegisterContent &rhsContent)
 {
     Q_ASSERT(typeResolver);
     const auto varType = typeResolver->varType();

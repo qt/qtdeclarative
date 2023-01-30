@@ -2608,6 +2608,8 @@ void QQmlJSCodeGenerator::generateExceptionCheck()
 void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &function, bool invert)
 {
     const QQmlJSRegisterContent lhsContent = registerType(lhs);
+    const bool strictlyComparableWithVar = function == "strictlyEquals"_L1
+            && canStrictlyCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn());
     auto isComparable = [&]() {
         if (m_typeResolver->isPrimitive(lhsContent)
                 && m_typeResolver->isPrimitive(m_state.accumulatorIn())) {
@@ -2617,7 +2619,7 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             return true;
         if (m_typeResolver->isNumeric(m_state.accumulatorIn()) && lhsContent.isEnumeration())
             return true;
-        if (canCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn()))
+        if (strictlyComparableWithVar)
             return true;
         if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn()))
             return true;
@@ -2625,8 +2627,8 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
     };
 
     if (!isComparable()) {
-        reject(u"equality comparison on non-primitive types %1 and %2"_s.arg(
-                   m_state.accumulatorIn().descriptiveName(), lhsContent.descriptiveName()));
+        reject(u"incomparable types %1 and %2"_s.arg(m_state.accumulatorIn().descriptiveName(),
+                                                     lhsContent.descriptiveName()));
     }
 
     const QQmlJSScope::ConstPtr lhsType = lhsContent.storedType();
@@ -2647,7 +2649,7 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             // null === null and  undefined === undefined
             m_body += invert ? u"false"_s : u"true"_s;
         }
-    } else if (canCompareWithVar(m_typeResolver, lhsContent, m_state.accumulatorIn())) {
+    } else if (strictlyComparableWithVar) {
         // Determine which side is holding a storable type
         if (const auto registerVariableName = registerVariable(lhs);
             !registerVariableName.isEmpty()) {

@@ -1849,7 +1849,7 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
     }
 
     // We don't modify types if the types are comparable with QObject or var
-    if (canCompareWithVar(m_typeResolver, lhsRegister, accumulatorIn)
+    if (canStrictlyCompareWithVar(m_typeResolver, lhsRegister, accumulatorIn)
         || canCompareWithQObject(m_typeResolver, lhsRegister, accumulatorIn)) {
         addReadRegister(lhs, lhsRegister);
         addReadAccumulator(accumulatorIn);
