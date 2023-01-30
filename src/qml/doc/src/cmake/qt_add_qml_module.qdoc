@@ -363,6 +363,13 @@ alphanumeric or dot characters. Other QML modules may use this name in
 \l{Module Definition qmldir Files}{qmldir} file. The \c URI is also used to
 form the \e{target path} by replacing dots with forward slashes.
 
+See \l{qtqml-modules-identifiedmodules.html}{Identified Modules} for further
+in-depth discussion of the module URI. In particular, mind that in order for
+the module to be importable from QML, each segment of its URI must be a
+well-formed ECMAScript Identifier Name. This means, for example, the segments
+must not start with a number and they must not contain \e{-} (minus)
+characters.
+
 \section2 Versions
 
 A QML module can also define a \c VERSION in the form \c{Major.Minor}, where
@@ -371,7 +378,7 @@ component may be appended, but will be ignored. A list of earlier major
 versions the module provides types for can also optionally be given after the
 \c PAST_MAJOR_VERSIONS keyword (see below).
 See \l{qtqml-modules-identifiedmodules.html}{Identified Modules} for further
-in-depth discussion of the module URI and version numbering,
+in-depth discussion of version numbering,
 \l{Registering past major versions} for registering past major versions, and
 \l{Keeping module versions in sync} for keeping module versions in sync.
 
