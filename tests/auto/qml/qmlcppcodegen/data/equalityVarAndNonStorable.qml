@@ -1,4 +1,3 @@
-pragma Strict
 import QtQml
 import TestTypes
 
@@ -33,4 +32,11 @@ QtObject {
     property bool primitiveIsNull: wrapped.nullPrimitiveValue === null
     property bool primitiveIsDefined: wrapped.intPrimitiveValue !== null &&  undefined !==  wrapped.intPrimitiveValue
     property bool primitiveIsUndefined: wrapped.undefinedPrimitiveValue === undefined
+
+    // Non-strict cases
+    property var nullVar: null
+    property bool nullVarIsUndefined: nullVar == undefined
+    property bool nullIsUndefined: null == undefined
+    property bool nullVarIsNull: nullVar == null
+    property bool nullIsNotUndefined: null !== undefined
 }

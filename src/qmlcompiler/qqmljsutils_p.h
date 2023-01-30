@@ -367,9 +367,9 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath);
 };
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithVar(const QQmlJSTypeResolver *typeResolver,
-                                                    const QQmlJSRegisterContent &lhsContent,
-                                                    const QQmlJSRegisterContent &rhsContent);
+bool Q_QMLCOMPILER_PRIVATE_EXPORT canStrictlyCompareWithVar(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSRegisterContent &lhsContent,
+        const QQmlJSRegisterContent &rhsContent);
 
 bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQObject(const QQmlJSTypeResolver *typeResolver,
                                                         const QQmlJSRegisterContent &lhsContent,
