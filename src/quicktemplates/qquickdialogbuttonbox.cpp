@@ -478,7 +478,7 @@ QQuickDialogButtonBox::~QQuickDialogButtonBox()
 
     Possible values:
     \value DialogButtonBox.Header The button box is at the top, as a window or page header.
-    \value DialogButtonBox.Footer The button box is at the bottom, as a window or page header.
+    \value DialogButtonBox.Footer The button box is at the bottom, as a window or page footer.
 
     The default value is \c Footer.
 
