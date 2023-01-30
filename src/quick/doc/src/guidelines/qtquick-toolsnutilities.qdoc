@@ -79,17 +79,20 @@ flag for doing so by passing \c{--help} on the command line.
 \e qmlformat is a tool that automatically formats QML files in accordance
 with the \l{QML Coding Conventions}.
 
-The tool groups all properties, functions, and signals together, instead of
-retaining the order you specified.
-
-Imports will also be sorted in alphabetical order. This can be disabled
-by specifying the \c{-n} flag.
+If you pass the \c{-n} or \c{--normalize} flag, \e qmlformat groups all
+properties, functions, and signals together, instead of retaining the order you
+specified.
 
 By default, qmlformat writes the formatted version of the file to stdout.
 If you wish to have your file updated in-place specify the \c{-i} flag.
 
 You may also change tab widths and line ending types among other settings,
-either via command line options or by using a settings file.
+either via command line options or by using a settings file called
+\c{.qmlformat.ini}. A default settings file can be obtained by passing the
+\c{--write-defaults} flag.
+
+As with all tools, the \c{-h} or \c{--help} flag will print some information on
+all the available options.
 
 \section1 Qt Quick Compiler
 
