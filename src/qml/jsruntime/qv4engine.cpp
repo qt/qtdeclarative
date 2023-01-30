@@ -1569,9 +1569,9 @@ static QVariant toVariant(
                 QV4::ScopedValue arrayValue(scope);
                 for (qint64 i = 0; i < length; ++i) {
                     arrayValue = a->get(i);
-                    QVariant asVariant(valueMetaType);
-                    if (QQmlValueTypeProvider::createValueType(
-                                arrayValue, valueMetaType, asVariant.data())) {
+                    QVariant asVariant = QQmlValueTypeProvider::createValueType(
+                                arrayValue, valueMetaType);
+                    if (asVariant.isValid()) {
                         retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                         continue;
                     }
@@ -1662,8 +1662,8 @@ static QVariant toVariant(
 #endif
 
     if (metaType.isValid() && !(metaType.flags() & QMetaType::PointerToQObject)) {
-        QVariant result(metaType);
-        if (QQmlValueTypeProvider::createValueType(value, metaType, result.data()))
+        const QVariant result = QQmlValueTypeProvider::createValueType(value, metaType);
+        if (result.isValid())
             return result;
     }
 

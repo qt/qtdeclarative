@@ -714,9 +714,9 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
             } else {
                 const QMetaType originalType = variant.metaType();
                 if (originalType != valueMetaType) {
-                    QVariant converted(valueMetaType);
-                    if (QQmlValueTypeProvider::createValueType(
-                                variant, valueMetaType, converted.data())) {
+                    const QVariant converted = QQmlValueTypeProvider::createValueType(
+                                variant, valueMetaType);
+                    if (converted.isValid()) {
                         variant = converted;
                     } else if (!variant.convert(valueMetaType)) {
                         qWarning().noquote()
@@ -725,7 +725,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
                                    .arg(QString::number(i),
                                         QString::fromUtf8(originalType.name()),
                                         QString::fromUtf8(valueMetaType.name()));
-                        variant = converted;
+                        variant = QVariant(valueMetaType);
                     }
                 }
                 meta->addValueAtEnd(result.data(), variant.constData());

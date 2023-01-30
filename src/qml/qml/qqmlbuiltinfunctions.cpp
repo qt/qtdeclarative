@@ -475,8 +475,9 @@ QVariant QtObject::font(const QJSValue &fontSpecifier) const
     }
 
     {
-        QVariant v((QMetaType(QMetaType::QFont)));
-        if (QQmlValueTypeProvider::constructFromJSValue(fontSpecifier, v.metaType(), v.data()))
+        const QVariant v = QQmlValueTypeProvider::createValueType(
+                    fontSpecifier, QMetaType(QMetaType::QFont));
+        if (v.isValid())
             return v;
     }
 
@@ -511,9 +512,8 @@ static QVariant constructFromJSValue(QJSEngine *e, QMetaType type, T... paramete
         return QVariant();
     QJSValue params = e->newArray(sizeof...(parameters));
     addParameters(e, params, 0, parameters...);
-    QVariant variant(type);
-    QQmlValueTypeProvider::constructFromJSValue(params, type, variant.data());
-    return variant;
+    const QVariant variant = QQmlValueTypeProvider::createValueType(params, type);
+    return variant.isValid() ? variant : QVariant(type);
 }
 
 /*!
@@ -563,10 +563,9 @@ QVariant QtObject::quaternion(double scalar, double x, double y, double z) const
  */
 QVariant QtObject::matrix4x4() const
 {
-    QVariant variant((QMetaType(QMetaType::QMatrix4x4)));
-    QQmlValueTypeProvider::constructFromJSValue(
-                QJSValue(), variant.metaType(), variant.data());
-    return variant;
+    const QMetaType metaType(QMetaType::QMatrix4x4);
+    const QVariant variant = QQmlValueTypeProvider::createValueType(QJSValue(), metaType);
+    return variant.isValid() ? variant : QVariant(metaType);
 }
 
 /*!
@@ -587,8 +586,9 @@ QVariant QtObject::matrix4x4() const
 QVariant QtObject::matrix4x4(const QJSValue &value) const
 {
     if (value.isObject()) {
-        QVariant v((QMetaType(QMetaType::QMatrix4x4)));
-        if (QQmlValueTypeProvider::constructFromJSValue(value, v.metaType(), v.data()))
+        QVariant v = QQmlValueTypeProvider::createValueType(
+                    value, QMetaType(QMetaType::QMatrix4x4));
+        if (v.isValid())
             return v;
     }
 

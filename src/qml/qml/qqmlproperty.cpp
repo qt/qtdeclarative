@@ -1423,14 +1423,15 @@ static ConvertAndAssignResult tryConvertAndAssign(
     }
     }
 
-    QVariant converted(propertyMetaType);
-    if (QQmlValueTypeProvider::createValueType(value, propertyMetaType, converted.data())
-            || QMetaType::convert(value.metaType(), value.constData(),
-                                  propertyMetaType, converted.data()))  {
-        return {true, property.writeProperty(object, converted.data(), flags)};
+    QVariant converted = QQmlValueTypeProvider::createValueType(value, propertyMetaType);
+    if (!converted.isValid()) {
+        converted = QVariant(propertyMetaType);
+        if (!QMetaType::convert(value.metaType(), value.constData(),
+                                propertyMetaType, converted.data()))  {
+            return {false, false};
+        }
     }
-
-    return {false, false};
+    return {true, property.writeProperty(object, converted.data(), flags)};
 };
 
 template<typename Op>
