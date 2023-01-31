@@ -490,6 +490,8 @@ bool QQmlComponent::isLoading() const
 /*!
     Returns true if the component was created in a QML files that specifies
     \c{pragma ComponentBehavior: Bound}, otherwise returns false.
+
+    \since 6.5
  */
 bool QQmlComponent::isBound() const
 {
@@ -594,6 +596,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringV
     the component will be loaded and compiled asynchronously.
 
     \sa loadFromModule()
+    \since 6.5
     \overload
 */
 QQmlComponent::QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, CompilationMode mode, QObject *parent)

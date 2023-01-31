@@ -276,6 +276,8 @@ QQmlApplicationEngine::QQmlApplicationEngine(const QUrl &url, QObject *parent)
   \a uri and \a typeName
   This is provided as a convenience,  and is the same as using the empty constructor and calling
   loadFromModule afterwards.
+
+  \since 6.5
 */
 QQmlApplicationEngine::QQmlApplicationEngine(QAnyStringView uri, QAnyStringView typeName, QObject *parent)
     : QQmlApplicationEngine(parent)
@@ -352,6 +354,7 @@ void QQmlApplicationEngine::load(const QString &filePath)
     engine.loadFromModule("QtQuick", "Rectangle");
     \endcode
 
+    \since 6.5
     \sa QQmlComponent::loadFromModule
  */
 void QQmlApplicationEngine::loadFromModule(QAnyStringView uri, QAnyStringView typeName)
