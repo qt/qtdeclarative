@@ -1685,6 +1685,13 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
 
   \sa {Qt Quick Local Storage QML Types}
 */
+
+/*!
+  \fn void QQmlEngine::offlineStoragePathChanged()
+  This signal is emitted when \l offlineStoragePath changes.
+  \since 6.5
+*/
+
 void QQmlEngine::setOfflineStoragePath(const QString& dir)
 {
     Q_D(QQmlEngine);
