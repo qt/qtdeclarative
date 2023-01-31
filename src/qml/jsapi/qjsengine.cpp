@@ -848,13 +848,6 @@ bool QJSEngine::convertManaged(const QJSManagedValue &value, QMetaType type, voi
     return QV4::ExecutionEngine::metaTypeFromJS(*value.d, type, ptr);
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(7,0,0)
-bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
-{
-    return convertV2(value, QMetaType(type), ptr);
-}
-#endif
-
 bool QJSEngine::convertString(const QString &string, QMetaType metaType, void *ptr)
 {
     // have a string based value without engine. Do conversion manually

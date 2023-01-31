@@ -305,7 +305,7 @@ private:
     static bool convertPrimitive(const QJSPrimitiveValue &value, QMetaType type, void *ptr);
     static bool convertManaged(const QJSManagedValue &value, int type, void *ptr);
     static bool convertManaged(const QJSManagedValue &value, QMetaType type, void *ptr);
-#if QT_VERSION < QT_VERSION_CHECK(7,0,0)
+#if QT_QML_REMOVED_SINCE(6, 5)
     static bool convertV2(const QJSValue &value, int type, void *ptr); // only there for BC reasons
 #endif
     static bool convertV2(const QJSValue &value, QMetaType metaType, void *ptr);

@@ -17,5 +17,10 @@ QJSValue QJSEngine::create(int typeId, const void *ptr)
     return create(type, ptr);
 }
 
+bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
+{
+    return convertV2(value, QMetaType(type), ptr);
+}
+
 #endif
 
