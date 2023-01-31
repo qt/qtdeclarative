@@ -3112,6 +3112,13 @@ void tst_QmlCppCodegen::equalityQObjects()
     QVERIFY(object->property("compareSameObjects").toBool());
     QVERIFY(object->property("compareDifferentObjects").toBool());
     QVERIFY(object->property("compareObjectWithNullObject").toBool());
+
+    QVERIFY(object->property("nonStrict_derivedIsNotNull").toBool());
+    QVERIFY(object->property("nonStrict_nullObjectIsNull").toBool());
+    QVERIFY(object->property("nonStrict_nonNullObjectIsNotNull").toBool());
+    QVERIFY(object->property("nonStrict_compareSameObjects").toBool());
+    QVERIFY(object->property("nonStrict_compareDifferentObjects").toBool());
+    QVERIFY(object->property("nonStrict_compareObjectWithNullObject").toBool());
 }
 
 void tst_QmlCppCodegen::dateConversions()

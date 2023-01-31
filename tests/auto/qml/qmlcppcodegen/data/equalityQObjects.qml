@@ -16,4 +16,12 @@ QtObject {
     property bool compareSameObjects: sameNonNullObject === nonNullObject
     property bool compareDifferentObjects: derivedObject !== nonNullObject
     property bool compareObjectWithNullObject: nullObject !== nonNullObject
+
+    // Above tests should hold true for the weak comparisons
+    property bool nonStrict_derivedIsNotNull: derivedObject != null
+    property bool nonStrict_nullObjectIsNull: nullObject == null
+    property bool nonStrict_nonNullObjectIsNotNull: null != nonNullObject
+    property bool nonStrict_compareSameObjects: sameNonNullObject == nonNullObject
+    property bool nonStrict_compareDifferentObjects: derivedObject != nonNullObject
+    property bool nonStrict_compareObjectWithNullObject: nullObject != nonNullObject
 }
