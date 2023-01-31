@@ -109,7 +109,7 @@ const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::R
         alignof(double),
         alignof(bool),
         alignof(ListModel *),
-        alignof(QObject *),
+        alignof(QV4::PersistentValue),
         alignof(QVariantMap),
         alignof(QDateTime),
         alignof(QUrl),
