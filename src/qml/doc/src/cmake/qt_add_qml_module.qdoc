@@ -356,19 +356,19 @@ libraries, or as a static library otherwise. This choice can be explicitly
 overridden with the \c STATIC or \c SHARED options.
 
 Every QML module must define a \c URI. It should be specified in dotted URI
-notation, such as \c{QtQuick.Layouts}. It must not contain anything other than
-alphanumeric or dot characters. Other QML modules may use this name in
+notation, such as \c{QtQuick.Layouts}. Each segment must be a well-formed
+ECMAScript Identifier Name. This means, for example, the segments
+must not start with a number and they must not contain \e{-} (minus)
+characters. As the \c URI will be translated into directory names, you
+should restrict it to alphanumeric characters of the latin alphabet,
+underscores, and dots. Other QML modules may use this name in
 \l{qtqml-syntax-imports.html}{import statements} to import the module. The
 \c URI will be used in the \c module line of the generated
 \l{Module Definition qmldir Files}{qmldir} file. The \c URI is also used to
 form the \e{target path} by replacing dots with forward slashes.
 
 See \l{qtqml-modules-identifiedmodules.html}{Identified Modules} for further
-in-depth discussion of the module URI. In particular, mind that in order for
-the module to be importable from QML, each segment of its URI must be a
-well-formed ECMAScript Identifier Name. This means, for example, the segments
-must not start with a number and they must not contain \e{-} (minus)
-characters.
+in-depth discussion of the module URI.
 
 \section2 Versions
 
