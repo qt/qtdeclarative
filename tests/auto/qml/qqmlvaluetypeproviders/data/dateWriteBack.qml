@@ -9,6 +9,7 @@ MyTypeObject {
 
     Component.onCompleted: {
         aDateTime.setDate(14);
+        aDate.setDate(10);
         aDate.setMonth(8);
         aTime.setHours(5);
         aVariant.setMinutes(44);
