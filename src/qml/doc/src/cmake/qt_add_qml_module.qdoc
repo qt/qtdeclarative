@@ -364,8 +364,12 @@ been created. When  \c NO_CREATE_PLUGIN_TARGET is given, \c PLUGIN_TARGET must
 also be provided to explicitly name the plugin target.
 
 Every QML module must define a \c URI. It should be specified in dotted URI
-notation, such as \c{QtQuick.Layouts}. It must not contain anything other than
-alphanumeric or dot characters. Other QML modules may use this name in
+notation, such as \c{QtQuick.Layouts}. Each segment must be a well-formed
+ECMAScript Identifier Name. This means, for example, the segments
+must not start with a number and they must not contain \e{-} (minus)
+characters. As the \c URI will be translated into directory names, you
+should restrict it to alphanumeric characters of the latin alphabet,
+underscores, and dots. Other QML modules may use this name in
 \l{qtqml-syntax-imports.html}{import statements} to import the module. The
 \c URI will be used in the \c module line of the generated
 \l{Module Definition qmldir Files}{qmldir} file. The \c URI is also used to
