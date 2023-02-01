@@ -31,14 +31,119 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     \ingroup qtquick-effects
     \brief Applies post-processing effect to an item.
 
-    The MultiEffect type applies a post-processing effect to \c source item.
+    The MultiEffect type applies a post-processing effect to \l source item.
     Compared to \c {Qt Graphical Effects} module, MultiEffect combines multiple
-    effects (blur, shadow, colorization etc.) into a single item and shader. This
-    makes it optimal for multiple effects.
+    effects (blur, shadow, colorization etc.) into a single item and shader which
+    makes it better for multiple effects. There are several shader variations
+    and the most optimal one gets selected based on the features used.
 
-    MultiEffect is designed especially for animated effects. There are several
-    shader variations and the most optimal one gets selected based on the
-    features used.
+    MultiEffect is designed specifically for most common effects and can be easily animated.
+    If the MultiEffect doesn't contain the effect you need, consider implementing a custom
+    effect using \l {Qt Quick Effect Maker}. For more information about shader effects,
+    see the \l ShaderEffect reference documentation.
+
+    \section1 Example Usage
+
+    The following simple example shows how to apply a saturation effect on an item:
+
+    \table 70%
+    \row
+    \li \image multieffect-example1.png
+    \li \qml
+        import QtQuick
+        import QtQuick.Effects
+
+        ...
+        Image {
+            id: sourceItem
+            source: "qt_logo_green_rgb.png"
+            visible: false
+        }
+        MultiEffect {
+            source: sourceItem
+            anchors.fill: sourceItem
+            saturation: -1.0
+        }
+        \endqml
+    \endtable
+
+    Here is a bit more complex example, applying multiple effects at the same time:
+
+    \table 70%
+    \row
+    \li \image multieffect-example2.png
+    \li \qml
+        import QtQuick
+        import QtQuick.Effects
+
+        ...
+        MultiEffect {
+            source: sourceItem
+            anchors.fill: sourceItem
+            brightness: 0.4
+            saturation: 0.2
+            blurEnabled: true
+            blurMax: 64
+            blur: 1.0
+        }
+        \endqml
+    \endtable
+
+    Below is an example of how to use the mask, colorization and brightness effects together to
+    fade away an element. This kind of hiding/showing of elements can be, for example, bind
+    to a slider value or animations like NumberAnimation. Note how the \c visible property is
+    false when the item is totally faded away, to avoid unnecessary rendering of the effect.
+
+    \table 70%
+    \row
+    \li \image multieffect-example3.png
+    \li \qml
+        import QtQuick
+        import QtQuick.Effects
+        import QtQuick.Controls.Material
+
+        ...
+        MultiEffect {
+            property real effectAmount: effectSlider.value
+            source: sourceItem
+            anchors.fill: sourceItem
+            brightness: effectAmount
+            colorizationColor: "#ff20d0"
+            colorization: effectAmount
+            maskEnabled: true
+            maskSource: Image {
+                source: "mask.png"
+            }
+            maskSpreadAtMin: 0.2
+            maskThresholdMin: effectAmount
+            visible: effectAmount < 1.0
+        }
+        Slider {
+            id: effectSlider
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        \endqml
+    \endtable
+
+    \section1 Performance
+    There are a few things to consider for optimal performance:
+    \list
+    \li To get the most optimal shader, enable only the effects which you actually use
+        (see \l blurEnabled, \l shadowEnabled, \l maskEnabled). Simple color effects (\l brightness,
+        \l contrast, \l saturation, \l colorization) are always enabled, so using them doesn't
+        add extra overhead.
+    \li See the \b {Performance notes} of the properties which may change the shader or the effect
+        item size and don't modify these during animations.
+    \li When the MultiEffect isn't used, remember to set its \c visible property to be false to
+        avoid rendering the effects in the background.
+    \li Blur and shadow are the heaviest effects. With these, prefer increasing \l blurMultiplier
+        over \l blurMax and avoid using \l source items which animate, so blurring doesn't need
+        to be regenerated in every frame.
+    \li Apply effects to optimally sized QML elements as more pixels means more work for
+        the GPU. When applying the blur effect to the whole background, remember to set
+        \l autoPaddingEnabled false or the effect grows "outside" the window / screen.
+    \endlist
 */
 
 /*!
@@ -62,8 +167,12 @@ QQuickMultiEffect::~QQuickMultiEffect()
     \qmlproperty Item QtQuick::MultiEffect::source
 
     This property holds the item to be used as a source for the effect.
-    If needed, MultiEffect will internally generate a ShaderEffectSource
+    If needed, MultiEffect will internally generate a \l ShaderEffectSource
     as the texture source.
+
+    \note It is not supported to let the effect include itself, for instance
+    by setting source to the effect's parent.
+
     \sa hasProxySource
 */
 QQuickItem *QQuickMultiEffect::source() const
@@ -83,7 +192,9 @@ void QQuickMultiEffect::setSource(QQuickItem *item)
 
     When blur or shadow effects are enabled and this is set to true (default),
     the item size is padded automatically based on blurMax and blurMultiplier.
-    Note that \c paddingRect is always added to the size.
+    Note that \l paddingRect is always added to the size.
+
+    \image multieffect-example4.png
 
     \sa paddingRect
 
@@ -107,10 +218,17 @@ void QQuickMultiEffect::setAutoPaddingEnabled(bool enabled)
     \qmlproperty rect QtQuick::MultiEffect::paddingRect
 
     Set this to increase item size manually so that blur and/or shadows will fit.
-    If paddingEnabled is enabled and paddingRect is not set, the item is padded
+    If autoPaddingEnabled is true and paddingRect is not set, the item is padded
     to fit maximally blurred item based on blurMax and blurMultiplier. When
-    enabling the shadow, you typically needs to take shadowHorizontalOffset and
-    shadowVerticalOffset into account and adjust this paddingRect accordingly.
+    enabling the shadow, you typically need to take \l shadowHorizontalOffset and
+    \l shadowVerticalOffset into account and adjust this paddingRect accordingly.
+
+    Below is an example of adjusting paddingRect with autoPaddingEnabled set to
+    false so that the shadow fits inside the MultiEffect item.
+
+    \image multieffect-example5.png
+
+    \sa autoPaddingEnabled
 
     \include notes.qdocinc performance item size
 
@@ -218,7 +336,9 @@ void QQuickMultiEffect::setColorization(qreal colorization)
     This property defines the RGBA color value which is used to
     colorize the source.
 
-    By default, the property is set to \c  Qt.rgba(1.0, 0.0, 0.0, 1.0) (red).
+    By default, the property is set to \c {Qt.rgba(1.0, 0.0, 0.0, 1.0)} (red).
+
+    \sa colorization
 */
 QColor QQuickMultiEffect::colorizationColor() const
 {
@@ -516,9 +636,9 @@ void QQuickMultiEffect::setMaskEnabled(bool enabled)
     \qmlproperty Item QtQuick::MultiEffect::maskSource
 
     Source item for the mask effect. Should point to ShaderEffectSource,
-    item with \c {layer.enabled} set to \c true, or to an item that can be
-    directly used as a texture source (e.g. \l [QML] Image). The alpha
-    channel of the source item is used for masking.
+    item with \l {QtQuick::Item::layer.enabled} {layer.enabled} set to \c true,
+    or to an item that can be directly used as a texture source (e.g.
+    \l [QML] Image). The alpha channel of the source item is used for masking.
 */
 QQuickItem *QQuickMultiEffect::maskSource() const
 {
@@ -652,6 +772,8 @@ void QQuickMultiEffect::setMaskInverted(bool inverted)
 
     Read-only access to effect item rectangle. This can be used e.g. to see
     the area item covers.
+
+    \sa paddingRect, autoPaddingEnabled
 */
 QRectF QQuickMultiEffect::itemRect() const
 {
@@ -689,8 +811,9 @@ QString QQuickMultiEffect::vertexShader() const
 
     Returns true when the MultiEffect internally creates \l ShaderEffectSource
     for the \l source item and false when \l source item is used as-is.
-    For example when source is \l Image element or \l Item with \c layer.enabled
-    set to \c true, this additional proxy source is not needed.
+    For example when source is \l Image element or \l Item with
+    \l {QtQuick::Item::layer.enabled} {layer.enabled} set to \c true,
+    this additional proxy source is not needed.
 */
 bool QQuickMultiEffect::hasProxySource() const
 {
