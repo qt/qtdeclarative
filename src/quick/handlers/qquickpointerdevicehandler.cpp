@@ -270,7 +270,7 @@ bool QQuickPointerDeviceHandler::wantsPointerEvent(QPointerEvent *event)
     if (d->acceptedModifiers != Qt::KeyboardModifierMask && event->modifiers() != d->acceptedModifiers)
         return false;
     // Some handlers (HoverHandler, PinchHandler) set acceptedButtons to Qt::NoButton to indicate that button state is irrelevant.
-    if (event->pointingDevice()->pointerType() != QPointingDevice::PointerType::Finger &&
+    if (event->pointingDevice()->type() != QPointingDevice::DeviceType::TouchScreen &&
             acceptedButtons() != Qt::NoButton && event->type() != QEvent::Wheel &&
             (static_cast<QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == 0 &&
             (static_cast<QSinglePointEvent *>(event)->button() & acceptedButtons()) == 0)

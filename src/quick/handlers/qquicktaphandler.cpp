@@ -87,16 +87,17 @@ bool QQuickTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventP
         ret = parentContains(point);
         break;
     case QEventPoint::Updated:
+        ret = point.id() == this->point().id();
         switch (m_gesturePolicy) {
         case DragThreshold:
-            ret = !overThreshold && parentContains(point);
+            ret = ret && !overThreshold && parentContains(point);
             break;
         case WithinBounds:
         case DragWithinBounds:
-            ret = parentContains(point);
+            ret = ret && parentContains(point);
             break;
         case ReleaseWithinBounds:
-            ret = point.id() == this->point().id();
+            // no change to ret: depends only whether it's the already-tracking point ID
             break;
         }
         break;

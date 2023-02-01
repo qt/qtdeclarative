@@ -11,6 +11,7 @@
 #include <QtQuick/private/qquickitemview_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquickdraghandler_p.h>
+#include <QtQuick/private/qquickpinchhandler_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuick/private/qquicktableview_p.h>
 #include <qpa/qwindowsysteminterface.h>
@@ -55,10 +56,14 @@ private slots:
     void touchAndDragHandlerOnFlickable_data();
     void touchAndDragHandlerOnFlickable();
     void pinchHandlerOnFlickable();
+    void nativeGesturePinchOnFlickableWithParentTapHandler_data();
+    void nativeGesturePinchOnFlickableWithParentTapHandler();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
+    QScopedPointer<QPointingDevice> touchpad = QScopedPointer<QPointingDevice>(
+                QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad));
 };
 
 void tst_FlickableInterop::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -851,6 +856,116 @@ void tst_FlickableInterop::pinchHandlerOnFlickable()
     QQuickTouchUtils::flush(&window);
     QTRY_COMPARE(pinchHandler->active(), false);
     QCOMPARE(flickMoveSpy.count(), 0); // Flickable never moved
+}
+
+void tst_FlickableInterop::nativeGesturePinchOnFlickableWithParentTapHandler_data()
+{
+    QTest::addColumn<const QPointingDevice*>("device");
+    QTest::addColumn<Qt::MouseButton>("button");
+    QTest::addColumn<Qt::NativeGestureType>("gesture");
+    QTest::addColumn<qreal>("value");
+    QTest::addColumn<qreal>("expectedPropertyValue");
+
+    const QPointingDevice *constTouchPad = touchpad.data();
+
+    QTest::newRow("touchpad: left and rotate") << constTouchPad << Qt::LeftButton << Qt::RotateNativeGesture << 5.0 << 10.0;
+    QTest::newRow("touchpad: right and rotate") << constTouchPad << Qt::RightButton << Qt::RotateNativeGesture << 5.0 << 10.0;
+    QTest::newRow("touchpad: left and scale") << constTouchPad << Qt::LeftButton << Qt::ZoomNativeGesture << 0.1 << 1.21;
+    QTest::newRow("touchpad: right and scale") << constTouchPad << Qt::RightButton << Qt::ZoomNativeGesture << 0.1 << 1.21;
+
+    const auto *mouse = QPointingDevice::primaryPointingDevice();
+    if (mouse->type() == QInputDevice::DeviceType::Mouse) {
+        QTest::newRow("mouse: left and rotate") << mouse << Qt::LeftButton << Qt::RotateNativeGesture << 5.0 << 10.0;
+        QTest::newRow("mouse: right and rotate") << mouse << Qt::RightButton << Qt::RotateNativeGesture << 5.0 << 10.0;
+        QTest::newRow("mouse: left and scale") << mouse << Qt::LeftButton << Qt::ZoomNativeGesture << 0.1 << 1.21;
+        QTest::newRow("mouse: right and scale") << mouse << Qt::RightButton << Qt::ZoomNativeGesture << 0.1 << 1.21;
+    } else {
+        qCWarning(lcPointerTests) << "skipping mouse tests: primary device is not a mouse" << mouse;
+    }
+}
+
+void tst_FlickableInterop::nativeGesturePinchOnFlickableWithParentTapHandler()
+{
+    QFETCH(const QPointingDevice*, device);
+    QFETCH(Qt::MouseButton, button);
+    QFETCH(Qt::NativeGestureType, gesture);
+    QFETCH(qreal, value);
+    QFETCH(qreal, expectedPropertyValue);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pinchOnFlickableWithParentTapHandler.qml")));
+    QQuickFlickable *flickable = window.rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+    QQuickPointerHandler *pinchHandler = flickable->findChild<QQuickPinchHandler*>();
+    QVERIFY(pinchHandler);
+    QQuickItem *pinchable = pinchHandler->target();
+    QVERIFY(pinchable);
+    QQuickTapHandler *tapHandler = window.rootObject()->findChild<QQuickTapHandler*>();
+    QVERIFY(tapHandler);
+    const bool expectTap = button & tapHandler->acceptedButtons();
+
+    QSignalSpy flickMoveSpy(flickable, &QQuickFlickable::movementStarted);
+    QSignalSpy grabChangedSpy(touchDevice.get(), &QPointingDevice::grabChanged);
+    QSignalSpy tapActiveSpy(tapHandler, &QQuickTapHandler::activeChanged);
+    QSignalSpy tapSpy(tapHandler, &QQuickTapHandler::tapped);
+
+    QObject *grabber = nullptr;
+    connect(device, &QPointingDevice::grabChanged,
+            [&grabber](QObject *g, QPointingDevice::GrabTransition transition, const QPointerEvent *, const QEventPoint &) {
+        if (transition == QPointingDevice::GrabTransition::GrabExclusive)
+            grabber = g;
+    });
+
+    const QPoint pinchPos(75, 75);
+    const QPoint outsidePos(200, 200);
+
+    // move to position
+    QTest::mouseMove(&window, pinchPos);
+
+    // pinch via native gesture
+    ulong ts = 502; // after the mouse move, which is at time 501 in practice
+    QWindowSystemInterface::handleGestureEvent(&window, ts++, touchpad.get(),
+                                               Qt::BeginNativeGesture, pinchPos, pinchPos);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    for (int i = 0; i < 2; ++i) {
+        QWindowSystemInterface::handleGestureEventWithRealValue(&window, ts++, touchpad.get(),
+                                                                gesture, value, pinchPos, pinchPos);
+    }
+    if (gesture == Qt::RotateNativeGesture)
+        QTRY_COMPARE(pinchHandler->parentItem()->rotation(), expectedPropertyValue);
+    else if (gesture == Qt::ZoomNativeGesture)
+        QTRY_COMPARE(pinchHandler->parentItem()->scale(), expectedPropertyValue);
+    QVERIFY(pinchHandler->active());
+    QCOMPARE(grabChangedSpy.count(), 0);
+    QCOMPARE(grabber, nullptr);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    QWindowSystemInterface::handleGestureEvent(&window, ts++, touchpad.get(),
+                                               Qt::EndNativeGesture, pinchPos, pinchPos);
+
+    // tap in square: TapHandler detects tap iff acceptedButtons permits
+    // TODO delay; unfortunately this also begins at timestamp 502 because we don't have testlib
+    // functions to send gesture events, and QQuickTest::pointerPress() doesn't take a delay value
+    QQuickTest::pointerPress(device, &window, 0, pinchPos, button);
+    QCOMPARE(tapHandler->point().id(), expectTap ? 0 : -1);
+    QQuickTest::pointerRelease(device, &window, 0, pinchPos, button);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    QCOMPARE(tapSpy.size(), expectTap);
+    QCOMPARE(tapActiveSpy.size(), 0);
+    QCOMPARE(tapHandler->point().id(), -1); // does not keep tracking after release
+
+    // move outside: nothing should happen;
+    // but QTBUG-108896 happened because TapHandler was setting pointInfo to track this moving point
+    QQuickTest::pointerMove(device, &window, 0, outsidePos);
+    QCOMPARE(tapHandler->point().id(), -1); // does not track after mouse move
+
+    // tap outside: nothing happens
+    tapSpy.clear();
+    tapActiveSpy.clear();
+    QQuickTest::pointerPress(device, &window, 0, outsidePos, button);
+    QQuickTest::pointerRelease(device, &window, 0, outsidePos, button);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    QCOMPARE(tapSpy.size(), 0);
+    QCOMPARE(tapActiveSpy.size(), 0);
 }
 
 QTEST_MAIN(tst_FlickableInterop)
