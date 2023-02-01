@@ -31,7 +31,6 @@ class tst_FlickableInterop : public QQmlDataTest
 public:
     tst_FlickableInterop()
          : QQmlDataTest(QT_QMLTEST_DATADIR)
-         , touchDevice(QTest::createTouchDevice())
     {}
 
 private slots:
@@ -59,7 +58,7 @@ private slots:
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
-    QPointingDevice *touchDevice;
+    QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
 void tst_FlickableInterop::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -98,24 +97,24 @@ void tst_FlickableInterop::touchTapButton()
 
     // Button changes pressed state and emits tapped on release
     QPoint p1 = button->mapToScene(QPointF(20, 20)).toPoint();
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(button->property("pressed").toBool());
-    QTest::touchEvent(window, touchDevice).release(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!button->property("pressed").toBool());
     QCOMPARE(tappedSpy.size(), 1);
 
     // We can drag <= dragThreshold and the button still acts normal, Flickable doesn't grab
     p1 = button->mapToScene(QPointF(20, 20)).toPoint();
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(button->property("pressed").toBool());
     p1 += QPoint(dragThreshold, 0);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(button->property("pressed").toBool());
-    QTest::touchEvent(window, touchDevice).release(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!button->property("pressed").toBool());
     QCOMPARE(tappedSpy.size(), 2);
@@ -146,11 +145,11 @@ void tst_FlickableInterop::touchDragFlickableBehindButton()
 
     tappedSpy.clear();
     QPoint p1 = button->mapToScene(QPointF(20, 20)).toPoint();
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(button->property("pressed").toBool());
     p1 += QPoint(dragThreshold, 0);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(button->property("pressed").toBool());
     int i = 0;
@@ -158,14 +157,14 @@ void tst_FlickableInterop::touchDragFlickableBehindButton()
     // Button is no longer pressed because Flickable steals the grab
     for (; i < 100 && !flickable->isMoving(); ++i) {
         p1 += QPoint(1, 0);
-        QTest::touchEvent(window, touchDevice).move(1, p1, window);
+        QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
         QQuickTouchUtils::flush(window);
     }
     qCDebug(lcPointerTests) << "flickable started moving after" << i << "moves, when we got to" << p1;
     QVERIFY(flickable->isMoving());
     QCOMPARE(i, 2);
     QVERIFY(!button->property("pressed").toBool());
-    QTest::touchEvent(window, touchDevice).release(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!button->property("pressed").toBool());
     QCOMPARE(tappedSpy.size(), 0);
@@ -242,7 +241,7 @@ void tst_FlickableInterop::mouseDragFlickableBehindButton()
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(button->property("pressed").toBool());
     p1 += QPoint(dragThreshold, 0);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QVERIFY(button->property("pressed").toBool());
     int i = 0;
     for (; i < 100 && !flickable->isMoving(); ++i) {
@@ -279,19 +278,19 @@ void tst_FlickableInterop::touchDragSlider()
     // Drag the slider in the allowed (vertical) direction
     tappedSpy.clear();
     QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint() - QPoint(0, 8);
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(slider->property("pressed").toBool());
     p1 += QPoint(0, dragThreshold);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(slider->property("pressed").toBool());
     QCOMPARE(slider->property("value").toInt(), 49);
     p1 += QPoint(0, 1);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     p1 += QPoint(0, 10);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(slider->property("value").toInt() < 49);
     QVERIFY(!flickable->isMoving());
@@ -300,12 +299,12 @@ void tst_FlickableInterop::touchDragSlider()
     // Now that the DragHandler is active, the Flickable will not steal the grab
     // even if we move a large distance horizontally
     p1 += QPoint(dragThreshold * 2, 0);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!flickable->isMoving());
 
     // Release, and do not expect the tapped signal
-    QTest::touchEvent(window, touchDevice).release(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QCOMPARE(tappedSpy.size(), 0);
     QCOMPARE(translationChangedSpy.size(), 1);
@@ -418,24 +417,24 @@ void tst_FlickableInterop::touchDragFlickableBehindSlider()
     // because Flickable steals the grab
     tappedSpy.clear();
     QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint();
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(slider->property("pressed").toBool());
     p1 += QPoint(dragThreshold, 0);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(slider->property("pressed").toBool());
     int i = 0;
     for (; i < 100 && !flickable->isMoving(); ++i) {
         p1 += QPoint(1, 0);
-        QTest::touchEvent(window, touchDevice).move(1, p1, window);
+        QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
         QQuickTouchUtils::flush(window);
     }
     qCDebug(lcPointerTests) << "flickable started moving after" << i << "moves, when we got to" << p1;
     QVERIFY(flickable->isMoving());
     QCOMPARE(i, 2);
     QVERIFY(!slider->property("pressed").toBool());
-    QTest::touchEvent(window, touchDevice).release(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!slider->property("pressed").toBool());
     QCOMPARE(tappedSpy.size(), 0);
@@ -509,19 +508,19 @@ void tst_FlickableInterop::touchDragFlickableBehindItemWithHandlers()
     QPoint p1 = rect->mapToScene(rect->clipRect().center()).toPoint();
     QPoint originP1 = p1;
 
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     for (int i = 0; i < dragThreshold * 3; ++i) {
         p1 = originP1;
         p1.rx() += i;
-        QTest::touchEvent(window, touchDevice).move(1, p1, window);
+        QTest::touchEvent(window, touchDevice.get()).move(1, p1, window);
         QQuickTouchUtils::flush(window);
     }
     QCOMPARE(flickable->isMoving(), expectedFlickableMoving);
     if (!expectedFlickableMoving) {
         QVERIFY(rect->mapToScene(rect->clipRect().center()).toPoint().x() > originP1.x());
     }
-    QTest::touchEvent(window, touchDevice).release(1, p1, window);
+    QTest::touchEvent(window, touchDevice.get()).release(1, p1, window);
     QQuickTouchUtils::flush(window);
 }
 
@@ -586,7 +585,7 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
     QVERIFY(knob);
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);
-    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice, false);
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice.get(), false);
 
     // The knob is initially centered over the slider's "groove"
     qreal initialXOffset = qAbs(knob->mapToScene(knob->clipRect().center()).x() - slider->mapToScene
@@ -716,7 +715,7 @@ void tst_FlickableInterop::touchAndDragHandlerOnFlickable()
     }
 
     // Drag one finger on the Flickable (between delegates) and make sure it flicks
-    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice, false);
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice.get(), false);
     QPoint p1(780, 460);
     if (delegate)
         p1 = delegate->mapToScene(delegate->clipRect().bottomRight()).toPoint() + QPoint(-1, 1);
@@ -796,10 +795,10 @@ void tst_FlickableInterop::pinchHandlerOnFlickable()
     QVERIFY(pinchable);
 
     QSignalSpy flickMoveSpy(flickable, &QQuickFlickable::movementStarted);
-    QSignalSpy grabChangedSpy(touchDevice, &QPointingDevice::grabChanged);
+    QSignalSpy grabChangedSpy(touchDevice.get(), &QPointingDevice::grabChanged);
 
     QObject *grabber = nullptr;
-    connect(touchDevice, &QPointingDevice::grabChanged,
+    connect(touchDevice.get(), &QPointingDevice::grabChanged,
             [&grabber](QObject *g, QPointingDevice::GrabTransition transition, const QPointerEvent *, const QEventPoint &) {
         if (transition == QPointingDevice::GrabTransition::GrabExclusive)
             grabber = g;
@@ -807,7 +806,7 @@ void tst_FlickableInterop::pinchHandlerOnFlickable()
 
     QPoint p0 = pinchable->mapToScene({50, 100}).toPoint();
     QPoint p1 = pinchable->mapToScene({150, 100}).toPoint();
-    QTest::QTouchEventSequence touch = QTest::touchEvent(&window, touchDevice);
+    QTest::QTouchEventSequence touch = QTest::touchEvent(&window, touchDevice.get());
 
     touch.press(0, p0, &window).press(1, p1, &window).commit();
     QQuickTouchUtils::flush(&window);
