@@ -1306,6 +1306,8 @@ void tst_qqmlcomponent::loadFromModule_data()
 
     QTest::addRow("IC") << u"test"_s << u"TestComponentWithIC"_s << u"TestComponentWithIC"_s; // sanity check for next test
     QTest::addRow("IC") << u"test"_s << u"TestComponentWithIC.InnerIC"_s << u"InnerIC"_s;
+
+    QTest::addRow("plainQML") << u"plainqml"_s << u"Plain"_s << u"Plain"_s;
 }
 
 void tst_qqmlcomponent::loadFromModule()

@@ -395,6 +395,7 @@ protected:
     void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *) final { Q_UNREACHABLE(); }
 
 private:
+    bool couldFindModule() const;
     QString m_uri;
 };
 
