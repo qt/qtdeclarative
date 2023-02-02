@@ -23,9 +23,10 @@ qt_internal_add_test(tst_qquicklistview2
     TESTDATA ${test_data}
 )
 
+qt_policy(SET QTP0001 NEW)
+
 qt6_add_qml_module(tst_qquicklistview2
     URI Test
-    AUTO_RESOURCE_PREFIX
 )
 
 qt_internal_extend_target(tst_qquicklistview2 CONDITION ANDROID OR IOS

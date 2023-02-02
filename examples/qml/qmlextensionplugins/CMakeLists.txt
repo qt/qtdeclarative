@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/qmlextensionplugins/imports/T
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 #![0]
 set(qml_files
     imports/TimeExample/Clock.qml
@@ -37,7 +39,6 @@ qt_add_qml_module(qmlqtimeexample
     OUTPUT_DIRECTORY imports/TimeExample
     URI "TimeExample"
     SOURCES timemodel.cpp timemodel.h
-    AUTO_RESOURCE_PREFIX
     QML_FILES ${qml_files}
     RESOURCES ${images}
 )

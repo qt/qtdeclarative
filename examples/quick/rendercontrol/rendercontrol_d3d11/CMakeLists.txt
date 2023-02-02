@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/rendercontrol/rendercontrol
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(rendercontrol_d3d11example WIN32 MACOSX_BUNDLE
     engine.cpp engine.h
     main.cpp
@@ -34,7 +36,6 @@ target_link_libraries(rendercontrol_d3d11example PUBLIC
 # Resources:
 qt_add_qml_module(rendercontrol_d3d11example
     URI rendercontrol
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "demo.qml"
 )

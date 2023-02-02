@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/particles/affectors")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory("../../shared" "shared")
 
@@ -32,7 +32,6 @@ add_dependencies(affectorsexample affectors_shared)
 # Resources:
 qt_add_qml_module(affectorsexample
     URI affectors
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "affectors.qml"
         "GreyButton.qml"

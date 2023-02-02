@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/pointerhandlers")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Svg)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory("../shared" "shared")
 
@@ -30,7 +30,6 @@ add_dependencies(pointerhandlersexample pointerhandlers_shared)
 
 qt_add_qml_module(pointerhandlersexample
     URI pointerhandlers
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "components/Button.qml"
         "components/CheckBox.qml"

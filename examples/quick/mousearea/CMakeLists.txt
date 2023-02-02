@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/mousearea")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(mouseareaexample WIN32 MACOSX_BUNDLE
     main.cpp
@@ -28,7 +28,6 @@ target_link_libraries(mouseareaexample PRIVATE
 # Resources:
 qt_add_qml_module(mouseareaexample
     URI mousearea
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "mousearea-wheel-example.qml"
         "mousearea.qml"

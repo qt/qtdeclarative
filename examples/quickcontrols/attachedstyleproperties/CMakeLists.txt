@@ -10,7 +10,8 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/attachedstyleproperties")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml QuickControls2)
-qt_standard_project_setup()
+
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory(MyStyle)
 

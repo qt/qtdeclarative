@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/tutorials/dynamicview/dynam
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(dynamicview4
     main.cpp
 )
@@ -25,7 +27,6 @@ set_target_properties(dynamicview4 PROPERTIES
 
 qt_add_qml_module(dynamicview4
     URI dynamicview
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         dynamicview.qml
         ListSelector.qml

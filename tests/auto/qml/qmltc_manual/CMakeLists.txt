@@ -19,9 +19,10 @@ qt_internal_add_test(tst_qmltc_manual
     TESTDATA ${test_data}
 )
 
+qt_policy(SET QTP0001 NEW)
+
 qt6_add_qml_module(tst_qmltc_manual
     URI "QmltcManualTests"
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         ${test_data}
 )

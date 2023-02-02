@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/threading")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory("../shared" "shared")
 
@@ -33,7 +33,6 @@ add_dependencies(threadingexample threading_shared)
 
 qt_add_qml_module(threadingexample
     URI threading
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "threadedlistmodel/dataloader.mjs"
         "threadedlistmodel/timedisplay.qml"

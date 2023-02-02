@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/touchinteraction")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory("../shared" "shared")
 
@@ -33,7 +33,6 @@ add_dependencies(touchinteractionexample touchinteraction_shared)
 
 qt_add_qml_module(touchinteractionexample
     URI touchinteraction
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "flickable/Panel.qml"
         "flickable/basic-flickable.qml"

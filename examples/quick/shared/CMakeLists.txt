@@ -16,7 +16,6 @@ qt_add_qml_module(${PROJECT_NAME}_shared
     URI shared
     VERSION 2.2
     PLUGIN_TARGET ${PROJECT_NAME}_shared
-    AUTO_RESOURCE_PREFIX
     SOURCES
         "shared.h"
     QML_FILES

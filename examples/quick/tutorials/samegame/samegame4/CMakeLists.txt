@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/tutorials/samegame/samegame
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(samegame4
     main.cpp
 )
@@ -25,7 +27,6 @@ set_target_properties(samegame4 PROPERTIES
 
 qt_add_qml_module(samegame4
     URI samegame
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "BoomBlock.qml"
         "Button.qml"

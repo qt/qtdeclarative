@@ -223,11 +223,12 @@ set_target_properties(codegen_test_module PROPERTIES
     QT_QMLCACHEGEN_EXECUTABLE qmlcachegen
 )
 
+qt_policy(SET QTP0001 NEW)
+
 qt6_add_qml_module(codegen_test_module
     VERSION 1.5
     URI TestTypes
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
-    AUTO_RESOURCE_PREFIX
     DEPENDENCIES
         QtQuick
         QtQuick.Templates

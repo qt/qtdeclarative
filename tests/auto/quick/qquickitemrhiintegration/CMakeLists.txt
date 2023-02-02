@@ -40,7 +40,8 @@ qt_internal_add_shaders(tst_qquickitemrhiintegration "shaders"
         "texture.frag"
 )
 
+qt_policy(SET QTP0001 NEW)
+
 qt_add_qml_module(tst_qquickitemrhiintegration
     URI TestQquickitemrhiintegration
-    AUTO_RESOURCE_PREFIX
 )

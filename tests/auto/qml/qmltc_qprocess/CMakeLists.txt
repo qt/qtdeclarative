@@ -14,10 +14,11 @@ qt_internal_add_test(tst_qmltc_qprocess
 set_source_files_properties(data/SingletonThing.qml data/singletonUncreatable.qml
     PROPERTIES QT_QML_SINGLETON_TYPE true)
 
+qt_policy(SET QTP0001 NEW)
+
 qt6_add_qml_module(tst_qmltc_qprocess
     VERSION 1.0
     URI QmltcQProcessTests
-    AUTO_RESOURCE_PREFIX
     SOURCES
         cpptypes/testtype.h
     DEPENDENCIES
