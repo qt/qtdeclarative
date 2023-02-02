@@ -85,6 +85,12 @@ void QSGRhiShaderLinker::feedSamplers(const QSGShaderEffectNode::ShaderData &sha
             const QSGShaderEffectNode::VariableData &vd(shader.varData.at(i));
             if (var.type == QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler) {
                 Q_ASSERT(vd.specialType == QSGShaderEffectNode::VariableData::Source);
+
+#ifndef QT_NO_DEBUG
+                int existingBindPoint = m_samplerNameMap.value(var.name, -1);
+                Q_ASSERT(existingBindPoint < 0 || existingBindPoint == var.bindPoint);
+#endif
+
                 m_samplers.insert(var.bindPoint, vd.value);
                 m_samplerNameMap.insert(var.name, var.bindPoint);
             }
@@ -93,6 +99,12 @@ void QSGRhiShaderLinker::feedSamplers(const QSGShaderEffectNode::ShaderData &sha
         for (int idx : *dirtyIndices) {
             const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &var(shader.shaderInfo.variables.at(idx));
             const QSGShaderEffectNode::VariableData &vd(shader.varData.at(idx));
+
+#ifndef QT_NO_DEBUG
+            int existingBindPoint = m_samplerNameMap.value(var.name, -1);
+            Q_ASSERT(existingBindPoint < 0 || existingBindPoint == var.bindPoint);
+#endif
+
             m_samplers.insert(var.bindPoint, vd.value);
             m_samplerNameMap.insert(var.name, var.bindPoint);
         }
