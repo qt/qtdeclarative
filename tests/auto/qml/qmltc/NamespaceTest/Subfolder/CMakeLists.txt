@@ -24,9 +24,10 @@ qt_autogen_tools_initial_setup(qmltc_namespace_test_module)
 
 target_link_libraries(qmltc_namespace_test_module PUBLIC ${common_libraries})
 
+qt_policy(SET QTP0001 NEW)
+
 qt6_add_qml_module(qmltc_namespace_test_module
     URI NamespaceTest.Subfolder
-    AUTO_RESOURCE_PREFIX
     SOURCES
         ${cpp_sources}
     QML_FILES

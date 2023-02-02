@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/shadereffects")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick ShaderTools)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(shadereffectsexample
     WIN32
@@ -29,7 +29,6 @@ target_link_libraries(shadereffectsexample PRIVATE
 
 qt_add_qml_module(shadereffectsexample
     URI shadereffects
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "shadereffects.qml"
     RESOURCES

@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/canvas")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory("../shared" "shared")
 
@@ -31,7 +31,6 @@ target_link_libraries(canvasexample PRIVATE
 
 qt_add_qml_module(canvasexample
     URI canvas
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "LabeledSlider.qml"
         "bezierCurve/bezierCurve.qml"

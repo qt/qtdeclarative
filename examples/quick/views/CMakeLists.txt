@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/views")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 add_subdirectory("../shared" "shared")
 
 qt_add_executable(viewsexample
@@ -36,7 +38,6 @@ add_dependencies(viewsexample views_shared)
 
 qt_add_qml_module(viewsexample
     URI views
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "delegatemodel/dragselection.qml"
         "delegatemodel/slideshow.qml"

@@ -166,10 +166,11 @@ qt_internal_add_resource(qmltc_test_module "qmake_immediate"
         ${qmake_immediate_resource_files}
 )
 
+qt_policy(SET QTP0001 NEW)
+
 qt6_add_qml_module(qmltc_test_module
     VERSION 1.0
     URI QmltcTests
-    AUTO_RESOURCE_PREFIX
     SOURCES
         ${cpp_sources}
     QML_FILES

@@ -76,9 +76,11 @@ qt_add_library(tst-qmltyperegistrar-with-dashes)
 qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashes)
 target_link_libraries(tst-qmltyperegistrar-with-dashes PRIVATE Qt::Core Qt::Qml)
 qt_enable_autogen_tool(tst-qmltyperegistrar-with-dashes "moc" ON)
+
+qt_policy(SET QTP0001 NEW)
+
 qt_add_qml_module(tst-qmltyperegistrar-with-dashes
     URI Module-With-Dashes
-    AUTO_RESOURCE_PREFIX
     SOURCES
         foo.cpp foo.h
     OUTPUT_DIRECTORY Module-With-Dashes

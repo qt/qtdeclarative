@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/layouts")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(layoutsexample
     WIN32
@@ -22,7 +22,6 @@ qt_add_executable(layoutsexample
 
 qt_add_qml_module(layoutsexample
     URI layouts
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "layouts.qml"
 )

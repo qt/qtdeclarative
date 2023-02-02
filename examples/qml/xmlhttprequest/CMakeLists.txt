@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/xmlhttprequest")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(xmlhttprequestexample
     WIN32
     MACOSX_BUNDLE
@@ -22,7 +24,6 @@ qt_add_executable(xmlhttprequestexample
 
 qt_add_qml_module(xmlhttprequestexample
     URI xmlhttprequest
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "methods.js"
         "xmlhttprequest.qml"

@@ -15,9 +15,10 @@ set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/quick/imageprovider)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt6_add_qml_module(qmlimageproviderplugin
     URI "ImageProviderCore"
-    AUTO_RESOURCE_PREFIX
     PLUGIN_TARGET qmlimageproviderplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE

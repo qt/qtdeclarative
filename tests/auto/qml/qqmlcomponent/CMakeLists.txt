@@ -36,10 +36,11 @@ if(TARGET Qt::QuickControls2)
     target_compile_definitions(tst_qqmlcomponent PRIVATE HAS_CONTROLS)
 endif()
 
+qt_policy(SET QTP0001 NEW)
+
 qt_add_qml_module(
     tst_qqmlcomponent
     URI test
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "data/TestComponentWithIC.qml"
         "data/withAot.qml"

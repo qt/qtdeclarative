@@ -14,7 +14,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/quick-accessibility")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(quick-accessibility
     WIN32
@@ -31,7 +31,6 @@ target_link_libraries(quick-accessibility PRIVATE
 
 qt_add_qml_module(quick-accessibility
     URI accessibility
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "accessibility.qml"
         "Button.qml"

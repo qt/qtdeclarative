@@ -15,6 +15,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/customitems/flipable")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(flipableexample
     WIN32
     MACOSX_BUNDLE
@@ -30,7 +32,6 @@ target_link_libraries(flipableexample PUBLIC
 
 qt_add_qml_module(flipableexample
     URI flipable
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "flipable.qml"
         "Card.qml"

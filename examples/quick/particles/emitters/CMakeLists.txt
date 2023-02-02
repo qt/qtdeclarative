@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/particles/emitters")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory("../../shared" "shared")
 
@@ -32,7 +32,6 @@ add_dependencies(emittersexample emitters_shared)
 # Resources:
 qt_add_qml_module(emittersexample
     URI emitters
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "burstandpulse.qml"
         "customemitter.qml"

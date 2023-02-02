@@ -15,13 +15,14 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/customitems/painteditem")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 add_subdirectory(TextBalloon)
 
 qt_add_executable(painteditemexample WIN32 MACOSX_BUNDLE main.cpp)
 
 qt_add_qml_module(painteditemexample
     URI painteditem
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "textballoons.qml"
 )

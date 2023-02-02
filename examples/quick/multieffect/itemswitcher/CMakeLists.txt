@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/multieffect/itemswitcher")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 add_subdirectory("../../shared" "shared")
 
@@ -33,7 +33,6 @@ add_dependencies(itemswitcherexample itemswitcher_shared)
 # Resources:
 qt_add_qml_module(itemswitcherexample
     URI itemswitcher
-    AUTO_RESOURCE_PREFIX
     QML_FILES
     "qml/main.qml"
     "qml/PagesView.qml"

@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/customitems/dialcontrol")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(dialcontrolexample
     main.cpp
 )
@@ -32,7 +34,6 @@ target_link_libraries(dialcontrolexample PUBLIC
 
 qt_add_qml_module(dialcontrolexample
     URI dialcontrol
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "Dial.qml"
         "QuitButton.qml"

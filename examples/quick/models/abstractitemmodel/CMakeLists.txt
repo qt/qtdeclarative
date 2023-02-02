@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/models/abstractitemmodel")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(abstractitemmodelexample WIN32 MACOSX_BUNDLE
     main.cpp
@@ -29,7 +29,6 @@ target_link_libraries(abstractitemmodelexample PRIVATE
 # Resources:
 qt_add_qml_module(abstractitemmodelexample
     URI abstractitemmodel
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "view.qml"
 )

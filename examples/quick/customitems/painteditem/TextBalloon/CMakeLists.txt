@@ -10,7 +10,6 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/customitems/painteditem/Tex
 qt_add_qml_module(qmltextballoon
     URI "TextBalloon"
     PLUGIN_TARGET qmltextballoon
-    AUTO_RESOURCE_PREFIX
     SOURCES
         textballoon.cpp textballoon.h
 )

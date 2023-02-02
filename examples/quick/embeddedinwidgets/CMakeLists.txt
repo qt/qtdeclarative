@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/embeddedinwidgets")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Widgets)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(embeddedinwidgetsexample WIN32 MACOSX_BUNDLE
     main.cpp
@@ -28,7 +28,6 @@ target_link_libraries(embeddedinwidgetsexample PRIVATE
 # Resources:
 qt_add_qml_module(embeddedinwidgetsexample
     URI embeddedinwidgets
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         "main.qml"
     RESOURCES

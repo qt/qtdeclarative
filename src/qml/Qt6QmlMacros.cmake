@@ -452,6 +452,11 @@ function(qt6_add_qml_module target)
             )
         else()
             set(arg_RESOURCE_PREFIX "/qt/qml")
+            message(DEPRECATION "AUTO_RESOURCE_PREFIX is deprecated. "
+                    "Please use the qt_policy(SET) command to set the QTP0001 policy, "
+                    "or use the qt_standard_project_setup() command to set your preferred "
+                    "REQUIRES to get the preferred behavior. "
+                    "Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details.")
         endif()
     elseif(arg_RESOURCE_PREFIX)
         _qt_internal_canonicalize_resource_path("${arg_RESOURCE_PREFIX}" arg_RESOURCE_PREFIX)
