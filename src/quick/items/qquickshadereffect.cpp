@@ -1274,7 +1274,7 @@ bool QQuickShaderEffectPrivate::updateShader(Shader shaderType, const QUrl &file
             // provided and monitored like with an application-provided shader.
             QSGGuiThreadShaderEffectManager::ShaderInfo::Variable v;
             v.name = QByteArrayLiteral("source");
-            v.bindPoint = 0; // fake
+            v.bindPoint = 1; // fake, must match the default source bindPoint in qquickshadereffectnode.cpp
             v.type = texturesSeparate ? QSGGuiThreadShaderEffectManager::ShaderInfo::Texture
                                       : QSGGuiThreadShaderEffectManager::ShaderInfo::Sampler;
             m_shaders[shaderType].shaderInfo.variables.append(v);
