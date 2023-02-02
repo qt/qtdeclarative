@@ -127,6 +127,8 @@ TestCase {
         control.closePolicy = Popup.CloseOnPressOutside
         control.open()
         verify(control.visible)
+        // wait for enter transitions to finish
+        openedSpy.wait()
 
         mousePress(testCase, 1, 1)
         compare(rejectedSpy.count, 3)
@@ -145,6 +147,7 @@ TestCase {
         control.closePolicy = Popup.CloseOnReleaseOutside
         control.open()
         verify(control.visible)
+        openedSpy.wait()
 
         mousePress(testCase, 1, 1)
         compare(rejectedSpy.count, 3)
@@ -300,6 +303,7 @@ TestCase {
         compare(control.implicitHeight, control.contentItem.implicitHeight + control.topPadding + control.bottomPadding
                                       + control.header.implicitHeight + control.footer.implicitHeight)
 
+        control.footer.implicitWidth = 0
         control.header.implicitWidth = 150
         compare(control.implicitWidth, control.header.implicitWidth)
 
