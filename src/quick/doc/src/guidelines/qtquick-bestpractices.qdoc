@@ -88,6 +88,11 @@ qt_add_qml_module(my_module
 
 All QML files listed under \c {QML_FILES} will automatically get compiled \l {Ahead-of-Time Compilation}{ahead of time}.
 
+You should keep the QML files in the same directory as the CMakeLists.txt with
+the qt_add_qml_module. Otherwise their \l{The Implicit Import}{implicit imports}
+will be different from the \l{QML Modules} they belong to. This is a frequent
+source of mistakes.
+
 \section2 Related Information
 \list
  \li \l{The Qt Resource System}

@@ -85,15 +85,29 @@ as an installed module is imported with a unique identifier string rather than
 a file system path.
 
 
+\section1 The Implicit Import
+
+The directory a QML document resides in is automatically imported. You do
+not have to explicitly import \c{"."} or similar.
+
+\note You should make sure that the qmldir file that specifies the module a QML
+document belongs to resides in the same directory as the QML document itself.
+Otherwise the implicit import is different from the module the document belongs
+to. Then, for example, another QML document may be a singleton in the context of
+the module, but not a singleton in the context of the implicit import. This is a
+frequent source of mistakes.
+
+
 \section1 Remotely Located Directories
 
 A directory of QML files can also be imported from a remote location if the
 directory contains a directory listing \c qmldir file.
 
-\note This also holds for the implicit import of the directory a QML document
-resides in. If your QML documents are loaded from a remote location, you need
-to add qmldir files even if they don't contain any explicit directory import
-statements. Otherwise your QML documents won't see each other.
+\note This also holds for the \l{The Implicit Import}{implicit import} of the
+directory a QML document resides in. If your QML documents are loaded from a
+remote location, you need to add qmldir files even if they don't contain any
+explicit directory import statements. Otherwise your QML documents won't see
+each other.
 
 For example, if the \c myapp directory in the previous example was hosted at
 "http://www.my-example-server.com", and the \c mycomponents directory
