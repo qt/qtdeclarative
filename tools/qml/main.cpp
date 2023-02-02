@@ -79,6 +79,7 @@ static const QString customConfFileName(QStringLiteral("configuration.qml"));
 static bool verboseMode = false;
 static bool quietMode = false;
 static bool glShareContexts = true;
+static bool disableShaderCache = true;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -324,6 +325,8 @@ static void getAppFlags(int argc, char **argv)
             QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
         } else if (!strcmp(argv[i], "-disable-context-sharing") || !strcmp(argv[i], "--disable-context-sharing")) {
             glShareContexts = false;
+        } else if (!strcmp(argv[i], "-enable-shader-cache") || !strcmp(argv[i], "--enable-shader-cache")) {
+            disableShaderCache = false;
         }
     }
 #else
@@ -364,6 +367,8 @@ int main(int argc, char *argv[])
 
     if (glShareContexts)
         QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+    if (disableShaderCache)
+        QCoreApplication::setAttribute(Qt::AA_DisableShaderDiskCache);
 
     std::unique_ptr<QCoreApplication> app;
     switch (applicationType) {
@@ -448,6 +453,9 @@ int main(int argc, char *argv[])
     QCommandLineOption glContextSharing(QStringLiteral("disable-context-sharing"),
         QCoreApplication::translate("main", "Disable the use of a shared GL context for QtQuick Windows"));
     parser.addOption(glContextSharing); // Just for the help text... we've already handled this argument above
+    QCommandLineOption shaderCaching(QStringLiteral("enable-shader-cache"),
+        QCoreApplication::translate("main", "Enable persistent caching of generated shaders"));
+    parser.addOption(shaderCaching); // Just for the help text... we've already handled this argument above
 #endif // QT_GUI_LIB
     // Debugging and verbosity options
     QCommandLineOption quietOption(QStringLiteral("quiet"),
