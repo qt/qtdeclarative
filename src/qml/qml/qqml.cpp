@@ -261,7 +261,7 @@ static QTypeRevision resolveModuleVersion(int moduleMajor)
 
 /*!
  * \relates QQmlEngine
- * Registers an implicit import for module \a uri of major version \a moduleMajor.
+ * Registers a qmldir-import for module \a uri of major version \a moduleMajor.
  *
  * This has the same effect as an \c import statement in a qmldir file: Whenever
  * \a uri of version \a moduleMajor is imported, \a import of version
