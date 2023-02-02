@@ -45,6 +45,14 @@ qt_add_qml_module(
         "data/withAot.qml"
 )
 
+# intentionally NOT using qt_add_qml_module
+qt_add_resources(tst_qqmlcomponent plainqml
+    PREFIX /qt/qml
+    FILES
+        plainqml/qmldir
+        plainqml/Plain.qml
+)
+
 # Resources:
 set(qmake_immediate_resource_files
     "data/QtObjectComponent.qml"

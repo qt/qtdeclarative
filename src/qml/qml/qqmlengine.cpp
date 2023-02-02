@@ -2034,18 +2034,23 @@ LoadHelper::LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri)
     auto import = std::make_shared<PendingImport>();
     import->uri = uri.toString();
     QList<QQmlError> errorList;
-    Blob::addImport(import, &errorList);
+    if (!Blob::addImport(import, &errorList))
+        m_uri = QString(); // reset m_uri to remember the failure
 }
 
 LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
 {
     QQmlType type;
-    QQmlTypeModule *module = QQmlMetaType::typeModule(m_uri, QTypeRevision{});
-    if (!module)
+    if (!couldFindModule())
         return {ResolveTypeResult::NoSuchModule, type};
-    type = module->type(typeName.toString(), {});
-    if (type.isValid())
-        return {ResolveTypeResult::ModuleFound, type};
+    QQmlTypeModule *module = QQmlMetaType::typeModule(m_uri, QTypeRevision{});
+    if (module) {
+        type = module->type(typeName.toString(), {});
+        if (type.isValid())
+            return {ResolveTypeResult::ModuleFound, type};
+    }
+    // The module exists (see check above), but there is no QQmlTypeModule
+    // ==> pure QML module, attempt resolveType
     QTypeRevision versionReturn;
     QList<QQmlError> errors;
     QQmlImportNamespace *ns_return = nullptr;
@@ -2053,6 +2058,16 @@ LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
                                &ns_return,
                                &errors);
     return {ResolveTypeResult::ModuleFound, type};
+}
+
+bool LoadHelper::couldFindModule() const
+{
+    if (m_uri.isEmpty())
+        return false;
+    for (const auto &import: std::as_const(m_unresolvedImports))
+        if (import->priority == 0) // compare QQmlTypeData::allDependenciesDone
+            return false;
+    return true;
 }
 
 QT_END_NAMESPACE
