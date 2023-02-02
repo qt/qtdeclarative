@@ -14,9 +14,11 @@
 #include <QtQuickTemplates2/private/qquickmenubar_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
 using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 class tst_qquickmenubar : public QQmlDataTest
 {
@@ -28,6 +30,7 @@ public:
 private slots:
     void delegate();
     void mouse();
+    void touch();
     void keys();
     void mnemonics();
     void altNavigation();
@@ -36,11 +39,19 @@ private slots:
 
 private:
     static bool hasWindowActivation();
+
+    QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
+
+QPoint itemSceneCenter(const QQuickItem *item)
+{
+    return item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint();
+}
 
 tst_qquickmenubar::tst_qquickmenubar()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+    qputenv("QML_NO_TOUCH_COMPRESSION", "1");
 }
 
 bool tst_qquickmenubar::hasWindowActivation()
@@ -95,7 +106,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(fileMenuBarItem && editMenuBarItem && viewMenuBarItem && helpMenuBarItem);
 
     // highlight a menubar item
-    QTest::mouseMove(window.data(), fileMenuBarItem->mapToScene(QPointF(fileMenuBarItem->width() / 2, fileMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseMove(window.data(), itemSceneCenter(fileMenuBarItem));
 #ifndef Q_OS_ANDROID
     // Android theme does not use hover effects, so moving the mouse would not
     // highlight an item
@@ -104,7 +115,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(!fileMenuBarMenu->isVisible());
 
     // highlight another menubar item
-    QTest::mouseMove(window.data(), editMenuBarItem->mapToScene(QPointF(editMenuBarItem->width() / 2, editMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseMove(window.data(), itemSceneCenter(editMenuBarItem));
 #ifndef Q_OS_ANDROID
     // Android theme does not use hover effects, so moving the mouse would not
     // highlight an item
@@ -114,26 +125,28 @@ void tst_qquickmenubar::mouse()
     QVERIFY(!fileMenuBarMenu->isVisible());
     QVERIFY(!editMenuBarMenu->isVisible());
 
-    // trigger a menubar item to open a menu
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, editMenuBarItem->mapToScene(QPointF(editMenuBarItem->width() / 2, editMenuBarItem->height() / 2)).toPoint());
+    // trigger a menubar item to open a menu - it should open on press
+    QTest::mousePress(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(editMenuBarItem));
     QVERIFY(editMenuBarItem->isHighlighted());
     QVERIFY(editMenuBarMenu->isVisible());
     QTRY_VERIFY(editMenuBarMenu->isOpened());
+    QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(editMenuBarItem));
 
-    // re-trigger a menubar item to hide the menu
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, editMenuBarItem->mapToScene(QPointF(editMenuBarItem->width() / 2, editMenuBarItem->height() / 2)).toPoint());
+    // re-trigger a menubar item to hide the menu - it should close on press
+    QTest::mousePress(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(editMenuBarItem));
     QVERIFY(editMenuBarItem->isHighlighted());
     QVERIFY(editMenuBarItem->hasActiveFocus());
     QTRY_VERIFY(!editMenuBarMenu->isVisible());
+    QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(editMenuBarItem));
 
     // re-trigger a menubar item to show the menu again
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, editMenuBarItem->mapToScene(QPointF(editMenuBarItem->width() / 2, editMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(editMenuBarItem));
     QVERIFY(editMenuBarItem->isHighlighted());
     QVERIFY(editMenuBarMenu->isVisible());
     QTRY_VERIFY(editMenuBarMenu->isOpened());
 
     // highlight another menubar item to open another menu
-    QTest::mouseMove(window.data(), helpMenuBarItem->mapToScene(QPointF(helpMenuBarItem->width() / 2, helpMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseMove(window.data(), itemSceneCenter(helpMenuBarItem));
 #ifdef Q_OS_ANDROID
     // Android theme does not use hover effects, so moving the mouse would not
     // highlight an item. Add a mouse click to change menubar item selection.
@@ -159,7 +172,7 @@ void tst_qquickmenubar::mouse()
     QTRY_VERIFY(!helpMenuBarMenu->isVisible());
 
     // highlight a menubar item
-    QTest::mouseMove(window.data(), editMenuBarItem->mapToScene(QPointF(editMenuBarItem->width() / 2, editMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseMove(window.data(), itemSceneCenter(editMenuBarItem));
 #ifndef Q_OS_ANDROID
     // Android theme does not use hover effects, so moving the mouse would not
     // highlight an item
@@ -170,7 +183,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(!helpMenuBarMenu->isVisible());
 
     // trigger a menubar item to open a menu
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, viewMenuBarItem->mapToScene(QPointF(viewMenuBarItem->width() / 2, viewMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(viewMenuBarItem));
     QVERIFY(!editMenuBarItem->isHighlighted());
     QVERIFY(viewMenuBarItem->isHighlighted());
     QVERIFY(viewMenuBarMenu->isVisible());
@@ -181,7 +194,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(alignmentSubMenuItem);
     QQuickMenu *alignmentSubMenu = alignmentSubMenuItem->subMenu();
     QVERIFY(alignmentSubMenu);
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, alignmentSubMenuItem->mapToScene(QPointF(alignmentSubMenuItem->width() / 2, alignmentSubMenuItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(alignmentSubMenuItem));
 #if !defined(Q_OS_ANDROID) and !defined(Q_OS_WEBOS)
     // The screen on Android is too small to fit the whole hierarchy, so the
     // Alignment sub-menu is shown on top of View menu.
@@ -196,7 +209,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(verticalSubMenuItem);
     QQuickMenu *verticalSubMenu = verticalSubMenuItem->subMenu();
     QVERIFY(verticalSubMenu);
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, verticalSubMenuItem->mapToScene(QPointF(verticalSubMenuItem->width() / 2, verticalSubMenuItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(verticalSubMenuItem));
 #if !defined(Q_OS_ANDROID) and !defined(Q_OS_WEBOS)
     // The screen on Android is too small to fit the whole hierarchy, so the
     // Vertical sub-menu is shown on top of View menu and Alignment sub-menu.
@@ -210,7 +223,7 @@ void tst_qquickmenubar::mouse()
     // trigger a menu item to close the whole chain of menus
     QQuickMenuItem *centerMenuItem = qobject_cast<QQuickMenuItem *>(verticalSubMenu->itemAt(1));
     QVERIFY(centerMenuItem);
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, centerMenuItem->mapToScene(QPointF(centerMenuItem->width() / 2, centerMenuItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(centerMenuItem));
     QVERIFY(!viewMenuBarItem->isHighlighted());
     QTRY_VERIFY(!viewMenuBarMenu->isVisible());
     QTRY_VERIFY(!alignmentSubMenu->isVisible());
@@ -225,11 +238,11 @@ void tst_qquickmenubar::mouse()
 #endif
 
     // re-open the chain of menus
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, viewMenuBarItem->mapToScene(QPointF(viewMenuBarItem->width() / 2, viewMenuBarItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(viewMenuBarItem));
     QTRY_VERIFY(viewMenuBarMenu->isOpened());
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, alignmentSubMenuItem->mapToScene(QPointF(alignmentSubMenuItem->width() / 2, alignmentSubMenuItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(alignmentSubMenuItem));
     QTRY_VERIFY(alignmentSubMenu->isOpened());
-    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, verticalSubMenuItem->mapToScene(QPointF(verticalSubMenuItem->width() / 2, verticalSubMenuItem->height() / 2)).toPoint());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(verticalSubMenuItem));
     QTRY_VERIFY(verticalSubMenu->isOpened());
 
     // click outside to close the whole chain of menus
@@ -238,6 +251,37 @@ void tst_qquickmenubar::mouse()
     QTRY_VERIFY(!viewMenuBarMenu->isVisible());
     QTRY_VERIFY(!alignmentSubMenu->isVisible());
     QTRY_VERIFY(!verticalSubMenu->isVisible());
+}
+
+// Not sure how relevant MenuBar is for touch, but this test is here to make
+// sure that only release events cause the menu to open, as:
+// - That is how it has always behaved, so maintain that behavior.
+// - It's what happens with e.g. overflow menus on Android.
+void tst_qquickmenubar::touch()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("touch.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    centerOnScreen(helper.window);
+    helper.window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(helper.window));
+
+    QQuickMenuBar *menuBar = helper.window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
+    QVERIFY(fileMenuBarMenu);
+
+    QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
+    QVERIFY(fileMenuBarItem);
+
+    // Trigger a menubar item to open a menu - it should only open on release.
+    QTest::touchEvent(helper.window, touchScreen.data()).press(0, itemSceneCenter(fileMenuBarItem));
+    QVERIFY(!fileMenuBarItem->isHighlighted());
+    QVERIFY(!fileMenuBarMenu->isVisible());
+    QTest::touchEvent(helper.window, touchScreen.data()).release(0, itemSceneCenter(fileMenuBarItem));
+    QVERIFY(fileMenuBarItem->isHighlighted());
+    QVERIFY(fileMenuBarMenu->isVisible());
+    QTRY_VERIFY(fileMenuBarMenu->isOpened());
 }
 
 void tst_qquickmenubar::keys()

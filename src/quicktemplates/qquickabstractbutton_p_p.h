@@ -36,6 +36,7 @@ public:
         return button->d_func();
     }
 
+    QPointF centerPressPoint() const;
     void setPressPoint(const QPointF &point);
     void setMovePoint(const QPointF &point);
 

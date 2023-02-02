@@ -46,6 +46,43 @@ void QQuickMenuBarItemPrivate::setMenuBar(QQuickMenuBar *newMenuBar)
     emit q->menuBarChanged();
 }
 
+bool QQuickMenuBarItemPrivate::handlePress(const QPointF &point, ulong timestamp)
+{
+    Q_Q(QQuickMenuBarItem);
+    const bool handled = QQuickAbstractButtonPrivate::handlePress(point, timestamp);
+    if (!handled)
+        return false;
+
+    const bool wasTouchPress = touchId != -1;
+    if (!wasTouchPress) {
+        // Open the menu when it's a mouse press.
+        emit q->triggered();
+    }
+
+    return true;
+}
+
+bool QQuickMenuBarItemPrivate::handleRelease(const QPointF &point, ulong timestamp)
+{
+    Q_Q(QQuickMenuBarItem);
+    const bool wasTouchPress = touchId != -1;
+    const bool handled = QQuickAbstractButtonPrivate::handleRelease(point, timestamp);
+    if (!handled)
+        return false;
+
+    if (wasDoubleClick || !wasTouchPress) {
+        // Don't open the menu on mouse release, as it should be done on press.
+        return handled;
+    }
+
+    if (wasTouchPress) {
+        // Open the menu.
+        emit q->triggered();
+    }
+
+    return true;
+}
+
 QPalette QQuickMenuBarItemPrivate::defaultPalette() const
 {
     return QQuickTheme::palette(QQuickTheme::MenuBar);
@@ -55,7 +92,6 @@ QQuickMenuBarItem::QQuickMenuBarItem(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickMenuBarItemPrivate), parent)
 {
     setFocusPolicy(Qt::NoFocus);
-    connect(this, &QQuickAbstractButton::clicked, this, &QQuickMenuBarItem::triggered);
 }
 
 /*!
@@ -127,6 +163,50 @@ void QQuickMenuBarItem::setHighlighted(bool highlighted)
 
     d->highlighted = highlighted;
     emit highlightedChanged();
+}
+
+bool QQuickMenuBarItem::event(QEvent *event)
+{
+#if QT_CONFIG(shortcut)
+    Q_D(QQuickMenuBarItem);
+    if (event->type() == QEvent::Shortcut) {
+        auto *shortcutEvent = static_cast<QShortcutEvent *>(event);
+        if (shortcutEvent->shortcutId() == d->shortcutId) {
+            d->trigger();
+            emit triggered();
+            return true;
+        }
+    }
+#endif
+    return QQuickControl::event(event);
+}
+
+void QQuickMenuBarItem::keyPressEvent(QKeyEvent *event)
+{
+    Q_D(QQuickMenuBarItem);
+    QQuickControl::keyPressEvent(event);
+    if (d->acceptKeyClick(static_cast<Qt::Key>(event->key()))) {
+        d->setPressPoint(d->centerPressPoint());
+        setPressed(true);
+        emit pressed();
+        event->accept();
+    }
+}
+
+void QQuickMenuBarItem::keyReleaseEvent(QKeyEvent *event)
+{
+    Q_D(QQuickMenuBarItem);
+    QQuickControl::keyReleaseEvent(event);
+    if (d->pressed && d->acceptKeyClick(static_cast<Qt::Key>(event->key()))) {
+        setPressed(false);
+        emit released();
+        d->trigger();
+        // We override these event functions so that we can emit triggered here.
+        // We can't just connect clicked to triggered, because that would cause mouse clicks
+        // to open the menu, when only presses should.
+        emit triggered();
+        event->accept();
+    }
 }
 
 void QQuickMenuBarItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
