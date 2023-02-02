@@ -27,7 +27,7 @@
 #include <QTimeZone>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
-#include <private/qglobal_p.h>
+#include <private/qtenvironmentvariables_p.h> // for qTzSet()
 
 class tst_qqmlqt : public QQmlDataTest
 {
