@@ -84,6 +84,11 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the button is interactively double clicked by the user via touch or mouse.
 */
 
+QPointF QQuickAbstractButtonPrivate::centerPressPoint() const
+{
+    return QPointF(qRound(width / 2), qRound(height / 2));
+}
+
 void QQuickAbstractButtonPrivate::setPressPoint(const QPointF &point)
 {
     pressPoint = point;
@@ -1082,7 +1087,7 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickAbstractButton);
     QQuickControl::keyPressEvent(event);
     if (d->acceptKeyClick(static_cast<Qt::Key>(event->key()))) {
-        d->setPressPoint(QPoint(qRound(width() / 2), qRound(height() / 2)));
+        d->setPressPoint(d->centerPressPoint());
         setPressed(true);
 
         if (d->autoRepeat)

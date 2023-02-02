@@ -50,6 +50,10 @@ Q_SIGNALS:
     void highlightedChanged();
 
 protected:
+    bool event(QEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     QFont defaultFont() const override;

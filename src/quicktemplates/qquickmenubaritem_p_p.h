@@ -35,6 +35,9 @@ public:
 
     void setMenuBar(QQuickMenuBar *menuBar);
 
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
+
     QPalette defaultPalette() const override;
 
     bool highlighted = false;
