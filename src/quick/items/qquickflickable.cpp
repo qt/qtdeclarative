@@ -1451,7 +1451,7 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
 
     bool flickedVertically = false;
     vVelocity *= flickBoost;
-    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(pos.y() - pressPos.y()) > flickThreshold;
+    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > _q_MinimumFlickVelocity && qAbs(pos.y() - pressPos.y()) > flickThreshold;
     if (isVerticalFlickAllowed) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
@@ -1460,7 +1460,7 @@ void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
 
     bool flickedHorizontally = false;
     hVelocity *= flickBoost;
-    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(pos.x() - pressPos.x()) > flickThreshold;
+    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > _q_MinimumFlickVelocity && qAbs(pos.x() - pressPos.x()) > flickThreshold;
     if (isHorizontalFlickAllowed) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);

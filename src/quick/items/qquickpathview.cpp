@@ -28,8 +28,6 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcItemViewDelegateLifecycle)
 Q_LOGGING_CATEGORY(lcPathView, "qt.quick.pathview")
 
-static const qreal MinimumFlickVelocity = 75;
-
 static QQmlOpenMetaObjectType *qPathViewAttachedType = nullptr;
 
 QQuickPathViewAttached::QQuickPathViewAttached(QObject *parent)
@@ -1751,7 +1749,7 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *event)
     qreal count = pathItems == -1 ? modelCount : qMin(pathItems, modelCount);
     const auto averageItemLength = path->path().length() / count;
     qreal pixelVelocity = averageItemLength * velocity;
-    if (qAbs(pixelVelocity) > MinimumFlickVelocity) {
+    if (qAbs(pixelVelocity) > _q_MinimumFlickVelocity) {
         if (qAbs(pixelVelocity) > maximumFlickVelocity || snapMode == QQuickPathView::SnapOneItem) {
             // limit velocity
             qreal maxVel = velocity < 0 ? -maximumFlickVelocity : maximumFlickVelocity;
