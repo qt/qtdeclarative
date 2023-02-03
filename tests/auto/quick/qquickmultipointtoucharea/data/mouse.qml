@@ -17,10 +17,10 @@ MultiPointTouchArea {
         TouchPoint { objectName: "point2" }
     ]
 
-    onPressed: { touchCount = touchPoints.length }
-    onTouchUpdated: { touchCount = touchPoints.length }
-    onCanceled: { cancelCount = touchPoints.length }
-    onGestureStarted: {
+    onPressed: (points) => { touchCount = points.length }
+    onTouchUpdated: (points) => { touchCount = points.length }
+    onCanceled: (points) => { cancelCount = points.length }
+    onGestureStarted: (gesture) => {
         gestureStartedX = gesture.touchPoints[0].startX
         gestureStartedY = gesture.touchPoints[0].startY
         if (grabGesture)

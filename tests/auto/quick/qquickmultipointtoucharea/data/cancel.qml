@@ -30,12 +30,12 @@ MultiPointTouchArea {
     property int touchCount: 0
     property bool touchUpdatedHandled: false
 
-    onPressed: { touchPointPressCount = touchPoints.length }
-    onUpdated: { touchPointUpdateCount = touchPoints.length }
-    onReleased: { touchPointReleaseCount = touchPoints.length }
-    onCanceled: { touchPointCancelCount = touchPoints.length }
-    onTouchUpdated: {
-        touchCount = touchPoints.length
+    onPressed: (points) => { touchPointPressCount = points.length }
+    onUpdated: (points) => { touchPointUpdateCount = points.length }
+    onReleased: (points) => { touchPointReleaseCount = v.length }
+    onCanceled: (points) => { touchPointCancelCount = points.length }
+    onTouchUpdated: (points) => {
+        touchCount = points.length
         touchUpdatedHandled = true
     }
 }

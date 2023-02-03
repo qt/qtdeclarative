@@ -329,18 +329,39 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
 
     If minimumTouchPoints is set to a value greater than one, this signal will not be emitted until the minimum number
     of required touch points has been reached.
+
+    \note If you use the \c touchPoints argument in your signal handler code,
+    it's best to rename it in your formal parameter to avoid confusion with the
+    \c touchPoints property (see \l{QML Coding Conventions}):
+    \qml
+    onPressed: (points) => console.log("pressed", points.length)
+    \endqml
 */
 
 /*!
     \qmlsignal QtQuick::MultiPointTouchArea::updated(list<TouchPoint> touchPoints)
 
     This signal is emitted when existing touch points are updated. \a touchPoints is a list of these updated points.
+
+    \note If you use the \c touchPoints argument in your signal handler code,
+    it's best to rename it in your formal parameter to avoid confusion with the
+    \c touchPoints property (see \l{QML Coding Conventions}):
+    \qml
+    onUpdated: (points) => console.log("updated", points.length)
+    \endqml
 */
 
 /*!
     \qmlsignal QtQuick::MultiPointTouchArea::released(list<TouchPoint> touchPoints)
 
     This signal is emitted when existing touch points are removed. \a touchPoints is a list of these removed points.
+
+    \note If you use the \c touchPoints argument in your signal handler code,
+    it's best to rename it in your formal parameter to avoid confusion with the
+    \c touchPoints property (see \l{QML Coding Conventions}):
+    \qml
+    onReleased: (points) => console.log("released", points.length)
+    \endqml
 */
 
 /*!
@@ -356,7 +377,16 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     \c canceled should be handled in addition to \l released.
 
     \a touchPoints is the list of canceled points.
+
+    \note If you use the \c touchPoints argument in your signal handler code,
+    it's best to rename it in your formal parameter to avoid confusion with the
+    \c touchPoints property (see \l{QML Coding Conventions}):
+    \qml
+    onCanceled: (points) => console.log("canceled", points.length)
+    \endqml
 */
+
+// TODO Qt 7: remove the notes above about the signal touchPoints arguments
 
 /*!
     \qmlsignal QtQuick::MultiPointTouchArea::gestureStarted(GestureEvent gesture)

@@ -19,8 +19,8 @@ Rectangle {
 
             property int pointCount: 0
 
-            onPressed: pointCount = touchPoints.length;
-            onTouchUpdated: pointCount = touchPoints.length;
+            onPressed: (points) => pointCount = points.length;
+            onTouchUpdated: (points) => pointCount = points.length;
         }
     }
 }
