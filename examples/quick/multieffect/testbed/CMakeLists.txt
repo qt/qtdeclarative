@@ -49,6 +49,8 @@ qt_add_qml_module(testbedexample
     "qml/SettingsComponentSlider.qml"
     "qml/SettingsComponentCheckBox.qml"
     "qml/SettingsComponentColorSelector.qml"
+    "qml/CustomMultiEffect/BlurHelper.qml"
+    "qml/CustomMultiEffect/CustomMultiEffect.qml"
     RESOURCES
     "qml/images/pause.png"
     "qml/images/play.png"
@@ -57,6 +59,10 @@ qt_add_qml_module(testbedexample
     "qml/images/arrow.png"
     "qml/images/Built_with_Qt.png"
     "qml/images/Built_with_Qt_RGB_logo.png"
+    "qml/CustomMultiEffect/bluritems.frag.qsb"
+    "qml/CustomMultiEffect/bluritems.vert.qsb"
+    "qml/CustomMultiEffect/custommultieffect.frag.qsb"
+    "qml/CustomMultiEffect/custommultieffect.vert.qsb"
 )
 
 install(TARGETS testbedexample

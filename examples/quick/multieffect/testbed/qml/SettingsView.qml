@@ -125,6 +125,13 @@ Item {
                         settings.autoPaddingEnabled = checked;
                     }
                 }
+                SettingsComponentCheckBox {
+                    text: "Show Custom MultiEffect"
+                    checked: settings.showCustomMultiEffect
+                    onToggled: {
+                        settings.showCustomMultiEffect = checked;
+                    }
+                }
                 Item {
                     width: 1
                     height: 20 * dp
