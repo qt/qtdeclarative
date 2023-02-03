@@ -61,6 +61,8 @@ private:
         uint forceRenderPass : 1;
     };
 
+    WindowData *windowFor(QQuickWindow *window);
+
     void startOrStopAnimationTimer();
     void handleExposure(QQuickWindow *window);
     void handleObscurity(WindowData *w);
@@ -72,7 +74,7 @@ private:
     QAnimationDriver *m_anim;
     int animationTimer = 0;
     bool lockedForSync = false;
-    QVector<WindowData> m_windows;
+    QList<WindowData> m_windows;
 
     friend class QSGSoftwareRenderThread;
 };
