@@ -12,7 +12,6 @@
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_DEBUG
-static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 static int qt_node_count = 0;
 
 static void qt_print_node_count()
@@ -256,7 +255,7 @@ QSGNode::QSGNode(QSGNodePrivate &dd, NodeType type)
 void QSGNode::init()
 {
 #ifndef QT_NO_DEBUG
-    if (qsg_leak_check) {
+    if (_q_sg_leak_check) {
         ++qt_node_count;
         static bool atexit_registered = false;
         if (!atexit_registered) {
@@ -281,7 +280,7 @@ void QSGNode::init()
 QSGNode::~QSGNode()
 {
 #ifndef QT_NO_DEBUG
-    if (qsg_leak_check) {
+    if (_q_sg_leak_check) {
         --qt_node_count;
         if (qt_node_count < 0)
             qDebug("Node destroyed after qt_print_node_count() was called.");

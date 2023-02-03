@@ -21,10 +21,6 @@ void qsg_set_material_failure()
 }
 #endif
 
-#ifndef QT_NO_DEBUG
-static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
-#endif
-
 /*!
     \group qtquick-scenegraph-materials
     \title Qt Quick Scene Graph Material Classes
@@ -109,7 +105,7 @@ QSGMaterial::QSGMaterial()
 {
     Q_UNUSED(m_reserved);
 #ifndef QT_NO_DEBUG
-    if (qsg_leak_check) {
+    if (_q_sg_leak_check) {
         ++qt_material_count;
         static bool atexit_registered = false;
         if (!atexit_registered) {
@@ -128,7 +124,7 @@ QSGMaterial::QSGMaterial()
 QSGMaterial::~QSGMaterial()
 {
 #ifndef QT_NO_DEBUG
-    if (qsg_leak_check) {
+    if (_q_sg_leak_check) {
         --qt_material_count;
         if (qt_material_count < 0)
             qDebug("Material destroyed after qt_print_material_count() was called.");
