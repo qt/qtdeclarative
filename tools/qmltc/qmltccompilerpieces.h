@@ -260,7 +260,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
 
     if (int id = visitor->runtimeId(type); id >= 0) {
         current.init.body << u"// 3. set id since it is provided"_s;
-        QString idString = visitor->addressableScopes().id(type);
+        QString idString = visitor->addressableScopes().id(type, type);
         if (idString.isEmpty())
             idString = u"<unknown>"_s;
         QmltcCodeGenerator::generate_setIdValue(&current.init.body, u"context"_s, id, u"this"_s,

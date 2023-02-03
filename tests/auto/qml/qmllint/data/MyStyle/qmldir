@@ -1,0 +1,4 @@
+module MyStyle
+typeinfo MyStyle.qmltypes
+ToolBar 254.0 ToolBar.qml
+import QtQuick.Controls.Material

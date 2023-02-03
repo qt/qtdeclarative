@@ -151,6 +151,34 @@ private:
     QQmlSA::Element m_propertyChanges;
 };
 
+class AttachedPropertyReuse : public QQmlSA::PropertyPass
+{
+public:
+    enum Mode {
+        CheckAll,
+        RestrictToControls
+    };
+
+    AttachedPropertyReuse(QQmlSA::PassManager *manager, LoggerWarningId category)
+        : QQmlSA::PropertyPass(manager)
+        , category(category)
+    {}
+
+    void onRead(const QQmlSA::Element &element, const QString &propertyName,
+                const QQmlSA::Element &readScope, QQmlJS::SourceLocation location) override;
+    void onWrite(const QQmlSA::Element &element, const QString &propertyName,
+                 const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+                 QQmlJS::SourceLocation location) override;
+private:
+    struct ElementAndLocation {
+        QQmlSA::Element element;
+        QQmlJS::SourceLocation location;
+    };
+
+    QMultiHash<QQmlSA::Element, ElementAndLocation> usedAttachedTypes;
+    LoggerWarningId category;
+};
+
 QT_END_NAMESPACE
 
 #endif // QUICKLINTPLUGIN_H

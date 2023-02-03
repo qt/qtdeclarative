@@ -145,10 +145,12 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                                  QStringLiteral("ID duplication"), QtCriticalMsg, false, true },
         QQmlJSLogger::Category { qmlCompiler.name().toString(), QStringLiteral("CompilerWarnings"),
                                  QStringLiteral("Warn about compiler issues"), QtWarningMsg, true },
-        QQmlJSLogger::Category {
-                qmlAttachedPropertyReuse.name().toString(), QStringLiteral("AttachedPropertyReuse"),
-                QStringLiteral("Warn if attached types from parent components aren't reused"),
-                QtCriticalMsg, true },
+        QQmlJSLogger::Category { qmlAttachedPropertyReuse.name().toString(),
+                                 QStringLiteral("AttachedPropertyReuse"),
+                                 QStringLiteral("Warn if attached types from parent components "
+                                                "aren't reused. This is handled by the QtQuick "
+                                                "lint plugin. Use Quick.AttachedPropertyReuse instead."),
+                                 QtCriticalMsg, true },
         QQmlJSLogger::Category { qmlPlugin.name().toString(), QStringLiteral("LintPluginWarnings"),
                                  QStringLiteral("Warn if a qmllint plugin finds an issue"),
                                  QtWarningMsg, true },

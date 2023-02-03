@@ -26,10 +26,8 @@ using namespace Qt::StringLiterals;
 
 QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                            const QQmlJSTypeResolver *typeResolver,
-                                           QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo,
-                                           QQmlSA::PassManager *passManager)
+                                           QQmlJSLogger *logger,  QQmlSA::PassManager *passManager)
     : QQmlJSCompilePass(unitGenerator, typeResolver, logger),
-      m_typeInfo(typeInfo),
       m_passManager(passManager)
 {
 }
@@ -367,7 +365,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
         for (QQmlJSScope::ConstPtr scope = m_function->qmlScope; !scope.isNull();
              scope = scope->parentScope()) {
             if (scope->hasProperty(name)) {
-                const QString id = m_function->addressableScopes.id(scope);
+                const QString id = m_function->addressableScopes.id(scope, m_function->qmlScope);
 
                 QQmlJS::SourceLocation fixLocation = location;
                 fixLocation.length = 0;
@@ -736,45 +734,6 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                     ? m_jsUnitGenerator->stringForIndex(m_state.accumulatorIn().importNamespace())
                       + u'.' + propertyName
                     : propertyName));
-
-    if (m_typeInfo != nullptr
-        && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ScopeAttached) {
-        QQmlJSScope::ConstPtr attachedType = m_typeResolver->originalType(
-                    m_state.accumulatorIn().scopeType());
-
-        for (QQmlJSScope::ConstPtr scope = m_function->qmlScope->parentScope(); !scope.isNull();
-             scope = scope->parentScope()) {
-            if (m_typeInfo->usedAttachedTypes.values(scope).contains(attachedType)) {
-
-                // Ignore enum accesses, as these will not cause the attached object to be created
-                if (m_state.accumulatorOut().isValid() && m_state.accumulatorOut().isEnumeration())
-                    continue;
-
-                const QString id = m_function->addressableScopes.id(scope);
-
-                QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
-                fixLocation.length = 0;
-
-                QQmlJSFixSuggestion suggestion {
-                    "Reference it by id instead:"_L1,
-                    fixLocation,
-                    id.isEmpty() ? u"<id>."_s : (id + u'.')
-                };
-
-                if (id.isEmpty())
-                    suggestion.setHint("You first have to give the element an id"_L1);
-                else
-                    suggestion.setAutoApplicable();
-
-                m_logger->log(
-                        u"Using attached type %1 already initialized in a parent scope."_s.arg(
-                                m_state.accumulatorIn().scopeType()->internalName()),
-                        qmlAttachedPropertyReuse, getCurrentSourceLocation(), true, true,
-                        suggestion);
-            }
-        }
-        m_typeInfo->usedAttachedTypes.insert(m_function->qmlScope, attachedType);
-    }
 
     if (!m_state.accumulatorOut().isValid()) {
         if (m_typeResolver->isPrefix(propertyName)) {

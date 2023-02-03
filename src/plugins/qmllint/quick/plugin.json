@@ -34,6 +34,17 @@
             "name": "property-changes-parsed",
             "settingsName": "PropertyChangesParsed",
             "description": "Warn about legacy PropertyChanges that rely on the custom parser"
+        },
+        {
+            "name": "controls-attached-property-reuse",
+            "settingsName": "ControlsAttachedPropertyReuse",
+            "description": "Warn about failure to re-use attached objects of controls"
+        },
+        {
+            "name": "attached-property-reuse",
+            "settingsName": "AttachedPropertyReuse",
+            "description": "Warn about failure to re-use any attached objects. Implies ControlsAttachedPropertyReuse.",
+            "enabled": false
         }
     ]
 }

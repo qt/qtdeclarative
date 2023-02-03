@@ -34,10 +34,11 @@ public:
     void setValueTypesAreCopied(bool copied) { m_valueTypesAreCopied = copied; }
     bool valueTypesAreCopied() const { return m_valueTypesAreCopied; }
 
-    QString id(const QQmlJSScope::ConstPtr &scope) const
+    QString id(const QQmlJSScope::ConstPtr &scope, const QQmlJSScope::ConstPtr &referrer) const
     {
+        const QQmlJSScope::ConstPtr referrerRoot = componentRoot(referrer);
         for (auto it = m_scopesById.begin(), end = m_scopesById.end(); it != end; ++it) {
-            if (*it == scope)
+            if (*it == scope && isComponentVisible(componentRoot(*it), referrerRoot))
                 return it.key();
         }
         return QString();

@@ -44,6 +44,11 @@ void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
     d->manager->m_visitor->logger()->log(diagnostic.toString(), id, srcLocation, true, true, fix);
 }
 
+Element GenericPass::resolveTypeInFileScope(QAnyStringView typeName)
+{
+    return d->manager->m_visitor->imports().type(typeName.toString()).scope;
+}
+
 Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeName)
 {
     auto typeImporter = d->manager->m_visitor->importer();
@@ -56,9 +61,14 @@ Element GenericPass::resolveLiteralType(const QQmlJSMetaPropertyBinding &binding
     return binding.literalType(d->manager->m_typeResolver);
 }
 
-Element GenericPass::resolveId(QAnyStringView id, const Element &context)
+Element GenericPass::resolveIdToElement(QAnyStringView id, const Element &context)
 {
-    return d->manager->m_typeResolver->scopeForId(id.toString(), context);
+    return d->manager->m_visitor->addressableScopes().scope(id.toString(), context);
+}
+
+QString GenericPass::resolveElementToId(const Element &element, const Element &context)
+{
+    return d->manager->m_visitor->addressableScopes().id(element, context);
 }
 
 QString GenericPass::sourceCode(QQmlJS::SourceLocation location)
@@ -208,6 +218,16 @@ void PassManager::analyzeBinding(const Element &element, const QQmlSA::Element &
 bool PassManager::hasImportedModule(QAnyStringView module) const
 {
     return m_visitor->imports().hasType(u"$module$." + module.toString());
+}
+
+bool PassManager::isCategoryEnabled(LoggerWarningId category) const
+{
+    return !m_visitor->logger()->isCategoryIgnored(category);
+}
+
+void PassManager::setCategoryEnabled(LoggerWarningId category, bool enabled)
+{
+    m_visitor->logger()->setCategoryIgnored(category, !enabled);
 }
 
 QSet<PropertyPass *> PassManager::findPropertyUsePasses(const QQmlSA::Element &element,

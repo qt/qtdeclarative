@@ -169,7 +169,7 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
             return false;
         }
 
-        QJsonObject object = value.toObject();
+        const QJsonObject object = value.toObject();
 
         for (const QString &requiredKey : { u"name"_s, u"description"_s }) {
             if (!object.contains(requiredKey)) {
@@ -179,10 +179,18 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
             }
         }
 
+        const auto it = object.find("enabled"_L1);
+        const bool ignored = (it != object.end() && !it->toBool());
+
         const QString categoryId =
                 (m_isInternal ? u""_s : u"Plugin."_s) + m_name + u'.' + object[u"name"].toString();
-        m_categories << QQmlJSLogger::Category { categoryId, categoryId,
-                                                 object[u"description"].toString(), QtWarningMsg };
+        m_categories << QQmlJSLogger::Category {
+                categoryId,
+                categoryId,
+                object["description"_L1].toString(),
+                QtWarningMsg,
+                ignored
+        };
     }
 
     return true;
@@ -569,16 +577,13 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 return;
             }
 
-            QQmlJSTypeInfo typeInfo;
-
             const QStringList resourcePaths = mapper
                     ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
                     : QStringList();
             const QString resolvedPath =
                     (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
 
-            QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get(),
-                                          &typeInfo };
+            QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get() };
             codegen.setTypeResolver(std::move(typeResolver));
             if (passMan)
                 codegen.setPassManager(passMan.get());
