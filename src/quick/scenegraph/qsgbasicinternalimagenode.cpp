@@ -10,13 +10,13 @@ QT_BEGIN_NAMESPACE
 
 namespace
 {
-    struct SmoothVertex
+    struct SmoothImageVertex
     {
         float x, y, u, v;
         float dx, dy, du, dv;
     };
 
-    const QSGGeometry::AttributeSet &smoothAttributeSet()
+    const QSGGeometry::AttributeSet &smoothImageAttributeSet()
     {
         static QSGGeometry::Attribute data[] = {
             QSGGeometry::Attribute::createWithAttributeType(0, 2, QSGGeometry::FloatType, QSGGeometry::PositionAttribute),
@@ -24,7 +24,7 @@ namespace
             QSGGeometry::Attribute::createWithAttributeType(2, 2, QSGGeometry::FloatType, QSGGeometry::TexCoord1Attribute),
             QSGGeometry::Attribute::createWithAttributeType(3, 2, QSGGeometry::FloatType, QSGGeometry::TexCoord2Attribute)
         };
-        static QSGGeometry::AttributeSet attrs = { 4, sizeof(SmoothVertex), data };
+        static QSGGeometry::AttributeSet attrs = { 4, sizeof(SmoothImageVertex), data };
         return attrs;
     }
 }
@@ -97,7 +97,7 @@ void QSGBasicInternalImageNode::setAntialiasing(bool antialiasing)
         return;
     m_antialiasing = antialiasing;
     if (m_antialiasing) {
-        setGeometry(new QSGGeometry(smoothAttributeSet(), 0));
+        setGeometry(new QSGGeometry(smoothImageAttributeSet(), 0));
         setFlag(OwnsGeometry, true);
     } else {
         setGeometry(&m_geometry);
@@ -308,7 +308,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
 
     if (antialiasing) {
         if (!geometry || geometry->indexType() != indexType) {
-            geometry = new QSGGeometry(smoothAttributeSet(),
+            geometry = new QSGGeometry(smoothImageAttributeSet(),
                                        hCells * vCells * 4 + (hCells + vCells - 1) * 4,
                                        hCells * vCells * 6 + (hCells + vCells) * 12,
                                        indexType);
@@ -320,7 +320,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         Q_ASSERT(g);
 
         g->setDrawingMode(QSGGeometry::DrawTriangles);
-        SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
+        auto *vertices = reinterpret_cast<SmoothImageVertex *>(g->vertexData());
         memset(vertices, 0, g->vertexCount() * g->sizeOfVertex());
         void *indexData = g->indexData();
 
@@ -360,7 +360,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                 bool isLeft = i == 0;
                 bool isRight = i == hCells - 1;
 
-                SmoothVertex *v = vertices + index;
+                SmoothImageVertex *v = vertices + index;
 
                 int topLeft = index;
                 for (int k = (isTop || isLeft ? 2 : 1); k--; ++v, ++index) {
@@ -521,12 +521,12 @@ void QSGBasicInternalImageNode::updateGeometry()
                 QSGGeometry *g = geometry();
                 Q_ASSERT(g != &m_geometry);
                 if (g->indexType() != QSGGeometry::UnsignedShortType) {
-                    setGeometry(new QSGGeometry(smoothAttributeSet(), 0));
+                    setGeometry(new QSGGeometry(smoothImageAttributeSet(), 0));
                     g = geometry();
                 }
                 g->allocate(8, 14);
                 g->setDrawingMode(QSGGeometry::DrawTriangleStrip);
-                SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
+                auto *vertices = reinterpret_cast<SmoothImageVertex *>(g->vertexData());
                 float delta = float(qAbs(m_targetRect.width()) < qAbs(m_targetRect.height())
                         ? m_targetRect.width() : m_targetRect.height()) * 0.5f;
                 float sx = float(sr.width() / m_targetRect.width());
