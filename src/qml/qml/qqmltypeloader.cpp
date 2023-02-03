@@ -631,17 +631,20 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
 
         if (!loadImportDependencies(import, qmldirFilePath, import->flags, errors)) {
             QQmlError error;
+            QString reason = errors->front().description();
+            if (reason.size() > 512)
+                reason = reason.first(252) + QLatin1String("... ...") + reason.last(252);
             if (import->version.hasMajorVersion()) {
                 error.setDescription(QQmlImportDatabase::tr(
-                                         "module \"%1\" version %2.%3 cannot be imported because\n%4")
+                                         "module \"%1\" version %2.%3 cannot be imported because:\n%4")
                                      .arg(import->uri).arg(import->version.majorVersion())
                                      .arg(import->version.hasMinorVersion()
                                           ? QString::number(import->version.minorVersion())
                                           : QLatin1String("x"))
-                                     .arg(errors->front().description()));
+                                     .arg(reason));
             } else {
-                error.setDescription(QQmlImportDatabase::tr("module \"%1\" cannot be imported because\n%2")
-                                     .arg(import->uri, errors->front().description()));
+                error.setDescription(QQmlImportDatabase::tr("module \"%1\" cannot be imported because:\n%2")
+                                     .arg(import->uri, reason));
             }
             errors->prepend(error);
             return false;
@@ -826,7 +829,7 @@ bool QQmlTypeLoader::Blob::loadImportDependencies(
     case QQmlImportInstance::Lowest: {
         QQmlError error;
         error.setDescription(
-                    QString::fromLatin1("Too many dependent imports")
+                    QString::fromLatin1("Too many dependent imports for %1 %2.%3")
                     .arg(currentImport->uri)
                     .arg(currentImport->version.majorVersion())
                     .arg(currentImport->version.minorVersion()));
