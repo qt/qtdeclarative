@@ -15,9 +15,9 @@ static const int BlockWidth = 16;
 static const int BlockRestingSpacing = 4;
 static const int BlockMovingSpacing = 48;
 static const int BlockSpan = Blocks * (BlockWidth + BlockRestingSpacing) - BlockRestingSpacing;
-static const int TotalDuration = 4000;
-static const int SecondPhaseStart = TotalDuration * 0.4;
-static const int ThirdPhaseStart = TotalDuration * 0.6;
+static const int QbpbTotalDuration = 4000;
+static const int SecondPhaseStart = QbpbTotalDuration * 0.4;
+static const int ThirdPhaseStart = QbpbTotalDuration * 0.6;
 
 static inline qreal blockStartX(int blockIndex)
 {
@@ -53,7 +53,7 @@ QQuickBasicProgressBarNode::QQuickBasicProgressBarNode(QQuickBasicProgressBar *i
       m_pixelsPerSecond(item->width())
 {
     setLoopCount(Infinite);
-    setDuration(TotalDuration);
+    setDuration(QbpbTotalDuration);
 }
 
 void QQuickBasicProgressBarNode::updateCurrentTime(int time)

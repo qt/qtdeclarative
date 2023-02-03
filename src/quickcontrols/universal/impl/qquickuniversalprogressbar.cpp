@@ -12,10 +12,10 @@
 
 QT_BEGIN_NAMESPACE
 
-static const int PhaseCount = 4;
+static const int QupbPhaseCount = 4;
 static const int EllipseCount = 5;
-static const int Interval = 167;
-static const int TotalDuration = 3917;
+static const int QupbInterval = 167;
+static const int QupbTotalDuration = 3917;
 static const int VisibleDuration = 3000;
 static const qreal EllipseDiameter = 4;
 static const qreal EllipseOffset = 4;
@@ -42,15 +42,15 @@ private:
     };
 
     bool m_indeterminate = false;
-    Phase m_borderPhases[PhaseCount];
-    Phase m_ellipsePhases[PhaseCount];
+    Phase m_borderPhases[QupbPhaseCount];
+    Phase m_ellipsePhases[QupbPhaseCount];
 };
 
 QQuickUniversalProgressBarNode::QQuickUniversalProgressBarNode(QQuickUniversalProgressBar *item)
     : QQuickAnimatedNode(item)
 {
     setLoopCount(Infinite);
-    setDuration(TotalDuration);
+    setDuration(QupbTotalDuration);
 
     m_borderPhases[0] = Phase( 500, -50,   0);
     m_borderPhases[1] = Phase(1500,   0,   0);
@@ -79,7 +79,7 @@ void QQuickUniversalProgressBarNode::updateCurrentTime(int time)
     {
         qreal from = ContainerAnimationStartPosition;
         qreal to = from + ContainerAnimationEndPosition * width;
-        qreal progress = static_cast<qreal>(time) / TotalDuration;
+        qreal progress = static_cast<qreal>(time) / QupbTotalDuration;
         qreal dx = from + (to - from) * progress;
 
         QMatrix4x4 matrix;
@@ -98,8 +98,8 @@ void QQuickUniversalProgressBarNode::updateCurrentTime(int time)
         QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode *>(ellipseNode->firstChild());
         Q_ASSERT(opacityNode->type() == QSGNode::OpacityNodeType);
 
-        int begin = nodeIndex * Interval;
-        int end = VisibleDuration + nodeIndex * Interval;
+        int begin = nodeIndex * QupbInterval;
+        int end = VisibleDuration + nodeIndex * QupbInterval;
 
         bool visible = time >= begin && time <= end;
         opacityNode->setOpacity(visible ? 1.0 : 0.0);
@@ -107,7 +107,7 @@ void QQuickUniversalProgressBarNode::updateCurrentTime(int time)
         if (visible) {
             {
                 int phaseIndex, remain = time, elapsed = 0;
-                for (phaseIndex = 0; phaseIndex < PhaseCount - 1; ++phaseIndex) {
+                for (phaseIndex = 0; phaseIndex < QupbPhaseCount - 1; ++phaseIndex) {
                     if (remain <= m_borderPhases[phaseIndex].duration + begin)
                         break;
                     remain -= m_borderPhases[phaseIndex].duration;
@@ -130,7 +130,7 @@ void QQuickUniversalProgressBarNode::updateCurrentTime(int time)
                 curve.addCubicBezierSegment(QPointF(0.4, 0.0), QPointF(0.6, 1.0), QPointF(1.0, 1.0));
 
                 int phaseIndex, remain = time, elapsed = 0;
-                for (phaseIndex = 0; phaseIndex < PhaseCount - 1; ++phaseIndex) {
+                for (phaseIndex = 0; phaseIndex < QupbPhaseCount - 1; ++phaseIndex) {
                     if (remain <= m_ellipsePhases[phaseIndex].duration + begin)
                         break;
                     remain -= m_ellipsePhases[phaseIndex].duration;
