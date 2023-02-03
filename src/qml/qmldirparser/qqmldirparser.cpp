@@ -233,14 +233,28 @@ bool QQmlDirParser::parse(const QString &source)
             _classNames.append(sections[1]);
 
         } else if (sections[0] == QLatin1String("internal")) {
-            if (sectionCount != 3) {
+            if (sectionCount == 3) {
+                Component entry(sections[1], sections[2], QTypeRevision());
+                entry.internal = true;
+                _components.insert(entry.typeName, entry);
+            } else if (sectionCount == 4) {
+                const QTypeRevision version = parseVersion(sections[2]);
+                if (version.isValid()) {
+                    Component entry(sections[1], sections[3], version);
+                    entry.internal = true;
+                    _components.insert(entry.typeName, entry);
+                } else {
+                    reportError(lineNumber, 0,
+                                QStringLiteral("invalid version %1, expected <major>.<minor>")
+                                    .arg(sections[2]));
+                    continue;
+                }
+            } else {
                 reportError(lineNumber, 0,
-                            QStringLiteral("internal types require 2 arguments, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("internal types require 2 or 3 arguments, "
+                                           "but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
-            Component entry(sections[1], sections[2], QTypeRevision());
-            entry.internal = true;
-            _components.insert(entry.typeName, entry);
         } else if (sections[0] == QLatin1String("singleton")) {
             if (sectionCount < 3 || sectionCount > 4) {
                 reportError(lineNumber, 0,

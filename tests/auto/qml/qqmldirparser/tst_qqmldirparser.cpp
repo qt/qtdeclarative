@@ -421,6 +421,17 @@ void tst_qqmldirparser::parse_data()
         << QStringList()
         << QStringList()
         << false;
+
+    QTest::newRow("versioned-internal")
+        << "versioned-internal/qmldir"
+        << QString()
+        << QStringList()
+        << QStringList()
+        << QStringList()
+        << QStringList({"InternalType|InternalType.qml|1|0|true"})
+        << QStringList()
+        << QStringList()
+        << false;
 }
 
 void tst_qqmldirparser::parse()
