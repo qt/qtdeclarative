@@ -751,8 +751,6 @@ void QQuickControlPrivate::executeContentItem(bool complete)
         quickCompleteDeferred(q, contentItemName(), contentItem);
 }
 
-static inline QString backgroundName() { return QStringLiteral("background"); }
-
 void QQuickControlPrivate::cancelBackground()
 {
     Q_Q(QQuickControl);

@@ -202,8 +202,6 @@ void QQuickSliderPrivate::handleUngrab()
     q->setPressed(false);
 }
 
-static inline QString handleName() { return QStringLiteral("handle"); }
-
 void QQuickSliderPrivate::cancelHandle()
 {
     Q_Q(QQuickSlider);

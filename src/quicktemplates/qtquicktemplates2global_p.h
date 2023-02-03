@@ -25,6 +25,10 @@ QT_BEGIN_NAMESPACE
 Q_QUICKTEMPLATES2_PRIVATE_EXPORT void QQuickTemplates_initializeModule();
 Q_QUICKTEMPLATES2_PRIVATE_EXPORT void qml_register_types_QtQuick_Templates();
 
+[[maybe_unused]] static inline QString backgroundName() { return QStringLiteral("background"); }
+[[maybe_unused]] static inline QString handleName() { return QStringLiteral("handle"); }
+[[maybe_unused]] static inline QString indicatorName() { return QStringLiteral("indicator"); }
+
 QT_END_NAMESPACE
 
 #endif // QTQUICKTEMPLATES2GLOBAL_P_H

@@ -117,8 +117,6 @@ void QQuickRangeSliderNodePrivate::updatePosition(bool ignoreOtherPosition)
     setPosition(pos, ignoreOtherPosition);
 }
 
-static inline QString handleName() { return QStringLiteral("handle"); }
-
 void QQuickRangeSliderNodePrivate::cancelHandle()
 {
     Q_Q(QQuickRangeSliderNode);

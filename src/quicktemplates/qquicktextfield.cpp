@@ -300,8 +300,6 @@ QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
 }
 #endif
 
-static inline QString backgroundName() { return QStringLiteral("background"); }
-
 void QQuickTextFieldPrivate::cancelBackground()
 {
     Q_Q(QQuickTextField);
