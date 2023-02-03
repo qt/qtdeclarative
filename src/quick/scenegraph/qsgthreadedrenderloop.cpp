@@ -92,29 +92,6 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 // RL: Render Loop
 // RT: Render Thread
 
-// Passed from the RL to the RT when a window is removed obscured and
-// should be removed from the render loop.
-const QEvent::Type WM_Obscure           = QEvent::Type(QEvent::User + 1);
-
-// Passed from the RL to RT when GUI has been locked, waiting for sync
-// (updatePaintNode())
-const QEvent::Type WM_RequestSync       = QEvent::Type(QEvent::User + 2);
-
-// Passed by the RL to the RT to free up maybe release SG and GL contexts
-// if no windows are rendering.
-const QEvent::Type WM_TryRelease        = QEvent::Type(QEvent::User + 4);
-
-// Passed by the RL to the RT when a QQuickWindow::grabWindow() is
-// called.
-const QEvent::Type WM_Grab              = QEvent::Type(QEvent::User + 5);
-
-// Passed by the window when there is a render job to run
-const QEvent::Type WM_PostJob           = QEvent::Type(QEvent::User + 6);
-
-// When using the QRhi this is sent upon PlatformSurfaceAboutToBeDestroyed from
-// the event filter installed on the QQuickWindow.
-const QEvent::Type WM_ReleaseSwapchain  = QEvent::Type(QEvent::User + 7);
-
 template <typename T> T *windowFor(const QList<T> &list, QQuickWindow *window)
 {
     for (int i=0; i<list.size(); ++i) {
@@ -137,7 +114,7 @@ class WMTryReleaseEvent : public WMWindowEvent
 {
 public:
     WMTryReleaseEvent(QQuickWindow *win, bool destroy, bool needsFallbackSurface)
-        : WMWindowEvent(win, WM_TryRelease)
+        : WMWindowEvent(win, QEvent::Type(WM_TryRelease))
         , inDestructor(destroy)
         , needsFallback(needsFallbackSurface)
     {}
@@ -150,7 +127,7 @@ class WMSyncEvent : public WMWindowEvent
 {
 public:
     WMSyncEvent(QQuickWindow *c, bool inExpose, bool force, const QRhiSwapChainProxyData &scProxyData)
-        : WMWindowEvent(c, WM_RequestSync)
+        : WMWindowEvent(c, QEvent::Type(WM_RequestSync))
         , size(c->size())
         , dpr(float(c->effectiveDevicePixelRatio()))
         , syncInExpose(inExpose)
@@ -168,7 +145,8 @@ public:
 class WMGrabEvent : public WMWindowEvent
 {
 public:
-    WMGrabEvent(QQuickWindow *c, QImage *result) : WMWindowEvent(c, WM_Grab), image(result) {}
+    WMGrabEvent(QQuickWindow *c, QImage *result) :
+        WMWindowEvent(c, QEvent::Type(WM_Grab)), image(result) {}
     QImage *image;
 };
 
@@ -176,7 +154,7 @@ class WMJobEvent : public WMWindowEvent
 {
 public:
     WMJobEvent(QQuickWindow *c, QRunnable *postedJob)
-        : WMWindowEvent(c, WM_PostJob), job(postedJob) {}
+        : WMWindowEvent(c, QEvent::Type(WM_PostJob)), job(postedJob) {}
     ~WMJobEvent() { delete job; }
     QRunnable *job;
 };
@@ -184,7 +162,8 @@ public:
 class WMReleaseSwapchainEvent : public WMWindowEvent
 {
 public:
-    WMReleaseSwapchainEvent(QQuickWindow *c) : WMWindowEvent(c, WM_ReleaseSwapchain) { }
+    WMReleaseSwapchainEvent(QQuickWindow *c) :
+        WMWindowEvent(c, QEvent::Type(WM_ReleaseSwapchain)) { }
 };
 
 class QSGRenderThreadEventQueue : public QQueue<QEvent *>
@@ -1332,7 +1311,7 @@ void QSGThreadedRenderLoop::handleObscurity(Window *w)
             return;
         }
         w->thread->mutex.lock();
-        w->thread->postEvent(new WMWindowEvent(w->window, WM_Obscure));
+        w->thread->postEvent(new WMWindowEvent(w->window, QEvent::Type(WM_Obscure)));
         w->thread->waitCondition.wait(&w->thread->mutex);
         w->thread->mutex.unlock();
     }

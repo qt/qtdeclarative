@@ -20,6 +20,7 @@
 #include <private/qtquickglobal_p.h>
 #include <QtCore/qset.h>
 #include <QtCore/qobject.h>
+#include <QtCore/qcoreevent.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -92,6 +93,33 @@ enum QSGRenderLoopType
 {
     BasicRenderLoop,
     ThreadedRenderLoop
+};
+
+enum QSGCustomEvents {
+
+// Passed from the RL to the RT when a window is removed obscured and
+// should be removed from the render loop.
+WM_Obscure           = QEvent::User + 1,
+
+// Passed from the RL to RT when GUI has been locked, waiting for sync
+// (updatePaintNode())
+WM_RequestSync       = QEvent::User + 2,
+
+// Passed by the RL to the RT to free up maybe release SG and GL contexts
+// if no windows are rendering.
+WM_TryRelease        = QEvent::User + 4,
+
+// Passed by the RL to the RT when a QQuickWindow::grabWindow() is
+// called.
+WM_Grab              = QEvent::User + 5,
+
+// Passed by the window when there is a render job to run
+WM_PostJob           = QEvent::User + 6,
+
+// When using the QRhi this is sent upon PlatformSurfaceAboutToBeDestroyed from
+// the event filter installed on the QQuickWindow.
+WM_ReleaseSwapchain  = QEvent::User + 7,
+
 };
 
 QT_END_NAMESPACE
