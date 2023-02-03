@@ -499,11 +499,11 @@ void QSGSoftwareRenderThread::syncAndRender()
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 }
 
-template<class T> T *windowFor(const QVector<T> &list, QQuickWindow *window)
+QSGSoftwareThreadedRenderLoop::WindowData *QSGSoftwareThreadedRenderLoop::windowFor(QQuickWindow *window)
 {
-    for (const T &t : list) {
+    for (const auto &t : std::as_const(m_windows)) {
         if (t.window == window)
-            return const_cast<T *>(&t);
+            return const_cast<WindowData *>(&t);
     }
     return nullptr;
 }
@@ -535,7 +535,7 @@ void QSGSoftwareThreadedRenderLoop::hide(QQuickWindow *window)
     qCDebug(QSG_RASTER_LOG_RENDERLOOP) << "hide" << window;
 
     if (window->isExposed())
-        handleObscurity(windowFor(m_windows, window));
+        handleObscurity(windowFor(window));
 
     releaseResources(window);
 }
@@ -552,7 +552,7 @@ void QSGSoftwareThreadedRenderLoop::windowDestroyed(QQuickWindow *window)
 {
     qCDebug(QSG_RASTER_LOG_RENDERLOOP) << "window destroyed" << window;
 
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     if (!w)
         return;
 
@@ -586,7 +586,7 @@ void QSGSoftwareThreadedRenderLoop::exposureChanged(QQuickWindow *window)
     if (window->isExposed()) {
         handleExposure(window);
     } else {
-        WindowData *w = windowFor(m_windows, window);
+        WindowData *w = windowFor(window);
         if (w)
             handleObscurity(w);
     }
@@ -596,13 +596,13 @@ QImage QSGSoftwareThreadedRenderLoop::grab(QQuickWindow *window)
 {
     qCDebug(QSG_RASTER_LOG_RENDERLOOP) << "grab" << window;
 
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     // Have to support invisible (but created()'ed) windows as well.
     // Unlike with GL, leaving that case for QQuickWindow to handle is not feasible.
     const bool tempExpose = !w;
     if (tempExpose) {
         handleExposure(window);
-        w = windowFor(m_windows, window);
+        w = windowFor(window);
         Q_ASSERT(w);
     }
 
@@ -633,7 +633,7 @@ QImage QSGSoftwareThreadedRenderLoop::grab(QQuickWindow *window)
 
 void QSGSoftwareThreadedRenderLoop::update(QQuickWindow *window)
 {
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     if (!w)
         return;
 
@@ -650,7 +650,7 @@ void QSGSoftwareThreadedRenderLoop::update(QQuickWindow *window)
 
 void QSGSoftwareThreadedRenderLoop::maybeUpdate(QQuickWindow *window)
 {
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     if (w)
         scheduleUpdate(w);
 }
@@ -659,7 +659,7 @@ void QSGSoftwareThreadedRenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
     qCDebug(QSG_RASTER_LOG_RENDERLOOP) << "handleUpdateRequest" << window;
 
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     if (w)
         polishAndSync(w, false);
 }
@@ -683,14 +683,14 @@ void QSGSoftwareThreadedRenderLoop::releaseResources(QQuickWindow *window)
 {
     qCDebug(QSG_RASTER_LOG_RENDERLOOP) << "releaseResources" << window;
 
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     if (w)
         handleResourceRelease(w, false);
 }
 
 void QSGSoftwareThreadedRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
 {
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     if (w && w->thread && w->thread->exposedWindow)
         w->thread->postEvent(new QSGSoftwareJobEvent(window, job));
     else
@@ -774,7 +774,7 @@ void QSGSoftwareThreadedRenderLoop::handleExposure(QQuickWindow *window)
 {
     qCDebug(QSG_RASTER_LOG_RENDERLOOP) << "handleExposure" << window;
 
-    WindowData *w = windowFor(m_windows, window);
+    WindowData *w = windowFor(window);
     if (!w) {
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "adding window to list");
         WindowData win;
@@ -904,7 +904,7 @@ void QSGSoftwareThreadedRenderLoop::polishAndSync(QSGSoftwareThreadedRenderLoop:
     // Flush pending touch events.
     QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->flushFrameSynchronousEvents(window);
     // The delivery of the event might have caused the window to stop rendering
-    w = windowFor(m_windows, window);
+    w = windowFor(window);
     if (!w || !w->thread || !w->thread->exposedWindow) {
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "polishAndSync - removed after touch event flushing, abort");
         return;

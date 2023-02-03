@@ -76,6 +76,8 @@ private:
 
     friend class QSGRenderThread;
 
+
+    Window *windowFor(QQuickWindow *window);
     void releaseResources(Window *window, bool inDestructor);
     bool checkAndResetForceUpdate(QQuickWindow *window);
 
