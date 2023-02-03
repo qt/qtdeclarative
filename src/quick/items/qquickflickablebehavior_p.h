@@ -72,4 +72,7 @@
 #define QML_FLICK_MULTIFLICK_MAXBOOST 3.0
 #endif
 
+// Really slow flicks can be annoying.
+const qreal _q_MinimumFlickVelocity = 75.0;
+
 #endif //QQUICKFLICKABLEBEHAVIOR_H

@@ -3,6 +3,7 @@
 
 #include "qquicklistview_p.h"
 #include "qquickitemview_p_p.h"
+#include "qquickflickablebehavior_p.h"
 
 #include <private/qqmlobjectmodel_p.h>
 #include <QtQml/qqmlexpression.h>
@@ -1946,7 +1947,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
             else if (velocity > 0 && newtarget >= minExtent)
                 newtarget = minExtent + overshootDist;
             if (newtarget == data.flickTarget) { // boundary unchanged - nothing to do
-                if (qAbs(velocity) < MinimumFlickVelocity)
+                if (qAbs(velocity) < _q_MinimumFlickVelocity)
                     correctFlick = false;
                 return false;
             }
