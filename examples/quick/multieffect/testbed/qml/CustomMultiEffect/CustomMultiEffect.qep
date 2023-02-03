@@ -1,0 +1,377 @@
+{
+    "QEP": {
+        "QQEM": "0.42",
+        "connections": [
+            {
+                "fromId": 2,
+                "toId": 1
+            },
+            {
+                "fromId": 0,
+                "toId": 3
+            },
+            {
+                "fromId": 3,
+                "toId": 2
+            }
+        ],
+        "exportDirectory": ".",
+        "exportFlags": 11,
+        "exportName": "CustomMultiEffect",
+        "nodes": [
+            {
+                "fragmentCode": [
+                    "void main() {",
+                    "    fragColor = texture(iSource, texCoord);",
+                    "    @nodes",
+                    "    fragColor = fragColor * qt_Opacity;",
+                    "}"
+                ],
+                "name": "Main",
+                "nodeId": 0,
+                "type": 0,
+                "vertexCode": [
+                    "void main() {",
+                    "    texCoord = qt_MultiTexCoord0;",
+                    "    fragCoord = qt_Vertex.xy;",
+                    "    vec2 vertCoord = qt_Vertex.xy;",
+                    "    @nodes",
+                    "    gl_Position = qt_Matrix * vec4(vertCoord, 0.0, 1.0);",
+                    "}"
+                ],
+                "x": 140,
+                "y": 35.25
+            },
+            {
+                "name": "Output",
+                "nodeId": 1,
+                "type": 1,
+                "x": 140,
+                "y": 589.75
+            },
+            {
+                "description": "This node matches to features and API of the Qt Quick MultiEffect element. This makes it easy to build customized MultiEffects.",
+                "fragmentCode": [
+                    "{",
+                    "    vec4 color = fragColor;",
+                    "#if (BLUR_ENABLED)",
+                    "    // blur",
+                    "    vec4 blurredColor = texture(iSource, texCoord) * blurWeight1[0];",
+                    "    blurredColor += texture(iSourceBlur1, texCoord) * blurWeight1[1];",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 2)",
+                    "    blurredColor += texture(iSourceBlur2, texCoord) * blurWeight1[2];",
+                    "#endif",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 8)",
+                    "    blurredColor += texture(iSourceBlur3, texCoord) * blurWeight1[3];",
+                    "#endif",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 16)",
+                    "    blurredColor += texture(iSourceBlur4, texCoord) * blurWeight2[0];",
+                    "#endif",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 32)",
+                    "    blurredColor += texture(iSourceBlur5, texCoord) * blurWeight2[1];",
+                    "#endif",
+                    "    color = blurredColor;",
+                    "#endif",
+                    "    // contrast, brightness, saturation and colorization",
+                    "    color.rgb = (color.rgb - 0.5 * color.a) * (1.0 + contrast) + 0.5 * color.a;",
+                    "    color.rgb += brightness * color.a;",
+                    "    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));",
+                    "    float colorizationAlpha = colorization * colorizationColor.a;",
+                    "    color.rgb = mix(color.rgb, gray * colorizationColor.rgb, colorizationAlpha);",
+                    "    color.rgb = mix(vec3(gray), color.rgb, 1.0 + saturation);",
+                    "#if (SHADOW_ENABLED)",
+                    "    // shadow",
+                    "    float shadow = texture(iSource, shadowTexCoord).a * shadowBlurWeight1[0];",
+                    "    shadow += texture(iSourceBlur1, shadowTexCoord).a * shadowBlurWeight1[1];",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 2)",
+                    "    shadow += texture(iSourceBlur2, shadowTexCoord).a * shadowBlurWeight1[2];",
+                    "#endif",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 8)",
+                    "    shadow += texture(iSourceBlur3, shadowTexCoord).a * shadowBlurWeight1[3];",
+                    "#endif",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 16)",
+                    "    shadow += texture(iSourceBlur4, shadowTexCoord).a * shadowBlurWeight2[0];",
+                    "#endif",
+                    "#if (BLUR_HELPER_MAX_LEVEL > 32)",
+                    "    shadow += texture(iSourceBlur5, shadowTexCoord).a * shadowBlurWeight2[1];",
+                    "#endif",
+                    "    shadow *= (shadowColor.a * shadowOpacity);",
+                    "    float saa = (1.0 - color.a) * (1.0 - shadow);",
+                    "    color.rgb = mix(shadowColor.rgb * shadow, color.rgb, color.a + saa);",
+                    "    color.a = 1.0 - saa;",
+                    "#endif",
+                    "#if (MASK_ENABLED)",
+                    "    // mask",
+                    "    vec4 maskTexture = texture(maskSource, texCoord);",
+                    "    float alphaMask = maskTexture.a;",
+                    "    const float mSLow = 1.0 + maskSpreadAtMin;",
+                    "    const float mSUp = 1.0 + maskSpreadAtMax;",
+                    "    float m1 = smoothstep(maskThresholdMin * mSLow - (mSLow - 0.999), maskThresholdMin * mSLow, alphaMask);",
+                    "    float m2 = smoothstep((1.0 - maskThresholdMax) * mSUp - (mSUp - 0.999), (1.0 - maskThresholdMax) * mSUp, (1.0 - alphaMask));",
+                    "    float mm = m1 * m2;",
+                    "    color *= (1.0 - float(maskInverted)) * mm + float(maskInverted) * (1.0 - mm);",
+                    "#endif",
+                    "    fragColor = color;",
+                    "}"
+                ],
+                "name": "MultiEffect",
+                "nodeId": 2,
+                "properties": [
+                    {
+                        "defaultValue": "0",
+                        "maxValue": "1",
+                        "minValue": "-1",
+                        "name": "contrast",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "maxValue": "1",
+                        "minValue": "-1",
+                        "name": "brightness",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "maxValue": "1",
+                        "minValue": "-1",
+                        "name": "saturation",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "colorization",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "1, 0, 0, 1",
+                        "name": "colorizationColor",
+                        "type": "color",
+                        "value": "1, 0, 0, 1"
+                    },
+                    {
+                        "defaultValue": "1",
+                        "description": "Enables the blur effect.",
+                        "name": "BLUR_ENABLED",
+                        "type": "define",
+                        "value": "1"
+                    },
+                    {
+                        "defaultValue": "32",
+                        "maxValue": "64",
+                        "minValue": "0",
+                        "name": "blurMax",
+                        "type": "int",
+                        "value": "32"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "blur",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "description": "Enables the shadow effect.",
+                        "name": "SHADOW_ENABLED",
+                        "type": "define",
+                        "value": "1"
+                    },
+                    {
+                        "defaultValue": "1",
+                        "description": "This property defines how much blur (radius) is applied to the shadow.\n\nThe value ranges from 0.0 (no blur) to 1.0 (full blur). By default, the property is set to \\c 0.0 (no change). The amount of full blur is affected by blurHelperBlurMultiplier.",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "shadowBlur",
+                        "type": "float",
+                        "value": "1"
+                    },
+                    {
+                        "defaultValue": "1",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "shadowOpacity",
+                        "type": "float",
+                        "value": "1"
+                    },
+                    {
+                        "defaultValue": "0, 0, 0, 1",
+                        "name": "shadowColor",
+                        "type": "color",
+                        "value": "0, 0, 0, 1"
+                    },
+                    {
+                        "defaultValue": "1",
+                        "maxValue": "1.2",
+                        "minValue": "0.8",
+                        "name": "shadowScale",
+                        "type": "float",
+                        "value": "1"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "maxValue": "30",
+                        "minValue": "-30",
+                        "name": "shadowHorizontalOffset",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "maxValue": "30",
+                        "minValue": "-30",
+                        "name": "shadowVerticalOffset",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "1",
+                        "description": "Enables the mask effect.",
+                        "name": "MASK_ENABLED",
+                        "type": "define",
+                        "value": "1"
+                    },
+                    {
+                        "defaultValue": "",
+                        "description": "Source item for the mask effect. By default the alpha channel of the source item is used for masking but this can be easily adjusted in the shader.",
+                        "name": "maskSource",
+                        "type": "image",
+                        "value": ""
+                    },
+                    {
+                        "defaultValue": "0",
+                        "description": "This property defines a lower threshold value for the mask pixels. The mask pixels that have an alpha value below this property are used to completely mask away the corresponding pixels from the source item. The mask pixels that have a higher alpha value are used to alphablend the source item to the display.\n\nThe value ranges from 0.0 (alpha value 0) to 1.0 (alpha value 255). By default, the property is set to 0.0.",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "maskThresholdMin",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "description": "This property defines the smoothness of the mask edges near the maskThresholdMin. Setting higher spread values softens the transition from the transparent mask pixels towards opaque mask pixels by adding interpolated values between them.\n\nThe value ranges from 0.0 (sharp mask edge) to 1.0 (smooth mask edge). By default, the property is set to 0.0.",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "maskSpreadAtMin",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "1",
+                        "description": "This property defines an upper threshold value for the mask pixels. The mask pixels that have an alpha value below this property are used to completely mask away the corresponding pixels from the source item. The mask pixels that have a higher alpha value are used to alphablend the source item to the display.\n\nThe value ranges from 0.0 (alpha value 0) to 1.0 (alpha value 255). By default, the property is set to 1.0.",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "maskThresholdMax",
+                        "type": "float",
+                        "value": "1"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "description": "This property defines the smoothness of the mask edges near the maskThresholdMax. Using higher spread values softens the transition from the transparent mask pixels towards opaque mask pixels by adding interpolated values between them.\n\nThe value ranges from 0.0 (sharp mask edge) to 1.0 (smooth mask edge). By default, the property is set to 0.0.",
+                        "maxValue": "1",
+                        "minValue": "0",
+                        "name": "maskSpreadAtMax",
+                        "type": "float",
+                        "value": "0"
+                    },
+                    {
+                        "defaultValue": "false",
+                        "description": "This property switches the mask to the opposite side; instead of masking away the content outside maskThresholdMin and maskThresholdMax, content between them will get masked away.\n\nBy default, the property is set to false.",
+                        "name": "maskInverted",
+                        "type": "bool",
+                        "value": "false"
+                    }
+                ],
+                "type": 2,
+                "vertexCode": [
+                    "out vec4 blurWeight1;",
+                    "out vec2 blurWeight2;",
+                    "out vec2 shadowTexCoord;",
+                    "out vec4 shadowBlurWeight1;",
+                    "out vec2 shadowBlurWeight2;",
+                    "",
+                    "float blurWeight(float v) {",
+                    "    return max(0.0, min(1.0, 1.0 - v * 2.0));",
+                    "}",
+                    "",
+                    "@main",
+                    "{",
+                    "#if (BLUR_ENABLED)",
+                    "    float blurLod = sqrt(blur * (blurMax / 64.0)) * 1.2 - 0.2;",
+                    "    float bw1 = blurWeight(abs(blurLod - 0.1));",
+                    "    float bw2 = blurWeight(abs(blurLod - 0.3));",
+                    "    float bw3 = blurWeight(abs(blurLod - 0.5));",
+                    "    float bw4 = blurWeight(abs(blurLod - 0.7));",
+                    "    float bw5 = blurWeight(abs(blurLod - 0.9));",
+                    "    float bw6 = blurWeight(abs(blurLod - 1.1));",
+                    "",
+                    "    float bsum = bw1 + bw2 + bw3 + bw4 + bw5 + bw6;",
+                    "    blurWeight1 = vec4(bw1 / bsum, bw2 / bsum, bw3 / bsum, bw4 / bsum);",
+                    "    blurWeight2 = vec2(bw5 / bsum, bw6 / bsum);",
+                    "#endif",
+                    "#if (SHADOW_ENABLED)",
+                    "    float shadowBlurLod = sqrt(shadowBlur * (blurMax / 64.0)) * 1.2 - 0.2;",
+                    "    float sbw1 = blurWeight(abs(shadowBlurLod - 0.1));",
+                    "    float sbw2 = blurWeight(abs(shadowBlurLod - 0.3));",
+                    "    float sbw3 = blurWeight(abs(shadowBlurLod - 0.5));",
+                    "    float sbw4 = blurWeight(abs(shadowBlurLod - 0.7));",
+                    "    float sbw5 = blurWeight(abs(shadowBlurLod - 0.9));",
+                    "    float sbw6 = blurWeight(abs(shadowBlurLod - 1.1));",
+                    "",
+                    "    float sbsum = sbw1 + sbw2 + sbw3 + sbw4 + sbw5 + sbw6;",
+                    "    shadowBlurWeight1 = vec4(sbw1 / sbsum, sbw2 / sbsum, sbw3 / sbsum, sbw4 / sbsum);",
+                    "    shadowBlurWeight2 = vec2(sbw5 / sbsum, sbw6 / sbsum);",
+                    "",
+                    "    vec2 shadowOffset = vec2(shadowHorizontalOffset / iResolution.x, shadowVerticalOffset / iResolution.y);",
+                    "    float invertedScale = 1.0 / shadowScale;",
+                    "    float s = (1.0 - invertedScale) * 0.5;",
+                    "    vec2 shadowCenterOffset = vec2(s);",
+                    "    shadowTexCoord = qt_MultiTexCoord0 - shadowOffset;",
+                    "    shadowTexCoord = (shadowTexCoord * invertedScale) + shadowCenterOffset;",
+                    "#endif",
+                    "}"
+                ],
+                "x": 105,
+                "y": 327.5
+            },
+            {
+                "description": "This node is required e.g. for FastBlur and DropShadow. It generates blurred iSourceBlur[1..6] samplers to be available for shaders.",
+                "fragmentCode": [
+                    "@blursources"
+                ],
+                "name": "BlurHelper",
+                "nodeId": 3,
+                "properties": [
+                    {
+                        "defaultValue": "64",
+                        "description": "This property defines the maximum pixel radius that blur with value 1.0 will reach.\n\nMeaningful range of this value is from 2 (subtle blur) to 64 (high blur). By default, the property is set to 32. For the most optimal performance, select as small value as you need.\n\nNote: This affects to both blur and shadow effects.",
+                        "name": "BLUR_HELPER_MAX_LEVEL",
+                        "type": "define",
+                        "value": "64"
+                    },
+                    {
+                        "defaultValue": "0",
+                        "description": "This property defines a multiplier for extending the blur radius.\n\nThe value ranges from 0.0 (not multiplied) to inf. By default, the property is set to 0.0. Incresing the multiplier extends the blur radius, but decreases the blur quality. This is more performant option for a bigger blur radius than BLUR_HELPER_MAX_LEVEL as it doesn't increase the amount of texture lookups.\n\nNote: This affects to both blur and shadow effects.",
+                        "maxValue": "2",
+                        "minValue": "0",
+                        "name": "blurMultiplier",
+                        "type": "float",
+                        "value": "0"
+                    }
+                ],
+                "type": 2,
+                "x": 105,
+                "y": 188.875
+            }
+        ],
+        "version": 1
+    }
+}

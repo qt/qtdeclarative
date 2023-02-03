@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Effects
+import "CustomMultiEffect"
 
 Rectangle {
     id: mainWindow
@@ -77,9 +78,9 @@ Rectangle {
         MultiEffect {
             id: quickMultiEffect
             anchors.fill: testSourceItem
+            visible: !settings.showCustomMultiEffect
             source: testSourceItem
             maskSource: testMaskItem
-
             autoPaddingEnabled: settings.autoPaddingEnabled
             paddingRect: settings.paddingRect
             brightness: settings.brightnessEnabled ? settings.brightness : 0
@@ -106,11 +107,41 @@ Rectangle {
             maskSpreadAtMax: settings.maskSpreadAtMax
 
             onItemSizeChanged: {
-                warningsView.showSizeWarning();
+                if (visible)
+                    warningsView.showSizeWarning();
             }
             onShaderChanged: {
-                warningsView.showShaderWarning();
+                if (visible)
+                    warningsView.showShaderWarning();
             }
+        }
+
+        // For comparison, custom effect created with QQEM and the MultiEffect node.
+        CustomMultiEffect {
+            id: customMultiEffect
+            anchors.fill: testSourceItem
+            visible: settings.showCustomMultiEffect
+            source: testSourceItem
+            maskSource: testMaskItem
+            brightness: settings.brightnessEnabled ? settings.brightness : 0
+            contrast:  settings.contrastEnabled ? settings.contrast : 0
+            saturation: settings.saturationEnabled ? settings.saturation : 0
+            colorizationColor: settings.colorizationColor
+            colorization: settings.colorizationEnabled ? settings.colorization : 0
+            blur: settings.blur
+            blurMax: settings.blurMax
+            blurMultiplier: settings.blurMultiplier
+            shadowOpacity: settings.shadowOpacity
+            shadowBlur: settings.shadowBlur
+            shadowHorizontalOffset: settings.shadowHorizontalOffset
+            shadowVerticalOffset: settings.shadowVerticalOffset
+            shadowColor: settings.shadowColor
+            shadowScale: settings.shadowScale
+            maskInverted: settings.maskInverted
+            maskThresholdMin: settings.maskThresholdMin
+            maskSpreadAtMin: settings.maskSpreadAtMin
+            maskThresholdMax: settings.maskThresholdMax
+            maskSpreadAtMax: settings.maskSpreadAtMax
         }
     }
 

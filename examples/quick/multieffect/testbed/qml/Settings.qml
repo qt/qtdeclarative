@@ -18,6 +18,7 @@ QtObject {
     property bool animateMovement: true
     property bool showShader: false
     property bool showItemSize: false
+    property bool showCustomMultiEffect: false
 
     property bool autoPaddingEnabled: true
     property rect paddingRect: Qt.rect(0, 0, 0, 0)

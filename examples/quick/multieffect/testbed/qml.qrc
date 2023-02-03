@@ -21,5 +21,11 @@
         <file>qml/images/arrow.png</file>
         <file>qml/images/Built_with_Qt.png</file>
         <file>qml/images/Built_with_Qt_RGB_logo.png</file>
+        <file>qml/CustomMultiEffect/BlurHelper.qml</file>
+        <file>qml/CustomMultiEffect/bluritems.frag.qsb</file>
+        <file>qml/CustomMultiEffect/bluritems.vert.qsb</file>
+        <file>qml/CustomMultiEffect/custommultieffect.frag.qsb</file>
+        <file>qml/CustomMultiEffect/CustomMultiEffect.qml</file>
+        <file>qml/CustomMultiEffect/custommultieffect.vert.qsb</file>
     </qresource>
 </RCC>
