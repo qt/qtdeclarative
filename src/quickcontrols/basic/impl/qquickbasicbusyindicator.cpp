@@ -10,7 +10,7 @@
 QT_BEGIN_NAMESPACE
 
 static const int CircleCount = 10;
-static const int TotalDuration = 100 * CircleCount * 2;
+static const int QbbiTotalDuration = 100 * CircleCount * 2;
 static const QRgb TransparentColor = 0x00000000;
 
 static QPointF moveCircle(const QPointF &pos, qreal rotation, qreal distance)
@@ -35,7 +35,7 @@ QQuickBasicBusyIndicatorNode::QQuickBasicBusyIndicatorNode(QQuickBasicBusyIndica
     : QQuickAnimatedNode(item)
 {
     setLoopCount(Infinite);
-    setDuration(TotalDuration);
+    setDuration(QbbiTotalDuration);
     setCurrentTime(item->elapsed());
 
     for (int i = 0; i < CircleCount; ++i) {
@@ -51,7 +51,7 @@ QQuickBasicBusyIndicatorNode::QQuickBasicBusyIndicatorNode(QQuickBasicBusyIndica
 
 void QQuickBasicBusyIndicatorNode::updateCurrentTime(int time)
 {
-    const qreal percentageComplete = time / qreal(TotalDuration);
+    const qreal percentageComplete = time / qreal(QbbiTotalDuration);
     const qreal firstPhaseProgress = percentageComplete <= 0.5 ? percentageComplete * 2 : 0;
     const qreal secondPhaseProgress = percentageComplete > 0.5 ? (percentageComplete - 0.5) * 2 : 0;
 

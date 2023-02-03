@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 
 static const int PauseDuration = 520;
 static const int SlideDuration = 1240;
-static const int TotalDuration = SlideDuration + PauseDuration;
+static const int QmpbTotalDuration = SlideDuration + PauseDuration;
 
 class QQuickMaterialProgressBarNode : public QQuickAnimatedNode
 {
@@ -37,7 +37,7 @@ QQuickMaterialProgressBarNode::QQuickMaterialProgressBarNode(QQuickMaterialProgr
     : QQuickAnimatedNode(item)
 {
     setLoopCount(Infinite);
-    setDuration(TotalDuration);
+    setDuration(QmpbTotalDuration);
 }
 
 void QQuickMaterialProgressBarNode::updateCurrentTime(int time)
