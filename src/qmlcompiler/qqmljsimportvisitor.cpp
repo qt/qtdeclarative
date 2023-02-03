@@ -2604,10 +2604,17 @@ void QQmlJSImportVisitor::endVisit(Program *)
 
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
 {
+    // This is a rather rough approximation of "used type" but the "unused import"
+    // info message doesn't have to be 100% accurate.
     const QString name = fieldMember->name.toString();
     if (m_importTypeLocationMap.contains(name)) {
-        if (m_rootScopeImports.isNullType(name))
+        const QQmlJSImportedScope type = m_rootScopeImports.type(name);
+        if (type.scope.isNull()) {
+            if (m_rootScopeImports.hasType(name))
+                m_usedTypes.insert(name);
+        } else if (!type.scope->ownAttachedTypeName().isEmpty()) {
             m_usedTypes.insert(name);
+        }
     }
 }
 
