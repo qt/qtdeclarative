@@ -9,6 +9,7 @@
 #include <private/qsgdistancefieldglyphnode_p.h>
 #include <private/qquickclipnode_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qquicktextdocument_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 
 #include <QtCore/qpoint.h>
@@ -25,19 +26,6 @@
 #include <qhash.h>
 
 QT_BEGIN_NAMESPACE
-
-namespace {
-
-    class ProtectedLayoutAccessor: public QAbstractTextDocumentLayout
-    {
-    public:
-        inline QTextCharFormat formatAccessor(int pos)
-        {
-            return format(pos);
-        }
-    };
-
-}
 
 Q_DECLARE_LOGGING_CATEGORY(lcVP)
 
@@ -182,7 +170,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
         if (textFrame->firstPosition() > textFrame->lastPosition()
          && textFrame->frameFormat().position() != QTextFrameFormat::InFlow) {
             const int pos = textFrame->firstPosition() - 1;
-            ProtectedLayoutAccessor *a = static_cast<ProtectedLayoutAccessor *>(textDocument->documentLayout());
+            auto *a = static_cast<QtPrivate::ProtectedLayoutAccessor *>(textDocument->documentLayout());
             QTextCharFormat format = a->formatAccessor(pos);
             QRectF rect = a->frameBoundingRect(textFrame);
 

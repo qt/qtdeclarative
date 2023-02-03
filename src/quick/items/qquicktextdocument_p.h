@@ -65,6 +65,17 @@ private:
     static QSet<QUrl> errors;
 };
 
+namespace QtPrivate {
+class ProtectedLayoutAccessor: public QAbstractTextDocumentLayout
+{
+public:
+    inline QTextCharFormat formatAccessor(int pos)
+    {
+        return format(pos);
+    }
+};
+} // namespace QtPrivate
+
 QT_END_NAMESPACE
 
 #endif // QQUICKDOCUMENT_P_H
