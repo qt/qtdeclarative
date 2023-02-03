@@ -1219,6 +1219,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("propertyWithOn") << QStringLiteral("switcher.qml");
     QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml");
     QTest::newRow("constructorProperty") << QStringLiteral("constructorProperty.qml");
+    QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml");
 }
 
 void TestQmllint::cleanQmlCode()
