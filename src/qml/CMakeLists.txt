@@ -426,6 +426,10 @@ qt_internal_add_qml_module(Qml
 
 qt_update_ignore_pch_source(Qml "compat/removed_api.cpp")
 
+set_source_files_properties(compat/removed_api.cpp
+                            jsruntime/qv4mathobject.cpp # math.h issues on Windows
+                            PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
+
 qt_internal_add_qml_module(QmlMeta
     URI "QtQml"
     VERSION "${PROJECT_VERSION}"
