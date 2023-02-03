@@ -101,15 +101,6 @@ static const int nodeBreakingSize = 300;
 const int QQuickTextEditPrivate::largeTextSizeThreshold = QQUICKTEXT_LARGETEXT_THRESHOLD;
 
 namespace {
-    class ProtectedLayoutAccessor: public QAbstractTextDocumentLayout
-    {
-    public:
-        inline QTextCharFormat formatAccessor(int pos)
-        {
-            return format(pos);
-        }
-    };
-
     class RootNode : public QSGTransformNode
     {
     public:
@@ -2199,7 +2190,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 node = d->createTextNode();
                 updateNodeTransform(node, d->document->documentLayout()->frameBoundingRect(textFrame).topLeft());
                 const int pos = textFrame->firstPosition() - 1;
-                ProtectedLayoutAccessor *a = static_cast<ProtectedLayoutAccessor *>(d->document->documentLayout());
+                auto *a = static_cast<QtPrivate::ProtectedLayoutAccessor *>(d->document->documentLayout());
                 QTextCharFormat format = a->formatAccessor(pos);
                 QTextBlock block = textFrame->firstCursorPosition().block();
                 nodeOffset = d->document->documentLayout()->blockBoundingRect(block).topLeft();
