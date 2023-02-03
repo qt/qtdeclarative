@@ -1758,6 +1758,10 @@ QV4::ReturnedValue ExecutionEngine::fromData(
                 return QV4::Encode(*reinterpret_cast<const int*>(ptr));
             case QMetaType::UInt:
                 return QV4::Encode(*reinterpret_cast<const uint*>(ptr));
+            case QMetaType::Long:
+                return QV4::Encode((double)*reinterpret_cast<const long *>(ptr));
+            case QMetaType::ULong:
+                return QV4::Encode((double)*reinterpret_cast<const ulong *>(ptr));
             case QMetaType::LongLong:
                 return QV4::Encode((double)*reinterpret_cast<const qlonglong*>(ptr));
             case QMetaType::ULongLong:

@@ -383,6 +383,8 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     VALUE_TYPE_LOAD(QMetaType::Bool, bool, bool);
     VALUE_TYPE_LOAD(QMetaType::Int, int, int);
     VALUE_TYPE_LOAD(QMetaType::UInt, uint, uint);
+    VALUE_TYPE_LOAD(QMetaType::Long, long, double);
+    VALUE_TYPE_LOAD(QMetaType::ULong, ulong, double);
     VALUE_TYPE_LOAD(QMetaType::LongLong, qlonglong, double);
     VALUE_TYPE_LOAD(QMetaType::ULongLong, qulonglong, double);
     VALUE_TYPE_LOAD(QMetaType::Double, double, double);
