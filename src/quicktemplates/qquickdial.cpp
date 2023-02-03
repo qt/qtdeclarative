@@ -272,8 +272,6 @@ void QQuickDialPrivate::handleUngrab()
     q->setPressed(false);
 }
 
-static inline QString handleName() { return QStringLiteral("handle"); }
-
 void QQuickDialPrivate::cancelHandle()
 {
     Q_Q(QQuickDial);

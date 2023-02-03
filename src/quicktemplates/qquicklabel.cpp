@@ -211,8 +211,6 @@ void QQuickLabelPrivate::maybeSetAccessibleName(const QString &name)
 }
 #endif
 
-static inline QString backgroundName() { return QStringLiteral("background"); }
-
 void QQuickLabelPrivate::cancelBackground()
 {
     Q_Q(QQuickLabel);

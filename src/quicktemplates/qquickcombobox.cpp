@@ -767,8 +767,6 @@ void QQuickComboBoxPrivate::handleUngrab()
     q->setPressed(false);
 }
 
-static inline QString indicatorName() { return QStringLiteral("indicator"); }
-
 void QQuickComboBoxPrivate::cancelIndicator()
 {
     Q_Q(QQuickComboBox);

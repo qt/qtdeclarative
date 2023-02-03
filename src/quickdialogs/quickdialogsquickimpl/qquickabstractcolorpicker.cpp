@@ -13,11 +13,6 @@
 
 QQuickAbstractColorPickerPrivate::QQuickAbstractColorPickerPrivate() = default;
 
-static inline QString handleName()
-{
-    return QStringLiteral("handle");
-}
-
 bool QQuickAbstractColorPickerPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractColorPicker);

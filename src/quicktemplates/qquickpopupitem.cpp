@@ -71,8 +71,6 @@ void QQuickPopupItemPrivate::executeContentItem(bool complete)
         quickCompleteDeferred(popup, contentItemName(), contentItem);
 }
 
-static inline QString backgroundName() { return QStringLiteral("background"); }
-
 void QQuickPopupItemPrivate::cancelBackground()
 {
     quickCancelDeferred(popup, backgroundName());

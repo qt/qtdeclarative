@@ -8,8 +8,6 @@ QT_BEGIN_NAMESPACE
 
 class QQuickIndicatorButton;
 
-static inline QString indicatorName() { return QStringLiteral("indicator"); }
-
 void QQuickIndicatorButtonPrivate::cancelIndicator()
 {
     Q_Q(QQuickIndicatorButton);

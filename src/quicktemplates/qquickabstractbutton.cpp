@@ -362,8 +362,6 @@ void QQuickAbstractButtonPrivate::toggle(bool value)
         emit q->toggled();
 }
 
-static inline QString indicatorName() { return QStringLiteral("indicator"); }
-
 void QQuickAbstractButtonPrivate::cancelIndicator()
 {
     Q_Q(QQuickAbstractButton);

@@ -280,8 +280,6 @@ void QQuickApplicationWindowPrivate::contentData_append(QQmlListProperty<QObject
         QQuickPopupPrivate::get(popup)->setWindow(static_cast<QQuickApplicationWindow *>(prop->data));
 }
 
-static inline QString backgroundName() { return QStringLiteral("background"); }
-
 void QQuickApplicationWindowPrivate::cancelBackground()
 {
     Q_Q(QQuickApplicationWindow);
