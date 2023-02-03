@@ -1490,9 +1490,11 @@ void QQuickMultiEffectPrivate::updateColorizationColor()
     if (!m_shaderEffect)
         return;
 
-    int alpha = std::clamp(int(m_colorizationColor.alpha() * m_colorization), 0, 255);
-    QColor colorizationColor = m_colorizationColor;
-    colorizationColor.setAlpha(alpha);
+    float alpha = std::clamp(float(m_colorizationColor.alphaF() * m_colorization), 0.0f, 1.0f);
+    QVector4D colorizationColor(m_colorizationColor.redF(),
+                                m_colorizationColor.greenF(),
+                                m_colorizationColor.blueF(),
+                                alpha);
     m_shaderEffect->setProperty("colorizationColor", colorizationColor);
 }
 
@@ -1501,9 +1503,12 @@ void QQuickMultiEffectPrivate::updateShadowColor()
     if (!m_shaderEffect)
         return;
 
-    int alpha = std::clamp(int(m_shadowColor.alpha() * m_shadowOpacity), 0, 255);
-    QColor shadowColor = m_shadowColor;
-    shadowColor.setAlpha(alpha);
+    float alpha = std::clamp(float(m_shadowColor.alphaF() * m_shadowOpacity), 0.0f, 1.0f);
+    QVector4D shadowColor(m_shadowColor.redF(),
+                          m_shadowColor.greenF(),
+                          m_shadowColor.blueF(),
+                          alpha);
+
     m_shaderEffect->setProperty("shadowColor", shadowColor);
 }
 
@@ -1558,8 +1563,8 @@ void QQuickMultiEffectPrivate::updateBlurItemSizes(bool forceUpdate)
     // First blur item size to be half of th source item
     // extended size, rounded to next divisible by 16.
     QSizeF sourceSize = itemRect().size();
-    QSizeF firstItemSize(std::ceil(sourceSize.width() / 32) * 16,
-                         std::ceil(sourceSize.height() / 32) * 16);
+    QSizeF firstItemSize(std::ceil(sourceSize.width() / 16) * 8,
+                         std::ceil(sourceSize.height() / 16) * 8);
 
     if (!forceUpdate && m_firstBlurItemSize == firstItemSize)
         return;
