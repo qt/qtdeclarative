@@ -16,9 +16,8 @@ QT_BEGIN_NAMESPACE
 using namespace Qt::StringLiterals;
 
 QQmlJSLinterCodegen::QQmlJSLinterCodegen(QQmlJSImporter *importer, const QString &fileName,
-                                         const QStringList &qmldirFiles, QQmlJSLogger *logger,
-                                         QQmlJSTypeInfo *typeInfo)
-    : QQmlJSAotCompiler(importer, fileName, qmldirFiles, logger), m_typeInfo(typeInfo)
+                                         const QStringList &qmldirFiles, QQmlJSLogger *logger)
+    : QQmlJSAotCompiler(importer, fileName, qmldirFiles, logger)
 {
 }
 
@@ -84,7 +83,7 @@ bool QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
                                           QQmlJSCompilePass::Function *function,
                                           QQmlJS::DiagnosticMessage *error)
 {
-    QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger, m_typeInfo,
+    QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger,
                                     m_passManager);
     QQmlJSCompilePass::InstructionAnnotations annotations = propagator.run(function, error);
     if (!error->isValid()) {

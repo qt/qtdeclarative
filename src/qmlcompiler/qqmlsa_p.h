@@ -51,12 +51,15 @@ public:
                      QQmlJS::SourceLocation srcLocation = QQmlJS::SourceLocation());
     void emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                      QQmlJS::SourceLocation srcLocation, const FixSuggestion &fix);
+
+    Element resolveTypeInFileScope(QAnyStringView typeName);
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
     Element resolveLiteralType(const QQmlJSMetaPropertyBinding &binding);
-    Element resolveId(QAnyStringView id, const Element &context);
+
+    Element resolveIdToElement(QAnyStringView id, const Element &context);
+    QString resolveElementToId(const Element &element, const Element &context);
 
     QString sourceCode(QQmlJS::SourceLocation location);
-
 
 private:
     std::unique_ptr<GenericPassPrivate> d; // PIMPL might be overkill
@@ -117,6 +120,9 @@ public:
     void analyze(const Element &root);
 
     bool hasImportedModule(QAnyStringView name) const;
+
+    bool isCategoryEnabled(LoggerWarningId category) const;
+    void setCategoryEnabled(LoggerWarningId category, bool enabled = true);
 
 private:
     friend struct ::QQmlJSTypePropagator;

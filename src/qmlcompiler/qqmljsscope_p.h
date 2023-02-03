@@ -844,11 +844,6 @@ private:
 using QQmlJSExportedScope = QQmlJSScope::ExportedScope<QQmlJSScope::Ptr>;
 using QQmlJSImportedScope = QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr>;
 
-struct QQmlJSTypeInfo
-{
-    QMultiHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr> usedAttachedTypes;
-};
-
 QT_END_NAMESPACE
 
 #endif // QQMLJSSCOPE_P_H

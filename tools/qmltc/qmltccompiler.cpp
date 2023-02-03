@@ -1115,7 +1115,7 @@ void QmltcCompiler::compileObjectBinding(QmltcType &current,
             Q_ASSERT(object->baseType()->internalName() == u"QQmlComponent"_s);
 
             if (int id = m_visitor->runtimeId(object); id >= 0) {
-                QString idString = m_visitor->addressableScopes().id(object);
+                QString idString = m_visitor->addressableScopes().id(object, object);
                 if (idString.isEmpty())
                     idString = u"<unknown>"_s;
                 QmltcCodeGenerator::generate_setIdValue(block, u"thisContext"_s, id, objectName,

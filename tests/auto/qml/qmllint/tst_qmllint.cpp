@@ -1686,6 +1686,24 @@ void TestQmllint::attachedPropertyReuse()
             {}, {}, {}, UseDefaultImports, &categories);
 
     runTest("attachedPropEnum.qml", Result::clean(), {}, {}, {}, UseDefaultImports, &categories);
+    runTest("MyStyle/ToolBar.qml", Result {
+        {
+            Message {
+                "Using attached type MyStyle already initialized in a parent scope"_L1,
+                10,
+                16
+            }
+        },
+        {},
+        {
+            Message {
+                "Reference it by id instead"_L1,
+                10,
+                16
+            }
+        },
+        Result::AutoFixable
+    });
 }
 
 void TestQmllint::missingBuiltinsNoCrash()

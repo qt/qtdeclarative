@@ -28,7 +28,6 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompileP
 {
     QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                          const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                         QQmlJSTypeInfo *typeInfo = nullptr,
                          QQmlSA::PassManager *passManager = nullptr);
 
     InstructionAnnotations run(const Function *m_function, QQmlJS::DiagnosticMessage *error);
@@ -240,7 +239,6 @@ private:
     void recordCompareType(int lhs);
 
     QQmlJSRegisterContent m_returnType;
-    QQmlJSTypeInfo *m_typeInfo = nullptr;
     QQmlSA::PassManager *m_passManager = nullptr;
     QQmlJSScope::ConstPtr m_attachedContext;
 

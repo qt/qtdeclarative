@@ -16,6 +16,8 @@ static constexpr LoggerWarningId quickControlsNativeCustomize { "Quick.controls-
 static constexpr LoggerWarningId quickAnchorCombinations { "Quick.anchor-combinations" };
 static constexpr LoggerWarningId quickUnexpectedVarType { "Quick.unexpected-var-type" };
 static constexpr LoggerWarningId quickPropertyChangesParsed { "Quick.property-changes-parsed" };
+static constexpr LoggerWarningId quickControlsAttachedPropertyReuse { "Quick.controls-attached-property-reuse" };
+static constexpr LoggerWarningId quickAttachedPropertyReuse { "Quick.attached-property-reuse" };
 
 ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
         QQmlSA::PassManager *manager)
@@ -509,9 +511,103 @@ void VarBindingTypeValidatorPass::onBinding(const QQmlSA::Element &element,
     }
 }
 
+void AttachedPropertyReuse::onRead(
+        const QQmlSA::Element &element, const QString &propertyName,
+        const QQmlSA::Element &readScope, QQmlJS::SourceLocation location)
+{
+    const auto range = usedAttachedTypes.equal_range(readScope);
+    const auto attachedTypeAndLocation = std::find_if(
+                range.first, range.second, [&](const ElementAndLocation &elementAndLocation) {
+        return elementAndLocation.element == element;
+    });
+    if (attachedTypeAndLocation != range.second) {
+        const QQmlJS::SourceLocation attachedLocation = attachedTypeAndLocation->location;
+
+        // Ignore enum accesses, as these will not cause the attached object to be created.
+        // Also ignore anything we cannot determine.
+        if (!element->hasProperty(propertyName) && !element->hasMethod(propertyName))
+            return;
+
+        for (QQmlJSScope::ConstPtr scope = readScope->parentScope(); !scope.isNull();
+             scope = scope->parentScope()) {
+
+            const auto range = usedAttachedTypes.equal_range(scope);
+            bool found = false;
+            for (auto it = range.first; it != range.second; ++it) {
+                if (it->element == element) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                continue;
+
+            const QString id = resolveElementToId(scope, readScope);
+            const QQmlJS::SourceLocation idInsertLocation {
+                attachedLocation.offset, 0,
+                attachedLocation.startLine, attachedLocation.startColumn
+            };
+            QQmlJSFixSuggestion suggestion {
+                "Reference it by id instead:"_L1,
+                idInsertLocation,
+                id.isEmpty() ? "<id>."_L1 : (id + '.'_L1)
+            };
+
+            if (id.isEmpty())
+                suggestion.setHint("You first have to give the element an id"_L1);
+            else
+                suggestion.setAutoApplicable();
+
+            emitWarning("Using attached type %1 already initialized in a parent scope."_L1
+                            .arg(element->internalName()),
+                        category, attachedLocation, suggestion);
+        }
+
+        return;
+    }
+
+
+    if (element->hasProperty(propertyName))
+        return; // an actual property
+
+    QQmlSA::Element type = resolveTypeInFileScope(propertyName);
+    if (!type || type->attachedTypeName().isEmpty())
+        return;
+
+    const QQmlSA::Element attached = type->attachedType();
+    if (category == quickControlsAttachedPropertyReuse) {
+        for (QQmlSA::Element parent = attached; parent; parent = parent->baseType()) {
+            if (parent->internalName() == "QQuickAttachedPropertyPropagator"_L1) {
+                usedAttachedTypes.insert(readScope, {attached, location});
+                break;
+            }
+        }
+
+    } else {
+        usedAttachedTypes.insert(readScope, {attached, location});
+    }
+}
+
+void AttachedPropertyReuse::onWrite(
+            const QQmlSA::Element &element, const QString &propertyName,
+            const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
+            QQmlJS::SourceLocation location)
+{
+    Q_UNUSED(value);
+    onRead(element, propertyName, writeScope, location);
+}
+
 void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
+    const LoggerWarningId attachedReuseCategory = [manager](){
+        if (manager->isCategoryEnabled(quickAttachedPropertyReuse))
+            return quickAttachedPropertyReuse;
+        if (manager->isCategoryEnabled(qmlAttachedPropertyReuse))
+            return qmlAttachedPropertyReuse;
+        return quickControlsAttachedPropertyReuse;
+    }();
+
     const bool hasQuick = manager->hasImportedModule("QtQuick");
     const bool hasQuickLayouts = manager->hasImportedModule("QtQuick.Layouts");
     const bool hasQuickControls = manager->hasImportedModule("QtQuick.Templates")
@@ -601,8 +697,12 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
         addAttachedWarning({ "QtQuick.Layouts", "StackLayout" }, { { "QtQuick", "Item" } },
                            "StackLayout must be attached to an Item");
     }
+
+
     if (hasQuickControls) {
         manager->registerElementPass(std::make_unique<ControlsSwipeDelegateValidatorPass>(manager));
+        manager->registerPropertyPass(std::make_unique<AttachedPropertyReuse>(
+                                          manager, attachedReuseCategory), "", "");
 
         addAttachedWarning({ "QtQuick.Templates", "ScrollBar" },
                            { { "QtQuick", "Flickable" }, { "QtQuick.Templates", "ScrollView" } },
@@ -632,6 +732,9 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
         addVarBindingWarning("QtQuick.Templates", "SpinBox",
                              { { "textFromValue", { "", "function" } },
                                { "valueFromText", { "", "function" } } });
+    } else if (attachedReuseCategory != quickControlsAttachedPropertyReuse) {
+        manager->registerPropertyPass(std::make_unique<AttachedPropertyReuse>(
+                                          manager, attachedReuseCategory), "", "");
     }
 
     if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_s)
@@ -660,7 +763,7 @@ void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
 
     QString targetId = u"<id>"_s;
     const QString targetBinding = sourceCode(target->sourceLocation());
-    const QQmlSA::Element targetElement = resolveId(targetBinding, element);
+    const QQmlSA::Element targetElement = resolveIdToElement(targetBinding, element);
     if (!targetElement.isNull())
         targetId = targetBinding;
 

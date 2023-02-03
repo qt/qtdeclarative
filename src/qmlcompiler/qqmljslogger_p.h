@@ -111,6 +111,16 @@ public:
     const QAnyStringView name() const { return m_name; }
 
 private:
+    friend bool operator==(const LoggerWarningId &a, const LoggerWarningId &b)
+    {
+        return a.m_name == b.m_name;
+    }
+
+    friend bool operator!=(const LoggerWarningId &a, const LoggerWarningId &b)
+    {
+        return a.m_name != b.m_name;
+    }
+
     const QAnyStringView m_name;
 };
 

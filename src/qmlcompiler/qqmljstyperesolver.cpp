@@ -123,6 +123,12 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(
     return m_objectsById.scope(id, referrer);
 }
 
+QString QQmlJSTypeResolver::idForScope(
+        const QQmlJSScope::ConstPtr &scope, const QQmlJSScope::ConstPtr &referrer) const
+{
+    return m_objectsById.id(scope, referrer);
+}
+
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) const
 {
     const QString typeId = QmlIR::IRBuilder::asString(type->typeId);

@@ -152,10 +152,12 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
                 QStringLiteral("Performance checks used for QuickControl's implementation"),
                 QtCriticalMsg, true },
 
-        QQmlJSLogger::Category {
-                qmlAttachedPropertyReuse.name().toString(), QStringLiteral("AttachedPropertyReuse"),
-                QStringLiteral("Warn if attached types from parent components aren't reused"),
-                QtCriticalMsg, true },
+        QQmlJSLogger::Category { qmlAttachedPropertyReuse.name().toString(),
+                                 QStringLiteral("AttachedPropertyReuse"),
+                                 QStringLiteral("Warn if attached types from parent components "
+                                                "aren't reused. This is handled by the QtQuick "
+                                                "lint plugin. Use Quick.AttachedPropertyReuse instead."),
+                                 QtCriticalMsg, true },
         QQmlJSLogger::Category { qmlPlugin.name().toString(), QStringLiteral("LintPluginWarnings"),
                                  QStringLiteral("Warn if a qmllint plugin finds an issue"),
                                  QtWarningMsg, true },

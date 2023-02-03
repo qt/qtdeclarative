@@ -778,7 +778,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                                 != scopesToSearch.constEnd();
 
                         if (!found) {
-                            const QString scopeId = m_scopesById.id(defScope);
+                            const QString scopeId = m_scopesById.id(defScope, scope);
                             bool propertyUsedInRootAlias = false;
                             if (!scopeId.isEmpty()) {
                                 for (const QQmlJSMetaProperty &property :
@@ -2542,7 +2542,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
         while (!childScopes.isEmpty()) {
             const QQmlJSScope::ConstPtr scope = childScopes.takeFirst();
-            if (!m_scopesById.id(scope).isEmpty()) {
+            if (!m_scopesById.id(scope, scope).isEmpty()) {
                 foundIds = true;
                 break;
             }
