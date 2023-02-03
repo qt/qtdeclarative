@@ -122,9 +122,9 @@ QT_BEGIN_NAMESPACE
     \sa ScrollIndicator, ScrollView, {Customizing ScrollBar}, {Indicator Controls}
 */
 
-static const QQuickItemPrivate::ChangeTypes changeTypes = QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed;
-static const QQuickItemPrivate::ChangeTypes horizontalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitHeight;
-static const QQuickItemPrivate::ChangeTypes verticalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitWidth;
+static const QQuickItemPrivate::ChangeTypes QsbChangeTypes = QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed;
+static const QQuickItemPrivate::ChangeTypes QsbHorizontalChangeTypes = QsbChangeTypes | QQuickItemPrivate::ImplicitHeight;
+static const QQuickItemPrivate::ChangeTypes QsbVerticalChangeTypes = QsbChangeTypes | QQuickItemPrivate::ImplicitWidth;
 
 QQuickScrollBarPrivate::VisualArea QQuickScrollBarPrivate::visualArea() const
 {
@@ -1152,11 +1152,11 @@ QQuickScrollBarAttached::~QQuickScrollBarAttached()
 {
     Q_D(QQuickScrollBarAttached);
     if (d->horizontal) {
-        QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, horizontalChangeTypes);
+        QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, QsbHorizontalChangeTypes);
         d->horizontal = nullptr;
     }
     if (d->vertical) {
-        QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, verticalChangeTypes);
+        QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, QsbVerticalChangeTypes);
         d->vertical = nullptr;
     }
     d->setFlickable(nullptr);
@@ -1189,7 +1189,7 @@ void QQuickScrollBarAttached::setHorizontal(QQuickScrollBar *horizontal)
         return;
 
     if (d->horizontal) {
-        QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, horizontalChangeTypes);
+        QQuickItemPrivate::get(d->horizontal)->removeItemChangeListener(d, QsbHorizontalChangeTypes);
         QObjectPrivate::disconnect(d->horizontal, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollHorizontal);
 
         if (d->flickable)
@@ -1203,7 +1203,7 @@ void QQuickScrollBarAttached::setHorizontal(QQuickScrollBar *horizontal)
             horizontal->setParentItem(qobject_cast<QQuickItem *>(parent()));
         horizontal->setOrientation(Qt::Horizontal);
 
-        QQuickItemPrivate::get(horizontal)->addItemChangeListener(d, horizontalChangeTypes);
+        QQuickItemPrivate::get(horizontal)->addItemChangeListener(d, QsbHorizontalChangeTypes);
         QObjectPrivate::connect(horizontal, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollHorizontal);
 
         if (d->flickable)
@@ -1239,7 +1239,7 @@ void QQuickScrollBarAttached::setVertical(QQuickScrollBar *vertical)
         return;
 
     if (d->vertical) {
-        QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, verticalChangeTypes);
+        QQuickItemPrivate::get(d->vertical)->removeItemChangeListener(d, QsbVerticalChangeTypes);
         QObjectPrivate::disconnect(d->vertical, &QQuickScrollBar::mirroredChanged, d, &QQuickScrollBarAttachedPrivate::mirrorVertical);
         QObjectPrivate::disconnect(d->vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
 
@@ -1254,7 +1254,7 @@ void QQuickScrollBarAttached::setVertical(QQuickScrollBar *vertical)
             vertical->setParentItem(qobject_cast<QQuickItem *>(parent()));
         vertical->setOrientation(Qt::Vertical);
 
-        QQuickItemPrivate::get(vertical)->addItemChangeListener(d, verticalChangeTypes);
+        QQuickItemPrivate::get(vertical)->addItemChangeListener(d, QsbVerticalChangeTypes);
         QObjectPrivate::connect(vertical, &QQuickScrollBar::mirroredChanged, d, &QQuickScrollBarAttachedPrivate::mirrorVertical);
         QObjectPrivate::connect(vertical, &QQuickScrollBar::positionChanged, d, &QQuickScrollBarAttachedPrivate::scrollVertical);
 
