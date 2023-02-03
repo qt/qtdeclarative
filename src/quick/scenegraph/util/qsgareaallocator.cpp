@@ -13,16 +13,13 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace
+enum SplitType
 {
-    enum SplitType
-    {
-        VerticalSplit,
-        HorizontalSplit
-    };
+    VerticalSplit,
+    HorizontalSplit
+};
 
-    static const int maxMargin = 2;
-}
+static const int maxMargin = 2;
 
 struct QSGAreaAllocatorNode
 {

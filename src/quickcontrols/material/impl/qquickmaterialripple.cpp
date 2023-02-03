@@ -12,9 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-    enum WavePhase { WaveEnter, WaveExit };
-}
+enum WavePhase { WaveEnter, WaveExit };
 
 static const int RIPPLE_ENTER_DELAY = 80;
 static const int OPACITY_ENTER_DURATION_FAST = 120;
