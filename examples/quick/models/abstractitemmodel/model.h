@@ -1,5 +1,9 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+#ifndef MODEL_H
+#define MODEL_H
+
 #include <QAbstractListModel>
 #include <QStringList>
 
@@ -45,4 +49,4 @@ private:
 };
 //![2]
 
-
+#endif // MODEL_H
