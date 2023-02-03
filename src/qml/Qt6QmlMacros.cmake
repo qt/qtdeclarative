@@ -2114,11 +2114,16 @@ function(qt6_target_qml_sources target)
                 foreach(qml_file_version IN LISTS qml_file_versions)
                     if (qml_file_singleton)
                         string(APPEND qmldir_file_contents "singleton ")
+                    elseif (qml_file_internal)
+                        continue()
                     endif()
                     string(APPEND qmldir_file_contents "${qml_file_typename} ${qml_file_version} ${file_resource_path}\n")
                 endforeach()
 
                 if (qml_file_internal)
+                    # TODO: Remove when all qmldir parsers can parse internal types with versions.
+                    #       Instead handle internal types like singletons above.
+                    #       See QTCREATORBUG-28755
                     string(APPEND qmldir_file_contents "internal ${qml_file_typename} ${file_resource_path}\n")
                 endif()
 
