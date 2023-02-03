@@ -20,11 +20,17 @@ MultiPointTouchArea {
 
     maximumTouchPoints: 5
 
-    onPressed: { touchPointPressCount = touchPoints.length }
-    onUpdated: { touchPointUpdateCount = touchPoints.length }
+    // recommended syntax for a signal handler
+    onPressed: (points) => { touchPointPressCount = points.length }
+
+    // one with "touchPoints" being the signal argument rather than the property
+    onUpdated: (touchPoints) => { touchPointUpdateCount = touchPoints.length }
+
+    // one without the formal parameter, to test that it still works (with a warning)
     onReleased: { touchPointReleaseCount = touchPoints.length }
-    onTouchUpdated: {
-        touchCount = touchPoints.length
+
+    onTouchUpdated: (points) => {
+        touchCount = points.length
         touchUpdatedHandled = true
     }
 }

@@ -32,7 +32,7 @@ Rectangle {
             anchors.fill: parent
             minimumTouchPoints: 2
             maximumTouchPoints: 2
-            onGestureStarted: {
+            onGestureStarted: (gesture) => {
                 if ((Math.abs(point2.x - point2.startX) > gesture.dragThreshold/2) &&
                         (Math.abs(point1.x - point1.startX) > gesture.dragThreshold/2)) {
                     gesture.grab()

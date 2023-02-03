@@ -9,7 +9,7 @@ Rectangle {
         height: 160
         minimumTouchPoints: 2
         maximumTouchPoints: 2
-        onGestureStarted: gesture.grab()
+        onGestureStarted: (gesture) => gesture.grab()
         touchPoints: [
             TouchPoint { id: point11; objectName: "point11" },
             TouchPoint { id: point12; objectName: "point12" }
@@ -34,7 +34,7 @@ Rectangle {
         y: 160
         minimumTouchPoints: 3
         maximumTouchPoints: 3
-        onGestureStarted: gesture.grab()
+        onGestureStarted: (gesture) => gesture.grab()
         touchPoints: [
             TouchPoint { id: point21; objectName: "point21" },
             TouchPoint { id: point22; objectName: "point22" },

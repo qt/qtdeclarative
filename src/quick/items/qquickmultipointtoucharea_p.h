@@ -181,7 +181,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointTouchArea : public QQuickItem
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickMultiPointTouchArea)
 
-    Q_PROPERTY(QQmlListProperty<QQuickTouchPoint> touchPoints READ touchPoints)
+    Q_PROPERTY(QQmlListProperty<QQuickTouchPoint> touchPoints READ touchPoints CONSTANT)
     Q_PROPERTY(int minimumTouchPoints READ minimumTouchPoints WRITE setMinimumTouchPoints NOTIFY minimumTouchPointsChanged)
     Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints WRITE setMaximumTouchPoints NOTIFY maximumTouchPointsChanged)
     Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged)
@@ -219,12 +219,23 @@ public:
     }
 
 Q_SIGNALS:
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     void pressed(const QList<QObject*> &touchPoints);
     void updated(const QList<QObject*> &touchPoints);
     void released(const QList<QObject*> &touchPoints);
     void canceled(const QList<QObject*> &touchPoints);
+#else
+    void pressed(const QList<QObject*> &points);
+    void updated(const QList<QObject*> &points);
+    void released(const QList<QObject*> &points);
+    void canceled(const QList<QObject*> &points);
+#endif
     void gestureStarted(QQuickGrabGestureEvent *gesture);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     void touchUpdated(const QList<QObject*> &touchPoints);
+#else
+    void touchUpdated(const QList<QObject*> &points);
+#endif
     void minimumTouchPointsChanged();
     void maximumTouchPointsChanged();
     void mouseEnabledChanged();

@@ -66,7 +66,7 @@ MultiPointTouchArea {
         anchors.fill: parent
         minimumTouchPoints: 3
         maximumTouchPoints: 3
-        onGestureStarted: if (grabInnerArea) gesture.grab()
+        onGestureStarted: (gesture) => { if (grabInnerArea) gesture.grab() }
         touchPoints: [
             TouchPoint { id: point21; objectName: "point21" },
             TouchPoint { id: point22; objectName: "point22" },

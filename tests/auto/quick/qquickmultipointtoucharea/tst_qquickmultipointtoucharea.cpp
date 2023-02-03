@@ -19,6 +19,8 @@
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
+using namespace Qt::StringLiterals;
+
 class tst_QQuickMultiPointTouchArea : public QQmlDataTest
 {
     Q_OBJECT
@@ -73,6 +75,12 @@ void tst_QQuickMultiPointTouchArea::properties()
 
 void tst_QQuickMultiPointTouchArea::signalTest()
 {
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    QTest::ignoreMessage(QtWarningMsg, QString(testFileUrl("signalTest.qml").toString() +
+        u":30:5 Parameter \"touchPoints\" is not declared. Injection of parameters into signal handlers "
+          "is deprecated. Use JavaScript functions with formal parameters instead."_s).toLatin1().constData());
+#endif
+
     QScopedPointer<QQuickView> window(createAndShowView("signalTest.qml"));
     QVERIFY(window->rootObject() != nullptr);
 
