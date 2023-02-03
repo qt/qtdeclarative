@@ -5,6 +5,7 @@
 #include "qsgtexture_platform.h"
 #include <private/qqmlglobal_p.h>
 #include <private/qsgmaterialshader_p.h>
+#include <private/qsgrenderer_p.h>
 #include <private/qquickitem_p.h> // qquickwindow_p.h cannot be included on its own due to template nonsense
 #include <private/qquickwindow_p.h>
 #include <QtCore/private/qnativeinterface_p.h>
@@ -30,7 +31,6 @@
 #ifndef QT_NO_DEBUG
 Q_GLOBAL_STATIC(QSet<QSGTexture *>, qsg_valid_texture_set)
 Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
-static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -304,7 +304,7 @@ QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate(this)))
 {
 #ifndef QT_NO_DEBUG
-    if (qsg_leak_check)
+    if (_q_sg_leak_check)
         qt_debug_add_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());
@@ -319,7 +319,7 @@ QSGTexture::QSGTexture(QSGTexturePrivate &dd)
     : QObject(dd)
 {
 #ifndef QT_NO_DEBUG
-    if (qsg_leak_check)
+    if (_q_sg_leak_check)
         qt_debug_add_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());
@@ -333,7 +333,7 @@ QSGTexture::QSGTexture(QSGTexturePrivate &dd)
 QSGTexture::~QSGTexture()
 {
 #ifndef QT_NO_DEBUG
-    if (qsg_leak_check)
+    if (_q_sg_leak_check)
         qt_debug_remove_texture(this);
 
     QMutexLocker locker(qsg_valid_texture_mutex());

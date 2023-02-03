@@ -5,6 +5,7 @@
 #include <QtQuick/private/qquickimageprovider_p.h>
 #include <QtQuick/private/qquickprofiler_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgtexturereader_p.h>
 #include <QtQuick/qquickwindow.h>
 
@@ -52,10 +53,6 @@ QT_BEGIN_NAMESPACE
 const QLatin1String QQuickPixmap::itemGrabberScheme = QLatin1String("itemgrabber");
 
 Q_LOGGING_CATEGORY(lcImg, "qt.quick.image")
-
-#ifndef QT_NO_DEBUG
-static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
-#endif
 
 // The cache limit describes the maximum "junk" in the cache.
 static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded in qpixmapcache.cpp
@@ -1147,7 +1144,7 @@ QQuickPixmapStore::~QQuickPixmapStore()
     }
 
 #ifndef QT_NO_DEBUG
-    if (leakedPixmaps && qsg_leak_check)
+    if (leakedPixmaps && _q_sg_leak_check)
         qDebug("Number of leaked pixmaps: %i", leakedPixmaps);
 #endif
 }
