@@ -2405,4 +2405,20 @@ private:
     int m_length = 19;
 };
 
+class GetterObject : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    explicit GetterObject(QObject *parent = nullptr) : QObject{parent} {}
+
+    // always returns a 0 as uint64_t
+    Q_INVOKABLE uint64_t getFalse() const { return 0; }
+    Q_INVOKABLE uint64_t getTrue() const { return 1; }
+
+    Q_INVOKABLE quint64 getQFalse() const { return 0; }
+    Q_INVOKABLE quint64 getQTrue() const { return 1; }
+};
+
+
 #endif // TESTTYPES_H

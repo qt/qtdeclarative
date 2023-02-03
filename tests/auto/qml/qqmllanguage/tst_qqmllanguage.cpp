@@ -406,6 +406,8 @@ private slots:
     void objectAndGadgetMethodCallsRejectThisObject();
     void objectAndGadgetMethodCallsAcceptThisObject();
 
+    void longConversion();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -7847,6 +7849,28 @@ void tst_qqmllanguage::objectAndGadgetMethodCallsAcceptThisObject()
     QCOMPARE(o->property("goodInt1"), 5);
     QCOMPARE(o->property("goodInt2"), 5);
     QCOMPARE(o->property("goodInt3"), 5);
+}
+
+void tst_qqmllanguage::longConversion()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("longConversion.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    for (const char *prop : {
+            "testProp",
+            "testQProp",
+            "fromLocal",
+            "fromQLocal",
+            "fromBoolean",
+            "fromQBoolean"}) {
+        const QVariant val = o->property(prop);
+        QVERIFY(val.isValid());
+        QCOMPARE(val.metaType(), QMetaType::fromType<bool>());
+        QVERIFY(!val.toBool());
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

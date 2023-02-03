@@ -871,6 +871,12 @@ bool QJSEngine::convertString(const QString &string, QMetaType metaType, void *p
     case QMetaType::UInt:
         *reinterpret_cast<uint*>(ptr) = QV4::Value::toUInt32(d);
         return true;
+    case QMetaType::Long:
+        *reinterpret_cast<long*>(ptr) = QV4::Value::toInteger(d);
+        return true;
+    case QMetaType::ULong:
+        *reinterpret_cast<ulong*>(ptr) = QV4::Value::toInteger(d);
+        return true;
     case QMetaType::LongLong:
         *reinterpret_cast<qlonglong*>(ptr) = QV4::Value::toInteger(d);
         return true;
