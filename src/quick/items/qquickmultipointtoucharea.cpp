@@ -17,7 +17,7 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
+DEFINE_BOOL_CONFIG_OPTION(qmlMptaVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
 /*!
     \qmltype TouchPoint
@@ -437,7 +437,7 @@ QQuickMultiPointTouchArea::QQuickMultiPointTouchArea(QQuickItem *parent)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
     setFiltersChildMouseEvents(true);
-    if (qmlVisualTouchDebugging()) {
+    if (qmlMptaVisualTouchDebugging()) {
         setFlag(QQuickItem::ItemHasContents);
     }
     setAcceptTouchEvents(true);
@@ -1030,7 +1030,7 @@ QSGNode *QQuickMultiPointTouchArea::updatePaintNode(QSGNode *oldNode, UpdatePain
 {
     Q_UNUSED(data);
 
-    if (!qmlVisualTouchDebugging())
+    if (!qmlMptaVisualTouchDebugging())
         return nullptr;
 
     QSGInternalRectangleNode *rectangle = static_cast<QSGInternalRectangleNode *>(oldNode);
