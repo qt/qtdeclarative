@@ -3511,6 +3511,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
                 }
                 selectionChange = true;
             } else {
+                selectionChange = m_selstart != m_selend;
                 m_selstart = m_selend = 0;
             }
             cursorPositionChanged = true;
