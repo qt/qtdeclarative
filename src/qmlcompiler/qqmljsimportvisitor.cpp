@@ -814,7 +814,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                                     ? getScopeName(prevRequiredScope, QQmlJSScope::QMLScope)
                                     : u"here"_s;
 
-                            std::optional<FixSuggestion> suggestion;
+                            std::optional<QQmlJSFixSuggestion> suggestion;
 
                             QString message =
                                     QStringLiteral(
@@ -824,15 +824,15 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                             if (requiredScope != scope) {
                                 if (!prevRequiredScope.isNull()) {
                                     auto sourceScope = prevRequiredScope->baseType();
-                                    suggestion = FixSuggestion {
-                                        { { u"%1:%2:%3: Property marked as required in %4"_s
-                                                    .arg(sourceScope->filePath())
-                                                    .arg(sourceScope->sourceLocation().startLine)
-                                                    .arg(sourceScope->sourceLocation().startColumn)
-                                                    .arg(requiredScopeName),
-                                            sourceScope->sourceLocation(), QString(),
-                                            sourceScope->filePath() } }
+                                    suggestion = QQmlJSFixSuggestion {
+                                        "%1:%2:%3: Property marked as required in %4"_L1
+                                            .arg(sourceScope->filePath())
+                                            .arg(sourceScope->sourceLocation().startLine)
+                                            .arg(sourceScope->sourceLocation().startColumn)
+                                            .arg(requiredScopeName),
+                                        sourceScope->sourceLocation()
                                     };
+                                    suggestion->setFilename(sourceScope->filePath());
                                 } else {
                                     message += QStringLiteral(" (marked as required by %1)")
                                                        .arg(requiredScopeName);
@@ -863,7 +863,7 @@ void QQmlJSImportVisitor::processPropertyBindings()
                     continue;
 
                 // TODO: Can this be in a better suited category?
-                std::optional<FixSuggestion> fixSuggestion;
+                std::optional<QQmlJSFixSuggestion> fixSuggestion;
 
                 for (QQmlJSScope::ConstPtr baseScope = scope; !baseScope.isNull();
                      baseScope = baseScope->baseType()) {
@@ -945,7 +945,7 @@ void QQmlJSImportVisitor::checkSignal(
     }
 
     if (!signalMethod.has_value()) { // haven't found anything
-        std::optional<FixSuggestion> fix;
+        std::optional<QQmlJSFixSuggestion> fix;
 
         // There is a small chance of suggesting this fix for things that are not actually
         // QtQml/Connections elements, but rather some other thing that is also called
@@ -957,15 +957,13 @@ void QQmlJSImportVisitor::checkSignal(
             const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
                     - location.offset;
 
-            fix = FixSuggestion { { FixSuggestion::Fix {
-                    QStringLiteral("Implicitly defining %1 as signal handler in "
-                                   "Connections is deprecated. Create a function "
-                                   "instead")
-                            .arg(handlerName),
+            fix = QQmlJSFixSuggestion {
+                    "Implicitly defining %1 as signal handler in Connections is deprecated. "
+                    "Create a function instead"_L1.arg(handlerName),
                     QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
                                            location.startColumn),
-                    QStringLiteral("function %1(%2) { ... }")
-                            .arg(handlerName, handlerParameters.join(u", ")) } } };
+                    "function %1(%2) { ... }"_L1.arg(handlerName, handlerParameters.join(u", "))
+            };
         }
 
         m_logger->log(QStringLiteral("no matching signal found for handler \"%1\"")
@@ -1366,9 +1364,12 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
             templateString += c;
         }
 
-        const FixSuggestion suggestion = { { { u"Use a template literal instead"_s,
-                                               sl->literalToken, u"`" % templateString % u"`",
-                                               QString(), false } } };
+        QQmlJSFixSuggestion suggestion = {
+            "Use a template literal instead"_L1,
+            sl->literalToken,
+            u"`" % templateString % u"`"
+        };
+        suggestion.setAutoApplicable();
         m_logger->log(QStringLiteral("String contains unescaped line terminator which is "
                                      "deprecated."),
                       qmlMultilineStrings, sl->literalToken, true, true, suggestion);

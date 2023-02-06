@@ -198,28 +198,26 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
                 // We need to interject the information about where the fix suggestions end
                 // here since we don't have access to the textDocument to calculate it later.
                 QJsonArray fixedSuggestions;
-                for (const FixSuggestion::Fix &fix : suggestion->fixes) {
-                    QQmlJS::SourceLocation cut = fix.cutLocation;
+                const QQmlJS::SourceLocation cut = suggestion->location();
 
-                    int line = cut.isValid() ? cut.startLine - 1 : 0;
-                    int column = cut.isValid() ? cut.startColumn - 1 : 0;
+                const int line = cut.isValid() ? cut.startLine - 1 : 0;
+                const int column = cut.isValid() ? cut.startColumn - 1 : 0;
 
-                    QJsonObject object;
-                    object[u"lspBeginLine"] = line;
-                    object[u"lspBeginCharacter"] = column;
+                QJsonObject object;
+                object.insert("lspBeginLine"_L1, line);
+                object.insert("lspBeginCharacter"_L1, column);
 
-                    Position end = { line, column };
+                Position end = { line, column };
 
-                    addLength(end, srcLoc.isValid() ? cut.offset : 0,
-                              srcLoc.isValid() ? cut.length : 0);
-                    object[u"lspEndLine"] = end.line;
-                    object[u"lspEndCharacter"] = end.character;
+                addLength(end, srcLoc.isValid() ? cut.offset : 0,
+                          srcLoc.isValid() ? cut.length : 0);
+                object.insert("lspEndLine"_L1, end.line);
+                object.insert("lspEndCharacter"_L1, end.character);
 
-                    object[u"message"] = fix.message;
-                    object[u"replacement"] = fix.replacementString;
+                object.insert("message"_L1, suggestion->fixDescription());
+                object.insert("replacement"_L1, suggestion->replacement());
 
-                    fixedSuggestions << object;
-                }
+                fixedSuggestions << object;
                 QJsonObject data;
                 data[u"suggestions"] = fixedSuggestions;
 
