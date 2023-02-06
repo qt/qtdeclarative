@@ -47,6 +47,7 @@ set(qml_files
     "VerticalHeaderView.qml"
     "Dialog.qml"
     "DialogButtonBox.qml"
+    "DelayButton.qml"
 )
 
 set_source_files_properties(Slider.qml PROPERTIES
