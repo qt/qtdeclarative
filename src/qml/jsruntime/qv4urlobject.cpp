@@ -670,6 +670,7 @@ ReturnedValue UrlPrototype::method_getSearchParams(const FunctionObject *b, cons
 
     Scoped<UrlSearchParamsObject> usp(scope, v4->newUrlSearchParamsObject());
 
+    usp->setUrlObject(thisObject->as<UrlObject>());
     usp->initializeParams(r->search());
 
     return usp->asReturnedValue();
@@ -960,6 +961,11 @@ void UrlSearchParamsObject::setParams(QList<QStringList> params)
     d()->values.set(engine(), values);
 }
 
+void UrlSearchParamsObject::setUrlObject(const UrlObject *url)
+{
+    d()->url.set(engine(), url->d());
+}
+
 void UrlSearchParamsObject::append(Heap::String *name, Heap::String *value)
 {
     Scope scope(engine());
@@ -1006,6 +1012,25 @@ QList<QStringList> UrlSearchParamsObject::params() const
     }
 
     return result;
+}
+
+Heap::UrlObject *UrlSearchParamsObject::urlObject() const
+{
+    return d()->url.get();
+}
+
+QString UrlSearchParamsObject::searchString() const
+{
+    QString search = QLatin1String("");
+    auto params = this->params();
+    auto len = params.size();
+    for (int i = 0; i < len; ++i) {
+        const QStringList &param = params[i];
+        search += param[0] + QLatin1Char('=') + param[1];
+        if (i != len - 1)
+            search += QLatin1Char('&');
+    }
+    return search;
 }
 
 int UrlSearchParamsObject::length() const
@@ -1334,6 +1359,10 @@ ReturnedValue UrlSearchParamsPrototype::method_set(const FunctionObject *b, cons
         params << QStringList { name, value };
 
     o->setParams(params);
+
+    Scoped<UrlObject> scopedUrlObject(scope, o->d()->url.get());
+    if (scopedUrlObject)
+        scopedUrlObject->setSearch(o->searchString());
 
     return Encode::undefined();
 }
