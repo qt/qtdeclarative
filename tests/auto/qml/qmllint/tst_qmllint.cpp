@@ -1422,15 +1422,19 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 
     QQmlJSLinter::LintResult lintResult;
 
+    const QStringList resolvedImportPaths = defaultImports == UseDefaultImports
+            ? m_defaultImportPaths + importPaths
+            : importPaths;
     if (type == LintFile) {
+        const QList<QQmlJSLogger::Category> resolvedCategories = categories != nullptr
+                ? *categories
+                : QQmlJSLogger::defaultCategories();
         lintResult = m_linter.lintFile(
-                lintedFile, nullptr, true, &jsonOutput,
-                defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths
-                                                    : importPaths,
-                qmldirFiles, resources,
-                categories != nullptr ? *categories : QQmlJSLogger::defaultCategories());
+                    lintedFile, nullptr, true, &jsonOutput, resolvedImportPaths, qmldirFiles,
+                    resources, resolvedCategories);
     } else {
-        lintResult = m_linter.lintModule(fileToLint, true, &jsonOutput);
+        lintResult = m_linter.lintModule(
+                    fileToLint, true, &jsonOutput, resolvedImportPaths, resources);
     }
 
     bool success = lintResult == QQmlJSLinter::LintSuccess;
@@ -1723,10 +1727,14 @@ void TestQmllint::importMultipartUri()
 void TestQmllint::lintModule_data()
 {
     QTest::addColumn<QString>("module");
+    QTest::addColumn<QStringList>("importPaths");
+    QTest::addColumn<QStringList>("resources");
     QTest::addColumn<Result>("result");
 
     QTest::addRow("Things")
             << u"Things"_s
+            << QStringList()
+            << QStringList()
             << Result {
                    { Message {
                              u"Type \"QPalette\" not found. Used in SomethingEntirelyStrange.palette"_s,
@@ -1736,16 +1744,30 @@ void TestQmllint::lintModule_data()
                };
     QTest::addRow("missingQmltypes")
             << u"Fake5Compat.GraphicalEffects.private"_s
+            << QStringList()
+            << QStringList()
             << Result { { Message { u"QML types file does not exist"_s } } };
+
+    QTest::addRow("moduleWithQrc")
+            << u"moduleWithQrc"_s
+            << QStringList({ testFile("hidden") })
+            << QStringList({
+                               testFile("hidden/qmake_moduleWithQrc.qrc"),
+                               testFile("hidden/moduleWithQrc_raw_qml_0.qrc")
+                           })
+            << Result::clean();
 }
 
 void TestQmllint::lintModule()
 {
     QFETCH(QString, module);
+    QFETCH(QStringList, importPaths);
+    QFETCH(QStringList, resources);
     QFETCH(Result, result);
 
     QJsonArray warnings;
-    callQmllint(module, false, &warnings, {}, {}, {}, {}, nullptr, false, LintModule);
+    callQmllint(module, result.flags & Result::ExitsNormally, &warnings, importPaths, {}, resources,
+                UseDefaultImports, nullptr, false, LintModule);
     checkResult(warnings, result);
 }
 

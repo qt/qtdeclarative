@@ -603,14 +603,24 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
     return success ? LintSuccess : HasWarnings;
 }
 
-QQmlJSLinter::LintResult QQmlJSLinter::lintModule(const QString &module, const bool silent,
-                                                  QJsonArray *json)
+QQmlJSLinter::LintResult QQmlJSLinter::lintModule(
+        const QString &module, const bool silent, QJsonArray *json,
+        const QStringList &qmlImportPaths, const QStringList &resourceFiles)
 {
     // Make sure that we don't expose an old logger if we return before a new one is created.
     m_logger.reset();
 
     // We can't lint properly if a module has already been pre-cached
     m_importer.clearCache();
+
+    if (m_importer.importPaths() != qmlImportPaths)
+        m_importer.setImportPaths(qmlImportPaths);
+
+    QQmlJSResourceFileMapper mapper(resourceFiles);
+    if (!resourceFiles.isEmpty())
+        m_importer.setResourceFileMapper(&mapper);
+    else
+        m_importer.setResourceFileMapper(nullptr);
 
     QJsonArray warnings;
     QJsonObject result;
