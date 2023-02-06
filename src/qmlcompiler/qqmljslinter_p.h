@@ -113,7 +113,8 @@ public:
                         const QStringList &qmldirFiles, const QStringList &resourceFiles,
                         const QList<QQmlJSLogger::Category> &categories);
 
-    LintResult lintModule(const QString &uri, const bool silent, QJsonArray *json);
+    LintResult lintModule(const QString &uri, const bool silent, QJsonArray *json,
+                          const QStringList &qmlImportPaths, const QStringList &resourceFiles);
 
     FixResult applyFixes(QString *fixedCode, bool silent);
 

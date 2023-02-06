@@ -363,7 +363,8 @@ All warnings can be set to three levels:
         QQmlJSLinter::LintResult lintResult;
 
         if (parser.isSet(moduleOption)) {
-            lintResult = linter.lintModule(filename, silent, useJson ? &jsonFiles : nullptr);
+            lintResult = linter.lintModule(filename, silent, useJson ? &jsonFiles : nullptr,
+                                           qmlImportPaths, resourceFiles);
         } else {
             lintResult = linter.lintFile(filename, nullptr, silent || isFixing,
                                          useJson ? &jsonFiles : nullptr, qmlImportPaths,

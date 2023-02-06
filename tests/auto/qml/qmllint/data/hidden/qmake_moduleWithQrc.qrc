@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/qmllint65">
+    <file alias="qmldir">moduleWithQrc/qmldir</file>
+  </qresource>
+</RCC>
+
