@@ -292,7 +292,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
         return;
     }
 
-    std::optional<FixSuggestion> suggestion;
+    std::optional<QQmlJSFixSuggestion> suggestion;
 
     auto childScopes = m_function->qmlScope->childScopes();
     for (qsizetype i = 0; i < m_function->qmlScope->childScopes().size(); i++) {
@@ -307,9 +307,6 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
             const auto jsId = scope->childScopes().first()->findJSIdentifier(name);
 
             if (jsId.has_value() && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
-
-                suggestion = FixSuggestion {};
-
                 const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
 
                 QQmlJS::SourceLocation fixLocation = id.location;
@@ -328,15 +325,15 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
 
                 fixString += handler.isMultiline ? u") "_s : u") => "_s;
 
-                suggestion->fixes << FixSuggestion::Fix {
-                    name
-                            + QString::fromLatin1(" is accessible in this scope because "
-                                                  "you are handling a signal at %1:%2. Use a "
-                                                  "function instead.\n")
-                                      .arg(id.location.startLine)
-                                      .arg(id.location.startColumn),
-                    fixLocation, fixString, QString(), false
+                suggestion = QQmlJSFixSuggestion {
+                    name + u" is accessible in this scope because you are handling a signal"
+                           " at %1:%2. Use a function instead.\n"_s
+                        .arg(id.location.startLine)
+                        .arg(id.location.startColumn),
+                    fixLocation,
+                    fixString
                 };
+                suggestion->setAutoApplicable();
             }
             break;
         }
@@ -354,11 +351,10 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
                 if (!it->hasObject())
                     continue;
                 if (it->objectType() == m_function->qmlScope) {
-                    suggestion = FixSuggestion {};
-
-                    suggestion->fixes << FixSuggestion::Fix {
-                        name + u" is implicitly injected into this delegate. Add a required property instead."_s,
-                        m_function->qmlScope->sourceLocation(), QString(), QString(), true
+                    suggestion = QQmlJSFixSuggestion {
+                        name + " is implicitly injected into this delegate."
+                               " Add a required property instead."_L1,
+                        m_function->qmlScope->sourceLocation()
                     };
                 };
 
@@ -373,36 +369,34 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
             if (scope->hasProperty(name)) {
                 const QString id = m_function->addressableScopes.id(scope);
 
-                suggestion = FixSuggestion {};
-
                 QQmlJS::SourceLocation fixLocation = location;
                 fixLocation.length = 0;
-                suggestion->fixes << FixSuggestion::Fix {
-                    name + QLatin1String(" is a member of a parent element\n")
-                            + QLatin1String("      You can qualify the access with its id "
-                                            "to avoid this warning:\n"),
-                    fixLocation, (id.isEmpty() ? u"<id>."_s : (id + u'.')), QString(), id.isEmpty()
+                suggestion = QQmlJSFixSuggestion {
+                    name + " is a member of a parent element.\n      You can qualify the access "
+                           "with its id to avoid this warning:\n"_L1,
+                    fixLocation,
+                    (id.isEmpty() ? u"<id>."_s : (id + u'.'))
                 };
 
-                if (id.isEmpty()) {
-                    suggestion->fixes << FixSuggestion::Fix {
-                        u"You first have to give the element an id"_s, QQmlJS::SourceLocation {}, {}
-                    };
-                }
+                if (id.isEmpty())
+                    suggestion->setHint("You first have to give the element an id"_L1);
+                else
+                    suggestion->setAutoApplicable();
             }
         }
     }
 
     if (!suggestion.has_value() && !m_function->addressableScopes.componentsAreBound()
             && m_function->addressableScopes.existsAnywhereInDocument(name)) {
-        FixSuggestion::Fix bindComponents;
         const QLatin1String replacement = "pragma ComponentBehavior: Bound"_L1;
-        bindComponents.replacementString = replacement + '\n'_L1;
-        bindComponents.message = "Set \"%1\" in order to use IDs "
-                                 "from outer components in nested components."_L1.arg(replacement);
-        bindComponents.cutLocation = QQmlJS::SourceLocation(0, 0, 1, 1);
-        bindComponents.isHint = false;
-        suggestion = FixSuggestion {{ bindComponents }};
+        QQmlJSFixSuggestion bindComponents {
+            "Set \"%1\" in order to use IDs from outer components in nested components."_L1
+                .arg(replacement),
+            QQmlJS::SourceLocation(0, 0, 1, 1),
+            replacement + '\n'_L1
+        };
+        bindComponents.setAutoApplicable();
+        suggestion = bindComponents;
     }
 
     if (!suggestion.has_value()) {
@@ -758,25 +752,19 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
                 const QString id = m_function->addressableScopes.id(scope);
 
-                FixSuggestion suggestion;
-
                 QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
                 fixLocation.length = 0;
 
-                suggestion.fixes << FixSuggestion::Fix { u"Reference it by id instead:"_s,
-                                                         fixLocation,
-                                                         id.isEmpty() ? u"<id>."_s : (id + u'.'),
-                                                         QString(), id.isEmpty() };
+                QQmlJSFixSuggestion suggestion {
+                    "Reference it by id instead:"_L1,
+                    fixLocation,
+                    id.isEmpty() ? u"<id>."_s : (id + u'.')
+                };
 
-                fixLocation = scope->sourceLocation();
-                fixLocation.length = 0;
-
-                if (id.isEmpty()) {
-                    suggestion.fixes
-                            << FixSuggestion::Fix { u"You first have to give the element an id"_s,
-                                                    QQmlJS::SourceLocation {},
-                                                    {} };
-                }
+                if (id.isEmpty())
+                    suggestion.setHint("You first have to give the element an id"_L1);
+                else
+                    suggestion.setAutoApplicable();
 
                 m_logger->log(
                         u"Using attached type %1 already initialized in a parent scope."_s.arg(
@@ -832,7 +820,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         if (propertyResolution(baseType, propertyName) != PropertyMissing)
             return;
 
-        std::optional<FixSuggestion> fixSuggestion;
+        std::optional<QQmlJSFixSuggestion> fixSuggestion;
 
         if (auto suggestion = QQmlJSUtils::didYouMean(propertyName, baseType->properties().keys(),
                                                       getCurrentSourceLocation());
@@ -1107,7 +1095,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         if (isRestricted(propertyName))
             return;
 
-        std::optional<FixSuggestion> fixSuggestion;
+        std::optional<QQmlJSFixSuggestion> fixSuggestion;
 
         const auto baseType = m_typeResolver->containedType(callBase);
 

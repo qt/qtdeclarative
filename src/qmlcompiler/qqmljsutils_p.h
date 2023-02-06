@@ -359,7 +359,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
             act(begin->scope, begin->extensionSpecifier);
     }
 
-    static std::optional<FixSuggestion> didYouMean(const QString &userInput,
+    static std::optional<QQmlJSFixSuggestion> didYouMean(const QString &userInput,
                                                    QStringList candidates,
                                                    QQmlJS::SourceLocation location);
 

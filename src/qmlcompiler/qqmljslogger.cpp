@@ -226,7 +226,7 @@ static bool isMsgTypeLess(QtMsgType a, QtMsgType b)
 
 void QQmlJSLogger::log(const QString &message, LoggerWarningId id,
                        const QQmlJS::SourceLocation &srcLocation, QtMsgType type, bool showContext,
-                       bool showFileName, const std::optional<FixSuggestion> &suggestion,
+                       bool showFileName, const std::optional<QQmlJSFixSuggestion> &suggestion,
                        const QString overrideFileName)
 {
     Q_ASSERT(m_categoryLevels.contains(id.name().toString()));
@@ -331,59 +331,58 @@ void QQmlJSLogger::printContext(const QString &overrideFileName,
                    + QString::fromLatin1("^").repeated(locationLength) + QLatin1Char('\n'));
 }
 
-void QQmlJSLogger::printFix(const FixSuggestion &fix)
+void QQmlJSLogger::printFix(const QQmlJSFixSuggestion &fixItem)
 {
     const QString currentFileAbsPath = QFileInfo(m_fileName).absolutePath();
     QString code = m_code;
     QString currentFile;
-    for (const auto &fixItem : fix.fixes) {
-        m_output.writePrefixedMessage(fixItem.message, QtInfoMsg);
+    m_output.writePrefixedMessage(fixItem.fixDescription(), QtInfoMsg);
 
-        if (!fixItem.cutLocation.isValid())
-            continue;
+    if (!fixItem.location().isValid())
+        return;
 
-        if (fixItem.fileName == currentFile) {
-            // Nothing to do in this case, we've already read the code
-        } else if (fixItem.fileName.isEmpty() || fixItem.fileName == currentFileAbsPath) {
-            code = m_code;
-        } else {
-            QFile file(fixItem.fileName);
-            const bool success = file.open(QFile::ReadOnly);
-            Q_ASSERT(success);
-            code = QString::fromUtf8(file.readAll());
-            currentFile = fixItem.fileName;
-        }
-
-        IssueLocationWithContext issueLocationWithContext { code, fixItem.cutLocation };
-
-        if (const QStringView beforeText = issueLocationWithContext.beforeText();
-            !beforeText.isEmpty()) {
-            m_output.write(beforeText);
-        }
-
-        // The replacement string can be empty if we're only pointing something out to the user
-        QStringView replacementString = fixItem.replacementString.isEmpty()
-                ? issueLocationWithContext.issueText()
-                : fixItem.replacementString;
-
-        // But if there's nothing to change it has to be a hint
-        if (fixItem.replacementString.isEmpty())
-            Q_ASSERT(fixItem.isHint);
-
-        m_output.write(replacementString, QtDebugMsg);
-        m_output.write(issueLocationWithContext.afterText().toString() + u'\n');
-
-        int tabCount = issueLocationWithContext.beforeText().count(u'\t');
-
-        // Do not draw location indicator for multiline replacement strings
-        if (replacementString.contains(u'\n'))
-            continue;
-
-        m_output.write(u" "_s.repeated(
-                               issueLocationWithContext.beforeText().size() - tabCount)
-                       + u"\t"_s.repeated(tabCount)
-                       + u"^"_s.repeated(fixItem.replacementString.size()) + u'\n');
+    const QString filename = fixItem.filename();
+    if (filename == currentFile) {
+        // Nothing to do in this case, we've already read the code
+    } else if (filename.isEmpty() || filename == currentFileAbsPath) {
+        code = m_code;
+    } else {
+        QFile file(filename);
+        const bool success = file.open(QFile::ReadOnly);
+        Q_ASSERT(success);
+        code = QString::fromUtf8(file.readAll());
+        currentFile = filename;
     }
+
+    IssueLocationWithContext issueLocationWithContext { code, fixItem.location() };
+
+    if (const QStringView beforeText = issueLocationWithContext.beforeText();
+        !beforeText.isEmpty()) {
+        m_output.write(beforeText);
+    }
+
+    // The replacement string can be empty if we're only pointing something out to the user
+    const QString replacement = fixItem.replacement();
+    QStringView replacementString = replacement.isEmpty()
+            ? issueLocationWithContext.issueText()
+            : replacement;
+
+    // But if there's nothing to change it cannot be auto-applied
+    Q_ASSERT(!replacement.isEmpty() || !fixItem.isAutoApplicable());
+
+    m_output.write(replacementString, QtDebugMsg);
+    m_output.write(issueLocationWithContext.afterText().toString() + u'\n');
+
+    int tabCount = issueLocationWithContext.beforeText().count(u'\t');
+
+    // Do not draw location indicator for multiline replacement strings
+    if (replacementString.contains(u'\n'))
+        return;
+
+    m_output.write(u" "_s.repeated(
+                           issueLocationWithContext.beforeText().size() - tabCount)
+                   + u"\t"_s.repeated(tabCount)
+                   + u"^"_s.repeated(replacement.size()) + u'\n');
 }
 
 QT_END_NAMESPACE

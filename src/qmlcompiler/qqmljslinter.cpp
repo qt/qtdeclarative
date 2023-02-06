@@ -323,7 +323,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
 }
 
 static void addJsonWarning(QJsonArray &warnings, const QQmlJS::DiagnosticMessage &message,
-                           QAnyStringView id, const std::optional<FixSuggestion> &suggestion = {})
+                           QAnyStringView id, const std::optional<QQmlJSFixSuggestion> &suggestion = {})
 {
     QJsonObject jsonMessage;
 
@@ -362,19 +362,35 @@ static void addJsonWarning(QJsonArray &warnings, const QQmlJS::DiagnosticMessage
     jsonMessage[u"message"_s] = message.message;
 
     QJsonArray suggestions;
+    const auto convertLocation = [](const QQmlJS::SourceLocation &source, QJsonObject *target) {
+        target->insert("line"_L1, int(source.startLine));
+        target->insert("column"_L1, int(source.startColumn));
+        target->insert("charOffset"_L1, int(source.offset));
+        target->insert("length"_L1, int(source.length));
+    };
     if (suggestion.has_value()) {
-        for (const auto &fix : suggestion->fixes) {
-            QJsonObject jsonFix;
-            jsonFix[u"message"] = fix.message;
-            jsonFix[u"line"_s] = static_cast<int>(fix.cutLocation.startLine);
-            jsonFix[u"column"_s] = static_cast<int>(fix.cutLocation.startColumn);
-            jsonFix[u"charOffset"_s] = static_cast<int>(fix.cutLocation.offset);
-            jsonFix[u"length"_s] = static_cast<int>(fix.cutLocation.length);
-            jsonFix[u"replacement"_s] = fix.replacementString;
-            jsonFix[u"isHint"] = fix.isHint;
-            if (!fix.fileName.isEmpty())
-                jsonFix[u"fileName"] = fix.fileName;
-            suggestions << jsonFix;
+        QJsonObject jsonFix {
+            { "message"_L1, suggestion->fixDescription() },
+            { "replacement"_L1, suggestion->replacement() },
+            { "isHint"_L1, !suggestion->isAutoApplicable() },
+        };
+        convertLocation(suggestion->location(), &jsonFix);
+        const QString filename = suggestion->filename();
+        if (!filename.isEmpty())
+            jsonFix.insert("fileName"_L1, filename);
+        suggestions << jsonFix;
+
+        const QString hint = suggestion->hint();
+        if (!hint.isEmpty()) {
+            // We need to keep compatibility with the JSON format.
+            // Therefore the overly verbose encoding of the hint.
+            QJsonObject jsonHint {
+                { "message"_L1,  hint },
+                { "replacement"_L1, QString() },
+                { "isHint"_L1, true }
+            };
+            convertLocation(QQmlJS::SourceLocation(), &jsonHint);
+            suggestions << jsonHint;
         }
     }
     jsonMessage[u"suggestions"] = suggestions;
@@ -778,7 +794,7 @@ QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent
 
     QString code = m_fileContents;
 
-    QList<FixSuggestion::Fix> fixesToApply;
+    QList<QQmlJSFixSuggestion> fixesToApply;
 
     QFileInfo info(m_logger->fileName());
     const QString currentFileAbsolutePath = info.absoluteFilePath();
@@ -792,34 +808,30 @@ QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent
 
     for (const auto &messages : { m_logger->infos(), m_logger->warnings(), m_logger->errors() })
         for (const Message &msg : messages) {
-            if (!msg.fixSuggestion.has_value())
+            if (!msg.fixSuggestion.has_value() || !msg.fixSuggestion->isAutoApplicable())
                 continue;
 
-            for (const auto &fix : msg.fixSuggestion->fixes) {
-                if (fix.isHint)
-                    continue;
-
-                // Ignore fix suggestions for other files
-                if (!fix.fileName.isEmpty()
-                    && QFileInfo(fix.fileName).absoluteFilePath() != currentFileAbsolutePath) {
-                    continue;
-                }
-
-                fixesToApply << fix;
+            // Ignore fix suggestions for other files
+            const QString filename = msg.fixSuggestion->filename();
+            if (!filename.isEmpty()
+                    && QFileInfo(filename).absoluteFilePath() != currentFileAbsolutePath) {
+                continue;
             }
+
+            fixesToApply << msg.fixSuggestion.value();
         }
 
     if (fixesToApply.isEmpty())
         return NothingToFix;
 
     std::sort(fixesToApply.begin(), fixesToApply.end(),
-              [](FixSuggestion::Fix &a, FixSuggestion::Fix &b) {
-                  return a.cutLocation.offset < b.cutLocation.offset;
+              [](const QQmlJSFixSuggestion &a, const QQmlJSFixSuggestion &b) {
+                  return a.location().offset < b.location().offset;
               });
 
     for (auto it = fixesToApply.begin(); it + 1 != fixesToApply.end(); it++) {
-        QQmlJS::SourceLocation srcLocA = it->cutLocation;
-        QQmlJS::SourceLocation srcLocB = (it + 1)->cutLocation;
+        const QQmlJS::SourceLocation srcLocA = it->location();
+        const QQmlJS::SourceLocation srcLocB = (it + 1)->location();
         if (srcLocA.offset + srcLocA.length > srcLocB.offset) {
             if (!silent)
                 qWarning() << "Fixes for two warnings are overlapping, aborting. Please file a bug "
@@ -831,12 +843,14 @@ QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent
     int offsetChange = 0;
 
     for (const auto &fix : fixesToApply) {
-        qsizetype cutLocation = fix.cutLocation.offset + offsetChange;
-        QString before = code.left(cutLocation);
-        QString after = code.mid(cutLocation + fix.cutLocation.length);
+        const QQmlJS::SourceLocation fixLocation = fix.location();
+        qsizetype cutLocation = fixLocation.offset + offsetChange;
+        const QString before = code.left(cutLocation);
+        const QString after = code.mid(cutLocation + fixLocation.length);
 
-        code = before + fix.replacementString + after;
-        offsetChange += fix.replacementString.size() - fix.cutLocation.length;
+        const QString replacement = fix.replacement();
+        code = before + replacement + after;
+        offsetChange += replacement.size() - fixLocation.length;
     }
 
     QQmlJS::Engine engine;

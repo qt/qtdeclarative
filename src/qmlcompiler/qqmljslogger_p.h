@@ -70,19 +70,37 @@ private:
     QStringView m_afterText;
 };
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT FixSuggestion
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSFixSuggestion
 {
-    struct Fix
-    {
-        QString message;
-        QQmlJS::SourceLocation cutLocation = QQmlJS::SourceLocation();
-        QString replacementString = QString();
-        QString fileName = QString();
-        // A Fix is a hint if it can not be automatically applied to fix an issue or only points out
-        // its origin
-        bool isHint = true;
-    };
-    QList<Fix> fixes;
+public:
+    QQmlJSFixSuggestion() = default;
+    QQmlJSFixSuggestion(const QString &fixDescription, const QQmlJS::SourceLocation &location,
+                        const QString &replacement = QString())
+        : m_location(location)
+        , m_fixDescription(fixDescription)
+        , m_replacement(replacement)
+    {}
+
+    QString fixDescription() const { return m_fixDescription; }
+    QQmlJS::SourceLocation location() const { return m_location; }
+    QString replacement() const { return m_replacement; }
+
+    void setFilename(const QString &filename) { m_filename = filename; }
+    QString filename() const { return m_filename; }
+
+    void setHint(const QString &hint) { m_hint = hint; }
+    QString hint() const { return m_hint; }
+
+    void setAutoApplicable(bool autoApply = true) { m_autoApplicable = autoApply; }
+    bool isAutoApplicable() const { return m_autoApplicable; }
+
+private:
+    QQmlJS::SourceLocation m_location;
+    QString m_fixDescription;
+    QString m_replacement;
+    QString m_filename;
+    QString m_hint;
+    bool m_autoApplicable = false;
 };
 
 class Q_QMLCOMPILER_PRIVATE_EXPORT LoggerWarningId
@@ -138,7 +156,7 @@ struct Message : public QQmlJS::DiagnosticMessage
     // This doesn't need to be an owning-reference since the string is expected to outlive any
     // Message object by virtue of coming from a LoggerWarningId.
     QAnyStringView id;
-    std::optional<FixSuggestion> fixSuggestion;
+    std::optional<QQmlJSFixSuggestion> fixSuggestion;
 };
 
 class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSLogger
@@ -254,7 +272,7 @@ public:
     */
     void log(const QString &message, LoggerWarningId id, const QQmlJS::SourceLocation &srcLocation,
              bool showContext = true, bool showFileName = true,
-             const std::optional<FixSuggestion> &suggestion = {},
+             const std::optional<QQmlJSFixSuggestion> &suggestion = {},
              const QString overrideFileName = QString())
     {
         log(message, id, srcLocation, m_categoryLevels[id.name().toString()], showContext,
@@ -282,11 +300,11 @@ private:
     QMap<QString, Category> m_categories;
 
     void printContext(const QString &overrideFileName, const QQmlJS::SourceLocation &location);
-    void printFix(const FixSuggestion &fix);
+    void printFix(const QQmlJSFixSuggestion &fix);
 
     void log(const QString &message, LoggerWarningId id, const QQmlJS::SourceLocation &srcLocation,
              QtMsgType type, bool showContext, bool showFileName,
-             const std::optional<FixSuggestion> &suggestion, const QString overrideFileName);
+             const std::optional<QQmlJSFixSuggestion> &suggestion, const QString overrideFileName);
 
     QString m_fileName;
     QString m_code;

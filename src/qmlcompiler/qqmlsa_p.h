@@ -35,6 +35,7 @@ namespace QQmlSA {
 
 // ### FIXME: Replace with a proper PIMPL'd type
 using Element = QQmlJSScope::ConstPtr;
+using FixSuggestion = QQmlJSFixSuggestion;
 
 class GenericPassPrivate;
 class PassManager;
@@ -46,8 +47,10 @@ public:
     GenericPass(PassManager *manager);
     virtual ~GenericPass();
 
-    void emitWarning(QAnyStringView message, LoggerWarningId id,
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                      QQmlJS::SourceLocation srcLocation = QQmlJS::SourceLocation());
+    void emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
+                     QQmlJS::SourceLocation srcLocation, const FixSuggestion &fix);
     Element resolveType(QAnyStringView moduleName, QAnyStringView typeName); // #### TODO: revisions
     Element resolveLiteralType(const QQmlJSMetaPropertyBinding &binding);
     Element resolveId(QAnyStringView id, const Element &context);

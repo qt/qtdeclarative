@@ -31,10 +31,17 @@ GenericPass::GenericPass(PassManager *manager)
     d->manager = manager;
 }
 
-void GenericPass::emitWarning(QAnyStringView message, LoggerWarningId id,
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
                               QQmlJS::SourceLocation srcLocation)
 {
-    d->manager->m_visitor->logger()->log(message.toString(), id, srcLocation);
+    d->manager->m_visitor->logger()->log(diagnostic.toString(), id, srcLocation);
+}
+
+
+void GenericPass::emitWarning(QAnyStringView diagnostic, LoggerWarningId id,
+                              QQmlJS::SourceLocation srcLocation, const FixSuggestion &fix)
+{
+    d->manager->m_visitor->logger()->log(diagnostic.toString(), id, srcLocation, true, true, fix);
 }
 
 Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeName)
