@@ -82,6 +82,7 @@ set(qml_files
     deadShoeSize.qml
     deadStoreLoop.qml
     dialog.qml
+    dialogButtonBox.qml
     dynamicscene.qml
     enumConversion.qml
     enumInvalid.qml
