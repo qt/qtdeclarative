@@ -2204,31 +2204,6 @@ void QQmlJSTypePropagator::generate_GetTemplateObject(int index)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
-static bool instructionManipulatesContext(QV4::Moth::Instr::Type type)
-{
-    using Type = QV4::Moth::Instr::Type;
-    switch (type) {
-    case Type::PopContext:
-    case Type::PopScriptContext:
-    case Type::CreateCallContext:
-    case Type::CreateCallContext_Wide:
-    case Type::PushCatchContext:
-    case Type::PushCatchContext_Wide:
-    case Type::PushWithContext:
-    case Type::PushWithContext_Wide:
-    case Type::PushBlockContext:
-    case Type::PushBlockContext_Wide:
-    case Type::CloneBlockContext:
-    case Type::CloneBlockContext_Wide:
-    case Type::PushScriptContext:
-    case Type::PushScriptContext_Wide:
-        return true;
-    default:
-        break;
-    }
-    return false;
-}
-
 QV4::Moth::ByteCodeHandler::Verdict
 QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
 {
