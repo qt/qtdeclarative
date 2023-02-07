@@ -14,8 +14,7 @@ This policy was introduced in Qt 6.5. It changes where
 \l{qt_add_qml_module}{qt_add_qml_module()} stores QML resources in
 the resource system.
 
-The \c OLD behavior of this policy is that, unless
-\c AUTO_RESOURCE_PREFIX is set, the \c RESOURCE_PREFIX argument for
+The \c OLD behavior of this policy is that, the \c RESOURCE_PREFIX argument for
 \c{qt_add_qml_module()} defaults to \c{":/"}.
 
 The \c NEW behavior of this policy is that the \c RESOURCE_PREFIX argument
@@ -24,9 +23,9 @@ ensures that modules are put into the \l{QML Import Path} and can be
 found without further setup.
 
 Qt 6.5 issues warnings if you do not pass any of the following arguments to the
-\c qt_add_qml_module command: \c RESOURCE_PREFIX, \c AUTO_RESOURCE_PREFIX,
-\c NO_RESOURCE_TARGET_PATH. Use the \l qt_policy command to suppress
-the warning by explicitly setting the policy to \c OLD or \c NEW.
+\c qt_add_qml_module command: \c RESOURCE_PREFIX, \c NO_RESOURCE_TARGET_PATH.
+Use the \l qt_policy command to suppress the warning by explicitly setting
+the policy to \c OLD or \c NEW.
 
 \note The \c{OLD} behavior of a policy is deprecated, and may
 be removed in the future.
