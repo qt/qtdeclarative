@@ -143,7 +143,7 @@ In more complex projects, this convention can be too limiting. You might for
 instance want to group all QML modules in one place to avoid polluting the
 project's root directory. Or you want to reuse a single module in multiple
 applications. For those cases, \c QT_QML_OUTPUT_DIRECTORY in combination with
-\c RESOURCE_PREFIX or \c AUTO_RESOURCE_PREFIX and \l IMPORT_PATH can be used.
+\c RESOURCE_PREFIX and \l IMPORT_PATH can be used.
 
 To collect QML modules into a specific output directory, for example a
 subdirectory "qml" in the build directory \l QT_QML_OUTPUT_DIRECTORY, set the
@@ -206,11 +206,11 @@ qt_add_qml_module(
 If all QML modules are always loaded from the resource
 file system, you can deploy the application as a single binary.
 
-Generally, you should pass the \c AUTO_RESOURCE_PREFIX without arguments to
-\l{qt_add_qml_module}. This way, your modules are placed in
-\c{:/qt/qml/} in the resource file system. Since Qt 6.5,
-this is part of the default \l{QML Import Path}, but not used by Qt itself. For
-modules to be used within your application, this is the right place.
+If \l{QTP0001} policy is set to \c NEW, the \c RESOURCE_PREFIX argument
+for \c{qt_add_qml_module()} defaults to \c{/qt/qml/}, therefore your
+modules are placed in \c{:/qt/qml/} in the resource file system.
+This is part of the default \l{QML Import Path}, but not used by Qt
+itself. For modules to be used within your application, this is the right place.
 
 If you have instead specified a custom \c RESOURCE_PREFIX, you have to add the
 custom resource prefix to the \l{QML Import Path}. You can also add multiple

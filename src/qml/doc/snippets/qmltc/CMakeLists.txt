@@ -42,11 +42,12 @@ target_compile_definitions(${application_name} PRIVATE
     QMLTC_TESTS_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}"
 )
 
+qt_policy(SET QTP0001 NEW)
+
 #! [qmltc-add-qml-module]
 # Make the application into a proper QML module:
 qt6_add_qml_module(${application_name}
     URI QmltcExample
-    AUTO_RESOURCE_PREFIX
     QML_FILES ${application_qml_files}
 
     # Compile qml files (listed in QML_FILES) to C++ using qmltc and add these
