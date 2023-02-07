@@ -1,5 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+
 #ifndef QQMLLANGUAGESERVER_P_H
 #define QQMLLANGUAGESERVER_P_H
 
@@ -20,6 +21,7 @@
 #include "qqmllintsuggestions_p.h"
 #include "qworkspace_p.h"
 #include "qqmlcompletionsupport_p.h"
+#include "qqmlgototypedefinitionsupport_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -58,6 +60,7 @@ private:
     QmlLintSuggestions m_lint;
     WorkspaceHandlers m_workspace;
     QmlCompletionSupport m_completionSupport;
+    QmlGoToTypeDefinitionSupport m_navigationSupport;
     int m_returnValue = 1;
 };
 

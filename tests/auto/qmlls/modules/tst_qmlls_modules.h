@@ -42,6 +42,8 @@ private slots:
     void function_documentations();
     void buildDir();
     void cleanupTestCase();
+    void goToTypeDefinition_data();
+    void goToTypeDefinition();
 
 private:
     QProcess m_server;

@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QQMLCOMPLETIONSUPPORT_P_H
 #define QQMLCOMPLETIONSUPPORT_P_H
@@ -16,44 +16,40 @@
 //
 
 #include "qlanguageserver_p.h"
+#include "qqmlbasemodule_p.h"
 #include "qqmlcodemodel_p.h"
 
 #include <QtCore/qmutex.h>
 #include <QtCore/qhash.h>
 
 struct CompletionRequest
+    : BaseRequest<QLspSpecification::CompletionParams,
+                  QLspSpecification::LSPPartialResponse<
+                          std::variant<QList<QLspSpecification::CompletionItem>,
+                                       QLspSpecification::CompletionList, std::nullptr_t>,
+                          std::variant<QLspSpecification::CompletionList,
+                                       QList<QLspSpecification::CompletionItem>>>>
 {
-    int minVersion;
     QString code;
-    QLspSpecification::CompletionParams completionParams;
-    QLspSpecification::LSPPartialResponse<
-            std::variant<QList<QLspSpecification::CompletionItem>,
-                         QLspSpecification::CompletionList, std::nullptr_t>,
-            std::variant<QLspSpecification::CompletionList,
-                         QList<QLspSpecification::CompletionItem>>>
-            response;
+
+    bool fillFrom(QmlLsp::OpenDocument doc, const Parameters &params, Response &&response);
     void sendCompletions(QmlLsp::OpenDocumentSnapshot &);
     QString urlAndPos() const;
     QList<QLspSpecification::CompletionItem> completions(QmlLsp::OpenDocumentSnapshot &doc) const;
 };
 
-class QmlCompletionSupport : public QLanguageServerModule
+class QmlCompletionSupport : public QQmlBaseModule<CompletionRequest>
 {
     Q_OBJECT
 public:
     QmlCompletionSupport(QmlLsp::QQmlCodeModel *codeModel);
-    ~QmlCompletionSupport();
     QString name() const override;
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
+    void process(CompletionRequest *req) override;
 public Q_SLOTS:
     void updatedSnapshot(const QByteArray &uri);
-
-private:
-    QmlLsp::QQmlCodeModel *m_codeModel;
-    QMutex m_mutex;
-    QMultiHash<QString, CompletionRequest *> m_completions;
 };
 
 #endif // QMLCOMPLETIONSUPPORT_P_H

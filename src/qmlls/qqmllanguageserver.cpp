@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmllanguageserver_p.h"
 #include "qtextsynchronization_p.h"
@@ -60,13 +60,15 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
       m_textSynchronization(&m_codeModel),
       m_lint(&m_server, &m_codeModel),
       m_workspace(&m_codeModel),
-      m_completionSupport(&m_codeModel)
+      m_completionSupport(&m_codeModel),
+      m_navigationSupport(&m_codeModel)
 {
     m_server.addServerModule(this);
     m_server.addServerModule(&m_textSynchronization);
     m_server.addServerModule(&m_lint);
     m_server.addServerModule(&m_workspace);
     m_server.addServerModule(&m_completionSupport);
+    m_server.addServerModule(&m_navigationSupport);
     m_server.finishSetup();
     qCWarning(lspServerLog) << "Did Setup";
 }
