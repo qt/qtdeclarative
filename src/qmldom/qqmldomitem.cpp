@@ -1496,6 +1496,7 @@ bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptio
     bool visitFirst = !(options & LookupOption::SkipFirstScope);
     bool visitCurrent = visitFirst;
     bool first = true;
+    QSet<quintptr> alreadyAddedComponentMaps;
     while (!toDo.isEmpty()) {
         DomItem current = toDo.takeLast();
         if (visited->contains(current.id()))
@@ -1523,7 +1524,7 @@ bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptio
             if (DomItem next = current.scope(FilterUpOptions::ReturnOuterNoSelf))
                 toDo.append(next);
             break;
-        case DomType::QmlComponent: // ids/attached type
+        case DomType::QmlComponent: { // ids/attached type
             if ((options & LookupOption::Strict) == 0) {
                 if (DomItem comp = current.field(Fields::nextComponent))
                     toDo.append(comp);
@@ -1535,8 +1536,24 @@ bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptio
             }
             if (DomItem next = current.scope(FilterUpOptions::ReturnOuterNoSelf))
                 toDo.append(next);
+
+            DomItem owner = current.owner();
+            Path pathToComponentMap = current.pathFromOwner().dropTail(2);
+            DomItem componentMap = owner.path(pathToComponentMap);
+            if (alreadyAddedComponentMaps.contains(componentMap.id()))
+                break;
+            alreadyAddedComponentMaps.insert(componentMap.id());
+            for (QString x : componentMap.keys()) {
+                DomItem componentList = componentMap.key(x);
+                for (int i = 0; i < componentList.indexes(); ++i) {
+                    DomItem component = componentList.index(i);
+                    if (component != current && !visited->contains(component.id()))
+                        toDo.append(component);
+                }
+            }
             first = false;
             break;
+        }
         case DomType::QmlFile: // subComponents, imported types
             if (DomItem iScope =
                         current.field(Fields::importScope)) // treat file as a separate scope?
@@ -1664,26 +1681,6 @@ bool DomItem::visitLookup1(QString symbolName, function_ref<bool(DomItem &)> vis
                            LookupOptions opts, ErrorHandler h, QSet<quintptr> *visited,
                            QList<Path> *visitedRefs)
 {
-    bool typeLookupInQmlFile = symbolName.size() > 1 && symbolName.at(0).isUpper()
-            && fileObject().internalKind() == DomType::QmlFile;
-    if (typeLookupInQmlFile) {
-        // shortcut to lookup types (scope chain would find them too, but after looking
-        // the prototype chain)
-        DomItem importScope = fileObject().field(Fields::importScope);
-        if (const ImportScope *importScopePtr = importScope.as<ImportScope>()) {
-            if (importScopePtr->subImports().contains(symbolName)) {
-                DomItem subItem = importScope.field(Fields::qualifiedImports).key(symbolName);
-                if (!visitor(subItem))
-                    return false;
-            }
-            QList<DomItem> types = importScopePtr->importedItemsWithName(importScope, symbolName);
-            for (DomItem &t : types) {
-                if (!visitor(t))
-                    return false;
-            }
-        }
-        return true;
-    }
     return visitScopeChain(
             [symbolName, visitor](DomItem &obj) {
                 return obj.visitLocalSymbolsNamed(symbolName,

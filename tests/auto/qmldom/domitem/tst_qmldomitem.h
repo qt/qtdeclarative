@@ -750,6 +750,97 @@ private slots:
         checkAliases(rootObj);
     }
 
+    void inlineComponents()
+    {
+        using namespace Qt::StringLiterals;
+
+        QString testFile = baseDir + u"/inlineComponents.qml"_s;
+
+        DomItem env = DomEnvironment::create(
+                QStringList(),
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        DomItem tFile;
+        env.loadFile(
+                testFile, QString(),
+                [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        auto rootQmlObject = tFile.rootQmlObject(GoTo::MostLikely);
+
+        // check if the lookup can find the inline components correctly, to see if the
+        // visitScopeChain also visit them.
+        auto ic3 = rootQmlObject.lookup("IC3", LookupType::Type, LookupOption::Normal,
+                                        [](const ErrorMessage &) {});
+
+        QCOMPARE(ic3.size(), 1);
+        QCOMPARE(ic3.front().name(), "inlineComponents.IC3");
+
+        auto ic1 = rootQmlObject.lookup("IC1", LookupType::Type, LookupOption::Normal,
+                                        [](const ErrorMessage &) {});
+
+        QCOMPARE(ic1.size(), 1);
+        QCOMPARE(ic1.front().name(), "inlineComponents.IC1");
+    }
+
+    void inlineObject()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/inlineObject.qml"_s;
+
+        DomItem env = DomEnvironment::create(
+                QStringList(),
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        DomItem tFile;
+        env.loadFile(
+                testFile, QString(),
+                [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        auto rootQmlObject = tFile.rootQmlObject(GoTo::MostLikely);
+
+        // check that the inline objects have their prototypes set.
+
+        {
+            auto prototypes = rootQmlObject.propertyInfos()
+                                      .key(u"myItem"_s)
+                                      .field(Fields::bindings)
+                                      .index(0)
+                                      .field(Fields::value)
+                                      .field(Fields::prototypes);
+            QVERIFY(prototypes.internalKind() != DomType::Empty);
+            QCOMPARE(prototypes.indexes(), 1);
+            QCOMPARE(prototypes.index(0)
+                             .field(Fields::referredObjectPath)
+                             .as<ConstantData>()
+                             ->value()
+                             .toString(),
+                     u"@lookup.type[\"Item\"]"_s);
+        }
+
+        {
+            auto prototypes2 = rootQmlObject.propertyInfos()
+                                       .key(u"myItem2"_s)
+                                       .field(Fields::bindings)
+                                       .index(0)
+                                       .field(Fields::value)
+                                       .field(Fields::prototypes);
+            QVERIFY(prototypes2.internalKind() != DomType::Empty);
+            QCOMPARE(prototypes2.indexes(), 1);
+            QCOMPARE(prototypes2.index(0)
+                             .field(Fields::referredObjectPath)
+                             .as<ConstantData>()
+                             ->value()
+                             .toString(),
+                     u"@lookup.type[\"IC\"]"_s);
+        }
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

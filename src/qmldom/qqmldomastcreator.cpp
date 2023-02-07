@@ -645,6 +645,8 @@ public:
         loadAnnotations(el);
         QmlObject *objValue = bPtr->objectValue();
         Q_ASSERT_X(objValue, className, "could not recover objectValue");
+        objValue->setName(toString(el->qualifiedTypeNameId));
+        objValue->addPrototypePath(Paths::lookupTypePath(objValue->name()));
         pushEl(bPathFromOwner.field(Fields::value), *objValue, el->initializer);
         return true;
     }
