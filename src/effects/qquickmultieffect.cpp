@@ -173,6 +173,11 @@ QQuickMultiEffect::~QQuickMultiEffect()
     \note It is not supported to let the effect include itself, for instance
     by setting source to the effect's parent.
 
+    \note If the source item has \l {QtQuick::Item::layer.enabled} {layer.enabled} set to true,
+    it will be used directly. This is good for the performance and often desired, when the source
+    is hidden. But if the source remains visible and the effect adds padding (autoPaddingEnabled,
+    paddingRect), that padding can affect the appearance of the source item.
+
     \sa hasProxySource
 */
 QQuickItem *QQuickMultiEffect::source() const
