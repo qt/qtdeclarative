@@ -9,9 +9,9 @@ Item {
     property var d
     property list<int> e
 
-    component D: Item {}
+    component D: Item { id: icid }
     C {id: firstC}D{id: firstD}
-    C {}   D{}
+    C { id: secondC }   D{ id: secondD}
     C {
         C{}
         C{
@@ -21,5 +21,7 @@ Item {
         }
         C{}
     }
+
+    component IC: Item { property C myC }
 
 }

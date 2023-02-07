@@ -126,6 +126,10 @@ void tst_qmlls_utils::findItemFromLocation_data()
                                     // start of the "property"-token of the "e" property
                                     << -1 << indentWidth;
 
+    QTest::addRow("property-in-ic")
+            << testFile(u"file1.qml"_s) << 24 << 35 << firstResult << outOfOne
+            << QQmlJS::Dom::DomType::PropertyDefinition << u"myC"_s << 24 << 25;
+
     QTest::addRow("onCChild") << testFile(u"file1.qml"_s) << 12 << 4 << firstResult << outOfOne
                               << QQmlJS::Dom::DomType::QmlObject << u"C"_s << -1 << indentWidth;
 
@@ -154,11 +158,19 @@ void tst_qmlls_utils::findItemFromLocation_data()
             << QQmlJS::Dom::DomType::QmlObject << u"C"_s << -1 << indentWidth;
 
     QTest::addRow("onWhitespaceBetweenCAndD")
-            << testFile(u"file1.qml"_s) << 13 << 9 << firstResult << outOfOne
-            << QQmlJS::Dom::DomType::QmlObject << u"D"_s << -1 << 11;
+            << testFile(u"file1.qml"_s) << 13 << 23 << firstResult << outOfOne
+            << QQmlJS::Dom::DomType::QmlObject << u"D"_s << -1 << 24;
     QTest::addRow("onWhitespaceBetweenCAndD2")
-            << testFile(u"file1.qml"_s) << 13 << 10 << firstResult << outOfOne
-            << QQmlJS::Dom::DomType::QmlObject << u"D"_s << -1 << 11;
+            << testFile(u"file1.qml"_s) << 13 << 22 << firstResult << outOfOne
+            << QQmlJS::Dom::DomType::QmlObject << u"D"_s << -1 << 24;
+    // check workaround for inline components
+    QTest::addRow("ic") << testFile(u"file1.qml"_s) << 11 << 14 << firstResult << outOfOne
+                        << QQmlJS::Dom::DomType::QmlObject << u"Item"_s << -1 << 17;
+    QTest::addRow("ic2") << testFile(u"file1.qml"_s) << 11 << 19 << firstResult << outOfOne
+                         << QQmlJS::Dom::DomType::QmlObject << u"Item"_s << -1 << 17;
+    QTest::addRow("ic3") << testFile(u"file1.qml"_s) << 11 << 32 << firstResult << outOfOne
+                         << QQmlJS::Dom::DomType::Id << u"icid"_s << -1 << 24;
+
 }
 
 std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
@@ -234,7 +246,7 @@ void tst_qmlls_utils::findLocationOfItem_data()
     QTest::addRow("property-a2") << testFile(u"file1.qml"_s) << 5 << 9 << -1 << indentWidth;
     QTest::addRow("nested-C") << testFile(u"file1.qml"_s) << 16 << 8 << -1 << -1;
     QTest::addRow("nested-C2") << testFile(u"file1.qml"_s) << 19 << 12 << -1 << -1;
-    QTest::addRow("D") << testFile(u"file1.qml"_s) << 13 << 12 << -1 << 11;
+    QTest::addRow("D") << testFile(u"file1.qml"_s) << 13 << 32 << -1 << 24;
     QTest::addRow("property-d") << testFile(u"file1.qml"_s) << 8 << 14 << -1 << indentWidth;
 
     QTest::addRow("import") << testFile(u"file1.qml"_s) << 0 << 5 << -1 << 0;

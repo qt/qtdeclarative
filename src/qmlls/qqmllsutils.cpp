@@ -200,6 +200,51 @@ QQmlLSUtils::itemsFromTextLocation(DomItem file, int line, int character, Ignore
             toDo.append(nearestChildren);
         }
     }
+
+    // The main component and inline components happen to have the same depth and the fullRegion of
+    // the main component contains the inline components fullRegion, such that querying the
+    // textposition of an inline component object also additionally returns the main component
+    // object, which is clearly not wanted. In this case, manually remove the main component after
+    // making sure that it really is shadowing an inline component.
+    if (itemsFound.size() > 1) {
+        std::optional<qsizetype> mainComponentIndex;
+        bool atLeastOneInlineComponent = false;
+
+        for (int i = 0; i < itemsFound.size(); ++i) {
+            DomItem component = itemsFound[i].domItem.component();
+            if (component.internalKind() != DomType::QmlComponent)
+                continue;
+
+            DomItem file = component.containingFile();
+            // name of the main component in the file that contains the current component
+            const QString mainComponentName =
+                    file.field(Fields::components).key(QString()).index(0).name();
+            // heuristic: inline components are called <MainComponentName>.<InlineComponentName>
+            if (component.name().startsWith(mainComponentName + u"."))
+                atLeastOneInlineComponent = true;
+            else
+                mainComponentIndex = i;
+        }
+        if (atLeastOneInlineComponent && mainComponentIndex) {
+            // sanity check: make sure there is another component contained inside of the
+            // mainComponentRegion before deleting it from itemsFound. This is required because
+            // qualified imports may mess up the inline components name heuristic above, e.g.,
+            // "import QtQuick as Main" inside of a Main.qml file.
+            QQmlJS::SourceLocation mainComponentRegion =
+                    itemsFound[*mainComponentIndex].fileLocation->info().fullRegion;
+            for (int i = 0; i < itemsFound.size(); ++i) {
+                if (i == *mainComponentIndex)
+                    continue;
+                QQmlJS::SourceLocation inlineComponentRegion =
+                        itemsFound[i].fileLocation->info().fullRegion;
+                if (mainComponentRegion.begin() <= inlineComponentRegion.begin()
+                    && inlineComponentRegion.end() <= mainComponentRegion.end()) {
+                    itemsFound.remove(*mainComponentIndex);
+                    break;
+                }
+            }
+        }
+    }
     return itemsFound;
 }
 
