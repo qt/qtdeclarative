@@ -34,8 +34,14 @@ private slots:
     void findItemFromLocation_data();
     void findItemFromLocation();
 
+    void findTypeDefinitionFromLocation_data();
+    void findTypeDefinitionFromLocation();
+
     void findLocationOfItem_data();
     void findLocationOfItem();
+
+    void findBaseObject();
+    void findBaseObject_data();
 
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;

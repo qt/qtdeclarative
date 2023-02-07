@@ -1850,7 +1850,7 @@ bool MethodParameter::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor
     cont = cont && self.dvValueField(visitor, Fields::name, name);
     if (!typeName.isEmpty()) {
         cont = cont
-                && self.dvReferenceField(visitor, Fields::type, Paths::lookupCppTypePath(typeName));
+                && self.dvReferenceField(visitor, Fields::type, Paths::lookupTypePath(typeName));
         cont = cont && self.dvValueField(visitor, Fields::typeName, typeName);
     }
     cont = cont && self.dvValueField(visitor, Fields::isPointer, isPointer);

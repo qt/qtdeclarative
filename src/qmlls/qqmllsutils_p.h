@@ -41,6 +41,8 @@ public:
     static QQmlJS::Dom::FileLocations::Tree textLocationFromItem(QQmlJS::Dom::DomItem qmlObject);
     static QByteArray lspUriToQmlUrl(const QByteArray &uri);
     static QByteArray qmlUrlToLspUri(const QByteArray &url);
+    static QQmlJS::Dom::DomItem baseObject(QQmlJS::Dom::DomItem qmlObject);
+    static QQmlJS::Dom::DomItem findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
 };
 
 #endif // QLANGUAGESERVERUTILS_P_H

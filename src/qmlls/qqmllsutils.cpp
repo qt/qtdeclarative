@@ -211,3 +211,90 @@ QQmlJS::Dom::FileLocations::Tree QQmlLSUtils::textLocationFromItem(QQmlJS::Dom::
     t = t->find(t, fromFileToObject, QQmlJS::Dom::AttachedInfo::PathType::Canonical);
     return t;
 }
+
+DomItem QQmlLSUtils::baseObject(DomItem object)
+{
+    if (!object.as<QmlObject>())
+        return {};
+
+    auto prototypes = object.field(QQmlJS::Dom::Fields::prototypes);
+    switch (prototypes.indexes()) {
+    case 0:
+        return {};
+    case 1:
+        break;
+    default:
+        qDebug() << "Multiple prototypes found for " << object.name() << ", taking the first one.";
+        break;
+    }
+    QQmlJS::Dom::DomItem base = prototypes.index(0).proceedToScope();
+    return base;
+}
+
+/*!
+   \internal
+   \brief Extracts the QML object type of an \l DomItem.
+
+   For a \c PropertyDefinition, return the type of the property.
+   For a \c Binding, return the bound item's type if an QmlObject is bound, and otherwise the type
+   of the property.
+   For a \c QmlObject, do nothing and return it.
+   For an \c Id, return the object to
+   which the id resolves.
+   For a \c Methodparameter, return the type of the parameter. =
+   Otherwise, return an empty item.
+ */
+DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
+{
+    DomItem result;
+
+    switch (object.internalKind()) {
+    case QQmlJS::Dom::DomType::QmlComponent:
+        result = object.field(Fields::objects).index(0);
+        break;
+    case QQmlJS::Dom::DomType::QmlObject:
+        result = baseObject(object);
+        break;
+    case QQmlJS::Dom::DomType::Binding: {
+        auto binding = object.as<Binding>();
+        Q_ASSERT(binding);
+
+        // try to grab the type from the bound object
+        if (binding->valueKind() == BindingValueKind::Object) {
+            result = baseObject(object.field(Fields::value));
+        } else {
+            // use the type of the property it is bound on for scriptexpression etc.
+            DomItem propertyDefinition;
+            const QString bindingName = binding->name();
+            object.containingObject().visitLookup(
+                    bindingName,
+                    [&propertyDefinition](DomItem &item) {
+                        if (item.internalKind() == QQmlJS::Dom::DomType::PropertyDefinition) {
+                            propertyDefinition = item;
+                            return false;
+                        }
+                        return true;
+                    },
+                    LookupType::PropertyDef);
+            result = propertyDefinition.field(Fields::type).proceedToScope();
+        }
+        break;
+    }
+    case QQmlJS::Dom::DomType::Id:
+        result = object.field(Fields::referredObject).proceedToScope();
+        break;
+    case QQmlJS::Dom::DomType::PropertyDefinition:
+    case QQmlJS::Dom::DomType::MethodParameter:
+    case QQmlJS::Dom::DomType::MethodInfo:
+        result = object.field(Fields::type).proceedToScope();
+        break;
+    case QQmlJS::Dom::DomType::Empty:
+        break;
+    default:
+        qDebug() << "Found unimplemented Type" << object.internalKindStr() << "in"
+                 << object.toString();
+        result = {};
+    }
+
+    return result;
+}
