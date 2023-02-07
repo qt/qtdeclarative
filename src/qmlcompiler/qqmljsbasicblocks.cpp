@@ -13,31 +13,6 @@ void deduplicate(Container &container)
     container.erase(erase, container.end());
 }
 
-static bool instructionManipulatesContext(QV4::Moth::Instr::Type type)
-{
-    using Type = QV4::Moth::Instr::Type;
-    switch (type) {
-    case Type::PopContext:
-    case Type::PopScriptContext:
-    case Type::CreateCallContext:
-    case Type::CreateCallContext_Wide:
-    case Type::PushCatchContext:
-    case Type::PushCatchContext_Wide:
-    case Type::PushWithContext:
-    case Type::PushWithContext_Wide:
-    case Type::PushBlockContext:
-    case Type::PushBlockContext_Wide:
-    case Type::CloneBlockContext:
-    case Type::CloneBlockContext_Wide:
-    case Type::PushScriptContext:
-    case Type::PushScriptContext_Wide:
-        return true;
-    default:
-        break;
-    }
-    return false;
-}
-
 QQmlJSCompilePass::InstructionAnnotations QQmlJSBasicBlocks::run(
         const Function *function,
         const InstructionAnnotations &annotations)
