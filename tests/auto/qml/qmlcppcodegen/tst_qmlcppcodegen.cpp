@@ -12,6 +12,7 @@
 #include <QtTest>
 #include <QtQml>
 #include <QtGui/qcolor.h>
+#include <QtGui/qpa/qplatformdialoghelper.h>
 
 #if QT_CONFIG(process)
 #include <QtCore/qprocess.h>
@@ -164,6 +165,7 @@ private slots:
     void dateConversions();
     void valueTypeBehavior();
     void invisibleSingleton();
+    void dialogButtonBox();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3209,6 +3211,21 @@ void tst_QmlCppCodegen::invisibleSingleton()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("c"), QVariant(QMetaType::fromName("QColor")));
+}
+
+void tst_QmlCppCodegen::dialogButtonBox()
+{
+    QQmlEngine engine;
+    const QUrl copy(u"qrc:/qt/qml/TestTypes/dialogButtonBox.qml"_s);
+    QQmlComponent c(&engine, copy);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QObject *footer = o->property("footer").value<QObject *>();
+    QVERIFY(footer);
+
+    QCOMPARE(footer->property("standardButtons").value<QPlatformDialogHelper::StandardButton>(),
+             QPlatformDialogHelper::Ok | QPlatformDialogHelper::Cancel);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

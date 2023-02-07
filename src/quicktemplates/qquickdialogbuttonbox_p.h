@@ -35,9 +35,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBox : public QQuickCont
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     // 2.5 (Qt 5.12)
     Q_PROPERTY(QPlatformDialogHelper::ButtonLayout buttonLayout READ buttonLayout WRITE setButtonLayout RESET resetButtonLayout NOTIFY buttonLayoutChanged FINAL REVISION(2, 5))
-    Q_FLAGS(QPlatformDialogHelper::StandardButtons)
     QML_NAMED_ELEMENT(DialogButtonBox)
     QML_ATTACHED(QQuickDialogButtonBoxAttached)
+    QML_EXTENDED_NAMESPACE(QPlatformDialogHelper)
     QML_ADDED_IN_VERSION(2, 1)
 
 public:
@@ -65,9 +65,6 @@ public:
     void setDelegate(QQmlComponent *delegate);
 
     static QQuickDialogButtonBoxAttached *qmlAttachedProperties(QObject *object);
-
-    // 2.5 (Qt 5.12)
-    Q_ENUMS(QPlatformDialogHelper::ButtonLayout)
 
     QPlatformDialogHelper::ButtonLayout buttonLayout() const;
     void setButtonLayout(QPlatformDialogHelper::ButtonLayout layout);
@@ -113,7 +110,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBoxAttached : public QO
     Q_OBJECT
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox NOTIFY buttonBoxChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::ButtonRole buttonRole READ buttonRole WRITE setButtonRole NOTIFY buttonRoleChanged FINAL)
-    Q_ENUMS(QPlatformDialogHelper::ButtonRole)
 
 public:
     explicit QQuickDialogButtonBoxAttached(QObject *parent = nullptr);
