@@ -447,12 +447,12 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"foo\" not found on type \"QtObject\""), 6,
+                       QStringLiteral("Member \"foo\" not found on type \"QtObject\""), 6,
                        31 } } };
     QTest::newRow("UnknownJavascriptMethd")
             << QStringLiteral("unknownJavascriptMethod.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"foo2\" not found on type \"Methods\""), 5,
+                       QStringLiteral("Member \"foo2\" not found on type \"Methods\""), 5,
                        25 } } };
     QTest::newRow("badAlias")
             << QStringLiteral("badAlias.qml")
@@ -488,17 +488,17 @@ void TestQmllint::dirtyQmlCode_data()
                                             9, 34 } } };
     QTest::newRow("badParent")
             << QStringLiteral("badParent.qml")
-            << Result { { Message { QStringLiteral("Property \"rrr\" not found on type \"Item\""),
+            << Result { { Message { QStringLiteral("Member \"rrr\" not found on type \"Item\""),
                                     5, 34 } } };
     QTest::newRow("parentIsComponent")
             << QStringLiteral("parentIsComponent.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"progress\" not found on type \"QQuickItem\""), 7,
+                       QStringLiteral("Member \"progress\" not found on type \"QQuickItem\""), 7,
                        39 } } };
     QTest::newRow("badTypeAssertion")
             << QStringLiteral("badTypeAssertion.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"rrr\" not found on type \"QQuickItem\""), 5,
+                       QStringLiteral("Member \"rrr\" not found on type \"QQuickItem\""), 5,
                        39 } } };
     QTest::newRow("incompleteQmltypes")
             << QStringLiteral("incompleteQmltypes.qml")
@@ -507,7 +507,7 @@ void TestQmllint::dirtyQmlCode_data()
                        26 } } };
     QTest::newRow("incompleteQmltypes2")
             << QStringLiteral("incompleteQmltypes2.qml")
-            << Result { { Message { QStringLiteral("Property \"weDontKnowIt\" "
+            << Result { { Message { QStringLiteral("Member \"weDontKnowIt\" "
                                                    "not found on type \"CustomPalette\""),
                                     5, 35 } } };
     QTest::newRow("incompleteQmltypes3")
@@ -529,11 +529,11 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleBad.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"unknownFunc\" not found on type \"Foo\""), 5,
+                       QStringLiteral("Member \"unknownFunc\" not found on type \"Foo\""), 5,
                        21 } } };
     QTest::newRow("badEnumFromQtQml")
             << QStringLiteral("badEnumFromQtQml.qml")
-            << Result { { Message { QStringLiteral("Property \"Linear123\" not "
+            << Result { { Message { QStringLiteral("Member \"Linear123\" not "
                                                    "found on type \"QQmlEasingEnums\""),
                                     4, 30 } } };
     QTest::newRow("anchors3")
@@ -551,13 +551,13 @@ void TestQmllint::dirtyQmlCode_data()
                                           "unknown grouped property scope nanchors.") } } };
     QTest::newRow("badAliasObject")
             << QStringLiteral("badAliasObject.qml")
-            << Result { { Message { QStringLiteral("Property \"wrongwrongwrong\" not "
+            << Result { { Message { QStringLiteral("Member \"wrongwrongwrong\" not "
                                                    "found on type \"QtObject\""),
                                     8, 40 } } };
     QTest::newRow("badScript") << QStringLiteral("badScript.qml")
                                << Result { { Message {
                                           QStringLiteral(
-                                                  "Property \"stuff\" not found on type \"Empty\""),
+                                                  "Member \"stuff\" not found on type \"Empty\""),
                                           5, 21 } } };
     QTest::newRow("badScriptOnAttachedProperty")
             << QStringLiteral("badScript.attached.qml")
@@ -568,7 +568,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("segFault (bad)")
             << QStringLiteral("SegFault.bad.qml")
             << Result { { Message { QStringLiteral(
-                       "Property \"foobar\" not found on type \"QQuickScreenAttached\"") } } };
+                       "Member \"foobar\" not found on type \"QQuickScreenAttached\"") } } };
     QTest::newRow("VariableUsedBeforeDeclaration")
             << QStringLiteral("useBeforeDeclaration.qml")
             << Result { { Message {
@@ -588,7 +588,7 @@ void TestQmllint::dirtyQmlCode_data()
                                       "than the signal it handles.") } } };
     QTest::newRow("OnAssignment") << QStringLiteral("onAssignment.qml")
                                   << Result { { Message { QStringLiteral(
-                                             "Property \"loops\" not found on type \"bool\"") } } };
+                                             "Member \"loops\" not found on type \"bool\"") } } };
     QTest::newRow("BadAttached") << QStringLiteral("badAttached.qml")
                                  << Result { { Message { QStringLiteral(
                                             "unknown attached property scope WrongAttached.") } } };
@@ -705,13 +705,13 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("badAttachedProperty")
             << QStringLiteral("badAttachedProperty.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"progress\" not found on type \"TestType\"") } } };
+                       QStringLiteral("Member \"progress\" not found on type \"TestType\"") } } };
     QTest::newRow("badAttachedPropertyNested")
             << QStringLiteral("badAttachedPropertyNested.qml")
             << Result { { Message { QStringLiteral(
-                                            "Property \"progress\" not found on type \"QObject\""),
+                                            "Member \"progress\" not found on type \"QObject\""),
                                     12, 41 } },
-                        { Message { QString("Property \"progress\" not found on type \"QObject\""),
+                        { Message { QString("Member \"progress\" not found on type \"QObject\""),
                                     6, 37 } } };
     QTest::newRow("badAttachedPropertyTypeString")
             << QStringLiteral("badAttachedPropertyTypeString.qml")
@@ -815,7 +815,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("QtQuick.Window 2.0")
             << QStringLiteral("qtquickWindow20.qml")
             << Result { { Message { QStringLiteral(
-                       "Property \"window\" not found on type \"QQuickWindow\"") } } };
+                       "Member \"window\" not found on type \"QQuickWindow\"") } } };
     QTest::newRow("unresolvedAttachedType")
             << QStringLiteral("unresolvedAttachedType.qml")
             << Result { { Message { QStringLiteral(
@@ -882,22 +882,22 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("enumInvalid")
             << QStringLiteral("enumInvalid.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"red\" not found on type \"QtObject\"") } } };
+                       QStringLiteral("Member \"red\" not found on type \"QtObject\"") } } };
     QTest::newRow("inaccessibleId")
             << QStringLiteral("inaccessibleId.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"objectName\" not found on type \"int\"") } } };
+                       QStringLiteral("Member \"objectName\" not found on type \"int\"") } } };
     QTest::newRow("inaccessibleId2")
             << QStringLiteral("inaccessibleId2.qml")
             << Result { { Message {
-                       QStringLiteral("Property \"objectName\" not found on type \"int\"") } } };
+                       QStringLiteral("Member \"objectName\" not found on type \"int\"") } } };
     QTest::newRow("unknownTypeCustomParser")
             << QStringLiteral("unknownTypeCustomParser.qml")
             << Result { { Message { QStringLiteral("TypeDoesNotExist was not found.") } } };
     QTest::newRow("nonNullStored")
             << QStringLiteral("nonNullStored.qml")
             << Result { { Message { QStringLiteral(
-                                "Property \"objectName\" not found on type \"Foozle\"") } },
+                                "Member \"objectName\" not found on type \"Foozle\"") } },
                         { Message { QStringLiteral("Unqualified access") } } };
     QTest::newRow("cppPropertyChangeHandlers-wrong-parameters-size-bindable")
             << QStringLiteral("badCppPropertyChangeHandlers1.qml")
@@ -939,13 +939,13 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("didYouMean(property)")
             << QStringLiteral("didYouMeanProperty.qml")
             << Result { { Message { QStringLiteral(
-                                  "Property \"hoight\" not found on type \"Rectangle\"") },
+                                  "Member \"hoight\" not found on type \"Rectangle\"") },
                           {},
                           { Message { QStringLiteral("height") } } } };
     QTest::newRow("didYouMean(propertyCall)")
             << QStringLiteral("didYouMeanPropertyCall.qml")
             << Result {
-                   { Message { QStringLiteral("Property \"lgg\" not found on type \"Console\"") },
+                   { Message { QStringLiteral("Member \"lgg\" not found on type \"Console\"") },
                      {},
                      { Message { QStringLiteral("log") } } }
                };
@@ -958,7 +958,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("didYouMean(enum)")
             << QStringLiteral("didYouMeanEnum.qml")
             << Result { { Message { QStringLiteral(
-                                  "Property \"Readx\" not found on type \"QQuickImage\"") },
+                                  "Member \"Readx\" not found on type \"QQuickImage\"") },
                           {},
                           { Message { QStringLiteral("Ready") } } } };
     QTest::newRow("nullBinding") << QStringLiteral("nullBinding.qml")
