@@ -103,9 +103,9 @@ Q_SIGNALS:
     void minimumRotationChanged();
     void maximumRotationChanged();
     void updated();
-    Q_REVISION(6, 5) void scaleChanged(qreal delta);
-    Q_REVISION(6, 5) void rotationChanged(qreal delta);
-    Q_REVISION(6, 5) void translationChanged(QVector2D delta);
+    void scaleChanged(qreal delta);
+    void rotationChanged(qreal delta);
+    void translationChanged(QVector2D delta);
 
 protected:
     bool wantsPointerEvent(QPointerEvent *event) override;
