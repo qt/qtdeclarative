@@ -21,7 +21,6 @@
 
 struct QQmlLSUtilsItemLocation
 {
-    int depth = -1;
     QQmlJS::Dom::DomItem domItem;
     QQmlJS::Dom::FileLocations::Tree fileLocation;
 };
@@ -37,10 +36,8 @@ class QQmlLSUtils
 public:
     static qsizetype textOffsetFrom(const QString &code, int row, int character);
     static QQmlLSUtilsTextPosition textRowAndColumnFrom(const QString &code, qsizetype offset);
-    enum IgnoreWhitespace { Off, OnSameLine };
     static QList<QQmlLSUtilsItemLocation> itemsFromTextLocation(QQmlJS::Dom::DomItem file, int line,
-                                                                int character,
-                                                                IgnoreWhitespace = Off);
+                                                                int character);
     static QQmlJS::Dom::FileLocations::Tree textLocationFromItem(QQmlJS::Dom::DomItem qmlObject);
     static QByteArray lspUriToQmlUrl(const QByteArray &uri);
     static QByteArray qmlUrlToLspUri(const QByteArray &url);

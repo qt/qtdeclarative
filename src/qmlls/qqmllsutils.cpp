@@ -111,16 +111,11 @@ QQmlLSUtilsTextPosition QQmlLSUtils::textRowAndColumnFrom(const QString &text, q
    character/column.
 
     If line and character point between two objects, two objects might be returned.
-    If line and character point to whitespace, it might return an inner node of the QmlDom-Tree
-    if \c IgnoreWhitespace is set to \c Off. If set to \c onSameLine, it will continue at the
-    nearest child that starts or ends on the same line. The distance is measured from the
-    child's start-or endcharacter to the character-value passed to this function.
-    This function can return internal objects, e.g. when line and character point to whitespace.
+    If line and character point to whitespace, it might return an inner node of the QmlDom-Tree.
  */
-QList<QQmlLSUtilsItemLocation>
-QQmlLSUtils::itemsFromTextLocation(DomItem file, int line, int character, IgnoreWhitespace option)
+QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, int line,
+                                                                  int character)
 {
-    // TODO: write tests for this method
     QList<QQmlLSUtilsItemLocation> itemsFound;
     std::shared_ptr<QmlFile> filePtr = file.ownerAs<QmlFile>();
     if (!filePtr)
@@ -140,7 +135,6 @@ QQmlLSUtils::itemsFromTextLocation(DomItem file, int line, int character, Ignore
     };
     if (containsTarget(t->info().fullRegion)) {
         QQmlLSUtilsItemLocation loc;
-        loc.depth = 0;
         loc.domItem = file;
         loc.fileLocation = t;
         toDo.append(loc);
@@ -148,111 +142,65 @@ QQmlLSUtils::itemsFromTextLocation(DomItem file, int line, int character, Ignore
     while (!toDo.isEmpty()) {
         QQmlLSUtilsItemLocation iLoc = toDo.last();
         toDo.removeLast();
-        if (itemsFound.isEmpty() || itemsFound.constFirst().depth <= iLoc.depth) {
-            if (!itemsFound.isEmpty() && itemsFound.constFirst().depth < iLoc.depth)
-                itemsFound.clear();
-            itemsFound.append(iLoc);
-        }
 
         bool inParentButOutsideChildren = true;
+
         auto subEls = iLoc.fileLocation->subItems();
         for (auto it = subEls.begin(); it != subEls.end(); ++it) {
             auto subLoc = std::static_pointer_cast<AttachedInfoT<FileLocations>>(it.value());
             Q_ASSERT(subLoc);
-            DomItem tmp = iLoc.domItem.path(it.key());
+
             if (containsTarget(subLoc->info().fullRegion)) {
                 QQmlLSUtilsItemLocation subItem;
-                subItem.depth = iLoc.depth + 1;
                 subItem.domItem = iLoc.domItem.path(it.key());
                 subItem.fileLocation = subLoc;
                 toDo.append(subItem);
                 inParentButOutsideChildren = false;
             }
         }
-
-        if (option == OnSameLine && inParentButOutsideChildren) {
-            // try again, as none of the children contained the current position
-            QList<QQmlLSUtilsItemLocation> nearestChildren;
-            quint32 distanceToNearest = -1;
-            for (auto it = subEls.begin(); it != subEls.end(); ++it) {
-                auto subLoc = std::static_pointer_cast<AttachedInfoT<FileLocations>>(it.value());
-                DomItem tmp = iLoc.domItem.path(it.key());
-                Q_ASSERT(subLoc);
-                if (subLoc->info().fullRegion.startLine != quint32(line + 1)
-                    || quint32(targetPos) > subLoc->info().fullRegion.begin())
-                    continue;
-
-                const quint32 distance = subLoc->info().fullRegion.begin() - targetPos;
-                if (distance < distanceToNearest) {
-                    // remove the others
-                    nearestChildren.clear();
-                    distanceToNearest = distance;
-                }
-                if (distance <= distanceToNearest) {
-                    // add to nearest
-                    QQmlLSUtilsItemLocation subItem;
-                    subItem.depth = iLoc.depth + 1;
-                    subItem.domItem = iLoc.domItem.path(it.key());
-                    subItem.fileLocation = subLoc;
-                    nearestChildren.append(subItem);
-                }
-            }
-            toDo.append(nearestChildren);
+        if (inParentButOutsideChildren) {
+            itemsFound.append(iLoc);
         }
     }
 
-    // The main component and inline components happen to have the same depth and the fullRegion of
-    // the main component contains the inline components fullRegion, such that querying the
-    // textposition of an inline component object also additionally returns the main component
-    // object, which is clearly not wanted. In this case, manually remove the main component after
-    // making sure that it really is shadowing an inline component.
+    // filtering step:
     if (itemsFound.size() > 1) {
-        std::optional<qsizetype> mainComponentIndex;
-        bool atLeastOneInlineComponent = false;
+        // if there are multiple items, take the smallest one + its neighbors
+        // this allows to prefer inline components over main components, when both contain the
+        // current textposition, and to disregard internal structures like property maps, which
+        // "contain" everything from their first-appearing to last-appearing property (e.g. also
+        // other stuff in between those two properties).
+        auto smallest = std::min_element(
+                itemsFound.begin(), itemsFound.end(),
+                [](const QQmlLSUtilsItemLocation &a, const QQmlLSUtilsItemLocation &b) {
+                    return a.fileLocation->info().fullRegion.length
+                            < b.fileLocation->info().fullRegion.length;
+                });
+        QList<QQmlLSUtilsItemLocation> filteredItems;
+        filteredItems.append(*smallest);
 
-        for (int i = 0; i < itemsFound.size(); ++i) {
-            DomItem component = itemsFound[i].domItem.component();
-            if (component.internalKind() != DomType::QmlComponent)
+        const QQmlJS::SourceLocation smallestLoc = smallest->fileLocation->info().fullRegion;
+        const quint32 smallestBegin = smallestLoc.begin();
+        const quint32 smallestEnd = smallestLoc.end();
+
+        for (auto it = itemsFound.begin(); it != itemsFound.end(); it++) {
+            if (it == smallest)
                 continue;
 
-            DomItem file = component.containingFile();
-            // name of the main component in the file that contains the current component
-            const QString mainComponentName =
-                    file.field(Fields::components).key(QString()).index(0).name();
-            // heuristic: inline components are called <MainComponentName>.<InlineComponentName>
-            if (component.name().startsWith(mainComponentName + u"."))
-                atLeastOneInlineComponent = true;
-            else
-                mainComponentIndex = i;
-        }
-        if (atLeastOneInlineComponent && mainComponentIndex) {
-            // sanity check: make sure there is another component contained inside of the
-            // mainComponentRegion before deleting it from itemsFound. This is required because
-            // qualified imports may mess up the inline components name heuristic above, e.g.,
-            // "import QtQuick as Main" inside of a Main.qml file.
-            QQmlJS::SourceLocation mainComponentRegion =
-                    itemsFound[*mainComponentIndex].fileLocation->info().fullRegion;
-            for (int i = 0; i < itemsFound.size(); ++i) {
-                if (i == *mainComponentIndex)
-                    continue;
-                QQmlJS::SourceLocation inlineComponentRegion =
-                        itemsFound[i].fileLocation->info().fullRegion;
-                if (mainComponentRegion.begin() <= inlineComponentRegion.begin()
-                    && inlineComponentRegion.end() <= mainComponentRegion.end()) {
-                    itemsFound.remove(*mainComponentIndex);
-                    break;
-                }
+            const QQmlJS::SourceLocation itLoc = it->fileLocation->info().fullRegion;
+            const quint32 itBegin = itLoc.begin();
+            const quint32 itEnd = itLoc.end();
+            if (itBegin == smallestEnd || smallestBegin == itEnd) {
+                filteredItems.append(*it);
             }
         }
+        itemsFound = filteredItems;
     }
     return itemsFound;
 }
 
 QQmlJS::Dom::FileLocations::Tree QQmlLSUtils::textLocationFromItem(QQmlJS::Dom::DomItem qmlObject)
 {
-    Q_UNUSED(qmlObject);
-    // TODO
-    // TODO: write tests for this method
     DomItem file = qmlObject.containingFile();
     std::shared_ptr<QmlFile> filePtr = file.ownerAs<QmlFile>();
     if (!filePtr)

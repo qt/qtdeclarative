@@ -38,8 +38,12 @@ private slots:
     void findLocationOfItem();
 
 private:
-    std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
-    createEnvironmentAndLoadFile(const QString &file) const;
+    using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;
+
+    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file);
+
+    // avoid loading the same file over and over when running all the tests
+    QHash<QString, EnvironmentAndFile> cache;
 };
 
 #endif // TST_QMLLS_UTILS_H
