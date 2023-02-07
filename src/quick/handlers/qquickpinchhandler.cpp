@@ -161,12 +161,12 @@ void QQuickPinchHandler::setActiveScale(qreal scale)
     and \c scaleChanged(1) is emitted.
 */
 
-void QQuickPinchHandler::setPersistentScale(qreal rot)
+void QQuickPinchHandler::setPersistentScale(qreal scale)
 {
-    if (rot == persistentScale())
+    if (scale == persistentScale())
         return;
 
-    m_scaleAxis.updateValue(m_scaleAxis.activeValue(), rot);
+    m_scaleAxis.updateValue(m_scaleAxis.activeValue(), scale);
     emit scaleChanged(1);
 }
 
