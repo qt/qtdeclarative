@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
 
 /*!
-    \qmltype HandlerPoint
+    \qmltype handlerPoint
     \instantiates QQuickHandlerPoint
     \inqmlmodule QtQuick
     \brief An event point.
@@ -31,7 +31,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
     and reused for subsequent event deliveries. Continuous bindings to its
     properties are not possible, and an individual handler cannot rely on it
     outside the period when that point is part of an active gesture which that
-    handler is handling. HandlerPoint is a Q_GADGET that the handler owns.
+    handler is handling. handlerPoint is a Q_GADGET that the handler owns.
     This allows you to make lifetime bindings to its properties.
 
     \sa SinglePointHandler::point, MultiPointHandler::centroid
@@ -145,7 +145,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty int QtQuick::HandlerPoint::id
+    \qmlproperty int QtQuick::handlerPoint::id
     \brief The ID number of the point
 
     During a touch gesture, from the time that the first finger is pressed
@@ -163,7 +163,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty pointingDeviceUniqueId QtQuick::HandlerPoint::uniqueId
+    \qmlproperty pointingDeviceUniqueId QtQuick::handlerPoint::uniqueId
     \brief The unique ID of the point, if any
 
     This is normally empty, because touchscreens cannot uniquely identify fingers.
@@ -185,7 +185,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty QPointF QtQuick::HandlerPoint::position
+    \qmlproperty QPointF QtQuick::handlerPoint::position
     \brief The position within the \c parent Item
 
     This is the position of the event point relative to the bounds of
@@ -194,7 +194,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty QPointF QtQuick::HandlerPoint::scenePosition
+    \qmlproperty QPointF QtQuick::handlerPoint::scenePosition
     \brief The position within the scene
 
     This is the position of the event point relative to the bounds of the Qt
@@ -203,7 +203,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty QPointF QtQuick::HandlerPoint::pressPosition
+    \qmlproperty QPointF QtQuick::handlerPoint::pressPosition
     \brief The pressed position within the \c parent Item
 
     This is the position at which this point was pressed, relative to the
@@ -212,7 +212,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty QPointF QtQuick::HandlerPoint::scenePressPosition
+    \qmlproperty QPointF QtQuick::handlerPoint::scenePressPosition
     \brief The pressed position within the scene
 
     This is the position at which this point was pressed, in the coordinate
@@ -221,7 +221,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty QPointF QtQuick::HandlerPoint::sceneGrabPosition
+    \qmlproperty QPointF QtQuick::handlerPoint::sceneGrabPosition
     \brief The grabbed position within the scene
 
     If this point has been grabbed by a Pointer Handler or an Item, it means
@@ -232,7 +232,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty enumeration QtQuick::HandlerPoint::pressedButtons
+    \qmlproperty enumeration QtQuick::handlerPoint::pressedButtons
     \brief Which mouse or stylus buttons are currently pressed
 
     \sa MouseArea::pressedButtons
@@ -240,7 +240,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty enumeration QtQuick::HandlerPoint::modifiers
+    \qmlproperty enumeration QtQuick::handlerPoint::modifiers
     \brief Which modifier keys are currently pressed
 
     This property holds the keyboard modifiers that were pressed at the time
@@ -249,7 +249,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty QVector2D QtQuick::HandlerPoint::velocity
+    \qmlproperty QVector2D QtQuick::handlerPoint::velocity
     \brief A vector representing the average speed and direction of movement
 
     This is a velocity vector pointing in the direction of movement, in logical
@@ -262,7 +262,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty qreal QtQuick::HandlerPoint::rotation
+    \qmlproperty qreal QtQuick::handlerPoint::rotation
 
     This property holds the rotation angle of the stylus on a graphics tablet
     or the contact patch of a touchpoint on a touchscreen.
@@ -273,7 +273,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty qreal QtQuick::HandlerPoint::pressure
+    \qmlproperty qreal QtQuick::handlerPoint::pressure
 
     This property tells how hard the user is pressing the stylus on a graphics
     tablet or the finger against a touchscreen, in the range from \c 0 (no
@@ -286,7 +286,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty size QtQuick::HandlerPoint::ellipseDiameters
+    \qmlproperty size QtQuick::handlerPoint::ellipseDiameters
 
     This property holds the diameters of the contact patch, if the event
     comes from a touchpoint and the device provides this information.

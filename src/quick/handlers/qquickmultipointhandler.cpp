@@ -229,7 +229,7 @@ void QQuickMultiPointHandler::setMaximumPointCount(int maximumPointCount)
 
 /*!
     \readonly
-    \qmlproperty QtQuick::HandlerPoint QtQuick::MultiPointHandler::centroid
+    \qmlproperty QtQuick::handlerPoint QtQuick::MultiPointHandler::centroid
 
     A point exactly in the middle of the currently-pressed touch points.
     If only one point is pressed, it's the same as that point.
