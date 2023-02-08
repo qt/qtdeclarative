@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
 
    \list
    \li \l bool \c eventPoint.accepted: see also \l QEventPoint::accepted
-   \li \l pointingDevice \c eventPoint.device: see also \l QEventPoint::device
+   \li \l PointerDevice \c eventPoint.device: see also \l QEventPoint::device
    \li \l size \c eventPoint.ellipseDiameters: see also \l QEventPoint::ellipseDiameters
    \li \l point \c eventPoint.globalGrabPosition: see also \l QEventPoint::globalGrabPosition
    \li \l point \c eventPoint.globalLastPosition: see also \l QEventPoint::globalLastPosition
