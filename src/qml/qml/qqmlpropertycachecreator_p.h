@@ -179,7 +179,7 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlP
     }
 
     // create a graph on inline components referencing inline components
-    std::vector<Node> nodes;
+    std::vector<icutils::Node> nodes;
     nodes.resize(allICs.size());
     std::iota(nodes.begin(), nodes.end(), 0);
     AdjacencyList adjacencyList;

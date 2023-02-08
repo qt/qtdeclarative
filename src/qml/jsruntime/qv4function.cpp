@@ -41,8 +41,8 @@ bool Function::call(QObject *thisObject, void **a, const QMetaType *types, int a
 }
 
 static ReturnedValue doCall(
-        Function *self, const Value *thisObject, const Value *argv, int argc,
-        ExecutionContext *context)
+        QV4::Function *self, const QV4::Value *thisObject, const QV4::Value *argv, int argc,
+        QV4::ExecutionContext *context)
 {
     ExecutionEngine *engine = context->engine();
     JSTypesStackFrame frame;

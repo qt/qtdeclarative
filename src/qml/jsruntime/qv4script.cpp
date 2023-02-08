@@ -45,14 +45,12 @@ void Script::parse()
     if (parsed)
         return;
 
-    using namespace QV4::Compiler;
-
     parsed = true;
 
     ExecutionEngine *v4 = context->engine();
     Scope valueScope(v4);
 
-    Module module(v4->debugger() != nullptr);
+    QV4::Compiler::Module module(v4->debugger() != nullptr);
 
     if (sourceCode.startsWith(QLatin1String("function("))) {
         static const int snippetLength = 70;

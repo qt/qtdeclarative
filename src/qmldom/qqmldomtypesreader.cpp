@@ -24,7 +24,7 @@ namespace Dom {
 
 using namespace QQmlJS::AST;
 
-static ErrorGroups myParseErrors()
+static ErrorGroups readerParseErrors()
 {
     static ErrorGroups errs = { { NewErrorGroup("Dom"), NewErrorGroup("QmltypesFile"),
                                   NewErrorGroup("Parsing") } };
@@ -49,7 +49,7 @@ void QmltypesReader::insertProperty(QQmlJSScope::Ptr jsScope, const QQmlJSMetaPr
     prop.notify = property.notify();
 
     if (prop.name.isEmpty() || prop.typeName.isEmpty()) {
-        addError(myParseErrors()
+        addError(readerParseErrors()
                          .warning(tr("Property object is missing a name or type script binding."))
                          .handle());
         return;
@@ -86,7 +86,7 @@ void QmltypesReader::insertSignalOrMethod(const QQmlJSMetaMethod &metaMethod,
     int revision = metaMethod.revision();
     methodInfo.isConstructor = metaMethod.isConstructor();
     if (methodInfo.name.isEmpty()) {
-        addError(myParseErrors().error(tr("Method or signal is missing a name.")).handle());
+        addError(readerParseErrors().error(tr("Method or signal is missing a name.")).handle());
         return;
     }
 
@@ -193,7 +193,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
     while (it != begin) {
         --it;
         if (it.key() < 0) {
-            addError(myParseErrors().error(
+            addError(readerParseErrors().error(
                     tr("negative meta revision %1 not supported").arg(it.key())));
         }
         revToPath.insert(it.key(), compPath.field(Fields::objects).index(objectIndex));
@@ -230,7 +230,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
     }
 
     if (comp.name().isEmpty()) {
-        addError(myParseErrors()
+        addError(readerParseErrors()
                          .error(tr("Component definition is missing a name binding."))
                          .handle());
         return;
