@@ -550,9 +550,8 @@ int main(int argc, char *argv[])
 #if QT_CONFIG(translation)
     // Need to be installed before QQmlApplicationEngine's automatic translation loading
     // (qt_ translations are loaded there)
+    QTranslator translator;
     if (!translationFile.isEmpty()) {
-        QTranslator translator;
-
         if (translator.load(translationFile)) {
             app->installTranslator(&translator);
             if (verboseMode)
