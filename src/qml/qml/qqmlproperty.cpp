@@ -31,12 +31,6 @@
 #include <QtCore/private/qproperty_p.h>
 #include <QtCore/qsequentialiterable.h>
 
-Q_DECLARE_METATYPE(QList<int>)
-Q_DECLARE_METATYPE(QList<qreal>)
-Q_DECLARE_METATYPE(QList<bool>)
-Q_DECLARE_METATYPE(QList<QString>)
-Q_DECLARE_METATYPE(QList<QUrl>)
-
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(compatResolveUrlsOnAssigment, QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT);
