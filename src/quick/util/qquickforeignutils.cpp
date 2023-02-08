@@ -10,6 +10,7 @@ QT_BEGIN_NAMESPACE
    \instantiates QEventPoint
    \inqmlmodule QtQuick
    \brief Qml equivalent for \l QEventPoint.
+   \sa handlerPoint
 
    eventPoint is the Qml value type representation
    of \l QEventPoint.
