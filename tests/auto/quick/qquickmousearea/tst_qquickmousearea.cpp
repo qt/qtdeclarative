@@ -139,6 +139,7 @@ private slots:
     void negativeZStackingOrder();
     void containsMouseAndVisibility();
     void containsMouseAndVisibilityMasked();
+    void containsMouseAndHoverDisabled();
     void doubleClickToHide();
     void releaseFirstTouchAfterSecond();
 #if QT_CONFIG(tabletevent)
@@ -2506,6 +2507,20 @@ void tst_QQuickMouseArea::containsMouseAndVisibilityMasked()
 
     QTRY_VERIFY(mouseArea1->hovered());
     QTRY_VERIFY(!mouseArea2->hovered());
+}
+
+// QTBUG-110594
+void tst_QQuickMouseArea::containsMouseAndHoverDisabled()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("containsMouseAndHoverDisabled.qml")));
+
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea");
+    QVERIFY(mouseArea != nullptr);
+    QVERIFY(!mouseArea->hoverEnabled());
+
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    QTRY_VERIFY(!mouseArea->hovered());
 }
 
 // QTBUG-35995 and QTBUG-102158
