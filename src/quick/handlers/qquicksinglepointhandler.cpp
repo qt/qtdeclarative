@@ -209,7 +209,7 @@ QQuickHandlerPoint QQuickSinglePointHandler::point() const
     \readonly
     \qmlproperty HandlerPoint QtQuick::SinglePointHandler::point
 
-    The event point currently being handled. When no point is currently being
+    The \l eventPoint currently being handled. When no point is currently being
     handled, this object is reset to default values (all coordinates are 0).
 */
 

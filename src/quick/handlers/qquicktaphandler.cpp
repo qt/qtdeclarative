@@ -182,7 +182,7 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
 /*!
     \qmlproperty real QtQuick::TapHandler::longPressThreshold
 
-    The time in seconds that an event point must be pressed in order to
+    The time in seconds that an \l eventPoint must be pressed in order to
     trigger a long press gesture and emit the \l longPressed() signal.
     If the point is released before this time limit, a tap can be detected
     if the \l gesturePolicy constraint is satisfied. The default value is
@@ -316,7 +316,7 @@ void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gestureP
 
     Holds true whenever the mouse or touch point is pressed,
     and any movement since the press is compliant with the current
-    \l gesturePolicy. When the event point is released or the policy is
+    \l gesturePolicy. When the \l eventPoint is released or the policy is
     violated, \e pressed will change to false.
 */
 void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event, QEventPoint &point)
