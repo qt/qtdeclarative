@@ -90,7 +90,7 @@ if(QT_FEATURE_qml_devtools)
     endif()
 endif()
 
-if(QT_FEATURE_thread)
+if(QT_FEATURE_thread AND TARGET Qt::LanguageServerPrivate)
     add_subdirectory(qmlls)
 endif()
 
