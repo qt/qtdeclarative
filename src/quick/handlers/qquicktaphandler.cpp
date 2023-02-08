@@ -144,7 +144,7 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
 /*!
     \qmlproperty real QtQuick::TapHandler::longPressThreshold
 
-    The time in seconds that an event point must be pressed in order to
+    The time in seconds that an \l eventPoint must be pressed in order to
     trigger a long press gesture and emit the \l longPressed() signal.
     If the point is released before this time limit, a tap can be detected
     if the \l gesturePolicy constraint is satisfied. The default value is
@@ -200,7 +200,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     The \c gesturePolicy also affects grab behavior as described below.
 
     \value TapHandler.DragThreshold
-           (the default value) The event point must not move significantly.
+           (the default value) The \l eventPoint must not move significantly.
            If the mouse, finger or stylus moves past the system-wide drag
            threshold (QStyleHints::startDragDistance), the tap gesture is
            canceled, even if the button or finger is still pressed. This policy
@@ -211,7 +211,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
            \l {QPointerEvent::addPassiveGrabber()}{passive grab}.
 
     \value TapHandler.WithinBounds
-           If the event point leaves the bounds of the \c parent Item, the tap
+           If the \l eventPoint leaves the bounds of the \c parent Item, the tap
            gesture is canceled. The TapHandler will take the
            \l {QPointerEvent::setExclusiveGrabber}{exclusive grab} on
            press, but will release the grab as soon as the boundary constraint
@@ -219,7 +219,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
 
     \value TapHandler.ReleaseWithinBounds
            At the time of release (the mouse button is released or the finger
-           is lifted), if the event point is outside the bounds of the
+           is lifted), if the \l eventPoint is outside the bounds of the
            \c parent Item, a tap gesture is not recognized. This corresponds to
            typical behavior for button widgets: you can cancel a click by
            dragging outside the button, and you can also change your mind by
@@ -231,7 +231,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     \value TapHandler.DragWithinBounds
            On press, TapHandler takes the
            \l {QPointerEvent::setExclusiveGrabber}{exclusive grab}; after that,
-           the event point can be dragged within the bounds of the \c parent
+           the \l eventPoint can be dragged within the bounds of the \c parent
            item, while the \l timeHeld property keeps counting, and the
            \l longPressed() signal will be emitted regardless of drag distance.
            However, like \c WithinBounds, if the point leaves the bounds,
@@ -290,7 +290,7 @@ void QQuickTapHandler::setExclusiveSignals(QQuickTapHandler::ExclusiveSignals ex
 
     Holds true whenever the mouse or touch point is pressed,
     and any movement since the press is compliant with the current
-    \l gesturePolicy. When the event point is released or the policy is
+    \l gesturePolicy. When the \l eventPoint is released or the policy is
     violated, \e pressed will change to false.
 */
 void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event, QEventPoint &point)
