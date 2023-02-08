@@ -507,7 +507,8 @@ void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, QObject *
     frame.pop(scope.engine);
 }
 
-static ReturnedValue doCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+static ReturnedValue qfoDoCall(const QV4::FunctionObject *fo, const QV4::Value *thisObject,
+                               const QV4::Value *argv, int argc)
 {
     ExecutionEngine *engine = fo->engine();
     JSTypesStackFrame frame;
@@ -531,7 +532,8 @@ static ReturnedValue doCall(const FunctionObject *fo, const Value *thisObject, c
     return result;
 }
 
-ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ArrowFunction::virtualCall(const QV4::FunctionObject *fo, const Value *thisObject,
+                                         const QV4::Value *argv, int argc)
 {
     Function *function = fo->function();
     switch (function->kind) {
@@ -545,13 +547,13 @@ ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *
         return QV4::coerceAndCall(
                     fo->engine(), function->typedFunction, thisObject, argv, argc,
                     [fo](const Value *thisObject, const Value *argv, int argc) {
-            return doCall(fo, thisObject, argv, argc);
+            return qfoDoCall(fo, thisObject, argv, argc);
         });
     default:
         break;
     }
 
-    return doCall(fo, thisObject, argv, argc);
+    return qfoDoCall(fo, thisObject, argv, argc);
 }
 
 void Heap::ArrowFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)

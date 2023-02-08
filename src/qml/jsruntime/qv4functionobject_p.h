@@ -249,7 +249,8 @@ struct ArrowFunction : FunctionObject {
 
     static void virtualCallWithMetaTypes(const FunctionObject *f, QObject *thisObject,
                                          void **a, const QMetaType *types, int argc);
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const QV4::FunctionObject *f, const QV4::Value *thisObject,
+                                     const QV4::Value *argv, int argc);
 };
 
 struct ScriptFunction : ArrowFunction {

@@ -46,7 +46,7 @@ V *valueFromMultimap(QMultiMap<K, V> &mmap, const K &key, index_type idx)
     return &(*it);
 }
 
-static ErrorGroups myParseErrors()
+static ErrorGroups astParseErrors()
 {
     static ErrorGroups errs = { { NewErrorGroup("Dom"), NewErrorGroup("QmlFile"),
                                   NewErrorGroup("Parsing") } };
@@ -420,7 +420,7 @@ public:
 #endif
             if (p.name == u"id")
                 qmlFile.addError(
-                        myParseErrors()
+                        astParseErrors()
                                 .warning(tr("id is a special attribute, that should not be "
                                             "used as property name"))
                                 .withPath(currentNodeEl().path));
@@ -683,7 +683,7 @@ public:
         Path bPathFromOwner = current<QmlObject>().addBinding(
                 Binding(toString(el->qualifiedId), value, bType), AddOption::KeepExisting, &bPtr);
         if (bPtr->name() == u"id")
-            qmlFile.addError(myParseErrors()
+            qmlFile.addError(astParseErrors()
                                      .warning(tr("id attributes should only be a lower case letter "
                                                  "followed by letters, numbers or underscore, "
                                                  "assuming they refer to an id property"))
@@ -752,7 +752,7 @@ public:
 #endif
                 if (!m.hasMatch()) {
                     qmlFile.addError(
-                            myParseErrors()
+                            astParseErrors()
                                     .warning(
                                             tr("id attributes should only be a lower case letter "
                                                "followed by letters, numbers or underscore, not %1")
@@ -764,7 +764,7 @@ public:
                                                                 &bindingPtr);
                 Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
                 qmlFile.addError(
-                        myParseErrors()
+                        astParseErrors()
                                 .warning(tr("id attributes should only be a lower case letter "
                                             "followed by letters, numbers or underscore, not %1 "
                                             "%2, assuming they refer to a property")
@@ -818,7 +818,7 @@ public:
                 current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
         if (bindingV.name() == u"id")
             qmlFile.addError(
-                    myParseErrors()
+                    astParseErrors()
                             .error(tr("id attributes should have only simple strings as values"))
                             .withPath(bindingPathFromOwner));
         pushEl(bindingPathFromOwner, *bindingPtr, el);
@@ -1001,7 +1001,7 @@ public:
 
     void throwRecursionDepthError() override
     {
-        qmlFile.addError(myParseErrors().error(
+        qmlFile.addError(astParseErrors().error(
                 tr("Maximum statement or expression depth exceeded in QmlDomAstCreator")));
     }
 };
