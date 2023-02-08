@@ -309,6 +309,13 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     \sa QtQuick::TouchPoint::ellipseDiameters, QEventPoint::ellipseDiameters
 */
 
+/*!
+    \readonly
+    \qmlproperty PointerDevice QtQuick::handlerPoint::device
+
+    This property holds the device that the point (and its event) came from.
+*/
+
 QT_END_NAMESPACE
 
 #include "moc_qquickhandlerpoint_p.cpp"
