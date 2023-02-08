@@ -50,27 +50,21 @@ QT_BEGIN_NAMESPACE
 
     State supports the following values:
 
-    \table
-    \row
-        \li \c Qt.TouchPointUnknownState
-        \li Unknown state.
-    \row
-        \li \c Qt.TouchPointStationary
-        \li The event point did not move.
-    \row
-        \li \c Qt.TouchPointPressed
-        \li The touch point or button is pressed.
-    \row
-        \li \c Qt.TouchPointMoved
-        \li The event point was updated.
-    \row
-        \li \c Qt.TouchPointReleased
-        \li The touch point or button was released.
-    \endtable
+    \value EventPoint.Unknown
+        Unknown state; same as Qt.TouchPointUnknownState
+    \value EventPoint.Stationary
+        The event point did not move; same as Qt.TouchPointStationary
+    \value EventPoint.Pressed
+        The touch point or button is pressed; same as Qt.TouchPointPressed
+    \value EventPoint.Updated
+        The event point was updated; same as Qt.TouchPointMoved
+    \value EventPoint.Released
+        The touch point or button was released; same as Qt.TouchPointReleased
 
     The States type is a typedef for \l {QFlags} {QFlags<State>}. It stores an OR combination of
     State values. See also \l QEventPoint::States
 
+    \snippet pointerHandlers/tapHandlerGrabChanged.qml 0
  */
 
 QT_END_NAMESPACE

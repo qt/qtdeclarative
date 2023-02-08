@@ -273,17 +273,17 @@ void QQuickItemsModule::defineModule()
 
     Valid values for \a transition are:
 
-    \value GrabExclusive
+    \value PointerDevice.GrabExclusive
         The \a grabber has taken primary responsibility for handling the \a point.
-    \value UngrabExclusive
+    \value PointerDevice.UngrabExclusive
         The \a grabber has given up its previous exclusive grab.
-    \value CancelGrabExclusive
+    \value PointerDevice.CancelGrabExclusive
         The exclusive grab of \a grabber has been taken over or cancelled.
-    \value GrabPassive
+    \value PointerDevice.GrabPassive
         The \a grabber has acquired a passive grab, to monitor the \a point.
-    \value UngrabPassive
+    \value PointerDevice.UngrabPassive
         The \a grabber has given up its previous passive grab.
-    \value CancelGrabPassive
+    \value PointerDevice.CancelGrabPassive
         The previous passive grab has terminated abnormally.
 
     \note A grab transition from one object to another results in two signals,
@@ -291,7 +291,8 @@ void QQuickItemsModule::defineModule()
     another grabber. In other cases, when transitioning to or from a non-grabbing
     state, only one signal is emitted.
 
-    \sa QPointerEvent::setExclusiveGrabber(), QPointerEvent::addPassiveGrabber(), QPointerEvent::removePassiveGrabber()
+    \sa QPointerEvent::setExclusiveGrabber(), QPointerEvent::addPassiveGrabber(),
+        QPointerEvent::removePassiveGrabber(), PointerHandler::grabChanged()
 */
 
 QT_END_NAMESPACE

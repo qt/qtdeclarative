@@ -733,6 +733,21 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 
     The \a transition (verb) tells what happened.
     The \a point (object) is the point that was grabbed or ungrabbed.
+
+    Valid values for \a transition are:
+
+    \value PointerDevice.GrabExclusive
+        This handler has taken primary responsibility for handling the \a point.
+    \value PointerDevice.UngrabExclusive
+        This handler has given up its previous exclusive grab.
+    \value PointerDevice.CancelGrabExclusive
+        This handler's exclusive grab has been taken over or cancelled.
+    \value PointerDevice.GrabPassive
+        This handler has acquired a passive grab, to monitor the \a point.
+    \value PointerDevice.UngrabPassive
+        This handler has given up its previous passive grab.
+    \value PointerDevice.CancelGrabPassive
+        This handler's previous passive grab has terminated abnormally.
 */
 
 /*!
