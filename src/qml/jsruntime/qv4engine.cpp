@@ -92,8 +92,6 @@
 #include <valgrind/memcheck.h>
 #endif
 
-Q_DECLARE_METATYPE(QList<int>)
-
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(disableDiskCache, QML_DISABLE_DISK_CACHE);
