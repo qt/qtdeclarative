@@ -124,14 +124,14 @@ void UrlObject::setUrl(const QUrl &url)
 {
     d()->hash.set(engine(), engine()->newString(url.fragment()));
     d()->hostname.set(engine(), engine()->newString(url.host()));
-    d()->href.set(engine(), engine()->newString(url.toString()));
+    d()->href.set(engine(), engine()->newString(url.toString(QUrl::ComponentFormattingOptions(QUrl::ComponentFormattingOption::FullyEncoded))));
     d()->password.set(engine(), engine()->newString(url.password()));
     d()->pathname.set(engine(), engine()->newString(url.path()));
     d()->port.set(engine(),
                   engine()->newString(url.port() == -1 ? QLatin1String("")
                                                        : QString::number(url.port())));
     d()->protocol.set(engine(), engine()->newString(url.scheme() + QLatin1Char(':')));
-    d()->search.set(engine(), engine()->newString(url.query()));
+    d()->search.set(engine(), engine()->newString(url.query(QUrl::ComponentFormattingOptions(QUrl::ComponentFormattingOption::FullyEncoded))));
     d()->username.set(engine(), engine()->newString(url.userName()));
 
     updateOrigin();
@@ -240,6 +240,15 @@ bool UrlObject::setUsername(QString username)
     d()->href.set(engine(), engine()->newString(url.toString()));
 
     return true;
+}
+
+QString UrlObject::search() const
+{
+    auto url = QUrl(href());
+    if (auto url = QUrl(href()); !url.hasQuery() || url.query().isEmpty())
+        return QLatin1String("");
+
+    return QLatin1Char('?') + url.query(QUrl::ComponentFormattingOptions(QUrl::ComponentFormattingOption::FullyEncoded));
 }
 
 QUrl UrlObject::toQUrl() const

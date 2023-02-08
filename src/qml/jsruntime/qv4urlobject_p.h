@@ -102,7 +102,7 @@ struct UrlObject : Object
     QString protocol() const { return toQString(d()->protocol); }
     bool setProtocol(QString protocol);
 
-    QString search() const { return QLatin1String("?") + toQString(d()->search); }
+    Q_QML_AUTOTEST_EXPORT QString search() const;
     bool setSearch(QString search);
 
     QString username() const { return toQString(d()->username); }

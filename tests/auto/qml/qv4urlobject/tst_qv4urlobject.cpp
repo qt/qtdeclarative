@@ -11,6 +11,10 @@ class tst_urlobject : public QObject
 private slots:
     void searchParams_set();
     void searchParams_nullUrlPointer();
+    void urlObject_search();
+    void urlObject_search_data();
+    void urlObject_href();
+    void urlObject_href_data();
 };
 
 void tst_urlobject::searchParams_set()
@@ -51,6 +55,88 @@ void tst_urlobject::searchParams_nullUrlPointer()
     QJSValue result = engine.evaluate(QLatin1String("let params = new URLSearchParams();"
                                                     "params.set(\"foo\", \"bar\");"));
     QVERIFY(!result.isError());
+}
+
+void tst_urlobject::urlObject_search()
+{
+    QFETCH(QString, test);
+    QFETCH(QString, expected);
+
+    QJSEngine engine;
+
+    QCOMPARE(engine.evaluate(test).toString(), expected);
+}
+
+void tst_urlobject::urlObject_search_data()
+{
+    QTest::addColumn<QString>("test");
+    QTest::addColumn<QString>("expected");
+
+    QTest::newRow("base case")
+            << "var url = new URL(\"http://www.google.com/search?q=123\");"
+                "url.search"
+            << "?q=123";
+    QTest::newRow("space")
+            << "var url = new URL(\"http://www.google.com/search?a=b ~\");"
+                "url.search"
+            << "?a=b%20~";
+    QTest::newRow("empty search")
+            << "var url = new URL(\"http://www.google.com/search?\");"
+               "url.search"
+            << "";
+    QTest::newRow("no search")
+            << "var url = new URL(\"http://www.google.com/search\");"
+               "url.search"
+            << "";
+    QTest::newRow("Question mark")
+            << "var url = new URL(\"http://www.google.com/search??=?\");"
+               "url.search"
+            << "??=?";
+    QTest::newRow("equal sign")
+            << "var url = new URL(\"http://www.google.com/search?a==&b=!\");"
+               "url.search"
+            << "?a==&b=!";
+    QTest::newRow("percent sign")
+            << "var url = new URL(\"http://www.google.com/search?a=%20\");"
+               "url.search"
+            << "?a=%20";
+    QTest::newRow("multiple key-value pairs")
+            << "var url = new URL(\"http://www.google.com/search?a=b&c=d\");"
+               "url.search"
+            << "?a=b&c=d";
+    QTest::newRow("unreserved")
+            << "var url = new URL(\"http://www.google.com/search?a=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~\");"
+               "url.search"
+            << "?a=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
+    QTest::newRow("reserved + illegal")
+            << "var url = new URL(\"http://google.com/search/?a=!*();:@&=+$,/?#[]\");"
+               "url.search"
+            << "?a=!*();:@&=+$,/?";
+    QTest::newRow("unicode (U+327D)")
+            << "var url = new URL(\"http://google.com/search/?a=㉽\");"
+               "url.search"
+            << "?a=%E3%89%BD";
+}
+
+void tst_urlobject::urlObject_href()
+{
+    QFETCH(QString, test);
+    QFETCH(QString, expected);
+
+    QJSEngine engine;
+
+    QCOMPARE(engine.evaluate(test).toString(), expected);
+}
+
+void tst_urlobject::urlObject_href_data()
+{
+    QTest::addColumn<QString>("test");
+    QTest::addColumn<QString>("expected");
+
+    QTest::newRow("QTBUG-110454")
+            << "var url = new URL(\"https://example.com/?a=b ~\");"
+               "url.href"
+            << "https://example.com/?a=b%20~";
 }
 
 QTEST_MAIN(tst_urlobject)
