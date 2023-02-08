@@ -297,7 +297,7 @@ void QQuickPinchHandler::setPersistentRotation(qreal rot)
 
     The translation of the cluster of points while the pinch gesture is being
     performed. It is \c {0, 0} when the gesture begins, and increases as the
-    event point(s) are dragged downward and to the right. After the gesture
+    \l {eventPoint}{eventPoint(s)} are dragged downward and to the right. After the gesture
     ends, it stays the same; and when the next pinch gesture begins, it is
     reset to \c {0, 0} again.
 
