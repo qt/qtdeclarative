@@ -50,17 +50,23 @@ void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
-    if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object)) {
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
-
-        QQmlComponentPrivate::DeferredState state;
-        QQmlComponentPrivate::beginDeferred(ep, object, &state);
-
-        // Release the reference for the deferral action (we still have one from construction)
-        data->releaseDeferredData();
-
-        QQmlComponentPrivate::completeDeferred(ep, &state);
+    if (!data
+            || !data->context
+            || !data->context->engine()
+            || data->deferredData.isEmpty()
+            || data->wasDeleted(object)) {
+        return;
     }
+
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
+
+    QQmlComponentPrivate::DeferredState state;
+    QQmlComponentPrivate::beginDeferred(ep, object, &state);
+
+    // Release the reference for the deferral action (we still have one from construction)
+    data->releaseDeferredData();
+
+    QQmlComponentPrivate::completeDeferred(ep, &state);
 }
 
 QQmlContext *qmlContext(const QObject *obj)
