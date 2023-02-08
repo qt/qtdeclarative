@@ -12,7 +12,7 @@ Rectangle {
         anchors.fill: parent
         propagateComposedEvents: true
         z: 1
-        onClicked: {
+        onClicked: function (mouse) {
             mouse.accepted = false;
             clicksEnabled += 1;
             //console.log("Upper click");
@@ -23,7 +23,7 @@ Rectangle {
         propagateComposedEvents: true
         z: 0
         enabled: !disableLower
-        onClicked: {
+        onClicked: function (mouse) {
             mouse.accepted = false;
             clicksDisabled += 1;
             //console.log("Lower click");

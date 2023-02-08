@@ -28,8 +28,8 @@ Item{
         enabled: true
         anchors.fill: parent
         propagateComposedEvents: !noPropagation
-        onClicked: mouse.accepted = !letThrough;
-        onDoubleClicked: mouse.accepted = !letThrough;
-        onPressAndHold: mouse.accepted = !letThrough;
+        onClicked: function (mouse) { mouse.accepted = !letThrough; }
+        onDoubleClicked: function (mouse) { mouse.accepted = !letThrough; }
+        onPressAndHold: function (mouse) { mouse.accepted = !letThrough; }
     }
 }

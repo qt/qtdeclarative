@@ -22,19 +22,19 @@ Rectangle {
         property bool mouseMatchesPos: true
 
         anchors.fill: brother
-        onPressed: {
+        onPressed: function (mouse) {
             if (mouse.x != mouseX || mouse.y != mouseY)
                 mouseMatchesPos = false
             x1 = mouseX; y1 = mouseY
             anchors.fill = parent
         }
         onPositionChanged: { emitPositionChanged = true }
-        onMouseXChanged: {
+        onMouseXChanged: function (mouse) {
             if (mouse.x != mouseX || mouse.y != mouseY)
                 mouseMatchesPos = false
             x2 = mouseX; y2 = mouseY
         }
-        onMouseYChanged: {
+        onMouseYChanged: function (mouse) {
             if (mouse.x != mouseX || mouse.y != mouseY)
                 mouseMatchesPos = false
             x2 = mouseX; y2 = mouseY

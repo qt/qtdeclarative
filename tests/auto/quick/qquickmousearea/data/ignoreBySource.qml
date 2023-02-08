@@ -21,7 +21,7 @@ Item {
     MouseArea {
         id: ma
         objectName: "mousearea"
-        onPressed: {
+        onPressed: function (mouse) {
             root.lastEventSource = mouse.source
             if (mouse.source !== root.allowedSource)
                 mouse.accepted = false
