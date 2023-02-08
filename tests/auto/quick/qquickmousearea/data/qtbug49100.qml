@@ -8,7 +8,7 @@ ListView {
     delegate: Text {
         text: index + 1
         height: 30
-        width: parent.width
+        width: ListView.view.width
         MouseArea {
             anchors.fill: parent
         }

@@ -7,7 +7,7 @@ MouseArea {
     property bool hadMove: false
     property bool hadRelease: false
 
-    onPressed: mouse.accepted = false
+    onPressed: function (mouse) { mouse.accepted = false }
     onPositionChanged: hadMove = true
     onReleased: hadRelease = true
 }

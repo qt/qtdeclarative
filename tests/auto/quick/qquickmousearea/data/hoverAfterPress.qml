@@ -16,7 +16,7 @@ Item {
             objectName: "mouseArea"
             anchors.fill: parent
             hoverEnabled: true
-            onPressed: mouse.accepted = false
+            onPressed: function (mouse) { mouse.accepted = false }
             //onContainsMouseChanged: print("containsMouse changed =", containsMouse)
 
             Rectangle {

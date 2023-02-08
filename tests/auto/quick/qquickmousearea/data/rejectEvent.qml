@@ -23,7 +23,7 @@ Rectangle {
         id: mouseRegion2
         objectName: "mouseRegion2"
         width: 120; height: 120
-        onPressed: { root.mr2_pressed = true; mouse.accepted = false }
+        onPressed: function (mouse) { root.mr2_pressed = true; mouse.accepted = false }
         onReleased: { root.mr2_released = true }
         onCanceled: { root.mr2_canceled = true }
     }

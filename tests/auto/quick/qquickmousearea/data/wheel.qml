@@ -14,7 +14,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
 
-        onWheel: {
+        onWheel: function (wheel) {
             root.angleDeltaY = wheel.angleDelta.y;
             root.mouseX = wheel.x;
             root.mouseY = wheel.y;
