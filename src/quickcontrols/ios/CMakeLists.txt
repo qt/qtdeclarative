@@ -49,6 +49,7 @@ set(qml_files
     "DialogButtonBox.qml"
     "DelayButton.qml"
     "SelectionRectangle.qml"
+    "ToolTip.qml"
 )
 
 set_source_files_properties(Slider.qml PROPERTIES

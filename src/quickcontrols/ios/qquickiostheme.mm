@@ -64,6 +64,8 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     systemPalette.setColor(QPalette::Button, button);
     systemPalette.setColor(QPalette::Disabled, QPalette::Button, disabledButton);
 
+    systemPalette.setColor(QPalette::ToolTipText, windowText);
+
     systemPalette.setColor(QPalette::ButtonText, white);
     white.setAlphaF(0.5);
     systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, white);
