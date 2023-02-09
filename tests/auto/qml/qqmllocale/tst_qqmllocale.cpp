@@ -763,7 +763,15 @@ void tst_qqmllocale::testFunctionCall()
         STOP_ON_FAILURE
         QVERIFY(evaluationResult.canConvert<QString>());
         STOP_ON_FAILURE
-        QCOMPARE(evaluationResult.toString(), expectedResult);
+
+        // We're not interested in whether the spaces in the date/time format
+        // are breaking or non-breaking.
+        const QString resultWithBreakingSpaces
+                = evaluationResult.toString().replace(u'\u202f', u' ');
+        const QString expectedWithBreakingSpaces
+                = expectedResult.replace(u'\u202f', u' ');
+
+        QCOMPARE(resultWithBreakingSpaces, expectedWithBreakingSpaces);
         STOP_ON_FAILURE
     } else {
         QVERIFY(qmlExpression.hasError());
