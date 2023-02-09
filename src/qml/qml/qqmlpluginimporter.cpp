@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmlpluginimporter_p.h"
+#include "qqmlimport_p.h"
 
 #include <private/qqmlextensionplugin_p.h>
 #include <private/qqmltypeloader_p.h>
@@ -58,12 +59,6 @@ private:
 };
 
 Q_GLOBAL_STATIC(PluginMap, qmlPluginsById); // stores the uri and the PluginLoaders
-
-static QTypeRevision validVersion(QTypeRevision version = QTypeRevision())
-{
-    // If the given version is invalid, return a valid but useless version to signal "It's OK".
-    return version.isValid() ? version : QTypeRevision::fromMinorVersion(0);
-}
 
 static QVector<QStaticPlugin> makePlugins()
 {
@@ -217,7 +212,7 @@ QTypeRevision QQmlPluginImporter::importStaticPlugin(QObject *instance, const QS
     if (!database->initializedPlugins.contains(pluginId))
         finalizePlugin(instance, pluginId);
 
-    return validVersion(importVersion);
+    return QQmlImports::validVersion(importVersion);
 }
 
 QTypeRevision QQmlPluginImporter::importDynamicPlugin(
@@ -326,7 +321,7 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(
     if (!engineInitialized)
         finalizePlugin(instance, pluginId);
 
-    return validVersion(importVersion);
+    return QQmlImports::validVersion(importVersion);
 }
 
 /*!
@@ -611,7 +606,7 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
 
         database->modulesForWhichPluginsHaveBeenLoaded.insert(moduleId);
     }
-    return validVersion(importVersion);
+    return QQmlImports::validVersion(importVersion);
 }
 
 QT_END_NAMESPACE

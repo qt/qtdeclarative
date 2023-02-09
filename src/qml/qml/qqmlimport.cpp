@@ -85,12 +85,6 @@ QTypeRevision relevantVersion(const QString &uri, QTypeRevision version)
     return QQmlMetaType::latestModuleVersion(uri).isValid() ? version : QTypeRevision();
 }
 
-QTypeRevision validVersion(QTypeRevision version = QTypeRevision())
-{
-    // If the given version is invalid, return a valid but useless version to signal "It's OK".
-    return version.isValid() ? version : QTypeRevision::fromMinorVersion(0);
-}
-
 QQmlError moduleNotFoundError(const QString &uri, QTypeRevision version)
 {
     QQmlError error;
@@ -202,6 +196,12 @@ bool isPathAbsolute(const QString &path)
 \brief The QQmlImports class encapsulates one QML document's import statements.
 \internal
 */
+
+QTypeRevision QQmlImports::validVersion(QTypeRevision version)
+{
+    // If the given version is invalid, return a valid but useless version to signal "It's OK".
+    return version.isValid() ? version : QTypeRevision::fromMinorVersion(0);
+}
 
 /*!
   Sets the base URL to be used for all relative file imports added.
