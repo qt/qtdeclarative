@@ -223,7 +223,7 @@ static void handleCompileErrors(
     results.stopLogging();
 }
 
-bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
+bool qWaitForSignal(QObject *obj, const char* signal, int timeout)
 {
     QSignalSpy spy(obj, signal);
     QElapsedTimer timer;
