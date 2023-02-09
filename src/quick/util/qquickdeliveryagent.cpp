@@ -1697,50 +1697,43 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
             handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
                                    const_cast<QEventPoint &>(point));
         }
-    } else {
+    } else if (auto *grabberItem = qmlobject_cast<QQuickItem *>(grabber)) {
         switch (transition) {
         case QPointingDevice::CancelGrabExclusive:
         case QPointingDevice::UngrabExclusive:
-            if (auto *item = qmlobject_cast<QQuickItem *>(grabber)) {
-                bool filtered = false;
-                if (isDeliveringTouchAsMouse() ||
-                        point.device()->type() == QInputDevice::DeviceType::Mouse ||
-                        point.device()->type() == QInputDevice::DeviceType::TouchPad) {
-                    QMutableSinglePointEvent e(QEvent::UngrabMouse, point.device(), point);
-                    hasFiltered.clear();
-                    filtered = sendFilteredMouseEvent(&e, item, item->parentItem());
-                    if (!filtered) {
-                        lastUngrabbed = item;
-                        item->mouseUngrabEvent();
-                    }
+            if (isDeliveringTouchAsMouse()
+                || point.device()->type() == QInputDevice::DeviceType::Mouse
+                || point.device()->type() == QInputDevice::DeviceType::TouchPad) {
+                QMutableSinglePointEvent e(QEvent::UngrabMouse, point.device(), point);
+                hasFiltered.clear();
+                if (!sendFilteredMouseEvent(&e, grabberItem, grabberItem->parentItem())) {
+                    lastUngrabbed = grabberItem;
+                    grabberItem->mouseUngrabEvent();
                 }
-                if (point.device()->type() == QInputDevice::DeviceType::TouchScreen) {
-                    bool allReleasedOrCancelled = true;
-                    if (transition == QPointingDevice::UngrabExclusive && event) {
-                        for (const auto &pt : event->points()) {
-                            if (pt.state() != QEventPoint::State::Released) {
-                                allReleasedOrCancelled = false;
-                                break;
-                            }
+            }
+            if (point.device()->type() == QInputDevice::DeviceType::TouchScreen) {
+                bool allReleasedOrCancelled = true;
+                if (transition == QPointingDevice::UngrabExclusive && event) {
+                    for (const auto &pt : event->points()) {
+                        if (pt.state() != QEventPoint::State::Released) {
+                            allReleasedOrCancelled = false;
+                            break;
                         }
                     }
-                    if (allReleasedOrCancelled)
-                        item->touchUngrabEvent();
                 }
+                if (allReleasedOrCancelled)
+                    grabberItem->touchUngrabEvent();
             }
             break;
         default:
             break;
         }
-        auto grabberItem = static_cast<QQuickItem *>(grabber); // cannot be a handler: we checked above
-        if (grabberItem) {
-            auto itemPriv = QQuickItemPrivate::get(grabberItem);
-            deliveryAgent = itemPriv->deliveryAgent();
-            // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
-            // whereas the subscene root item already knows it has its own DA.
-            if (isSubsceneAgent && grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
-                itemPriv->maybeHasSubsceneDeliveryAgent = true;
-        }
+        auto *itemPriv = QQuickItemPrivate::get(grabberItem);
+        deliveryAgent = itemPriv->deliveryAgent();
+        // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
+        // whereas the subscene root item already knows it has its own DA.
+        if (isSubsceneAgent && grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
+            itemPriv->maybeHasSubsceneDeliveryAgent = true;
     }
 
     if (currentEventDeliveryAgent == q && event && event->device()) {
