@@ -38,6 +38,7 @@ class QQmlImportNamespace;
 class QQmlImportDatabase;
 class QQmlTypeLoader;
 class QQmlTypeLoaderQmldirContent;
+class QTypeRevision;
 
 const QLoggingCategory &lcQmlImport();
 
@@ -212,6 +213,8 @@ public:
     static QUrl urlFromLocalFileOrQrcOrUrl(const QString &);
 
     static void setDesignerSupportRequired(bool b);
+
+    static QTypeRevision validVersion(QTypeRevision version = QTypeRevision());
 
 private:
     friend class QQmlImportDatabase;
