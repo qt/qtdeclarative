@@ -80,7 +80,7 @@ void QQmlProfilerTestClient::addEvent(const QQmlProfilerEvent &event)
 
     const QQmlProfilerEventType &type = types[typeIndex];
 
-    QVERIFY(event.timestamp() >= lastTimestamp);
+    const qint64 oldTimestamp = lastTimestamp;
     lastTimestamp = event.timestamp();
 
     switch (type.message()) {
@@ -149,6 +149,8 @@ void QQmlProfilerTestClient::addEvent(const QQmlProfilerEvent &event)
         }
         break;
     }
+
+    QCOMPARE_GE(lastTimestamp, oldTimestamp);
 }
 
 class tst_QQmlProfilerService : public QQmlDebugTest
