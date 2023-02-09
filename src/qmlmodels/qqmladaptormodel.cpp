@@ -22,7 +22,7 @@ public:
     QV4::PersistentValue listItemProto;
 };
 
-V4_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, engineData)
+V4_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, qamEngineData)
 
 static QV4::ReturnedValue get_index(const QV4::FunctionObject *f, const QV4::Value *thisObject, const QV4::Value *, int)
 {
@@ -389,7 +389,7 @@ public:
     QV4::ReturnedValue get() override
     {
         if (type->prototype.isUndefined()) {
-            QQmlAdaptorModelEngineData * const data = engineData(v4);
+            QQmlAdaptorModelEngineData * const data = qamEngineData(v4);
             type->initializeConstructor(data);
         }
         QV4::Scope scope(v4);
@@ -576,7 +576,7 @@ public:
 
     QV4::ReturnedValue get() override
     {
-        QQmlAdaptorModelEngineData *data = engineData(v4);
+        QQmlAdaptorModelEngineData *data = qamEngineData(v4);
         QV4::Scope scope(v4);
         QV4::ScopedObject o(scope, v4->memoryManager->allocate<QQmlDelegateModelItemObject>(this));
         QV4::ScopedObject p(scope, data->listItemProto.value());
