@@ -36,6 +36,6 @@ T.GroupBox {
         width: parent.width
         height: parent.height - control.topPadding + control.bottomPadding
         radius: 9
-        color: Qt.styleHints.appearance === Qt.Dark ? control.palette.light : control.palette.base
+        color: Qt.styleHints.colorScheme === Qt.Dark ? control.palette.light : control.palette.base
     }
 }

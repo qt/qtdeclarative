@@ -56,7 +56,7 @@ Page {
                 }
 
                 Image {
-                    source: Qt.styleHints.appearance === Qt.Dark ? "images/close-white.png"
+                    source: Qt.styleHints.colorScheme === Qt.Dark ? "images/close-white.png"
                                                    : "images/close.png"
                     width: 20
                     height: 20

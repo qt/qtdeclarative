@@ -62,7 +62,7 @@ void QQuickStylePlugin::registerTypes(const char *uri)
 
     qCDebug(lcStylePlugin) << "theme has not yet been initialized; calling initializeTheme()";
     initializeTheme(theme);
-    connect(QGuiApplication::styleHints(), &QStyleHints::appearanceChanged,
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
                                      this, &QQuickStylePlugin::updateTheme);
 
     if (!styleName.isEmpty())
@@ -75,7 +75,7 @@ void QQuickStylePlugin::unregisterTypes()
     if (!QQuickThemePrivate::instance)
         return;
 
-    disconnect(QGuiApplication::styleHints(), &QStyleHints::appearanceChanged,
+    disconnect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
                                         this, &QQuickStylePlugin::updateTheme);
 
     // Not every style has a plugin - some styles are QML-only. So, we clean this

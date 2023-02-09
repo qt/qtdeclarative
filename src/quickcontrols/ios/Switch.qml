@@ -32,8 +32,8 @@ T.Switch {
         source: IOS.url + "switch-indicator"
         ImageSelector on source {
             states: [
-                {"light": Qt.styleHints.appearance === Qt.Light},
-                {"dark": Qt.styleHints.appearance === Qt.Dark},
+                {"light": Qt.styleHints.colorScheme === Qt.Light},
+                {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                 {"checked": control.checked}
             ]
         }
@@ -53,8 +53,8 @@ T.Switch {
             source: IOS.url + "switch-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark},
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                     {"disabled": !control.enabled}
                 ]
             }

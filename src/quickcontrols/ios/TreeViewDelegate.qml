@@ -46,8 +46,8 @@ T.TreeViewDelegate {
             source: IOS.url + "arrow-indicator"
             ImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark}
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark}
                 ]
             }
         }
@@ -55,15 +55,15 @@ T.TreeViewDelegate {
 
     background: Rectangle {
         implicitHeight: 44
-        color: Qt.styleHints.appearance === Qt.Dark ? control.palette.dark : control.palette.base
+        color: Qt.styleHints.colorScheme === Qt.Dark ? control.palette.dark : control.palette.base
         NinePatchImage {
             height: parent.height
             width: parent.width
             source: IOS.url + (control.highlighted ? "itemdelegate-background-pressed" : "itemdelegate-background")
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark}
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark}
                 ]
             }
         }

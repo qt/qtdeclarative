@@ -27,8 +27,8 @@ T.CheckBox {
             states: [
                 {"checked": control.checkState === Qt.Checked},
                 {"partially-checked": control.checkState === Qt.PartiallyChecked},
-                {"light": Qt.styleHints.appearance === Qt.Light},
-                {"dark": Qt.styleHints.appearance === Qt.Dark}
+                {"light": Qt.styleHints.colorScheme === Qt.Light},
+                {"dark": Qt.styleHints.colorScheme === Qt.Dark}
             ]
         }
     }
