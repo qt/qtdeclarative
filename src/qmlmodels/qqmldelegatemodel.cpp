@@ -103,7 +103,7 @@ public:
     QV4::PersistentValue changeProto;
 };
 
-V4_DEFINE_EXTENSION(QQmlDelegateModelEngineData, engineData)
+V4_DEFINE_EXTENSION(QQmlDelegateModelEngineData, qdmEngineData)
 
 
 void QQmlDelegateModelPartsMetaObject::propertyCreated(int, QMetaPropertyBuilder &prop)
@@ -2762,9 +2762,9 @@ void QQmlDelegateModelGroupPrivate::emitChanges(QV4::ExecutionEngine *v4)
     Q_Q(QQmlDelegateModelGroup);
     if (isChangedConnected() && !changeSet.isEmpty()) {
         emit q->changed(QJSValuePrivate::fromReturnedValue(
-                            engineData(v4)->array(v4, changeSet.removes())),
+                            qdmEngineData(v4)->array(v4, changeSet.removes())),
                         QJSValuePrivate::fromReturnedValue(
-                            engineData(v4)->array(v4, changeSet.inserts())));
+                            qdmEngineData(v4)->array(v4, changeSet.inserts())));
     }
     if (changeSet.difference() != 0)
         emit q->countChanged();
@@ -3926,7 +3926,7 @@ public:
 
             const QQmlChangeSet::Change &change = array->at(index);
 
-            QV4::ScopedObject changeProto(scope, engineData(v4)->changeProto.value());
+            QV4::ScopedObject changeProto(scope, qdmEngineData(v4)->changeProto.value());
             QV4::Scoped<QQmlDelegateModelGroupChange> object(scope, QQmlDelegateModelGroupChange::create(v4));
             object->setPrototypeOf(changeProto);
             object->d()->change = change;
