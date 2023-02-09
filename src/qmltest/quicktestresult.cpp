@@ -4,6 +4,7 @@
 
 #include "quicktestresult_p.h"
 #include "quicktest.h"
+#include "quicktest_p.h"
 #include <QtTest/qtestcase.h>
 #include <QtTest/qtestsystem.h>
 #include <QtTest/private/qtestblacklist_p.h>
@@ -44,8 +45,6 @@ QT_BEGIN_NAMESPACE
 static const char *globalProgramName = nullptr;
 static bool loggingStarted = false;
 static QBenchmarkGlobalData globalBenchmarkData;
-
-extern bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000);
 
 class Q_QUICK_TEST_EXPORT QuickTestImageObject : public QObject
 {

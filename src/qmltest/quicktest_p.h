@@ -83,6 +83,8 @@ private:
     QQmlPropertyMap *m_defined;
 };
 
+bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000);
+
 QT_END_NAMESPACE
 
 #endif // QUICKTEST_P_H
