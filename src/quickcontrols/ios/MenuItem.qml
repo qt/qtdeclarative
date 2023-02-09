@@ -86,8 +86,8 @@ T.MenuItem {
                 states: [
                     {"edge": control.isFirstItem || control.isLastItem},
                     {"single": control.isSingleItem},
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark},
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                     {"pressed": control.down}
                 ]
             }

@@ -111,7 +111,7 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
             style = new QMacStyle;
 #elif defined(Q_OS_WINDOWS)
             style = new QWindowsXPStyle;
-            if (QGuiApplication::styleHints()->appearance() == Qt::Appearance::Dark)
+            if (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark)
                 qobject_cast<QWindowsStyle *>(style)->refreshPalette();
 #else
             style = new QCommonStyle;

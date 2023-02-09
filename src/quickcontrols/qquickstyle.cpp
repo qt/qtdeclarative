@@ -386,7 +386,7 @@ bool QQuickStylePrivate::isDarkSystemTheme()
 {
     const bool dark = [](){
         if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-            return theme->appearance() == Qt::Appearance::Dark;
+            return theme->colorScheme() == Qt::ColorScheme::Dark;
         return false;
     }();
     return dark;

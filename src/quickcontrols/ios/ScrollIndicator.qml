@@ -18,8 +18,8 @@ T.ScrollIndicator {
         source: IOS.url + "scrollindicator-handle"
         NinePatchImageSelector on source {
             states: [
-                {"light": Qt.styleHints.appearance === Qt.Light},
-                {"dark": Qt.styleHints.appearance === Qt.Dark},
+                {"light": Qt.styleHints.colorScheme === Qt.Light},
+                {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                 {"horizontal": control.horizontal},
                 {"vertical": control.vertical}
             ]

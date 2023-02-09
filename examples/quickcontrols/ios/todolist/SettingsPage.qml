@@ -52,7 +52,7 @@ Page {
             required property string page
 
             Image {
-                source: Qt.styleHints.appearance === Qt.Dark ? "images/back-white.png"
+                source: Qt.styleHints.colorScheme === Qt.Dark ? "images/back-white.png"
                                                : "images/back.png"
                 width: 20
                 height: 20

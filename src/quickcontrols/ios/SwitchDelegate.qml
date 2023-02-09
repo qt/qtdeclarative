@@ -33,8 +33,8 @@ T.SwitchDelegate {
         source: IOS.url + "switch-indicator"
         ImageSelector on source {
             states: [
-                {"light": Qt.styleHints.appearance === Qt.Light},
-                {"dark": Qt.styleHints.appearance === Qt.Dark},
+                {"light": Qt.styleHints.colorScheme === Qt.Light},
+                {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                 {"checked": control.checked}
             ]
         }
@@ -54,8 +54,8 @@ T.SwitchDelegate {
             source: IOS.url + "switch-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark},
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                     {"disabled": !control.enabled}
                 ]
             }
@@ -84,7 +84,7 @@ T.SwitchDelegate {
 
     background: Rectangle {
         implicitHeight: 44
-        color: Qt.styleHints.appearance === Qt.Dark ? control.palette.light : control.palette.base
+        color: Qt.styleHints.colorScheme === Qt.Dark ? control.palette.light : control.palette.base
         NinePatchImage {
             property real offset: control.icon.source.toString() !== "" ? control.icon.width + control.spacing : 0
             x: control.leftPadding + offset
@@ -93,8 +93,8 @@ T.SwitchDelegate {
             source: IOS.url + "itemdelegate-background"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark},
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                 ]
             }
         }

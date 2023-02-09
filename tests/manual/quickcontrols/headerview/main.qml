@@ -14,7 +14,7 @@ Window {
     width: 640
     height: 480
     title: qsTr("HeaderView Test")
-    color: Qt.styleHints.appearance === Qt.Light ? palette.mid : palette.midlight
+    color: Qt.styleHints.colorScheme === Qt.Light ? palette.mid : palette.midlight
 
     TestTableModelWithHeader {
         id: tableModel

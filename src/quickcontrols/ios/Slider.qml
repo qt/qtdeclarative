@@ -26,8 +26,8 @@ T.Slider {
             source: IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark},
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                     {"disabled": !control.enabled}
                 ]
             }
@@ -47,8 +47,8 @@ T.Slider {
             width: control.horizontal ? background.width : background.height
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark},
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                 ]
             }
 
@@ -59,8 +59,8 @@ T.Slider {
                 source: IOS.url + "slider-progress"
                 NinePatchImageSelector on source {
                     states: [
-                        {"light": Qt.styleHints.appearance === Qt.Light},
-                        {"dark": Qt.styleHints.appearance === Qt.Dark},
+                        {"light": Qt.styleHints.colorScheme === Qt.Light},
+                        {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                     ]
                 }
             }
