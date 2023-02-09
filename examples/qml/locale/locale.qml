@@ -8,6 +8,19 @@ Rectangle {
     width: 320
     height: 480
     color: "lightgray"
+    property list<string> locales: ([
+                "en_US",
+                "en_GB",
+                "fi_FI",
+                "de_DE",
+                "ar_SA",
+                "hi_IN",
+                "zh_CN",
+                "th_TH",
+                "fr_FR",
+                "nb_NO",
+                "sv_SE"
+            ])
 
     component LocaleDelegate: Text {
         required property var modelData
@@ -23,7 +36,7 @@ Rectangle {
         }
     }
 
-    property string locale: (view.currentItem as LocaleDelegate).locale
+    property string locale: view.currentIndex === -1 ? "en_US" : root.locales[view.currentIndex]
 
     Text {
         id: title
@@ -43,19 +56,7 @@ Rectangle {
             clip: true
             focus: true
             anchors.fill: parent
-            model: [
-                "en_US",
-                "en_GB",
-                "fi_FI",
-                "de_DE",
-                "ar_SA",
-                "hi_IN",
-                "zh_CN",
-                "th_TH",
-                "fr_FR",
-                "nb_NO",
-                "sv_SE"
-            ]
+            model: root.locales
 
             delegate: LocaleDelegate {}
             highlight: Rectangle {
