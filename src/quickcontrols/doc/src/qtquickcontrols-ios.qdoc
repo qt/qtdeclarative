@@ -10,12 +10,6 @@
 
     \styleimport {QtQuick.Controls.iOS} {Qt 6.4}
 
-    \section1 Attached Properties
-
-    \list
-        \li \l {ios-theme-attached-prop}{\b theme} : enumeration
-    \endlist
-
     \section1 Detailed Description
     \target detailed-desc-iOS
 
@@ -45,9 +39,8 @@
 
     \section2 Current state
 
-    The iOS style is currently in Tech Preview and is under development. Some controls are not
-    yet supported. Those controls are: \l BusyIndicator, \l DelayButton, \l Dialog, \l DialogButtonBox,
-    \l SelectionRectangle and \l Tumbler. Those will fall back to use the \l {Basic Style}.
+    The \l Tumbler control is not yet implemented for the iOS style and will fall back
+    to use the \l {Basic Style}.
 
     \section2 Customization
 
