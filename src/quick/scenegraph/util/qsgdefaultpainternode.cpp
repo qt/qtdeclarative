@@ -167,7 +167,7 @@ void QSGDefaultPainterNode::updateRenderTarget()
     if (!m_image.isNull() && !m_dirtyGeometry)
         return;
 
-    m_image = QImage(m_textureSize, QImage::Format_ARGB32_Premultiplied);
+    m_image = QImage(m_textureSize, QImage::Format_RGBA8888_Premultiplied);
     m_image.fill(Qt::transparent);
 
     if (!m_texture) {
