@@ -65,6 +65,7 @@ private slots:
     void cppRegisteredSingletonDependency();
     void cacheModuleScripts();
     void reuseStaticMappings();
+    void invalidateSaveLoadCache();
 
 private:
     QDir m_qmlCacheDirectory;
@@ -550,6 +551,7 @@ void tst_qmldiskcache::recompileAfterChange()
         CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
         QScopedPointer<TypeVersion2> obj(qobject_cast<TypeVersion2*>(component.create()));
         QVERIFY(!obj.isNull());
+        qDebug() << obj->property("x");
         QVERIFY(QFileInfo(testCompiler.cacheFilePath).lastModified() > initialCacheTimeStamp);
     }
 }
@@ -1028,6 +1030,112 @@ void tst_qmldiskcache::reuseStaticMappings()
     QVERIFY(testCompiler.loadTestFile());
 
     QCOMPARE(testCompiler.unitData(), data1);
+}
+
+class AParent : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int x MEMBER x)
+public:
+    AParent(QObject *parent = nullptr) : QObject(parent) {}
+    int x = 25;
+};
+
+class BParent : public QObject
+{
+    Q_OBJECT
+
+    // Insert y before x, to change the property index of x
+    Q_PROPERTY(int y MEMBER y)
+
+    Q_PROPERTY(int x MEMBER x)
+public:
+    BParent(QObject *parent = nullptr) : QObject(parent) {}
+    int y = 13;
+    int x = 25;
+};
+
+static QString writeTempFile(
+        const QTemporaryDir &tempDir, const QString &fileName, const char *contents) {
+    QFile f(tempDir.path() + '/' + fileName);
+    const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    Q_ASSERT(ok);
+    f.write(contents);
+    return f.fileName();
+};
+
+void tst_qmldiskcache::invalidateSaveLoadCache()
+{
+    qmlRegisterType<AParent>("Base", 1, 0, "Parent");
+    QQmlEngine e;
+
+    // If you store a CU to a .qmlc file at run time, the .qmlc file will contain
+    // alias entries with the encodedMetaPropertyIndex pre-resolved. That's in
+    // contrast to .qmlc files generated ahead of time. Exploit that to cause
+    // a need to recompile the file.
+
+    QTemporaryDir tempDir;
+    const QString fileName = writeTempFile(
+                tempDir, QLatin1String("a.qml"),
+                "import Base\nParent { id: self; property alias z: self.x }");
+    const QUrl url = QUrl::fromLocalFile(fileName);
+    waitForFileSystem();
+
+    {
+        QQmlComponent a(&e, url);
+        QVERIFY2(a.isReady(), qPrintable(a.errorString()));
+        QScopedPointer<QObject> ao(a.create());
+        QVERIFY(!ao.isNull());
+        AParent *ap = qobject_cast<AParent *>(ao.data());
+        QCOMPARE(ap->property("z").toInt(), ap->x);
+    }
+
+    QString errorString;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> oldUnit
+            = QV4::ExecutableCompilationUnit::create();
+    QVERIFY2(oldUnit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
+
+    // Produce a checksum mismatch.
+    e.clearComponentCache();
+    qmlClearTypeRegistrations();
+    qmlRegisterType<BParent>("Base", 1, 0, "Parent");
+
+    {
+        QQmlComponent b(&e, url);
+        QVERIFY2(b.isReady(), qPrintable(b.errorString()));
+        QScopedPointer<QObject> bo(b.create());
+        QVERIFY(!bo.isNull());
+        BParent *bp = qobject_cast<BParent *>(bo.data());
+        QCOMPARE(bp->property("z").toInt(), bp->x);
+    }
+
+    // Make it recompile again.
+    e.clearComponentCache();
+    {
+        QFile file(fileName);
+        file.open(QIODevice::WriteOnly | QIODevice::Append);
+        file.write(" ");
+    }
+    waitForFileSystem();
+
+    {
+        QQmlComponent b(&e, url);
+        QVERIFY2(b.isReady(), qPrintable(b.errorString()));
+        QScopedPointer<QObject> bo(b.create());
+        QVERIFY(!bo.isNull());
+        BParent *bp = qobject_cast<BParent *>(bo.data());
+        QCOMPARE(bp->property("z").toInt(), bp->x);
+    }
+
+    // Verify that the mapped unit data is actually different now.
+    // The cache should have been invalidated after all.
+    // So, now we should be able to load a freshly written CU.
+
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> unit
+            = QV4::ExecutableCompilationUnit::create();
+    QVERIFY2(unit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
+
+    QVERIFY(unit->unitData() != oldUnit->unitData());
 }
 
 QTEST_MAIN(tst_qmldiskcache)

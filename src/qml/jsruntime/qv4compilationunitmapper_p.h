@@ -69,6 +69,7 @@ public:
 
     CompiledData::Unit *get(
             const QString &cacheFilePath, const QDateTime &sourceTimeStamp, QString *errorString);
+    static void invalidate(const QString &cacheFilePath);
 
 private:
     CompiledData::Unit *open(

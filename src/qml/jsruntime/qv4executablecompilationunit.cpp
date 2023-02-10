@@ -857,8 +857,14 @@ bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorSt
 
     return CompiledData::SaveableUnitPointer(unitData()).saveToDisk<char>(
             [&unitUrl, errorString](const char *data, quint32 size) {
-        return CompiledData::SaveableUnitPointer::writeDataToFile(localCacheFilePath(unitUrl), data,
-                                                                  size, errorString);
+        const QString cachePath = localCacheFilePath(unitUrl);
+        if (CompiledData::SaveableUnitPointer::writeDataToFile(
+                    cachePath, data, size, errorString)) {
+            CompilationUnitMapper::invalidate(cachePath);
+            return true;
+        }
+
+        return false;
     });
 }
 
