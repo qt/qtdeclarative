@@ -10,6 +10,4 @@ if(TARGET Qt::Quick)
     endif()
     qt_internal_add_example(dynamicscene)
 endif()
-if(QT_FEATURE_qml_network AND TARGET Qt::Quick)
-    qt_internal_add_example(networkaccessmanagerfactory)
-endif()
+

@@ -4,9 +4,6 @@ QT_FOR_CONFIG += qml
 qtHaveModule(quick) {
     SUBDIRS += \
         qmlextensionplugins
-
-    qtConfig(qml-network): \
-        SUBDIRS += networkaccessmanagerfactory
 }
 
 SUBDIRS += \
