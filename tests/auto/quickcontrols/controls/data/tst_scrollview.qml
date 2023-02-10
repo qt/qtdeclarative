@@ -482,6 +482,33 @@ TestCase {
         compare(control.contentHeight, flickable.contentHeight)
     }
 
+    Component {
+        id: scrollableTextAreaWithPadding
+
+        ScrollView {
+            TextArea {
+                text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas id dignissim ipsum. Nam molestie nisl turpis."
+                wrapMode: TextArea.WordWrap
+                leftPadding: 1
+                topPadding: 1
+            }
+        }
+    }
+
+    function test_textAreaWithPadding() {
+        let control = createTemporaryObject(scrollableTextAreaWithPadding, testCase)
+        verify(control)
+
+        let flickable = control.contentItem
+        verify(flickable)
+
+        let textArea = flickable.contentItem.children[0]
+        verify(textArea)
+
+        compare(control.contentWidth, flickable.contentWidth)
+        compare(control.contentHeight, flickable.contentHeight)
+    }
+
     function test_textAreaWithSibling() {
         // Checks that it does not crash when the ScrollView is deleted
         var control = createTemporaryObject(scrollableTextAreaWithSibling, testCase)

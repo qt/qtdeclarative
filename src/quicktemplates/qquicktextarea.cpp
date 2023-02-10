@@ -373,8 +373,8 @@ void QQuickTextAreaPrivate::resizeFlickableContent()
     if (!flickable)
         return;
 
-    flickable->setContentWidth(q->contentWidth() + q->leftPadding() + q->rightPadding());
-    flickable->setContentHeight(q->contentHeight() + q->topPadding() + q->bottomPadding());
+    flickable->setContentWidth(q->implicitWidth());
+    flickable->setContentHeight(q->implicitHeight());
 }
 
 void QQuickTextAreaPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
