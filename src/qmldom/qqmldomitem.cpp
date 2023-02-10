@@ -1734,6 +1734,90 @@ public:
     bool isList = false;
 };
 
+static bool visitForLookupType(DomItem el, LookupType lookupType,
+                               function_ref<bool(DomItem &)> visitor)
+{
+    bool correctType = false;
+    DomType iType = el.internalKind();
+    switch (lookupType) {
+    case LookupType::Binding:
+        correctType = (iType == DomType::Binding);
+        break;
+    case LookupType::Method:
+        correctType = (iType == DomType::MethodInfo);
+        break;
+    case LookupType::Property:
+        correctType = (iType == DomType::PropertyDefinition || iType == DomType::Binding);
+        break;
+    case LookupType::PropertyDef:
+        correctType = (iType == DomType::PropertyDefinition);
+        break;
+    case LookupType::Type:
+        correctType = (iType == DomType::Export); // accept direct QmlObject ref?
+        break;
+    default:
+        Q_ASSERT(false);
+        break;
+    }
+    if (correctType)
+        return visitor(el);
+    return true;
+}
+
+static bool visitQualifiedNameLookup(DomItem newIt, QStringList &subpath,
+                                     function_ref<bool(DomItem &)> visitor, LookupType lookupType,
+                                     ErrorHandler &errorHandler, QList<Path> *visitedRefs)
+{
+    QVector<ResolveToDo> lookupToDos(
+            { ResolveToDo{ newIt, 1 } }); // invariant: always increase pathIndex to guarantee
+    // end even with only partial visited match
+    QList<QSet<quintptr>> lookupVisited(subpath.size() + 1);
+    while (!lookupToDos.isEmpty()) {
+        ResolveToDo tNow = lookupToDos.takeFirst();
+        auto vNow = qMakePair(tNow.item.id(), tNow.pathIndex);
+        DomItem subNow = tNow.item;
+        int iSubPath = tNow.pathIndex;
+        Q_ASSERT(iSubPath < subpath.size());
+        QString subPathNow = subpath[iSubPath++];
+        DomItem scope = subNow.proceedToScope();
+        if (iSubPath < subpath.size()) {
+            if (vNow.first != 0) {
+                if (lookupVisited[vNow.second].contains(vNow.first))
+                    continue;
+                else
+                    lookupVisited[vNow.second].insert(vNow.first);
+            }
+            if (scope.internalKind() == DomType::QmlObject)
+                scope.visitDirectAccessibleScopes(
+                        [&lookupToDos, subPathNow, iSubPath](DomItem &el) {
+                            return el.visitLocalSymbolsNamed(
+                                    subPathNow, [&lookupToDos, iSubPath](DomItem &subEl) {
+                                        lookupToDos.append({ subEl, iSubPath });
+                                        return true;
+                                    });
+                        },
+                        VisitPrototypesOption::Normal, errorHandler, &(lookupVisited[vNow.second]),
+                        visitedRefs);
+        } else {
+            bool cont = scope.visitDirectAccessibleScopes(
+                    [&visitor, subPathNow, lookupType](DomItem &el) -> bool {
+                        if (lookupType == LookupType::Symbol)
+                            return el.visitLocalSymbolsNamed(subPathNow, visitor);
+                        else
+                            return el.visitLocalSymbolsNamed(
+                                    subPathNow, [lookupType, &visitor](DomItem &el) -> bool {
+                                        return visitForLookupType(el, lookupType, visitor);
+                                    });
+                    },
+                    VisitPrototypesOption::Normal, errorHandler, &(lookupVisited[vNow.second]),
+                    visitedRefs);
+            if (!cont)
+                return false;
+        }
+    }
+    return true;
+}
+
 bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
                           LookupType lookupType, LookupOptions opts, ErrorHandler errorHandler,
                           QSet<quintptr> *visited, QList<Path> *visitedRefs)
@@ -1753,101 +1837,10 @@ bool DomItem::visitLookup(QString target, function_ref<bool(DomItem &)> visitor,
         } else {
             return visitLookup1(
                     subpath.at(0),
-                    [&subpath, visitor, lookupType, &errorHandler, visitedRefs](DomItem &newIt) {
-                        QVector<ResolveToDo> lookupToDos({ ResolveToDo {
-                                newIt, 1 } }); // invariant: always increase pathIndex to guarantee
-                                               // end even with only partial visited match
-                        QList<QSet<quintptr>> lookupVisited(subpath.size() + 1);
-                        while (!lookupToDos.isEmpty()) {
-                            ResolveToDo tNow = lookupToDos.takeFirst();
-                            auto vNow = qMakePair(tNow.item.id(), tNow.pathIndex);
-                            DomItem subNow = tNow.item;
-                            int iSubPath = tNow.pathIndex;
-                            Q_ASSERT(iSubPath < subpath.size());
-                            QString subPathNow = subpath[iSubPath++];
-                            DomItem scope = subNow.proceedToScope();
-                            if (iSubPath < subpath.size()) {
-                                if (vNow.first != 0) {
-                                    if (lookupVisited[vNow.second].contains(vNow.first))
-                                        continue;
-                                    else
-                                        lookupVisited[vNow.second].insert(vNow.first);
-                                }
-                                if (scope.internalKind() == DomType::QmlObject)
-                                    scope.visitDirectAccessibleScopes(
-                                            [&lookupToDos, subPathNow, iSubPath](DomItem &el) {
-                                                return el.visitLocalSymbolsNamed(
-                                                        subPathNow,
-                                                        [&lookupToDos, iSubPath](DomItem &subEl) {
-                                                            lookupToDos.append({ subEl, iSubPath });
-                                                            return true;
-                                                        });
-                                            },
-                                            VisitPrototypesOption::Normal, errorHandler,
-                                            &(lookupVisited[vNow.second]), visitedRefs);
-                            } else {
-                                bool cont = scope.visitDirectAccessibleScopes(
-                                        [&visitor, subPathNow, lookupType](DomItem &el) -> bool {
-                                            if (lookupType == LookupType::Symbol)
-                                                return el.visitLocalSymbolsNamed(subPathNow,
-                                                                                 visitor);
-                                            else
-                                                return el.visitLocalSymbolsNamed(
-                                                        subPathNow,
-                                                        [lookupType,
-                                                         &visitor](DomItem &el) -> bool {
-                                                            bool correctType = false;
-                                                            DomType iType = el.internalKind();
-                                                            switch (lookupType) {
-                                                            case LookupType::Binding:
-                                                                correctType =
-                                                                        (iType == DomType::Binding);
-                                                                break;
-                                                            case LookupType::Method:
-                                                                correctType =
-                                                                        (iType
-                                                                         == DomType::MethodInfo);
-                                                                break;
-                                                            case LookupType::Property:
-                                                                correctType =
-                                                                        (iType
-                                                                                 == DomType::
-                                                                                         PropertyDefinition
-                                                                         || iType
-                                                                                 == DomType::
-                                                                                         Binding);
-                                                                break;
-                                                            case LookupType::PropertyDef:
-                                                                correctType =
-                                                                        (iType
-                                                                         == DomType::
-                                                                                 PropertyDefinition);
-                                                                break;
-                                                            case LookupType::Type:
-                                                                correctType =
-                                                                        (iType
-                                                                         == DomType::
-                                                                                 Export); // accept
-                                                                                          // direct
-                                                                                          // QmlObject
-                                                                                          // ref?
-                                                                break;
-                                                            default:
-                                                                Q_ASSERT(false);
-                                                                break;
-                                                            }
-                                                            if (correctType)
-                                                                return visitor(el);
-                                                            return true;
-                                                        });
-                                        },
-                                        VisitPrototypesOption::Normal, errorHandler,
-                                        &(lookupVisited[vNow.second]), visitedRefs);
-                                if (!cont)
-                                    return false;
-                            }
-                        }
-                        return true;
+                    [&subpath, visitor, lookupType, &errorHandler,
+                     visitedRefs](DomItem &newIt) -> bool {
+                        return visitQualifiedNameLookup(newIt, subpath, visitor, lookupType,
+                                                        errorHandler, visitedRefs);
                     },
                     opts, errorHandler, visited, visitedRefs);
         }
