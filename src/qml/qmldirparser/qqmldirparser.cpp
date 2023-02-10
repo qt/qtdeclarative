@@ -218,7 +218,7 @@ bool QQmlDirParser::parse(const QString &source)
                     continue;
             } else {
                 reportError(lineNumber, 0,
-                            QStringLiteral("only optional imports can have a a defaultl, "
+                            QStringLiteral("only optional imports can have a default, "
                                            "not %1.")
                                     .arg(sections[1]));
             }

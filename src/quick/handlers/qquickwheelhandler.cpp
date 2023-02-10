@@ -524,7 +524,7 @@ QMetaProperty &QQuickWheelHandlerPrivate::targetMetaProperty() const
 
     By default, this property is set to
     \l{QInputDevice::DeviceType}{PointerDevice.Mouse}, so as to react only to
-    events events from an actual mouse wheel.
+    events from an actual mouse wheel.
 
     WheelHandler can be made to respond to both mouse wheel and touchpad
     scrolling by setting acceptedDevices to

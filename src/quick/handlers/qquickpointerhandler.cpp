@@ -414,7 +414,7 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
     \value PointerHandler.ApprovesCancellation
            This handler will allow its grab to be set to null.
     \value PointerHandler.ApprovesTakeOverByAnything
-           This handler gives permission for any any type of Item or Handler to take the grab.
+           This handler gives permission for any type of Item or Handler to take the grab.
 
     The default is
     \c {PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType | PointerHandler.ApprovesTakeOverByAnything}

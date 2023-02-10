@@ -243,7 +243,7 @@ Q_DECLARE_METATYPE(QList<int>)
   \section1 Extensions
 
   QJSEngine provides a compliant ECMAScript implementation. By default,
-  familiar utilities like logging are not available, but they can can be
+  familiar utilities like logging are not available, but they can be
   installed via the \l installExtensions() function.
 
   \sa QJSValue, {Making Applications Scriptable},
@@ -1037,7 +1037,7 @@ QDate QJSEngine::convertDateTimeToDate(const QDateTime &dateTime)
     JavaScript function through QJSEngine.
 
     When returning from C++, the engine will interrupt the normal flow of
-    execution and call the the next pre-registered exception handler with
+    execution and call the next pre-registered exception handler with
     an error object that contains the given \a message. The error object
     will point to the location of the top-most context on the JavaScript
     caller stack; specifically, it will have properties \c lineNumber,

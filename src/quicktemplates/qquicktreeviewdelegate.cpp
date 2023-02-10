@@ -138,7 +138,7 @@ QT_BEGIN_NAMESPACE
     \qmlproperty bool QtQuick.Controls::TreeViewDelegate::isTreeNode
 
     This property is \c true if the delegate item draws a node in the tree.
-    Only one column in the view will be used to to draw the tree, and
+    Only one column in the view will be used to draw the tree, and
     therefore, only delegate items in that column will have this
     property set to \c true.
 
