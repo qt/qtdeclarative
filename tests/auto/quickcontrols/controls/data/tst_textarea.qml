@@ -280,8 +280,8 @@ TestCase {
         verify(textArea.contentWidth > 0)
         verify(textArea.contentHeight > 200)
 
-        compare(control.contentWidth, textArea.contentWidth + textArea.leftPadding + textArea.rightPadding)
-        compare(control.contentHeight, textArea.contentHeight + textArea.topPadding + textArea.bottomPadding)
+        compare(control.contentWidth, textArea.implicitWidth)
+        compare(control.contentHeight, textArea.implicitHeight)
 
         compare(textArea.cursorPosition, 0)
 
