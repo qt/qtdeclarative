@@ -5,9 +5,6 @@ qtHaveModule(quick) {
     SUBDIRS += \
         qmlextensionplugins \
         xmlhttprequest
-
-    qtConfig(qml-network): \
-        SUBDIRS += networkaccessmanagerfactory
 }
 
 SUBDIRS += \
