@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
   Management of the graphics devices, contexts, image and texture objects is up
   to the application. The device or context that will be used by Qt Quick must
-  be created before calling initialize(). The creation of the the texture object
+  be created before calling initialize(). The creation of the texture object
   can be deferred, see below. Qt 5.4 introduces the ability for QOpenGLContext
   to adopt existing native contexts. Together with QQuickRenderControl this
   makes it possible to create a QOpenGLContext that shares with an external
@@ -574,7 +574,7 @@ QQuickWindow *QQuickRenderControl::window() const
     to the user of QQuickRenderControl to specify these points.
 
     A typical update step, including initialization of rendering into an
-    existing texture, could like like the following. The example snippet
+    existing texture, could look like the following. The example snippet
     assumes Direct3D 11 but the same concepts apply other graphics APIs as
     well.
 

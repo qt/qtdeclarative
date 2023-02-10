@@ -3136,7 +3136,7 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     buffering of resources, such as buffers, is up to the graphics API client
     to manage. Most commonly, a uniform buffer where the data changes between
     frames cannot simply change its contents when submitting a frame, given
-    that that frame may still be active ("in flight") when starting to record
+    that the frame may still be active ("in flight") when starting to record
     the next frame. To avoid stalling the pipeline, one way is to have multiple
     buffers (and memory allocations) under the hood, thus realizing at least a
     double buffered scheme for such resources.
@@ -3493,7 +3493,7 @@ void QQuickWindow::endExternalCommands()
 
     However if you set this property, then Qt Quick will no longer wait until
     the \c transientParent window is shown before showing this window. If you
-    want to to be able to show a transient window independently of the "parent"
+    want to be able to show a transient window independently of the "parent"
     Item or Window within which it was declared, you can remove that
     relationship by setting \c transientParent to \c null:
 
