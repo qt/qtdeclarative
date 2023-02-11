@@ -321,6 +321,7 @@ void QQuickLabsPlatformMenu::setParentMenu(QQuickLabsPlatformMenu *menu)
     emit parentMenuChanged();
 }
 
+#if QT_CONFIG(systemtrayicon)
 /*!
     \readonly
     \qmlproperty SystemTrayIcon Qt.labs.platform::Menu::systemTrayIcon
@@ -342,6 +343,7 @@ void QQuickLabsPlatformMenu::setSystemTrayIcon(QQuickLabsPlatformSystemTrayIcon 
     destroy();
     emit systemTrayIconChanged();
 }
+#endif
 
 /*!
     \readonly
