@@ -10,7 +10,9 @@
 #include <QtGui/qstylehints.h>
 
 #include <QtQml/qqmlinfo.h>
+#if QT_CONFIG(qml_locale)
 #include <QtQml/private/qqmllocale_p.h>
+#endif
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 
@@ -155,8 +157,11 @@ void QQuickSpinBoxPrivate::updateValue()
             int val = 0;
             QQmlEngine *engine = qmlEngine(q);
             if (engine && valueFromText.isCallable()) {
+                QJSValue loc;
+#if QT_CONFIG(qml_locale)
                 QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-                QJSValue loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+                loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+#endif
                 val = valueFromText.call(QJSValueList() << text.toString() << loc).toInt();
             } else {
                 val = locale.toInt(text.toString());
@@ -223,8 +228,11 @@ void QQuickSpinBoxPrivate::updateDisplayText(bool modified)
     QString text;
     QQmlEngine *engine = qmlEngine(q);
     if (engine && textFromValue.isCallable()) {
+        QJSValue loc;
+#if QT_CONFIG(qml_locale)
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-        QJSValue loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+        loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+#endif
         text = textFromValue.call(QJSValueList() << value << loc).toString();
     } else {
         text = locale.toString(value);
