@@ -47,7 +47,9 @@ class QQuickLabsPlatformMenu : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQmlListProperty<QQuickLabsPlatformMenuItem> items READ items NOTIFY itemsChanged FINAL)
     Q_PROPERTY(QQuickLabsPlatformMenuBar *menuBar READ menuBar NOTIFY menuBarChanged FINAL)
     Q_PROPERTY(QQuickLabsPlatformMenu *parentMenu READ parentMenu NOTIFY parentMenuChanged FINAL)
+#if QT_CONFIG(systemtrayicon)
     Q_PROPERTY(QQuickLabsPlatformSystemTrayIcon *systemTrayIcon READ systemTrayIcon NOTIFY systemTrayIconChanged FINAL)
+#endif
     Q_PROPERTY(QQuickLabsPlatformMenuItem *menuItem READ menuItem CONSTANT FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
@@ -76,8 +78,10 @@ public:
     QQuickLabsPlatformMenu *parentMenu() const;
     void setParentMenu(QQuickLabsPlatformMenu *menu);
 
+#if QT_CONFIG(systemtrayicon)
     QQuickLabsPlatformSystemTrayIcon *systemTrayIcon() const;
     void setSystemTrayIcon(QQuickLabsPlatformSystemTrayIcon *icon);
+#endif
 
     QQuickLabsPlatformMenuItem *menuItem() const;
 
