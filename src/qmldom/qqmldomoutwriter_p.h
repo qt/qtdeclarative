@@ -27,12 +27,6 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-#define QMLDOM_USTRING(s) u##s
-#define QMLDOM_REGION(name) constexpr const auto name = QMLDOM_USTRING(#name)
-// namespace, so it cam be reopened to add more entries
-namespace Regions {
-} // namespace Regions
-
 class QMLDOM_EXPORT OutWriterState
 {
 public:
