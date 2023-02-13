@@ -57,7 +57,7 @@ public:
         const void *m_data;
     };
 
-    struct Q_QUICK_EXPORT GraphicsPipelineState {
+    struct GraphicsPipelineState {
         enum BlendFactor {
             Zero,
             One,
