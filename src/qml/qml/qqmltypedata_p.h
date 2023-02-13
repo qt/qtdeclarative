@@ -58,7 +58,6 @@ public:
     const QList<ScriptReference> &resolvedScripts() const;
 
     QV4::ExecutableCompilationUnit *compilationUnit() const;
-    QV4::ExecutableCompilationUnit *compilationUnitForInlineComponent(unsigned int icObjectId) const;
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
@@ -130,7 +129,6 @@ private:
     QHash<int, InlineComponentData> m_inlineComponentData;
 
     ExecutableCompilationUnitPtr m_compiledData;
-    QHash<int, ExecutableCompilationUnitPtr> m_inlineComponentToCompiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 
