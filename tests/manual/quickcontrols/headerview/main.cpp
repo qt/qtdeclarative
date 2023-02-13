@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QSet>
 
 class TestTableModel : public QAbstractTableModel {
     Q_OBJECT
