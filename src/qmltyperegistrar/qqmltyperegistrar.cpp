@@ -447,7 +447,7 @@ static const QQmlModuleRegistration registration("%1", %4);
         output << u"} // namespace %1\n"_s.arg(m_targetNamespace);
 }
 
-void QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)
+bool QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)
 {
     QmlTypesCreator creator;
     creator.setOwnTypes(m_types);
@@ -456,7 +456,7 @@ void QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)
     creator.setModule(m_module);
     creator.setVersion(QTypeRevision::fromVersion(m_moduleVersion.majorVersion(), 0));
 
-    creator.generate(pluginTypesFile);
+    return creator.generate(pluginTypesFile);
 }
 
 void QmlTypeRegistrar::setModuleNameAndNamespace(const QString &module,

@@ -156,6 +156,10 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
 
     typeRegistrar.setReferencedTypes(processor.referencedTypes());
-    typeRegistrar.generatePluginTypes(parser.value(pluginTypesOption));
+    const QString qmltypes = parser.value(pluginTypesOption);
+    if (!typeRegistrar.generatePluginTypes(qmltypes)) {
+        fprintf(stderr, "Error: Cannot generate qmltypes file %s\n", qPrintable(qmltypes));
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }

@@ -423,7 +423,7 @@ void QmlTypesCreator::writeComponents()
     }
 }
 
-void QmlTypesCreator::generate(const QString &outFileName)
+bool QmlTypesCreator::generate(const QString &outFileName)
 {
     m_qml.writeStartDocument();
     m_qml.writeLibraryImport(QLatin1String("QtQuick.tooling"), 1, 2);
@@ -439,9 +439,13 @@ void QmlTypesCreator::generate(const QString &outFileName)
     m_qml.writeEndObject();
 
     QSaveFile file(outFileName);
-    file.open(QIODevice::WriteOnly);
-    file.write(m_output);
-    file.commit();
+    if (!file.open(QIODevice::WriteOnly))
+        return false;
+
+    if (file.write(m_output) != m_output.size())
+        return false;
+
+    return file.commit();
 }
 
 QT_END_NAMESPACE

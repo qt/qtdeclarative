@@ -28,7 +28,7 @@ class QmlTypesCreator
 public:
     QmlTypesCreator() : m_qml(&m_output) {}
 
-    void generate(const QString &outFileName);
+    bool generate(const QString &outFileName);
 
     void setOwnTypes(QVector<QJsonObject> ownTypes) { m_ownTypes = std::move(ownTypes); }
     void setForeignTypes(QVector<QJsonObject> foreignTypes) { m_foreignTypes = std::move(foreignTypes); }
