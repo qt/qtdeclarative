@@ -515,6 +515,13 @@ void QQuickDialogButtonBox::setPosition(Position position)
     \value Qt.AlignTop The buttons are aligned to the top.
     \value Qt.AlignVCenter The buttons are vertically centered.
     \value Qt.AlignBottom The buttons are aligned to the bottom.
+
+    The default value is \c undefined.
+
+    \note This property assumes a horizontal layout of the buttons. The
+    DialogButtonBox for the \l {iOS Style}{iOS style} uses a vertical layout
+    when there are more than two buttons, and if set to a value other than
+    \c undefined, the layout of its buttons will be done horizontally.
 */
 Qt::Alignment QQuickDialogButtonBox::alignment() const
 {
