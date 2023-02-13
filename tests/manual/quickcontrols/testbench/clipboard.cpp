@@ -6,6 +6,7 @@
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QSettings>
+#include <QMap>
 
 const QStringList keys = {
     "Palette/window",

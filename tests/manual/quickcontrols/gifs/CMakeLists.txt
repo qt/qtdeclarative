@@ -13,13 +13,12 @@ endif()
 ## tst_gifs Test:
 #####################################################################
 
-# Collect test data
 file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_internal_add_manual_test(tst_gifs
+qt_internal_add_test(tst_gifs
     SOURCES
         capturedevent.cpp capturedevent.h
         eventcapturer.cpp eventcapturer.h
@@ -28,7 +27,19 @@ qt_internal_add_manual_test(tst_gifs
     LIBRARIES
         Qt::Gui
         Qt::Quick
+        Qt::Test
     TESTDATA ${test_data}
+)
+
+# Make the QML files available to Creator's locator.
+target_sources(tst_gifs
+    PRIVATE
+        ${test_data}
+)
+
+set_source_files_properties(${test_data}
+    PROPERTIES
+        HEADER_FILE_ONLY ON
 )
 
 #### Keys ignored in scope 1:.:.:gifs.pro:<TRUE>:
