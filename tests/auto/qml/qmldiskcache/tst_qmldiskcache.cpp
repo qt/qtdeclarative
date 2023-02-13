@@ -528,7 +528,6 @@ void tst_qmldiskcache::recompileAfterChange()
         CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
         QScopedPointer<TypeVersion2> obj(qobject_cast<TypeVersion2*>(component.create()));
         QVERIFY(!obj.isNull());
-        qDebug() << obj->property("x");
         QVERIFY(QFileInfo(testCompiler.cacheFilePath).lastModified() > initialCacheTimeStamp);
     }
 }
@@ -1086,7 +1085,10 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
         QCOMPARE(bp->property("z").toInt(), bp->x);
     }
 
-    // Make it recompile again.
+    // Make it recompile again. If we ever get rid of the metaobject indices in compilation units,
+    // the above test will not test the save/load cache anymore. Therefore, in order to make really
+    // sure that we get a new CU that invalidates the save/load cache, modify the file in place.
+
     e.clearComponentCache();
     {
         QFile file(fileName);
