@@ -1351,7 +1351,7 @@
     This attached property holds the edit delegate. It's instantiated
     when editing begins, and parented to the delegate it edits. It
     supports the same required properties as the
-    \l {\l delegate}{TableView delegate}, including \c index, \c row and \c column.
+    \l {TableView::delegate}{TableView delegate}, including \c index, \c row and \c column.
     Properties of the model, like \c display and \c edit, are also available
     (depending on the \l {QAbstractItemModel::roleNames()}{role names} exposed
     by the model).
