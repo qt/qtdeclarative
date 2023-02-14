@@ -1955,9 +1955,9 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
 }
 
 JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames,
-                     QV4::Compiler::CodegenWarningInterface *interface,
+                     QV4::Compiler::CodegenWarningInterface *iface,
                      bool storeSourceLocations)
-    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/ false, interface,
+    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/ false, iface,
                              storeSourceLocations),
       document(document)
 {

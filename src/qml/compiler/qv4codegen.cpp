@@ -92,7 +92,7 @@ void Codegen::generateThrowException(const QString &type, const QString &text)
 }
 
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
-                 CodegenWarningInterface *interface, bool storeSourceLocations)
+                 CodegenWarningInterface *iface, bool storeSourceLocations)
     : _module(nullptr),
       _returnAddress(-1),
       _context(nullptr),
@@ -101,7 +101,7 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
       _strictMode(strict),
       storeSourceLocations(storeSourceLocations),
       _fileNameIsUrl(false),
-      _interface(interface)
+      _interface(iface)
 {
     jsUnitGenerator->codeGeneratorName = QStringLiteral("moth");
     pushExpr();
