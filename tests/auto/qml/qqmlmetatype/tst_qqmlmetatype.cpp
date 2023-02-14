@@ -51,6 +51,8 @@ private slots:
     void enumsInRecursiveImport();
 
     void revertValueTypeAnimation();
+
+    void clearPropertyCaches();
 };
 
 class TestType : public QObject
@@ -722,6 +724,18 @@ void tst_qqmlmetatype::revertValueTypeAnimation()
     QScopedPointer<QObject> o(c.create());
     QTRY_COMPARE(o->property("letterSpacing").toDouble(), 24.0);
     QCOMPARE(o->property("pointSize").toDouble(), 12.0);
+}
+
+void tst_qqmlmetatype::clearPropertyCaches()
+{
+    qmlClearTypeRegistrations();
+    qmlRegisterType<TestType>("ClearPropertyCaches", 1, 0, "A");
+    QQmlPropertyCache::ConstPtr oldCache = QQmlMetaType::propertyCache(&TestType::staticMetaObject);
+    QVERIFY(oldCache);
+    qmlClearTypeRegistrations();
+    qmlRegisterType<TestType>("ClearPropertyCaches", 1, 0, "B");
+    QQmlPropertyCache::ConstPtr newCache = QQmlMetaType::propertyCache(&TestType::staticMetaObject);
+    QVERIFY(oldCache.data() != newCache.data());
 }
 
 QTEST_MAIN(tst_qqmlmetatype)
