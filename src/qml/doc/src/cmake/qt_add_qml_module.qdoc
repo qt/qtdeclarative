@@ -679,10 +679,6 @@ and deploy all QML modules used by an executable target.
 with \l{QML Type Compiler}{qmltc}. Files with the source property
 \c{QT_QML_SKIP_TYPE_COMPILER} are not compiled to C++.
 
-\c TYPE_COMPILER_NAMESPACE argument defines a namespace, in which the generated
-C++ code resides. By default, no namespace is specified for user projects. The
-code generated from Qt's own sources is put under a QT_NAMESPACE namespace.
-
 \c TYPE_COMPILER_NAMESPACE argument allows to override the namespace in which
 \l{QML Type Compiler}{qmltc} generates code.
 By default, the namespace of the generated code follows the module
