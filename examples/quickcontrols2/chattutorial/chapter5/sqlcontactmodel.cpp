@@ -84,7 +84,7 @@ SqlContactModel::SqlContactModel(QObject *parent) :
     if (!query.exec("SELECT * FROM Contacts"))
         qFatal("Contacts SELECT query failed: %s", qPrintable(query.lastError().text()));
 
-    setQuery(query);
+    setQuery(std::move(query));
     if (lastError().isValid())
         qFatal("Cannot set query on SqlContactModel: %s", qPrintable(lastError().text()));
 }
