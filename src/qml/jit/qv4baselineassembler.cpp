@@ -236,8 +236,7 @@ public:
     void isNullOrUndefined()
     {
         move(AccumulatorRegister, ScratchRegister);
-        move(TrustedImm64(Value::ManagedMask), ScratchRegister2);
-        compare64(Equal, ScratchRegister, ScratchRegister2, AccumulatorRegister);
+        compare64(Equal, ScratchRegister, TrustedImm32(0), AccumulatorRegister);
         Jump isUndef = branch32(NotEqual, TrustedImm32(0), AccumulatorRegister);
 
         // not undefined

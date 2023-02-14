@@ -402,6 +402,7 @@ private slots:
     void importPrecedence();
     void nullIsNull();
     void multiRequired();
+    void isNullOrUndefined();
 
     void objectAndGadgetMethodCallsRejectThisObject();
     void objectAndGadgetMethodCallsAcceptThisObject();
@@ -7766,6 +7767,30 @@ void tst_qqmllanguage::multiRequired()
     QVERIFY(o.isNull());
     QCOMPARE(c.errorString(),
              qPrintable(url.toString() + ":5 Required property description was not initialized\n"));
+}
+
+// QTBUG-111088
+void tst_qqmllanguage::isNullOrUndefined()
+{
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("isNullOrUndefined_interpreter.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVariant result = o.data()->property("result");
+        QVERIFY(result.isValid());
+        QCOMPARE(result.toInt(), 3);
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("isNullOrUndefined_jit.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVariant result = o.data()->property("result");
+        QVERIFY(result.isValid());
+        QCOMPARE(result.toInt(), 150);
+    }
 }
 
 void tst_qqmllanguage::objectAndGadgetMethodCallsRejectThisObject()
