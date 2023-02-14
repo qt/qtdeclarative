@@ -45,6 +45,8 @@ QT_BEGIN_NAMESPACE
         base: "green"
     }
     \endcode
+
+    The \l Palette type exposes color groups for each QML item state.
  */
 
 /*!
@@ -180,8 +182,6 @@ QT_BEGIN_NAMESPACE
 
     Additional signal indicates that the current state of this color group
     has been changed. Usually it means that one of the colors is changed.
-
-    \sa Palette
 */
 
 /*!
