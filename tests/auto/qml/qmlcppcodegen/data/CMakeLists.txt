@@ -136,6 +136,7 @@ set(qml_files
     listPropertyAsModel.qml
     listlength.qml
     math.qml
+    mathMinMax.qml
     mathOperations.qml
     methods.qml
     modulePrefix.qml

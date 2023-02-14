@@ -1435,6 +1435,38 @@ bool QQmlJSCodeGenerator::inlineTranslateMethod(const QString &name, int argc, i
     return false;
 }
 
+static QString maxExpression(int argc)
+{
+    Q_ASSERT_X(argc >= 2, Q_FUNC_INFO, "max() expects at least two arguments.");
+
+    QString expression =
+            u"[&]() { \nauto  tmpMax = (qIsNull(arg2) && qIsNull(arg1) && std::copysign(1.0, arg2) == 1) ? arg2 : ((arg2 > arg1 || std::isnan(arg2)) ? arg2 : arg1);\n"_s;
+    for (int i = 2; i < argc; i++) {
+        expression +=
+                "\ttmpMax = (qIsNull(%1) && qIsNull(tmpMax) && std::copysign(1.0, %1) == 1) ? arg2 : ((%1 > tmpMax || std::isnan(%1)) ? %1 : tmpMax);\n"_L1
+                        .arg("arg"_L1 + QString::number(i + 1));
+    }
+    expression += "return tmpMax;\n}()"_L1;
+
+    return expression;
+}
+
+static QString minExpression(int argc)
+{
+    Q_ASSERT_X(argc >= 2, Q_FUNC_INFO, "min() expects at least two arguments.");
+
+    QString expression =
+            u"[&]() { \nauto  tmpMin = (qIsNull(arg2) && qIsNull(arg1) && std::copysign(1.0, arg2) == -1) ? arg2 : ((arg2 < arg1 || std::isnan(arg2)) ? arg2 : arg1);\n"_s;
+    for (int i = 2; i < argc; i++) {
+        expression +=
+                "tmpMin = (qIsNull(%1) && qIsNull(tmpMin) && std::copysign(1.0, %1) == -1) ? arg2 : ((%1 < tmpMin || std::isnan(%1)) ? %1 : tmpMin);\n"_L1
+                        .arg("arg"_L1 + QString::number(i + 1));
+    }
+    expression += "return tmpMin;\n}()"_L1;
+
+    return expression;
+}
+
 bool QQmlJSCodeGenerator::inlineMathMethod(const QString &name, int argc, int argv)
 {
     addInclude(u"cmath"_s);
@@ -1516,14 +1548,10 @@ bool QQmlJSCodeGenerator::inlineMathMethod(const QString &name, int argc, int ar
         expression = u"arg1 < -1.0 ? %1 : std::log1p(arg1)"_s.arg(qNaN);
     } else if (name == u"log2"_s && argc == 1) {
         expression = u"arg1 < -0.0 ? %1 : std::log2(arg1)"_s.arg(qNaN);
-    } else if (name == u"max"_s && argc == 2) {
-        expression = u"(qIsNull(arg2) && qIsNull(arg1) && std::copysign(1.0, arg2) == 1) "
-                "? arg2 "
-                ": ((arg2 > arg1 || std::isnan(arg2)) ? arg2 : arg1)"_s;
-    } else if (name == u"min"_s && argc == 2) {
-        expression = u"(qIsNull(arg2) && qIsNull(arg1) && std::copysign(1.0, arg2) == -1) "
-                "? arg2 "
-                ": ((arg2 < arg1 || std::isnan(arg2)) ? arg2 : arg1)"_s;
+    } else if (name == u"max"_s && argc >= 2) {
+        expression = maxExpression(argc);
+    } else if (name == u"min"_s && argc >= 2) {
+        expression = minExpression(argc);
     } else if (name == u"pow"_s) {
         expression = u"QQmlPrivate::jsExponentiate(arg1, arg2)"_s;
     } else if (name == u"random"_s && argc == 0) {

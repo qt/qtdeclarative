@@ -169,6 +169,7 @@ private slots:
     void equalityQUrl();
     void undefinedToDouble();
     void variantMapLookup();
+    void mathMinMax();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3279,6 +3280,68 @@ void tst_QmlCppCodegen::variantMapLookup()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("i"), 42);
+}
+
+void tst_QmlCppCodegen::mathMinMax()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mathMinMax.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    // Math.max()
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "2");
+    QTest::ignoreMessage(QtDebugMsg, "9");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0.002");
+    QTest::ignoreMessage(QtDebugMsg, "5.4");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+    QTest::ignoreMessage(QtDebugMsg, "Infinity");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "0.08");
+    QTest::ignoreMessage(QtDebugMsg, "Infinity");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+
+    // Math.min()
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "1");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-2");
+    QTest::ignoreMessage(QtDebugMsg, "-2");
+    QTest::ignoreMessage(QtDebugMsg, "0");
+
+    QTest::ignoreMessage(QtDebugMsg, "0");
+    QTest::ignoreMessage(QtDebugMsg, "-0.001");
+    QTest::ignoreMessage(QtDebugMsg, "0.002");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-1");
+    QTest::ignoreMessage(QtDebugMsg, "-8");
+    QTest::ignoreMessage(QtDebugMsg, "NaN");
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
