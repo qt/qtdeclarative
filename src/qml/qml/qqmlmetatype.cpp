@@ -311,6 +311,7 @@ void QQmlMetaType::clearTypeRegistrations()
     data->urlToNonFileImportType.clear();
     data->metaObjectToType.clear();
     data->undeletableTypes.clear();
+    data->propertyCaches.clear();
 }
 
 int QQmlMetaType::registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &function)
