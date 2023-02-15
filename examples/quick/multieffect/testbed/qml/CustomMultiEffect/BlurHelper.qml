@@ -32,7 +32,7 @@ Item {
 
     BlurItem {
         id: blurredItemSource1
-        property var src: priv.useBlurItem1 ? source : null
+        property Item src: priv.useBlurItem1 ? source : null
         // Size of the first blurred item is by default half of the source.
         // Increase for quality and decrease for performance & more blur.
         readonly property int blurItemSize: 8
@@ -41,26 +41,26 @@ Item {
     }
     BlurItem {
         id: blurredItemSource2
-        property var src: priv.useBlurItem2 ? blurredItemSource1 : null
-        width: blurredItemSource1.width / 2
-        height: blurredItemSource1.height / 2
+        property Item src: priv.useBlurItem2 ? blurredItemSource1 : null
+        width: blurredItemSource1.width * 0.5
+        height: blurredItemSource1.height * 0.5
     }
     BlurItem {
         id: blurredItemSource3
-        property var src: priv.useBlurItem3 ? blurredItemSource2 : null
-        width: blurredItemSource2.width / 2
-        height: blurredItemSource2.height / 2
+        property Item src: priv.useBlurItem3 ? blurredItemSource2 : null
+        width: blurredItemSource2.width * 0.5
+        height: blurredItemSource2.height * 0.5
     }
     BlurItem {
         id: blurredItemSource4
-        property var src: priv.useBlurItem4 ?  blurredItemSource3 : null
-        width: blurredItemSource3.width / 2
-        height: blurredItemSource3.height / 2
+        property Item src: priv.useBlurItem4 ?  blurredItemSource3 : null
+        width: blurredItemSource3.width * 0.5
+        height: blurredItemSource3.height * 0.5
     }
     BlurItem {
         id: blurredItemSource5
-        property var src: priv.useBlurItem5 ? blurredItemSource4 : null
-        width: blurredItemSource4.width / 2
-        height: blurredItemSource4.height / 2
+        property Item src: priv.useBlurItem5 ? blurredItemSource4 : null
+        width: blurredItemSource4.width * 0.5
+        height: blurredItemSource4.height * 0.5
     }
 }

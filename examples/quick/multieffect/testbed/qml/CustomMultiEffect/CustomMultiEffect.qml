@@ -1,6 +1,6 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-// Created with Qt Quick Effect Maker (version 0.42), Fri Feb 3 15:59:56 2023
+// Created with Qt Quick Effect Maker (version 0.43), Thu Feb 16 13:48:55 2023
 
 import QtQuick
 
@@ -8,7 +8,7 @@ Item {
     id: rootItem
 
     // This is the main source for the effect
-    property var source: null
+    property Item source: null
 
     property real contrast: 0
     property real brightness: 0
@@ -62,37 +62,36 @@ Item {
         property real blurMultiplier: rootItem.blurMultiplier
     }
     ShaderEffect {
-        readonly property var iSource: source
+        readonly property alias iSource: rootItem.source
         readonly property vector3d iResolution: Qt.vector3d(width, height, 1.0)
-        readonly property var iSourceBlur1: blurHelper.blurSrc1
-        readonly property var iSourceBlur2: blurHelper.blurSrc2
-        readonly property var iSourceBlur3: blurHelper.blurSrc3
-        readonly property var iSourceBlur4: blurHelper.blurSrc4
-        readonly property var iSourceBlur5: blurHelper.blurSrc5
-        readonly property real contrast: parent.contrast
-        readonly property real brightness: parent.brightness
-        readonly property real saturation: parent.saturation
-        readonly property real colorization: parent.colorization
-        readonly property color colorizationColor: parent.colorizationColor
-        readonly property int blurMax: parent.blurMax
-        readonly property real blur: parent.blur
-        readonly property real shadowBlur: parent.shadowBlur
-        readonly property real shadowOpacity: parent.shadowOpacity
-        readonly property color shadowColor: parent.shadowColor
-        readonly property real shadowScale: parent.shadowScale
-        readonly property real shadowHorizontalOffset: parent.shadowHorizontalOffset
-        readonly property real shadowVerticalOffset: parent.shadowVerticalOffset
-        readonly property var maskSource: parent.maskSource
-        readonly property real maskThresholdMin: parent.maskThresholdMin
-        readonly property real maskSpreadAtMin: parent.maskSpreadAtMin
-        readonly property real maskThresholdMax: parent.maskThresholdMax
-        readonly property real maskSpreadAtMax: parent.maskSpreadAtMax
-        readonly property bool maskInverted: parent.maskInverted
-        readonly property real blurMultiplier: parent.blurMultiplier
+        readonly property alias iSourceBlur1: blurHelper.blurSrc1
+        readonly property alias iSourceBlur2: blurHelper.blurSrc2
+        readonly property alias iSourceBlur3: blurHelper.blurSrc3
+        readonly property alias iSourceBlur4: blurHelper.blurSrc4
+        readonly property alias iSourceBlur5: blurHelper.blurSrc5
+        readonly property alias contrast: rootItem.contrast
+        readonly property alias brightness: rootItem.brightness
+        readonly property alias saturation: rootItem.saturation
+        readonly property alias colorization: rootItem.colorization
+        readonly property alias colorizationColor: rootItem.colorizationColor
+        readonly property alias blurMax: rootItem.blurMax
+        readonly property alias blur: rootItem.blur
+        readonly property alias shadowBlur: rootItem.shadowBlur
+        readonly property alias shadowOpacity: rootItem.shadowOpacity
+        readonly property alias shadowColor: rootItem.shadowColor
+        readonly property alias shadowScale: rootItem.shadowScale
+        readonly property alias shadowHorizontalOffset: rootItem.shadowHorizontalOffset
+        readonly property alias shadowVerticalOffset: rootItem.shadowVerticalOffset
+        readonly property alias maskSource: rootItem.maskSource
+        readonly property alias maskThresholdMin: rootItem.maskThresholdMin
+        readonly property alias maskSpreadAtMin: rootItem.maskSpreadAtMin
+        readonly property alias maskThresholdMax: rootItem.maskThresholdMax
+        readonly property alias maskSpreadAtMax: rootItem.maskSpreadAtMax
+        readonly property alias maskInverted: rootItem.maskInverted
+        readonly property alias blurMultiplier: rootItem.blurMultiplier
 
         vertexShader: 'custommultieffect.vert.qsb'
         fragmentShader: 'custommultieffect.frag.qsb'
-        width: parent.width
-        height: parent.height
+        anchors.fill: parent
     }
 }
