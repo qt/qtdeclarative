@@ -303,7 +303,7 @@ void tst_QQmlPreview::zoom()
 
     for (auto testZoomFactor : {2.0f, 1.5f, 0.5f}) {
         m_client->triggerZoom(testZoomFactor);
-        verifyZoomFactor(m_process, testZoomFactor);
+        verifyZoomFactor(m_process, testZoomFactor * baseZoomFactor);
     }
 
     m_client->triggerZoom(-1.0f);
