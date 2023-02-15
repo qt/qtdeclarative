@@ -157,6 +157,7 @@ set(qml_files
     typePropertyClash.qml
     typedArray.qml
     undefinedResets.qml
+    undefinedToDouble.qml
     unknownAttached.qml
     unknownParameter.qml
     unstoredUndefined.qml

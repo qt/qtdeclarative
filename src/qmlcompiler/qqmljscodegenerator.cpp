@@ -2544,24 +2544,24 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
     const auto jsPrimitiveType = m_typeResolver->jsPrimitiveType();
     const auto boolType = m_typeResolver->boolType();
 
-    auto zeroBoolOrNumeric = [&](const QQmlJSScope::ConstPtr &to) {
+    auto zeroBoolOrInt = [&](const QQmlJSScope::ConstPtr &to) {
         if (m_typeResolver->equals(to, boolType))
             return u"false"_s;
         if (m_typeResolver->equals(to, m_typeResolver->intType()))
             return u"0"_s;
-        if (m_typeResolver->equals(to, m_typeResolver->floatType()))
-            return u"0.0f"_s;
-        if (m_typeResolver->equals(to, m_typeResolver->realType()))
-            return u"0.0"_s;
         return QString();
     };
 
     if (m_typeResolver->equals(from, m_typeResolver->voidType())) {
         if (to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
             return u"static_cast<"_s + to->internalName() + u" *>(nullptr)"_s;
-        const QString zero = zeroBoolOrNumeric(to);
+        const QString zero = zeroBoolOrInt(to);
         if (!zero.isEmpty())
             return zero;
+        if (m_typeResolver->equals(to, m_typeResolver->floatType()))
+            return u"std::numeric_limits<float>::quiet_NaN()"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->realType()))
+            return u"std::numeric_limits<double>::quiet_NaN()"_s;
         if (m_typeResolver->equals(to, m_typeResolver->stringType()))
             return QQmlJSUtils::toLiteral(u"undefined"_s);
         if (m_typeResolver->equals(from, to))
@@ -2579,9 +2579,13 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
             return u"QJSPrimitiveValue(QJSPrimitiveNull())"_s;
         if (m_typeResolver->equals(to, varType))
             return u"QVariant::fromValue<std::nullptr_t>(nullptr)"_s;
-        const QString zero = zeroBoolOrNumeric(to);
+        const QString zero = zeroBoolOrInt(to);
         if (!zero.isEmpty())
             return zero;
+        if (m_typeResolver->equals(to, m_typeResolver->floatType()))
+            return u"0.0f"_s;
+        if (m_typeResolver->equals(to, m_typeResolver->realType()))
+            return u"0.0"_s;
         if (m_typeResolver->equals(to, m_typeResolver->stringType()))
             return QQmlJSUtils::toLiteral(u"null"_s);
         if (m_typeResolver->equals(from, to))
