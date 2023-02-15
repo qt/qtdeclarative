@@ -11,38 +11,44 @@
 
     \section2 Basic Style
 
-    \image qtquickcontrols-basic-thumbnail.png
+    \image qtquickcontrols-basic.png
+
     The \l {Basic Style} is a simple and light-weight all-round style that offers
     the maximum performance for Qt Quick Controls.
 
     \section2 Fusion Style
 
-    \image qtquickcontrols-fusion-thumbnail.png
+    \include style-screenshots.qdocinc {file} {Fusion} {fusion}
+
     The \l {Fusion Style} is a platform-agnostic style that offers a desktop-oriented
     look and feel for Qt Quick Controls.
 
     \section2 Imagine Style
 
-    \image qtquickcontrols-imagine-thumbnail.png
+    \image qtquickcontrols-imagine.png
+
     The \l {Imagine Style} is based on image assets. The style comes with a default
     set of images which can easily be changed by providing a directory
     with images using a predefined naming convention.
 
     \section2 macOS Style
 
-    \image qtquickcontrols-macos-thumbnail.png
+    \include style-screenshots.qdocinc {file} {macOS} {macos}
+
     The \l {macOS Style} is a native-looking style for macOS.
     \note this style is only available for applications running on macOS.
 
-
     \section2 iOS Style
+
+    \include style-screenshots.qdocinc {file} {iOS} {ios}
 
     The \l {iOS Style} is a native-looking style for iOS based on image assets.
     \note this style is only available for applications running on iOS.
 
     \section2 Material Style
 
-    \image qtquickcontrols-material-thumbnail.png
+    \include style-screenshots.qdocinc {file} {Material} {material}
+
     The \l {Material Style} offers an appealing design based on the
     \l {https://www.google.com/design/spec/material-design/introduction.html}
     {Google Material Design Guidelines}, but requires more system resources than
@@ -50,14 +56,16 @@
 
     \section2 Universal Style
 
-    \image qtquickcontrols-universal-thumbnail.png
+    \include style-screenshots.qdocinc {file} {Universal} {universal}
+
     The \l {Universal Style} offers an appealing design based on the
     \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines},
     but requires more system resources than the Basic style.
 
     \section2 Windows Style
 
-    \image qtquickcontrols-windows-thumbnail.png
+    \image qtquickcontrols-windows.png
+
     The \l {Windows Style} is a native-looking style for Windows.
     \note this style is only available for applications running on Windows.
 

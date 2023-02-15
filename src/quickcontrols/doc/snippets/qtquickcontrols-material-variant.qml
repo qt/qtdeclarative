@@ -1,6 +1,16 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
+/*
+    This file is used by tst_snippets to generate qtquickcontrols-material-variant-normal.png:
+
+    SCREENSHOTS=1 ./tst_snippets verify:qtquickcontrols-material-variant
+
+    and qtquickcontrols-material-variant-dense.png:
+
+    SCREENSHOTS=1 QT_QUICK_CONTROLS_MATERIAL_VARIANT=Dense ./tst_snippets verify:qtquickcontrols-material-variant
+*/
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material

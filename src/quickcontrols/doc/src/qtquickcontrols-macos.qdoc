@@ -18,13 +18,7 @@
     \note Be aware that the apperance of this style can change from one minor Qt version to the
     next, to better blend in with native applications on the platform.
 
-    \table
-        \row
-            \li \image qtquickcontrols-macos-light.png
-                \caption The macOS style in light theme
-            \li \image qtquickcontrols-macos-dark.png
-                \caption The macOS style in dark theme
-    \endtable
+    \include style-screenshots.qdocinc {file} {macOS} {macos}
 
     To run an application with the macOS style, see
     \l {Using Styles in Qt Quick Controls}.
