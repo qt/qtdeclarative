@@ -166,6 +166,7 @@ private slots:
     void valueTypeBehavior();
     void invisibleSingleton();
     void dialogButtonBox();
+    void equalityQUrl();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3226,6 +3227,23 @@ void tst_QmlCppCodegen::dialogButtonBox()
 
     QCOMPARE(footer->property("standardButtons").value<QPlatformDialogHelper::StandardButton>(),
              QPlatformDialogHelper::Ok | QPlatformDialogHelper::Cancel);
+}
+
+void tst_QmlCppCodegen::equalityQUrl()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c1(&engine, QUrl(u"qrc:/qt/qml/TestTypes/equalityQUrl.qml"_s));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> object(c1.create());
+    QVERIFY(!object.isNull() && !c1.isError());
+    QVERIFY(object->property("emptyUrlStrict").toBool());
+    QVERIFY(object->property("emptyUrlWeak").toBool());
+    QVERIFY(object->property("sourceUrlStrict").toBool());
+    QVERIFY(object->property("sourceUrlWeak").toBool());
+    QVERIFY(object->property("sourceIsNotEmptyStrict").toBool());
+    QVERIFY(object->property("sourceIsNotEmptyWeak").toBool());
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

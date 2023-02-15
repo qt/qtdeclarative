@@ -2604,6 +2604,8 @@ void QQmlJSCodeGenerator::generateEqualityOperation(int lhs, const QString &func
             return true;
         if (canCompareWithQObject(m_typeResolver, lhsContent, m_state.accumulatorIn()))
             return true;
+        if (canCompareWithQUrl(m_typeResolver, lhsContent, m_state.accumulatorIn()))
+            return true;
         return false;
     };
 

@@ -375,6 +375,10 @@ bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQObject(const QQmlJSTypeResolver
                                                         const QQmlJSRegisterContent &lhsContent,
                                                         const QQmlJSRegisterContent &rhsContent);
 
+bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQUrl(const QQmlJSTypeResolver *typeResolver,
+                                                     const QQmlJSRegisterContent &lhsContent,
+                                                     const QQmlJSRegisterContent &rhsContent);
+
 QT_END_NAMESPACE
 
 #endif // QQMLJSUTILS_P_H
