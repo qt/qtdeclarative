@@ -1502,6 +1502,12 @@ static QVariant toVariant(
     if (metaType == QMetaType::fromType<bool>())
         return QVariant(value.toBoolean());
 
+    if (metaType == QMetaType::fromType<double>())
+        return QVariant(value.toNumber());
+
+    if (metaType == QMetaType::fromType<float>())
+        return QVariant(float(value.toNumber()));
+
     if (metaType == QMetaType::fromType<QJsonValue>())
         return QVariant::fromValue(QV4::JsonObject::toJsonValue(value));
 

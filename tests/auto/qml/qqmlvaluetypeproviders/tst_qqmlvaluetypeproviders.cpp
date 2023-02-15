@@ -253,7 +253,6 @@ void tst_qqmlvaluetypeproviders::structured()
             " with value [object Object]",
         "Could not find any constructor for value type ConstructibleValueType to call"
             " with value QVariant(QJSValue, )",
-        "Could not convert QLocale(English, Latin, Australia) to double for property y",
         "Could not find any constructor for value type ConstructibleValueType to call"
             " with value [object Object]",
         "Could not find any constructor for value type ConstructibleValueType to call"
@@ -292,8 +291,16 @@ void tst_qqmlvaluetypeproviders::structured()
     QCOMPARE(o->property("c3").value<ConstructibleValueType>(), ConstructibleValueType(99));
     QCOMPARE(o->property("c4").value<ConstructibleValueType>(), ConstructibleValueType(0));
 
-    QCOMPARE(o->property("ps").value<QList<QPointF>>(),
-             QList<QPointF>({QPointF(1, 2), QPointF(3, 4), QPointF(55, 0)}));
+    const QList<QPointF> actual = o->property("ps").value<QList<QPointF>>();
+    const QList<QPointF> expected = {
+        QPointF(1, 2), QPointF(3, 4), QPointF(55, std::numeric_limits<double>::quiet_NaN())
+    };
+    QCOMPARE(actual.size(), expected.size());
+    QCOMPARE(actual[0], expected[0]);
+    QCOMPARE(actual[1], expected[1]);
+    QCOMPARE(actual[2].x(), expected[2].x());
+    QVERIFY(std::isnan(actual[2].y()));
+
     QCOMPARE(o->property("ss").value<QList<QSizeF>>(),
              QList<QSizeF>({QSizeF(5, 6), QSizeF(7, 8), QSizeF(-1, 99)}));
     QCOMPARE(o->property("cs").value<QList<ConstructibleValueType>>(),
