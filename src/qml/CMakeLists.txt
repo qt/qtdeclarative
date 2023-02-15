@@ -737,3 +737,14 @@ if(QT_FEATURE_private_tests AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.19" AND Q
     qt_autogen_tools(qt_target_qml_sources_example ENABLE_AUTOGEN_TOOLS moc)
     qt_autogen_tools(qt_target_qml_sources_exampleplugin ENABLE_AUTOGEN_TOOLS moc)
 endif()
+
+# The Qml_sync_headers target doesn't exist when this CMakeLists is executed. So the qmlplugin
+# plugin target misses the dependency on Qml_sync_headers target. This leads to the
+# "unknown IID" issue when moc processes plugin sources, because of missing header aliases.
+# Qml_sync_headers target is created later by the finalizer in the directory scope so we add this
+# dependency manually instead of relying on qt_internal_add_qml_module logic. Same is applicable
+# for QmlMeta target.
+set_property(TARGET qmlplugin APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
+    Qml_sync_headers)
+set_property(TARGET QmlMeta APPEND PROPERTY AUTOGEN_TARGET_DEPENDS
+    Qml_sync_headers)
