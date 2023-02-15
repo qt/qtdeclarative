@@ -1530,6 +1530,12 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
     if (typeHint == QMetaType::Bool)
         return QVariant(value.toBoolean());
 
+    if (typeHint == QMetaType::Double)
+        return QVariant(value.toNumber());
+
+    if (typeHint == QMetaType::Float)
+        return QVariant(float(value.toNumber()));
+
     if (typeHint == QMetaType::QJsonValue)
         return QVariant::fromValue(QV4::JsonObject::toJsonValue(value));
 
