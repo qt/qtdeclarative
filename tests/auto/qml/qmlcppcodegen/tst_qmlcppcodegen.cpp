@@ -164,6 +164,7 @@ private slots:
     void invisibleSingleton();
     void dialogButtonBox();
     void equalityQUrl();
+    void undefinedToDouble();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -2022,8 +2023,19 @@ void tst_QmlCppCodegen::typedArray()
              QList<int>({1, 2, 3, 4}));
     QCOMPARE(qvariant_cast<QList<QDateTime>>(o->property("values4")),
              QList<QDateTime>({date, date, date}));
-    QCOMPARE(qvariant_cast<QList<double>>(o->property("values5")),
-             QList<double>({1, 2, 3.4, 30, 0, 0}));
+    {
+        const QList<double> actual
+                = qvariant_cast<QList<double>>(o->property("values5"));
+        const QList<double> expected
+                = QList<double>({1, 2, 3.4, 30, std::numeric_limits<double>::quiet_NaN(), 0});
+        QCOMPARE(actual.size(), expected.size());
+        for (qsizetype i = 0, end = actual.size(); i != end; ++i) {
+            if (std::isnan(expected[i]))
+                QVERIFY(std::isnan(actual[i]));
+            else
+                QCOMPARE(actual[i], expected[i]);
+        }
+    }
     date = QDateTime::currentDateTime();
     o->setProperty("aDate", date);
     QCOMPARE(qvariant_cast<QList<QDateTime>>(o->property("values4")),
@@ -3187,6 +3199,18 @@ void tst_QmlCppCodegen::equalityQUrl()
     QVERIFY(object->property("sourceUrlWeak").toBool());
     QVERIFY(object->property("sourceIsNotEmptyStrict").toBool());
     QVERIFY(object->property("sourceIsNotEmptyWeak").toBool());
+}
+
+void tst_QmlCppCodegen::undefinedToDouble()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/undefinedToDouble.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    const QVariant d = o->property("d");
+    QCOMPARE(d.metaType(), QMetaType::fromType<double>());
+    QVERIFY(std::isnan(d.toDouble()));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
