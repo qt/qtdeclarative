@@ -92,6 +92,7 @@ set(qml_files
     enumsInOtherObject.qml
     enumsUser.qml
     equalityQObjects.qml
+    equalityQUrl.qml
     equalityVarAndNonStorable.qml
     equalsUndefined.qml
     excessiveParameters.qml

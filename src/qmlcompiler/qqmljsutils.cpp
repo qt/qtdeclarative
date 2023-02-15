@@ -244,4 +244,20 @@ bool canCompareWithQObject(const QQmlJSTypeResolver *typeResolver,
                     || typeResolver->equals(lhsType, typeResolver->nullType())));
 }
 
+/*! \internal
+
+    Utility method that checks if both sides are QUrl type. In future, that might be extended to
+    support comparison with other types i.e QUrl vs string
+*/
+bool canCompareWithQUrl(const QQmlJSTypeResolver *typeResolver,
+                        const QQmlJSRegisterContent &lhsContent,
+                        const QQmlJSRegisterContent &rhsContent)
+{
+    Q_ASSERT(typeResolver);
+    const auto lhsType = typeResolver->containedType(lhsContent);
+    const auto rhsType = typeResolver->containedType(rhsContent);
+    return typeResolver->equals(lhsType, typeResolver->urlType())
+            && typeResolver->equals(rhsType, typeResolver->urlType());
+}
+
 QT_END_NAMESPACE
