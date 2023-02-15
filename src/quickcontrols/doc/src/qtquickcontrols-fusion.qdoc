@@ -11,7 +11,7 @@
     look and feel. It implements the same design language as the
     \l {Qt Widget Gallery}{Fusion style for Qt Widgets}.
 
-    \image qtquickcontrols-fusion.png
+    \include style-screenshots.qdocinc {file} {Fusion} {fusion}
 
     To run an application with the Fusion style, see
     \l {Using Styles in Qt Quick Controls}.
