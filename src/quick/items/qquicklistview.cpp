@@ -865,6 +865,12 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
 
         FxListItemSG *firstItem = static_cast<FxListItemSG *>(visibleItems.constFirst());
         bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
+
+        /* Set position of first item in list view when populate transition is configured, as it doesn't set
+           while adding visible item (addVisibleItem()) to the view */
+        if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true))
+            resetFirstItemPosition(isContentFlowReversed() ? -firstItem->position()-firstItem->size() : firstItem->position());
+
         firstVisibleItemPosition = firstItem->position();
         qreal sum = firstItem->size();
         qreal pos = firstItem->position() + firstItem->size() + spacing;
