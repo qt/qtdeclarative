@@ -128,6 +128,7 @@ class TypeAnnotation;
 
 // ui elements
 class UiProgram;
+class UiPragmaValueList;
 class UiPragma;
 class UiImport;
 class UiPublicMember;

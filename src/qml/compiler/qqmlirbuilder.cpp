@@ -767,10 +767,10 @@ struct PragmaParser
 
         pragma->type = type();
 
-        if (!assign(pragma, node->value)) {
+        if (QQmlJS::AST::UiPragmaValueList *bad = assign(pragma, node->values)) {
             builder->recordError(
                         node->pragmaToken, QCoreApplication::translate(
-                            "QQmlParser", "Unknown %1 '%2' in pragma").arg(name(), node->value));
+                            "QQmlParser", "Unknown %1 '%2' in pragma").arg(name(), bad->value));
             return false;
         }
 
@@ -795,63 +795,90 @@ private:
         Q_UNREACHABLE_RETURN(Pragma::PragmaType(-1));
     }
 
-    static bool assign(Pragma *pragma, QStringView value)
+    template<typename F>
+    static QQmlJS::AST::UiPragmaValueList *iterateValues(
+            QQmlJS::AST::UiPragmaValueList *input, F &&process)
+    {
+        for (QQmlJS::AST::UiPragmaValueList *i = input; i; i = i->next) {
+            if (!process(i->value))
+                return i;
+        }
+        return nullptr;
+    }
+
+    static QQmlJS::AST::UiPragmaValueList *assign(
+            Pragma *pragma, QQmlJS::AST::UiPragmaValueList *values)
     {
         // We could use QMetaEnum here to make the code more compact,
         // but it's probably more expensive.
 
         if constexpr (std::is_same_v<Argument, Pragma::ComponentBehaviorValue>) {
-            if (value == "Unbound"_L1) {
-                pragma->componentBehavior = Pragma::Unbound;
-                return true;
-            }
-            if (value == "Bound"_L1) {
-                pragma->componentBehavior = Pragma::Bound;
-                return true;
-            }
+            return iterateValues(values, [pragma](QStringView value) {
+                if (value == "Unbound"_L1) {
+                    pragma->componentBehavior = Pragma::Unbound;
+                    return true;
+                }
+                if (value == "Bound"_L1) {
+                    pragma->componentBehavior = Pragma::Bound;
+                    return true;
+                }
+                return false;
+            });
         } else if constexpr (std::is_same_v<Argument, Pragma::ListPropertyAssignBehaviorValue>) {
-            if (value == "Append"_L1) {
-                pragma->listPropertyAssignBehavior = Pragma::Append;
-                return true;
-            }
-            if (value == "Replace"_L1) {
-                pragma->listPropertyAssignBehavior = Pragma::Replace;
-                return true;
-            }
-            if (value == "ReplaceIfNotDefault"_L1) {
-                pragma->listPropertyAssignBehavior = Pragma::ReplaceIfNotDefault;
-                return true;
-            }
+            return iterateValues(values, [pragma](QStringView value) {
+                if (value == "Append"_L1) {
+                    pragma->listPropertyAssignBehavior = Pragma::Append;
+                    return true;
+                }
+                if (value == "Replace"_L1) {
+                    pragma->listPropertyAssignBehavior = Pragma::Replace;
+                    return true;
+                }
+                if (value == "ReplaceIfNotDefault"_L1) {
+                    pragma->listPropertyAssignBehavior = Pragma::ReplaceIfNotDefault;
+                    return true;
+                }
+                return false;
+            });
         } else if constexpr (std::is_same_v<Argument, Pragma::FunctionSignatureBehaviorValue>) {
-            if (value == "Ignored"_L1) {
-                pragma->functionSignatureBehavior = Pragma::Ignored;
-                return true;
-            }
-            if (value == "Enforced"_L1) {
-                pragma->functionSignatureBehavior = Pragma::Enforced;
-                return true;
-            }
+            return iterateValues(values, [pragma](QStringView value) {
+                if (value == "Ignored"_L1) {
+                    pragma->functionSignatureBehavior = Pragma::Ignored;
+                    return true;
+                }
+                if (value == "Enforced"_L1) {
+                    pragma->functionSignatureBehavior = Pragma::Enforced;
+                    return true;
+                }
+                return false;
+            });
         } else if constexpr (std::is_same_v<Argument, Pragma::NativeMethodBehaviorValue>) {
-            if (value == "AcceptThisObject"_L1) {
-                pragma->nativeMethodBehavior = Pragma::AcceptThisObject;
-                return true;
-            }
-            if (value == "RejectThisObject"_L1) {
-                pragma->nativeMethodBehavior = Pragma::RejectThisObject;
-                return true;
-            }
+            return iterateValues(values, [pragma](QStringView value) {
+                if (value == "AcceptThisObject"_L1) {
+                    pragma->nativeMethodBehavior = Pragma::AcceptThisObject;
+                    return true;
+                }
+                if (value == "RejectThisObject"_L1) {
+                    pragma->nativeMethodBehavior = Pragma::RejectThisObject;
+                    return true;
+                }
+                return false;
+            });
         } else if constexpr (std::is_same_v<Argument, Pragma::ValueTypeBehaviorValue>) {
-            if (value == "Reference"_L1) {
-                pragma->valueTypeBehavior = Pragma::Reference;
-                return true;
-            }
-            if (value == "Copy"_L1) {
-                pragma->valueTypeBehavior = Pragma::Copy;
-                return true;
-            }
+            return iterateValues(values, [pragma](QStringView value) {
+                if (value == "Reference"_L1) {
+                    pragma->valueTypeBehavior = Pragma::Reference;
+                    return true;
+                }
+                if (value == "Copy"_L1) {
+                    pragma->valueTypeBehavior = Pragma::Copy;
+                    return true;
+                }
+                return false;
+            });
         }
 
-        return false;
+        Q_UNREACHABLE_RETURN(nullptr);
     }
 
     static bool isUnique(IRBuilder *builder)

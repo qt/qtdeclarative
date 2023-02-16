@@ -905,6 +905,11 @@ bool Codegen::visit(UiHeaderItemList *)
     Q_UNREACHABLE_RETURN(false);
 }
 
+bool Codegen::visit(UiPragmaValueList *)
+{
+    Q_UNREACHABLE_RETURN(false);
+}
+
 bool Codegen::visit(UiPragma *)
 {
     Q_UNREACHABLE_RETURN(false);

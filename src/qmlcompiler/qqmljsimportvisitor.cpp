@@ -2233,6 +2233,21 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     return true;
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+template<typename F>
+void handlePragmaValues(QQmlJS::AST::UiPragma *pragma, F &&assign)
+{
+    for (const QQmlJS::AST::UiPragmaValueList *v = pragma->values; v; v = v->next)
+        assign(v->value);
+}
+#else
+template<typename F>
+void handlePragmaValues(QQmlJS::AST::UiPragma *pragma, F &&assign)
+{
+    assign(pragma->value);
+}
+#endif
+
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
 {
     if (pragma->name == u"Strict"_s) {
@@ -2248,37 +2263,41 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
     } else if (pragma->name == u"Singleton") {
         m_rootIsSingleton = true;
     } else if (pragma->name == u"ComponentBehavior") {
-        if (pragma->value == u"Bound") {
-            m_scopesById.setComponentsAreBound(true);
-        } else if (pragma->value == u"Unbound") {
-            m_scopesById.setComponentsAreBound(false);
-        } else {
-            m_logger->log(
-                    u"Unkonwn argument \"%s\" to pragma ComponentBehavior"_s.arg(pragma->value),
-                    qmlSyntax, pragma->firstSourceLocation());
-        }
+        handlePragmaValues(pragma, [this, pragma](QStringView value) {
+            if (value == u"Bound") {
+                m_scopesById.setComponentsAreBound(true);
+            } else if (value == u"Unbound") {
+                m_scopesById.setComponentsAreBound(false);
+            } else {
+                m_logger->log(
+                        u"Unkonwn argument \"%s\" to pragma ComponentBehavior"_s.arg(value),
+                        qmlSyntax, pragma->firstSourceLocation());
+            }
+        });
     } else if (pragma->name == u"FunctionSignatureBehavior") {
-        if (pragma->value == u"Enforced") {
-            m_scopesById.setSignaturesAreEnforced(true);
-        } else if (pragma->value == u"Ignored") {
-            m_scopesById.setSignaturesAreEnforced(false);
-        } else {
-            m_logger->log(
-                    u"Unkonwn argument \"%s\" to pragma FunctionSignatureBehavior"_s
-                        .arg(pragma->value),
-                    qmlSyntax, pragma->firstSourceLocation());
-        }
+        handlePragmaValues(pragma, [this, pragma](QStringView value) {
+            if (value == u"Enforced") {
+                m_scopesById.setSignaturesAreEnforced(true);
+            } else if (value == u"Ignored") {
+                m_scopesById.setSignaturesAreEnforced(false);
+            } else {
+                m_logger->log(
+                        u"Unkonwn argument \"%s\" to pragma FunctionSignatureBehavior"_s.arg(value),
+                        qmlSyntax, pragma->firstSourceLocation());
+            }
+        });
     } else if (pragma->name == u"ValueTypeBehavior") {
-        if (pragma->value == u"Copy") {
-            m_scopesById.setValueTypesAreCopied(true);
-        } else if (pragma->value == u"Reference") {
-            m_scopesById.setValueTypesAreCopied(false);
-        } else {
-            m_logger->log(
-                    u"Unkonwn argument \"%s\" to pragma ValueTypeBehavior"_s
-                        .arg(pragma->value),
-                    qmlSyntax, pragma->firstSourceLocation());
-        }
+        handlePragmaValues(pragma, [this, pragma](QStringView value) {
+            if (value == u"Copy") {
+                m_scopesById.setValueTypesAreCopied(true);
+            } else if (value == u"Reference") {
+                m_scopesById.setValueTypesAreCopied(false);
+            } else {
+                m_logger->log(
+                        u"Unkonwn argument \"%s\" to pragma ValueTypeBehavior"_s.arg(value),
+                        qmlSyntax, pragma->firstSourceLocation());
+            }
+        });
     }
 
     return true;

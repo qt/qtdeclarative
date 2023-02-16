@@ -92,7 +92,14 @@ protected:
         }
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
     // we are not supposed to handle the ui
+    bool visit(UiPragmaValueList *) override
+    {
+        Q_ASSERT(false);
+        return false;
+    }
+#endif
     bool visit(UiPragma *) override
     {
         Q_ASSERT(false);
@@ -1059,6 +1066,9 @@ protected:
     void endVisit(UiProgram *) override { }
     void endVisit(UiImport *) override { }
     void endVisit(UiHeaderItemList *) override { }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    void endVisit(UiPragmaValueList *) override { }
+#endif
     void endVisit(UiPragma *) override { }
     void endVisit(UiPublicMember *) override { }
     void endVisit(UiSourceElement *) override { }

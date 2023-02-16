@@ -60,6 +60,7 @@ public:
     // Ui
     virtual bool visit(UiProgram *) = 0;
     virtual bool visit(UiHeaderItemList *) = 0;
+    virtual bool visit(UiPragmaValueList *) = 0;
     virtual bool visit(UiPragma *) = 0;
     virtual bool visit(UiImport *) = 0;
     virtual bool visit(UiPublicMember *) = 0;
@@ -84,6 +85,7 @@ public:
     virtual void endVisit(UiProgram *) = 0;
     virtual void endVisit(UiImport *) = 0;
     virtual void endVisit(UiHeaderItemList *) = 0;
+    virtual void endVisit(UiPragmaValueList *) = 0;
     virtual void endVisit(UiPragma *) = 0;
     virtual void endVisit(UiPublicMember *) = 0;
     virtual void endVisit(UiSourceElement *) = 0;
@@ -404,6 +406,7 @@ public:
     // Ui
     bool visit(UiProgram *) override { return true; }
     bool visit(UiHeaderItemList *) override { return true; }
+    bool visit(UiPragmaValueList *) override { return true; }
     bool visit(UiPragma *) override { return true; }
     bool visit(UiImport *) override { return true; }
     bool visit(UiPublicMember *) override { return true; }
@@ -428,6 +431,7 @@ public:
     void endVisit(UiProgram *) override {}
     void endVisit(UiImport *) override {}
     void endVisit(UiHeaderItemList *) override {}
+    void endVisit(UiPragmaValueList *) override {}
     void endVisit(UiPragma *) override {}
     void endVisit(UiPublicMember *) override {}
     void endVisit(UiSourceElement *) override {}

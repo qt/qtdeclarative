@@ -132,6 +132,14 @@ public:
     bool visit(UiHeaderItemList *) override { start(u"UiHeaderItemList"); return true; }
     void endVisit(AST::UiHeaderItemList *) override { stop(u"UiHeaderItemList"); }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    bool visit(UiPragmaValueList *el) override {
+        start(QLatin1String("UiPragmaValueList value=%1").arg(el->value));
+        return true;
+    }
+    void endVisit(AST::UiPragmaValueList *) override { stop(u"UiPragmaValueList"); }
+#endif
+
     bool visit(UiPragma *el) override {
         start(QLatin1String("UiPragma name=%1 pragmaToken=%2%3")
                       .arg(quotedString(el->name), loc(el->pragmaToken),

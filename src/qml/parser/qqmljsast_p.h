@@ -222,6 +222,7 @@ public:
         Kind_UiObjectInitializer,
         Kind_UiObjectMemberList,
         Kind_UiArrayMemberList,
+        Kind_UiPragmaValueList,
         Kind_UiPragma,
         Kind_UiProgram,
         Kind_UiParameterList,
@@ -3074,13 +3075,53 @@ public:
     UiObjectMember *member;
 };
 
+class QML_PARSER_EXPORT UiPragmaValueList: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiPragmaValueList)
+
+    UiPragmaValueList(QStringView value)
+        : value(value)
+        , next(this)
+    {
+        kind = K;
+    }
+
+    UiPragmaValueList(UiPragmaValueList *previous, QStringView value)
+        : value(value)
+    {
+        kind = K;
+        next = previous->next;
+        previous->next = this;
+    }
+
+    void accept0(BaseVisitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return location; }
+
+    SourceLocation lastSourceLocation() const override
+    { return lastListElement(this)->location; }
+
+    UiPragmaValueList *finish()
+    {
+        UiPragmaValueList *head = next;
+        next = nullptr;
+        return head;
+    }
+
+    QStringView value;
+    UiPragmaValueList *next;
+    SourceLocation location;
+};
+
 class QML_PARSER_EXPORT UiPragma: public Node
 {
 public:
     QQMLJS_DECLARE_AST_NODE(UiPragma)
 
-    UiPragma(QStringView name, QStringView value = {})
-        : name(name), value(value)
+    UiPragma(QStringView name, UiPragmaValueList *values = nullptr)
+        : name(name), values(values)
     { kind = K; }
 
     void accept0(BaseVisitor *visitor) override;
@@ -3093,7 +3134,7 @@ public:
 
 // attributes
     QStringView name;
-    QStringView value;
+    UiPragmaValueList *values;
     SourceLocation pragmaToken;
     SourceLocation semicolonToken;
 };

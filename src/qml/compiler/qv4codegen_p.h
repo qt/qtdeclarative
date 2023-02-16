@@ -595,6 +595,7 @@ protected:
     bool visit(QQmlJS::AST::UiArrayMemberList *ast) override;
     bool visit(QQmlJS::AST::UiImport *ast) override;
     bool visit(QQmlJS::AST::UiHeaderItemList *ast) override;
+    bool visit(QQmlJS::AST::UiPragmaValueList *ast) override;
     bool visit(QQmlJS::AST::UiPragma *ast) override;
     bool visit(QQmlJS::AST::UiObjectInitializer *ast) override;
     bool visit(QQmlJS::AST::UiObjectMemberList *ast) override;

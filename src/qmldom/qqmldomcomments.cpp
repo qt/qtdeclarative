@@ -331,6 +331,9 @@ QSet<int> VisitAll::uiKinds()
                            AST::Node::Kind_UiArrayBinding,     AST::Node::Kind_UiImport,
                            AST::Node::Kind_UiObjectBinding,    AST::Node::Kind_UiObjectDefinition,
                            AST::Node::Kind_UiInlineComponent,  AST::Node::Kind_UiObjectInitializer,
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+                           AST::Node::Kind_UiPragmaValueList,
+#endif
                            AST::Node::Kind_UiPragma,           AST::Node::Kind_UiProgram,
                            AST::Node::Kind_UiPublicMember,     AST::Node::Kind_UiQualifiedId,
                            AST::Node::Kind_UiScriptBinding,    AST::Node::Kind_UiSourceElement,
