@@ -12,7 +12,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/quickwidgets/quickwidget")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickWidgets Widgets)
 
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(quickwidget
     WIN32
