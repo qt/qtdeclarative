@@ -524,7 +524,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
             emit updated();
             return;
         case Qt::ZoomNativeGesture:
-            setActiveScale(1 + gesture->value());
+            setActiveScale(m_scaleAxis.activeValue() * (1 + gesture->value()));
             break;
         case Qt::RotateNativeGesture:
             setActiveRotation(m_rotationAxis.activeValue() + gesture->value());
