@@ -34,6 +34,8 @@ private slots:
     void scaleThreeFingers();
     void scaleNativeGesture_data();
     void scaleNativeGesture();
+    void cumulativeNativeGestures_data();
+    void cumulativeNativeGestures();
     void pan();
     void dragAxesEnabled_data();
     void dragAxesEnabled();
@@ -548,6 +550,103 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     QCOMPARE(pinchHandler->persistentScale(), 1);
     QCOMPARE(pinchHandler->activeScale(), 1);
     QCOMPARE(pinchHandler->scaleAxis()->activeValue(), 1);
+}
+
+void tst_QQuickPinchHandler::cumulativeNativeGestures_data()
+{
+    QTest::addColumn<const QPointingDevice*>("device");
+    QTest::addColumn<Qt::NativeGestureType>("gesture");
+    QTest::addColumn<qreal>("value");
+
+    const auto *touchpadDevice = touchpad.get();
+    const auto *mouse = QPointingDevice::primaryPointingDevice();
+
+    QTest::newRow("touchpad: rotate") << touchpadDevice << Qt::RotateNativeGesture << 5.0;
+    QTest::newRow("touchpad: scale") << touchpadDevice << Qt::ZoomNativeGesture << 0.1;
+
+    if (mouse->type() == QInputDevice::DeviceType::Mouse) {
+        QTest::newRow("mouse: rotate") << mouse << Qt::RotateNativeGesture << 5.0;
+        QTest::newRow("mouse: scale") << mouse << Qt::ZoomNativeGesture << 0.1;
+    } else {
+        qCWarning(lcPointerTests) << "skipping mouse tests: primary device is not a mouse" << mouse;
+    }
+}
+
+void tst_QQuickPinchHandler::cumulativeNativeGestures()
+{
+    QFETCH(const QPointingDevice*, device);
+    QFETCH(Qt::NativeGestureType, gesture);
+    QFETCH(qreal, value);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pinchproperties.qml")));
+    QVERIFY(window.rootObject() != nullptr);
+    qApp->processEvents();
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
+    QVERIFY(root != nullptr);
+    QQuickPinchHandler *pinchHandler = root->findChild<QQuickPinchHandler*>("pinchHandler");
+    QVERIFY(pinchHandler != nullptr);
+    QQuickItem *target = root->findChild<QQuickItem*>("blackrect");
+    QVERIFY(target != nullptr);
+
+    ulong ts = 1;
+    qreal expectedScale = 1;
+    qreal expectedRotation = 0;
+    QPointF pinchPos(75, 75);
+    QWindowSystemInterface::handleGestureEvent(&window, ts++, device,
+                                               Qt::BeginNativeGesture, pinchPos, pinchPos);
+    for (int i = 1; i <= 4; ++i) {
+        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+        QWindowSystemInterface::handleGestureEventWithRealValue(&window, ts++, device,
+                                                                gesture, value, pinchPos, pinchPos);
+        qApp->processEvents();
+        switch (gesture) {
+        case Qt::ZoomNativeGesture:
+            expectedScale = qBound(qreal(0.5), qPow(1 + value, i), qreal(4));
+            break;
+        case Qt::RotateNativeGesture:
+            expectedRotation = qBound(qreal(0), value * i, qreal(90));
+            break;
+        default:
+            break; // PinchHandler doesn't react to the others
+        }
+
+        qCDebug(lcPointerTests) << gesture << "with value" << value
+                                << ": scale" << target->scale() << "expected" << expectedScale
+                                << ": rotation" << target->rotation() << "expected" << expectedRotation;
+        QCOMPARE(target->scale(), expectedScale);
+        QCOMPARE(target->rotation(), expectedRotation);
+        QCOMPARE(pinchHandler->persistentScale(), expectedScale);
+        QCOMPARE(pinchHandler->activeScale(), expectedScale);
+        QCOMPARE(pinchHandler->scaleAxis()->persistentValue(), expectedScale);
+        QCOMPARE(pinchHandler->scaleAxis()->activeValue(), expectedScale);
+        QCOMPARE(pinchHandler->persistentRotation(), expectedRotation);
+        QCOMPARE(pinchHandler->activeRotation(), expectedRotation);
+        QCOMPARE(pinchHandler->rotationAxis()->persistentValue(), expectedRotation);
+        QCOMPARE(pinchHandler->rotationAxis()->activeValue(), expectedRotation);
+        QCOMPARE(pinchHandler->activeTranslation(), QPointF());
+    }
+    QCOMPARE(pinchHandler->active(), true);
+    qCDebug(lcPointerTests) << "centroid: local" << pinchHandler->centroid().position()
+                            << "scene" << pinchHandler->centroid().scenePosition();
+    QCOMPARE(pinchHandler->persistentScale(), expectedScale);
+    QCOMPARE(pinchHandler->activeScale(), expectedScale);
+    QCOMPARE(pinchHandler->scaleAxis()->activeValue(), expectedScale);
+    QWindowSystemInterface::handleGestureEvent(&window, ts++, device,
+                                               Qt::EndNativeGesture, pinchPos, pinchPos);
+    QTRY_COMPARE(pinchHandler->active(), false);
+    QCOMPARE(target->scale(), expectedScale);
+    QCOMPARE(target->rotation(), expectedRotation);
+    QCOMPARE(pinchHandler->persistentScale(), expectedScale);
+    QCOMPARE(pinchHandler->activeScale(), 1);
+    QCOMPARE(pinchHandler->scaleAxis()->persistentValue(), expectedScale);
+    QCOMPARE(pinchHandler->scaleAxis()->activeValue(), 1);
+    QCOMPARE(pinchHandler->persistentRotation(), expectedRotation);
+    QCOMPARE(pinchHandler->activeRotation(), 0);
+    QCOMPARE(pinchHandler->rotationAxis()->persistentValue(), expectedRotation);
+    QCOMPARE(pinchHandler->rotationAxis()->activeValue(), 0);
+    QCOMPARE(pinchHandler->activeTranslation(), QPointF());
 }
 
 void tst_QQuickPinchHandler::pan()
