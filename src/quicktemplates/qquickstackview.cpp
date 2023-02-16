@@ -551,13 +551,13 @@ void QQuickStackView::push(QQmlV4Function *args)
     QStringList errors;
     QList<QQuickStackElement *> elements = d->parseElements(0, args, &errors);
     // Remove any items that are already in the stack, as they can't be in two places at once.
-    for (int i = 0; i < elements.size(); ) {
-        QQuickStackElement *element = elements.at(i);
-        if (element->item && d->findElement(element->item))
-            elements.removeAt(i);
-        else
-            ++i;
-    }
+    // not using erase_if, as we have to delete the elements first
+    auto removeIt = std::remove_if(elements.begin(), elements.end(), [&](QQuickStackElement *element) {
+        return element->item && d->findElement(element->item);
+    });
+    for (auto it = removeIt, end = elements.end(); it != end; ++it)
+        delete *it;
+    elements.erase(removeIt, elements.end());
 
     if (!errors.isEmpty() || elements.isEmpty()) {
         if (!errors.isEmpty()) {
