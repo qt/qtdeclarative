@@ -67,4 +67,13 @@ the \c QML_ELEMENT macro).
 
 The effect is equivalent to using \c QML_FOREIGN with custom structs in the QML library to expose
 the types.
+
+\note In order to implement custom behavior, such as exposing an existing
+singleton instance with its own life cycle to QML, you should add custom types
+to your QML library (mylib_declarative in the above example). In turn, you
+should omit the \l QML_ELEMENT and similar macros from the original C++ classes
+so that qt_generate_foreign_qml_types() does not generate more QML integration
+structs for them. The QML macros, as well as any singleton factory functions,
+can be added to the structs that contain the \l QML_FOREIGN.
+
 */
