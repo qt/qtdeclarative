@@ -384,4 +384,44 @@ that use value types or sequences when generating C++ code. Those functions are
 then left to be interpreted or JIT-compiled with the default behavior of the
 interpreter and JIT.
 
+In addition, you can specify \c{Addressable} to refer to value types in all
+places. This allows a JavaScript value to be explicitly coerced to a specific,
+named, value type. This is done using the \c as operator, like you would do
+with object types. Furthermore, you can also check for value types using the
+\c instanceof operator:
+
+\qml
+pragma ValueTypeBehavior: Addressable
+import QtQml
+
+QtObject {
+    property var a
+    property real b: (a as rect).x
+    property bool c: a instanceof rect
+
+    property var rect // inaccessible. "rect" is a type name.
+}
+\endqml
+
+If the type does not match, casting returns \c undefined. \c instanceof
+only checks for inheritance, not for all possible type coercions. So, for
+example, a \l{QRect} is not a \c rect value type since \c rect is \l{QRectF}
+in C++, and therefore not related by inheritance. With \c as you can cast
+to any type compatible via coercion.
+
+Since \c rect in the above example is now a type name, it will shadow any
+properties called \c{rect}.
+
+Explicitly casting to the desired type helps tooling. It can allow the
+\l{Qt Quick Compiler} generate efficient code where it otherwise would not be
+able to. You can use \l{qmllint} to find such occurrences.
+
+There is also a \c{Inaddressable} value you can use to explicitly specify the
+default behavior. The pragma values can be combined as comma-separated list:
+
+\qml
+pragma ValueTypeBehavior: Copy, Addressable
+\endqml
+
+\sa {Type annotations and assertions}
 */

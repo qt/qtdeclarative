@@ -365,7 +365,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
     Q_UNREACHABLE_RETURN({});
 }
 
-QQmlJSRegisterContent QQmlJSTypeResolver::referenceTypeForName(
+QQmlJSRegisterContent QQmlJSTypeResolver::registerContentForName(
         const QString &name, const QQmlJSScope::ConstPtr &scopeType,
         bool hasObjectModulePrefix) const
 {
@@ -415,7 +415,11 @@ QQmlJSRegisterContent QQmlJSTypeResolver::referenceTypeForName(
                                              QQmlJSRegisterContent::MetaType, type);
     case QQmlJSScope::AccessSemantics::Sequence:
     case QQmlJSScope::AccessSemantics::Value:
-        // This is not actually a type reference. You cannot get the metaobject
+        if (canAddressValueTypes()) {
+            return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
+                                                 QQmlJSRegisterContent::MetaType, type);
+        }
+        // Else this is not actually a type reference. You cannot get the metaobject
         // of a value type in QML and sequences don't even have metaobjects.
         break;
     }
@@ -642,6 +646,49 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     return varType();
 }
 
+bool QQmlJSTypeResolver::canHold(
+        const QQmlJSScope::ConstPtr &container, const QQmlJSScope::ConstPtr &contained) const
+{
+    if (equals(container, contained)
+            || equals(container, m_varType)
+            || equals(container, m_jsValueType)) {
+        return true;
+    }
+
+    if (equals(container, m_jsPrimitiveType))
+        return isPrimitive(contained);
+
+    if (equals(container, m_variantListType))
+        return contained->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
+
+    if (equals(container, m_qObjectListType) || equals(container, m_listPropertyType)) {
+        if (contained->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence)
+            return false;
+        if (QQmlJSScope::ConstPtr value = contained->valueType())
+            return value->isReferenceType();
+        return false;
+    }
+
+    if (QQmlJSUtils::searchBaseAndExtensionTypes(
+                container, [&](const QQmlJSScope::ConstPtr &base) {
+        return equals(base, contained);
+    })) {
+        return true;
+    }
+
+    if (container->isReferenceType()) {
+        if (QQmlJSUtils::searchBaseAndExtensionTypes(
+                    contained, [&](const QQmlJSScope::ConstPtr &base) {
+            return equals(base, container);
+        })) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool QQmlJSTypeResolver::canHoldUndefined(const QQmlJSRegisterContent &content) const
 {
     const auto canBeUndefined = [this](const QQmlJSScope::ConstPtr &type) {
@@ -857,7 +904,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         }
     }
 
-    QQmlJSRegisterContent result = referenceTypeForName(name);
+    QQmlJSRegisterContent result = registerContentForName(name);
+
     if (result.isValid())
         return result;
 
@@ -1165,13 +1213,31 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
             return {};
         }
 
-        return referenceTypeForName(
+        return registerContentForName(
                     name, type.scopeType(),
                     type.variant() == QQmlJSRegisterContent::ObjectModulePrefix);
     }
     if (type.isConversion()) {
-        const auto result = memberType(type.conversionResult(), name);
-        return result.isValid() ? result : memberEnumType(type.scopeType(), name);
+        if (const auto result = memberType(type.conversionResult(), name); result.isValid())
+            return result;
+        if (const auto result = memberEnumType(type.scopeType(), name); result.isValid())
+            return result;
+
+        // If the conversion consists of only undefined and one actual type,
+        // we can produce the members of that one type.
+        // If the value is then actually undefined, the result is an exception.
+
+        auto origins = type.conversionOrigins();
+        const auto begin = origins.begin();
+        const auto end = std::remove_if(begin, origins.end(),
+                       [this](const QQmlJSScope::ConstPtr &origin) {
+            return equals(origin, m_voidType);
+        });
+
+        // If the conversion cannot hold the original type, it loses information.
+        return (end - begin == 1 && canHold(type.conversionResult(), *begin))
+                ? memberType(*begin, name)
+                : QQmlJSRegisterContent();
     }
 
     Q_UNREACHABLE_RETURN({});

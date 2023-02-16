@@ -148,6 +148,7 @@ public:
     const QQmlJSScopesById &objectsById() const { return m_objectsById; }
     bool canCallJSFunctions() const { return m_objectsById.signaturesAreEnforced(); }
     bool canUseValueTypes() const { return m_objectsById.valueTypesAreCopied(); }
+    bool canAddressValueTypes() const { return m_objectsById.valueTypesAreAddressable(); }
 
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
     {
@@ -165,6 +166,9 @@ public:
     bool canHoldUndefined(const QQmlJSRegisterContent &content) const;
     bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
 
+    bool canHold(const QQmlJSScope::ConstPtr &container,
+                 const QQmlJSScope::ConstPtr &contained) const;
+
 protected:
 
     QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;
@@ -180,7 +184,7 @@ protected:
             const QQmlJSRegisterContent &origin,
             QQmlJSScope::ConstPtr (QQmlJSTypeResolver::*op)(const QQmlJSScope::ConstPtr &) const) const;
 
-    QQmlJSRegisterContent referenceTypeForName(
+    QQmlJSRegisterContent registerContentForName(
             const QString &name,
             const QQmlJSScope::ConstPtr &scopeType = QQmlJSScope::ConstPtr(),
             bool hasObjectModuelPrefix = false) const;

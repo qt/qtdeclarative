@@ -87,6 +87,13 @@ QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
     return QString();
 }
 
+QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
+{
+    return m_typeResolver->equals(m_typeResolver->genericType(type), type)
+            ? metaTypeFromType(type)
+            : metaTypeFromName(type);
+}
+
 QQmlJSAotFunction QQmlJSCodeGenerator::run(
         const Function *function, const InstructionAnnotations *annotations,
         QQmlJS::DiagnosticMessage *error)
@@ -948,6 +955,59 @@ void QQmlJSCodeGenerator::rejectIfNonQObjectOut(const QString &error)
     }
 }
 
+bool QQmlJSCodeGenerator::generateContentPointerCheck(
+        const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+        const QString &variable, const QString &errorMessage)
+{
+    const QQmlJSScope::ConstPtr scope = required;
+    const QQmlJSScope::ConstPtr input = m_typeResolver->containedType(actual);
+    if (QQmlJSUtils::searchBaseAndExtensionTypes(input,
+            [&](const QQmlJSScope::ConstPtr &base) {
+                return m_typeResolver->equals(base, scope);
+            })) {
+        return false;
+    }
+
+    if (!m_typeResolver->canHold(input, scope)) {
+        reject(u"lookup of members of %1 in %2"_s.arg(
+                   scope->internalName(), input->internalName()));
+    }
+    if (!m_typeResolver->equals(actual.storedType(),
+                                m_typeResolver->varType())) {
+        reject(u"retrieving metatype from %1"_s.arg(actual.descriptiveName()));
+    }
+
+    // Since we have verified the type in qqmljstypepropagator.cpp we now know
+    // that we can only have either undefined or the actual type here. Therefore,
+    // it's enough to check the QVariant for isValid().
+
+    m_body += u"if (!"_s + variable + u".isValid()) {\n    "_s;
+    generateSetInstructionPointer();
+    m_body += u"    aotContext->engine->throwError(QJSValue::TypeError, "_s;
+    m_body += u"QLatin1String(\"%1\"));\n"_s.arg(errorMessage);
+    m_body += u"    return "_s + errorReturnValue() + u";\n"_s;
+    m_body += u"}\n"_s;
+    return true;
+}
+
+QString QQmlJSCodeGenerator::resolveValueTypeContentPointer(
+        const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+        const QString &variable, const QString &errorMessage)
+{
+    if (generateContentPointerCheck(required, actual, variable, errorMessage))
+        return variable + u".data()"_s;
+    return contentPointer(actual, variable);
+}
+
+QString QQmlJSCodeGenerator::resolveQObjectPointer(
+        const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+        const QString &variable, const QString &errorMessage)
+{
+    if (generateContentPointerCheck(required, actual, variable, errorMessage))
+        return u"*static_cast<QObject *const *>("_s + variable + u".constData())"_s;
+    return variable;
+}
+
 void QQmlJSCodeGenerator::generate_GetLookup(int index)
 {
     INJECT_TRACE_INFO(generate_GetLookup);
@@ -981,8 +1041,8 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
             ? QString::number(m_state.accumulatorIn().importNamespace())
             : u"QQmlPrivate::AOTCompiledContext::InvalidStringId"_s;
     const auto accumulatorIn = m_state.accumulatorIn();
-    const bool isReferenceType = (accumulatorIn.storedType()->accessSemantics()
-                                  == QQmlJSScope::AccessSemantics::Reference);
+    const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut().scopeType();
+    const bool isReferenceType = scope->isReferenceType();
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::ObjectAttached: {
@@ -1016,12 +1076,18 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
 
     Q_ASSERT(m_state.accumulatorOut().isProperty());
 
-    if (isReferenceType) {
+    if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->jsValueType())) {
+        reject(u"lookup in QJSValue"_s);
+    } else if (isReferenceType) {
+        const QString inputPointer = resolveQObjectPointer(
+                    scope, accumulatorIn, m_state.accumulatorVariableIn,
+                    u"Cannot read property '%1' of undefined"_s.arg(
+                        m_jsUnitGenerator->lookupName(index)));
         const QString lookup = u"aotContext->getObjectLookup("_s + indexString
-                + u", "_s + m_state.accumulatorVariableIn + u", "_s
+                + u", "_s + inputPointer + u", "_s
                 + contentPointer(m_state.accumulatorOut(), m_state.accumulatorVariableOut) + u')';
         const QString initialization = u"aotContext->initGetObjectLookup("_s
-                + indexString + u", "_s + m_state.accumulatorVariableIn
+                + indexString + u", "_s + inputPointer
                 + u", "_s + contentType(m_state.accumulatorOut(), m_state.accumulatorVariableOut)
                 + u')';
         const QString preparation = getLookupPreparation(
@@ -1052,18 +1118,20 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
                              m_state.accumulatorOut(),
                              m_state.accumulatorVariableIn + u".length()"_s)
                 + u";\n"_s;
-    } else if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->jsValueType())) {
-        reject(u"lookup in QJSValue"_s);
     } else if (m_typeResolver->canUseValueTypes()) {
+
+        const QString inputContentPointer = resolveValueTypeContentPointer(
+                    scope, accumulatorIn, m_state.accumulatorVariableIn,
+                    u"Cannot read property '%1' of undefined"_s.arg(
+                        m_jsUnitGenerator->lookupName(index)));
+
         const QString lookup = u"aotContext->getValueLookup("_s + indexString
-                + u", "_s + contentPointer(m_state.accumulatorIn(),
-                                            m_state.accumulatorVariableIn)
-                + u", "_s + contentPointer(m_state.accumulatorOut(),
-                                            m_state.accumulatorVariableOut)
+                + u", "_s + inputContentPointer
+                + u", "_s + contentPointer(m_state.accumulatorOut(), m_state.accumulatorVariableOut)
                 + u')';
         const QString initialization = u"aotContext->initGetValueLookup("_s
                 + indexString + u", "_s
-                + metaObject(m_state.accumulatorOut().scopeType()) + u", "_s
+                + metaObject(scope) + u", "_s
                 + contentType(m_state.accumulatorOut(), m_state.accumulatorVariableOut) + u')';
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
@@ -1146,12 +1214,16 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
         argType = variableInType;
     }
 
-    switch (callBase.storedType()->accessSemantics()) {
+    switch (property.scopeType()->accessSemantics()) {
     case QQmlJSScope::AccessSemantics::Reference: {
+        const QString basePointer = resolveQObjectPointer(
+                    property.scopeType(), registerType(baseReg), object,
+                    u"TypeError: Value is undefined and could not be converted to an object"_s);
+
         const QString lookup = u"aotContext->setObjectLookup("_s + indexString
-                + u", "_s + object + u", "_s + variableIn + u')';
+                + u", "_s + basePointer + u", "_s + variableIn + u')';
         const QString initialization = u"aotContext->initSetObjectLookup("_s
-                + indexString + u", "_s + object + u", "_s + argType + u')';
+                + indexString + u", "_s + basePointer + u", "_s + argType + u')';
         generateLookup(lookup, initialization, preparation);
         break;
     }
@@ -1189,12 +1261,16 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
         const QQmlJSRegisterContent property = specific.storedIn(
                     m_typeResolver->genericType(specific.storedType()));
 
+        const QString baseContentPointer = resolveValueTypeContentPointer(
+                    property.scopeType(), registerType(baseReg), object,
+                    u"TypeError: Value is undefined and could not be converted to an object"_s);
+
         const QString lookup = u"aotContext->setValueLookup("_s + indexString
-                + u", "_s + contentPointer(registerType(baseReg), object)
+                + u", "_s + baseContentPointer
                 + u", "_s + variableIn + u')';
         const QString initialization = u"aotContext->initSetValueLookup("_s
                 + indexString + u", "_s + metaObject(property.scopeType())
-                + u", "_s + contentType(registerType(baseReg), object) + u')';
+                + u", "_s + argType + u')';
 
         generateLookup(lookup, initialization, preparation);
         if (m_typeResolver->canUseValueTypes())
@@ -2338,22 +2414,51 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
     INJECT_TRACE_INFO(generate_As);
 
     const QString input = registerVariable(lhs);
-    const QQmlJSScope::ConstPtr contained
-            = m_typeResolver->containedType(m_state.readRegister(lhs));
+    const QQmlJSRegisterContent inputContent = m_state.readRegister(lhs);
+    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(inputContent);
+    const QQmlJSRegisterContent outputContent = m_state.accumulatorOut();
 
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-    if (m_typeResolver->equals(
-                m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())
-            && contained->isComposite()) {
-        m_body += conversion(
-                    m_typeResolver->genericType(contained), m_state.accumulatorOut().storedType(),
-                    m_state.accumulatorVariableIn + u"->cast("_s + input + u')');
-    } else {
-        m_body += conversion(
-                    m_typeResolver->genericType(contained), m_state.accumulatorOut().storedType(),
-                    u'(' + metaObject(contained) + u")->cast("_s + input + u')');
+    if (contained->isReferenceType()) {
+        m_body += m_state.accumulatorVariableOut + u" = "_s;
+        if (m_typeResolver->equals(
+                    m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())
+                && contained->isComposite()) {
+            m_body += conversion(
+                        m_typeResolver->genericType(contained), outputContent.storedType(),
+                        m_state.accumulatorVariableIn + u"->cast("_s + input + u')');
+        } else {
+            m_body += conversion(
+                        m_typeResolver->genericType(contained), outputContent.storedType(),
+                        u'(' + metaObject(contained) + u")->cast("_s + input + u')');
+        }
+        m_body += u";\n"_s;
+        return;
+    } else if (m_typeResolver->equals(inputContent.storedType(), m_typeResolver->varType())) {
+        // If the original output is a conversion, we're supposed to check for the contained
+        // type and if it doesn't match, set the result to undefined.
+        const auto originalContent = m_typeResolver->original(outputContent);
+        if (originalContent.isConversion()) {
+            const auto origins = originalContent.conversionOrigins();
+            Q_ASSERT(origins.size() == 2);
+
+            const auto target = m_typeResolver->equals(origins[0], m_typeResolver->voidType())
+                ? origins[1]
+                : origins[0];
+
+            Q_ASSERT(!m_typeResolver->equals(target, m_typeResolver->voidType()));
+
+            m_body += m_state.accumulatorVariableOut + u" = "_s;
+            m_body += input + u".metaType() == "_s + metaType(target)
+                    + u" ? " + conversion(inputContent, outputContent, input)
+                    + u" : " + conversion(m_typeResolver->globalType(m_typeResolver->voidType()),
+                                          outputContent, QString());
+            m_body += u";\n"_s;
+            return;
+        }
     }
-    m_body += u";\n"_s;
+
+    reject(u"unsupported type assertion"_s);
+
 }
 
 void QQmlJSCodeGenerator::generate_UNot()

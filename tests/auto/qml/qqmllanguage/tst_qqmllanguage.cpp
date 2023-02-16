@@ -406,6 +406,7 @@ private slots:
 
     void objectAndGadgetMethodCallsRejectThisObject();
     void objectAndGadgetMethodCallsAcceptThisObject();
+    void asValueType();
 
     void longConversion();
 
@@ -7896,6 +7897,31 @@ void tst_qqmllanguage::longConversion()
         QCOMPARE(val.metaType(), QMetaType::fromType<bool>());
         QVERIFY(!val.toBool());
     }
+}
+
+void tst_qqmllanguage::asValueType()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("asValueType.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(url.toString() + ":6:5: Unable to assign [undefined] to QRectF"_L1));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("a"), QVariant());
+    QCOMPARE(o->property("b").value<QRectF>(), QRectF());
+    QVERIFY(!o->property("c").toBool());
+
+    const QRectF rect(1, 2, 3, 4);
+    o->setProperty("a", QVariant(rect));
+    QCOMPARE(o->property("b").value<QRectF>(), rect);
+    QVERIFY(o->property("c").toBool());
+
+    QVERIFY(!o->property("d").toBool());
+    const QPointF point = o->property("e").value<QPointF>();
+    QCOMPARE(point.x(), 10.0);
+    QCOMPARE(point.y(), 20.0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

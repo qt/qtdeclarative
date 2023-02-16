@@ -1968,16 +1968,25 @@ void QQmlJSTypePropagator::generate_As(int lhs)
         break;
     }
 
-    addReadRegister(lhs, m_typeResolver->globalType(contained));
+    QQmlJSRegisterContent output;
 
-    if (m_typeResolver->containedType(input)->accessSemantics()
-                != QQmlJSScope::AccessSemantics::Reference
-        || contained->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
+    if (contained->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+        // A referece type cast can result in either the type or null.
+        // Reference tpyes can hold null. We don't need to special case that.
+        output = m_typeResolver->globalType(contained);
+    } else if (!m_typeResolver->canAddressValueTypes()) {
         setError(u"invalid cast from %1 to %2. You can only cast object types."_s
-                         .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
+                 .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
+        return;
     } else {
-        setAccumulator(m_typeResolver->globalType(contained));
+        // A value type cast can result in either the type or undefined.
+        output = m_typeResolver->merge(
+                    m_typeResolver->globalType(contained),
+                    m_typeResolver->globalType(m_typeResolver->voidType()));
     }
+
+    addReadRegister(lhs, output);
+    setAccumulator(output);
 }
 
 void QQmlJSTypePropagator::checkConversion(

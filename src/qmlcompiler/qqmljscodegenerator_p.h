@@ -63,6 +63,7 @@ protected:
     };
 
     virtual QString metaObject(const QQmlJSScope::ConstPtr &objectType);
+    virtual QString metaType(const QQmlJSScope::ConstPtr &type);
 
     void generate_Ret() override;
     void generate_Debug() override;
@@ -287,6 +288,16 @@ private:
         using namespace Qt::StringLiterals;
         return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
     }
+
+    QString resolveValueTypeContentPointer(
+            const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+            const QString &variable, const QString &errorMessage);
+    QString resolveQObjectPointer(
+            const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+            const QString &variable, const QString &errorMessage);
+    bool generateContentPointerCheck(
+            const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
+            const QString &variable, const QString &errorMessage);
 
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;

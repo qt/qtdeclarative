@@ -113,6 +113,7 @@ public:
     QMetaType type() const;
     bool write(QObject *target, int propertyIndex) const;
     bool readReferenceValue() const { return d()->readReference(); }
+    const QMetaObject *metaObject() const { return d()->metaObject(); }
 
     QQmlPropertyData dataForPropertyKey(PropertyKey id) const;
 

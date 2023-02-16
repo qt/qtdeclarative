@@ -171,6 +171,7 @@ private slots:
     void variantMapLookup();
     void mathMinMax();
     void enumFromBadSingleton();
+    void objectLookupOnListElement();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -533,6 +534,7 @@ void tst_QmlCppCodegen::math()
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("a").toInt(), 9);
     QCOMPARE(object->property("b").toDouble(), 50.0 / 22.0);
+    QCOMPARE(object->property("c").toDouble(), std::atan(1.0) * 8.0);
 }
 
 void tst_QmlCppCodegen::unknownParameter()
@@ -3222,6 +3224,22 @@ void tst_QmlCppCodegen::valueTypeBehavior()
     QVERIFY(!o2.isNull());
     QVERIFY(qIsNaN(o2->property("e").toDouble()));
     QCOMPARE(o2->property("f").toDouble(), 5.0);
+
+    const QUrl cast(u"qrc:/qt/qml/TestTypes/valueTypeCast.qml"_s);
+    QQmlComponent c3(&engine, cast);
+    QVERIFY2(c3.isReady(), qPrintable(c3.errorString()));
+    QScopedPointer o3(c3.create());
+    QVERIFY(!o3.isNull());
+    QCOMPARE(o3->property("x"), 10);
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(cast.toString()
+                           + u":8: TypeError: Cannot read property 'x' of undefined"_s));
+    o3->setProperty("v", QLatin1String("not a rect"));
+
+    // If the binding throws an exception, the value doesn't change.
+    QCOMPARE(o3->property("x"), 10);
 }
 
 void tst_QmlCppCodegen::invisibleSingleton()
@@ -3378,6 +3396,33 @@ void tst_QmlCppCodegen::enumFromBadSingleton()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QVERIFY(o->objectName().isEmpty());
+}
+
+void tst_QmlCppCodegen::objectLookupOnListElement()
+{
+    QQmlEngine engine;
+
+    const QUrl url(u"qrc:/qt/qml/TestTypes/objectLookupOnListElement.qml"_s);
+    QQmlComponent c1(&engine, url);
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QScopedPointer<QObject> object(c1.create());
+    QVERIFY(!object.isNull());
+
+    QList<int> zOrders;
+    QMetaObject::invokeMethod(object.data(), "zOrders", Q_RETURN_ARG(QList<int>, zOrders));
+    QCOMPARE(zOrders, (QList<int>{1, 0, 0}));
+    object->setProperty("current", 1);
+    QMetaObject::invokeMethod(object.data(), "zOrders", Q_RETURN_ARG(QList<int>, zOrders));
+    QCOMPARE(zOrders, (QList<int>{0, 1, 0}));
+
+    QMetaObject::invokeMethod(object.data(), "clearChildren");
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString()
+                           + u":21: TypeError: Cannot read property 'z' of undefined"_s));
+    QMetaObject::invokeMethod(object.data(), "zOrders", Q_RETURN_ARG(QList<int>, zOrders));
+    QCOMPARE(zOrders, (QList<int>()));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

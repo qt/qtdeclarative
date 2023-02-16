@@ -155,6 +155,7 @@ set(qml_files
     nullComparison.qml
     numbersInJsPrimitive.qml
     objectInVar.qml
+    objectLookupOnListElement.qml
     outOfBounds.qml
     overriddenMember.qml
     ownProperty.qml
@@ -199,6 +200,7 @@ set(qml_files
     unusedAttached.qml
     urlString.qml
     usingCxxTypesFromFileImports.qml
+    valueTypeCast.qml
     valueTypeCopy.qml
     valueTypeLists.qml
     valueTypeProperty.qml
