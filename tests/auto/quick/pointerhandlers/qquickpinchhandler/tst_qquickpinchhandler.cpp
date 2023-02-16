@@ -43,8 +43,8 @@ private slots:
     void transformedpinchHandler();
 
 private:
-    QPointingDevice *touchscreen = QTest::createTouchDevice();
-    QPointingDevice *touchpad = QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad);
+    QScopedPointer<QPointingDevice> touchscreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
+    QScopedPointer<QPointingDevice> touchpad = QScopedPointer<QPointingDevice>(QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad));
 };
 
 void tst_QQuickPinchHandler::cleanupTestCase()
@@ -236,7 +236,7 @@ void tst_QQuickPinchHandler::scale()
 
     QPoint p0(80, 80);
     QPoint p1(100, 100);
-    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(&window, touchscreen);
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(&window, touchscreen.get());
     pinchSequence.press(0, p0, &window).commit();
     QQuickTouchUtils::flush(&window);
     // In order for the stationary point to remember its previous position,
@@ -383,7 +383,7 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
     QPoint p1(220, 80);
     QPoint p2(150, 220);
     {
-        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen);
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen.get());
         pinchSequence.press(0, p0, window).commit();
         QQuickTouchUtils::flush(window);
         // In order for the stationary point to remember its previous position,
@@ -488,10 +488,10 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     // so as to compensate for the change in size, to hold the centroid in place
     const QPointF expectedPos = targetPos + QPointF( (pinchPos.x() - target->x()) * (expectedScale - 1),
                                                      (pinchPos.y() - target->y()) * (expectedScale - 1) );
-    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
+    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad.get(),
                                                Qt::BeginNativeGesture, pinchPos, pinchPos);
     if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
-    QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, touchpad,
+    QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, touchpad.get(),
                                                             Qt::ZoomNativeGesture, scale - 1, pinchPos, pinchPos);
     if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
     QTRY_COMPARE(target->scale(), expectedScale);
@@ -509,7 +509,7 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     QCOMPARE(pinchHandler->activeRotation(), 0);
     QCOMPARE(pinchHandler->rotationAxis()->persistentValue(), 0);
     QCOMPARE(pinchHandler->rotationAxis()->activeValue(), 0);
-    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
+    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad.get(),
                                                Qt::EndNativeGesture, pinchPos, pinchPos);
     QTRY_COMPARE(pinchHandler->active(), false);
     QCOMPARE(target->scale(), expectedScale);
@@ -528,9 +528,9 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     const qreal reverseScale = (1 / expectedScale);
     pinchPos = QPointF(110, 110);
     pinchLocalPos = target->mapFromScene(pinchPos);
-    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
+    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad.get(),
                                                Qt::BeginNativeGesture, pinchPos, pinchPos);
-    QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, touchpad,
+    QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, touchpad.get(),
                                                             Qt::ZoomNativeGesture, reverseScale - 1, pinchPos, pinchPos);
     QTRY_COMPARE(target->scale(), 1);
     QCOMPARE(pinchHandler->active(), true);
@@ -541,7 +541,7 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     QCOMPARE(pinchHandler->persistentScale(), 1);
     QCOMPARE(pinchHandler->activeScale(), reverseScale);
     QCOMPARE(pinchHandler->scaleAxis()->activeValue(), reverseScale);
-    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
+    QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad.get(),
                                                Qt::EndNativeGesture, pinchPos, pinchPos);
     QTRY_COMPARE(pinchHandler->active(), false);
     QCOMPARE(target->scale(), 1);
@@ -575,7 +575,7 @@ void tst_QQuickPinchHandler::pan()
     QPoint p1(100, 100);
     {
         const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
-        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen);
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen.get());
         pinchSequence.press(0, p0, window).commit();
         QQuickTouchUtils::flush(window);
         // In order for the stationary point to remember its previous position,
@@ -649,7 +649,7 @@ void tst_QQuickPinchHandler::pan()
     // pan x beyond bound
     p0 += QPoint(100,100);
     p1 += QPoint(100,100);
-    QTest::touchEvent(window, touchscreen).move(0, p0, window).move(1, p1, window);
+    QTest::touchEvent(window, touchscreen.get()).move(0, p0, window).move(1, p1, window);
     QQuickTouchUtils::flush(window);
 
     QCOMPARE(blackRect->x(), 140.0);
@@ -657,7 +657,7 @@ void tst_QQuickPinchHandler::pan()
     QCOMPARE(translationChangedSpy.size(), 5);
     QCOMPARE(translationChangedSpy.last().first().value<QVector2D>(), QVector2D(100, 100));
 
-    QTest::touchEvent(window, touchscreen).release(0, p0, window).release(1, p1, window);
+    QTest::touchEvent(window, touchscreen.get()).release(0, p0, window).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!root->property("pinchActive").toBool());
 }
@@ -697,7 +697,7 @@ void tst_QQuickPinchHandler::dragAxesEnabled()
     QPoint blackRectPos = blackRect->position().toPoint();
 
     // press two points, one above the rectangle's center and one below
-    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen);
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen.get());
     pinchSequence.press(0, p0, window).press(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
 
@@ -734,7 +734,7 @@ void tst_QQuickPinchHandler::dragAxesEnabled()
     QCOMPARE(blackRect->position().toPoint().x(), xEnabled ? 140 : blackRectPos.x()); // because of xAxis.maximum
     QCOMPARE(blackRect->position().toPoint().y(), yEnabled ? 170 : blackRectPos.y()); // because of yAxis.maximum
 
-    QTest::touchEvent(window, touchscreen).release(0, p0, window).release(1, p1, window);
+    QTest::touchEvent(window, touchscreen.get()).release(0, p0, window).release(1, p1, window);
     QQuickTouchUtils::flush(window);
 }
 
@@ -763,7 +763,7 @@ void tst_QQuickPinchHandler::retouch()
     QPoint p0(80, 80);
     QPoint p1(100, 100);
     {
-        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen);
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen.get());
         pinchSequence.press(0, p0, window).commit();
         QQuickTouchUtils::flush(window);
         // In order for the stationary point to remember its previous position,
@@ -846,7 +846,7 @@ void tst_QQuickPinchHandler::cancel()
     QPoint p0(80, 80);
     QPoint p1(100, 100);
     {
-        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen);
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, touchscreen.get());
         pinchSequence.press(0, p0, window).commit();
         QQuickTouchUtils::flush(window);
         // In order for the stationary point to remember its previous position,
@@ -876,7 +876,7 @@ void tst_QQuickPinchHandler::cancel()
 
         QSKIP("cancel is not supported atm");
 
-        QTouchEvent cancelEvent(QEvent::TouchCancel, touchscreen);
+        QTouchEvent cancelEvent(QEvent::TouchCancel, touchscreen.get());
         QCoreApplication::sendEvent(window, &cancelEvent);
         QQuickTouchUtils::flush(window);
 
@@ -932,7 +932,7 @@ void tst_QQuickPinchHandler::transformedpinchHandler()
     const int threshold = qApp->styleHints()->startDragDistance();
 
     {
-        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(view, touchscreen);
+        QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(view, touchscreen.get());
         // start pinchHandler
         pinchSequence.press(0, p0, view).commit();
         QQuickTouchUtils::flush(view);
