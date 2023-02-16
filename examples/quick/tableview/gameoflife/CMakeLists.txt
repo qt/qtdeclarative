@@ -14,17 +14,16 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/tableview/gameoflife")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(gameoflife
+    WIN32
+    MACOSX_BUNDLE
     gameoflifemodel.cpp gameoflifemodel.h
     main.cpp
 )
 
-set_target_properties(gameoflife PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-
-target_link_libraries(gameoflife PUBLIC
+target_link_libraries(gameoflife PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Qml
