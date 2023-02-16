@@ -19,7 +19,7 @@ void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
     pressPos = event->position();
     if (Qt::LeftButton == (event->buttons() & Qt::LeftButton)) {
         timer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), control);
-        delayedMousePressEvent = new QMouseEvent(event->type(), event->position().toPoint(), event->globalPosition().toPoint(),
+        delayedMousePressEvent = std::make_unique<QMouseEvent>(event->type(), event->position().toPoint(), event->globalPosition().toPoint(),
                                                  event->button(), event->buttons(), event->modifiers(), event->pointingDevice());
     } else {
         timer.stop();
@@ -86,10 +86,7 @@ QT_WARNING_POP
 
 void QQuickPressHandler::clearDelayedMouseEvent()
 {
-    if (delayedMousePressEvent) {
-        delete delayedMousePressEvent;
-        delayedMousePressEvent = 0;
-    }
+    delayedMousePressEvent.reset();
 }
 
 bool QQuickPressHandler::isActive()
