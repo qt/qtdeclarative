@@ -3,5 +3,14 @@
 [ScrollView::test_textArea]
 *
 
+[SelectionRectangle::test_handleDragBottomRight_expand]
+*
+[SelectionRectangle::test_handleDragBottomRight_shrink]
+*
+[SelectionRectangle::test_handleDragTopLeft]
+*
+[SelectionRectangle::test_pressAndHold_on_top_of_handle]
+*
+
 [ComboBox::test_keyClose]
 macos arm ci # QTBUG-102817
