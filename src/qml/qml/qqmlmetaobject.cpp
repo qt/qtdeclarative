@@ -8,28 +8,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Returns true if \a from is assignable to a property of type \a to
-bool QQmlMetaObject::canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to)
-{
-    Q_ASSERT(!from.isNull() && !to.isNull());
-
-    auto equal = [] (const QMetaObject *lhs, const QMetaObject *rhs) -> bool {
-        return lhs == rhs || (lhs && rhs && lhs->d.stringdata == rhs->d.stringdata);
-    };
-
-    const QMetaObject *tom = to.metaObject();
-    if (tom == &QObject::staticMetaObject) return true;
-
-    const QMetaObject *fromm = from.metaObject();
-    while (fromm) {
-        if (equal(fromm, tom))
-            return true;
-        fromm = fromm->superClass();
-    }
-
-    return false;
-}
-
 void QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, const QMetaObject **metaObject, int *index)
 {
     int offset;

@@ -67,7 +67,11 @@ public:
     bool constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;
 
 
-    static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
+    static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to)
+    {
+        Q_ASSERT(!from.isNull() && !to.isNull());
+        return from.metaObject()->inherits(to.metaObject());
+    }
 
     // static_metacall (on Gadgets) doesn't call the base implementation and therefore
     // we need a helper to find the correct meta object and property/method index.
