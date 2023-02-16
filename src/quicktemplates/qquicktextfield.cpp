@@ -869,7 +869,7 @@ void QQuickTextField::mousePressEvent(QMouseEvent *event)
     d->pressHandler.mousePressEvent(event);
     if (d->pressHandler.isActive()) {
         if (d->pressHandler.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
             d->pressHandler.clearDelayedMouseEvent();
         }
         if (event->buttons() != Qt::RightButton)
@@ -883,7 +883,7 @@ void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
     d->pressHandler.mouseMoveEvent(event);
     if (d->pressHandler.isActive()) {
         if (d->pressHandler.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
             d->pressHandler.clearDelayedMouseEvent();
         }
         const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event)
@@ -902,7 +902,7 @@ void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
     d->pressHandler.mouseReleaseEvent(event);
     if (d->pressHandler.isActive()) {
         if (d->pressHandler.delayedMousePressEvent) {
-            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
             d->pressHandler.clearDelayedMouseEvent();
         }
         if (event->buttons() != Qt::RightButton)
@@ -914,7 +914,7 @@ void QQuickTextField::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextField);
     if (d->pressHandler.delayedMousePressEvent) {
-        QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+        QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
         d->pressHandler.clearDelayedMouseEvent();
     }
     if (event->buttons() != Qt::RightButton)

@@ -44,7 +44,7 @@ struct QQuickPressHandler
     int pressAndHoldSignalIndex = -1;
     int pressedSignalIndex = -1;
     int releasedSignalIndex = -1;
-    QMouseEvent *delayedMousePressEvent = nullptr;
+    std::unique_ptr<QMouseEvent> delayedMousePressEvent = nullptr;
 };
 
 QT_END_NAMESPACE

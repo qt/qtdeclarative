@@ -1044,7 +1044,7 @@ void QQuickTextArea::mousePressEvent(QMouseEvent *event)
     d->pressHandler.mousePressEvent(event);
     if (d->pressHandler.isActive()) {
         if (d->pressHandler.delayedMousePressEvent) {
-            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
             d->pressHandler.clearDelayedMouseEvent();
         }
         // Calling the base class implementation will result in QQuickTextControl's
@@ -1062,7 +1062,7 @@ void QQuickTextArea::mouseMoveEvent(QMouseEvent *event)
     d->pressHandler.mouseMoveEvent(event);
     if (d->pressHandler.isActive()) {
         if (d->pressHandler.delayedMousePressEvent) {
-            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
             d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextEdit::mouseMoveEvent(event);
@@ -1075,7 +1075,7 @@ void QQuickTextArea::mouseReleaseEvent(QMouseEvent *event)
     d->pressHandler.mouseReleaseEvent(event);
     if (d->pressHandler.isActive()) {
         if (d->pressHandler.delayedMousePressEvent) {
-            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+            QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
             d->pressHandler.clearDelayedMouseEvent();
         }
         QQuickTextEdit::mouseReleaseEvent(event);
@@ -1086,7 +1086,7 @@ void QQuickTextArea::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextArea);
     if (d->pressHandler.delayedMousePressEvent) {
-        QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent);
+        QQuickTextEdit::mousePressEvent(d->pressHandler.delayedMousePressEvent.get());
         d->pressHandler.clearDelayedMouseEvent();
     }
     QQuickTextEdit::mouseDoubleClickEvent(event);
