@@ -437,9 +437,10 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
 
     enum ValueTypeBehaviorValue
     {
-        Reference,
-        Copy
+        Copy        = 0x1,
+        Addressable = 0x2,
     };
+    Q_DECLARE_FLAGS(ValueTypeBehaviorValues, ValueTypeBehaviorValue);
 
     PragmaType type;
 
@@ -448,7 +449,7 @@ struct Q_QML_COMPILER_PRIVATE_EXPORT Pragma
         ComponentBehaviorValue componentBehavior;
         FunctionSignatureBehaviorValue functionSignatureBehavior;
         NativeMethodBehaviorValue nativeMethodBehavior;
-        ValueTypeBehaviorValue valueTypeBehavior;
+        ValueTypeBehaviorValues::Int valueTypeBehavior;
     };
 
     QV4::CompiledData::Location location;

@@ -266,6 +266,10 @@ public:
 
     void addExpression(QQmlJavaScriptExpression *expression);
 
+    bool valueTypesAreAddressable() const {
+        return m_typeCompilationUnit && m_typeCompilationUnit->valueTypesAreAddressable();
+    }
+
 private:
     friend class QQmlGuardedContextData;
     friend class QQmlContextPrivate;

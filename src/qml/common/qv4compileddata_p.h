@@ -1185,6 +1185,7 @@ struct Unit
         FunctionSignaturesEnforced = 0x400,
         NativeMethodsAcceptThisObject = 0x800,
         ValueTypesCopied = 0x1000,
+        ValueTypesAddressable = 0x2000,
     };
     quint32_le flags;
     quint32_le stringTableSize;

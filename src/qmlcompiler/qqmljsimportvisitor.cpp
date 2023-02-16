@@ -2292,6 +2292,10 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
                 m_scopesById.setValueTypesAreCopied(true);
             } else if (value == u"Reference") {
                 m_scopesById.setValueTypesAreCopied(false);
+            } else if (value == u"Addressable") {
+                m_scopesById.setValueTypesAreAddressable(true);
+            } else if (value == u"Inaddressable") {
+                m_scopesById.setValueTypesAreAddressable(false);
             } else {
                 m_logger->log(
                         u"Unkonwn argument \"%s\" to pragma ValueTypeBehavior"_s.arg(value),

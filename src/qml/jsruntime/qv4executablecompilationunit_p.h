@@ -181,6 +181,11 @@ public:
         return data->flags & CompiledData::Unit::ValueTypesCopied;
     }
 
+    bool valueTypesAreAddressable() const
+    {
+        return data->flags & CompiledData::Unit::ValueTypesAddressable;
+    }
+
     int objectCount() const { return qmlData->nObjects; }
     const CompiledObject *objectAt(int index) const
     {
