@@ -108,7 +108,8 @@ void QSGDefaultPainterNode::paint()
     }
 
     painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(clipRect, m_fillColor);
+    if (m_fillColor.isValid())
+        painter.fillRect(clipRect, m_fillColor);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     m_item->paint(&painter);
