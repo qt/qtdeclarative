@@ -194,6 +194,7 @@ QQuickItem *QQuickSwipePrivate::createDelegateItem(QQmlComponent *component)
     if (item) {
         item->setParentItem(control);
         component->completeCreate();
+        QJSEngine::setObjectOwnership(item, QJSEngine::JavaScriptOwnership);
     }
     return item;
 }
