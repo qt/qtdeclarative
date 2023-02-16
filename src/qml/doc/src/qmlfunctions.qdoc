@@ -173,7 +173,9 @@
   \c{T *create(QQmlEngine *, QJSEngine *)} when the type is first accessed.
   If both do exist and are accessible, the default constructor is preferred.
   If there is no default constructor and no factory function the singleton is
-  inaccessible.
+  inaccessible. The QML engine generally assumes ownership of the singleton and
+  will delete it when the engine itself is destroyed. You can prevent this by
+  calling QJSEngine::setObjectOwnership() on the singleton.
 
   In order to declare a default-constructible class as singleton, all you have
   to do is add \l QML_SINGLETON:
