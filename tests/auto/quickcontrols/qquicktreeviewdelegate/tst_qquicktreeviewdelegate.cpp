@@ -25,7 +25,7 @@ using namespace QQuickVisualTestUtils;
 #define LOAD_TREEVIEW(fileName) \
     view->setSource(testFileUrl(fileName)); \
     view->show(); \
-    QVERIFY(QTest::qWaitForWindowActive(view)); \
+    QVERIFY(QTest::qWaitForWindowActive(view.get())); \
     auto treeView = view->rootObject()->property("treeView").value<QQuickTreeView *>(); \
     QVERIFY(treeView); \
     auto treeViewPrivate = QQuickTreeViewPrivate::get(treeView); \
@@ -46,7 +46,7 @@ public:
     tst_qquicktreeviewdelegate();
 
 private:
-    QQuickView *view = nullptr;
+    std::unique_ptr<QQuickView> view = nullptr;
 
 private slots:
     void initTestCase() override;
@@ -74,7 +74,7 @@ void tst_qquicktreeviewdelegate::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qmlRegisterType<TestModel>("TestModel", 1, 0, "TestModel");
-    view = createView();
+    view.reset(createView());
 }
 
 void tst_qquicktreeviewdelegate::showTreeView()
