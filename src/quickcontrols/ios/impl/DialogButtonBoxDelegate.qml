@@ -20,7 +20,7 @@ Button {
     flat: true
 
     contentItem: IconLabel {
-        readonly property var redColor: Qt.styleHints.appearance === Qt.Light ? "#ff3b30" : "#ff453a"
+        readonly property var redColor: Qt.styleHints.colorScheme === Qt.Light ? "#ff3b30" : "#ff453a"
         text: delegate.text
         font: delegate.font
         spacing: delegate.spacing
@@ -57,8 +57,8 @@ Button {
                     {"vertical": delegate.hasVerticalLayout},
                     {"last": delegate.hasVerticalLayout && delegate.isLastItem},
                     {"pressed": delegate.down},
-                    {"light": Qt.styleHints.appearance === Qt.Light},
-                    {"dark": Qt.styleHints.appearance === Qt.Dark},
+                    {"light": Qt.styleHints.colorScheme === Qt.Light},
+                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
                 ]
             }
         }
