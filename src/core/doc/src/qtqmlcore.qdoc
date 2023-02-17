@@ -7,6 +7,14 @@
 
     \brief The Qt QML Core module provides core system functionality in QML.
 
+    \section1 Application Permissions
+
+    The module exposes the Qt C++ \l [QtCore] {Application Permissions}
+    functionality to QML via a set of permission types that
+    can be used to check or request permission in a cross
+    platform manner. See \l{QML Application Permissions}
+    for more details.
+
     \section1 QML Types
 
     \generatelist {qmltypesbymodule QtCore}

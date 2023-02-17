@@ -1,0 +1,34 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+//! [type-docs]
+    \qmltype \1
+    \inqmlmodule QtCore
+    \ingroup qml-permissions
+
+    \brief Access to the user's \3.
+
+    This type represents a \2, and can be used to
+    check the status of and request access to the user's \3.
+
+    See \2 for documentation of the individual properties
+    and detailed usage requirements.
+
+    \sa {QML Application Permissions}, {Application Permissions}, \2
+//! [type-docs]
+
+//! [status-docs]
+    \qmlproperty Qt::PermissionStatus \1::status
+
+    This property holds the current status of the permission.
+
+    \sa QCoreApplication::checkPermission
+//! [status-docs]
+
+//! [request-docs]
+    \qmlmethod \1::request()
+
+    Requests the permission with its current properties.
+
+    \sa QCoreApplication::requestPermission
+//! [request-docs]
