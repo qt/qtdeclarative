@@ -17,6 +17,7 @@
 
 #include <private/qqmladaptormodelenginedata_p.h>
 #include <private/qqmldelegatemodel_p_p.h>
+#include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -25,6 +26,8 @@ class QQmlDMAbstractItemModelData : public QQmlDelegateModelItem
 {
     Q_OBJECT
     Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT)
+    Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
+    QT_ANONYMOUS_PROPERTY(QVariant READ modelData NOTIFY modelDataChanged)
 
 public:
     QQmlDMAbstractItemModelData(
@@ -39,10 +42,27 @@ public:
     void setValue(const QString &role, const QVariant &value) override;
     bool resolveIndex(const QQmlAdaptorModel &model, int idx) override;
 
-    static QV4::ReturnedValue get_property(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
-    static QV4::ReturnedValue set_property(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue get_property(
+            const QV4::FunctionObject *b, const QV4::Value *thisObject,
+            const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue set_property(
+            const QV4::FunctionObject *b, const QV4::Value *thisObject,
+            const QV4::Value *argv, int argc);
+
+    static QV4::ReturnedValue get_modelData(
+            const QV4::FunctionObject *b, const QV4::Value *thisObject,
+            const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue set_modelData(
+            const QV4::FunctionObject *b, const QV4::Value *thisObject,
+            const QV4::Value *argv, int argc);
+
+    QVariant modelData() const;
+    void setModelData(const QVariant &modelData);
 
     const VDMAbstractItemModelDataType *type() const { return m_type; }
+
+Q_SIGNALS:
+    void modelDataChanged();
 
 private:
     QVariant value(int role) const;
@@ -62,7 +82,6 @@ public:
         : model(model)
         , propertyOffset(0)
         , signalOffset(0)
-        , hasModelData(false)
     {
     }
 
@@ -101,9 +120,11 @@ public:
                 signalIndexes.append(propertyId + signalOffset);
         }
 
-        QVarLengthArray<QQmlGuard<QQmlDelegateModelItem>> guardedItems;
-        for (const auto item : items)
-            guardedItems.append(item);
+        QVarLengthArray<QQmlGuard<QQmlDMAbstractItemModelData>> guardedItems;
+        for (const auto item : items) {
+            Q_ASSERT(qobject_cast<QQmlDMAbstractItemModelData *>(item) == item);
+            guardedItems.append(static_cast<QQmlDMAbstractItemModelData *>(item));
+        }
 
         for (const auto &item : std::as_const(guardedItems)) {
             if (item.isNull())
@@ -113,6 +134,7 @@ public:
             if (idx >= index && idx < index + count) {
                 for (int i = 0; i < signalIndexes.size(); ++i)
                     QMetaObject::activate(item, signalIndexes.at(i), nullptr);
+                emit item->modelDataChanged();
             }
         }
         return changed;
@@ -155,6 +177,9 @@ public:
         QV4::ScopedObject proto(scope, v4->newObject());
         proto->defineAccessorProperty(QStringLiteral("index"), QQmlAdaptorModelEngineData::get_index, nullptr);
         proto->defineAccessorProperty(QStringLiteral("hasModelChildren"), get_hasModelChildren, nullptr);
+        proto->defineAccessorProperty(QStringLiteral("modelData"),
+                                      QQmlDMAbstractItemModelData::get_modelData,
+                                      QQmlDMAbstractItemModelData::set_modelData);
         QV4::ScopedProperty p(scope);
 
         typedef QHash<QByteArray, int>::const_iterator iterator;
@@ -212,15 +237,25 @@ public:
         }
 
         if (const QAbstractItemModel *aim = model.aim()) {
-            QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
-            if (it != roleNames.end()) {
-                return aim->index(model.rowAt(index), model.columnAt(index),
-                                  model.rootIndex).data(*it);
-            } else if (role == QLatin1String("hasModelChildren")) {
-                return QVariant(aim->hasChildren(aim->index(model.rowAt(index),
-                                                            model.columnAt(index),
-                                                            model.rootIndex)));
+            const QModelIndex modelIndex
+                    = aim->index(model.rowAt(index), model.columnAt(index), model.rootIndex);
+
+            const auto it = roleNames.find(role.toUtf8()), end = roleNames.end();
+            if (it != roleNames.end())
+                return modelIndex.data(*it);
+
+            if (role.isEmpty() || role == QLatin1String("modelData")) {
+                if (roleNames.size() == 1)
+                    return modelIndex.data(roleNames.begin().value());
+
+                QVariantMap modelData;
+                for (auto jt = roleNames.begin(); jt != end; ++jt)
+                    modelData.insert(QString::fromUtf8(jt.key()), modelIndex.data(jt.value()));
+                return modelData;
             }
+
+            if (role == QLatin1String("hasModelChildren"))
+                return QVariant(aim->hasChildren(modelIndex));
         }
         return QVariant();
     }
@@ -278,16 +313,6 @@ public:
             QQmlAdaptorModelEngineData::addProperty(&builder, propertyId, it.value(), propertyType);
         }
 
-        if (propertyRoles.size() == 1) {
-            hasModelData = true;
-            const int role = names.begin().key();
-            const QByteArray propertyName = QByteArrayLiteral("modelData");
-
-            propertyRoles.append(role);
-            roleNames.insert(propertyName, role);
-            QQmlAdaptorModelEngineData::addProperty(&builder, 1, propertyName, propertyType);
-        }
-
         metaObject.reset(builder.toMetaObject());
         *static_cast<QMetaObject *>(this) = *metaObject;
         propertyCache = QQmlPropertyCache::createStandalone(
@@ -302,7 +327,6 @@ public:
     QQmlAdaptorModel *model;
     int propertyOffset;
     int signalOffset;
-    bool hasModelData;
 };
 
 QT_END_NAMESPACE

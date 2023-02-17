@@ -188,12 +188,71 @@ To visualize data, bind the view's \c model property to a model and the
     possible to delay delegate destruction in some views via a \c delayRemove
     attached property.)
 
-    Models that do not have named roles (such as the ListModel shown
-    below) will have the data provided via the \e modelData role. The \e
-    modelData role is also provided for models that have only one role. In this
-    case the \e modelData role contains the same data as the named role.
+    Remember that you can use integers or arrays as model:
 
-    \note \e model, \e index, and \e modelData roles are not accessible
+    \qml
+    Repeater {
+        model: 5
+        Text {
+            required property int modelData
+            text: modelData
+        }
+    }
+    \endqml
+
+    \qml
+    Repeater {
+        model: ["one", "two", "three"]
+        Text {
+            required property string modelData
+            text: modelData
+        }
+    }
+    \endqml
+
+    Such models provide a singular, anonymous piece of data to each instance
+    of the delegate. Accessing this piece of data is the primary reason to
+    use \e modelData, but other models also provide \e modelData.
+
+    The object provided via the \e model role has a property with an empty name.
+    This anonymous property holds the \e modelData. Furthermore, the object
+    provided via the \e model role has another property called \e modelData.
+    This property is deprecated and also holds the \e modelData.
+
+    In addition to the \e model role, a \e modelData role is provided. The
+    \e modelData role holds the same data as the \e modelData property and the
+    anonymous property of the object provided via the \e model role.
+
+    The differences between the \e model role and the various means to access
+    \e modelData are as follows:
+
+    \list
+    \li Models that do not have named roles (such as integers or an array of
+        strings) have their data provided via the \e modelData role. The
+        \e modelData role does not necessarily contain an object in this case.
+        In the case of an integer model it would contain an integer (the index
+        of the current model item). In the case of an array of strings it would
+        contain a string. The \e model role still contains an object, but
+        without any properties for named roles. \e model still contains its
+        usual \e modelData and anonymous properties, though.
+    \li If the model has only one named role, the \e modelData role contains
+        the same data as the named role. It is not necessarily an object and it
+        does not contain the named role as a named property the way it usually
+        would. The \e model role still contains an object with the named role as
+        property, and the \e modelData and anonymous properties in this case.
+    \li For models with multiple roles, the \e modelData role is only provided as
+        a required property, not as a context property. This is due to backwards
+        compatibility with older versions of Qt.
+    \endlist
+
+    The anonymous property on \e model allows you to cleanly write delegates
+    that receive both their model data and the role name they should react
+    to as properties from the outside. You can provide a model without or
+    with only one named role, and an empty string as role. Then, a binding that
+    simply accesses \c{model[role]} will do what you expect. You don't have to
+    add special code for this case.
+
+    \note The \e model, \e index, and \e modelData roles are not accessible
     if the delegate contains required properties, unless it has also required
     properties with matching names.
 

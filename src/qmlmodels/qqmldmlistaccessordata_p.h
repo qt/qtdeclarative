@@ -17,6 +17,7 @@
 
 #include <private/qqmladaptormodelenginedata_p.h>
 #include <private/qqmldelegatemodel_p_p.h>
+#include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -24,6 +25,7 @@ class QQmlDMListAccessorData : public QQmlDelegateModelItem
 {
     Q_OBJECT
     Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
+    QT_ANONYMOUS_PROPERTY(QVariant READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
     QQmlDMListAccessorData(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
                            QQmlAdaptorModel::Accessors *accessor,
@@ -84,7 +86,7 @@ public:
 
     void setValue(const QString &role, const QVariant &value) override
     {
-        if (role == QLatin1String("modelData"))
+        if (role == QLatin1String("modelData") || role.isEmpty())
             cachedData = value;
     }
 
@@ -138,7 +140,7 @@ public:
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
         const QVariant entry = model.list.at(index);
-        if (role == QLatin1String("modelData"))
+        if (role == QLatin1String("modelData") || role.isEmpty())
             return entry;
 
         const QMetaType type = entry.metaType();

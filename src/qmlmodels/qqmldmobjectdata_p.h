@@ -17,6 +17,7 @@
 
 #include <private/qqmladaptormodelenginedata_p.h>
 #include <private/qqmldelegatemodel_p_p.h>
+#include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -25,6 +26,7 @@ class QQmlDMObjectData : public QQmlDelegateModelItem, public QQmlAdaptorModelPr
 {
     Q_OBJECT
     Q_PROPERTY(QObject *modelData READ modelData NOTIFY modelDataChanged)
+    QT_ANONYMOUS_PROPERTY(QObject * READ modelData NOTIFY modelDataChanged)
     Q_INTERFACES(QQmlAdaptorModelProxyInterface)
 public:
     QQmlDMObjectData(

@@ -12,8 +12,12 @@ QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4)
     QV4::Scope scope(v4);
     QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("index"), get_index, nullptr);
-    proto->defineAccessorProperty(QStringLiteral("modelData"),
-                                  QQmlDMListAccessorData::get_modelData, QQmlDMListAccessorData::set_modelData);
+    proto->defineAccessorProperty(
+                QStringLiteral("modelData"),
+                QQmlDMListAccessorData::get_modelData, QQmlDMListAccessorData::set_modelData);
+    proto->defineAccessorProperty(
+                QString(),
+                QQmlDMListAccessorData::get_modelData, QQmlDMListAccessorData::set_modelData);
     listItemProto.set(v4, proto);
 }
 
