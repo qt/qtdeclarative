@@ -24,25 +24,24 @@ T.Drawer {
     enter: Transition { SmoothedAnimation { velocity: 5 } }
     exit: Transition { SmoothedAnimation { velocity: 5 } }
 
-    Material.elevation: !interactive && !dim ? 0 : 16
+    // https://m3.material.io/components/navigation-drawer/specs#e616dc8f-d61a-4d56-a311-50c68ecda744
+    Material.elevation: !interactive && !dim ? 0 : 1
+    Material.roundedScale: Material.LargeScale
 
-    background: Rectangle {
+    background: PaddedRectangle {
+        // https://m3.material.io/components/navigation-drawer/specs#ce8bfbcf-3dec-45d2-9d8b-5e10af1cf87d
+        implicitWidth: 360
         color: control.Material.dialogColor
+        // FullScale doesn't make sense for Drawer.
+        radius: control.Material.roundedScale
+        // Only the top and bottom right corners should be rounded.
+        leftPadding: -radius
+        clip: true
 
-        Rectangle {
-            readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
-            width: horizontal ? 1 : parent.width
-            height: horizontal ? parent.height : 1
-            color: control.Material.dividerColor
-            x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
-            y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
-            visible: !control.dim && control.Material.elevation === 0
-        }
-
-        layer.enabled: control.position > 0
-        layer.effect: ElevationEffect {
+        layer.enabled: control.position > 0 && control.Material.elevation > 0
+        layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
-            fullHeight: true
+            roundedScale: control.background.radius
         }
     }
 
