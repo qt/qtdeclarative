@@ -117,10 +117,6 @@ void QSGRhiSupport::applySettings()
     // f.ex.), and all that is based on what we report from here. So further
     // adjustments are not possible (or, at minimum, not safe and portable).
 
-    m_killDeviceFrameCount = qEnvironmentVariableIntValue("QSG_RHI_SIMULATE_DEVICE_LOSS");
-    if (m_killDeviceFrameCount > 0 && m_rhiBackend == QRhi::D3D11)
-        qDebug("Graphics device will be reset every %d frames", m_killDeviceFrameCount);
-
     QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
     if (!hdrRequest.isEmpty()) {
         hdrRequest = hdrRequest.toLower();
@@ -1192,10 +1188,6 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
     if (backend == QRhi::D3D11) {
         QRhiD3D11InitParams rhiParams;
         rhiParams.enableDebugLayer = debugLayer;
-        if (m_killDeviceFrameCount > 0) {
-            rhiParams.framesUntilKillingDeviceViaTdr = m_killDeviceFrameCount;
-            rhiParams.repeatDeviceKill = true;
-        }
         if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndContext) {
             QRhiD3D11NativeHandles importDev;
             importDev.dev = customDevD->u.deviceAndContext.device;

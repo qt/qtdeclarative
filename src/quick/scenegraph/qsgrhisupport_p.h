@@ -122,7 +122,6 @@ private:
     } m_requested;
     bool m_settingsApplied = false;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
-    int m_killDeviceFrameCount;
     QRhiSwapChain::Format m_swapChainFormat = QRhiSwapChain::SDR;
 };
 
