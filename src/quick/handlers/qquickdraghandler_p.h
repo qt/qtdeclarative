@@ -62,8 +62,6 @@ public:
     QQuickDragHandler::SnapMode snapMode() const;
     void setSnapMode(QQuickDragHandler::SnapMode mode);
 
-    void enforceConstraints();
-
 Q_SIGNALS:
     void translationChanged(QVector2D delta);
     Q_REVISION(2, 14) void snapModeChanged();

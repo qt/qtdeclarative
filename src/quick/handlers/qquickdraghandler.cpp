@@ -264,17 +264,6 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
     }
 }
 
-void QQuickDragHandler::enforceConstraints()
-{
-    if (!target() || !target()->parentItem())
-        return;
-    QPointF pos = target()->position();
-    QPointF copy(pos);
-    enforceAxisConstraints(&pos);
-    if (pos != copy)
-        target()->setPosition(pos);
-}
-
 void QQuickDragHandler::enforceAxisConstraints(QPointF *localPos)
 {
     if (m_xAxis.enabled())
