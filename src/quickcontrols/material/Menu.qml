@@ -10,8 +10,6 @@ import QtQuick.Window
 T.Menu {
     id: control
 
-    Material.elevation: 8
-
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
@@ -21,6 +19,9 @@ T.Menu {
     verticalPadding: 8
 
     transformOrigin: !cascade ? Item.Top : (mirrored ? Item.TopRight : Item.TopLeft)
+
+    Material.elevation: 4
+    Material.roundedScale: Material.ExtraSmallScale
 
     delegate: MenuItem { }
 
@@ -52,13 +53,14 @@ T.Menu {
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: control.Material.menuItemHeight
-
-        radius: 3
+        // FullScale doesn't make sense for Menu.
+        radius: control.Material.roundedScale
         color: control.Material.dialogColor
 
         layer.enabled: control.Material.elevation > 0
-        layer.effect: ElevationEffect {
+        layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
+            roundedScale: control.background.radius
         }
     }
 
