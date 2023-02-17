@@ -9,14 +9,15 @@ import QtQuick.Controls.Material.impl
 T.Popup {
     id: control
 
-    Material.elevation: 24
-
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
     padding: 12
+
+    Material.elevation: 4
+    Material.roundedScale: Material.ExtraSmallScale
 
     enter: Transition {
         // grow_fade_in
@@ -31,12 +32,14 @@ T.Popup {
     }
 
     background: Rectangle {
-        radius: 2
+        // FullScale doesn't make sense for Popup.
+        radius: control.Material.roundedScale
         color: control.Material.dialogColor
 
         layer.enabled: control.Material.elevation > 0
-        layer.effect: ElevationEffect {
+        layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
+            roundedScale: control.background.radius
         }
     }
 
