@@ -1026,8 +1026,18 @@ void QSGRhiSupport::finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfigu
 
     // If empty, do nothing. This is exactly what will happen if the rhi was
     // created without QRhi::EnablePipelineCacheDataSave set.
-    if (buf.isEmpty())
+    if (buf.isEmpty()) {
+        if (isAutomatic) {
+            // Attempt to remove the file. If it does not exist or this fails,
+            // that's fine. The goal is just to prevent warnings from
+            // setPipelineCacheData in future runs, e.g. if the Qt or driver
+            // version does not match _and_ we do not generate any data at run
+            // time, then not writing the file out also means the warning would
+            // appear again and again on every run. Prevent that.
+            QDir().remove(pipelineCacheSave);
+        }
         return;
+    }
 
     QLockFile lock(pipelineCacheLockFileName(pipelineCacheSave));
     if (!lock.lock()) {
