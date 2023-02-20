@@ -189,16 +189,41 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
 
     The \c gesturePolicy also affects grab behavior as described below.
 
-    \value TapHandler.DragThreshold
-           (the default value) The event point must not move significantly.
-           If the mouse, finger or stylus moves past the system-wide drag
-           threshold (QStyleHints::startDragDistance), the tap gesture is
-           canceled, even if the button or finger is still pressed. This policy
-           can be useful whenever TapHandler needs to cooperate with other
-           input handlers (for example \l DragHandler) or event-handling Items
-           (for example QtQuick Controls), because in this case TapHandler
-           will not take the exclusive grab, but merely a
-           \l {QPointerEvent::addPassiveGrabber()}{passive grab}.
+    \table
+    \header
+        \li Constant
+        \li Description
+    \row
+        \li \c TapHandler.DragThreshold
+            \image pointerHandlers/tapHandlerOverlappingButtons.webp
+            Grab on press: \e passive
+        \li (the default value) The \l eventPoint must not move significantly.
+            If the mouse, finger or stylus moves past the system-wide drag
+            threshold (QStyleHints::startDragDistance), the tap gesture is
+            canceled, even if the device or finger is still pressed. This policy
+            can be useful whenever TapHandler needs to cooperate with other
+            input handlers (for example \l DragHandler) or event-handling Items
+            (for example \l {Qt Quick Controls}), because in this case TapHandler
+            will not take the exclusive grab, but merely a
+            \l {QPointerEvent::addPassiveGrabber()}{passive grab}.
+            That is, \c DragThreshold is especially useful to \e augment
+            existing behavior: it reacts to tap/click/long-press even when
+            another item or handler is already reacting, perhaps even in a
+            different layer of the UI. The following snippet shows one
+            TapHandler as used in one component; but if we stack up two
+            instances of the component, you will see the handlers in both of them
+            react simultaneously when a press occurs over both of them, because
+            the passive grab does not stop event propagation:
+            \quotefromfile pointerHandlers/tapHandlerOverlappingButtons.qml
+            \skipto Item
+            \printuntil component Button
+            \skipto TapHandler
+            \printuntil }
+            \skipuntil Text {
+            \skipuntil }
+            \printuntil Button
+            \printuntil Button
+            \printuntil }
 
     \value TapHandler.WithinBounds
            If the event point leaves the bounds of the \c parent Item, the tap
@@ -207,31 +232,47 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
            press, but will release the grab as soon as the boundary constraint
            is no longer satisfied.
 
-    \value TapHandler.ReleaseWithinBounds
-           At the time of release (the mouse button is released or the finger
-           is lifted), if the event point is outside the bounds of the
-           \c parent Item, a tap gesture is not recognized. This corresponds to
-           typical behavior for button widgets: you can cancel a click by
-           dragging outside the button, and you can also change your mind by
-           dragging back inside the button before release. Note that it's
-           necessary for TapHandler to take the
-           \l {QPointerEvent::setExclusiveGrabber}{exclusive grab} on press
-           and retain it until release in order to detect this gesture.
+    \row
+        \li \c TapHandler.ReleaseWithinBounds
+            \image pointerHandlers/tapHandlerButtonReleaseWithinBounds.webp
+            Grab on press: \e exclusive
+        \li At the time of release (the mouse button is released or the finger
+            is lifted), if the \l eventPoint is outside the bounds of the
+            \c parent Item, a tap gesture is not recognized. This corresponds to
+            typical behavior for button widgets: you can cancel a click by
+            dragging outside the button, and you can also change your mind by
+            dragging back inside the button before release. Note that it's
+            necessary for TapHandler to take the
+            \l {QPointerEvent::setExclusiveGrabber}{exclusive grab} on press
+            and retain it until release in order to detect this gesture.
+            \snippet pointerHandlers/tapHandlerButtonReleaseWithinBounds.qml 1
 
-    \value TapHandler.DragWithinBounds
-           On press, TapHandler takes the
-           \l {QPointerEvent::setExclusiveGrabber}{exclusive grab}; after that,
-           the event point can be dragged within the bounds of the \c parent
-           item, while the \l timeHeld property keeps counting, and the
-           \l longPressed() signal will be emitted regardless of drag distance.
-           However, like \c WithinBounds, if the point leaves the bounds,
-           the tap gesture is \l {PointerHandler::}{canceled()}, \l active()
-           becomes \c false, and \l timeHeld stops counting. This is suitable
-           for implementing press-drag-release components, such as menus, in
-           which a single TapHandler detects press, \c timeHeld drives an
-           "opening" animation, and then the user can drag to a menu item and
-           release, while never leaving the bounds of the parent scene containing
-           the menu. This value was added in Qt 6.3.
+    \row
+        \li \c TapHandler.DragWithinBounds
+            \image pointerHandlers/dragReleaseMenu.webp
+            Grab on press: \e exclusive
+        \li On press, TapHandler takes the
+            \l {QPointerEvent::setExclusiveGrabber}{exclusive grab}; after that,
+            the \l eventPoint can be dragged within the bounds of the \c parent
+            item, while the \l timeHeld property keeps counting, and the
+            \l longPressed() signal will be emitted regardless of drag distance.
+            However, like \c WithinBounds, if the point leaves the bounds,
+            the tap gesture is \l {PointerHandler::}{canceled()}, \l active()
+            becomes \c false, and \l timeHeld stops counting. This is suitable
+            for implementing press-drag-release components, such as menus, in
+            which a single TapHandler detects press, \c timeHeld drives an
+            "opening" animation, and then the user can drag to a menu item and
+            release, while never leaving the bounds of the parent scene containing
+            the menu. This value was added in Qt 6.3.
+            \snippet pointerHandlers/dragReleaseMenu.qml 1
+    \endtable
+
+    \note If you find that TapHandler is reacting in cases that conflict with
+    some other behavior, the first thing you should try is to think about which
+    \c gesturePolicy is appropriate. If you cannot fix it by changing \c gesturePolicy,
+    some cases are better served by adjusting \l {PointerHandler::}{grabPermissions},
+    either in this handler, or in another handler that should \e prevent TapHandler
+    from reacting.
 */
 void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gesturePolicy)
 {
