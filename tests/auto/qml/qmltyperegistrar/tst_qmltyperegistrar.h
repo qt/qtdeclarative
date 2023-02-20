@@ -501,6 +501,19 @@ signals:
     void clonedSignal(int i = 7);
 };
 
+class Constructible
+{
+    Q_GADGET
+    QML_VALUE_TYPE(constructible)
+    QML_CONSTRUCTIBLE_VALUE
+public:
+    Q_INVOKABLE Constructible(int i = 12) : m_i(i) {}
+
+private:
+    int m_i;
+};
+
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -549,6 +562,7 @@ private slots:
     void duplicateExportWarnings();
     void clonedSignal();
     void baseVersionInQmltypes();
+    void constructibleValueType();
 
 private:
     QByteArray qmltypesData;

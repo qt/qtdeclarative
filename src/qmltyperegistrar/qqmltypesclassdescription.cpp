@@ -109,6 +109,7 @@ void QmlTypesClassDescription::collect(
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
     const QString classDefName = classDef->value(QLatin1String("className")).toString();
     QString foreignTypeName;
+    bool explicitCreatable = false;
     for (const QJsonValue classInfo : classInfos) {
         const QJsonObject obj = classInfo.toObject();
         const QString name = obj[QLatin1String("name")].toString();
@@ -143,6 +144,7 @@ void QmlTypesClassDescription::collect(
             removedInRevision = QTypeRevision::fromEncodedVersion(value.toInt());
         } else if (name == QLatin1String("QML.Creatable")) {
             isCreatable = (value != QLatin1String("false"));
+            explicitCreatable = true;
         } else if (name == QLatin1String("QML.Attached")) {
             attachedType = value;
             collectRelated(value, types, foreign, defaultRevision);
@@ -261,7 +263,8 @@ void QmlTypesClassDescription::collect(
     } else if (classDef && classDef->value(QLatin1String("object")).toBool()) {
         accessSemantics = QLatin1String("reference");
     } else {
-        isCreatable = false;
+        if (!explicitCreatable)
+            isCreatable = false;
         // If no classDef, we assume it's a value type defined by the foreign/extended trick.
         // Objects and namespaces always have metaobjects and therefore classDefs.
         accessSemantics = (!classDef || classDef->value(QLatin1String("gadget")).toBool())

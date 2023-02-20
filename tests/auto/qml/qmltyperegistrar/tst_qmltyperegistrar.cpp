@@ -544,4 +544,22 @@ void tst_qmltyperegistrar::baseVersionInQmltypes()
     QVERIFY(qmltypesData.contains("exports: [\"QmlTypeRegistrarTest/WithMethod 1.0\"]"));
 }
 
+void tst_qmltyperegistrar::constructibleValueType()
+{
+    QVERIFY(qmltypesData.contains(
+    R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "Constructible"
+        accessSemantics: "value"
+        exports: ["QmlTypeRegistrarTest/constructible 1.0"]
+        exportMetaObjectRevisions: [256]
+        Method {
+            name: "Constructible"
+            isConstructor: true
+            Parameter { name: "i"; type: "int" }
+        }
+        Method { name: "Constructible"; isCloned: true; isConstructor: true }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
