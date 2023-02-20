@@ -14,6 +14,7 @@ endif()
 add_subdirectory(drawingmodes)
 
 if(QT_FEATURE_private_tests)
+    add_subdirectory(doc)
     add_subdirectory(examples)
     add_subdirectory(nokeywords)
     add_subdirectory(propertyrequirements)

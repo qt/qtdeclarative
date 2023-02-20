@@ -1,0 +1,43 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquick-how-tos.html
+    \title Qt Quick How-tos
+
+    This page aims to provide an easily discoverable, useful reference that
+    shows the simplest and best way of performing specific tasks in Qt Quick.
+    Each solution provides QML and/or C++ code snippets where applicable, and
+    every snippet is automatically tested by Qt to ensure they remain
+    functional.
+
+    How do I:
+
+    \list
+    \li \l {Call a C++ function from QML when a Button is clicked}
+    \endlist
+
+    \section1 Call a C++ function from QML when a Button is clicked
+
+    Assuming that the C++ type should be globally available to the QML
+    files in the application, the simplest way is to make it a QML singleton
+    with \l QML_SINGLETON. For example, in the header file, \c backend.h:
+
+    \snippet how-tos/how-to-cpp-button/backend.h file
+
+    \c backend.cpp:
+
+    \snippet how-tos/how-to-cpp-button/backend.cpp file
+
+    You can then call that function from any QML file:
+
+    \snippet how-tos/how-to-cpp-button/Main.qml file
+
+    If the C++ type only needs to be available to a small set of QML files,
+    consider using \l QML_ELEMENT. For more ways of exposing C++ types to QML,
+    see \l {Choosing the Correct Integration Method Between C++ and QML}.
+
+    This example assumes that the \c Backend type is available in a QML module.
+    With CMake, this is done via \l qt_add_qml_module. For an example that
+    demonstrates this in detail, see \l {Building a QML application}.
+*/

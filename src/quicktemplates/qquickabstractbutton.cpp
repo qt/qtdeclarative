@@ -62,6 +62,8 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick.Controls::AbstractButton::clicked()
 
     This signal is emitted when the button is interactively clicked by the user via touch, mouse, or keyboard.
+
+    \sa {Call a C++ function from QML when a Button is clicked}
 */
 
 /*!
