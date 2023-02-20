@@ -52,7 +52,7 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
 
     At this time, drag-and-drop is not yet supported.
 
-    \sa Drag, MouseArea
+    \sa Drag, MouseArea, {Pointer Handlers Example}
 */
 
 QQuickDragHandler::QQuickDragHandler(QQuickItem *parent)
