@@ -1220,6 +1220,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml");
     QTest::newRow("constructorProperty") << QStringLiteral("constructorProperty.qml");
     QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml");
+    QTest::newRow("VariantMapGetPropertyLookup") << QStringLiteral("variantMapLookup.qml");
 }
 
 void TestQmllint::cleanQmlCode()

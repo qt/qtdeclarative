@@ -37,6 +37,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_urlType = builtinTypes.type(u"QUrl"_s).scope;
     m_dateTimeType = builtinTypes.type(u"QDateTime"_s).scope;
     m_variantListType = builtinTypes.type(u"QVariantList"_s).scope;
+    m_variantMapType = builtinTypes.type(u"QVariantMap"_s).scope;
     m_varType = builtinTypes.type(u"QVariant"_s).scope;
     m_jsValueType = builtinTypes.type(u"QJSValue"_s).scope;
     m_listPropertyType = builtinTypes.type(u"QQmlListProperty<QObject>"_s).scope;
@@ -714,14 +715,13 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     if (type->isListProperty())
         return m_listPropertyType;
 
-    if (isPrimitive(type) || equals(type, m_jsValueType)
-            || equals(type, m_urlType) || equals(type, m_dateTimeType)
-            || equals(type, m_variantListType) || equals(type, m_varType)
-            || equals(type, m_stringListType) || equals(type, m_emptyListType)
-            || equals(type, m_byteArrayType)) {
+    if (isPrimitive(type) || equals(type, m_jsValueType) || equals(type, m_urlType)
+        || equals(type, m_dateTimeType) || equals(type, m_variantListType)
+        || equals(type, m_variantMapType) || equals(type, m_varType)
+        || equals(type, m_stringListType) || equals(type, m_emptyListType)
+        || equals(type, m_byteArrayType)) {
         return type;
     }
-
     if (type->scopeType() == QQmlJSScope::EnumScope)
         return m_intType;
 
@@ -1007,6 +1007,16 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
     if (equals(type, metaObjectType()))
         return {};
 
+    if (equals(type, variantMapType())) {
+        QQmlJSMetaProperty prop;
+        prop.setPropertyName(name);
+        prop.setTypeName(u"QVariant"_s);
+        prop.setType(varType());
+        prop.setIsWritable(true);
+        return QQmlJSRegisterContent::create(varType(), prop,
+                                             QQmlJSRegisterContent::GenericObjectProperty, type);
+    }
+
     if (equals(type, jsValueType())) {
         QQmlJSMetaProperty prop;
         prop.setPropertyName(name);
@@ -1014,7 +1024,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
         prop.setType(jsValueType());
         prop.setIsWritable(true);
         return QQmlJSRegisterContent::create(jsValueType(), prop,
-                                             QQmlJSRegisterContent::JavaScriptObjectProperty, type);
+                                             QQmlJSRegisterContent::GenericObjectProperty, type);
     }
 
     if ((equals(type, stringType())
@@ -1135,9 +1145,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
         prop.setPropertyName(name);
         prop.setType(jsValueType());
         prop.setIsWritable(true);
-        return QQmlJSRegisterContent::create(jsValueType(), prop,
-                                             QQmlJSRegisterContent::JavaScriptObjectProperty,
-                                             jsValueType());
+        return QQmlJSRegisterContent::create(
+                jsValueType(), prop, QQmlJSRegisterContent::GenericObjectProperty, jsValueType());
     }
     if (type.isImportNamespace()) {
         if (type.scopeType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {

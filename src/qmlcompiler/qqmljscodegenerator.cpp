@@ -1035,6 +1035,14 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
                     m_state.accumulatorVariableIn + u".count("_s + u'&'
                         + m_state.accumulatorVariableIn + u')');
         m_body += u";\n"_s;
+    } else if (m_typeResolver->registerIsStoredIn(accumulatorIn,
+                                                  m_typeResolver->variantMapType())) {
+        QString mapLookup = m_state.accumulatorVariableIn + u"["_s
+                + QQmlJSUtils::toLiteral(m_jsUnitGenerator->lookupName(index)) + u"]"_s;
+        m_body += m_state.accumulatorVariableOut + u" = "_s;
+        m_body += conversion(m_typeResolver->globalType(m_typeResolver->varType()),
+                             m_state.accumulatorOut(), mapLookup);
+        m_body += u";\n"_s;
     } else if ((m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->stringType())
                 || accumulatorIn.storedType()->accessSemantics()
                     == QQmlJSScope::AccessSemantics::Sequence)
