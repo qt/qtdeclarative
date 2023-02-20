@@ -803,6 +803,9 @@
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtIndex(QModelIndex index, PositionMode mode, point offset, rect subRect)
 
+    Positions the view such that \a index is at the position specified
+    by \a mode, \a offset and \a subRect.
+
     Convenience method for calling
     \code
     positionViewAtRow(index.row, mode & Qt.AlignVertical_Mask, offset.y, subRect)
