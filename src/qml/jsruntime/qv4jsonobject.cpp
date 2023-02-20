@@ -695,12 +695,18 @@ QString Stringify::Str(const QString &key, const Value &v)
     }
 
     if (replacerFunction) {
-        ScopedObject holder(scope, v4->newObject());
-        holder->put(scope.engine->id_empty(), value);
         JSCallArguments jsCallData(scope, 2);
         jsCallData.args[0] = v4->newString(key);
         jsCallData.args[1] = value;
-        *jsCallData.thisObject = holder;
+
+        if (stack.isEmpty()) {
+            ScopedObject holder(scope, v4->newObject());
+            holder->put(scope.engine->id_empty(), v);
+            *jsCallData.thisObject = holder;
+        } else {
+            *jsCallData.thisObject = stack.top();
+        }
+
         value = replacerFunction->call(jsCallData);
         if (v4->hasException)
             return QString();

@@ -136,7 +136,10 @@ private slots:
     void reentrancy_Array();
     void reentrancy_objectCreation();
     void jsIncDecNonObjectProperty();
-    void JSONparse();
+    void JSON_Parse();
+    void JSON_Stringify_data();
+    void JSON_Stringify();
+    void JSON_Stringify_WithReplacer_QTBUG_95324();
     void arraySort();
     void lookupOnDisappearingProperty();
     void arrayConcat();
@@ -3305,11 +3308,63 @@ void tst_QJSEngine::jsIncDecNonObjectProperty()
     }
 }
 
-void tst_QJSEngine::JSONparse()
+void tst_QJSEngine::JSON_Parse()
 {
     QJSEngine eng;
     QJSValue ret = eng.evaluate("var json=\"{\\\"1\\\": null}\"; JSON.parse(json);");
     QVERIFY(ret.isObject());
+}
+
+void tst_QJSEngine::JSON_Stringify_data()
+{
+    QTest::addColumn<QString>("object");
+    QTest::addColumn<QString>("json");
+
+    // Basic "smoke" test. More tests are provided by test262 suite.
+    // Don't test with multiple key-value pairs on the same level,
+    // because serialization order might not be deterministic.
+    // Note: parenthesis are required, otherwise objects will be interpretted as code blocks.
+    QTest::newRow("empty")          << "({})"               << "{}";
+    QTest::newRow("string")         << "({a: 'b'})"         << "{\"a\":\"b\"}";
+    QTest::newRow("number")         << "({c: 42})"          << "{\"c\":42}";
+    QTest::newRow("boolean")        << "({d: true})"        << "{\"d\":true}";
+    QTest::newRow("key is array")   << "({[[12, 34]]: 56})" << "{\"12,34\":56}";
+    QTest::newRow("value is date")  << "({d: new Date('2000-01-20T12:00:00.000Z')})"  << "{\"d\":\"2000-01-20T12:00:00.000Z\"}";
+}
+
+void tst_QJSEngine::JSON_Stringify()
+{
+    QFETCH(QString, object);
+    QFETCH(QString, json);
+
+    QJSEngine eng;
+
+    QJSValue obj = eng.evaluate(object);
+    QVERIFY(obj.isObject());
+
+    QJSValue func = eng.evaluate("(function(obj) { return JSON.stringify(obj); })");
+    QVERIFY(func.isCallable());
+
+    QJSValue ret = func.call(QJSValueList{obj});
+    QVERIFY(ret.isString());
+    QCOMPARE(ret.toString(), json);
+}
+
+void tst_QJSEngine::JSON_Stringify_WithReplacer_QTBUG_95324()
+{
+    QJSEngine eng;
+    QJSValue json = eng.evaluate(R"(
+        function replacer(k, v) {
+          if (this[k] instanceof Date) {
+            return Math.floor(this[k].getTime() / 1000.0);
+          }
+          return v;
+        }
+        const obj = {d: new Date('2000-01-20T12:00:00.000Z')};
+        JSON.stringify(obj, replacer);
+    )");
+    QVERIFY(json.isString());
+    QCOMPARE(json.toString(), QString::fromLatin1("{\"d\":948369600}"));
 }
 
 void tst_QJSEngine::arraySort()
