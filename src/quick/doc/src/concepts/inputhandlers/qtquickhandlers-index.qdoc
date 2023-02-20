@@ -70,7 +70,8 @@
     PointHandler) can work only with passive grabs; others require exclusive
     grabs; and others can "lurk" with passive grabs until they detect that a
     gesture is being performed, and then make the transition from passive to
-    exclusive grab.
+    exclusive grab. TapHandler's grabbing behavior is
+    \l {TapHandler::gesturePolicy}{configurable}.
 
     When a grab transition is requested, \l PointerHandler::grabPermissions,
     \l QQuickItem::keepMouseGrab() and \l QQuickItem::keepTouchGrab() control
