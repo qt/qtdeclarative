@@ -168,6 +168,7 @@ private slots:
     void dialogButtonBox();
     void equalityQUrl();
     void undefinedToDouble();
+    void variantMapLookup();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3268,6 +3269,16 @@ void tst_QmlCppCodegen::undefinedToDouble()
     const QVariant d = o->property("d");
     QCOMPARE(d.metaType(), QMetaType::fromType<double>());
     QVERIFY(std::isnan(d.toDouble()));
+}
+
+void tst_QmlCppCodegen::variantMapLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/variantMapLookup.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("i"), 42);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

@@ -178,4 +178,17 @@ Module {
         exportMetaObjectRevisions: [256]
         Method { name: "createObject"; isJavaScriptFunction: true }
     }
+    Component {
+        file: "variantMapLookup.h"
+        name: "VariantMapLookupFoo"
+        prototype: "QObject"
+        exports: ["TestTypes/VariantMapLookupFoo 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property {
+            name: "data"
+            type: "QVariantMap"
+            read: "data"
+            index: 0
+        }
+    }
 }

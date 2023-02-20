@@ -18,6 +18,7 @@ set(cpp_sources
     state.h
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
+    variantMapLookup.h
     wrapwithvariant.h
     withlength.h
 )
@@ -200,6 +201,7 @@ set(qml_files
     valueTypeProperty.qml
     valueTypeReference.qml
     variantlist.qml
+    variantMapLookup.qml
     versionmismatch.qml
     voidfunction.qml
     dummy_imports.qml
