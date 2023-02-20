@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
     want to react to all the touchpoints but do not require the smooth
     native-gesture experience.
 
-    \sa MultiPointTouchArea
+    \sa MultiPointTouchArea, {Pointer Handlers Example}
 */
 
 QQuickPointHandler::QQuickPointHandler(QQuickItem *parent)

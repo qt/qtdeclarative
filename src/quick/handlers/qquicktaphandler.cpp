@@ -84,7 +84,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
     QStyleHints::touchDoubleTapDistance() with touch, and the time between
     taps must not exceed QStyleHints::mouseDoubleClickInterval().
 
-    \sa MouseArea
+    \sa MouseArea, {Pointer Handlers Example}
 */
 
 QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
@@ -291,6 +291,8 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
             and retain it until release in order to detect this gesture.
             \snippet pointerHandlers/tapHandlerButtonReleaseWithinBounds.qml 1
     \endtable
+
+    The \l {Pointer Handlers Example} demonstrates some use cases for these.
 
     \note If you find that TapHandler is reacting in cases that conflict with
     some other behavior, the first thing you should try is to think about which

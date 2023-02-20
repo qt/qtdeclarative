@@ -67,7 +67,7 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
     The \l cursorShape property allows changing the cursor whenever
     \l hovered changes to \c true.
 
-    \sa MouseArea, PointHandler
+    \sa MouseArea, PointHandler, {Pointer Handlers Example}
 */
 
 QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
