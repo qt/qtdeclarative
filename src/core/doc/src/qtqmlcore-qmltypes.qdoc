@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \qmlmodule QtCore 6.\QtMinorVersion
+    \qmlmodule QtCore
     \title Qt QML Core QML Types
     \ingroup qmlmodules
     \brief Provides core system functionality in QML.
