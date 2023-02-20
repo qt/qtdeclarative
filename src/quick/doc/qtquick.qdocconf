@@ -70,7 +70,8 @@ excludedirs += \
 exampledirs += \
     ../../../examples/quick \
     ../../qmlmodels/doc/snippets \
-    snippets
+    snippets \
+    ../../../tests/auto/quick/doc
 
 imagedirs += images
 

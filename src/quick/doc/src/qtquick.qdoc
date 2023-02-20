@@ -104,6 +104,8 @@ To find out more about using the QML language, see the \l{Qt QML} module documen
         \li \l {Qt QML}
             - documentation for the Qt QML module, which provides the QML engine
             and language infrastructure
+        \li \l {Qt Quick How-tos}
+            - shows how to achieve specific tasks in Qt Quick
     \endlist
 \endlist
 
