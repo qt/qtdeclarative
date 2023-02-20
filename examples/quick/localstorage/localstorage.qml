@@ -7,15 +7,18 @@ import QtQuick.Layouts
 import QtQuick.LocalStorage
 import "Database.js" as JS
 
+pragma ComponentBehavior: Bound
+
 Window {
     id: window
+
+    property bool creatingNewEntry: false
+    property bool editingEntry: false
+
     visible: true
     width: Screen.width / 2
     height: Screen.height / 1.8
     color: "#161616"
-
-    property bool creatingNewEntry: false
-    property bool editingEntry: false
 
     Rectangle {
         anchors.fill: parent
@@ -42,10 +45,10 @@ Window {
                 }
                 Button {
                     id: saveButton
-                    enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex != -1
+                    enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex !== -1
                     text: qsTr("Save")
                     onClicked: {
-                        var insertedRow = false;
+                        let insertedRow = false;
                         if (listView.model.get(listView.currentIndex).id < 1) {
                             //insert mode
                             if (input.insertrec()) {
@@ -76,7 +79,7 @@ Window {
                 Button {
                     id: editButton
                     text: qsTr("Edit")
-                    enabled: !window.creatingNewEntry && !window.editingEntry && listView.currentIndex != -1
+                    enabled: !window.creatingNewEntry && !window.editingEntry && listView.currentIndex !== -1
                     onClicked: {
                         input.editrec(listView.model.get(listView.currentIndex).date,
                                       listView.model.get(listView.currentIndex).trip_desc,
@@ -89,11 +92,11 @@ Window {
                 Button {
                     id: deleteButton
                     text: qsTr("Delete")
-                    enabled: !window.creatingNewEntry && listView.currentIndex != -1
+                    enabled: !window.creatingNewEntry && listView.currentIndex !== -1
                     onClicked: {
                         JS.dbDeleteRow(listView.model.get(listView.currentIndex).id)
                         listView.model.remove(listView.currentIndex, 1)
-                        if (listView.count == 0) {
+                        if (listView.count === 0) {
                             // ListView doesn't automatically set its currentIndex to -1
                             // when the count becomes 0.
                             listView.currentIndex = -1
@@ -103,7 +106,7 @@ Window {
                 Button {
                     id: cancelButton
                     text: qsTr("Cancel")
-                    enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex != -1
+                    enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex !== -1
                     onClicked: {
                         if (listView.model.get(listView.currentIndex).id === 0) {
                             // This entry had an id of 0, which means it was being created and hadn't
@@ -123,7 +126,7 @@ Window {
             }
             Item {
                 Layout.fillWidth: true
-                height: 5
+                Layout.preferredHeight: 5
             }
             Label {
                 Layout.alignment: Qt.AlignCenter
@@ -133,8 +136,8 @@ Window {
             Component {
                 id: highlightBar
                 Rectangle {
-                    width: listView.currentItem !== null ? listView.currentItem.width : implicitWidth
-                    height: listView.currentItem !== null ? listView.currentItem.height : implicitHeight
+                    width: listView.currentItem?.width ?? implicitWidth
+                    height: listView.currentItem?.height ?? implicitHeight
                     color: "lightgreen"
                 }
             }
@@ -157,19 +160,23 @@ Window {
 
                 header: Component {
                     RowLayout {
-                        property var headerTitles: [qsTr("Date"), qsTr("Description"), qsTr("Distance")]
                         width: ListView.view.width
                         Repeater {
-                            model: headerTitles
+                            model: [qsTr("Date"), qsTr("Description"), qsTr("Distance")]
                             delegate: Label {
                                 id: headerTitleDelegate
+
+                                required property string modelData
+
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: 1
                                 text: modelData
-                                font.pointSize: 15
-                                font.bold: true
-                                font.underline: true
+                                font {
+                                    pointSize: 15
+                                    bold: true
+                                    underline: true
+                                }
                                 padding: 12
                                 horizontalAlignment: Label.AlignHCenter
                             }
@@ -183,7 +190,7 @@ Window {
                 font.bold: true
                 font.pointSize: 20
                 opacity: 0.0
-                visible: opacity !== 0 // properly cull item if effectively invisible
+                visible: opacity > 0 // properly cull item if effectively invisible
                 Layout.alignment: Layout.Center
 
                 function displayWarning(text) {
