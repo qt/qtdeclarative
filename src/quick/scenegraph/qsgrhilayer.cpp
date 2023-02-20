@@ -443,10 +443,13 @@ QImage QSGRhiLayer::toImage() const
         return QImage();
     }
 
-    // There is no room for negotiation here, the texture is RGBA8, and the
-    // readback happens with GL_RGBA on GL, so RGBA8888 is the only option.
+    // There is little room for negotiation here, the texture is one of the formats from setFormat.
     // Also, Quick is always premultiplied alpha.
-    const QImage::Format imageFormat = QImage::Format_RGBA8888_Premultiplied;
+    QImage::Format imageFormat = QImage::Format_RGBA8888_Premultiplied;
+    if (m_format == QRhiTexture::RGBA16F)
+        imageFormat = QImage::Format_RGBA16FPx4_Premultiplied;
+    else if (m_format == QRhiTexture::RGBA32F)
+        imageFormat = QImage::Format_RGBA32FPx4_Premultiplied;
 
     const uchar *p = reinterpret_cast<const uchar *>(result.data.constData());
     return QImage(p, result.pixelSize.width(), result.pixelSize.height(), imageFormat).mirrored();
