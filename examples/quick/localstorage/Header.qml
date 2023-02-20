@@ -8,15 +8,15 @@ import "Database.js" as JS
 
 Item {
     id: root
-    width: Screen.width / 2
-    height: Screen.height / 7
-
     required property ListView listView
     signal statusMessage(string msg)
+
+    width: Screen.width / 2
+    height: Screen.height / 7
     enabled: false
 
     function insertrec() {
-        var rowid = parseInt(JS.dbInsert(dateInput.text, descInput.text, distInput.text), 10)
+        const rowid = parseInt(JS.dbInsert(dateInput.text, descInput.text, distInput.text), 10)
         if (rowid) {
             listView.model.setProperty(listView.currentIndex, "id", rowid)
             listView.forceLayout()
@@ -101,11 +101,10 @@ Item {
                         activeFocusOnTab: true
 
                         ToolTip {
-                            parent: dateInput
                             x: parent.width + 3
                             y: (parent.height - height) / 2
                             text: qsTr("Date format = 'YYYY-MM-DD'")
-                            visible: parent.enabled && parent.hovered
+                            visible: dateInput.enabled && dateInput.hovered
                             delay: 1000
                         }
 
@@ -113,13 +112,13 @@ Item {
                             regularExpression: /\d{4}[,.:/-]\d\d?[,.:/-]\d\d?/
                         }
 
-                        onFocusChanged: ()=> {
+                        onFocusChanged: function() {
                             if (!dateInput.focus && !acceptableInput && root.enabled)
                                 root.statusMessage(qsTr("Please fill in the date"));
                         }
 
-                        onEditingFinished: ()=> {
-                            let regex = /(\d+)[,.:/-](\d+)[,.:/-](\d+)/
+                        onEditingFinished: function() {
+                            const regex = /(\d+)[,.:/-](\d+)[,.:/-](\d+)/
                             if (dateInput.text.match(regex))
                                 dateInput.text = dateInput.text.replace(regex, '$1-$2-$3')
                         }
@@ -127,29 +126,29 @@ Item {
 
                     TextField {
                         id: descInput
+                        property string oldString
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
-                        property string oldString
-                        onFocusChanged: ()=> { if (focus) oldString = descInput.text; }
-                        onEditingFinished: ()=> {
-                            if (descInput.text.length < 8  && descInput.text != descInput.oldString && root.enabled)
+                        onFocusChanged: if (focus) oldString = descInput.text
+                        onEditingFinished: function() {
+                            if (descInput.text.length < 8 && descInput.text !== descInput.oldString && root.enabled)
                                 root.statusMessage(qsTr("Enter a description of minimum 8 characters"))
                         }
                     }
 
                     TextField {
                         id: distInput
+                        property string oldString
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
                         validator: RegularExpressionValidator {
                             regularExpression: /\d{1,3}/
                         }
-                        property string oldString
-                        onFocusChanged: ()=> { if (focus) oldString = distInput.text; }
-                        onEditingFinished: ()=> {
-                            if (distInput.text == "" && distInput.text != distInput.oldString && root.enabled)
+                        onFocusChanged: if (focus) oldString = distInput.text
+                        onEditingFinished: function() {
+                            if (distInput.text === "" && distInput.text !== distInput.oldString && root.enabled)
                                 root.statusMessage(qsTr("Please fill in the distance"))
                         }
                     }
