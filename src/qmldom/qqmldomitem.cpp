@@ -1309,6 +1309,70 @@ bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOp
                 });
     });
 }
+static bool visitPrototypeIndex(QList<DomItem> &toDo, DomItem &current,
+                                DomItem &derivedFromPrototype, ErrorHandler h,
+                                QList<Path> *visitedRefs, VisitPrototypesOptions options,
+                                DomItem &prototype)
+{
+    Path elId = prototype.canonicalPath();
+    if (visitedRefs->contains(elId))
+        return true;
+    else
+        visitedRefs->append(elId);
+    QList<DomItem> protos = prototype.getAll(h, visitedRefs);
+    if (protos.isEmpty()) {
+        if (std::shared_ptr<DomEnvironment> envPtr =
+                    derivedFromPrototype.environment().ownerAs<DomEnvironment>())
+            if (!(envPtr->options() & DomEnvironment::Option::NoDependencies))
+                derivedFromPrototype.myErrors()
+                        .warning(derivedFromPrototype.tr("could not resolve prototype %1 (%2)")
+                                         .arg(current.canonicalPath().toString(),
+                                              prototype.field(Fields::referredObjectPath)
+                                                      .value()
+                                                      .toString()))
+                        .withItem(derivedFromPrototype)
+                        .handle(h);
+    } else {
+        if (protos.size() > 1) {
+            QStringList protoPaths;
+            for (DomItem &p : protos)
+                protoPaths.append(p.canonicalPath().toString());
+            derivedFromPrototype.myErrors()
+                    .warning(derivedFromPrototype
+                                     .tr("Multiple definitions found, using first only, resolving "
+                                         "prototype %1 (%2): %3")
+                                     .arg(current.canonicalPath().toString(),
+                                          prototype.field(Fields::referredObjectPath)
+                                                  .value()
+                                                  .toString(),
+                                          protoPaths.join(QLatin1String(", "))))
+                    .withItem(derivedFromPrototype)
+                    .handle(h);
+        }
+        int nProtos = 1; // change to protos.length() to use all prototypes
+        // (sloppier)
+        for (int i = nProtos; i != 0;) {
+            DomItem proto = protos.at(--i);
+            if (proto.internalKind() == DomType::Export) {
+                if (!(options & VisitPrototypesOption::ManualProceedToScope))
+                    proto = proto.proceedToScope(h, visitedRefs);
+                toDo.append(proto);
+            } else if (proto.internalKind() == DomType::QmlObject) {
+                toDo.append(proto);
+            } else {
+                derivedFromPrototype.myErrors()
+                        .warning(derivedFromPrototype.tr("Unexpected prototype type %1 (%2)")
+                                         .arg(current.canonicalPath().toString(),
+                                              prototype.field(Fields::referredObjectPath)
+                                                      .value()
+                                                      .toString()))
+                        .withItem(derivedFromPrototype)
+                        .handle(h);
+            }
+        }
+    }
+    return true;
+}
 
 bool DomItem::visitPrototypeChain(function_ref<bool(DomItem &)> visitor,
                                   VisitPrototypesOptions options, ErrorHandler h,
@@ -1349,63 +1413,7 @@ bool DomItem::visitPrototypeChain(function_ref<bool(DomItem &)> visitor,
         shouldVisit = true;
         current.field(Fields::prototypes)
                 .visitIndexes([&toDo, &current, this, &h, visitedRefs, options](DomItem &el) {
-                    Path elId = el.canonicalPath();
-                    if (visitedRefs->contains(elId))
-                        return true;
-                    else
-                        visitedRefs->append(elId);
-                    QList<DomItem> protos = el.getAll(h, visitedRefs);
-                    if (protos.isEmpty()) {
-                        if (std::shared_ptr<DomEnvironment> envPtr =
-                                    environment().ownerAs<DomEnvironment>())
-                            if (!(envPtr->options() & DomEnvironment::Option::NoDependencies))
-                                myErrors()
-                                        .warning(tr("could not resolve prototype %1 (%2)")
-                                                         .arg(current.canonicalPath().toString(),
-                                                              el.field(Fields::referredObjectPath)
-                                                                      .value()
-                                                                      .toString()))
-                                        .withItem(*this)
-                                        .handle(h);
-                    } else {
-                        if (protos.size() > 1) {
-                            QStringList protoPaths;
-                            for (DomItem &p : protos)
-                                protoPaths.append(p.canonicalPath().toString());
-                            myErrors()
-                                    .warning(tr("Multiple definitions found, using first only, "
-                                                "resolving prototype %1 (%2): %3")
-                                                     .arg(current.canonicalPath().toString(),
-                                                          el.field(Fields::referredObjectPath)
-                                                                  .value()
-                                                                  .toString(),
-                                                          protoPaths.join(QLatin1String(", "))))
-                                    .withItem(*this)
-                                    .handle(h);
-                        }
-                        int nProtos = 1; // change to protos.length() to us all prototypes found
-                                         // (sloppier)
-                        for (int i = nProtos; i != 0;) {
-                            DomItem proto = protos.at(--i);
-                            if (proto.internalKind() == DomType::Export) {
-                                if (!(options & VisitPrototypesOption::ManualProceedToScope))
-                                    proto = proto.proceedToScope(h, visitedRefs);
-                                toDo.append(proto);
-                            } else if (proto.internalKind() == DomType::QmlObject) {
-                                toDo.append(proto);
-                            } else {
-                                myErrors()
-                                        .warning(tr("Unexpected prototype type %1 (%2)")
-                                                         .arg(current.canonicalPath().toString(),
-                                                              el.field(Fields::referredObjectPath)
-                                                                      .value()
-                                                                      .toString()))
-                                        .withItem(*this)
-                                        .handle(h);
-                            }
-                        }
-                    }
-                    return true;
+                    return visitPrototypeIndex(toDo, current, *this, h, visitedRefs, options, el);
                 });
     }
     return true;
