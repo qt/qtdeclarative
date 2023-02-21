@@ -1341,6 +1341,14 @@ void AOTCompiledContext::writeToConsole(
     }
 }
 
+QVariant AOTCompiledContext::constructValueType(
+        QMetaType resultMetaType, const QMetaObject *resultMetaObject,
+        int ctorIndex, void *ctorArg) const
+{
+    return QQmlValueTypeProvider::constructValueType(
+                resultMetaType, resultMetaObject, ctorIndex, ctorArg);
+}
+
 bool AOTCompiledContext::callQmlContextPropertyLookup(
         uint index, void **args, const QMetaType *types, int argc) const
 {

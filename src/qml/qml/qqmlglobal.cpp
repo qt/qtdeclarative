@@ -94,6 +94,17 @@ static void callConstructor(
 }
 
 template<typename Allocate>
+static void fromVerifiedType(
+        const QMetaObject *mo, int ctorIndex, void *sData, Allocate &&allocate)
+{
+    const QMetaMethod ctor = mo->constructor(ctorIndex);
+    Q_ASSERT_X(ctor.parameterCount() == 1, "fromVerifiedType",
+               "Value type constructor must take exactly one argument");
+    callConstructor(mo, ctorIndex, sData, allocate());
+}
+
+
+template<typename Allocate>
 static bool fromMatchingType(
         const QMetaObject *mo, const QV4::Value &s, Allocate &&allocate)
 {
@@ -297,6 +308,16 @@ bool QQmlValueTypeProvider::createValueType(const QV4::Value &s, QMetaType metaT
     }
 
     return false;
+}
+
+QVariant QQmlValueTypeProvider::constructValueType(
+        QMetaType resultMetaType, const QMetaObject *resultMetaObject,
+        int ctorIndex, void *ctorArg)
+{
+    QVariant result;
+    fromVerifiedType(resultMetaObject, ctorIndex, ctorArg,
+                     [&]() { return createVariantData(resultMetaType, &result); });
+    return result;
 }
 
 static QVariant fromJSValue(const QQmlType &type, const QJSValue &s, QMetaType metaType)

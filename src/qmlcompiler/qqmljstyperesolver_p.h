@@ -169,6 +169,10 @@ public:
     bool canHold(const QQmlJSScope::ConstPtr &container,
                  const QQmlJSScope::ConstPtr &contained) const;
 
+    QQmlJSMetaMethod selectConstructor(
+            const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &argument,
+            bool *isExtension) const;
+
 protected:
 
     QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;

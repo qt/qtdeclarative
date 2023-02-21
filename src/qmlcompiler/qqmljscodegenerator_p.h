@@ -213,12 +213,49 @@ protected:
                        const QQmlJSRegisterContent &to,
                        const QString &variable)
     {
-        return conversion(from.storedType(), to.storedType(), variable);
+        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
+        if (m_typeResolver->registerIsStoredIn(to, contained)
+                || m_typeResolver->registerIsStoredIn(from, m_typeResolver->intType())
+                || to.storedType()->isReferenceType()
+                || m_typeResolver->registerContains(from, contained)) {
+            // If:
+            // * the output is not actually wrapped at all, or
+            // * the input is stored in an int (as there are no internals to an int), or
+            // * the output is a QObject pointer, or
+            // * we merely wrap the value into a new container,
+            // we can convert by stored type.
+            return convertStored(from.storedType(), to.storedType(), variable);
+        } else {
+            return convertContained(from, to, variable);
+        }
     }
 
     QString conversion(const QQmlJSScope::ConstPtr &from,
-                       const QQmlJSScope::ConstPtr &to,
-                       const QString &variable);
+                       const QQmlJSRegisterContent &to,
+                       const QString &variable)
+    {
+        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
+        if (m_typeResolver->equals(to.storedType(), contained)
+                || to.storedType()->isReferenceType()
+                || m_typeResolver->equals(from, contained)) {
+            // If:
+            // * the output is not actually wrapped at all, or
+            // * the output is a QObject pointer, or
+            // * we merely wrap the value into a new container,
+            // we can convert by stored type.
+            return convertStored(from, to.storedType(), variable);
+        } else {
+            return convertContained(m_typeResolver->globalType(from), to, variable);
+        }
+    }
+
+    QString convertStored(const QQmlJSScope::ConstPtr &from,
+                          const QQmlJSScope::ConstPtr &to,
+                          const QString &variable);
+
+    QString convertContained(const QQmlJSRegisterContent &from,
+                             const QQmlJSRegisterContent &to,
+                             const QString &variable);
 
     QString errorReturnValue();
     void reject(const QString &thing);
@@ -263,7 +300,6 @@ private:
     void generateInPlaceOperation(const QString &cppOperator);
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
-    void generateOutputVariantConversion(const QQmlJSScope::ConstPtr &containedType);
     void generateVariantEqualityComparison(const QQmlJSRegisterContent &nonStorable,
                                            const QString &registerName, bool invert);
     void rejectIfNonQObjectOut(const QString &error);

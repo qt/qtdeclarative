@@ -1,6 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 
 #include "data/druggeljug.h"
+#include "data/withlength.h"
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
 #include <data/enumproblems.h>
@@ -172,6 +173,7 @@ private slots:
     void mathMinMax();
     void enumFromBadSingleton();
     void objectLookupOnListElement();
+    void multipleCtors();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3423,6 +3425,18 @@ void tst_QmlCppCodegen::objectLookupOnListElement()
                            + u":21: TypeError: Cannot read property 'z' of undefined"_s));
     QMetaObject::invokeMethod(object.data(), "zOrders", Q_RETURN_ARG(QList<int>, zOrders));
     QCOMPARE(zOrders, (QList<int>()));
+}
+
+void tst_QmlCppCodegen::multipleCtors()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/multipleCtors.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("wr").value<ValueTypeWithLength>().length(), 3);
+    QCOMPARE(o->property("wp").value<ValueTypeWithLength>().length(), 11);
+    QCOMPARE(o->property("wi").value<ValueTypeWithLength>().length(), 17);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

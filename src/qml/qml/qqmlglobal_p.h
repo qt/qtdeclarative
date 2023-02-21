@@ -190,6 +190,9 @@ class QQmlValueTypeProvider
 {
 public:
     static bool createValueType(const QV4::Value &, QMetaType, void *);
+    static QVariant constructValueType(
+            QMetaType resultMetaType, const QMetaObject *resultMetaObject,
+            int ctorIndex, void *ctorArg);
 
     static QVariant createValueType(const QJSValue &, QMetaType);
     static QVariant createValueType(const QString &, QMetaType);

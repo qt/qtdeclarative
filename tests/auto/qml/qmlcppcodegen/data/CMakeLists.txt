@@ -144,6 +144,7 @@ set(qml_files
     modulePrefix.qml
     moveRegVoid.qml
     multiforeign.qml
+    multipleCtors.qml
     namespaceWithEnum.qml
     noBindingLoop.qml
     noQQmlData.qml

@@ -166,6 +166,7 @@ void QQmlJSTypeDescriptionReader::readDependencies(UiScriptBinding *ast)
 
 void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 {
+    m_currentCtorIndex = 0;
     QQmlJSScope::Ptr scope = QQmlJSScope::create();
     QList<QQmlJSScope::Export> exports;
 
@@ -262,8 +263,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
     m_objects->append({scope, exports});
 }
 
-void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
-                                               const QQmlJSScope::Ptr &scope)
+void QQmlJSTypeDescriptionReader::readSignalOrMethod(
+        UiObjectDefinition *ast, bool isMethod, const QQmlJSScope::Ptr &scope)
 {
     QQmlJSMetaMethod metaMethod;
     // ### confusion between Method and Slot. Method should be removed.
@@ -296,6 +297,13 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
                 metaMethod.setIsCloned(true);
             } else if (name == QLatin1String("isConstructor")) {
                 metaMethod.setIsConstructor(true);
+
+                // The constructors in the moc json output are ordered the same
+                // way as the ones in the metaobject. qmltyperegistrar moves them into
+                // the same list as the other members, but maintains their order.
+                metaMethod.setConstructorIndex(
+                            QQmlJSMetaMethod::RelativeFunctionIndex(m_currentCtorIndex++));
+
             } else if (name == QLatin1String("isJavaScriptFunction")) {
                 metaMethod.setIsJavaScriptFunction(true);
             } else if (name == QLatin1String("isList")) {

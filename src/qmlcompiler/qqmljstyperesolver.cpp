@@ -536,11 +536,9 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
     //       in QQmlJSCodeGenerator::conversion().
     if (equals(from, m_stringType) && !to.isNull()) {
         const QString toTypeName = to->internalName();
-        if (toTypeName == u"QTime"_s || toTypeName == u"QDate"_s
-                || toTypeName == u"QPoint"_s || toTypeName == u"QPointF"_s
+        if (toTypeName == u"QPoint"_s || toTypeName == u"QPointF"_s
                 || toTypeName == u"QSize"_s || toTypeName == u"QSizeF"_s
-                || toTypeName == u"QRect"_s || toTypeName == u"QRectF"_s
-                || toTypeName == u"QColor"_s) {
+                || toTypeName == u"QRect"_s || toTypeName == u"QRectF"_s) {
             return true;
         }
     }
@@ -957,6 +955,56 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
     return false;
 }
 
+QQmlJSMetaMethod QQmlJSTypeResolver::selectConstructor(
+        const QQmlJSScope::ConstPtr &type, const QQmlJSScope::ConstPtr &passedArgumentType, bool *isExtension) const
+{
+    // If the "from" type can hold the target type, we should not try to coerce
+    // it to any constructor argument.
+    if (canHold(passedArgumentType, type))
+        return QQmlJSMetaMethod();
+
+    if (QQmlJSScope::ConstPtr extension = type->extensionType().scope) {
+        const QQmlJSMetaMethod ctor = selectConstructor(extension, passedArgumentType, nullptr);
+        if (ctor.isValid()) {
+            if (isExtension)
+                *isExtension = true;
+            return ctor;
+        }
+    }
+
+    if (isExtension)
+        *isExtension = false;
+
+    QQmlJSMetaMethod candidate;
+    if (!type->isCreatable() || type->accessSemantics() != QQmlJSScope::AccessSemantics::Value)
+        return candidate;
+
+    const auto ownMethods = type->ownMethods();
+    for (const QQmlJSMetaMethod &method : ownMethods) {
+        if (!method.isConstructor())
+            continue;
+
+        const auto index = method.constructorIndex();
+        Q_ASSERT(index != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
+
+        const auto methodArguments = method.parameters();
+        if (methodArguments.size() != 1)
+            continue;
+
+        const QQmlJSScope::ConstPtr methodArgumentType = methodArguments[0].type();
+
+        if (equals(passedArgumentType, methodArgumentType))
+            return method;
+
+        if (!candidate.isValid()
+                && canPrimitivelyConvertFromTo(passedArgumentType, methodArgumentType)) {
+            candidate = method;
+        }
+    }
+
+    return candidate;
+}
+
 bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const
 {
@@ -1041,7 +1089,7 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
         return true;
 
-    return false;
+    return selectConstructor(to, from, nullptr).isValid();
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::lengthProperty(

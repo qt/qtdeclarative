@@ -5,6 +5,8 @@
 #define WITHLENGTH_H
 
 #include <QtCore/qobject.h>
+#include <QtCore/qpoint.h>
+#include <QtCore/qrect.h>
 #include <QtQmlIntegration/qqmlintegration.h>
 
 struct ValueTypeWithLength
@@ -18,6 +20,8 @@ struct ValueTypeWithLength
 public:
     ValueTypeWithLength() = default;
     Q_INVOKABLE ValueTypeWithLength(int length) : m_length(length) {}
+    Q_INVOKABLE ValueTypeWithLength(QPointF point) : m_length(point.manhattanLength()) {}
+    Q_INVOKABLE ValueTypeWithLength(QRectF rect) : m_length(rect.width()) {}
     Q_INVOKABLE QString toString() const { return QStringLiteral("no"); }
 
     int length() const { return m_length; }

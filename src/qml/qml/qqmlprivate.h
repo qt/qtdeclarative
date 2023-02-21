@@ -644,7 +644,9 @@ namespace QQmlPrivate
                 QtMsgType type, const QString &message,
                 const QLoggingCategory *loggingCategory) const;
 
-        QString objectToString(QObject *object) const;
+        QVariant constructValueType(
+                QMetaType resultMetaType, const QMetaObject *resultMetaObject,
+                int ctorIndex, void *ctorArg) const;
 
         // All of these lookup functions should be used as follows:
         //
