@@ -27,6 +27,6 @@ Item {
     PointHandler {
         id: handler
         objectName: "pointHandler"
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.NoButton // don't care: we want everything, moves too
     }
 }
