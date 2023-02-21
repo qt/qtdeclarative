@@ -26,11 +26,11 @@ QString FileSystemModel::readFile(const QString &filePath)
 
     QFile file(filePath);
 
-    const QMimeDatabase db;
-    const QMimeType mime = db.mimeTypeForFile(QFileInfo(file));
-
     if (file.size() >= 2'000'000)
         return tr("File size is too big.\nYou can read files up to %1 MB.").arg(2);
+
+    static const QMimeDatabase db;
+    const QMimeType mime = db.mimeTypeForFile(QFileInfo(file));
 
     // Check if the mimetype is supported and return the content.
     const auto mimeTypesForFile = mime.parentMimeTypes();
