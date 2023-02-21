@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickpointhandler_p.h"
+#include <private/qquickdeliveryagent_p_p.h>
 #include <private/qquickwindow_p.h>
-
 #include <QDebug>
 #include <QtCore/qpointer.h>
 
@@ -90,31 +90,34 @@ QQuickPointHandler::QQuickPointHandler(QQuickItem *parent)
 bool QQuickPointHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
 {
     // On press, we want it unless a sibling of the same type also does.
-    if (point.state() == QEventPoint::Pressed && QQuickSinglePointHandler::wantsEventPoint(event, point)) {
+    // If a synth-mouse press occurs, and we've already been interested in the original point, stay interested.
+    const bool trackedPointId = QQuickSinglePointHandler::point().id() == point.id() &&
+            QQuickSinglePointHandler::point().device() == point.device();
+    if ((point.state() == QEventPoint::Pressed && QQuickSinglePointHandler::wantsEventPoint(event, point))
+            || (QQuickDeliveryAgentPrivate::isSynthMouse(event) && trackedPointId)) {
         for (const QObject *grabber : event->passiveGrabbers(point)) {
-            if (grabber && grabber->parent() == parent() &&
+            if (grabber && grabber != this && grabber->parent() == parent() &&
                     grabber->metaObject()->className() == metaObject()->className())
                 return false;
         }
         return true;
     }
     // If we've already been interested in a point, stay interested, even if it has strayed outside bounds.
-    return (point.state() != QEventPoint::Pressed &&
-            QQuickSinglePointHandler::point().id() == point.id());
+    return (point.state() != QEventPoint::Pressed && trackedPointId);
 }
 
 void QQuickPointHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
 {
     switch (point.state()) {
     case QEventPoint::Pressed:
-        if (QQuickDeliveryAgentPrivate::isTouchEvent(event) ||
+        if (acceptedButtons() == Qt::NoButton || !event->isSinglePointEvent() ||
                 (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) != Qt::NoButton) {
             setPassiveGrab(event, point);
             setActive(true);
         }
         break;
     case QEventPoint::Released:
-        if (QQuickDeliveryAgentPrivate::isTouchEvent(event) ||
+        if (acceptedButtons() == Qt::NoButton || !event->isSinglePointEvent() ||
                 (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton)
             setActive(false);
         break;
@@ -123,7 +126,8 @@ void QQuickPointHandler::handleEventPoint(QPointerEvent *event, QEventPoint &poi
     }
     point.setAccepted(false); // Just lurking... don't interfere with propagation
     emit translationChanged();
-    QQuickSinglePointHandler::handleEventPoint(event, point);
+    if (!QQuickDeliveryAgentPrivate::isSynthMouse(event))
+        QQuickSinglePointHandler::handleEventPoint(event, point);
 }
 
 QVector2D QQuickPointHandler::translation() const
@@ -138,12 +142,28 @@ QVector2D QQuickPointHandler::translation() const
 
     By default, this property is set to \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
     It can be set to an OR combination of mouse buttons, and will ignore events
-    in which other buttons are pressed or held.
+    in which other buttons are pressed or held. If it is set to \c Qt.NoButton,
+    it means it does not care about buttons at all, and ignores synthetic
+    mouse events that come from any device for which it's already handling
+    an authentic \l eventPoint.
 
     \snippet pointerHandlers/pointHandlerAcceptedButtons.qml 0
 
     \note On a touchscreen, there are no buttons, so this property does not
     prevent PointHandler from reacting to touchpoints.
+
+    \note By default, when this property holds \c Qt.LeftButton, if a
+    non-mouse \l {PointerDevice} (such as a touchscreen or graphics tablet
+    stylus) is allowed to generate synthetic mouse events, those usually
+    indicate that the left mouse button is pressed, and those events can
+    temporarily de-activate the PointHandler which was already reacting to an
+    authentic \l eventPoint from the device. It's useful to declare
+    \qml
+    acceptedButtons: \c Qt.NoButton
+    \endqml
+    to avoid this issue. See also
+    \l Qt::AA_SynthesizeMouseForUnhandledTouchEvents and
+    \l Qt::AA_SynthesizeMouseForUnhandledTabletEvents.
 */
 
 /*!
