@@ -19,7 +19,7 @@ ScrollablePage {
         }
 
         TextArea {
-            width: pane.availableWidth / 3
+            width: page.availableWidth / 3
             anchors.horizontalCenter: parent.horizontalCenter
 
             wrapMode: TextArea.Wrap

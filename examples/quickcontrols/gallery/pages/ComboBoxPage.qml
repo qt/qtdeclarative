@@ -33,16 +33,17 @@ ScrollablePage {
         }
 
         ComboBox {
+            id: comboBox
+
             editable: true
             model: ListModel {
-                id: model
                 ListElement { text: "Banana" }
                 ListElement { text: "Apple" }
                 ListElement { text: "Coconut" }
             }
             onAccepted: {
                 if (find(editText) === -1)
-                    model.append({text: editText})
+                    comboBox.model.append({text: comboBox.editText})
             }
             anchors.horizontalCenter: parent.horizontalCenter
         }

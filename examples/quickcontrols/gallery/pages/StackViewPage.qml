@@ -1,6 +1,8 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 
@@ -42,6 +44,13 @@ StackView {
                     width: Math.max(button.implicitWidth, Math.min(button.implicitWidth * 2, pane.availableWidth / 3))
                     anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: stackView.pop()
+                }
+
+                Label {
+                    width: parent.width
+                    wrapMode: Label.Wrap
+                    horizontalAlignment: Qt.AlignHCenter
+                    text: "Stack Depth: " + stackView.depth
                 }
             }
         }

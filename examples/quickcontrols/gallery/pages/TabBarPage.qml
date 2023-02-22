@@ -16,8 +16,8 @@ Page {
             model: 3
 
             Pane {
-                width: swipeView.width
-                height: swipeView.height
+                width: SwipeView.view.width
+                height: SwipeView.view.height
 
                 Column {
                     spacing: 40

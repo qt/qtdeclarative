@@ -1,6 +1,8 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtCore
 import QtQuick
 import QtQuick.Layouts
@@ -14,6 +16,10 @@ ApplicationWindow {
     height: 520
     visible: true
     title: "Qt Quick Controls"
+
+    //! [orientation]
+    readonly property bool portraitMode: window.width < window.height
+    //! [orientation]
 
     function help() {
         let displayingControl = listView.currentIndex !== -1
@@ -41,7 +47,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: StandardKey.HelpContents
-        onActivated: help()
+        onActivated: window.help()
     }
 
     Action {
@@ -72,14 +78,16 @@ ApplicationWindow {
         RowLayout {
             spacing: 20
             anchors.fill: parent
+            anchors.leftMargin: !window.portraitMode ? drawer.width : undefined
 
             ToolButton {
                 action: navigateBackAction
+                visible: window.portraitMode
             }
 
             Label {
                 id: titleLabel
-                text: listView.currentItem ? listView.currentItem.text : "Gallery"
+                text: listView.currentItem ? (listView.currentItem as ItemDelegate).text : "Gallery"
                 font.pixelSize: 20
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
@@ -101,7 +109,7 @@ ApplicationWindow {
                     }
                     Action {
                         text: "Help"
-                        onTriggered: help()
+                        onTriggered: window.help()
                     }
                     Action {
                         text: "About"
@@ -114,9 +122,13 @@ ApplicationWindow {
 
     Drawer {
         id: drawer
+
         width: Math.min(window.width, window.height) / 3 * 2
         height: window.height
-        interactive: stackView.depth === 1
+        modal: window.portraitMode
+        interactive: window.portraitMode ? (stackView.depth === 1) : false
+        position: window.portraitMode ? 0 : 1
+        visible: !window.portraitMode
 
         ListView {
             id: listView
@@ -124,17 +136,6 @@ ApplicationWindow {
             focus: true
             currentIndex: -1
             anchors.fill: parent
-
-            delegate: ItemDelegate {
-                width: listView.width
-                text: model.title
-                highlighted: ListView.isCurrentItem
-                onClicked: {
-                    listView.currentIndex = index
-                    stackView.push(model.source)
-                    drawer.close()
-                }
-            }
 
             model: ListModel {
                 ListElement { title: "BusyIndicator"; source: "qrc:/pages/BusyIndicatorPage.qml" }
@@ -165,13 +166,34 @@ ApplicationWindow {
                 ListElement { title: "Tumbler"; source: "qrc:/pages/TumblerPage.qml" }
             }
 
+            delegate: ItemDelegate {
+                id: delegateItem
+                width: ListView.view.width
+                text: title
+                highlighted: ListView.isCurrentItem
+
+                required property int index
+                required property var model
+                required property string title
+                required property string source
+
+                onClicked: {
+                    listView.currentIndex = index
+                    stackView.push(source)
+                    if (window.portraitMode)
+                        drawer.close()
+                }
+            }
+
             ScrollIndicator.vertical: ScrollIndicator { }
         }
     }
 
     StackView {
         id: stackView
+
         anchors.fill: parent
+        anchors.leftMargin: !window.portraitMode ? drawer.width : undefined
 
         initialItem: Pane {
             id: pane
@@ -203,6 +225,7 @@ ApplicationWindow {
                 source: "images/arrow.png"
                 anchors.left: parent.left
                 anchors.bottom: parent.bottom
+                visible: window.portraitMode
             }
         }
     }
