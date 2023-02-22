@@ -1690,13 +1690,13 @@ bool QQmlPropertyPrivate::write(
         if (!ok && QQmlMetaType::isInterface(propertyMetaType)) {
             auto valueAsQObject = qvariant_cast<QObject *>(value);
 
-            if (void *interface = valueAsQObject
+            if (void *iface = valueAsQObject
                         ? valueAsQObject->qt_metacast(QQmlMetaType::interfaceIId(propertyMetaType))
                         : nullptr;
-                interface) {
+                iface) {
                 // this case can occur when object has an interface type
                 // and the variant contains a type implementing the interface
-                return property.writeProperty(object, &interface, flags);
+                return property.writeProperty(object, &iface, flags);
             }
         }
 

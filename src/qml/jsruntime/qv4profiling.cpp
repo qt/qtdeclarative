@@ -88,10 +88,10 @@ void Profiler::startProfiling(quint64 features)
                                                (qint64)m_engine->memoryManager->getLargeItemsMem(),
                                                HeapPage};
             m_memory_data.append(heap);
-            MemoryAllocationProperties small = {timestamp,
+            MemoryAllocationProperties smallP = {timestamp,
                                                 (qint64)m_engine->memoryManager->getUsedMem(),
                                                 SmallItem};
-            m_memory_data.append(small);
+            m_memory_data.append(smallP);
             MemoryAllocationProperties large = {timestamp,
                                                 (qint64)m_engine->memoryManager->getLargeItemsMem(),
                                                 LargeItem};
