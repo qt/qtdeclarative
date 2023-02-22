@@ -874,6 +874,10 @@ QT_DEFINE_NATIVE_INTERFACE(QSGD3D12Texture);
 
     \a size specifies the size in pixels.
 
+    \a resourceState must specify the
+    \l{https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_resource_states}{current state}
+    of the texture resource.
+
     \note This function must be called on the scene graph rendering thread.
 
     \sa QQuickWindow::sceneGraphInitialized(), QSGTexture,
