@@ -84,7 +84,7 @@ void QmlCompletionSupport::updatedSnapshot(const QByteArray &url)
     processPending(url);
 }
 
-void QmlCompletionSupport::process(CompletionRequest *req)
+void QmlCompletionSupport::process(RequestPointerArgument req)
 {
     QmlLsp::OpenDocumentSnapshot doc = m_codeModel->snapshotByUrl(req->parameters.textDocument.uri);
     req->sendCompletions(doc);

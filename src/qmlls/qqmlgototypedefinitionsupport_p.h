@@ -42,7 +42,7 @@ public:
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
 
-    void process(TypeDefinitionRequest *request) override;
+    void process(RequestPointerArgument request) override;
 
     void typeDefinitionRequestHandler(const QByteArray &,
                                       const QLspSpecification::TypeDefinitionParams &params,

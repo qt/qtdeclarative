@@ -63,7 +63,7 @@ void QmlGoToTypeDefinitionSupport::registerHandlers(QLanguageServer *,
     });
 }
 
-void QmlGoToTypeDefinitionSupport::process(TypeDefinitionRequest *request)
+void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
 {
     QList<QLspSpecification::Location> results;
     QScopeGuard onExit([&results, &request]() { request->response.sendResponse(results); });

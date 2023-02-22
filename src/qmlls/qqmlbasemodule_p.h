@@ -19,6 +19,7 @@
 #include "qqmlcodemodel_p.h"
 
 #include <QObject>
+#include <unordered_map>
 
 template<typename ParametersT, typename ResponseT>
 struct BaseRequest
@@ -45,6 +46,8 @@ struct QQmlBaseModule : public QLanguageServerModule
 {
     using RequestParameters = typename RequestType::Parameters;
     using RequestResponse = typename RequestType::Response;
+    using RequestPointer = std::unique_ptr<RequestType>;
+    using RequestPointerArgument = RequestPointer &&;
 
     QQmlBaseModule(QmlLsp::QQmlCodeModel *codeModel);
     ~QQmlBaseModule();
@@ -54,11 +57,11 @@ struct QQmlBaseModule : public QLanguageServerModule
                                      RequestResponse &&response);
     void processPending(const QByteArray &url);
     // processes a request in a different thread.
-    virtual void process(RequestType *toBeProcessed) = 0;
+    virtual void process(RequestPointerArgument toBeProcessed) = 0;
 
 protected:
     QMutex m_pending_mutex;
-    QMultiHash<QString, RequestType *> m_pending;
+    std::unordered_multimap<QString, RequestPointer> m_pending;
     QmlLsp::QQmlCodeModel *m_codeModel;
 };
 
@@ -82,8 +85,7 @@ template<typename RequestType>
 QQmlBaseModule<RequestType>::~QQmlBaseModule()
 {
     QMutexLocker l(&m_pending_mutex);
-    qDeleteAll(m_pending);
-    m_pending.clear();
+    m_pending.clear(); // empty the m_pending while the mutex is hold
 }
 
 // make the registerHandlers method easier to write
@@ -92,19 +94,19 @@ bool QQmlBaseModule<RequestType>::addRequestAndCheckForUpdate(QmlLsp::OpenDocume
                                                               const RequestParameters &parameters,
                                                               RequestResponse &&response)
 {
-    auto *req = new RequestType;
-    bool requestIsValid = req->fillFrom(doc, parameters, std::move(response));
+    auto req = std::make_unique<RequestType>();
+    const bool requestIsValid = req->fillFrom(doc, parameters, std::move(response));
     if (!requestIsValid) {
         req->response.sendErrorResponse(0, "Received invalid request", parameters);
-        delete req;
         return false;
     }
+    const int minVersion = req->minVersion;
     {
         QMutexLocker l(&m_pending_mutex);
-        m_pending.insert(QString::fromUtf8(req->parameters.textDocument.uri), req);
+        m_pending.insert({ QString::fromUtf8(req->parameters.textDocument.uri), std::move(req) });
     }
     const bool requireSnapshotUpdate =
-            doc.snapshot.docVersion && *doc.snapshot.docVersion >= req->minVersion;
+            doc.snapshot.docVersion && *doc.snapshot.docVersion >= minVersion;
     return requireSnapshotUpdate;
 }
 
@@ -113,20 +115,20 @@ template<typename RequestType>
 void QQmlBaseModule<RequestType>::processPending(const QByteArray &url)
 {
     QmlLsp::OpenDocumentSnapshot doc = m_codeModel->snapshotByUrl(url);
-    QList<RequestType *> toCompl;
+    std::vector<RequestPointer> toCompl;
     {
         QMutexLocker l(&m_pending_mutex);
-        for (auto [it, end] = m_pending.equal_range(QString::fromUtf8(url)); it != end; ++it) {
-            if (doc.docVersion && it.value()->minVersion <= *doc.docVersion)
-                toCompl.append(it.value());
+        for (auto [it, end] = m_pending.equal_range(QString::fromUtf8(url)); it != end;) {
+            if (auto &[key, value] = *it; doc.docVersion && value->minVersion <= *doc.docVersion) {
+                toCompl.push_back(std::move(value));
+                it = m_pending.erase(it);
+            } else {
+                ++it;
+            }
         }
-        for (auto req : toCompl)
-            m_pending.remove(QString::fromUtf8(url), req);
     }
     for (auto it = toCompl.rbegin(), end = toCompl.rend(); it != end; ++it) {
-        RequestType *req = *it;
-        process(req);
-        delete req;
+        process(std::move(*it));
     }
 }
 

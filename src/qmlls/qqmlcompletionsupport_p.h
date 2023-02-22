@@ -47,7 +47,7 @@ public:
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
-    void process(CompletionRequest *req) override;
+    void process(RequestPointerArgument req) override;
 public Q_SLOTS:
     void updatedSnapshot(const QByteArray &uri);
 };
