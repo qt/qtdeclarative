@@ -56,9 +56,8 @@ QString QQmlJSCodeGenerator::castTargetName(const QQmlJSScope::ConstPtr &type) c
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
         const QV4::Compiler::JSUnitGenerator *unitGenerator,
         const QQmlJSTypeResolver *typeResolver,
-        QQmlJSLogger *logger, const QStringList &sourceCodeLines)
+        QQmlJSLogger *logger)
     : QQmlJSCompilePass(unitGenerator, typeResolver, logger)
-    , m_sourceCodeLines(sourceCodeLines)
     , m_context(compilerContext)
 {}
 
@@ -140,6 +139,9 @@ QT_WARNING_POP
 
     QQmlJSAotFunction result;
     result.includes.swap(m_includes);
+
+    result.code += u"// %1 at line %2, column %3\n"_s
+            .arg(m_context->name).arg(m_context->line).arg(m_context->column);
 
     QDuplicateTracker<QString> generatedVariables;
     for (auto registerIt = m_registerVariables.cbegin(), registerEnd = m_registerVariables.cend();
@@ -2543,17 +2545,6 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
              || !m_state.accumulatorVariableOut.isEmpty()
              || !isTypeStorable(m_typeResolver, m_state.changedRegister().storedType()));
 
-    const int currentLine = currentSourceLocation().startLine;
-    if (currentLine != m_lastLineNumberUsed) {
-        const int nextLine = nextJSLine(currentLine);
-        for (auto line = currentLine - 1; line < nextLine - 1; ++line) {
-            m_body += u"// "_s;
-            m_body += m_sourceCodeLines.value(line).trimmed();
-            m_body += u'\n';
-        }
-        m_lastLineNumberUsed = currentLine;
-    }
-
     // If the instruction has no side effects and doesn't write any register, it's dead.
     // We might still need the label, though, and the source code comment.
     if (!m_state.hasSideEffects() && changedRegisterVariable().isEmpty())
@@ -3106,21 +3097,6 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
 
     reject(u"conversion from "_s + from->internalName() + u" to "_s + to->internalName());
     return QString();
-}
-
-int QQmlJSCodeGenerator::nextJSLine(uint line) const
-{
-    auto findLine = [](int line, const QV4::CompiledData::CodeOffsetToLineAndStatement &entry) {
-        return entry.line > line;
-    };
-    const auto codeToLine
-        = std::upper_bound(m_context->lineAndStatementNumberMapping.constBegin(),
-                           m_context->lineAndStatementNumberMapping.constEnd(),
-                           line,
-                           findLine);
-    bool bNoNextLine = m_context->lineAndStatementNumberMapping.constEnd() == codeToLine;
-
-    return static_cast<int>(bNoNextLine ? -1 : codeToLine->line);
 }
 
 void QQmlJSCodeGenerator::reject(const QString &thing)
