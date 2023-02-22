@@ -33,7 +33,7 @@ public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
                        const QV4::Compiler::JSUnitGenerator *unitGenerator,
                        const QQmlJSTypeResolver *typeResolver,
-                       QQmlJSLogger *logger, const QStringList &sourceCodeLines);
+                       QQmlJSLogger *logger);
     ~QQmlJSCodeGenerator() = default;
 
     QQmlJSAotFunction run(const Function *function, const InstructionAnnotations *annotations,
@@ -288,17 +288,12 @@ private:
         return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
     }
 
-    int nextJSLine(uint line) const;
-
-    QStringList m_sourceCodeLines;
-
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;
 
     const QV4::Compiler::Context *m_context = nullptr;
     const InstructionAnnotations *m_annotations = nullptr;
 
-    int m_lastLineNumberUsed = -1;
     bool m_skipUntilNextLabel = false;
 
     QStringList m_includes;
