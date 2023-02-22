@@ -75,7 +75,6 @@ protected:
             const QString &message, QtMsgType type, const QQmlJS::SourceLocation &location) const;
 
     QQmlJSTypeResolver m_typeResolver;
-    QStringList m_entireSourceCodeLines;
 
     const QString m_resourcePath;
     const QStringList m_qmldirFiles;
