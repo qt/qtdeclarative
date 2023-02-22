@@ -83,6 +83,8 @@ public:
     void setHslHue(qreal);
     void setHslSaturation(qreal);
     void setHslLightness(qreal);
+
+    operator QColor() const { return v; }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickVector2DValueType
@@ -118,6 +120,8 @@ public:
     Q_INVOKABLE QVector4D toVector4d() const;
     Q_INVOKABLE bool fuzzyEquals(const QVector2D &vec, qreal epsilon) const;
     Q_INVOKABLE bool fuzzyEquals(const QVector2D &vec) const;
+
+    operator QVector2D() const { return v; }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickVector3DValueType
@@ -158,6 +162,8 @@ public:
     Q_INVOKABLE QVector4D toVector4d() const;
     Q_INVOKABLE bool fuzzyEquals(const QVector3D &vec, qreal epsilon) const;
     Q_INVOKABLE bool fuzzyEquals(const QVector3D &vec) const;
+
+    operator QVector3D() const { return v; }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickVector4DValueType
@@ -200,6 +206,8 @@ public:
     Q_INVOKABLE QVector3D toVector3d() const;
     Q_INVOKABLE bool fuzzyEquals(const QVector4D &vec, qreal epsilon) const;
     Q_INVOKABLE bool fuzzyEquals(const QVector4D &vec) const;
+
+    operator QVector4D() const { return v; }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickQuaternionValueType
@@ -247,6 +255,8 @@ public:
 
     Q_INVOKABLE bool fuzzyEquals(const QQuaternion &q, qreal epsilon) const;
     Q_INVOKABLE bool fuzzyEquals(const QQuaternion &q) const;
+
+    operator QQuaternion() const { return v; }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4ValueType
@@ -339,6 +349,8 @@ public:
 
     Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m, qreal epsilon) const;
     Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m) const;
+
+    operator QMatrix4x4() const { return v; }
 };
 
 namespace QQuickFontEnums
@@ -454,6 +466,8 @@ public:
 
     bool preferShaping() const;
     void setPreferShaping(bool b);
+
+    operator QFont() const { return v; }
 };
 
 namespace QQuickColorSpaceEnums
@@ -518,6 +532,8 @@ public:
     void setTransferFunction(QQuickColorSpaceEnums::TransferFunction transferFunction);
     float gamma() const noexcept;
     void setGamma(float gamma);
+
+    operator QColorSpace() const { return v; }
 };
 
 QT_END_NAMESPACE
