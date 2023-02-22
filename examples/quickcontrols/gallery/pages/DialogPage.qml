@@ -25,7 +25,7 @@ ScrollablePage {
         Button {
             text: "Message"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: buttonWidth
+            width: page.buttonWidth
             onClicked: messageDialog.open()
 
             Dialog {
@@ -46,7 +46,7 @@ ScrollablePage {
             id: button
             text: "Confirmation"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: buttonWidth
+            width: page.buttonWidth
             onClicked: confirmationDialog.open()
 
             Dialog {
@@ -77,7 +77,7 @@ ScrollablePage {
         Button {
             text: "Content"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: buttonWidth
+            width: page.buttonWidth
             onClicked: contentDialog.open()
 
             Dialog {
@@ -139,7 +139,7 @@ ScrollablePage {
         Button {
             text: "Input"
             anchors.horizontalCenter: parent.horizontalCenter
-            width: buttonWidth
+            width: page.buttonWidth
             onClicked: inputDialog.open()
 
             Dialog {
