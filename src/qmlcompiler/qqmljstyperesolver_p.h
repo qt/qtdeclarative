@@ -128,10 +128,11 @@ public:
     QQmlJSScope::ConstPtr trackedContainedType(const QQmlJSRegisterContent &container) const;
     QQmlJSScope::ConstPtr originalContainedType(const QQmlJSRegisterContent &container) const;
 
-    void adjustTrackedType(const QQmlJSScope::ConstPtr &tracked,
-                           const QQmlJSScope::ConstPtr &conversion) const;
-    void adjustTrackedType(const QQmlJSScope::ConstPtr &tracked,
-                           const QList<QQmlJSScope::ConstPtr> &conversions) const;
+    [[nodiscard]] bool adjustTrackedType(
+            const QQmlJSScope::ConstPtr &tracked, const QQmlJSScope::ConstPtr &conversion) const;
+    [[nodiscard]] bool adjustTrackedType(
+            const QQmlJSScope::ConstPtr &tracked,
+            const QList<QQmlJSScope::ConstPtr> &conversions) const;
     void generalizeType(const QQmlJSScope::ConstPtr &type) const;
 
     void setParentMode(ParentMode mode) { m_parentMode = mode; }

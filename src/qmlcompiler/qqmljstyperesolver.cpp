@@ -450,23 +450,30 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::originalContainedType(
     return originalType(containedType(container));
 }
 
-void QQmlJSTypeResolver::adjustTrackedType(
+bool QQmlJSTypeResolver::adjustTrackedType(
         const QQmlJSScope::ConstPtr &tracked, const QQmlJSScope::ConstPtr &conversion) const
 {
     if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
-        return;
+        return true;
 
     const auto it = m_trackedTypes->find(tracked);
     Q_ASSERT(it != m_trackedTypes->end());
+
+    // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
+    // we better not change the type.
+    if (!canPrimitivelyConvertFromTo(tracked, conversion))
+        return false;
+
     it->replacement = comparableType(conversion);
     *it->clone = std::move(*QQmlJSScope::clone(conversion));
+    return true;
 }
 
-void QQmlJSTypeResolver::adjustTrackedType(
+bool QQmlJSTypeResolver::adjustTrackedType(
         const QQmlJSScope::ConstPtr &tracked, const QList<QQmlJSScope::ConstPtr> &conversions) const
 {
     if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
-        return;
+        return true;
 
     const auto it = m_trackedTypes->find(tracked);
     Q_ASSERT(it != m_trackedTypes->end());
@@ -477,10 +484,12 @@ void QQmlJSTypeResolver::adjustTrackedType(
 
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
-    if (canPrimitivelyConvertFromTo(tracked, result)) {
-        it->replacement = comparableType(result);
-        *mutableTracked = std::move(*QQmlJSScope::clone(result));
-    }
+    if (!canPrimitivelyConvertFromTo(tracked, result))
+        return false;
+
+    it->replacement = comparableType(result);
+    *mutableTracked = std::move(*QQmlJSScope::clone(result));
+    return true;
 }
 
 void QQmlJSTypeResolver::generalizeType(const QQmlJSScope::ConstPtr &type) const
