@@ -2380,8 +2380,13 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
 
     const QString input = registerVariable(lhs);
     const QQmlJSRegisterContent inputContent = m_state.readRegister(lhs);
-    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(inputContent);
     const QQmlJSRegisterContent outputContent = m_state.accumulatorOut();
+
+    // If the original output is a conversion, we're supposed to check for the contained
+    // type and if it doesn't match, set the result to null or undefined.
+    const QQmlJSRegisterContent originalContent = m_typeResolver->original(outputContent);
+
+    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(originalContent);
 
     if (contained->isReferenceType()) {
         m_body += m_state.accumulatorVariableOut + u" = "_s;
@@ -2399,9 +2404,6 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
         m_body += u";\n"_s;
         return;
     } else if (m_typeResolver->equals(inputContent.storedType(), m_typeResolver->varType())) {
-        // If the original output is a conversion, we're supposed to check for the contained
-        // type and if it doesn't match, set the result to undefined.
-        const auto originalContent = m_typeResolver->original(outputContent);
         if (originalContent.isConversion()) {
             const auto origins = originalContent.conversionOrigins();
             Q_ASSERT(origins.size() == 2);

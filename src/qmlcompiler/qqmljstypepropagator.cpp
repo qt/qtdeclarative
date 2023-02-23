@@ -1985,7 +1985,7 @@ void QQmlJSTypePropagator::generate_As(int lhs)
                     m_typeResolver->globalType(m_typeResolver->voidType()));
     }
 
-    addReadRegister(lhs, output);
+    addReadRegister(lhs, input);
     setAccumulator(output);
 }
 
