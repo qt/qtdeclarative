@@ -15,8 +15,8 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "RadioButton presents an option button that can be toggled on or off. "
-                + "Radio buttons are typically used to select one option from a set of options."
+            text: qsTr("RadioButton presents an option button that can be toggled on or off. "
+                + "Radio buttons are typically used to select one option from a set of options.")
         }
 
         Column {
@@ -24,14 +24,14 @@ ScrollablePage {
             anchors.horizontalCenter: parent.horizontalCenter
 
             RadioButton {
-                text: "First"
+                text: qsTr("First")
             }
             RadioButton {
-                text: "Second"
+                text: qsTr("Second")
                 checked: true
             }
             RadioButton {
-                text: "Third"
+                text: qsTr("Third")
                 enabled: false
             }
         }

@@ -27,8 +27,8 @@ Page {
                         width: parent.width
                         wrapMode: Label.Wrap
                         horizontalAlignment: Qt.AlignHCenter
-                        text: "TabBar is a bar with icons or text which allows the user "
-                              + "to switch between different subtasks, views, or modes."
+                        text: qsTr("TabBar is a bar with icons or text which allows the user "
+                              + "to switch between different subtasks, views, or modes.")
                     }
 
                     Image {
@@ -45,13 +45,13 @@ Page {
         currentIndex: swipeView.currentIndex
 
         TabButton {
-            text: "First"
+            text: qsTr("First")
         }
         TabButton {
-            text: "Second"
+            text: qsTr("Second")
         }
         TabButton {
-            text: "Third"
+            text: qsTr("Third")
         }
     }
 }

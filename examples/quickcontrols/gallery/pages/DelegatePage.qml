@@ -15,7 +15,7 @@ Pane {
             Layout.fillWidth: true
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "Delegate controls are used as delegates in views such as ListView."
+            text: qsTr("Delegate controls are used as delegates in views such as ListView.")
         }
 
         ListView {
@@ -85,7 +85,7 @@ Pane {
                                 // qmllint disable unqualified
                                 font.pixelSize: swipeDelegate.font.pixelSize
                                 // qmllint enable unqualified
-                                text: "Remove"
+                                text: qsTr("Remove")
                                 color: "white"
                                 anchors.centerIn: parent
                             }
@@ -161,21 +161,21 @@ Pane {
             }
 
             model: ListModel {
-                ListElement { type: "ItemDelegate"; value: "ItemDelegate1" }
-                ListElement { type: "ItemDelegate"; value: "ItemDelegate2" }
-                ListElement { type: "ItemDelegate"; value: "ItemDelegate3" }
-                ListElement { type: "SwipeDelegate"; value: "SwipeDelegate1" }
-                ListElement { type: "SwipeDelegate"; value: "SwipeDelegate2" }
-                ListElement { type: "SwipeDelegate"; value: "SwipeDelegate3" }
-                ListElement { type: "CheckDelegate"; value: "CheckDelegate1" }
-                ListElement { type: "CheckDelegate"; value: "CheckDelegate2" }
-                ListElement { type: "CheckDelegate"; value: "CheckDelegate3" }
-                ListElement { type: "RadioDelegate"; value: "RadioDelegate1" }
-                ListElement { type: "RadioDelegate"; value: "RadioDelegate2" }
-                ListElement { type: "RadioDelegate"; value: "RadioDelegate3" }
-                ListElement { type: "SwitchDelegate"; value: "SwitchDelegate1" }
-                ListElement { type: "SwitchDelegate"; value: "SwitchDelegate2" }
-                ListElement { type: "SwitchDelegate"; value: "SwitchDelegate3" }
+                ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate1") }
+                ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate2") }
+                ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate3") }
+                ListElement { type: "SwipeDelegate"; value: qsTr("SwipeDelegate1") }
+                ListElement { type: "SwipeDelegate"; value: qsTr("SwipeDelegate2") }
+                ListElement { type: "SwipeDelegate"; value: qsTr("SwipeDelegate3") }
+                ListElement { type: "CheckDelegate"; value: qsTr("CheckDelegate1") }
+                ListElement { type: "CheckDelegate"; value: qsTr("CheckDelegate2") }
+                ListElement { type: "CheckDelegate"; value: qsTr("CheckDelegate3") }
+                ListElement { type: "RadioDelegate"; value: qsTr("RadioDelegate1") }
+                ListElement { type: "RadioDelegate"; value: qsTr("RadioDelegate2") }
+                ListElement { type: "RadioDelegate"; value: qsTr("RadioDelegate3") }
+                ListElement { type: "SwitchDelegate"; value: qsTr("SwitchDelegate1") }
+                ListElement { type: "SwitchDelegate"; value: qsTr("SwitchDelegate2") }
+                ListElement { type: "SwitchDelegate"; value: qsTr("SwitchDelegate3") }
             }
 
             delegate: Loader {

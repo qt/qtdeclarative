@@ -23,9 +23,9 @@ Flickable {
                 width: parent.width
                 wrapMode: Label.Wrap
                 horizontalAlignment: Qt.AlignHCenter
-                text: "ScrollBar is an interactive bar that can be used to scroll to a specific position. "
+                text: qsTr("ScrollBar is an interactive bar that can be used to scroll to a specific position. "
                     + "A scroll bar can be either vertical or horizontal, and can be attached to any Flickable, "
-                    + "such as ListView and GridView."
+                    + "such as ListView and GridView.")
             }
 
             Image {

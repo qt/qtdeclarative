@@ -17,7 +17,7 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "Frame is used to layout a logical group of controls together, within a visual frame."
+            text: qsTr("Frame is used to layout a logical group of controls together, within a visual frame.")
         }
 
         Frame {
@@ -28,17 +28,17 @@ ScrollablePage {
                 width: page.itemWidth
 
                 RadioButton {
-                    text: "First"
+                    text: qsTr("First")
                     checked: true
                     width: parent.width
                 }
                 RadioButton {
                     id: button
-                    text: "Second"
+                    text: qsTr("Second")
                     width: parent.width
                 }
                 RadioButton {
-                    text: "Third"
+                    text: qsTr("Third")
                     width: parent.width
                 }
             }
