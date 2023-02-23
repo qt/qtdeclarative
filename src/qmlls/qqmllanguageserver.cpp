@@ -20,25 +20,38 @@ using namespace Qt::StringLiterals;
 /*!
 \internal
 \class QmlLsp::QQmlLanguageServer
-\brief Class that sets up a QmlLanguageServer
+\brief Sets up a QmlLanguageServer.
 
 This class sets up a QML language server.
-It needs a function
+
+Use the following function to send replies:
+
 \code
 std::function<void(const QByteArray &)> sendData
 \endcode
-to send out its replies, and one should feed the data it receives to the server()->receive() method.
-It is expected to call this method only from a single thread, and not to block, the simplest way to
-achieve this is to avoid direct calls, and connect it as slot, while reading from another thread.
 
-The Server is build with separate QLanguageServerModule that implement a given functionality, and
-all of them are constructed and registered with the QLanguageServer in the constructor o this class.
+And, feed the data that the function receives to the \c {server()->receive()}
+method.
 
-Generally all operations are expected to be done in the object thread, and handlers are always
-called from it, but they are free to delegate the response to another thread, the response handler
-is thread safe. All the methods of the server() obect are also threadsafe.
+Call this method only from a single thread, and do not block. To achieve this,
+avoid direct calls, and connect the method as a slot, while reading from another
+thread.
 
-The code model starts other threads to update its state, see its documentation for more information.
+The various tasks of the language server are divided between
+QLanguageServerModule instances. Each instance is responsible for handling a
+certain subset of client requests. For example, one instance handles completion
+requests, another one updates the code in the code model when the client sends a
+new file version, and so on. The QLanguageServerModule instances are
+constructed and registered with QLanguageServer in the constructor of
+this class.
+
+Generally, do all operations in the object thread and always call handlers from
+it. However, the operations can delegate the response to another thread, as the
+response handler is thread safe. All the methods of the \c server() object are
+also thread safe.
+
+The code model starts other threads to update its state. See its documentation
+for more information.
 */
 QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> sendData,
                                        QQmlToolingSettings *settings)
