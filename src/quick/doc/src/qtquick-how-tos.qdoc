@@ -15,7 +15,9 @@
 
     \list
     \li \l {Call a C++ function from QML when a Button is clicked}
+    \li \l {See which item has active focus}
     \endlist
+
 
     \section1 Call a C++ function from QML when a Button is clicked
 
@@ -40,4 +42,16 @@
     This example assumes that the \c Backend type is available in a QML module.
     With CMake, this is done via \l qt_add_qml_module. For an example that
     demonstrates this in detail, see \l {Building a QML application}.
+
+
+    \section1 See which item has active focus
+
+    Write a \l {Property change signal handlers}{property change signal handler}
+    for the window's \l {Window::}{activeFocusItem} property:
+
+    \snippet how-tos/how-to-qml/active-focus-debugging/ActiveFocusDebuggingMain.qml file
+
+    This will print the item which currently has active focus to the console.
+    To ensure that the output is useful, give each item a descriptive
+    \l {QtObject::}{objectName}.
 */
