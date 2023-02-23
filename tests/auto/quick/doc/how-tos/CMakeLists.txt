@@ -2,4 +2,4 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 add_subdirectory(how-to-cpp-button)
-
+add_subdirectory(how-to-qml)
