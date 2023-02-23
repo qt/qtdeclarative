@@ -52,6 +52,7 @@ private slots:
 
     void pullbackSparseList();
     void highlightWithBound();
+    void sectionIsCompatibleWithBoundComponents();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -944,6 +945,19 @@ void tst_QQuickListView2::highlightWithBound()
     QQuickItem *highlight = listView->highlightItem();
     QVERIFY(highlight);
     QCOMPARE(highlight->objectName(), QStringLiteral("highlight"));
+}
+
+void tst_QQuickListView2::sectionIsCompatibleWithBoundComponents()
+{
+    QTest::failOnWarning(".?");
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("sectionBoundComponent.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QQuickListView *listView = qobject_cast<QQuickListView *>(o.data());
+    QVERIFY(listView);
+    QTRY_COMPARE(listView->currentSection(), "42");
 }
 
 QTEST_MAIN(tst_QQuickListView2)
