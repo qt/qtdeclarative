@@ -44,6 +44,8 @@ private slots:
     void touchMultiTap();
     void mouseMultiTap_data();
     void mouseMultiTap();
+    void mouseMultiTapLeftRight_data();
+    void mouseMultiTapLeftRight();
     void singleTapDoubleTap_data();
     void singleTapDoubleTap();
     void touchLongPress();
@@ -590,6 +592,66 @@ void tst_TapHandler::mouseMultiTap()
     QCOMPARE(tappedSpy.size(), 5);
     QCOMPARE(tapHandler->tapCount(), 1);
     QCOMPARE(singleTapSpy.size(), expectedSingleTapsAfterWaiting);
+}
+
+void tst_TapHandler::mouseMultiTapLeftRight_data()
+{
+    QTest::addColumn<QQuickTapHandler::ExclusiveSignals>("exclusiveSignals");
+    QTest::addColumn<int>("expectedSingleTaps");
+    QTest::addColumn<int>("expectedDoubleTaps");
+    QTest::addColumn<int>("expectedTabCount2");
+    QTest::addColumn<int>("expectedTabCount3");
+
+    QTest::newRow("NotExclusive")        << QQuickTapHandler::ExclusiveSignals(QQuickTapHandler::NotExclusive)
+                                         << 3 << 0 << 1 << 1;
+    QTest::newRow("SingleTap")           << QQuickTapHandler::ExclusiveSignals(QQuickTapHandler::SingleTap)
+                                         << 3 << 0 << 1 << 1;
+    QTest::newRow("DoubleTap")           << QQuickTapHandler::ExclusiveSignals(QQuickTapHandler::DoubleTap)
+                                         << 0 << 0 << 1 << 1;
+    QTest::newRow("SingleTap|DoubleTap") << QQuickTapHandler::ExclusiveSignals(QQuickTapHandler::SingleTap | QQuickTapHandler::DoubleTap)
+                                         << 0 << 0 << 1 << 1;
+}
+
+void tst_TapHandler::mouseMultiTapLeftRight() //QTBUG-111557
+{
+    QFETCH(QQuickTapHandler::ExclusiveSignals, exclusiveSignals);
+    QFETCH(int, expectedSingleTaps);
+    QFETCH(int, expectedDoubleTaps);
+    QFETCH(int, expectedTabCount2);
+    QFETCH(int, expectedTabCount3);
+
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "buttons.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("DragThreshold");
+    QVERIFY(button);
+    QQuickTapHandler *tapHandler = button->findChild<QQuickTapHandler*>();
+    QVERIFY(tapHandler);
+    tapHandler->setExclusiveSignals(exclusiveSignals);
+    tapHandler->setAcceptedButtons(Qt::LeftButton | Qt::RightButton);
+    QSignalSpy tappedSpy(button, SIGNAL(tapped()));
+    QSignalSpy singleTapSpy(tapHandler, &QQuickTapHandler::singleTapped);
+    QSignalSpy doubleTapSpy(tapHandler, &QQuickTapHandler::doubleTapped);
+
+    // Click once with the left button
+    QPoint p1 = button->mapToScene(QPointF(2, 2)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1, 10);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1, 10);
+
+    // Click again with the right button -> should reset tabCount()
+    QTest::mousePress(window, Qt::RightButton, Qt::NoModifier, p1, 10);
+    QTest::mouseRelease(window, Qt::RightButton, Qt::NoModifier, p1, 10);
+
+    QCOMPARE(tapHandler->tapCount(), expectedTabCount2);
+
+    // Click again with the left button -> should reset tabCount()
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1, 10);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1, 10);
+
+    QCOMPARE(tapHandler->tapCount(), expectedTabCount3);
+    QCOMPARE(singleTapSpy.size(), expectedSingleTaps);
+    QCOMPARE(doubleTapSpy.size(), expectedDoubleTaps);
 }
 
 void tst_TapHandler::singleTapDoubleTap_data()
