@@ -1062,16 +1062,20 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
         QQmlContext *context = QQmlEngine::contextForObject(sectionItem)->parentContext();
         setSectionHelper(context, sectionItem, section);
     } else {
-        QQmlContext *creationContext = sectionCriteria->delegate()->creationContext();
-        QQmlContext *context = new QQmlContext(
-                creationContext ? creationContext : qmlContext(q));
         QQmlComponent* delegate = sectionCriteria->delegate();
-        QQmlComponentPrivate* delegatePriv = QQmlComponentPrivate::get(delegate);
+        const bool reuseExistingContext = delegate->isBound();
+        auto delegatePriv = QQmlComponentPrivate::get(delegate);
+        QQmlPropertyCache::ConstPtr rootPropertyCache;
+
+        QQmlContext *creationContext = sectionCriteria->delegate()->creationContext();
+        auto baseContext = creationContext ? creationContext : qmlContext(q);
+        // if we need to insert a context property, we need a separate context
+        QQmlContext *context = reuseExistingContext ? baseContext : new QQmlContext(baseContext);
         QObject *nobj = delegate->beginCreate(context);
         if (nobj) {
             if (delegatePriv->hadTopLevelRequiredProperties()) {
                 delegate->setInitialProperties(nobj, {{QLatin1String("section"), section}});
-            } else {
+            } else if (!reuseExistingContext) {
                 context->setContextProperty(QLatin1String("section"), section);
             }
             QQml_setParent_noEvent(context, nobj);
@@ -1087,7 +1091,7 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
             // sections are not controlled by FxListItemSG, so apply attached properties here
             QQuickItemViewAttached *attached = static_cast<QQuickItemViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(sectionItem));
             attached->setView(q);
-        } else {
+        } else if (!reuseExistingContext) {
             delete context;
         }
         sectionCriteria->delegate()->completeCreate();
@@ -1974,7 +1978,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
 void QQuickListViewPrivate::setSectionHelper(QQmlContext *context, QQuickItem *sectionItem, const QString &section)
 {
-    if (context->contextProperty(QLatin1String("section")).isValid())
+    if (!QQmlContextData::get(context)->isInternal() && context->contextProperty(QLatin1String("section")).isValid())
         context->setContextProperty(QLatin1String("section"), section);
     else
         sectionItem->setProperty("section", section);
