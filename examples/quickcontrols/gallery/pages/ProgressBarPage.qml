@@ -15,8 +15,8 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "ProgressBar indicates the progress of an operation. It can be set in an "
-                + "indeterminate mode to indicate that the length of the operation is unknown."
+            text: qsTr("ProgressBar indicates the progress of an operation. It can be set in an "
+                + "indeterminate mode to indicate that the length of the operation is unknown.")
         }
 
         ProgressBar {

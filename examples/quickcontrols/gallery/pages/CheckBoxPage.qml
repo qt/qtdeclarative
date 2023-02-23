@@ -15,8 +15,8 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "CheckBox presents an option button that can be toggled on or off. "
-                + "Check boxes are typically used to select one or more options from a set of options."
+            text: qsTr("CheckBox presents an option button that can be toggled on or off. "
+                + "Check boxes are typically used to select one or more options from a set of options.")
         }
 
         Column {
@@ -24,14 +24,14 @@ ScrollablePage {
             anchors.horizontalCenter: parent.horizontalCenter
 
             CheckBox {
-                text: "First"
+                text: qsTr("First")
                 checked: true
             }
             CheckBox {
-                text: "Second"
+                text: qsTr("Second")
             }
             CheckBox {
-                text: "Third"
+                text: qsTr("Third")
                 checked: true
                 enabled: false
             }

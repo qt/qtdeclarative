@@ -23,9 +23,9 @@ Flickable {
                 width: parent.width
                 wrapMode: Label.Wrap
                 horizontalAlignment: Qt.AlignHCenter
-                text: "ScrollIndicator is a non-interactive indicator that indicates the current scroll position. "
+                text: qsTr("ScrollIndicator is a non-interactive indicator that indicates the current scroll position. "
                     + "A scroll indicator can be either vertical or horizontal, and can be attached to any Flickable, "
-                    + "such as ListView and GridView."
+                    + "such as ListView and GridView.")
             }
 
             Image {
