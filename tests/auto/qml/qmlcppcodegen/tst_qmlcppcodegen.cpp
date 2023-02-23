@@ -174,6 +174,7 @@ private slots:
     void enumFromBadSingleton();
     void objectLookupOnListElement();
     void multipleCtors();
+    void boolCoercions();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3437,6 +3438,31 @@ void tst_QmlCppCodegen::multipleCtors()
     QCOMPARE(o->property("wr").value<ValueTypeWithLength>().length(), 3);
     QCOMPARE(o->property("wp").value<ValueTypeWithLength>().length(), 11);
     QCOMPARE(o->property("wi").value<ValueTypeWithLength>().length(), 17);
+}
+
+void tst_QmlCppCodegen::boolCoercions()
+{
+    QQmlEngine e;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/boolCoercions.qml"_s);
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + ":41:5: Unable to assign [undefined] to bool"_L1));
+    QScopedPointer<QObject> o(c.create());
+
+    for (char p = '1'; p <= '8'; ++p) {
+        const QVariant t = o->property(qPrintable(QLatin1String("t%1").arg(p)));
+        QCOMPARE(t.metaType(), QMetaType::fromType<bool>());
+        QVERIFY(t.toBool());
+    }
+
+    for (char p = '1'; p <= '5'; ++p) {
+        const QVariant f = o->property(qPrintable(QLatin1String("f%1").arg(p)));
+        QCOMPARE(f.metaType(), QMetaType::fromType<bool>());
+        QVERIFY(!f.toBool());
+    }
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

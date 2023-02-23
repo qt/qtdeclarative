@@ -3235,6 +3235,17 @@ QString QQmlJSCodeGenerator::convertStored(
                 + castTargetName(to) + u">("_s + variable + u')';
     }
 
+    // Any value type is a non-null JS 'object' and therefore coerces to true.
+    if (m_typeResolver->equals(to, m_typeResolver->boolType())) {
+        // All the interesting cases are already handled above:
+        Q_ASSERT(!m_typeResolver->equals(from, m_typeResolver->nullType()));
+        Q_ASSERT(!m_typeResolver->equals(from, m_typeResolver->voidType()));
+        Q_ASSERT(retrieveFromPrimitive(from, u"x"_s).isEmpty());
+        Q_ASSERT(!isBoolOrNumber(from));
+
+        return u"true"_s;
+    }
+
     bool isExtension = false;
     if (const auto ctor = m_typeResolver->selectConstructor(to, from, &isExtension); ctor.isValid()) {
         const auto argumentTypes = ctor.parameters();

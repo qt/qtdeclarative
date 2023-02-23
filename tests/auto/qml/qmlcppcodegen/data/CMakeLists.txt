@@ -64,6 +64,7 @@ set(qml_files
     badSequence.qml
     bindToValueType.qml
     blockComments.qml
+    boolCoercions.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
     callWithSpread.qml

@@ -1089,6 +1089,10 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
         return true;
 
+    // We can convert everything to bool.
+    if (equals(to, m_boolType))
+        return true;
+
     return selectConstructor(to, from, nullptr).isValid();
 }
 
