@@ -379,12 +379,16 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
                 const qreal ts = event->timestamp() / 1000.0;
                 const qreal interval = ts - m_lastTapTimestamp;
                 const auto distanceSquared = QVector2D(point.scenePosition() - m_lastTapPos).lengthSquared();
-                if (interval < m_multiTapInterval && distanceSquared <
+                const auto singleTapReleasedButton = event->isSinglePointEvent() ? static_cast<QSinglePointEvent *>(event)->button() : Qt::NoButton;
+                if ((interval < m_multiTapInterval && distanceSquared <
                         (event->device()->type() == QInputDevice::DeviceType::Mouse ?
                          m_mouseMultiClickDistanceSquared : m_touchMultiTapDistanceSquared))
+                      && m_singleTapReleasedButton == singleTapReleasedButton) {
                     ++m_tapCount;
-                else
+                } else {
+                    m_singleTapReleasedButton = singleTapReleasedButton;
                     m_tapCount = 1;
+                }
                 qCDebug(lcTapHandler) << objectName() << "tapped" << m_tapCount << "times; interval since last:" << interval
                                       << "sec; distance since last:" << qSqrt(distanceSquared);
                 auto button = event->isSinglePointEvent() ? static_cast<QSinglePointEvent *>(event)->button() : Qt::NoButton;
@@ -447,8 +451,8 @@ void QQuickTapHandler::updateTimeHeld()
     \readonly
 
     The number of taps which have occurred within the time and space
-    constraints to be considered a single gesture.  For example, to detect
-    a triple-tap, you can write:
+    constraints to be considered a single gesture. The counter is reset to 1
+    if the button changed. For example, to detect a triple-tap, you can write:
 
     \qml
     Rectangle {
