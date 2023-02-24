@@ -11,7 +11,6 @@
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypemodule_p.h>
-#include <private/qqmltypenotavailable_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
@@ -755,6 +754,13 @@ QList<QTypeRevision> QQmlPrivate::revisionClassInfos(const QMetaObject *metaObje
     return revisions;
 }
 
+int qmlRegisterTypeNotAvailable(
+        const char *uri, int versionMajor, int versionMinor,
+        const char *qmlName, const QString &message)
+{
+    return qmlRegisterUncreatableType<QQmlTypeNotAvailable>(
+                uri, versionMajor, versionMinor, qmlName, message);
+}
 
 namespace QQmlPrivate {
 template<>
@@ -797,7 +803,6 @@ void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
 
     qmlregister(TypeAndRevisionsRegistration, &type);
 }
-
 
 QQmlEngine *AOTCompiledContext::qmlEngine() const
 {

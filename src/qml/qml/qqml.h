@@ -133,8 +133,16 @@ void qmlRegisterAnonymousTypesAndRevisions(const char *uri, int versionMajor)
             nullptr, true);
 }
 
+class QQmlTypeNotAvailable : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(TypeNotAvailable)
+    QML_ADDED_IN_VERSION(2, 15)
+    QML_UNCREATABLE("Type not available.")
+};
+
 int Q_QML_EXPORT qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor,
-                                             const char *qmlName, const QString& message);
+                                             const char *qmlName, const QString &message);
 
 template<typename T>
 int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
