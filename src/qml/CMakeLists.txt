@@ -340,7 +340,6 @@ qt_internal_add_qml_module(Qml
         qml/qqmltypemodule.cpp qml/qqmltypemodule_p.h
         qml/qqmltypemoduleversion.cpp qml/qqmltypemoduleversion_p.h
         qml/qqmltypenamecache.cpp qml/qqmltypenamecache_p.h
-        qml/qqmltypenotavailable.cpp qml/qqmltypenotavailable_p.h
         qml/qqmltypewrapper.cpp qml/qqmltypewrapper_p.h
         qml/qqmlvaluetype.cpp qml/qqmlvaluetype_p.h
         qml/qqmlvaluetypeproxybinding.cpp qml/qqmlvaluetypeproxybinding_p.h

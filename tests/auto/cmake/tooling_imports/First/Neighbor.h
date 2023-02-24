@@ -15,4 +15,11 @@ public:
     Neighbor(QObject *parent = nullptr);
 };
 
+class Absent : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNAVAILABLE
+};
+
 #endif // NEIGHBOR_H
