@@ -19,4 +19,9 @@ qt_add_qml_module(tst_how-to-qml
     URI HowToQml
     QML_FILES
         active-focus-debugging/ActiveFocusDebuggingMain.qml
+        time-picker/TimeComponentLabel.qml
+        time-picker/TimePickerDialog.qml
+        time-picker/TimePickerMain.qml
+        time-picker/TimePickerLabel.qml
+        time-picker/TimePicker.qml
 )
