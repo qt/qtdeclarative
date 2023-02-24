@@ -114,7 +114,7 @@ namespace QQmlPrivate
 #endif
     };
 
-    enum class ConstructionMode
+    enum class SingletonConstructionMode
     {
         None,
         Constructor,
@@ -139,18 +139,18 @@ namespace QQmlPrivate
     };
 
     template<typename T, typename WrapperT>
-    constexpr ConstructionMode constructionMode()
+    constexpr SingletonConstructionMode singletonConstructionMode()
     {
         if constexpr (!std::is_base_of<QObject, T>::value)
-            return ConstructionMode::None;
+            return SingletonConstructionMode::None;
         if constexpr (!std::is_same_v<T, WrapperT> && HasSingletonFactory<T, WrapperT>::value)
-            return ConstructionMode::FactoryWrapper;
+            return SingletonConstructionMode::FactoryWrapper;
         if constexpr (std::is_default_constructible<T>::value)
-            return ConstructionMode::Constructor;
+            return SingletonConstructionMode::Constructor;
         if constexpr (HasSingletonFactory<T>::value)
-            return ConstructionMode::Factory;
+            return SingletonConstructionMode::Factory;
 
-        return ConstructionMode::None;
+        return SingletonConstructionMode::None;
     }
 
     template<typename>
@@ -168,16 +168,16 @@ namespace QQmlPrivate
     template<typename T>
     void createInto(void *memory, void *) { new (memory) QQmlElement<T>; }
 
-    template<typename T, typename WrapperT, ConstructionMode Mode>
+    template<typename T, typename WrapperT, SingletonConstructionMode Mode>
     QObject *createSingletonInstance(QQmlEngine *q, QJSEngine *j)
     {
         Q_UNUSED(q);
         Q_UNUSED(j);
-        if constexpr (Mode == ConstructionMode::Constructor)
+        if constexpr (Mode == SingletonConstructionMode::Constructor)
             return new T;
-        else if constexpr (Mode == ConstructionMode::Factory)
+        else if constexpr (Mode == SingletonConstructionMode::Factory)
             return T::create(q, j);
-        else if constexpr (Mode == ConstructionMode::FactoryWrapper)
+        else if constexpr (Mode == SingletonConstructionMode::FactoryWrapper)
             return WrapperT::create(q, j);
         else
             return nullptr;
@@ -191,39 +191,43 @@ namespace QQmlPrivate
     using CreateParentFunction = QObject *(*)(QObject *);
     using CreateValueTypeFunction = QVariant (*)(const QJSValue &);
 
-    template<typename T, typename WrapperT = T, ConstructionMode Mode = constructionMode<T, WrapperT>()>
+    template<typename T, typename WrapperT = T,
+             SingletonConstructionMode Mode = singletonConstructionMode<T, WrapperT>()>
     struct Constructors;
 
     template<typename T, typename WrapperT>
-    struct Constructors<T, WrapperT, ConstructionMode::Constructor>
+    struct Constructors<T, WrapperT, SingletonConstructionMode::Constructor>
     {
         static constexpr CreateIntoFunction createInto
                 = QQmlPrivate::createInto<T>;
         static constexpr CreateSingletonFunction createSingletonInstance
-                = QQmlPrivate::createSingletonInstance<T, WrapperT, ConstructionMode::Constructor>;
+                = QQmlPrivate::createSingletonInstance<
+                    T, WrapperT, SingletonConstructionMode::Constructor>;
     };
 
     template<typename T, typename WrapperT>
-    struct Constructors<T, WrapperT, ConstructionMode::None>
+    struct Constructors<T, WrapperT, SingletonConstructionMode::None>
     {
         static constexpr CreateIntoFunction createInto = nullptr;
         static constexpr CreateSingletonFunction createSingletonInstance = nullptr;
     };
 
     template<typename T, typename WrapperT>
-    struct Constructors<T, WrapperT, ConstructionMode::Factory>
+    struct Constructors<T, WrapperT, SingletonConstructionMode::Factory>
     {
         static constexpr CreateIntoFunction createInto = nullptr;
         static constexpr CreateSingletonFunction createSingletonInstance
-                = QQmlPrivate::createSingletonInstance<T, WrapperT, ConstructionMode::Factory>;
+                = QQmlPrivate::createSingletonInstance<
+                    T, WrapperT, SingletonConstructionMode::Factory>;
     };
 
     template<typename T, typename WrapperT>
-    struct Constructors<T, WrapperT, ConstructionMode::FactoryWrapper>
+    struct Constructors<T, WrapperT, SingletonConstructionMode::FactoryWrapper>
     {
         static constexpr CreateIntoFunction createInto = nullptr;
         static constexpr CreateSingletonFunction createSingletonInstance
-                = QQmlPrivate::createSingletonInstance<T, WrapperT, ConstructionMode::FactoryWrapper>;
+                = QQmlPrivate::createSingletonInstance<
+                    T, WrapperT, SingletonConstructionMode::FactoryWrapper>;
     };
 
     template<typename T,
@@ -946,39 +950,9 @@ namespace QQmlPrivate
         static const QMetaObject *staticMetaObject() { return &T::staticMetaObject; }
     };
 
-    /*! \internal
-       For singletons: check that there is a static create method. It is needed by the engine to
-       initialize a singleton object in case T has no default constructor.
-
-       Using a default constructor is preferred over the static create method.
-    */
-    template<class T, class = std::void_t<>>
-    struct HasStaticCreate
-    {
-        static constexpr bool Value = false;
-    };
-
-    // std::is_member_pointer<&X::Y> returns false when Y is a static member, and
-    // sfinae takes care of the existence Y being a member of X
-    template<class T>
-    struct HasStaticCreate<
-            T,
-            typename std::enable_if<!std::is_member_pointer<decltype(&T::create)>::value
-                                    && std::is_invocable_r_v<T *, decltype(&T::create),
-                                                             QQmlEngine *, QJSEngine *>>::type>
-    {
-        static constexpr bool Value = true;
-    };
-
     template<class T>
     struct QmlMetaType
     {
-        static constexpr bool hasAcceptableSingletonCtors()
-        {
-            return std::is_default_constructible_v<T> || HasStaticCreate<T>::Value;
-        }
-
-
         static constexpr bool hasAcceptableCtors()
         {
             if constexpr (!std::is_default_constructible_v<T>)
