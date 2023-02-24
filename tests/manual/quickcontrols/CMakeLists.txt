@@ -5,7 +5,9 @@
 
 add_subdirectory(buttons)
 add_subdirectory(fonts)
-add_subdirectory(gifs)
+if(LINUX)
+    add_subdirectory(gifs)
+endif()
 add_subdirectory(headerview)
 add_subdirectory(qquickdialog)
 add_subdirectory(screenshots)
