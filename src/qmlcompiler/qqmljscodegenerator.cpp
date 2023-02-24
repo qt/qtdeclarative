@@ -635,9 +635,7 @@ void QQmlJSCodeGenerator::generate_StoreNameSloppy(int nameIndex)
     INJECT_TRACE_INFO(generate_StoreNameSloppy);
 
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
-    const QQmlJSRegisterContent specific = m_typeResolver->scopedType(m_function->qmlScope, name);
-    const QQmlJSRegisterContent type = specific.storedIn(
-                m_typeResolver->genericType(specific.storedType()));
+    const QQmlJSRegisterContent type = m_typeResolver->scopedType(m_function->qmlScope, name);
     Q_ASSERT(type.isProperty());
 
     switch (type.variant()) {
