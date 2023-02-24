@@ -8495,7 +8495,7 @@ void QQuickItem::setContainmentMask(QObject *mask)
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a point to the coordinate system of the
+    If \a item is \nullptr, this maps \a point to the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -8553,7 +8553,7 @@ QPointF QQuickItem::mapToGlobal(const QPointF &point) const
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a rect to the coordinate system of the
+    If \a item is \nullptr, this maps \a rect to the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -8589,7 +8589,7 @@ QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a point from the coordinate system of the
+    If \a item is \nullptr, this maps \a point from the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -8656,7 +8656,7 @@ QPointF QQuickItem::mapFromGlobal(const QPointF &point) const
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a rect from the coordinate system of the
+    If \a item is \nullptr, this maps \a rect from the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
