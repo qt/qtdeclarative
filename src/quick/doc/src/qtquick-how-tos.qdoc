@@ -16,6 +16,7 @@
     \list
     \li \l {Call a C++ function from QML when a Button is clicked}
     \li \l {See which item has active focus}
+    \li \l {Create a time picker like Android's TimePickerDialog}
     \endlist
 
 
@@ -54,4 +55,22 @@
     This will print the item which currently has active focus to the console.
     To ensure that the output is useful, give each item a descriptive
     \l {QtObject::}{objectName}.
+
+
+    \section1 Create a time picker like Android's TimePickerDialog
+
+    We've prepared an example that consists of a few
+    \l {https://code.qt.io/cgit/qt/qtdeclarative.git/tree/tests/auto/quick/doc/how-tos/how-to-qml/time-picker/TimeComponentLabel.qml?h=\QtMajorVersion.\QtMinorVersion}
+    {QML files} which demonstrate how to do this. They can be used
+    in your application in the following manner:
+
+    \snippet how-tos/how-to-qml/time-picker/TimePickerMain.qml file
+
+    \table
+        \row
+            \li \image how-to-time-picker-light.png
+                \caption TimePickerDialog in its light theme.
+            \li \image how-to-time-picker-dark.png
+                \caption TimePickerDialog in its dark theme.
+    \endtable
 */
