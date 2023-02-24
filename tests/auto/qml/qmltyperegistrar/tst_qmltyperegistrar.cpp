@@ -450,21 +450,38 @@ void tst_qmltyperegistrar::hasIsConstantInParameters()
 
 void tst_qmltyperegistrar::uncreatable()
 {
+    using namespace QQmlPrivate;
+
     // "normal" constructible types
-    QVERIFY(QQmlPrivate::QmlMetaType<Creatable>::hasAcceptableCtors());
-    QVERIFY(QQmlPrivate::QmlMetaType<Creatable2>::hasAcceptableCtors());
+    QVERIFY(QmlMetaType<Creatable>::hasAcceptableCtors());
+    QVERIFY(QmlMetaType<Creatable2>::hasAcceptableCtors());
 
     // good singletons
-    QVERIFY(QQmlPrivate::QmlMetaType<SingletonCreatable>::hasAcceptableSingletonCtors());
-    QVERIFY(QQmlPrivate::QmlMetaType<SingletonCreatable2>::hasAcceptableSingletonCtors());
-    QVERIFY(QQmlPrivate::QmlMetaType<SingletonCreatable3>::hasAcceptableSingletonCtors());
+    QCOMPARE((singletonConstructionMode<SingletonCreatable, SingletonCreatable>()),
+             SingletonConstructionMode::Factory);
+    QCOMPARE((singletonConstructionMode<SingletonCreatable2, SingletonCreatable2>()),
+             SingletonConstructionMode::Constructor);
+    QCOMPARE((singletonConstructionMode<SingletonCreatable2, SingletonCreatable2>()),
+             SingletonConstructionMode::Constructor);
+    QCOMPARE((singletonConstructionMode<SingletonForeign, SingletonLocalCreatable>()),
+             SingletonConstructionMode::FactoryWrapper);
 
     // bad singletons
-    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable>::hasAcceptableSingletonCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable2>::hasAcceptableSingletonCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable3>::hasAcceptableSingletonCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatable4>::hasAcceptableSingletonCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<SingletonIncreatableExtended>::hasAcceptableSingletonCtors());
+    QCOMPARE((singletonConstructionMode<SingletonIncreatable, SingletonIncreatable>()),
+             SingletonConstructionMode::None);
+    QCOMPARE((singletonConstructionMode<SingletonIncreatable2, SingletonIncreatable2>()),
+             SingletonConstructionMode::None);
+    QCOMPARE((singletonConstructionMode<SingletonIncreatable3, SingletonIncreatable3>()),
+             SingletonConstructionMode::None);
+    QCOMPARE((singletonConstructionMode<SingletonIncreatable4, SingletonIncreatable4>()),
+             SingletonConstructionMode::None);
+    QCOMPARE((singletonConstructionMode<SingletonIncreatableExtended,
+                                        SingletonIncreatableExtended>()),
+             SingletonConstructionMode::None);
+    QCOMPARE((singletonConstructionMode<SingletonForeign, SingletonLocalUncreatable1>()),
+             SingletonConstructionMode::None);
+    QCOMPARE((singletonConstructionMode<SingletonForeign, SingletonLocalUncreatable2>()),
+             SingletonConstructionMode::None);
 #if QT_DEPRECATED_SINCE(6, 4)
     QTest::ignoreMessage(
                 QtWarningMsg,
@@ -496,14 +513,26 @@ void tst_qmltyperegistrar::uncreatable()
                 "when adding a default constructor is infeasible, a public static "
                 "create(QQmlEngine *, QJSEngine *) method.");
     qmlRegisterTypesAndRevisions<SingletonIncreatableExtended>("A", 1);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "Singleton SingletonForeign needs either a default constructor or, "
+                "when adding a default constructor is infeasible, a public static "
+                "create(QQmlEngine *, QJSEngine *) method.");
+    qmlRegisterTypesAndRevisions<SingletonLocalUncreatable1>("A", 1);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                "Singleton SingletonForeign needs either a default constructor or, "
+                "when adding a default constructor is infeasible, a public static "
+                "create(QQmlEngine *, QJSEngine *) method.");
+    qmlRegisterTypesAndRevisions<SingletonLocalUncreatable2>("A", 1);
 #endif
 
     // QML_UNCREATABLE types
-    QVERIFY(!QQmlPrivate::QmlMetaType<BadUncreatable>::hasAcceptableCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<BadUncreatableExtended>::hasAcceptableCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<GoodUncreatable>::hasAcceptableCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<UncreatableNeedsForeign>::hasAcceptableCtors());
-    QVERIFY(!QQmlPrivate::QmlMetaType<GoodUncreatableExtended>::hasAcceptableCtors());
+    QVERIFY(!QmlMetaType<BadUncreatable>::hasAcceptableCtors());
+    QVERIFY(!QmlMetaType<BadUncreatableExtended>::hasAcceptableCtors());
+    QVERIFY(!QmlMetaType<GoodUncreatable>::hasAcceptableCtors());
+    QVERIFY(!QmlMetaType<UncreatableNeedsForeign>::hasAcceptableCtors());
+    QVERIFY(!QmlMetaType<GoodUncreatableExtended>::hasAcceptableCtors());
 #if QT_DEPRECATED_SINCE(6, 4)
     QTest::ignoreMessage(
                 QtWarningMsg,

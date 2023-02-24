@@ -879,12 +879,14 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false, false
     {
 #if QT_DEPRECATED_SINCE(6, 4)
         // ### Qt7: Remove the warning, and leave only the static assert below.
-        if constexpr (!QQmlPrivate::QmlMetaType<Resolved>::hasAcceptableSingletonCtors()) {
+        if constexpr (QQmlPrivate::singletonConstructionMode<Resolved, T>()
+                == QQmlPrivate::SingletonConstructionMode::None) {
             QQmlPrivate::qmlRegistrationWarning(QQmlPrivate::UnconstructibleSingleton,
                                                 QMetaType::fromType<Resolved>());
         }
 #else
-        static_assert(QQmlPrivate::QmlMetaType<Resolved>::hasAcceptableSingletonCtors(),
+        static_assert(QQmlPrivate::singletonConstructionMode<Resolved, T>()
+                        != QQmlPrivate::SingletonConstructionMode::None,
                       "A singleton needs either a default constructor or, when adding a default "
                       "constructor is infeasible, a public static "
                       "create(QQmlEngine *, QJSEngine *) method");
