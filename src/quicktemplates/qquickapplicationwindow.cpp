@@ -112,6 +112,7 @@ public:
     void itemVisibilityChanged(QQuickItem *item) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    QPalette windowPalette() const override { return defaultPalette(); }
 
     void updateFont(const QFont &f);
     inline void setFont_helper(const QFont &f) {
