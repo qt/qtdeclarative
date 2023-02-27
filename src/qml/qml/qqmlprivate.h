@@ -897,6 +897,20 @@ namespace QQmlPrivate
                 && bool(T::QmlIsUncreatable::yes);
     };
 
+    template<class T, class = std::void_t<>>
+    struct QmlAnonymous
+    {
+        static constexpr bool Value = false;
+    };
+
+    template<class T>
+    struct QmlAnonymous<T, std::void_t<typename T::QmlIsAnonymous>>
+    {
+        static constexpr bool Value =
+                QmlTypeHasMarker<T, decltype(&T::qt_qmlMarker_anonymous)>::value
+                && bool(T::QmlIsAnonymous::yes);
+    };
+
 
     template<class T, class = std::void_t<>>
     struct QmlSingleton

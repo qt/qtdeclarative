@@ -591,4 +591,15 @@ void tst_qmltyperegistrar::constructibleValueType()
     })"));
 }
 
+void tst_qmltyperegistrar::anonymousAndUncreatable()
+{
+    QVERIFY(qmltypesData.contains(
+    R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "AnonymousAndUncreatable"
+        accessSemantics: "reference"
+        prototype: "QObject"
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
