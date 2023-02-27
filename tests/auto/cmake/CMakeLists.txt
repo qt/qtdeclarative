@@ -65,6 +65,7 @@ if(TARGET Qt::Qml)
         _qt_internal_test_expect_pass(test_plugins)
     endif()
     _qt_internal_test_expect_pass(empty_qmldir)
+    _qt_internal_test_expect_fail(test_internal_singleton)
 endif()
 
 if(TARGET Qt::Quick)
