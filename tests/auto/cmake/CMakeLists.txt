@@ -110,6 +110,7 @@ if(TARGET Qt::Qml)
     If(NOT ANDROID) # QML only project cannot run on Android with C++ enty point
         _qt_internal_test_expect_pass(qmlquery)
     endif()
+    _qt_internal_test_expect_fail(test_internal_singleton)
 endif()
 
 if(TARGET Qt::Quick)
