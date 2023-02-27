@@ -2054,6 +2054,12 @@ function(qt6_target_qml_sources target)
                 get_source_file_property(qml_file_singleton ${qml_file_src} QT_QML_SINGLETON_TYPE)
                 get_source_file_property(qml_file_internal  ${qml_file_src} QT_QML_INTERNAL_TYPE)
 
+                if (qml_file_singleton AND qml_file_internal)
+                   message(FATAL_ERROR
+                       "${qml_file_src} is marked as both internal and as a "
+                       "singleton, but singletons cannot be internal!")
+                endif()
+
                 if (NOT qml_file_versions)
                     set(qml_file_versions ${qml_module_files_versions})
                 endif()
