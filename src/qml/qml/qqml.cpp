@@ -1777,7 +1777,12 @@ void AOTCompiledContext::initGetEnumLookup(
 {
     Q_ASSERT(!engine->hasError());
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    Q_ASSERT(metaObject);
+    if (!metaObject) {
+        engine->handle()->throwTypeError(
+                    QStringLiteral("Cannot read property '%1' of undefined")
+                    .arg(QString::fromUtf8(enumValue)));
+        return;
+    }
     const int enumIndex = metaObject->indexOfEnumerator(enumerator);
     const int value = metaObject->enumerator(enumIndex).keyToValue(enumValue);
     l->qmlEnumValueLookup.encodedEnumValue = value;
