@@ -891,7 +891,7 @@ void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QList<int> 
             QQmlPrivate::QmlSingleton<T>::Value,
             QQmlPrivate::QmlInterface<T>::Value,
             QQmlPrivate::QmlSequence<T>::Value,
-            QQmlPrivate::QmlUncreatable<T>::Value>
+            QQmlPrivate::QmlUncreatable<T>::Value || QQmlPrivate::QmlAnonymous<T>::Value>
             ::registerTypeAndRevisions(uri, versionMajor, qmlTypeIds,
                                        QQmlPrivate::QmlExtendedNamespace<T>::metaObject()), ...);
 }

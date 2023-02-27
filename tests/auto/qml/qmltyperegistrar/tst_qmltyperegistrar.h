@@ -501,6 +501,13 @@ signals:
     void clonedSignal(int i = 7);
 };
 
+class AnonymousAndUncreatable : public QObject
+{
+     Q_OBJECT
+     QML_ANONYMOUS
+     QML_UNCREATABLE("Pointless uncreatable message")
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -549,6 +556,7 @@ private slots:
     void duplicateExportWarnings();
     void clonedSignal();
     void baseVersionInQmltypes();
+    void anonymousAndUncreatable();
 
 private:
     QByteArray qmltypesData;

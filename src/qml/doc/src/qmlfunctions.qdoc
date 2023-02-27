@@ -153,8 +153,7 @@
 
   Some QML types are implicitly uncreatable, in particular types exposed with
   \l QML_ANONYMOUS or namespaces exposed with \l QML_ELEMENT or
-  \l QML_NAMED_ELEMENT(). For such types, \l QML_UNCREATABLE() can be used to
-  provide a custom error message.
+  \l QML_NAMED_ELEMENT().
 
   Since Qt 6.0 you can use "" instead of a reason to use a standard message instead.
 

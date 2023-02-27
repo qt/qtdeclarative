@@ -573,4 +573,15 @@ void tst_qmltyperegistrar::baseVersionInQmltypes()
     QVERIFY(qmltypesData.contains("exports: [\"QmlTypeRegistrarTest/WithMethod 1.0\"]"));
 }
 
+void tst_qmltyperegistrar::anonymousAndUncreatable()
+{
+    QVERIFY(qmltypesData.contains(
+    R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "AnonymousAndUncreatable"
+        accessSemantics: "reference"
+        prototype: "QObject"
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
