@@ -1265,6 +1265,10 @@ void tst_QmlCppCodegen::overriddenProperty()
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+
+    QObject *child = object->property("child").value<QObject *>();
+    QVERIFY(child);
+
     QCOMPARE(object->objectName(), u"kraut"_s);
     QCOMPARE(object->property("doneThing").toInt(), 5);
     QCOMPARE(object->property("usingFinal").toInt(), 5);
@@ -1275,6 +1279,13 @@ void tst_QmlCppCodegen::overriddenProperty()
         QCOMPARE(object->objectName(), newName);
     };
     checkAssignment();
+
+    QMetaObject::invokeMethod(child, "doString");
+    QCOMPARE(child->objectName(), u"string"_s);
+    QMetaObject::invokeMethod(child, "doNumber");
+    QCOMPARE(child->objectName(), u"double"_s);
+    QMetaObject::invokeMethod(child, "doArray");
+    QCOMPARE(child->objectName(), u"javaScript"_s);
 
     ObjectWithMethod *benign = new ObjectWithMethod(object.data());
     benign->theThing = 10;
