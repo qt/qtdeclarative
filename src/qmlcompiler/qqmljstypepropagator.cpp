@@ -1095,10 +1095,11 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
                                                         int argc, int argv, QStringList *errors)
 {
     QQmlJSMetaMethod javascriptFunction;
+    QQmlJSMetaMethod candidate;
     for (const auto &method : methods) {
 
         // If we encounter a JavaScript function, use this as a fallback if no other method matches
-        if (method.isJavaScriptFunction())
+        if (method.isJavaScriptFunction() && !javascriptFunction.isValid())
             javascriptFunction = method;
 
         if (method.returnType().isNull() && !method.returnTypeName().isEmpty()) {
@@ -1115,33 +1116,42 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
             continue;
         }
 
-        bool matches = true;
+        bool fuzzyMatch = true;
+        bool exactMatch = true;
         for (int i = 0; i < argc; ++i) {
             const auto argumentType = arguments[i].type();
             if (argumentType.isNull()) {
                 errors->append(
                         u"type %1 for argument %2 cannot be resolved"_s.arg(arguments[i].typeName())
                                 .arg(i));
-                matches = false;
+                exactMatch = false;
+                fuzzyMatch = false;
                 break;
             }
 
-            if (canConvertFromTo(m_state.registers[argv + i].content,
-                                 m_typeResolver->globalType(argumentType))) {
+            const auto content = m_state.registers[argv + i].content;
+            if (m_typeResolver->registerContains(content, argumentType))
                 continue;
-            }
+
+            exactMatch = false;
+            if (canConvertFromTo(content, m_typeResolver->globalType(argumentType)))
+                continue;
 
             errors->append(
                     u"argument %1 contains %2 but is expected to contain the type %3"_s.arg(i).arg(
                             m_state.registers[argv + i].content.descriptiveName(),
                             arguments[i].typeName()));
-            matches = false;
+            fuzzyMatch = false;
             break;
         }
-        if (matches)
+
+        if (exactMatch)
             return method;
+        else if (fuzzyMatch && !candidate.isValid())
+            candidate = method;
     }
-    return javascriptFunction;
+
+    return candidate.isValid() ? candidate : javascriptFunction;
 }
 
 void QQmlJSTypePropagator::setAccumulator(const QQmlJSRegisterContent &content)

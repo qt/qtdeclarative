@@ -7,6 +7,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qproperty.h>
 #include <QtQml/qqml.h>
+#include <QtQml/private/qv4engine_p.h>
 
 // Make objectName available. It doesn't exist on the builtin QtObject type
 struct QObjectForeignForObjectName {
@@ -27,6 +28,10 @@ public:
     Q_INVOKABLE int doThing() const { return theThing; }
     QProperty<int> theThing;
     QBindable<int> theThingBindable() { return QBindable<int>(&theThing); }
+
+    Q_INVOKABLE void overloaded(QQmlV4Function *) { setObjectName(QStringLiteral("javaScript")); }
+    Q_INVOKABLE void overloaded(double) { setObjectName(QStringLiteral("double")); }
+    Q_INVOKABLE void overloaded(const QString &) { setObjectName(QStringLiteral("string")); }
 };
 
 class OverriddenObjectName : public ObjectWithMethod
