@@ -2,6 +2,7 @@ set(cpp_sources
     ambiguous.h
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
+    dummyobjekt.h
     dynamicmeta.h
     enumProperty.h
     enumproblems.h
@@ -71,6 +72,7 @@ set(qml_files
     dialog.qml
     dynamicscene.qml
     enumConversion.qml
+    enumFromBadSingleton.qml
     enumInvalid.qml
     enumLookup.qml
     enumProblems.qml
