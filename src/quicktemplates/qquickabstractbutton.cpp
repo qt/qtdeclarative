@@ -497,8 +497,14 @@ QQuickAbstractButton::~QQuickAbstractButton()
 {
     Q_D(QQuickAbstractButton);
     d->removeImplicitSizeListener(d->indicator);
-    if (d->group)
-        d->group->removeButton(this);
+    if (d->group) {
+        auto *attached = qobject_cast<QQuickButtonGroupAttached *>(
+            qmlAttachedPropertiesObject<QQuickButtonGroup>(this, false));
+        if (attached)
+            attached->setGroup(nullptr);
+        else
+            d->group->removeButton(this);
+    }
 #if QT_CONFIG(shortcut)
     d->ungrabShortcut();
 #endif
