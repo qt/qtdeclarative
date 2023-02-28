@@ -368,7 +368,6 @@ public:
 
     QQuickWindow *window; // Will be 0 when window is not exposed
     QSize windowSize;
-    QSize windowPixelSize;
     float dpr = 1;
     int rhiSampleCount = 1;
     bool rhiDeviceLost = false;
@@ -407,8 +406,6 @@ bool QSGRenderThread::event(QEvent *e)
             stopEventProcessing = true;
         window = se->window;
         windowSize = se->size;
-        if (window)
-            windowPixelSize = window->handle()->geometry().size();
         dpr = se->dpr;
 
         pendingUpdate |= SyncRequest;
@@ -836,14 +833,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         }
     }
     if (current) {
-        const QSize surfaceSize = [this, cd]{
-            if (rhi)
-                return cd->swapchain->currentPixelSize();
-            if (windowPixelSize.isValid())
-                return windowPixelSize;
-            return QSize();
-        }();
-        d->renderSceneGraph(windowSize, surfaceSize);
+        d->renderSceneGraph(windowSize, rhi ? cd->swapchain->currentPixelSize() : QSize());
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();

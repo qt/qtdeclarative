@@ -591,7 +591,15 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
                 renderer->setDevicePixelRatio(1);
             }
         } else {
-            const QSize pixelSize = surfaceSize.isEmpty() ? size * devicePixelRatio : surfaceSize;
+            QSize pixelSize;
+            QSizeF logicalSize;
+            if (surfaceSize.isEmpty()) {
+                pixelSize = size * devicePixelRatio;
+                logicalSize = size;
+            } else {
+                pixelSize = surfaceSize;
+                logicalSize = QSizeF(surfaceSize) / devicePixelRatio;
+            }
             QRect rect(QPoint(0, 0), pixelSize);
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
@@ -599,7 +607,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
             if (flipY)
                 matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
-            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), size), matrixFlags);
+            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
 
