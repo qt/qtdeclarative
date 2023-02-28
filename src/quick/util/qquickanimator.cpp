@@ -247,7 +247,8 @@ QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
     Q_D(QQuickAnimator);
 
     if (d->defaultProperty.isValid() && propertyName() != d->defaultProperty.name()) {
-        qDebug() << Q_FUNC_INFO << "property name conflict...";
+        qmlWarning(this) << "property name conflict: \""
+            << propertyName() << "\" != \"" << d->defaultProperty.name() << "\"";
         return nullptr;
     }
 
