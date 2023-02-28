@@ -50,15 +50,15 @@ public:
     QDeferredSharedPointer() = default;
 
     QDeferredSharedPointer(QSharedPointer<T> data)
-        : m_data(data)
+        : m_data(std::move(data))
     {}
 
     QDeferredSharedPointer(QWeakPointer<T> data)
-        : m_data(data)
+        : m_data(std::move(data))
     {}
 
     QDeferredSharedPointer(QSharedPointer<T> data, QSharedPointer<Factory> factory)
-        : m_data(data), m_factory(factory)
+        : m_data(std::move(data)), m_factory(std::move(factory))
     {
         // You have to provide a valid pointer if you provide a factory. We cannot allocate the
         // pointer for you because then two copies of the same QDeferredSharedPointer will diverge
