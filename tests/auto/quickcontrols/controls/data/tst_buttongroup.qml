@@ -417,4 +417,56 @@ TestCase {
         mouseClick(column.children[0])
         wait(0) // don't crash (QTBUG-62946, QTBUG-63470)
     }
+
+    Component {
+        id: buttonGroupComp
+
+        Item {
+
+            property ButtonGroup buttonGroup: ButtonGroup { }
+            property int buttonGroupCount: buttonGroup.buttons.length
+            property int buttonGrpSigCnt: 0
+
+            function clearButtonGroup() {
+                buttonGroup.buttons = []
+            }
+            function assignButtonGroup() {
+                radioButton1.ButtonGroup.group = buttonGroup
+            }
+
+            Column {
+                RadioButton {
+                    id: radioButton1
+                    visible: false
+                    ButtonGroup.group: buttonGroup
+                    ButtonGroup.onGroupChanged: { (ButtonGroup.group === null) ? --buttonGrpSigCnt : ++buttonGrpSigCnt }
+                }
+                RadioButton {
+                    id: radioButton2
+                    visible: false
+                    ButtonGroup.group: buttonGroup
+                    ButtonGroup.onGroupChanged: { (ButtonGroup.group === null) ? --buttonGrpSigCnt : ++buttonGrpSigCnt }
+                }
+            }
+        }
+    }
+
+    function test_resetButtonGroup() {
+        var container = createTemporaryObject(buttonGroupComp, testCase)
+        verify(container)
+
+        // Check for initial buttons assigned to button group
+        compare(container.buttonGroupCount, 2)
+        compare(container.buttonGrpSigCnt, 2)
+        // Clear buttons in the button group
+        container.clearButtonGroup()
+        // Check for buttons in the group and group changed event for buttons
+        compare(container.buttonGroupCount, 0)
+        compare(container.buttonGrpSigCnt, 0)
+        // Assign same group to the button
+        container.assignButtonGroup()
+        // Check for group change event from the button
+        compare(container.buttonGroupCount, 1)
+        compare(container.buttonGrpSigCnt, 1)
+    }
 }
