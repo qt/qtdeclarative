@@ -425,6 +425,20 @@ To visualize data, bind the view's \c model property to a model and the
     \l{Using C++ Models with Qt Quick Views}
     article.
 
+    \section2 Array models
+
+    You can use JavaScript arrays and various kinds of QML lists as models.
+    The elements of the list will be made available as model and modelData
+    by the rules outlined above: Singular data like integers or strings are
+    made available as singular modelData. Structured data like JavaScript
+    objects or QObjects are made available as structured model and modelData.
+
+    The individual model roles are also made available if you request them as
+    required properties. Since we cannot know in advance what objects will
+    appear in an array, any required property in a delegate will be populated,
+    possibly with a coercion of \c undefined to the required type. The
+    individual model roles are not made available via the QML context, though.
+    They would shadow all other context properties.
 
 \section1 Repeaters
 

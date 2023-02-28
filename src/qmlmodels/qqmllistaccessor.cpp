@@ -161,6 +161,54 @@ QVariant QQmlListAccessor::at(qsizetype idx) const
     Q_UNREACHABLE_RETURN(QVariant());
 }
 
+void QQmlListAccessor::set(qsizetype idx, const QVariant &value)
+{
+    Q_ASSERT(idx >= 0 && idx < count());
+    switch (m_type) {
+    case StringList:
+        Q_ASSERT(d.metaType() == QMetaType::fromType<QStringList>());
+        (*static_cast<QStringList *>(d.data()))[idx] = value.toString();
+        break;
+    case UrlList:
+        Q_ASSERT(d.metaType() == QMetaType::fromType<QList<QUrl>>());
+        (*static_cast<QList<QUrl> *>(d.data()))[idx] = value.value<QUrl>();
+        break;
+    case VariantList:
+        Q_ASSERT(d.metaType() == QMetaType::fromType<QVariantList>());
+        (*static_cast<QVariantList *>(d.data()))[idx] = value;
+        break;
+    case ObjectList:
+        Q_ASSERT(d.metaType() == QMetaType::fromType<QList<QObject *>>());
+        (*static_cast<QList<QObject *> *>(d.data()))[idx] = value.value<QObject *>();
+        break;
+    case ListProperty:
+        Q_ASSERT(d.metaType() == QMetaType::fromType<QQmlListReference>());
+        static_cast<QQmlListReference *>(d.data())->replace(idx, value.value<QObject *>());
+        break;
+    case Sequence: {
+        Q_ASSERT(m_metaSequence != QMetaSequence());
+        const QMetaType valueMetaType = m_metaSequence.valueMetaType();
+        if (valueMetaType == QMetaType::fromType<QVariant>()) {
+            m_metaSequence.setValueAtIndex(d.data(), idx, &value);
+        } else if (valueMetaType == value.metaType()) {
+            m_metaSequence.setValueAtIndex(d.data(), idx, value.constData());
+        } else {
+            QVariant converted = value;
+            converted.convert(valueMetaType);
+            m_metaSequence.setValueAtIndex(d.data(), idx, converted.constData());
+        }
+        break;
+    }
+    case Instance:
+        d = value;
+        break;
+    case Integer:
+        break;;
+    case Invalid:
+        break;
+    }
+}
+
 bool QQmlListAccessor::isValid() const
 {
     return m_type != Invalid;

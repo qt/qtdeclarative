@@ -302,7 +302,6 @@ void tst_QQmlDelegateModel::universalModelData()
         }
         case 2: {
             // JS array of objects
-            QEXPECT_FAIL("", "Model does not properly expose JS objects", Continue);
             QCOMPARE(delegate->property("modelA"), QStringLiteral("a"));
             QCOMPARE(delegate->property("modelDataA"), QStringLiteral("a"));
 

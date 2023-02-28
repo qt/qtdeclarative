@@ -21,6 +21,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class VDMListDelegateDataType;
+
 class QQmlDMListAccessorData : public QQmlDelegateModelItem
 {
     Q_OBJECT
@@ -28,26 +30,14 @@ class QQmlDMListAccessorData : public QQmlDelegateModelItem
     QT_ANONYMOUS_PROPERTY(QVariant READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
     QQmlDMListAccessorData(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
-                           QQmlAdaptorModel::Accessors *accessor,
-                           int index, int row, int column, const QVariant &value)
-        : QQmlDelegateModelItem(metaType, accessor, index, row, column)
-        , cachedData(value)
-    {
-    }
+            VDMListDelegateDataType *dataType, int index, int row, int column, const QVariant &value);
 
     QVariant modelData() const
     {
         return cachedData;
     }
 
-    void setModelData(const QVariant &data)
-    {
-        if (data == cachedData)
-            return;
-
-        cachedData = data;
-        emit modelDataChanged();
-    }
+    void setModelData(const QVariant &data);
 
     static QV4::ReturnedValue get_modelData(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
     {
@@ -84,42 +74,32 @@ public:
         return o.asReturnedValue();
     }
 
-    void setValue(const QString &role, const QVariant &value) override
-    {
-        if (role == QLatin1String("modelData") || role.isEmpty())
-            cachedData = value;
-    }
-
-    bool resolveIndex(const QQmlAdaptorModel &model, int idx) override
-    {
-        if (index == -1) {
-            index = idx;
-            cachedData = model.list.at(idx);
-            emit modelIndexChanged();
-            emit modelDataChanged();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
+    void setValue(const QString &role, const QVariant &value) override;
+    bool resolveIndex(const QQmlAdaptorModel &model, int idx) override;
 
 Q_SIGNALS:
     void modelDataChanged();
 
 private:
+    friend class VDMListDelegateDataType;
     QVariant cachedData;
 };
 
 
-class VDMListDelegateDataType : public QQmlRefCount, public QQmlAdaptorModel::Accessors
+class VDMListDelegateDataType
+    : public QQmlRefCount
+    , public QQmlAdaptorModel::Accessors
+    , public QAbstractDynamicMetaObject
 {
 public:
     VDMListDelegateDataType(QQmlAdaptorModel *model)
         : QQmlRefCount()
         , QQmlAdaptorModel::Accessors()
+        , model(model)
     {
-        Q_UNUSED(model)
+        QQmlAdaptorModelEngineData::setModelDataType<QQmlDMListAccessorData>(&builder, this);
+        metaObject.reset(builder.toMetaObject());
+        *static_cast<QMetaObject *>(this) = *metaObject.data();
     }
 
     void cleanup(QQmlAdaptorModel &) const override
@@ -132,9 +112,94 @@ public:
         return model.list.count();
     }
 
-    int columnCount(const QQmlAdaptorModel &) const override
+    int columnCount(const QQmlAdaptorModel &model) const override
     {
-        return 1;
+        switch (model.list.type()) {
+        case QQmlListAccessor::Invalid:
+            return 0;
+        case QQmlListAccessor::StringList:
+        case QQmlListAccessor::UrlList:
+        case QQmlListAccessor::Integer:
+            return 1;
+        default:
+            break;
+        }
+
+        // If there are no properties, we can get modelData itself.
+        return std::max(1, propertyCount() - propertyOffset);
+    }
+
+    static const QMetaObject *metaObjectFromType(QMetaType type)
+    {
+        if (const QMetaObject *metaObject = type.metaObject())
+            return metaObject;
+
+        // NB: This acquires the lock on QQmlMetaTypeData. If we had a QQmlEngine here,
+        //     we could use QQmlGadgetPtrWrapper::instance() to avoid this.
+        if (const QQmlValueType *valueType = QQmlMetaType::valueType(type))
+            return valueType->staticMetaObject();
+
+        return nullptr;
+    }
+
+    template<typename String>
+    static QString toQString(const String &string)
+    {
+        if constexpr (std::is_same_v<String, QString>)
+            return string;
+        else if constexpr (std::is_same_v<String, QByteArray>)
+            return QString::fromUtf8(string);
+        Q_UNREACHABLE_RETURN(QString());
+    }
+
+    template<typename String>
+    static QByteArray toUtf8(const String &string)
+    {
+        if constexpr (std::is_same_v<String, QString>)
+            return string.toUtf8().constData();
+        else if constexpr (std::is_same_v<String, QByteArray>)
+            return string;
+        Q_UNREACHABLE_RETURN(QByteArray());
+    }
+
+    template<typename String>
+    static QVariant value(const QVariant *row, const String &role)
+    {
+        const QMetaType type = row->metaType();
+        if (type == QMetaType::fromType<QVariantMap>())
+            return row->toMap().value(toQString(role));
+
+        if (type == QMetaType::fromType<QVariantHash>())
+            return row->toHash().value(toQString(role));
+
+        const QMetaType::TypeFlags typeFlags = type.flags();
+        if (typeFlags & QMetaType::PointerToQObject)
+            return row->value<QObject *>()->property(toUtf8(role));
+
+        if (const QMetaObject *metaObject = metaObjectFromType(type)) {
+            const int propertyIndex = metaObject->indexOfProperty(toUtf8(role));
+            if (propertyIndex >= 0)
+                return metaObject->property(propertyIndex).readOnGadget(row->constData());
+        }
+
+        return QVariant();
+    }
+
+    template<typename String>
+    static void setValue(QVariant *row, const String &role, const QVariant &value)
+    {
+        const QMetaType type = row->metaType();
+        if (type == QMetaType::fromType<QVariantMap>()) {
+            static_cast<QVariantMap *>(row->data())->insert(toQString(role), value);
+        } else if (type == QMetaType::fromType<QVariantHash>()) {
+            static_cast<QVariantHash *>(row->data())->insert(toQString(role), value);
+        } else if (type.flags() & QMetaType::PointerToQObject) {
+            row->value<QObject *>()->setProperty(toUtf8(role), value);
+        } else if (const QMetaObject *metaObject = metaObjectFromType(type)) {
+            const int propertyIndex = metaObject->indexOfProperty(toUtf8(role));
+            if (propertyIndex >= 0)
+                metaObject->property(propertyIndex).writeOnGadget(row->data(), value);
+        }
     }
 
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
@@ -143,29 +208,7 @@ public:
         if (role == QLatin1String("modelData") || role.isEmpty())
             return entry;
 
-        const QMetaType type = entry.metaType();
-        if (type == QMetaType::fromType<QVariantMap>())
-            return entry.toMap().value(role);
-
-        if (type == QMetaType::fromType<QVariantHash>())
-            return entry.toHash().value(role);
-
-        const QMetaType::TypeFlags typeFlags = type.flags();
-        if (typeFlags & QMetaType::PointerToQObject)
-            return entry.value<QObject *>()->property(role.toUtf8());
-
-        const QMetaObject *metaObject = type.metaObject();
-        if (!metaObject) {
-            // NB: This acquires the lock on QQmlMetaTypeData. If we had a QQmlEngine here,
-            //     we could use QQmlGadgetPtrWrapper::instance() to avoid this.
-            if (const QQmlValueType *valueType = QQmlMetaType::valueType(type))
-                metaObject = valueType->staticMetaObject();
-            else
-                return QVariant();
-        }
-
-        const int propertyIndex = metaObject->indexOfProperty(role.toUtf8());
-        return metaObject->property(propertyIndex).readOnGadget(entry.constData());
+        return value(&entry, role);
     }
 
     QQmlDelegateModelItem *createItem(
@@ -173,16 +216,10 @@ public:
             const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
             int index, int row, int column) override
     {
-        if (!propertyCache) {
-            propertyCache = QQmlPropertyCache::createStandalone(
-                        &QQmlDMListAccessorData::staticMetaObject, model.modelItemRevision);
-        }
-
-        return new QQmlDMListAccessorData(
-                metaType,
-                this,
-                index, row, column,
-                index >= 0 && index < model.list.count() ? model.list.at(index) : QVariant());
+        const QVariant value = (index >= 0 && index < model.list.count())
+                ? model.list.at(index)
+                : QVariant();
+        return new QQmlDMListAccessorData(metaType, this, index, row, column, value);
     }
 
     bool notify(const QQmlAdaptorModel &model, const QList<QQmlDelegateModelItem *> &items, int index, int count, const QVector<int> &) const override
@@ -198,6 +235,22 @@ public:
         }
         return true;
     }
+
+    void objectDestroyed(QObject *) override
+    {
+        release();
+    }
+
+    void emitAllSignals(QQmlDMListAccessorData *accessor) const;
+
+    int metaCall(QObject *object, QMetaObject::Call call, int id, void **arguments) final;
+    int createProperty(const char *name, const char *) final;
+    QMetaObject *toDynamicMetaObject(QObject *accessors) final;
+
+    QMetaObjectBuilder builder;
+    QQmlAdaptorModel *model = nullptr;
+    int propertyOffset = 0;
+    int signalOffset = 0;
 };
 
 QT_END_NAMESPACE
