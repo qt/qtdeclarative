@@ -2084,7 +2084,7 @@ void QQuickBulkValueAnimator::debugAnimation(QDebug d) const
     Note that PropertyAnimation inherits the abstract \l Animation type.
     This includes additional properties and methods for controlling the animation.
 
-    \section1 Modifying Properties Duration Animations
+    \section1 Modifying running animations
 
     Since Qt 6.4, it is possible to set the \l from, \l to, \l duration, and
     \l easing properties on a top-level animation while it is running. The
