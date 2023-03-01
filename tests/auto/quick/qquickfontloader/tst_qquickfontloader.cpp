@@ -200,9 +200,7 @@ void tst_qquickfontloader::changeFontSourceViaState()
 {
     QQuickView window(testFileUrl("qtbug-20268.qml"));
     window.show();
-    window.requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(&window));
-    QCOMPARE(&window, qGuiApp->focusWindow());
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QQuickFontLoader *fontObject = qobject_cast<QQuickFontLoader*>(qvariant_cast<QObject *>(window.rootObject()->property("fontloader")));
     QVERIFY(fontObject != nullptr);

@@ -44,10 +44,10 @@ T.ComboBox {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            contentItem.implicitWidth + background ? (background.leftPadding + background.rightPadding) : 0)
+                            implicitContentWidth + (background ? background.leftPadding + background.rightPadding : 0))
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              Math.max(implicitContentHeight,
-                                      implicitIndicatorHeight) + background ? (background.topPadding + background.bottomPadding) : 0)
+                                      implicitIndicatorHeight) + (background ? background.topPadding + background.bottomPadding : 0))
 
     leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
@@ -78,7 +78,7 @@ T.ComboBox {
                 {"open": control.down},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered},
+                {"hovered": control.enabled && control.hovered},
                 {"flat": control.flat}
             ]
         }
@@ -116,7 +116,7 @@ T.ComboBox {
                 {"open": control.down},
                 {"focused": control.visualFocus || (control.editable && control.activeFocus)},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered},
+                {"hovered": control.enabled && control.hovered},
                 {"flat": control.flat}
             ]
         }
@@ -164,7 +164,7 @@ T.ComboBox {
                     {"editable": control.editable},
                     {"focused": control.visualFocus || (control.editable && control.activeFocus)},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered},
+                    {"hovered": control.enabled && control.hovered},
                     {"flat": control.flat}
                 ]
             }

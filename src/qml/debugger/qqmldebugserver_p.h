@@ -62,6 +62,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QQmlDebugConnector
 {
     Q_OBJECT
 public:
+    ~QQmlDebugServer() override;
     virtual void setDevice(QIODevice *socket) = 0;
 };
 

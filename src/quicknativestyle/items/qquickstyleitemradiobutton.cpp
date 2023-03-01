@@ -85,3 +85,5 @@ void QQuickStyleItemRadioButton::initStyleOption(QStyleOptionButton &styleOption
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemradiobutton.cpp"

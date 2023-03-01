@@ -1576,6 +1576,33 @@ public:
     int own() const { return 93; }
 };
 
+class ExtendedNamespaceByObject : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED_NAMESPACE(Extension)
+
+    Q_PROPERTY(QString dummy READ dummy CONSTANT)
+    Q_PROPERTY(int extension READ extension WRITE setExtension NOTIFY extensionChanged)
+
+    int m_ext = 0;
+
+public:
+    ExtendedNamespaceByObject(QObject *parent = nullptr) : QObject(parent) {}
+    QString dummy() const { return QStringLiteral("dummy"); }
+    int extension() const { return m_ext; }
+    void setExtension(int e)
+    {
+        if (e != m_ext) {
+            m_ext = e;
+            Q_EMIT extensionChanged();
+        }
+    }
+
+Q_SIGNALS:
+    void extensionChanged();
+};
+
 class FactorySingleton : public QObject
 {
     Q_OBJECT
@@ -1816,6 +1843,25 @@ signals:
 
 private:
     QString m_name;
+};
+
+class BindableOnly : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QByteArray data READ data WRITE setData BINDABLE dataBindable FINAL)
+    QML_ELEMENT
+public:
+    BindableOnly(QObject *parent = nullptr)
+        : QObject(parent)
+    {}
+
+    QBindable<QByteArray> dataBindable() { return QBindable<QByteArray>(&m_data); }
+
+    QByteArray data() const { return m_data.value(); }
+    void setData(const QByteArray &newData) { m_data.setValue(newData); }
+
+private:
+    QProperty<QByteArray> m_data;
 };
 
 void registerTypes();

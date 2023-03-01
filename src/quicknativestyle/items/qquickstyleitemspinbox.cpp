@@ -112,3 +112,5 @@ void QQuickStyleItemSpinBox::initStyleOption(QStyleOptionSpinBox &styleOption) c
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemspinbox.cpp"

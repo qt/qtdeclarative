@@ -818,3 +818,5 @@ void QQuickDrawer::geometryChange(const QRectF &newGeometry, const QRectF &oldGe
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdrawer_p.cpp"

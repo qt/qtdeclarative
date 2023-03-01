@@ -37,7 +37,6 @@ set(texteditor_resource_files
     "images/qt-logo.png"
     "qml/+touch/texteditor.qml"
     "qml/texteditor.qml"
-    "qtquickcontrols2.conf"
     "texteditor.html"
 )
 

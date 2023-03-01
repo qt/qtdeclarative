@@ -115,6 +115,7 @@ private slots:
     void outerBindingOverridesInnerBinding();
     void aliasPropertyAndBinding();
     void aliasPropertyReset();
+    void aliasPropertyToIC();
     void nonExistentAttachedObject();
     void scope();
     void importScope();
@@ -425,6 +426,8 @@ private slots:
     void asCast();
     void functionNameInFunctionScope();
     void functionAsDefaultArgument();
+
+    void internalClassParentGc();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -1833,6 +1836,24 @@ void tst_qqmlecmascript::aliasPropertyReset()
     QMetaObject::invokeMethod(object.data(), "resetAlias");
     QCOMPARE(object->property("intAlias").value<int>(), 12);
     QCOMPARE(object->property("aliasedIntIsUndefined"), QVariant(false));
+}
+
+void tst_qqmlecmascript::aliasPropertyToIC()
+{
+    QQmlEngine engine;
+    std::unique_ptr<QObject> root;
+
+    // test that a manual write (of undefined) to a resettable aliased property succeeds
+    QQmlComponent c(&engine, testFileUrl("aliasPropertyToIC.qml"));
+    root.reset(c.create());
+    QVERIFY(root);
+    auto mo = root->metaObject();
+    int aliasIndex = mo->indexOfProperty("myalias");
+    auto prop = mo->property(aliasIndex);
+    QVERIFY(prop.isAlias());
+    auto fromAlias = prop.read(root.get()).value<QObject *>();
+    auto direct = root->property("direct").value<QObject *>();
+    QCOMPARE(fromAlias, direct);
 }
 
 void tst_qqmlecmascript::componentCreation_data()
@@ -9946,6 +9967,15 @@ void tst_qqmlecmascript::functionAsDefaultArgument()
     QScopedPointer root(component.create());
     QVERIFY(root);
     QCOMPARE(root->objectName(), "didRun");
+}
+
+void tst_qqmlecmascript::internalClassParentGc()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("internalClassParentGc.qml"));
+    QScopedPointer root(component.create());
+    QVERIFY(root);
+    QCOMPARE(root->objectName(), "3");
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

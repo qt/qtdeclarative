@@ -59,8 +59,8 @@ T.Slider {
 
         radius: 4
         color: control.pressed ? control.Universal.chromeHighColor :
-               control.hovered ? control.Universal.chromeAltLowColor :
-               control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
+               control.enabled ? control.hovered ? control.Universal.chromeAltLowColor :
+               control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
 
     background: Item {
@@ -80,7 +80,7 @@ T.Slider {
             width: control.horizontal ? parent.width : 2 // SliderTrackThemeHeight
             height: !control.horizontal ? parent.height : 2 // SliderTrackThemeHeight
 
-            color: control.hovered && !control.pressed ? control.Universal.baseMediumColor :
+            color: enabled && control.hovered && !control.pressed ? control.Universal.baseMediumColor :
                    control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
         }
 

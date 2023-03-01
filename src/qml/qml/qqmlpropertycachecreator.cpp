@@ -149,6 +149,11 @@ void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(QQmlEnginePr
         if (propertyCaches->at(groupPropertyObjectIndex))
             continue;
 
+        if (!pendingBinding.referencingObjectPropertyCache) {
+            pendingBinding.referencingObjectPropertyCache
+                    = propertyCaches->at(pendingBinding.referencingObjectIndex);
+        }
+
         if (!pendingBinding.resolveInstantiatingProperty())
             continue;
 

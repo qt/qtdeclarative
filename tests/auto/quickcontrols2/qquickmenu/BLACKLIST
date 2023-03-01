@@ -1,6 +1,3 @@
-[popup]
-macos # Can't control cursor (QTBUG-76312)
-
 # QTBUG-87018
 [subMenuDisabledMouse]
 macos

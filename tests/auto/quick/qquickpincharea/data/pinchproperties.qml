@@ -31,18 +31,18 @@ Rectangle {
             pinch.maximumScale: 2.0
             pinch.minimumRotation: 0.0
             pinch.maximumRotation: 90.0
-            onPinchStarted: {
+            onPinchStarted: (pinch) => {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
                 whiteRect.pointCount = pinch.pointCount;
                 whiteRect.pinchActive = true;
             }
-            onPinchUpdated: {
+            onPinchUpdated: (pinch) => {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
                 whiteRect.pointCount = pinch.pointCount;
             }
-            onPinchFinished: {
+            onPinchFinished: (pinch) => {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
                 whiteRect.pointCount = pinch.pointCount;

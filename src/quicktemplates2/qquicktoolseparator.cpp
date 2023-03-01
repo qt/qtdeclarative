@@ -146,3 +146,5 @@ QAccessible::Role QQuickToolSeparator::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktoolseparator_p.cpp"

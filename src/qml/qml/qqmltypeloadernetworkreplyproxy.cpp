@@ -72,3 +72,5 @@ void QQmlTypeLoaderNetworkReplyProxy::manualFinished(QNetworkReply *reply)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmltypeloadernetworkreplyproxy_p.cpp"

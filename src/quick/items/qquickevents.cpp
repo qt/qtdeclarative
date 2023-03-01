@@ -497,3 +497,5 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickevents_p_p.cpp"

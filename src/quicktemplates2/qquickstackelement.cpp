@@ -205,7 +205,6 @@ void QQuickStackElement::initialize(RequiredProperties &requiredProperties)
     if (!(heightValid = p->heightValid()))
         item->setHeight(view->height());
     item->setParentItem(view);
-    p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
 
     if (!properties.isUndefined()) {
         QQmlEngine *engine = qmlEngine(view);
@@ -219,6 +218,7 @@ void QQuickStackElement::initialize(RequiredProperties &requiredProperties)
         QQmlComponentPrivate::setInitialProperties(v4, qmlContext, qmlObject, ipv, requiredProperties, item);
         properties.clear();
     }
+
     if (!requiredProperties.empty()) {
         QString error;
         for (const auto &property: requiredProperties) {
@@ -227,6 +227,8 @@ void QQuickStackElement::initialize(RequiredProperties &requiredProperties)
         }
         QQuickStackViewPrivate::get(view)->warn(error);
         item = nullptr;
+    } else {
+        p->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
     }
 
     init = true;

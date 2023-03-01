@@ -91,3 +91,5 @@ void QQuickStyleItemCheckBox::initStyleOption(QStyleOptionButton &styleOption) c
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemcheckbox.cpp"

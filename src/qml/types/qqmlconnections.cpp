@@ -130,6 +130,12 @@ public:
     }
     \endqml
 
+    \note For backwards compatibility you can also specify the signal handlers
+    without \c{function}, like you would specify them directly in the target
+    object. This is not recommended. If you specify one signal handler this way,
+    then all signal handlers specified as \c{function} in the same Connections
+    object are ignored.
+
     \sa {Qt QML}
 */
 QQmlConnections::QQmlConnections(QObject *parent) :

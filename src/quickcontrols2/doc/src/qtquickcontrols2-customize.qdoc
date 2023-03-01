@@ -50,6 +50,11 @@
 
     \include customize-button-background.qdocinc file
 
+    \note as the different items that make up a control in any given style are
+    designed to work together, it may be necessary to override other items to
+    get the look you're after. In addition, not all styles can be customized.
+    See the note in \l {Customization Reference} for more information.
+
     The second way to create the button is good if you plan to use your rounded
     button in several places. It involves moving the code into its own QML file
     within your project.
@@ -602,6 +607,47 @@
 
         \snippet qtquickcontrols2-combobox-custom.qml file
 
+        As explained in \l {ComboBox Model Roles}, ComboBox supports multiple
+        types of models. If you know that your ComboBox instances will only
+        ever use one particular type of model, then it is possible to simplify
+        the code above.
+
+        For example, if your models will only ever be derived from
+        \l QAbstractItemModel and have more than one role, the following
+        binding is sufficient:
+
+        \code
+        text: model[control.textRole]
+        \endcode
+
+        However, if you want to support all standard models, the more complex
+        binding is necessary, and is explained in detail below.
+
+        \quotefromfile qtquickcontrols2-combobox-custom.qml
+        \skipto control.textRole
+        \printto Array.isArray
+
+        The first line checks if the \l {ComboBox::}{textRole} property has
+        been set. It is only necessary to set this property if the model
+        has more than one role.
+
+        \printline Array.isArray
+
+        If \c textRole has been set, the next step is to check if the model
+        is an array.
+
+        If it is an array, the \c modelData context property will be available,
+        and so it must be used. Square bracket notation is used to access
+        the property of modelData since the property name is not known ahead
+        of time.
+
+        If it is not an array, the \c model context property must be used
+        instead.
+
+        \printline modelData
+
+        Finally, if \c textRole has not been set, then the model only has one
+        role, and so it is sufficient to use the value of \c modelData.
 
     \section2 Customizing DelayButton
 

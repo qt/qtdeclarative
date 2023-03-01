@@ -78,8 +78,8 @@ T.TextField {
     background: Rectangle {
         y: control.height - height - control.bottomPadding + 8
         implicitWidth: 120
-        height: control.activeFocus || control.hovered ? 2 : 1
+        height: control.activeFocus || (enabled && control.hovered) ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor
-                                   : (control.hovered ? control.Material.primaryTextColor : control.Material.hintTextColor)
+            : ((enabled && control.hovered) ? control.Material.primaryTextColor : control.Material.hintTextColor)
     }
 }

@@ -76,7 +76,7 @@ T.ProgressBar {
                     {"disabled": !control.enabled},
                     {"indeterminate": control.indeterminate},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
         }
@@ -93,7 +93,7 @@ T.ProgressBar {
                 states: [
                     {"disabled": !control.enabled},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
         }
@@ -109,7 +109,7 @@ T.ProgressBar {
                     {"disabled": !control.enabled},
                     {"indeterminate": control.indeterminate},
                     {"mirrored": control.mirrored},
-                    {"hovered": control.hovered}
+                    {"hovered": control.enabled && control.hovered}
                 ]
             }
         }
@@ -134,7 +134,7 @@ T.ProgressBar {
                 {"disabled": !control.enabled},
                 {"indeterminate": control.indeterminate},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

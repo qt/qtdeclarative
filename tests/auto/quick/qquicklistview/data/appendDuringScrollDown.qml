@@ -1,10 +1,11 @@
 import QtQuick 2.6
 
 ListView {
+    id: listView
     width: 320; height: 240
     focus: true
     delegate: Text {
-        height: 40; width: parent.width
+        height: 40; width: listView.width
         text: model.text
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignHCenter

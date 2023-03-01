@@ -50,6 +50,6 @@ T.SplitView {
         implicitWidth: control.orientation === Qt.Horizontal ? 6 : control.width
         implicitHeight: control.orientation === Qt.Horizontal ? control.height : 6
         color: T.SplitHandle.pressed ? control.Universal.baseMediumColor
-            : (T.SplitHandle.hovered ? control.Universal.baseMediumLowColor : control.Universal.chromeHighColor)
+            : (enabled && T.SplitHandle.hovered ? control.Universal.baseMediumLowColor : control.Universal.chromeHighColor)
     }
 }

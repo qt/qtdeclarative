@@ -581,4 +581,51 @@ TestCase {
         verify(newHorizontalScrollBar.visible)
         verify(!oldHorizontalScrollBar.visible)
     }
+
+    Component {
+        id: bindingToContentItemAndStandaloneFlickable
+
+        Item {
+            width: 200
+            height: 200
+
+            property alias scrollView: scrollView
+
+            ScrollView {
+                id: scrollView
+                anchors.fill: parent
+                contentItem: listView
+
+                property Item someBinding: contentItem
+            }
+            ListView {
+                id: listView
+                model: 10
+                delegate: ItemDelegate {
+                    text: modelData
+                    width: listView.width
+                }
+            }
+        }
+    }
+
+    // Tests that scroll bars show up for a ScrollView where
+    // - its contentItem is declared as a standalone, separate item
+    // - there is a binding to contentItem (which causes a default Flickable to be created)
+    function test_bindingToContentItemAndStandaloneFlickable() {
+        let root = createTemporaryObject(bindingToContentItemAndStandaloneFlickable, testCase)
+        verify(root)
+
+        let control = root.scrollView
+        let verticalScrollBar = control.ScrollBar.vertical
+        let horizontalScrollBar = control.ScrollBar.horizontal
+        compare(verticalScrollBar.parent, control)
+        compare(horizontalScrollBar.parent, control)
+        verify(verticalScrollBar.visible)
+        verify(horizontalScrollBar.visible)
+
+        mouseDrag(verticalScrollBar, verticalScrollBar.width / 2, verticalScrollBar.height / 2, 0, 50)
+        verify(verticalScrollBar.active)
+        verify(horizontalScrollBar.active)
+    }
 }

@@ -71,3 +71,15 @@ endif()
 qt_internal_add_docs(QuickControls2
     doc/qtquickcontrols.qdocconf
 )
+
+# Make the doc files available to Creator's locator.
+file(GLOB doc_files
+    "${CMAKE_CURRENT_SOURCE_DIR}/doc/snippets/*.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/doc/src/*.qdoc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/doc/src/templates/*.qdoc"
+)
+target_sources(QuickControls2
+    PRIVATE
+        ${doc_files}
+        doc/qtquickcontrols.qdocconf
+)

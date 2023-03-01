@@ -370,3 +370,5 @@ void FileInfoThread::findChangeRange(const QList<FileProperty> &list, int &fromI
 }
 
 QT_END_NAMESPACE
+
+#include "moc_fileinfothread_p.cpp"

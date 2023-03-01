@@ -777,7 +777,7 @@ bool QObjectWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ScopedString name(scope, id.asStringOrSymbol());
 
-    if (that->internalClass()->isFrozen) {
+    if (that->internalClass()->isFrozen()) {
         QString error = QLatin1String("Cannot assign to property \"") +
                         name->toQString() + QLatin1String("\" of read-only object");
         scope.engine->throwError(error);

@@ -86,19 +86,13 @@ void tst_qqmlfileselector::basicTestCached()
 void tst_qqmlfileselector::applicationEngineTest()
 {
     QQmlApplicationEngine engine;
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
-    QQmlFileSelector* selector = QQmlFileSelector::get(&engine);
-QT_WARNING_POP
-    QVERIFY(selector != nullptr);
-    selector->setExtraSelectors(QStringList() << "basic");
+    engine.setExtraFileSelectors(QStringList() << "basic");
+    engine.load(testFileUrl("basicTest.qml"));
 
-    QQmlComponent component(&engine, testFileUrl("basicTest.qml"));
-    QObject *object = component.create();
+    QVERIFY(!engine.rootObjects().isEmpty());
+    QObject *object = engine.rootObjects().at(0);
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toString(), QString("selected"));
-
-    delete object;
 }
 
 QTEST_MAIN(tst_qqmlfileselector)

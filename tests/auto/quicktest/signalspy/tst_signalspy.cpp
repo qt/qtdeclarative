@@ -79,7 +79,7 @@ void tst_SignalSpy::testCount()
         window.resize(200, 200);
         window.setSource(url);
         window.show();
-        QVERIFY(QTest::qWaitForWindowActive(&window));
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
         QVERIFY(window.rootObject() != nullptr);
 
         QObject *mouseSpy = window.rootObject()->findChild<QObject *>("mouseSpy");

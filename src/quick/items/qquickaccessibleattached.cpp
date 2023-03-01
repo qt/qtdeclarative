@@ -109,7 +109,7 @@ QT_BEGIN_NAMESPACE
     This property sets an accessible description.
     Similar to the name it describes the item. The description
     can be a little more verbose and tell what the item does,
-    for example the functionallity of the button it describes.
+    for example the functionality of the button it describes.
 */
 
 /*!

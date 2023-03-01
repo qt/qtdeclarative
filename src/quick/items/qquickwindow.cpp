@@ -1726,6 +1726,12 @@ QPair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorItemAnd
 }
 #endif
 
+void QQuickWindowPrivate::clearFocusObject()
+{
+    if (auto da = deliveryAgentPrivate())
+        da->clearFocusObject();
+}
+
 /*!
     \qmlproperty list<Object> Window::data
     \qmldefault

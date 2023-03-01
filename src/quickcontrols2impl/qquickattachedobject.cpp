@@ -272,3 +272,5 @@ void QQuickAttachedObject::attachedParentChange(QQuickAttachedObject *newParent,
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickattachedobject_p.cpp"

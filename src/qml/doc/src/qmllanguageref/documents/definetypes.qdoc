@@ -53,8 +53,12 @@ The type name has the following requirements:
 
 This document is then automatically recognized by the engine as a definition of
 a QML type. Additionally, a type defined in this manner is automatically made
-available to other QML files within the same directory as the engine searches
-within the immediate directory when resolving QML type names.
+available to other QML files within the same local directory as the engine
+searches within the immediate directory when resolving QML type names.
+
+\note The QML engine does not automatically search remote directories this way.
+You have to add a qmldir file if your documents are loaded over the network. See
+\l{Importing QML Document Directories}.
 
 \section2 Custom QML Type Definition
 

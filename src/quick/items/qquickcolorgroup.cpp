@@ -594,3 +594,5 @@ void QQuickColorGroup::resetColor(QPalette::ColorRole role, Notifier notifier)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcolorgroup_p.cpp"

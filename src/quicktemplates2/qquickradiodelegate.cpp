@@ -120,3 +120,5 @@ QAccessible::Role QQuickRadioDelegate::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickradiodelegate_p.cpp"

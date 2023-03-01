@@ -768,6 +768,13 @@ void QQuickControlPrivate::executeBackground(bool complete)
         quickCompleteDeferred(q, backgroundName(), background);
 }
 
+/*
+    \internal
+
+    Hides an item that was replaced by a newer one, rather than
+    deleting it, as the item is typically created in QML and hence
+    we don't own it.
+*/
 void QQuickControlPrivate::hideOldItem(QQuickItem *item)
 {
     if (!item)
@@ -783,6 +790,29 @@ void QQuickControlPrivate::hideOldItem(QQuickItem *item)
     QQuickAccessibleAttached *accessible = accessibleAttached(item);
     if (accessible)
         accessible->setIgnored(true);
+#endif
+}
+
+/*
+    \internal
+
+    Named "unhide" because it's used for cases where an item
+    that was previously hidden by \l hideOldItem() wants to be
+    shown by a control again, such as a ScrollBar in ScrollView.
+*/
+void QQuickControlPrivate::unhideOldItem(QQuickControl *control, QQuickItem *item)
+{
+    Q_ASSERT(item);
+    qCDebug(lcItemManagement) << "unhiding old item" << item;
+
+    item->setVisible(true);
+    item->setParentItem(control);
+
+#if QT_CONFIG(accessibility)
+    // Add the item back in to the accessibility tree.
+    QQuickAccessibleAttached *accessible = accessibleAttached(item);
+    if (accessible)
+        accessible->setIgnored(false);
 #endif
 }
 
@@ -2197,3 +2227,5 @@ bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVaria
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcontrol_p.cpp"

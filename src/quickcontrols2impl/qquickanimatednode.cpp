@@ -165,3 +165,5 @@ void QQuickAnimatedNode::update()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickanimatednode_p.cpp"

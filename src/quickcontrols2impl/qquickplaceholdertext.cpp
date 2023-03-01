@@ -71,3 +71,5 @@ void QQuickPlaceholderText::updateAlignment()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplaceholdertext_p.cpp"

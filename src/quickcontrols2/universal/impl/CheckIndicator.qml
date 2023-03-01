@@ -70,7 +70,7 @@ Rectangle {
         width: indicator.partiallyChecked ? parent.width / 2 : parent.width
         height: indicator.partiallyChecked ? parent.height / 2 : parent.height
 
-        visible: !indicator.control.pressed && indicator.control.hovered || indicator.partiallyChecked
+        visible: !indicator.control.pressed && enabled && indicator.control.hovered || indicator.partiallyChecked
         color: !indicator.partiallyChecked ? "transparent" :
                !indicator.control.enabled ? indicator.control.Universal.baseLowColor :
                 indicator.control.down ? indicator.control.Universal.baseMediumColor :

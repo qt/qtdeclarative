@@ -750,7 +750,12 @@ void QQuickSplitViewPrivate::createHandleItem(int index)
         m_handleItems.insert(index, handleItem);
 
         handleItem->setParentItem(q);
-
+        // Handles must have priority for press events, so we need to set this.
+        handleItem->setAcceptedMouseButtons(Qt::LeftButton);
+        handleItem->setKeepMouseGrab(true);
+#if QT_CONFIG(cursor)
+        updateCursorHandle(handleItem);
+#endif
         m_handle->completeCreate();
         resizeHandle(handleItem);
     }
@@ -882,6 +887,13 @@ void QQuickSplitViewPrivate::resizeHandles()
         resizeHandle(handleItem);
 }
 
+#if QT_CONFIG(cursor)
+void QQuickSplitViewPrivate::updateCursorHandle(QQuickItem *handleItem)
+{
+    handleItem->setCursor(isHorizontal() ? Qt::SplitHCursor : Qt::SplitVCursor);
+}
+#endif
+
 void QQuickSplitViewPrivate::updateHandleVisibilities()
 {
     // If this is the first item that is visible, we won't have any
@@ -918,7 +930,6 @@ void QQuickSplitViewPrivate::updateHandleVisibilities()
 
 void QQuickSplitViewPrivate::updateHoveredHandle(QQuickItem *hoveredItem)
 {
-    Q_Q(QQuickSplitView);
     qCDebug(qlcQQuickSplitViewMouse) << "updating hovered handle after" << hoveredItem << "was hovered";
 
     const int oldHoveredHandleIndex = m_hoveredHandleIndex;
@@ -943,13 +954,6 @@ void QQuickSplitViewPrivate::updateHoveredHandle(QQuickItem *hoveredItem)
     } else {
         qCDebug(qlcQQuickSplitViewMouse) << "either there is no hovered item or" << hoveredItem << "is not a handle";
     }
-
-#if QT_CONFIG(cursor)
-    if (m_hoveredHandleIndex != -1)
-        q->setCursor(m_orientation == Qt::Horizontal ? Qt::SplitHCursor : Qt::SplitVCursor);
-    else
-        q->setCursor(Qt::ArrowCursor);
-#endif
 }
 
 void QQuickSplitViewPrivate::setResizing(bool resizing)
@@ -1009,8 +1013,6 @@ void QQuickSplitViewPrivate::handlePress(const QPointF &point)
         m_rightOrBottomItemSizeBeforePress = isHorizontal ? rightOrBottomItem->width() : rightOrBottomItem->height();
         m_handlePosBeforePress = pressedItem->position();
 
-        // Avoid e.g. Flickable stealing our drag if we're inside it.
-        q->setKeepMouseGrab(true);
 
         // Force the attached object to be created since we rely on it.
         QQuickSplitHandleAttached *handleAttached = qobject_cast<QQuickSplitHandleAttached*>(
@@ -1043,7 +1045,6 @@ void QQuickSplitViewPrivate::handleMove(const QPointF &point)
 
 void QQuickSplitViewPrivate::handleRelease(const QPointF &point)
 {
-    Q_Q(QQuickSplitView);
     QQuickContainerPrivate::handleRelease(point);
 
     if (m_pressedHandleIndex != -1) {
@@ -1061,7 +1062,6 @@ void QQuickSplitViewPrivate::handleRelease(const QPointF &point)
     m_handlePosBeforePress = QPointF();
     m_leftOrTopItemSizeBeforePress = 0.0;
     m_rightOrBottomItemSizeBeforePress = 0.0;
-    q->setKeepMouseGrab(false);
 }
 
 void QQuickSplitViewPrivate::itemVisibilityChanged(QQuickItem *item)
@@ -1115,7 +1115,6 @@ QQuickSplitView::QQuickSplitView(QQuickItem *parent)
     Q_D(QQuickSplitView);
     d->changeTypes |= QQuickItemPrivate::Visibility;
 
-    setAcceptedMouseButtons(Qt::LeftButton);
     setFiltersChildMouseEvents(true);
 }
 
@@ -1125,7 +1124,6 @@ QQuickSplitView::QQuickSplitView(QQuickSplitViewPrivate &dd, QQuickItem *parent)
     Q_D(QQuickSplitView);
     d->changeTypes |= QQuickItemPrivate::Visibility;
 
-    setAcceptedMouseButtons(Qt::LeftButton);
     setFiltersChildMouseEvents(true);
 }
 
@@ -1163,6 +1161,10 @@ void QQuickSplitView::setOrientation(Qt::Orientation orientation)
 
     d->m_orientation = orientation;
     d->resizeHandles();
+#if QT_CONFIG(cursor)
+    for (QQuickItem *handleItem : d->m_handleItems)
+        d->updateCursorHandle(handleItem);
+#endif
     d->requestLayout();
     emit orientationChanged();
 }
@@ -1398,18 +1400,46 @@ void QQuickSplitView::hoverMoveEvent(QHoverEvent *event)
     d->updateHoveredHandle(hoveredItem);
 }
 
+void QQuickSplitView::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_UNUSED(event);
+    Q_D(QQuickSplitView);
+    // If SplitView is no longer hovered (e.g. visible set to false), clear handle hovered value
+    d->updateHoveredHandle(nullptr);
+}
+
 bool QQuickSplitView::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickSplitView);
     qCDebug(qlcQQuickSplitViewMouse) << "childMouseEventFilter called with" << item << event;
-    if (event->type() != QEvent::HoverEnter)
-        return false;
 
-    // If a child item received a hover enter event, then it means our handle is no longer hovered.
-    // Handles should be purely visual and not accept hover events,
-    // so we should never get hover events for them here.
-    d->updateHoveredHandle(nullptr);
-    return false;
+    if (event->type() == QEvent::MouseButtonPress) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+        const QPointF point = mapFromItem(item, mouseEvent->position());
+        d->handlePress(point);
+
+        // Keep the mouse grab if this item belongs to the handle,
+        // otherwise this event can be stolen e.g. Flickable if we're inside it.
+        if (d->m_pressedHandleIndex != -1)
+            item->setKeepMouseGrab(true);
+    }
+    else if (event->type() == QEvent::MouseButtonRelease) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+        const QPointF point = mapFromItem(item, mouseEvent->position());
+        d->handleRelease(point);
+    }
+    else if (event->type() == QEvent::MouseMove) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+        const QPointF point = mapFromItem(item, mouseEvent->position());
+        d->handleMove(point);
+    }
+
+    // If this event belongs to the handle, filter it. (d->m_pressedHandleIndex != -1) means that
+    // we press or move the handle, so we don't need to propagate it further.
+    if (d->m_pressedHandleIndex != -1)
+        return true;
+
+    return QQuickContainer::childMouseEventFilter(item, event);
 }
 
 void QQuickSplitView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -1483,7 +1513,6 @@ void QQuickSplitView::itemRemoved(int index, QQuickItem *item)
             handleAttachedPrivate->setPressed(false);
         }
 
-        setKeepMouseGrab(false);
         d->m_hoveredHandleIndex = -1;
         d->m_pressedHandleIndex = -1;
     }

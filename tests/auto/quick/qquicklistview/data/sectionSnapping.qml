@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
 ListView {
+    id: listView
     width: 400
     height: 400
     preferredHighlightBegin: 100
@@ -17,7 +18,7 @@ ListView {
     }
 
     delegate: Rectangle {
-        width: parent.width
+        width: listView.width
         height: 50
         color: index % 2 ? "lightsteelblue" : "steelblue"
         Text {

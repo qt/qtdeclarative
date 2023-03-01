@@ -518,3 +518,7 @@ QQuickVerticalHeaderViewPrivate::QQuickVerticalHeaderViewPrivate() = default;
 QQuickVerticalHeaderViewPrivate::~QQuickVerticalHeaderViewPrivate() = default;
 
 QT_END_NAMESPACE
+
+#include "moc_qquickheaderview_p_p.cpp"
+
+#include "moc_qquickheaderview_p.cpp"

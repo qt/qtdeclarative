@@ -69,3 +69,5 @@ void QQuickStyleItemFrame::initStyleOption(QStyleOptionFrame &styleOption) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemframe.cpp"

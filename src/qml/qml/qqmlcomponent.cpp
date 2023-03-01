@@ -833,8 +833,16 @@ QObject *QQmlComponent::create(QQmlContext *context)
     Q_D(QQmlComponent);
 
     QObject *rv = d->doBeginCreate(this, context);
-    if (rv)
+    if (rv) {
         completeCreate();
+    } else if (d->state.completePending) {
+        // overridden completCreate might assume that
+        // the object has actually been created
+        ++creationDepth.localData();
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(d->engine);
+        d->complete(ep, &d->state);
+        --creationDepth.localData();
+    }
     if (rv && !d->requiredProperties().empty()) {
         delete  rv;
         return nullptr;
@@ -1793,3 +1801,4 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 QT_END_NAMESPACE
 
 #include "moc_qqmlcomponent.cpp"
+#include "moc_qqmlcomponentattached_p.cpp"

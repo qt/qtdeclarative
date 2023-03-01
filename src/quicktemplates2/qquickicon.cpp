@@ -307,3 +307,5 @@ QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickicon_p.cpp"

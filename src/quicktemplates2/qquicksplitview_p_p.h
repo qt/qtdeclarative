@@ -73,6 +73,9 @@ public:
     void destroyHandles();
     void resizeHandle(QQuickItem *handleItem);
     void resizeHandles();
+#if QT_CONFIG(cursor)
+    void updateCursorHandle(QQuickItem *handleItem);
+#endif
     void updateHandleVisibilities();
     void updateHoveredHandle(QQuickItem *hoveredItem);
     void setResizing(bool resizing);

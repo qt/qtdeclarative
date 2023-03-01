@@ -469,7 +469,7 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
     \class QQuickAsyncImageProvider
     \since 5.6
     \inmodule QtQuick
-    \brief The QQuickAsyncImageProvider class provides an interface for for asynchronous control of QML image requests.
+    \brief The QQuickAsyncImageProvider class provides an interface for asynchronous control of QML image requests.
 
     See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
 

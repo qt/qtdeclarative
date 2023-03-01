@@ -145,7 +145,7 @@ ModuleIndex::~ModuleIndex()
     auto it = scopes.begin();
     auto end = scopes.end();
     while (it != end) {
-        free(*it);
+        delete *it;
         ++it;
     }
 }

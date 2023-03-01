@@ -56,7 +56,7 @@ T.ComboBox {
     leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
 
-    Material.elevation: flat ? control.pressed || control.hovered ? 2 : 0
+    Material.elevation: flat ? control.pressed || (enabled && control.hovered) ? 2 : 0
                              : control.pressed ? 8 : 2
     Material.background: flat ? "transparent" : undefined
     Material.foreground: flat ? undefined : Material.primaryTextColor
@@ -127,7 +127,7 @@ T.ComboBox {
             height: parent.height
             pressed: control.pressed
             anchor: control.editable && control.indicator ? control.indicator : control
-            active: control.pressed || control.visualFocus || control.hovered
+            active: enabled && (control.pressed || control.visualFocus || control.hovered)
             color: control.Material.rippleColor
         }
     }

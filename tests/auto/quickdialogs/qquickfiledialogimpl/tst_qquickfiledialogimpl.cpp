@@ -92,6 +92,7 @@ private slots:
     void chooseFolderViaEnter();
     void chooseFileAndThenFolderViaTextEdit();
     void cancelDialogWhileTextEditHasFocus();
+    void closingDialogCancels();
     void goUp();
     void goUpWhileTextEditHasFocus();
     void goIntoLargeFolder();
@@ -454,6 +455,9 @@ void tst_QQuickFileDialogImpl::changeFolderViaDoubleClick()
     COMPARE_URL(subDirDelegate->file(), QUrl::fromLocalFile(tempSubDir.path()));
     QVERIFY(doubleClickButton(subDirDelegate));
     // The first file in the directory should be selected, which is "sub-sub-dir".
+    const QStringList expectedVisibleFiles = { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() };
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(fileDialogListView, expectedVisibleFiles, failureMessage), qPrintable(failureMessage));
     COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
     COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempSubSubDir.path()) });
     QQuickFileDialogDelegate *subSubDirDelegate = nullptr;
@@ -534,6 +538,9 @@ void tst_QQuickFileDialogImpl::chooseFolderViaEnter()
     // Select the delegate by pressing enter.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir.path()));
+    const QStringList expectedVisibleFiles = { tempSubSubDir.path(), tempSubFile1->fileName(), tempSubFile2->fileName() };
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(fileDialogListView, expectedVisibleFiles, failureMessage), qPrintable(failureMessage));
     // The first file in the new directory should be selected, which is "sub-sub-dir".
     COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
     // Since we only chose a folder, the dialog should still be open.
@@ -648,6 +655,32 @@ void tst_QQuickFileDialogImpl::cancelDialogWhileTextEditHasFocus()
     QVERIFY(!breadcrumbBar->textField()->isVisible());
 }
 
+void tst_QQuickFileDialogImpl::closingDialogCancels()
+{
+    // Open the dialog.
+    DialogTestHelper<QQuickFileDialog, QQuickFileDialogImpl> dialogHelper(this, "fileDialog.qml");
+    OPEN_QUICK_DIALOG();
+
+    QSignalSpy accepted(dialogHelper.dialog, &QQuickAbstractDialog::accepted);
+    QSignalSpy rejected(dialogHelper.dialog, &QQuickAbstractDialog::rejected);
+
+    // Accept the dialog.
+    QVERIFY(QMetaObject::invokeMethod(dialogHelper.window(), "doneAccepted"));
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
+    QCOMPARE(accepted.size(), 1);
+    QCOMPARE(rejected.size(), 0);
+
+    // Re-open the dialog.
+    accepted.clear();
+    OPEN_QUICK_DIALOG();
+
+    // Close the dialog.
+    CLOSE_QUICK_DIALOG();
+    QCOMPARE(accepted.size(), 0);
+    QCOMPARE(rejected.size(), 1);
+}
+
 void tst_QQuickFileDialogImpl::goUp()
 {
     // Open the dialog. Start off in "sub-dir".
@@ -676,7 +709,7 @@ void tst_QQuickFileDialogImpl::goUp()
     QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 0, subDirDelegate));
     QCOMPARE(subDirDelegate->isHighlighted(), true);
 
-    // Go up a directory via the keyboard shortcut next to the breadcrumb bar.
+    // Go up a directory via the keyboard shortcut.
     const auto goUpKeySequence = QKeySequence(Qt::ALT | Qt::Key_Up);
     QTest::keySequence(dialogHelper.window(), goUpKeySequence);
     QDir tempParentDir(tempDir.path());

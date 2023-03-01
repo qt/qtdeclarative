@@ -646,6 +646,28 @@ struct Stringify
     QString makeMember(const QString &key, const Value &v);
 };
 
+class [[nodiscard]] CallDepthAndCycleChecker
+{
+    Q_DISABLE_COPY_MOVE(CallDepthAndCycleChecker);
+
+public:
+    CallDepthAndCycleChecker(Stringify *stringify, Object *o)
+        : m_callDepthRecorder(stringify->v4)
+    {
+        if (stringify->stackContains(o)) {
+            stringify->v4->throwTypeError(
+                        QStringLiteral("Cannot convert circular structure to JSON"));
+        }
+
+        stringify->v4->checkStackLimits();
+    }
+
+    bool foundProblem() const { return m_callDepthRecorder.ee->hasException; }
+
+private:
+    ExecutionEngineCallDepthRecorder m_callDepthRecorder;
+};
+
 static QString quote(const QString &str)
 {
     QString product;
@@ -776,10 +798,9 @@ QString Stringify::makeMember(const QString &key, const Value &v)
 
 QString Stringify::JO(Object *o)
 {
-    if (stackContains(o)) {
-        v4->throwTypeError();
+    CallDepthAndCycleChecker check(this, o);
+    if (check.foundProblem())
         return QString();
-    }
 
     Scope scope(v4);
 
@@ -836,10 +857,9 @@ QString Stringify::JO(Object *o)
 
 QString Stringify::JA(Object *a)
 {
-    if (stackContains(a)) {
-        v4->throwTypeError();
+    CallDepthAndCycleChecker check(this, a);
+    if (check.foundProblem())
         return QString();
-    }
 
     Scope scope(a->engine());
 

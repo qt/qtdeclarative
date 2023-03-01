@@ -285,3 +285,5 @@ void QQuickGroupBox::accessibilityActiveChanged(bool active)
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickgroupbox_p.cpp"

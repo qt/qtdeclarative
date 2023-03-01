@@ -77,6 +77,9 @@ private slots:
     void writeProperty_javascriptExpression_data();
     void writeProperty_javascriptExpression();
 
+    void cyclicStringify();
+    void recursiveStringify();
+
 private:
     QByteArray readAsUtf8(const QString &fileName);
     static QJsonValue valueFromJson(const QByteArray &json);
@@ -512,6 +515,43 @@ void tst_qjsonbinding::writeProperty_javascriptExpression()
                                 .arg(property).arg(expression));
     QVERIFY(!ret.isError());
     QCOMPARE(ret.toString(), expectedJson);
+}
+
+void tst_qjsonbinding::cyclicStringify()
+{
+    QJSEngine e;
+    const QString program = QStringLiteral(R"(
+        var a = {};
+        a.a = a;
+        JSON.stringify(a);
+    )");
+
+    QJSValue result = e.evaluate(program);
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::TypeError);
+    QVERIFY(result.toString().contains(QLatin1String("Cannot convert circular structure to JSON")));
+}
+
+void tst_qjsonbinding::recursiveStringify()
+{
+    QJSEngine e;
+    const QString program = QStringLiteral(R"(
+        function create() {
+            var a = {}
+            Object.defineProperty(a, "a", {
+                enumerable: true,
+                get: function() { return create(); }
+            });
+            return a;
+        }
+
+        JSON.stringify(create());
+    )");
+
+    QJSValue result = e.evaluate(program);
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::RangeError);
+    QVERIFY(result.toString().contains(QLatin1String("Maximum call stack size exceeded")));
 }
 
 QTEST_MAIN(tst_qjsonbinding)

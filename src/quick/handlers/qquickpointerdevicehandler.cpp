@@ -315,3 +315,5 @@ bool QQuickPointerDeviceHandler::wantsPointerEvent(QPointerEvent *event)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpointerdevicehandler_p.cpp"

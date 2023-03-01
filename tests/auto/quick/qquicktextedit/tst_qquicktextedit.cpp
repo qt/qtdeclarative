@@ -932,7 +932,7 @@ void tst_qquicktextedit::hAlignVisual()
 
     // Try to check whether alignment works by checking the number of black
     // pixels in the thirds of the grabbed image.
-    const int windowWidth = 200;
+    const int windowWidth = view.width();
     const int textWidth = qCeil(text->implicitWidth());
     QVERIFY2(textWidth < windowWidth, "System font too large.");
     const int sectionWidth = textWidth / 3;
@@ -980,7 +980,7 @@ void tst_qquicktextedit::hAlignVisual()
     {
         // Left Align
         QImage image = view.grabWindow();
-        int x = qCeil(text->implicitWidth());
+        int x = qCeil(text->implicitWidth() * view.devicePixelRatio());
         int left = numberOfNonWhitePixels(0, x, image);
         int right = numberOfNonWhitePixels(x, image.width() - x, image);
         QVERIFY2(left > 0, msgNotGreaterThan(left, 0).constData());
@@ -990,7 +990,7 @@ void tst_qquicktextedit::hAlignVisual()
         // HCenter Align
         text->setHAlign(QQuickText::AlignHCenter);
         QImage image = view.grabWindow();
-        int x1 = qFloor(image.width() - text->implicitWidth()) / 2;
+        int x1 = qFloor(image.width() - text->implicitWidth() * view.devicePixelRatio()) / 2;
         int x2 = image.width() - x1;
         int left = numberOfNonWhitePixels(0, x1, image);
         int mid = numberOfNonWhitePixels(x1, x2 - x1, image);
@@ -1003,7 +1003,7 @@ void tst_qquicktextedit::hAlignVisual()
         // Right Align
         text->setHAlign(QQuickText::AlignRight);
         QImage image = view.grabWindow();
-        int x = image.width() - qCeil(text->implicitWidth());
+        int x = image.width() - qCeil(text->implicitWidth() * view.devicePixelRatio());
         int left = numberOfNonWhitePixels(0, x, image);
         int right = numberOfNonWhitePixels(x, image.width() - x, image);
         QCOMPARE(left, 0);

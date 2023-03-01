@@ -56,7 +56,7 @@ ListView {
     anchors.fill: parent
     model: 10
     delegate: Rectangle {
-        width: parent.width
+        width: listView.width
         height: 40
         border.color: "lightsteelblue"
         Text {

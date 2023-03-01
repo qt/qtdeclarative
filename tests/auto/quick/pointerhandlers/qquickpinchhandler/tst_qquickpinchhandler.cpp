@@ -154,19 +154,19 @@ void tst_QQuickPinchHandler::pinchProperties()
     QSignalSpy scaleMinSpy(pinchHandler, SIGNAL(minimumScaleChanged()));
     QSignalSpy scaleMaxSpy(pinchHandler, SIGNAL(maximumScaleChanged()));
 
-    QCOMPARE(pinchHandler->minimumScale(), 1.0);
+    QCOMPARE(pinchHandler->minimumScale(), 0.5);
     QCOMPARE(pinchHandler->maximumScale(), 4.0);
 
-    pinchHandler->setMinimumScale(0.5);
+    pinchHandler->setMinimumScale(0.25);
     pinchHandler->setMaximumScale(1.5);
 
-    QCOMPARE(pinchHandler->minimumScale(), 0.5);
+    QCOMPARE(pinchHandler->minimumScale(), 0.25);
     QCOMPARE(pinchHandler->maximumScale(), 1.5);
 
     QCOMPARE(scaleMinSpy.count(),1);
     QCOMPARE(scaleMaxSpy.count(),1);
 
-    pinchHandler->setMinimumScale(0.5);
+    pinchHandler->setMinimumScale(0.25);
     pinchHandler->setMaximumScale(1.5);
 
     QCOMPARE(scaleMinSpy.count(),1);
@@ -373,14 +373,18 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
 void tst_QQuickPinchHandler::scaleNativeGesture_data()
 {
     QTest::addColumn<QString>("qmlfile");
+    QTest::addColumn<qreal>("scale");
 
-    QTest::newRow("just pinch") << "pinchproperties.qml";
-    QTest::newRow("pinch & drag") << "pinchAndDrag.qml";
+    QTest::newRow("just pinch") << "pinchproperties.qml" << 1.1;
+    QTest::newRow("pinch & drag") << "pinchAndDrag.qml" << 1.1;
+    QTest::newRow("bigger than limit") << "pinchproperties.qml" << 5.0;
+    QTest::newRow("smaller than limit") << "pinchproperties.qml" << 0.25;
 }
 
 void tst_QQuickPinchHandler::scaleNativeGesture()
 {
     QFETCH(QString, qmlfile);
+    QFETCH(qreal, scale);
 
     QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
@@ -400,8 +404,8 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     QPointF targetPos = target->position();
     ulong ts = 1;
 
-    // first pinch: scale it up
-    const qreal expectedScale = 1.1;
+    // first pinch: scale it
+    const qreal expectedScale = qBound(qreal(0.5), scale, qreal(4));
     QPointF pinchPos(75, 75);
     QPointF pinchLocalPos = target->mapFromScene(pinchPos);
     // target position is adjusted in QQuickItemPrivate::adjustedPosForTransform()
@@ -411,11 +415,11 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
                                                Qt::BeginNativeGesture, pinchPos, pinchPos);
     QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, touchpad,
-                                                            Qt::ZoomNativeGesture, expectedScale - 1, pinchPos, pinchPos);
+                                                            Qt::ZoomNativeGesture, scale - 1, pinchPos, pinchPos);
     QTRY_COMPARE(target->scale(), expectedScale);
     QCOMPARE(pinchHandler->active(), true);
-    QCOMPARE(pinchHandler->centroid().position(), pinchLocalPos);
-    QCOMPARE(pinchHandler->centroid().scenePosition(), pinchPos);
+    QCOMPARE(pinchHandler->centroid().position().toPoint(), pinchLocalPos.toPoint());
+    QCOMPARE(pinchHandler->centroid().scenePosition().toPoint(), pinchPos.toPoint());
     QVERIFY(qAbs(target->position().x() - expectedPos.x()) < 0.001);
     QVERIFY(qAbs(target->position().y() - expectedPos.y()) < 0.001);
     QCOMPARE(pinchHandler->scale(), expectedScale);
@@ -431,9 +435,12 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
     QCOMPARE(pinchHandler->translation(), QVector2D());
     QCOMPARE(pinchHandler->rotation(), 0);
 
-    // second pinch at a different position: scale it down to original size again
+    // second pinch at a different position: scale it back to original size again
+    // but remove the limits first, so that we can scale arbitrarily
+    pinchHandler->setMaximumScale(qInf());
+    pinchHandler->setMinimumScale(-qInf());
     const qreal reverseScale = (1 / expectedScale);
-    pinchPos = QPointF(125, 125);
+    pinchPos = QPointF(110, 110);
     pinchLocalPos = target->mapFromScene(pinchPos);
     QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
                                                Qt::BeginNativeGesture, pinchPos, pinchPos);
@@ -441,8 +448,8 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
                                                             Qt::ZoomNativeGesture, reverseScale - 1, pinchPos, pinchPos);
     QTRY_COMPARE(target->scale(), 1);
     QCOMPARE(pinchHandler->active(), true);
-    QCOMPARE(pinchHandler->centroid().position(), pinchLocalPos);
-    QCOMPARE(pinchHandler->centroid().scenePosition(), pinchPos);
+    QCOMPARE(pinchHandler->centroid().position().toPoint(), pinchLocalPos.toPoint());
+    QCOMPARE(pinchHandler->centroid().scenePosition().toPoint(), pinchPos.toPoint());
     QCOMPARE(pinchHandler->scale(), 1);
     QCOMPARE(pinchHandler->activeScale(), reverseScale);
     QWindowSystemInterface::handleGestureEvent(window, ts++, touchpad,
@@ -680,7 +687,7 @@ void tst_QQuickPinchHandler::retouch()
 
         // accept some slack
         QVERIFY(withinBounds(1.4, root->property("scale").toReal(), 1.6));
-        QCOMPARE(pinchHandler->centroid().position(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(pinchHandler->centroid().position().toPoint(), QPoint(40, 40)); // blackrect is at 50,50
         QVERIFY(withinBounds(1.4, blackRect->scale(), 1.6));
 
         QCOMPARE(root->property("activeCount").toInt(), 1);
@@ -763,7 +770,7 @@ void tst_QQuickPinchHandler::cancel()
         QQuickTouchUtils::flush(window);
 
         QVERIFY(withinBounds(1.4, root->property("scale").toReal(), 1.6));
-        QCOMPARE(pinchHandler->centroid().position(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(pinchHandler->centroid().position().toPoint(), QPoint(40, 40)); // blackrect is at 50,50
         QVERIFY(withinBounds(1.4, blackRect->scale(), 1.6));
 
         QSKIP("cancel is not supported atm");
@@ -773,7 +780,7 @@ void tst_QQuickPinchHandler::cancel()
         QQuickTouchUtils::flush(window);
 
         QCOMPARE(root->property("scale").toReal(), 1.0);
-        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(root->property("center").toPoint(), QPoint(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.0);
         QVERIFY(!root->property("pinchActive").toBool());
     }

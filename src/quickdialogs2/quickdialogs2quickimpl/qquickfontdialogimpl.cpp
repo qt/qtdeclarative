@@ -861,3 +861,5 @@ void QQuickFontDialogImplAttached::selectFontInListViews(const QFont &font)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfontdialogimpl_p.cpp"

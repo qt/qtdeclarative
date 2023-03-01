@@ -56,6 +56,7 @@ The set of QML object-type attribute types is as follows:
 These attributes are discussed in detail below.
 
 \section2 The \e id Attribute
+\keyword QML.id
 
 Every QML object type has exactly one \e id attribute. This attribute is
 provided by the language itself, and cannot be redefined or overridden by any
@@ -686,8 +687,8 @@ the role names of the view's model, then those properties will be initialized
 with the model's corresponding values.
 For more information, visit the \l{Models and Views in Qt Quick} page.
 
-\sa {QQmlComponent::createWithInitialProperties}, {QQmlApplicationEngine::setInitialProperties}
-and {QQuickView::setInitialProperties} for ways to initialize required properties from C++.
+See \l{QQmlComponent::createWithInitialProperties}, \l{QQmlApplicationEngine::setInitialProperties}
+and \l{QQuickView::setInitialProperties} for ways to initialize required properties from C++.
 
 \section3 Read-Only Properties
 

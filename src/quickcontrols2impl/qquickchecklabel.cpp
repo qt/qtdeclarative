@@ -47,3 +47,5 @@ QQuickCheckLabel::QQuickCheckLabel(QQuickItem *parent) :
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickchecklabel_p.cpp"

@@ -76,7 +76,7 @@ T.ToolButton {
         Rectangle {
             width: parent.width
             height: parent.height
-            visible: control.down || control.hovered
+            visible: enabled && (control.down || control.hovered)
             color: control.down ? control.Universal.listMediumColor : control.Universal.listLowColor
         }
     }

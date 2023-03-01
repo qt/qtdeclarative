@@ -90,7 +90,7 @@ T.CheckDelegate {
             clip: visible
             pressed: control.pressed
             anchor: control
-            active: control.down || control.visualFocus || control.hovered
+            active: enabled && (control.down || control.visualFocus || control.hovered)
             color: control.Material.rippleColor
         }
     }

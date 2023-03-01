@@ -44,7 +44,7 @@ Item {
         model: 100
         delegate: Rectangle {
             objectName: "delegate"
-            width: parent.width
+            width: view.width
             height: 25
             color: index % 2 ? "steelblue" : "lightsteelblue"
             Text {

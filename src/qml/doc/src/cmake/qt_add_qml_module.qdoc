@@ -73,6 +73,9 @@ qt_add_qml_module(
 
 \versionlessCMakeCommandsNote qt6_add_qml_module()
 
+See \l {Building a QML application} and \l {Building a reusable QML module}
+for examples that define QML modules.
+
 \section1 Description
 
 This command defines a QML module that can consist of C++ sources, \c{.qml}
@@ -125,6 +128,10 @@ plugin class will be automatically generated and added to the plugin target.
 For cases where the QML module needs a custom plugin class implementation, the
 \l{NO_GENERATE_PLUGIN_SOURCE} and usually the \l{NO_PLUGIN_OPTIONAL} options
 will be needed.
+
+\note
+When using static linking, it migt be necessary to use
+\c Q_IMPORT_QML_PLUGIN to ensure that the QML plugin is correctly linked.
 
 \section3 Plugin target with no backing target
 

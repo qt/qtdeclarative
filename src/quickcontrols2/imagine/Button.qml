@@ -91,7 +91,7 @@ T.Button {
                 {"highlighted": control.highlighted},
                 {"mirrored": control.mirrored},
                 {"flat": control.flat},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

@@ -398,7 +398,7 @@ bool QQuickMultiPointHandler::grabPoints(QPointerEvent *event, const QVector<QEv
         }
     }
     if (allowed) {
-        for (auto point : points)
+        for (const auto &point : qAsConst(points))
             setExclusiveGrab(event, point);
     }
     return allowed;
@@ -444,3 +444,5 @@ QMetaProperty &QQuickMultiPointHandlerPrivate::yMetaProperty() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmultipointhandler_p.cpp"

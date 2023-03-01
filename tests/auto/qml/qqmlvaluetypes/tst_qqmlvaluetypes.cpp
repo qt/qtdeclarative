@@ -102,6 +102,7 @@ private slots:
     void char16Type();
     void writeBackOnFunctionCall();
     void valueTypeConversions();
+    void readReferenceOnGetOwnProperty();
 
 private:
     QQmlEngine engine;
@@ -1974,6 +1975,35 @@ void tst_qqmlvaluetypes::valueTypeConversions()
 
     QCOMPARE(resultA.a, b.b);
     QCOMPARE(resultB.b, a.a);
+}
+
+class Chose : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QRectF f READ ff CONSTANT)
+public:
+    Chose(QObject *parent = nullptr) : QObject(parent) {}
+    QRectF ff() const { return QRectF(); }
+    Q_INVOKABLE bool g(QJSValue v) { return v.hasProperty("x"); }
+};
+
+void tst_qqmlvaluetypes::readReferenceOnGetOwnProperty()
+{
+    Chose chose;
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("chose"), &chose);
+    QQmlComponent c(&engine);
+    c.setData(R"fin(
+        import QtQml
+        QtObject {
+            property bool allo: chose.g(chose.f)
+        }
+    )fin", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->property("allo").toBool());
 }
 
 #undef CHECK_TYPE_IS_NOT_VALUETYPE

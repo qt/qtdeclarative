@@ -54,11 +54,13 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0
-            color: Fusion.gradientStart(Fusion.buttonColor(handle.palette, handle.visualFocus, handle.pressed, handle.hovered))
+            color: Fusion.gradientStart(Fusion.buttonColor(handle.palette, handle.visualFocus,
+                handle.pressed, handle.enabled && handle.hovered))
         }
         GradientStop {
             position: 1
-            color: Fusion.gradientStop(Fusion.buttonColor(handle.palette, handle.visualFocus, handle.pressed, handle.hovered))
+            color: Fusion.gradientStop(Fusion.buttonColor(handle.palette, handle.visualFocus,
+                handle.pressed, handle.enabled && handle.hovered))
         }
     }
     rotation: handle.vertical ? -90 : 0

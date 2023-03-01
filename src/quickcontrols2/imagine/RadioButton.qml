@@ -72,7 +72,7 @@ T.RadioButton {
                 {"checked": control.checked},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }
@@ -97,7 +97,7 @@ T.RadioButton {
                 {"checked": control.checked},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

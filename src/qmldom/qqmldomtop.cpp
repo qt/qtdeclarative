@@ -288,11 +288,14 @@ void DomUniverse::loadFile(DomItem &self, QString canonicalFilePath, QString log
     case DomType::QmlFile:
     case DomType::QmltypesFile:
     case DomType::QmldirFile:
-    case DomType::QmlDirectory:
+    case DomType::QmlDirectory: {
+        // Protect the queue from concurrent access.
+        QMutexLocker l(mutex());
         m_queue.enqueue(ParsingTask { QDateTime::currentDateTime(), loadOptions, fType,
                                       canonicalFilePath, logicalPath, code, codeDate,
                                       self.ownerAs<DomUniverse>(), callback });
         break;
+    }
     default:
         self.addError(myErrors()
                               .error(tr("Ignoring request to load file %1 of unexpected type %2, "
@@ -351,7 +354,14 @@ updateEntry(DomItem &univ, std::shared_ptr<T> newItem,
 
 void DomUniverse::execQueue()
 {
-    ParsingTask t = m_queue.dequeue();
+    ParsingTask t;
+    {
+        // Protect the queue from concurrent access.
+        QMutexLocker l(mutex());
+        if (m_queue.isEmpty())
+            return;
+        t = m_queue.dequeue();
+    }
     shared_ptr<DomUniverse> topPtr = t.requestingUniverse.lock();
     if (!topPtr) {
         myErrors().error(tr("Ignoring callback for loading of %1: universe is not valid anymore").arg(t.canonicalPath)).handle();

@@ -239,13 +239,14 @@ void QSGRenderNode::prepare()
     Assume nothing about the pipelines and dynamic states bound on the command
     list/buffer when this function is called.
 
-    With some graphics APIs it can be necessary to also connect to the
-    QQuickWindow::beforeRendering() signal, because that is emitted before
-    recording the beginning of a renderpass on the command buffer
-    (vkCmdBeginRenderPass with Vulkan, or starting to encode via
-    MTLRenderCommandEncoder in case of Metal). Recording copy operations cannot
-    be done inside render() with such APIs. Rather, do it in the slot connected
-    (with DirectConnection) to the beforeRendering signal.
+    With some graphics APIs it can be necessary to reimplement prepare() in
+    addition, or alternatively connect to the QQuickWindow::beforeRendering()
+    signal. These are called/emitted before recording the beginning of a
+    renderpass on the command buffer (vkCmdBeginRenderPass with Vulkan, or
+    starting to encode via MTLRenderCommandEncoder in case of Metal. Recording
+    copy operations cannot be done inside render() with such APIs. Rather, do
+    such operations either in prepare() or the slot connected to
+    beforeRendering (with DirectConnection).
 
     \sa QSGRendererInterface, QQuickWindow::rendererInterface()
   */

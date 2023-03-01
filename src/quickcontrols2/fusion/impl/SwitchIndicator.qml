@@ -102,11 +102,13 @@ Rectangle {
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: Fusion.gradientStart(Fusion.buttonColor(indicator.control.palette, indicator.control.visualFocus, indicator.control.pressed, indicator.control.hovered))
+                color: Fusion.gradientStart(Fusion.buttonColor(indicator.control.palette,
+                    indicator.control.visualFocus, indicator.control.pressed, indicator.enabled && indicator.control.hovered))
             }
             GradientStop {
                 position: 1
-                color: Fusion.gradientStop(Fusion.buttonColor(indicator.control.palette, indicator.control.visualFocus, indicator.control.pressed, indicator.control.hovered))
+                color: Fusion.gradientStop(Fusion.buttonColor(indicator.control.palette,
+                    indicator.control.visualFocus, indicator.control.pressed, indicator.enabled && indicator.control.hovered))
             }
         }
         border.width: 1

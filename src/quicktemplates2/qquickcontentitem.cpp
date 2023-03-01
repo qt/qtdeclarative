@@ -59,3 +59,5 @@ QQuickContentItem::QQuickContentItem(const QObject *scope, QQuickItem *parent)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcontentitem_p.cpp"

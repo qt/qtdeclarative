@@ -81,13 +81,24 @@
 
     \section1 Using Styles in Qt Quick Controls
 
-    There are two ways of using styles in Qt Quick Controls:
-    run-time style selection and compile-time style selection.
+    \section2 Default Styles
+
+    If no style is explicitly set, a default style will be used. The style that
+    is used depends on the operating system:
+
+    \list
+    \li Android: \l {Material Style}
+    \li Linux: \l {Fusion Style}
+    \li macOS: \l {macOS Style}
+    \li Windows: \l {Windows Style}
+    \endlist
+
+    For all other operating systems, the \l {Basic Style} is used.
 
     \section2 Compile-Time Style Selection
 
-    Compile-time style selection involves using QML imports to specify the
-    style. For example, to import the Material style:
+    Compile-time style selection is a way of specifying a style to use by
+    importing it in QML. For example, to import the Material style:
 
     \qml
     import QtQuick.Controls.Material
@@ -115,7 +126,8 @@
 
     \section2 Run-Time Style Selection
 
-    Run-time style selection involves importing \c QtQuick.Controls:
+    Run-time style selection is a way of specifying a style to use by importing
+    \c QtQuick.Controls:
 
     \qml
     import QtQuick.Controls

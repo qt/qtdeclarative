@@ -226,7 +226,8 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 }
 
 void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
-                         const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd)
+                         const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd,
+                         QQmlMetaType::ClonePolicy policy)
 {
     // Set classname
     builder.setClassName(ignoreEnd->className());
@@ -243,40 +244,41 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         }
     }
 
-    // Clone Q_METHODS - do this first to avoid duplicating the notify signals.
-    for (int ii = mo->methodOffset(); ii < mo->methodCount(); ++ii) {
-        QMetaMethod method = mo->method(ii);
+    if (policy != QQmlMetaType::CloneEnumsOnly) {
+        // Clone Q_METHODS - do this first to avoid duplicating the notify signals.
+        for (int ii = mo->methodOffset(); ii < mo->methodCount(); ++ii) {
+            QMetaMethod method = mo->method(ii);
 
-        // More complex - need to search name
-        QByteArray name = method.name();
+            // More complex - need to search name
+            QByteArray name = method.name();
 
+            bool found = false;
 
-        bool found = false;
+            for (int ii = ignoreStart->methodOffset() + ignoreStart->methodCount();
+                 !found && ii < ignoreEnd->methodOffset() + ignoreEnd->methodCount(); ++ii) {
 
-        for (int ii = ignoreStart->methodOffset() + ignoreStart->methodCount();
-             !found && ii < ignoreEnd->methodOffset() + ignoreEnd->methodCount();
-             ++ii) {
+                QMetaMethod other = ignoreEnd->method(ii);
 
-            QMetaMethod other = ignoreEnd->method(ii);
+                found = name == other.name();
+            }
 
-            found = name == other.name();
+            QMetaMethodBuilder m = builder.addMethod(method);
+            if (found) // SKIP
+                m.setAccess(QMetaMethod::Private);
         }
 
-        QMetaMethodBuilder m = builder.addMethod(method);
-        if (found) // SKIP
-            m.setAccess(QMetaMethod::Private);
-    }
+        // Clone Q_PROPERTY
+        for (int ii = mo->propertyOffset(); ii < mo->propertyCount(); ++ii) {
+            QMetaProperty property = mo->property(ii);
 
-    // Clone Q_PROPERTY
-    for (int ii = mo->propertyOffset(); ii < mo->propertyCount(); ++ii) {
-        QMetaProperty property = mo->property(ii);
-
-        int otherIndex = ignoreEnd->indexOfProperty(property.name());
-        if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
-            builder.addProperty(QByteArray("__qml_ignore__") + property.name(), QByteArray("void"));
-            // Skip
-        } else {
-            builder.addProperty(property);
+            int otherIndex = ignoreEnd->indexOfProperty(property.name());
+            if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
+                builder.addProperty(QByteArray("__qml_ignore__") + property.name(),
+                                    QByteArray("void"));
+                // Skip
+            } else {
+                builder.addProperty(property);
+            }
         }
     }
 
@@ -1521,7 +1523,8 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
             return;
 
         QMetaObjectBuilder builder;
-        clone(builder, extMetaObject, superdataBaseMetaObject, baseMetaObject);
+        clone(builder, extMetaObject, superdataBaseMetaObject, baseMetaObject,
+              extFunc ? QQmlMetaType::CloneAll : QQmlMetaType::CloneEnumsOnly);
         builder.setFlags(MetaObjectFlag::DynamicMetaObject);
         QMetaObject *mmo = builder.toMetaObject();
         mmo->d.superdata = baseMetaObject;

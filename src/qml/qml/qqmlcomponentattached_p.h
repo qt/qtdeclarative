@@ -58,6 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 
+// implemented in qqmlcomponent.cpp
 class Q_QML_PRIVATE_EXPORT QQmlComponentAttached : public QObject
 {
     Q_OBJECT

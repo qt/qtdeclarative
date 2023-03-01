@@ -43,278 +43,287 @@ module. For more information about the first form of \c qmldir file, see
 
 \section1 Contents of a Module Definition qmldir File
 
-A \c qmldir file is a plain-text file that contains
-the following commands:
+A \c qmldir file is a plain-text file that contains the following commands:
 
-\table 70%
-    \header
-        \li Syntax
-        \li Usage
-    \row
-        \li
-            \code
-module <ModuleIdentifier>
-            \endcode
-        \li Declares the module identifier of the module.
-            The <ModuleIdentifier> is the (dotted URI notation) identifier
-            for the module, which must match the module's install path.
+\list
+    \li \l {Module Identifier Declaration}
+    \li \l {Object Type Declaration}
+    \li \l {Internal Object Type Declaration}
+    \li \l {JavaScript Resource Declaration}
+    \li \l {Plugin Declaration}
+    \li \l {Plugin Classname Declaration}
+    \li \l {Type Description File Declaration}
+    \li \l {Module Dependencies Declaration}
+    \li \l {Module Import Declaration}
+    \li \l {Designer Support Declaration}
+    \li \l {Preferred Path Declaration}
+\endlist
 
-            The \l{Identified Modules#Semantics of Identified Modules}
-            {module identifier directive} must be the first line of the file.
-            Exactly one module identifier directive may exist in the \c qmldir
-            file.
+\note Each command in a \c qmldir file must be on a separate line.
 
-            Example:
-            \code
-module ExampleModule
-            \endcode
+In addition to commands, you can also add comments, which are lines starting
+with \c {#}.
 
-    \row
-        \li
-            \code
-[singleton] <TypeName> <InitialVersion> <File>
-            \endcode
-        \li Declares a \l{qtqml-typesystem-objecttypes.html}{QML object type}
-            to be made available by the module.
-                \list
-                \li \c [singleton] Optional. Used to declare a singleton type.
-                \li \c <TypeName> is the type being made available
-                \li \c <InitialVersion> is the module version for which the type is to be made available
-                \li \c <File> is the (relative) file name of the QML file that defines the type
-                \endlist
+\section2 Module Identifier Declaration
 
-            Zero or more object type declarations may exist in the \c qmldir
-            file, however each object type must have a unique type name within
-            any particular version of the module.
-            \note To declare a \c singleton type, the QML file defining the
-            type must include the \c {pragma Singleton} statement.
+\code
+    module <ModuleIdentifier>
+\endcode
 
-            Example:
-            \code
-//Style.qml with custom singleton type definition
-pragma Singleton
-import QtQuick 2.0
+Declares the module identifier of the module. The <ModuleIdentifier> is the
+(dotted URI notation) identifier for the module, which must match the module's
+install path.
 
-QtObject {
-    property int textSize: 20
-    property color textColor: "green"
-}
+The \l{Identified Modules#Semantics of Identified Modules}
+{module identifier directive} must be the first line of the file. Exactly one
+module identifier directive may exist in the \c qmldir file.
 
-// qmldir declaring the singleton type
-module CustomStyles
-singleton Style 1.0 Style.qml
+Example:
+\code
+    module ExampleModule
+\endcode
 
-// singleton type in use
-import QtQuick 2.0
-import CustomStyles 1.0
+\section2 Object Type Declaration
+\code
+    [singleton] <TypeName> <InitialVersion> <File>
+\endcode
 
-Text {
-    font.pixelSize: Style.textSize
-    color: Style.textColor
-    text: "Hello World"
-}
-            \endcode
+Declares a \l{qtqml-typesystem-objecttypes.html}{QML object type}
+to be made available by the module.
+\list
+    \li \c [singleton] Optional. Used to declare a singleton type.
+    \li \c <TypeName> is the type being made available
+    \li \c <InitialVersion> is the module version for which the type is to be
+    made available
+    \li \c <File> is the (relative) file name of the QML file that defines
+    the type
+\endlist
 
-    \row
-        \li
-            \code
-internal <TypeName> <File>
-            \endcode
-        \li Declares an object type that is in the module but should not be
-            made available to users of the module.
+Zero or more object type declarations may exist in the \c qmldir
+file. However, each object type must have a unique type name within
+any particular version of the module.
+\note To declare a \c singleton type, the QML file defining the
+type must include the \c {pragma Singleton} statement.
 
-            Zero or more internal object type declarations may exist in the
-            \c qmldir file.
+Example:
+\code
+    //Style.qml with custom singleton type definition
+    pragma Singleton
+    import QtQuick 2.0
 
-            Example:
-            \code
-internal MyPrivateType MyPrivateType.qml
-         \endcode
+    QtObject {
+        property int textSize: 20
+        property color textColor: "green"
+    }
 
-            This is necessary if the module may be imported remotely (see
-            \l{Identified Modules#Remotely Installed Identified Modules}
-            {Remotely Installed Identified Modules}) because if an exported type depends
-            on an non-exported type within the module, the engine must also
-            load the non-exported type.
+    // qmldir declaring the singleton type
+    module CustomStyles
+    singleton Style 1.0 Style.qml
 
-    \row
-        \li
-            \code
-<ResourceIdentifier> <InitialVersion> <File>
-            \endcode
-        \li Declares a JavaScript file to be made available by the module.
-            The resource will be made available via the specified identifier
-            with the specified version number.
+    // singleton type in use
+    import QtQuick 2.0
+    import CustomStyles 1.0
 
-            Zero or more JavaScript resource declarations may exist in the
-            \c qmldir file, however each JavaScript resource must have a unique
-            identifier within any particular version of the module.
+    Text {
+        font.pixelSize: Style.textSize
+        color: Style.textColor
+        text: "Hello World"
+    }
+\endcode
 
-            Example:
-            \code
-MyScript 1.0 MyScript.js
-            \endcode
+\section2 Internal Object Type Declaration
 
-            See the documentation about \l{qtqml-javascript-resources.html}
-            {defining JavaScript resources} and
-            \l{qtqml-javascript-imports.html}
-            {Importing JavaScript Resources In QML} for more information.
+\code
+    internal <TypeName> <File>
+\endcode
 
-    \row
-        \li
-            \code
-[optional] plugin <Name> [<Path>]
-            \endcode
-        \li Declares a plugin to be made available by the module.
+Declares an object type that is in the module but should not be
+made available to users of the module.
 
-            \list
-            \li \c optional denotes that the plugin itself does not contain
-                any relevant code and only serves to load a library it links
-                to. If given, and if any types for the module are already
-                available, indicating that the library has been loaded by some
-                other means, QML will not load the plugin.
-            \li \c <Name> is the plugin library name. This is usually not the
-                same as the file name of the plugin binary, which is platform
-                dependent; e.g. the library \c MyAppTypes would produce
-                \c libMyAppTypes.so on Linux and \c MyAppTypes.dll on Windows.
-            \li \c <Path> (optional) specifies either:
-                \list
-                \li an absolute path to the directory containing the plugin
-                    file, or
-                \li a relative path from the directory containing the \c qmldir
-                    file to the directory containing the plugin file.
-                \endlist
+Zero or more internal object type declarations may exist in the
+\c qmldir file.
 
-                By default the engine searches for the plugin library in the
-                directory that contains the \c qmldir file. (The plugin search
-                path can be queried with QQmlEngine::pluginPathList() and
-                modified using QQmlEngine::addPluginPath().)
-            \endlist
+Example:
+\code
+    internal MyPrivateType MyPrivateType.qml
+\endcode
 
-            Zero or more C++ plugin declarations may exist in the \c qmldir
-            file, however since plugin loading is a relatively expensive
-            operation, clients are advised to specify at most a single plugin.
+This is necessary if the module is imported remotely
+(see \l{Identified Modules#Remotely Installed Identified Modules}
+{Remotely Installed Identified Modules}) because if an exported type depends
+on a non-exported type within the module, the engine must also
+load the non-exported type.
 
-            Example:
-            \code
-plugin MyPluginLibrary
-           \endcode
-    \row
-        \li
-            \code
-classname <C++ plugin class>
-            \endcode
-        \li Provides the class name of the C++ plugin used by the module.
+\section2 JavaScript Resource Declaration
 
-            This information is required for all the QML modules that depend
-            on a C++ plugin for additional functionality. Qt Quick applications
-            built with static linking cannot resolve the module imports without
-            this information.
+\code
+    <ResourceIdentifier> <InitialVersion> <File>
+\endcode
 
-    \row
-        \li
-            \code
-typeinfo <File>
-            \endcode
-        \li Declares a \l{Type Description Files}{type description file} for
-            the module that can be read by QML tools such as Qt Creator to
-            access information about the types defined by the module's plugins.
-            \c <File> is the (relative) file name of a \c .qmltypes file.
+Declares a JavaScript file to be made available by the module.
+The resource will be made available via the specified identifier
+with the specified version number.
 
-            Example:
-            \code
-typeinfo mymodule.qmltypes
-            \endcode
+Zero or more JavaScript resource declarations may exist in the
+\c qmldir file. However, each JavaScript resource must have a unique
+identifier within any particular version of the module.
 
-            Without such a file, QML tools may be unable to offer features such
-            as code completion for the types defined in your plugins.
+Example:
+\code
+    MyScript 1.0 MyScript.js
+\endcode
 
-    \row
-        \li
-            \code
-depends <ModuleIdentifier> <InitialVersion>
-            \endcode
-        \li Declares that this module depends on another.
+See the documentation about \l{qtqml-javascript-resources.html}
+{defining JavaScript resources} and
+\l{qtqml-javascript-imports.html}
+{Importing JavaScript Resources In QML} for more information.
 
-            Example:
-            \code
-depends MyOtherModule 1.0
-            \endcode
+\section2 Plugin Declaration
 
-            This declaration is necessary only in cases when the dependency is
-            hidden: for example, when the C++ code for one module is used to
-            load QML (perhaps conditionally) which then depends on other
-            modules. In such cases, the \c depends declaration is necessary
-            to include the other modules in application packages.
-    \row
-        \li
-            \code
-import <ModuleIdentifier> [<Version>]
-            \endcode
-        \li Declares that this module imports another.
+\code
+    [optional] plugin <Name> [<Path>]
+\endcode
 
-            Example:
-            \code
-import MyOtherModule 1.0
-            \endcode
+Declares a plugin to be made available by the module.
 
-            The types from the other module are made available in the same type
-            namespace as this module is imported into. Omitting the version
-            imports the latest version available of the other module, specifying
-            \c auto as version imports the same version as the version of this
-            module specified in the QML \c import statement.
+\list
+    \li \c optional denotes that the plugin itself does not contain
+        any relevant code and only serves to load a library it links
+        to. If given, and if any types for the module are already
+        available, indicating that the library has been loaded by some
+        other means, QML will not load the plugin.
+    \li \c <Name> is the plugin library name. This is usually not the
+        same as the file name of the plugin binary, which is platform
+        dependent. For example, the library \c MyAppTypes would produce
+        \c libMyAppTypes.so on Linux and \c MyAppTypes.dll on Windows.
+    \li \c <Path> (optional) specifies either:
+        \list
+            \li an absolute path to the directory containing the plugin
+            file, or
+            \li a relative path from the directory containing the \c qmldir
+            file to the directory containing the plugin file.
+        \endlist
+\endlist
 
-    \row
-        \li
-            \code
-# <Comment>
-            \endcode
-        \li Declares a comment. These are ignored by the engine.
+By default, the engine searches for the plugin library in the
+directory that contains the \c qmldir file. (The plugin search
+path can be queried with QQmlEngine::pluginPathList() and
+modified using QQmlEngine::addPluginPath().)
 
-            Example:
-            \code
-# this is a comment
-            \endcode
+Zero or more C++ plugin declarations may exist in the \c qmldir
+file. However, since plugin loading is a relatively expensive
+operation, clients are advised to specify at most a single plugin.
 
-    \row
-    \li
-         \code
-designersupported
-         \endcode
+Example:
+\code
+    plugin MyPluginLibrary
+\endcode
 
-     \li Set this property if the plugin is supported by Qt Quick Designer.
-         By default, the plugin will not be supported.
+\section2 Plugin Classname Declaration
 
-         A plugin that is supported by Qt Quick Designer has to be properly
-         tested. This means that the plugin does not crash when running inside
-         the qml2puppet that is used by Qt Quick Designer to execute QML.
-         Generally the plugin should work well in the Qt Quick Designer
-         and not cause any show stoppers, like taking huge amounts of memory,
-         slowing down the qml2puppet heavily or anything else that renders
-         the plugin effectively unusable in the Qt Quick Designer.
+\code
+    classname <C++ plugin class>
+\endcode
 
-         The items of an unsupported plugin are not painted in the Qt Quick Designer,
-         but they are still available as empty boxes and the properties can be edited.
+Provides the class name of the C++ plugin used by the module.
 
-    \row
-    \li
-        \code
-prefer <Path>
-        \endcode
+This information is required for all the QML modules that depend
+on a C++ plugin for additional functionality. Qt Quick applications
+built with static linking cannot resolve the module imports without
+this information.
 
-    \li This property directs the QML engine to load any further files for this
-        module from <path>, rather than the current directory. This can be used
-        to load files compiled with qmlcachegen.
+\section2 Type Description File Declaration
 
-        For example, you can add a module's QML files as resources to a resource
-        path \c{:/my/path/MyModule/}. Then, add \c{prefer :/my/path/MyModule} to
-        the qmldir file in order to use the files in the resource system, rather
-        than the ones in the file system. If you then use qmlcachegen for those,
-        the pre-compiled files will be available to any clients of the module.
+\code
+    typeinfo <File>
+\endcode
 
-\endtable
+Declares a \l{Type Description Files}{type description file} for
+the module that can be read by QML tools such as Qt Creator to
+access information about the types defined by the module's plugins.
+\c <File> is the (relative) file name of a \c .qmltypes file.
 
-Each command in a \c qmldir file must be on a separate line.
+Example:
+\code
+    typeinfo mymodule.qmltypes
+\endcode
+
+Without such a file, QML tools may be unable to offer features such
+as code completion for the types defined in your plugins.
+
+\section2 Module Dependencies Declaration
+
+\code
+    depends <ModuleIdentifier> <InitialVersion>
+\endcode
+
+Declares that this module depends on another.
+
+Example:
+\code
+    depends MyOtherModule 1.0
+\endcode
+
+This declaration is necessary only in cases when the dependency is
+hidden: for example, when the C++ code for one module is used to
+load QML (perhaps conditionally), which then depends on other
+modules. In such cases, the \c depends declaration is necessary
+to include the other modules in application packages.
+
+\section2 Module Import Declaration
+
+\code
+    import <ModuleIdentifier> [<Version>]
+\endcode
+
+Declares that this module imports another.
+
+Example:
+\code
+    import MyOtherModule 1.0
+\endcode
+
+The types from the other module are made available in the same type
+namespace as this module is imported into. Omitting the version
+imports the latest version available of the other module. Specifying
+\c auto as version imports the same version as the version of this
+module specified in the QML \c import statement.
+
+\section2 Designer Support Declaration
+
+\code
+    designersupported
+\endcode
+
+Set this property if the plugin is supported by Qt Quick Designer.
+By default, the plugin will not be supported.
+
+A plugin that is supported by Qt Quick Designer has to be properly
+tested. This means that the plugin does not crash when running inside
+the qml2puppet that is used by Qt Quick Designer to execute QML.
+Generally, the plugin should work well in the Qt Quick Designer
+and not cause any show stoppers, like taking excessive amounts of memory,
+slowing down the qml2puppet heavily, or anything else that renders
+the plugin effectively unusable in the Qt Quick Designer.
+
+The items of an unsupported plugin are not painted in the Qt Quick Designer,
+but they are still available as empty boxes and the properties can be edited.
+
+\section2 Preferred Path Declaration
+
+\code
+    prefer <Path>
+\endcode
+
+This property directs the QML engine to load any further files for this
+module from <path>, rather than the current directory. This can be used
+to load files compiled with qmlcachegen.
+
+For example, you can add a module's QML files as resources to a resource
+path \c{:/my/path/MyModule/}. Then, add \c{prefer :/my/path/MyModule} to
+the qmldir file in order to use the files in the resource system, rather
+than the ones in the file system. If you then use qmlcachegen for those,
+the pre-compiled files will be available to any clients of the module.
 
 \section1 Versioning Semantics
 

@@ -334,10 +334,9 @@ classes directly, if this is either not possible or is complicated by some
 other concerns, extension objects allow limited extension possibilities
 without direct modifications.
 
-\e{Extension objects} add additional properties to an existing type. Extension
-objects can only add properties, not signals or methods. An extended type
-definition allows the programmer to supply an additional type, known as the
-\e{extension type}, when registering the class. The properties are transparently
+\e{Extension objects} add additional properties to an existing type. An extended
+type definition allows the programmer to supply an additional type, known as the
+\e{extension type}, when registering the class. Its members are transparently
 merged with the original target class when used from within QML. For example:
 
 \snippet referenceexamples/extended/example.qml 0

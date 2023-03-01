@@ -60,7 +60,7 @@ T.Button {
         flat && highlighted ? Material.accentColor :
         highlighted ? Material.primaryHighlightedTextColor : Material.foreground
 
-    Material.elevation: flat ? control.down || control.hovered ? 2 : 0
+    Material.elevation: flat ? control.down || (enabled && control.hovered) ? 2 : 0
                              : control.down ? 8 : 2
     Material.background: flat ? "transparent" : undefined
 
@@ -111,7 +111,7 @@ T.Button {
             height: parent.height
             pressed: control.pressed
             anchor: control
-            active: control.down || control.visualFocus || control.hovered
+            active: enabled && (control.down || control.visualFocus || control.hovered)
             color: control.flat && control.highlighted ? control.Material.highlightedRippleColor : control.Material.rippleColor
         }
     }

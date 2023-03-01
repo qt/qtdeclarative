@@ -146,7 +146,8 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
         item->setParentItem(q);
         requestedIndex = -1;
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-        itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+        itemPrivate->addItemChangeListener(
+                    this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
     }
     inRequest = false;
     return item;
@@ -199,11 +200,14 @@ void QQuickPathView::initItem(int index, QObject *object)
 
 void QQuickPathViewPrivate::releaseItem(QQuickItem *item)
 {
-    if (!item || !model)
+    if (!item)
         return;
     qCDebug(lcItemViewDelegateLifecycle) << "release" << item;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-    itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+    itemPrivate->removeItemChangeListener(
+                this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed);
+    if (!model)
+        return;
     QQmlInstanceModel::ReleaseFlags flags = model->release(item);
     if (!flags) {
         // item was not destroyed, and we no longer reference it.

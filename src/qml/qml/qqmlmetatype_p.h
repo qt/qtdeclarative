@@ -245,8 +245,13 @@ public:
                                                            const QMetaObject *baseMetaObject,
                                                            QMetaObject *lastMetaObject);
 
+    enum ClonePolicy {
+        CloneAll, // default
+        CloneEnumsOnly, // skip properties and methods
+    };
     static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
-                      const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd);
+                      const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd,
+                      ClonePolicy policy);
 
     static void qmlInsertModuleRegistration(const QString &uri, void (*registerFunction)());
     static void qmlRemoveModuleRegistration(const QString &uri);

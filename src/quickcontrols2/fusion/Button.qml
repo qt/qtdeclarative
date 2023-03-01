@@ -70,6 +70,7 @@ T.Button {
         implicitHeight: 24
 
         control: control
-        visible: !control.flat || control.down || control.checked || control.highlighted || control.visualFocus || control.hovered
+        visible: !control.flat || control.down || control.checked || control.highlighted || control.visualFocus
+            || (enabled && control.hovered)
     }
 }

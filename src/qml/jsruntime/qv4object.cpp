@@ -61,17 +61,52 @@ DEFINE_OBJECT_VTABLE(Object);
 
 void Object::setInternalClass(Heap::InternalClass *ic)
 {
-    d()->internalClass.set(engine(), ic);
-    if (ic->isUsedAsProto)
-        ic->updateProtoUsage(d());
     Q_ASSERT(ic && ic->vtable);
-    uint nInline = d()->vtable()->nInlineProperties;
-    if (ic->size <= nInline)
-        return;
-    bool hasMD = d()->memberData != nullptr;
-    uint requiredSize = ic->size - nInline;
-    if (!(hasMD && requiredSize) || (hasMD && d()->memberData->values.size < requiredSize))
-        d()->memberData.set(ic->engine, MemberData::allocate(ic->engine, requiredSize, d()->memberData));
+    Heap::Object *p = d();
+
+    if (ic->numRedundantTransitions < p->internalClass.get()->numRedundantTransitions) {
+        // IC was rebuilt. The indices are different now. We need to move everything.
+
+        Scope scope(engine());
+
+        // We allocate before setting the new IC. Protect it from GC.
+        Scoped<InternalClass> newIC(scope, ic);
+
+        // Pick the members of the old IC that are still valid in the new IC.
+        // Order them by index in memberData (or inline data).
+        Scoped<MemberData> newMembers(scope, MemberData::allocate(scope.engine, ic->size));
+        for (uint i = 0; i < ic->size; ++i)
+            newMembers->set(scope.engine, i, get(ic->nameMap.at(i)));
+
+        p->internalClass.set(scope.engine, ic);
+        const uint nInline = p->vtable()->nInlineProperties;
+
+        if (ic->size > nInline)
+            p->memberData.set(scope.engine, MemberData::allocate(ic->engine, ic->size - nInline));
+        else
+            p->memberData.set(scope.engine, nullptr);
+
+        const auto &memberValues = newMembers->d()->values;
+        for (uint i = 0; i < ic->size; ++i)
+            setProperty(i, memberValues[i]);
+    } else {
+        // The old indices are still the same. No need to move any values.
+        // We may need to re-allocate, though.
+
+        p->internalClass.set(ic->engine, ic);
+        const uint nInline = p->vtable()->nInlineProperties;
+        if (ic->size > nInline) {
+            const uint requiredSize = ic->size - nInline;
+            if ((p->memberData ? p->memberData->values.size : 0) < requiredSize) {
+                p->memberData.set(ic->engine, MemberData::allocate(
+                                      ic->engine, requiredSize, p->memberData));
+            }
+        }
+    }
+
+    if (ic->isUsedAsProto())
+        ic->updateProtoUsage(p);
+
 }
 
 void Object::getProperty(const InternalClassEntry &entry, Property *p) const
@@ -958,7 +993,7 @@ bool Object::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property
 
 bool Object::virtualIsExtensible(const Managed *m)
 {
-    return m->d()->internalClass->extensible;
+    return m->d()->internalClass->isExtensible();
 }
 
 bool Object::virtualPreventExtensions(Managed *m)
@@ -982,7 +1017,7 @@ bool Object::virtualSetPrototypeOf(Managed *m, const Object *proto)
     Heap::Object *protod = proto ? proto->d() : nullptr;
     if (current == protod)
         return true;
-    if (!o->internalClass()->extensible)
+    if (!o->internalClass()->isExtensible())
         return false;
     Heap::Object *p = protod;
     while (p) {

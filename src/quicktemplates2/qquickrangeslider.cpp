@@ -1337,3 +1337,5 @@ QAccessible::Role QQuickRangeSlider::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickrangeslider_p.cpp"

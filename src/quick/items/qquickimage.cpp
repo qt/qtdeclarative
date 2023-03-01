@@ -970,3 +970,7 @@ void QQuickImage::setMipmap(bool use)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickimage_p_p.cpp"
+
+#include "moc_qquickimage_p.cpp"

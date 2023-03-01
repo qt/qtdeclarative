@@ -883,3 +883,5 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgrhishadereffectnode_p.cpp"

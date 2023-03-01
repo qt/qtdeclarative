@@ -341,24 +341,24 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         }
     }
 
-    if (QQmlPropertyCache *thisCache = propertyCaches->at(objectIndex)) {
-        auto binding = obj->bindingsBegin();
-        auto end = obj->bindingsEnd();
-        for ( ; binding != end; ++binding)
-            if (binding->type() >= QV4::CompiledData::Binding::Type_Object) {
-                QQmlBindingInstantiationContext context(objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
+    QQmlPropertyCache *thisCache = propertyCaches->at(objectIndex);
+    auto binding = obj->bindingsBegin();
+    auto end = obj->bindingsEnd();
+    for ( ; binding != end; ++binding) {
+        if (binding->type() >= QV4::CompiledData::Binding::Type_Object) {
+            QQmlBindingInstantiationContext context(objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
 
-                // Binding to group property where we failed to look up the type of the
-                // property? Possibly a group property that is an alias that's not resolved yet.
-                // Let's attempt to resolve it after we're done with the aliases and fill in the
-                // propertyCaches entry then.
-                if (!context.resolveInstantiatingProperty())
-                    pendingGroupPropertyBindings->append(context);
+            // Binding to group property where we failed to look up the type of the
+            // property? Possibly a group property that is an alias that's not resolved yet.
+            // Let's attempt to resolve it after we're done with the aliases and fill in the
+            // propertyCaches entry then.
+            if (!thisCache || !context.resolveInstantiatingProperty())
+                pendingGroupPropertyBindings->append(context);
 
-                QQmlError error = buildMetaObjectRecursively(binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);
-                if (error.isValid())
-                    return error;
-            }
+            QQmlError error = buildMetaObjectRecursively(binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);
+            if (error.isValid())
+                return error;
+        }
     }
 
     QQmlError noError;
@@ -901,10 +901,16 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         }
 
         const auto referencedType = typeRef->type();
-        if (referencedType.isValid())
+        if (referencedType.isValid()) {
             *type = referencedType.typeId();
-        else
+            if (!type->isValid() && referencedType.isInlineComponentType()) {
+                int objectId = referencedType.inlineComponentId();
+                *type = objectContainer->typeIdsForComponent(objectId).id;
+                Q_ASSERT(type->isValid());
+            }
+        } else {
             *type = typeRef->compilationUnit()->typeIds.id;
+        }
 
         *version = typeRef->version();
 

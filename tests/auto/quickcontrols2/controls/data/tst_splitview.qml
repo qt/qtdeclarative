@@ -1883,6 +1883,436 @@ TestCase {
         verify(firstItem.height > firstItemOriginalHeight)
     }
 
+    Component {
+        id: splitViewHandleContainmentMaskComponent
+
+        MouseArea {
+            property alias mouseArea1: mouseArea1
+            property alias mouseArea2: mouseArea2
+            property alias splitView: splitView
+
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.LeftButton
+
+            Rectangle {
+                anchors.fill: parent
+                color: 'green'
+                opacity: 0.3
+            }
+
+            SplitView {
+                id: splitView
+
+                anchors {
+                    fill: parent
+                    margins: 100
+                }
+
+                handle: Rectangle {
+                    id: handleRoot
+
+                    readonly property bool containsMouse: SplitHandle.hovered
+                    readonly property int defaultSize: 2
+
+                    implicitWidth: splitView.orientation === Qt.Horizontal ? handleRoot.defaultSize : splitView.width
+                    implicitHeight: splitView.orientation === Qt.Vertical ? handleRoot.defaultSize : splitView.height
+
+                    color: 'red'
+                    objectName: "handle"
+
+                    Text {
+                        objectName: "handleText_" + text
+                        text: parent.x + "," + parent.y + " " + parent.width + "x" + parent.height
+                        color: "black"
+                        anchors.centerIn: parent
+                        rotation: 90
+                    }
+
+                    containmentMask: Item {
+                        readonly property real extraOverflow: 20
+
+                        x: splitView.orientation === Qt.Horizontal ? -extraOverflow : 0
+                        y: splitView.orientation === Qt.Horizontal ? 0 : -extraOverflow
+                        width: splitView.orientation === Qt.Horizontal ? handleRoot.defaultSize + (extraOverflow * 2): handleRoot.width
+                        height: splitView.orientation === Qt.Horizontal ? handleRoot.height : handleRoot.defaultSize + (extraOverflow * 2)
+                    }
+                }
+
+                MouseArea {
+                    id: mouseArea1
+
+                    SplitView.fillHeight: splitView.orientation === Qt.Horizontal
+                    SplitView.fillWidth: splitView.orientation === Qt.Vertical
+                    SplitView.preferredWidth: splitView.orientation === Qt.Horizontal ? parent.width / 2 : undefined
+                    SplitView.preferredHeight: splitView.orientation === Qt.Vertical ? parent.height / 2 : undefined
+                    hoverEnabled: true
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: 'cyan'
+                        opacity: 0.3
+                    }
+                }
+
+                MouseArea {
+                    id: mouseArea2
+
+                    SplitView.fillHeight: splitView.orientation === Qt.Horizontal
+                    SplitView.fillWidth: splitView.orientation === Qt.Vertical
+                    SplitView.preferredWidth: splitView.orientation === Qt.Horizontal ? parent.width / 2 : undefined
+                    SplitView.preferredHeight: splitView.orientation === Qt.Vertical ? parent.height / 2 : undefined
+                    hoverEnabled: true
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: 'cyan'
+                        opacity: 0.3
+                    }
+                }
+            }
+        }
+    }
+
+    function test_handleContainmentMask_data() {
+        const data = [
+            {
+                tag: "handleContainmentMaskHorizontalLeftEdgeDragRight",
+                orientation: Qt.Horizontal,
+                press: {
+                    x: (handle) => handle.containmentMask.x,
+                    y: (handle) => handle.height / 2
+                },
+                dx: 25,
+                dy: 0,
+            },
+            {
+                tag: "handleContainmentMaskHorizontalRightEdgeDragLeft",
+                orientation: Qt.Horizontal,
+                press: {
+                    x: (handle) => handle.containmentMask.x,
+                    y: (handle) => handle.height / 2
+                },
+                dx: -50,
+                dy: 0
+            },
+            {
+                tag: "handleContainmentMaskHorizontalTopEdgeDragRight",
+                orientation: Qt.Horizontal,
+                press: {
+                    x: (handle) => handle.containmentMask.x + handle.containmentMask.width - 1,
+                    y: (handle) => handle.height / 2
+                },
+                dx: 25,
+                dy: 0,
+            },
+            {
+                tag: "handleContainmentMaskHorizontalBottomEdgeDragLeft",
+                orientation: Qt.Horizontal,
+                press: {
+                    x: (handle) => handle.containmentMask.x + handle.containmentMask.width - 1,
+                    y: (handle) => handle.containmentMask.y
+                },
+                dx: -50,
+                dy: 0
+            },
+            {
+                tag: "handleContainmentMaskVerticalTopEdgeDragUp",
+                orientation: Qt.Vertical,
+                press: {
+                    x: (handle) => handle.width / 2,
+                    y: (handle) => handle.containmentMask.y
+                },
+                dx: 0,
+                dy: -40,
+            },
+            {
+                tag: "handleContainmentMaskVerticalTopEdgeDragDown",
+                orientation: Qt.Vertical,
+                press: {
+                    x: (handle) => handle.width / 2,
+                    y: (handle) => handle.containmentMask.y
+                },
+                dx: 0,
+                dy: 70
+            },
+            {
+                tag: "handleContainmentMaskVerticalBottomEdgeDragUp",
+                orientation: Qt.Vertical,
+                press: {
+                    x: (handle) => handle.width / 2,
+                    y: (handle) => handle.containmentMask.y + handle.containmentMask.height - 1
+                },
+                dx: 0,
+                dy: -40,
+            },
+            {
+                tag: "handleContainmentMaskVerticalBottomEdgeDragDown",
+                orientation: Qt.Vertical,
+                press: {
+                    x: (handle) => handle.width / 2,
+                    y: (handle) => handle.containmentMask.y + handle.containmentMask.height - 1
+                },
+                dx: 0,
+                dy: 70
+            }
+        ]
+
+        return data
+    }
+
+    function test_handleContainmentMask(data) {
+        const control = createTemporaryObject(splitViewHandleContainmentMaskComponent, testCase)
+        verify(control)
+        const splitView = control.splitView
+        splitView.orientation = data.orientation
+
+        const handle = findHandles(splitView)[0]
+        if (splitView.orientation === Qt.Vertical)
+            handle.height = handle.defaultHeight
+
+        verify(isPolishScheduled(splitView))
+        verify(waitForItemPolished(splitView))
+
+        const firstItem = control.mouseArea1
+        const secondItem = control.mouseArea2
+
+        const backgroundMouseAreaPress = signalSpyComponent.createObject(control,
+            { target: control, signalName: "onPressed" })
+
+        const mouseArea1Press = signalSpyComponent.createObject(firstItem,
+            { target: firstItem, signalName: "onPressed" })
+
+        const mouseArea2Press = signalSpyComponent.createObject(secondItem,
+            { target: secondItem, signalName: "onPressed" })
+
+        verify(backgroundMouseAreaPress.valid)
+        verify(mouseArea1Press.valid)
+        verify(mouseArea2Press.valid)
+
+        const firstItemWidthBeforeDrag = firstItem.width
+        const secondItemWidthBeforeDrag = secondItem.width
+        const firstItemHeightBeforeDrag = firstItem.height
+        const secondItemHeightBeforeDrag = secondItem.height
+
+        const dx = data.dx
+        const dy = data.dy
+        const pressX = data.press.x(handle)
+        const pressY = data.press.y(handle)
+
+        mousePress(handle, pressX, pressY, Qt.LeftButton)
+        mouseMove(handle, pressX + dx, pressY + dy, -1, Qt.LeftButton)
+        mouseRelease(handle, pressX + dx, pressY + dy, Qt.LeftButton)
+
+        compare(firstItem.width, firstItemWidthBeforeDrag + dx)
+        compare(secondItem.width, secondItemWidthBeforeDrag - dx)
+        compare(firstItem.height, firstItemHeightBeforeDrag + dy)
+        compare(secondItem.height, secondItemHeightBeforeDrag - dy)
+
+        compare(backgroundMouseAreaPress.count, 0)
+        compare(mouseArea1Press.count, 0)
+        compare(mouseArea2Press.count, 0)
+    }
+
+    function test_handleContainmentMaskHovered_data() {
+        const data = [
+            {
+                tag: "firstItemHorizontalHover",
+                orientation: Qt.Horizontal,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "firstItem",
+                expectedHover: {
+                    "firstItem": true,
+                    "handle": false,
+                    "secondItem": false
+                }
+            },
+            {
+                tag: "handleHorizontalHoverOnTheLeft",
+                orientation: Qt.Horizontal,
+                press: {
+                    "x": (item) => item.containmentMask.x,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "handle",
+                expectedHover: {
+                    "firstItem": true,
+                    "handle": true,
+                    "secondItem": false
+                }
+            },
+            {
+                tag: "handleHorizontalHoverOnTheCenter",
+                orientation: Qt.Horizontal,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "handle",
+                expectedHover: {
+                    "firstItem": false,
+                    "handle": true,
+                    "secondItem": false
+                }
+            },
+            {
+                tag: "handleHorizontalHoverOnTheRight",
+                orientation: Qt.Horizontal,
+                press: {
+                    "x": (item) => item.containmentMask.x + item.containmentMask.width - 1,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "handle",
+                expectedHover: {
+                    "firstItem": false,
+                    "handle": true,
+                    "secondItem": true
+                }
+            },
+            {
+                tag: "secondItemHorizontalHover",
+                orientation: Qt.Horizontal,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "secondItem",
+                expectedHover: {
+                    "firstItem": false,
+                    "handle": false,
+                    "secondItem": true
+                }
+            },
+            {
+                tag: "firstItemVerticalHover",
+                orientation: Qt.Vertical,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "firstItem",
+                expectedHover: {
+                    "firstItem": true,
+                    "handle": false,
+                    "secondItem": false
+                }
+            },
+            {
+                tag: "handleVerticalHoverOnTheTop",
+                orientation: Qt.Vertical,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.containmentMask.y
+                },
+                hoverItem: "handle",
+                expectedHover: {
+                    "firstItem": true,
+                    "handle": true,
+                    "secondItem": false
+                }
+            },
+            {
+                tag: "handleVerticalHoverOnTheCenter",
+                orientation: Qt.Vertical,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "handle",
+                expectedHover: {
+                    "firstItem": false,
+                    "handle": true,
+                    "secondItem": false
+                }
+            },
+            {
+                tag: "handleVerticalHoverOnTheBottom",
+                orientation: Qt.Vertical,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.containmentMask.y + item.containmentMask.height - 1
+                },
+                hoverItem: "handle",
+                expectedHover: {
+                    "firstItem": false,
+                    "handle": true,
+                    "secondItem": true
+                }
+            },
+            {
+                tag: "secondItemVerticalHover",
+                orientation: Qt.Vertical,
+                press: {
+                    "x": (item) => item.width / 2,
+                    "y": (item) => item.height / 2
+                },
+                hoverItem: "secondItem",
+                expectedHover: {
+                    "firstItem": false,
+                    "handle": false,
+                    "secondItem": true
+                }
+            }
+        ]
+
+        return data
+    }
+
+    function test_handleContainmentMaskHovered(data) {
+        if ((Qt.platform.pluginName === "offscreen") || (Qt.platform.pluginName === "minimal"))
+            skip("Mouse hovering not functional on offscreen/minimal platforms")
+
+        const control = createTemporaryObject(splitViewHandleContainmentMaskComponent, testCase)
+        verify(control)
+        const splitView = control.splitView
+        splitView.orientation = data.orientation
+
+        const handle = findHandles(splitView)[0]
+        if (splitView.orientation === Qt.Vertical)
+            handle.height = handle.defaultHeight
+
+        verify(isPolishScheduled(splitView))
+        verify(waitForItemPolished(splitView))
+
+        const firstItem = control.mouseArea1
+        const secondItem = control.mouseArea2
+
+        verify(!firstItem.containsMouse)
+        verify(!secondItem.containsMouse)
+        verify(!handle.containsMouse)
+
+        const actualItem = {
+            "firstItem": firstItem,
+            "secondItem": secondItem,
+            "handle": handle
+        }[data.hoverItem]
+
+        const pressX = data.press.x(actualItem)
+        const pressY = data.press.y(actualItem)
+
+        // Test fails if we don't do two moves for some reason...
+        mouseMove(actualItem, pressX, pressY)
+        mouseMove(actualItem, pressX, pressY)
+
+        compare(firstItem.containsMouse, data.expectedHover.firstItem)
+        compare(secondItem.containsMouse, data.expectedHover.secondItem)
+        compare(handle.containsMouse, data.expectedHover.handle)
+
+        // Hide SplitView, then all children shouldn't be hovered
+        control.visible = false
+
+        verify(isPolishScheduled(splitView))
+        verify(waitForItemPolished(splitView))
+
+        verify(!control.containsMouse)
+        verify(!firstItem.containsMouse)
+        verify(!secondItem.containsMouse)
+        verify(!handle.containsMouse)
+    }
+
     function test_hoveredPressed() {
         if ((Qt.platform.pluginName === "offscreen") || (Qt.platform.pluginName === "minimal"))
             skip("Mouse hovering not functional on offscreen/minimal platforms")

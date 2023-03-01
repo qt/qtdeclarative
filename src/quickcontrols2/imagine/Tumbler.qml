@@ -89,7 +89,7 @@ T.Tumbler {
                 {"disabled": !control.enabled},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
+                {"hovered": control.enabled && control.hovered}
             ]
         }
     }

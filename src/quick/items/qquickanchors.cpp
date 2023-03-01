@@ -1409,5 +1409,7 @@ bool QQuickAnchorsPrivate::checkVAnchorValid(QQuickAnchorLine anchor) const
 
 QT_END_NAMESPACE
 
+#include "moc_qquickanchors_p_p.cpp"
+
 #include <moc_qquickanchors_p.cpp>
 

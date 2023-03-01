@@ -153,3 +153,5 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption) 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitemscrollbar.cpp"

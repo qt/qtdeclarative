@@ -53,7 +53,6 @@ DialogsQuickImpl.FolderBreadcrumbBar {
 
     background: Rectangle {}
     contentItem: ListView {
-        id: listView
         currentIndex: control.currentIndex
         model: control.contentModel
         orientation: ListView.Horizontal

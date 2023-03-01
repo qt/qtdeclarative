@@ -134,3 +134,5 @@ QPalette QQuickItemDelegatePrivate::defaultPalette() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickitemdelegate_p.cpp"

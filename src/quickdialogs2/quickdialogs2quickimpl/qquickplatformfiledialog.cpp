@@ -224,3 +224,5 @@ QQuickFileDialogImpl *QQuickPlatformFileDialog::dialog() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformfiledialog_p.cpp"

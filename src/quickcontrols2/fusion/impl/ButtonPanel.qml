@@ -47,18 +47,21 @@ Rectangle {
 
     visible: !control.flat || control.down || control.checked
 
-    color: Fusion.buttonColor(control.palette, panel.highlighted, control.down || control.checked, control.hovered)
+    color: Fusion.buttonColor(control.palette, panel.highlighted, control.down || control.checked,
+        enabled && control.hovered)
     gradient: control.down || control.checked ? null : buttonGradient
 
     Gradient {
         id: buttonGradient
         GradientStop {
             position: 0
-            color: Fusion.gradientStart(Fusion.buttonColor(panel.control.palette, panel.highlighted, panel.control.down, panel.control.hovered))
+            color: Fusion.gradientStart(Fusion.buttonColor(panel.control.palette, panel.highlighted,
+                panel.control.down, panel.enabled && panel.control.hovered))
         }
         GradientStop {
             position: 1
-            color: Fusion.gradientStop(Fusion.buttonColor(panel.control.palette, panel.highlighted, panel.control.down, panel.control.hovered))
+            color: Fusion.gradientStop(Fusion.buttonColor(panel.control.palette, panel.highlighted,
+                panel.control.down, panel.enabled && panel.control.hovered))
         }
     }
 

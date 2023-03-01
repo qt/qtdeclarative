@@ -149,3 +149,5 @@ QUrl QQmlStandardPaths::writableLocation(QStandardPaths::StandardLocation type) 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlstandardpaths_p.cpp"

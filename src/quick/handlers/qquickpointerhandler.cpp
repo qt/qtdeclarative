@@ -436,6 +436,8 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
            This handler can take the exclusive grab from another handler of the same class.
     \value PointerHandler.CanTakeOverFromHandlersOfDifferentType
            This handler can take the exclusive grab from any kind of handler.
+    \value PointerHandler.CanTakeOverFromItems
+           This handler can take the exclusive grab from any type of Item.
     \value PointerHandler.CanTakeOverFromAnything
            This handler can take the exclusive grab from any type of Item or Handler.
     \value PointerHandler.ApprovesTakeOverByHandlersOfSameType
@@ -658,10 +660,12 @@ bool QQuickPointerHandler::event(QEvent *e)
 
 void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
 {
+    Q_D(QQuickPointerHandler);
     bool wants = wantsPointerEvent(event);
     qCDebug(lcPointerHandlerDispatch) << metaObject()->className() << objectName()
                                       << "on" << parent()->metaObject()->className() << parent()->objectName()
                                       << (wants ? "WANTS" : "DECLINES") << event;
+    d->currentEvent = event;
     if (wants) {
         handlePointerEventImpl(event);
     } else {
@@ -677,6 +681,7 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
             }
         }
     }
+    d->currentEvent = nullptr;
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->device()).append(this);
 }
 
@@ -718,10 +723,8 @@ void QQuickPointerHandler::setActive(bool active)
     }
 }
 
-void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *event)
+void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *)
 {
-    Q_D(QQuickPointerHandler);
-    d->currentEvent = event;
 }
 
 /*!
@@ -805,3 +808,5 @@ QVector<QObject *> &QQuickPointerHandlerPrivate::deviceDeliveryTargets(const QIn
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpointerhandler_p.cpp"

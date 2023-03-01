@@ -663,3 +663,5 @@ QAccessible::Role QQuickScrollIndicator::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickscrollindicator_p.cpp"

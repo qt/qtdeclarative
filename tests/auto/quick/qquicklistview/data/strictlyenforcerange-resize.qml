@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
 ListView {
+    id: listView
     width: 400
     height: 400
     focus: true
@@ -15,7 +16,7 @@ ListView {
 
     model: 10
     delegate: Item {
-        width: parent.width
+        width: listView.width
         height: ListView.isCurrentItem ? 100 : 50
 
         Text {

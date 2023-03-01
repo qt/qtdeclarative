@@ -641,3 +641,5 @@ void QQuickIconLabel::geometryChange(const QRectF &newGeometry, const QRectF &ol
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickiconlabel_p.cpp"

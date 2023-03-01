@@ -56,7 +56,7 @@ Rectangle {
         PinchHandler {
             id: pincharea
             objectName: "pinchHandler"
-            minimumScale: 1.0
+            minimumScale: 0.5
             maximumScale: 4.0
             minimumRotation: 0.0
             maximumRotation: 90.0

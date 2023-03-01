@@ -70,6 +70,7 @@ T.ToolButton {
         implicitHeight: 20
 
         control: control
-        visible: control.down || control.checked || control.highlighted || control.visualFocus || control.hovered
+        visible: control.down || control.checked || control.highlighted || control.visualFocus
+            || (enabled && control.hovered)
     }
 }

@@ -353,7 +353,7 @@ void QQuickFlickablePrivate::AxisData::updateVelocity()
     }
 }
 
-void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &)
+void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeom)
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
@@ -362,8 +362,14 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometr
             orient |= Qt::Horizontal;
         if (change.yChange())
             orient |= Qt::Vertical;
-        if (orient)
+        if (orient) {
             q->viewportMoved(orient);
+            const QPointF deltaMoved = item->position() - oldGeom.topLeft();
+            if (hData.contentPositionChangedExternallyDuringDrag)
+                hData.pressPos += deltaMoved.x();
+            if (vData.contentPositionChangedExternallyDuringDrag)
+                vData.pressPos += deltaMoved.y();
+        }
         if (orient & Qt::Horizontal)
             emit q->contentXChanged();
         if (orient & Qt::Vertical)
@@ -823,8 +829,11 @@ void QQuickFlickable::setContentX(qreal pos)
     d->hData.vTime = d->timeline.time();
     if (isMoving() || isFlicking())
         movementEnding(true, false);
-    if (!qFuzzyCompare(-pos, d->hData.move.value()))
+    if (!qFuzzyCompare(-pos, d->hData.move.value())) {
+        d->hData.contentPositionChangedExternallyDuringDrag = d->hData.dragging;
         d->hData.move.setValue(-pos);
+        d->hData.contentPositionChangedExternallyDuringDrag = false;
+    }
 }
 
 qreal QQuickFlickable::contentY() const
@@ -841,8 +850,11 @@ void QQuickFlickable::setContentY(qreal pos)
     d->vData.vTime = d->timeline.time();
     if (isMoving() || isFlicking())
         movementEnding(false, true);
-    if (!qFuzzyCompare(-pos, d->vData.move.value()))
+    if (!qFuzzyCompare(-pos, d->vData.move.value())) {
+        d->vData.contentPositionChangedExternallyDuringDrag = d->vData.dragging;
         d->vData.move.setValue(-pos);
+        d->vData.contentPositionChangedExternallyDuringDrag = false;
+    }
 }
 
 /*!
@@ -2242,9 +2254,11 @@ void QQuickFlickable::setContentWidth(qreal w)
         d->contentItem->setWidth(w);
     d->hData.markExtentsDirty();
     // Make sure that we're entirely in view.
-    if (!d->pressed && !d->hData.moving && !d->vData.moving) {
+    if ((!d->pressed && !d->hData.moving && !d->vData.moving) || d->hData.dragging) {
+        d->hData.contentPositionChangedExternallyDuringDrag = d->hData.dragging;
         d->fixupMode = QQuickFlickablePrivate::Immediate;
         d->fixupX();
+        d->hData.contentPositionChangedExternallyDuringDrag = false;
     } else if (!d->pressed && d->hData.fixingUp) {
         d->fixupMode = QQuickFlickablePrivate::ExtentChanged;
         d->fixupX();
@@ -2271,9 +2285,11 @@ void QQuickFlickable::setContentHeight(qreal h)
         d->contentItem->setHeight(h);
     d->vData.markExtentsDirty();
     // Make sure that we're entirely in view.
-    if (!d->pressed && !d->hData.moving && !d->vData.moving) {
+    if ((!d->pressed && !d->hData.moving && !d->vData.moving) || d->vData.dragging) {
+        d->vData.contentPositionChangedExternallyDuringDrag = d->vData.dragging;
         d->fixupMode = QQuickFlickablePrivate::Immediate;
         d->fixupY();
+        d->vData.contentPositionChangedExternallyDuringDrag = false;
     } else if (!d->pressed && d->vData.fixingUp) {
         d->fixupMode = QQuickFlickablePrivate::ExtentChanged;
         d->fixupY();
@@ -2920,6 +2936,12 @@ void QQuickFlickable::movementStarting()
     if (!wasMoving && (d->hData.moving || d->vData.moving)) {
         emit movingChanged();
         emit movementStarted();
+#if QT_CONFIG(accessibility)
+        if (QAccessible::isActive()) {
+            QAccessibleEvent ev(this, QAccessible::ScrollingStart);
+            QAccessible::updateAccessibility(&ev);
+        }
+#endif
     }
 }
 
@@ -2964,6 +2986,12 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     if (wasMoving && !isMoving()) {
         emit movingChanged();
         emit movementEnded();
+#if QT_CONFIG(accessibility)
+        if (QAccessible::isActive()) {
+            QAccessibleEvent ev(this, QAccessible::ScrollingEnd);
+            QAccessible::updateAccessibility(&ev);
+        }
+#endif
     }
 
     if (hMovementEnding) {
@@ -3090,5 +3118,7 @@ void QQuickFlickable::setBoundsMovement(BoundsMovement movement)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickflickable_p_p.cpp"
 
 #include "moc_qquickflickable_p.cpp"
