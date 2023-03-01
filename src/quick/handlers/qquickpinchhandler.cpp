@@ -462,6 +462,13 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 }
 
 /*!
+    \internal
+    \qmlproperty flags QtQuick::PinchHandler::acceptedButtons
+
+    This property is not used in PinchHandler.
+*/
+
+/*!
     \readonly
     \qmlproperty QtQuick::HandlerPoint QtQuick::PinchHandler::centroid
 
