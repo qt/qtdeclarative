@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_deploy_qml_imports
-\target qt6_deploy_qml_imports
+\keyword qt6_deploy_qml_imports
 
 \summary {Deploy the runtime components of QML modules needed by an executable.}
 
