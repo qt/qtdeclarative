@@ -732,6 +732,13 @@ QPointF QQuickPinchHandler::startPos()
 }
 
 /*!
+    \internal
+    \qmlproperty flags QtQuick::PinchHandler::acceptedButtons
+
+    This property is not used in PinchHandler.
+*/
+
+/*!
     \readonly
     \qmlproperty QtQuick::handlerPoint QtQuick::PinchHandler::centroid
 
