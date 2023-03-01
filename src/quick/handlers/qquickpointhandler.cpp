@@ -66,7 +66,8 @@ QT_BEGIN_NAMESPACE
     PointHandler will not automatically manipulate the \c target item in any way.
     You need to use bindings to make it react to the \l point.
 
-    \note On macOS, PointHandler does not react to the trackpad by default.
+    \note On macOS, PointHandler does not react to multiple fingers on the
+    trackpad by default, although it does react to a pressed point (mouse position).
     That is because macOS can provide either native gesture recognition, or raw
     touchpoints, but not both. We prefer to use the native gesture event in
     PinchHandler, so we do not want to disable it by enabling touch. However
@@ -75,7 +76,7 @@ QT_BEGIN_NAMESPACE
     want to react to all the touchpoints but do not require the smooth
     native-gesture experience.
 
-    \sa MultiPointTouchArea
+    \sa MultiPointTouchArea, HoverHandler, {Pointer Handlers Example}
 */
 
 QQuickPointHandler::QQuickPointHandler(QQuickItem *parent)
@@ -127,6 +128,127 @@ QVector2D QQuickPointHandler::translation() const
 {
     return QVector2D(point().position() - point().pressPosition());
 }
+
+/*!
+    \qmlproperty flags PointHandler::acceptedButtons
+
+    The mouse buttons that can activate this PointHandler.
+
+    By default, this property is set to \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
+    It can be set to an OR combination of mouse buttons, and will ignore events
+    in which other buttons are pressed or held.
+
+    \snippet pointerHandlers/pointHandlerAcceptedButtons.qml 0
+
+    \note On a touchscreen, there are no buttons, so this property does not
+    prevent PointHandler from reacting to touchpoints.
+*/
+
+/*!
+    \qmlproperty flags PointHandler::acceptedDevices
+
+    The types of pointing devices that can activate this PointHandler.
+
+    By default, this property is set to
+    \l{QInputDevice::DeviceType}{PointerDevice.AllDevices}.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching \l {PointerDevice}{devices}:
+
+    \snippet pointerHandlers/pointHandler.qml 1
+*/
+
+/*!
+    \qmlproperty flags PointHandler::acceptedPointerTypes
+
+    The types of pointing instruments (finger, stylus, eraser, etc.)
+    that can activate this PointHandler.
+
+    By default, this property is set to
+    \l {QPointingDevice::PointerType} {PointerDevice.AllPointerTypes}.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching \l {PointerDevice}{devices}:
+
+    \snippet pointerHandlers/pointHandlerCanvasDrawing.qml 0
+
+    The \l {Pointer Handlers Example} includes a more complex example for
+    drawing on a Canvas with a graphics tablet.
+*/
+
+/*!
+    \qmlproperty flags PointHandler::acceptedModifiers
+
+    If this property is set, PointHandler requires the given keyboard modifiers
+    to be pressed in order to react to \l {PointerEvent}{PointerEvents}, and
+    otherwise ignores them.
+
+    If this property is set to \c Qt.KeyboardModifierMask (the default value),
+    then PointHandler ignores the modifier keys.
+
+    For example, an \l [QML] Item could have two handlers, one of which is
+    enabled only if the required keyboard modifier is pressed:
+
+    \snippet pointerHandlers/pointHandlerAcceptedModifiers.qml 0
+
+    If you set \c acceptedModifiers to an OR combination of modifier keys,
+    it means \e all of those modifiers must be pressed to activate the handler.
+
+    The available modifiers are as follows:
+
+    \value NoModifier       No modifier key is allowed.
+    \value ShiftModifier    A Shift key on the keyboard must be pressed.
+    \value ControlModifier  A Ctrl key on the keyboard must be pressed.
+    \value AltModifier      An Alt key on the keyboard must be pressed.
+    \value MetaModifier     A Meta key on the keyboard must be pressed.
+    \value KeypadModifier   A keypad button must be pressed.
+    \value GroupSwitchModifier X11 only (unless activated on Windows by a command line argument).
+                            A Mode_switch key on the keyboard must be pressed.
+    \value KeyboardModifierMask The handler does not care which modifiers are pressed.
+
+    \sa Qt::KeyboardModifier
+*/
+
+/*!
+    \readonly
+    \qmlproperty bool PointHandler::active
+
+    This holds \c true whenever the constraints are satisfied and this
+    PointHandler is reacting. This means that it is keeping its properties
+    up-to-date according to the movements of the \l {eventPoint}{eventPoints}
+    that satisfy the constraints.
+*/
+
+/*!
+    \internal
+    \qmlproperty flags PointHandler::dragThreshold
+
+    This property is not used in PointHandler.
+*/
+
+/*!
+    \qmlproperty real PointHandler::margin
+
+    The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
+    item within which an \l eventPoint can activate this handler.
+
+    The default value is \c 0.
+
+    \snippet pointerHandlers/pointHandlerMargin.qml 0
+*/
+
+/*!
+    \qmlproperty real PointHandler::target
+
+    A property that can conveniently hold an Item to be manipulated or to show
+    feedback. Unlike other \l {Qt Quick Input Handlers}{Pointer Handlers},
+    PointHandler does not do anything with the \c target on its own: you
+    usually need to create reactive bindings to properties such as
+    \l SinglePointHandler::point and \l PointHandler::active. If you declare
+    an Item instance here, you need to explicitly set its \l {Item::}{parent},
+    because PointHandler is not an Item.
+
+    By default, it is the same as the \l {PointerHandler::}{parent}, the Item
+    within which the handler is declared.
+*/
 
 QT_END_NAMESPACE
 
