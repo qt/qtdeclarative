@@ -336,6 +336,13 @@ void QQuickHoverHandler::setHovered(bool hovered)
     \sa Qt::CursorShape, QQuickItem::cursor()
 */
 
+/*!
+    \internal
+    \qmlproperty flags HoverHandler::dragThreshold
+
+    This property is not used in HoverHandler.
+*/
+
 QT_END_NAMESPACE
 
 #include "moc_qquickhoverhandler_p.cpp"
