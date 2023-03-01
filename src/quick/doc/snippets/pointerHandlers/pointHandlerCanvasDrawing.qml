@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2023 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -47,33 +47,55 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 //![0]
 import QtQuick
 
-Window {
-    width: 480
-    height: 320
-    visible: true
+Canvas {
+    id: canvas
+    width: 800
+    height: 600
+    antialiasing: true
+    renderTarget: Canvas.FramebufferObject
+    property var points: []
+    onPaint: {
+        if (points.length < 2)
+            return
+        var ctx = canvas.getContext('2d');
+        ctx.save()
+        ctx.strokeStyle = stylusHandler.active ? "blue" : "white"
+        ctx.lineCap = "round"
+        ctx.beginPath()
+        ctx.moveTo(points[0].x, points[0].y)
+        for (var i = 1; i < points.length; i++)
+            ctx.lineTo(points[i].x, points[i].y)
+        ctx.lineWidth = 3
+        ctx.stroke()
+        points = points.slice(points.length - 2, 1)
+        ctx.restore()
+    }
 
-    Item {
-        id: glassPane
-        z: 10000
-        anchors.fill: parent
-
-        //![1]
-        PointHandler {
-            id: handler
-            acceptedDevices: PointerDevice.TouchScreen | PointerDevice.TouchPad
-            target: Rectangle {
-                parent: glassPane
-                color: "red"
-                visible: handler.active
-                x: handler.point.position.x - width / 2
-                y: handler.point.position.y - height / 2
-                width: 20; height: width; radius: width / 2
-            }
+    PointHandler {
+        id: stylusHandler
+        acceptedPointerTypes: PointerDevice.Pen
+        onPointChanged: {
+            canvas.points.push(point.position)
+            canvas.requestPaint()
         }
-        //![1]
+    }
+
+    PointHandler {
+        id: eraserHandler
+        acceptedPointerTypes: PointerDevice.Eraser
+        onPointChanged: {
+            canvas.points.push(point.position)
+            canvas.requestPaint()
+        }
+    }
+
+    Rectangle {
+        width: 10; height: 10
+        color: stylusHandler.active ? "green" : eraserHandler.active ? "red" : "beige"
     }
 }
 //![0]

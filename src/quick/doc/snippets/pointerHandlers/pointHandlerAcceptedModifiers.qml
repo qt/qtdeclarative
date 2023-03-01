@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2023 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -50,30 +50,34 @@
 //![0]
 import QtQuick
 
-Window {
-    width: 480
-    height: 320
-    visible: true
+Item {
+    id: feedbackPane
+    width: 480; height: 320
 
-    Item {
-        id: glassPane
-        z: 10000
-        anchors.fill: parent
-
-        //![1]
-        PointHandler {
-            id: handler
-            acceptedDevices: PointerDevice.TouchScreen | PointerDevice.TouchPad
-            target: Rectangle {
-                parent: glassPane
-                color: "red"
-                visible: handler.active
-                x: handler.point.position.x - width / 2
-                y: handler.point.position.y - height / 2
-                width: 20; height: width; radius: width / 2
-            }
+    PointHandler {
+        id: control
+        acceptedModifiers: Qt.ControlModifier
+        cursorShape: Qt.PointingHandCursor
+        target: Rectangle {
+            parent: feedbackPane
+            color: control.active ? "indianred" : "khaki"
+            x: control.point.position.x - width / 2
+            y: control.point.position.y - height / 2
+            width: 20; height: width; radius: width / 2
         }
-        //![1]
+    }
+
+    PointHandler {
+        id: shift
+        acceptedModifiers: Qt.ShiftModifier | Qt.MetaModifier
+        cursorShape: Qt.CrossCursor
+        target: Rectangle {
+            parent: feedbackPane
+            color: shift.active ? "darkslateblue" : "lightseagreen"
+            x: shift.point.position.x - width / 2
+            y: shift.point.position.y - height / 2
+            width: 30; height: width; radius: width / 2
+        }
     }
 }
 //![0]
