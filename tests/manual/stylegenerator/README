@@ -1,0 +1,4 @@
+How to use:
+1. qqcstylegenerator -d MyStyle style.qtbridge
+2. export QML_IMPORT_PATH=$PWD (where $PWD is the directory that contains MyStyle)
+3. appexe -style MyStyle
