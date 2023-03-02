@@ -335,8 +335,10 @@ void QQuickWidgetPrivate::render(bool needsSync)
             q->createFramebufferObject();
         }
 
-        if (!rhi)
+        if (!rhi) {
+            qWarning("QQuickWidget: Attempted to render scene with no rhi");
             return;
+        }
 
         // createFramebufferObject() bails out when the size is empty. In this case
         // we cannot render either.
@@ -395,11 +397,6 @@ void QQuickWidgetPrivate::renderSceneGraph()
 
     if (!q->isVisible() || fakeHidden)
         return;
-
-    if (!useSoftwareRenderer && !rhi) {
-        qWarning("QQuickWidget: Attempted to render scene with no rhi");
-        return;
-    }
 
     render(true);
 
@@ -1671,6 +1668,7 @@ bool QQuickWidget::event(QEvent *e)
 
     case QEvent::WindowAboutToChangeInternal:
         d->invalidateRenderControl();
+        d->deviceLost = true;
         d->rhi = nullptr;
         break;
 
