@@ -10,6 +10,18 @@ qt_internal_add_app(qqcstylegenerator
     EXCEPTIONS
     SOURCES
         src/main.cpp
+        src/qtbridgereader.h
+        src/stylegenerator.h
+        src/jsontools.h src/jsontools.cpp
     LIBRARIES
         Qt::GuiPrivate
+)
+
+qt_add_resources(qqcstylegenerator "controls"
+    PREFIX "/"
+    BASE templates/controls
+    FILES
+        templates/Button.qml
+        templates/CheckBox.qml
+        templates/Switch.qml
 )

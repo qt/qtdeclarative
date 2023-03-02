@@ -3,6 +3,9 @@
 
 #include <QtGui>
 
+#include "qtbridgereader.h"
+#include "stylegenerator.h"
+
 int main(int argc, char **argv){
     QGuiApplication app(argc, argv);
 
@@ -27,6 +30,19 @@ int main(int argc, char **argv){
 
     if (parser.positionalArguments().length() != 1) {
         parser.showHelp();
+        return -1;
+    }
+
+    const QString sourcePath = parser.positionalArguments().first();
+    const QString destinationPath = parser.value("d");
+
+    try {
+        QtBridgeReader bridgeReader(sourcePath);
+        StyleGenerator generator(bridgeReader.document(), bridgeReader.resourcePath(), destinationPath);
+        generator.setVerbose(parser.isSet("verbose"));
+        generator.generateStyle();
+    } catch (std::exception &e) {
+        qWarning() << "Error:" << e.what();
         return -1;
     }
 
