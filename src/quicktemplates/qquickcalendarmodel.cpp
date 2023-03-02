@@ -42,9 +42,9 @@ public:
     {
     }
 
-    static int getCount(const QDate& from, const QDate &to);
+    static int getCount(QDate from, QDate to);
 
-    void populate(const QDate &from, const QDate &to, bool force = false);
+    void populate(QDate from, QDate to, bool force = false);
 
     bool complete;
     QDate from;
@@ -52,7 +52,7 @@ public:
     int count;
 };
 
-int QQuickCalendarModelPrivate::getCount(const QDate& from, const QDate &to)
+int QQuickCalendarModelPrivate::getCount(QDate from, QDate to)
 {
     if (!from.isValid() || !to.isValid())
         return 0;
@@ -69,7 +69,7 @@ int QQuickCalendarModelPrivate::getCount(const QDate& from, const QDate &to)
     return 12 * years + months + (r.day() / t.day());
 }
 
-void QQuickCalendarModelPrivate::populate(const QDate &f, const QDate &t, bool force)
+void QQuickCalendarModelPrivate::populate(QDate f, QDate t, bool force)
 {
     Q_Q(QQuickCalendarModel);
     if (!force && f == from && t == to)
