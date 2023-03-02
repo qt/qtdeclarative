@@ -40,6 +40,7 @@ the client to import the module which provides them.
 All of the value types listed below may be used as a \c property type in a QML
 document, with the following exceptions:
 \list
+  \li \c void, which marks the absence of a value
   \li \c list must be used in conjunction with an object or value type as element
   \li \c enumeration cannot be used directly as the enumeration must be defined by a registered QML object type
 \endlist
