@@ -544,39 +544,39 @@
   containers like this:
 
   \code
-  class Person : public QObject
-  {
-    Q_OBJECT
-    QML_ELEMENT
-    [...]
-  };
-
-  class Thing
+  class IntDequeRegistration
   {
     Q_GADGET
-    QML_VALUE_TYPE(thing)
-    [...]
-  };
-
-  class PersonListRegistration
-  {
-    Q_GADGET
-    QML_FOREIGN(QList<Person *>)
+    QML_FOREIGN(std::deque<int>)
     QML_ANONYMOUS
-    QML_SEQUENTIAL_CONTAINER(Person *)
-  };
-
-  class ThingListRegistration
-  {
-    Q_GADGET
-    QML_FOREIGN(std::vector<Thing>)
-    QML_ANONYMOUS
-    QML_SEQUENTIAL_CONTAINER(Thing)
+    QML_SEQUENTIAL_CONTAINER(int)
   };
   \endcode
 
-  After this, you can use the respective containers like JavaScript arrays
-  in QML.
+  After this, you can use the container like a JavaScript array in QML.
+
+  \code
+  class Maze
+  {
+    Q_OBJECT
+    Q_ELEMENT
+    // 0: North, 1: East, 2: South, 3: West
+    Q_PROPERTY(std::deque<int> solution READ solution CONSTANT FINAL)
+    [...]
+  }
+  \endcode
+
+  \code
+  Item {
+    Maze {
+      id: maze
+    }
+
+    function showSolution() {
+        maze.solution.forEach([...])
+    }
+  }
+  \endcode
 
   \note For \l{QML Value Types} \l{QList} is automatically registered as
   sequential container. For \l{QML Object Types} \l{QQmlListProperty} is.
