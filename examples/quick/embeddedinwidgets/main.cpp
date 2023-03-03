@@ -26,6 +26,7 @@ private:
     QQuickView *m_quickView;
 };
 
+//! [ctor]
 MainWindow::MainWindow()
     : m_quickView(new QQuickView)
 {
@@ -51,6 +52,7 @@ MainWindow::MainWindow()
     QMenu *fileMenu = menuBar()->addMenu(tr("File"));
     fileMenu->addAction(tr("Quit"), qApp, &QCoreApplication::quit);
 }
+//! [ctor]
 
 void MainWindow::quickViewStatusChanged(QQuickView::Status status)
 {
