@@ -10,12 +10,14 @@ Item {
     required property string colorKey
     required property int modelData
 
-    width: 64; height: 64
+    width: 64
+    height: 64
 
     MouseArea {
         id: mouseArea
 
-        width: 64; height: 64
+        width: 64
+        height: 64
         anchors.centerIn: parent
 
         drag.target: tile
@@ -25,9 +27,12 @@ Item {
         Rectangle {
             id: tile
 
-            width: 64; height: 64
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
+            width: 64
+            height: 64
+            anchors {
+                verticalCenter: parent.verticalCenter
+                horizontalCenter: parent.horizontalCenter
+            }
 
             color: root.colorKey
 
@@ -41,13 +46,19 @@ Item {
                 color: "white"
                 font.pixelSize: 48
                 text: root.modelData + 1
-                horizontalAlignment:Text.AlignHCenter
+                horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 //! [1]
             states: State {
                 when: mouseArea.drag.active
-                AnchorChanges { target: tile; anchors.verticalCenter: undefined; anchors.horizontalCenter: undefined }
+                AnchorChanges {
+                    target: tile
+                    anchors {
+                        verticalCenter: undefined
+                        horizontalCenter: undefined
+                    }
+                }
             }
         }
     }

@@ -11,8 +11,8 @@ Item {
         id: ll
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Tiles", "Press and drag tiles to move them into the matching colored boxes",  Qt.resolvedUrl("tiles/tiles.qml"));
-            addExample("GridView", "Press and drag to re-order items in the grid", Qt.resolvedUrl("views/gridview.qml"));
+            addExample(qsTr("Tiles"), qsTr("Press and drag tiles to move them into the matching colored boxes"),  Qt.resolvedUrl("tiles/tiles.qml"))
+            addExample(qsTr("GridView"), qsTr("Press and drag to re-order items in the grid"), Qt.resolvedUrl("views/gridview.qml"))
         }
     }
 }
