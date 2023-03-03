@@ -8003,7 +8003,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
     Returns \c true if this item contains \a point, which is in local coordinates;
     returns \c false otherwise.  This is the same check that is used for
     hit-testing a QEventPoint during event delivery, and is affected by
-    containmentMask() if it is set.
+    \l containmentMask if it is set.
 */
 /*!
     Returns \c true if this item contains \a point, which is in local coordinates;
@@ -8011,7 +8011,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 
     This function can be overridden in order to handle point collisions in items
     with custom shapes. The default implementation checks whether the point is inside
-    containmentMask() if it is set, or inside the bounding box otherwise.
+    \l containmentMask() if it is set, or inside the bounding box otherwise.
 
     \note This method is used for hit-testing each QEventPoint during event
     delivery, so the implementation should be kept as lightweight as possible.
@@ -8040,10 +8040,10 @@ bool QQuickItem::contains(const QPointF &point) const
     \qmlproperty QObject* QtQuick::Item::containmentMask
     \since 5.11
     This property holds an optional mask for the Item to be used in the
-    QtQuick::Item::contains() method. Its main use is currently to determine
+    \l contains() method. Its main use is currently to determine
     whether a \l {QPointerEvent}{pointer event} has landed into the item or not.
 
-    By default the \l contains method will return true for any point
+    By default the \c contains() method will return true for any point
     within the Item's bounding box. \c containmentMask allows for
     more fine-grained control. For example, if a custom C++
     QQuickItem subclass with a specialized contains() method
