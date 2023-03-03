@@ -5,7 +5,8 @@ import QtQuick
 Rectangle {
     id: editor
     color: "lightGrey"
-    width: 640; height: 480
+    width: 640
+    height: 480
 
     Rectangle {
         color: "white"
@@ -98,11 +99,17 @@ Rectangle {
                     width: 60
                     height: 16
 
-                    Text { anchors.centerIn: parent; text: "Cut" }
+                    Text {
+                        anchors.centerIn: parent
+                        text: qsTr("Cut")
+                    }
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: { edit.cut(); editor.state = "" }
+                        onClicked: function() {
+                            edit.cut()
+                            editor.state = ""
+                        }
                     }
                 }
 
@@ -113,11 +120,17 @@ Rectangle {
                     width: 60
                     height: 16
 
-                    Text { anchors.centerIn: parent; text: "Copy" }
+                    Text {
+                        anchors.centerIn: parent
+                        text: qsTr("Copy")
+                    }
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: { edit.copy(); editor.state = "selection" }
+                        onClicked: function() {
+                            edit.copy()
+                            editor.state = "selection"
+                        }
                     }
                 }
 
@@ -128,11 +141,18 @@ Rectangle {
                     width: 60
                     height: 16
 
-                    Text { anchors.centerIn: parent; text: "Paste" }
+                    Text {
+                        anchors.centerIn: parent
+                        text: qsTr("Paste")
+                    }
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: { edit.paste(); edit.cursorPosition = edit.selectionEnd; editor.state = "" }
+                        onClicked: function() {
+                            edit.paste()
+                            edit.cursorPosition = edit.selectionEnd
+                            editor.state = ""
+                        }
                     }
                 }
 
@@ -143,7 +163,10 @@ Rectangle {
                     width: 60
                     height: 16
 
-                    Text { anchors.centerIn: parent; text: "Deselect" }
+                    Text {
+                        anchors.centerIn: parent
+                        text: qsTr("Deselect")
+                    }
 
                     MouseArea {
                         anchors.fill: parent

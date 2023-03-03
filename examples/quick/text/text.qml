@@ -8,15 +8,14 @@ Item {
     height: 480
     width: 320
     LauncherList {
-        id: ll
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Hello", "An Animated Hello World", Qt.resolvedUrl("fonts/hello.qml"));
-            addExample("Fonts", "Using various fonts with a Text element", Qt.resolvedUrl("fonts/fonts.qml"));
-            addExample("Available Fonts", "A list of your available fonts",  Qt.resolvedUrl("fonts/availableFonts.qml"));
-            addExample("Banner", "Large, scrolling text", Qt.resolvedUrl("fonts/banner.qml"));
-            addExample("Img tag", "Embedding images into text", Qt.resolvedUrl("imgtag/imgtag.qml"));
-            addExample("Text Layout", "Flowing text around items", Qt.resolvedUrl("styledtext-layout.qml"));
+            addExample(qsTr("Hello"), qsTr("An Animated Hello World"), Qt.resolvedUrl("fonts/hello.qml"));
+            addExample(qsTr("Fonts"), qsTr("Using various fonts with a Text element"), Qt.resolvedUrl("fonts/fonts.qml"));
+            addExample(qsTr("Available Fonts"), qsTr("A list of your available fonts"),  Qt.resolvedUrl("fonts/availableFonts.qml"));
+            addExample(qsTr("Banner"), qsTr("Large, scrolling text"), Qt.resolvedUrl("fonts/banner.qml"));
+            addExample(qsTr("Img tag"), qsTr("Embedding images into text"), Qt.resolvedUrl("imgtag/imgtag.qml"));
+            addExample(qsTr("Text Layout"), qsTr("Flowing text around items"), Qt.resolvedUrl("styledtext-layout.qml"));
         }
     }
 }

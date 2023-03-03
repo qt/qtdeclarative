@@ -5,20 +5,32 @@ import QtQuick
 
 Rectangle {
     id: root
-    property string myText: "The quick brown fox jumps over the lazy dog."
+    readonly property string myText: qsTr("The quick brown fox jumps over the lazy dog.")
 
-    width: 320; height: 480
+    width: 320
+    height: 480
     color: "steelblue"
 
 //! [fontloaderlocal]
-    FontLoader { id: localFont; source: "content/fonts/tarzeau_ocr_a.ttf" }
+    FontLoader {
+        id: localFont
+        source: "content/fonts/tarzeau_ocr_a.ttf"
+    }
 //! [fontloaderlocal]
 //! [fontloaderremote]
-    FontLoader { id: webFont; source: "http://www.princexml.com/fonts/steffmann/Starburst.ttf" }
+    FontLoader {
+        id: webFont
+        source: "http://www.princexml.com/fonts/steffmann/Starburst.ttf"
+    }
 //! [fontloaderremote]
 
     Column {
-        anchors { fill: parent; leftMargin: 10; rightMargin: 10; topMargin: 10 }
+        anchors {
+            fill: parent
+            leftMargin: 10
+            rightMargin: 10
+            topMargin: 10
+        }
         spacing: 15
 
         Text {
@@ -37,7 +49,11 @@ Rectangle {
             width: parent.width
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
-            font { family: "Times"; pixelSize: 20; capitalization: Font.AllUppercase }
+            font {
+                family: "Times"
+                pixelSize: 20
+                capitalization: Font.AllUppercase
+            }
         }
         Text {
             text: root.myText
@@ -45,21 +61,35 @@ Rectangle {
             width: parent.width
             horizontalAlignment: Text.AlignRight
             wrapMode: Text.WordWrap
-            font { family: "Courier"; pixelSize: 20; weight: Font.Bold; capitalization: Font.AllLowercase }
+            font {
+                family: "Courier"
+                pixelSize: 20
+                weight: Font.Bold
+                capitalization: Font.AllLowercase
+            }
         }
         Text {
             text: root.myText
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
-            font { family: "Courier"; pixelSize: 20; italic: true; capitalization: Font.SmallCaps }
+            font {
+                family: "Courier"
+                pixelSize: 20
+                italic: true
+                capitalization: Font.SmallCaps
+            }
         }
         Text {
             text: root.myText
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
-            font { family: localFont.name; pixelSize: 20; capitalization: Font.Capitalize }
+            font {
+                family: localFont.name
+                pixelSize: 20
+                capitalization: Font.Capitalize
+            }
         }
         Text {
             text: {
@@ -70,7 +100,8 @@ Rectangle {
             color: "lightsteelblue"
             width: parent.width
             wrapMode: Text.WordWrap
-            font.family: webFont.name; font.pixelSize: 20
+            font.family: webFont.name
+            font.pixelSize: 20
         }
     }
 }
