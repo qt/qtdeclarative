@@ -17,26 +17,41 @@ Rectangle {
         ShapePath {
             fillGradient: LinearGradient {
                 y2: shape.height
-                GradientStop { position: 0; color: "yellow" }
-                GradientStop { position: 1; color: "green" }
+                GradientStop {
+                    position: 0
+                    color: "yellow"
+                }
+                GradientStop {
+                    position: 1
+                    color: "green"
+                }
             }
 
-            startX: 10; startY: 100
+            startX: 10
+            startY: 100
             PathArc {
-                relativeX: 50; y: 100
-                radiusX: 25; radiusY: 25
+                relativeX: 50
+                y: 100
+                radiusX: 25
+                radiusY: 25
             }
             PathArc {
-                relativeX: 50; y: 100
-                radiusX: 25; radiusY: 35
+                relativeX: 50
+                y: 100
+                radiusX: 25
+                radiusY: 35
             }
             PathArc {
-                relativeX: 50; y: 100
-                radiusX: 25; radiusY: 60
+                relativeX: 50
+                y: 100
+                radiusX: 25
+                radiusY: 60
             }
             PathArc {
-                relativeX: 50; y: 100
-                radiusX: 50; radiusY: 120
+                relativeX: 50
+                y: 100
+                radiusX: 50
+                radiusY: 120
             }
         }
     }
@@ -56,13 +71,21 @@ Rectangle {
             capStyle: ShapePath.RoundCap
 
             PathAngleArc {
-                centerX: 65; centerY: 95
-                radiusX: 45; radiusY: 45
+                centerX: 65
+                centerY: 95
+                radiusX: 45
+                radiusY: 45
                 startAngle: -180
                 SequentialAnimation on sweepAngle {
                     loops: Animation.Infinite
-                    NumberAnimation { to: 360; duration: 2000 }
-                    NumberAnimation { to: 0; duration: 2000 }
+                    NumberAnimation {
+                        to: 360
+                        duration: 2000
+                    }
+                    NumberAnimation {
+                        to: 0
+                        duration: 2000
+                    }
                 }
             }
         }

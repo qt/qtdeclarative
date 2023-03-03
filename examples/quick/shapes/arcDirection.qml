@@ -17,21 +17,28 @@ Rectangle {
 
         Repeater {
             model: 2
-            Shape {
+            delegate: Shape {
+                id: delegate
+
+                required property int index
+
                 anchors.fill: parent
 
                 ShapePath {
                     fillColor: "transparent"
-                    strokeColor: model.index === 0 ? "red" : "blue"
+                    strokeColor: delegate.index === 0 ? "red" : "blue"
                     strokeStyle: ShapePath.DashLine
                     strokeWidth: 4
 
-                    startX: 4; startY: 4
+                    startX: 4
+                    startY: 4
                     PathArc {
                         id: arc
-                        x: 96; y: 96
-                        radiusX: 100; radiusY: 100
-                        direction: model.index === 0 ? PathArc.Clockwise : PathArc.Counterclockwise
+                        x: 96
+                        y: 96
+                        radiusX: 100
+                        radiusY: 100
+                        direction: delegate.index === 0 ? PathArc.Clockwise : PathArc.Counterclockwise
                     }
                 }
             }
@@ -41,11 +48,11 @@ Rectangle {
     Column {
         anchors.right: parent.right
         Text {
-            text: "Clockwise (sweep 1)"
+            text: qsTr("Clockwise (sweep 1)")
             color: "red"
         }
         Text {
-            text: "Counter clockwise (sweep 0)"
+            text: qsTr("Counter clockwise (sweep 0)")
             color: "blue"
         }
     }

@@ -27,13 +27,15 @@ Rectangle {
             PathArc {
                 x: shape.width / 2 + p.xr
                 y: shape.height / 2 + p.yr
-                radiusX: p.xr; radiusY: p.yr
+                radiusX: p.xr
+                radiusY: p.yr
                 useLargeArc: true
             }
             PathArc {
                 x: shape.width / 2 - p.xr
                 y: shape.height / 2 - p.yr
-                radiusX: p.xr; radiusY: p.yr
+                radiusX: p.xr
+                radiusY: p.yr
                 useLargeArc: true
             }
         }
