@@ -32,6 +32,8 @@ qt_add_qml_module(embeddedinwidgetsexample
         "main.qml"
     RESOURCES
         "reflect.frag.qsb"
+    RESOURCE_PREFIX /embeddedinwidgets
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS embeddedinwidgetsexample
