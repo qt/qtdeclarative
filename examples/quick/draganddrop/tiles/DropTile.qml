@@ -9,7 +9,8 @@ DropArea {
 
     property string colorKey
 
-    width: 64; height: 64
+    width: 64
+    height: 64
     keys: [ colorKey ]
 
     Rectangle {

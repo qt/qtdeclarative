@@ -14,22 +14,28 @@ Rectangle {
     Grid {
         id: redDestination
 
-        anchors.left: redSource.right; anchors.top: parent.top;
-        anchors.margins: 5
+        anchors {
+            left: redSource.right
+            top: parent.top
+            margins: 5
+        }
         width: 64*3
         height: 64*3
         opacity: 0.5
         columns: 3
 
         Repeater {
-            model: 9;
+            model: 9
             delegate: DropTile { colorKey: "red" }
         }
     }
 
     Grid {
-        anchors.right: blueSource.left; anchors.bottom: parent.bottom;
-        anchors.margins: 5
+        anchors {
+            right: blueSource.left
+            bottom: parent.bottom
+            margins: 5
+        }
         width: 64*3
         height: 64*3
 
@@ -46,8 +52,12 @@ Rectangle {
     Column {
         id: redSource
 
-        anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
-        anchors.margins: 5
+        anchors {
+            left: parent.left
+            top: parent.top
+            bottom: parent.bottom
+            margins: 5
+        }
         width: 64
         spacing: -16
 
@@ -59,8 +69,12 @@ Rectangle {
     Column {
         id: blueSource
 
-        anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom
-        anchors.margins: 5
+        anchors {
+            right: parent.right
+            top: parent.top
+            bottom: parent.bottom
+            margins: 5
+        }
         width: 64
         spacing: -16
 
