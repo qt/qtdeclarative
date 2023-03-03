@@ -87,6 +87,8 @@ private slots:
     void sortTreeModel();
     void sortTreeModelDynamic_data();
     void sortTreeModelDynamic();
+    void setRootIndex();
+    void setRootIndexToLeaf();
 };
 
 tst_qquicktreeview::tst_qquicktreeview()
@@ -1151,6 +1153,100 @@ void tst_qquicktreeview::sortTreeModelDynamic()
     for (int row = 0; row < treeView->rows(); ++row) {
         const auto index = treeView->index(row, 0);
         const QString modelDisplay = proxyModel.data(index, Qt::DisplayRole).toString();
+        const auto childFxItem = treeViewPrivate->loadedTableItem(QPoint(0, row));
+        QVERIFY(childFxItem);
+        const auto childItem = childFxItem->item;
+        QVERIFY(childItem);
+        const auto context = qmlContext(childItem.data());
+        const auto itemDisplay = context->contextProperty("display").toString();
+        QCOMPARE(itemDisplay, modelDisplay);
+    }
+}
+
+void tst_qquicktreeview::setRootIndex()
+{
+    // Check that if you can change the root index in the view to point
+    // at a child branch in the model
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    const QModelIndex rootIndex = model->index(0, 0);
+    const QModelIndex childIndex = model->index(3, 0, rootIndex);
+    QVERIFY(model->hasChildren(childIndex));
+    treeView->setRootIndex(childIndex);
+
+    // Go through all rows in the view, and check that view shows the
+    // same display text as the display role in the model (under the
+    // given root).
+    for (int row = 0; row < treeView->rows(); ++row) {
+        const auto index = model->index(row, 0, childIndex);
+        const QString modelDisplay = model->data(index, Qt::DisplayRole).toString();
+        const auto childFxItem = treeViewPrivate->loadedTableItem(QPoint(0, row));
+        QVERIFY(childFxItem);
+        const auto childItem = childFxItem->item;
+        QVERIFY(childItem);
+        const auto context = qmlContext(childItem.data());
+        const auto itemDisplay = context->contextProperty("display").toString();
+        QCOMPARE(itemDisplay, modelDisplay);
+    }
+
+    // Do the same once more, but this time choose a child that is deeper in the model
+    const QModelIndex childIndex2 = model->index(3, 0, childIndex);
+    QVERIFY(model->hasChildren(childIndex2));
+    treeView->setRootIndex(childIndex);
+
+    for (int row = 0; row < treeView->rows(); ++row) {
+        const auto index = model->index(row, 0, childIndex2);
+        const QString modelDisplay = model->data(index, Qt::DisplayRole).toString();
+        const auto childFxItem = treeViewPrivate->loadedTableItem(QPoint(0, row));
+        QVERIFY(childFxItem);
+        const auto childItem = childFxItem->item;
+        QVERIFY(childItem);
+        const auto context = qmlContext(childItem.data());
+        const auto itemDisplay = context->contextProperty("display").toString();
+        QCOMPARE(itemDisplay, modelDisplay);
+    }
+
+    // Reset rootIndex. This should show the whole model again
+    treeView->setRootIndex(QModelIndex());
+
+    for (int row = 0; row < treeView->rows(); ++row) {
+        const auto index = model->index(row, 0);
+        const QString modelDisplay = model->data(index, Qt::DisplayRole).toString();
+        const auto childFxItem = treeViewPrivate->loadedTableItem(QPoint(0, row));
+        QVERIFY(childFxItem);
+        const auto childItem = childFxItem->item;
+        QVERIFY(childItem);
+        const auto context = qmlContext(childItem.data());
+        const auto itemDisplay = context->contextProperty("display").toString();
+        QCOMPARE(itemDisplay, modelDisplay);
+    }
+}
+
+void tst_qquicktreeview::setRootIndexToLeaf()
+{
+    // When you set a custom root index, the root index itself will not
+    // be shown. Therefore, check that if you change the root index to a
+    // leaf in the model, TreeView will be empty.
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    const QModelIndex rootIndex = model->index(0, 0);
+    const QModelIndex leafIndex = model->index(1, 0, rootIndex);
+    QVERIFY(!model->hasChildren(leafIndex));
+    treeView->setRootIndex(leafIndex);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(treeView->rows(), 0);
+
+    // According to the docs, you can set rootIndex to undefined
+    // in order to show the whole model again. This is the same
+    // as calling 'reset' on the property from c++. Verify that this works.
+    const QMetaObject *metaObject = treeView->metaObject();
+    const int propertyIndex = metaObject->indexOfProperty("rootIndex");
+    QVERIFY(propertyIndex != -1);
+    metaObject->property(propertyIndex).reset(treeView);
+
+    for (int row = 0; row < treeView->rows(); ++row) {
+        const auto index = model->index(row, 0);
+        const QString modelDisplay = model->data(index, Qt::DisplayRole).toString();
         const auto childFxItem = treeViewPrivate->loadedTableItem(QPoint(0, row));
         QVERIFY(childFxItem);
         const auto childItem = childFxItem->item;

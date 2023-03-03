@@ -25,12 +25,17 @@ class QQuickTreeViewPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickTreeView : public QQuickTableView
 {
     Q_OBJECT
+    Q_PROPERTY(QModelIndex rootIndex READ rootIndex WRITE setRootIndex RESET resetRootIndex NOTIFY rootIndexChanged REVISION(6, 6) FINAL)
     QML_NAMED_ELEMENT(TreeView)
     QML_ADDED_IN_VERSION(6, 3)
 
 public:
     QQuickTreeView(QQuickItem *parent = nullptr);
     ~QQuickTreeView() override;
+
+    QModelIndex rootIndex() const;
+    void setRootIndex(const QModelIndex &index);
+    void resetRootIndex();
 
     Q_INVOKABLE int depth(int row) const;
 
@@ -54,6 +59,7 @@ public:
 Q_SIGNALS:
     void expanded(int row, int depth);
     void collapsed(int row, bool recursively);
+    Q_REVISION(6, 6) void rootIndexChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
