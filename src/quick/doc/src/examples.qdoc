@@ -161,5 +161,13 @@ Creator.
         \li \l{Scene Graph - Rendering FBOs}{Rendering to OpenGL FBOs}
         \endlist
     \enddiv
+    \div {class="doc-column"}
+        \b{Adding Qt Quick scenes in QWidget applications}
+        \list
+        \li \l{Qt Quick Widgets Example}{Using QQuickWidget}
+        \li \l{QQuickWidget - QQuickView Comparison Example}{QQuickWidget - QQuickView Comparison (OpenGL)}
+        \li \l{Qt Quick Examples - Embedded in Widgets}{Embedding a QQuickView as Native Window}
+        \endlist
+    \enddiv
 \enddiv
 */
