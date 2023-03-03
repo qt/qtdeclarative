@@ -121,6 +121,8 @@ Creator.
         \li \l{Qt Quick Examples - Animation}{Animation}
         \li \l{Qt Quick Examples - Canvas}{Canvas API}
         \li \l{Qt Quick Examples - Shader Effects}{Shader Effects}
+        \li \l{Qt Quick Examples - MultiEffect Test Bed}{MultiEffect}
+        \li \l{Qt Quick Examples - MultiEffect Item Switcher}{MultiEffect-based Item Transitions}
         \endlist
     \enddiv
 \enddiv

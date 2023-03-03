@@ -1,0 +1,15 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+    \title Qt Quick Examples - MultiEffect Item Switcher
+    \example multieffect/itemswitcher
+    \image qml-multieffectitemswitcher-example.jpg
+    \brief Demonstrates using MultiEffect
+    \ingroup qtquickexamples
+
+    This example demonstrates advanced usage of the MultiEffect type, which
+    offers a simple, efficient solution for applying effects such as blur, drop
+    shadow, or colorize to an Item and its children.
+
+    \include examples-run.qdocinc
+*/
