@@ -9,10 +9,10 @@ Rectangle {
     width: 256
     height: 256
     Rectangle {
-        border.color: "black"
+        anchors.centerIn: parent
         width: 200
         height: 200
-        anchors.centerIn: parent
+        border.color: "black"
 
         Shape {
             anchors.fill: parent
@@ -22,16 +22,36 @@ Rectangle {
 
                 fillGradient: LinearGradient {
                     id: grad
-                    y1: 50; y2: 150
-                    GradientStop { position: 0; color: "black" }
-                    GradientStop { position: 1; color: "red" }
+                    y1: 50
+                    y2: 150
+                    GradientStop {
+                        position: 0
+                        color: "black"
+                    }
+                    GradientStop {
+                        position: 1
+                        color: "red"
+                    }
                 }
 
-                startX: 10; startY: 10
-                PathLine { relativeX: 180; relativeY: 0 }
-                PathLine { relativeX: 0; relativeY: 180 }
-                PathLine { relativeX: -180; relativeY: 0 }
-                PathLine { relativeX: 0; relativeY: -180 }
+                startX: 10
+                startY: 10
+                PathLine {
+                    relativeX: 180
+                    relativeY: 0
+                }
+                PathLine {
+                    relativeX: 0
+                    relativeY: 180
+                }
+                PathLine {
+                    relativeX: -180
+                    relativeY: 0
+                }
+                PathLine {
+                    relativeX: 0
+                    relativeY: -180
+                }
             }
         }
 
@@ -40,12 +60,14 @@ Rectangle {
             interval: 3000
             running: true
             repeat: true
-            property variant spreads: [ ShapeGradient.PadSpread, ShapeGradient.RepeatSpread, ShapeGradient.ReflectSpread ]
-            property variant spreadTexts: [ "PadSpread", "RepeatSpread", "ReflectSpread" ]
+            readonly property variant spreads: [ ShapeGradient.PadSpread, ShapeGradient.RepeatSpread, ShapeGradient.ReflectSpread ]
+            readonly property variant spreadTexts: [ qsTr("PadSpread"), qsTr("RepeatSpread"), qsTr("ReflectSpread") ]
             property int spreadIdx: 0
-            onTriggered: { spreadIdx = (spreadIdx + 1) % spreads.length; grad.spread = spreads[spreadIdx] }
+            onTriggered: function() {
+                spreadIdx = (spreadIdx + 1) % spreads.length
+                grad.spread = spreads[spreadIdx]
+            }
         }
-
 
         Shape {
             anchors.fill: parent
@@ -53,10 +75,22 @@ Rectangle {
                 strokeColor: "gray"
                 strokeWidth: 2
                 fillColor: "transparent"
-                PathMove { x: 0; y: 50 }
-                PathLine { relativeX: 200; relativeY: 0 }
-                PathMove { x: 0; y: 150 }
-                PathLine { relativeX: 200; relativeY: 0 }
+                PathMove {
+                    x: 0
+                    y: 50
+                }
+                PathLine {
+                    relativeX: 200
+                    relativeY: 0
+                }
+                PathMove {
+                    x: 0
+                    y: 150
+                }
+                PathLine {
+                    relativeX: 200
+                    relativeY: 0
+                }
             }
         }
     }

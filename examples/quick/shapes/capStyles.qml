@@ -6,7 +6,8 @@ import QtQuick.Shapes
 
 Rectangle {
     color: "lightGray"
-    width: 256; height: 256
+    width: 256
+    height: 256
 
     Shape {
         anchors.centerIn: parent
@@ -20,15 +21,29 @@ Rectangle {
             fillColor: "transparent"
 
             property int capStyleIdx: 0
-            property variant styles: [ ShapePath.FlatCap, ShapePath.SquareCap, ShapePath.RoundCap ]
-            property variant styleTexts: [ "FlatCap", "SquareCap", "RoundCap" ]
+            readonly property variant styles: [ ShapePath.FlatCap, ShapePath.SquareCap, ShapePath.RoundCap ]
+            readonly property variant styleTexts: [ qsTr("FlatCap"), qsTr("SquareCap"), qsTr("RoundCap") ]
 
             capStyle: styles[capStyleIdx]
 
-            startX: 40; startY: 30
-            PathQuad { x: 50; y: 80; controlX: 0; controlY: 80 }
-            PathLine { x: 150; y: 80 }
-            PathQuad { x: 160; y: 30; controlX: 200; controlY: 80 }
+            startX: 40
+            startY: 30
+            PathQuad {
+                x: 50
+                y: 80
+                controlX: 0
+                controlY: 80
+            }
+            PathLine {
+                x: 150
+                y: 80
+            }
+            PathQuad {
+                x: 160
+                y: 30
+                controlX: 200
+                controlY: 80
+            }
         }
     }
 
