@@ -57,6 +57,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(QQmlComponent *footer READ footer WRITE setFooter NOTIFY footerChanged)
     Q_PROPERTY(QQuickItem *footerItem READ footerItem NOTIFY footerItemChanged)
 
+#if QT_CONFIG(quick_viewtransitions)
     Q_PROPERTY(QQuickTransition *populate READ populateTransition WRITE setPopulateTransition NOTIFY populateTransitionChanged)
     Q_PROPERTY(QQuickTransition *add READ addTransition WRITE setAddTransition NOTIFY addTransitionChanged)
     Q_PROPERTY(QQuickTransition *addDisplaced READ addDisplacedTransition WRITE setAddDisplacedTransition NOTIFY addDisplacedTransitionChanged)
@@ -65,6 +66,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickItemView : public QQuickFlickable
     Q_PROPERTY(QQuickTransition *remove READ removeTransition WRITE setRemoveTransition NOTIFY removeTransitionChanged)
     Q_PROPERTY(QQuickTransition *removeDisplaced READ removeDisplacedTransition WRITE setRemoveDisplacedTransition NOTIFY removeDisplacedTransitionChanged)
     Q_PROPERTY(QQuickTransition *displaced READ displacedTransition WRITE setDisplacedTransition NOTIFY displacedTransitionChanged)
+#endif
 
     Q_PROPERTY(QQmlComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
     Q_PROPERTY(QQuickItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
@@ -144,6 +146,7 @@ public:
     void setHeader(QQmlComponent *);
     QQuickItem *headerItem() const;
 
+#if QT_CONFIG(quick_viewtransitions)
     QQuickTransition *populateTransition() const;
     void setPopulateTransition(QQuickTransition *transition);
 
@@ -167,6 +170,7 @@ public:
 
     QQuickTransition *displacedTransition() const;
     void setDisplacedTransition(QQuickTransition *transition);
+#endif
 
     QQmlComponent *highlight() const;
     void setHighlight(QQmlComponent *);
@@ -233,6 +237,7 @@ Q_SIGNALS:
     void headerItemChanged();
     void footerItemChanged();
 
+#if QT_CONFIG(quick_viewtransitions)
     void populateTransitionChanged();
     void addTransitionChanged();
     void addDisplacedTransitionChanged();
@@ -241,6 +246,7 @@ Q_SIGNALS:
     void removeTransitionChanged();
     void removeDisplacedTransitionChanged();
     void displacedTransitionChanged();
+#endif
 
     void highlightChanged();
     void highlightItemChanged();

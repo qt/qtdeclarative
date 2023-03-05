@@ -75,7 +75,9 @@ public:
     void layoutVisibleItems(int fromModelIndex = 0) override;
 
     bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView) override;
+#if QT_CONFIG(quick_viewtransitions)
     void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) override;
+#endif
 
     void updateSectionCriteria() override;
     void updateSections() override;
@@ -756,7 +758,9 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, incubationMode))))
             break;
         qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer << "item" << (QObject *)(item->item);
+#if QT_CONFIG(quick_viewtransitions)
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
+#endif
             item->setPosition(pos, true);
         if (item->item)
             QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
@@ -775,7 +779,9 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         qCDebug(lcItemViewDelegateLifecycle) << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos << "buffer" << doBuffer << "item" << (QObject *)(item->item);
         --visibleIndex;
         visiblePos -= item->size() + spacing;
+#if QT_CONFIG(quick_viewtransitions)
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
+#endif
             item->setPosition(visiblePos, true);
         if (item->item)
             QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
@@ -788,11 +794,14 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
 
 void QQuickListViewPrivate::removeItem(FxViewItem *item)
 {
+#if QT_CONFIG(quick_viewtransitions)
     if (item->transitionScheduledOrRunning()) {
         qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item" << item->index << (QObject *)(item->item);
         item->releaseAfterTransition = true;
         releasePendingTransition.append(item);
-    } else {
+    } else
+#endif
+    {
         qCDebug(lcItemViewDelegateLifecycle) << "\treleasing stationary item" << item->index << (QObject *)(item->item);
         releaseItem(item, reusableFlag);
     }
@@ -1590,8 +1599,10 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometry
             // position all subsequent items
             if (visibleItems.size() && item == visibleItems.constFirst()->item) {
                 FxListItemSG *listItem = static_cast<FxListItemSG*>(visibleItems.constFirst());
+#if QT_CONFIG(quick_viewtransitions)
                 if (listItem->transitionScheduledOrRunning())
                     return;
+#endif
                 if (orient == QQuickListView::Vertical) {
                     const qreal oldItemEndPosition = verticalLayoutDirection == QQuickItemView::BottomToTop ? -oldGeometry.y() : oldGeometry.y() + oldGeometry.height();
                     const qreal heightDiff = item->height() - oldGeometry.height();
@@ -3622,6 +3633,9 @@ void QQuickListViewPrivate::updateSectionCriteria()
 
 bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
+#if QT_CONFIG(quick_viewtransitions)
+    Q_UNUSED(movingIntoView)
+#endif
     int modelIndex = change.index;
     int count = change.count;
 
@@ -3664,10 +3678,12 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     for (FxViewItem *item : std::as_const(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
             item->index += count;
+#if QT_CONFIG(quick_viewtransitions)
             if (change.isMove())
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
             else
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
+#endif
         }
     }
 
@@ -3702,9 +3718,11 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
+#if QT_CONFIG(quick_viewtransitions)
                     if (transitioner)
                         item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                     else
+#endif
                         static_cast<FxListItemSG *>(item)->setPosition(pos, true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += item->size() + spacing;
@@ -3733,7 +3751,9 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             FxViewItem *item = nullptr;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(it.index))))
                 item->index = it.index;
+#if QT_CONFIG(quick_viewtransitions)
             bool newItem = !item;
+#endif
             it.removedAtIndex = false;
             if (!item)
                 item = createItem(it.index, QQmlIncubator::Synchronous);
@@ -3750,13 +3770,17 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (change.isMove()) {
                 // we know this is a move target, since move displaced items that are
                 // shuffled into view due to a move would be added in refill()
+#if QT_CONFIG(quick_viewtransitions)
                 if (newItem && transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true))
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
+#endif
             } else {
                 addedItems->append(item);
+#if QT_CONFIG(quick_viewtransitions)
                 if (transitioner)
                     item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 else
+#endif
                     static_cast<FxListItemSG *>(item)->setPosition(pos, true);
             }
             insertResult->sizeChangesAfterVisiblePos += item->size() + spacing;
@@ -3770,13 +3794,17 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             FxViewItem *item = visibleItems.at(index);
             if (prevItem->index != item->index - 1) {
                 int i = index;
+#if QT_CONFIG(quick_viewtransitions)
                 qreal prevPos = prevItem->position();
+#endif
                 while (i < visibleItems.size()) {
                     FxListItemSG *nvItem = static_cast<FxListItemSG *>(visibleItems.takeLast());
                     insertResult->sizeChangesAfterVisiblePos -= nvItem->size() + spacing;
                     addedItems->removeOne(nvItem);
+#if QT_CONFIG(quick_viewtransitions)
                     if (nvItem->transitionScheduledOrRunning())
                         nvItem->setPosition(prevPos + (nvItem->index - prevItem->index) * averageSize);
+#endif
                     removeItem(nvItem);
                 }
             }
@@ -3788,6 +3816,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     return visibleAffected;
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)
 {
     Q_UNUSED(insertionResult);
@@ -3821,6 +3850,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
         }
     }
 }
+#endif
 
 /*!
     \qmlmethod QtQuick::ListView::positionViewAtIndex(int index, PositionMode mode)

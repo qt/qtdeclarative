@@ -54,7 +54,10 @@ public:
 
     QQuickBasePositionerPrivate()
         : spacing(0), type(QQuickBasePositioner::None)
-        , transitioner(0), positioningDirty(false)
+#if QT_CONFIG(quick_viewtransitions)
+        , transitioner(0)
+#endif
+        , positioningDirty(false)
         , doingPositioning(false), anchorConflict(false), layoutDirection(Qt::LeftToRight)
 
     {
@@ -68,7 +71,9 @@ public:
     qreal spacing;
 
     QQuickBasePositioner::PositionerType type;
+#if QT_CONFIG(quick_viewtransitions)
     QQuickItemViewTransitioner *transitioner;
+#endif
 
     void watchChanges(QQuickItem *other);
     void unwatchChanges(QQuickItem* other);

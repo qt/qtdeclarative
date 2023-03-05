@@ -21,7 +21,9 @@ QT_REQUIRE_CONFIG(quick_itemview);
 
 #include "qquickitemview_p.h"
 #include "qquickitemviewfxitem_p_p.h"
+#if QT_CONFIG(quick_viewtransitions)
 #include "qquickitemviewtransition_p.h"
+#endif
 #include "qquickflickable_p_p.h"
 #include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
@@ -64,7 +66,12 @@ public:
 };
 
 
-class Q_QUICK_AUTOTEST_EXPORT QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemViewTransitionChangeListener, public QAnimationJobChangeListener
+class Q_QUICK_AUTOTEST_EXPORT QQuickItemViewPrivate
+        : public QQuickFlickablePrivate
+#if QT_CONFIG(quick_viewtransitions)
+        , public QQuickItemViewTransitionChangeListener
+#endif
+        , public QAnimationJobChangeListener
 {
 public:
     Q_DECLARE_PUBLIC(QQuickItemView)
@@ -166,11 +173,13 @@ public:
     void repositionFirstItem(FxViewItem *prevVisibleItemsFirst, qreal prevVisibleItemsFirstPos,
             FxViewItem *prevFirstVisible, ChangeResult *insertionResult, ChangeResult *removalResult);
 
+#if QT_CONFIG(quick_viewtransitions)
     void createTransitioner();
     void prepareVisibleItemTransitions();
     void prepareRemoveTransitions(QMultiHash<QQmlChangeSet::MoveKey, FxViewItem *> *removedItems);
     bool prepareNonVisibleItemTransition(FxViewItem *item, const QRectF &viewBounds);
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
+#endif
 
     int findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Change> &changes) const;
 
@@ -187,7 +196,10 @@ public:
     bool hasPendingChanges() const {
         return currentChanges.hasPendingChanges()
                 || bufferedChanges.hasPendingChanges()
-                ||runDelayedRemoveTransition;
+#if QT_CONFIG(quick_viewtransitions)
+                ||runDelayedRemoveTransition
+#endif
+                ;
     }
 
     void refillOrLayout() {
@@ -266,8 +278,10 @@ public:
         MovedItem(FxViewItem *i, QQmlChangeSet::MoveKey k)
             : item(i), moveKey(k) {}
     };
+#if QT_CONFIG(quick_viewtransitions)
     QQuickItemViewTransitioner *transitioner;
     QVector<FxViewItem *> releasePendingTransition;
+#endif
 
     mutable qreal minExtent;
     mutable qreal maxExtent;
@@ -286,7 +300,9 @@ public:
     bool highlightRangeEndValid : 1;
     bool fillCacheBuffer : 1;
     bool inRequest : 1;
+#if QT_CONFIG(quick_viewtransitions)
     bool runDelayedRemoveTransition : 1;
+#endif
     bool delegateValidated : 1;
     bool isClearing : 1;
 
@@ -333,7 +349,9 @@ protected:
                 QList<FxViewItem *> *newItems, QList<MovedItem> *movingIntoView) = 0;
 
     virtual bool needsRefillForAddedOrRemovedIndex(int) const { return false; }
+#if QT_CONFIG(quick_viewtransitions)
     virtual void translateAndTransitionItemsAfter(int afterIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) = 0;
+#endif
 
     virtual void initializeViewItem(FxViewItem *) {}
     virtual void initializeCurrentItem() {}

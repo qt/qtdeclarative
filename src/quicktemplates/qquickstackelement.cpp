@@ -15,6 +15,7 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_CONFIG(quick_viewtransitions)
 static QQuickStackViewAttached *attachedStackObject(QQuickStackElement *element)
 {
     QQuickStackViewAttached *attached = qobject_cast<QQuickStackViewAttached *>(qmlAttachedPropertiesObject<QQuickStackView>(element->item, false));
@@ -22,6 +23,7 @@ static QQuickStackViewAttached *attachedStackObject(QQuickStackElement *element)
         QQuickStackViewAttachedPrivate::get(attached)->element = element;
     return attached;
 }
+#endif
 
 class QQuickStackIncubator : public QQmlIncubator
 {
@@ -44,18 +46,23 @@ private:
 };
 
 QQuickStackElement::QQuickStackElement()
+#if QT_CONFIG(quick_viewtransitions)
     : QQuickItemViewTransitionableItem(nullptr)
+#endif
 {
 }
 
 QQuickStackElement::~QQuickStackElement()
 {
+#if QT_CONFIG(quick_viewtransitions)
     if (item)
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
+#endif
 
     if (ownComponent)
         delete component;
 
+#if QT_CONFIG(quick_viewtransitions)
     QQuickStackViewAttached *attached = attachedStackObject(this);
     if (item) {
         if (ownItem) {
@@ -79,6 +86,7 @@ QQuickStackElement::~QQuickStackElement()
 
     if (attached)
         emit attached->removed();
+#endif
 }
 
 QQuickStackElement *QQuickStackElement::fromString(const QString &str, QQuickStackView *view, QString *error)
@@ -110,9 +118,11 @@ QQuickStackElement *QQuickStackElement::fromObject(QObject *object, QQuickStackV
 
     QQuickStackElement *element = new QQuickStackElement;
     element->component = qobject_cast<QQmlComponent *>(object);
+#if QT_CONFIG(quick_viewtransitions)
     element->item = qobject_cast<QQuickItem *>(object);
     if (element->item)
         element->originalParent = element->item->parentItem();
+#endif
     return element;
 }
 
@@ -202,9 +212,11 @@ void QQuickStackElement::setIndex(int value)
         return;
 
     index = value;
+#if QT_CONFIG(quick_viewtransitions)
     QQuickStackViewAttached *attached = attachedStackObject(this);
     if (attached)
         emit attached->indexChanged();
+#endif
 }
 
 void QQuickStackElement::setView(QQuickStackView *value)
@@ -213,9 +225,11 @@ void QQuickStackElement::setView(QQuickStackView *value)
         return;
 
     view = value;
+#if QT_CONFIG(quick_viewtransitions)
     QQuickStackViewAttached *attached = attachedStackObject(this);
     if (attached)
         emit attached->viewChanged();
+#endif
 }
 
 void QQuickStackElement::setStatus(QQuickStackView::Status value)
@@ -224,6 +238,7 @@ void QQuickStackElement::setStatus(QQuickStackView::Status value)
         return;
 
     status = value;
+#if QT_CONFIG(quick_viewtransitions)
     QQuickStackViewAttached *attached = attachedStackObject(this);
     if (!attached)
         return;
@@ -247,17 +262,25 @@ void QQuickStackElement::setStatus(QQuickStackView::Status value)
     }
 
     emit attached->statusChanged();
+#endif
 }
 
 void QQuickStackElement::setVisible(bool visible)
 {
+#if QT_CONFIG(quick_viewtransitions)
     QQuickStackViewAttached *attached = attachedStackObject(this);
-    if (!item || (attached && QQuickStackViewAttachedPrivate::get(attached)->explicitVisible))
+#endif
+    if (!item
+#if QT_CONFIG(quick_viewtransitions)
+            || (attached && QQuickStackViewAttachedPrivate::get(attached)->explicitVisible)
+#endif
+            )
         return;
 
     item->setVisible(visible);
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 void QQuickStackElement::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)
 {
     if (transitioner)
@@ -294,10 +317,13 @@ void QQuickStackElement::completeTransition(QQuickTransition *quickTransition)
 {
     QQuickItemViewTransitionableItem::completeTransition(quickTransition);
 }
+#endif
 
 void QQuickStackElement::itemDestroyed(QQuickItem *)
 {
+#if QT_CONFIG(quick_viewtransitions)
     item = nullptr;
+#endif
 }
 
 QT_END_NAMESPACE

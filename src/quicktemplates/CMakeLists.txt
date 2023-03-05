@@ -94,8 +94,6 @@ qt_internal_add_qml_module(QuickTemplates2
         qquicksplitview.cpp qquicksplitview_p.h
         qquickstackelement.cpp
         qquickstackelement_p_p.h
-        qquickstacktransition.cpp
-        qquickstacktransition_p_p.h
         qquickstackview.cpp qquickstackview_p.cpp qquickstackview_p.h
         qquickstackview_p_p.h
         qquickswipe_p.h
@@ -180,6 +178,12 @@ qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quicktemplates2_c
         qquickmonthmodel.cpp qquickmonthmodel_p.h
         qquickweeknumbercolumn.cpp qquickweeknumbercolumn_p.h
         qquickweeknumbermodel.cpp qquickweeknumbermodel_p.h
+)
+
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_viewtransitions
+    SOURCES
+        qquickstacktransition.cpp
+        qquickstacktransition_p_p.h
 )
 
 qt_internal_extend_Target(qtquicktemplates2plugin

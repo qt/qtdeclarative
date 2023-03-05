@@ -162,7 +162,9 @@ public:
     void setPosition(qreal pos) override;
     void layoutVisibleItems(int fromModelIndex = 0) override;
     bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView) override;
+#if QT_CONFIG(quick_viewtransitions)
     void translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) override;
+#endif
     bool needsRefillForAddedOrRemovedIndex(int index) const override;
 
     qreal headerSize() const override;
@@ -503,8 +505,10 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << colPos << rowPos;
         if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, incubationMode))))
             break;
+#if QT_CONFIG(quick_viewtransitions)
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos, true);
+#endif
         QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.append(item);
         if (++colNum >= columns) {
@@ -538,8 +542,10 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, incubationMode))))
             break;
         --visibleIndex;
+#if QT_CONFIG(quick_viewtransitions)
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos, true);
+#endif
         QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.prepend(item);
         if (--colNum < 0) {
@@ -555,11 +561,14 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
 
 void QQuickGridViewPrivate::removeItem(FxViewItem *item)
 {
+#if QT_CONFIG(quick_viewtransitions)
     if (item->transitionScheduledOrRunning()) {
         qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item:" << item->index << item->item->objectName();
         item->releaseAfterTransition = true;
         releasePendingTransition.append(item);
-    } else {
+    } else
+#endif
+    {
         releaseItem(item, QQmlDelegateModel::NotReusable);
     }
 }
@@ -883,7 +892,11 @@ void QQuickGridViewPrivate::initializeCurrentItem()
         FxViewItem *actualItem = visibleItem(currentIndex);
 
         // don't reposition the item if it's about to be transitioned to another position
-        if ((!actualItem || !actualItem->transitionScheduledOrRunning()))
+        if ((!actualItem
+#if QT_CONFIG(quick_viewtransitions)
+             || !actualItem->transitionScheduledOrRunning()
+#endif
+             ))
             gridItem->setPosition(colPosAt(currentIndex), rowPosAt(currentIndex));
     }
 }
@@ -2404,6 +2417,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         }
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     // Update the indexes of the following visible items.
     for (FxViewItem *item : std::as_const(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
@@ -2414,6 +2428,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
         }
     }
+#endif
 
     int prevVisibleCount = visibleItems.size();
     if (insertResult->visiblePos.isValid() && rowPos < insertResult->visiblePos) {
@@ -2443,9 +2458,11 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
+#if QT_CONFIG(quick_viewtransitions)
                     if (transitioner)
                         item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                     else
+#endif
                         item->moveTo(QPointF(colPos, rowPos), true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += rowSize();
@@ -2497,13 +2514,19 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (change.isMove()) {
                 // we know this is a move target, since move displaced items that are
                 // shuffled into view due to a move would be added in refill()
-                if (newItem && transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true))
+                if (newItem
+#if QT_CONFIG(quick_viewtransitions)
+                        && transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true)
+#endif
+                        )
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);
+#if QT_CONFIG(quick_viewtransitions)
                 if (transitioner)
                     item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 else
+#endif
                     item->moveTo(QPointF(colPos, rowPos), true);
             }
             insertResult->sizeChangesAfterVisiblePos += rowSize();
@@ -2523,6 +2546,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     return visibleItems.size() > prevVisibleCount;
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)
 {
     if (!transitioner)
@@ -2562,6 +2586,7 @@ void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
         }
     }
 }
+#endif
 
 bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) const
 {
