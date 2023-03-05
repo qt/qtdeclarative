@@ -4,7 +4,9 @@
 #include "qquickstackview_p.h"
 #include "qquickstackview_p_p.h"
 #include "qquickstackelement_p_p.h"
+#if QT_CONFIG(quick_viewtransitions)
 #include "qquickstacktransition_p_p.h"
+#endif
 
 #include <QtCore/qscopedvaluerollback.h>
 #include <QtQml/qjsvalue.h>
@@ -354,10 +356,12 @@ QQuickStackView::QQuickStackView(QQuickItem *parent)
 QQuickStackView::~QQuickStackView()
 {
     Q_D(QQuickStackView);
+#if QT_CONFIG(quick_viewtransitions)
     if (d->transitioner) {
         d->transitioner->setChangeListener(nullptr);
         delete d->transitioner;
     }
+#endif
     qDeleteAll(d->removing);
     qDeleteAll(d->removed);
     qDeleteAll(d->elements);
@@ -543,10 +547,12 @@ void QQuickStackView::push(QQmlV4Function *args)
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
 
+#if QT_CONFIG(quick_viewtransitions)
     Operation operation = d->elements.isEmpty() ? Immediate : PushTransition;
     QV4::ScopedValue lastArg(scope, (*args)[args->length() - 1]);
     if (lastArg->isInt32())
         operation = static_cast<Operation>(lastArg->toInt32());
+#endif
 
     QStringList errors;
     QList<QQuickStackElement *> elements = d->parseElements(0, args, &errors);
@@ -570,17 +576,21 @@ void QQuickStackView::push(QQmlV4Function *args)
         return;
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     QQuickStackElement *exit = nullptr;
     if (!d->elements.isEmpty())
         exit = d->elements.top();
+#endif
 
     int oldDepth = d->elements.size();
     if (d->pushElements(elements)) {
         d->depthChange(d->elements.size(), oldDepth);
         QQuickStackElement *enter = d->elements.top();
+#if QT_CONFIG(quick_viewtransitions)
         d->startTransition(QQuickStackTransition::pushEnter(operation, enter, this),
                            QQuickStackTransition::pushExit(operation, exit, this),
                            operation == Immediate);
+#endif
         d->setCurrentItem(enter);
     }
 
@@ -671,12 +681,14 @@ void QQuickStackView::pop(QQmlV4Function *args)
         }
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     Operation operation = PopTransition;
     if (argc > 0) {
         QV4::ScopedValue lastArg(scope, (*args)[argc - 1]);
         if (lastArg->isInt32())
             operation = static_cast<Operation>(lastArg->toInt32());
     }
+#endif
 
     QQuickItem *previousItem = nullptr;
 
@@ -687,9 +699,11 @@ void QQuickStackView::pop(QQmlV4Function *args)
             previousItem = exit->item;
         }
         d->depthChange(d->elements.size(), oldDepth);
+#if QT_CONFIG(quick_viewtransitions)
         d->startTransition(QQuickStackTransition::popExit(operation, exit, this),
                            QQuickStackTransition::popEnter(operation, enter, this),
                            operation == Immediate);
+#endif
         d->setCurrentItem(enter);
     }
 
@@ -812,10 +826,12 @@ void QQuickStackView::replace(QQmlV4Function *args)
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
 
+#if QT_CONFIG(quick_viewtransitions)
     Operation operation = d->elements.isEmpty() ? Immediate : ReplaceTransition;
     QV4::ScopedValue lastArg(scope, (*args)[args->length() - 1]);
     if (lastArg->isInt32())
         operation = static_cast<Operation>(lastArg->toInt32());
+#endif
 
     QQuickStackElement *target = nullptr;
     QV4::ScopedValue firstArg(scope, (*args)[0]);
@@ -849,9 +865,11 @@ void QQuickStackView::replace(QQmlV4Function *args)
             d->removing.insert(exit);
         }
         QQuickStackElement *enter = d->elements.top();
+#if QT_CONFIG(quick_viewtransitions)
         d->startTransition(QQuickStackTransition::replaceExit(operation, exit, this),
                            QQuickStackTransition::replaceEnter(operation, enter, this),
                            operation == Immediate);
+#endif
         d->setCurrentItem(enter);
     }
 
@@ -894,6 +912,9 @@ bool QQuickStackView::isEmpty() const
 */
 void QQuickStackView::clear(Operation operation)
 {
+#if !QT_CONFIG(quick_viewtransitions)
+    Q_UNUSED(operation)
+#endif
     Q_D(QQuickStackView);
     if (d->elements.isEmpty())
         return;
@@ -906,6 +927,7 @@ void QQuickStackView::clear(Operation operation)
 
     QScopedValueRollback<bool> modifyingElements(d->modifyingElements, true);
     QScopedValueRollback<QString> operationNameRollback(d->operation, operationName);
+#if QT_CONFIG(quick_viewtransitions)
     if (operation != Immediate) {
         QQuickStackElement *exit = d->elements.pop();
         exit->removal = true;
@@ -913,6 +935,7 @@ void QQuickStackView::clear(Operation operation)
         d->startTransition(QQuickStackTransition::popExit(operation, exit, this),
                            QQuickStackTransition::popEnter(operation, nullptr, this), false);
     }
+#endif
 
     int oldDepth = d->elements.size();
     d->setCurrentItem(nullptr);
@@ -945,6 +968,7 @@ void QQuickStackView::setInitialItem(const QJSValue &item)
     d->initialItem = item;
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 /*!
     \qmlproperty Transition QtQuick.Controls::StackView::popEnter
 
@@ -1106,6 +1130,7 @@ void QQuickStackView::setReplaceExit(QQuickTransition *exit)
     d->transitioner->moveDisplacedTransition = exit;
     emit replaceExitChanged();
 }
+#endif
 
 void QQuickStackView::componentComplete()
 {
