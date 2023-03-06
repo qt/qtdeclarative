@@ -61,8 +61,10 @@ shader effects.
            {States, Transitions And Animations}
     \li \l {Important Concepts In Qt Quick - Data - Models, Views and data Storage}
            {Data - Models, Views and Data Storage}
-    \li \l {Important Concepts In Qt Quick - Graphical Effects}{Particles And
-           Graphical Effects}
+    \li \list \l {Important Concepts In Qt Quick - Graphical Effects}
+           {Particles And Graphical Effects}
+       \li \l MultiEffect
+    \endlist
     \li \l {Important Concepts In Qt Quick - Convenience Types}
            {Convenience Types}
 \endlist

@@ -17,11 +17,11 @@ import QtQuick
 \endqml
 
 Visit the \l {Qt Quick} module documentation for more
-information about the concepts which are central to \c QtQuick.
+information about the concepts that are central to \c QtQuick.
 
 \section1 Submodules
 
-    Qt Quick includes several submodules which contain additional types.
+    Qt Quick includes several submodules that contain additional types:
 
     \list
     \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
@@ -33,6 +33,8 @@ information about the concepts which are central to \c QtQuick.
     \li \l{Qt Quick Layouts QML Types}{Layouts} - contains types that are used
     to arrange items in the user interface
     \li \l{Qt Quick Test QML Types}{Tests} - types for testing QML applications.
+    \li \l{Qt Quick Effects QML Types}{Effects} - provides types for applying
+    one or more simple graphical effects to Qt Quick items.
     \endlist
 
 \target value-types
