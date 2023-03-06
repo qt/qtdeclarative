@@ -313,6 +313,9 @@ private slots:
     void garbageCollectedObjectMethodBase();
 
     void optionalChainWithElementLookup();
+
+    void deleteDefineCycle();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6327,6 +6330,25 @@ void tst_QJSEngine::optionalChainWithElementLookup()
     QVERIFY(engine.hasError());
     QCOMPARE(engine.catchError().toString(), "TypeError: Cannot read property 'en' of undefined");
     QVERIFY(!engine.hasError());
+}
+
+void tst_QJSEngine::deleteDefineCycle()
+{
+  QJSEngine engine;
+  QStringList stackTrace;
+
+  QJSValue result = engine.evaluate(QString::fromLatin1(R"(
+  let global = ({})
+
+  for (let j = 0; j < 1000; j++) {
+    for (let i = 0; i < 2; i++) {
+      const name = "test" + i
+      delete global[name]
+      Object.defineProperty(global, name, { get() { return 0 }, configurable: true })
+    }
+  }
+  )"), {}, 1, &stackTrace);
+  QVERIFY(stackTrace.isEmpty());
 }
 
 QTEST_MAIN(tst_QJSEngine)
