@@ -108,6 +108,7 @@ private slots:
     void statusChangeOnlyEmittedOnce();
 
     void setSourceAndCheckStatus();
+    void loadComponentWithStates();
     void asyncLoaderRace();
     void noEngine();
 
@@ -1491,6 +1492,26 @@ void tst_QQuickLoader::setSourceAndCheckStatus()
 
     QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant()));
     QCOMPARE(loader->status(), QQuickLoader::Null);
+}
+
+void tst_QQuickLoader::loadComponentWithStates()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray("import QtQuick\n"
+                                 "Loader {\n"
+                                     "id: loader\n"
+                                     "property int createdObjCount: 0\n"
+                                     "states: [ State { when: true; PropertyChanges { target: loader; sourceComponent: myComp } } ]\n"
+                                     "Component { id: myComp; Item { Component.onCompleted: { ++createdObjCount } } }\n"
+                                 "}" )
+            , dataDirectoryUrl());
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    QTest::qWait(200);
+    QTRY_VERIFY(loader != nullptr);
+    QVERIFY(loader->item());
+    QCOMPARE(static_cast<QQuickItem*>(loader.data())->childItems().size(), 1);
+    QCOMPARE(loader->property("createdObjCount").toInt(), 1);
 }
 
 void tst_QQuickLoader::asyncLoaderRace()
