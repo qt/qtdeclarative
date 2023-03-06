@@ -41,8 +41,11 @@ void Object::setInternalClass(Heap::InternalClass *ic)
         // Pick the members of the old IC that are still valid in the new IC.
         // Order them by index in memberData (or inline data).
         Scoped<MemberData> newMembers(scope, MemberData::allocate(scope.engine, ic->size));
-        for (uint i = 0; i < ic->size; ++i)
-            newMembers->set(scope.engine, i, get(ic->nameMap.at(i)));
+        for (uint i = 0; i < ic->size; ++i) {
+            // Note that some members might have been deleted. The key may be invalid.
+            const PropertyKey key = ic->nameMap.at(i);
+            newMembers->set(scope.engine, i, key.isValid() ? get(key) : Encode::undefined());
+        }
 
         p->internalClass.set(scope.engine, ic);
         const uint nInline = p->vtable()->nInlineProperties;
