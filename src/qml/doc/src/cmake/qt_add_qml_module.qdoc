@@ -38,6 +38,7 @@ qt_add_qml_module(
     [DESIGNER_SUPPORTED]
     [FOLLOW_FOREIGN_VERSIONING]
     [NAMESPACE namespace]
+    [NO_PLUGIN]
     [NO_PLUGIN_OPTIONAL]
     [NO_CREATE_PLUGIN_TARGET]
     [NO_GENERATE_PLUGIN_SOURCE]
@@ -578,7 +579,21 @@ plugin class, the \c NO_GENERATE_PLUGIN_SOURCE option should be given. Where no
 \c CLASS_NAME is provided, it defaults to the \c URI with dots replaced by
 underscores, then \c Plugin appended. Unless the QML module has no plugin, the
 class name will be recorded as a \c classname line in the generated
-\l{Module Definition qmldir Files}{qmldir} file.
+\l{Module Definition qmldir Files}{qmldir} file. You need to add any C++ files
+with custom plugin code to the plugin target. Since the plugin then likely
+contains functionality that goes beyond simply loading the backing library, you
+will probably want to add \l{NO_PLUGIN_OPTIONAL}, too. Otherwise the QML engine
+may skip loading the plugin if it detects that the backing library is already
+linked.
+
+\target NO_PLUGIN
+If the \c NO_PLUGIN keyword is given, then no plugin will be built. This
+keyword is thus incompatible with all the options that customize the plugin
+target, in particular \l{NO_GENERATE_PLUGIN_SOURCE}, \l{NO_PLUGIN_OPTIONAL},
+\l{PLUGIN_TARGET}, \l{NO_CREATE_PLUGIN_TARGET}, and \l{CLASS_NAME}. If you do
+not provide a plugin for your module, it will only be fully usable if its
+backing library has been linked into the executable. It is generally hard to
+guarantee that a linker preserves the linkage to a library it considers unused.
 
 \target NO_PLUGIN_OPTIONAL
 If the \c NO_PLUGIN_OPTIONAL keyword is given, then the plugin is recorded in
