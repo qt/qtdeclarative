@@ -9,11 +9,19 @@
 #include <QtCore/QRegularExpression>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtQmlDom/private/qqmldomscriptelements_p.h>
+#include <QtQmlDom/private/qqmldom_utils_p.h>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <variant>
 
 QT_USE_NAMESPACE
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
+
+Q_LOGGING_CATEGORY(QQmlLSUtilsLog, "qt.languageserver.utils")
 
 /*!
    \internal
@@ -37,6 +45,29 @@ QByteArray QQmlLSUtils::lspUriToQmlUrl(const QByteArray &uri)
 QByteArray QQmlLSUtils::qmlUrlToLspUri(const QByteArray &url)
 {
     return url;
+}
+
+/*!
+   \internal
+   \brief Converts a QQmlJS::SourceLocation to a LSP Range.
+
+   QQmlJS::SourceLocation starts counting lines and rows at 1, but the LSP Range starts at 0.
+   Also, the QQmlJS::SourceLocation contains startLine, startColumn and length while the LSP Range
+   contains startLine, startColumn, endLine and endColumn, which must be computed from the actual
+   qml code.
+ */
+QLspSpecification::Range QQmlLSUtils::qmlLocationToLspLocation(const QString &code,
+                                                               QQmlJS::SourceLocation qmlLocation)
+{
+    Range range;
+
+    range.start.line = qmlLocation.startLine - 1;
+    range.start.character = qmlLocation.startColumn - 1;
+
+    auto end = QQmlLSUtils::textRowAndColumnFrom(code, qmlLocation.end());
+    range.end.line = end.line;
+    range.end.character = end.character;
+    return range;
 }
 
 /*!
@@ -153,6 +184,9 @@ QList<QQmlLSUtilsItemLocation> QQmlLSUtils::itemsFromTextLocation(DomItem file, 
             if (containsTarget(subLoc->info().fullRegion)) {
                 QQmlLSUtilsItemLocation subItem;
                 subItem.domItem = iLoc.domItem.path(it.key());
+                Q_ASSERT_X(subItem.domItem, "QQmlLSUtils::itemsFromTextLocation",
+                           "A DomItem child is missing or the FileLocationsTree structure does not "
+                           "follow the DomItem Structure.");
                 subItem.fileLocation = subLoc;
                 toDo.append(subItem);
                 inParentButOutsideChildren = false;
@@ -281,6 +315,78 @@ DomItem QQmlLSUtils::findTypeDefinitionOf(DomItem object)
         qDebug() << "Found unimplemented Type" << object.internalKindStr() << "in"
                  << object.toString();
         result = {};
+    }
+
+    return result;
+}
+
+QList<QQmlLSUtilsLocation> QQmlLSUtils::findUsagesOf(DomItem item)
+{
+    QList<QQmlLSUtilsLocation> result;
+
+    QString name;
+
+    switch (item.internalKind()) {
+    case DomType::ScriptIdentifierExpression:
+    case DomType::ScriptVariableDeclarationEntry:
+        name = item.field(Fields::identifier).value().toString();
+        break;
+    default:
+        qDebug() << item.internalKindStr() << "was not implemented for QQmlLSUtils::findUsagesOf";
+        return result;
+    }
+
+    qCDebug(QQmlLSUtilsLog) << "Looking for JS identifier with name" << name;
+
+    DomItem definitionOfItem;
+
+    item.visitUp([&name, &definitionOfItem](DomItem &i) {
+        if (std::optional<QQmlJSScope::Ptr> scope = i.semanticScope(); scope) {
+            qCDebug(QQmlLSUtilsLog) << "Searching for definition in" << i.internalKindStr();
+            if (auto jsIdentifier = scope.value()->JSIdentifier(name)) {
+                qCDebug(QQmlLSUtilsLog) << "Found scope" << scope.value()->baseTypeName();
+                definitionOfItem = i;
+                return false;
+            }
+        } else {
+            qCDebug(QQmlLSUtilsLog)
+                    << "Searching for definition in" << i.internalKindStr() << "that has no scope";
+        }
+        return true;
+    });
+
+    definitionOfItem.visitTree(
+            Path(), emptyChildrenVisitor, VisitOption::VisitAdopted | VisitOption::Recurse,
+            [&name, &result](Path, DomItem &item, bool) -> bool {
+                qCDebug(QQmlLSUtilsLog) << "Visiting a " << item.internalKindStr();
+                if (item.internalKind() == DomType::ScriptIdentifierExpression
+                    && item.field(Fields::identifier).value().toString() == name) {
+                    // add this usage
+                    auto fileLocation = FileLocations::treeOf(item);
+                    if (!fileLocation) {
+                        qCWarning(QQmlLSUtilsLog) << "Failed finding filelocation of found usage";
+                        return true;
+                    }
+                    const QQmlJS::SourceLocation location = fileLocation->info().fullRegion;
+                    const QString fileName = item.canonicalFilePath();
+                    result.append({ fileName, location });
+                    return true;
+                } else if (std::optional<QQmlJSScope::Ptr> scope = item.semanticScope();
+                           scope && scope.value()->JSIdentifier(name)) {
+                    // current JS identifier has been redefined, do not visit children
+                    return false;
+                }
+                return true;
+            });
+
+    std::sort(result.begin(), result.end());
+
+    if (QQmlLSUtilsLog().isDebugEnabled()) {
+        qCDebug(QQmlLSUtilsLog) << "Found following usages:";
+        for (auto r : result) {
+            qCDebug(QQmlLSUtilsLog)
+                    << r.filename << " @ " << r.location.startLine << ":" << r.location.startColumn;
+        }
     }
 
     return result;

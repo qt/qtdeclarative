@@ -190,6 +190,8 @@ public:
     // minimal required overload for this to be wrapped as DomItem:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
 
+    QCborValue value() const override { return QCborValue(m_name); }
+
 private:
     QString m_name;
 };
@@ -321,8 +323,8 @@ public:
     ScopeType scopeType() const { return m_scopeType; }
     void setScopeType(ScopeType scopeType) { m_scopeType = scopeType; }
 
-    QString identifier() const { return m_identifier; }
-    void setIdentifier(const QString &identifier) { m_identifier = identifier; }
+    ScriptElementVariant identifier() const { return m_identifier; }
+    void setIdentifier(const ScriptElementVariant &identifier) { m_identifier = identifier; }
 
     ScriptElementVariant initializer() const { return m_initializer; }
     void setInitializer(const ScriptElementVariant &initializer) { m_initializer = initializer; }
@@ -333,7 +335,7 @@ public:
 
 private:
     ScopeType m_scopeType;
-    QString m_identifier;
+    ScriptElementVariant m_identifier;
     ScriptElementVariant m_initializer;
 };
 

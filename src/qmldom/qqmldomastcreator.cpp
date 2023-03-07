@@ -1296,7 +1296,12 @@ void QQmlDomAstCreator::endVisit(AST::PatternElement *pe)
             Q_UNREACHABLE();
         }
         variableDeclaration->setScopeType(scopeType);
-        variableDeclaration->setIdentifier(pe->bindingIdentifier.toString());
+
+        auto identifier =
+                std::make_shared<ScriptElements::IdentifierExpression>(pe->identifierToken);
+        identifier->setName(pe->bindingIdentifier.toString());
+        variableDeclaration->setIdentifier(ScriptElementVariant::fromElement(identifier));
+
         if (pe->initializer) {
             Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
             variableDeclaration->setInitializer(scriptNodeStack.takeLast().takeVariant());

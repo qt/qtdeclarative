@@ -57,6 +57,7 @@ struct QQmlBaseModule : public QLanguageServerModule
     decltype(auto) getRequestHandler();
     // processes a request in a different thread.
     virtual void process(RequestPointerArgument toBeProcessed) = 0;
+    std::optional<QList<QQmlLSUtilsItemLocation>> itemsForRequest(const RequestPointer &request);
 
 public Q_SLOTS:
     void updatedSnapshot(const QByteArray &uri);
@@ -152,6 +153,34 @@ void QQmlBaseModule<RequestType>::updatedSnapshot(const QByteArray &url)
     for (auto it = toCompl.rbegin(), end = toCompl.rend(); it != end; ++it) {
         process(std::move(*it));
     }
+}
+
+template<typename RequestType>
+std::optional<QList<QQmlLSUtilsItemLocation>>
+QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
+{
+
+    QmlLsp::OpenDocument doc = m_codeModel->openDocumentByUrl(
+            QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
+
+    QQmlJS::Dom::DomItem file = doc.snapshot.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
+    // clear reference cache to resolve latest versions (use a local env instead?)
+    if (auto envPtr = file.environment().ownerAs<QQmlJS::Dom::DomEnvironment>())
+        envPtr->clearReferenceCache();
+    if (!file) {
+        qWarning() << u"Could not find file in Dom Environment from Codemodel :"_s
+                   << doc.snapshot.doc.toString();
+        return {};
+    }
+
+    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, request->m_parameters.position.line,
+                                                         request->m_parameters.position.character);
+
+    if (itemsFound.isEmpty()) {
+        qWarning() << u"Could not find any items at given text location."_s;
+        return {};
+    }
+    return itemsFound;
 }
 
 #endif // QQMLBASEMODULE_P_H

@@ -44,6 +44,8 @@ private slots:
     void cleanupTestCase();
     void goToTypeDefinition_data();
     void goToTypeDefinition();
+    void findUsages_data();
+    void findUsages();
 
 private:
     QProcess m_server;

@@ -19,6 +19,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmlbasemodule_p.h
         qqmlgototypedefinitionsupport_p.h qqmlgototypedefinitionsupport.cpp
         qqmllsutils_p.h qqmllsutils.cpp
+        qqmlfindusagessupport_p.h qqmlfindusagessupport.cpp
 
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate

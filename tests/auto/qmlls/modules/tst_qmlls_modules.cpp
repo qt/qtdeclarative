@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "tst_qmlls_modules.h"
+#include "QtQmlLS/private/qqmllsutils_p.h"
 
 // Check if QTest already has a QTEST_CHECKED macro
 #ifndef QTEST_CHECKED
@@ -17,6 +18,7 @@ QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
 
+static constexpr bool enable_debug_output = true;
 
 tst_qmlls_modules::tst_qmlls_modules()
     : QQmlDataTest(QT_QMLTEST_DATADIR),
@@ -79,9 +81,8 @@ void tst_qmlls_modules::initTestCase()
     QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
 
     for (const QString &filePath :
-         QStringList({ u"completions/Yyy.qml"_s,
-                     u"completions/fromBuildDir.qml"_s,
-                     u"completions/SomeBase.qml"_s })) {
+         QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s,
+                       u"completions/SomeBase.qml"_s, u"findUsages/jsIdentifierUsages.qml"_s })) {
         QFile file(testFile(filePath));
         QVERIFY(file.open(QIODevice::ReadOnly));
         DidOpenTextDocumentParams oParams;
@@ -495,6 +496,8 @@ void tst_qmlls_modules::goToTypeDefinition()
     QFETCH(int, expectedEndLine);
     QFETCH(int, expectedEndCharacter);
 
+    QVERIFY(uri.startsWith("file://"_ba));
+
     // TODO
     TypeDefinitionParams params;
     params.position.line = line;
@@ -527,6 +530,132 @@ void tst_qmlls_modules::goToTypeDefinition()
                 QVERIFY2(false, "error computing the completion");
             });
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+}
+
+// startLine and startCharacter start at 1, not 0
+static QLspSpecification::Location locationFrom(const QByteArray fileName, const QString &code,
+                                                quint32 startLine, quint32 startCharacter,
+                                                quint32 length)
+{
+    QLspSpecification::Location location;
+    location.uri = QQmlLSUtils::qmlUrlToLspUri(fileName);
+    // the LSP works with lines and characters starting at 0
+    location.range.start.line = startLine - 1;
+    location.range.start.character = startCharacter - 1;
+
+    quint32 startOffset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+    auto end = QQmlLSUtils::textRowAndColumnFrom(code, startOffset + length);
+    location.range.end.line = end.line;
+    location.range.end.character = end.character;
+
+    return location;
+}
+
+void tst_qmlls_modules::findUsages_data()
+{
+    QTest::addColumn<QByteArray>("uri");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QList<QLspSpecification::Location>>("expectedUsages");
+
+    QByteArray jsIdentifierUsagesUri = testFileUrl("findUsages/jsIdentifierUsages.qml").toEncoded();
+
+    QString jsIdentifierUsagesContent;
+    {
+        QFile file(testFile("findUsages/jsIdentifierUsages.qml").toUtf8());
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        jsIdentifierUsagesContent = QString::fromUtf8(file.readAll());
+    }
+
+    // line and character start at 1!
+    const QList<QLspSpecification::Location> sumUsages = {
+        locationFrom(jsIdentifierUsagesUri, jsIdentifierUsagesContent, 8, 13, strlen("sum")),
+        locationFrom(jsIdentifierUsagesUri, jsIdentifierUsagesContent, 10, 13, strlen("sum")),
+        locationFrom(jsIdentifierUsagesUri, jsIdentifierUsagesContent, 10, 19, strlen("sum")),
+    };
+    QVERIFY(sumUsages.front().uri.startsWith("file://"_ba));
+
+    // line and character start at 1!
+    QTest::addRow("sumUsagesFromUsage") << jsIdentifierUsagesUri << 10 << 14 << sumUsages;
+    QTest::addRow("sumUsagesFromUsage2") << jsIdentifierUsagesUri << 10 << 20 << sumUsages;
+    QTest::addRow("sumUsagesFromDefinition") << jsIdentifierUsagesUri << 8 << 14 << sumUsages;
+}
+
+static bool operator==(const QLspSpecification::Location &a, const QLspSpecification::Location &b)
+{
+    return std::tie(a.uri, a.range.start.character, a.range.start.line, a.range.end.character,
+                    a.range.end.line)
+            == std::tie(b.uri, b.range.start.character, b.range.start.line, b.range.end.character,
+                        b.range.end.line);
+}
+
+static bool locationListsAreEqual(const QList<QLspSpecification::Location> &a,
+                                  const QList<QLspSpecification::Location> &b)
+{
+    return std::equal(
+            a.cbegin(), a.cend(), b.cbegin(), b.cend(),
+            [](const QLspSpecification::Location &a, const QLspSpecification::Location &b) {
+                return a == b; // as else std::equal will not find the above implementation of
+                               // operator==
+            });
+}
+
+static QString locationToString(const QLspSpecification::Location &l)
+{
+    QString s = u"%1: (%2, %3) - (%4, %5)"_s.arg(l.uri)
+                        .arg(l.range.start.line)
+                        .arg(l.range.start.character)
+                        .arg(l.range.end.line)
+                        .arg(l.range.end.character);
+    return s;
+}
+
+void tst_qmlls_modules::findUsages()
+{
+    QFETCH(QByteArray, uri);
+    // line and character start at 1!
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QList<QLspSpecification::Location>, expectedUsages);
+
+    QVERIFY(uri.startsWith("file://"_ba));
+
+    ReferenceParams params;
+    params.position.line = line - 1;
+    params.position.character = character - 1;
+    params.textDocument.uri = uri;
+
+    std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+    auto clean = [didFinish]() { *didFinish = true; };
+
+    m_protocol.requestReference(
+            params,
+            [&](auto res) {
+                QScopeGuard cleanup(clean);
+                auto *result = std::get_if<QList<Location>>(&res);
+
+                QVERIFY(result);
+                if constexpr (enable_debug_output) {
+                    if (!locationListsAreEqual(*result, expectedUsages)) {
+                        qDebug() << "Got following locations:";
+                        for (auto &x : *result) {
+                            qDebug() << locationToString(x);
+                        }
+                        qDebug() << "But expected:";
+                        for (auto &x : expectedUsages) {
+                            qDebug() << locationToString(x);
+                        }
+                    }
+                }
+
+                QVERIFY(locationListsAreEqual(*result, expectedUsages));
+            },
+            [clean](const ResponseError &err) {
+                QScopeGuard cleanup(clean);
+                ProtocolBase::defaultResponseErrorHandler(err);
+                QVERIFY2(false, "error computing the completion");
+            });
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

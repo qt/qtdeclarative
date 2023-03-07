@@ -275,7 +275,7 @@ bool VariableDeclarationEntry::iterateDirectSubpaths(DomItem &self, DirectVisito
 {
     bool cont = true;
     cont &= self.dvValueField(visitor, Fields::scopeType, m_scopeType);
-    cont &= self.dvValueField(visitor, Fields::identifier, m_identifier);
+    cont &= wrap(self, visitor, Fields::identifier, m_identifier);
     cont &= wrap(self, visitor, Fields::initializer, m_initializer);
     return cont;
 }
@@ -283,6 +283,8 @@ bool VariableDeclarationEntry::iterateDirectSubpaths(DomItem &self, DirectVisito
 void VariableDeclarationEntry::updatePathFromOwner(Path p)
 {
     BaseT::updatePathFromOwner(p);
+    if (auto ptr = m_identifier.base())
+        ptr->updatePathFromOwner(p.field(Fields::identifier));
     if (auto ptr = m_initializer.base())
         ptr->updatePathFromOwner(p.field(Fields::initializer));
 }
@@ -290,6 +292,8 @@ void VariableDeclarationEntry::updatePathFromOwner(Path p)
 void VariableDeclarationEntry::createFileLocations(FileLocations::Tree base)
 {
     BaseT::createFileLocations(base);
+    if (auto ptr = m_identifier.base())
+        ptr->createFileLocations(base);
     if (auto ptr = m_initializer.base())
         ptr->createFileLocations(base);
 }

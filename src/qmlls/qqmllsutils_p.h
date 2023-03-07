@@ -18,6 +18,8 @@
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <algorithm>
+#include <tuple>
 
 struct QQmlLSUtilsItemLocation
 {
@@ -31,6 +33,23 @@ struct QQmlLSUtilsTextPosition
     int character;
 };
 
+struct QQmlLSUtilsLocation
+{
+    QString filename;
+    QQmlJS::SourceLocation location;
+
+    friend bool operator<(const QQmlLSUtilsLocation &a, const QQmlLSUtilsLocation &b)
+    {
+        return std::make_tuple(a.filename, a.location.begin(), a.location.end())
+                < std::make_tuple(b.filename, b.location.begin(), b.location.end());
+    }
+    friend bool operator==(const QQmlLSUtilsLocation &a, const QQmlLSUtilsLocation &b)
+    {
+        return std::make_tuple(a.filename, a.location.begin(), a.location.end())
+                == std::make_tuple(b.filename, b.location.begin(), b.location.end());
+    }
+};
+
 class QQmlLSUtils
 {
 public:
@@ -40,8 +59,11 @@ public:
                                                                 int character);
     static QByteArray lspUriToQmlUrl(const QByteArray &uri);
     static QByteArray qmlUrlToLspUri(const QByteArray &url);
+    static QLspSpecification::Range qmlLocationToLspLocation(const QString &code,
+                                                             QQmlJS::SourceLocation qmlLocation);
     static QQmlJS::Dom::DomItem baseObject(QQmlJS::Dom::DomItem qmlObject);
     static QQmlJS::Dom::DomItem findTypeDefinitionOf(QQmlJS::Dom::DomItem item);
+    static QList<QQmlLSUtilsLocation> findUsagesOf(QQmlJS::Dom::DomItem item);
 };
 
 #endif // QLANGUAGESERVERUTILS_P_H

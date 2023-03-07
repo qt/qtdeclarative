@@ -43,10 +43,14 @@ private slots:
     void findBaseObject();
     void findBaseObject_data();
 
+    void findUsages();
+    void findUsages_data();
+
 private:
     using EnvironmentAndFile = std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>;
 
-    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file);
+    EnvironmentAndFile createEnvironmentAndLoadFile(const QString &file,
+                                                    QQmlJS::Dom::DomCreationOptions options);
 
     // avoid loading the same file over and over when running all the tests
     QHash<QString, EnvironmentAndFile> cache;

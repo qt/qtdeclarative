@@ -1400,10 +1400,13 @@ bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOp
         return true;
     if (options & VisitOption::VisitSelf && !visitor(basePath, *this, true))
         return false;
-    if (!openingVisitor(basePath, *this, true))
+    if (options & VisitOption::VisitSelf && !openingVisitor(basePath, *this, true))
         return true;
-    auto atEnd = qScopeGuard(
-            [closingVisitor, basePath, this]() { closingVisitor(basePath, *this, true); });
+    auto atEnd = qScopeGuard([closingVisitor, basePath, this, options]() {
+        if (options & VisitOption::VisitSelf) {
+            closingVisitor(basePath, *this, true);
+        }
+    });
     return visitEl([this, basePath, visitor, openingVisitor, closingVisitor, options](auto &&el) {
         return el->iterateDirectSubpathsConst(
                 *this,
@@ -2312,9 +2315,7 @@ DomItem DomItem::operator[](Path p)
 
 QCborValue DomItem::value()
 {
-    if (internalKind() == DomType::ConstantData)
-        return std::get<ConstantData>(m_element).value();
-    return QCborValue();
+    return base()->value();
 }
 
 void DomItem::dumpPtr(Sink sink)

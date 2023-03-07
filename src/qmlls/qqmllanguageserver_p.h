@@ -17,6 +17,7 @@
 
 #include "qlanguageserver_p.h"
 #include "qqmlcodemodel_p.h"
+#include "qqmlfindusagessupport_p.h"
 #include "qtextsynchronization_p.h"
 #include "qqmllintsuggestions_p.h"
 #include "qworkspace_p.h"
@@ -61,6 +62,7 @@ private:
     WorkspaceHandlers m_workspace;
     QmlCompletionSupport m_completionSupport;
     QmlGoToTypeDefinitionSupport m_navigationSupport;
+    QQmlFindUsagesSupport m_referencesSupport;
     int m_returnValue = 1;
 };
 

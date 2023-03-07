@@ -22,7 +22,8 @@ static QString printSet(const QSet<QString> &s)
 }
 
 std::tuple<QQmlJS::Dom::DomItem, QQmlJS::Dom::DomItem>
-tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
+tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath,
+                                              QQmlJS::Dom::DomCreationOptions options)
 {
     if (auto entry = cache.find(filePath); entry != cache.end())
         return *entry;
@@ -38,7 +39,7 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     QQmlJS::Dom::DomItem file;
     env.loadFile(
             QQmlJS::Dom::FileToLoad::fromFileSystem(env.ownerAs<QQmlJS::Dom::DomEnvironment>(),
-                                                    filePath, QQmlJS::Dom::WithSemanticAnalysis),
+                                                    filePath, options),
             [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &,
                     const QQmlJS::Dom::DomItem &newIt) { file = newIt; },
             QQmlJS::Dom::LoadOption::DefaultLoad);
@@ -260,7 +261,10 @@ void tst_qmlls_utils::findItemFromLocation()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -392,7 +396,10 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -488,7 +495,10 @@ void tst_qmlls_utils::findLocationOfItem()
     Q_ASSERT(expectedLine > 0);
     Q_ASSERT(expectedCharacter > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     // grab item using already tested QQmlLSUtils::findLastItemsContaining
     auto locations = QQmlLSUtils::itemsFromTextLocation(
@@ -596,7 +606,10 @@ void tst_qmlls_utils::findBaseObject()
     Q_ASSERT(line > 0);
     Q_ASSERT(character > 0);
 
-    auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
 
     // grab item using already tested QQmlLSUtils::findLastItemsContaining
     auto locations = QQmlLSUtils::itemsFromTextLocation(
@@ -638,6 +651,105 @@ void tst_qmlls_utils::findBaseObject()
              u"Incorrect baseType found: it has an unexpected marker properties: "_s
                      .append(printSet(unExpectedPropertyName))
                      .toLatin1());
+}
+
+using QQmlJS::SourceLocation;
+
+static QQmlLSUtilsLocation sourceLocationFrom(const QString fileName, const QString &code,
+                                              quint32 startLine, quint32 startCharacter,
+                                              quint32 length)
+{
+    quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+
+    QQmlLSUtilsLocation location{
+        fileName, QQmlJS::SourceLocation{ offset, length, startLine, startCharacter }
+    };
+    return location;
+}
+
+void tst_qmlls_utils::findUsages_data()
+{
+    QTest::addColumn<QString>("filePath");
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+    QTest::addColumn<QList<QQmlLSUtilsLocation>>("expectedUsages");
+
+    const QString testFileName = testFile(u"JSUsages.qml"_s);
+    QString testFileContent;
+    {
+        QFile file(testFileName);
+        QVERIFY(file.open(QIODeviceBase::ReadOnly));
+        testFileContent = QString::fromUtf8(file.readAll());
+    }
+
+    QList<QQmlLSUtilsLocation> sumUsages{
+        sourceLocationFrom(testFileName, testFileContent, 8, 13, strlen("sum")),
+        sourceLocationFrom(testFileName, testFileContent, 10, 13, strlen("sum")),
+        sourceLocationFrom(testFileName, testFileContent, 10, 19, strlen("sum")),
+    };
+
+    QList<QQmlLSUtilsLocation> iUsages{
+        sourceLocationFrom(testFileName, testFileContent, 9, 17, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 9, 24, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 9, 32, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 9, 36, strlen("i")),
+        sourceLocationFrom(testFileName, testFileContent, 10, 25, strlen("i")),
+    };
+
+    std::sort(sumUsages.begin(), sumUsages.end());
+    std::sort(iUsages.begin(), iUsages.end());
+
+    QTest::addRow("findSumFromDeclaration") << testFileName << 8 << 13 << sumUsages;
+    QTest::addRow("findSumFromUsage") << testFileName << 10 << 20 << sumUsages;
+
+    QTest::addRow("findIFromDeclaration") << testFileName << 9 << 17 << iUsages;
+    QTest::addRow("findIFromUsage") << testFileName << 9 << 24 << iUsages;
+    QTest::addRow("findIFromUsage2") << testFileName << 10 << 25 << iUsages;
+}
+
+void tst_qmlls_utils::findUsages()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QList<QQmlLSUtilsLocation>, expectedUsages);
+
+    QQmlJS::Dom::DomCreationOptions options;
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithSemanticAnalysis);
+    options.setFlag(QQmlJS::Dom::DomCreationOption::WithScriptExpressions);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, options);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    if constexpr (enable_debug_output) {
+        if (locations.size() > 1) {
+            for (auto &x : locations)
+                qDebug() << x.domItem.toString();
+        }
+    }
+    QCOMPARE(locations.size(), 1);
+
+    auto usages = QQmlLSUtils::findUsagesOf(locations.front().domItem);
+
+    if constexpr (enable_debug_output) {
+        if (usages != expectedUsages) {
+            qDebug() << "Got:\n";
+            for (auto &x : usages) {
+                qDebug() << x.filename << "(" << x.location.startLine << ", "
+                         << x.location.startColumn << "), " << x.location.offset << "+"
+                         << x.location.length;
+            }
+            qDebug() << "But expected: \n";
+            for (auto &x : expectedUsages) {
+                qDebug() << x.filename << "(" << x.location.startLine << ", "
+                         << x.location.startColumn << "), " << x.location.offset << "+"
+                         << x.location.length;
+            }
+        }
+    }
+    QCOMPARE(usages, expectedUsages);
 }
 
 QTEST_MAIN(tst_qmlls_utils)
