@@ -31,16 +31,13 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleimplplugin
         Qt::QuickTemplates2Private
 )
 
-# Resources:
-set(qmake_qtquickcontrols2imaginestyleimplplugin_resource_files
-    "shaders/+glslcore/OpacityMask.frag"
-    "shaders/+qsb/OpacityMask.frag"
-    "shaders/OpacityMask.frag"
-)
-
-qt_internal_add_resource(qtquickcontrols2imaginestyleimplplugin "qmake_qtquickcontrols2imaginestyleimplplugin"
+qt_internal_add_shaders(qtquickcontrols2imaginestyleimplplugin "qtquickcontrols2imaginestyleimplplugin_shaders"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
     PREFIX
-        "qt-project.org/imports/QtQuick/Controls/Imagine/impl"
+        "/qt-project.org/imports/QtQuick/Controls/Imagine/impl"
     FILES
-        ${qmake_qtquickcontrols2imaginestyleimplplugin_resource_files}
+        "shaders/OpacityMask.frag"
 )
