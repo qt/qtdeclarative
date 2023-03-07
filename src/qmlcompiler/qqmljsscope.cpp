@@ -326,6 +326,15 @@ QQmlJSScope::findJSIdentifier(const QString &id) const
     return std::optional<JavaScriptIdentifier>{};
 }
 
+std::optional<QQmlJSScope::JavaScriptIdentifier> QQmlJSScope::JSIdentifier(const QString &id) const
+{
+    auto it = m_jsIdentifiers.find(id);
+    if (it != m_jsIdentifiers.end())
+        return *it;
+
+    return std::optional<JavaScriptIdentifier>{};
+}
+
 static QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr>
 qFindInlineComponents(QStringView typeName, const QQmlJSScope::ContextualTypes &contextualTypes)
 {

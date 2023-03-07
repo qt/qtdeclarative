@@ -108,6 +108,18 @@ class QQmlDomAstCreator final : public AST::Visitor
                        "Should be a List, did the parser change?");
             return std::get<ScriptElements::ScriptList>(std::move(value));
         }
+
+        void setSemanticScope(const QQmlJSScope::Ptr &scope)
+        {
+            if (auto x = std::get_if<ScriptElementVariant>(&value)) {
+                x->base()->setSemanticScope(scope);
+                return;
+            } else if (auto x = std::get_if<ScriptElements::ScriptList>(&value)) {
+                x->setSemanticScope(scope);
+                return;
+            }
+            Q_UNREACHABLE();
+        }
     };
 
 public:
@@ -337,20 +349,7 @@ public:
     }
 
 private:
-    void setScopeInDom()
-    {
-        QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
-        if (!m_domCreator.nodeStack.isEmpty()) {
-            std::visit(
-                    [&scope](auto &&e) {
-                        using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
-                        if constexpr (std::is_same_v<U, QmlObject>) {
-                            e.setSemanticScope(scope);
-                        }
-                    },
-                    m_domCreator.currentNodeEl().item.value);
-        }
-    }
+    void setScopeInDom();
 
     template<typename T>
     bool visitT(T *t)

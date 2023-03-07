@@ -602,23 +602,29 @@ DomItem DomItem::scope(FilterUpOptions options)
     return res;
 }
 
-QQmlJSScope::Ptr DomItem::nearestSemanticScope()
+std::optional<QQmlJSScope::Ptr> DomItem::nearestSemanticScope()
 {
-    QQmlJSScope::Ptr scope;
+    std::optional<QQmlJSScope::Ptr> scope;
     visitUp([&scope](DomItem &item) {
-        scope = std::visit(
-                [](auto &&e) -> QQmlJSScope::Ptr {
-                    using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
-                    if constexpr (std::is_same_v<T, QmlObject *>) {
-                        return e->semanticScope();
-                    } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
-                        return e.element().base()->qQmlJSScope();
-                    }
-                    return {};
-                },
-                item.m_element);
+        scope = item.semanticScope();
         return !scope; // stop when scope was true
     });
+    return scope;
+}
+
+std::optional<QQmlJSScope::Ptr> DomItem::semanticScope()
+{
+    std::optional<QQmlJSScope::Ptr> scope = std::visit(
+            [](auto &&e) -> std::optional<QQmlJSScope::Ptr> {
+                using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                if constexpr (std::is_same_v<T, QmlObject *>) {
+                    return e->semanticScope();
+                } else if constexpr (std::is_same_v<T, ScriptElementDomWrapper>) {
+                    return e.element().base()->semanticScope();
+                }
+                return {};
+            },
+            m_element);
     return scope;
 }
 
@@ -3611,11 +3617,11 @@ void ListPBase::writeOut(DomItem &self, OutWriter &ow, bool compact) const
     ow.writeRegion(u"rightSquareBrace", u"]");
 }
 
-QQmlJSScope::Ptr ScriptElement::qQmlJSScope()
+std::optional<QQmlJSScope::Ptr> ScriptElement::semanticScope()
 {
     return m_scope;
 }
-void ScriptElement::setQQmlJSScope(const QQmlJSScope::Ptr &scope)
+void ScriptElement::setSemanticScope(const QQmlJSScope::Ptr &scope)
 {
     m_scope = scope;
 }

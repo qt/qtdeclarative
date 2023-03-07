@@ -700,11 +700,11 @@ struct ScriptElement : public DomElement
     using DomElement::DomElement;
     virtual void createFileLocations(std::shared_ptr<AttachedInfoT<FileLocations>> fileLocationOfOwner) = 0;
 
-    QQmlJSScope::Ptr qQmlJSScope();
-    void setQQmlJSScope(const QQmlJSScope::Ptr &scope);
+    std::optional<QQmlJSScope::Ptr> semanticScope();
+    void setSemanticScope(const QQmlJSScope::Ptr &scope);
 
 private:
-    QQmlJSScope::Ptr m_scope;
+    std::optional<QQmlJSScope::Ptr> m_scope;
 };
 
 /*!
@@ -938,7 +938,8 @@ public:
     DomItem globalScope();
     DomItem component(GoTo option = GoTo::Strict);
     DomItem scope(FilterUpOptions options = FilterUpOptions::ReturnOuter);
-    QQmlJSScope::Ptr nearestSemanticScope();
+    std::optional<QQmlJSScope::Ptr> nearestSemanticScope();
+    std::optional<QQmlJSScope::Ptr> semanticScope();
 
     // convenience getters
     DomItem get(ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr);

@@ -932,13 +932,14 @@ private slots:
         QString testFile = baseDir + u"/scriptExpressions.qml"_s;
 
         DomItem env = DomEnvironment::create(
-                QStringList(),
+                qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
         DomItem tFile;
         DomCreationOptions options;
         options.setFlag(DomCreationOption::WithScriptExpressions);
+        options.setFlag(DomCreationOption::WithSemanticAnalysis);
 
         env.loadFile(
                 FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile, options),
@@ -960,6 +961,14 @@ private slots:
         // check the body of the "f" method
         {
             DomItem block = rootQmlObject.path(".methods[\"f\"][0].body.scriptElement");
+
+            // This block should have a semantic scope that defines sum and helloWorld
+            auto blockSemanticScope = block.semanticScope();
+            QVERIFY(blockSemanticScope);
+            QVERIFY(*blockSemanticScope);
+            QVERIFY(blockSemanticScope.value()->JSIdentifier(u"sum"_s));
+            QVERIFY(blockSemanticScope.value()->JSIdentifier(u"helloWorld"_s));
+
             DomItem statements = block.field(Fields::statements);
             QCOMPARE(statements.indexes(), 2);
 
@@ -1042,6 +1051,9 @@ private slots:
             {
                 // test the body of the for-loop
                 DomItem body = forLoop.field(Fields::body);
+                auto blockSemanticScope = body.semanticScope();
+                QVERIFY(blockSemanticScope);
+                QVERIFY(*blockSemanticScope);
                 QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
                 DomItem statementList = body.field(Fields::statements);
                 QCOMPARE(statementList.indexes(), 2);
@@ -1164,6 +1176,9 @@ private slots:
                          42);
 
                 DomItem consequence = conditional.field(Fields::consequence);
+                auto blockSemanticScope = consequence.semanticScope();
+                QVERIFY(blockSemanticScope);
+                QVERIFY(*blockSemanticScope);
                 QCOMPARE(consequence.internalKind(), DomType::ScriptBlockStatement);
                 QCOMPARE(consequence.field(Fields::statements).indexes(), 1);
                 DomItem consequence1 = consequence.field(Fields::statements).index(0);
@@ -1190,29 +1205,45 @@ private slots:
                 QCOMPARE(condition.field(Fields::right).field(Fields::value).value().toDouble(),
                          746);
 
-                DomItem consequence = conditional.field(Fields::consequence);
-                QCOMPARE(consequence.internalKind(), DomType::ScriptBlockStatement);
-                QCOMPARE(consequence.field(Fields::statements).indexes(), 1);
-                DomItem consequence1 = consequence.field(Fields::statements).index(0);
-                QCOMPARE(consequence1.field(Fields::left)
-                                 .field(Fields::identifier)
-                                 .value()
-                                 .toString(),
-                         u"i"_s);
-                QCOMPARE(consequence1.field(Fields::right).field(Fields::value).value().toDouble(),
-                         123);
+                {
+                    DomItem consequence = conditional.field(Fields::consequence);
+                    auto blockSemanticScope = consequence.semanticScope();
+                    QVERIFY(blockSemanticScope);
+                    QVERIFY(*blockSemanticScope);
+                    QCOMPARE(consequence.internalKind(), DomType::ScriptBlockStatement);
+                    QCOMPARE(consequence.field(Fields::statements).indexes(), 1);
+                    DomItem consequence1 = consequence.field(Fields::statements).index(0);
+                    QCOMPARE(consequence1.field(Fields::left)
+                                     .field(Fields::identifier)
+                                     .value()
+                                     .toString(),
+                             u"i"_s);
+                    QCOMPARE(consequence1.field(Fields::right)
+                                     .field(Fields::value)
+                                     .value()
+                                     .toDouble(),
+                             123);
+                }
 
-                DomItem alternative = conditional.field(Fields::alternative);
-                QCOMPARE(alternative.internalKind(), DomType::ScriptBlockStatement);
-                QCOMPARE(alternative.field(Fields::statements).indexes(), 1);
-                DomItem alternative1 = alternative.field(Fields::statements).index(0);
-                QCOMPARE(alternative1.field(Fields::left)
-                                 .field(Fields::identifier)
-                                 .value()
-                                 .toString(),
-                         u"i"_s);
-                QCOMPARE(alternative1.field(Fields::right).field(Fields::value).value().toDouble(),
-                         456);
+                {
+                    DomItem alternative = conditional.field(Fields::alternative);
+                    auto blockSemanticScope = alternative.semanticScope();
+                    QVERIFY(blockSemanticScope);
+                    QVERIFY(*blockSemanticScope);
+                    QCOMPARE(alternative.internalKind(), DomType::ScriptBlockStatement);
+                    QCOMPARE(alternative.field(Fields::statements).indexes(), 1);
+                    DomItem alternative1 = alternative.field(Fields::statements).index(0);
+                    QCOMPARE(alternative1.field(Fields::left)
+                                     .field(Fields::identifier)
+                                     .value()
+                                     .toString(),
+                             u"i"_s);
+                    QCOMPARE(alternative1.field(Fields::right)
+                                     .field(Fields::value)
+                                     .value()
+                                     .toDouble(),
+                             456);
+                }
             }
         }
     }

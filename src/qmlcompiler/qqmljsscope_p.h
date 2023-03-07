@@ -570,6 +570,7 @@ QT_WARNING_POP
     bool isIdInjectedFromSignal(const QString &id) const;
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
+    std::optional<JavaScriptIdentifier> JSIdentifier(const QString &id) const;
 
     ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
     ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }

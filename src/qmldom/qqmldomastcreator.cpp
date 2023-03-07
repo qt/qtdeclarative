@@ -567,6 +567,8 @@ void QQmlDomAstCreator::endVisit(AST::UiSourceElement *el)
                 // It is more intuitive to have functions with a block as a body instead of a list.
                 auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
                 body->setStatements(currentScriptNodeEl().takeList());
+                if (auto semanticScope = body->statements().semanticScope())
+                    body->setSemanticScope(*semanticScope);
                 m.body->setScriptElement(
                         finalizeScriptExpression(ScriptElementVariant::fromElement(body), bodyLoc));
             } else {
@@ -1307,6 +1309,41 @@ QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomIte
     }
 QQmlJSASTClassListToVisit
 #undef X
+
+        void
+        QQmlDomAstCreatorWithQQmlJSScope::setScopeInDom()
+{
+    QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
+    if (!m_domCreator.scriptNodeStack.isEmpty()) {
+        auto topOfStack = m_domCreator.currentScriptNodeEl();
+        switch (topOfStack.kind) {
+        case DomType::ScriptBlockStatement:
+        case DomType::ScriptForStatement:
+        case DomType::List:
+            m_domCreator.currentScriptNodeEl().setSemanticScope(scope);
+            break;
+        // TODO: find which script elements also have a scope and implement them here
+        default:
+            break;
+        };
+    } else if (!m_domCreator.nodeStack.isEmpty()) {
+        std::visit(
+                [&scope](auto &&e) {
+                    using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                    // TODO: find which dom elements also have a scope and implement them here
+                    if constexpr (std::is_same_v<U, QmlObject>) {
+                        e.setSemanticScope(scope);
+                    } else if constexpr (std::is_same_v<U, MethodInfo>) {
+                        if (e.body) {
+                            if (auto scriptElement = e.body->scriptElement())
+                                scriptElement.base()->setSemanticScope(scope);
+                        }
+                        e.setSemanticScope(scope);
+                    }
+                },
+                m_domCreator.currentNodeEl().item.value);
+    }
+}
 
 void QQmlDomAstCreatorWithQQmlJSScope::throwRecursionDepthError()
 {
