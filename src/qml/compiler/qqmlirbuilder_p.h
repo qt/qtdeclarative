@@ -167,6 +167,9 @@ struct PoolList
         bool operator!=(const Iterator &rhs) const {
             return ptr != rhs.ptr;
         }
+
+        operator T *() { return ptr; }
+        operator const T *() const { return ptr; }
     };
 
     Iterator begin() { return Iterator(first); }

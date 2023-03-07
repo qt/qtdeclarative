@@ -1,15 +1,16 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include <private/qqmltypedata_p.h>
+#include <private/qqmlcomponentandaliasresolver_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qqmlpropertycachecreator_p.h>
-#include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmlirloader_p.h>
+#include <private/qqmlpropertycachecreator_p.h>
+#include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlscriptblob_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmltypecompiler_p.h>
+#include <private/qqmltypedata_p.h>
 #include <private/qqmltypeloaderqmldircontent_p.h>
 
 #include <QtCore/qloggingcategory.h>
@@ -173,7 +174,53 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     return true;
 }
 
-void QQmlTypeData::createTypeAndPropertyCaches(
+template<>
+void QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::allocateNamedObjects(
+        const QV4::CompiledData::Object *object) const
+{
+    Q_UNUSED(object);
+}
+
+template<>
+bool QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::markAsComponent(int index) const
+{
+    return m_compiler->objectAt(index)->hasFlag(QV4::CompiledData::Object::IsComponent);
+}
+
+template<>
+void QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::setObjectId(int index) const
+{
+    Q_UNUSED(index)
+    // we cannot sanity-check the index here because bindings are sorted in a different order
+    // in the CU vs the IR.
+}
+
+template<>
+typename QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::AliasResolutionResult
+QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::resolveAliasesInObject(
+        int objectIndex, QQmlError *error)
+{
+    const CompiledObject *obj = m_compiler->objectAt(objectIndex);
+    for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
+        if (!alias->hasFlag(QV4::CompiledData::Alias::Resolved)) {
+            *error = qQmlCompileError( alias->referenceLocation, tr("Unresolved alias found"));
+            return NoAliasResolved;
+        }
+    }
+
+    return AllAliasesResolved;
+}
+
+template<>
+bool QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::wrapImplicitComponent(
+        const QV4::CompiledData::Binding *binding)
+{
+    // This should have been done when creating the CU.
+    Q_UNUSED(binding);
+    return false;
+}
+
+QQmlError QQmlTypeData::createTypeAndPropertyCaches(
         const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
         const QV4::ResolvedTypeReferenceMap &resolvedTypeCache)
 {
@@ -190,18 +237,32 @@ void QQmlTypeData::createTypeAndPropertyCaches(
         QQmlPropertyCacheCreator<QV4::ExecutableCompilationUnit> propertyCacheCreator(
                 &m_compiledData->propertyCaches, &pendingGroupPropertyBindings, engine,
                 m_compiledData.data(), m_importCache.data(), typeClassName());
-        QQmlError error = propertyCacheCreator.buildMetaObjects();
-        if (error.isValid()) {
-            setError(error);
-            return;
-        }
 
-        QQmlPropertyCacheAliasCreator<QV4::ExecutableCompilationUnit> aliasCreator(
-                &m_compiledData->propertyCaches, m_compiledData.data());
-        aliasCreator.appendAliasPropertiesToMetaObjects(engine);
+        QQmlError error = propertyCacheCreator.verifyNoICCycle();
+        if (error.isValid())
+            return error;
+
+        QQmlPropertyCacheCreatorBase::IncrementalResult result;
+        do {
+            result = propertyCacheCreator.buildMetaObjectsIncrementally();
+            if (result.error.isValid()) {
+                return result.error;
+            } else {
+                QQmlComponentAndAliasResolver resolver(
+                            m_compiledData.data(), engine, &m_compiledData->propertyCaches);
+                if (const QQmlError error = resolver.resolve(result.processedRoot);
+                        error.isValid()) {
+                    return error;
+                }
+                pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_compiledData->propertyCaches);
+                pendingGroupPropertyBindings.clear(); // anything that can be processed is now processed
+            }
+
+        } while (result.canResume);
     }
 
     pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_compiledData->propertyCaches);
+    return QQmlError();
 }
 
 static bool addTypeReferenceChecksumsToHash(
@@ -370,23 +431,34 @@ void QQmlTypeData::done()
 
     // verify if any dependencies changed if we're using a cache
     if (m_document.isNull()) {
-        createTypeAndPropertyCaches(typeNameCache, resolvedTypeCache);
-        if (isError()) {
-            return;
-        }
-
-        if (m_compiledData->verifyChecksum(dependencyHasher)) {
+        const QQmlError error = createTypeAndPropertyCaches(typeNameCache, resolvedTypeCache);
+        if (!error.isValid() && m_compiledData->verifyChecksum(dependencyHasher)) {
             setCompileUnit(m_compiledData);
         } else {
-            qCDebug(DBG_DISK_CACHE) << "Checksum mismatch for cached version of" << m_compiledData->fileName();
+
+            if (error.isValid()) {
+                qCDebug(DBG_DISK_CACHE)
+                        << "Failed to create property caches for"
+                        << m_compiledData->fileName()
+                        << "because" << error.description();
+            } else {
+                qCDebug(DBG_DISK_CACHE)
+                        << "Checksum mismatch for cached version of"
+                        << m_compiledData->fileName();
+            }
+
             if (!loadFromSource())
                 return;
 
             // We want to keep our resolve types ...
             m_compiledData->resolvedTypes.clear();
-            // ... but we don't want their property caches.
-            for (QV4::ResolvedTypeReference *ref: std::as_const(resolvedTypeCache))
+            // ... but we don't want the property caches we've created for the broken CU.
+            for (QV4::ResolvedTypeReference *ref: std::as_const(resolvedTypeCache)) {
+                if (ref->compilationUnit() != m_compiledData)
+                    continue;
                 ref->setTypePropertyCache(QQmlPropertyCache::ConstPtr());
+                ref->setCompilationUnit(QQmlRefPointer<QV4::ExecutableCompilationUnit>());
+            }
 
             m_compiledData.reset();
         }
