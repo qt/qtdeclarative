@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/window">
+    <qresource prefix="/qt/qml/window">
         <file>window.qml</file>
         <file>Splash.qml</file>
         <file>CurrentScreen.qml</file>
