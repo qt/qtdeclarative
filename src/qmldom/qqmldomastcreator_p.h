@@ -17,7 +17,6 @@
 
 #include "qqmldom_global.h"
 #include "qqmldomitem_p.h"
-#include "qqmldomastcreator_p.h"
 #include "qqmldomcomments_p.h"
 
 #include <QtQml/private/qqmljsastvisitor_p.h>
@@ -30,7 +29,12 @@ namespace Dom {
 SourceLocation combineLocations(SourceLocation s1, SourceLocation s2);
 SourceLocation combineLocations(AST::Node *n);
 
-void createDom(MutableDomItem qmlFile);
+void createDom(MutableDomItem qmlFile, DomCreationOptions options = None);
+
+// TODO: rename QmlDomAstCreator to QQmlDomAstCreator, split it into header + implementation, add
+// its header stuff here.
+// TODO: also move the QmlDomAstCreatorWithQQmlJSScope header stuff here, or to its own header (in
+// this case also move the implementation into its own .cpp).
 
 } // end namespace Dom
 } // end namespace QQmlJS

@@ -841,6 +841,81 @@ private slots:
         }
     }
 
+    void scopesInDom()
+    {
+        QString fileName = baseDir + u"/checkScopes.qml"_s;
+
+        const QStringList importPaths = {
+            QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+        };
+
+        DomItem tFile;
+
+        DomItem env = DomEnvironment::create(
+                importPaths,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        env.loadFile(
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileName,
+                                           WithSemanticAnalysis),
+                [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        auto root = tFile.rootQmlObject(GoTo::MostLikely);
+
+        {
+            auto rootQmlObject = root.as<QmlObject>();
+            QVERIFY(rootQmlObject);
+            auto rootScope = rootQmlObject->semanticScope();
+            QVERIFY(rootScope);
+            QVERIFY(rootScope->hasOwnProperty("myInt"));
+            QVERIFY(rootScope->hasOwnProperty("myInt2"));
+            QVERIFY(rootScope->hasOwnPropertyBindings("myInt"));
+            QVERIFY(rootScope->hasOwnPropertyBindings("myInt2"));
+        }
+    }
+
+    void domConstructionTime_data()
+    {
+        QTest::addColumn<QString>("fileName");
+        QTest::addColumn<DomCreationOption>("withScope");
+
+        auto withScope = DomCreationOption::WithSemanticAnalysis;
+        auto noScope = DomCreationOption::None;
+
+        QTest::addRow("tiger.qml") << baseDir + u"/longQmlFile.qml"_s << noScope;
+        QTest::addRow("tiger.qml-with-scope") << baseDir + u"/longQmlFile.qml"_s << withScope;
+        QTest::addRow("deeplyNested.qml") << baseDir + u"/deeplyNested.qml"_s << noScope;
+        QTest::addRow("deeplyNested.qml-with-scope")
+                << baseDir + u"/deeplyNested.qml"_s << withScope;
+    }
+
+    void domConstructionTime()
+    {
+        QFETCH(QString, fileName);
+        QFETCH(DomCreationOption, withScope);
+
+        const QStringList importPaths = {
+            QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+        };
+
+        DomItem tFile;
+        QBENCHMARK {
+            DomItem env = DomEnvironment::create(
+                    importPaths,
+                    QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+            env.loadFile(
+                    FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileName, withScope),
+                    [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                    LoadOption::DefaultLoad);
+            env.loadPendingDependencies();
+        }
+    }
+
 private:
     QString baseDir;
     QStringList qmltypeDirs;

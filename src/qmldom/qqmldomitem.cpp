@@ -1,5 +1,6 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#include "qqmldomitem_p.h"
 #include "qqmldomtop_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomexternalitems_p.h"
@@ -305,27 +306,29 @@ it every time it needs.
 
 FileToLoad::FileToLoad(const std::weak_ptr<DomEnvironment> &environment,
                        const QString &canonicalPath, const QString &logicalPath,
-                       std::optional<InMemoryContents> content)
+                       std::optional<InMemoryContents> content, DomCreationOptions options)
     : m_environment(environment),
       m_canonicalPath(canonicalPath),
       m_logicalPath(logicalPath),
-      m_content(content)
+      m_content(content),
+      m_options(options)
 {
 }
 
 FileToLoad FileToLoad::fromMemory(const std::weak_ptr<DomEnvironment> &environment,
-                                  const QString &path, const QString &code)
+                                  const QString &path, const QString &code,
+                                  DomCreationOptions options)
 {
     const QString canonicalPath = QFileInfo(path).canonicalFilePath();
-    return { environment, canonicalPath, path, InMemoryContents{ code } };
+    return { environment, canonicalPath, path, InMemoryContents{ code }, options };
 }
 
 FileToLoad FileToLoad::fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
-                                      const QString &path)
+                                      const QString &path, DomCreationOptions options)
 {
     // make the path canonical so the file content can be loaded from it later
     const QString canonicalPath = QFileInfo(path).canonicalFilePath();
-    return { environment, canonicalPath, path, std::nullopt };
+    return { environment, canonicalPath, path, std::nullopt, options };
 }
 
 ErrorGroup DomItem::domErrorGroup = NewErrorGroup("Dom");
@@ -545,6 +548,24 @@ DomItem DomItem::scope(FilterUpOptions options)
 {
     DomItem res = filterUp([](DomType, DomItem &el) { return el.isScope(); }, options);
     return res;
+}
+
+QQmlJSScope::Ptr DomItem::nearestSemanticScope()
+{
+    QQmlJSScope::Ptr scope;
+    visitUp([&scope](DomItem &item) {
+        scope = std::visit(
+                [](auto &&e) -> QQmlJSScope::Ptr {
+                    using T = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                    if constexpr (std::is_same_v<T, QmlObject *>) {
+                        return e->semanticScope();
+                    }
+                    return {};
+                },
+                item.m_element);
+        return !scope; // stop when scope was true
+    });
+    return scope;
 }
 
 DomItem DomItem::get(ErrorHandler h, QList<Path> *visitedRefs)
@@ -1512,6 +1533,24 @@ bool DomItem::visitStaticTypePrototypeChains(function_ref<bool(DomItem &)> visit
     return true;
 }
 
+/*!
+    \brief Let the visitor visit the Dom Tree hierarchy of this DomItem.
+ */
+bool DomItem::visitUp(function_ref<bool(DomItem &)> visitor)
+{
+    Path p = canonicalPath();
+    while (p.length() > 0) {
+        DomItem current = top().path(p);
+        if (!visitor(current))
+            return false;
+        p = p.dropTail();
+    }
+    return true;
+}
+
+/*!
+    \brief Let the visitor visit the QML scope hierarchy of this DomItem.
+ */
 bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptions options,
                               ErrorHandler h, QSet<quintptr> *visited, QList<Path> *visitedRefs)
 {

@@ -52,9 +52,11 @@ private:
     QString m_qmlformatPath;
     QStringList m_excludedDirs;
     QStringList m_invalidFiles;
+    QStringList m_ignoreFiles;
 
     QStringList findFiles(const QDir &);
     bool isInvalidFile(const QFileInfo &fileName) const;
+    bool isIgnoredFile(const QFileInfo &fileName) const;
 };
 
 // Don't fail on warnings because we read a lot of QML files that might intentionally be malformed.
@@ -145,6 +147,10 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon1.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon_error1.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon2.qml";
+
+    // These files are too big
+    m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/longQmlFile.qml";
+    m_ignoreFiles << "tests/auto/qmldom/domdata/domitem/deeplyNested.qml";
 }
 
 QStringList TestQmlformat::findFiles(const QDir &d)
@@ -160,7 +166,9 @@ QStringList TestQmlformat::findFiles(const QDir &d)
     const QStringList files = d.entryList(QStringList() << QLatin1String("*.qml"),
                                           QDir::Files);
     for (const QString &file: files) {
-        rv << d.absoluteFilePath(file);
+        QString absoluteFilePath = d.absoluteFilePath(file);
+        if (!isIgnoredFile(QFileInfo(absoluteFilePath)))
+            rv << absoluteFilePath;
     }
 
     const QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
@@ -178,6 +186,15 @@ bool TestQmlformat::isInvalidFile(const QFileInfo &fileName) const
 {
     for (const QString &invalidFile : m_invalidFiles) {
         if (fileName.absoluteFilePath().endsWith(invalidFile))
+            return true;
+    }
+    return false;
+}
+
+bool TestQmlformat::isIgnoredFile(const QFileInfo &fileName) const
+{
+    for (const QString &file : m_ignoreFiles) {
+        if (fileName.absoluteFilePath().endsWith(file))
             return true;
     }
     return false;

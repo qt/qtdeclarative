@@ -420,7 +420,8 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     QString fPath = url2Path(url, UrlLookup::ForceLookup);
     Path p;
     newCurrent.loadFile(
-            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), fPath, docText),
+            FileToLoad::fromMemory(newCurrent.ownerAs<DomEnvironment>(), fPath, docText,
+                                   DomCreationOption::WithSemanticAnalysis),
             [&p](Path, DomItem &, DomItem &newValue) { p = newValue.fileObject().canonicalPath(); },
             {});
     newCurrent.loadPendingDependencies();

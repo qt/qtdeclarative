@@ -38,7 +38,7 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath)
     QQmlJS::Dom::DomItem file;
     env.loadFile(
             QQmlJS::Dom::FileToLoad::fromFileSystem(env.ownerAs<QQmlJS::Dom::DomEnvironment>(),
-                                                    filePath),
+                                                    filePath, QQmlJS::Dom::WithSemanticAnalysis),
             [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &,
                     const QQmlJS::Dom::DomItem &newIt) { file = newIt; },
             QQmlJS::Dom::LoadOption::DefaultLoad);

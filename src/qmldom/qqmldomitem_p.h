@@ -36,6 +36,7 @@
 #include <QtCore/QCborValue>
 #include <QtCore/QTimeZone>
 #include <QtQml/private/qqmljssourcelocation_p.h>
+#include <QtQmlCompiler/private/qqmljsscope_p.h>
 
 #include <memory>
 #include <typeinfo>
@@ -694,6 +695,13 @@ inline bool emptyChildrenVisitor(Path, DomItem &, bool)
 
 class MutableDomItem;
 
+enum DomCreationOption : char {
+    None = 0,
+    WithSemanticAnalysis = 1,
+};
+
+Q_DECLARE_FLAGS(DomCreationOptions, DomCreationOption);
+
 class FileToLoad
 {
 public:
@@ -704,24 +712,29 @@ public:
     };
 
     FileToLoad(const std::weak_ptr<DomEnvironment> &environment, const QString &canonicalPath,
-               const QString &logicalPath, std::optional<InMemoryContents> content);
+               const QString &logicalPath, std::optional<InMemoryContents> content,
+               DomCreationOptions options);
     FileToLoad() = default;
 
     static FileToLoad fromMemory(const std::weak_ptr<DomEnvironment> &environment,
-                                 const QString &path, const QString &data);
+                                 const QString &path, const QString &data,
+                                 DomCreationOptions options = None);
     static FileToLoad fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
-                                     const QString &canonicalPath);
+                                     const QString &canonicalPath,
+                                     DomCreationOptions options = None);
 
     std::weak_ptr<DomEnvironment> environment() const { return m_environment; }
     QString canonicalPath() const { return m_canonicalPath; }
     QString logicalPath() const { return m_logicalPath; }
     std::optional<InMemoryContents> content() const { return m_content; }
+    DomCreationOptions options() const { return m_options; }
 
 private:
     std::weak_ptr<DomEnvironment> m_environment;
     QString m_canonicalPath;
     QString m_logicalPath;
     std::optional<InMemoryContents> m_content;
+    DomCreationOptions m_options;
 };
 
 class QMLDOM_EXPORT DomItem {
@@ -782,6 +795,7 @@ public:
     DomItem globalScope();
     DomItem component(GoTo option = GoTo::Strict);
     DomItem scope(FilterUpOptions options = FilterUpOptions::ReturnOuter);
+    QQmlJSScope::Ptr nearestSemanticScope();
 
     // convenience getters
     DomItem get(ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr);
@@ -873,6 +887,8 @@ public:
                                    VisitPrototypesOptions options = VisitPrototypesOption::Normal,
                                    ErrorHandler h = nullptr, QSet<quintptr> *visited = nullptr,
                                    QList<Path> *visitedRefs = nullptr);
+
+    bool visitUp(function_ref<bool(DomItem &)> visitor);
     bool visitScopeChain(function_ref<bool(DomItem &)> visitor,
                          LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
                          QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr);
@@ -1575,6 +1591,8 @@ public:
     {
         return addPostComment(comment, regionName.toString());
     }
+    QQmlJSScope::Ptr semanticScope();
+    void setSemanticScope(const QQmlJSScope::Ptr &scope);
 
     MutableDomItem() = default;
     MutableDomItem(DomItem owner, Path pathFromOwner):

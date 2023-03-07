@@ -1,6 +1,7 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#include "qqmldomitem_p.h"
 #include "qqmldomtop_p.h"
 #include "qqmldomexternalitems_p.h"
 #include "qqmldommock_p.h"
@@ -421,7 +422,7 @@ void DomUniverse::execQueue()
                 DomItem env(envPtr);
                 if (qmlFile->isValid()) {
                     MutableDomItem qmlFileObj(env.copy(qmlFile));
-                    createDom(qmlFileObj);
+                    createDom(qmlFileObj, t.file.options());
                 } else {
                     QString errs;
                     DomItem qmlFileObj = env.copy(qmlFile);
@@ -2230,6 +2231,12 @@ QStringList DomEnvironment::loadPaths() const
 {
     QMutexLocker l(mutex());
     return m_loadPaths;
+}
+
+QStringList DomEnvironment::qmldirFiles() const
+{
+    QMutexLocker l(mutex());
+    return m_qmldirFileWithPath.keys();
 }
 
 QString DomEnvironment::globalScopeName() const

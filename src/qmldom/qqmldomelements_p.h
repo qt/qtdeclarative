@@ -876,6 +876,9 @@ public:
                                       std::shared_ptr<ScriptExpression> accessSequence) const;
     LocallyResolvedAlias resolveAlias(DomItem &self, const QStringList &accessSequence) const;
 
+    QQmlJSScope::Ptr semanticScope() const { return m_scope; }
+    void setSemanticScope(const QQmlJSScope::Ptr &scope) { m_scope = scope; }
+
 private:
     friend class QmlDomAstCreator;
     QString m_idStr;
@@ -888,6 +891,7 @@ private:
     QMultiMap<QString, MethodInfo> m_methods;
     QList<QmlObject> m_children;
     QList<QmlObject> m_annotations;
+    QQmlJSScope::Ptr m_scope;
 };
 
 class Export

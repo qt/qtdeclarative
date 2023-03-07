@@ -734,6 +734,7 @@ public:
     std::shared_ptr<DomEnvironment> base() const;
 
     QStringList loadPaths() const;
+    QStringList qmldirFiles() const;
 
     QString globalScopeName() const;
 

@@ -13,7 +13,11 @@
 #include <QtCore/QScopeGuard>
 #include <QtCore/QLoggingCategory>
 
+#include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
+
 #include <memory>
+#include <optional>
+#include <type_traits>
 #include <variant>
 
 static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
@@ -112,6 +116,8 @@ public:
 class QmlDomAstCreator final : public AST::Visitor
 {
     Q_DECLARE_TR_FUNCTIONS(QmlDomAstCreator)
+    using AST::Visitor::endVisit;
+    using AST::Visitor::visit;
 
     static constexpr const auto className = "QmlDomAstCreator";
 
@@ -950,13 +956,196 @@ public:
         qmlFile.addError(astParseErrors().error(
                 tr("Maximum statement or expression depth exceeded in QmlDomAstCreator")));
     }
+
+public:
+    friend class QQmlDomAstCreatorWithQQmlJSScope;
 };
 
-void createDom(MutableDomItem qmlFile)
+class QQmlDomAstCreatorWithQQmlJSScope : public AST::Visitor
+{
+public:
+    QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger);
+
+#define X(name)                  \
+    bool visit(name *) override; \
+    void endVisit(name *) override;
+    QQmlJSASTClassListToVisit
+#undef X
+
+    virtual void throwRecursionDepthError() override;
+
+private:
+    void setScopeInDom()
+    {
+        QQmlJSScope::Ptr scope = m_scopeCreator.m_currentScope;
+        if (!m_domCreator.nodeStack.isEmpty()) {
+            std::visit(
+                    [&scope](auto &&e) {
+                        using U = std::remove_cv_t<std::remove_reference_t<decltype(e)>>;
+                        if constexpr (std::is_same_v<U, QmlObject>) {
+                            e.setSemanticScope(scope);
+                        }
+                    },
+                    m_domCreator.currentNodeEl().item.value);
+        }
+    }
+
+    template<typename T>
+    bool visitT(T *t)
+    {
+        if (m_marker && m_marker->nodeKind == t->kind) {
+            m_marker->count += 1;
+        }
+
+        // first case: no marker, both can visit
+        if (!m_marker) {
+            bool continueForDom = m_domCreator.visit(t);
+            bool continueForScope = m_scopeCreator.visit(t);
+            if (!continueForDom && !continueForScope)
+                return false;
+            else if (continueForDom ^ continueForScope) {
+                m_marker.emplace();
+                m_marker->inactiveVisitor = continueForDom ? ScopeCreator : DomCreator;
+                m_marker->count = 1;
+                m_marker->nodeKind = AST::Node::Kind(t->kind);
+                return true;
+            } else {
+                Q_ASSERT(continueForDom && continueForScope);
+                return true;
+            }
+            Q_UNREACHABLE();
+        }
+
+        // second case: a marker, just one visit
+        switch (m_marker->inactiveVisitor) {
+        case DomCreator: {
+            const bool continueForScope = m_scopeCreator.visit(t);
+            return continueForScope;
+        }
+        case ScopeCreator: {
+            const bool continueForDom = m_domCreator.visit(t);
+            return continueForDom;
+        }
+        };
+        Q_UNREACHABLE();
+    }
+
+    template<typename T>
+    void endVisitT(T *t)
+    {
+        if (m_marker && m_marker->nodeKind == t->kind) {
+            m_marker->count -= 1;
+            if (m_marker->count == 0)
+                m_marker.reset();
+        }
+
+        if (m_marker) {
+            switch (m_marker->inactiveVisitor) {
+            case DomCreator: {
+                m_scopeCreator.endVisit(t);
+                return;
+            }
+            case ScopeCreator: {
+                m_domCreator.endVisit(t);
+                return;
+            }
+            };
+            Q_UNREACHABLE();
+        }
+
+        m_domCreator.endVisit(t);
+        setScopeInDom();
+        m_scopeCreator.endVisit(t);
+    }
+
+    QQmlJSScope::Ptr m_root;
+    QQmlJSLogger *m_logger;
+    QQmlJSImporter m_importer;
+    QString m_implicitImportDirectory;
+    QQmlJSImportVisitor m_scopeCreator;
+    QmlDomAstCreator m_domCreator;
+
+    enum InactiveVisitor : bool { DomCreator, ScopeCreator };
+    struct Marker
+    {
+        qsizetype count;
+        AST::Node::Kind nodeKind;
+        InactiveVisitor inactiveVisitor;
+    };
+    std::optional<Marker> m_marker;
+};
+
+static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
+{
+    auto top = qmlFile.top();
+    if (!top) {
+        return {};
+    }
+    auto domEnvironment = top.as<DomEnvironment>();
+    if (!domEnvironment) {
+        return {};
+    }
+    return domEnvironment;
+}
+
+static QStringList importPathsFrom(MutableDomItem &qmlFile)
+{
+    if (auto env = environmentFrom(qmlFile))
+        return env->loadPaths();
+
+    return {};
+}
+
+static QStringList qmldirFilesFrom(MutableDomItem &qmlFile)
+{
+    if (auto env = environmentFrom(qmlFile))
+        return env->qmldirFiles();
+
+    return {};
+}
+
+QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile,
+                                                                   QQmlJSLogger *logger)
+    : m_root(QQmlJSScope::create()),
+      m_logger(logger),
+      m_importer(importPathsFrom(qmlFile), nullptr, true),
+      m_implicitImportDirectory(QQmlJSImportVisitor::implicitImportDirectory(
+              m_logger->fileName(), m_importer.resourceFileMapper())),
+      m_scopeCreator(m_root, &m_importer, m_logger, m_implicitImportDirectory,
+                     qmldirFilesFrom(qmlFile)),
+      m_domCreator(qmlFile)
+{
+}
+
+#define X(name)                                                 \
+bool QQmlDomAstCreatorWithQQmlJSScope::visit(name *node)    \
+{                                                           \
+    return visitT(node);                                    \
+}                                                           \
+void QQmlDomAstCreatorWithQQmlJSScope::endVisit(name *node) \
+{                                                           \
+    endVisitT(node);                                        \
+}
+QQmlJSASTClassListToVisit
+#undef X
+
+void QQmlDomAstCreatorWithQQmlJSScope::throwRecursionDepthError()
+{
+}
+
+void createDom(MutableDomItem qmlFile, DomCreationOptions options)
 {
     if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>()) {
-        QmlDomAstCreator componentCreator(qmlFile);
-        AST::Node::accept(qmlFilePtr->ast(), &componentCreator);
+        QQmlJSLogger logger; // TODO
+        std::unique_ptr<BaseVisitor> visitor;
+        if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
+            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger);
+            visitor = std::move(v);
+        } else {
+            auto v = std::make_unique<QmlDomAstCreator>(qmlFile);
+            visitor = std::move(v);
+        }
+        AST::Node::accept(qmlFilePtr->ast(), visitor.get());
         AstComments::collectComments(qmlFile);
     } else {
         qCWarning(creatorLog) << "createDom called on non qmlFile";
