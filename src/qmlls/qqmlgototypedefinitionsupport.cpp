@@ -10,25 +10,8 @@
 QT_USE_NAMESPACE
 using namespace Qt::StringLiterals;
 
-bool TypeDefinitionRequest::fillFrom(QmlLsp::OpenDocument doc, const Parameters &params,
-                                     Response &&response)
-{
-    BaseRequest<Parameters, Response>::fillFrom(doc, params, std::move(response));
-
-    if (!doc.textDocument)
-        return false;
-
-    std::optional<int> targetVersion;
-    {
-        QMutexLocker l(doc.textDocument->mutex());
-        targetVersion = doc.textDocument->version();
-    }
-    minVersion = (targetVersion ? *targetVersion : 0);
-    return true;
-}
-
 QmlGoToTypeDefinitionSupport::QmlGoToTypeDefinitionSupport(QmlLsp::QQmlCodeModel *codeModel)
-    : QQmlBaseModule<TypeDefinitionRequest>(codeModel)
+    : BaseT(codeModel)
 {
 }
 
@@ -50,43 +33,32 @@ void QmlGoToTypeDefinitionSupport::setupCapabilities(
 void QmlGoToTypeDefinitionSupport::registerHandlers(QLanguageServer *,
                                                     QLanguageServerProtocol *protocol)
 {
-    protocol->registerTypeDefinitionRequestHandler([this](const QByteArray &,
-                                                          const RequestParameters &parameters,
-                                                          RequestResponse &&response) {
-        QmlLsp::OpenDocument doc = m_codeModel->openDocumentByUrl(
-                QQmlLSUtils::lspUriToQmlUrl(parameters.textDocument.uri));
-
-        bool checkUpdate = addRequestAndCheckForUpdate(doc, parameters, std::move(response));
-
-        if (checkUpdate)
-            updatedSnapshot(QQmlLSUtils::lspUriToQmlUrl(parameters.textDocument.uri));
-    });
+    protocol->registerTypeDefinitionRequestHandler(getRequestHandler());
 }
 
 void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
 {
     QList<QLspSpecification::Location> results;
-    QScopeGuard onExit([&results, &request]() { request->response.sendResponse(results); });
+    QScopeGuard onExit([&results, &request]() { request->m_response.sendResponse(results); });
 
     QmlLsp::OpenDocument doc;
     {
         doc = m_codeModel->openDocumentByUrl(
-                QQmlLSUtils::lspUriToQmlUrl(request->parameters.textDocument.uri));
+                QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
     }
 
     QQmlJS::Dom::DomItem file = doc.snapshot.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (auto envPtr = file.environment().ownerAs<QQmlJS::Dom::DomEnvironment>())
         envPtr->clearReferenceCache();
-    auto filePtr = file.as<QQmlJS::Dom::QmlFile>();
-    if (!filePtr || !filePtr->isValid()) {
+    if (!file) {
         qWarning() << u"Could not find file in Dom Environment from Codemodel :"_s
                    << doc.snapshot.doc.toString();
         return;
     }
 
-    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, request->parameters.position.line,
-                                                         request->parameters.position.character);
+    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, request->m_parameters.position.line,
+                                                         request->m_parameters.position.character);
     if (itemsFound.size() == 0) {
         qWarning() << u"Could not find any items at given text location."_s;
         return;
@@ -134,9 +106,4 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
     l.range.end.character = end.character;
 
     results.append(l);
-}
-
-void QmlGoToTypeDefinitionSupport::updatedSnapshot(const QByteArray &url)
-{
-    processPending(url);
 }

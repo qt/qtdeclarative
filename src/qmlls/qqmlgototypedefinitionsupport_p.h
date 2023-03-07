@@ -20,15 +20,9 @@
 #include "qqmlbasemodule_p.h"
 
 struct TypeDefinitionRequest
-    : public BaseRequest<
-              QLspSpecification::TypeDefinitionParams,
-              QLspSpecification::LSPPartialResponse<
-                      std::variant<QLspSpecification::Location, QList<QLspSpecification::Location>,
-                                   QList<QLspSpecification::LocationLink>, std::nullptr_t>,
-                      std::variant<QList<QLspSpecification::Location>,
-                                   QList<QLspSpecification::LocationLink>>>>
+    : public BaseRequest<QLspSpecification::TypeDefinitionParams,
+                         QLspSpecification::Responses::TypeDefinitionResponseType>
 {
-    bool fillFrom(QmlLsp::OpenDocument doc, const Parameters &params, Response &&response);
 };
 
 class QmlGoToTypeDefinitionSupport : public QQmlBaseModule<TypeDefinitionRequest>
@@ -47,9 +41,6 @@ public:
     void typeDefinitionRequestHandler(const QByteArray &,
                                       const QLspSpecification::TypeDefinitionParams &params,
                                       TypeDefinitionRequest::Response &&response);
-
-public Q_SLOTS:
-    void updatedSnapshot(const QByteArray &uri);
 };
 
 #endif // QMLGOTOTYPEDEFINITIONSUPPORT_P_H
