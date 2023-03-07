@@ -154,9 +154,22 @@ public:
     std::unique_ptr<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
-    using CompiledObject = CompiledData::Object;
-    using CompiledFunction = CompiledData::Function;
+    using CompiledObject = const CompiledData::Object;
+    using CompiledFunction = const CompiledData::Function;
+    using CompiledBinding = const CompiledData::Binding;
     enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };
+
+    // Empty dummy. We don't need to do this when loading from cache.
+    class IdToObjectMap
+    {
+    public:
+        void insert(int, int) {}
+        void clear() {}
+
+        // We have already checked uniqueness of IDs when creating the CU
+        bool contains(int) { return false; }
+    };
+
     ListPropertyAssignBehavior listPropertyAssignBehavior() const
     {
         if (data->flags & CompiledData::Unit::ListPropertyAssignReplace)

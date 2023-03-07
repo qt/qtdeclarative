@@ -267,6 +267,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmlboundsignal.cpp qml/qqmlboundsignal_p.h
         qml/qqmlbuiltinfunctions.cpp qml/qqmlbuiltinfunctions_p.h
         qml/qqmlcomponent.cpp qml/qqmlcomponent.h qml/qqmlcomponent_p.h
+        qml/qqmlcomponentandaliasresolver_p.h
         qml/qqmlcomponentattached_p.h
         qml/qqmlcontext.cpp qml/qqmlcontext.h qml/qqmlcontext_p.h
         qml/qqmlcontextdata.cpp qml/qqmlcontextdata_p.h

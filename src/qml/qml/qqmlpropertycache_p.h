@@ -232,7 +232,7 @@ private:
     friend class QQmlCompiler;
     template <typename T> friend class QQmlPropertyCacheCreator;
     template <typename T> friend class QQmlPropertyCacheAliasCreator;
-    friend class QQmlComponentAndAliasResolver;
+    template <typename T> friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
 
     QQmlPropertyCache(const QQmlMetaObjectPointer &metaObject) : _metaObject(metaObject) {}

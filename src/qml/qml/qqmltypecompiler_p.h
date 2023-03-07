@@ -52,9 +52,14 @@ public:
 
     // --- interface used by QQmlPropertyCacheCreator
     typedef QmlIR::Object CompiledObject;
+    typedef QmlIR::Binding CompiledBinding;
     using ListPropertyAssignBehavior = QmlIR::Pragma::ListPropertyAssignBehaviorValue;
 
+    // Deliberate choice of map over hash here to ensure stable generated output.
+    using IdToObjectMap = QMap<int, int>;
+
     const QmlIR::Object *objectAt(int index) const { return document->objects.at(index); }
+    QmlIR::Object *objectAt(int index) { return document->objects.at(index); }
     int objectCount() const { return document->objects.size(); }
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
@@ -86,11 +91,8 @@ public:
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
     QVector<QmlIR::Object *> *qmlObjects() const;
-    void setPropertyCaches(QQmlPropertyCacheVector &&caches);
+    QQmlPropertyCacheVector *propertyCaches();
     const QQmlPropertyCacheVector *propertyCaches() const;
-    QQmlPropertyCacheVector &&takePropertyCaches();
-    void setComponentRoots(const QVector<quint32> &roots) { m_componentRoots = roots; }
-    const QVector<quint32> &componentRoots() const { return m_componentRoots; }
     QQmlJS::MemoryPool *memoryPool();
     QStringView newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
@@ -117,7 +119,6 @@ private:
     QHash<int, QQmlCustomParser*> customParsers;
 
     // index in first hash is component index, vector inside contains object indices of objects with id property
-    QVector<quint32> m_componentRoots;
     QQmlPropertyCacheVector m_propertyCaches;
 
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
@@ -132,16 +133,9 @@ struct QQmlCompilePass
 protected:
     void recordError(const QV4::CompiledData::Location &location, const QString &description) const
     { compiler->recordError(location, description); }
-    void recordError(const QQmlError &error)
-    { compiler->recordError(error); }
 
     QV4::ResolvedTypeReference *resolvedType(int id) const
     { return compiler->resolvedType(id); }
-    bool containsResolvedType(int id) const
-    { return compiler->resolvedTypes->contains(id); }
-    QV4::ResolvedTypeReferenceMap::iterator insertResolvedType(
-            int id, QV4::ResolvedTypeReference *value)
-    { return compiler->resolvedTypes->insert(id, value); }
 
     QQmlTypeCompiler *compiler;
 };
@@ -233,44 +227,6 @@ public:
 private:
     const QVector<QmlIR::Object*> &qmlObjects;
     const QQmlPropertyCacheVector * const propertyCaches;
-};
-
-class QQmlComponentAndAliasResolver : public QQmlCompilePass
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlAnonymousComponentResolver)
-public:
-    QQmlComponentAndAliasResolver(QQmlTypeCompiler *typeCompiler);
-
-    bool resolve(int root = 0);
-
-protected:
-    void findAndRegisterImplicitComponents(
-            const QmlIR::Object *obj, const QQmlPropertyCache::ConstPtr &propertyCache);
-    bool collectIdsAndAliases(int objectIndex);
-    bool resolveAliases(int componentIndex);
-    void propertyDataForAlias(QmlIR::Alias *alias, int *type, quint32 *propertyFlags);
-
-    enum AliasResolutionResult {
-        NoAliasResolved,
-        SomeAliasesResolved,
-        AllAliasesResolved
-    };
-
-    AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlError *error);
-
-    QQmlEnginePrivate *enginePrivate;
-    QQmlJS::MemoryPool *pool;
-
-    QVector<QmlIR::Object*> *qmlObjects;
-
-    // indices of the objects that are actually Component {}
-    QVector<quint32> componentRoots;
-
-    // Deliberate choice of map over hash here to ensure stable generated output.
-    QMap<int, int> _idToObjectIndex;
-    QVector<int> _objectsWithAliases;
-
-    QQmlPropertyCacheVector propertyCaches;
 };
 
 class QQmlDeferredAndCustomParserBindingScanner : public QQmlCompilePass

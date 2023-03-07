@@ -1080,6 +1080,7 @@ public:
 
     const Binding *bindingsBegin() const { return bindingTable(); }
     const Binding *bindingsEnd() const { return bindingTable() + nBindings; }
+    int bindingCount() const { return nBindings; }
 
     const Property *propertiesBegin() const { return propertyTable(); }
     const Property *propertiesEnd() const { return propertyTable() + nProperties; }

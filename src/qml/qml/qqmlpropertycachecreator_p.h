@@ -115,14 +115,6 @@ public:
      */
     QQmlError verifyNoICCycle();
 
-    /*!
-        \internal
-        Fills the property caches for the CompiledObjects by
-        calling buildMetaObjectsIncrementally until it can no
-        longer resume.
-     */
-    QQmlError buildMetaObjects();
-
     enum class VMEMetaObjectIsRequired {
         Maybe,
         Always
@@ -230,20 +222,6 @@ QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectsIncrementally()
 
     auto diag = buildMetaObjectRecursively(/*root object*/0, m_context, VMEMetaObjectIsRequired::Maybe);
     return {diag, false, 0};
-}
-
-template <typename ObjectContainer>
-inline  QQmlError
-QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
-{
-    QQmlError error = verifyNoICCycle();
-    if (error.isValid())
-        return error;
-    QQmlPropertyCacheCreatorBase::IncrementalResult result;
-    do {
-        result = buildMetaObjectsIncrementally();
-    } while (result.canResume);
-    return result.error;
 }
 
 template <typename ObjectContainer>
@@ -753,18 +731,16 @@ class QQmlPropertyCacheAliasCreator
 public:
     typedef typename ObjectContainer::CompiledObject CompiledObject;
 
-    QQmlPropertyCacheAliasCreator(QQmlPropertyCacheVector *propertyCaches, const ObjectContainer *objectContainer);
-
-    void appendAliasPropertiesToMetaObjects(QQmlEnginePrivate *enginePriv);
-
-    QQmlError appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex, QQmlEnginePrivate *enginePriv);
+    QQmlPropertyCacheAliasCreator(
+            QQmlPropertyCacheVector *propertyCaches, const ObjectContainer *objectContainer);
+    QQmlError appendAliasesToPropertyCache(
+            const CompiledObject &component, int objectIndex, QQmlEnginePrivate *enginePriv);
 
 private:
-    void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex, QQmlEnginePrivate *enginePriv);
-    QQmlError propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type, QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv);
-
-    void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
-
+    QQmlError propertyDataForAlias(
+            const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
+            QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags,
+            QQmlEnginePrivate *enginePriv);
     int objectForId(const CompiledObject &component, int id) const;
 
     QQmlPropertyCacheVector *propertyCaches;
@@ -772,107 +748,11 @@ private:
 };
 
 template <typename ObjectContainer>
-inline QQmlPropertyCacheAliasCreator<ObjectContainer>::QQmlPropertyCacheAliasCreator(QQmlPropertyCacheVector *propertyCaches, const ObjectContainer *objectContainer)
+inline QQmlPropertyCacheAliasCreator<ObjectContainer>::QQmlPropertyCacheAliasCreator(
+        QQmlPropertyCacheVector *propertyCaches, const ObjectContainer *objectContainer)
     : propertyCaches(propertyCaches)
     , objectContainer(objectContainer)
 {
-
-}
-
-template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesToMetaObjects(QQmlEnginePrivate *enginePriv)
-{
-    // skip the root object (index 0) as that one does not have a first object index originating
-    // from a binding.
-    for (int i = 1; i < objectContainer->objectCount(); ++i) {
-        const CompiledObject &component = *objectContainer->objectAt(i);
-        if (!component.hasFlag(QV4::CompiledData::Object::IsComponent))
-            continue;
-
-        const auto rootBinding = component.bindingsBegin();
-        appendAliasPropertiesInMetaObjectsWithinComponent(component, rootBinding->value.objectIndex, enginePriv);
-    }
-
-    const int rootObjectIndex = 0;
-    appendAliasPropertiesInMetaObjectsWithinComponent(*objectContainer->objectAt(rootObjectIndex), rootObjectIndex, enginePriv);
-}
-
-template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex, QQmlEnginePrivate *enginePriv)
-{
-    QVector<int> objectsWithAliases;
-    collectObjectsWithAliasesRecursively(firstObjectIndex, &objectsWithAliases);
-    if (objectsWithAliases.isEmpty())
-        return;
-
-    const auto allAliasTargetsExist = [this, &component](const CompiledObject &object) {
-        auto alias = object.aliasesBegin();
-        auto end = object.aliasesEnd();
-        for ( ; alias != end; ++alias) {
-            Q_ASSERT(alias->hasFlag(QV4::CompiledData::Alias::Resolved));
-
-            const int targetObjectIndex = objectForId(component, alias->targetObjectId());
-            Q_ASSERT(targetObjectIndex >= 0);
-
-            if (alias->isAliasToLocalAlias())
-                continue;
-
-            if (alias->encodedMetaPropertyIndex == -1)
-                continue;
-
-            const QQmlPropertyCache::ConstPtr targetCache
-                    = propertyCaches->at(targetObjectIndex);
-            Q_ASSERT(targetCache);
-
-            int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
-            const QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
-            if (!targetProperty)
-                return false;
-       }
-       return true;
-    };
-
-    do {
-        QVector<int> pendingObjects;
-
-        for (int objectIndex: std::as_const(objectsWithAliases)) {
-            const CompiledObject &object = *objectContainer->objectAt(objectIndex);
-
-            if (allAliasTargetsExist(object)) {
-                appendAliasesToPropertyCache(component, objectIndex, enginePriv);
-            } else {
-                pendingObjects.append(objectIndex);
-            }
-
-        }
-        objectsWithAliases = std::move(pendingObjects);
-    } while (!objectsWithAliases.isEmpty());
-}
-
-template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const
-{
-    const CompiledObject &object = *objectContainer->objectAt(objectIndex);
-    if (object.aliasCount() > 0)
-        objectsWithAliases->append(objectIndex);
-
-    // Stop at Component boundary
-    if (object.hasFlag(QV4::CompiledData::Object::IsComponent) && objectIndex != /*root object*/0)
-        return;
-
-    auto binding = object.bindingsBegin();
-    auto end = object.bindingsEnd();
-    for (; binding != end; ++binding) {
-        switch (binding->type()) {
-        case QV4::CompiledData::Binding::Type_Object:
-        case QV4::CompiledData::Binding::Type_AttachedProperty:
-        case QV4::CompiledData::Binding::Type_GroupProperty:
-            collectObjectsWithAliasesRecursively(binding->value.objectIndex, objectsWithAliases);
-            break;
-        default:
-            break;
-        }
-    }
 }
 
 template <typename ObjectContainer>
@@ -912,7 +792,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
             lastAlias = targetAlias;
         } while (lastAlias->isAliasToLocalAlias());
 
-        return propertyDataForAlias(component, *lastAlias, type, version, propertyFlags, enginePriv);
+        return propertyDataForAlias(
+                    component, *lastAlias, type, version, propertyFlags, enginePriv);
     }
 
     const int targetObjectIndex = objectForId(component, alias.targetObjectId());
@@ -947,7 +828,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         propertyFlags->type = QQmlPropertyData::Flags::QObjectDerivedType;
     } else {
         int coreIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).coreIndex();
-        int valueTypeIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).valueTypeIndex();
+        int valueTypeIndex = QQmlPropertyIndex::fromEncoded(
+                    alias.encodedMetaPropertyIndex).valueTypeIndex();
 
         QQmlPropertyCache::ConstPtr targetCache = propertyCaches->at(targetObjectIndex);
         Q_ASSERT(targetCache);
