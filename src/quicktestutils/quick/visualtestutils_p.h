@@ -187,6 +187,10 @@ namespace QQuickVisualTestUtils
         QPointer<QWindow> m_window;
         Qt::KeyboardModifiers m_modifiers;
     };
+
+    QPoint mapCenterToWindow(const QQuickItem *item);
+    QPoint mapToWindow(const QQuickItem *item, qreal relativeX, qreal relativeY);
+    QPoint mapToWindow(const QQuickItem *item, const QPointF &relativePos);
 }
 
 #define QQUICK_VERIFY_POLISH(item) \

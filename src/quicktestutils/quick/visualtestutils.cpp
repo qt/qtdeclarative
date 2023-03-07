@@ -198,6 +198,21 @@ void QQuickVisualTestUtils::MnemonicKeySimulator::click(Qt::Key key)
     release(key);
 }
 
+QPoint QQuickVisualTestUtils::mapCenterToWindow(const QQuickItem *item)
+{
+    return item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint();
+}
+
+QPoint QQuickVisualTestUtils::mapToWindow(const QQuickItem *item, qreal relativeX, qreal relativeY)
+{
+    return item->mapToScene(QPointF(relativeX, relativeY)).toPoint();
+}
+
+QPoint QQuickVisualTestUtils::mapToWindow(const QQuickItem *item, const QPointF &relativePos)
+{
+    return mapToWindow(item, relativePos.x(), relativePos.y());
+}
+
 QT_END_NAMESPACE
 
 #include "moc_visualtestutils_p.cpp"
