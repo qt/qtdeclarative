@@ -1375,6 +1375,23 @@ bool DomItem::hasAnnotations()
     return hasAnnotations;
 }
 
+/*!
+    \internal
+    \brief Visits recursively all the children of this item using the given visitors.
+
+    First, the visitor is called and can continue or exit the visit by returning true or false.
+
+    Second, the openingVisitor is called and controls if the children of the current item needs to
+   be visited or not by returning true or false. In either case, the visitation of all the other
+   siblings is not affected. If both visitor and openingVisitor returned true, then the childrens of
+   the current item will be recursively visited.
+
+    Finally, after all the children were visited by visitor and openingVisitor, the closingVisitor
+   is called. Its return value is currently ignored.
+
+    Compared to the AST::Visitor*, openingVisitor and closingVisitor are called in the same order as
+   the visit() and endVisit()-calls.
+ */
 bool DomItem::visitTree(Path basePath, DomItem::ChildrenVisitor visitor, VisitOptions options,
                         DomItem::ChildrenVisitor openingVisitor,
                         DomItem::ChildrenVisitor closingVisitor)
