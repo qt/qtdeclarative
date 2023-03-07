@@ -34,6 +34,7 @@
 #include <QtCore/QtGlobal>
 #include <QtCore/QTimeZone>
 #include <optional>
+#include <type_traits>
 
 QT_BEGIN_NAMESPACE
 
@@ -42,6 +43,37 @@ namespace Dom {
 
 Q_LOGGING_CATEGORY(writeOutLog, "qt.qmldom.writeOut", QtWarningMsg);
 static Q_LOGGING_CATEGORY(refLog, "qt.qmldom.ref", QtWarningMsg);
+
+template<class... TypeList>
+struct CheckDomElementT;
+
+template<class... Ts>
+struct CheckDomElementT<std::variant<Ts...>> : std::conjunction<IsInlineDom<Ts>...>
+{
+};
+
+/*!
+   \internal
+   \class QQmljs::Dom::ElementT
+
+   \brief A variant that contains all the Dom elements that an DomItem can contain.
+
+   Types in this variant are divided in two categories: normal Dom elements and internal Dom
+   elements.
+   The first ones are inheriting directly or indirectly from DomBase, and are the usual elements
+   that a DomItem can wrap around, like a QmlFile or an QmlObject. They should all appear in
+   ElementT as pointers, e.g. QmlFile*.
+   The internal Dom elements are a little bit special. They appear in ElementT without pointer, do
+   not inherit from DomBase \b{but} should behave like a smart DomBase-pointer. That is, they should
+   dereference as if they were a DomBase* pointing to a normal DomElement by implementing
+   operator->() and operator*().
+   Adding types here that are neither inheriting from DomBase nor implementing a smartpointer to
+   DomBase will throw compilation errors in the std::visit()-calls on this type.
+*/
+static_assert(CheckDomElementT<ElementT>::value,
+              "Types in ElementT must either be a pointer to a class inheriting "
+              "from DomBase or (for internal Dom structures) implement a smart "
+              "pointer pointing to a class inheriting from DomBase");
 
 using std::shared_ptr;
 /*!
