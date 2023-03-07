@@ -34,6 +34,7 @@ class QQuickMaterialPlaceholderText : public QQuickPlaceholderText
     Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding NOTIFY verticalPaddingChanged FINAL)
     Q_PROPERTY(qreal controlImplicitBackgroundHeight READ controlImplicitBackgroundHeight
         WRITE setControlImplicitBackgroundHeight NOTIFY controlImplicitBackgroundHeightChanged FINAL)
+    Q_PROPERTY(qreal controlHeight READ controlHeight WRITE setControlHeight FINAL)
     QML_NAMED_ELEMENT(FloatingPlaceholderText)
     QML_ADDED_IN_VERSION(6, 5)
 
@@ -54,6 +55,9 @@ public:
     qreal controlImplicitBackgroundHeight() const;
     void setControlImplicitBackgroundHeight(qreal controlImplicitBackgroundHeight);
 
+    qreal controlHeight() const;
+    void setControlHeight(qreal controlHeight);
+
     qreal verticalPadding() const;
     void setVerticalPadding(qreal verticalPadding);
 
@@ -69,6 +73,7 @@ private:
     bool shouldFloat() const;
     bool shouldAnimate() const;
 
+    void updateY();
     qreal normalTargetY() const;
     qreal floatingTargetY() const;
 
@@ -85,6 +90,7 @@ private:
     int m_largestHeight = 0;
     qreal m_verticalPadding = 0;
     qreal m_controlImplicitBackgroundHeight = 0;
+    qreal m_controlHeight = 0;
     QPointer<QParallelAnimationGroup> m_focusInAnimation;
     QPointer<QParallelAnimationGroup> m_focusOutAnimation;
 };
