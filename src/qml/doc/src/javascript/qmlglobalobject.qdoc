@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-javascript-qmlglobalobject.html
@@ -7,22 +7,27 @@
 
 
 The QML JavaScript host environment implements the following host objects and functions.
-These are built in and can be used from any JavaScript code loaded in QML, without
+They are built-in, so you can use them from any JavaScript code loaded in QML, without
 additional imports:
 
 \list
-\li The \l{QmlGlobalQtObject}{Qt object}: This object is specific to QML, and provides helper methods
+\li The \l{QmlGlobalQtObject}{Qt object}: A QML object that offers helper methods
     and properties specific to the QML environment.
-\li qsTr(), qsTranslate(), qsTrId(), QT_TR_NOOP(), QT_TRANSLATE_NOOP(), and QT_TRID_NOOP() functions:
-    These functions are specific to QML, and provide \l{Overview of the Translation Process}{translation capabilities} to the QML environment.
-\li gc() function: This function is specific to QML, and provides a way to manually trigger garbage collection.
-\li print() function: This function is specific to QML, and provides a simple way to output information to the console.
-\li The \l{Console API}{console object}: This object implements a subset of the \l{http://getfirebug.com/wiki/index.php/Console_API}{FireBug Console API}.
-\li \l{XMLHttpRequest}, DOMException: These objects implement a subset of the \l{http://www.w3.org/TR/XMLHttpRequest/}{W3C XMLHttpRequest specification}.
+\li \l {Qt::}{qsTr()}, \l {Qt::}{qsTranslate()}, \l {Qt::}{qsTrId()}, \l {Qt::}{qsTrNoOp()},
+    \l {Qt::}{qsTranslateNoOp()}, \l {Qt::}{qsTrIdNoOp()} functions:
+    QML functions that let you translate \l{Mark Strings for Translation}
+    {strings} and \l{Mark Translatable Data Text Strings}{string literals} in the
+    QML environment.
+\li gc() function: A QML function that manually triggers garbage collection.
+\li print() function: A QML function that prints output to the console.
+\li The \l{Console API}{console object}: Implements a subset of the
+    \l{http://getfirebug.com/wiki/index.php/Console_API}{FireBug Console API}.
+\li \l{XMLHttpRequest}, DOMException: Implements a subset of the
+    \l{http://www.w3.org/TR/XMLHttpRequest/}{W3C XMLHttpRequest specification}.
 \endlist
 
-\note The \l {QJSEngine::}{globalObject()} function cannot be used to modify
-the global object of a \l QQmlEngine. For more information about this, see
+\note You cannot use the \l {QJSEngine::}{globalObject()} function to change
+the global object of a \l QQmlEngine. For more information, see
 \l {JavaScript Environment Restrictions}.
 
 */
