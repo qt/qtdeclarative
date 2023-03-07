@@ -715,12 +715,13 @@ void tst_TapHandler::singleTapDoubleTap()
     QSignalSpy singleTapSpy(tapHandler, &QQuickTapHandler::singleTapped);
     QSignalSpy doubleTapSpy(tapHandler, &QQuickTapHandler::doubleTapped);
 
-    auto tap = [window, tapHandler, deviceType, this](const QPoint &p1) {
+    auto tap = [window, tapHandler, deviceType, this](const QPoint &p1, int delay = 10) {
         switch (static_cast<QPointingDevice::DeviceType>(deviceType)) {
         case QPointingDevice::DeviceType::Mouse:
-            QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, p1, 10);
+            QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, p1, delay);
             break;
         case QPointingDevice::DeviceType::TouchScreen:
+            QTest::qWait(delay);
             QTest::touchEvent(window, touchDevice).press(0, p1, window);
             QTRY_VERIFY(tapHandler->isPressed());
             QTest::touchEvent(window, touchDevice).release(0, p1, window);
@@ -733,6 +734,23 @@ void tst_TapHandler::singleTapDoubleTap()
     // tap once
     const QPoint p1 = button->mapToScene(QPointF(2, 2)).toPoint();
     tap(p1);
+    QCOMPARE(tappedSpy.size(), 1);
+    QCOMPARE(doubleTapSpy.size(), 0);
+
+    // tap again immediately afterwards
+    tap(p1);
+    QTRY_COMPARE(doubleTapSpy.size(), expectedDoubleTapCount);
+    QCOMPARE(tappedSpy.size(), 2);
+    QCOMPARE(singleTapSpy.size(), expectedEndingSingleTapCount);
+
+    // wait past the double-tap interval, then do it again
+    const auto delay = qApp->styleHints()->mouseDoubleClickInterval() + 10;
+    tappedSpy.clear();
+    singleTapSpy.clear();
+    doubleTapSpy.clear();
+
+    // tap once with delay
+    tap(p1, delay);
     QCOMPARE(tappedSpy.size(), 1);
     QCOMPARE(doubleTapSpy.size(), 0);
 
