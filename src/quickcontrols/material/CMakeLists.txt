@@ -141,9 +141,16 @@ qt_internal_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2ma
         "images/drop-indicator@2x.png"
         "images/drop-indicator@3x.png"
         "images/drop-indicator@4x.png"
-        "shaders/+glslcore/RectangularGlow.frag"
-        "shaders/+hlsl/RectangularGlow.frag"
-        "shaders/+qsb/RectangularGlow.frag"
+)
+
+qt_internal_add_shaders(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin_shaders"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/qt-project.org/imports/QtQuick/Controls/Material"
+    FILES
         "shaders/RectangularGlow.frag"
 )
 
