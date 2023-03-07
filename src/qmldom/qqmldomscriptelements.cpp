@@ -278,3 +278,22 @@ void VariableDeclaration::createFileLocations(FileLocations::Tree base)
     BaseT::createFileLocations(base);
     m_declarations.createFileLocations(base);
 }
+
+bool ReturnStatement::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+{
+    bool cont = true;
+    cont &= wrap(self, visitor, Fields::expression, m_expression);
+    return cont;
+}
+
+void ReturnStatement::updatePathFromOwner(Path p)
+{
+    BaseT::updatePathFromOwner(p);
+    m_expression.base()->updatePathFromOwner(p.field(Fields::expression));
+}
+
+void ReturnStatement::createFileLocations(FileLocations::Tree base)
+{
+    BaseT::createFileLocations(base);
+    m_expression.base()->createFileLocations(base);
+}

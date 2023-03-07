@@ -1246,6 +1246,30 @@ private slots:
                 }
             }
         }
+        {
+            DomItem block =
+                    rootQmlObject.path(".methods[\"returningFunction\"][0].body.scriptElement");
+            QCOMPARE(block.internalKind(), DomType::ScriptBlockStatement);
+            QCOMPARE(block.field(Fields::statements).indexes(), 1);
+            DomItem conditional = block.field(Fields::statements).index(0);
+            DomItem consequence = conditional.field(Fields::consequence);
+            QCOMPARE(consequence.internalKind(), DomType::ScriptReturnStatement);
+            {
+                DomItem returnValue = consequence.field(Fields::expression);
+                QCOMPARE(returnValue.internalKind(), DomType::ScriptLiteral);
+                QCOMPARE(returnValue.field(Fields::value).value().toDouble(), 123);
+            }
+            DomItem alternative = conditional.field(Fields::alternative);
+            QCOMPARE(alternative.internalKind(), DomType::ScriptReturnStatement);
+            {
+                DomItem returnValue = alternative.field(Fields::expression);
+                QCOMPARE(returnValue.internalKind(), DomType::ScriptBinaryExpression);
+                QCOMPARE(returnValue.field(Fields::left).field(Fields::value).value().toDouble(),
+                         1);
+                QCOMPARE(returnValue.field(Fields::right).field(Fields::value).value().toDouble(),
+                         2);
+            }
+        }
     }
 
 private:

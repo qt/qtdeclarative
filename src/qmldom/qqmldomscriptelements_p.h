@@ -241,6 +241,24 @@ private:
     ScriptElementVariant m_alternative;
 };
 
+class ReturnStatement : public ScriptElementBase<DomType::ScriptReturnStatement>
+{
+public:
+    using BaseT::BaseT;
+    ~ReturnStatement() override{};
+
+    // minimal required overload for this to be wrapped as DomItem:
+    bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
+    void updatePathFromOwner(Path p) override;
+    void createFileLocations(FileLocations::Tree base) override;
+
+    ScriptElementVariant expression() const { return m_expression; }
+    void setExpression(ScriptElementVariant expression) { m_expression = expression; }
+
+private:
+    ScriptElementVariant m_expression;
+};
+
 class BinaryExpression : public ScriptElementBase<DomType::ScriptBinaryExpression>
 {
 public:

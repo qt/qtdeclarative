@@ -303,6 +303,9 @@ public:
     bool visit(AST::Block *block) override;
     void endVisit(AST::Block *) override;
 
+    bool visit(AST::ReturnStatement *block) override;
+    void endVisit(AST::ReturnStatement *) override;
+
     bool visit(AST::ForStatement *forStatement) override;
     void endVisit(AST::ForStatement *forStatement) override;
 

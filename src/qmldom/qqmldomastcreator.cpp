@@ -1256,6 +1256,30 @@ void QQmlDomAstCreator::endVisit(AST::IfStatement *ifStatement)
     pushScriptElement(current);
 }
 
+bool QQmlDomAstCreator::visit(AST::ReturnStatement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ReturnStatement *returnStatement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::ReturnStatement>(returnStatement);
+
+    if (returnStatement->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setExpression(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode({});
+    }
+
+    pushScriptElement(current);
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();

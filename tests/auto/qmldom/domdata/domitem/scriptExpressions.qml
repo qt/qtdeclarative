@@ -36,7 +36,13 @@ Item {
         } else {
             i = 456
         }
+    }
 
+    function returningFunction() {
+        if (i)
+            return 123;
+        else
+            return 1 + 2;
     }
 
     function testForNull() {

@@ -200,6 +200,7 @@ enum class DomType {
     ScriptFunctionDeclaration,
     ScriptVariableDeclaration,
     ScriptVariableDeclarationEntry,
+    ScriptReturnStatement,
 
     ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
