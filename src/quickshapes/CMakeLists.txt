@@ -37,20 +37,18 @@ qt_internal_extend_target(qmlshapesplugin
     LIBRARIES Qt::QuickShapesPrivate
 )
 
-# Resources:
-set(qtquickshapes_resource_files
-    "shaders_ng/conicalgradient.frag.qsb"
-    "shaders_ng/conicalgradient.vert.qsb"
-    "shaders_ng/lineargradient.frag.qsb"
-    "shaders_ng/lineargradient.vert.qsb"
-    "shaders_ng/radialgradient.frag.qsb"
-    "shaders_ng/radialgradient.vert.qsb"
-)
-
-qt_internal_add_resource(QuickShapesPrivate "qtquickshapes"
+qt_internal_add_shaders(QuickShapesPrivate "qtquickshapes_shaders"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
     PREFIX
         "/qt-project.org/shapes"
     FILES
-        ${qtquickshapes_resource_files}
+        "shaders_ng/lineargradient.vert"
+        "shaders_ng/lineargradient.frag"
+        "shaders_ng/radialgradient.vert"
+        "shaders_ng/radialgradient.frag"
+        "shaders_ng/conicalgradient.vert"
+        "shaders_ng/conicalgradient.frag"
 )
-

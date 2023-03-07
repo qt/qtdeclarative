@@ -15,7 +15,7 @@
 static void initResources()
 {
 #if defined(QT_STATIC)
-    Q_INIT_RESOURCE(qtquickshapes);
+    Q_INIT_RESOURCE(qtquickshapes_shaders);
 #endif
 }
 
