@@ -612,7 +612,7 @@ QMLDOM_FIELD(values);
 QMLDOM_FIELD(version);
 QMLDOM_FIELD(when);
 QMLDOM_FIELD(write);
-}
+} // namespace Fields
 
 class Source;
 size_t qHash(const Path &, size_t);

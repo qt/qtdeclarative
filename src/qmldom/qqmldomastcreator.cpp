@@ -253,6 +253,7 @@ class QmlDomAstCreator final : public AST::Visitor
             if (p.length() > 3)
                 p = p.mid(p.length() - 3, 3);
             break;
+
         default:
             qCWarning(domLog) << "Unexpected type in createMap:" << domTypeToString(k);
             Q_UNREACHABLE();

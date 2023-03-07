@@ -61,17 +61,36 @@ The subclass *must* have a
 \endcode
 entry with its kind to enable casting usng the DomItem::as DomItem::ownerAs templates.
 
-The minimal overload set to be usable is:
+The minimal overload set to be usable consists of following methods:
+\list
+\li \c{kind()} returns the kind of the current element:
 \code
-    Kind kind() const override {  return kindValue; } // returns the kind of the current element
-    Path pathFromOwner(DomItem &self) const override; // returns the path from the owner to the
-current element Path canonicalPath(DomItem &self) const override; // returns the path from virtual
-bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem)>) const = 0; // iterates
-the *direct* subpaths, returns false if a quick end was requested \endcode But you probably want to
-subclass either DomElement of OwningItem for your element. DomElement stores its pathFromOwner, and
-computes the canonicalPath from it and its owner. OwningItem is the unit for updates to the Dom
-model, exposed changes always change at least one OwningItem. They have their lifetime handled with
-shared_ptr and own (i.e. are responsible of freeing) other items in them.
+    Kind kind() const override {  return kindValue; }
+\endcode
+
+\li \c{pathFromOwner()} returns the path from the owner to the current element
+\code
+    Path pathFromOwner(DomItem &self) const override;
+\endcode
+
+\li \c{canonicalPath()} returns the path
+\code
+    Path canonicalPath(DomItem &self) const override;
+\endcode
+
+\li \c{iterateDirectSubpaths} iterates the *direct* subpaths/children and returns false if a quick
+end was requested:
+\code
+bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem)>) const = 0;
+\endcode
+
+\endlist
+
+But you probably want to subclass either \c DomElement or \c OwningItem for your element. \c
+DomElement stores its \c pathFromOwner, and computes the \c canonicalPath from it and its owner. \c
+OwningItem is the unit for updates to the Dom model, exposed changes always change at least one \c
+OwningItem. They have their lifetime handled with \c shared_ptr and own (i.e. are responsible of
+freeing) other items in them.
 
 \sa QQml::Dom::DomItem, QQml::Dom::DomElement, QQml::Dom::OwningItem
 */

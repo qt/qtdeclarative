@@ -193,9 +193,14 @@ union SubclassStorage {
     ~SubclassStorage() { data()->~T(); }
 };
 
-class QMLDOM_EXPORT DomBase{
+class QMLDOM_EXPORT DomBase
+{
 public:
+    using FilterT = function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)>;
+
     virtual ~DomBase() = default;
+
+    DomBase *domBase() { return static_cast<DomBase *>(this); }
 
     // minimal overload set:
     virtual DomType kind() const = 0;
@@ -211,9 +216,7 @@ public:
 
     virtual DomItem containingObject(
             DomItem &self) const; // the DomItem corresponding to the canonicalSource source
-    virtual void
-    dump(DomItem &, Sink sink, int indent,
-         function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter) const;
+    virtual void dump(DomItem &, Sink sink, int indent, FilterT filter) const;
     virtual quintptr id() const;
     QString typeName() const;
 
@@ -285,6 +288,7 @@ public:
     Path canonicalPath(DomItem &self) const override;
     DomItem containingObject(DomItem &self) const override;
     virtual void updatePathFromOwner(Path newPath);
+
 private:
     Path m_pathFromOwner;
 };
@@ -491,6 +495,7 @@ public:
             return m_value.value<T *>();
         }
     }
+
     template <typename T>
     T *mutableAs()
     {
@@ -502,6 +507,7 @@ public:
             return m_value.value<T *>();
         }
     }
+
     SimpleObjectWrapBase() = delete;
     virtual void copyTo(SimpleObjectWrapBase *) const { Q_ASSERT(false); }
     virtual void moveTo(SimpleObjectWrapBase *) const { Q_ASSERT(false); }
@@ -1143,10 +1149,12 @@ private:
         return nullptr;
     }
     DomBase *mutableBase();
+
     template<typename Env, typename Owner>
     DomItem(Env, Owner, Path, std::nullptr_t) : DomItem()
     {
     }
+
     template<typename Env, typename Owner, typename T,
              typename = std::enable_if_t<IsInlineDom<std::decay_t<T>>::value>>
     DomItem(Env env, Owner owner, Path ownerPath, T el)
