@@ -700,7 +700,15 @@ qt_internal_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-qt_internal_create_tracepoints(Qml qtqml.tracepoints)
+qt_internal_generate_tracepoints(Qml qml
+    SOURCES
+        qml/qqmlobjectcreator.cpp
+        qml/qqmlboundsignal.cpp
+        qml/qqmlbinding.cpp
+        qml/qqmltypeloader.cpp
+        jsruntime/qv4vme_moth.cpp
+)
+
 qt_internal_add_docs(Qml
     doc/qtqml.qdocconf
 )

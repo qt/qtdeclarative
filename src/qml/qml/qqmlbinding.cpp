@@ -29,6 +29,9 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_TRACE_POINT(qtqml, QQmlBinding_entry, const QQmlEngine *engine, const QString &function, const QString &fileName, int line, int column)
+Q_TRACE_POINT(qtqml, QQmlBinding_exit)
+
 QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
 {
     QQmlBinding *b = newBinding(property);
