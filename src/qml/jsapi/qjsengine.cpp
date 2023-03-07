@@ -922,6 +922,7 @@ bool QJSEngine::convertV2(const QJSValue &value, QMetaType metaType, void *ptr)
     if (const QString *string = QJSValuePrivate::asQString(&value))
         return convertString(*string, metaType, ptr);
 
+    // Does not need scoping since QJSValue still holds on to the value.
     return QV4::ExecutionEngine::metaTypeFromJS(QJSValuePrivate::asReturnedValue(&value), metaType, ptr);
 }
 
@@ -929,14 +930,18 @@ bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *
 {
     // TODO: We could probably avoid creating a QV4::Value in many cases, but we'd have to
     //       duplicate much of metaTypeFromJS and some methods of QV4::Value itself here.
-    return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromVariant(value), metaType, ptr);
+    QV4::Scope scope(handle());
+    QV4::ScopedValue scoped(scope, scope.engine->fromVariant(value));
+    return QV4::ExecutionEngine::metaTypeFromJS(scoped, metaType, ptr);
 }
 
 bool QJSEngine::convertMetaType(QMetaType fromType, const void *from, QMetaType toType, void *to)
 {
     // TODO: We could probably avoid creating a QV4::Value in many cases, but we'd have to
     //       duplicate much of metaTypeFromJS and some methods of QV4::Value itself here.
-    return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromData(fromType, from), toType, to);
+    QV4::Scope scope(handle());
+    QV4::ScopedValue scoped(scope, scope.engine->fromData(fromType, from));
+    return QV4::ExecutionEngine::metaTypeFromJS(scoped, toType, to);
 }
 
 QString QJSEngine::convertQObjectToString(QObject *object)
