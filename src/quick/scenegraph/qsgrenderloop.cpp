@@ -40,6 +40,18 @@ extern bool qsg_useConsistentTiming();
 
 #define ENABLE_DEFAULT_BACKEND
 
+Q_TRACE_POINT(qtquick, QSG_renderWindow_entry)
+Q_TRACE_POINT(qtquick, QSG_renderWindow_exit)
+Q_TRACE_POINT(qtquick, QSG_polishItems_entry)
+Q_TRACE_POINT(qtquick, QSG_polishItems_exit)
+Q_TRACE_POINT(qtquick, QSG_sync_entry)
+Q_TRACE_POINT(qtquick, QSG_sync_exit)
+Q_TRACE_POINT(qtquick, QSG_render_entry)
+Q_TRACE_POINT(qtquick, QSG_render_exit)
+Q_TRACE_POINT(qtquick, QSG_swap_entry)
+Q_TRACE_POINT(qtquick, QSG_swap_exit)
+
+
 /*
      - Uses one QRhi per window. (and so each window has its own QOpenGLContext or ID3D11Device(Context) etc.)
      - Animations are advanced using the standard timer (no custom animation

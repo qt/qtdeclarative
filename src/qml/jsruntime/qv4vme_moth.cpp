@@ -35,6 +35,9 @@
 
 #undef COUNT_INSTRUCTIONS
 
+Q_TRACE_POINT(qtqml, QQmlV4_function_call_entry, const QV4::ExecutionEngine *engine, const QString &function, const QString &fileName, int line, int column)
+Q_TRACE_POINT(qtqml, QQmlV4_function_call_exit)
+
 enum { ShowWhenDeoptimiationHappens = 0 };
 
 extern "C" {

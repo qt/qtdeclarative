@@ -46,6 +46,9 @@ namespace {
     };
 }
 
+Q_TRACE_POINT(qtqml, QQmlCompiling_entry, const QUrl &url)
+Q_TRACE_POINT(qtqml, QQmlCompiling_exit)
+
 /*!
 \class QQmlTypeLoader
 \brief The QQmlTypeLoader class abstracts loading files and their dependencies over the network.

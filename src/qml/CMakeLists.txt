@@ -728,8 +728,15 @@ qt_internal_extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLAN
         -Wno-c++0x-compat
 )
 
+qt_internal_generate_tracepoints(Qml qml
+    SOURCES
+        qml/qqmlobjectcreator.cpp
+        qml/qqmlboundsignal.cpp
+        qml/qqmlbinding.cpp
+        qml/qqmltypeloader.cpp
+        jsruntime/qv4vme_moth.cpp
+)
 
-qt_internal_create_tracepoints(Qml qtqml.tracepoints)
 qt_internal_add_docs(Qml
     doc/qtqml.qdocconf
 )

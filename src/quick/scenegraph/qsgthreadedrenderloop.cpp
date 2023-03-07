@@ -85,6 +85,15 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_TRACE_POINT(qtquick, QSG_polishAndSync_entry)
+Q_TRACE_POINT(qtquick, QSG_polishAndSync_exit)
+Q_TRACE_POINT(qtquick, QSG_wait_entry)
+Q_TRACE_POINT(qtquick, QSG_wait_exit)
+Q_TRACE_POINT(qtquick, QSG_syncAndRender_entry)
+Q_TRACE_POINT(qtquick, QSG_syncAndRender_exit)
+Q_TRACE_POINT(qtquick, QSG_animations_entry)
+Q_TRACE_POINT(qtquick, QSG_animations_exit)
+
 #define QSG_RT_PAD "                    (RT) %s"
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);

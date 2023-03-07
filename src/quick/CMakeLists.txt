@@ -514,7 +514,14 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_im
         util/qquickinputmethod.cpp util/qquickinputmethod_p.h
 )
 
-qt_internal_create_tracepoints(Quick qtquick.tracepoints)
+qt_internal_generate_tracepoints(Quick quick
+    SOURCES
+        scenegraph/qsgrenderloop.cpp
+        scenegraph/coreapi/qsgrenderer.cpp
+        scenegraph/qsgthreadedrenderloop.cpp
+        scenegraph/adaptations/software/qsgsoftwarethreadedrenderloop.cpp
+        scenegraph/qsgadaptationlayer.cpp
+)
 qt_internal_add_docs(Quick
     doc/qtquick.qdocconf
 )

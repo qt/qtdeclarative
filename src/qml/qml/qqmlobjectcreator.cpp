@@ -38,6 +38,19 @@ Q_LOGGING_CATEGORY(lcQmlDefaultMethod, "qt.qml.defaultmethod")
 
 QT_USE_NAMESPACE
 
+Q_TRACE_PREFIX(qtqml,
+"namespace QV4 {" \
+"struct ExecutionEngine;" \
+"namespace CompiledData {" \
+"struct CompilationUnit;" \
+"struct Object;" \
+"}}" \
+"class QQmlEngine;"
+)
+
+Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_entry, const QV4::CompiledData::CompilationUnit *compilationUnit, const QV4::CompiledData::Object *object, const QUrl &url)
+Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_exit, const QString &typeName)
+
 QQmlObjectCreator::QQmlObjectCreator(
         QQmlRefPointer<QQmlContextData> parentContext,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
