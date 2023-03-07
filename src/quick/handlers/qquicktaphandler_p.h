@@ -48,8 +48,8 @@ public:
 
     enum ExclusiveSignal {
         NotExclusive = 0,
-        SingleTap = 1 << 1,
-        DoubleTap = 1 << 2
+        SingleTap = 1 << 0,
+        DoubleTap = 1 << 1
     };
     Q_DECLARE_FLAGS(ExclusiveSignals, ExclusiveSignal)
     Q_FLAG(ExclusiveSignal)
