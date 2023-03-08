@@ -662,13 +662,13 @@ code will be generated into a C++ namespace of this name.
 For static Qt builds, \c{qmlimportscanner} is run at configure time to scan the
 \c{.qml} files of a QML module and identify the QML imports it uses (see
 \l{qt6_import_qml_plugins}{qt_import_qml_plugins()}). For non-static Qt builds,
-if the target is an executable, a similar scan is performed at build time
-to provide the information needed by deployment scripts (see
-\l{qt_deploy_qml_imports()}). Both scans can be disabled by providing the
-\c{NO_IMPORT_SCAN} option. Doing so means the project takes on the
-responsibility of ensuring all required plugins are instantiated and linked for
-static builds. For non-static builds the project must manually work out
-and deploy all QML modules used by an executable target.
+if the target is an executable, a similar scan is performed at build time to
+provide the information needed by deployment scripts (see
+\l{qt6_deploy_qml_imports}{qt_deploy_qml_imports()}). Both scans can be
+disabled by providing the \c{NO_IMPORT_SCAN} option. Doing so means the project
+takes on the responsibility of ensuring all required plugins are instantiated
+and linked for static builds. For non-static builds the project must manually
+work out and deploy all QML modules used by an executable target.
 
 \section2 Arguments for qmltc
 
