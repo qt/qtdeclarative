@@ -37,6 +37,7 @@ public:
         generateCheckBox();
         generateSwitch();
         generateQmlDir();
+        generateConfig();
     }
 
 private:
@@ -54,6 +55,22 @@ private:
             [this, &stateMap](const QString &state, const QJsonObject &artboard){
             const QString imageState = stateMap.value(state, state);
             copyImageToStyleFolder({"background"}, "button-background", imageState, artboard);
+
+            const QRectF bgGeo = getGeometry({"background"}, artboard);
+            const QRectF contentGeo = getGeometry({"label"}, artboard);
+
+            QJsonObject desc;
+            desc.insert("width", bgGeo.width());
+            desc.insert("height", bgGeo.height());
+            desc.insert("leftPadding", contentGeo.x());
+            desc.insert("topPadding", contentGeo.y());
+            desc.insert("rightPadding", qMax(0., bgGeo.width() - contentGeo.x() - contentGeo.width()));
+            desc.insert("bottomPadding", qMax(0., bgGeo.height() - contentGeo.y() - contentGeo.height()));
+            // Todo: use the radius of the rectangle to decide the stretch
+            desc.insert("horizontalStretch", QJsonArray{8, bgGeo.width() - 8});
+            desc.insert("verticalStretch", QJsonArray{8, bgGeo.width() - 8});
+
+            m_imageConfigRoot.insert(imageName("button-background", imageState), desc);
         });
     }
 
@@ -80,6 +97,33 @@ private:
             copyImageToStyleFolder({"CheckboxIndicator", "checkBackground"}, "checkbox-indicator-background", imageState, artboard);
             copyImageToStyleFolder({"CheckboxIndicator", "checkIcon"}, "checkbox-indicator-icon", imageState, artboard);
             copyImageToStyleFolder({"CheckboxIndicator", "triCheckIcon"}, "checkbox-indicator-partialicon", imageState, artboard);
+
+            const QRectF bgGeo = getGeometry({"CheckboxBackground", "background"}, artboard);
+            const QRectF contentGeo = getGeometry({"CheckboxBackground", "Label"}, artboard);
+            const QRectF indicatorGeo = getGeometry({"CheckboxIndicator"}, artboard);
+            const bool mirrored = indicatorGeo.x() > bgGeo.width() / 2;
+
+            QJsonObject desc;
+            desc.insert("width", bgGeo.width());
+            desc.insert("height", bgGeo.height());
+            desc.insert("mirrored", mirrored);
+            // Todo: use the radius of the rectangle to decide the stretch
+            desc.insert("horizontalStretch", QJsonArray{8, bgGeo.width() - 8});
+            desc.insert("verticalStretch", QJsonArray{8, bgGeo.height() - 8});
+
+            if (mirrored) {
+                // When we detect that the indicator is on the right side of
+                // the background, we create a control that is mirrored.
+                desc.insert("leftPadding", contentGeo.x());
+                desc.insert("rightPadding", qMax(0., bgGeo.width() - indicatorGeo.x() - indicatorGeo.width()));
+                desc.insert("spacing", qMax(0., indicatorGeo.x() - contentGeo.x() - contentGeo.width()));
+            } else {
+                desc.insert("leftPadding", indicatorGeo.x());
+                desc.insert("rightPadding",  qMax(0., bgGeo.width() - contentGeo.x() - contentGeo.width()));
+                desc.insert("spacing", qMax(0., contentGeo.x() - indicatorGeo.x() - indicatorGeo.width()));
+            }
+
+            m_imageConfigRoot.insert(imageName("checkbox-background", imageState), desc);
         });
     }
 
@@ -112,6 +156,25 @@ private:
         debugHeader(name);
         copyFileToStyleFolder(":/" + name + ".qml");
         m_qmlDirControls.append(name);
+    }
+
+    void generateConfig()
+    {
+        QJsonObject root;
+        root.insert("version", "1.0");
+        root.insert("images", m_imageConfigRoot);
+        QJsonDocument configDocument(root);
+
+        const QString path = m_targetPath + "/config.json";
+        const QString styleName = QFileInfo(m_targetPath).fileName();
+        debug("generating configuration: " + path);
+
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly))
+            throw std::runtime_error("Could not open file for writing: " + path.toStdString());
+
+        QTextStream out(&file);
+        out << configDocument.toJson();
     }
 
     void generateQmlDir()
@@ -163,7 +226,7 @@ private:
 
     void copyImageToStyleFolder(
         const QJsonObject objectWithAsset,
-        const QString &imageName,
+        const QString &imageBaseName,
         const QString &imageState)
     {
         // Require the images to be png for now. While we could convert svg's to
@@ -174,20 +237,19 @@ private:
             throw std::runtime_error("The image needs to be png: " + resourceName.toStdString());
 
         const QString srcPath = m_resourcePath + '/' + resourceName;
-        const QString targetState = (imageState == "") ? "" : "-" + imageState;
-        const QString targetName = "images/" + imageName + targetState + ".png";
+        const QString targetName = "images/" + imageName(imageBaseName, imageState) + ".png";
         copyFileToStyleFolder(srcPath, targetName);
     }
 
     void copyImageToStyleFolder(
         const QStringList path,
-        const QString &imageName,
+        const QString &imageBaseName,
         const QString &imageState,
         const QJsonObject artboard)
     {
         try {
             const auto objectWithAsset = getChild(path, artboard, m_document);
-            copyImageToStyleFolder(objectWithAsset, imageName, imageState);
+            copyImageToStyleFolder(objectWithAsset, imageBaseName, imageState);
         } catch (NoImageFoundException &) {
             qWarning().nospace().noquote()
                 << "Warning: no image found for: "
@@ -221,6 +283,25 @@ private:
         }
     }
 
+    QRectF getGeometry(const QJsonObject object)
+    {
+        const auto x = getValue("x", object).toDouble();
+        const auto y = getValue("y", object).toDouble();
+        const auto width = getValue("width", object).toDouble();
+        const auto height = getValue("height", object).toDouble();
+        return QRectF(x, y, width, height);
+    }
+
+    QRectF getGeometry(const QStringList &path, const QJsonObject &parent)
+    {
+        return getGeometry(getChild(path, parent, m_document));
+    }
+
+    QString imageName(const QString &baseName, const QString &state) const
+    {
+        return baseName + (state.isEmpty() ? "" : "-" + state);
+    }
+
     void debug(const QString &msg)
     {
         if (!m_verbose)
@@ -236,6 +317,7 @@ private:
 
 private:
     QJsonDocument m_document;
+    QJsonObject m_imageConfigRoot;
     QStringList m_qmlDirControls;
     QString m_resourcePath;
     QString m_targetPath;
