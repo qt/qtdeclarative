@@ -120,7 +120,7 @@ private slots:
 Q_DECLARE_METATYPE(QList<QQmlError>)
 
 tst_QQuickLoader::tst_QQuickLoader()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
 {
     qmlRegisterType<SlowComponent>("LoaderTest", 1, 0, "SlowComponent");
     qRegisterMetaType<QList<QQmlError>>();
@@ -1492,7 +1492,7 @@ void tst_QQuickLoader::setSourceAndCheckStatus()
     QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant::fromValue(QStringLiteral(""))));
     QCOMPARE(loader->status(), QQuickLoader::Null);
 
-    QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant()));
+    QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant(QUrl())));
     QCOMPARE(loader->status(), QQuickLoader::Null);
 }
 
