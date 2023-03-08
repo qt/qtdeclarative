@@ -4,7 +4,7 @@
 /*!
     \qmltype XMLHttpRequest
     \inqmlmodule QtQml
-    \brief Object for sending requests to a server
+    \brief Object for sending requests to a server.
 
     The \c XMLHttpRequest object allows scripts to perform HTTP client functionality,
     such as submitting form data or loading data asynchronously from a server.
