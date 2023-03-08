@@ -18,7 +18,7 @@ Item {
             Timer {
                 onTriggered: {
                     root.a = true
-                    l.source = "loaded.qml"
+                    l.source = "BlueRect.qml"
                 }
                 interval: 0
                 running: true
