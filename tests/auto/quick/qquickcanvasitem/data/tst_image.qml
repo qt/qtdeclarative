@@ -11,8 +11,7 @@ CanvasTestCase {
        canvas.loadImage('rgrg-256x256.png');
        canvas.loadImage('ggrr-256x256.png');
        canvas.loadImage('broken.png');
-       while (!canvas.isImageLoaded('green.png'))
-          wait(200);
+       tryVerify(function() { return canvas.isImageLoaded('green.png'); })
    }
 
    function test_3args(row) {
@@ -223,6 +222,7 @@ CanvasTestCase {
        var ctx = canvas.getContext('2d');
 
        canvas.loadImage(testCase.green);
+       tryVerify(function() { return canvas.isImageLoaded(testCase.green); })
        ctx.drawImage(testCase.green, 0, 0);
        comparePixel(ctx, 0,0, 0,255,0,255,2);
    }
