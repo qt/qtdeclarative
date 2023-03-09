@@ -3033,6 +3033,7 @@ function(qt6_generate_deploy_qml_app_script)
     set(no_value_options
         NO_UNSUPPORTED_PLATFORM_ERROR
         NO_TRANSLATIONS
+        NO_COMPILER_RUNTIME
         MACOS_BUNDLE_POST_BUILD
         DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
     )
@@ -3115,6 +3116,9 @@ function(qt6_generate_deploy_qml_app_script)
     set(common_deploy_args "")
     if(arg_NO_TRANSLATIONS)
         string(APPEND common_deploy_args "    NO_TRANSLATIONS\n")
+    endif()
+    if(arg_NO_COMPILER_RUNTIME)
+        string(APPEND common_deploy_args "    NO_COMPILER_RUNTIME\n")
     endif()
 
     # Forward the arguments that are exactly the same for qt_deploy_runtime_dependencies.
