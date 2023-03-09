@@ -97,7 +97,8 @@ Item {
         }
 
         function test_textentry() {
-            txtentry.focus = true;
+            txtentry.forceActiveFocus()
+            verify(txtentry.activeFocus)
             compare(txtentry.text, "")
             keyClick(Qt.Key_H)
             keyClick(Qt.Key_E)
