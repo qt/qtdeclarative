@@ -11,6 +11,7 @@ CanvasTestCase {
             skip("ctx.getImageData crashes on offscreen/minimal platforms");
 
         var canvas = createCanvasObject(row);
+        tryVerify(function() { return canvas.available; });
         var ctx = canvas.getContext('2d');
         var size = 17
         ctx.reset();
