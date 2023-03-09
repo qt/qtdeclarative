@@ -458,9 +458,9 @@
     itself differently according on its own state.
 
     \list
-    \li required property bool current - \c true if the delegate is \l {current.}{Keyboard navigation}
-    \li required property bool selected - \c true if the delegate is \l {selected.}{Selecting items}
-    \li required property bool editing - \c true if the delegate is being \l {edited.}{Editing cells}
+    \li required property bool current - \c true if the delegate is \l {Keyboard navigation}{current.}
+    \li required property bool selected - \c true if the delegate is \l {Selecting items}{selected.}
+    \li required property bool editing - \c true if the delegate is being \l {Editing cells}{edited.}
     \endlist
 
     The following example shows how to use these properties:
@@ -601,7 +601,7 @@
     \readonly
 
     This read-only property holds the column in the view that contains the
-    item that is current. If no item is current, it will be \c -1.
+    item that is \l {Keyboard navigation}{current.} If no item is current, it will be \c -1.
 
     \note In order for TableView to report what the current column is, you
     need to assign an \l ItemSelectionModel to \l selectionModel.
@@ -614,7 +614,7 @@
     \readonly
 
     This read-only property holds the row in the view that contains the item
-    that is current. If no item is current, it will be \c -1.
+    that is \l {Keyboard navigation}{current.} If no item is current, it will be \c -1.
 
     \note In order for TableView to report what the current row is, you
     need to assign an \l ItemSelectionModel to \l selectionModel.
@@ -833,14 +833,15 @@
 
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtIndex(QModelIndex index, PositionMode mode, point offset, rect subRect)
+    \since 6.5
 
     Positions the view such that \a index is at the position specified
     by \a mode, \a offset and \a subRect.
 
     Convenience method for calling
     \code
-    positionViewAtRow(index.row, mode & Qt.AlignVertical_Mask, offset.y, subRect)
-    positionViewAtColumn(index.column, mode & Qt.AlignVertical_Mask, offset.x, subRect)
+    positionViewAtRow(rowAtIndex(index), mode & Qt.AlignVertical_Mask, offset.y, subRect)
+    positionViewAtColumn(columnAtIndex(index), mode & Qt.AlignVertical_Mask, offset.x, subRect)
     \endcode
 */
 
@@ -987,15 +988,6 @@
     Returns the width of the given \a column. If the column is not
     loaded (and therefore not visible), the return value will be \c -1.
 
-    \note It's the applications responsibility to store what the
-    column widths are, by using a \l columnWidthProvider. Hence,
-    there is no setter function. This getter function is mostly
-    useful if the TableView doesn't have a columnWidthProvider set, since
-    otherwise you can call that function instead (which will work, even
-    for columns that are not currently visible).
-    If no columnWidthProvider is set, the width of a column will be
-    equal to its \l implicitColumnWidth().
-
     \sa columnWidthProvider, implicitColumnWidth(), isColumnLoaded(), {Row heights and column widths}
 */
 
@@ -1005,15 +997,6 @@
 
     Returns the height of the given \a row. If the row is not
     loaded (and therefore not visible), the return value will be \c -1.
-
-    \note It's the applications responsibility to store what the
-    row heights are, by using a \l rowHeightProvider. Hence,
-    there is no setter function. This getter function is mostly
-    useful if the TableView doesn't have a rowHeightProvider set, since
-    otherwise you can call that function instead (which will work, even
-    for rows that are not currently visible).
-    If no rowHeightProvider is set, the height of a row will be
-    equal to its \l implicitRowHeight().
 
     \sa rowHeightProvider, implicitRowHeight(), isRowLoaded(), {Row heights and column widths}
 */
@@ -1110,7 +1093,7 @@
     \qmlmethod qreal QtQuick::TableView::explicitColumnWidth(int column)
 
     Returns the width of the \a column set with \l setColumnWidth(). This width might
-    differ from the actual width of the column, if a \l columnWidthProvider()
+    differ from the actual width of the column, if a \l columnWidthProvider
     is in use. To get the actual width of a column, use \l columnWidth().
 
     A return value equal to \c 0 means that the column has been told to hide.
@@ -1182,7 +1165,7 @@
     \qmlmethod qreal QtQuick::TableView::explicitRowHeight(int row)
 
     Returns the height of the \a row set with \l setRowHeight(). This height might
-    differ from the actual height of the column, if a \l rowHeightProvider()
+    differ from the actual height of the column, if a \l rowHeightProvider
     is in use. To get the actual height of a row, use \l rowHeight().
 
     A return value equal to \c 0 means that the row has been told to hide.
@@ -1798,7 +1781,7 @@ QRectF QQuickTableViewPrivate::selectionRectangle() const
     // If the corner cells of the selection are loaded, we can position the
     // selection rectangle at its exact location. Otherwise we extend it out
     // to the edges of the content item. This is not ideal, but the best we
-    // can do while the location of the the corner cells are unknown.
+    // can do while the location of the corner cells are unknown.
     // This will at least move the selection handles (and other overlay) out
     // of the viewport until the affected cells are eventually loaded.
     int left = 0;
