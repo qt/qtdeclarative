@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_clearRect(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -17,6 +18,7 @@ CanvasTestCase {
 
    function test_clip(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        var composites = [ {compsite:"copy"},
                          {compsite:"destination-atop"},
@@ -47,6 +49,7 @@ CanvasTestCase {
 
    function test_globalAlpha(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        compare(ctx.globalAlpha, 1.0);
@@ -83,6 +86,7 @@ CanvasTestCase {
 
    function test_operation(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.globalCompositeOperation = 'xor';
@@ -137,6 +141,7 @@ CanvasTestCase {
 
    function test_solid(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = Qt.rgba(0, 1, 1, 1.0);
@@ -233,6 +238,7 @@ CanvasTestCase {
    }
    function test_transparent(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
@@ -330,6 +336,7 @@ CanvasTestCase {
 
    function test_uncovered(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';

@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
    function test_default(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        compare(ctx.lineWidth, 1);
@@ -16,6 +17,7 @@ CanvasTestCase {
 
    function test_cross(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#0f0';
@@ -43,6 +45,7 @@ CanvasTestCase {
 
    function test_join(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -306,6 +309,7 @@ CanvasTestCase {
    }
    function test_miter(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#f00';
@@ -481,6 +485,7 @@ CanvasTestCase {
    }
    function test_width(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.fillStyle = '#0f0';
@@ -625,6 +630,7 @@ CanvasTestCase {
            skip("line::test_cap crashes on Android, QTBUG-103257")
 
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
 
@@ -841,6 +847,7 @@ CanvasTestCase {
 
    function test_lineDash(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.strokeStyle = "#fff";
@@ -899,6 +906,7 @@ CanvasTestCase {
 
    function test_lineDashReset(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.strokeStyle = "#ff0000";
@@ -930,6 +938,7 @@ CanvasTestCase {
 
    function test_lineDashOffset(row) {
        var canvas = createCanvasObject(row);
+       tryVerify(function() { return canvas.available; });
        var ctx = canvas.getContext('2d');
        ctx.reset();
        ctx.strokeStyle = "#fff";
