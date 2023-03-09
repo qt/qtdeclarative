@@ -5,6 +5,7 @@ SUBDIRS += \
     texteditor \
     contactlist \
     wearable \
+    filesystemexplorer \
     imagine/automotive \
     imagine/musicplayer
 
