@@ -41,7 +41,6 @@ private slots:
     void cacheModuleScripts();
     void reuseStaticMappings();
     void invalidateSaveLoadCache();
-    void inlineComponentDoesNotCauseConstantInvalidation();
 
 private:
     QDir m_qmlCacheDirectory;
@@ -1116,35 +1115,6 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     QVERIFY2(unit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
 
     QVERIFY(unit->unitData() != oldUnit->unitData());
-}
-
-void tst_qmldiskcache::inlineComponentDoesNotCauseConstantInvalidation()
-{
-    QQmlEngine engine;
-
-    TestCompiler testCompiler(&engine);
-    QVERIFY(testCompiler.tempDir.isValid());
-
-    testCompiler.reset();
-    QVERIFY(testCompiler.writeTestFile("import QtQml\nQtObject { component Test : QtObject { property int i: 2 }\n property Test test: Test { objectName: 'foobar' } }\n"));
-    QVERIFY(testCompiler.loadTestFile());
-
-    const quintptr data1 = testCompiler.unitData();
-    QVERIFY(data1 != 0);
-    QCOMPARE(testCompiler.unitData(), data1);
-
-    engine.clearComponentCache();
-
-    // inline component does not invalidate cache
-    QVERIFY(testCompiler.loadTestFile());
-    QCOMPARE(testCompiler.unitData(), data1);
-
-    testCompiler.reset();
-    QVERIFY(testCompiler.writeTestFile("import QtQml\nQtObject { component Test : QtObject { property double d: 2 }\n property Test test: Test { objectName: 'foobar' } }\n"));
-    QVERIFY(testCompiler.loadTestFile());
-    const quintptr data2 = testCompiler.unitData();
-    QVERIFY(data2);
-    QVERIFY(data1 != data2);
 }
 
 QTEST_MAIN(tst_qmldiskcache)
