@@ -358,7 +358,10 @@ private:
     quint32 m_ownedByParent:1;
     quint32 m_ownedByPublicContext:1;
     quint32 m_hasExtraObject:1; // used in QQmlDelegateModelItem::dataForObject to find the corresponding QQmlDelegateModelItem of an object
-    quint32 m_dummy:23;
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_GCC("-Wattributes")
+    [[maybe_unused]] quint32 m_dummy:23;
+    QT_WARNING_POP
     QQmlContext *m_publicContext = nullptr;
 
     union {
