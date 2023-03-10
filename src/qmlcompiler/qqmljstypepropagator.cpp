@@ -460,52 +460,6 @@ void QQmlJSTypePropagator::checkDeprecated(QQmlJSScope::ConstPtr scope, const QS
     m_logger->log(message, qmlDeprecated, getCurrentSourceLocation());
 }
 
-bool QQmlJSTypePropagator::isRestricted(const QString &propertyName) const
-{
-    QString restrictedKind;
-
-    const auto accumulatorIn = m_state.registers.find(Accumulator);
-    if (accumulatorIn == m_state.registers.end())
-        return false;
-
-    if (accumulatorIn.value().isList() && propertyName != u"length") {
-        restrictedKind = u"a list"_s;
-    } else if (accumulatorIn.value().isEnumeration()) {
-        const auto metaEn = accumulatorIn.value().enumeration();
-        if (metaEn.isScoped()) {
-            if (!metaEn.hasKey(propertyName))
-                restrictedKind = u"an enum"_s;
-        } else {
-            restrictedKind = u"an unscoped enum"_s;
-        }
-    } else if (accumulatorIn.value().isMethod()) {
-        auto overloadSet = accumulatorIn.value().method();
-        auto potentiallyJSMethod = std::any_of(
-                    overloadSet.cbegin(), overloadSet.cend(),
-                    [](const QQmlJSMetaMethod &overload){
-            return overload.isJavaScriptFunction();
-        });
-        if (potentiallyJSMethod) {
-            /* JS global constructors like Number get detected as methods
-               However, they still have properties that can be accessed
-               e.g. Number.EPSILON. This also isn't restricted to constructor
-               functions, so use isJavaScriptFunction as an overapproximation.
-               That catches also QQmlV4Function, but we're purging uses of it
-               anyway.
-             */
-            return false;
-        }
-        restrictedKind = u"a method"_s;
-    }
-
-    if (!restrictedKind.isEmpty())
-        m_logger->log(u"Type is %1. You cannot access \"%2\" from here."_s.arg(restrictedKind,
-                                                                               propertyName),
-                      qmlRestrictedType, getCurrentSourceLocation());
-
-    return !restrictedKind.isEmpty();
-}
-
 // Only to be called once a lookup has already failed
 QQmlJSTypePropagator::PropertyResolution QQmlJSTypePropagator::propertyResolution(
         QQmlJSScope::ConstPtr scope, const QString &propertyName) const
@@ -680,6 +634,27 @@ void QQmlJSTypePropagator::generate_StoreNameStrict(int name)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
+bool QQmlJSTypePropagator::checkForEnumProblems(const QString &propertyName) const
+{
+    if (m_state.accumulatorIn().isEnumeration()) {
+        const auto metaEn = m_state.accumulatorIn().enumeration();
+        if (!metaEn.isScoped()) {
+            m_logger->log(u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName),
+                          qmlRestrictedType, getCurrentSourceLocation());
+            return true;
+        } else if (!metaEn.hasKey(propertyName)) {
+            auto fixSuggestion = QQmlJSUtils::didYouMean(propertyName, metaEn.keys(),
+                                                         getCurrentSourceLocation());
+            m_logger->log(u"\"%1\" is not an entry of enum \"%2\"."_s.arg(propertyName)
+                                  .arg(metaEn.name()),
+                          qmlMissingEnumEntry, getCurrentSourceLocation(), true, true,
+                          fixSuggestion);
+            return true;
+        }
+    }
+    return false;
+}
+
 void QQmlJSTypePropagator::generate_LoadElement(int base)
 {
     const QQmlJSRegisterContent baseRegister = m_state.registers[base];
@@ -772,14 +747,12 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         setAccumulator(QQmlJSRegisterContent());
     }
 
-    const bool isRestrictedProperty = isRestricted(propertyName);
+    if (checkForEnumProblems(propertyName))
+        return;
 
     if (!m_state.accumulatorOut().isValid()) {
         setError(u"Cannot load property %1 from %2."_s
                          .arg(propertyName, m_state.accumulatorIn().descriptiveName()));
-
-        if (isRestrictedProperty)
-            return;
 
         const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn(), true);
 
@@ -1066,7 +1039,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         if (callBase.isType() && isCallingProperty(callBase.type(), propertyName))
             return;
 
-        if (isRestricted(propertyName))
+        if (checkForEnumProblems(propertyName))
             return;
 
         std::optional<QQmlJSFixSuggestion> fixSuggestion;

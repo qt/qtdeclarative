@@ -57,7 +57,7 @@ const LoggerWarningId qmlUseProperFunction { "use-proper-function" };
 const LoggerWarningId qmlAccessSingleton { "access-singleton-via-object" };
 const LoggerWarningId qmlTopLevelComponent { "top-level-component" };
 const LoggerWarningId qmlUncreatableType { "uncreatable-type" };
-
+const LoggerWarningId qmlMissingEnumEntry{ "missing-enum-entry" };
 
 const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
 {
