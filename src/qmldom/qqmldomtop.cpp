@@ -229,12 +229,12 @@ static DomType fileTypeForPath(DomItem &self, QString canonicalFilePath)
     } else if (QStringView(u"qmldir").compare(QFileInfo(canonicalFilePath).fileName(),
                                               Qt::CaseInsensitive)
                == 0) {
-        return DomType::QmltypesFile;
+        return DomType::QmldirFile;
     } else if (QFileInfo(canonicalFilePath).isDir()) {
         return DomType::QmlDirectory;
     } else {
         self.addError(DomUniverse::myErrors()
-                              .error(QCoreApplication::translate("Dom::filteTypeForPath",
+                              .error(QCoreApplication::translate("Dom::fileTypeForPath",
                                                                  "Could not detect type of file %1")
                                              .arg(canonicalFilePath))
                               .handle());
