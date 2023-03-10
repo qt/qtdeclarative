@@ -6591,7 +6591,7 @@ void tst_QQuickTableView::editUsingEditTriggers()
 
     if (editTriggers & QQuickTableView::SelectedTapped) {
         // select cell first, then tap on it
-        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        tableView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::Select);
         QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
         QCOMPARE(tableView->selectionModel()->currentIndex(), index1);
         const auto editItem1 = tableView->property(kEditItem).value<QQuickItem *>();
@@ -6612,6 +6612,11 @@ void tst_QQuickTableView::editUsingEditTriggers()
         QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
         QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
         QCOMPARE(tableView->selectionModel()->currentIndex(), index2);
+
+        // tap on the current cell. This alone should not start an edit (unless it's also selected)
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!tableView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!tableView->property(kEditIndex).value<QModelIndex>().isValid());
     }
 
     if (editTriggers & QQuickTableView::EditKeyPressed) {

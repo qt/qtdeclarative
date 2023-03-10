@@ -725,8 +725,8 @@
         But the application can call \l edit() and \l closeEditor() manually.
     \value TableView.SingleTapped - the user can edit a cell by single tapping it.
     \value TableView.DoubleTapped - the user can edit a cell by double tapping it.
-    \value TableView.SelectedTapped - the user can edit the
-        \l {QItemSelectionModel::currentIndex()}{current cell} by tapping it.
+    \value TableView.SelectedTapped - the user can edit a
+        \l {QItemSelectionModel::selectedIndexes()}{selected cell} by tapping it.
     \value TableView.EditKeyPressed - the user can edit the
         \l {QItemSelectionModel::currentIndex()}{current cell} by pressing one
         of the edit keys. The edit keys are decided by the OS, but are normally
@@ -4790,24 +4790,29 @@ void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
     if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
         return;
 
-    QModelIndex prevIndex;
-    if (selectionModel) {
-        prevIndex = selectionModel->currentIndex();
-        if (pointerNavigationEnabled) {
+    const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(point.position()));
+    bool tappedCellIsSelected = false;
+
+    if (selectionModel)
+        tappedCellIsSelected = selectionModel->isSelected(tappedIndex);
+
+    if (canEdit(tappedIndex, false)) {
+        if (editTriggers & QQuickTableView::SingleTapped) {
             clearSelection();
-            setCurrentIndexFromTap(point.position());
+            q->edit(tappedIndex);
+            return;
+        } else if (editTriggers & QQuickTableView::SelectedTapped && tappedCellIsSelected) {
+            q->edit(tappedIndex);
+            return;
         }
     }
 
-    if (editTriggers != QQuickTableView::NoEditTriggers)
+    // Since the tap didn't result in selecting or editing cells, we clear
+    // the current selection and move the current index instead.
+    if (pointerNavigationEnabled) {
         q->closeEditor();
-
-    const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(point.position()));
-    if (canEdit(tappedIndex, false)) {
-        if (editTriggers & QQuickTableView::SingleTapped)
-            q->edit(tappedIndex);
-        else if ((editTriggers & QQuickTableView::SelectedTapped) && tappedIndex == prevIndex)
-            q->edit(tappedIndex);
+        clearSelection();
+        setCurrentIndexFromTap(point.position());
     }
 }
 
