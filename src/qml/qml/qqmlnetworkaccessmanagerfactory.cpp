@@ -55,7 +55,6 @@ QT_BEGIN_NAMESPACE
     For more information about signals and threads, see
     \l {Threads and QObjects} and \l {Signals and Slots Across Threads}.
 
-    \sa {C++ Extensions: Network Access Manager Factory Example}{Network Access Manager Factory Example}
     \sa QNetworkDiskCache
 */
 
