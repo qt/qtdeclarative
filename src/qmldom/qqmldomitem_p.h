@@ -694,6 +694,36 @@ inline bool emptyChildrenVisitor(Path, DomItem &, bool)
 
 class MutableDomItem;
 
+class FileToLoad
+{
+public:
+    struct InMemoryContents
+    {
+        QString data;
+        QDateTime date = QDateTime::currentDateTimeUtc();
+    };
+
+    FileToLoad(const std::weak_ptr<DomEnvironment> &environment, const QString &canonicalPath,
+               const QString &logicalPath, std::optional<InMemoryContents> content);
+    FileToLoad() = default;
+
+    static FileToLoad fromMemory(const std::weak_ptr<DomEnvironment> &environment,
+                                 const QString &path, const QString &data);
+    static FileToLoad fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
+                                     const QString &canonicalPath);
+
+    std::weak_ptr<DomEnvironment> environment() const { return m_environment; }
+    QString canonicalPath() const { return m_canonicalPath; }
+    QString logicalPath() const { return m_logicalPath; }
+    std::optional<InMemoryContents> content() const { return m_content; }
+
+private:
+    std::weak_ptr<DomEnvironment> m_environment;
+    QString m_canonicalPath;
+    QString m_logicalPath;
+    std::optional<InMemoryContents> m_content;
+};
+
 class QMLDOM_EXPORT DomItem {
     Q_DECLARE_TR_FUNCTIONS(DomItem);
 public:
@@ -1004,11 +1034,8 @@ public:
     DomItem(std::shared_ptr<DomUniverse>);
 
     static DomItem fromCode(QString code, DomType fileType = DomType::QmlFile);
-    void loadFile(QString filePath, QString logicalPath,
-                  std::function<void(Path, DomItem &, DomItem &)> callback, LoadOptions loadOptions,
-                  std::optional<DomType> fileType = std::optional<DomType>());
-    void loadFile(QString canonicalFilePath, QString logicalPath, QString code, QDateTime codeDate,
-                  std::function<void(Path, DomItem &, DomItem &)> callback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, std::function<void(Path, DomItem &, DomItem &)> callback,
+                  LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
     void loadModuleDependency(QString uri, Version v,
                               std::function<void(Path, DomItem &, DomItem &)> callback = nullptr,

@@ -54,7 +54,7 @@ bool parseFile(const QString &filename, const Options &options)
                                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile; // place where to store the loaded file
     env.loadFile(
-            filename, QString(),
+            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filename),
             [&tFile](Path, const DomItem &, const DomItem &newIt) {
                 tFile = newIt; // callback called when everything is loaded that receives the loaded
                                // external file pair (path, oldValue, newValue)

@@ -32,6 +32,7 @@
 #include <QtCore/QScopeGuard>
 #include <QtCore/QtGlobal>
 #include <QtCore/QTimeZone>
+#include <optional>
 
 QT_BEGIN_NAMESPACE
 
@@ -301,6 +302,31 @@ In this case the use of the MutableDomItem is required.
 It does not keep any pointers to internal elements, but rather the path to them, and it resolves
 it every time it needs.
 */
+
+FileToLoad::FileToLoad(const std::weak_ptr<DomEnvironment> &environment,
+                       const QString &canonicalPath, const QString &logicalPath,
+                       std::optional<InMemoryContents> content)
+    : m_environment(environment),
+      m_canonicalPath(canonicalPath),
+      m_logicalPath(logicalPath),
+      m_content(content)
+{
+}
+
+FileToLoad FileToLoad::fromMemory(const std::weak_ptr<DomEnvironment> &environment,
+                                  const QString &path, const QString &code)
+{
+    const QString canonicalPath = QFileInfo(path).canonicalFilePath();
+    return { environment, canonicalPath, path, InMemoryContents{ code } };
+}
+
+FileToLoad FileToLoad::fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
+                                      const QString &path)
+{
+    // make the path canonical so the file content can be loaded from it later
+    const QString canonicalPath = QFileInfo(path).canonicalFilePath();
+    return { environment, canonicalPath, path, std::nullopt };
+}
 
 ErrorGroup DomItem::domErrorGroup = NewErrorGroup("Dom");
 DomItem DomItem::empty = DomItem();
@@ -2377,52 +2403,26 @@ DomItem::DomItem(std::shared_ptr<DomUniverse> universePtr):
 {
 }
 
-void DomItem::loadFile(QString canonicalFilePath, QString logicalPath, QString code,
-                       QDateTime codeDate, DomTop::Callback callback, LoadOptions loadOptions,
+void DomItem::loadFile(const FileToLoad &file, DomTop::Callback callback, LoadOptions loadOptions,
                        std::optional<DomType> fileType)
 {
     DomItem topEl = top();
     if (topEl.internalKind() == DomType::DomEnvironment
         || topEl.internalKind() == DomType::DomUniverse) {
         if (auto univ = topEl.ownerAs<DomUniverse>())
-            univ->loadFile(*this, canonicalFilePath, logicalPath, code, codeDate, callback,
-                           loadOptions, fileType);
+            univ->loadFile(*this, file, callback, loadOptions, fileType);
         else if (auto env = topEl.ownerAs<DomEnvironment>()) {
             if (env->options() & DomEnvironment::Option::NoDependencies)
-                env->loadFile(topEl, canonicalFilePath, logicalPath, code, codeDate, callback,
-                              DomTop::Callback(), DomTop::Callback(), loadOptions, fileType);
+                env->loadFile(topEl, file, callback, DomTop::Callback(), DomTop::Callback(),
+                              loadOptions, fileType);
             else
-                env->loadFile(topEl, canonicalFilePath, logicalPath, code, codeDate,
-                              DomTop::Callback(), DomTop::Callback(), callback, loadOptions,
-                              fileType);
+                env->loadFile(topEl, file, DomTop::Callback(), DomTop::Callback(), callback,
+                              loadOptions, fileType);
         } else
             Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
     } else {
         addError(myErrors().warning(tr("loadFile called without DomEnvironment or DomUniverse.")));
-        callback(Paths::qmlFileInfoPath(canonicalFilePath), DomItem::empty, DomItem::empty);
-    }
-}
-
-void DomItem::loadFile(QString filePath, QString logicalPath, DomTop::Callback callback,
-                       LoadOptions loadOptions, std::optional<DomType> fileType)
-{
-    DomItem topEl = top();
-    if (topEl.internalKind() == DomType::DomEnvironment
-        || topEl.internalKind() == DomType::DomUniverse) {
-        if (auto univ = topEl.ownerAs<DomUniverse>())
-            univ->loadFile(*this, filePath, logicalPath, callback, loadOptions);
-        else if (auto env = topEl.ownerAs<DomEnvironment>()) {
-            if (env->options() & DomEnvironment::Option::NoDependencies)
-                env->loadFile(topEl, filePath, logicalPath, callback, DomTop::Callback(),
-                              DomTop::Callback(), loadOptions, fileType);
-            else
-                env->loadFile(topEl, filePath, logicalPath, DomTop::Callback(), DomTop::Callback(),
-                              callback, loadOptions, fileType);
-        } else
-            Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
-    } else {
-        addError(myErrors().warning(tr("loadFile called without DomEnvironment or DomUniverse.")));
-        callback(Paths::qmlFileInfoPath(filePath), DomItem::empty, DomItem::empty);
+        callback(Paths::qmlFileInfoPath(file.canonicalPath()), DomItem::empty, DomItem::empty);
     }
 }
 
@@ -2481,10 +2481,11 @@ DomItem DomItem::fromCode(QString code, DomType fileType)
                                            | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
 
     DomItem tFile;
+
     env.loadFile(
-            QString(), QString(), code, QDateTime::currentDateTimeUtc(),
+            FileToLoad::fromMemory(env.ownerAs<DomEnvironment>(), QString(), code),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-            LoadOption::DefaultLoad, fileType);
+            LoadOption::DefaultLoad, std::make_optional(fileType));
     env.loadPendingDependencies();
     return tFile.fileObject();
 }

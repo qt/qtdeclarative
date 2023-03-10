@@ -60,7 +60,7 @@ private slots:
 
         // qDebug() << "loading the file" << testFilePath;
         env.loadFile(
-                testFilePath, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) {
                     tFile = newIt; // callback called when everything is loaded that receives the
                                    // loaded external file pair (path, oldValue, newValue)

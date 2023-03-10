@@ -410,10 +410,10 @@ private slots:
         DomItem tFile;
         // env.loadBuiltins();
         env.loadFile(
-                testFile1, QString(),
+                FileToLoad::fromFileSystem(envPtr, testFile1),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadFile(baseDir, QString(), {}, LoadOption::DefaultLoad);
+        env.loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
         env.loadPendingDependencies();
 
         QVERIFY(tFile);
@@ -496,10 +496,10 @@ private slots:
         DomItem tFile;
         env.loadBuiltins();
         env.loadFile(
-                testFile1, QString(),
+                FileToLoad::fromFileSystem(envPtr, testFile1),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadFile(baseDir, QString(), {}, LoadOption::DefaultLoad);
+        env.loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
         env.loadPendingDependencies();
 
         QVERIFY(tFile);
@@ -565,7 +565,7 @@ private slots:
 
         DomItem tFile;
         env.loadFile(
-                testFile1, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile1),
                 [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
@@ -608,7 +608,7 @@ private slots:
 
         DomItem tFile; // place where to store the loaded file
         env.loadFile(
-                testFile, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile),
                 [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
@@ -741,7 +741,7 @@ private slots:
 
         DomItem tFile;
         env.loadFile(
-                testFile1, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile1),
                 [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
@@ -763,7 +763,7 @@ private slots:
 
         DomItem tFile;
         env.loadFile(
-                testFile, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile),
                 [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();
@@ -797,7 +797,7 @@ private slots:
 
         DomItem tFile;
         env.loadFile(
-                testFile, QString(),
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile),
                 [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
                 LoadOption::DefaultLoad);
         env.loadPendingDependencies();

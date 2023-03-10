@@ -465,7 +465,7 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
                     | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile;
     env.loadFile(
-            fileToFormat, QString(),
+            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileToFormat),
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad);
     env.loadPendingDependencies();

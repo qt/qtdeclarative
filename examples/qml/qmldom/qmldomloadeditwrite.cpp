@@ -43,7 +43,11 @@ int main()
 
     qDebug() << "loading the file" << testFilePath;
     env.loadFile(
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
+#else
             testFilePath, QString(),
+#endif
             [&tFile](Path, const DomItem &, const DomItem &newIt) {
                 tFile = newIt; // callback called when everything is loaded that receives the loaded
                                // external file pair (path, oldValue, newValue)

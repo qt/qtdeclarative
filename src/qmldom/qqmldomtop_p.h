@@ -31,30 +31,32 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace QQmlJS {
 namespace Dom {
 
 class QMLDOM_EXPORT ParsingTask {
 public:
     QCborMap toCbor() const {
-        return QCborMap(
-        {{ QString::fromUtf16(Fields::requestedAt), QCborValue(requestedAt)},
-         { QString::fromUtf16(Fields::loadOptions), int(loadOptions)},
-         { QString::fromUtf16(Fields::kind), int(kind)},
-         { QString::fromUtf16(Fields::canonicalPath), canonicalPath},
-         { QString::fromUtf16(Fields::logicalPath), logicalPath},
-         { QString::fromUtf16(Fields::contents), contents},
-         { QString::fromUtf16(Fields::contentsDate), QCborValue(contentsDate)},
-         { QString::fromUtf16(Fields::hasCallback), bool(callback)}});
+        return QCborMap({ { QString::fromUtf16(Fields::requestedAt), QCborValue(requestedAt) },
+                          { QString::fromUtf16(Fields::loadOptions), int(loadOptions) },
+                          { QString::fromUtf16(Fields::kind), int(kind) },
+                          { QString::fromUtf16(Fields::canonicalPath), file.canonicalPath() },
+                          { QString::fromUtf16(Fields::logicalPath), file.logicalPath() },
+                          { QString::fromUtf16(Fields::contents),
+                            file.content() ? file.content()->data : QString() },
+                          { QString::fromUtf16(Fields::contentsDate),
+                            QCborValue(file.content() ? file.content()->date
+                                                      : QDateTime::fromMSecsSinceEpoch(
+                                                              0, QTimeZone::UTC)) },
+                          { QString::fromUtf16(Fields::hasCallback), bool(callback) } });
     }
 
     QDateTime requestedAt;
     LoadOptions loadOptions;
     DomType kind;
-    QString canonicalPath;
-    QString logicalPath;
-    QString contents;
-    QDateTime contentsDate;
+    FileToLoad file;
     std::weak_ptr<DomUniverse> requestingUniverse; // make it a shared_ptr?
     function<void(Path, DomItem &, DomItem &)> callback;
 };
@@ -223,11 +225,7 @@ public:
         return std::static_pointer_cast<DomUniverse>(doCopy(self));
     }
 
-    void loadFile(DomItem &self, QString filePath, QString logicalPath, Callback callback,
-                  LoadOptions loadOptions,
-                  std::optional<DomType> fileType = std::optional<DomType>());
-    void loadFile(DomItem &self, QString canonicalFilePath, QString logicalPath, QString code,
-                  QDateTime codeDate, Callback callback, LoadOptions loadOptions,
+    void loadFile(DomItem &self, const FileToLoad &file, Callback callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
     void execQueue();
 
@@ -656,13 +654,8 @@ public:
 
     std::shared_ptr<DomEnvironment> makeCopy(DomItem &self) const;
 
-    void loadFile(DomItem &self, QString filePath, QString logicalPath, Callback loadCallback,
+    void loadFile(DomItem &self, FileToLoad file, Callback loadCallback,
                   Callback directDepsCallback, Callback endCallback, LoadOptions loadOptions,
-                  std::optional<DomType> fileType = std::optional<DomType>(),
-                  ErrorHandler h = nullptr);
-    void loadFile(DomItem &self, QString canonicalFilePath, QString logicalPath, QString code,
-                  QDateTime codeDate, Callback loadCallback, Callback directDepsCallback,
-                  Callback endCallback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   ErrorHandler h = nullptr);
     void loadModuleDependency(DomItem &self, QString uri, Version v,
