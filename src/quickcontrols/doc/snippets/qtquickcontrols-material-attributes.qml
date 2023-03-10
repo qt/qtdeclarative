@@ -27,28 +27,28 @@ Pane {
 
             Component.onCompleted: forceActiveFocus()
         }
+    }
 
-        component Line: Shape {
-            // Account for 1-pixel-wide lines.
-            width: Math.max(1, endX - startX)
-            height: Math.max(1, endY - startY)
+    component Line: Shape {
+        // Account for 1-pixel-wide lines.
+        width: Math.max(1, endX - startX)
+        height: Math.max(1, endY - startY)
 
-            layer.enabled: true
-            layer.samples: 4
+        layer.enabled: true
+        layer.samples: 4
 
-            property alias startX: shapePath.startX
-            property alias startY: shapePath.startY
-            property alias endX: pathLine.x
-            property alias endY: pathLine.y
+        property alias startX: shapePath.startX
+        property alias startY: shapePath.startY
+        property alias endX: pathLine.x
+        property alias endY: pathLine.y
 
-            ShapePath {
-                id: shapePath
-                strokeWidth: 1
-                strokeColor: "#444"
+        ShapePath {
+            id: shapePath
+            strokeWidth: 1
+            strokeColor: "#444"
 
-                PathLine {
-                    id: pathLine
-                }
+            PathLine {
+                id: pathLine
             }
         }
     }
