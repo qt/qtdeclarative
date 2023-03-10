@@ -1020,9 +1020,8 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("NotScopedEnumCpp")
             << QStringLiteral("NotScopedEnumCpp.qml")
             << Result{ { Message{
-                       QStringLiteral(
-                               "Type is an unscoped enum. You cannot access \"V1\" from here."),
-                       5, 57 } } };
+                       QStringLiteral("You cannot access unscoped enum \"V1\" from here."), 5,
+                       57 } } };
 
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
@@ -1044,6 +1043,13 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                                "in nested components."), 0, 0, QtInfoMsg } },
                     Result::AutoFixable
                 };
+    QTest::newRow("IsNotAnEntryOfEnum")
+            << QStringLiteral("IsNotAnEntryOfEnum.qml")
+            << Result{ { Message{ QStringLiteral("\"Hour\" is not an entry of enum \"Mode\"."), 13,
+                                  62, QtInfoMsg } },
+                       {},
+                       { Message{ QStringLiteral("Hours") } },
+                       Result::ExitsNormally };
 }
 
 void TestQmllint::dirtyQmlCode()
