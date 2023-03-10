@@ -459,6 +459,10 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
         return;
     }
 
+    // Should normally not be needed, but there might be an incoming window resize event that we
+    // will process before we process updatePolish()
+    ensureLayoutItemsUpdated(QQuickLayout::ApplySizeHints | QQuickLayout::Recursive);
+
     d->m_rearranging = true;
     qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
     Qt::LayoutDirection visualDir = effectiveLayoutDirection();
