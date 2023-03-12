@@ -741,7 +741,9 @@ ReturnedValue QQmlLocaleData::method_get_ ## VARIABLE (const QV4::FunctionObject
 
 LOCALE_STRING_PROPERTY(name)
 LOCALE_STRING_PROPERTY(nativeLanguageName)
+#if QT_DEPRECATED_SINCE(6, 6)
 QT_IGNORE_DEPRECATIONS(LOCALE_STRING_PROPERTY(nativeCountryName))
+#endif
 LOCALE_STRING_PROPERTY(nativeTerritoryName)
 LOCALE_STRING_PROPERTY(decimalPoint)
 LOCALE_STRING_PROPERTY(groupSeparator)
@@ -789,7 +791,9 @@ QV4LocaleDataDeletable::QV4LocaleDataDeletable(QV4::ExecutionEngine *engine)
     o->defineAccessorProperty(QStringLiteral("groupSeparator"), QQmlLocaleData::method_get_groupSeparator, nullptr);
     o->defineAccessorProperty(QStringLiteral("decimalPoint"), QQmlLocaleData::method_get_decimalPoint, nullptr);
     o->defineAccessorProperty(QStringLiteral("nativeLanguageName"), QQmlLocaleData::method_get_nativeLanguageName, nullptr);
+#if QT_DEPRECATED_SINCE(6, 6)
     o->defineAccessorProperty(QStringLiteral("nativeCountryName"), QQmlLocaleData::method_get_nativeCountryName, nullptr);
+#endif
     o->defineAccessorProperty(QStringLiteral("nativeTerritoryName"), QQmlLocaleData::method_get_nativeTerritoryName, nullptr);
     o->defineAccessorProperty(QStringLiteral("zeroDigit"), QQmlLocaleData::method_get_zeroDigit, nullptr);
     o->defineAccessorProperty(QStringLiteral("amText"), QQmlLocaleData::method_get_amText, nullptr);
@@ -941,10 +945,10 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
 /*!
     \qmlproperty string QtQml::Locale::name
 
-    Holds the language and country of this locale as a
-    string of the form "language_country", where
+    Holds the language and territory of this locale as a
+    string of the form "language_territory", where
     language is a lowercase, two-letter ISO 639 language code,
-    and country is an uppercase, two- or three-letter ISO 3166 country code.
+    and territory is an uppercase, two- or three-letter ISO 3166 territory code.
 */
 
 /*!
@@ -1216,7 +1220,7 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
     Holds a native name of the language for the locale. For example
     "Schwiizertüütsch" for Swiss-German locale.
 
-    \sa nativeCountryName
+    \sa nativeTerritoryName
 */
 
 /*!
