@@ -128,7 +128,9 @@ struct QQmlLocaleData : public QV4::Object
 
     static QV4::ReturnedValue method_get_name(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_get_nativeLanguageName(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+#if QT_DEPRECATED_SINCE(6, 6)
     static QV4::ReturnedValue method_get_nativeCountryName(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+#endif
     static QV4::ReturnedValue method_get_nativeTerritoryName(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_get_decimalPoint(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_get_groupSeparator(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
