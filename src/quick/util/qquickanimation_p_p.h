@@ -250,7 +250,7 @@ public:
     QObject *target;
     QString propertyName;
     QString properties;
-    QList<QObject *> targets;
+    QList<QPointer<QObject>> targets;
     QList<QObject *> exclude;
     QString defaultProperties;
 
