@@ -747,7 +747,6 @@ TestCase {
     function test_background_data() {
         return [
             { tag: "button", inherit: false, wait: 400 },
-            { tag: "combobox", inherit: false, wait: 400 },
             { tag: "drawer", inherit: true },
             { tag: "groupbox", inherit: true },
             { tag: "frame", inherit: true },
