@@ -100,6 +100,7 @@ private slots:
     void frameAnimation2();
     void restartAnimationGroupWhenDirty();
     void restartNestedAnimationGroupWhenDirty();
+    void targetsDeletedNotRemoved();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2273,6 +2274,27 @@ void tst_qquickanimations::restartNestedAnimationGroupWhenDirty()
     QTRY_COMPARE(target0->x(), 140);
     QTRY_COMPARE(target1->x(), 140);
 }
+
+void tst_qquickanimations::targetsDeletedNotRemoved()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("targetsDeletedWithoutRemoval.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj.get(), qPrintable(component.errorString()));
+    {
+        QQmlListReference ref(obj.get(), "targets");
+        QVERIFY(ref.isValid());
+        QCOMPARE(ref.size(), 1);
+        QTRY_COMPARE(ref.at(0), nullptr);
+    }
+    {
+        QQmlListReference ref(obj.get(), "animTargets");
+        QVERIFY(ref.isValid());
+        QCOMPARE(ref.size(), 1);
+        QCOMPARE(ref.at(0), nullptr);
+    }
+}
+
 QTEST_MAIN(tst_qquickanimations)
 
 #include "tst_qquickanimations.moc"
