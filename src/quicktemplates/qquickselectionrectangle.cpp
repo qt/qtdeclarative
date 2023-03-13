@@ -201,7 +201,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             }
         }
 
-        if (!modifiers.testFlag(Qt::ShiftModifier))
+        if (!modifiers.testFlag(Qt::ControlModifier))
             m_selectable->clearSelection();
         m_selectable->setSelectionStartPos(pos);
         m_selectable->setSelectionEndPos(pos);
@@ -217,7 +217,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         if (m_dragHandler->active()) {
             if (!m_selectable->startSelection(startPos))
                 return;
-            if (!modifiers.testFlag(Qt::ShiftModifier))
+            if (!modifiers.testFlag(Qt::ControlModifier))
                 m_selectable->clearSelection();
             m_selectable->setSelectionStartPos(startPos);
             m_selectable->setSelectionEndPos(dragPos);
