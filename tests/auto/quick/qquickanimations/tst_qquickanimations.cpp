@@ -118,6 +118,7 @@ private slots:
     void alwaysRunToEndInSequentialAnimationBug();
     void cleanupWhenRenderThreadStops();
     void infiniteLoopsWithoutFrom();
+    void targetsDeletedNotRemoved();
 };
 #define QTIMED_COMPARE(lhs, rhs) do { \
     for (int ii = 0; ii < 5; ++ii) { \
@@ -2058,6 +2059,26 @@ void tst_qquickanimations::infiniteLoopsWithoutFrom()
     QCOMPARE(numsCrossedZero, 2);
 
     animation->stop();
+}
+
+void tst_qquickanimations::targetsDeletedNotRemoved()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("targetsDeletedWithoutRemoval.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj.get(), qPrintable(component.errorString()));
+    {
+        QQmlListReference ref(obj.get(), "targets");
+        QVERIFY(ref.isValid());
+        QCOMPARE(ref.size(), 1);
+        QTRY_COMPARE(ref.at(0), nullptr);
+    }
+    {
+        QQmlListReference ref(obj.get(), "animTargets");
+        QVERIFY(ref.isValid());
+        QCOMPARE(ref.size(), 1);
+        QCOMPARE(ref.at(0), nullptr);
+    }
 }
 
 QTEST_MAIN(tst_qquickanimations)
