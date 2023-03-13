@@ -17,8 +17,8 @@ T.SpinBox {
                              up.implicitIndicatorHeight, down.implicitIndicatorHeight)
 
     spacing: 6
-    topPadding: 8
-    bottomPadding: 16
+    topPadding: Material.textFieldVerticalPadding
+    bottomPadding: Material.textFieldVerticalPadding
     leftPadding: control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0)
     rightPadding: control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0)
 
@@ -107,16 +107,14 @@ T.SpinBox {
         }
     }
 
-    background: Item {
-        implicitWidth: 192
-        implicitHeight: control.Material.touchTarget
+    background: MaterialTextContainer {
+        implicitWidth: 140
+        implicitHeight: control.Material.textFieldHeight
 
-        Rectangle {
-            x: parent.width / 2 - width / 2
-            y: parent.y + parent.height - height - control.bottomPadding / 2
-            width: control.availableWidth
-            height: control.activeFocus ? 2 : 1
-            color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
-        }
+        outlineColor: (enabled && control.hovered) ? control.Material.primaryTextColor : control.Material.hintTextColor
+        focusedOutlineColor: control.Material.accentColor
+        controlHasActiveFocus: control.activeFocus
+        controlHasText: true
+        horizontalPadding: control.Material.textFieldHorizontalPadding
     }
 }
