@@ -337,8 +337,8 @@ TestCase {
 //        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
 //        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 1)))
 
-//        // Hold down shift, and drag again to do a multi-selection
-//        mouseDrag(tableView, 1, cellHeight + 5, (cellWidth * 2) - 2, 1, Qt.LeftButton, Qt.ShiftModifier)
+//        // Hold down control, and drag again to do a multi-selection
+//        mouseDrag(tableView, 1, cellHeight + 5, (cellWidth * 2) - 2, 1, Qt.LeftButton, Qt.ControlModifier)
 //        verify(tableView.selectionModel.hasSelection)
 //        compare(tableView.selectionModel.selectedIndexes.length, 4)
 //        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
