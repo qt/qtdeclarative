@@ -214,7 +214,7 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
     QQmlApplicationEngine engine;
 
     // quit on error
-    QObject::connect(&app, QQmlApplicationEngine::objectCreationFailed,
+    QObject::connect(&engine, QQmlApplicationEngine::objectCreationFailed,
                      QCoreApplication::instance(), QCoreApplication::quit,
                      Qt::QueuedConnection);
     engine.load(QUrl());
