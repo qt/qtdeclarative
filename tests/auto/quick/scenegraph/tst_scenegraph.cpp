@@ -289,7 +289,9 @@ struct Sample {
     }
 
     bool check(const QImage &image, qreal scale) {
-        QColor color(image.pixel(x * scale, y * scale));
+        const int scaledX = qRound(x * scale);
+        const int scaledY = qRound(y * scale);
+        const QColor color(image.pixel(scaledX, scaledY));
         return qAbs(color.redF() - r) <= tolerance
                 && qAbs(color.greenF() - g) <= tolerance
                 && qAbs(color.blueF() - b) <= tolerance;
@@ -430,6 +432,10 @@ void tst_SceneGraph::render()
     // ideal world.
     // Just keep this in mind when writing tests.
     qreal scale = view.devicePixelRatio();
+    const bool isIntegerScale = qFuzzyIsNull(qreal(qFloor(scale)) - scale);
+
+    if (file == "render_OutOfFloatRange.qml" && !isIntegerScale)
+        QSKIP("render_OutOfFloatRange doesn't work with non-integer scaling factors");
 
     // Grab the window and check all our base stage samples
     QImage content = view.grabWindow();
