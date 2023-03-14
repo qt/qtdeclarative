@@ -17,40 +17,11 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef GL_FRAMEBUFFER_SRGB
-#define GL_FRAMEBUFFER_SRGB 0x8DB9
-#endif
-
-#ifndef GL_FRAMEBUFFER_SRGB_CAPABLE
-#define GL_FRAMEBUFFER_SRGB_CAPABLE 0x8DBA
-#endif
-
 static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
 {
     float o = c.w() * globalOpacity;
     return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
 }
-
-#if 0
-static inline qreal qt_sRGB_to_linear_RGB(qreal f)
-{
-    return f > 0.04045 ? qPow((f + 0.055) / 1.055, 2.4) : f / 12.92;
-}
-
-static inline QVector4D qt_sRGB_to_linear_RGB(const QVector4D &color)
-{
-    return QVector4D(qt_sRGB_to_linear_RGB(color.x()),
-                     qt_sRGB_to_linear_RGB(color.y()),
-                     qt_sRGB_to_linear_RGB(color.z()),
-                     color.w());
-}
-
-static inline qreal fontSmoothingGamma()
-{
-    static qreal fontSmoothingGamma = QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FontSmoothingGamma).toReal();
-    return fontSmoothingGamma;
-}
-#endif
 
 class QSGTextMaskRhiShader : public QSGMaterialShader
 {
@@ -199,13 +170,6 @@ public:
                                      QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
-// ### gamma correction (sRGB) Unsurprisingly, the GL approach is not portable
-// to anything else - it just does not work that way, there is no opt-in/out
-// switch and magic winsys-provided maybe-sRGB buffers. When requesting an sRGB
-// QRhiSwapChain (which we do not do), it is full sRGB, with the sRGB
-// framebuffer update and blending always on... Could we do gamma correction in
-// the shader for text? (but that's bad for blending?)
-
 bool QSG24BitTextMaskRhiShader::updateUniformData(RenderState &state,
                                                   QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
@@ -239,9 +203,6 @@ bool QSG24BitTextMaskRhiShader::updateGraphicsPipelineState(RenderState &state, 
     ps->dstColor = GraphicsPipelineState::OneMinusSrcColor;
 
     QVector4D color = mat->color();
-
-    //        if (useSRGB())
-    //            color = qt_sRGB_to_linear_RGB(color);
 
     // this is dynamic state but it's - magic! - taken care of by the renderer
     ps->blendConstant = QColor::fromRgbF(color.x(), color.y(), color.z(), color.w());
