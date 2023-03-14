@@ -168,6 +168,29 @@ public:
     {
     }
 
+    constexpr QMetaType metaType() const  { return d.metaType(); }
+    constexpr void *data() { return d.data(); }
+    constexpr const void *data() const { return d.data(); }
+    constexpr const void *constData() const { return d.data(); }
+
+    template<Type type>
+    QJSPrimitiveValue to() const {
+        if constexpr (type == Undefined)
+            return QJSPrimitiveUndefined();
+        if constexpr (type == Null)
+            return QJSPrimitiveNull();
+        if constexpr (type == Boolean)
+            return toBoolean();
+        if constexpr (type == Integer)
+            return toInteger();
+        if constexpr (type == Double)
+            return toDouble();
+        if constexpr (type == String)
+            return toString();
+
+        Q_UNREACHABLE_RETURN(QJSPrimitiveUndefined());
+    }
+
     constexpr bool toBoolean() const
     {
         switch (type()) {
@@ -750,6 +773,61 @@ private:
                 return getString();
 
             Q_UNREACHABLE_RETURN(T());
+        }
+
+        constexpr QMetaType metaType() const noexcept {
+            switch (m_type) {
+            case Undefined:
+                return QMetaType();
+            case Null:
+                return QMetaType::fromType<std::nullptr_t>();
+            case Boolean:
+                return QMetaType::fromType<bool>();
+            case Integer:
+                return QMetaType::fromType<int>();
+            case Double:
+                return QMetaType::fromType<double>();
+            case String:
+                return QMetaType::fromType<QString>();
+            }
+
+            Q_UNREACHABLE_RETURN(QMetaType());
+        }
+
+        constexpr void *data() noexcept {
+            switch (m_type) {
+            case Undefined:
+            case Null:
+                return nullptr;
+            case Boolean:
+                return &m_bool;
+            case Integer:
+                return &m_int;
+            case Double:
+                return &m_double;
+            case String:
+                return &m_string;
+            }
+
+            Q_UNREACHABLE_RETURN(nullptr);
+        }
+
+        constexpr const void *data() const noexcept {
+            switch (m_type) {
+            case Undefined:
+            case Null:
+                return nullptr;
+            case Boolean:
+                return &m_bool;
+            case Integer:
+                return &m_int;
+            case Double:
+                return &m_double;
+            case String:
+                return &m_string;
+            }
+
+            Q_UNREACHABLE_RETURN(nullptr);
         }
 
     private:

@@ -211,24 +211,7 @@ protected:
 
     QString conversion(const QQmlJSRegisterContent &from,
                        const QQmlJSRegisterContent &to,
-                       const QString &variable)
-    {
-        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
-        if (m_typeResolver->registerIsStoredIn(to, contained)
-                || m_typeResolver->registerIsStoredIn(from, m_typeResolver->intType())
-                || to.storedType()->isReferenceType()
-                || m_typeResolver->registerContains(from, contained)) {
-            // If:
-            // * the output is not actually wrapped at all, or
-            // * the input is stored in an int (as there are no internals to an int), or
-            // * the output is a QObject pointer, or
-            // * we merely wrap the value into a new container,
-            // we can convert by stored type.
-            return convertStored(from.storedType(), to.storedType(), variable);
-        } else {
-            return convertContained(from, to, variable);
-        }
-    }
+                       const QString &variable);
 
     QString conversion(const QQmlJSScope::ConstPtr &from,
                        const QQmlJSRegisterContent &to,

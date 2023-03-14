@@ -2252,8 +2252,10 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
     if (m_typeResolver->registerContains(content, stored))
         return u'&' + var;
 
-    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType()))
+    if (m_typeResolver->registerIsStoredIn(content, m_typeResolver->varType())
+            || m_typeResolver->registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
         return var + u".data()"_s;
+    }
 
     if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
         return u'&' + var;
@@ -2266,7 +2268,7 @@ QString QQmlJSCodeGenerator::contentPointer(const QQmlJSRegisterContent &content
     if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
         return u'&' + var;
 
-    reject(u"content pointer of non-QVariant wrapper type "_s + content.descriptiveName());
+    reject(u"content pointer of unsupported wrapper type "_s + content.descriptiveName());
     return QString();
 }
 
@@ -2278,8 +2280,10 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
     if (m_typeResolver->equals(contained, stored))
         return metaTypeFromType(stored);
 
-    if (m_typeResolver->equals(stored, m_typeResolver->varType()))
-        return var + u".metaType()"_s; // We expect the QVariant to be initialized
+    if (m_typeResolver->equals(stored, m_typeResolver->varType())
+            || m_typeResolver->registerIsStoredIn(content, m_typeResolver->jsPrimitiveType())) {
+        return var + u".metaType()"_s; // We expect the container to be initialized
+    }
 
     if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
         return metaTypeFromName(contained);
@@ -2292,7 +2296,7 @@ QString QQmlJSCodeGenerator::contentType(const QQmlJSRegisterContent &content, c
     if (stored->isListProperty() && m_typeResolver->containedType(content)->isListProperty())
         return metaTypeFromType(m_typeResolver->listPropertyType());
 
-    reject(u"content type of non-QVariant wrapper type "_s + content.descriptiveName());
+    reject(u"content type of unsupported wrapper type "_s + content.descriptiveName());
     return QString();
 }
 
@@ -2990,6 +2994,45 @@ QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
     return QQmlJSRegisterContent();
 }
 
+QString QQmlJSCodeGenerator::conversion(
+        const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to, const QString &variable)
+{
+    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
+
+    // If both types are stored in QJSPrimitiveValue we coerce using QJSPrimitiveValue
+    if (m_typeResolver->registerIsStoredIn(from, m_typeResolver->jsPrimitiveType())
+            && m_typeResolver->registerIsStoredIn(to, m_typeResolver->jsPrimitiveType())) {
+        if (m_typeResolver->equals(contained, m_typeResolver->jsPrimitiveType()))
+            return variable;
+
+        const QString conversion = variable + u".to<QJSPrimitiveValue::%1>()"_s;
+        if (m_typeResolver->equals(contained, m_typeResolver->boolType()))
+            return conversion.arg(u"Boolean"_s);
+        if (m_typeResolver->equals(contained, m_typeResolver->intType()))
+            return conversion.arg(u"Integer"_s);
+        if (m_typeResolver->equals(contained, m_typeResolver->realType()))
+            return conversion.arg(u"Double"_s);
+        if (m_typeResolver->equals(contained, m_typeResolver->stringType()))
+            return conversion.arg(u"String"_s);
+        reject(u"Conversion of QJSPrimitiveValue to "_s + contained->internalName());
+    }
+
+    if (m_typeResolver->registerIsStoredIn(to, contained)
+            || m_typeResolver->registerIsStoredIn(from, m_typeResolver->intType())
+            || to.storedType()->isReferenceType()
+            || m_typeResolver->registerContains(from, contained)) {
+        // If:
+        // * the output is not actually wrapped at all, or
+        // * the input is stored in an int (as there are no internals to an int), or
+        // * the output is a QObject pointer, or
+        // * we merely wrap the value into a new container,
+        // we can convert by stored type.
+        return convertStored(from.storedType(), to.storedType(), variable);
+    } else {
+        return convertContained(from, to, variable);
+    }
+}
+
 QString QQmlJSCodeGenerator::convertStored(
         const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to, const QString &variable)
 {
@@ -3272,8 +3315,10 @@ QString QQmlJSCodeGenerator::convertContained(const QQmlJSRegisterContent &from,
     Q_ASSERT(!m_typeResolver->registerIsStoredIn(from, m_typeResolver->intType()));
     Q_ASSERT(!m_typeResolver->equals(containedFrom, containedTo));
 
-    if (!m_typeResolver->registerIsStoredIn(to, m_typeResolver->varType()))
-        reject(u"internal conversion into non-QVariant wrapper type."_s);
+    if (!m_typeResolver->registerIsStoredIn(to, m_typeResolver->varType()) &&
+            !m_typeResolver->registerIsStoredIn(to, m_typeResolver->jsPrimitiveType())) {
+        reject(u"internal conversion into unsupported wrapper type."_s);
+    }
 
     bool isExtension = false;
     if (const auto ctor = m_typeResolver->selectConstructor(
