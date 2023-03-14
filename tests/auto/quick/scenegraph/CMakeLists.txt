@@ -26,6 +26,16 @@ qt_internal_add_test(tst_scenegraph
     TESTDATA ${test_data}
 )
 
+qt_internal_add_shaders(tst_scenegraph "shaders"
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/"
+    FILES
+        "data/render_bug37422.frag"
+)
+
 #### Keys ignored in scope 1:.:.:scenegraph.pro:<TRUE>:
 # OTHER_FILES = "data/render_OutOfFloatRange.qml" "data/simple.qml" "data/render_ImageFiltering.qml"
 
