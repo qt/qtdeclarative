@@ -1157,8 +1157,12 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                +  m_jsUnitGenerator->lookupName(index));
         return;
     }
-    const QQmlJSRegisterContent property = specific.storedIn(
-                m_typeResolver->genericType(specific.storedType()));
+
+    // Choose a container that can hold both, the "in" accumulator and what we actually want.
+    // If the types are all the same because we can all store them as verbatim C++ types,
+    // the container will also be that type.
+    const QQmlJSScope::ConstPtr container = m_typeResolver->merge(specific.storedType(), valueType);
+    const QQmlJSRegisterContent property = specific.storedIn(container);
 
     const QString object = registerVariable(baseReg);
     m_body += u"{\n"_s;
