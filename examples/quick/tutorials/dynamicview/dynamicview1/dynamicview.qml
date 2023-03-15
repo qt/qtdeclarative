@@ -8,7 +8,8 @@ import QtQuick
 Rectangle {
     id: root
 
-    width: 300; height: 400
+    width: 300
+    height: 400
 
 //![1]
     Component {
@@ -32,12 +33,15 @@ Rectangle {
 
             Column {
                 id: column
-                anchors { fill: parent; margins: 2 }
+                anchors {
+                    fill: parent
+                    margins: 2
+                }
 
-                Text { text: 'Name: ' + name }
-                Text { text: 'Type: ' + type }
-                Text { text: 'Age: ' + age }
-                Text { text: 'Size: ' + size }
+                Text { text: qsTr('Name: ') + content.name }
+                Text { text: qsTr('Type: ') + content.type }
+                Text { text: qsTr('Age: ') + content.age }
+                Text { text: qsTr('Size: ') + content.size }
             }
         }
     }
@@ -46,7 +50,10 @@ Rectangle {
     ListView {
         id: view
 
-        anchors { fill: parent; margins: 2 }
+        anchors {
+            fill: parent
+            margins: 2
+        }
 
         model: PetsModel {}
         delegate: dragDelegate

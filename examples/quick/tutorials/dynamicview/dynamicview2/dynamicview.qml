@@ -1,12 +1,14 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 import QtQuick
 
 Rectangle {
     id: root
 
-    width: 300; height: 400
+    width: 300
+    height: 400
 
 //![0]
     Component {
@@ -17,8 +19,15 @@ Rectangle {
             id: dragArea
 
             property bool held: false
+            required property string name
+            required property string type
+            required property string size
+            required property int age
 
-            anchors { left: parent.left; right: parent.right }
+            anchors {
+                left: parent?.left
+                right: parent?.right
+            }
             height: content.height
 
             drag.target: held ? content : undefined
@@ -34,7 +43,8 @@ Rectangle {
                     horizontalCenter: parent.horizontalCenter
                     verticalCenter: parent.verticalCenter
                 }
-                width: dragArea.width; height: column.implicitHeight + 4
+                width: dragArea.width
+                height: column.implicitHeight + 4
 
                 border.width: 1
                 border.color: "lightsteelblue"
@@ -47,21 +57,30 @@ Rectangle {
                 states: State {
                     when: dragArea.held
 
-                    ParentChange { target: content; parent: root }
+                    ParentChange {
+                        target: content
+                        parent: root
+                    }
                     AnchorChanges {
                         target: content
-                        anchors { horizontalCenter: undefined; verticalCenter: undefined }
+                        anchors {
+                            horizontalCenter: undefined
+                            verticalCenter: undefined
+                        }
                     }
                 }
 //![4]
                 Column {
                     id: column
-                    anchors { fill: parent; margins: 2 }
+                    anchors {
+                        fill: parent
+                        margins: 2
+                    }
 
-                    Text { text: 'Name: ' + name }
-                    Text { text: 'Type: ' + type }
-                    Text { text: 'Age: ' + age }
-                    Text { text: 'Size: ' + size }
+                    Text { text: qsTr('Name: ') + dragArea.name }
+                    Text { text: qsTr('Type: ') + dragArea.type }
+                    Text { text: qsTr('Age: ') + dragArea.age }
+                    Text { text: qsTr('Size: ') + dragArea.size }
                 }
 //![2]
             }
@@ -73,7 +92,10 @@ Rectangle {
     ListView {
         id: view
 
-        anchors { fill: parent; margins: 2 }
+        anchors {
+            fill: parent
+            margins: 2
+        }
 
         model: PetsModel {}
         delegate: dragDelegate

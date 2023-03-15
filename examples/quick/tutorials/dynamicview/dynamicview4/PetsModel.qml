@@ -5,57 +5,57 @@ import QtQuick
 
 ListModel {
     ListElement {
-        name: "Polly"
-        type: "Parrot"
+        name: qsTr("Polly")
+        type: qsTr("Parrot")
         age: 12
-        size: "Small"
+        size: qsTr("Small")
     }
     ListElement {
-        name: "Penny"
-        type: "Turtle"
+        name: qsTr("Penny")
+        type: qsTr("Turtle")
         age: 4
-        size: "Small"
+        size: qsTr("Small")
     }
     ListElement {
-        name: "Warren"
-        type: "Rabbit"
+        name: qsTr("Warren")
+        type: qsTr("Rabbit")
         age: 2
-        size: "Small"
+        size: qsTr("Small")
     }
     ListElement {
-        name: "Spot"
-        type: "Dog"
+        name: qsTr("Spot")
+        type: qsTr("Dog")
         age: 9
-        size: "Medium"
+        size: qsTr("Medium")
     }
     ListElement {
-        name: "Schrödinger"
-        type: "Cat"
+        name: qsTr("Schrödinger")
+        type: qsTr("Cat")
         age: 2
-        size: "Medium"
+        size: qsTr("Medium")
     }
     ListElement {
-        name: "Joey"
-        type: "Kangaroo"
+        name: qsTr("Joey")
+        type: qsTr("Kangaroo")
         age: 1
-        size: "Medium"
+        size: qsTr("Medium")
     }
     ListElement {
-        name: "Kimba"
-        type: "Bunny"
+        name: qsTr("Kimba")
+        type: qsTr("Bunny")
         age: 65
-        size: "Large"
+        size: qsTr("Large")
     }
     ListElement {
-        name: "Rover"
-        type: "Dog"
+        name: qsTr("Rover")
+        type: qsTr("Dog")
         age: 5
-        size: "Large"
+        size: qsTr("Large")
     }
     ListElement {
-        name: "Tiny"
-        type: "Elephant"
+        name: qsTr("Tiny")
+        type: qsTr("Elephant")
         age: 15
-        size: "Large"
+        size: qsTr("Large")
     }
 }

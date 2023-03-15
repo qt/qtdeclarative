@@ -1,6 +1,7 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 import QtQuick
 
 Item {
@@ -11,12 +12,17 @@ Item {
     property alias label: labelText.text
     property bool expanded
 
-    width: 100; height: labelText.implicitHeight + 26
+    width: 100
+    height: labelText.implicitHeight + 26
 
     Rectangle {
-        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; }
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
 
-        height: labelText.implicitHeight + 4 + (expanded ? 20 * view.count : 20)
+        height: labelText.implicitHeight + 4 + (selector.expanded ? 20 * view.count : 20)
         Behavior on height { NumberAnimation { duration: 300 } }
 
         radius: 2
@@ -31,13 +37,20 @@ Item {
 
             Text {
                 id: labelText
-                anchors { left: parent.left; top: parent.top; margins: 2 }
+
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    margins: 2
+                }
             }
 
             Rectangle {
                 anchors {
-                    left: parent.left; top: labelText.bottom;
-                    right: parent.right; bottom: parent.bottom;
+                    left: parent.left
+                    top: labelText.bottom
+                    right: parent.right
+                    bottom: parent.bottom
                     margins: 2
                     leftMargin: 10
                 }
@@ -53,7 +66,13 @@ Item {
                     clip: true
 
                     delegate: Text {
-                        anchors { left: parent.left; right: parent.right }
+                        required property int index
+                        required property string modelData
+
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                        }
                         height: 20
 
                         verticalAlignment: Text.AlignVCenter
@@ -64,13 +83,16 @@ Item {
                             anchors.fill: parent
 
                             onClicked: {
-                                view.currentIndex = index
+                                parent.ListView.view.currentIndex = parent.index
                                 selector.expanded = !selector.expanded
                             }
                         }
                     }
                     highlight: Rectangle {
-                        anchors { left: parent.left; right: parent.right }
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                        }
                         height: 20
                         radius: 2
 
