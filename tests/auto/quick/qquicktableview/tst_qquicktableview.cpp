@@ -208,6 +208,7 @@ private slots:
     void testSelectableStartPosEndPosOutsideView();
     void testSelectableScrollTowardsPos();
     void setCurrentIndexFromSelectionModel();
+    void clearSelectionOnTap_data();
     void clearSelectionOnTap();
     void moveCurrentIndexUsingArrowKeys();
     void moveCurrentIndexUsingHomeAndEndKeys();
@@ -4744,12 +4745,25 @@ void tst_QQuickTableView::setCurrentIndexFromSelectionModel()
     QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
 }
 
+void tst_QQuickTableView::clearSelectionOnTap_data()
+{
+    QTest::addColumn<bool>("selectionEnabled");
+    QTest::newRow("selections enabled") << true;
+    QTest::newRow("selections disabled") << false;
+}
+
 void tst_QQuickTableView::clearSelectionOnTap()
 {
+    // Check that we clear the current selection when tapping
+    // inside TableView. But only if TableView has selections
+    // enabled. Otherwise, TableView should not touch the selection model.
+    QFETCH(bool, selectionEnabled);
     LOAD_TABLEVIEW("tableviewwithselected2.qml");
 
     TestModel model(40, 40);
     tableView->setModel(QVariant::fromValue(&model));
+    if (!selectionEnabled)
+        tableView->setSelectionBehavior(QQuickTableView::SelectionDisabled);
 
     WAIT_UNTIL_POLISHED;
 
@@ -4758,13 +4772,14 @@ void tst_QQuickTableView::clearSelectionOnTap()
     tableView->selectionModel()->select(index, QItemSelectionModel::Select);
     QCOMPARE(tableView->selectionModel()->selectedIndexes().size(), 1);
 
-    // Click on a cell. This should remove the selection
+    // Click on a cell
     const auto item = tableView->itemAtIndex(tableView->index(0, 0));
     QVERIFY(item);
     QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
     QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
     QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-    QCOMPARE(tableView->selectionModel()->selectedIndexes().size(), 0);
+
+    QCOMPARE(tableView->selectionModel()->hasSelection(), !selectionEnabled);
 }
 
 void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()
