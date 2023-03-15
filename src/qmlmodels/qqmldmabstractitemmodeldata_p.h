@@ -34,8 +34,6 @@ public:
 
     int metaCall(QMetaObject::Call call, int id, void **arguments);
     bool hasModelChildren() const;
-    QVariant value(int role) const;
-    void setValue(int role, const QVariant &value);
 
     QV4::ReturnedValue get() override;
     void setValue(const QString &role, const QVariant &value) override;
@@ -44,8 +42,14 @@ public:
     static QV4::ReturnedValue get_property(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue set_property(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
-    VDMAbstractItemModelDataType *type;
-    QVector<QVariant> cachedData;
+    const VDMAbstractItemModelDataType *type() const { return m_type; }
+
+private:
+    QVariant value(int role) const;
+    void setValue(int role, const QVariant &value);
+
+    VDMAbstractItemModelDataType *m_type;
+    QVector<QVariant> m_cachedData;
 };
 
 class VDMAbstractItemModelDataType
@@ -134,7 +138,8 @@ public:
         if (!o)
             RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object")));
 
-        const QQmlAdaptorModel *const model = static_cast<QQmlDMAbstractItemModelData *>(o->d()->item)->type->model;
+        const QQmlAdaptorModel *const model
+                = static_cast<QQmlDMAbstractItemModelData *>(o->d()->item)->type()->model;
         if (o->d()->item->index >= 0) {
             if (const QAbstractItemModel *const aim = model->aim())
                 RETURN_RESULT(QV4::Encode(aim->hasChildren(aim->index(o->d()->item->index, 0, model->rootIndex))));
