@@ -1996,7 +1996,7 @@ void Renderer::uploadBatch(Batch *b)
     bool canMerge = (g->drawingMode() == QSGGeometry::DrawTriangles || g->drawingMode() == QSGGeometry::DrawTriangleStrip ||
                      g->drawingMode() == QSGGeometry::DrawLines || g->drawingMode() == QSGGeometry::DrawPoints)
             && b->positionAttribute >= 0
-            && g->indexType() == QSGGeometry::UnsignedShortType
+            && (g->indexType() == QSGGeometry::UnsignedShortType && g->indexCount() > 0)
             && (flags & (QSGMaterial::NoBatching | QSGMaterial_FullMatrix)) == 0
             && ((flags & QSGMaterial::RequiresFullMatrixExceptTranslate) == 0 || b->isTranslateOnlyToRoot())
             && b->isSafeToBatch();
