@@ -114,7 +114,7 @@ private Q_SLOTS:
     void _q_itemsInserted(int index, int count);
     void _q_itemsRemoved(int index, int count);
     void _q_itemsMoved(int from, int to, int count);
-    void _q_modelReset();
+    void _q_modelAboutToBeReset();
     void _q_rowsInserted(const QModelIndex &,int,int);
     void _q_columnsInserted(const QModelIndex &, int, int);
     void _q_columnsRemoved(const QModelIndex &, int, int);
@@ -126,6 +126,7 @@ private Q_SLOTS:
     void _q_layoutChanged(const QList<QPersistentModelIndex>&, QAbstractItemModel::LayoutChangeHint);
 
 private:
+    void handleModelReset();
     bool isDescendantOf(const QPersistentModelIndex &desc, const QList<QPersistentModelIndex> &parents) const;
 
     Q_DISABLE_COPY(QQmlDelegateModel)
