@@ -9,15 +9,13 @@
 
 QT_BEGIN_NAMESPACE
 
-static const QQmlAdaptorModel::Accessors qt_vdm_null_accessors;
-
 QQmlAdaptorModel::Accessors::~Accessors()
 {
 }
 
 QQmlAdaptorModel::QQmlAdaptorModel()
     : QQmlGuard<QObject>(QQmlAdaptorModel::objectDestroyedImpl, nullptr)
-    , accessors(&qt_vdm_null_accessors)
+    , accessors(&m_nullAccessors)
 {
 }
 
@@ -55,24 +53,24 @@ void QQmlAdaptorModel::setModel(const QVariant &variant)
     } else if (list.type() != QQmlListAccessor::Invalid
             && list.type() != QQmlListAccessor::Instance) { // Null QObject
         setObject(nullptr);
-        accessors = new VDMListDelegateDataType;
+        accessors = new VDMListDelegateDataType(this);
     } else {
         setObject(nullptr);
-        accessors = &qt_vdm_null_accessors;
+        accessors = &m_nullAccessors;
     }
 }
 
 void QQmlAdaptorModel::invalidateModel()
 {
     accessors->cleanup(*this);
-    accessors = &qt_vdm_null_accessors;
+    accessors = &m_nullAccessors;
     // Don't clear the model object as we still need the guard to clear the list variant if the
     // object is destroyed.
 }
 
 bool QQmlAdaptorModel::isValid() const
 {
-    return accessors != &qt_vdm_null_accessors;
+    return accessors != &m_nullAccessors;
 }
 
 int QQmlAdaptorModel::count() const

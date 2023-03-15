@@ -100,13 +100,12 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
-            int index, int row, int column) const override
+            int index, int row, int column) override
     {
-        VDMObjectDelegateDataType *dataType = const_cast<VDMObjectDelegateDataType *>(this);
         if (!metaObject)
-            dataType->initializeMetaType(model);
+            initializeMetaType(model);
         return index >= 0 && index < model.list.count()
-                ? new QQmlDMObjectData(metaType, dataType, index, row, column, qvariant_cast<QObject *>(model.list.at(index)))
+                ? new QQmlDMObjectData(metaType, this, index, row, column, qvariant_cast<QObject *>(model.list.at(index)))
                 : nullptr;
     }
 
@@ -126,7 +125,7 @@ public:
 
     void cleanup(QQmlAdaptorModel &) const override
     {
-        const_cast<VDMObjectDelegateDataType *>(this)->release();
+        release();
     }
 
     bool notify(const QQmlAdaptorModel &model, const QList<QQmlDelegateModelItem *> &items, int index, int count, const QVector<int> &) const override

@@ -52,7 +52,7 @@ public:
         virtual QQmlDelegateModelItem *createItem(
                 QQmlAdaptorModel &,
                 const QQmlRefPointer<QQmlDelegateModelItemMetaType> &,
-                int, int, int) const { return nullptr; }
+                int, int, int) { return nullptr; }
 
         virtual bool notify(
                 const QQmlAdaptorModel &,
@@ -75,7 +75,7 @@ public:
         QQmlPropertyCache::ConstPtr propertyCache;
     };
 
-    const Accessors *accessors;
+    Accessors *accessors;
     QPersistentModelIndex rootIndex;
     QQmlListAccessor list;
     // we need to ensure that a JS created model does not get gced, but cannot
@@ -136,6 +136,8 @@ public:
 
 private:
     static void objectDestroyedImpl(QQmlGuardImpl *);
+
+    Accessors m_nullAccessors;
 };
 
 class QQmlAdaptorModelProxyInterface

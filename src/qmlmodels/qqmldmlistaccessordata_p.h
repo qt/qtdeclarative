@@ -113,14 +113,16 @@ private:
 class VDMListDelegateDataType : public QQmlRefCount, public QQmlAdaptorModel::Accessors
 {
 public:
-    VDMListDelegateDataType()
+    VDMListDelegateDataType(QQmlAdaptorModel *model)
         : QQmlRefCount()
         , QQmlAdaptorModel::Accessors()
-    {}
+    {
+        Q_UNUSED(model)
+    }
 
     void cleanup(QQmlAdaptorModel &) const override
     {
-        const_cast<VDMListDelegateDataType *>(this)->release();
+        release();
     }
 
     int rowCount(const QQmlAdaptorModel &model) const override
@@ -167,17 +169,16 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
-            int index, int row, int column) const override
+            int index, int row, int column) override
     {
-        VDMListDelegateDataType *dataType = const_cast<VDMListDelegateDataType *>(this);
         if (!propertyCache) {
-            dataType->propertyCache = QQmlPropertyCache::createStandalone(
+            propertyCache = QQmlPropertyCache::createStandalone(
                         &QQmlDMListAccessorData::staticMetaObject, model.modelItemRevision);
         }
 
         return new QQmlDMListAccessorData(
                 metaType,
-                dataType,
+                this,
                 index, row, column,
                 index >= 0 && index < model.list.count() ? model.list.at(index) : QVariant());
     }

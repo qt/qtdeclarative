@@ -256,12 +256,11 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
-            int index, int row, int column) const override
+            int index, int row, int column) override
     {
-        VDMAbstractItemModelDataType *dataType = const_cast<VDMAbstractItemModelDataType *>(this);
         if (!metaObject)
-            dataType->initializeMetaType(model);
-        return new QQmlDMAbstractItemModelData(metaType, dataType, index, row, column);
+            initializeMetaType(model);
+        return new QQmlDMAbstractItemModelData(metaType, this, index, row, column);
     }
 
     void initializeMetaType(const QQmlAdaptorModel &model)
