@@ -268,7 +268,7 @@ set_target_properties(someTarget PROPERTIES
 \endcode
 
 Another important argument is \c{--direct-calls}. You can use it to enable the
-direct mode of \l{The QML Script Compiler} in case the QtQuick Compiler
+direct mode of \l{The QML script compiler} in case the Qt Quick Compiler
 Extensions are installed. If the extensions are not installed, the argument is
 ignored. There is a shorthand called \c {QT_QMLCACHEGEN_DIRECT_CALLS} for it.
 
@@ -312,10 +312,10 @@ See \l{qt_target_qml_sources_example}{qt_target_qml_sources()} for an example on
 how to set the \c QT_QML_SINGLETON_TYPE property.
 
 \target qmltc-cmake
-\section2 Compiling QML to C++ with QML Type Compiler
+\section2 Compiling QML to C++ with QML type compiler
 
 If a QML module has \c{.qml} files, you can compile them to C++ using \l{QML
-Type Compiler}{qmltc}. Unlike \l{qmlcachegen-auto}{bytecode compilation}, you
+type compiler}{qmltc}. Unlike \l{qmlcachegen-auto}{bytecode compilation}, you
 have to explicitly enable qmltc via \l{ENABLE_TYPE_COMPILER} argument. In which
 case, \c{.qml} files specified under \c{QML_FILES} would be compiled. Files
 ending with \c{.js} and \c{.mjs} are ignored as qmltc does not compile
@@ -511,7 +511,7 @@ class MyItem: public QQuickItem { ... };
 then one has to make sure that the module containing \c QQuickItem, called
 \c Quick, is declared as a dependency via the \c DEPENDENCIES option. Not doing
 so might result in errors during type compilation with
-\l{QML Type Compiler}{qmltc} or during binding and function compilation to C++
+\l{QML type compiler}{qmltc} or during binding and function compilation to C++
 with \l{qmlcachegen-auto}{qmlcachegen}.
 
 \note Adding the module to \c DEPENDENCIES is not necessary if the module
@@ -686,7 +686,7 @@ work out and deploy all QML modules used by an executable target.
 
 \target ENABLE_TYPE_COMPILER
 \c ENABLE_TYPE_COMPILER can be used to compile \c{.qml} files to C++ source code
-with \l{QML Type Compiler}{qmltc}. Files with the source property
+with \l{QML type compiler}{qmltc}. Files with the source property
 \c{QT_QML_SKIP_TYPE_COMPILER} are not compiled to C++.
 
 \c TYPE_COMPILER_NAMESPACE argument defines a namespace, in which the generated

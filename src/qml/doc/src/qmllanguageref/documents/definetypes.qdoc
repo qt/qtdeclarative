@@ -319,13 +319,13 @@ the file, no matter how deeply nested.
 
 With this pragma you can change the way type annotations on functions are
 handled. By default the interpreter and JIT ignore type annotations, but
-the \l{QML Script Compiler} enforces them when compiling to C++.
+the \l{QML script compiler} enforces them when compiling to C++.
 
 Specifying \c{Enforce} as value makes sure the type annotations are always
 enforced. The resulting type coercions increase the overhead of calling
 typed JavaScript functions.
 
-Specifying \c{Ignore} as value makes the \l{QML Script Compiler} ignore
+Specifying \c{Ignore} as value makes the \l{QML script compiler} ignore
 any JavaScript functions when compiling the document to C++. This means less
 code is compiled to C++ ahead of time, and more code has to be interpreted or
 JIT-compiled.
@@ -336,7 +336,7 @@ JIT-compiled.
 
 The behavior of \l{QML Value Types} and list types differs slightly
 depending on whether a QML document is compiled to C++ using the
-\l{QML Script Compiler} or interpreted at run time.
+\l{QML script compiler} or interpreted at run time.
 
 With this pragma you can change the way value types and sequences are handled
 when retrieved as locals from properties. By default, the interpreter and JIT
@@ -344,7 +344,7 @@ treat all value types and sequences as references. This means, if you change
 the local value, the original property is also changed. Furthermore, if you
 write the original property explicitly, the local value is also updated.
 
-When compiled to C++ using the \l{QML Script Compiler}, the local value is not
+When compiled to C++ using the \l{QML script compiler}, the local value is not
 updated when the property is written, and the property is only updated when
 written directly, without retrieving it as local value before.
 
@@ -379,7 +379,7 @@ confusing.
 
 Specifying \c{Copy} as value to the pragma makes the interpreter and JIT behave
 like the generated C++ code. This is the recommended way to handle the problem.
-Specifying \c{Reference} makes the \l{QML Script Compiler} skip any functions
+Specifying \c{Reference} makes the \l{QML script compiler} skip any functions
 that use value types or sequences when generating C++ code. Those functions are
 then left to be interpreted or JIT-compiled with the default behavior of the
 interpreter and JIT.
