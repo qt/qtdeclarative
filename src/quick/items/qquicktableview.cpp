@@ -4802,7 +4802,8 @@ void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
 
     if (canEdit(tappedIndex, false)) {
         if (editTriggers & QQuickTableView::SingleTapped) {
-            clearSelection();
+            if (selectionBehavior != QQuickTableView::SelectionDisabled)
+                clearSelection();
             q->edit(tappedIndex);
             return;
         } else if (editTriggers & QQuickTableView::SelectedTapped && tappedCellIsSelected) {
@@ -4815,7 +4816,8 @@ void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
     // the current selection and move the current index instead.
     if (pointerNavigationEnabled) {
         q->closeEditor();
-        clearSelection();
+        if (selectionBehavior != QQuickTableView::SelectionDisabled)
+            clearSelection();
         setCurrentIndexFromTap(point.position());
     }
 }
