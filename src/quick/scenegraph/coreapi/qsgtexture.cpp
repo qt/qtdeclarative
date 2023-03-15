@@ -687,6 +687,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting OpenGL texture objects.
     \since 6.0
 */
@@ -787,6 +788,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Direct3D 11 texture objects.
     \since 6.0
 */
@@ -845,6 +847,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Direct3D 12 texture objects.
     \since 6.6
 */
@@ -918,6 +921,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Metal texture objects.
     \since 6.0
 */
@@ -965,6 +969,7 @@ namespace QNativeInterface {
     \inmodule QtQuick
     \ingroup native-interfaces
     \ingroup native-interfaces-qsgtexture
+    \inheaderfile QSGTexture
     \brief Provides access to and enables adopting Vulkan image objects.
     \since 6.0
 */
