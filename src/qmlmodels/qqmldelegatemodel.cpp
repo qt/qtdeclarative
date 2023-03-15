@@ -367,8 +367,8 @@ void QQmlDelegateModelPrivate::connectToAbstractItemModel()
                       q, QQmlDelegateModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
                       q, QQmlDelegateModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
-    qmlobject_connect(aim, QAbstractItemModel, SIGNAL(modelReset()),
-                      q, QQmlDelegateModel, SLOT(_q_modelReset()));
+
+    QObject::connect(aim, &QAbstractItemModel::modelAboutToBeReset, q, &QQmlDelegateModel::_q_modelAboutToBeReset);
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
                       q, QQmlDelegateModel, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
 }
@@ -397,8 +397,7 @@ void QQmlDelegateModelPrivate::disconnectFromAbstractItemModel()
                         q, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
     QObject::disconnect(aim, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
                         q, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
-    QObject::disconnect(aim, SIGNAL(modelReset()),
-                        q, SLOT(_q_modelReset()));
+    QObject::disconnect(aim, &QAbstractItemModel::modelAboutToBeReset, q, &QQmlDelegateModel::_q_modelAboutToBeReset);
     QObject::disconnect(aim, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
                         q, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
 }
@@ -1840,7 +1839,29 @@ void QQmlDelegateModelPrivate::emitChanges()
     }
 }
 
-void QQmlDelegateModel::_q_modelReset()
+void QQmlDelegateModel::_q_modelAboutToBeReset()
+{
+    auto aim = static_cast<QAbstractItemModel *>(sender());
+    auto oldRoleNames = aim->roleNames();
+    // this relies on the fact that modelAboutToBeReset must be followed
+    // by a modelReset signal before any further modelAboutToBeReset can occur
+    QObject::connect(aim, &QAbstractItemModel::modelReset, this, [&, oldRoleNames](){
+        auto aim = static_cast<QAbstractItemModel *>(sender());
+        if (oldRoleNames == aim->roleNames()) {
+            // if the rolenames stayed the same (most common case), then we don't have
+            // to throw away all the setup that we did
+            handleModelReset();
+        } else {
+            // If they did change, we give up and just start from scratch via setMode
+            setModel(QVariant::fromValue(model()));
+            // but we still have to call handleModelReset, otherwise views will
+            // not refresh
+            handleModelReset();
+        }
+    }, Qt::SingleShotConnection);
+}
+
+void QQmlDelegateModel::handleModelReset()
 {
     Q_D(QQmlDelegateModel);
     if (!d->m_delegate)
@@ -2005,7 +2026,7 @@ void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &par
         // Ignored
     } else {
         // We don't know what's going on, so reset the model
-        _q_modelReset();
+        handleModelReset();
     }
 }
 
