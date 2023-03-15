@@ -50,6 +50,42 @@
 
 QT_BEGIN_NAMESPACE
 
+#if defined(QT_DEBUG) && QT_CONFIG(thread)
+class ThreadAffinityMarker
+{
+public:
+    ThreadAffinityMarker() { attachToCurrentThread(); }
+
+    void assertOnAssignedThread()
+    {
+        QMutexLocker locker(&m_mutex);
+        if (!m_assignedThread)
+            attachToCurrentThread();
+        Q_ASSERT_X(m_assignedThread == QThread::currentThreadId(), Q_FUNC_INFO,
+                   "Running on a wrong thread!");
+    }
+
+    void detachFromCurrentThread()
+    {
+        QMutexLocker locker(&m_mutex);
+        m_assignedThread = nullptr;
+    }
+
+    void attachToCurrentThread() { m_assignedThread = QThread::currentThreadId(); }
+
+private:
+    Qt::HANDLE m_assignedThread;
+    QMutex m_mutex;
+};
+#  define Q_THREAD_AFFINITY_MARKER(x) ThreadAffinityMarker x
+#  define Q_ASSERT_CALLED_ON_VALID_THREAD(x) x.assertOnAssignedThread()
+#  define Q_DETACH_THREAD_AFFINITY_MARKER(x) x.detachFromCurrentThread()
+#else
+#  define Q_THREAD_AFFINITY_MARKER(x)
+#  define Q_ASSERT_CALLED_ON_VALID_THREAD(x)
+#  define Q_DETACH_THREAD_AFFINITY_MARKER(x)
+#endif
+
 const QLatin1String QQuickPixmap::itemGrabberScheme = QLatin1String("itemgrabber");
 
 Q_LOGGING_CATEGORY(lcImg, "qt.quick.image")
@@ -137,18 +173,32 @@ public:
     static int downloadProgressMethodIndex;
 };
 
-class QQuickPixmapReaderThreadObject : public QObject {
+/*! \internal
+    Serves as an endpoint for notifications on the connected reader's thread, thus enforcing
+    execution of their continuation on the thread. */
+class ReaderThreadExecutionEnforcer : public QObject
+{
     Q_OBJECT
 public:
-    QQuickPixmapReaderThreadObject(QQuickPixmapReader *);
-    void processJobs();
-    bool event(QEvent *e) override;
+    enum Event {
+        ProcessJobs = QEvent::User,
+    };
+
+    ReaderThreadExecutionEnforcer(QQuickPixmapReader *reader);
+
+    /*! \internal
+        Forces the execution of processJobs() on the original reader on the thread it's running on.
+    */
+    void processJobsOnReaderThreadLater();
+
 public slots:
     void asyncResponseFinished(QQuickImageResponse *response);
     void asyncResponseFinished();
 private slots:
     void networkRequestDone();
 private:
+    bool event(QEvent *e) override;
+
     QQuickPixmapReader *reader;
 };
 
@@ -170,7 +220,7 @@ protected:
     void run() override;
 
 private:
-    friend class QQuickPixmapReaderThreadObject;
+    friend class ReaderThreadExecutionEnforcer;
     void processJobs();
     void processJob(QQuickPixmapReply *, const QUrl &, const QString &, QQuickImageProvider::ImageType, const QSharedPointer<QQuickImageProvider> &);
 #if QT_CONFIG(qml_network)
@@ -189,20 +239,20 @@ private:
     /*! \internal
         Returns a pointer to the thread object owned by the run loop in QQuickPixmapReader::run.
      */
-    QQuickPixmapReaderThreadObject *threadObject()
+    ReaderThreadExecutionEnforcer *readerThreadExecutionEnforcer()
     {
-        return runLoopThreadObject;
+        return runLoopReaderThreadExecutionEnforcer;
     }
-    QQuickPixmapReaderThreadObject *runLoopThreadObject = nullptr;
+    ReaderThreadExecutionEnforcer *runLoopReaderThreadExecutionEnforcer = nullptr;
 #else
     /*! \internal
         Returns a pointer to the thread object owned by this instance.
      */
-    QQuickPixmapReaderThreadObject *threadObject()
+    ReaderThreadExecutionEnforcer *readerThreadExecutionEnforcer()
     {
-        return ownedThreadObject.get();
+        return ownedReaderThreadExecutionEnforcer.get();
     }
-    std::unique_ptr<QQuickPixmapReaderThreadObject> ownedThreadObject;
+    std::unique_ptr<ReaderThreadExecutionEnforcer> ownedReaderThreadExecutionEnforcer;
 #endif
 
 #if QT_CONFIG(qml_network)
@@ -211,6 +261,9 @@ private:
     QHash<QNetworkReply*,QQuickPixmapReply*> networkJobs;
 #endif
     QHash<QQuickImageResponse*,QQuickPixmapReply*> asyncResponses;
+
+    Q_THREAD_AFFINITY_MARKER(m_creatorThreadAffinityMarker);
+    Q_THREAD_AFFINITY_MARKER(m_readerThreadAffinityMarker);
 
     static int replyDownloadProgressMethodIndex;
     static int replyFinishedMethodIndex;
@@ -362,8 +415,9 @@ QQuickPixmapReply::Event::~Event()
 QNetworkAccessManager *QQuickPixmapReader::networkAccessManager()
 {
     if (!accessManager) {
-        Q_ASSERT(threadObject());
-        accessManager = QQmlEnginePrivate::get(engine)->createNetworkAccessManager(threadObject());
+        Q_ASSERT(readerThreadExecutionEnforcer());
+        accessManager = QQmlEnginePrivate::get(engine)->createNetworkAccessManager(
+                readerThreadExecutionEnforcer());
     }
     return accessManager;
 }
@@ -502,6 +556,7 @@ QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
 , accessManager(nullptr)
 #endif
 {
+    Q_DETACH_THREAD_AFFINITY_MARKER(m_readerThreadAffinityMarker);
     eventLoopQuitHack = new QObject;
     eventLoopQuitHack->moveToThread(this);
     connect(eventLoopQuitHack, SIGNAL(destroyed(QObject *)), SLOT(quit()), Qt::DirectConnection);
@@ -514,6 +569,8 @@ QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
 
 QQuickPixmapReader::~QQuickPixmapReader()
 {
+    Q_ASSERT_CALLED_ON_VALID_THREAD(m_creatorThreadAffinityMarker);
+
     readerMutex.lock();
     readers.remove(engine);
     readerMutex.unlock();
@@ -541,8 +598,8 @@ QQuickPixmapReader::~QQuickPixmapReader()
         for (auto *reply : std::as_const(asyncResponses))
             cancelJob(reply);
 #endif
-        if (threadObject())
-            threadObject()->processJobs();
+        if (readerThreadExecutionEnforcer())
+            readerThreadExecutionEnforcer()->processJobsOnReaderThreadLater();
     }
 
     eventLoopQuitHack->deleteLater();
@@ -572,6 +629,8 @@ QQuickPixmapReader::~QQuickPixmapReader()
 #if QT_CONFIG(qml_network)
 void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
 {
+    Q_ASSERT_CALLED_ON_VALID_THREAD(m_readerThreadAffinityMarker);
+
     QQuickPixmapReply *job = networkJobs.take(reply);
 
     if (job) {
@@ -588,7 +647,8 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
 
                 QMetaObject::connect(reply, replyDownloadProgressMethodIndex, job,
                                      downloadProgressMethodIndex);
-                QMetaObject::connect(reply, replyFinishedMethodIndex, threadObject(),
+                QMetaObject::connect(reply, replyFinishedMethodIndex,
+                                     readerThreadExecutionEnforcer(),
                                      threadNetworkRequestDoneMethodIndex);
 
                 networkJobs.insert(reply, job);
@@ -637,13 +697,15 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
     }
     reply->deleteLater();
 
-    // kick off event loop again incase we have dropped below max request count
-    threadObject()->processJobs();
+    // kick off event loop again in case we have dropped below max request count
+    readerThreadExecutionEnforcer()->processJobsOnReaderThreadLater();
 }
 #endif // qml_network
 
 void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
 {
+    Q_ASSERT_CALLED_ON_VALID_THREAD(m_readerThreadAffinityMarker);
+
     QQuickPixmapReply *job = asyncResponses.take(response);
 
     if (job) {
@@ -665,31 +727,30 @@ void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
     }
     response->deleteLater();
 
-    // kick off event loop again incase we have dropped below max request count
-    threadObject()->processJobs();
+    // kick off event loop again in case we have dropped below max request count
+    readerThreadExecutionEnforcer()->processJobsOnReaderThreadLater();
 }
 
-QQuickPixmapReaderThreadObject::QQuickPixmapReaderThreadObject(QQuickPixmapReader *i)
-: reader(i)
+ReaderThreadExecutionEnforcer::ReaderThreadExecutionEnforcer(QQuickPixmapReader *i) : reader(i) { }
+
+void ReaderThreadExecutionEnforcer::processJobsOnReaderThreadLater()
 {
+    QCoreApplication::postEvent(
+            this, new QEvent(QEvent::Type(ReaderThreadExecutionEnforcer::ProcessJobs)));
 }
 
-void QQuickPixmapReaderThreadObject::processJobs()
+bool ReaderThreadExecutionEnforcer::event(QEvent *e)
 {
-    QCoreApplication::postEvent(this, new QEvent(QEvent::User));
-}
-
-bool QQuickPixmapReaderThreadObject::event(QEvent *e)
-{
-    if (e->type() == QEvent::User) {
+    switch (e->type()) {
+    case QEvent::Type(ReaderThreadExecutionEnforcer::ProcessJobs):
         reader->processJobs();
         return true;
-    } else {
+    default:
         return QObject::event(e);
     }
 }
 
-void QQuickPixmapReaderThreadObject::networkRequestDone()
+void ReaderThreadExecutionEnforcer::networkRequestDone()
 {
 #if QT_CONFIG(qml_network)
     QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
@@ -697,12 +758,12 @@ void QQuickPixmapReaderThreadObject::networkRequestDone()
 #endif
 }
 
-void QQuickPixmapReaderThreadObject::asyncResponseFinished(QQuickImageResponse *response)
+void ReaderThreadExecutionEnforcer::asyncResponseFinished(QQuickImageResponse *response)
 {
     reader->asyncResponseFinished(response);
 }
 
-void QQuickPixmapReaderThreadObject::asyncResponseFinished()
+void ReaderThreadExecutionEnforcer::asyncResponseFinished()
 {
     QQuickImageResponse *response = static_cast<QQuickImageResponse *>(sender());
     asyncResponseFinished(response);
@@ -710,8 +771,9 @@ void QQuickPixmapReaderThreadObject::asyncResponseFinished()
 
 void QQuickPixmapReader::processJobs()
 {
-    QMutexLocker locker(&mutex);
+    Q_ASSERT_CALLED_ON_VALID_THREAD(m_readerThreadAffinityMarker);
 
+    QMutexLocker locker(&mutex);
     while (true) {
         if (cancelledJobs.isEmpty() && jobs.isEmpty())
             return; // Nothing else to do
@@ -769,7 +831,6 @@ void QQuickPixmapReader::processJobs()
                             ;
                 }
 
-
                 if (usableJob) {
                     jobs.removeAt(i);
 
@@ -792,6 +853,8 @@ void QQuickPixmapReader::processJobs()
 void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &url, const QString &localFile,
                                     QQuickImageProvider::ImageType imageType, const QSharedPointer<QQuickImageProvider> &provider)
 {
+    Q_ASSERT_CALLED_ON_VALID_THREAD(m_readerThreadAffinityMarker);
+
     // fetch
     if (url.scheme() == QLatin1String("image")) {
         // Use QQuickImageProvider
@@ -894,8 +957,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 }
 
                 {
-                    QObject::connect(response, &QQuickImageResponse::finished, threadObject(),
-                                     qOverload<>(&QQuickPixmapReaderThreadObject::asyncResponseFinished));
+                    QObject::connect(response, &QQuickImageResponse::finished, readerThreadExecutionEnforcer(),
+                                     qOverload<>(&ReaderThreadExecutionEnforcer::asyncResponseFinished));
                     // as the response object can outlive the provider QSharedPointer, we have to extend the pointee's lifetime by that of the response
                     // we do this by capturing a copy of the QSharedPointer in a lambda, and dropping it once the lambda has been called
                     auto provider_copy = provider; // capturing provider would capture it as a const reference, and copy capture with initializer is only available in C++14
@@ -908,7 +971,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                 //
                 // loadAcquire() synchronizes-with storeRelease() in QQuickImageResponsePrivate::_q_finished():
                 if (static_cast<QQuickImageResponsePrivate*>(QObjectPrivate::get(response))->finished.loadAcquire()) {
-                    QMetaObject::invokeMethod(threadObject(), "asyncResponseFinished",
+                    QMetaObject::invokeMethod(readerThreadExecutionEnforcer(), "asyncResponseFinished",
                                               Qt::QueuedConnection,
                                               Q_ARG(QQuickImageResponse *, response));
                 }
@@ -985,7 +1048,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
 
             QMetaObject::connect(reply, replyDownloadProgressMethodIndex, runningJob,
                                  downloadProgressMethodIndex);
-            QMetaObject::connect(reply, replyFinishedMethodIndex, threadObject(),
+            QMetaObject::connect(reply, replyFinishedMethodIndex, readerThreadExecutionEnforcer(),
                                  threadNetworkRequestDoneMethodIndex);
 
             networkJobs.insert(reply, runningJob);
@@ -1021,8 +1084,8 @@ QQuickPixmapReply *QQuickPixmapReader::getImage(QQuickPixmapData *data)
     reply->engineForReader = engine;
     jobs.append(reply);
     // XXX
-    if (threadObject())
-        threadObject()->processJobs();
+    if (readerThreadExecutionEnforcer())
+        readerThreadExecutionEnforcer()->processJobsOnReaderThreadLater();
     return reply;
 }
 
@@ -1033,8 +1096,8 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
         cancelledJobs.append(reply);
         reply->data = nullptr;
         // XXX
-        if (threadObject())
-            threadObject()->processJobs();
+        if (readerThreadExecutionEnforcer())
+            readerThreadExecutionEnforcer()->processJobsOnReaderThreadLater();
     } else {
         // If loading was started (reply removed from jobs) but the reply was never processed
         // (otherwise it would have deleted itself) we need to profile an error.
@@ -1047,12 +1110,14 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
 
 void QQuickPixmapReader::run()
 {
+    Q_ASSERT_CALLED_ON_VALID_THREAD(m_readerThreadAffinityMarker);
+
     if (replyDownloadProgressMethodIndex == -1) {
 #if QT_CONFIG(qml_network)
         replyDownloadProgressMethodIndex =
                 QMetaMethod::fromSignal(&QNetworkReply::downloadProgress).methodIndex();
         replyFinishedMethodIndex = QMetaMethod::fromSignal(&QNetworkReply::finished).methodIndex();
-        const QMetaObject *ir = &QQuickPixmapReaderThreadObject::staticMetaObject;
+        const QMetaObject *ir = &ReaderThreadExecutionEnforcer::staticMetaObject;
         threadNetworkRequestDoneMethodIndex = ir->indexOfSlot("networkRequestDone()");
 #endif
         downloadProgressMethodIndex =
@@ -1061,22 +1126,22 @@ void QQuickPixmapReader::run()
 
 #if USE_THREADED_DOWNLOAD
     const auto guard = qScopeGuard([this]() {
-        // We need to delete the runLoopThreadObject from the same thread.
+        // We need to delete the runLoopReaderThreadExecutionEnforcer from the same thread.
         QMutexLocker lock(&mutex);
-        delete runLoopThreadObject;
-        runLoopThreadObject = nullptr;
+        delete runLoopReaderThreadExecutionEnforcer;
+        runLoopReaderThreadExecutionEnforcer = nullptr;
     });
 
     {
         QMutexLocker lock(&mutex);
-        Q_ASSERT(!runLoopThreadObject);
-        runLoopThreadObject = new QQuickPixmapReaderThreadObject(this);
+        Q_ASSERT(!runLoopReaderThreadExecutionEnforcer);
+        runLoopReaderThreadExecutionEnforcer = new ReaderThreadExecutionEnforcer(this);
     }
 
     processJobs();
     exec();
 #else
-    ownedThreadObject = std::make_unique<QQuickPixmapReaderThreadObject>(this);
+    ownedReaderThreadExecutionEnforcer = std::make_unique<ReaderThreadExecutionEnforcer>(this);
     processJobs();
 #endif
 }
