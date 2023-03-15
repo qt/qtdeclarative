@@ -55,7 +55,7 @@ endif()
 add_subdirectory(qqmlmetatype)
 if(TARGET Qt::Quick)
     add_subdirectory(qmltc_manual)
-    # QML Type Compiler tests cannot be run on webOS due to missing support for multiple
+    # QML type compiler tests cannot be run on webOS due to missing support for multiple
     # consecutive window creation from a single QtWayland client
     if(NOT WEBOS)
         add_subdirectory(qmltc)

@@ -17,17 +17,17 @@ time, rather than at run time. This allows for:
 
 The Qt Quick Compiler consist of two components:
 \list
-    \li \l {QML Type Compiler}
-    \li \l {QML Script Compiler}
+    \li \l {QML type compiler}
+    \li \l {QML script compiler}
 \endlist
 
 \note \e qmltc, \e qmlsc and \l qmlcachegen are internal build tools. If you
 need to care about their invocation, you are either writing a build system, or
 you are doing something wrong.
 
-\subtitle The QML Type Compiler
+\subtitle The QML type compiler
 
-The \l{QML Type Compiler}, \e(qmltc) compiles QML types to C++ classes. These C++
+The \l{QML type compiler}, \e(qmltc) compiles QML types to C++ classes. These C++
 classes are then added to your application and can be instantiated from other
 C++ code. This way you can avoid much of the overhead of using \l{QQmlComponent}
 to create instances of your QML types. In order to benefit from \l qmltc, you
@@ -38,9 +38,9 @@ structure. It will fail if an unsupported language feature is encountered.
 It does not have to understand the JavaScript code in bindings and functions,
 though.
 
-\subtitle The QML Script Compiler
+\subtitle The QML script compiler
 
-The \l{QML Script Compiler}, (\e qmlsc and \e qmlcachegen) compiles bindings and
+The \l{QML script compiler}, (\e qmlsc and \e qmlcachegen) compiles bindings and
 functions to both, an efficient byte code and C++ functions. This process
 automatically happens behind the scenes if you are using \l{qt_add_qml_module}
 to specify your QML modules. At compile time, for each QML or JavaScript

@@ -1270,7 +1270,7 @@ function(_qt_internal_qml_add_qmltc_file_mapping_resource qrc_file target qml_fi
     set(${qrc_file} ${generated_qrc_file} PARENT_SCOPE)
 endfunction()
 
-# Compile Qml files (.qml) to C++ source files with Qml Type Compiler (qmltc).
+# Compile Qml files (.qml) to C++ source files with QML type compiler (qmltc).
 function(_qt_internal_target_enable_qmltc target)
     set(args_option "")
     set(args_single NAMESPACE EXPORT_MACRO_NAME EXPORT_FILE_NAME)

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qtqml-tool-qmltc.html
-\title QML Type Compiler
+\page qtqml-qml-type-compiler.html
+\title QML type compiler
 \brief A tool to compile QML types to C++ ahead of time.
 \keyword qmltc
 
-The QML Type Compiler, \c qmltc, is a tool shipped with Qt to translate QML
+The QML type compiler, \c qmltc, is a tool shipped with Qt to translate QML
 types into C++ types that are \e{ahead-of-time} compiled as part of the user
 code. Using qmltc can lead to better run-time performance due to more
 optimization opportunities available to the compiler compared to a

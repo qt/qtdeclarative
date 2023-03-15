@@ -98,7 +98,7 @@ all the available options.
 
 The Qt Quick Compiler consist of two components:
 \list
-    \li \l {QML Type Compiler}
-    \li \l {QML Script Compiler}
+    \li \l {QML type compiler}
+    \li \l {QML script compiler}
 \endlist
 */
