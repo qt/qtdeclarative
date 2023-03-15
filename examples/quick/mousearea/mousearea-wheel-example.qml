@@ -27,11 +27,11 @@ Rectangle {
 
                 MouseArea {
                     anchors.fill: parent
-                    onWheel: {
+                    onWheel: (wheel) => {
                         if (wheel.modifiers & Qt.ControlModifier) {
-                            parent.scaleFactor += 0.2 * wheel.angleDelta.y / 120;
+                            parent.scaleFactor += 0.2 * wheel.angleDelta.y / 120
                             if (parent.scaleFactor < 0)
-                                parent.scaleFactor = 0;
+                                parent.scaleFactor = 0
                         }
                     }
                 }
@@ -40,9 +40,11 @@ Rectangle {
     }
 
     Text {
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors {
+            bottom: parent.bottom
+            horizontalCenter: parent.horizontalCenter
+        }
         color: "#FFD700"
-        text: "Rotate the mouse wheel pressing <Control> to resize the squares."
+        text: qsTr("Rotate the mouse wheel pressing <Control> to resize the squares.")
     }
 }
