@@ -519,32 +519,32 @@ QQuickPixmapReader::~QQuickPixmapReader()
     readers.remove(engine);
     readerMutex.unlock();
 
-    mutex.lock();
-    // manually cancel all outstanding jobs.
-    for (QQuickPixmapReply *reply : std::as_const(jobs)) {
-        if (reply->data && reply->data->reply == reply)
-            reply->data->reply = nullptr;
-        delete reply;
-    }
-    jobs.clear();
-#if QT_CONFIG(qml_network)
-
-    const auto cancelJob = [this](QQuickPixmapReply *reply) {
-        if (reply->loading) {
-            cancelled.append(reply);
-            reply->data = nullptr;
+    {
+        QMutexLocker locker(&mutex);
+        // manually cancel all outstanding jobs.
+        for (QQuickPixmapReply *reply : std::as_const(jobs)) {
+            if (reply->data && reply->data->reply == reply)
+                reply->data->reply = nullptr;
+            delete reply;
         }
-    };
+        jobs.clear();
+#if QT_CONFIG(qml_network)
+        const auto cancelJob = [this](QQuickPixmapReply *reply) {
+            if (reply->loading) {
+                cancelled.append(reply);
+                reply->data = nullptr;
+            }
+        };
 
-    for (auto *reply : std::as_const(networkJobs))
-        cancelJob(reply);
+        for (auto *reply : std::as_const(networkJobs))
+            cancelJob(reply);
 
-    for (auto *reply : std::as_const(asyncResponses))
-        cancelJob(reply);
+        for (auto *reply : std::as_const(asyncResponses))
+            cancelJob(reply);
 #endif
-    if (threadObject())
-        threadObject()->processJobs();
-    mutex.unlock();
+        if (threadObject())
+            threadObject()->processJobs();
+    }
 
     eventLoopQuitHack->deleteLater();
     wait();
@@ -630,10 +630,10 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
         // send completion event to the QQuickPixmapReply
         if (!factory)
             factory = QQuickTextureFactory::textureFactoryForImage(image);
-        mutex.lock();
+
+        QMutexLocker locker(&mutex);
         if (!cancelled.contains(job))
             job->postReply(error, errorString, readSize, factory);
-        mutex.unlock();
     }
     reply->deleteLater();
 
@@ -655,13 +655,13 @@ void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
             errorString = response->errorString();
         } else {
             t = response->textureFactory();
-       }
-        mutex.lock();
+        }
+
+        QMutexLocker locker(&mutex);
         if (!cancelled.contains(job))
             job->postReply(error, errorString, t ? t->textureSize() : QSize(), t);
         else
             delete t;
-        mutex.unlock();
     }
     response->deleteLater();
 
@@ -799,10 +799,9 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
 
         if (imageType == QQuickImageProvider::Invalid) {
             QString errorStr = QQuickPixmap::tr("Invalid image provider: %1").arg(url.toString());
-            mutex.lock();
+            QMutexLocker locker(&mutex);
             if (!cancelled.contains(runningJob))
                 runningJob->postReply(QQuickPixmapReply::Loading, errorStr, readSize, nullptr);
-            mutex.unlock();
             return;
         }
 
@@ -830,10 +829,11 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorCode = QQuickPixmapReply::Loading;
                     errorStr = QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString());
                 }
-                mutex.lock();
-                if (!cancelled.contains(runningJob))
-                    runningJob->postReply(errorCode, errorStr, readSize, QQuickTextureFactory::textureFactoryForImage(image));
-                mutex.unlock();
+                QMutexLocker locker(&mutex);
+                if (!cancelled.contains(runningJob)) {
+                    runningJob->postReply(errorCode, errorStr, readSize,
+                                          QQuickTextureFactory::textureFactoryForImage(image));
+                }
                 break;
             }
 
@@ -851,10 +851,13 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorCode = QQuickPixmapReply::Loading;
                     errorStr = QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString());
                 }
-                mutex.lock();
-                if (!cancelled.contains(runningJob))
-                    runningJob->postReply(errorCode, errorStr, readSize, QQuickTextureFactory::textureFactoryForImage(pixmap.toImage()));
-                mutex.unlock();
+
+                QMutexLocker locker(&mutex);
+                if (!cancelled.contains(runningJob)) {
+                    runningJob->postReply(
+                            errorCode, errorStr, readSize,
+                            QQuickTextureFactory::textureFactoryForImage(pixmap.toImage()));
+                }
                 break;
             }
 
@@ -872,12 +875,11 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorCode = QQuickPixmapReply::Loading;
                     errorStr = QQuickPixmap::tr("Failed to get texture from provider: %1").arg(url.toString());
                 }
-                mutex.lock();
+                QMutexLocker locker(&mutex);
                 if (!cancelled.contains(runningJob))
                     runningJob->postReply(errorCode, errorStr, readSize, t);
                 else
                     delete t;
-                mutex.unlock();
                 break;
             }
 
@@ -947,10 +949,9 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                                 errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
                             errorCode = QQuickPixmapReply::Decoding;
                         }
-                        mutex.lock();
+                        QMutexLocker locker(&mutex);
                         if (!cancelled.contains(runningJob))
                             runningJob->postReply(errorCode, errorStr, readSize, factory);
-                        mutex.unlock();
                         return;
                     } else {
                         int frameCount;
@@ -970,10 +971,11 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorCode = QQuickPixmapReply::Loading;
                 }
             }
-            mutex.lock();
-            if (!cancelled.contains(runningJob))
-                runningJob->postReply(errorCode, errorStr, readSize, QQuickTextureFactory::textureFactoryForImage(image));
-            mutex.unlock();
+            QMutexLocker locker(&mutex);
+            if (!cancelled.contains(runningJob)) {
+                runningJob->postReply(errorCode, errorStr, readSize,
+                                      QQuickTextureFactory::textureFactoryForImage(image));
+            }
         } else {
 #if QT_CONFIG(qml_network)
             // Network resource
@@ -1012,20 +1014,19 @@ QQuickPixmapReader *QQuickPixmapReader::existingInstance(QQmlEngine *engine)
 
 QQuickPixmapReply *QQuickPixmapReader::getImage(QQuickPixmapData *data)
 {
-    mutex.lock();
+    QMutexLocker locker(&mutex);
     QQuickPixmapReply *reply = new QQuickPixmapReply(data);
     reply->engineForReader = engine;
     jobs.append(reply);
     // XXX
     if (threadObject())
         threadObject()->processJobs();
-    mutex.unlock();
     return reply;
 }
 
 void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
 {
-    mutex.lock();
+    QMutexLocker locker(&mutex);
     if (reply->loading) {
         cancelled.append(reply);
         reply->data = nullptr;
@@ -1040,7 +1041,6 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
         }
         delete reply;
     }
-    mutex.unlock();
 }
 
 void QQuickPixmapReader::run()
