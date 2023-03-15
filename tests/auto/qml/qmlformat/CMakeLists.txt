@@ -26,6 +26,8 @@ qt_internal_add_test(tst_qmlformat
     TESTDATA ${test_data}
 )
 
+add_dependencies(tst_qmlformat Qt::qmlformat)
+
 ## Scopes:
 #####################################################################
 
