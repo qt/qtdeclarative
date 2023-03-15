@@ -89,7 +89,7 @@ QV4::ReturnedValue QQmlDMAbstractItemModelData::get_property(const QV4::Function
     if (!o)
         return scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
 
-    uint propertyId = static_cast<const QV4::IndexedBuiltinFunction *>(b)->d()->index;
+    const qsizetype propertyId = static_cast<const QV4::IndexedBuiltinFunction *>(b)->d()->index;
 
     QQmlDMAbstractItemModelData *modelData = static_cast<QQmlDMAbstractItemModelData *>(o->d()->item);
     if (o->d()->item->index == -1) {
@@ -113,7 +113,7 @@ QV4::ReturnedValue QQmlDMAbstractItemModelData::set_property(const QV4::Function
     if (!argc)
         return scope.engine->throwTypeError();
 
-    uint propertyId = static_cast<const QV4::IndexedBuiltinFunction *>(b)->d()->index;
+    const qsizetype propertyId = static_cast<const QV4::IndexedBuiltinFunction *>(b)->d()->index;
 
     if (o->d()->item->index == -1) {
         QQmlDMAbstractItemModelData *modelData = static_cast<QQmlDMAbstractItemModelData *>(o->d()->item);

@@ -159,7 +159,7 @@ public:
 
         typedef QHash<QByteArray, int>::const_iterator iterator;
         for (iterator it = roleNames.constBegin(), end = roleNames.constEnd(); it != end; ++it) {
-            const int propertyId = propertyRoles.indexOf(it.value());
+            const qsizetype propertyId = propertyRoles.indexOf(it.value());
             const QByteArray &propertyName = it.key();
 
             QV4::ScopedString name(scope, v4->newString(QString::fromUtf8(propertyName)));
