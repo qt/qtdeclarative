@@ -8,7 +8,7 @@ Item {
     Popup {
         anchors.centerIn: parent
         visible: true
-        Text {
+        Label {
             text: "visible"
         }
     }
