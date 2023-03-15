@@ -248,7 +248,10 @@ QString UrlObject::search() const
     if (auto url = QUrl(href()); !url.hasQuery() || url.query().isEmpty())
         return QLatin1String("");
 
-    return QLatin1Char('?') + url.query(QUrl::ComponentFormattingOptions(QUrl::ComponentFormattingOption::FullyEncoded));
+    constexpr auto options = QUrl::ComponentFormattingOption::EncodeSpaces
+            | QUrl::ComponentFormattingOption::EncodeUnicode
+            | QUrl::ComponentFormattingOption::EncodeReserved;
+    return u'?' + url.query(options);
 }
 
 QUrl UrlObject::toQUrl() const
