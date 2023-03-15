@@ -133,8 +133,8 @@ private:
     Q_DISABLE_COPY(QQuickPixmapReply)
 
 public:
-    static int finishedIndex;
-    static int downloadProgressIndex;
+    static int finishedMethodIndex;
+    static int downloadProgressMethodIndex;
 };
 
 class QQuickPixmapReaderThreadObject : public QObject {
@@ -212,10 +212,10 @@ private:
 #endif
     QHash<QQuickImageResponse*,QQuickPixmapReply*> asyncResponses;
 
-    static int replyDownloadProgress;
-    static int replyFinished;
-    static int downloadProgress;
-    static int threadNetworkRequestDone;
+    static int replyDownloadProgressMethodIndex;
+    static int replyFinishedMethodIndex;
+    static int downloadProgressMethodIndex;
+    static int threadNetworkRequestDoneMethodIndex;
     static QHash<QQmlEngine *,QQuickPixmapReader*> readers;
 public:
     static QMutex readerMutex;
@@ -329,18 +329,17 @@ public:
 #endif
 };
 
-int QQuickPixmapReply::finishedIndex = -1;
-int QQuickPixmapReply::downloadProgressIndex = -1;
+int QQuickPixmapReply::finishedMethodIndex = -1;
+int QQuickPixmapReply::downloadProgressMethodIndex = -1;
 
 // XXX
 QHash<QQmlEngine *,QQuickPixmapReader*> QQuickPixmapReader::readers;
 QMutex QQuickPixmapReader::readerMutex;
 
-int QQuickPixmapReader::replyDownloadProgress = -1;
-int QQuickPixmapReader::replyFinished = -1;
-int QQuickPixmapReader::downloadProgress = -1;
-int QQuickPixmapReader::threadNetworkRequestDone = -1;
-
+int QQuickPixmapReader::replyDownloadProgressMethodIndex = -1;
+int QQuickPixmapReader::replyFinishedMethodIndex = -1;
+int QQuickPixmapReader::downloadProgressMethodIndex = -1;
+int QQuickPixmapReader::threadNetworkRequestDoneMethodIndex = -1;
 
 void QQuickPixmapReply::postReply(ReadError error, const QString &errorString,
                                         const QSize &implicitSize, QQuickTextureFactory *factory)
@@ -587,9 +586,10 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
                 reply->deleteLater();
                 reply = networkAccessManager()->get(req);
 
-                QMetaObject::connect(reply, replyDownloadProgress, job, downloadProgress);
-                QMetaObject::connect(reply, replyFinished, threadObject(),
-                                     threadNetworkRequestDone);
+                QMetaObject::connect(reply, replyDownloadProgressMethodIndex, job,
+                                     downloadProgressMethodIndex);
+                QMetaObject::connect(reply, replyFinishedMethodIndex, threadObject(),
+                                     threadNetworkRequestDoneMethodIndex);
 
                 networkJobs.insert(reply, job);
                 return;
@@ -983,8 +983,10 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             req.setAttribute(QNetworkRequest::HttpPipeliningAllowedAttribute, true);
             QNetworkReply *reply = networkAccessManager()->get(req);
 
-            QMetaObject::connect(reply, replyDownloadProgress, runningJob, downloadProgress);
-            QMetaObject::connect(reply, replyFinished, threadObject(), threadNetworkRequestDone);
+            QMetaObject::connect(reply, replyDownloadProgressMethodIndex, runningJob,
+                                 downloadProgressMethodIndex);
+            QMetaObject::connect(reply, replyFinishedMethodIndex, threadObject(),
+                                 threadNetworkRequestDoneMethodIndex);
 
             networkJobs.insert(reply, runningJob);
 #else
@@ -1045,14 +1047,16 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
 
 void QQuickPixmapReader::run()
 {
-    if (replyDownloadProgress == -1) {
+    if (replyDownloadProgressMethodIndex == -1) {
 #if QT_CONFIG(qml_network)
-        replyDownloadProgress = QMetaMethod::fromSignal(&QNetworkReply::downloadProgress).methodIndex();
-        replyFinished = QMetaMethod::fromSignal(&QNetworkReply::finished).methodIndex();
+        replyDownloadProgressMethodIndex =
+                QMetaMethod::fromSignal(&QNetworkReply::downloadProgress).methodIndex();
+        replyFinishedMethodIndex = QMetaMethod::fromSignal(&QNetworkReply::finished).methodIndex();
         const QMetaObject *ir = &QQuickPixmapReaderThreadObject::staticMetaObject;
-        threadNetworkRequestDone = ir->indexOfSlot("networkRequestDone()");
+        threadNetworkRequestDoneMethodIndex = ir->indexOfSlot("networkRequestDone()");
 #endif
-        downloadProgress = QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
+        downloadProgressMethodIndex =
+                QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
     }
 
 #if USE_THREADED_DOWNLOAD
@@ -1268,9 +1272,10 @@ QQuickPixmapReply::QQuickPixmapReply(QQuickPixmapData *d)
   : data(d), engineForReader(nullptr), requestRegion(d->requestRegion), requestSize(d->requestSize),
     url(d->url), loading(false), providerOptions(d->providerOptions), redirectCount(0)
 {
-    if (finishedIndex == -1) {
-        finishedIndex = QMetaMethod::fromSignal(&QQuickPixmapReply::finished).methodIndex();
-        downloadProgressIndex = QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
+    if (finishedMethodIndex == -1) {
+        finishedMethodIndex = QMetaMethod::fromSignal(&QQuickPixmapReply::finished).methodIndex();
+        downloadProgressMethodIndex =
+                QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
     }
 }
 
@@ -1874,7 +1879,7 @@ bool QQuickPixmap::connectFinished(QObject *object, int method)
         return false;
     }
 
-    return QMetaObject::connect(d->reply, QQuickPixmapReply::finishedIndex, object, method);
+    return QMetaObject::connect(d->reply, QQuickPixmapReply::finishedMethodIndex, object, method);
 }
 
 bool QQuickPixmap::connectDownloadProgress(QObject *object, const char *method)
@@ -1884,7 +1889,8 @@ bool QQuickPixmap::connectDownloadProgress(QObject *object, const char *method)
         return false;
     }
 
-    return QObject::connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)), object, method);
+    return QObject::connect(d->reply, SIGNAL(downloadProgress(qint64, qint64)), object,
+                            method);
 }
 
 bool QQuickPixmap::connectDownloadProgress(QObject *object, int method)
@@ -1894,7 +1900,8 @@ bool QQuickPixmap::connectDownloadProgress(QObject *object, int method)
         return false;
     }
 
-    return QMetaObject::connect(d->reply, QQuickPixmapReply::downloadProgressIndex, object, method);
+    return QMetaObject::connect(d->reply, QQuickPixmapReply::downloadProgressMethodIndex, object,
+                                method);
 }
 
 QColorSpace QQuickPixmap::colorSpace() const
