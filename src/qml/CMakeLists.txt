@@ -694,35 +694,6 @@ qt_internal_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
-# ITAB = "$$PWD/disassembler/udis86/optable.xml"
-# QMAKE_EXTRA_COMPILERS = "udis86"
-# QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
-# udis86.CONFIG = "no_link"
-# udis86.commands = "$$QMAKE_PYTHON" "$$PWD/disassembler/udis86/itab.py" "${QMAKE_FILE_IN}"
-# udis86.input = "ITAB"
-# udis86.output = "udis86_itab.h"
-# udis86_tab_cfile.depends = "udis86_itab.h"
-# udis86_tab_cfile.target = "$$OUT_PWD/udis86_itab.c"
-
-#### Keys ignored in scope 74:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
-# GENERATEDDIR = "$$GENERATEDDIR/debug"
-
-#### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
-# GENERATEDDIR = "$$GENERATEDDIR/release"
-
-qt_internal_extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
-    COMPILE_OPTIONS
-        -Wno-c++0x-extensions
-        -Wno-c++11-extensions
-)
-
-qt_internal_extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GCC)) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 4) OR (QT_COMPILER_VERSION_MINOR STRGREATER 5))
-    COMPILE_OPTIONS
-        -Wno-c++0x-compat
-)
-
-
 qt_internal_create_tracepoints(Qml qtqml.tracepoints)
 qt_internal_add_docs(Qml
     doc/qtqml.qdocconf
