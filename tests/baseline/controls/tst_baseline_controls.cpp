@@ -203,6 +203,7 @@ void tst_Baseline_Controls::runTest(const QString& style)
     QStringList args;
     if (!style.isEmpty())
         args.append({"-style", style});
+    args.append("-useAppWindow");
     if (renderAndGrab(qmlFile, args, &screenShot, &errorMessage)) {
         consecutiveErrors = 0;
     } else {
