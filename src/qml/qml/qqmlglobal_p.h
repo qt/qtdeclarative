@@ -122,6 +122,8 @@ do { \
     QMetaObject::disconnect(sender, signalIdx, receiver, methodIdx); \
 } while (0)
 
+Q_QML_PRIVATE_EXPORT bool qmlobject_can_cast(QObject *object, const QMetaObject *mo);
+
 /*!
     This method is identical to qobject_cast<T>() except that it does not require lazy
     QMetaObjects to be built, so should be preferred in all QML code that might interact
@@ -137,7 +139,9 @@ do { \
 template<class T>
 T qmlobject_cast(QObject *object)
 {
-    if (object && QQmlMetaObject::canConvert(object, &reinterpret_cast<T>(object)->staticMetaObject))
+    if (!object)
+        return nullptr;
+    if (qmlobject_can_cast(object, &(std::remove_pointer_t<T>::staticMetaObject)))
         return static_cast<T>(object);
     else
         return nullptr;

@@ -596,6 +596,16 @@ void QQmlApplication::setDomain(const QString &arg)
     QCoreApplication::instance()->setOrganizationDomain(arg);
 }
 
+bool qmlobject_can_cast(QObject *object, const QMetaObject *mo)
+{
+    Q_ASSERT(object);
+    Q_ASSERT(mo);
+    auto ddata = QQmlData::get(object, false);
+    if (!ddata || ! ddata->propertyCache)
+        return object->metaObject()->inherits(mo);
+   return ddata->propertyCache->firstCppMetaObject()->inherits(mo);
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qqmlglobal_p.cpp"
