@@ -35,48 +35,4 @@ Item {
         active: root.handlePressed || root.handleHasFocus || (enabled && root.handleHovered)
         color: root.control ? root.control.Material.highlightedRippleColor : "transparent"
     }
-
-    Rectangle {
-        anchors.bottom: parent.top
-        anchors.bottomMargin: 6
-        anchors.horizontalCenter: parent.horizontalCenter
-        scale: root.handlePressed ? 1 : 0
-        implicitWidth: Math.max(tm.width + 8, height)
-        implicitHeight: tm.height + 8
-        radius: height / 2
-        color: root.control ? root.control.Material.accentColor : "transparent"
-        transformOrigin: Item.Bottom
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: 100
-            }
-        }
-
-        Rectangle {
-            anchors.top: parent.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            // Center the square to the parent circle, then position it downwards by half of the diagonal
-            anchors.topMargin: Math.floor(-parent.radius * 1.5 + Math.sqrt(parent.radius * parent.radius / 2))
-            implicitWidth: parent.radius
-            implicitHeight: parent.radius
-            rotation: 45
-            color: root.control ? root.control.Material.accentColor : "transparent"
-        }
-
-        TextMetrics {
-            id: tm
-            text: '8'.repeat(label.text.length)
-            font: label.font
-        }
-
-        Text {
-            id: label
-            anchors.centerIn: parent
-            text: Math.abs(Math.floor(value) - value.toFixed(2)) < Number.EPSILON ? Math.trunc(value) : value.toFixed(2)
-            color: root.control ? root.control.Material.primaryHighlightedTextColor : "transparent"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-    }
 }
