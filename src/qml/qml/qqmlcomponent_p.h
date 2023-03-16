@@ -164,7 +164,8 @@ public:
                                   QQmlContext *context, CreateBehavior behavior = CreateDefault);
 
     bool isBound() const {
-        return compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound;
+        return compilationUnit
+                && (compilationUnit->unitData()->flags & QV4::CompiledData::Unit::ComponentsBound);
     }
 };
 

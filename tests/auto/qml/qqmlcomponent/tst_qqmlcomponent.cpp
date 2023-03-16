@@ -1245,12 +1245,14 @@ void tst_qqmlcomponent::boundComponent()
     {
         QQmlComponent component(&engine, testFileUrl("nestedBoundComponent.qml"));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QVERIFY(component.isBound());
 
         QScopedPointer<QObject> o(component.create());
         QVERIFY(!o.isNull());
 
         QQmlComponent *nestedComponent = o->property("c").value<QQmlComponent *>();
         QVERIFY(nestedComponent != nullptr);
+        QVERIFY(nestedComponent->isBound());
 
         QObject *nestedObject = o->property("o").value<QObject *>();
         QVERIFY(nestedObject != nullptr);
@@ -1269,6 +1271,7 @@ void tst_qqmlcomponent::boundComponent()
     {
         QQmlComponent component(&engine, testFileUrl("BoundInlineComponent.qml"));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QVERIFY(component.isBound());
 
         QScopedPointer<QObject> o(component.create());
         QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
@@ -1282,11 +1285,22 @@ void tst_qqmlcomponent::boundComponent()
     {
         QQmlComponent component(&engine, testFileUrl("boundInlineComponentUser.qml"));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QVERIFY(!component.isBound());
         QScopedPointer<QObject> o(component.create());
         QVERIFY(o.isNull());
 
         QVERIFY(component.errorString().contains(
                 QLatin1String("Cannot instantiate bound inline component in different file")));
+
+    }
+
+    {
+        QQmlComponent component(&engine);
+        QVERIFY(!component.isBound());
+
+        component.setData("pragma ComponentBehavior: Bound\nsyntax error", QUrl());
+        QCOMPARE(component.errorString(), ":2 Syntax error\n"_L1);
+        QVERIFY(!component.isBound());
     }
 }
 
