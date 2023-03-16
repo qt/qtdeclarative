@@ -1,6 +1,8 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
@@ -56,6 +58,9 @@ T.ComboBox {
     }
 
     delegate: ItemDelegate {
+        required property var model
+        required property int index
+
         width: ListView.view.width
         text: model[control.textRole]
         palette.text: control.palette.text

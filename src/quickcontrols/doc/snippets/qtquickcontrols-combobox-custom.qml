@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 //! [file]
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 
@@ -10,9 +12,14 @@ ComboBox {
     model: ["First", "Second", "Third"]
 
     delegate: ItemDelegate {
+        id: delegate
+
+        required property var model
+        required property int index
+
         width: control.width
         contentItem: Text {
-            text: model[control.textRole]
+            text: delegate.model[control.textRole]
             color: "#21be2b"
             font: control.font
             elide: Text.ElideRight
