@@ -3933,7 +3933,8 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
         }
         xform = xform->parent();
     }
-    rd->m_matrix = &matrix;
+    rd->m_localMatrix = matrix;
+    rd->m_matrix = &rd->m_localMatrix;
 
     QSGNode *opacity = e->renderNode->parent();
     rd->m_opacity = 1.0;
