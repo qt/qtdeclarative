@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
     surfaceFormat.setStencilBufferSize(8);
     if (requestMSAA)
         surfaceFormat.setSamples(4);
-    if (requestMSAA)
+    if (requestAlphaChannel)
         surfaceFormat.setAlphaBufferSize(8);
     if (qEnvironmentVariableIsSet("QSG_CORE_PROFILE")
             || qEnvironmentVariableIsSet("QML_CORE_PROFILE")
