@@ -28,6 +28,7 @@
 #include <QtCore/qbuffer.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qscopeguard.h>
 
 #if QT_CONFIG(qml_network)
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
@@ -231,11 +232,8 @@ private:
     QList<QQuickPixmapReply*> jobs;
     QList<QQuickPixmapReply *> cancelledJobs;
     QQmlEngine *engine;
-    QObject *eventLoopQuitHack;
 
-    QMutex mutex;
-
-#if USE_THREADED_DOWNLOAD
+#if QT_CONFIG(quick_pixmap_cache_threaded_download)
     /*! \internal
         Returns a pointer to the thread object owned by the run loop in QQuickPixmapReader::run.
      */
@@ -243,6 +241,8 @@ private:
     {
         return runLoopReaderThreadExecutionEnforcer;
     }
+    QObject *eventLoopQuitHack;
+    QMutex mutex;
     ReaderThreadExecutionEnforcer *runLoopReaderThreadExecutionEnforcer = nullptr;
 #else
     /*! \internal
@@ -273,6 +273,12 @@ private:
 public:
     static QMutex readerMutex;
 };
+
+#if QT_CONFIG(quick_pixmap_cache_threaded_download)
+#  define PIXMAP_READER_LOCK() QMutexLocker locker(&mutex)
+#else
+#  define PIXMAP_READER_LOCK()
+#endif
 
 class QQuickPixmapStore;
 class QQuickPixmapData
@@ -557,10 +563,10 @@ QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
 #endif
 {
     Q_DETACH_THREAD_AFFINITY_MARKER(m_readerThreadAffinityMarker);
+#if QT_CONFIG(quick_pixmap_cache_threaded_download)
     eventLoopQuitHack = new QObject;
     eventLoopQuitHack->moveToThread(this);
-    connect(eventLoopQuitHack, SIGNAL(destroyed(QObject *)), SLOT(quit()), Qt::DirectConnection);
-#if USE_THREADED_DOWNLOAD
+    QObject::connect(eventLoopQuitHack, &QObject::destroyed, this, &QThread::quit, Qt::DirectConnection);
     start(QThread::LowestPriority);
 #else
     run(); // Call nonblocking run for ourselves.
@@ -576,7 +582,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
     readerMutex.unlock();
 
     {
-        QMutexLocker locker(&mutex);
+        PIXMAP_READER_LOCK();
         // manually cancel all outstanding jobs.
         for (QQuickPixmapReply *reply : std::as_const(jobs)) {
             if (reply->data && reply->data->reply == reply)
@@ -598,12 +604,25 @@ QQuickPixmapReader::~QQuickPixmapReader()
         for (auto *reply : std::as_const(asyncResponses))
             cancelJob(reply);
 #endif
-        if (readerThreadExecutionEnforcer())
-            readerThreadExecutionEnforcer()->processJobsOnReaderThreadLater();
+#if !QT_CONFIG(quick_pixmap_cache_threaded_download)
+    // In this case we won't be waiting, but we are on the correct thread already, so we can
+    // perform housekeeping synchronously now.
+    processJobs();
+#else  // QT_CONFIG(quick_pixmap_cache_threaded_download) is true
+    // Perform housekeeping on all the jobs cancelled above soon...
+    if (readerThreadExecutionEnforcer())
+        readerThreadExecutionEnforcer()->processJobsOnReaderThreadLater();
+#endif
     }
 
+#if QT_CONFIG(quick_pixmap_cache_threaded_download)
+    // ... schedule stopping of this thread via the eventLoopQuitHack (processJobs scheduled above
+    // will run first) ...
     eventLoopQuitHack->deleteLater();
+    // ... and wait() for it all to finish, as the thread will only quit after eventLoopQuitHack
+    // has been deleted.
     wait();
+#endif
 
 #if QT_CONFIG(qml_network)
     // While we've been waiting, the other thread may have added
@@ -691,7 +710,7 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
         if (!factory)
             factory = QQuickTextureFactory::textureFactoryForImage(image);
 
-        QMutexLocker locker(&mutex);
+        PIXMAP_READER_LOCK();
         if (!cancelledJobs.contains(job))
             job->postReply(error, errorString, readSize, factory);
     }
@@ -719,7 +738,7 @@ void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
             t = response->textureFactory();
         }
 
-        QMutexLocker locker(&mutex);
+        PIXMAP_READER_LOCK();
         if (!cancelledJobs.contains(job))
             job->postReply(error, errorString, t ? t->textureSize() : QSize(), t);
         else
@@ -773,7 +792,7 @@ void QQuickPixmapReader::processJobs()
 {
     Q_ASSERT_CALLED_ON_VALID_THREAD(m_readerThreadAffinityMarker);
 
-    QMutexLocker locker(&mutex);
+    PIXMAP_READER_LOCK();
     while (true) {
         if (cancelledJobs.isEmpty() && jobs.isEmpty())
             return; // Nothing else to do
@@ -838,9 +857,13 @@ void QQuickPixmapReader::processJobs()
 
                     PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
 
+#if QT_CONFIG(quick_pixmap_cache_threaded_download)
                     locker.unlock();
+                    auto relockMutexGuard = qScopeGuard(([&locker]() {
+                        locker.relock();
+                    }));
+#endif
                     processJob(job, url, localFile, imageType, provider);
-                    locker.relock();
                 }
             }
 
@@ -862,7 +885,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
 
         if (imageType == QQuickImageProvider::Invalid) {
             QString errorStr = QQuickPixmap::tr("Invalid image provider: %1").arg(url.toString());
-            QMutexLocker locker(&mutex);
+            PIXMAP_READER_LOCK();
             if (!cancelledJobs.contains(runningJob))
                 runningJob->postReply(QQuickPixmapReply::Loading, errorStr, readSize, nullptr);
             return;
@@ -892,7 +915,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorCode = QQuickPixmapReply::Loading;
                     errorStr = QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString());
                 }
-                QMutexLocker locker(&mutex);
+                PIXMAP_READER_LOCK();
                 if (!cancelledJobs.contains(runningJob)) {
                     runningJob->postReply(errorCode, errorStr, readSize,
                                           QQuickTextureFactory::textureFactoryForImage(image));
@@ -915,7 +938,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorStr = QQuickPixmap::tr("Failed to get image from provider: %1").arg(url.toString());
                 }
 
-                QMutexLocker locker(&mutex);
+                PIXMAP_READER_LOCK();
                 if (!cancelledJobs.contains(runningJob)) {
                     runningJob->postReply(
                             errorCode, errorStr, readSize,
@@ -938,7 +961,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorCode = QQuickPixmapReply::Loading;
                     errorStr = QQuickPixmap::tr("Failed to get texture from provider: %1").arg(url.toString());
                 }
-                QMutexLocker locker(&mutex);
+                PIXMAP_READER_LOCK();
                 if (!cancelledJobs.contains(runningJob))
                     runningJob->postReply(errorCode, errorStr, readSize, t);
                 else
@@ -1012,7 +1035,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                                 errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
                             errorCode = QQuickPixmapReply::Decoding;
                         }
-                        QMutexLocker locker(&mutex);
+                        PIXMAP_READER_LOCK();
                         if (!cancelledJobs.contains(runningJob))
                             runningJob->postReply(errorCode, errorStr, readSize, factory);
                         return;
@@ -1034,7 +1057,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     errorCode = QQuickPixmapReply::Loading;
                 }
             }
-            QMutexLocker locker(&mutex);
+            PIXMAP_READER_LOCK();
             if (!cancelledJobs.contains(runningJob)) {
                 runningJob->postReply(errorCode, errorStr, readSize,
                                       QQuickTextureFactory::textureFactoryForImage(image));
@@ -1079,7 +1102,7 @@ QQuickPixmapReader *QQuickPixmapReader::existingInstance(QQmlEngine *engine)
 
 QQuickPixmapReply *QQuickPixmapReader::getImage(QQuickPixmapData *data)
 {
-    QMutexLocker locker(&mutex);
+    PIXMAP_READER_LOCK();
     QQuickPixmapReply *reply = new QQuickPixmapReply(data);
     reply->engineForReader = engine;
     jobs.append(reply);
@@ -1091,7 +1114,7 @@ QQuickPixmapReply *QQuickPixmapReader::getImage(QQuickPixmapData *data)
 
 void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
 {
-    QMutexLocker locker(&mutex);
+    PIXMAP_READER_LOCK();
     if (reply->loading) {
         cancelledJobs.append(reply);
         reply->data = nullptr;
@@ -1124,16 +1147,16 @@ void QQuickPixmapReader::run()
                 QMetaMethod::fromSignal(&QQuickPixmapReply::downloadProgress).methodIndex();
     }
 
-#if USE_THREADED_DOWNLOAD
+#if QT_CONFIG(quick_pixmap_cache_threaded_download)
     const auto guard = qScopeGuard([this]() {
         // We need to delete the runLoopReaderThreadExecutionEnforcer from the same thread.
-        QMutexLocker lock(&mutex);
+        PIXMAP_READER_LOCK();
         delete runLoopReaderThreadExecutionEnforcer;
         runLoopReaderThreadExecutionEnforcer = nullptr;
     });
 
     {
-        QMutexLocker lock(&mutex);
+        PIXMAP_READER_LOCK();
         Q_ASSERT(!runLoopReaderThreadExecutionEnforcer);
         runLoopReaderThreadExecutionEnforcer = new ReaderThreadExecutionEnforcer(this);
     }
