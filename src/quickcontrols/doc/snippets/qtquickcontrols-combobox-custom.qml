@@ -12,9 +12,7 @@ ComboBox {
     delegate: ItemDelegate {
         width: control.width
         contentItem: Text {
-            text: control.textRole
-                ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole])
-                : modelData
+            text: model[control.textRole]
             color: "#21be2b"
             font: control.font
             elide: Text.ElideRight

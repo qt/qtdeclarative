@@ -28,9 +28,7 @@ T.HorizontalHeaderView {
 
         Label {
             id: text
-            text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole]
-                                        : model[control.textRole])
-                                   : modelData
+            text: model[control.textRole]
             width: parent.width
             height: parent.height
             horizontalAlignment: Text.AlignHCenter
