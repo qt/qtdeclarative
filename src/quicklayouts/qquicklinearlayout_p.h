@@ -120,6 +120,11 @@ class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickGridLayout : public QQuickGridLayoutBa
     Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged)
     Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
+    Q_PROPERTY(bool uniformCellWidths READ uniformCellWidths WRITE setUniformCellWidths
+               NOTIFY uniformCellWidthsChanged REVISION(6, 6))
+    Q_PROPERTY(bool uniformCellHeights READ uniformCellHeights WRITE setUniformCellHeights
+               NOTIFY uniformCellHeightsChanged REVISION(6, 6))
+
     QML_NAMED_ELEMENT(GridLayout)
     QML_ADDED_IN_VERSION(1, 0)
 public:
@@ -139,6 +144,11 @@ public:
     Flow flow() const;
     void setFlow(Flow flow);
 
+    bool uniformCellWidths() const;
+    void setUniformCellWidths(bool uniformCellWidths);
+    bool uniformCellHeights() const;
+    void setUniformCellHeights(bool uniformCellHeights);
+
     void insertLayoutItems() override;
 
 Q_SIGNALS:
@@ -149,6 +159,9 @@ Q_SIGNALS:
     void rowsChanged();
 
     void flowChanged();
+
+    Q_REVISION(6, 6) void uniformCellWidthsChanged();
+    Q_REVISION(6, 6) void uniformCellHeightsChanged();
 private:
     Q_DECLARE_PRIVATE(QQuickGridLayout)
 };
@@ -174,17 +187,22 @@ class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLinearLayout : public QQuickGridLayout
 {
     Q_OBJECT
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
+    Q_PROPERTY(bool uniformCellSizes READ uniformCellSizes WRITE setUniformCellSizes
+               NOTIFY uniformCellSizesChanged REVISION(6, 6))
 public:
     explicit QQuickLinearLayout(Qt::Orientation orientation,
                                 QQuickItem *parent = nullptr);
     void insertLayoutItem(QQuickItem *item);
     qreal spacing() const;
     void setSpacing(qreal spacing);
+    bool uniformCellSizes() const;
+    void setUniformCellSizes(bool uniformCellSizes);
 
     void insertLayoutItems() override;
 
 Q_SIGNALS:
     void spacingChanged();
+    Q_REVISION(6, 6) void uniformCellSizesChanged();
 private:
     Q_DECLARE_PRIVATE(QQuickLinearLayout)
 };

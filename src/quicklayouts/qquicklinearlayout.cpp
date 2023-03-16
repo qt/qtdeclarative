@@ -622,6 +622,75 @@ void QQuickGridLayout::setFlow(QQuickGridLayout::Flow flow)
     emit flowChanged();
 }
 
+/*!
+    \qmlproperty bool GridLayout::uniformCellWidths
+    \since QtQuick.Layouts 6.6
+
+    If this property is set to \c true, the layout will force all cells to have
+    a uniform width. The layout aims to respect
+    \l{Layout::minimumWidth}{Layout.minimumWidth},
+    \l{Layout::preferredWidth}{Layout.preferredWidth} and
+    \l{Layout::maximumWidth}{Layout.maximumWidth} in this mode but might make
+    compromisses to fullfill the requirements of all items.
+
+    Default value is \c false.
+
+    \note This API is considered tech preview and may change or be removed in future versions of
+    Qt.
+
+    \sa GridLayout::uniformCellHeights, RowLayout::uniformCellSizes, ColumnLayout::uniformCellSizes
+*/
+bool QQuickGridLayout::uniformCellWidths() const
+{
+    Q_D(const QQuickGridLayout);
+    return d->engine.uniformCellWidths();
+}
+
+void QQuickGridLayout::setUniformCellWidths(bool uniformCellWidths)
+{
+    Q_D(QQuickGridLayout);
+    if (d->engine.uniformCellWidths() == uniformCellWidths)
+        return;
+    d->engine.setUniformCellWidths(uniformCellWidths);
+    invalidate();
+    emit uniformCellWidthsChanged();
+}
+
+/*!
+    \qmlproperty bool GridLayout::uniformCellHeights
+    \since QtQuick.Layouts 6.6
+
+    If this property is set to \c true, the layout will force all cells to have an
+    uniform Height. The layout aims to respect
+    \l{Layout::minimumHeight}{Layout.minimumHeight},
+    \l{Layout::preferredHeight}{Layout.preferredHeight} and
+    \l{Layout::maximumHeight}{Layout.maximumHeight} in this mode but might make
+    compromisses to fullfill the requirements of all items.
+
+    Default value is \c false.
+
+    \note This API is considered tech preview and may change or be removed in future versions of
+    Qt.
+
+    \sa GridLayout::uniformCellWidths, RowLayout::uniformCellSizes, ColumnLayout::uniformCellSizes
+*/
+bool QQuickGridLayout::uniformCellHeights() const
+{
+    Q_D(const QQuickGridLayout);
+    return d->engine.uniformCellHeights();
+}
+
+void QQuickGridLayout::setUniformCellHeights(bool uniformCellHeights)
+{
+    Q_D(QQuickGridLayout);
+    if (d->engine.uniformCellHeights() == uniformCellHeights)
+        return;
+    d->engine.setUniformCellHeights(uniformCellHeights);
+    invalidate();
+    emit uniformCellHeightsChanged();
+}
+
+
 void QQuickGridLayout::insertLayoutItems()
 {
     Q_D(QQuickGridLayout);
@@ -795,6 +864,49 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
 
     \sa GridLayout::layoutDirection, RowLayout::layoutDirection
 */
+
+/*!
+    \qmlproperty bool RowLayout::uniformCellSizes
+    \since QtQuick.Layouts 6.6
+
+    If this property is set to \c true, the layout will force all cells to have
+    a uniform size.
+
+    \note This API is considered tech preview and may change or be removed in future versions of
+    Qt.
+
+    \sa GridLayout::uniformCellWidths, GridLayout::uniformCellHeights, ColumnLayout::uniformCellSizes
+*/
+/*!
+    \qmlproperty bool ColumnLayout::uniformCellSizes
+    \since QtQuick.Layouts 6.6
+
+    If this property is set to \c true, the layout will force all cells to have
+    a uniform size.
+
+    \note This API is considered tech preview and may change or be removed in future versions of
+    Qt.
+
+    \sa GridLayout::uniformCellWidths, GridLayout::uniformCellHeights, RowLayout::uniformCellSizes
+*/
+bool QQuickLinearLayout::uniformCellSizes() const
+{
+    Q_D(const QQuickLinearLayout);
+    Q_ASSERT(d->engine.uniformCellWidths() == d->engine.uniformCellHeights());
+    return d->engine.uniformCellWidths();
+}
+
+void QQuickLinearLayout::setUniformCellSizes(bool uniformCellSizes)
+{
+    Q_D(QQuickLinearLayout);
+    Q_ASSERT(d->engine.uniformCellWidths() == d->engine.uniformCellHeights());
+    if (d->engine.uniformCellHeights() == uniformCellSizes)
+        return;
+    d->engine.setUniformCellWidths(uniformCellSizes);
+    d->engine.setUniformCellHeights(uniformCellSizes);
+    invalidate();
+    emit uniformCellSizesChanged();
+}
 
 
 /*!
