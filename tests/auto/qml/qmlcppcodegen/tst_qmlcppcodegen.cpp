@@ -167,6 +167,7 @@ private slots:
     void undefinedToDouble();
     void variantMapLookup();
     void enumFromBadSingleton();
+    void ambiguousAs();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3247,6 +3248,20 @@ void tst_QmlCppCodegen::enumFromBadSingleton()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QVERIFY(o->objectName().isEmpty());
+}
+
+void tst_QmlCppCodegen::ambiguousAs()
+{
+    QQmlEngine e;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/ambiguousAs.qml"_s);
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("other").value<QObject *>(), o.data());
+    o->setProperty("useSelf", QVariant::fromValue(false));
+    QCOMPARE(o->property("other").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
