@@ -300,4 +300,11 @@ void tst_qmltyperegistrar::methodReturnType()
     QVERIFY(qmltypesData.contains("type: \"QQmlComponent\""));
 }
 
+void tst_qmltyperegistrar::omitInvisible()
+{
+    // If it cannot resolve the type a QML_FOREIGN refers to, it should not generate anything.
+    QVERIFY(qmltypesData.contains(
+    R"(Component { file: "tst_qmltyperegistrar.h"; name: "Invisible"; accessSemantics: "none" })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

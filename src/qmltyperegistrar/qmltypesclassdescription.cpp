@@ -261,11 +261,29 @@ void QmlTypesClassDescription::collect(
         accessSemantics = QLatin1String("reference");
     } else {
         isCreatable = false;
-        // If no classDef, we assume it's a value type defined by the foreign/extended trick.
-        // Objects and namespaces always have metaobjects and therefore classDefs.
-        accessSemantics = (!classDef || classDef->value(QLatin1String("gadget")).toBool())
-                ? QLatin1String("value")
-                : QLatin1String("none");
+
+        if (!classDef) {
+            if (elementName.isEmpty() || elementName[0].isLower()) {
+                // If no classDef, we generally assume it's a value type defined by the
+                // foreign/extended trick.
+                accessSemantics = QLatin1String("value");
+            } else {
+                // Objects and namespaces always have metaobjects and therefore classDefs.
+                // However, we may not be able to resolve the metaobject at compile time. See
+                // the "Invisible" test case. In that case, we must not assume anything about
+                // access semantics.
+                qWarning() << "Warning: Refusing to generate non-lowercase name"
+                           << elementName << "for unknown foreign type";
+                elementName.clear();
+                // Make it completely inaccessible.
+                // We cannot get enums from anonymous types after all.
+                accessSemantics = QLatin1String("none");
+            }
+        } else if (classDef->value(QLatin1String("gadget")).toBool()) {
+            accessSemantics = QLatin1String("value");
+        } else {
+            accessSemantics = QLatin1String("none");
+        }
     }
 }
 
