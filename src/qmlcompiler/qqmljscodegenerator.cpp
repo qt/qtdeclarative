@@ -2307,20 +2307,25 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
     INJECT_TRACE_INFO(generate_As);
 
     const QString input = registerVariable(lhs);
-    const QQmlJSScope::ConstPtr contained
-            = m_typeResolver->containedType(m_state.readRegister(lhs));
+    const QQmlJSRegisterContent inputContent = m_state.readRegister(lhs);
+    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(inputContent);
+
+    const QQmlJSScope::ConstPtr genericContained = m_typeResolver->genericType(contained);
+    const QString inputConversion = inputContent.storedType()->isReferenceType()
+            ? input
+            : conversion(inputContent.storedType(), genericContained, input);
 
     m_body += m_state.accumulatorVariableOut + u" = "_s;
     if (m_typeResolver->equals(
                 m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())
             && contained->isComposite()) {
         m_body += conversion(
-                    m_typeResolver->genericType(contained), m_state.accumulatorOut().storedType(),
-                    m_state.accumulatorVariableIn + u"->cast("_s + input + u')');
+                    genericContained, m_state.accumulatorOut().storedType(),
+                    m_state.accumulatorVariableIn + u"->cast("_s + inputConversion + u')');
     } else {
         m_body += conversion(
-                    m_typeResolver->genericType(contained), m_state.accumulatorOut().storedType(),
-                    u'(' + metaObject(contained) + u")->cast("_s + input + u')');
+                    genericContained, m_state.accumulatorOut().storedType(),
+                    u'(' + metaObject(contained) + u")->cast("_s + inputConversion + u')');
     }
     m_body += u";\n"_s;
 }

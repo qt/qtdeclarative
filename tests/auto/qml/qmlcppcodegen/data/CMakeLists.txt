@@ -54,6 +54,7 @@ set(qml_files
     aliasLookup.qml
     ambiguous1/Ambiguous.qml
     ambiguous2/Ambiguous.qml
+    ambiguousAs.qml
     ambiguousSignals.qml
     anchorsFill.qml
     argumentConversion.qml

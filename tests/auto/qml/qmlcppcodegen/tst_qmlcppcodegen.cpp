@@ -166,6 +166,7 @@ private slots:
     void equalityQUrl();
     void undefinedToDouble();
     void variantMapLookup();
+    void ambiguousAs();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3222,6 +3223,20 @@ void tst_QmlCppCodegen::variantMapLookup()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("i"), 42);
+}
+
+void tst_QmlCppCodegen::ambiguousAs()
+{
+    QQmlEngine e;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/ambiguousAs.qml"_s);
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("other").value<QObject *>(), o.data());
+    o->setProperty("useSelf", QVariant::fromValue(false));
+    QCOMPARE(o->property("other").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
