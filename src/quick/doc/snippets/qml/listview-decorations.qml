@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //! [document]
-import QtQuick 2.0
+import QtQuick
 
 //! [parent begin]
 Rectangle {
@@ -24,7 +24,8 @@ ListModel {
 Component {
     id: nameDelegate
     Text {
-        text: name;
+        required property string name
+        text: name
         font.pixelSize: 24
     }
 }
