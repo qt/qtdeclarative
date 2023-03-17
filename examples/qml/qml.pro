@@ -7,7 +7,6 @@ qtHaveModule(quick) {
 }
 
 SUBDIRS += \
-          referenceexamples \
           tutorials
 
 EXAMPLE_FILES = \

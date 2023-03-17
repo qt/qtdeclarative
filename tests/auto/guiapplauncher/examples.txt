@@ -36,17 +36,6 @@
 "quick/quickwidgets/qquickviewcomparison Example", "examples/quick/quickwidgets/qquickviewcomparison", "qquickviewcomparison", 0, -1
 "quick/quickwidgets/quickwidget Example", "examples/quick/quickwidgets/quickwidget", "quickwidget", 0, -1
 "qml/shell Example", "examples/qml/shell", "shell", 10, -1
-"qml/referenceexamples/extended Example", "examples/qml/referenceexamples/extended", "extended", 0, -1
-"qml/referenceexamples/binding Example", "examples/qml/referenceexamples/binding", "binding", 10, -1
-"qml/referenceexamples/adding Example", "examples/qml/referenceexamples/adding", "adding", 10, -1
-"qml/referenceexamples/attached Example", "examples/qml/referenceexamples/attached", "attached", 10, -1
-"qml/referenceexamples/default Example", "examples/qml/referenceexamples/default", "default", 10, -1
-"qml/referenceexamples/signal Example", "examples/qml/referenceexamples/signal", "signal", 10, -1
-"qml/referenceexamples/coercion Example", "examples/qml/referenceexamples/coercion", "coercion", 10, -1
-"qml/referenceexamples/grouped Example", "examples/qml/referenceexamples/grouped", "grouped", 10, -1
-"qml/referenceexamples/valuesource Example", "examples/qml/referenceexamples/valuesource", "valuesource", 10, -1
-"qml/referenceexamples/properties Example", "examples/qml/referenceexamples/properties", "properties", 10, -1
-"qml/referenceexamples/methods Example", "examples/qml/referenceexamples/methods", "methods", 10, -1
 "qml/networkaccessmanagerfactory Example", "examples/qml/networkaccessmanagerfactory", "networkaccessmanagerfactory", 10, -1
 "qml/xmlhttprequest Example", "examples/qml/xmlhttprequest", "xmlhttprequest", 0, -1
 "qmltest/qmltest Example", "examples/qmltest/qmltest", "tst_qmltestexample", 10, -1

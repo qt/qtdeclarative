@@ -81,11 +81,12 @@ steps such as use cases and introductory material. For more information about Qt
 
 \section2 Extending QML
 
-The following tutorials show how a QML-based application can be combined with
-C++ code using the \l{Qt QML} module. For information about extending QML, visit
-the \l{Writing QML Extensions with C++} page.
-
-\annotatedlist{qmlextendingexamples}
+The following tutorials show how a QML-based application can be combined and
+exteneded with C++ code using the \l{Qt QML} module.
+\list
+    \li \l {Writing QML Extensions with C++}
+    \li \l {Writing advanced QML Extensions with C++}
+\endlist
 
 \section1 Examples
 

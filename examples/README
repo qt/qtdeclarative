@@ -6,8 +6,8 @@ designers to actually implement their UI vision. QML UIs can integrate
 with C++ code in many ways, including being loaded as a part of a C++ UI
 and loading data models from C++ and interacting with them.
 
-Mostof these examples can be viewed directly with the
+Most of these examples can be viewed directly with the
 QML viewer utility, without requiring compilation.
 
-Documentation for these examples can be found via the Examples
+Documentation for these examples can be found via the Examples and Tutorials
 link in the main Qt documentation.

@@ -1,0 +1,380 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\example tutorials/extending-qml-advanced
+\meta tags{qml,extensions,advanced}
+
+\title Writing advanced QML Extensions with C++
+\brief Tutorial about advanced extensions to QML with Qt C++.
+
+
+\section1 BirthdayParty Base Project
+\c extending-qml-advanced/advanced1-Base-project
+
+This tutorial uses the example of a birthday party to demonstrate some of
+the features of QML. The code for the various features explained below is
+based on this birthday party project and relies on some of the material in the
+first tutorial on \l {Writing QML Extensions with C++}{QML extensions}. This
+simple example is then expanded upon to illustrate the various QML extensions
+explained below. The complete code for each new extension to the code can be
+found in the tutorials at the location specified under each section's title or
+by following the link to the code at the very end of this page.
+
+\image extending-qml-advanced-word-cloud.png
+
+The base project defines the \c Person class and the \c BirthdayParty class,
+which model the attendees and the party itself respectively.
+\quotefromfile tutorials/extending-qml-advanced/advanced1-Base-project/person.h
+    \skipto class
+    \printuntil QML_ELEMENT
+    \dots
+    \skipuntil     private:
+    \printuntil /\};/
+
+\quotefromfile tutorials/extending-qml-advanced/advanced1-Base-project/birthdayparty.h
+    \skipto class
+    \printuntil QML_ELEMENT
+    \dots
+    \skipto     Person *m_host = nullptr;
+    \printuntil /\};/
+
+All the information about the party can then be stored in the corresponding QML
+file.
+\quotefromfile tutorials/extending-qml-advanced/advanced1-Base-project/Main.qml
+    \skipto BirthdayParty
+    \printuntil /^\}/
+
+The \c main.cpp file creates a simple shell application that displays whose
+birthday it is and who is invited to their party.
+\quotefromfile tutorials/extending-qml-advanced/advanced1-Base-project/main.cpp
+    \skipto engine
+    \printuntil }
+
+The app outputs the following summary of the party.
+\badcode
+"Bob Jones" is having a birthday!
+They are inviting:
+    "Leo Hodges"
+    "Jack Smith"
+    "Anne Brown"
+\endcode
+
+The following sections go into how to add support for \c Boy and \c Girl
+attendees instead of just \c Person by using inheritance and coercion, how to
+make use of default properties to implicitly assign attendees of the party as
+guests, how to assign properties as groups instead of one by one, how to use
+attached objects to keep track of invited guests' reponses, how to use a
+property value source to display the lyrics of the happy birthday song over
+time, and how to expose third party objects to QML.
+
+
+
+\section1 Inheritance and Coercion
+\c extending-qml-advanced/advanced2-Inheritanace-and-coercion
+
+Right now, each attendant is being modelled as a person. This is a bit too
+generic and it would be nice to be able to know more about the attendees. By
+specializing them as boys and girls, we can already get a better idea of who's
+coming.
+
+To do this, the \c Boy and \c Girl classes are introduced, both inheriting from
+\c Person.
+\quotefromfile tutorials/extending-qml-advanced/advanced2-Inheritance-and-coercion/person.h
+    \skipto Boy
+    \printuntil /^\};/
+
+\quotefromfile tutorials/extending-qml-advanced/advanced2-Inheritance-and-coercion/person.h
+    \skipto Girl
+    \printuntil /^\};/
+
+The \c Person class remains unaltered and the \c Boy and \c Girl C++ classes
+are trivial extensions of it. The types and their QML name are registered with
+the QML engine with \l QML_ELEMENT.
+
+Notice that the \c host and \c guests properties in \c BirthdayParty still take
+instances of \c Person.
+\quotefromfile tutorials/extending-qml-advanced/advanced2-Inheritance-and-coercion/birthdayparty.h
+    \skipto BirthdayParty
+    \printuntil QML_ELEMENT
+    \dots
+    \skipto /^\};/
+    \printuntil /^\};/
+
+The implementation of the \c Person class itself has not been changed. However,
+as the \c Person class was repurposed as a common base for \c Boy and \c Girl,
+\c Person should no longer be instantiable from QML directly. An explicit
+\c Boy or \c Girl should be instantiated instead.
+\quotefromfile tutorials/extending-qml-advanced/advanced2-Inheritance-and-coercion/person.h
+    \skipto Person
+    \printto Q_OBJECT
+    \dots
+    \skipto QML_ELEMENT
+    \printuntil QML_UNCREATABLE
+    \dots
+    \skipto /^\};/
+    \printuntil /^\};/
+
+While we want to disallow instantiating \c Person from within QML, it still
+needs to be registered with the QML engine so that it can be used as a property
+type and other types can be coerced to it. This is what the QML_UNCREATABLE
+macro does. As all three types, \c Person, \c Boy and \c Girl, have been
+registered with the QML system, on assignment, QML automatically (and type-safely)
+converts the \c Boy and \c Girl objects into a \c Person.
+
+With these changes in place, we can now specify the birthday party with the
+extra information about the attendees as follows.
+\quotefromfile tutorials/extending-qml-advanced/advanced2-Inheritance-and-coercion/Main.qml
+    \skipto BirthdayParty
+    \printuntil /^\}/
+
+
+
+\section1 Default Properties
+\c extending-qml-advanced/advanced3-Default-properties
+
+Currently, in the QML file, each property is assigned explicitly. For example,
+the \c host property is assigned a \c Boy and the \c guests property is
+assigned a list of \c Boy or \c Girl. This is easy but it can be made a bit
+simpler for this specific use case. Instead of assigning the \c guests property
+explicitly, we can add \c Boy and \c Girl objects inside the party directly
+and have them assigned to \c guests implicitly. It makes sense that all the
+attendees that we specify, and that are not the host, are guests. This change
+is purely syntactical but it can add a more natural feel in many situations.
+
+The \c guests property can be designated as the default property of
+\c BirthdayParty. Meaning that each object created inside of a \c BirthdayParty
+is implicitly appended to the default property \c guests. The resulting QML
+looks like this.
+\quotefromfile tutorials/extending-qml-advanced/advanced3-Default-properties/Main.qml
+    \skipto BirthdayParty
+    \printuntil /^\}/
+
+The only change required to enable this behavior is to add the \c DefaultProperty
+class info annotation to \c BirthdayParty to designate \c guests as its default
+property.
+\quotefromfile tutorials/extending-qml-advanced/advanced3-Default-properties/birthdayparty.h
+    \skipto class
+    \printuntil QML_ELEMENT
+    \dots
+    \skipto /^\};/
+    \printuntil /^\};/
+
+You may already be familiar with this mechanism. The default property for all
+descendants of \c Item in QML is the \c data property. All elements not
+explicitly added to a property of an \c Item will be added to \c data. This
+makes the structure clear and reduces unnecessary noise in the code.
+
+\sa {Specifying Default and Parent Properties for QML Object Types}
+
+
+
+\section1 Grouped Properties
+\c extending-qml-advanced/advanced4-Grouped-properties
+
+More information is needed about the shoes of the guests. Aside from their
+size, we also want to store the shoes' color, brand, and price. This
+information is stored in a \c ShoeDescription class.
+\quotefromfile tutorials/extending-qml-advanced/advanced4-Grouped-properties/person.h
+    \skipto ShoeDescription
+    \printuntil price
+    \dots
+    \skipto /^\};/
+    \printuntil /^\};/
+
+Each person now has two properties, a \c name and a shoe description \c shoe.
+\quotefromfile tutorials/extending-qml-advanced/advanced4-Grouped-properties/person.h
+    \skipto Person
+    \printuntil shoe
+    \dots
+    \skipto /^\};/
+    \printuntil /^\};/
+
+Specifying the values for each element of the shoe description works but is a
+bit repetitive.
+\quotefromfile tutorials/extending-qml-advanced/advanced4-Grouped-properties/Main.qml
+    \skipto Girl
+    \printuntil }
+
+Grouped properties provide a more elegant way of assigning these properties.
+Instead of assigning the values to each property one-by-one, the individual
+values can be passed as a group to the \c shoe property making the code more
+readable. No changes are required to enable this feature as it is available by
+default for all of QML.
+\quotefromfile tutorials/extending-qml-advanced/advanced4-Grouped-properties/Main.qml
+    \skipto host
+    \printuntil /^....}/
+
+\sa {Grouped Properties}
+
+
+
+\section1 Attached Properties
+\c extending-qml-advanced/advanced5-Attached-properties
+
+The time has come for the host to send out invitations. To keep track of which
+guests have responded to the invitation and when, we need somewhere to store
+that information. Storing it in the \c BirthdayParty object iself would not
+really fit. A better way would be to store the responses as attached objects to
+the party object.
+
+First, we declare the \c BirthdayPartyAttached class which holds the guest reponses.
+\quotefromfile tutorials/extending-qml-advanced/advanced5-Attached-properties/birthdayparty.h
+    \skipto BirthdayPartyAttached
+    \printuntil QML_ANONYMOUS
+    \dots
+    \skipto /^\};/
+    \printuntil /^\};/
+
+And we attach it to the \c BirthdayParty class and define
+\c qmlAttachedProperties() to return the attached object.
+\quotefromfile tutorials/extending-qml-advanced/advanced5-Attached-properties/birthdayparty.h
+    \skipto /BirthdayParty : public QObject/
+    \printuntil /^{/
+    \dots
+    \skipto QML_ATTACHED
+    \printuntil QML_ATTACHED
+    \dots
+    \skipto qmlAttachedProperties
+    \printuntil qmlAttachedProperties
+    \skipto /^\};/
+    \printuntil /^\};/
+
+Now, attached objects can be used in the QML to hold the rsvp information of the invited guests.
+\quotefromfile tutorials/extending-qml-advanced/advanced5-Attached-properties/Main.qml
+    \skipto BirthdayParty
+    \printuntil /^}/
+
+Finally, the information can be accessed in the following way.
+\quotefromfile tutorials/extending-qml-advanced/advanced5-Attached-properties/main.cpp
+    \skipto rsvpDate
+    \printuntil attached->property("rsvp").toDate();
+
+The program outputs the following summary of the party to come.
+\badcode
+"Jack Smith" is having a birthday!
+He is inviting:
+    "Robert Campbell" RSVP date: "Wed Mar 1 2023"
+    "Leo Hodges" RSVP date: "Mon Mar 6 2023"
+\endcode
+
+\sa {Providing Attached Properties}
+
+
+
+\section1 Property Value Source
+\c extending-qml-advanced/advanced6-Property-value-source
+
+During the party the guests have to sing for the host. It would be handy if the
+program could display the lyrics customized for the occasion to help the
+guests. To this end, a property value source is used to generate the verses of
+the song over time.
+\quotefromfile tutorials/extending-qml-advanced/advanced6-Property-value-source/happybirthdaysong.h
+    \skipto class
+    \printuntil Q_INTERFACES
+    \dots
+    \skipto setTarget
+    \printuntil setTarget
+    \skipto /^\};/
+    \printuntil /^\};/
+
+The class \c HappyBirthdaySong is added as a value source. It must inherit from
+\c QQmlPropertyValueSource and implement the QQmlPropertyValueSource interface
+with the Q_INTERFACES macro. The \c setTarget() function is used to define
+which property this source acts upon. In this case, the value source writes to
+the \c announcement property of the \c BirthdayParty to display the lyrics
+over time. It has an internal timer that causes the \c announcement
+property of the party to be set to the next line of the lyrics repeatedly.
+
+In QML, a \c HappyBirthdaySong is instantiated inside the \c BirthdayParty. The
+\c on keyword in its signature is used to specify the property that the value
+source targets, in this case \c announcement. The \c name property of the
+\c HappyBirthdaySong object is also \l {Property Binding}{bound} to the name of
+the host of the party.
+\quotefromfile tutorials/extending-qml-advanced/advanced6-Property-value-source/Main.qml
+    \skipto BirthdayParty
+    \printuntil }
+    \dots
+    \skipto /^\}/
+    \printuntil /^\}/
+
+The program displays the time at which the party started using the
+\c partyStarted signal and then prints the following happy birthday verses
+over and over.
+\badcode
+Happy birthday to you,
+Happy birthday to you,
+Happy birthday dear Bob Jones,
+Happy birthday to you!
+\endcode
+
+\sa {Property Value Sources}
+
+
+
+\section1 Foreign objects integration
+\c extending-qml-advanced/advanced7-Foreign-objects-integration
+
+Instead of just printing the lyrics out to the console, the attendees would
+like to use a more fancy display with support for colors. They would like to
+integrate it in the project but currently it is not possible to configure the
+screen from QML because it comes from a third party library. To solve this, the
+necessary types need to be exposed to the QML engine so its properties are
+available for modification in QML directly.
+
+The display can be controlled by the \c ThirdPartyDisplay class. It has
+properties to define the content and the foreground and background colors of the text
+to display.
+\quotefromfile tutorials/extending-qml-advanced/advanced7-Foreign-objects-integration/library/ThirdPartyDisplay.h
+    \skipto ThirdPartyDisplay
+    \printuntil backgroundColor
+    \dots
+    \skipto };
+    \printuntil };
+
+To expose this type to QML, we can register it with the engine with
+QML_ELEMENT. However, since the class isn't accessible for modification,
+QML_ELEMENT cannot simply be added to it. To register the type with the engine,
+the type needs to be registered from the outside. This is what QML_FOREIGN is
+for. When used in a type in conjunction with other QML macros, the other macros
+apply not to the type they reside in but to the foreign type designated by
+QML_FOREIGN.
+\quotefromfile tutorials/extending-qml-advanced/advanced7-Foreign-objects-integration/foreigndisplay.h
+    \skipto ForeignDisplay
+    \printuntil };
+
+This way, the BirthdayParty now has a new property with the display.
+\quotefromfile tutorials/extending-qml-advanced/advanced7-Foreign-objects-integration/birthdayparty.h
+    \skipuntil BirthdayPartyAttached
+    \skipto BirthdayParty
+    \printto Q_CLASSINFO
+    \dots
+    \skipto };
+    \printuntil };
+
+And, in QML, the colors of the text on the fancy third display can be set explicitly.
+\quotefromfile tutorials/extending-qml-advanced/advanced7-Foreign-objects-integration/Main.qml
+    \skipto BirthdayParty
+    \printuntil BirthdayParty
+    \skipto display:
+    \printuntil }
+    \dots
+    \skipto /^}/
+    \printuntil /^}/
+
+Setting the \c announcement property of the BirthdayParty now sends the
+message to the fancy display instead of printing it itself.
+\quotefromfile tutorials/extending-qml-advanced/advanced7-Foreign-objects-integration/birthdayparty.cpp
+    \skipto setAnnouncement
+    \printuntil /^}/
+
+The output then looks like this over and over similar to the previous section.
+\badcode
+[Fancy ThirdPartyDisplay] Happy birthday to you,
+[Fancy ThirdPartyDisplay] Happy birthday to you,
+[Fancy ThirdPartyDisplay] Happy birthday dear Bob Jones,
+[Fancy ThirdPartyDisplay] Happy birthday to you!
+\endcode
+
+\sa {Registering Foreign Types}
+*/
