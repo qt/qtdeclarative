@@ -595,11 +595,26 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     if (!m_state.accumulatorOut().isValid()) {
         setError(u"Cannot access value for name "_s + name);
         handleUnqualifiedAccess(name, false);
-    } else if (m_typeResolver->genericType(m_state.accumulatorOut().storedType()).isNull()) {
+        return;
+    }
+
+    const QQmlJSScope::ConstPtr outStored
+            = m_typeResolver->genericType(m_state.accumulatorOut().storedType());
+
+    if (outStored.isNull()) {
         // It should really be valid.
         // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
         setError(u"Cannot determine generic type for "_s + name);
-    } else if (m_passManager != nullptr) {
+        return;
+    }
+
+    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectById
+            && !outStored->isReferenceType()) {
+        setError(u"Cannot retrieve a non-object type by ID: "_s + name);
+        return;
+    }
+
+    if (m_passManager != nullptr) {
         m_passManager->analyzeRead(m_function->qmlScope, name, m_function->qmlScope,
                                    getCurrentSourceLocation());
     }

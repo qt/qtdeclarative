@@ -1269,6 +1269,12 @@ void TestQmllint::compilerWarnings_data()
                        "Cannot resolve property type  for binding on myColor. "
                        "You may want use ID-based grouped properties here.") } } }
             << true;
+    QTest::newRow("invalidIdLookup")
+            << QStringLiteral("invalidIdLookup.qml")
+            << Result { { {
+                    QStringLiteral("Cannot retrieve a non-object type by ID: stateMachine")
+               } } }
+            << true;
 }
 
 void TestQmllint::compilerWarnings()
