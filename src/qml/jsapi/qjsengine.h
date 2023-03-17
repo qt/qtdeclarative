@@ -138,9 +138,18 @@ public:
             return toPrimitiveValue(value);
 
         if constexpr (std::is_same_v<T, QString>) {
-            if (targetType.flags() & QMetaType::PointerToQObject) {
+            if (sourceType.flags() & QMetaType::PointerToQObject) {
                 return convertQObjectToString(
                             *reinterpret_cast<QObject *const *>(value.constData()));
+            }
+        }
+
+        if constexpr (std::is_same_v<QObject, std::remove_const_t<std::remove_pointer_t<T>>>) {
+            if (sourceType.flags() & QMetaType::PointerToQObject) {
+                return *static_cast<QObject *const *>(value.constData());
+
+                // We should not access source->metaObject() here since that may trigger some
+                // rather involved code. convertVariant() can do this using property caches.
             }
         }
 
@@ -174,7 +183,7 @@ public:
     template<typename From, typename To>
     inline To coerceValue(const From &from)
     {
-        if constexpr (std::is_same_v<From, To>)
+        if constexpr (std::is_base_of_v<To, From>)
             return from;
 
         if constexpr (std::is_same_v<To, QJSValue>)
