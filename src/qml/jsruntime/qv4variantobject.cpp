@@ -131,7 +131,8 @@ ReturnedValue VariantPrototype::method_valueOf(const FunctionObject *b, const Va
             return Encode(v.toBool());
         default:
             if (QMetaType(v.metaType()).flags() & QMetaType::IsEnumeration)
-                return Encode(v.toInt());
+                if (v.metaType().sizeOf() <= qsizetype(sizeof(int)))
+                    return Encode(v.toInt());
             if (v.canConvert<double>())
                 return Encode(v.toDouble());
             if (v.canConvert<int>())

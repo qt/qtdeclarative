@@ -1850,7 +1850,7 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             }
         }
 
-    } else {
+    } else if (!(metaType.flags() & QMetaType::IsEnumeration)) {
         QV4::Scope scope(this);
         if (metaType == QMetaType::fromType<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
@@ -1936,9 +1936,8 @@ QV4::ReturnedValue ExecutionEngine::fromData(
     //    + QObjectList
     //    + QList<int>
 
-    // Enumeration types can just be treated as integers for now
     if (metaType.flags() & QMetaType::IsEnumeration)
-        return QV4::Encode(*reinterpret_cast<const int *>(ptr));
+        return fromData(metaType.underlyingType(), ptr, container, property, flags);
 
     return QV4::Encode(newVariantObject(metaType, ptr));
 }
