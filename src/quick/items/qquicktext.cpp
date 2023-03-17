@@ -2997,6 +2997,7 @@ bool QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
 
 /*!
     \qmlproperty int QtQuick::Text::renderTypeQuality
+    \since 6.0
 
     Override the default rendering type quality for this component. This is a low-level
     customization which can be ignored in most cases. It currently only has an effect
