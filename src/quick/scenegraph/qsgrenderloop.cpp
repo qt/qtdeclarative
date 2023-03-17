@@ -258,6 +258,15 @@ void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
 
 void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window)
 {
+    // Must always be called on the gui thread.
+
+    // Guard for recursion; relevant due to the MessageBox() on Windows.
+    static QSet<QQuickWindow *> recurseGuard;
+    if (recurseGuard.contains(window))
+        return;
+
+    recurseGuard.insert(window);
+
     QString translatedMessage;
     QString untranslatedMessage;
     QQuickWindowPrivate::rhiCreationFailureMessage(QSGRhiSupport::instance()->rhiBackendName(),
@@ -278,6 +287,8 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window)
 #endif // Q_OS_WIN
     if (!signalEmitted)
         qFatal("%s", qPrintable(untranslatedMessage));
+
+    recurseGuard.remove(window);
 }
 
 #ifdef ENABLE_DEFAULT_BACKEND
