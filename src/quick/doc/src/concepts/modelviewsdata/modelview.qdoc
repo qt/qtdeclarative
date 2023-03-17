@@ -4,9 +4,9 @@
 /*!
 \page qtquick-modelviewsdata-modelview.html
 \title Models and Views in Qt Quick
-\brief how to display and form data in Qt Quick
+\brief how to display and format data in Qt Quick
 
-Simply put, applications need to form data and display the data. Qt Quick has the
+Most applications need to format data and display the data. Qt Quick has the
 notion of \e models, \e views, and \e delegates to display data. They modularize
 the visualization of data in order to give the developer or designer control
 over the different aspects of the data. A developer can swap a list view with a
@@ -21,7 +21,7 @@ types for creating models.
 \li \b View - a container that displays the data. The view might
 display the data in a list or a grid.
 \li \b Delegate - dictates how the data should appear in the view.
-The delegate takes each data in the model and encapsulates it. The data is
+The delegate takes each unit of data in the model and encapsulates it. The data is
 accessible through the delegate. The delegate can also write data
 back into editable models (e.g. in a TextField's onAccepted Handler).
 \endlist
@@ -58,7 +58,7 @@ To visualize data, bind the view's \c model property to a model and the
     Views allow visual customization through \e decoration properties such as
     the \c header, \c footer, and \c section properties. By binding an object,
     usually another visual object, to these properties, the views are
-    decoratable. A footer may include a \l Rectangle type showcasing borders
+    decoratable. A footer may include a \l Rectangle type showing borders
     or a header that displays a logo on top of the list.
 
     Suppose that a specific club wants to decorate its members list with its brand
@@ -144,26 +144,41 @@ To visualize data, bind the view's \c model property to a model and the
     bind to. Here is a ListModel with two roles, \e type and \e age, and a
     ListView with a delegate that binds to these roles to display their values:
 
+    \snippet qml/qml-data-models/listmodel-listview-required.qml document
+
+    In most cases you should use \l{Required Properties}{required properties} to
+    pass model data into your delegates. If a delegate contains required
+    properties, the QML engine will check if the name of a required property
+    matches that of a model role. If so, that property will be bound to the
+    corresponding value from the model.
+
+    In rare corner cases, you may want to transfer the model properties through
+    the QML context rather than as required properties. If no required
+    properties are present in your delegate, the named roles are provided as
+    context properties:
+
     \snippet qml/qml-data-models/listmodel-listview.qml document
 
-    To get finer control over which roles are accessible, and to make delegates
-    more self-contained and usable outside of views,
-    \l{Required Properties}{required properties} can be used. If a delegate
-    contains required properties, the named roles are not provided. Instead,
-    the QML engine will check if the name of a required property matches that of
-    a model role. If so, that property will be bound to the corresponding value
-    from the model.
-
-    \snippet qml/qml-data-models/listmodel-listview-required.qml document
+    Context properties are invisible to tooling and prevent the
+    \l{Qt Quick Compiler} from optimizing your code. They make it harder to
+    reason about the specific data your delegate expects. There is no way to
+    explicitly populate the QML context from QML. If your component expects
+    data to be passed via the QML context, you can only use it in places
+    where the right context is made available via native means. This can be
+    your own C++ code or the specific implementations of surrounding elements.
+    Conversely, required properties can be set in a number of ways from QML or
+    via native means. Therefore, passing data via the QML context reduces the
+    re-usability of your components.
 
     If there is a naming clash between the model's properties and the delegate's
     properties, the roles can be accessed with the qualified \e model name
-    instead. For example, if a \l Text type had \e type or \e age properties,
-    the text in the above example would display those property values instead of
-    the \e type and \e age values from the model item. In this case, the
-    properties could have been referenced as \c model.type and \c model.age
-    instead to ensure the delegate displays the property values from the model
-    item.
+    instead. For example, if a \l Text type had (non-required) \e type or \e age
+    properties, the text in the above example would display those property
+    values instead of the \e type and \e age values from the model item. In this
+    case, the properties could have been referenced as \c model.type and
+    \c model.age instead to ensure the delegate displays the property values from
+    the model item. For this to work, you need to require a \c model property in
+    your delegate (unless you are using context properties).
 
     A special \e index role containing the index of the item in the model is
     also available to the delegate. Note this index is set to -1 if the item is
@@ -285,7 +300,11 @@ To visualize data, bind the view's \c model property to a model and the
 
         Component {
             id: itemDelegate
-            Text { text: "I am item number: " + index }
+
+            Text {
+                required property int index
+                text: "I am item number: " + index
+            }
         }
 
         ListView {
@@ -320,7 +339,11 @@ To visualize data, bind the view's \c model property to a model and the
 
         Component {
             id: myDelegate
-            Text { text: model.color }
+
+            Text {
+                required property var model
+                text: model.color
+            }
         }
 
         ListView {
@@ -373,8 +396,8 @@ the model.
 
 For more details, see the \l{qtquick-modelviewsdata-modelview.html#integers-as-models}{QML Data Models} document.
 
-If the model is a string list, the delegate is also exposed to a read-only
-\c modelData property that holds the string. For example:
+If the model is a string list, the delegate is also exposed to the usual
+read-only \c modelData property that holds the string. For example:
 
 \table
    \row
@@ -400,6 +423,8 @@ ListView {
     anchors.fill: parent
     model: EditableModel {}
     delegate: TextEdit {
+        required property var model
+
         width: ListView.view.width
         height: 30
         text: model.edit
