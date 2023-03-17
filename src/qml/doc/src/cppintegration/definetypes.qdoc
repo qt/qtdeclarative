@@ -390,7 +390,11 @@ type definition allows the programmer to supply an additional type, known as the
 \e{extension type}, when registering the class. Its members are transparently
 merged with the original target class when used from within QML. For example:
 
-\snippet referenceexamples/extended/example.qml 0
+\qml
+QLineEdit {
+    leftMargin: 20
+}
+\endqml
 
 The \c leftMargin property is a new property added to an existing C++ type, \l
 QLineEdit, without modifying its source code.
@@ -408,9 +412,6 @@ pointer. However, the extension class creation is delayed until the first
 extended property is accessed. The extension class is created and the target
 object is passed in as the parent. When the property on the original is
 accessed, the corresponding property on the extension object is used instead.
-
-The \l{Extending QML - Extension Objects Example}{Extension Objects Example}
-demonstrates a usage of extension objects.
 
 \section2 Registering Foreign Types
 
