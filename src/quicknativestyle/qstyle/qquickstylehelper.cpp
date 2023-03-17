@@ -121,14 +121,13 @@ static QPointF calcRadialPos(const QStyleOptionSlider *dial, qreal offset)
     const int r = qMin(width, height) / 2;
     const int currentSliderPosition = dial->upsideDown ? dial->sliderPosition : (dial->maximum - dial->sliderPosition);
     qreal a = 0;
+    qreal startAngle = (90. - dial->startAngle) * Q_PI / 180.;
+    qreal spanAngle = (dial->endAngle - dial->startAngle) * Q_PI / 180.;
     if (dial->maximum == dial->minimum)
         a = Q_PI / 2;
-    else if (dial->dialWrapping)
-        a = Q_PI * 3 / 2 - (currentSliderPosition - dial->minimum) * 2 * Q_PI
-            / (dial->maximum - dial->minimum);
     else
-        a = (Q_PI * 8 - (currentSliderPosition - dial->minimum) * 10 * Q_PI
-            / (dial->maximum - dial->minimum)) / 6;
+        a = (startAngle - (currentSliderPosition - dial->minimum) * spanAngle
+            / (dial->maximum - dial->minimum));
     qreal xc = width / 2.0;
     qreal yc = height / 2.0;
     qreal len = r - QStyleHelper::calcBigLineSize(r) - 3;

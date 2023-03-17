@@ -514,6 +514,8 @@ public:
     int pageStep;
     qreal notchTarget;
     bool dialWrapping;
+    qreal startAngle;
+    qreal endAngle;
 
     QStyleOptionSlider();
     QStyleOptionSlider(const QStyleOptionSlider &other) : QStyleOptionComplex(Version, Type) { *this = other; }

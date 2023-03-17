@@ -129,7 +129,7 @@
             \li .9.png (or .png)
         \row
             \li \l Dial
-            \li background
+            \li background\sup{1}
             \li disabled, pressed, focused, mirrored, hovered
             \li .9.png (or .png)
         \row
@@ -468,6 +468,10 @@
             \li disabled, focused, mirrored, hovered
             \li .9.png (or .png)
     \endtable
+
+    \note \sup{1}) The Imagine style Dial does not yet support the
+    \l {Dial::}{startAngle} and \l {Dial::}{endAngle} properties that were
+    introduced in Qt 6.6, and instead uses a fixed background image.
 
     \section2 Asset Examples
 

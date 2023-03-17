@@ -29,6 +29,34 @@ void QQuickBasicDial::setProgress(qreal progress)
     update();
 }
 
+qreal QQuickBasicDial::startAngle() const
+{
+    return m_startAngle;
+}
+
+void QQuickBasicDial::setStartAngle(qreal startAngle)
+{
+    if (startAngle == m_startAngle)
+        return;
+
+    m_startAngle = startAngle;
+    update();
+}
+
+qreal QQuickBasicDial::endAngle() const
+{
+    return m_endAngle;
+}
+
+void QQuickBasicDial::setEndAngle(qreal endAngle)
+{
+    if (endAngle == m_endAngle)
+        return;
+
+    m_endAngle = endAngle;
+    update();
+}
+
 QColor QQuickBasicDial::color() const
 {
     return m_color;
@@ -70,8 +98,8 @@ void QQuickBasicDial::paint(QPainter *painter)
 
     painter->setRenderHint(QPainter::Antialiasing);
 
-    const qreal startAngle = (140 + 90);
-    const qreal spanAngle = (m_progress * 280) * -1;
+    const qreal startAngle = 90. - m_startAngle;
+    const qreal spanAngle = m_progress * (m_startAngle - m_endAngle);
     QPainterPath path;
     path.arcMoveTo(rect, startAngle);
     path.arcTo(rect, startAngle, spanAngle);
