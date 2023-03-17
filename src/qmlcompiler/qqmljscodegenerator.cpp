@@ -2397,17 +2397,22 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
     const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(originalContent);
 
     if (contained->isReferenceType()) {
+        const QQmlJSScope::ConstPtr genericContained = m_typeResolver->genericType(contained);
+        const QString inputConversion = inputContent.storedType()->isReferenceType()
+                ? input
+                : convertStored(inputContent.storedType(), genericContained, input);
+
         m_body += m_state.accumulatorVariableOut + u" = "_s;
         if (m_typeResolver->equals(
                     m_state.accumulatorIn().storedType(), m_typeResolver->metaObjectType())
                 && contained->isComposite()) {
             m_body += conversion(
-                        m_typeResolver->genericType(contained), outputContent,
-                        m_state.accumulatorVariableIn + u"->cast("_s + input + u')');
+                        genericContained, outputContent,
+                        m_state.accumulatorVariableIn + u"->cast("_s + inputConversion + u')');
         } else {
             m_body += conversion(
-                        m_typeResolver->genericType(contained), outputContent,
-                        u'(' + metaObject(contained) + u")->cast("_s + input + u')');
+                        genericContained, outputContent,
+                        u'(' + metaObject(contained) + u")->cast("_s + inputConversion + u')');
         }
         m_body += u";\n"_s;
         return;

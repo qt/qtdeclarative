@@ -175,6 +175,7 @@ private slots:
     void objectLookupOnListElement();
     void multipleCtors();
     void boolCoercions();
+    void ambiguousAs();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3463,6 +3464,20 @@ void tst_QmlCppCodegen::boolCoercions()
         QCOMPARE(f.metaType(), QMetaType::fromType<bool>());
         QVERIFY(!f.toBool());
     }
+}
+
+void tst_QmlCppCodegen::ambiguousAs()
+{
+    QQmlEngine e;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/ambiguousAs.qml"_s);
+    QQmlComponent c(&e, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("other").value<QObject *>(), o.data());
+    o->setProperty("useSelf", QVariant::fromValue(false));
+    QCOMPARE(o->property("other").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
