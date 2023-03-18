@@ -298,9 +298,10 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-  \fn template <Type type> QJSPrimiteiveValue QJSPrimitiveValue::to()
+  \fn template<Type type> QJSPrimitiveValue QJSPrimitiveValue::to() const
+  \since 6.6
 
-  Coerces the value to the specified \a type and returns the result as a new
+  Coerces the value to the specified \e type and returns the result as a new
   QJSPrimitiveValue.
 
   \sa toBoolean(), toInteger(), toDouble(), toString()
