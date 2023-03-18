@@ -4,7 +4,7 @@
     \title Qt Quick Examples - MultiEffect Test Bed
     \example multieffect/testbed
     \image qml-multieffecttestbed-example.jpg
-    \brief Demonstrates using MultiEffect
+    \brief Demonstrates MultiEffect usage.
     \ingroup qtquickexamples
 
     This example demonstrates the MultiEffect type, which offers a simple,

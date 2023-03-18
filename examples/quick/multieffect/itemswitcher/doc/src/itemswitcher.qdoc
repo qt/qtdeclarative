@@ -4,7 +4,7 @@
     \title Qt Quick Examples - MultiEffect Item Switcher
     \example multieffect/itemswitcher
     \image qml-multieffectitemswitcher-example.jpg
-    \brief Demonstrates using MultiEffect
+    \brief Demonstrates MultiEffect usage.
     \ingroup qtquickexamples
 
     This example demonstrates advanced usage of the MultiEffect type, which
