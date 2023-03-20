@@ -31,7 +31,6 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstantiatorPrivate : public QObjectPrivate
 
 public:
     QQmlInstantiatorPrivate();
-    ~QQmlInstantiatorPrivate();
 
     void clear();
     void regenerate();
