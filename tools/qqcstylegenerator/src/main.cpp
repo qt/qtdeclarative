@@ -3,7 +3,6 @@
 
 #include <QtGui>
 
-#include "qtbridgereader.h"
 #include "stylegenerator.h"
 
 int main(int argc, char **argv){
@@ -17,11 +16,16 @@ int main(int argc, char **argv){
             QCoreApplication::translate("main", "The target directory where the style will be created."),
             QCoreApplication::translate("main", "directory"),
             "."},
+        {{"t", "token"},
+            QCoreApplication::translate("main", "A Figma-generated token that lets the tool access the Figma file."),
+            QCoreApplication::translate("main", "token")},
         {{"v", "verbose"},
-            QCoreApplication::translate("main", "Debug out what gets generated.")}
+            QCoreApplication::translate("main", "Print everything that gets generated.")},
+        {{"s", "silent"},
+            QCoreApplication::translate("main", "Don't show progress")}
     });
-    parser.addPositionalArgument("qtbridge",
-        QCoreApplication::translate("main", "The .qtbridge file to create a style from."));
+    parser.addPositionalArgument("figma_file_id",
+        QCoreApplication::translate("main", "The figma file ID to create a style from."));
 
     if (!parser.parse(QCoreApplication::arguments())) {
         qWarning() << parser.errorText();
@@ -33,13 +37,19 @@ int main(int argc, char **argv){
         return -1;
     }
 
-    const QString sourcePath = parser.positionalArguments().first();
-    const QString destinationPath = parser.value("d");
+    const QString fileId = parser.positionalArguments().first();
+    const QString token = parser.value("token");
+    const QString destinationPath = parser.value("directory");
+    const bool verbose = parser.isSet("verbose");
+    const bool silent = parser.isSet("silent");
+
+    if (token.isEmpty()) {
+        qWarning() << "You need to specify a Figma generated token using '--token'";
+        return -1;
+    }
 
     try {
-        QtBridgeReader bridgeReader(sourcePath);
-        StyleGenerator generator(bridgeReader.document(), bridgeReader.resourcePath(), destinationPath);
-        generator.setVerbose(parser.isSet("verbose"));
+        StyleGenerator generator(fileId, token, destinationPath, verbose, silent);
         generator.generateStyle();
     } catch (std::exception &e) {
         qWarning() << "Error:" << e.what();
