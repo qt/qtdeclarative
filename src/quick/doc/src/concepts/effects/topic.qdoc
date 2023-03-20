@@ -16,7 +16,7 @@ item is active, or how focus is being transferred).  Over-use of visual
 effects can actually detract from the user-experience.
 
 For more information about applying post-processing effects, such as blur, drop
-shadow, or colarize, to an \l Item, see the \l MultiEffect QML type.
+shadow, or colorize, to an \l Item, see the \l MultiEffect QML type.
 
 \section1 Visual Transformation
 
