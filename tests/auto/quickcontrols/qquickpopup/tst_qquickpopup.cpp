@@ -25,6 +25,8 @@
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquicktooltip_p.h>
+#include <QtQuickTemplates2/private/qquickdrawer_p.h>
+#include <QtQuick/private/qquicktextedit_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
@@ -92,6 +94,7 @@ private slots:
     void relativeZOrder();
     void mirroredCombobox();
     void rotatedCombobox();
+    void focusMultiplePopup();
 
 private:
     static bool hasWindowActivation();
@@ -2147,6 +2150,51 @@ void tst_QQuickPopup::rotatedCombobox()
 
         popup->close();
     }
+}
+
+void tst_QQuickPopup::focusMultiplePopup()
+{
+    QQuickApplicationHelper helper(this, "multiplepopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *rootItem = window->findChild<QQuickItem *>("rootItem");
+    QTRY_VERIFY(rootItem->hasFocus());
+
+    auto *buttonPopup = window->findChild<QQuickPopup *>("popup1");
+    buttonPopup->open();
+    QTRY_VERIFY(buttonPopup->isOpened());
+    QVERIFY(!rootItem->hasFocus());
+    QVERIFY(buttonPopup->hasFocus());
+
+    auto *textEditPopup = window->findChild<QQuickPopup *>("popup2");
+    textEditPopup->open();
+    QTRY_VERIFY(textEditPopup->isOpened());
+    QVERIFY(textEditPopup->hasFocus());
+
+    auto *drawerPopup = window->findChild<QQuickPopup *>("popup3");
+    drawerPopup->open();
+    QTRY_VERIFY(drawerPopup->isVisible());
+    QVERIFY(drawerPopup->hasFocus());
+
+    auto *drawer = window->findChild<QQuickDrawer *>("drawer");
+    drawer->close();
+    QTRY_VERIFY(!drawer->isVisible());
+    drawerPopup->close();
+    QTRY_VERIFY(!drawerPopup->isVisible());
+    QVERIFY(textEditPopup->hasFocus());
+
+    textEditPopup->close();
+    QTRY_VERIFY(!textEditPopup->isVisible());
+    QVERIFY(buttonPopup->hasFocus());
+
+    buttonPopup->close();
+    QTRY_VERIFY(!buttonPopup->isVisible());
+
+    QVERIFY(rootItem->hasFocus());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
