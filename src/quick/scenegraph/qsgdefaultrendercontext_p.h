@@ -24,6 +24,7 @@ class QRhi;
 class QRhiCommandBuffer;
 class QRhiRenderPassDescriptor;
 class QRhiResourceUpdateBatch;
+class QRhiTexture;
 class QSGMaterialShader;
 class QSurface;
 
@@ -102,7 +103,8 @@ public:
 
     QRhiResourceUpdateBatch *maybeGlyphCacheResourceUpdates();
     QRhiResourceUpdateBatch *glyphCacheResourceUpdates();
-    void releaseGlyphCacheResourceUpdates();
+    void deferredReleaseGlyphCacheTexture(QRhiTexture *texture);
+    void resetGlyphCacheResources();
 
 protected:
     static QString fontKey(const QRawFont &font, int renderTypeQuality);
@@ -116,6 +118,7 @@ protected:
     qreal m_currentDevicePixelRatio;
     bool m_useDepthBufferFor2D;
     QRhiResourceUpdateBatch *m_glyphCacheResourceUpdates;
+    QSet<QRhiTexture *> m_pendingGlyphCacheTextures;
 };
 
 QT_END_NAMESPACE
