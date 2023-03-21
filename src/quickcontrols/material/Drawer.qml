@@ -16,10 +16,8 @@ T.Drawer {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    topPadding: !dim && edge === Qt.BottomEdge && Material.elevation === 0
-    leftPadding: !dim && edge === Qt.RightEdge && Material.elevation === 0
-    rightPadding: !dim && edge === Qt.LeftEdge && Material.elevation === 0
-    bottomPadding: !dim && edge === Qt.TopEdge && Material.elevation === 0
+    topPadding: edge !== Qt.TopEdge ? Material.roundedScale : 0
+    bottomPadding: edge !== Qt.BottomEdge ? Material.roundedScale : 0
 
     enter: Transition { SmoothedAnimation { velocity: 5 } }
     exit: Transition { SmoothedAnimation { velocity: 5 } }
@@ -34,8 +32,10 @@ T.Drawer {
         color: control.Material.dialogColor
         // FullScale doesn't make sense for Drawer.
         radius: control.Material.roundedScale
-        // Only the top and bottom right corners should be rounded.
-        leftPadding: -radius
+        leftPadding: edge === Qt.LeftEdge ? -radius : 0
+        rightPadding: edge === Qt.RightEdge ? -radius : 0
+        topPadding: edge === Qt.TopEdge ? -radius : 0
+        bottomPadding: edge === Qt.BottomEdge ? -radius : 0
         clip: true
 
         layer.enabled: control.position > 0 && control.Material.elevation > 0
