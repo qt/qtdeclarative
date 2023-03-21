@@ -1133,14 +1133,16 @@ void tst_QQuickDrawer::flickable()
         QTest::touchEvent(window, touchDevice.data()).press(0, from);
 
     static const int steps = 10;
-    for (int i = 0; i < steps; ++i) {
-        int x = i * qAbs(from.x() - to.x()) / steps;
-        int y = i * qAbs(from.y() - to.y()) / steps;
-
+    const QPoint distance(to.x() - from.x(), to.y() - from.y());
+    for (int i = 0; i <= steps; ++i) {
+        const auto pos = from + QPoint(
+            i * distance.x() / steps,
+            i * distance.y() / steps
+        );
         if (mouse)
-            QTest::mouseMove(window, QPoint(x, y));
+            QTest::mouseMove(window, pos);
         else
-            QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, y));
+            QTest::touchEvent(window, touchDevice.data()).move(0, pos);
         QTest::qWait(1); // avoid infinite velocity
     }
 
