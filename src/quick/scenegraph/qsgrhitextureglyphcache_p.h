@@ -60,7 +60,6 @@ private:
     QSize m_size;
     bool m_bgra = false;
     QVarLengthArray<QRhiTextureUploadEntry, 16> m_uploads;
-    QSet<QRhiTexture *> m_pendingDispose;
 };
 
 QT_END_NAMESPACE

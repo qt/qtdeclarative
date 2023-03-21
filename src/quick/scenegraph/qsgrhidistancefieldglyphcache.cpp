@@ -32,19 +32,10 @@ QSGRhiDistanceFieldGlyphCache::QSGRhiDistanceFieldGlyphCache(QSGDefaultRenderCon
 
 QSGRhiDistanceFieldGlyphCache::~QSGRhiDistanceFieldGlyphCache()
 {
-    // A plain delete should work, but just in case commitResourceUpdates was
-    // not called and something is enqueued on the update batch for a texture,
-    // defer until the end of the frame.
-    for (int i = 0; i < m_textures.size(); ++i) {
-        if (m_textures[i].texture)
-            m_textures[i].texture->deleteLater();
-    }
+    for (const TextureInfo &t : std::as_const(m_textures))
+        m_rc->deferredReleaseGlyphCacheTexture(t.texture);
 
     delete m_areaAllocator;
-
-    // should be empty, but just in case
-    for (QRhiTexture *t : std::as_const(m_pendingDispose))
-        t->deleteLater();
 }
 
 void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
@@ -243,7 +234,7 @@ void QSGRhiDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int widt
         resourceUpdates->copyTexture(texInfo->texture, oldTexture);
     }
 
-    m_pendingDispose.insert(oldTexture);
+    m_rc->deferredReleaseGlyphCacheTexture(oldTexture);
 }
 
 bool QSGRhiDistanceFieldGlyphCache::useTextureResizeWorkaround() const
@@ -522,14 +513,8 @@ void QSGRhiDistanceFieldGlyphCache::commitResourceUpdates(QRhiResourceUpdateBatc
 {
     if (QRhiResourceUpdateBatch *resourceUpdates = m_rc->maybeGlyphCacheResourceUpdates()) {
         mergeInto->merge(resourceUpdates);
-        m_rc->releaseGlyphCacheResourceUpdates();
+        m_rc->resetGlyphCacheResources();
     }
-
-    // now let's assume the resource updates will be committed in this frame
-    for (QRhiTexture *t : std::as_const(m_pendingDispose))
-        t->deleteLater(); // will be deleted after the frame is submitted -> safe
-
-    m_pendingDispose.clear();
 }
 
 bool QSGRhiDistanceFieldGlyphCache::eightBitFormatIsAlphaSwizzled() const
