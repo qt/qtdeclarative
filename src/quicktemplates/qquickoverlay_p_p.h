@@ -64,6 +64,7 @@ public:
     // QQuickDrawer by the time removePopup is called.
     QList<QQuickPopup *> allDrawers;
     QPointer<QQuickPopup> mouseGrabberPopup;
+    QPointer<QQuickItem> lastActiveFocusItem;
 };
 
 QT_END_NAMESPACE
