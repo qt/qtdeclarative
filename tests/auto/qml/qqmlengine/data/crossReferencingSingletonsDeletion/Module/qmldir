@@ -1,0 +1,3 @@
+module Module
+singleton SingletonA 1.0 SingletonA.qml
+singleton SingletonB 1.0 SingletonB.qml
