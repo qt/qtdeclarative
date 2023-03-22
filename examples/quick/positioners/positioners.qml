@@ -11,8 +11,8 @@ Item {
         id: ll
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Transitions", "Fluidly shows and hides elements",  Qt.resolvedUrl("positioners-transitions.qml"));
-            addExample("Attached Properties", "Knows where it is in the positioner", Qt.resolvedUrl("positioners-attachedproperties.qml"));
+            addExample(qsTr("Transitions"), qsTr("Fluidly shows and hides elements"),  Qt.resolvedUrl("positioners-transitions.qml"))
+            addExample(qsTr("Attached Properties"), qsTr("Knows where it is in the positioner"), Qt.resolvedUrl("positioners-attachedproperties.qml"))
         }
     }
 }
