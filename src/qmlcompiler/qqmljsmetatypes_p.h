@@ -48,6 +48,7 @@ class QQmlJSMetaEnum
     QList<int> m_values; // empty if values unknown.
     QString m_name;
     QString m_alias;
+    QString m_typeName;
     QSharedPointer<const QQmlJSScope> m_type;
     bool m_isFlag = false;
     bool m_scoped = true;
@@ -79,6 +80,9 @@ public:
     bool hasValues() const { return !m_values.isEmpty(); }
     int value(const QString &key) const { return m_values.value(m_keys.indexOf(key)); }
     bool hasKey(const QString &key) const { return m_keys.indexOf(key) != -1; }
+
+    QString typeName() const { return m_typeName; }
+    void setTypeName(const QString &typeName) { m_typeName = typeName; }
 
     QSharedPointer<const QQmlJSScope> type() const { return m_type; }
     void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }

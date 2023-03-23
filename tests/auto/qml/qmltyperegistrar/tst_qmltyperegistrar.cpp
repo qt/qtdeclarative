@@ -606,7 +606,40 @@ void tst_qmltyperegistrar::omitInvisible()
 {
     // If it cannot resolve the type a QML_FOREIGN refers to, it should not generate anything.
     QVERIFY(qmltypesData.contains(
-    R"(Component { file: "tst_qmltyperegistrar.h"; name: "Invisible"; accessSemantics: "none" })"));
+                R"(Component { file: "tst_qmltyperegistrar.h"; name: "Invisible"; accessSemantics: "none" })"));
+}
+
+void tst_qmltyperegistrar::typedEnum()
+{
+    QVERIFY(qmltypesData.contains(
+    R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "TypedEnum"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/TypedEnum 1.0"]
+        exportMetaObjectRevisions: [256]
+        Enum {
+            name: "S"
+            type: "short"
+            values: ["A", "B", "C"]
+        }
+        Enum {
+            name: "T"
+            type: "ushort"
+            values: ["D", "E", "F"]
+        }
+        Enum {
+            name: "U"
+            type: "qint8"
+            values: ["G", "H", "I"]
+        }
+        Enum {
+            name: "V"
+            type: "quint8"
+            values: ["J", "K", "L"]
+        }
+    })"));
 }
 
 QTEST_MAIN(tst_qmltyperegistrar)

@@ -333,6 +333,7 @@ void QmlTypesCreator::writeEnums(const QJsonArray &enums)
         auto isFlag = obj.find(QLatin1String("isFlag"));
         if (isFlag != obj.end() && isFlag->toBool())
             m_qml.writeBooleanBinding(isFlag.key(), true);
+        writeType(obj, QLatin1String("type"));
         m_qml.writeArrayBinding(QLatin1String("values"), valueList);
         m_qml.writeEndObject();
     }

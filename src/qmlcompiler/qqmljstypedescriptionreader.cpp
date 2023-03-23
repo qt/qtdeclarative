@@ -422,9 +422,11 @@ void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJS
             readEnumValues(script, &metaEnum);
         } else if (name == QLatin1String("scoped")) {
             metaEnum.setScoped(readBoolBinding(script));
+        } else if (name == QLatin1String("type")) {
+            metaEnum.setTypeName(readStringBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only name and values script bindings."));
+                       tr("Expected only name, alias, isFlag, values, scoped, or type."));
         }
     }
 
