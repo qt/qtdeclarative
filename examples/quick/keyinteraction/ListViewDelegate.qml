@@ -7,28 +7,42 @@ Item {
     id: container
     required property int index
 
-    width: ListView.view.width; height: 60; anchors.leftMargin: 10; anchors.rightMargin: 10
+    width: ListView.view.width
+    height: 60
+    anchors.leftMargin: 10
+    anchors.rightMargin: 10
 
     Rectangle {
         id: content
-        anchors.centerIn: parent; width: container.width - 40; height: container.height - 10
+
+        anchors.centerIn: parent
+        width: container.width - 40
+        height: container.height - 10
         color: "transparent"
         antialiasing: true
         radius: 10
 
-        Rectangle { anchors.fill: parent; anchors.margins: 3; color: "#91AA9D"; antialiasing: true; radius: 8 }
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 3
+            color: "#91AA9D"
+            antialiasing: true
+            radius: 8
+        }
     }
 
     Text {
         id: label
+
         anchors.centerIn: content
-        text: "List element " + (container.index + 1)
+        text: qsTr("List element ") + (container.index + 1)
         color: "#193441"
         font.pixelSize: 14
     }
 
     MouseArea {
         id: mouseArea
+
         anchors.fill: parent
         hoverEnabled: true
 
@@ -39,7 +53,8 @@ Item {
     }
 
     states: State {
-        name: "active"; when: container.activeFocus
+        name: "active"
+        when: container.activeFocus
         PropertyChanges {
             content {
                 color: "#FCFFF5"
@@ -50,6 +65,9 @@ Item {
     }
 
     transitions: Transition {
-        NumberAnimation { properties: "scale"; duration: 100 }
+        NumberAnimation {
+            properties: "scale"
+            duration: 100
+        }
     }
 }
