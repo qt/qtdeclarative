@@ -112,7 +112,6 @@ Creator.
         \li \l{Qt Quick Examples - Positioners}{Positioners}
         \li \l{Qt Quick Examples - Views}{Views}
         \li \l{Qt Quick Examples - Window and Screen}{Windows and Screen}
-        \li \l{Qt Quick Examples - Right to Left}{Right-to-Left and Text Layout}
         \endlist
     \enddiv
     \div {class="doc-column"}

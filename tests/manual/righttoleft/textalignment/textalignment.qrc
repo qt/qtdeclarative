@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/qt/qml/textalignment">
+        <file>textalignment.qml</file>
+    </qresource>
+</RCC>

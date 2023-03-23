@@ -8,6 +8,7 @@ add_subdirectory(mousearea)
 add_subdirectory(nodetypes_ng)
 # add_subdirectory(qmltypememory) # TODO: C++ API changed
 # add_subdirectory(quickwidgetviewer) # TODO: C++ API changed
+add_subdirectory(righttoleft)
 add_subdirectory(scalablepath)
 add_subdirectory(shapestest)
 add_subdirectory(tableview)

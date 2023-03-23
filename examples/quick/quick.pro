@@ -15,7 +15,6 @@ SUBDIRS =   quick-accessibility \
             mousearea \
             pointerhandlers \
             positioners \
-            righttoleft \
             scenegraph \
             shadereffects \
             text \
