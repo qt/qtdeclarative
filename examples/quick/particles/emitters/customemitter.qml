@@ -16,7 +16,7 @@ ParticleSystem {
     }
 
     property real petalLength: 180
-    property real petalRotation: 0
+    property real petalRotation
     NumberAnimation on petalRotation {
         from: 0;
         to: 360;
@@ -34,9 +34,9 @@ ParticleSystem {
         //! [0]
         onEmitParticles: (particles) => {
             for (var i=0; i<particles.length; i++) {
-                var particle = particles[i];
+                let particle = particles[i];
                 particle.startSize = Math.max(02,Math.min(492,Math.tan(particle.t/2)*24));
-                var theta = Math.floor(Math.random() * 6.0);
+                let theta = Math.floor(Math.random() * 6.0);
                 particle.red = theta == 0 || theta == 1 || theta == 2 ? 0.2 : 1;
                 particle.green = theta == 2 || theta == 3 || theta == 4 ? 0.2 : 1;
                 particle.blue = theta == 4 || theta == 5 || theta == 0 ? 0.2 : 1;
