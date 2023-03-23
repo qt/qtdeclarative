@@ -114,7 +114,7 @@ Item {
         id: circle
         x: root.width / 1.2
         y: root.height / 1.7
-        property real percent: 0
+        property real percent
 
         SequentialAnimation on percent {
             id: circleAnim1
@@ -135,7 +135,6 @@ Item {
         groups: ["exhaust"]
         source: "qrc:///particleresources/fuzzydot.png"
 
-        color: "orange"
         SequentialAnimation on color {
             loops: Animation.Infinite
             ColorAnimation {

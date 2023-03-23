@@ -69,7 +69,6 @@ Rectangle {
             groups: ["engine"]
             source: "qrc:///particleresources/fuzzydot.png"
 
-            color: "orange"
             SequentialAnimation on color {
                 loops: Animation.Infinite
                 ColorAnimation {
