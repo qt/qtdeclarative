@@ -45,15 +45,15 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         spacing: 4
         GreyButton {
-            text:"dx/dt"
+            text: qsTr("dx/dt")
             onClicked: wanderer.affectedParameter = Wander.Position;
         }
         GreyButton {
-            text:"dv/dt"
+            text: qsTr("dv/dt")
             onClicked: wanderer.affectedParameter = Wander.Velocity;
         }
         GreyButton {
-            text:"da/dt"
+            text: qsTr("da/dt")
             onClicked: wanderer.affectedParameter = Wander.Acceleration;
         }
     }
