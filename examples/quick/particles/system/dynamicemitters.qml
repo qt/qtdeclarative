@@ -4,6 +4,8 @@
 import QtQuick
 import QtQuick.Particles
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: root
     color: "black"
@@ -31,15 +33,18 @@ Rectangle {
                 lifeSpan: 600
                 size: 16
                 endSize: 8
-                velocity: AngleDirection {angleVariation:360; magnitude: 60}
+                velocity: AngleDirection {
+                    angleVariation: 360
+                    magnitude: 60
+                }
             }
 
             property int life: 2600
             property real targetX: 0
             property real targetY: 0
             function go() {
-                xAnim.start();
-                yAnim.start();
+                xAnim.start()
+                yAnim.start()
                 container.enabled = true
             }
             system: sys
@@ -49,35 +54,35 @@ Rectangle {
             endSize: 8
             NumberAnimation on x {
                 id: xAnim;
-                to: targetX
-                duration: life
+                to: container.targetX
+                duration: container.life
                 running: false
             }
             NumberAnimation on y {
                 id: yAnim;
-                to: targetY
-                duration: life
+                to: container.targetY
+                duration: container.life
                 running: false
             }
             Timer {
-                interval: life
+                interval: container.life
                 running: true
-                onTriggered: container.destroy();
+                onTriggered: container.destroy()
             }
         }
     }
 
-    function customEmit(x,y) {
+    function customEmit(x, y) {
         //! [0]
-        for (var i=0; i<8; i++) {
-            var obj = emitterComp.createObject(root);
+        for (var i = 0; i < 8; i++) {
+            let obj = emitterComp.createObject(root)
             obj.x = x
             obj.y = y
             obj.targetX = Math.random() * 240 - 120 + obj.x
             obj.targetY = Math.random() * 240 - 120 + obj.y
             obj.life = Math.round(Math.random() * 2400) + 200
             obj.emitRate = Math.round(Math.random() * 32) + 32
-            obj.go();
+            obj.go()
         }
         //! [0]
     }
@@ -87,16 +92,15 @@ Rectangle {
         triggeredOnStart: true
         running: true
         repeat: true
-        onTriggered: customEmit(Math.random() * 320, Math.random() * 480)
+        onTriggered: root.customEmit(Math.random() * 320, Math.random() * 480)
     }
-    MouseArea {
-        anchors.fill: parent
-        onClicked: (mouse)=> customEmit(mouse.x, mouse.y);
+    TapHandler {
+        onTapped: function(event) { root.customEmit(event.pressPosition.x, event.pressPosition.y) }
     }
 
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: "Click Somewhere"
+        text: qsTr("Click Somewhere")
         color: "white"
         font.pixelSize: 24
     }
