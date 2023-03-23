@@ -202,7 +202,7 @@ public:
     QQuickViewTransitionAttached(QObject *parent);
 
     int index() const { return m_index; }
-    QQuickItem *item() const { return m_item; }
+    QQuickItem *item() const;
     QPointF destination() const { return m_destination; }
 
     QList<int> targetIndexes() const { return m_targetIndexes; }
@@ -224,7 +224,7 @@ private:
     QList<int> m_targetIndexes;
     QList<QObject *> m_targetItems;
 
-    QQuickItem *m_item;
+    QPointer<QQuickItem> m_item;
     int m_index;
 };
 

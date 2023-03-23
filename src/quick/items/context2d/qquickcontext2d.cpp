@@ -3892,16 +3892,16 @@ void QQuickContext2D::bezierCurveTo(qreal cp1x, qreal cp1y,
         m_path.cubicTo(QPointF(cp1x, cp1y), QPointF(cp2x, cp2y),  pt);
 }
 
-void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radius)
+void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, qreal radius)
 {
     QPointF p0(m_path.currentPosition());
 
     QPointF p1p0((p0.x() - p1.x()), (p0.y() - p1.y()));
     QPointF p1p2((p2.x() - p1.x()), (p2.y() - p1.y()));
-    float p1p0_length = std::sqrt(p1p0.x() * p1p0.x() + p1p0.y() * p1p0.y());
-    float p1p2_length = std::sqrt(p1p2.x() * p1p2.x() + p1p2.y() * p1p2.y());
+    qreal p1p0_length = std::hypot(p1p0.x(), p1p0.y());
+    qreal p1p2_length = std::hypot(p1p2.x(), p1p2.y());
 
-    double cos_phi = (p1p0.x() * p1p2.x() + p1p0.y() * p1p2.y()) / (p1p0_length * p1p2_length);
+    qreal cos_phi = QPointF::dotProduct(p1p0, p1p2) / (p1p0_length * p1p2_length);
 
     // The points p0, p1, and p2 are on the same straight line (HTML5, 4.8.11.1.8)
     // We could have used areCollinear() here, but since we're reusing
@@ -3911,16 +3911,16 @@ void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radiu
         return;
     }
 
-    float tangent = radius / std::tan(std::acos(cos_phi) / 2);
-    float factor_p1p0 = tangent / p1p0_length;
+    qreal tangent = radius / std::tan(std::acos(cos_phi) / 2);
+    qreal factor_p1p0 = tangent / p1p0_length;
     QPointF t_p1p0((p1.x() + factor_p1p0 * p1p0.x()), (p1.y() + factor_p1p0 * p1p0.y()));
 
     QPointF orth_p1p0(p1p0.y(), -p1p0.x());
-    float orth_p1p0_length = std::sqrt(orth_p1p0.x() * orth_p1p0.x() + orth_p1p0.y() * orth_p1p0.y());
-    float factor_ra = radius / orth_p1p0_length;
+    qreal orth_p1p0_length = std::hypot(orth_p1p0.x(), orth_p1p0.y());
+    qreal factor_ra = radius / orth_p1p0_length;
 
     // angle between orth_p1p0 and p1p2 to get the right vector orthographic to p1p0
-    double cos_alpha = (orth_p1p0.x() * p1p2.x() + orth_p1p0.y() * p1p2.y()) / (orth_p1p0_length * p1p2_length);
+    qreal cos_alpha = QPointF::dotProduct(orth_p1p0, p1p2) / (orth_p1p0_length * p1p2_length);
     if (cos_alpha < 0.f)
         orth_p1p0 = QPointF(-orth_p1p0.x(), -orth_p1p0.y());
 
@@ -3928,20 +3928,15 @@ void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, float radiu
 
     // calculate angles for addArc
     orth_p1p0 = QPointF(-orth_p1p0.x(), -orth_p1p0.y());
-    float sa = std::acos(orth_p1p0.x() / orth_p1p0_length);
-    if (orth_p1p0.y() < 0.f)
-        sa = 2 * M_PI - sa;
+    qreal sa = std::atan2(orth_p1p0.y(), orth_p1p0.x());
 
     // anticlockwise logic
     bool anticlockwise = false;
 
-    float factor_p1p2 = tangent / p1p2_length;
+    qreal factor_p1p2 = tangent / p1p2_length;
     QPointF t_p1p2((p1.x() + factor_p1p2 * p1p2.x()), (p1.y() + factor_p1p2 * p1p2.y()));
     QPointF orth_p1p2((t_p1p2.x() - p.x()), (t_p1p2.y() - p.y()));
-    float orth_p1p2_length = std::sqrt(orth_p1p2.x() * orth_p1p2.x() + orth_p1p2.y() * orth_p1p2.y());
-    float ea = std::acos(orth_p1p2.x() / orth_p1p2_length);
-    if (orth_p1p2.y() < 0)
-        ea = 2 * M_PI - ea;
+    qreal ea = std::atan2(orth_p1p2.y(), orth_p1p2.x());
     if ((sa > ea) && ((sa - ea) < M_PI))
         anticlockwise = true;
     if ((sa < ea) && ((ea - sa) > M_PI))

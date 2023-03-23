@@ -62,7 +62,9 @@ struct Node {
     Node& operator=(Node &&) = default;
     bool operator==(Node const &other) const {return index == other.index;}
 
-    Node(std::vector<QV4::CompiledData::InlineComponent>::size_type s) {
+    Node(std::vector<QV4::CompiledData::InlineComponent>::size_type s)
+        : index{0}
+    {
         index = quint32(s);
         temporaryMark = 0;
         permanentMark = 0;

@@ -981,7 +981,7 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
 
     if (MultiplyWrappedQObjectMap *multiplyWrappedQObjects = engine->m_multiplyWrappedQObjects) {
         for (MultiplyWrappedQObjectMap::Iterator it = multiplyWrappedQObjects->begin(); it != multiplyWrappedQObjects->end();) {
-            if (!it.value().isNullOrUndefined())
+            if (it.value().isNullOrUndefined())
                 it = multiplyWrappedQObjects->erase(it);
             else
                 ++it;

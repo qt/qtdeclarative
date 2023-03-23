@@ -188,6 +188,7 @@ private slots:
     void revertListMemoryLeak();
     void duplicateStateName();
     void trivialWhen();
+    void noStateOsciallation();
     void parentChangeCorrectReversal();
     void revertNullObjectBinding();
 };
@@ -1731,6 +1732,20 @@ void tst_qquickstates::trivialWhen()
 
     QQmlComponent c(&engine, testFileUrl("trivialWhen.qml"));
     QVERIFY(c.create());
+}
+
+void tst_qquickstates::noStateOsciallation()
+{
+   QQmlEngine engine;
+   QQmlComponent component(&engine, testFileUrl("noStateOsciallation.qml"));
+   QScopedPointer<QObject> root {component.create()};
+   QVERIFY(root);
+   // set to 1 on initial transition from "" to "n2"
+   QCOMPARE(root->property("stateChangeCounter").toInt(), 1);
+   root->setProperty("number", 1);
+   // setting number to 1 changes directly from "n2" to "n1"
+   // without any intermediate transition to ""
+   QCOMPARE(root->property("stateChangeCounter").toInt(), 2);
 }
 
 void tst_qquickstates::parentChangeCorrectReversal()

@@ -102,6 +102,7 @@ private slots:
     void valueConversion_RegularExpression();
     void castWithMultipleInheritance();
     void collectGarbage();
+    void collectGarbageNestedWrappersTwoEngines();
     void gcWithNestedDataStructure();
     void stacktrace();
     void numberParsing_data();
@@ -1807,6 +1808,44 @@ void tst_QJSEngine::collectGarbage()
     if (ptr)
         QGuiApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
     QVERIFY(ptr.isNull());
+}
+
+class TestObjectContainer : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *dummy MEMBER m_dummy CONSTANT)
+
+public:
+    TestObjectContainer() : m_dummy(new QObject(this)) {}
+
+private:
+    QObject *m_dummy;
+};
+
+void tst_QJSEngine::collectGarbageNestedWrappersTwoEngines()
+{
+    QJSEngine engine1;
+    QJSEngine engine2;
+
+    TestObjectContainer container;
+    QQmlEngine::setObjectOwnership(&container, QQmlEngine::CppOwnership);
+
+    engine1.globalObject().setProperty("foobar", engine1.newQObject(&container));
+    engine2.globalObject().setProperty("foobar", engine2.newQObject(&container));
+
+    engine1.evaluate("foobar.dummy.baz = 42");
+    engine2.evaluate("foobar.dummy.baz = 43");
+
+    QCOMPARE(engine1.evaluate("foobar.dummy.baz").toInt(), 42);
+    QCOMPARE(engine2.evaluate("foobar.dummy.baz").toInt(), 43);
+
+    engine1.collectGarbage();
+    engine2.collectGarbage();
+
+    // The GC should not collect dummy object wrappers neither in engine1 nor engine2, we
+    // verify that by checking whether the baz property still has its previous value.
+    QCOMPARE(engine1.evaluate("foobar.dummy.baz").toInt(), 42);
+    QCOMPARE(engine2.evaluate("foobar.dummy.baz").toInt(), 43);
 }
 
 void tst_QJSEngine::gcWithNestedDataStructure()

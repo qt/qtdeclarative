@@ -241,7 +241,7 @@ public:
     void arc(qreal x, qreal y, qreal radius,
              qreal startAngle, qreal endAngle,
              bool anticlockwise);
-    void addArcTo(const QPointF& p1, const QPointF& p2, float radius);
+    void addArcTo(const QPointF& p1, const QPointF& p2, qreal radius);
 
     bool isPointInPath(qreal x, qreal y) const;
 

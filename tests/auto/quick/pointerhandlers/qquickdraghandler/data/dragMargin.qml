@@ -1,4 +1,4 @@
-import QtQuick 2.12
+import QtQuick 2.15
 
 Rectangle {
     color: "#333"
@@ -13,6 +13,7 @@ Rectangle {
         DragHandler {
             id: dragHandler
             margin: 20
+            cursorShape: Qt.ClosedHandCursor
         }
 
         Rectangle {

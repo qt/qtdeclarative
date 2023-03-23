@@ -13,7 +13,7 @@ private slots:
 void tst_QQC::packaging()
 {
     QVERIFY(QFile::exists(":/main.qml"));
-    QCOMPARE(QFileInfo(":/main.qml").size(), 0);
+    QVERIFY(QFileInfo(":/main.qml").size() > 0);
     QVERIFY(QFile::exists(":/main.cpp"));
     QVERIFY(QFileInfo(":/main.cpp").size() > 0);
 

@@ -29,21 +29,22 @@
 import QtQuick 2.0
 
 QtObject {
-    property int q:1
+    property int q: 1
+
     function assertFail() {
-        console.assert(0, "This will fail too")
+        console.assert(0, "This will fail too");
     }
 
     Component.onCompleted: {
-        var x = 12;
+        const x = 12;
         console.assert(x == 12, "This will pass");
         try {
-        console.assert(x < 12, "This will fail");
+            console.assert(x < 12, "This will fail");
         } catch (e) {
             console.log(e);
         }
-        console.assert("x < 12", "This will pass too")
+        console.assert("x < 12", "This will pass too");
         assertFail();
-        console.assert(1)
+        console.assert(1);
     }
 }

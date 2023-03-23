@@ -177,6 +177,11 @@ QList<QQuickItem *> QAccessibleQuickItem::childItems() const
     return accessibleUnignoredChildren(item());
 }
 
+static bool isTextRole(QAccessible::Role role)
+{
+    return role == QAccessible::EditableText || role == QAccessible::StaticText;
+}
+
 QAccessible::State QAccessibleQuickItem::state() const
 {
     QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item());
@@ -194,7 +199,7 @@ QAccessible::State QAccessibleQuickItem::state() const
         state.offscreen = true;
     if ((role() == QAccessible::CheckBox || role() == QAccessible::RadioButton) && object()->property("checked").toBool())
         state.checked = true;
-    if (item()->activeFocusOnTab() || role() == QAccessible::EditableText)
+    if (item()->activeFocusOnTab() || isTextRole(role()))
         state.focusable = true;
     if (item()->hasActiveFocus())
         state.focused = true;

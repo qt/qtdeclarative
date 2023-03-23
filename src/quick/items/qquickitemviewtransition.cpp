@@ -125,6 +125,8 @@ void QQuickItemViewTransitionJob::startTransition(QQuickItemViewTransitionableIt
     actions << QQuickStateAction(item->item, QLatin1String("x"), QVariant(to.x()));
     actions << QQuickStateAction(item->item, QLatin1String("y"), QVariant(to.y()));
 
+    actions[0].fromValue = item->itemX();
+    actions[1].fromValue = item->itemY();
     m_transitioner->runningJobs << this;
     QQuickTransitionManager::transition(actions, trans, item->item);
 }
@@ -555,9 +557,15 @@ void QQuickItemViewTransitionableItem::stopTransition()
 
 
 QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
-    : QObject(parent), m_item(nullptr), m_index(-1)
+    : QObject(parent), m_index(-1)
 {
 }
+
+QQuickItem *QQuickViewTransitionAttached::item() const
+{
+    return m_item.data();
+}
+
 /*!
     \qmltype ViewTransition
     \instantiates QQuickViewTransitionAttached

@@ -4543,10 +4543,10 @@ static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *
 }
 
 /*!
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, real x, real y)
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, point p)
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, real x, real y, real width, real height)
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, rect r)
+    \qmlmethod point QtQuick::Item::mapFromItem(Item item, real x, real y)
+    \qmlmethod point QtQuick::Item::mapFromItem(Item item, point p)
+    \qmlmethod rect QtQuick::Item::mapFromItem(Item item, real x, real y, real width, real height)
+    \qmlmethod rect QtQuick::Item::mapFromItem(Item item, rect r)
 
     Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in \a
     item's coordinate system, to this item's coordinate system, and returns a \l point or \l rect
@@ -4598,10 +4598,10 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 }
 
 /*!
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, real x, real y)
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, point p)
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, real x, real y, real width, real height)
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, rect r)
+    \qmlmethod point QtQuick::Item::mapToItem(Item item, real x, real y)
+    \qmlmethod point QtQuick::Item::mapToItem(Item item, point p)
+    \qmlmethod rect QtQuick::Item::mapToItem(Item item, real x, real y, real width, real height)
+    \qmlmethod rect QtQuick::Item::mapToItem(Item item, rect r)
 
     Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in this
     item's coordinate system, to \a item's coordinate system, and returns a \l point or \l rect
@@ -4683,7 +4683,7 @@ static bool unwrapMapFromToFromGlobalArgs(QQmlV4Function *args, const QQuickItem
 
 /*!
     \since 5.7
-    \qmlmethod object QtQuick::Item::mapFromGlobal(real x, real y)
+    \qmlmethod point QtQuick::Item::mapFromGlobal(real x, real y)
 
     Maps the point (\a x, \a y), which is in the global coordinate system, to the
     item's coordinate system, and returns a \l point  matching the mapped coordinate.
@@ -4710,7 +4710,7 @@ void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
 
 /*!
     \since 5.7
-    \qmlmethod object QtQuick::Item::mapToGlobal(real x, real y)
+    \qmlmethod point QtQuick::Item::mapToGlobal(real x, real y)
 
     Maps the point (\a x, \a y), which is in this item's coordinate system, to the
     global coordinate system, and returns a \l point  matching the mapped coordinate.
@@ -7887,10 +7887,26 @@ bool QQuickItem::contains(const QPointF &point) const
     \e{item}'s contains method would then return \c true only if
     \e{anotherItem}'s contains() implementation returns \c true.
 
-    A \l Shape can be used in this way, to make an item react to
-    \l {QPointerEvent}{pointer events} only within a non-rectangular region,
-    as illustrated in the \l {Qt Quick Examples - Shapes}{Shapes example}
-    (see \c tapableTriangle.qml).
+    A \l Shape can be used as a mask, to make an item react to
+    \l {QPointerEvent}{pointer events} only within a non-rectangular region:
+
+    \table
+    \row
+    \li \image containmentMask-shape.gif
+    \li \snippet qml/item/containmentMask-shape.qml 0
+    \endtable
+
+    It is also possible to define the contains method in QML. For example,
+    to create a circular item that only responds to events within its
+    actual bounds:
+
+    \table
+    \row
+    \li \image containmentMask-circle.gif
+    \li \snippet qml/item/containmentMask-circle-js.qml 0
+    \endtable
+
+    \sa {Qt Quick Examples - Shapes}
 */
 /*!
     \property QQuickItem::containmentMask

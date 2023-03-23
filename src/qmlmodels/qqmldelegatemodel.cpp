@@ -258,7 +258,7 @@ QQmlDelegateModel::~QQmlDelegateModel()
 {
     Q_D(QQmlDelegateModel);
     d->disconnectFromAbstractItemModel();
-    d->m_adaptorModel.setObject(nullptr, this);
+    d->m_adaptorModel.setObject(nullptr);
 
     for (QQmlDelegateModelItem *cacheItem : qAsConst(d->m_cache)) {
         if (cacheItem->object) {
@@ -1728,6 +1728,7 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
         return;
 
     d->m_count -= count;
+    Q_ASSERT(d->m_count >= 0);
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
     //Prevents items being deleted in remove loop
     for (QQmlDelegateModelItem *item : cache)

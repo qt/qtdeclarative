@@ -147,7 +147,7 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
 {
     Q_Q(QQmlInstantiator);
 
-    if (!componentComplete || effectiveReset)
+    if (!componentComplete || effectiveReset || !active)
         return;
 
     if (reset) {

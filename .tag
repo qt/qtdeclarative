@@ -1,1 +1,1 @@
-$Format:%H$
+$Format:%T$

@@ -406,9 +406,10 @@ void QQuickAccessibleAttached::setRole(QAccessible::Role role)
                 m_state.focusable = true;
             break;
         case QAccessible::StaticText:
-            if (!m_stateExplicitlySet.readOnly) {
+            if (!m_stateExplicitlySet.readOnly)
                 m_state.readOnly = true;
-            }
+            if (!m_stateExplicitlySet.focusable)
+                m_state.focusable = true;
             break;
         default:
             break;

@@ -215,6 +215,7 @@ private slots:
     void QTBUG_48870_fastModelUpdates();
 
     void keyNavigationEnabled();
+    void resizeDynamicCellWidthRtL();
     void releaseItems();
 
 private:
@@ -6793,6 +6794,24 @@ void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
                 flick(window.data(), QPoint(100, 200), QPoint(100, 400), 100);
         }
     }
+}
+
+void tst_QQuickGridView::resizeDynamicCellWidthRtL()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug92998.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "gridview");
+    QTRY_VERIFY(gridview != nullptr);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    gridview->setWidth(460);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    QTRY_COMPARE(gridview->contentX(), 0.f);
+    gridview->setWidth(360);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    QTRY_COMPARE(gridview->contentX(), 0.f);
 }
 
 void tst_QQuickGridView::releaseItems()

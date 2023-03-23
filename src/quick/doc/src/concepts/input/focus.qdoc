@@ -196,7 +196,7 @@ property. As the \l ListView is a focus scope, this doesn't affect the
 rest of the application. However, if the \l ListView itself has
 active focus this causes the delegate itself to receive active focus.
 In this example, the root type of the delegate is also a focus scope,
-which in turn gives active focus to the \c {Text} type that actually performs
+which in turn gives active focus to the \l {TextInput} type that actually performs
 the work of handling the \c {Return} key.
 
 All of the QML view classes, such as \l PathView and \l GridView, behave

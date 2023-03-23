@@ -991,19 +991,9 @@ bool compactDependencies(QStringList *dependencies)
     return false;
 }
 
-inline std::wostream &operator<<(std::wostream &str, const QString &s)
-{
-#ifdef Q_OS_WIN
-    str << reinterpret_cast<const wchar_t *>(s.utf16());
-#else
-    str << s.toStdWString();
-#endif
-    return str;
-}
-
 void printDebugMessage(QtMsgType, const QMessageLogContext &, const QString &msg)
 {
-    std::wcerr << msg << std::endl;
+    std::cerr << msg.toStdString() << std::endl;
     // In case of QtFatalMsg the calling code will abort() when appropriate.
 }
 

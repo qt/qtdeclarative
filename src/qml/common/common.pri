@@ -1,8 +1,8 @@
 !build_pass {
     # Create a header containing a hash that describes this library.  For a
     # released version of Qt, we'll use the .tag file that is updated by git
-    # archive with the commit hash. For unreleased versions, we'll ask git
-    # describe. Note that it won't update unless qmake is run again, even if
+    # archive with the tree hash. For unreleased versions, we'll ask git
+    # rev-parse. Note that it won't update unless qmake is run again, even if
     # the commit change also changed something in this library.
     tagFile = $$PWD/../../.tag
     tag =
@@ -10,7 +10,7 @@
         tag = $$cat($$tagFile, singleline)
         QMAKE_INTERNAL_INCLUDED_FILES += $$tagFile
     }
-    !equals(tag, "$${LITERAL_DOLLAR}Format:%H$${LITERAL_DOLLAR}") {
+    !equals(tag, "$${LITERAL_DOLLAR}Format:%T$${LITERAL_DOLLAR}") {
         QML_COMPILE_HASH = $$tag
     } else:exists($$PWD/../../.git) {
         commit = $$system(git rev-parse HEAD)

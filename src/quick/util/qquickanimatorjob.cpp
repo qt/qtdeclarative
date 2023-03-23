@@ -285,6 +285,17 @@ qreal QQuickAnimatorJob::progress(int time) const
     return m_easing.valueForProgress((m_duration == 0) ? qreal(1) : qreal(time) / qreal(m_duration));
 }
 
+void QQuickAnimatorJob::boundValue()
+{
+    qreal rangeMin = m_from;
+    qreal rangeMax = m_to;
+    if (m_from > m_to) {
+        rangeMax = m_from;
+        rangeMin = m_to;
+    }
+    m_value = qBound(rangeMin, m_value, rangeMax);
+}
+
 qreal QQuickAnimatorJob::value() const
 {
     qreal value = m_to;

@@ -1708,6 +1708,8 @@ QQuickItem *QQuickWindow::contentItem() const
 
     \brief The item which currently has active focus or \c null if there is
     no item with active focus.
+
+    \sa QQuickItem::forceActiveFocus(), {Keyboard Focus in Qt Quick}
 */
 QQuickItem *QQuickWindow::activeFocusItem() const
 {
@@ -2441,6 +2443,9 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, event->button(),
                               event->buttons());
         deliverPointerEvent(pointerEventInstance(event));
+#if QT_CONFIG(cursor)
+        updateCursor(event->windowPos());
+#endif
         break;
     case QEvent::MouseButtonDblClick:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseDoubleClick,
@@ -2612,7 +2617,9 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) con
     }
 
     Q_ASSERT(dev);
-    return pointerEventInstance(dev, event->type())->reset(event);
+    auto pev = pointerEventInstance(dev, event->type());
+    Q_ASSERT(pev);
+    return pev->reset(event);
 }
 
 void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)

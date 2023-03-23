@@ -564,6 +564,8 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
                 textOut += QChar(60);
             else if (entity == QLatin1String("amp"))
                 textOut += QChar(38);
+            else if (entity == QLatin1String("apos"))
+                textOut += QChar(39);
             else if (entity == QLatin1String("quot"))
                 textOut += QChar(34);
             else if (entity == QLatin1String("nbsp"))

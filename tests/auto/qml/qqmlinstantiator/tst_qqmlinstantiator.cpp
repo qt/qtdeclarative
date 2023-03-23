@@ -47,6 +47,7 @@ private slots:
     void createMultiple();
     void stringModel();
     void activeProperty();
+    void activeModelChangeInteraction();
     void intModelChange();
     void createAndRemove();
 
@@ -151,6 +152,26 @@ void tst_qqmlinstantiator::activeProperty()
     QCOMPARE(object->parent(), instantiator);
     QCOMPARE(object->property("success").toBool(), true);
     QCOMPARE(object->property("idx").toInt(), 0);
+}
+
+void tst_qqmlinstantiator::activeModelChangeInteraction()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("activeModelChangeInteraction.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+
+    // If the instantiator is inactive, a model change does not lead to items being loaded
+    bool ok = false;
+    int count = root->property("instanceCount").toInt(&ok);
+    QVERIFY(ok);
+    QCOMPARE(count, 0);
+
+    // When turning the instantiator active, it will however reflect the model
+    root->setProperty("active", true);
+    count = root->property("instanceCount").toInt(&ok);
+    QVERIFY(ok);
+    QCOMPARE(count, 3);
 }
 
 void tst_qqmlinstantiator::intModelChange()

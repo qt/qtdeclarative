@@ -134,18 +134,27 @@ void tst_qqmlconsole::categorized_logging()
     QVERIFY(messageHandler.messages().contains("qt.test.warning: console.error"));
 
     QString emptyCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(56).arg(5) +
-                            "QML LoggingCategory: Declaring the name of the LoggingCategory is mandatory and cannot be changed later !";
+                            "QML LoggingCategory: Declaring the name of a LoggingCategory is mandatory and cannot be changed later";
     QVERIFY(messageHandler.messages().contains(emptyCategory));
 
-    QString changedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
-                            "QML LoggingCategory: The name of a LoggingCategory cannot be changed after the Item is created";
+
+    QString notChangedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
+                            "QML LoggingCategory: The name of a LoggingCategory cannot be changed after the component is completed";
+    QVERIFY(!messageHandler.messages().contains(notChangedCategory));
+    QString changedCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(50).arg(5) +
+                            "QML LoggingCategory: The name of a LoggingCategory cannot be changed after the component is completed";
     QVERIFY(messageHandler.messages().contains(changedCategory));
 
-    QString changedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
-                            "QML LoggingCategory: The defaultLogLevel of a LoggingCategory cannot be changed after the Item is created";
+
+    QString notChangedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
+                            "QML LoggingCategory: The defaultLogLevel of a LoggingCategory cannot be changed after the component is completed";
+    QVERIFY(!messageHandler.messages().contains(notChangedDefaultLogLevel));
+    QString changedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(50).arg(5) +
+                            "QML LoggingCategory: The defaultLogLevel of a LoggingCategory cannot be changed after the component is completed";
     QVERIFY(messageHandler.messages().contains(changedDefaultLogLevel));
 
-    QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(75) +
+
+    QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(78) +
                             "Error: A QmlLoggingCatgory was provided without a valid name";
     QVERIFY(messageHandler.messages().contains(useEmptyCategory));
 
@@ -188,11 +197,11 @@ void tst_qqmlconsole::testAssert()
 
     // assert()
     QString assert1 = "This will fail\n" +
-            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(41);
+            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(42);
 
     QString assert2 = "This will fail too\n" +
-            QString::fromLatin1("assertFail (%1:%2)\n").arg(testUrl.toString()).arg(34) +
-            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(46);
+            QString::fromLatin1("assertFail (%1:%2)\n").arg(testUrl.toString()).arg(35) +
+            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(47);
 
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert1));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert2));

@@ -712,6 +712,8 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event
     switch (event->pointerType()) {
     case QTabletEvent::Pen:
         ptype = Pen;
+        if (type == QQuickPointerDevice::UnknownDevice)
+            type = QQuickPointerDevice::Stylus;
         break;
     case QTabletEvent::Eraser:
         ptype = Eraser;
