@@ -3,6 +3,8 @@
 
 import QtQuick
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: root
     property bool mirror
@@ -22,7 +24,7 @@ Rectangle {
             id: rowCell
         }
         Text {
-            text: "Row"
+            text: qsTr("Row")
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
@@ -36,21 +38,20 @@ Rectangle {
             }
             Repeater {
                 model: 3
-                Loader {
-                    required property int index
-                    sourceComponent: PositionerDelegate {}
+                delegate: PositionerDelegate {
                 }
             }
         }
 
         Text {
-            text: "Grid"
+            text: qsTr("Grid")
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
         Grid {
             layoutDirection: root.direction
-            spacing: 10; columns: 3
+            spacing: 10
+            columns: 3
             move: Transition {
                 NumberAnimation {
                     properties: "x"
@@ -58,15 +59,13 @@ Rectangle {
             }
             Repeater {
                 model: 8
-                Loader {
-                    required property int index
-                    sourceComponent: PositionerDelegate {}
+                delegate: PositionerDelegate {
                 }
             }
         }
 
         Text {
-            text: "Flow"
+            text: qsTr("Flow")
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
@@ -80,9 +79,8 @@ Rectangle {
             }
             Repeater {
                 model: 8
-                Loader {
-                    required property int index
-                    sourceComponent: PositionerDelegate {}
+                delegate: PositionerDelegate {
+
                 }
             }
         }
@@ -94,7 +92,7 @@ Rectangle {
         y: 10
 
         Text {
-            text: "ListView"
+            text: qsTr("ListView")
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
@@ -105,7 +103,8 @@ Rectangle {
             layoutDirection: root.direction
             orientation: Qt.Horizontal
             model: 48
-            delegate: ViewDelegate {}
+            delegate: ViewDelegate {
+            }
         }
 
         Text {
@@ -119,7 +118,8 @@ Rectangle {
             cellWidth: 50; cellHeight: 50
             layoutDirection: root.direction
             model: 48
-            delegate: ViewDelegate {}
+            delegate: ViewDelegate {
+            }
         }
 
         Rectangle {
@@ -128,13 +128,13 @@ Rectangle {
             Column {
                 anchors.centerIn: parent
                 Text {
-                    text: root.direction ? "Right to left" : "Left to right"
+                    text: root.direction ? qsTr("Right to left") : qsTr("Left to right")
                     color: "white"
                     font.pixelSize: 16
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
-                    text: "(click here to toggle)"
+                    text: qsTr("(click here to toggle)")
                     color: "white"
                     font.pixelSize: 10
                     font.italic: true
@@ -145,7 +145,7 @@ Rectangle {
                 id: mouseArea
                 anchors.fill: parent
                 onClicked: {
-                    if (root.direction == Qt.LeftToRight) {
+                    if (root.direction === Qt.LeftToRight) {
                         root.direction = Qt.RightToLeft;
                     } else {
                         root.direction = Qt.LeftToRight;
@@ -160,13 +160,13 @@ Rectangle {
             Column {
                 anchors.centerIn: parent
                 Text {
-                    text: root.mirror ? "Mirrored" : "Not mirrored"
+                    text: root.mirror ? qsTr("Mirrored") : qsTr("Not mirrored")
                     color: "white"
                     font.pixelSize: 16
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 Text {
-                    text: "(click here to toggle)"
+                    text: qsTr("(click here to toggle)")
                     color: "white"
                     font.pixelSize: 10
                     font.italic: true
@@ -186,7 +186,9 @@ Rectangle {
     component PositionerDelegate : Rectangle {
         width: 40
         height: 40
-        property int lightness: parent.index + 1;
+
+        required property int index
+        property int lightness: index + 1
         color: Qt.rgba(0.8 / lightness, 0.8 / lightness, 0.8 / lightness, 1.0)
         Text {
             text: parent.lightness
@@ -199,7 +201,7 @@ Rectangle {
     component ViewDelegate : Item {
         id: delegateItem
         required property int index
-        width: (listView.effectiveLayoutDirection == Qt.LeftToRight  ? (index == 48 - 1) : (index == 0)) ? 40 : 50
+        width: (listView.effectiveLayoutDirection === Qt.LeftToRight ? (index === 48 - 1) : (index === 0)) ? 40 : 50
         Rectangle {
             width: 40; height: 40
             color: Qt.rgba(0.5 + (48 - delegateItem.index) * Math.random() / 48,
