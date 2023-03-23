@@ -7,18 +7,23 @@ import QtQuick
 Rectangle {
     id: window
 
-    width: 800; height: 640
+    width: 800
+    height: 640
     color: "#3E606F"
 
     FocusScope {
         id: mainView
 
-        width: parent.width; height: parent.height
+        width: parent.width
+        height: parent.height
         focus: true
 
         TabMenu {
             id: tabMenu
-            y: 160; width: parent.width; height: 160
+
+            y: 160
+            width: parent.width
+            height: 160
 
             keyUpTarget: listMenu
             keyDownTarget: gridMenu
@@ -34,7 +39,10 @@ Rectangle {
 
         GridMenu {
             id: gridMenu
-            y: 320; width: parent.width; height: 320
+
+            y: 320
+            width: parent.width
+            height: 320
             activeFocusOnTab: true
 
             keyUpTarget: tabMenu
@@ -49,7 +57,10 @@ Rectangle {
 
         ListMenu {
             id: listMenu
-            y: 640; width: parent.width; height: 320
+
+            y: 640
+            width: parent.width
+            height: 320
             activeFocusOnTab: true
 
             keyUpTarget: gridMenu
@@ -72,7 +83,7 @@ Rectangle {
             State {
                 name: "showTabViews"
                 PropertyChanges {
-                    tabMenu.y:  160
+                    tabMenu.y: 160
                     gridMenu.y: 320
                     listMenu.y: 640
                 }
@@ -81,7 +92,7 @@ Rectangle {
             State {
                 name: "showGridViews"
                 PropertyChanges {
-                    tabMenu.y:    0
+                    tabMenu.y: 0
                     gridMenu.y: 160
                     listMenu.y: 480
                 }
@@ -98,7 +109,11 @@ Rectangle {
         ]
 
         transitions: Transition {
-            NumberAnimation { properties: "y"; duration: 600; easing.type: Easing.OutQuint }
+            NumberAnimation {
+                properties: "y"
+                duration: 600
+                easing.type: Easing.OutQuint
+            }
         }
     }
 
@@ -108,7 +123,8 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
 
         MouseArea {
-            anchors.fill: parent; anchors.margins: -10
+            anchors.fill: parent
+            anchors.margins: -10
             onClicked: contextMenu.focus = true
         }
     }
@@ -135,6 +151,10 @@ Rectangle {
     }
 
     transitions: Transition {
-        NumberAnimation { properties: "x,opacity"; duration: 600; easing.type: Easing.OutQuint }
+        NumberAnimation {
+            properties: "x,opacity"
+            duration: 600
+            easing.type: Easing.OutQuint
+        }
     }
 }

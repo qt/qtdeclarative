@@ -5,6 +5,7 @@ import QtQuick
 
 FocusScope {
     id: container
+
     required property Item keyRightTarget
 
     property bool open: false
@@ -19,10 +20,14 @@ FocusScope {
             Keys.onRightPressed: container.keyRightTarget.focus = true
 
             Text {
-                anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; margins: 30 }
+                anchors {
+                    top: parent.top
+                    horizontalCenter: parent.horizontalCenter
+                    margins: 30
+                }
                 color: "black"
                 font.pixelSize: 14
-                text: "Context Menu"
+                text: qsTr("Context Menu")
             }
         }
     }
