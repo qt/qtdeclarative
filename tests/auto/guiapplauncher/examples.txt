@@ -2,7 +2,6 @@
 "quick/models/stringlistmodel Example", "examples/quick/models/stringlistmodel", "stringlistmodel", 0, -1
 "quick/models/objectlistmodel Example", "examples/quick/models/objectlistmodel", "objectlistmodel", 0, -1
 "quick/models/abstractitemmodel Example", "examples/quick/models/abstractitemmodel", "abstractitemmodel", 0, -1
-"quick/righttoleft Example", "examples/quick/righttoleft", "righttoleft", 0, -1
 "quick/externaldraganddrop Example", "examples/quick/externaldraganddrop", "externaldraganddrop", 0, -1
 "quick/customitems/maskedmousearea Example", "examples/quick/customitems/maskedmousearea", "maskedmousearea", 0, -1
 "quick/imageelements Example", "examples/quick/imageelements", "imageelements", 0, -1

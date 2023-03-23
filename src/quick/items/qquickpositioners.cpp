@@ -1156,7 +1156,7 @@ QQuickRow::QQuickRow(QQuickItem *parent)
     \value Qt.RightToLeft   Items are laid out from right to left. If the width of the row is
                             explicitly set, the right anchor remains to the right of the row.
 
-    \sa Grid::layoutDirection, Flow::layoutDirection, {Qt Quick Examples - Right to Left}
+    \sa Grid::layoutDirection, Flow::layoutDirection
 */
 
 Qt::LayoutDirection QQuickRow::layoutDirection() const
@@ -1569,7 +1569,7 @@ void QQuickGrid::setColumnSpacing(const qreal columnSpacing)
     \l Grid::flow property.
     \endlist
 
-    \sa Flow::layoutDirection, Row::layoutDirection, {Qt Quick Examples - Right to Left}
+    \sa Flow::layoutDirection, Row::layoutDirection
 */
 Qt::LayoutDirection QQuickGrid::layoutDirection() const
 {
@@ -2069,7 +2069,7 @@ void QQuickFlow::setFlow(Flow flow)
     \l Flow::flow property.
     \endlist
 
-    \sa Grid::layoutDirection, Row::layoutDirection, {Qt Quick Examples - Right to Left}
+    \sa Grid::layoutDirection, Row::layoutDirection
 */
 
 Qt::LayoutDirection QQuickFlow::layoutDirection() const

@@ -13,7 +13,6 @@ SUBDIRS =   quick-accessibility \
             tableview \
             mousearea \
             positioners \
-            righttoleft \
             scenegraph \
             shadereffects \
             text \

@@ -15,7 +15,6 @@ qt_internal_add_example(views)
 add_subdirectory(tableview)
 qt_internal_add_example(mousearea)
 qt_internal_add_example(positioners)
-qt_internal_add_example(righttoleft)
 add_subdirectory(scenegraph)
 qt_internal_add_example(shadereffects)
 qt_internal_add_example(text)
@@ -48,7 +47,6 @@ set(reused_dir_targets
     canvas_shared
     views_shared
     positioners_shared
-    righttoleft_shared
     text_shared
     threading_shared
     touchinteraction_shared
