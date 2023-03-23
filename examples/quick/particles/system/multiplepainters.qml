@@ -13,13 +13,12 @@ Rectangle {
     ParticleSystem {
         id: sys
     }
-    MouseArea {
-        anchors.fill: parent
-        onClicked: cloneMode = !cloneMode;
+    TapHandler {
+        onTapped: root.cloneMode = !root.cloneMode
     }
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: "Click to Toggle"
+        text: qsTr("Click to Toggle")
         color: "white"
         font.pixelSize: 24
     }
@@ -30,18 +29,18 @@ Rectangle {
         emitRate: 200
         lifeSpan: 4000
         startTime: 4000
-        velocity: PointDirection { y: -120; }
+        velocity: PointDirection { y: -120 }
     }
 
     ImageParticle {
         system: sys
-        visible: !cloneMode
+        visible: !root.cloneMode
         source: "images/particle2.png"
     }
 
     ImageParticle {
         system: sys
-        visible: cloneMode
+        visible: root.cloneMode
         z: 0
         source: "images/particle3.png"
     }
@@ -49,7 +48,7 @@ Rectangle {
     ImageParticle {
         system: sys
         clip: true
-        visible: cloneMode
+        visible: root.cloneMode
         y: 120
         height: 240
         width: root.width

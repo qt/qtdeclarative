@@ -4,6 +4,8 @@
 import QtQuick
 import QtQuick.Particles
 
+pragma ComponentBehavior: Bound
+
 Rectangle {
     id: root
     color: "black"
@@ -38,11 +40,11 @@ Rectangle {
         id: fakeEmitter
         function burst(number) {
             while (number > 0) {
-                var item = fakeParticle.createObject(root);
-                item.lifeSpan = Math.random() * 5000 + 5000;
-                item.x = Math.random() * (root.width/2) + (root.width/2);
-                item.y = 0;
-                number--;
+                let item = fakeParticle.createObject(root)
+                item.lifeSpan = Math.random() * 5000 + 5000
+                item.x = Math.random() * (root.width / 2) + (root.width / 2)
+                item.y = 0
+                number--
             }
         }
 
@@ -54,13 +56,12 @@ Rectangle {
                 width: 32
                 height: 32
                 source: "qrc:///particleresources/glowdot.png"
-                y: 0
-                PropertyAnimation on y {from: -16; to: root.height-16; duration: container.lifeSpan; running: true}
+                PropertyAnimation on y { from: -16; to: root.height - 16; duration: container.lifeSpan; running: true }
                 SequentialAnimation on opacity {
                     running: true
-                    NumberAnimation { from:0; to: 1; duration: 500}
-                    PauseAnimation { duration: container.lifeSpan - 1000}
-                    NumberAnimation { from:1; to: 0; duration: 500}
+                    NumberAnimation { from: 0; to: 1; duration: 500 }
+                    PauseAnimation { duration: container.lifeSpan - 1000 }
+                    NumberAnimation { from: 1; to: 0; duration: 500 }
                     ScriptAction { script: container.destroy(); }
                 }
             }
@@ -82,7 +83,7 @@ Rectangle {
     Text {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        text: "1000 particles"
+        text: qsTr("1000 particles")
         color: "white"
         MouseArea {
             anchors.fill: parent
@@ -92,7 +93,7 @@ Rectangle {
     Text {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        text: "1000 items"
+        text: qsTr("1000 items")
         color: "white"
         MouseArea {
             anchors.fill: parent
