@@ -168,6 +168,30 @@ Module {
     }
 
     Component {
+        name: "qint8"
+        extension: "Number"
+        accessSemantics: "value"
+    }
+
+    Component {
+        name: "quint8"
+        extension: "Number"
+        accessSemantics: "value"
+    }
+
+    Component {
+        name: "short"
+        extension: "Number"
+        accessSemantics: "value"
+    }
+
+    Component {
+        name: "ushort"
+        extension: "Number"
+        accessSemantics: "value"
+    }
+
+    Component {
         name: "int"
         extension: "Number"
         exports: ["QML/int 1.0"]
@@ -182,13 +206,13 @@ Module {
     }
 
     Component {
-       name: "qlonglong"
-       accessSemantics: "value"
+        name: "qlonglong"
+        accessSemantics: "value"
     }
 
     Component {
-      name: "qulonglong"
-      accessSemantics: "value"
+        name: "qulonglong"
+        accessSemantics: "value"
     }
 
     Component {

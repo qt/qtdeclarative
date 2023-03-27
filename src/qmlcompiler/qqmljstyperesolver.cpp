@@ -28,8 +28,14 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_nullType = builtinTypes.type(u"std::nullptr_t"_s).scope;
     m_realType = builtinTypes.type(u"double"_s).scope;
     m_floatType = builtinTypes.type(u"float"_s).scope;
-    m_intType = builtinTypes.type(u"int"_s).scope;
-    m_uintType = builtinTypes.type(u"uint"_s).scope;
+    m_int8Type = builtinTypes.type(u"qint8"_s).scope;
+    m_uint8Type = builtinTypes.type(u"quint8"_s).scope;
+    m_int16Type = builtinTypes.type(u"short"_s).scope;
+    m_uint16Type = builtinTypes.type(u"ushort"_s).scope;
+    m_int32Type = builtinTypes.type(u"int"_s).scope;
+    m_uint32Type = builtinTypes.type(u"uint"_s).scope;
+    m_int64Type = builtinTypes.type(u"qlonglong"_s).scope;
+    m_uint64Type = builtinTypes.type(u"qulonglong"_s).scope;
     m_boolType = builtinTypes.type(u"bool"_s).scope;
     m_stringType = builtinTypes.type(u"QString"_s).scope;
     m_stringListType = builtinTypes.type(u"QStringList"_s).scope;
@@ -147,7 +153,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeForConst(QV4::ReturnedValue rv) co
         return voidType();
 
     if (value.isInt32())
-        return intType();
+        return int32Type();
 
     if (value.isBoolean())
         return boolType();
@@ -187,9 +193,9 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
     case QSOperator::Op::BitXor:
     case QSOperator::Op::LShift:
     case QSOperator::Op::RShift:
-        return builtinType(intType());
+        return builtinType(int32Type());
     case QSOperator::Op::URShift:
-        return builtinType(uintType());
+        return builtinType(uint32Type());
     case QSOperator::Op::Add: {
         const auto leftContents = containedType(left);
         const auto rightContents = containedType(right);
@@ -198,7 +204,7 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
 
         const QQmlJSScope::ConstPtr result = merge(leftContents, rightContents);
         if (equals(result, boolType()))
-            return builtinType(intType());
+            return builtinType(int32Type());
         if (isNumeric(result))
             return builtinType(realType());
 
@@ -208,7 +214,7 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
     case QSOperator::Op::Mul:
     case QSOperator::Op::Exp: {
         const QQmlJSScope::ConstPtr result = merge(containedType(left), containedType(right));
-        return builtinType(equals(result, boolType()) ? intType() : realType());
+        return builtinType(equals(result, boolType()) ? int32Type() : realType());
     }
     case QSOperator::Op::Div:
     case QSOperator::Op::Mod:
@@ -229,14 +235,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::typeForArithmeticUnaryOperation(
     case UnaryOperator::Not:
         return builtinType(boolType());
     case UnaryOperator::Complement:
-        return builtinType(intType());
+        return builtinType(int32Type());
     case UnaryOperator::Plus:
         if (isIntegral(operand))
             return operand;
         Q_FALLTHROUGH();
     default:
         if (equals(containedType(operand), boolType()))
-            return builtinType(intType());
+            return builtinType(int32Type());
         break;
     }
 
@@ -255,13 +261,18 @@ bool QQmlJSTypeResolver::isNumeric(const QQmlJSRegisterContent &type) const
 
 bool QQmlJSTypeResolver::isIntegral(const QQmlJSRegisterContent &type) const
 {
-    return equals(containedType(type), m_intType) || equals(containedType(type), m_uintType);
+    return isIntegral(containedType(type));
+}
+
+bool QQmlJSTypeResolver::isIntegral(const QQmlJSScope::ConstPtr &type) const
+{
+    // Only types of length <= 32bit count as integral
+    return isSignedInteger(type) || isUnsignedInteger(type);
 }
 
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 {
-    return equals(type, m_intType) || equals(type, m_uintType)
-            || equals(type, m_realType) || equals(type, m_floatType)
+    return isNumeric(type)
             || equals(type, m_boolType) || equals(type, m_voidType) || equals(type, m_nullType)
             || equals(type, m_stringType) || equals(type, m_jsPrimitiveType);
 }
@@ -273,7 +284,23 @@ bool QQmlJSTypeResolver::isNumeric(const QQmlJSScope::ConstPtr &type) const
                 if (mode == QQmlJSScope::ExtensionNamespace)
                     return false;
                 return equals(scope, m_numberPrototype);
-            });
+    });
+}
+
+bool QQmlJSTypeResolver::isSignedInteger(const QQmlJSScope::ConstPtr &type) const
+{
+    // Only types of length <= 32bit count as integral
+    return equals(type, m_int8Type)
+            || equals(type, m_int16Type)
+            || equals(type, m_int32Type);
+}
+
+bool QQmlJSTypeResolver::isUnsignedInteger(const QQmlJSScope::ConstPtr &type) const
+{
+    // Only types of length <= 32bit count as integral
+    return equals(type, m_uint8Type)
+            || equals(type, m_uint16Type)
+            || equals(type, m_uint32Type);
 }
 
 QQmlJSScope::ConstPtr
@@ -623,21 +650,31 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (equals(b, jsValueType()) || equals(b, varType()))
         return b;
 
-    auto canConvert = [&](const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) {
-        return (equals(a, from) && equals(b, to)) || (equals(b, from) && equals(a, to));
+    const auto isInt32Compatible = [&](const QQmlJSScope::ConstPtr &type) {
+        return (isIntegral(type) && !equals(type, uint32Type())) || equals(type, boolType());
     };
+
+    if (isInt32Compatible(a) && isInt32Compatible(b))
+        return int32Type();
+
+    const auto isUInt32Compatible = [&](const QQmlJSScope::ConstPtr &type) {
+        return isUnsignedInteger(type) || equals(type, boolType());
+    };
+
+    if (isUInt32Compatible(a) && isUInt32Compatible(b))
+        return uint32Type();
 
     if (isNumeric(a) && isNumeric(b))
         return realType();
 
-    if (canConvert(boolType(), intType()))
-        return intType();
-    if (canConvert(boolType(), uintType()))
-        return uintType();
-    if (canConvert(intType(), stringType()))
+    const auto isStringCompatible = [&](const QQmlJSScope::ConstPtr &type) {
+        // TODO: We can losslessly coerce more types to string. Should we?
+        return isIntegral(type) || equals(type, stringType());
+    };
+
+    if (isStringCompatible(a) && isStringCompatible(b))
         return stringType();
-    if (canConvert(uintType(), stringType()))
-        return stringType();
+
     if (isPrimitive(a) && isPrimitive(b))
         return jsPrimitiveType();
 
@@ -765,6 +802,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     if (type->isListProperty())
         return m_listPropertyType;
 
+    if (type->scopeType() == QQmlJSScope::EnumScope)
+        return type->baseType();
+
     if (isPrimitive(type) || equals(type, m_jsValueType) || equals(type, m_urlType)
         || equals(type, m_dateTimeType) || equals(type, m_dateType) || equals(type, m_timeType)
         || equals(type, m_variantListType) || equals(type, m_variantMapType)
@@ -772,12 +812,6 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
         || equals(type, m_emptyListType) || equals(type, m_byteArrayType)) {
         return type;
     }
-
-    if (type->scopeType() == QQmlJSScope::EnumScope)
-        return m_intType;
-
-    if (isNumeric(type))
-        return m_realType;
 
     if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
         if (const QQmlJSScope::ConstPtr valueType = type->valueType()) {
@@ -944,7 +978,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
     for (const auto &enumeration : enums) {
         if (enumeration.name() == name) {
             *result = QQmlJSRegisterContent::create(
-                    storedType(intType()), enumeration, QString(),
+                    storedType(enumeration.type()), enumeration, QString(),
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
                                 : QQmlJSRegisterContent::ObjectEnum,
                     scope);
@@ -953,7 +987,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
 
         if (enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
-                    storedType(intType()), enumeration, name,
+                    storedType(enumeration.type()), enumeration, name,
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
                                 : QQmlJSRegisterContent::ObjectEnum,
                     scope);
@@ -1109,9 +1143,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::lengthProperty(
     QQmlJSMetaProperty prop;
     prop.setPropertyName(u"length"_s);
     prop.setTypeName(u"int"_s);
-    prop.setType(intType());
+    prop.setType(int32Type());
     prop.setIsWritable(isWritable);
-    return QQmlJSRegisterContent::create(intType(), prop, QQmlJSRegisterContent::Builtin, scope);
+    return QQmlJSRegisterContent::create(int32Type(), prop, QQmlJSRegisterContent::Builtin, scope);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr &type,
@@ -1252,7 +1286,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
         const auto enumeration = type.enumeration();
         if (!type.enumMember().isEmpty() || !enumeration.hasKey(name))
             return {};
-        return QQmlJSRegisterContent::create(storedType(intType()), enumeration, name,
+        return QQmlJSRegisterContent::create(storedType(enumeration.type()), enumeration, name,
                                              QQmlJSRegisterContent::ObjectEnum, type.scopeType());
     }
     if (type.isMethod()) {

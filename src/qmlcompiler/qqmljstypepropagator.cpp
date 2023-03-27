@@ -122,7 +122,7 @@ void QQmlJSTypePropagator::generate_LoadConst(int index)
 
 void QQmlJSTypePropagator::generate_LoadZero()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
 }
 
 void QQmlJSTypePropagator::generate_LoadTrue()
@@ -147,7 +147,7 @@ void QQmlJSTypePropagator::generate_LoadUndefined()
 
 void QQmlJSTypePropagator::generate_LoadInt(int)
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
 }
 
 void QQmlJSTypePropagator::generate_MoveConst(int constIndex, int destTemp)
@@ -669,8 +669,11 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
         return;
     }
 
-    if (m_typeResolver->isIntegral(m_state.accumulatorIn()))
-        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    const auto contained = m_typeResolver->containedType(m_state.accumulatorIn());
+    if (m_typeResolver->isSignedInteger(contained))
+        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
+    else if (m_typeResolver->isUnsignedInteger(contained))
+        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->uint32Type()));
     else
         addReadAccumulator(m_typeResolver->globalType(m_typeResolver->realType()));
 
@@ -699,8 +702,11 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
         return;
     }
 
-    if (m_typeResolver->isIntegral(indexRegister))
-        addReadRegister(index, m_typeResolver->globalType(m_typeResolver->intType()));
+    const auto contained = m_typeResolver->containedType(indexRegister);
+    if (m_typeResolver->isSignedInteger(contained))
+        addReadRegister(index, m_typeResolver->globalType(m_typeResolver->int32Type()));
+    else if (m_typeResolver->isUnsignedInteger(contained))
+        addReadRegister(index, m_typeResolver->globalType(m_typeResolver->uint32Type()));
     else
         addReadRegister(index, m_typeResolver->globalType(m_typeResolver->realType()));
 
@@ -1261,7 +1267,7 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
 
     const QQmlJSMetaMethod method = methods.front();
     const QQmlJSRegisterContent intType
-            = m_typeResolver->globalType(m_typeResolver->intType());
+            = m_typeResolver->globalType(m_typeResolver->int32Type());
     const QQmlJSRegisterContent stringType
             = m_typeResolver->globalType(m_typeResolver->stringType());
     const QQmlJSRegisterContent returnType
@@ -1370,17 +1376,25 @@ void QQmlJSTypePropagator::propagateStringArgCall(int argv)
 
     const QQmlJSScope::ConstPtr input = m_typeResolver->containedType(
                 m_state.registers[argv].content);
-    for (QQmlJSScope::ConstPtr targetType : {
-         m_typeResolver->intType(),
-         m_typeResolver->uintType(),
-         m_typeResolver->realType(),
-         m_typeResolver->floatType(),
-         m_typeResolver->boolType(),
-    }) {
-        if (m_typeResolver->equals(input, targetType)) {
-            addReadRegister(argv, m_typeResolver->globalType(targetType));
-            return;
-        }
+
+    if (m_typeResolver->equals(input, m_typeResolver->uint32Type())) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
+        return;
+    }
+
+    if (m_typeResolver->isIntegral(input)) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->int32Type()));
+        return;
+    }
+
+    if (m_typeResolver->isNumeric(input)) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
+        return;
+    }
+
+    if (m_typeResolver->equals(input, m_typeResolver->boolType())) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->boolType()));
+        return;
     }
 
     addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->stringType()));
@@ -1779,10 +1793,11 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
     };
 
     const auto isIntCompatible = [this](const QQmlJSRegisterContent &content) {
-        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
-        return contained->scopeType() == QQmlJSScope::EnumScope
-                || m_typeResolver->equals(contained, m_typeResolver->intType())
-                || m_typeResolver->equals(contained, m_typeResolver->uintType());
+        auto contained = m_typeResolver->containedType(content);
+        if (contained->scopeType() == QQmlJSScope::EnumScope)
+            contained = contained->baseType();
+        return m_typeResolver->isIntegral(contained)
+                && !m_typeResolver->equals(contained, m_typeResolver->uint32Type());
     };
 
     const auto accumulatorIn = m_state.accumulatorIn();
@@ -1797,7 +1812,7 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
             return;
         } else if (isNumericOrEnum(accumulatorIn) && isNumericOrEnum(lhsRegister)) {
             const auto targetType = isIntCompatible(accumulatorIn) && isIntCompatible(lhsRegister)
-                    ? m_typeResolver->globalType(m_typeResolver->intType())
+                    ? m_typeResolver->globalType(m_typeResolver->int32Type())
                     : m_typeResolver->globalType(m_typeResolver->realType());
             addReadRegister(lhs, targetType);
             addReadAccumulator(targetType);
@@ -1858,7 +1873,7 @@ void QQmlJSTypePropagator::generate_CmpEqInt(int lhsConst)
     recordEqualsIntType();
     Q_UNUSED(lhsConst)
     setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
-            QSOperator::Op::Equal, m_typeResolver->globalType(m_typeResolver->intType()),
+            QSOperator::Op::Equal, m_typeResolver->globalType(m_typeResolver->int32Type()),
             m_state.accumulatorIn())));
 }
 
@@ -1867,7 +1882,7 @@ void QQmlJSTypePropagator::generate_CmpNeInt(int lhsConst)
     recordEqualsIntType();
     Q_UNUSED(lhsConst)
     setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
-            QSOperator::Op::NotEqual, m_typeResolver->globalType(m_typeResolver->intType()),
+            QSOperator::Op::NotEqual, m_typeResolver->globalType(m_typeResolver->int32Type()),
             m_state.accumulatorIn())));
 }
 
@@ -2040,7 +2055,7 @@ void QQmlJSTypePropagator::generateBinaryConstArithmeticOperation(QSOperator::Op
 {
     const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
                 op, m_state.accumulatorIn(),
-                m_typeResolver->builtinType(m_typeResolver->intType()));
+                m_typeResolver->builtinType(m_typeResolver->int32Type()));
 
     checkConversion(m_state.accumulatorIn(), type);
     addReadAccumulator(type);

@@ -3043,10 +3043,10 @@ void tst_QmlCppCodegen::lengthAccessArraySequenceCompat()
     QCOMPARE(o->property("length").toInt(), 100);
 }
 
-static QList<QString> convertToStrings(const QList<int> &ints)
+static QList<QString> convertToStrings(const QList<qint64> &ints)
 {
     QList<QString> strings;
-    for (int i : ints)
+    for (qint64 i : ints)
         strings.append(QString::number(i));
     return strings;
 }
@@ -3059,12 +3059,41 @@ void tst_QmlCppCodegen::numbersInJsPrimitive()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 
-    const QList<int> zeroes  = {0, 0, 0, 0};
-    const QList<int> written = {39, 40, 41, 42};
-    const QList<int> stored  = {1334, 1335, 1336, 1337};
-    QStringList asStrings(4);
+    const QList<qint64> zeroes
+            = {0, 0, 0, 0, 0, 0, 0, 0};
+    const QList<qint64> written
+            = {35, 36, 37, 38, 39, 40, 41, 42};
+    const QList<qint64> writtenNegative
+            = {-35, 220, -37, 65498, -39, 4294967256, -41, 4294967254};
+    const QList<QList<qint64>> writtenShuffled = {
+        { -36, 219, -38, 65497, -40, 4294967255, -42, 4294967260 },
+        { -37, 218, -39, 65496, -41, 4294967254, -36, 4294967259 },
+        { -38, 217, -40, 65495, -42, 4294967260, -37, 4294967258 },
+        { -39, 216, -41, 65494, -36, 4294967259, -38, 4294967257 },
+        { -40, 215, -42, 65500, -37, 4294967258, -39, 4294967256 },
+        { -41, 214, -36, 65499, -38, 4294967257, -40, 4294967255 },
+        { -42, 220, -37, 65498, -39, 4294967256, -41, 4294967254 },
+        { -36, 219, -38, 65497, -40, 4294967255, -42, 4294967260 },
+    };
 
-    for (int i = 0; i < 4; ++i) {
+    const QList<qint64> stored
+            = {50, 51, 1332, 1333, 1334, 1335, 1336, 1337};
+    const QList<qint64> storedNegative
+            = {-50, 205, -1332, 64203, -1334, 4294965961, -1336, 4294965959};
+    const QList<QList<qint64>> storedShuffled = {
+        { -51, 204, -1333, 64202, -1335, 4294965960, -1337, 4294967245 },
+        { -52, 203, -1334, 64201, -1336, 4294965959, -51,   4294967244 },
+        { -53, 202, -1335, 64200, -1337, 4294967245, -52,   4294967243 },
+        { -54, 201, -1336, 64199, -51,   4294967244, -53,   4294967242 },
+        { -55, 200, -1337, 65485, -52,   4294967243, -54,   4294967241 },
+        { -56, 199, -51,   65484, -53,   4294967242, -55,   4294967240 },
+        { -57, 205, -52,   65483, -54,   4294967241, -56,   4294967239 },
+        { -51, 204, -53,   65482, -55,   4294967240, -57,   4294967245 },
+    };
+
+    QStringList asStrings(8);
+
+    for (int i = 0; i < 8; ++i) {
         QMetaObject::invokeMethod(
                     o.data(), "readValueAsString",
                     Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
@@ -3072,20 +3101,56 @@ void tst_QmlCppCodegen::numbersInJsPrimitive()
     QCOMPARE(asStrings, convertToStrings(zeroes));
 
     QMetaObject::invokeMethod(o.data(), "writeValues");
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 8; ++i) {
         QMetaObject::invokeMethod(
                     o.data(), "readValueAsString",
                     Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
     }
     QCOMPARE(asStrings, convertToStrings(written));
 
+    QMetaObject::invokeMethod(o.data(), "negateValues");
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(
+                    o.data(), "readValueAsString",
+                    Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+    }
+    QCOMPARE(asStrings, convertToStrings(writtenNegative));
+
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(o.data(), "shuffleValues");
+        for (int i = 0; i < 8; ++i) {
+            QMetaObject::invokeMethod(
+                        o.data(), "readValueAsString",
+                        Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+        }
+        QCOMPARE(asStrings, convertToStrings(writtenShuffled[i]));
+    }
+
     QMetaObject::invokeMethod(o.data(), "storeValues");
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 8; ++i) {
         QMetaObject::invokeMethod(
                     o.data(), "readValueAsString",
                     Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
     }
     QCOMPARE(asStrings, convertToStrings(stored));
+
+    QMetaObject::invokeMethod(o.data(), "negateValues");
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(
+                    o.data(), "readValueAsString",
+                    Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+    }
+    QCOMPARE(asStrings, convertToStrings(storedNegative));
+
+    for (int i = 0; i < 8; ++i) {
+        QMetaObject::invokeMethod(o.data(), "shuffleValues");
+        for (int i = 0; i < 8; ++i) {
+            QMetaObject::invokeMethod(
+                        o.data(), "readValueAsString",
+                        Q_RETURN_ARG(QString, asStrings[i]), Q_ARG(int, i));
+        }
+        QCOMPARE(asStrings, convertToStrings(storedShuffled[i]));
+    }
 }
 
 void tst_QmlCppCodegen::infinitiesToInt()

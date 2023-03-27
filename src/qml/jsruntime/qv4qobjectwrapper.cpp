@@ -602,7 +602,7 @@ void QObjectWrapper::setProperty(
         scope.engine->throwError(error);
         return;
     } else if (propType == QMetaType::fromType<int>() && value.isNumber()) {
-        PROPERTY_STORE(int, value.asDouble());
+        PROPERTY_STORE(int, value.toInt32());
     } else if (propType == QMetaType::fromType<qreal>() && value.isNumber()) {
         PROPERTY_STORE(qreal, qreal(value.asDouble()));
     } else if (propType == QMetaType::fromType<float>() && value.isNumber()) {
