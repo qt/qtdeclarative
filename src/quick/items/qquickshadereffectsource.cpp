@@ -231,12 +231,10 @@ QSGTextureProvider *QQuickShaderEffectSource::textureProvider() const
 
     The default value is \c{ShaderEffectSource.ClampToEdge}.
 
-    \list
-    \li ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
-    \li ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
-    \li ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
-    \li ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
-    \endlist
+    \value ShaderEffectSource.ClampToEdge           GL_CLAMP_TO_EDGE both horizontally and vertically
+    \value ShaderEffectSource.RepeatHorizontally    GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
+    \value ShaderEffectSource.RepeatVertically      GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
+    \value ShaderEffectSource.Repeat                GL_REPEAT both horizontally and vertically
 
     \note Some OpenGL ES 2 implementations do not support the GL_REPEAT
     wrap mode with non-power-of-two textures.
@@ -385,14 +383,12 @@ void QQuickShaderEffectSource::setTextureSize(const QSize &size)
     Modifying this property makes most sense when the item is used as a
     source texture of a \l ShaderEffect.
 
-    \list
-    \li ShaderEffectSource.RGBA8
-    \li ShaderEffectSource.RGBA16F
-    \li ShaderEffectSource.RGBA32F
-    \li ShaderEffectSource.Alpha - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \li ShaderEffectSource.RGB - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \li ShaderEffectSource.RGBA - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \endlist
+    \value ShaderEffectSource.RGBA8
+    \value ShaderEffectSource.RGBA16F
+    \value ShaderEffectSource.RGBA32F
+    \value ShaderEffectSource.Alpha     Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
+    \value ShaderEffectSource.RGB       Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
+    \value ShaderEffectSource.RGBA      Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
 */
 
 QQuickShaderEffectSource::Format QQuickShaderEffectSource::format() const
@@ -524,11 +520,9 @@ void QQuickShaderEffectSource::setRecursive(bool enabled)
     such as those specified by ShaderEffect. Mirroring has no effect on the UI representation of
     the ShaderEffectSource item itself.
 
-    \list
-    \li ShaderEffectSource.NoMirroring - No mirroring
-    \li ShaderEffectSource.MirrorHorizontally - The generated texture is flipped along X-axis.
-    \li ShaderEffectSource.MirrorVertically - The generated texture is flipped along Y-axis.
-    \endlist
+    \value ShaderEffectSource.NoMirroring           No mirroring
+    \value ShaderEffectSource.MirrorHorizontally    The generated texture is flipped along X-axis.
+    \value ShaderEffectSource.MirrorVertically      The generated texture is flipped along Y-axis.
 */
 
 QQuickShaderEffectSource::TextureMirroring QQuickShaderEffectSource::textureMirroring() const

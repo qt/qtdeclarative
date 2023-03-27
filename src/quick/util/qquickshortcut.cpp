@@ -319,10 +319,11 @@ void QQuickShortcut::setAutoRepeat(bool repeat)
     This property holds the \l{Qt::ShortcutContext}{shortcut context}.
 
     Supported values are:
-    \list
-    \li \c Qt.WindowShortcut (default) - The shortcut is active when its parent item is in an active top-level window.
-    \li \c Qt.ApplicationShortcut - The shortcut is active when one of the application's windows are active.
-    \endlist
+
+    \value Qt.WindowShortcut
+        (default) The shortcut is active when its parent item is in an active top-level window.
+    \value Qt.ApplicationShortcut
+        The shortcut is active when one of the application's windows are active.
 
     \qml
     Shortcut {

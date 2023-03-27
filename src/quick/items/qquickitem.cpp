@@ -568,14 +568,12 @@ void QQuickKeyNavigationAttached::setBacktab(QQuickItem *i)
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
 
-    \list
-    \li KeyNavigation.BeforeItem - process the key events before normal
-    item key processing.  If the event is used for key navigation, it will be accepted and will not
-    be passed on to the item.
-    \li KeyNavigation.AfterItem (default) - process the key events after normal item key
-    handling.  If the item accepts the key event it will not be
-    handled by the KeyNavigation attached property handler.
-    \endlist
+    \value KeyNavigation.BeforeItem     process the key events before normal
+        item key processing.  If the event is used for key navigation, it will be accepted and
+        will not be passed on to the item.
+    \value KeyNavigation.AfterItem      (default) process the key events after normal item key
+        handling.  If the item accepts the key event it will not be
+        handled by the KeyNavigation attached property handler.
 */
 QQuickKeyNavigationAttached::Priority QQuickKeyNavigationAttached::priority() const
 {
@@ -868,14 +866,11 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
 
-    \list
-    \li Keys.BeforeItem (default) - process the key events before normal
-    item key processing.  If the event is accepted it will not
-    be passed on to the item.
-    \li Keys.AfterItem - process the key events after normal item key
-    handling.  If the item accepts the key event it will not be
-    handled by the Keys attached property handler.
-    \endlist
+    \value Keys.BeforeItem  (default) process the key events before normal item key processing.
+                            If the event is accepted, it will not be passed on to the item.
+    \value Keys.AfterItem   process the key events after normal item key handling.  If the item
+                            accepts the key event, it will not be handled by the
+                            Keys attached property handler.
 
     \sa {Key Handling Priorities}
 */
@@ -9368,14 +9363,12 @@ void QQuickItemLayer::setMipmap(bool mipmap)
     Modifying this property makes most sense when the \a layer.effect is also
     specified.
 
-    \list
-    \li ShaderEffectSource.RGBA8
-    \li ShaderEffectSource.RGBA16F
-    \li ShaderEffectSource.RGBA32F
-    \li ShaderEffectSource.Alpha - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \li ShaderEffectSource.RGB - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \li ShaderEffectSource.RGBA - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \endlist
+    \value ShaderEffectSource.RGBA8
+    \value ShaderEffectSource.RGBA16F
+    \value ShaderEffectSource.RGBA32F
+    \value ShaderEffectSource.Alpha     Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
+    \value ShaderEffectSource.RGB       Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
+    \value ShaderEffectSource.RGBA      Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
 
     \sa {Item Layers}
  */
@@ -9496,12 +9489,10 @@ void QQuickItemLayer::setSize(const QSize &size)
     Modifying this property makes most sense when the \a layer.effect is
     specified.
 
-    \list
-    \li ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
-    \li ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
-    \li ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
-    \li ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
-    \endlist
+    \value ShaderEffectSource.ClampToEdge       GL_CLAMP_TO_EDGE both horizontally and vertically
+    \value ShaderEffectSource.RepeatHorizontally GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
+    \value ShaderEffectSource.RepeatVertically  GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
+    \value ShaderEffectSource.Repeat            GL_REPEAT both horizontally and vertically
 
     \note Some OpenGL ES 2 implementations do not support the GL_REPEAT
     wrap mode with non-power-of-two textures.
@@ -9531,11 +9522,9 @@ void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
     such as those specified by ShaderEffect. If no effect is specified for the layered
     item, mirroring has no effect on the UI representation of the item.
 
-    \list
-    \li ShaderEffectSource.NoMirroring - No mirroring
-    \li ShaderEffectSource.MirrorHorizontally - The generated texture is flipped along X-axis.
-    \li ShaderEffectSource.MirrorVertically - The generated texture is flipped along Y-axis.
-    \endlist
+    \value ShaderEffectSource.NoMirroring           No mirroring
+    \value ShaderEffectSource.MirrorHorizontally    The generated texture is flipped along X-axis.
+    \value ShaderEffectSource.MirrorVertically      The generated texture is flipped along Y-axis.
  */
 
 void QQuickItemLayer::setTextureMirroring(QQuickShaderEffectSource::TextureMirroring mirroring)

@@ -428,13 +428,11 @@ QQmlComponent::~QQmlComponent()
     This property holds the status of component loading. The status can be one of the
     following:
 
-    \list
-    \li \c{Component.Null} - no data is available for the component
-    \li \c{Component.Ready} - the component has been loaded, and can be used to create instances.
-    \li \c{Component.Loading} - the component is currently being loaded
-    \li \c{Component.Error} - an error occurred while loading the component.
+    \value Component.Null       no data is available for the component
+    \value Component.Ready      the component has been loaded, and can be used to create instances.
+    \value Component.Loading    the component is currently being loaded
+    \value Component.Error      an error occurred while loading the component.
         Calling \l errorString() will provide a human-readable description of any errors.
-    \endlist
  */
 
 /*!

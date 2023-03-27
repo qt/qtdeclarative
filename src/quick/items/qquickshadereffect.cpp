@@ -641,11 +641,9 @@ void QQuickShaderEffect::setMesh(const QVariant &mesh)
 
     This property defines which sides of the item should be visible.
 
-    \list
-    \li ShaderEffect.NoCulling - Both sides are visible
-    \li ShaderEffect.BackFaceCulling - only front side is visible
-    \li ShaderEffect.FrontFaceCulling - only back side is visible
-    \endlist
+    \value ShaderEffect.NoCulling           Both sides are visible
+    \value ShaderEffect.BackFaceCulling     only the front side is visible
+    \value ShaderEffect.FrontFaceCulling    only the back side is visible
 
     The default is NoCulling.
 */
@@ -700,11 +698,9 @@ void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 
     This property tells the current status of the shaders.
 
-    \list
-    \li ShaderEffect.Compiled - the shader program was successfully compiled and linked.
-    \li ShaderEffect.Uncompiled - the shader program has not yet been compiled.
-    \li ShaderEffect.Error - the shader program failed to compile or link.
-    \endlist
+    \value ShaderEffect.Compiled    the shader program was successfully compiled and linked.
+    \value ShaderEffect.Uncompiled  the shader program has not yet been compiled.
+    \value ShaderEffect.Error       the shader program failed to compile or link.
 
     When setting the fragment or vertex shader source code, the status will
     become Uncompiled. The first time the ShaderEffect is rendered with new

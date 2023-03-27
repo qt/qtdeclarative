@@ -162,12 +162,8 @@ void QQuickDoubleValidator::resetLocaleName()
 
     The possible values for this property are:
 
-    \list
-    \li DoubleValidator.StandardNotation
-    \li DoubleValidator.ScientificNotation (default)
-    \endlist
-
-    If this property is set to DoubleValidator.ScientificNotation, the written number may have an exponent part (e.g. 1.5E-2).
+    \value DoubleValidator.StandardNotation     only decimal numbers with optional sign (e.g. \c -0.015)
+    \value DoubleValidator.ScientificNotation   (default) the written number may have an exponent part (e.g. \c 1.5E-2)
 */
 
 /*!
