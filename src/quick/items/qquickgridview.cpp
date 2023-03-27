@@ -1467,36 +1467,32 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     Valid values for \c highlightRangeMode are:
 
-    \list
-    \li GridView.ApplyRange - the view attempts to maintain the highlight within the range.
+    \value GridView.ApplyRange              the view attempts to maintain the highlight within the range.
        However, the highlight can move outside of the range at the ends of the view or due
        to mouse interaction.
-    \li GridView.StrictlyEnforceRange - the highlight never moves outside of the range.
+    \value GridView.StrictlyEnforceRange    the highlight never moves outside of the range.
        The current item changes if a keyboard or mouse action would cause the highlight to move
        outside of the range.
-    \li GridView.NoHighlightRange - this is the default value.
-    \endlist
+    \value GridView.NoHighlightRange        the default value
 */
 
 
 /*!
-  \qmlproperty enumeration QtQuick::GridView::layoutDirection
-  This property holds the layout direction of the grid.
+    \qmlproperty enumeration QtQuick::GridView::layoutDirection
+    This property holds the layout direction of the grid.
 
     Possible values:
 
-  \list
-  \li Qt.LeftToRight (default) - Items will be laid out starting in the top, left corner. The flow is
-  dependent on the \l GridView::flow property.
-  \li Qt.RightToLeft - Items will be laid out starting in the top, right corner. The flow is dependent
-  on the \l GridView::flow property.
-  \endlist
+    \value Qt.LeftToRight   (default) Items will be laid out starting in the top, left corner. The flow is
+                            dependent on the \l GridView::flow property.
+    \value Qt.RightToLeft   Items will be laid out starting in the top, right corner. The flow is dependent
+                            on the \l GridView::flow property.
 
-  \b Note: If GridView::flow is set to GridView.FlowLeftToRight, this is not to be confused if
-  GridView::layoutDirection is set to Qt.RightToLeft. The GridView.FlowLeftToRight flow value simply
-  indicates that the flow is horizontal.
+    \b Note: If GridView::flow is set to GridView.FlowLeftToRight, this is not to be confused if
+    GridView::layoutDirection is set to Qt.RightToLeft. The GridView.FlowLeftToRight flow value simply
+    indicates that the flow is horizontal.
 
-  \sa GridView::effectiveLayoutDirection, GridView::verticalLayoutDirection
+    \sa GridView::effectiveLayoutDirection, GridView::verticalLayoutDirection
 */
 
 
@@ -1517,10 +1513,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
   Possible values:
 
-  \list
-  \li GridView.TopToBottom (default) - Items are laid out from the top of the view down to the bottom of the view.
-  \li GridView.BottomToTop - Items are laid out from the bottom of the view up to the top of the view.
-  \endlist
+  \value GridView.TopToBottom   (default) Items are laid out from the top of the view down to the bottom of the view.
+  \value GridView.BottomToTop   Items are laid out from the bottom of the view up to the top of the view.
 
   \sa GridView::layoutDirection
 */
@@ -1628,10 +1622,8 @@ void QQuickGridView::setHighlightMoveDuration(int duration)
 
     Possible values:
 
-    \list
-    \li GridView.FlowLeftToRight (default) - Items are laid out from left to right, and the view scrolls vertically
-    \li GridView.FlowTopToBottom - Items are laid out from top to bottom, and the view scrolls horizontally
-    \endlist
+    \value GridView.FlowLeftToRight (default) Items are laid out from left to right, and the view scrolls vertically
+    \value GridView.FlowTopToBottom Items are laid out from top to bottom, and the view scrolls horizontally
 */
 QQuickGridView::Flow QQuickGridView::flow() const
 {
@@ -1706,15 +1698,12 @@ void QQuickGridView::setCellHeight(qreal cellHeight)
     This property determines how the view scrolling will settle following a drag or flick.
     The possible values are:
 
-    \list
-    \li GridView.NoSnap (default) - the view stops anywhere within the visible area.
-    \li GridView.SnapToRow - the view settles with a row (or column for \c GridView.FlowTopToBottom flow)
-    aligned with the start of the view.
-    \li GridView.SnapOneRow - the view will settle no more than one row (or column for \c GridView.FlowTopToBottom flow)
-    away from the first visible row at the time the mouse button is released.
-    This mode is particularly useful for moving one page at a time.
-    \endlist
-
+    \value GridView.NoSnap      (default) the view stops anywhere within the visible area.
+    \value GridView.SnapToRow   the view settles with a row (or column for \c GridView.FlowTopToBottom flow)
+                                aligned with the start of the view.
+    \value GridView.SnapOneRow  the view will settle no more than one row (or column for \c GridView.FlowTopToBottom flow)
+                                away from the first visible row at the time the mouse button is released.
+                                This mode is particularly useful for moving one page at a time.
 */
 QQuickGridView::SnapMode QQuickGridView::snapMode() const
 {
@@ -2610,18 +2599,15 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     Positions the view such that the \a index is at the position specified by
     \a mode:
 
-    \list
-    \li GridView.Beginning - position item at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
-    \li GridView.Center - position item in the center of the view.
-    \li GridView.End - position item at bottom (or right for horizontal orientation) of the view.
-    \li GridView.Visible - if any part of the item is visible then take no action, otherwise
-    bring the item into view.
-    \li GridView.Contain - ensure the entire item is visible.  If the item is larger than
-    the view the item is positioned at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
-    \li GridView.SnapPosition - position the item at \l preferredHighlightBegin.  This mode
-    is only valid if \l highlightRangeMode is StrictlyEnforceRange or snapping is enabled
-    via \l snapMode.
-    \endlist
+    \value GridView.Beginning       position item at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
+    \value GridView.Center          position item in the center of the view.
+    \value GridView.End             position item at bottom (or right for horizontal orientation) of the view.
+    \value GridView.Visible         if any part of the item is visible then take no action, otherwise
+                                    bring the item into view.
+    \value GridView.Contain         ensure the entire item is visible. If the item is larger than the view, the item
+                                    is positioned at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
+    \value GridView.SnapPosition    position the item at \l preferredHighlightBegin.  This mode is only valid if
+                                    \l highlightRangeMode is \c StrictlyEnforceRange or snapping is enabled via \l snapMode.
 
     If positioning the view at the index would cause empty space to be displayed at
     the beginning or end of the view, the view will be positioned at the boundary.

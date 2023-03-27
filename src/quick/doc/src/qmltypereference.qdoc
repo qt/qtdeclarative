@@ -189,68 +189,32 @@ available when you import \c QtQuick.
     Font weighting is classified on a scale from 0 to 99, where a weight of 0 is ultralight,
     and 99 is extremely black. The following values are supported:
 
-    \table
-    \row
-        \li \c Font.Thin
-        \li 0
-    \row
-        \li \c Font.ExtraLight
-        \li 12
-    \row
-        \li \c Font.Light
-        \li 25
-    \row
-        \li \c Font.Normal
-        \li 50
-    \row
-        \li \c Font.Medium
-        \li 57
-    \row
-        \li \c Font.DemiBold
-        \li 63
-    \row
-        \li \c Font.Bold
-        \li 75
-    \row
-        \li \c Font.ExtraBold
-        \li 81
-    \row
-        \li \c Font.Black
-        \li 87
-    \endtable
+    \value Font.Thin        0
+    \value Font.ExtraLight  12
+    \value Font.Light       25
+    \value Font.Normal      50
+    \value Font.Medium      57
+    \value Font.DemiBold    63
+    \value Font.Bold        75
+    \value Font.ExtraBold   81
+    \value Font.Black       87
 
     Capitalization supports the following values:
 
-    \table
-    \row
-        \li \c Font.MixedCase
-        \li No capitalization change is applied.
-    \row
-        \li \c Font.AllUppercase
-        \li Alters the text to be rendered in all uppercase type.
-    \row
-        \li \c Font.AllLowercase
-        \li Alters the text to be rendered in all lowercase type.
-    \row
-        \li \c Font.SmallCaps
-        \li Alters the text to be rendered in small-caps type.
-    \row
-        \li \c Font.Capitalize
-        \li Alters the text to be rendered with the first character of each word as an uppercase character.
-    \endtable
+    \value Font.MixedCase       No capitalization change is applied.
+    \value Font.AllUppercase    Alters the text to be rendered in all uppercase type.
+    \value Font.AllLowercase    Alters the text to be rendered in all lowercase type.
+    \value Font.SmallCaps       Alters the text to be rendered in small-caps type.
+    \value Font.Capitalize      Alters the text to be rendered with the first character of each word as an uppercase character.
 
     Setting the hinting preference only has an effect when using the "NativeRendering" render type.
     The property supports the following values:
 
-    \list
-    \value Font.PreferDefaultHinting - Use the default hinting level for the target platform.
-    \value Font.PreferNoHinting - If possible, render text without hinting the outlines
-           of the glyphs.
-    \value Font.PreferVerticalHinting - If possible, render text with no horizontal hinting,
-           but align glyphs to the pixel grid in the vertical direction.
-    \value Font.PreferFullHinting - If possible, render text with hinting in both horizontal and
-           vertical directions.
-    \endlist
+    \value Font.PreferDefaultHinting    Use the default hinting level for the target platform.
+    \value Font.PreferNoHinting         If possible, render text without hinting the outlines of the glyphs.
+    \value Font.PreferVerticalHinting   If possible, render text with no horizontal hinting,
+                                        but align glyphs to the pixel grid in the vertical direction.
+    \value Font.PreferFullHinting       If possible, render text with hinting in both horizontal and vertical directions.
 
     \sa {QML Basic Types}
 */

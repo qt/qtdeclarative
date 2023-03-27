@@ -275,11 +275,9 @@ QColor QQuickSystemPalette::placeholderText() const
 
     The color group of the palette. This can be one of:
 
-    \list
-    \li SystemPalette.Active (default)
-    \li SystemPalette.Inactive
-    \li SystemPalette.Disabled
-    \endlist
+    \value SystemPalette.Active     (default) QPalette::Active
+    \value SystemPalette.Inactive   QPalette::Inactive
+    \value SystemPalette.Disabled   QPalette::Disabled
 
     \sa QPalette::ColorGroup
 */

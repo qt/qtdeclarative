@@ -155,12 +155,11 @@ void QQuickTextInput::setText(const QString &s)
     Override the default rendering type for this component.
 
     Supported render types are:
-    \list
-    \li Text.QtRendering
-    \li Text.NativeRendering
-    \endlist
 
-    Select Text.NativeRendering if you prefer text to look native on the target platform and do
+    \value TextInput.QtRendering     Text is rendered using a scalable distance field for each glyph.
+    \value TextInput.NativeRendering Text is rendered using a platform-specific technique.
+
+    Select \c TextInput.NativeRendering if you prefer text to look native on the target platform and do
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
@@ -259,17 +258,16 @@ QString QQuickTextInputPrivate::realText() const
 
     The requested weight of the font. The weight requested must be an integer
     between 1 and 1000, or one of the predefined values:
-    \list
-    \li Font.Thin
-    \li Font.Light
-    \li Font.ExtraLight
-    \li Font.Normal - the default
-    \li Font.Medium
-    \li Font.DemiBold
-    \li Font.Bold
-    \li Font.ExtraBold
-    \li Font.Black
-    \endlist
+
+    \value Font.Thin        100
+    \value Font.ExtraLight  200
+    \value Font.Light       300
+    \value Font.Normal      400 (default)
+    \value Font.Medium      500
+    \value Font.DemiBold    600
+    \value Font.Bold        700
+    \value Font.ExtraBold   800
+    \value Font.Black       900
 
     \qml
     TextInput { text: "Hello"; font.weight: Font.DemiBold }
@@ -333,13 +331,12 @@ QString QQuickTextInputPrivate::realText() const
 
     Sets the capitalization for the text.
 
-    \list
-    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
-    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
-    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
-    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
-    \endlist
+    \value Font.MixedCase       the normal case: no capitalization change is applied
+    \value Font.AllUppercase    alters the text to be rendered in all uppercase type
+    \value Font.AllLowercase    alters the text to be rendered in all lowercase type
+    \value Font.SmallCaps       alters the text to be rendered in small-caps type
+    \value Font.Capitalize      alters the text to be rendered with the first character of
+                                each word as an uppercase character
 
     \qml
     TextInput { text: "Hello"; font.capitalization: Font.AllLowercase }
@@ -356,23 +353,21 @@ QString QQuickTextInputPrivate::realText() const
 
     \note This property only has an effect when used together with render type TextInput.NativeRendering.
 
-    \list
-    \value Font.PreferDefaultHinting - Use the default hinting level for the target platform.
-    \value Font.PreferNoHinting - If possible, render text without hinting the outlines
+    \value Font.PreferDefaultHinting    Use the default hinting level for the target platform.
+    \value Font.PreferNoHinting         If possible, render text without hinting the outlines
            of the glyphs. The text layout will be typographically accurate, using the same metrics
            as are used e.g. when printing.
-    \value Font.PreferVerticalHinting - If possible, render text with no horizontal hinting,
+    \value Font.PreferVerticalHinting   If possible, render text with no horizontal hinting,
            but align glyphs to the pixel grid in the vertical direction. The text will appear
            crisper on displays where the density is too low to give an accurate rendering
            of the glyphs. But since the horizontal metrics of the glyphs are unhinted, the text's
            layout will be scalable to higher density devices (such as printers) without impacting
            details such as line breaks.
-    \value Font.PreferFullHinting - If possible, render text with hinting in both horizontal and
+    \value Font.PreferFullHinting       If possible, render text with hinting in both horizontal and
            vertical directions. The text will be altered to optimize legibility on the target
            device, but since the metrics will depend on the target size of the text, the positions
            of glyphs, line breaks, and other typographical detail will not scale, meaning that a
            text layout may look different on devices with different pixel densities.
-    \endlist
 
     \qml
     TextInput { text: "Hello"; renderType: TextInput.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
@@ -688,12 +683,17 @@ void QQuickTextInput::setVAlign(QQuickTextInput::VAlignment alignment)
     Set this property to wrap the text to the TextInput item's width.
     The text will only wrap if an explicit width has been set.
 
-    \list
-    \li TextInput.NoWrap - no wrapping will be performed. If the text contains insufficient newlines, then implicitWidth will exceed a set width.
-    \li TextInput.WordWrap - wrapping is done on word boundaries only. If a word is too long, implicitWidth will exceed a set width.
-    \li TextInput.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
-    \li TextInput.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
-    \endlist
+    \value TextInput.NoWrap
+       (default) no wrapping will be performed. If the text contains
+       insufficient newlines, then \l contentWidth will exceed a set width.
+    \value TextInput.WordWrap
+        wrapping is done on word boundaries only. If a word is too long,
+        \l contentWidth will exceed a set width.
+    \value TextInput.WrapAnywhere
+        wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \value TextInput.Wrap
+        if possible, wrapping occurs at a word boundary; otherwise it will occur
+        at the appropriate point on the line, even in the middle of a word.
 
     The default is TextInput.NoWrap. If you set a width, consider using TextInput.Wrap.
 */
@@ -1236,14 +1236,13 @@ Qt::InputMethodHints QQuickTextInputPrivate::effectiveInputMethodHints() const
     \qmlproperty enumeration QtQuick::TextInput::echoMode
 
     Specifies how the text should be displayed in the TextInput.
-    \list
-    \li TextInput.Normal - Displays the text as it is. (Default)
-    \li TextInput.Password - Displays platform-dependent password mask
-    characters instead of the actual characters.
-    \li TextInput.NoEcho - Displays nothing.
-    \li TextInput.PasswordEchoOnEdit - Displays characters as they are entered
-    while editing, otherwise identical to \c TextInput.Password.
-    \endlist
+
+    \value TextInput.Normal     Displays the text as it is. (Default)
+    \value TextInput.Password   Displays platform-dependent password mask
+                                characters instead of the actual characters.
+    \value TextInput.NoEcho     Displays nothing.
+    \value TextInput.PasswordEchoOnEdit Displays characters as they are entered
+                                while editing, otherwise identical to \c TextInput.Password.
 */
 QQuickTextInput::EchoMode QQuickTextInput::echoMode() const
 {
@@ -1284,40 +1283,31 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
 
     Flags that alter behaviour are:
 
-    \list
-    \li Qt.ImhHiddenText - Characters should be hidden, as is typically used when entering passwords.
-            This is automatically set when setting echoMode to \c TextInput.Password.
-    \li Qt.ImhSensitiveData - Typed text should not be stored by the active input method
-            in any persistent storage like predictive user dictionary.
-    \li Qt.ImhNoAutoUppercase - The input method should not try to automatically switch to upper case
-            when a sentence ends.
-    \li Qt.ImhPreferNumbers - Numbers are preferred (but not required).
-    \li Qt.ImhPreferUppercase - Upper case letters are preferred (but not required).
-    \li Qt.ImhPreferLowercase - Lower case letters are preferred (but not required).
-    \li Qt.ImhNoPredictiveText - Do not use predictive text (i.e. dictionary lookup) while typing.
-
-    \li Qt.ImhDate - The text editor functions as a date field.
-    \li Qt.ImhTime - The text editor functions as a time field.
-    \li Qt.ImhMultiLine - The text editor doesn't close software input keyboard when Return or Enter key is pressed (since QtQuick 2.4).
-    \endlist
+    \value Qt.ImhHiddenText         Characters should be hidden, as is typically used when entering passwords.
+    \value Qt.ImhSensitiveData      Typed text should not be stored by the active input method
+                                    in any persistent storage like predictive user dictionary.
+    \value Qt.ImhNoAutoUppercase    The input method should not try to automatically switch to
+                                    upper case when a sentence ends.
+    \value Qt.ImhPreferNumbers      Numbers are preferred (but not required).
+    \value Qt.ImhPreferUppercase    Upper case letters are preferred (but not required).
+    \value Qt.ImhPreferLowercase    Lower case letters are preferred (but not required).
+    \value Qt.ImhNoPredictiveText   Do not use predictive text (i.e. dictionary lookup) while typing.
+    \value Qt.ImhDate               The text editor functions as a date field.
+    \value Qt.ImhTime               The text editor functions as a time field.
 
     Flags that restrict input (exclusive flags) are:
 
-    \list
-    \li Qt.ImhDigitsOnly - Only digits are allowed.
-    \li Qt.ImhFormattedNumbersOnly - Only number input is allowed. This includes decimal point and minus sign.
-    \li Qt.ImhUppercaseOnly - Only upper case letter input is allowed.
-    \li Qt.ImhLowercaseOnly - Only lower case letter input is allowed.
-    \li Qt.ImhDialableCharactersOnly - Only characters suitable for phone dialing are allowed.
-    \li Qt.ImhEmailCharactersOnly - Only characters suitable for email addresses are allowed.
-    \li Qt.ImhUrlCharactersOnly - Only characters suitable for URLs are allowed.
-    \endlist
+    \value Qt.ImhDigitsOnly         Only digits are allowed.
+    \value Qt.ImhFormattedNumbersOnly Only number input is allowed. This includes decimal point and minus sign.
+    \value Qt.ImhUppercaseOnly      Only upper case letter input is allowed.
+    \value Qt.ImhLowercaseOnly      Only lower case letter input is allowed.
+    \value Qt.ImhDialableCharactersOnly Only characters suitable for phone dialing are allowed.
+    \value Qt.ImhEmailCharactersOnly Only characters suitable for email addresses are allowed.
+    \value Qt.ImhUrlCharactersOnly  Only characters suitable for URLs are allowed.
 
     Masks:
 
-    \list
-    \li Qt.ImhExclusiveInputMask - This mask yields nonzero if any of the exclusive flags are used.
-    \endlist
+    \value Qt.ImhExclusiveInputMask This mask yields nonzero if any of the exclusive flags are used.
 */
 
 Qt::InputMethodHints QQuickTextInput::inputMethodHints() const
@@ -2439,10 +2429,8 @@ void QQuickTextInput::setSelectByMouse(bool on)
 
     Specifies how text should be selected using a mouse.
 
-    \list
-    \li TextInput.SelectCharacters - The selection is updated with individual characters. (Default)
-    \li TextInput.SelectWords - The selection is updated with whole words.
-    \endlist
+    \value TextInput.SelectCharacters    (default) The selection is updated with individual characters.
+    \value TextInput.SelectWords         The selection is updated with whole words.
 
     This property only applies when \l selectByMouse is true.
 */
@@ -2582,13 +2570,12 @@ void QQuickTextInput::moveCursorSelection(int position)
     The selection mode specifies whether the selection is updated on a per character or a per word
     basis.  If not specified the selection mode will default to \c {TextInput.SelectCharacters}.
 
-    \list
-    \li TextInput.SelectCharacters - Sets either the selectionStart or selectionEnd (whichever was at
-    the previous cursor position) to the specified position.
-    \li TextInput.SelectWords - Sets the selectionStart and selectionEnd to include all
-    words between the specified position and the previous cursor position.  Words partially in the
-    range are included.
-    \endlist
+    \value TextInput.SelectCharacters
+        Sets either the selectionStart or selectionEnd (whichever was at the previous cursor position)
+        to the specified position.
+    \value TextInput.SelectWords
+        Sets the selectionStart and selectionEnd to include all words between the specified position
+        and the previous cursor position. Words partially in the range are included.
 
     For example, take this sequence of calls:
 

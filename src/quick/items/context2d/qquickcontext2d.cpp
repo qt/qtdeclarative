@@ -1325,29 +1325,81 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_globalAlpha(const QV4::Function
 
 /*!
     \qmlproperty string QtQuick::Context2D::globalCompositeOperation
-     Holds the current the current composition operation, from the list below:
-     \list
-     \li source-atop      - A atop B. Display the source image wherever both images are opaque.
-                           Display the destination image wherever the destination image is opaque but the source image is transparent.
-                           Display transparency elsewhere.
-     \li source-in        - A in B. Display the source image wherever both the source image and destination image are opaque.
-                           Display transparency elsewhere.
-     \li source-out       - A out B. Display the source image wherever the source image is opaque and the destination image is transparent.
-                           Display transparency elsewhere.
-     \li source-over      - (default) A over B. Display the source image wherever the source image is opaque.
-                           Display the destination image elsewhere.
-     \li destination-atop - B atop A. Same as source-atop but using the destination image instead of the source image and vice versa.
-     \li destination-in   - B in A. Same as source-in but using the destination image instead of the source image and vice versa.
-     \li destination-out  - B out A. Same as source-out but using the destination image instead of the source image and vice versa.
-     \li destination-over - B over A. Same as source-over but using the destination image instead of the source image and vice versa.
-     \li lighter          - A plus B. Display the sum of the source image and destination image, with color values approaching 255 (100%) as a limit.
-     \li copy             - A (B is ignored). Display the source image instead of the destination image.
-     \li xor              - A xor B. Exclusive OR of the source image and destination image.
-     \endlist
+    Holds the current the current composition operation. Allowed operations are:
 
-     Additionally, this property also accepts the compositon modes listed in QPainter::CompositionMode. According to the W3C standard, these
-     extension composition modes are provided as "vendorName-operationName" syntax, for example: QPainter::CompositionMode_Exclusion is provided as
-     "qt-exclusion".
+    \value "source-atop"
+        QPainter::CompositionMode_SourceAtop
+        A atop B. Display the source image wherever both images are opaque.
+        Display the destination image wherever the destination image is opaque
+        but the source image is transparent. Display transparency elsewhere.
+    \value "source-in"
+        QPainter::CompositionMode_SourceIn
+        A in B. Display the source image wherever both the source image and
+        destination image are opaque. Display transparency elsewhere.
+    \value "source-out"
+        QPainter::CompositionMode_SourceOut
+        A out B. Display the source image wherever the source image is opaque
+        and the destination image is transparent. Display transparency elsewhere.
+    \value "source-over"
+        QPainter::CompositionMode_SourceOver (default)
+        A over B. Display the source image wherever the source image is opaque.
+        Display the destination image elsewhere.
+    \value "destination-atop"
+        QPainter::CompositionMode_DestinationAtop
+        B atop A. Same as \c source-atop but using the destination image instead
+        of the source image and vice versa.
+    \value "destination-in"
+        QPainter::CompositionMode_DestinationIn
+        B in A. Same as \c source-in but using the destination image instead of
+        the source image and vice versa.
+    \value "destination-out"
+        QPainter::CompositionMode_DestinationOut
+        B out A. Same as \c source-out but using the destination image instead
+        of the source image and vice versa.
+    \value "destination-over"
+        QPainter::CompositionMode_DestinationOver
+        B over A. Same as \c source-over but using the destination image
+        instead of the source image and vice versa.
+    \value "lighter"
+        QPainter::CompositionMode_Plus
+        A plus B. Display the sum of the source image and destination image,
+        with color values approaching \c 255 (100%) as a limit.
+    \value "copy"
+        QPainter::CompositionMode_Source
+        A (B is ignored). Display the source image instead of the destination image.
+    \value "xor"
+        QPainter::CompositionMode_Xor
+        A xor B. Exclusive OR of the source image and destination image.
+    \value "qt-clear"
+        QPainter::CompositionMode_Clear
+    \value "qt-destination"
+        QPainter::CompositionMode_Destination
+    \value "qt-multiply"
+        QPainter::CompositionMode_Multiply
+    \value "qt-screen"
+        QPainter::CompositionMode_Screen
+    \value "qt-overlay"
+        QPainter::CompositionMode_Overlay
+    \value "qt-darken"
+        QPainter::CompositionMode_Darken
+    \value "qt-lighten"
+        QPainter::CompositionMode_Lighten
+    \value "qt-color-dodge"
+        QPainter::CompositionMode_ColorDodge
+    \value "qt-color-burn"
+        QPainter::CompositionMode_ColorBurn
+    \value "qt-hard-light"
+        QPainter::CompositionMode_HardLight
+    \value "qt-soft-light"
+        QPainter::CompositionMode_SoftLight
+    \value "qt-difference"
+        QPainter::CompositionMode_Difference
+    \value "qt-exclusion"
+        QPainter::CompositionMode_Exclusion
+
+    In compliance with the W3C standard, the extended composition modes beyond
+    the required modes are provided as "vendorName-operationName" syntax, for
+    example: QPainter::CompositionMode_Exclusion is provided as "qt-exclusion".
 */
 QV4::ReturnedValue QQuickJSContext2D::method_get_globalCompositeOperation(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
 {
@@ -1458,18 +1510,19 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(const QV4::FunctionOb
    }
    RETURN_UNDEFINED();
 }
+
 /*!
     \qmlproperty enumeration QtQuick::Context2D::fillRule
-     Holds the current fill rule used for filling shapes. The following fill rules are supported:
-     \list
-     \li Qt.OddEvenFill
-     \li Qt.WindingFill
-     \endlist
-     Note: Unlike the QPainterPath, the Canvas API uses the winding fill as the default fill rule.
-     The fillRule property is part of the context rendering state.
+    Holds the current fill rule used for filling shapes. The following fill rules are supported:
 
-     \sa fillStyle
- */
+    \value Qt.OddEvenFill  Qt::OddEvenFill
+    \value Qt.WindingFill  (default) Qt::WindingFill
+
+    \note Unlike QPainterPath, the Canvas API uses the winding fill as the default fill rule.
+    The fillRule property is part of the context rendering state.
+
+    \sa fillStyle
+*/
 QV4::ReturnedValue QQuickJSContext2D::method_get_fillRule(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
 {
     QV4::Scope scope(b);
@@ -1723,48 +1776,49 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(cons
 
 }
 /*!
-  \qmlmethod variant QtQuick::Context2D::createPattern(color color, enumeration patternMode)
-  This is a overload function.
-  Returns a CanvasPattern object that uses the given \a color and \a patternMode.
-  The valid pattern modes are:
-    \list
-    \li Qt.SolidPattern
-    \li Qt.Dense1Pattern
-    \li Qt.Dense2Pattern
-    \li Qt.Dense3Pattern
-    \li Qt.Dense4Pattern
-    \li Qt.Dense5Pattern
-    \li Qt.Dense6Pattern
-    \li Qt.Dense7Pattern
-    \li Qt.HorPattern
-    \li Qt.VerPattern
-    \li Qt.CrossPattern
-    \li Qt.BDiagPattern
-    \li Qt.FDiagPattern
-    \li Qt.DiagCrossPattern
-\endlist
+    \qmlmethod variant QtQuick::Context2D::createPattern(color color, enumeration patternMode)
+    This is an overloaded function.
+    Returns a CanvasPattern object that uses the given \a color and \a patternMode.
+    The valid pattern modes are:
+
+    \value Qt.SolidPattern      Qt::SolidPattern
+    \value Qt.Dense1Pattern     Qt::Dense1Pattern
+    \value Qt.Dense2Pattern     Qt::Dense2Pattern
+    \value Qt.Dense3Pattern     Qt::Dense3Pattern
+    \value Qt.Dense4Pattern     Qt::Dense4Pattern
+    \value Qt.Dense5Pattern     Qt::Dense5Pattern
+    \value Qt.Dense6Pattern     Qt::Dense6Pattern
+    \value Qt.Dense7Pattern     Qt::Dense7Pattern
+    \value Qt.HorPattern        Qt::HorPattern
+    \value Qt.VerPattern        Qt::VerPattern
+    \value Qt.CrossPattern      Qt::CrossPattern
+    \value Qt.BDiagPattern      Qt::BDiagPattern
+    \value Qt.FDiagPattern      Qt::FDiagPattern
+    \value Qt.DiagCrossPattern  Qt::DiagCrossPattern
+
     \sa Qt::BrushStyle
- */
+*/
 /*!
-  \qmlmethod variant QtQuick::Context2D::createPattern(Image image, string repetition)
-  Returns a CanvasPattern object that uses the given image and repeats in the direction(s) given by the repetition argument.
+    \qmlmethod variant QtQuick::Context2D::createPattern(Image image, string repetition)
+    Returns a CanvasPattern object that uses the given image and repeats in the
+    direction(s) given by the repetition argument.
 
-  The \a image parameter must be a valid Image item, a valid CanvasImageData object or loaded image url, if there is no image data, throws an INVALID_STATE_ERR exception.
+    The \a image parameter must be a valid Image item, a valid CanvasImageData
+    object or loaded image url. If there is no image data, thus function throws an
+    INVALID_STATE_ERR exception.
 
-  The allowed values for \a repetition are:
+    The allowed values for \a repetition are:
 
-  \list
-  \li "repeat"    - both directions
-  \li "repeat-x   - horizontal only
-  \li "repeat-y"  - vertical only
-  \li "no-repeat" - neither
-  \endlist
+    \value "repeat"    both directions
+    \value "repeat-x   horizontal only
+    \value "repeat-y"  vertical only
+    \value "no-repeat" neither
 
-  If the repetition argument is empty or null, the value "repeat" is used.
+    If the repetition argument is empty or null, the value "repeat" is used.
 
-  \sa strokeStyle
-  \sa fillStyle
-  */
+    \sa strokeStyle
+    \sa fillStyle
+*/
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
     QV4::Scope scope(b);
@@ -1827,13 +1881,20 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(const QV4::F
 // line styles
 /*!
     \qmlproperty string QtQuick::Context2D::lineCap
-     Holds the current line cap style.
-     The possible line cap styles are:
-    \list
-    \li butt - the end of each line has a flat edge perpendicular to the direction of the line, this is the default line cap value.
-    \li round - a semi-circle with the diameter equal to the width of the line must then be added on to the end of the line.
-    \li square - a rectangle with the length of the line width and the width of half the line width, placed flat against the edge perpendicular to the direction of the line.
-    \endlist
+    Holds the current line cap style.
+    The possible line cap styles are:
+
+    \value "butt"
+        (default) Qt::FlatCap the end of each line has a flat edge
+        perpendicular to the direction of the line.
+    \value "round"
+        Qt::RoundCap a semi-circle with the diameter equal to the width of the
+        line is added on to the end of the line.
+    \value "square"
+        Qt::SquareCap a rectangle with the length of the line width and the
+        width of half the line width, placed flat against the edge
+        perpendicular to the direction of the line.
+
     Other values are ignored.
 */
 QV4::ReturnedValue QQuickJSContext2D::method_get_lineCap(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
@@ -1883,16 +1944,18 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_lineCap(const QV4::FunctionObje
 
 /*!
     \qmlproperty string QtQuick::Context2D::lineJoin
-     Holds the current line join style. A join exists at any point in a subpath
-     shared by two consecutive lines. When a subpath is closed, then a join also exists
-     at its first point (equivalent to its last point) connecting the first and last lines in the subpath.
+    Holds the current line join style. A join exists at any point in a subpath
+    shared by two consecutive lines. When a subpath is closed, then a join also
+    exists at its first point (equivalent to its last point) connecting the
+    first and last lines in the subpath.
 
     The possible line join styles are:
-    \list
-    \li bevel - this is all that is rendered at joins.
-    \li round - a filled arc connecting the two aforementioned corners of the join, abutting (and not overlapping) the aforementioned triangle, with the diameter equal to the line width and the origin at the point of the join, must be rendered at joins.
-    \li miter - a second filled triangle must (if it can given the miter length) be rendered at the join, this is the default line join style.
-    \endlist
+
+    \value "bevel"  Qt::BevelJoin The triangular notch between the two lines is filled.
+    \value "round"  Qt::RoundJoin A circular arc between the two lines is filled.
+    \value "miter"  (default) Qt::MiterJoin The outer edges of the lines are extended to
+                    meet at an angle, and this area is filled.
+
     Other values are ignored.
 */
 QV4::ReturnedValue QQuickJSContext2D::method_get_lineJoin(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
@@ -2825,19 +2888,20 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_font(const QV4::FunctionObject 
 }
 
 /*!
-  \qmlproperty string QtQuick::Context2D::textAlign
+    \qmlproperty string QtQuick::Context2D::textAlign
 
-  Holds the current text alignment settings.
-  The possible values are:
-  \list
-    \li start
-    \li end
-    \li left
-    \li right
-    \li center
-  \endlist
-  Other values are ignored. The default value is "start".
-  */
+    Holds the current text alignment settings. The possible values are:
+
+    \value "start"  (default) Align to the start edge of the text (left side in
+                    left-to-right text, right side in right-to-left text).
+    \value "end"    Align to the end edge of the text (right side in left-to-right
+                    text, left side in right-to-left text).
+    \value "left"   Qt::AlignLeft
+    \value "right"  Qt::AlignRight
+    \value "center" Qt::AlignHCenter
+
+    Other values are ignored.
+*/
 QV4::ReturnedValue QQuickJSContext2D::method_get_textAlign(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
 {
     QV4::Scope scope(b);
@@ -2892,20 +2956,19 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textAlign(const QV4::FunctionOb
 }
 
 /*!
-  \qmlproperty string QtQuick::Context2D::textBaseline
+    \qmlproperty string QtQuick::Context2D::textBaseline
 
-  Holds the current baseline alignment settings.
-  The possible values are:
-  \list
-    \li top
-    \li hanging
-    \li middle
-    \li alphabetic
-    \li ideographic
-    \li bottom
-  \endlist
-  Other values are ignored. The default value is "alphabetic".
-  */
+    Holds the current baseline alignment settings. The possible values are:
+
+    \value "top"            The top of the em square
+    \value "hanging"        The hanging baseline
+    \value "middle"         The middle of the em square
+    \value "alphabetic"     (default) The alphabetic baseline
+    \value "ideographic"    The ideographic-under baseline
+    \value "bottom"         The bottom of the em square
+
+    Other values are ignored. The default value is "alphabetic".
+*/
 QV4::ReturnedValue QQuickJSContext2D::method_get_textBaseline(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
 {
     QV4::Scope scope(b);

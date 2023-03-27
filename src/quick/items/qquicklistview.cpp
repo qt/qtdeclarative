@@ -2479,15 +2479,13 @@ QQuickListView::~QQuickListView()
 
     Valid values for \c highlightRangeMode are:
 
-    \list
-    \li ListView.ApplyRange - the view attempts to maintain the highlight within the range.
-       However, the highlight can move outside of the range at the ends of the list or due
-       to mouse interaction.
-    \li ListView.StrictlyEnforceRange - the highlight never moves outside of the range.
-       The current item changes if a keyboard or mouse action would cause the highlight to move
-       outside of the range.
-    \li ListView.NoHighlightRange - this is the default value.
-    \endlist
+    \value ListView.ApplyRange              the view attempts to maintain the highlight within the range.
+                                            However, the highlight can move outside of the range at the
+                                            ends of the list or due to mouse interaction.
+    \value ListView.StrictlyEnforceRange    the highlight never moves outside of the range.
+                                            The current item changes if a keyboard or mouse action would
+                                            cause the highlight to move outside of the range.
+    \value ListView.NoHighlightRange        this is the default value.
 */
 void QQuickListView::setHighlightFollowsCurrentItem(bool autoHighlight)
 {
@@ -2534,10 +2532,8 @@ void QQuickListView::setSpacing(qreal spacing)
 
     Possible values:
 
-    \list
-    \li ListView.Horizontal - Items are laid out horizontally
-    \li ListView.Vertical (default) - Items are laid out vertically
-    \endlist
+    \value ListView.Horizontal  Items are laid out horizontally
+    \value ListView.Vertical    (default) Items are laid out vertically
 
     \table
     \row
@@ -2588,10 +2584,8 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
   Possible values:
 
-  \list
-  \li Qt.LeftToRight (default) - Items will be laid out from left to right.
-  \li Qt.RightToLeft - Items will be laid out from right to left.
-  \endlist
+  \value Qt.LeftToRight (default) Items will be laid out from left to right.
+  \value Qt.RightToLeft Items will be laid out from right to left.
 
   Setting this property has no effect if the \l orientation is Qt.Vertical.
 
@@ -2617,10 +2611,8 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
   Possible values:
 
-  \list
-  \li ListView.TopToBottom (default) - Items are laid out from the top of the view down to the bottom of the view.
-  \li ListView.BottomToTop - Items are laid out from the bottom of the view up to the top of the view.
-  \endlist
+  \value ListView.TopToBottom   (default) Items are laid out from the top of the view down to the bottom of the view.
+  \value ListView.BottomToTop   Items are laid out from the bottom of the view up to the top of the view.
 
   Setting this property has no effect if the \l orientation is Qt.Horizontal.
 
@@ -2728,13 +2720,11 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     \c section.criteria holds the criteria for forming each section based on
     \c section.property. This value can be one of:
 
-    \list
-    \li ViewSection.FullString (default) - sections are created based on the
-    \c section.property value.
-    \li ViewSection.FirstCharacter - sections are created based on the first
-    character of the \c section.property value (for example, 'A', 'B', 'C'
-    sections, etc. for an address book)
-    \endlist
+    \value ViewSection.FullString       (default) sections are created based on the
+                                        \c section.property value.
+    \value ViewSection.FirstCharacter   sections are created based on the first character of
+                                        the \c section.property value (for example,
+                                        'A', 'B', 'C' ... sections for an address book.)
 
     A case insensitive comparison is used when determining section
     boundaries.
@@ -2748,16 +2738,17 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     next section labels stick to the start/end of the view, and whether
     the labels are shown inline.  This value can be a combination of:
 
-    \list
-    \li ViewSection.InlineLabels - section labels are shown inline between
-    the item delegates separating sections (default).
-    \li ViewSection.CurrentLabelAtStart - the current section label sticks to the
-    start of the view as it is moved.
-    \li ViewSection.NextLabelAtEnd - the next section label (beyond all visible
-    sections) sticks to the end of the view as it is moved. \note Enabling
-    \c ViewSection.NextLabelAtEnd requires the view to scan ahead for the next
-    section, which has performance implications, especially for slower models.
-    \endlist
+    \value ViewSection.InlineLabels
+        (default) section labels are shown inline between the item delegates
+        separating sections.
+    \value ViewSection.CurrentLabelAtStart
+        the current section label sticks to the start of the view as it is moved.
+    \value ViewSection.NextLabelAtEnd
+        the next section label (beyond all visible sections) sticks to the end
+        of the view as it is moved.
+        \note Enabling \c ViewSection.NextLabelAtEnd requires the view to scan
+        ahead for the next section, which has performance implications,
+        especially for slower models.
 
     Each item in the list has attached properties named \c ListView.section,
     \c ListView.previousSection and \c ListView.nextSection.
@@ -2908,18 +2899,14 @@ void QQuickListView::setHighlightResizeDuration(int duration)
     This property determines how the view scrolling will settle following a drag or flick.
     The possible values are:
 
-    \list
-    \li ListView.NoSnap (default) - the view stops anywhere within the visible area.
-    \li ListView.SnapToItem - the view settles with an item aligned with the start of
-    the view.
-    \li ListView.SnapOneItem - the view settles no more than one item away from the first
-    visible item at the time the mouse button is released.  This mode is particularly
-    useful for moving one page at a time. When SnapOneItem is enabled, the ListView will
-    show a stronger affinity to neighboring items when movement occurs. For example, a
-    short drag that snaps back to the current item with SnapToItem might snap to a
-    neighboring item with SnapOneItem.
-
-    \endlist
+    \value ListView.NoSnap      (default) the view stops anywhere within the visible area.
+    \value ListView.SnapToItem  the view settles with an item aligned with the start of the view.
+    \value ListView.SnapOneItem the view settles no more than one item away from the first
+        visible item at the time the mouse button is released.  This mode is particularly
+        useful for moving one page at a time. When SnapOneItem is enabled, the ListView will
+        show a stronger affinity to neighboring items when movement occurs. For example, a
+        short drag that snaps back to the current item with SnapToItem might snap to a
+        neighboring item with SnapOneItem.
 
     \c snapMode does not affect the \l currentIndex.  To update the
     \l currentIndex as the list is moved, set \l highlightRangeMode
@@ -3844,21 +3831,17 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 /*!
     \qmlmethod QtQuick::ListView::positionViewAtIndex(int index, PositionMode mode)
 
-    Positions the view such that the \a index is at the position specified by
-    \a mode:
+    Positions the view such that the \a index is at the position specified by \a mode:
 
-    \list
-    \li ListView.Beginning - position item at the top (or left for horizontal orientation) of the view.
-    \li ListView.Center - position item in the center of the view.
-    \li ListView.End - position item at bottom (or right for horizontal orientation) of the view.
-    \li ListView.Visible - if any part of the item is visible then take no action, otherwise
-    bring the item into view.
-    \li ListView.Contain - ensure the entire item is visible.  If the item is larger than
-    the view the item is positioned at the top (or left for horizontal orientation) of the view.
-    \li ListView.SnapPosition - position the item at \l preferredHighlightBegin.  This mode
-    is only valid if \l highlightRangeMode is StrictlyEnforceRange or snapping is enabled
-    via \l snapMode.
-    \endlist
+    \value ListView.Beginning   position item at the top (or left for horizontal orientation) of the view.
+    \value ListView.Center      position item in the center of the view.
+    \value ListView.End         position item at bottom (or right for horizontal orientation) of the view.
+    \value ListView.Visible     if any part of the item is visible then take no action, otherwise
+                                bring the item into view.
+    \value ListView.Contain     ensure the entire item is visible. If the item is larger than the view,
+                                the item is positioned at the top (or left for horizontal orientation) of the view.
+    \value ListView.SnapPosition position the item at \l preferredHighlightBegin.  This mode is only valid
+                                if \l highlightRangeMode is StrictlyEnforceRange or snapping is enabled via \l snapMode.
 
     If positioning the view at \a index would cause empty space to be displayed at
     the beginning or end of the view, the view will be positioned at the boundary.

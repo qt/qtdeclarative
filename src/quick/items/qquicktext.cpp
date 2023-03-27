@@ -1483,17 +1483,16 @@ QQuickText::~QQuickText()
 
     The requested weight of the font. The weight requested must be an integer
     between 1 and 1000, or one of the predefined values:
-    \list
-    \li Font.Thin
-    \li Font.Light
-    \li Font.ExtraLight
-    \li Font.Normal - the default
-    \li Font.Medium
-    \li Font.DemiBold
-    \li Font.Bold
-    \li Font.ExtraBold
-    \li Font.Black
-    \endlist
+
+    \value Font.Thin        100
+    \value Font.ExtraLight  200
+    \value Font.Light       300
+    \value Font.Normal      400 (default)
+    \value Font.Medium      500
+    \value Font.DemiBold    600
+    \value Font.Bold        700
+    \value Font.ExtraBold   800
+    \value Font.Black       900
 
     \qml
     Text { text: "Hello"; font.weight: Font.DemiBold }
@@ -1557,13 +1556,12 @@ QQuickText::~QQuickText()
 
     Sets the capitalization for the text.
 
-    \list
-    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
-    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
-    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
-    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
-    \endlist
+    \value Font.MixedCase       the normal case: no capitalization change is applied
+    \value Font.AllUppercase    alters the text to be rendered in all uppercase type
+    \value Font.AllLowercase    alters the text to be rendered in all lowercase type
+    \value Font.SmallCaps       alters the text to be rendered in small-caps type
+    \value Font.Capitalize      alters the text to be rendered with the first character of
+                                each word as an uppercase character
 
     \qml
     Text { text: "Hello"; font.capitalization: Font.AllLowercase }
@@ -1580,23 +1578,21 @@ QQuickText::~QQuickText()
 
     \note This property only has an effect when used together with render type Text.NativeRendering.
 
-    \list
-    \value Font.PreferDefaultHinting - Use the default hinting level for the target platform.
-    \value Font.PreferNoHinting - If possible, render text without hinting the outlines
+    \value Font.PreferDefaultHinting    Use the default hinting level for the target platform.
+    \value Font.PreferNoHinting         If possible, render text without hinting the outlines
            of the glyphs. The text layout will be typographically accurate, using the same metrics
            as are used e.g. when printing.
-    \value Font.PreferVerticalHinting - If possible, render text with no horizontal hinting,
+    \value Font.PreferVerticalHinting   If possible, render text with no horizontal hinting,
            but align glyphs to the pixel grid in the vertical direction. The text will appear
            crisper on displays where the density is too low to give an accurate rendering
            of the glyphs. But since the horizontal metrics of the glyphs are unhinted, the text's
            layout will be scalable to higher density devices (such as printers) without impacting
            details such as line breaks.
-    \value Font.PreferFullHinting - If possible, render text with hinting in both horizontal and
+    \value Font.PreferFullHinting       If possible, render text with hinting in both horizontal and
            vertical directions. The text will be altered to optimize legibility on the target
            device, but since the metrics will depend on the target size of the text, the positions
            of glyphs, line breaks, and other typographical detail will not scale, meaning that a
            text layout may look different on devices with different pixel densities.
-    \endlist
 
     \qml
     Text { text: "Hello"; renderType: Text.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
@@ -1838,12 +1834,11 @@ void QQuickText::setLinkColor(const QColor &color)
     Set an additional text style.
 
     Supported text styles are:
-    \list
-    \li Text.Normal - the default
-    \li Text.Outline
-    \li Text.Raised
-    \li Text.Sunken
-    \endlist
+
+    \value Text.Normal - the default
+    \value Text.Outline
+    \value Text.Raised
+    \value Text.Sunken
 
     \qml
     Row {
@@ -2043,12 +2038,17 @@ void QQuickText::setVAlign(VAlignment align)
     Set this property to wrap the text to the Text item's width.  The text will only
     wrap if an explicit width has been set.  wrapMode can be one of:
 
-    \list
-    \li Text.NoWrap (default) - no wrapping will be performed. If the text contains insufficient newlines, then \l contentWidth will exceed a set width.
-    \li Text.WordWrap - wrapping is done on word boundaries only. If a word is too long, \l contentWidth will exceed a set width.
-    \li Text.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
-    \li Text.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
-    \endlist
+    \value Text.NoWrap
+       (default) no wrapping will be performed. If the text contains
+       insufficient newlines, then \l contentWidth will exceed a set width.
+    \value Text.WordWrap
+        wrapping is done on word boundaries only. If a word is too long,
+        \l contentWidth will exceed a set width.
+    \value Text.WrapAnywhere
+        wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \value Text.Wrap
+        if possible, wrapping occurs at a word boundary; otherwise it will occur
+        at the appropriate point on the line, even in the middle of a word.
 */
 QQuickText::WrapMode QQuickText::wrapMode() const
 {
@@ -2247,12 +2247,11 @@ void QQuickText::setTextFormat(TextFormat format)
     This property cannot be used with rich text.
 
     Eliding can be:
-    \list
-    \li Text.ElideNone  - the default
-    \li Text.ElideLeft
-    \li Text.ElideMiddle
-    \li Text.ElideRight
-    \endlist
+
+    \value Text.ElideNone  - the default
+    \value Text.ElideLeft
+    \value Text.ElideMiddle
+    \value Text.ElideRight
 
     If this property is set to Text.ElideRight, it can be used with \l {wrapMode}{wrapped}
     text. The text will only elide if \c maximumLineCount, or \c height has been set.
@@ -2611,11 +2610,9 @@ void QQuickText::setLineHeight(qreal lineHeight)
     This property determines how the line height is specified.
     The possible values are:
 
-    \list
-    \li Text.ProportionalHeight (default) - this sets the spacing proportional to the
-       line (as a multiplier). For example, set to 2 for double spacing.
-    \li Text.FixedHeight - this sets the line height to a fixed line height (in pixels).
-    \endlist
+    \value Text.ProportionalHeight  (default) sets the spacing proportional to the line
+                                    (as a multiplier). For example, set to 2 for double spacing.
+    \value Text.FixedHeight         sets the line height to a fixed line height (in pixels).
 */
 QQuickText::LineHeightMode QQuickText::lineHeightMode() const
 {
@@ -2643,16 +2640,16 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
     This property specifies how the font size of the displayed text is determined.
     The possible values are:
 
-    \list
-    \li Text.FixedSize (default) - The size specified by \l font.pixelSize
-    or \l font.pointSize is used.
-    \li Text.HorizontalFit - The largest size up to the size specified that fits
-    within the width of the item without wrapping is used.
-    \li Text.VerticalFit - The largest size up to the size specified that fits
-    the height of the item is used.
-    \li Text.Fit - The largest size up to the size specified that fits within the
-    width and height of the item is used.
-    \endlist
+    \value Text.FixedSize
+        (default) The size specified by \l font.pixelSize or \l font.pointSize is used.
+    \value Text.HorizontalFit
+        The largest size up to the size specified that fits within the width of the item
+        without wrapping is used.
+    \value Text.VerticalFit
+        The largest size up to the size specified that fits the height of the item is used.
+    \value Text.Fit
+        The largest size up to the size specified that fits within the width and height
+        of the item is used.
 
     The font size of fitted text has a minimum bound specified by the
     minimumPointSize or minimumPixelSize property and maximum bound specified
@@ -3000,13 +2997,11 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
     The \c renderTypeQuality may be any integer over 0, or one of the following
     predefined values
 
-    \list
-    \li Text.DefaultRenderTypeQuality (default) = -1
-    \li Text.LowRenderTypeQuality = 26
-    \li Text.NormalRenderTypeQuality = 52
-    \li Text.HighRenderTypeQuality = 104
-    \li Text.VeryHighRenderTypeQuality = 208
-    \endlist
+    \value Text.DefaultRenderTypeQuality    -1 (default)
+    \value Text.LowRenderTypeQuality        26
+    \value Text.NormalRenderTypeQuality     52
+    \value Text.HighRenderTypeQuality       104
+    \value Text.VeryHighRenderTypeQuality   208
 */
 int QQuickText::renderTypeQuality() const
 {
@@ -3035,12 +3030,11 @@ void QQuickText::setRenderTypeQuality(int renderTypeQuality)
     Override the default rendering type for this component.
 
     Supported render types are:
-    \list
-    \li Text.QtRendering
-    \li Text.NativeRendering
-    \endlist
 
-    Select Text.NativeRendering if you prefer text to look native on the target platform and do
+    \value Text.QtRendering     Text is rendered using a scalable distance field for each glyph.
+    \value Text.NativeRendering Text is rendered using a platform-specific technique.
+
+    Select \c Text.NativeRendering if you prefer text to look native on the target platform and do
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
