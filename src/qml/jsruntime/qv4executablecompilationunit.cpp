@@ -846,10 +846,15 @@ bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &s
         });
         setUnitData(mappedUnit);
 
-        if (data->sourceFileIndex != 0
-            && sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
-            *errorString = QStringLiteral("QML source file has moved to a different location.");
-            continue;
+        if (data->sourceFileIndex != 0) {
+            if (data->sourceFileIndex >= data->stringTableSize + dynamicStrings.size()) {
+                *errorString = QStringLiteral("QML source file index is invalid.");
+                continue;
+            }
+            if (sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
+                *errorString = QStringLiteral("QML source file has moved to a different location.");
+                continue;
+            }
         }
 
         dataPtrRevert.dismiss();
