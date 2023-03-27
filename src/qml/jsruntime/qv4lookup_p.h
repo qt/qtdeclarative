@@ -145,6 +145,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             Heap::InternalClass *ic;
             quintptr unused;
             ReturnedValue encodedEnumValue;
+            const QtPrivate::QMetaTypeInterface *metaType;
         } qmlEnumValueLookup;
         struct {
             Heap::InternalClass *ic;

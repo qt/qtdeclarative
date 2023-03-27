@@ -92,8 +92,7 @@ private:
     {
         AvailableTypes(ImportedTypes builtins)
             : cppNames(std::move(builtins))
-            , qmlNames(QQmlJSScope::ContextualTypes::QML, {},
-                       cppNames.intType(), cppNames.arrayType())
+            , qmlNames(QQmlJSScope::ContextualTypes::QML, {}, cppNames.arrayType())
         {
         }
 

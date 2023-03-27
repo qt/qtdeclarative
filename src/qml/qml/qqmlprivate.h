@@ -703,7 +703,7 @@ namespace QQmlPrivate
         bool getValueLookup(uint index, void *value, void *target) const;
         void initGetValueLookup(uint index, const QMetaObject *metaObject, QMetaType type) const;
 
-        bool getEnumLookup(uint index, int *target) const;
+        bool getEnumLookup(uint index, void *target) const;
         void initGetEnumLookup(uint index, const QMetaObject *metaObject,
                                const char *enumerator, const char *enumValue) const;
 

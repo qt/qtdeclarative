@@ -45,8 +45,23 @@ class FooThingWrapper {
 class FooFactory : public QObject {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(T8 t8 READ t8 CONSTANT FINAL)
+    Q_PROPERTY(T16 t16 READ t16 CONSTANT FINAL)
 
 public:
+    enum T8: qint8 {
+        A, B, C
+    };
+    Q_ENUM(T8)
+
+    enum T16: qint16 {
+        D = 500, E, F
+    };
+    Q_ENUM(T16)
+
+    T8 t8() const { return C; }
+    T16 t16() const { return E; }
+
     Q_INVOKABLE Foo* get(Foo::Type type) const { return new Foo(type); }
 };
 

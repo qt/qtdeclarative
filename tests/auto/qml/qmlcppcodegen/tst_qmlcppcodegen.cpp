@@ -2981,6 +2981,11 @@ void tst_QmlCppCodegen::enumProblems()
     Foo *fighter = inner->property("fighter").value<Foo *>();
     QVERIFY(fighter);
     QCOMPARE(fighter->type(), Foo::Fighter);
+
+    QCOMPARE(outer->property("a").toInt(), FooFactory::B);
+    QCOMPARE(outer->property("b").toInt(), FooFactory::C);
+    QCOMPARE(outer->property("c").toInt(), FooFactory::D);
+    QCOMPARE(outer->property("d").toInt(), FooFactory::E);
 }
 
 void tst_QmlCppCodegen::enumConversion()

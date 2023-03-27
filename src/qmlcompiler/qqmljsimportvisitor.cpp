@@ -77,7 +77,6 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(
       m_logger(logger),
       m_rootScopeImports(
           QQmlJSImporter::ImportedTypes::QML, {},
-          importer->builtinInternalNames().intType(),
           importer->builtinInternalNames().arrayType())
 {
     m_currentScope->setScopeType(QQmlJSScope::JSFunctionScope);

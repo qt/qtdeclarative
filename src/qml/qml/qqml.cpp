@@ -1020,9 +1020,41 @@ static bool isTypeCompatible(QMetaType lookupType, QMetaType propertyType)
 
         if (!foundMetaObject)
             return false;
-    } else if (lookupType == QMetaType::fromType<int>()
-               && propertyType.flags() & QMetaType::IsEnumeration) {
-        return true;
+    } else if (propertyType.flags() & QMetaType::IsEnumeration) {
+        if (propertyType == lookupType)
+            return true;
+
+        // You can pass the underlying type of an enum.
+        // We don't want to check for the actual underlying type because
+        // moc and qmltyperegistrar are not very precise about it. Especially
+        // the long and longlong types can be ambiguous.
+
+        const bool isUnsigned = propertyType.flags() & QMetaType::IsUnsignedEnumeration;
+        switch (propertyType.sizeOf()) {
+        case 1:
+            return isUnsigned
+                    ? lookupType == QMetaType::fromType<quint8>()
+                    : lookupType == QMetaType::fromType<qint8>();
+        case 2:
+            return isUnsigned
+                    ? lookupType == QMetaType::fromType<ushort>()
+                    : lookupType == QMetaType::fromType<short>();
+        case 4:
+            // The default type, if moc doesn't know the actual enum type, is int.
+            // However, the compiler can still decide to encode the enum in uint.
+            // Therefore, we also accept int for uint enums.
+            // TODO: This is technically UB.
+            return isUnsigned
+                    ? (lookupType == QMetaType::fromType<int>()
+                       || lookupType == QMetaType::fromType<uint>())
+                    : lookupType == QMetaType::fromType<int>();
+        case 8:
+            return isUnsigned
+                    ? lookupType == QMetaType::fromType<qulonglong>()
+                    : lookupType == QMetaType::fromType<qlonglong>();
+        }
+
+        return false;
     } else if (propertyType != lookupType) {
         return false;
     }
@@ -1776,13 +1808,44 @@ void AOTCompiledContext::initGetValueLookup(
         engine->handle()->throwTypeError();
 }
 
-bool AOTCompiledContext::getEnumLookup(uint index, int *target) const
+bool AOTCompiledContext::getEnumLookup(uint index, void *target) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     if (l->getter != QV4::QQmlTypeWrapper::lookupEnumValue)
         return false;
-    *target = l->qmlEnumValueLookup.encodedEnumValue;
-    return true;
+    const bool isUnsigned
+            = l->qmlEnumValueLookup.metaType->flags & QMetaType::IsUnsignedEnumeration;
+    const QV4::ReturnedValue encoded = l->qmlEnumValueLookup.encodedEnumValue;
+    switch (l->qmlEnumValueLookup.metaType->size) {
+    case 1:
+        if (isUnsigned)
+            *static_cast<quint8 *>(target) = encoded;
+        else
+            *static_cast<qint8 *>(target) = encoded;
+        return true;
+    case 2:
+        if (isUnsigned)
+            *static_cast<quint16 *>(target) = encoded;
+        else
+            *static_cast<qint16 *>(target) = encoded;
+        return true;
+    case 4:
+        if (isUnsigned)
+            *static_cast<quint32 *>(target) = encoded;
+        else
+            *static_cast<qint32 *>(target) = encoded;
+        return true;
+    case 8:
+        if (isUnsigned)
+            *static_cast<quint64 *>(target) = encoded;
+        else
+            *static_cast<qint64 *>(target) = encoded;
+        return true;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 void AOTCompiledContext::initGetEnumLookup(
@@ -1798,8 +1861,9 @@ void AOTCompiledContext::initGetEnumLookup(
         return;
     }
     const int enumIndex = metaObject->indexOfEnumerator(enumerator);
-    const int value = metaObject->enumerator(enumIndex).keyToValue(enumValue);
-    l->qmlEnumValueLookup.encodedEnumValue = value;
+    const QMetaEnum metaEnum = metaObject->enumerator(enumIndex);
+    l->qmlEnumValueLookup.encodedEnumValue = metaEnum.keyToValue(enumValue);
+    l->qmlEnumValueLookup.metaType = metaEnum.metaType().iface();
     l->getter = QV4::QQmlTypeWrapper::lookupEnumValue;
 }
 

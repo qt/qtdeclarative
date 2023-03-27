@@ -216,16 +216,13 @@ public:
         ContextualTypes(
                 CompileContext context,
                 const QHash<QString, ImportedScope<ConstPtr>> types,
-                const QQmlJSScope::ConstPtr &intType,
                 const QQmlJSScope::ConstPtr &arrayType)
             : m_types(types)
             , m_context(context)
-            , m_intType(intType)
             , m_arrayType(arrayType)
         {}
 
         CompileContext context() const { return m_context; }
-        ConstPtr intType() const { return m_intType; }
         ConstPtr arrayType() const { return m_arrayType; }
 
         bool hasType(const QString &name) const { return m_types.contains(name); }
@@ -606,7 +603,8 @@ QT_WARNING_POP
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);
     static void resolveEnums(
-            const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType);
+            const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+            QSet<QString> *usedTypes = nullptr);
     static void resolveList(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType);
     static void resolveGeneralizedGroup(
