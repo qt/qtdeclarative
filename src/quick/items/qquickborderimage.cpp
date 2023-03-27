@@ -63,9 +63,8 @@ QT_BEGIN_NAMESPACE
     \image qml-borderimage-normal-image.png
     \endfloat
 
-    An unscaled image is displayed using an Image. The \l border property is
-    used to determine the parts of the image that will lie inside the unscaled corner
-    areas and the parts that will be stretched horizontally and vertically.
+    For comparison, an unscaled image is displayed using a simple Image item.
+    Here we have overlaid lines to show how we'd like to break it up with BorderImage:
 
     \snippet qml/borderimage/normal-image.qml normal image
 
@@ -74,12 +73,15 @@ QT_BEGIN_NAMESPACE
     \image qml-borderimage-scaled.png
     \endfloat
 
-    A BorderImage is used to display the image, and it is given a size that is
+    But when a BorderImage is used to display the image, the \l border property is
+    used to determine the parts of the image that will lie inside the unscaled corner
+    areas, and the parts that will be stretched horizontally and vertically.
+    Then, you can give it a size that is
     larger than the original image. Since the \l horizontalTileMode property is set to
     \l{BorderImage::horizontalTileMode}{BorderImage.Stretch}, the parts of image in
     regions 2 and 8 are stretched horizontally. Since the \l verticalTileMode property
     is set to \l{BorderImage::verticalTileMode}{BorderImage.Stretch}, the parts of image
-    in regions 4 and 6 are stretched vertically.
+    in regions 4 and 6 are stretched vertically:
 
     \snippet qml/borderimage/borderimage-scaled.qml scaled border image
 
@@ -92,17 +94,25 @@ QT_BEGIN_NAMESPACE
     \l horizontalTileMode property set to \l{BorderImage::horizontalTileMode}{BorderImage.Repeat},
     the parts of image in regions 2 and 8 are tiled so that they fill the space at the
     top and bottom of the item. Similarly, the \l verticalTileMode property is set to
-    \l{BorderImage::verticalTileMode}{BorderImage.Repeat}, the parts of image in regions
-    4 and 6 are tiled so that they fill the space at the left and right of the item.
+    \l{BorderImage::verticalTileMode}{BorderImage.Repeat}, so the parts of image in regions
+    4 and 6 are tiled to fill the space at the left and right of the item:
 
     \snippet qml/borderimage/borderimage-tiled.qml tiled border image
 
     \clearfloat
+    \beginfloatleft
+    \image qml-borderimage-rounded.png
+    \endfloat
+
     In some situations, the width of regions 2 and 8 may not be an exact multiple of the width
     of the corresponding regions in the source image. Similarly, the height of regions 4 and 6
-    may not be an exact multiple of the height of the corresponding regions. It can be useful
-    to use \l{BorderImage::horizontalTileMode}{BorderImage.Round} instead of
-    \l{BorderImage::horizontalTileMode}{BorderImage.Repeat} in cases like these.
+    may not be an exact multiple of the height of the corresponding regions. If you use
+    \l{BorderImage::horizontalTileMode}{BorderImage.Round} mode, it will choose an integer
+    number of tiles and shrink them to fit:
+
+    \snippet qml/borderimage/borderimage-rounded.qml tiled border image
+
+    \clearfloat
 
     The Border Image example in \l{Qt Quick Examples - Image Elements} shows how a BorderImage
     can be used to simulate a shadow effect on a rectangular item.
@@ -149,12 +159,10 @@ QQuickBorderImage::~QQuickBorderImage()
 
     This property describes the status of image loading.  It can be one of:
 
-    \list
-    \li BorderImage.Null - no image has been set
-    \li BorderImage.Ready - the image has been loaded
-    \li BorderImage.Loading - the image is currently being loaded
-    \li BorderImage.Error - an error occurred while loading the image
-    \endlist
+    \value BorderImage.Null     No image has been set
+    \value BorderImage.Ready    The image has been loaded
+    \value BorderImage.Loading  The image is currently being loaded
+    \value BorderImage.Error    An error occurred while loading the image
 
     \sa progress
 */
@@ -332,11 +340,9 @@ QQuickScaleGrid *QQuickBorderImage::border()
 
     This property describes how to repeat or stretch the middle parts of the border image.
 
-    \list
-    \li BorderImage.Stretch - Scales the image to fit to the available area.
-    \li BorderImage.Repeat - Tile the image until there is no more space. May crop the last image.
-    \li BorderImage.Round - Like Repeat, but scales the images down to ensure that the last image is not cropped.
-    \endlist
+    \value BorderImage.Stretch  Scales the image to fit to the available area.
+    \value BorderImage.Repeat   Tile the image until there is no more space. May crop the last image.
+    \value BorderImage.Round    Like Repeat, but scales the images down to ensure that the last image is not cropped.
 
     The default tile mode for each property is BorderImage.Stretch.
 */
