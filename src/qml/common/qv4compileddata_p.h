@@ -1239,8 +1239,8 @@ struct Unit
     }
     /* end QML specific fields*/
 
-    QString stringAtInternal(int idx) const {
-        Q_ASSERT(idx < int(stringTableSize));
+    QString stringAtInternal(uint idx) const {
+        Q_ASSERT(idx < stringTableSize);
         const quint32_le *offsetTable = reinterpret_cast<const quint32_le*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
         const quint32_le offset = offsetTable[idx];
         const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
@@ -1531,11 +1531,14 @@ public:
         m_finalUrlString = !finalUrlString.isEmpty() ? finalUrlString : stringAt(data->finalUrlIndex);
     }
 
-    QString stringAt(int index) const
+    QString stringAt(uint index) const
     {
-        if (uint(index) >= data->stringTableSize)
-            return dynamicStrings.at(index - data->stringTableSize);
-        return data->stringAtInternal(index);
+        if (index < data->stringTableSize)
+            return data->stringAtInternal(index);
+
+        const uint dynamicIndex = index - data->stringTableSize;
+        Q_ASSERT(dynamicIndex < dynamicStrings.size());
+        return dynamicStrings.at(dynamicIndex);
     }
 
     QString fileName() const { return m_fileName; }
