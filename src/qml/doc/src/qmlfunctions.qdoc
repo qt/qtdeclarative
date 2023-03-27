@@ -533,6 +533,7 @@
 
 /*!
   \macro QML_SEQUENTIAL_CONTAINER(VALUE_TYPE)
+  \relates QQmlEngine
 
   This macro declares the enclosing or referenced type as a sequential container
   managing a sequence of \a VALUE_TYPE elements. \a VALUE_TYPE can be an actual
