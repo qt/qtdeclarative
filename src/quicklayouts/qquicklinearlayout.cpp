@@ -247,10 +247,8 @@ QSizeF QQuickGridLayoutBase::sizeHint(Qt::SizeHint whichSizeHint) const
 
     Possible values:
 
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right.
-    \li Qt.RightToLeft - Items are laid out from right to left.
-    \endlist
+    \value Qt.LeftToRight   (default) Items are laid out from left to right.
+    \value Qt.RightToLeft   Items are laid out from right to left.
 
     \sa RowLayout::layoutDirection, ColumnLayout::layoutDirection
 */
@@ -595,12 +593,10 @@ void QQuickGridLayout::setRows(int rows)
 
     Possible values are:
 
-    \list
-    \li GridLayout.LeftToRight (default) - Items are positioned next to
-       each other, then wrapped to the next line.
-    \li GridLayout.TopToBottom - Items are positioned next to each
-       other from top to bottom, then wrapped to the next column.
-    \endlist
+    \value GridLayout.LeftToRight
+        (default) Items are positioned next to each other, then wrapped to the next line.
+    \value GridLayout.TopToBottom
+        Items are positioned next to each other from top to bottom, then wrapped to the next column.
 
     \sa rows
     \sa columns
@@ -775,10 +771,8 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
 
     Possible values:
 
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right.
-    \li Qt.RightToLeft - Items are laid out from right to left
-    \endlist
+    \value Qt.LeftToRight   (default) Items are laid out from left to right.
+    \value Qt.RightToLeft   Items are laid out from right to left
 
     \sa GridLayout::layoutDirection, ColumnLayout::layoutDirection
 */
@@ -792,10 +786,8 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
 
     Possible values:
 
-    \list
-    \li Qt.LeftToRight (default) - Items are laid out from left to right.
-    \li Qt.RightToLeft - Items are laid out from right to left
-    \endlist
+    \value Qt.LeftToRight   (default) Items are laid out from left to right.
+    \value Qt.RightToLeft   Items are laid out from right to left
 
     \sa GridLayout::layoutDirection, RowLayout::layoutDirection
 */

@@ -229,10 +229,9 @@ QQmlListProperty<QQuickGradientStop> QQuickGradient::stops()
     \since 5.12
 
     Set this property to define the direction of the gradient.
-    \list
-    \li Gradient.Vertical - a vertical gradient
-    \li Gradient.Horizontal - a horizontal gradient
-    \endlist
+
+    \value Gradient.Vertical    a vertical gradient
+    \value Gradient.Horizontal  a horizontal gradient
 
     The default is Gradient.Vertical.
 */

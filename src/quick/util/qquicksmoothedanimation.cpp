@@ -421,11 +421,12 @@ QAbstractAnimationJob* QQuickSmoothedAnimation::transition(QQuickStateActions &a
 
     Possible values are:
 
-    \list
-    \li SmoothedAnimation.Eased (default) - the animation will smoothly decelerate, and then reverse direction
-    \li SmoothedAnimation.Immediate - the animation will immediately begin accelerating in the reverse direction, beginning with a velocity of 0
-    \li SmoothedAnimation.Sync - the property is immediately set to the target value
-    \endlist
+    \value SmoothedAnimation.Eased
+        (default) the animation will smoothly decelerate, and then reverse direction
+    \value SmoothedAnimation.Immediate
+        the animation will immediately begin accelerating in the reverse direction, beginning with a velocity of 0
+    \value SmoothedAnimation.Sync
+        the property is immediately set to the target value
 */
 QQuickSmoothedAnimation::ReversingMode QQuickSmoothedAnimation::reversingMode() const
 {
