@@ -516,6 +516,8 @@ void QQmlChangeSet::change(QVector<Change> *changes)
 }
 
 /*!
+    \internal
+    \relates QQmlChangeSet
     Prints the contents of a change \a set to the \a debug stream.
 */
 
@@ -536,6 +538,8 @@ QDebug operator <<(QDebug debug, const QQmlChangeSet &set)
 }
 
 /*!
+    \internal
+    \relates QQmlChangeSet
     Prints a \a change to the \a debug stream.
 */
 
