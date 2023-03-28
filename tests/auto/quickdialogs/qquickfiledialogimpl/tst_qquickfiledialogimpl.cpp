@@ -565,6 +565,9 @@ void tst_QQuickFileDialogImpl::chooseFolderViaTextEdit()
 
     // Hit enter to accept.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        tempSubDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
     // The first file in the directory should be selected, which is "sub-sub-dir".
     // Note that the TextEdit will still have focus, so we can't use VERIFY_FILE_SELECTED_AND_FOCUSED.
     VERIFY_FILE_SELECTED(QUrl::fromLocalFile(tempSubDir.path()), QUrl::fromLocalFile(tempSubSubDir.path()));
@@ -649,6 +652,9 @@ void tst_QQuickFileDialogImpl::chooseFileAndThenFolderViaTextEdit()
 
     // Hit enter to accept.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        tempSubDirExpectedVisibleFiles(ShowDirectoriesFirst), failureMessage), qPrintable(failureMessage));
     // The first file in the directory should be selected, which is "sub-sub-dir".
     // Note that the TextEdit will still have focus, so we can't use VERIFY_FILE_SELECTED_AND_FOCUSED.
     VERIFY_FILE_SELECTED(QUrl::fromLocalFile(tempSubDir.path()), QUrl::fromLocalFile(tempSubSubDir.path()));
@@ -748,6 +754,9 @@ void tst_QQuickFileDialogImpl::goUp()
         QVERIFY(QQuickTest::qWaitForPolish(barListView));
     QVERIFY(clickButton(breadcrumbBar->upButton()));
     // The previous directory that we were in should now be selected (matches e.g. Windows and Ubuntu).
+    QString failureMessage;
+    QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
+        tempDirExpectedVisibleFiles(showDirsFirst ? ShowDirectoriesFirst : ShowFilesFirst), failureMessage), qPrintable(failureMessage));
     int expectedCurrentIndex = showDirsFirst ? 0 : 2;
     VERIFY_FILE_SELECTED_AND_FOCUSED(QUrl::fromLocalFile(tempDir.path()), QUrl::fromLocalFile(tempSubDir.path()), expectedCurrentIndex);
 
