@@ -90,8 +90,9 @@ public:
 
     int effectiveStepSize() const;
 
-    void updateDisplayText(bool modified = false);
-    void setDisplayText(const QString &displayText, bool modified = false);
+    void updateDisplayText();
+    void setDisplayText(const QString &displayText);
+    void contentItemTextChanged();
 
     bool upEnabled() const;
     void updateUpEnabled();
@@ -111,9 +112,13 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    QString evaluateTextFromValue(int val) const;
+    int evaluateValueFromText(const QString &text) const;
+
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::SpinBox); }
 
     bool editable = false;
+    bool live = false;
     bool wrap = false;
     int from = 0;
     int to = 99;
@@ -150,23 +155,10 @@ int QQuickSpinBoxPrivate::boundValue(int value, bool wrap) const
 
 void QQuickSpinBoxPrivate::updateValue()
 {
-    Q_Q(QQuickSpinBox);
     if (contentItem) {
         QVariant text = contentItem->property("text");
         if (text.isValid()) {
-            int val = 0;
-            QQmlEngine *engine = qmlEngine(q);
-            if (engine && valueFromText.isCallable()) {
-                QJSValue loc;
-#if QT_CONFIG(qml_locale)
-                QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-                loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
-#endif
-                val = valueFromText.call(QJSValueList() << text.toString() << loc).toInt();
-            } else {
-                val = locale.toInt(text.toString());
-            }
-            setValue(val, /* allowWrap = */ false, /* modified = */ true);
+            setValue(evaluateValueFromText(text.toString()), /* allowWrap = */ false, /* modified = */ true);
         }
     }
 }
@@ -188,7 +180,7 @@ bool QQuickSpinBoxPrivate::setValue(int newValue, bool allowWrap, bool modified)
     const bool emitSignals = (value != correctedValue);
     value = correctedValue;
 
-    updateDisplayText(modified);
+    updateDisplayText();
     updateUpEnabled();
     updateDownEnabled();
 
@@ -222,33 +214,44 @@ int QQuickSpinBoxPrivate::effectiveStepSize() const
     return from > to ? -1 * stepSize : stepSize;
 }
 
-void QQuickSpinBoxPrivate::updateDisplayText(bool modified)
+void QQuickSpinBoxPrivate::updateDisplayText()
 {
-    Q_Q(QQuickSpinBox);
-    QString text;
-    QQmlEngine *engine = qmlEngine(q);
-    if (engine && textFromValue.isCallable()) {
-        QJSValue loc;
-#if QT_CONFIG(qml_locale)
-        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-        loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
-#endif
-        text = textFromValue.call(QJSValueList() << value << loc).toString();
-    } else {
-        text = locale.toString(value);
-    }
-    setDisplayText(text, modified);
+    setDisplayText(evaluateTextFromValue(value));
 }
 
-void QQuickSpinBoxPrivate::setDisplayText(const QString &text, bool modified)
+void QQuickSpinBoxPrivate::setDisplayText(const QString &text)
 {
     Q_Q(QQuickSpinBox);
 
-    if (!modified && displayText == text)
+    if (displayText == text)
         return;
 
     displayText = text;
     emit q->displayTextChanged();
+}
+
+void QQuickSpinBoxPrivate::contentItemTextChanged()
+{
+    Q_Q(QQuickSpinBox);
+
+    QQuickTextInput *inputTextItem = qobject_cast<QQuickTextInput *>(q->contentItem());
+    if (!inputTextItem)
+        return;
+    QString text = inputTextItem->text();
+    validator->fixup(text);
+
+    if (live) {
+        const int enteredVal = evaluateValueFromText(text);
+        const int correctedValue = boundValue(enteredVal, false);
+        if (correctedValue == enteredVal && correctedValue != value) {
+            // If live is true and the text is valid change the value
+            // setValue will set the displayText for us.
+            q->setValue(correctedValue);
+            return;
+        }
+    }
+    // If live is false or the value is not valid, just set the displayText
+    setDisplayText(text);
 }
 
 bool QQuickSpinBoxPrivate::upEnabled() const
@@ -407,6 +410,44 @@ void QQuickSpinBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit down->implicitIndicatorHeightChanged();
 }
 
+
+QString QQuickSpinBoxPrivate::evaluateTextFromValue(int val) const
+{
+    Q_Q(const QQuickSpinBox);
+
+    QString text;
+    QQmlEngine *engine = qmlEngine(q);
+    if (engine && textFromValue.isCallable()) {
+        QJSValue loc;
+#if QT_CONFIG(qml_locale)
+        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
+        loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+#endif
+        text = textFromValue.call(QJSValueList() << val << loc).toString();
+    } else {
+        text = locale.toString(val);
+    }
+    return text;
+}
+
+int QQuickSpinBoxPrivate::evaluateValueFromText(const QString &text) const
+{
+    Q_Q(const QQuickSpinBox);
+    int value;
+    QQmlEngine *engine = qmlEngine(q);
+    if (engine && valueFromText.isCallable()) {
+        QJSValue loc;
+#if QT_CONFIG(qml_locale)
+        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
+        loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
+#endif
+        value = valueFromText.call(QJSValueList() << text << loc).toInt();
+    } else {
+        value = locale.toInt(text);
+    }
+    return value;
+}
+
 QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
     : QQuickControl(*(new QQuickSpinBoxPrivate), parent)
 {
@@ -558,6 +599,41 @@ void QQuickSpinBox::setEditable(bool editable)
     d->editable = editable;
     setAccessibleProperty("editable", editable);
     emit editableChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick.Controls::SpinBox::live
+    \since 6.6
+
+    This property holds whether the \l value is updated when the user edits the
+    \l displayText. The default value is \c false. If this property is \c true and
+    the value entered by the user is valid and within the bounds of the spinbox
+    [\l from, \l to], the value of the SpinBox will be set. If this property is
+    \c false or the value entered by the user is outside the boundaries, the
+    value will not be updated until the enter or return keys are pressed, or the
+    input field loses focus.
+
+    \sa editable, displayText
+*/
+bool QQuickSpinBox::isLive() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->live;
+}
+
+void QQuickSpinBox::setLive(bool live)
+{
+    Q_D(QQuickSpinBox);
+    if (d->live == live)
+        return;
+
+    d->live = live;
+
+    //make sure to update the value when changing to live
+    if (live)
+        d->contentItemTextChanged();
+
+    emit liveChanged();
 }
 
 #if QT_CONFIG(validator)
@@ -1000,8 +1076,10 @@ void QQuickSpinBox::itemChange(ItemChange change, const ItemChangeData &value)
 void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickSpinBox);
-    if (QQuickTextInput *oldInput = qobject_cast<QQuickTextInput *>(oldItem))
+    if (QQuickTextInput *oldInput = qobject_cast<QQuickTextInput *>(oldItem)) {
         disconnect(oldInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickSpinBox::inputMethodComposingChanged);
+        QObjectPrivate::disconnect(oldInput, &QQuickTextInput::textChanged, d, &QQuickSpinBoxPrivate::contentItemTextChanged);
+    }
 
     if (newItem) {
         newItem->setActiveFocusOnTab(true);
@@ -1012,8 +1090,10 @@ void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
             newItem->setCursor(Qt::IBeamCursor);
 #endif
 
-        if (QQuickTextInput *newInput = qobject_cast<QQuickTextInput *>(newItem))
+        if (QQuickTextInput *newInput = qobject_cast<QQuickTextInput *>(newItem)) {
             connect(newInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickSpinBox::inputMethodComposingChanged);
+            QObjectPrivate::connect(newInput, &QQuickTextInput::textChanged, d, &QQuickSpinBoxPrivate::contentItemTextChanged);
+        }
     }
 }
 

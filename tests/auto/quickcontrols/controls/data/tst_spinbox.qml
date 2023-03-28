@@ -5,6 +5,7 @@ import QtQuick
 import QtTest
 import QtQuick.Controls
 import QtQuick.Window
+import QtQuick.Layouts
 
 TestCase {
     id: testCase
@@ -330,24 +331,420 @@ TestCase {
         var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
+        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
+        verify(displayTextChangedSpy.valid)
+
+
+        control.from = 0
+        control.to = 10
+        compare(control.from, 0)
+        compare(control.to, 10)
+
         control.contentItem.forceActiveFocus()
         compare(control.contentItem.activeFocus, true)
 
         compare(control.editable, false)
         control.contentItem.selectAll()
+        compare(control.displayText, "0")
         keyClick(Qt.Key_5)
         keyClick(Qt.Key_Return)
+        compare(control.displayText, "0")
         compare(control.value, 0)
         compare(valueModifiedSpy.count, 0)
 
         control.editable = true
         compare(control.editable, true)
         control.contentItem.selectAll()
+        keyClick(Qt.Key_Backspace)
         keyClick(Qt.Key_5)
+        compare(control.displayText, "5")
         keyClick(Qt.Key_Return)
         compare(control.value, 5)
         compare(valueModifiedSpy.count, 1)
+        compare(displayTextChangedSpy.count, 2)
+
+        keyClick(Qt.Key_0)
+        compare(control.displayText, "50")
+        compare(control.value, 5)
+        compare(valueModifiedSpy.count, 1)
+        compare(displayTextChangedSpy.count, 3)
+        keyClick(Qt.Key_Return) //will set the value to maximum = 10
+        compare(control.displayText, "10")
+        compare(control.value, 10)
+        compare(valueModifiedSpy.count, 2) // 0->5->10
+        compare(displayTextChangedSpy.count, 4) //0->5->50->10
     }
+
+
+    function test_editable_liveUpdate() {
+        var control = createTemporaryObject(spinBox, testCase)
+        verify(control)
+
+        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        verify(valueModifiedSpy.valid)
+
+        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
+        verify(valueChangedSpy.valid)
+
+        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
+        verify(displayTextChangedSpy.valid)
+
+        control.contentItem.forceActiveFocus()
+        compare(control.contentItem.activeFocus, true)
+
+        control.editable = true
+        control.live = true
+        control.from = -10
+        control.to = 10
+        compare(control.editable, true)
+        compare(control.live, true)
+        compare(control.from, -10)
+        compare(control.to, 10)
+
+        control.contentItem.selectAll()
+        keyClick(Qt.Key_5)
+        compare(control.displayText, "5")
+        compare(control.value, 5)
+        compare(valueModifiedSpy.count, 0)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.count, 1)
+
+        keyClick(Qt.Key_0)
+        compare(control.displayText, "50") // do not set the value
+        compare(control.value, 5)          // if it is out of bounds
+        compare(valueModifiedSpy.count, 0)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.count, 2)
+
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.displayText, "5")
+        compare(control.value, 5)
+        compare(valueModifiedSpy.count, 0)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.count, 3)
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.displayText, "0")
+        compare(control.value, 0)
+        compare(valueModifiedSpy.count, 0)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 4)
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.displayText, "")
+        compare(control.value, 0)
+        compare(valueModifiedSpy.count, 0)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 5)
+    }
+
+    Component {
+        id: doubleBox
+        SpinBox {
+            id: doubleSpinBox
+
+            property int decimals: 2
+            property double realValue: value / 10**decimals
+            validator: DoubleValidator {
+                bottom: Math.min(doubleSpinBox.from, doubleSpinBox.to)
+                top:  Math.max(doubleSpinBox.from, doubleSpinBox.to)
+                decimals: doubleSpinBox.decimals
+                notation: DoubleValidator.StandardNotation
+            }
+
+            textFromValue: function(value, locale) {
+                let res = Number(value / 10**doubleSpinBox.decimals).toLocaleString(locale, 'f', doubleSpinBox.decimals)
+                return res
+            }
+
+            valueFromText: function(text, locale) {
+                let res = Math.round(Number.fromLocaleString(locale, text) * 10**doubleSpinBox.decimals)
+                return res
+            }
+        }
+    }
+
+    function test_editable_doubleSpinBox() {
+        var control = createTemporaryObject(doubleBox, testCase)
+        verify(control)
+
+        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        verify(valueModifiedSpy.valid)
+
+        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "valueChanged"})
+        verify(valueChangedSpy.valid)
+
+        var displayTextChangedSpy = signalSpy.createObject(control, {target: control, signalName: "displayTextChanged"})
+        verify(displayTextChangedSpy.valid)
+
+        control.locale = Qt.locale("en_EN")
+        control.editable = true
+        control.from = 0
+        control.to = 1000000
+        control.value = 500
+        control.stepSize = 1
+
+        compare(control.editable, true)
+        compare(control.from, 0)
+        compare(control.to, 1000000)
+        compare(control.value, 500)
+        compare(control.realValue, 5.00)
+        compare(control.displayText, "5.00")
+
+        control.contentItem.forceActiveFocus()
+        compare(control.contentItem.activeFocus, true)
+
+        control.contentItem.selectAll()
+        keyClick(Qt.Key_4)
+        compare(control.value, 500)
+        compare(control.realValue, 5.00)
+        compare(control.displayText, "4")
+        compare(valueModifiedSpy.count, 0)
+        compare(valueChangedSpy.count, 1)
+        compare(displayTextChangedSpy.count, 2)
+
+        keyClick(Qt.Key_Enter)
+        compare(control.value, 400)
+        compare(control.realValue, 4.00)
+        compare(control.displayText, "4.00")
+        compare(valueModifiedSpy.count, 1)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 3)
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.value, 400)
+        compare(control.realValue, 4.00)
+        compare(control.displayText, "4.0")
+        compare(valueModifiedSpy.count, 1)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 4)
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.value, 400)
+        compare(control.realValue, 4.00)
+        compare(control.displayText, "4") //The fixup removes the trailing "."
+        compare(valueModifiedSpy.count, 1)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 5)
+
+        keyClick(Qt.Key_0)
+        compare(control.value, 400)
+        compare(control.realValue, 4.00)
+        compare(control.displayText, "40")
+        compare(valueModifiedSpy.count, 1)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 6)
+
+        keyClick(Qt.Key_0)
+        compare(control.value, 400)
+        compare(control.realValue, 4.00)
+        compare(control.displayText, "400")
+        compare(valueModifiedSpy.count, 1)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 7)
+
+        keyClick(Qt.Key_0)
+        compare(control.value, 400)
+        compare(control.realValue, 4.00)
+        compare(control.displayText, "4,000")
+        compare(valueModifiedSpy.count, 1)
+        compare(valueChangedSpy.count, 2)
+        compare(displayTextChangedSpy.count, 8)
+
+        keyClick(Qt.Key_Enter)
+        compare(control.value, 400000)
+        compare(control.realValue, 4000.00)
+        compare(control.displayText, "4,000.00")
+        compare(valueModifiedSpy.count, 2)
+        compare(valueChangedSpy.count, 3)
+        compare(displayTextChangedSpy.count, 9)
+
+        // Changing to and testing live mode
+        control.live = true
+        compare(control.live, true)
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.value, 400000)
+        compare(control.realValue, 4000.00)
+        compare(control.displayText, "4,000.0")
+        compare(valueModifiedSpy.count, 2)
+        compare(valueChangedSpy.count, 3)
+        compare(displayTextChangedSpy.count, 10)
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.value, 400000)
+        compare(control.realValue, 4000.00)
+        compare(control.displayText, "4,000") //The fixup removes the trailing "."
+        compare(valueModifiedSpy.count, 2)
+        compare(valueChangedSpy.count, 3)
+        compare(displayTextChangedSpy.count, 11)
+
+        keyClick(Qt.Key_Backspace)
+        compare(control.displayText, "400.00")
+        compare(control.value, 40000)
+        compare(control.realValue, 400.00)
+        compare(valueModifiedSpy.count, 2)
+        compare(valueChangedSpy.count, 4)
+        compare(displayTextChangedSpy.count, 12)
+
+        // It is a bit unfortunate that we need 3 Backspace to go from
+        // 400 to 4000 on live editing mode. Maybe think about a fix in
+        // the future to make it more user friendly
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_Backspace)
+        compare(control.displayText, "40.00")
+        compare(control.value, 4000)
+        compare(control.realValue, 40.00)
+        compare(valueModifiedSpy.count, 2)
+        compare(valueChangedSpy.count, 5)
+        compare(displayTextChangedSpy.count, 15)
+
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_Backspace)
+        compare(control.displayText, "4.00")
+        compare(control.value, 400)
+        compare(control.realValue, 4.00)
+        compare(valueModifiedSpy.count, 2)
+        compare(valueChangedSpy.count, 6)
+        compare(displayTextChangedSpy.count, 18)
+
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_1)
+        compare(control.displayText, "41.00")
+        compare(control.value, 4100)
+        compare(control.realValue, 41.00)
+        compare(valueModifiedSpy.count, 2)
+        compare(valueChangedSpy.count, 7)
+        compare(displayTextChangedSpy.count, 21)
+    }
+
+    function test_groupSeparatorHandling_data() {
+            return [
+                { tag: "en_EN" },
+                { tag: "de_DE" }
+            ]
+        }
+
+    function test_groupSeparatorHandling(data) {
+        var control = createTemporaryObject(spinBox, testCase)
+        verify(control)
+
+        let testLoc = Qt.locale(data.tag)
+        control.locale = testLoc
+
+        control.contentItem.forceActiveFocus()
+        compare(control.contentItem.activeFocus, true)
+
+        control.editable = true
+        control.live = true
+        control.from = 0
+        control.to = 10*1000*1000
+        compare(control.editable, true)
+        compare(control.live, true)
+        compare(control.from, 0)
+        compare(control.to, 10*1000*1000)
+
+        control.contentItem.selectAll()
+        keyClick(Qt.Key_5)
+        compare(control.displayText, "5")
+        compare(control.value, 5)
+
+        let i = 50
+        for (; i < 1e7; i*=10) {
+            keyClick(Qt.Key_0)
+            compare(control.displayText, testLoc.toString(i))
+            compare(control.value, i)
+        }
+
+        i /= 100;
+        for (; i > 10; i/=10) {
+            keyClick(Qt.Key_Backspace)
+            compare(control.displayText, testLoc.toString(i))
+            compare(control.value, i)
+        }
+    }
+
+    function test_qtbug64151() {
+        // Slightly modified example from QTBUG-64151. We use displayText
+        // instead of contentItem.text as a workaround.
+        var control = createTemporaryObject(spinBox, testCase)
+        verify(control)
+
+        control.locale = Qt.locale("en_EN")
+
+        control.from = 0
+        control.to = 2000
+        control.value = 2000
+        control.editable = true
+
+        compare(control.displayText, "2,000")
+
+        control.contentItem.forceActiveFocus()
+        compare(control.contentItem.activeFocus, true)
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_Return)
+
+        compare(control.displayText, "200")
+        compare(control.valueFromText(control.contentItem.text, control.locale), 200)
+        compare(control.value, 200)
+
+        control.contentItem.forceActiveFocus()
+        keyClick(Qt.Key_0)
+        keyClick(Qt.Key_Return)
+        compare(control.displayText, "2,000")
+    }
+
+    Component {
+        id: spinBoxAndAction
+        RowLayout {
+            id: layout
+            property alias spinbox: theSpinbox
+            property alias button: theButton
+            SpinBox {
+                id: theSpinbox
+                from: 0
+                to: 200
+                value: 200
+                editable: true
+                live: true
+            }
+
+            Button {
+                id: theButton
+                property int value: 0
+                action: Action {
+                    text: "&Do something"
+                    shortcut: "Return"
+                    onTriggered: {
+                        theButton.value = theSpinbox.value;
+                    }
+                }
+            }
+        }
+    }
+
+    function test_qtbug103205() {
+
+        var control = createTemporaryObject(spinBoxAndAction, testCase)
+        verify(control)
+        verify(control.spinbox)
+
+        compare(control.spinbox.displayText, "200")
+        control.forceActiveFocus()
+        control.spinbox.forceActiveFocus()
+        control.spinbox.contentItem.forceActiveFocus()
+        compare(control.spinbox.contentItem.activeFocus, true)
+        keyClick(Qt.Key_Backspace)
+        keyClick(Qt.Key_Return)
+
+        compare(control.spinbox.displayText, "20")
+        compare(control.button.value, 20)
+    }
+
 
     function test_wheel_data() {
         return [
