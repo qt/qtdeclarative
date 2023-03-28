@@ -1116,7 +1116,7 @@ void QQuickMenu::setTitle(QString &title)
 
     \include qquickicon.qdocinc grouped-properties
 
-    \sa text, display, {Icons in Qt Quick Controls}
+    \sa AbstractButton::text, AbstractButton::display, {Icons in Qt Quick Controls}
 */
 
 QQuickIcon QQuickMenu::icon() const

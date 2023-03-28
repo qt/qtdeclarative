@@ -769,8 +769,6 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     \snippet qml/flickableScrollbar.qml 0
     \dots 8
     \snippet qml/flickableScrollbar.qml 1
-
-    \sa {customitems/scrollbar}{UI Components: Scrollbar Example}
 */
 QQuickFlickable::QQuickFlickable(QQuickItem *parent)
   : QQuickItem(*(new QQuickFlickablePrivate), parent)

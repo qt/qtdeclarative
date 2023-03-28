@@ -15,15 +15,15 @@
     It can either be used as an independent view or header for a \l TableView.
 
     You can add a header for a TableView by assigning a HorizontalHeaderView
-    to the \l {TablewView::syncView} property. The header and the table will
+    to the \l {TableView::syncView} property. The header and the table will
     then be kept in sync while flicking.
 
     By default, HorizontalHeaderView displays
-    \l {header data}{QAbstractItemModel::headerData()}
-    from the \l {sync view's}{TableView::syncView} \l {model.}{TableView::model}
+    \l {QAbstractItemModel::headerData()}{header data}
+    from the \l {TableView::syncView}{sync view's} \l {TableView::model}{model}.
     If you don't wish to use this model, you can assign a different model to the
-    \l {model}{TableView::model} property. If you assign a model that is a
-    QAbstractItemModel, it's header data will be used. Otherwise the data in
+    \l {TableView::model}{model} property. If you assign a model that is a
+    QAbstractItemModel, its header data will be used. Otherwise the data in
     the model will be used directly (for example, if you assign a model that
     is simply an array of strings).
 
@@ -38,7 +38,7 @@
     \snippet qtquickcontrols-headerview.qml 0
 
     A HorizontalHeaderView will have
-    \l {resizableColumns}{TableView::resizableColumns} set to \c true by default.
+    \l {TableView::resizableColumns}{resizableColumns} set to \c true by default.
 
     \sa VerticalHeaderView
 */
@@ -54,15 +54,15 @@
     It can either be used as an independent view or header for a \l TableView.
 
     You can add a header for a TableView by assigning a VerticalHeaderView
-    to the \l {TablewView::syncView} property. The header and the table will
+    to the \l {TableView::syncView} property. The header and the table will
     then be kept in sync while flicking.
 
     By default, VerticalHeaderView displays
-    \l {header data}{QAbstractItemModel::headerData()}
-    from the \l {sync view's}{TableView::syncView} \l {model.}{TableView::model}
+    \l {QAbstractItemModel::headerData()}{header data}
+    from the \l {TableView::syncView}{sync view's} \l {TableView::model}{model}.
     If you don't wish to use this model, you can assign a different model to the
-    \l {model}{TableView::model} property. If you assign a model that is a
-    QAbstractItemModel, it's header data will be used. Otherwise the data in
+    \l {TableView::model}{model} property. If you assign a model that is a
+    QAbstractItemModel, its header data will be used. Otherwise the data in
     the model will be used directly (for example, if you assign a model that
     is simply an array of strings).
 
@@ -77,7 +77,7 @@
     \snippet qtquickcontrols-headerview.qml 0
 
     A VerticalHeaderView will have
-    \l {resizableRows}{TableView::resizableRows} set to \c true by default.
+    \l {TableView::resizableRows}{resizableRows} set to \c true by default.
 
     \sa HorizontalHeaderView
 */

@@ -106,7 +106,7 @@
     the width of the column. Otherwise, it will check if an explicit width has
     been set with \l setColumnWidth(). If not, \l implicitColumnWidth() will be used.
     The implicit width of a column is the same as the largest
-    \l {implicit width}{QQuickItem::implicitWidth()} found among the currently loaded
+    \l {Item::implicitWidth}{implicit width} found among the currently loaded
     delegate items in that column. Trying to set an explicit \c width directly on
     a delegate has no effect, and will be ignored and overwritten. The same logic also
     applies to row heights.
@@ -130,7 +130,7 @@
     of the view, and is recalculated again if it's flicked back in. This means that if the
     width depends on the \l implicitColumnWidth(), the calculation can be different each time,
     depending on which row you're at when the column enters (since \l implicitColumnWidth()
-    only considers the delegate items that are currently \l {loaded}{isColumnLoaded()}).
+    only considers the delegate items that are currently \l {isColumnLoaded()}{loaded}).
     To avoid this, you should use a \l columnWidthProvider, or ensure that all the delegate
     items in the same column have the same \c implicitWidth.
 
@@ -160,13 +160,13 @@
     You can let the user edit table cells by providing an edit delegate. The
     edit delegate will be instantiated according to the \l editTriggers, which
     by default is when the user double taps on a cell, or presses e.g
-    \l Qt.Key_Enter or \l Qt.Key_Return. The edit delegate is set using
+    \l Qt::Key_Enter or \l Qt::Key_Return. The edit delegate is set using
     \l {TableView::editDelegate}, which is an attached property that you set
     on the \l delegate. The following snippet shows how to do that:
 
     \snippet qml/tableview/editdelegate.qml 0
 
-    If the user presses Qt.Key_Enter or Qt.Key_Return while the edit delegate
+    If the user presses Qt::Key_Enter or Qt::Key_Return while the edit delegate
     is active, TableView will emit the \l TableView::commit signal to the edit
     delegate, so that it can write back the changed data to the model.
 
@@ -211,7 +211,7 @@
     \snippet qml/tableview/overlay.qml 0
 
     You could also parent the overlay directly to the cell instead of the
-    \l contentItem. But doing so will be fragile since the cell is unloaded
+    \l {Flickable::}{contentItem}. But doing so will be fragile since the cell is unloaded
     or reused whenever it's flicked out of the viewport.
 
     \sa layoutChanged()
@@ -252,7 +252,7 @@
     to let the user select cells.
 
     \note By default, a cell will become
-    \l {QQuickItemSelectionModel::currentIndex()}{current}, and any selections will
+    \l {ItemSelectionModel::currentIndex}{current}, and any selections will
     be removed, when the user taps on it. If such default tap behavior is not wanted
     (e.g if you use custom pointer handlers inside your delegate), you can set
     \l pointerNavigationEnabled to \c false.
@@ -264,7 +264,7 @@
     the model's \l {ItemSelectionModel::currentIndex}{currentIndex}.
 
     It's the responsibility of the delegate to render itself as
-    \l {QQuickItemSelectionModel::currentIndex()}{current.} You can do this by adding a
+    \l {ItemSelectionModel::currentIndex}{current}. You can do this by adding a
     property \c {required property bool current} to it, and let the appearance
     depend on its state. The \c current property's value is set by the TableView.
     You can also disable keyboard navigation fully (in case you want to implement your
@@ -334,7 +334,7 @@
     }
     \endcode
 
-    \sa mimeData(), dropMimeData(), QUndoStack, QUndoCommand, QClipboard
+    \sa QAbstractItemModel::mimeData(), QAbstractItemModel::dropMimeData(), QUndoStack, QUndoCommand, QClipboard
 */
 
 /*!
@@ -732,22 +732,22 @@
     \value TableView.SelectedTapped - the user can edit a
         \l {QItemSelectionModel::selectedIndexes()}{selected cell} by tapping it.
     \value TableView.EditKeyPressed - the user can edit the
-        \l {QItemSelectionModel::currentIndex()}{current cell} by pressing one
+        \l {ItemSelectionModel::currentIndex}{current cell} by pressing one
         of the edit keys. The edit keys are decided by the OS, but are normally
-        \c Qt.Key_Enter and \c Qt.Key_Return.
+        \c Qt::Key_Enter and \c Qt::Key_Return.
     \value TableView.AnyKeyPressed - the user can edit the
-        \l {TableView::current}{current cell} by pressing any key, other
+        \l {ItemSelectionModel::currentIndex}{current cell} by pressing any key, other
         than the cell navigation keys. The pressed key is also sent to the
         focus object inside the \l {TableView::editDelegate}{edit delegate}.
 
     For \c TableView.SelectedTapped, \c TableView.EditKeyPressed, and
     \c TableView.AnyKeyPressed to have any effect, TableView needs to have a
     \l {selectionModel}{selection model} assigned, since they depend on a
-    \l {QItemSelectionModel::currentIndex()}{current index} being set. To be
+    \l {ItemSelectionModel::currentIndex}{current index} being set. To be
     able to receive any key events at all, TableView will also need to have
     \l QQuickItem::activeFocus.
 
-    When editing a cell, the user can press \c Qt.Key_Tab or \c Qt.Key_Backtab
+    When editing a cell, the user can press \c Qt::Key_Tab or \c Qt::Key_Backtab
     to \l {TableView::commit}{commit} the data, and move editing to the next
     cell. This behavior can be disabled by setting
     \l QQuickItem::activeFocusOnTab on TableView to \c false.
@@ -1182,7 +1182,7 @@
     \since 6.4
     \deprecated
 
-    Use \l index(row, column) instead.
+    Use \l {QtQuick::TableView::}{index(int row, int column)} instead.
 
     \note Because of an API incompatible change between Qt 6.4.0 and Qt 6.4.2, the
     order of \c row and \c column was specified in the opposite order. If you
@@ -1344,13 +1344,13 @@
     This signal is emitted by the \l {TableView::editDelegate}{edit delegate}
 
     This attached signal is emitted when the \l {TableView::editDelegate}{edit delegate}
-    is active, and the user presses \l Qt.Key_Enter or \l Qt.Key_Return. It will also
+    is active, and the user presses \l Qt::Key_Enter or \l Qt::Key_Return. It will also
     be emitted if TableView has \l QQuickItem::activeFocusOnTab set, and the user
-    presses Qt.Key_Tab or Qt.Key_Backtab.
+    presses Qt::Key_Tab or Qt::Key_Backtab.
 
     This signal will \e not be emitted if editing ends because of reasons other
     than the ones mentioned. This includes e.g if the user presses
-    Qt.Key_Escape, taps outside the delegate, the row or column being
+    Qt::Key_Escape, taps outside the delegate, the row or column being
     edited is deleted, or if the application calls \l closeEditor().
 
     Upon receiving the signal, the edit delegate should write any modified data
@@ -1383,12 +1383,12 @@
     and \l closeEditor(), respectively. The \c Qt::ItemIsEditable flag will
     then be ignored.
 
-    Editing ends when the user presses \c Qt.Key_Enter or \c Qt.Key_Return
-    (and also \c Qt.Key_Tab or \c Qt.Key_Backtab, if TableView has
+    Editing ends when the user presses \c Qt::Key_Enter or \c Qt::Key_Return
+    (and also \c Qt::Key_Tab or \c Qt::Key_Backtab, if TableView has
     \l QQuickItem::activeFocusOnTab set). In that case, the \l TableView::commit
     signal will be emitted, so that the edit delegate can respond by writing any
     modified data back to the model. If editing ends because of other reasons
-    (e.g if the user presses Qt.Key_Escape), the signal will not be emitted.
+    (e.g if the user presses Qt::Key_Escape), the signal will not be emitted.
     In any case will \l {Component::destruction}{destruction()} be emitted in the end.
 
     While the edit delegate is showing, the cell underneath will still be visible, and
@@ -1397,7 +1397,7 @@
     of the edit delegate be a solid \l Rectangle, or hide some of the items
     inside the \l {TableView::delegate}{TableView delegate.}. The latter can be done
     by defining a property \c {required property bool editing} inside it, that you
-    bind to the \l visible property of some of the child items.
+    bind to the \l {QQuickItem::}{visible} property of some of the child items.
     The following snippet shows how to do that:
 
     \snippet qml/tableview/editdelegate.qml 1

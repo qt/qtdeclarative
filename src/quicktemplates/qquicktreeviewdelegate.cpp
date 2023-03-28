@@ -99,14 +99,14 @@ QT_BEGIN_NAMESPACE
 
     \note If you want to disable the default behavior that occurs when the
     user clicks on the delegate (like changing the current index), you can set
-    \l {QQuickTableView::pointerNavigationEnabled}{pointerNavigationEnabled} to \c false.
+    \l {TableView::pointerNavigationEnabled}{pointerNavigationEnabled} to \c false.
 
     \section2 Editing nodes in the tree
     TreeViewDelegate has a default \l {TableView::editDelegate}{edit delegate}
     assigned. If \l TreeView has \l {TableView::editTriggers}{edit triggers}
     set, and the \l {TableView::model}{model} has support for
     \l {Editing cells} {editing model items}, then the user can activate any of
-    the edit triggers to edit the text of the \l {TableView::current}{current}
+    the edit triggers to edit the text of the \l {TreeViewDelegate::current}{current}
     tree node.
 
     The default edit delegate will try to use the \c {Qt.EditRole} to read and

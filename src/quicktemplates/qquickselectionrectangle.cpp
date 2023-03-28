@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
     The handle is not hidden by default when a selection is removed.
     Instead, this is the responsibility of the delegate, to open up for
     custom fade-out animations. The easiest way to ensure that the handle
-    ends up hidden, is to simply bind \l visible to the \l active
+    ends up hidden, is to simply bind \l {Item::}{visible} to the \l active
     state of the SelectionRectangle:
 
     \qml
@@ -109,7 +109,7 @@ QT_BEGIN_NAMESPACE
     The handle is not hidden by default when a selection is removed.
     Instead, this is the responsibility of the delegate, to open up for
     custom fade-out animations. The easiest way to ensure that the handle
-    ends up hidden, is to simply bind \l visible to the \l active
+    ends up hidden, is to simply bind \l {Item::}{visible} to the \l active
     state of the SelectionRectangle:
 
     \qml
