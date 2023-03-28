@@ -36,12 +36,10 @@ resources and component directories are used within a QML document.  The types
 which may be used within a document depends on which modules, resources and
 directories are imported by the document.
 
-\section2 Import Types
-
 There are three different types of imports.  Each import type has a slightly
 different syntax, and different semantics apply to different import types.
 
-\section3 Module (Namespace) Imports
+\section2 Module (Namespace) Imports
 
 The most common type of import is a module import.  Clients can import
 \l{qtqml-modules-identifiedmodules.html}{QML modules} which register QML object
@@ -127,7 +125,7 @@ Rectangle {
 
 In this case, the engine will emit an error and refuse to load the file.
 
-\section4 C++ Module Imports
+\section3 C++ Module Imports
 
 Usually, C++ types are declared using the QML_ELEMENT and QML_NAMED_ELEMENT()
 macros and registered via the build system using QML_IMPORT_NAME and
@@ -137,7 +135,7 @@ module that can be imported to access the types.
 This is most common in client applications which define their own QML object
 types in C++.
 
-\section4 Importing into a Qualified Local Namespace
+\section3 Importing into a Qualified Local Namespace
 
 The \c import statement may optionally use the \c as keyword to specify that
 the types should be imported into a particular document-local namespace. If a
@@ -187,7 +185,7 @@ way that multiple modules can be imported into the global namespace. For example
 
 \snippet qml/imports/merged-named-imports.qml imports
 
-\section3 Directory Imports
+\section2 Directory Imports
 
 A directory which contains QML documents may also be imported directly in a
 QML document.  This provides a simple way for QML types to be segmented into
@@ -213,7 +211,7 @@ section about \l{Importing into a Qualified Local Namespace}.
 For more information about directory imports, please see the in-depth
 documentation about \l{qtqml-syntax-directoryimports.html}{directory imports}.
 
-\section3 JavaScript Resource Imports
+\section2 JavaScript Resource Imports
 
 JavaScript resources may be imported directly in a QML document.  Every
 JavaScript resource must have an identifier by which it is accessed.
@@ -226,7 +224,7 @@ import "<JavaScriptFile>" as <Identifier>
 Note that the \c <Identifier> must be unique within a QML document, unlike the
 local namespace qualifier which can be applied to module imports.
 
-\section4 JavaScript Resources from Modules
+\section3 JavaScript Resources from Modules
 
 Javascript files can be provided by modules, by adding identifier
 definitions to the \c qmldir file which specifies the module.
@@ -269,7 +267,7 @@ Item {
 }
 \endqml
 
-\section4 Further Information
+\section3 Further Information
 
 For more information about JavaScript resources, please see the documentation
 about \l{qtqml-javascript-resources.html}
