@@ -184,6 +184,7 @@ private slots:
     void parentChangeInvolvingBindings();
     void deferredProperties();
     void rewindAnchorChange();
+    void rewindAnchorChangeSize();
     void bindingProperlyRemovedWithTransition();
 };
 
@@ -1973,6 +1974,41 @@ void tst_qquickstates::rewindAnchorChange()
     QTRY_COMPARE(innerRect->y(), 0);
     QTRY_COMPARE(innerRect->width(), 200);
     QTRY_COMPARE(innerRect->height(), 200);
+}
+
+void tst_qquickstates::rewindAnchorChangeSize()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("anchorRewindSize.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QQmlContext *context = qmlContext(root.get());
+    QVERIFY(context);
+
+    QObject *inner = context->objectForName(QStringLiteral("inner"));
+    QVERIFY(inner);
+
+    QQuickItem *innerRect = qobject_cast<QQuickItem *>(inner);
+    QVERIFY(innerRect);
+
+    QCOMPARE(innerRect->x(), 0);
+    QCOMPARE(innerRect->y(), 0);
+    QCOMPARE(innerRect->width(), 100);
+    QCOMPARE(innerRect->height(), 100);
+
+    root->setProperty("changeState", true);
+    QCOMPARE(innerRect->x(), 0);
+    QCOMPARE(innerRect->y(), 0);
+    QCOMPARE(innerRect->width(), 400);
+    QCOMPARE(innerRect->height(), 400);
+
+    root->setProperty("changeState", false);
+    QCOMPARE(innerRect->x(), 0);
+    QCOMPARE(innerRect->y(), 0);
+    QCOMPARE(innerRect->width(), 100);
+    QCOMPARE(innerRect->height(), 100);
 }
 
 void tst_qquickstates::bindingProperlyRemovedWithTransition()
