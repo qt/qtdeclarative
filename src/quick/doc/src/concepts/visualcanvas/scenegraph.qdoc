@@ -1225,6 +1225,6 @@ with multiple windows.
   as environment variables are available as C++ APIs in
   QQuickGraphicsConfiguration. For example, setting \c QSG_RHI_DEBUG_LAYER and
   calling
-  \l{QQuickGraphicsConfiguration::setDebugLayerEnabled()}{setDebugLayerEnabled(true)}
+  \l{QQuickGraphicsConfiguration::setDebugLayer()}{setDebugLayer(true)}
   are equivalent.
  */

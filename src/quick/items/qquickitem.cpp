@@ -6380,9 +6380,9 @@ void QQuickItem::setVisible(bool v)
     Thus, a disabled item can continue to receive hover events, even when this
     property is \c false. This makes it possible to show informational feedback
     (such as \l ToolTip) even when an interactive item is disabled.
-    The same is also true for any \l {QQuickHoverHandler}{HoverHandlers}
+    The same is also true for any \l {HoverHandler}{HoverHandlers}
     added as children of the item. A HoverHandler can, however, be
-    \l{QQuickHoverHandler::enabled}{disabled} explicitly, or for example
+    \l {PointerHandler::enabled}{disabled} explicitly, or for example
     be bound to the \c enabled state of the item.
 
     \sa visible
