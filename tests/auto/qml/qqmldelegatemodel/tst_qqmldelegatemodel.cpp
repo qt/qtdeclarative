@@ -26,6 +26,7 @@ private slots:
     void contextAccessedByHandler();
     void redrawUponColumnChange();
     void nestedDelegates();
+    void deleteRace();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -205,6 +206,17 @@ void tst_QQmlDelegateModel::nestedDelegates()
         return; // loader found
     }
     QFAIL("Loader not found");
+}
+
+void tst_QQmlDelegateModel::deleteRace()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("deleteRace.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("count").toInt(), 2);
+    QTRY_COMPARE(o->property("count").toInt(), 0);
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

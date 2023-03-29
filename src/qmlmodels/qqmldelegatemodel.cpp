@@ -1833,10 +1833,15 @@ void QQmlDelegateModelPrivate::emitChanges()
     for (int i = 1; i < m_groupCount; ++i)
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->emitModelUpdated(reset);
 
-    auto cacheCopy = m_cache; // deliberate; emitChanges may alter m_cache
-    for (QQmlDelegateModelItem *cacheItem : std::as_const(cacheCopy)) {
-        if (cacheItem->attached)
-            cacheItem->attached->emitChanges();
+    // emitChanges may alter m_cache and delete items
+    QVarLengthArray<QPointer<QQmlDelegateModelAttached>> attachedObjects;
+    attachedObjects.reserve(m_cache.length());
+    for (const QQmlDelegateModelItem *cacheItem : std::as_const(m_cache))
+        attachedObjects.append(cacheItem->attached);
+
+    for (const QPointer<QQmlDelegateModelAttached> &attached : std::as_const(attachedObjects)) {
+        if (attached && attached->m_cacheItem)
+            attached->emitChanges();
     }
 }
 
@@ -2720,20 +2725,24 @@ void QQmlDelegateModelAttached::emitChanges()
     m_previousGroups = m_cacheItem->groups;
 
     int indexChanges = 0;
-    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i) {
+    const int groupCount = m_cacheItem->metaType->groupCount;
+    for (int i = 1; i < groupCount; ++i) {
         if (m_previousIndex[i] != m_currentIndex[i]) {
             m_previousIndex[i] = m_currentIndex[i];
             indexChanges |= (1 << i);
         }
     }
 
+    // Don't access m_cacheItem anymore once we've started sending signals.
+    // We don't own it and someone might delete it.
+
     int notifierId = 0;
     const QMetaObject *meta = metaObject();
-    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i, ++notifierId) {
+    for (int i = 1; i < groupCount; ++i, ++notifierId) {
         if (groupChanges & (1 << i))
             QMetaObject::activate(this, meta, notifierId, nullptr);
     }
-    for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i, ++notifierId) {
+    for (int i = 1; i < groupCount; ++i, ++notifierId) {
         if (indexChanges & (1 << i))
             QMetaObject::activate(this, meta, notifierId, nullptr);
     }
