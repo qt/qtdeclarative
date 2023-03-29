@@ -1054,14 +1054,12 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (to.isNull())
         return false;
 
-    if (equals(from, m_stringType) && equals(to, m_dateTimeType))
-        return true;
-
-    for (const auto &originType : {m_dateTimeType, m_dateType, m_timeType}) {
+    const auto types = { m_dateTimeType, m_dateType, m_timeType, m_stringType };
+    for (const auto &originType : types) {
         if (!equals(from, originType))
             continue;
 
-        for (const auto &targetType : {m_dateTimeType, m_dateType, m_timeType, m_stringType}) {
+        for (const auto &targetType : types) {
             if (equals(to, targetType))
                 return true;
         }
