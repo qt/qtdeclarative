@@ -147,6 +147,17 @@ T qmlobject_cast(QObject *object)
         return nullptr;
 }
 
+class QQuickItem;
+template<>
+inline QQuickItem *qmlobject_cast<QQuickItem *>(QObject *object)
+{
+    if (!object || !object->isQuickItemType())
+        return nullptr;
+    // QQuickItem is incomplete here -> can't use static_cast
+    // but we don't need any pointer adjustment, so reinterpret is safe
+    return reinterpret_cast<QQuickItem *>(object);
+}
+
 #define IS_SIGNAL_CONNECTED(Sender, SenderType, Name, Arguments) \
 do { \
     QObject *sender = (Sender); \
