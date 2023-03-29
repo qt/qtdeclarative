@@ -17,6 +17,7 @@
     \li \l {Call a C++ function from QML when a Button is clicked}
     \li \l {See which item has active focus}
     \li \l {Create a time picker like Android's TimePickerDialog}
+    \li \l {Use a C++ enum in JavaScript}
     \endlist
 
 
@@ -73,4 +74,36 @@
             \li \image how-to-time-picker-dark.png
                 \caption TimePickerDialog in its dark theme.
     \endtable
+
+
+    \section1 Use a C++ enum in JavaScript
+
+    To expose a C++ enum to JavaScript (that is, \l QJSEngine, not
+    \l QQmlEngine or \l QQmlApplicationEngine), use
+    \l QJSEngine::newQMetaObject():
+
+    \quotefromfile how-tos/how-to-cpp-enum-js/tst_how-to-cpp-enum-js.cpp
+    \skipto QJSEngine engine
+    \printuntil setProperty
+    \skipto Backend backend
+    \printuntil backend.load()
+
+    The enum can then be used from JavaScript:
+
+    \snippet how-tos/how-to-cpp-enum-js/script.mjs file
+
+    When using \l QQmlEngine or \l QQmlApplicationEngine, there are easier
+    options; see
+    \l {Choosing the Correct Integration Method Between C++ and QML}
+    for more information.
+
+    \c backend.h:
+
+    \snippet how-tos/how-to-cpp-enum-js/backend.h file
+
+    \c backend.cpp:
+
+    \snippet how-tos/how-to-cpp-enum-js/backend.cpp file
+
+    For more information, see \l {QObject Integration}.
 */
