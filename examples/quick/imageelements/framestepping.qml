@@ -9,6 +9,7 @@ Rectangle {
     height: 320
     Image {
         id: img
+
         anchors.centerIn: parent
         cache: true
         source: "pics/multi.ico"
@@ -30,7 +31,8 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.margins: 6
         horizontalAlignment: Text.AlignHCenter
-        text: qsTr("frame " + (img.currentFrame + 1) + " of " + img.frameCount +
-              "\nPress PgUp/PgDn to switch frames")
+        text: qsTr("frame %1 of %2 \nPress PgUp/PgDn to switch frames")
+            .arg(img.currentFrame + 1)
+            .arg(img.frameCount)
     }
 }

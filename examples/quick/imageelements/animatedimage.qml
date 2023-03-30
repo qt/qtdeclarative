@@ -12,6 +12,7 @@ Column {
 //! [image]
     AnimatedImage {
         id: animation
+
         source: "pics/Uniflow_steam_engine.gif"
         anchors.horizontalCenter: parent.horizontalCenter
         speed: speedSlider.value
@@ -23,6 +24,7 @@ Column {
 
     Rectangle {
         id: timeline
+
         color: "steelblue"
         width: animation.width
         height: 1
@@ -32,7 +34,8 @@ Column {
 
         Rectangle {
             property int frames: animation.frameCount
-            width: 4; height: 8
+            width: 4
+            height: 8
             x: (animation.width - width) * animation.currentFrame / frames
             y: -4
             color: "red"
@@ -51,6 +54,7 @@ Column {
 
         Slider {
             id: speedSlider
+
             from: 0
             to: 5
             value: 1
@@ -65,6 +69,7 @@ Column {
 
         TextMetrics {
             id: fontMetrics
+
             text: "100%"
             font.pointSize: 12
         }

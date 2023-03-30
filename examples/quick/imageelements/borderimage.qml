@@ -5,11 +5,13 @@ import QtQuick
 
 Rectangle {
     id: page
+
     width: 320
     height: 480
 
     BorderImageSelector {
         id: selector
+
         curIdx: 0
         maxIdx: 3
         gridWidth: 240
@@ -20,6 +22,7 @@ Rectangle {
 
     Flickable {
         id: mainFlickable
+
         width: parent.width
         anchors.bottom: parent.bottom
         anchors.top: selector.bottom
@@ -29,52 +32,91 @@ Rectangle {
         contentWidth: 1030
         contentHeight: 420
         Grid {
-            anchors.centerIn: parent; spacing: 20
+            anchors.centerIn: parent
+            spacing: 20
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: Qt.resolvedUrl("pics/colors.png"); margin: 30
+                minWidth: 120
+                maxWidth: 240
+                minHeight: 120
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/colors.png")
+                margin: 30
             }
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: Qt.resolvedUrl("pics/colors.png"); margin: 30
-                horizontalMode: BorderImage.Repeat; verticalMode: BorderImage.Repeat
+                minWidth: 120
+                maxWidth: 240
+                minHeight: 120
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/colors.png")
+                margin: 30
+                horizontalMode: BorderImage.Repeat
+                verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: Qt.resolvedUrl("pics/colors.png"); margin: 30
-                horizontalMode: BorderImage.Stretch; verticalMode: BorderImage.Repeat
+                minWidth: 120
+                maxWidth: 240
+                minHeight: 120
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/colors.png")
+                margin: 30
+                horizontalMode: BorderImage.Stretch
+                verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
-                minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: Qt.resolvedUrl("pics/colors.png"); margin: 30
-                horizontalMode: BorderImage.Round; verticalMode: BorderImage.Round
+                minWidth: 120
+                maxWidth: 240
+                minHeight: 120
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/colors.png")
+                margin: 30
+                horizontalMode: BorderImage.Round
+                verticalMode: BorderImage.Round
             }
 
             MyBorderImage {
-                minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: Qt.resolvedUrl("pics/bw.png"); margin: 10
+                minWidth: 60
+                maxWidth: 200
+                minHeight: 40
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/bw.png")
+                margin: 10
             }
 
             MyBorderImage {
-                minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: Qt.resolvedUrl("pics/bw.png"); margin: 10
-                horizontalMode: BorderImage.Repeat; verticalMode: BorderImage.Repeat
+                minWidth: 60
+                maxWidth: 200
+                minHeight: 40
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/bw.png")
+                margin: 10
+                horizontalMode: BorderImage.Repeat
+                verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
-                minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: Qt.resolvedUrl("pics/bw.png"); margin: 10
-                horizontalMode: BorderImage.Stretch; verticalMode: BorderImage.Repeat
+                minWidth: 60
+                maxWidth: 200
+                minHeight: 40
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/bw.png")
+                margin: 10
+                horizontalMode: BorderImage.Stretch
+                verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
-                minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: Qt.resolvedUrl("pics/bw.png"); margin: 10
-                horizontalMode: BorderImage.Round; verticalMode: BorderImage.Round
+                minWidth: 60
+                maxWidth: 200
+                minHeight: 40
+                maxHeight: 200
+                source: Qt.resolvedUrl("pics/bw.png")
+                margin: 10
+                horizontalMode: BorderImage.Round
+                verticalMode: BorderImage.Round
             }
         }
     }

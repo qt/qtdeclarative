@@ -9,11 +9,17 @@ Rectangle {
     height: 320
     BorderImage {
         id: img
+
         anchors.fill: parent
         anchors.margins: 6
         cache: true
         source: "pics/multi.ico"
-        border { left: 19; top: 19; right: 19; bottom: 19 }
+        border {
+            left: 19
+            top: 19
+            right: 19
+            bottom: 19
+        }
         horizontalTileMode: BorderImage.Stretch
 
         Shortcut {
