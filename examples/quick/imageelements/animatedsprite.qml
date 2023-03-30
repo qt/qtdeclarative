@@ -14,6 +14,7 @@ Item {
 //! [sprite]
     AnimatedSprite {
         id: sprite
+
         anchors.centerIn: parent
         source: "pics/speaker.png"
         frameCount: 60
@@ -34,21 +35,21 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: (mouse) => {
             if (!sprite.running) {
-                sprite.start();
+                sprite.start()
             } else if (!sprite.paused) {
-                sprite.pause();
+                sprite.pause()
             } else {
                 if (mouse.button === Qt.LeftButton)
-                    sprite.resume();
+                    sprite.resume()
                 else if (mouse.button === Qt.MiddleButton)
-                    sprite.advance(-1);
+                    sprite.advance(-1)
                 else if (mouse.button === Qt.RightButton)
-                    sprite.advance(1);
+                    sprite.advance(1)
             }
         }
     }
 
-    Component.onCompleted: console.log("Press Space to toggle visibility. Click with mouse to pause/resume.")
+    Component.onCompleted: console.log(qsTr("Press Space to toggle visibility. Click with mouse to pause/resume."))
     focus: true
     Keys.onSpacePressed: sprite.visible = !sprite.visible
 }

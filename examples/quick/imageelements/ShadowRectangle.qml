@@ -9,11 +9,25 @@ Item {
 //! [shadow]
     BorderImage {
         anchors.fill: rectangle
-        anchors { leftMargin: -6; topMargin: -6; rightMargin: -8; bottomMargin: -8 }
-        border { left: 10; top: 10; right: 10; bottom: 10 }
+        anchors {
+            leftMargin: -6
+            topMargin: -6
+            rightMargin: -8
+            bottomMargin: -8
+        }
+        border {
+            left: 10
+            top: 10
+            right: 10
+            bottom: 10
+        }
         source: "pics/shadow.png"
     }
 //! [shadow]
 
-    Rectangle { id: rectangle; anchors.fill: parent }
+    Rectangle {
+        id: rectangle
+
+        anchors.fill: parent
+    }
 }
