@@ -74,5 +74,7 @@ function(qt_declarative_generate_reg_exp_jit_tables consuming_target)
     )
     target_sources(${consuming_target} PRIVATE ${output_file})
     target_include_directories(${consuming_target} PRIVATE $<BUILD_INTERFACE:${generate_dir}>)
-    set_source_files_properties(${output_file} PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${output_file} PROPERTIES
+        GENERATED TRUE
+        _qt_non_module_header TRUE)
 endfunction()
