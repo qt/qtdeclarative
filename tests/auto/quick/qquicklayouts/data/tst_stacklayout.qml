@@ -724,6 +724,38 @@ Item {
             compare(layout.num_onCountChanged, 1)
         }
 
+        // QTBUG-111902
+        Component {
+            id: stackComponent
+            Loader {
+                id: loader
+                asynchronous: true
+                sourceComponent: StackLayout {
+                    id: stackLayout
+                    Repeater {
+                        model: 3
+                        Item {
+                            required property int index
+                        }
+                    }
+                }
+            }
+        }
 
+        function test_loadStackLayoutAsynchronously() {
+            var loaderObj = stackComponent.createObject(container)
+            // Check for loader status to be ready
+            tryCompare(loaderObj, 'status', 1)
+            // Get stack layout object
+            var stackLayoutObj = loaderObj.item
+            // Check repeater index of child object
+            compare(stackLayoutObj.children[0].index, 0)
+            compare(stackLayoutObj.children[1].index, 1)
+            compare(stackLayoutObj.children[2].index, 2)
+            // Check stack layout attached property index
+            compare(stackLayoutObj.children[0].StackLayout.index, 0)
+            compare(stackLayoutObj.children[1].StackLayout.index, 1)
+            compare(stackLayoutObj.children[2].StackLayout.index, 2)
+        }
     }
 }
