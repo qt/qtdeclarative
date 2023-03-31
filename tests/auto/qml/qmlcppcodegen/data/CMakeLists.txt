@@ -66,6 +66,7 @@ set(qml_files
     bindToValueType.qml
     blockComments.qml
     boolCoercions.qml
+    boolPointerMerge.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
     callWithSpread.qml

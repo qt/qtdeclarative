@@ -681,10 +681,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (auto commonBase = commonBaseType(a, b))
         return commonBase;
 
-    if (equals(a, nullType()) && b->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+    if ((equals(a, nullType()) || equals(a, boolType())) && b->isReferenceType())
         return b;
 
-    if (equals(b, nullType()) && a->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+    if ((equals(b, nullType()) || equals(b, boolType())) && a->isReferenceType())
         return a;
 
     return varType();

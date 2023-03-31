@@ -176,6 +176,7 @@ private slots:
     void multipleCtors();
     void boolCoercions();
     void ambiguousAs();
+    void boolPointerMerge();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3543,6 +3544,18 @@ void tst_QmlCppCodegen::ambiguousAs()
     QCOMPARE(o->property("other").value<QObject *>(), o.data());
     o->setProperty("useSelf", QVariant::fromValue(false));
     QCOMPARE(o->property("other").value<QObject *>(), nullptr);
+}
+
+void tst_QmlCppCodegen::boolPointerMerge()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/boolPointerMerge.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QObject *item = o->property("item").value<QObject *>();
+    QVERIFY(item);
+    QCOMPARE(item->property("ppp").toInt(), -99);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
