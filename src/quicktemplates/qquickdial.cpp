@@ -57,6 +57,20 @@ QT_BEGIN_NAMESPACE
     by the user by either touch, mouse, or keys.
 */
 
+/*!
+    \qmlsignal QtQuick.Controls::Dial::wrapped(Dial.WrapDirection direction)
+    \since 6.6
+
+    This signal is emitted when the dial wraps around, i.e. goes beyond its
+    maximum value to its minimum value, or vice versa. It is only emitted when
+    \l wrap is \c true.
+    The \a direction argument specifies the direction of the full rotation and
+    will be one of the following arguments:
+
+    \value Dial.Clockwise           The dial wrapped in clockwise direction.
+    \value Dial.CounterClockwise    The dial wrapped in counterclockwise direction.
+*/
+
 // The user angle is the clockwise angle between the position and the vertical
 // y-axis (12 o clock position).
 // Using radians for logic (atan2(...)) and degree for user interface
@@ -92,6 +106,8 @@ public:
     void executeHandle(bool complete = false);
 
     void updateAllValuesAreInteger();
+
+    void maybeEmitWrapAround(qreal pos);
 
     qreal from = 0;
     qreal to = 1;
@@ -230,7 +246,7 @@ void QQuickDialPrivate::updatePosition()
 
 bool QQuickDialPrivate::isLargeChange(qreal proposedPosition) const
 {
-    if (endAngle - startAngle < 180)
+    if (endAngle - startAngle < 180.0)
         return false;
     return qAbs(proposedPosition - position) > qreal(0.5);
 }
@@ -259,6 +275,8 @@ bool QQuickDialPrivate::handleMove(const QPointF &point, ulong timestamp)
     if (snapMode == QQuickDial::SnapAlways)
         pos = snapPosition(pos);
 
+    maybeEmitWrapAround(pos);
+
     if (wrap || isHorizontalOrVertical() || !isLargeChange(pos)) {
         if (live)
             q->setValue(valueAt(pos));
@@ -279,6 +297,8 @@ bool QQuickDialPrivate::handleRelease(const QPointF &point, ulong timestamp)
         qreal pos = positionAt(point);
         if (snapMode != QQuickDial::NoSnap)
             pos = snapPosition(pos);
+
+        maybeEmitWrapAround(pos);
 
         if (wrap || isHorizontalOrVertical() || !isLargeChange(pos))
             q->setValue(valueAt(pos));
@@ -331,6 +351,14 @@ static bool areRepresentableAsInteger(Real... numbers) {
 void QQuickDialPrivate::updateAllValuesAreInteger()
 {
     allValuesAreInteger = areRepresentableAsInteger(to, from, stepSize) && stepSize != 0.0;
+}
+
+void QQuickDialPrivate::maybeEmitWrapAround(qreal pos)
+{
+    Q_Q(QQuickDial);
+
+    if (wrap && isLargeChange(pos))
+        emit q->wrapped((pos < q->position()) ? QQuickDial::Clockwise : QQuickDial::CounterClockwise);
 }
 
 QQuickDial::QQuickDial(QQuickItem *parent)

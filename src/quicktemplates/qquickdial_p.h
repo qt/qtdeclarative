@@ -89,6 +89,12 @@ public:
     };
     Q_ENUM(InputMode)
 
+    enum WrapDirection {
+        Clockwise,
+        CounterClockwise
+    };
+    Q_ENUM(WrapDirection)
+
     bool wrap() const;
     void setWrap(bool wrap);
 
@@ -128,6 +134,7 @@ Q_SIGNALS:
     Q_REVISION(2, 5) void inputModeChanged();
     Q_REVISION(6, 6) void startAngleChanged();
     Q_REVISION(6, 6) void endAngleChanged();
+    Q_REVISION(6, 6) void wrapped(WrapDirection);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

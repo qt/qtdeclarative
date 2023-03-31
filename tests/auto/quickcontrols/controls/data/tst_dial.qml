@@ -668,66 +668,84 @@ TestCase {
         return [
             {
                 tag: "Default wrap", startAngle: -140, endAngle: 140, from: 0, to: 1, wrap: true,
-                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
-                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
-                values: [0.0, 0.5-0.32, 0.5, 0.5+0.32, 1.0, 0.0], //140/90*0.5 = 0.32
-                angles: [-140.0, -90.0, 0.0, 90.0, 140.0, -140.0]
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.51],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.99],
+                values: [0.0, 0.5-0.32, 0.5, 0.5+0.32, 1.0, 0.0, 1.0], //140/90*0.5 = 0.32
+                angles: [-140.0, -90.0, 0.0, 90.0, 140.0, -140.0, 140.0],
+                wrapClockwise: 1,
+                wrapCounterClockwise: 1
             },
             {
                 tag: "-30..30 wrap", startAngle: -30, endAngle: 30, from: 0, to: 1, wrap: true,
-                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
-                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
-                values: [0.0, 0.0, 0.5, 1.0, 1.0, 0.0],
-                angles: [-30.0, -30.0, 0.0, 30.0, 30.0, -30.0]
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.51],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.99],
+                values: [0.0, 0.0, 0.5, 1.0, 1.0, 0.0, 1.0],
+                angles: [-30.0, -30.0, 0.0, 30.0, 30.0, -30.0, 30.0],
+                wrapClockwise: 0, //no wrap if angle < 180
+                wrapCounterClockwise: 0
             },
             {
                 tag: "-180..180 wrap", startAngle: -180, endAngle: 180, from: 0, to: 1, wrap: true,
-                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
-                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
-                values: [0.0, 0.25, 0.5, 0.75, 1.0, 0.0],
-                angles: [-180.0, -90.0, 0.0, 90.0, 180.0, -180.0]
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.51],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.99],
+                values: [0.0, 0.25, 0.5, 0.75, 1.0, 0.0, 1.0],
+                angles: [-180.0, -90.0, 0.0, 90.0, 180.0, -180.0, 180.0],
+                wrapClockwise: 1,
+                wrapCounterClockwise: 1
             },
             {
                 tag: "90..360 wrap", startAngle: 90, endAngle: 360, from: 0, to: 1, wrap: true,
-                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
-                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
-                values: [0.33, 0.66, 1.0, 0.0, 0.33, 0.33],
-                angles: [180.0, 270.0, 360.0, 90.0, 180.0, 180.0]
+                x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49, 0.5],
+                y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99, 0.01],
+                values: [0.33, 0.66, 1.0, 0.0, 0.33, 0.33, 1.0],
+                angles: [180.0, 270.0, 360.0, 90.0, 180.0, 180.0, 360.0],
+                wrapClockwise: 1,
+                wrapCounterClockwise: 1
             },
             {
                 tag: "90..450 wrap", startAngle: 90, endAngle: 450, from: 0, to: 1, wrap: true,
-                x:      [0.49, 0.25, 0.5, 0.75, 0.75, 0.51, 0.49],
-                y:      [0.99, 0.5, 0.01, 0.49, 0.501, 0.99, 0.99],
-                values: [0.25, 0.5, 0.75, 1.0, 0.0, 0.5, 0.5],
-                angles: [180.0, 270.0, 360.0, 450.0, 90.0, 180.0, 180.0]
+                x:      [0.49, 0.25, 0.5, 0.75, 0.75, 0.51, 0.49, 0.75, 0.75],
+                y:      [0.99, 0.5, 0.01, 0.49, 0.501, 0.99, 0.99, 0.49, 0.501],
+                values: [0.25, 0.5, 0.75, 1.0, 0.0, 0.25, 0.25, 1.0, 0.0],
+                angles: [180.0, 270.0, 360.0, 450.0, 90.0, 180.0, 180.0, 450.0, 90.0],
+                wrapClockwise: 2,
+                wrapCounterClockwise: 1
             },
             {
                 tag: "Default nowrap", startAngle: -140, endAngle: 140, from: 0, to: 1, wrap: false,
                 x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
                 y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
                 values: [0.0, 0.5-0.32, 0.5, 0.5+0.32, 1.0, 1.0], //140/90*0.5 = 0.32
-                angles: [-140.0, -90.0, 0.0, 90.0, 140.0, 140.0]
+                angles: [-140.0, -90.0, 0.0, 90.0, 140.0, 140.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
             },
             {
                 tag: "-30..30 nowrap", startAngle: -30, endAngle: 30, from: 0, to: 1, wrap: false,
                 x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
                 y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
                 values: [0.0, 0.0, 0.5, 1.0, 1.0, 1.0],
-                angles: [-30.0, -30.0, 0.0, 30.0, 30.0, 30.0]
+                angles: [-30.0, -30.0, 0.0, 30.0, 30.0, 30.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
             },
             {
                 tag: "-180..180 nowrap", startAngle: -180, endAngle: 180, from: 0, to: 1, wrap: false,
                 x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
                 y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
                 values: [0.0, 0.25, 0.5, 0.75, 1.0, 1.0],
-                angles: [-180.0, -90.0, 0.0, 90.0, 180.0, 180.0]
+                angles: [-180.0, -90.0, 0.0, 90.0, 180.0, 180.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
             },
             {
                 tag: "90..360 nowrap", startAngle: 90, endAngle: 360, from: 0, to: 1, wrap: false,
                 x:      [0.49, 0.25, 0.5, 0.75, 0.51, 0.49],
                 y:      [0.99, 0.5, 0.01, 0.5, 0.99, 0.99],
                 values: [0.33, 0.66, 1.0, 1.0, 1.0, 1.0],
-                angles: [180.0, 270.0, 360.0, 360.0, 360.0, 360.0]
+                angles: [180.0, 270.0, 360.0, 360.0, 360.0, 360.0],
+                wrapClockwise: 0,
+                wrapCounterClockwise: 0
             }
         ]
     }
@@ -747,12 +765,27 @@ TestCase {
         compare(dial.startAngle, data.startAngle)
         compare(dial.endAngle, data.endAngle)
 
+        var wrappedSpy = signalSpy.createObject(dial, {target: dial, signalName: "wrapped"})
+        verify(wrappedSpy.valid)
 
         for (let i = 0; i < data.x.length; i++) {
             mousePress(dial, dial.width * data.x[i], dial.height * 0.5 + dial.width * ( data.y[i] - 0.5))
             fuzzyCompare(dial.angle, data.angles[i], 3.0)
-            fuzzyCompare(dial.value, data.values[i], 0.3)
+            fuzzyCompare(dial.value, data.values[i], 0.1)
         }
+
+        let clockwiseCount = 0
+        let counterClockwiseCount = 0
+        for (let i = 0; i < wrappedSpy.count; i++) {
+            if (wrappedSpy.signalArguments[i][0] == 0)
+                clockwiseCount++;
+            else
+                counterClockwiseCount++;
+        }
+
+        compare(clockwiseCount, data.wrapClockwise)
+        compare(counterClockwiseCount, data.wrapCounterClockwise)
+
     }
 
     function test_startEndAngleWarnings(data) {
