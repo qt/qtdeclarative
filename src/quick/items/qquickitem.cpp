@@ -5337,13 +5337,30 @@ bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
     return ret;
 }
 
+/*! \internal
+    Returns the new position (proposed values for the x and y properties)
+    to which this item should be moved to compensate for the given change
+    in scale from \a startScale to \a activeScale and in rotation from
+    \a startRotation to \a activeRotation. \a centroidParentPos is the
+    point that we wish to hold in place (and then apply \a activeTranslation to),
+    in this item's parent's coordinate system. \a startPos is this item's
+    position in its parent's coordinate system when the gesture began.
+    \a activeTranslation is the amount of translation that should be added to
+    the return value, i.e. the displacement by which the centroid is expected
+    to move.
+
+    If \a activeTranslation is \c (0, 0) the centroid is to be held in place.
+    If \a activeScale is \c 1, it means scale is intended to be held constant,
+    the same as \a startScale. If \a activeRotation is \c 0, it means rotation
+    is intended to be held constant, the same as \a startRotation.
+*/
 QPointF QQuickItemPrivate::adjustedPosForTransform(const QPointF &centroidParentPos,
                                                    const QPointF &startPos,
-                                                   const QVector2D &activeTranslation,  //[0,0] means no additional translation from startPos
+                                                   const QVector2D &activeTranslation,
                                                    qreal startScale,
-                                                   qreal activeScale,                   // 1.0 means no additional scale from startScale
+                                                   qreal activeScale,
                                                    qreal startRotation,
-                                                   qreal activeRotation)                // 0.0 means no additional rotation from startRotation
+                                                   qreal activeRotation)
 {
     Q_Q(QQuickItem);
     QVector3D xformOrigin(q->transformOriginPoint());
