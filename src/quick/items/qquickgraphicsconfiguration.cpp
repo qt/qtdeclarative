@@ -625,7 +625,7 @@ bool QQuickGraphicsConfiguration::prefersSoftwareDevice() const
 
     \since 6.5
 
-    \sa isAutomaticPipelineCacheEnbled()
+    \sa isAutomaticPipelineCacheEnabled()
  */
 void QQuickGraphicsConfiguration::setAutomaticPipelineCache(bool enable)
 {
