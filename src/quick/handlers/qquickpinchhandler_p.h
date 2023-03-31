@@ -111,8 +111,6 @@ protected:
     void onActiveChanged() override;
     void handlePointerEventImpl(QPointerEvent *event) override;
 
-    QPointF startPos();
-
 private:
     QQuickDragAxis m_xAxis = {this, u"x"_s};
     QQuickDragAxis m_yAxis = {this, u"y"_s};
@@ -122,6 +120,7 @@ private:
     // internal
     qreal m_startDistance = 0;
     qreal m_accumulatedStartCentroidDistance = 0;
+    QPointF m_startTargetPos;
     QVector<PointData> m_startAngles;
     QQuickMatrix4x4 m_transform;
 };

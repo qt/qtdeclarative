@@ -557,16 +557,20 @@ void tst_QQuickPinchHandler::cumulativeNativeGestures_data()
     QTest::addColumn<const QPointingDevice*>("device");
     QTest::addColumn<Qt::NativeGestureType>("gesture");
     QTest::addColumn<qreal>("value");
+    QTest::addColumn<QList<QPoint>>("expectedTargetTranslations");
 
     const auto *touchpadDevice = touchpad.get();
     const auto *mouse = QPointingDevice::primaryPointingDevice();
 
-    QTest::newRow("touchpad: rotate") << touchpadDevice << Qt::RotateNativeGesture << 5.0;
-    QTest::newRow("touchpad: scale") << touchpadDevice << Qt::ZoomNativeGesture << 0.1;
-
+    QTest::newRow("touchpad: rotate") << touchpadDevice << Qt::RotateNativeGesture << 5.0
+                                      << QList<QPoint>{{-2, 2}, {-5, 4}, {-7, 6}, {-10, 7}};
+    QTest::newRow("touchpad: scale") << touchpadDevice << Qt::ZoomNativeGesture << 0.1
+                                     << QList<QPoint>{{3, 3}, {5, 5}, {8, 8}, {12, 12}};
     if (mouse->type() == QInputDevice::DeviceType::Mouse) {
-        QTest::newRow("mouse: rotate") << mouse << Qt::RotateNativeGesture << 5.0;
-        QTest::newRow("mouse: scale") << mouse << Qt::ZoomNativeGesture << 0.1;
+        QTest::newRow("mouse: rotate") << mouse << Qt::RotateNativeGesture << 5.0
+                                       << QList<QPoint>{{-2, 2}, {-5, 4}, {-7, 6}, {-10, 7}};
+        QTest::newRow("mouse: scale") << mouse << Qt::ZoomNativeGesture << 0.1
+                                      << QList<QPoint>{{3, 3}, {5, 5}, {8, 8}, {12, 12}};
     } else {
         qCWarning(lcPointerTests) << "skipping mouse tests: primary device is not a mouse" << mouse;
     }
@@ -577,6 +581,9 @@ void tst_QQuickPinchHandler::cumulativeNativeGestures()
     QFETCH(const QPointingDevice*, device);
     QFETCH(Qt::NativeGestureType, gesture);
     QFETCH(qreal, value);
+    QFETCH(QList<QPoint>, expectedTargetTranslations);
+
+    QCOMPARE(expectedTargetTranslations.size(), 4);
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("pinchproperties.qml")));
@@ -589,15 +596,17 @@ void tst_QQuickPinchHandler::cumulativeNativeGestures()
     QVERIFY(pinchHandler != nullptr);
     QQuickItem *target = root->findChild<QQuickItem*>("blackrect");
     QVERIFY(target != nullptr);
+    QCOMPARE(pinchHandler->target(), target);
 
     ulong ts = 1;
     qreal expectedScale = 1;
     qreal expectedRotation = 0;
     QPointF pinchPos(75, 75);
+    const QPointF initialTargetPos(target->position());
     QWindowSystemInterface::handleGestureEvent(&window, ts++, device,
                                                Qt::BeginNativeGesture, pinchPos, pinchPos);
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
     for (int i = 1; i <= 4; ++i) {
-        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
         QWindowSystemInterface::handleGestureEventWithRealValue(&window, ts++, device,
                                                                 gesture, value, pinchPos, pinchPos);
         qApp->processEvents();
@@ -612,9 +621,10 @@ void tst_QQuickPinchHandler::cumulativeNativeGestures()
             break; // PinchHandler doesn't react to the others
         }
 
-        qCDebug(lcPointerTests) << gesture << "with value" << value
+        qCDebug(lcPointerTests) << i << gesture << "with value" << value
                                 << ": scale" << target->scale() << "expected" << expectedScale
                                 << ": rotation" << target->rotation() << "expected" << expectedRotation;
+        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
         QCOMPARE(target->scale(), expectedScale);
         QCOMPARE(target->rotation(), expectedRotation);
         QCOMPARE(pinchHandler->persistentScale(), expectedScale);
@@ -625,7 +635,20 @@ void tst_QQuickPinchHandler::cumulativeNativeGestures()
         QCOMPARE(pinchHandler->activeRotation(), expectedRotation);
         QCOMPARE(pinchHandler->rotationAxis()->persistentValue(), expectedRotation);
         QCOMPARE(pinchHandler->rotationAxis()->activeValue(), expectedRotation);
+        // The target gets transformed around the gesture position, for which
+        // QQuickItemPrivate::adjustedPosForTransform() computes its new position to compensate.
+        QPointF delta = target->position() - initialTargetPos;
+        qCDebug(lcPointerTests) << "target moved by" << delta << "to" << target->position()
+                                << "active trans" << pinchHandler->activeTranslation()
+                                << "perst trans" << pinchHandler->persistentTranslation();
+        QCOMPARE_NE(target->position(), initialTargetPos);
+        QCOMPARE(delta.toPoint(), expectedTargetTranslations.at(i - 1));
+        // The native pinch gesture cannot include a translation component (and
+        // the cursor doesn't move while you are performing the gesture on a touchpad).
         QCOMPARE(pinchHandler->activeTranslation(), QPointF());
+        // The target only moves to compensate for scale and rotation changes, and that's
+        // not reflected in PinchHandler.persistentTranslation.
+        QCOMPARE(pinchHandler->persistentTranslation(), QPointF());
     }
     QCOMPARE(pinchHandler->active(), true);
     qCDebug(lcPointerTests) << "centroid: local" << pinchHandler->centroid().position()
@@ -647,6 +670,7 @@ void tst_QQuickPinchHandler::cumulativeNativeGestures()
     QCOMPARE(pinchHandler->rotationAxis()->persistentValue(), expectedRotation);
     QCOMPARE(pinchHandler->rotationAxis()->activeValue(), 0);
     QCOMPARE(pinchHandler->activeTranslation(), QPointF());
+    QCOMPARE(pinchHandler->persistentTranslation(), QPointF());
 }
 
 void tst_QQuickPinchHandler::pan()

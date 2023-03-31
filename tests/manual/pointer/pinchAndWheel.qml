@@ -25,7 +25,9 @@ Rectangle {
     function getTransformationDetails(item, pinchhandler) {
         return "\n\npinch.scale:" + pinchhandler.scale.toFixed(2)
                 + "\npinch.rotation:" + pinchhandler.rotation.toFixed(2)
-                + "°\npinch.translation:" + "(" + pinchhandler.translation.x.toFixed(2) + "," + pinchhandler.translation.y.toFixed(2) + ")"
+                + "°\npinch.activeTranslation:" + "(" + pinchhandler.activeTranslation.x.toFixed(2) + "," + pinchhandler.activeTranslation.y.toFixed(2) + ")"
+                + "\npinch.persistentTranslation:" + "(" + pinchhandler.persistentTranslation.x.toFixed(2) + "," + pinchhandler.persistentTranslation.y.toFixed(2) + ")"
+                + " item pos " + "(" + transformable.x.toFixed(2) + "," + transformable.y.toFixed(2) + ")"
                 + "\nscale wheel.rotation:" + scaleWheelHandler.rotation.toFixed(2)
                 + "°\nhorizontal wheel.rotation:" + horizontalRotationWheelHandler.rotation.toFixed(2)
                 + "°\ncontrol-rotation wheel.rotation:" + controlRotationWheelHandler.rotation.toFixed(2)
