@@ -144,11 +144,11 @@
     effective preferred height is determined from the
     \l{Item::implicitHeight}{implicitHeight}.
 
-    \note If you don't specify neither preferredWidth nor implicitWidth,
-    the Layout will query \l width as an ultimate value for the effective
-    preferred width. However, you shouldn't rely on \l width as a source for
-    the effective preferred width, as that may cause unexpected behavior.
-    For instance, changing the \l{Item::width}{width} or
+    \note If you don't specify neither preferredWidth nor implicitWidth, the
+    Layout will query \l {Item::}{width} as an ultimate value for the effective
+    preferred width. However, you shouldn't rely on \l {Item::}{width} as a
+    source for the effective preferred width, as that may cause unexpected
+    behavior. For instance, changing the \l{Item::}{width} or
     \l{Item::height}{height} properties won't trigger a layout rearrangement,
     or the layout might use the actual width and height -- not the width and
     height specified in your QML file -- when forced to do a full rebuild.
