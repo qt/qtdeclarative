@@ -221,7 +221,7 @@ property is only invoked when the property is reassigned to a different object v
     The string value type is backed by the C++ type QString. It extends the
     JavaScript String primitive type in that it provides much of the same API,
     plus some extra methods. For example, the QML string value type method
-    \l {String::arg} {arg()} supports value substitution:
+    \c {arg()} supports value substitution:
 
     \qml
         var message = "There are %1 items"
