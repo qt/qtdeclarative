@@ -387,6 +387,11 @@ QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
     setLayout(stackLayout);
     setIndex(index);
     setIsCurrentItem(stackLayout->currentIndex() == index);
+
+    // In case of lazy loading in loader, attachedProperties are created and updated for the
+    // object after adding the child object to the stack layout, which leads to entries with
+    // same index. Triggering childItemsChanged() resets to right index in the stack layout.
+    stackLayout->childItemsChanged();
 }
 
 /*!
