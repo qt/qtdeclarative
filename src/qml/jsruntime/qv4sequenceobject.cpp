@@ -467,6 +467,14 @@ ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Va
     return Object::virtualGet(that, id, receiver, hasProperty);
 }
 
+qint64 Sequence::virtualGetLength(const Managed *m)
+{
+    const Sequence *s = static_cast<const Sequence *>(m);
+    if (s->d()->isReference() && !s->loadReference())
+        return 0;
+    return s->size();
+}
+
 bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Value *receiver)
 {
     if (id.isArrayIndex()) {

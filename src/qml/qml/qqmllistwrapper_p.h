@@ -61,6 +61,7 @@ struct Q_QML_EXPORT QmlListWrapper : Object
     QQmlListReference toListReference() const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static qint64 virtualGetLength(const Managed *m);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 };
