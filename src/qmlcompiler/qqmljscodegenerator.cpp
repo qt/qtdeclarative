@@ -1114,9 +1114,9 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 callBase, m_jsUnitGenerator->lookupName(index));
     if (specific.storedType().isNull()) {
         reject(u"SetLookup. Could not find property "
-               + callBase.storedType()->internalName()
-               +  u" on type "
-               +  m_jsUnitGenerator->lookupName(index));
+               + m_jsUnitGenerator->lookupName(index)
+               + u" on type "
+               + callBase.storedType()->internalName());
         return;
     }
     const QQmlJSRegisterContent property = specific.storedIn(
