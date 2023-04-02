@@ -71,8 +71,8 @@ public:
 
     void addComment(int pos, int len, int line, int col)
     {
-        if (len > 0)
-            _comments.append(QQmlJS::SourceLocation(pos, len, line, col));
+        Q_ASSERT(len >= 0);
+        _comments.append(QQmlJS::SourceLocation(pos, len, line, col));
     }
 
     QList<SourceLocation> comments() const { return _comments; }

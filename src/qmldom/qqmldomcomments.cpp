@@ -99,8 +99,6 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
         }
         commentEnd = commentBegin + commentStartStr.size();
         quint32 rawEnd = quint32(rawComment.size());
-        while (commentEnd < rawEnd && rawComment.at(commentEnd).isSpace())
-            ++commentEnd;
         commentContentEnd = commentContentBegin = commentEnd;
         QChar e1 = ((expectedEnd.isEmpty()) ? QChar::fromLatin1(0) : expectedEnd.at(0));
         while (commentEnd < rawEnd) {
@@ -115,7 +113,8 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
                         commentContentEnd = commentEnd;
                     }
                 } else {
-                    commentEndStr = rawComment.mid(++commentEnd - 1, 1);
+                    // Comment ends with \n, treat as it is not part of the comment but post whitespace
+                    commentEndStr = rawComment.mid(commentEnd - 1, 1);
                     break;
                 }
             } else if (!c.isSpace()) {
@@ -504,6 +503,7 @@ void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
         // do not add newline before, but add the one after
         quint32 iPre = cLoc.begin();
         int preNewline = 0;
+        int postNewline = 0;
         QStringView commentStartStr;
         while (iPre > 0) {
             QChar c = code.at(iPre - 1);
@@ -532,8 +532,10 @@ void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
             }
             --iPre;
         }
+
         if (iPre == 0)
             preNewline = 1;
+
         qsizetype iPost = cLoc.end();
         while (iPost < code.size()) {
             QChar c = code.at(iPost);
@@ -546,16 +548,25 @@ void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
                 } else {
                     break;
                 }
+            } else {
+                if (c == QLatin1Char('\n')) {
+                    ++postNewline;
+                    if (iPost + 1 < code.size() && code.at(iPost + 1) == QLatin1Char('\n')) {
+                        ++iPost;
+                        ++postNewline;
+                    }
+                } else if (c == QLatin1Char('\r')) {
+                    if (iPost + 1 < code.size() && code.at(iPost + 1) == QLatin1Char('\n')) {
+                        ++iPost;
+                        ++postNewline;
+                    }
+                }
             }
             ++iPost;
-            if (c == QLatin1Char('\n'))
+            if (postNewline > 1)
                 break;
-            if (c == QLatin1Char('\r')) {
-                if (iPost < code.size() && code.at(iPost) == QLatin1Char('\n'))
-                    ++iPost;
-                break;
-            }
         }
+
         ElementRef commentEl;
         bool pre = true;
         auto iStart = ranges.starts.lowerBound(cLoc.begin());
@@ -654,6 +665,7 @@ void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
                 commentEl.size = n->lastSourceLocation().end() - n->firstSourceLocation().begin();
             }
         }
+
         Comment comment(code.mid(iPre, iPost - iPre), preNewline);
         if (commentEl.element.index() == 0 && std::get<0>(commentEl.element)) {
             CommentedElement &cEl = commentedElements[std::get<0>(commentEl.element)];
