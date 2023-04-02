@@ -324,6 +324,9 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("arrowFunctionWithBinding")
             << "arrowFunctionWithBinding.qml"
             << "arrowFunctionWithBinding.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("blanklinesAfterComment")
+            << "blanklinesAfterComment.qml"
+            << "blanklinesAfterComment.formatted.qml" << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()

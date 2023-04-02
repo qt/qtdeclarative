@@ -26,6 +26,7 @@ Item {
                 // before zz
                 zz - // after z + zz
                 /*before (a b)*/(/*  before a  */ a * /* after a  */ b * /*after b*/ c); // after (a * b * c)
+
         if (y == 6) // if comment
             console.log("pippo");
         a + b; // comment
