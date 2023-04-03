@@ -1,6 +1,3 @@
-# QTBUG-98402
-[mirror]
-macos-12 ci
 # QTBUG-102721
 [hugeImages]
 android
