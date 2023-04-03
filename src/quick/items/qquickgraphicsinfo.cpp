@@ -62,6 +62,7 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     \value GraphicsInfo.OpenVG      OpenVG
     \value GraphicsInfo.OpenGL      OpenGL or OpenGL ES on top of QRhi, a graphics abstraction layer
     \value GraphicsInfo.Direct3D11  Direct3D 11 on top of QRhi, a graphics abstraction layer
+    \value GraphicsInfo.Direct3D12  Direct3D 12 on top of QRhi, a graphics abstraction layer
     \value GraphicsInfo.Vulkan      Vulkan on top of QRhi, a graphics abstraction layer
     \value GraphicsInfo.Metal       Metal on top of QRhi, a graphics abstraction layer
     \value GraphicsInfo.Null        Null (no output) on top of QRhi, a graphics abstraction layer
