@@ -33,6 +33,7 @@ private slots:
     void group();
     void valueType();
     void emptyBehavior();
+    void duplicatedBehavior();
     void explicitSelection();
     void nonSelectingBehavior();
     void reassignedAnimation();
@@ -221,6 +222,20 @@ void tst_qquickbehaviors::emptyBehavior()
     QQuickItemPrivate::get(rect.data())->setState("moved");
     qreal x = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("MyRect"))->x();
     QCOMPARE(x, qreal(200));    //should change immediately
+}
+
+void tst_qquickbehaviors::duplicatedBehavior()
+{
+    QTest::failOnWarning(QRegularExpression(".*"));
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg,
+                         QRegularExpression("Attempting to set another interceptor on.*"));
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("duplicated.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle *>(c.create()));
+    QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
+
+    // Expecting no crash
+    QQuickItemPrivate::get(rect.data())->setState("moved");
 }
 
 void tst_qquickbehaviors::explicitSelection()

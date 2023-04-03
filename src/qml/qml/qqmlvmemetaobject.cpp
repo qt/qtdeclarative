@@ -248,6 +248,15 @@ QQmlInterceptorMetaObject::~QQmlInterceptorMetaObject()
 
 void QQmlInterceptorMetaObject::registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor)
 {
+    for (QQmlPropertyValueInterceptor *vi = interceptors; vi; vi = vi->m_next) {
+        if (Q_UNLIKELY(vi->m_propertyIndex.coreIndex() == index.coreIndex())) {
+            qWarning() << "Attempting to set another interceptor on "
+                       << object->metaObject()->className() << "property"
+                       << object->metaObject()->property(index.coreIndex()).name()
+                       << "- unsupported";
+        }
+    }
+
     interceptor->m_propertyIndex = index;
     interceptor->m_next = interceptors;
     interceptors = interceptor;
