@@ -515,6 +515,19 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     return true;
 }
 
+void QQmlJSTypeResolver::adjustOriginalType(
+        const QQmlJSScope::ConstPtr &tracked, const QQmlJSScope::ConstPtr &conversion) const
+{
+    if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)
+        return;
+
+    const auto it = m_trackedTypes->find(tracked);
+    Q_ASSERT(it != m_trackedTypes->end());
+
+    it->original = conversion;
+    *it->clone = std::move(*QQmlJSScope::clone(conversion));
+}
+
 void QQmlJSTypeResolver::generalizeType(const QQmlJSScope::ConstPtr &type) const
 {
     if (m_cloneMode == QQmlJSTypeResolver::DoNotCloneTypes)

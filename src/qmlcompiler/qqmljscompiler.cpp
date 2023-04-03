@@ -779,13 +779,13 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     if (error->isValid())
         return compileError();
 
-    QQmlJSBasicBlocks basicBlocks(m_unitGenerator, &m_typeResolver, m_logger);
-    typePropagationResult = basicBlocks.run(function, typePropagationResult, error);
+    QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger);
+    shadowCheck.run(&typePropagationResult, function, error);
     if (error->isValid())
         return compileError();
 
-    QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger);
-    shadowCheck.run(&typePropagationResult, function, error);
+    QQmlJSBasicBlocks basicBlocks(m_unitGenerator, &m_typeResolver, m_logger);
+    typePropagationResult = basicBlocks.run(function, typePropagationResult, error);
     if (error->isValid())
         return compileError();
 

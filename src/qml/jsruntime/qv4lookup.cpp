@@ -201,6 +201,21 @@ ReturnedValue Lookup::getterFallback(Lookup *l, ExecutionEngine *engine, const V
     return o->get(name);
 }
 
+ReturnedValue Lookup::getterFallbackAsVariant(
+        Lookup *l, ExecutionEngine *engine, const Value &object)
+{
+    if (&Lookup::getterFallback == &Lookup::getterFallbackAsVariant) {
+        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
+        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
+        // decides how to retrieve the property.
+        qFatal("Your C++ compiler is broken.");
+    }
+
+    // This getter just marks the presence of a fallback lookup with variant conversion.
+    // It only does anything with it when running AOT-compiled code.
+    return getterFallback(l, engine, object);
+}
+
 ReturnedValue Lookup::getter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
     // we can safely cast to a QV4::Object here. If object is actually a string,
@@ -401,6 +416,21 @@ ReturnedValue Lookup::getterQObject(Lookup *lookup, ExecutionEngine *engine, con
     return QObjectWrapper::lookupPropertyGetterImpl(lookup, engine, object, flags, revertLookup);
 }
 
+ReturnedValue Lookup::getterQObjectAsVariant(
+        Lookup *lookup, ExecutionEngine *engine, const Value &object)
+{
+    if (&Lookup::getterQObject == &Lookup::getterQObjectAsVariant) {
+        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
+        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
+        // decides how to retrieve the property.
+        qFatal("Your C++ compiler is broken.");
+    }
+
+    // This getter marks the presence of a qobjectlookup with variant conversion.
+    // It only does anything with it when running AOT-compiled code.
+    return getterQObject(lookup, engine, object);
+}
+
 ReturnedValue Lookup::getterQObjectMethod(Lookup *lookup, ExecutionEngine *engine, const Value &object)
 {
     const auto revertLookup = [lookup, engine, &object]() {
@@ -559,6 +589,14 @@ bool Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, c
     return o->put(name, value);
 }
 
+bool Lookup::setterFallbackAsVariant(
+        Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+{
+    // This setter just marks the presence of a fallback lookup with QVariant conversion.
+    // It only does anything with it when running AOT-compiled code.
+    return setterFallback(l, engine, object, value);
+}
+
 bool Lookup::setter0MemberData(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
@@ -621,6 +659,15 @@ bool Lookup::setterQObject(Lookup *l, ExecutionEngine *engine, Value &object, co
     // running AOT-compiled code, though.
     return QV4::Lookup::setterFallback(l, engine, object, v);
 }
+
+bool Lookup::setterQObjectAsVariant(
+        Lookup *l, ExecutionEngine *engine, Value &object, const Value &v)
+{
+    // This setter marks the presence of a qobjectlookup with QVariant conversion.
+    // It only does anything with it when running AOT-compiled code.
+    return QV4::Lookup::setterFallback(l, engine, object, v);
+}
+
 
 bool Lookup::arrayLengthSetter(Lookup *, ExecutionEngine *engine, Value &object, const Value &value)
 {

@@ -181,6 +181,7 @@ set(qml_files
     scopeVsObject.qml
     script.js
     script.mjs
+    shadowedMethod.qml
     shared/Slider.qml
     shifts.qml
     signal.qml

@@ -416,8 +416,11 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
     Q_ALLOCA_DECLARE(void *, transformedArguments);
     for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+        const bool isValid = frame->argc() > i;
+        const QMetaType frameType = isValid ? frame->argTypes()[i] : QMetaType();
+
         const QMetaType argumentType = function->typedFunction->argumentTypes[i];
-        if (frame->argc() > i && argumentType == frame->argTypes()[i])
+        if (isValid && argumentType == frameType)
             continue;
 
         if (transformedArguments == nullptr) {
@@ -430,22 +433,41 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
             continue;
         }
 
+        void *frameVal = isValid ? frame->argv()[i] : nullptr;
+        if (isValid && frameType == QMetaType::fromType<QVariant>()) {
+            QVariant *variant = static_cast<QVariant *>(frameVal);
+
+            const QMetaType variantType = variant->metaType();
+            if (variantType == argumentType) {
+                // Slightly nasty, but we're allowed to do this.
+                // We don't want to destruct() the QVariant's data() below.
+                transformedArguments[i] = frame->argv()[i] = variant->data();
+            } else {
+                Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
+                argumentType.construct(arg);
+                QMetaType::convert(variantType, variant->data(), argumentType, arg);
+                transformedArguments[i] = arg;
+            }
+            continue;
+        }
+
         Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
 
         if (argumentType == QMetaType::fromType<QVariant>()) {
-            if (frame->argc() > i)
-                new (arg) QVariant(frame->argTypes()[i], frame->argv()[i]);
+            if (isValid)
+                new (arg) QVariant(frameType, frameVal);
             else
                 new (arg) QVariant();
         } else if (argumentType == QMetaType::fromType<QJSPrimitiveValue>()) {
-            if (frame->argc() > i)
-                new (arg) QJSPrimitiveValue(frame->argTypes()[i], frame->argv()[i]);
+            if (isValid)
+                new (arg) QJSPrimitiveValue(frameType, frameVal);
             else
                 new (arg) QJSPrimitiveValue();
         } else {
+
             argumentType.construct(arg);
-            if (frame->argc() > i)
-                QMetaType::convert(frame->argTypes()[i], frame->argv()[i], argumentType, arg);
+            if (isValid)
+                QMetaType::convert(frameType, frameVal, argumentType, arg);
         }
 
         transformedArguments[i] = arg;
@@ -453,12 +475,19 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
     const QMetaType returnType = function->typedFunction->returnType;
     const QMetaType frameReturn = frame->returnType();
+    bool returnsQVariantWrapper = false;
     Q_ALLOCA_DECLARE(void, transformedResult);
     if (frame->returnValue() && returnType != frameReturn) {
-        if (returnType.sizeOf() > 0)
+        if (frameReturn == QMetaType::fromType<QVariant>()) {
+            void *returnValue = frame->returnValue();
+            new (returnValue) QVariant(returnType);
+            transformedResult = static_cast<QVariant *>(returnValue)->data();
+            returnsQVariantWrapper = true;
+        } else if (returnType.sizeOf() > 0) {
             Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
-        else
+        } else {
             transformedResult = frame; // Some non-null marker value
+        }
     }
 
     QQmlPrivate::AOTCompiledContext aotContext;
@@ -475,7 +504,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
                 &aotContext, transformedResult ? transformedResult : frame->returnValue(),
                 transformedArguments ? transformedArguments : frame->argv());
 
-    if (transformedResult) {
+    if (transformedResult && !returnsQVariantWrapper) {
         // Shortcut the common case of the AOT function returning a more generic QObject pointer
         // that we need to QObject-cast. No need to construct or destruct anything in that case.
         if ((frameReturn.flags() & QMetaType::PointerToQObject)

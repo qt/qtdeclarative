@@ -28,7 +28,7 @@ public:
 
     ~QQmlJSShadowCheck() = default;
 
-    void run(const InstructionAnnotations *annotations, const Function *function,
+    void run(InstructionAnnotations *annotations, const Function *function,
              QQmlJS::DiagnosticMessage *error);
 
 private:
@@ -36,13 +36,16 @@ private:
     void generate_GetLookup(int index) override;
     void generate_StoreProperty(int nameIndex, int base) override;
     void generate_SetLookup(int index, int base) override;
+    void generate_CallProperty(int nameIndex, int base, int argc, int argv) override;
+    void generate_CallPropertyLookup(int nameIndex, int base, int argc, int argv) override;
 
     QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type) override;
     void endInstruction(QV4::Moth::Instr::Type) override;
 
-    void checkShadowing(const QQmlJSRegisterContent &baseType, const QString &propertyName);
+    void checkShadowing(
+            const QQmlJSRegisterContent &baseType, const QString &propertyName, int baseRegister);
 
-    const InstructionAnnotations *m_annotations = nullptr;
+    InstructionAnnotations *m_annotations = nullptr;
     State m_state;
 };
 

@@ -183,6 +183,7 @@ private slots:
     void jsArrayMethods();
     void jsArrayMethodsWithParams_data();
     void jsArrayMethodsWithParams();
+    void shadowedMethod();
 };
 
 void tst_QmlCppCodegen::initTestCase()
@@ -3752,6 +3753,18 @@ void tst_QmlCppCodegen::jsArrayMethodsWithParams()
     QCOMPARE(object->property("listPropertyIndexOf"), check->property("jsArrayIndexOf"));
     QCOMPARE(object->property("listPropertyLastIndexOf"), object->property("jsArrayLastIndexOf"));
     QCOMPARE(object->property("listPropertyLastIndexOf"), check->property("jsArrayLastIndexOf"));
+}
+
+void tst_QmlCppCodegen::shadowedMethod()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/shadowedMethod.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("athing"), QVariant::fromValue<bool>(false));
+    QCOMPARE(o->property("bthing"), QVariant::fromValue(u"b"_s));
+    QCOMPARE(o->property("cthing"), QVariant::fromValue(u"c"_s));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

@@ -1047,6 +1047,13 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
             // that would be expensive.
             reject(u"attached object for non-QObject type"_s);
         }
+
+        if (!m_state.accumulatorIn().storedType()->isReferenceType()) {
+            // This can happen if we retroactively determine that the property might not be
+            // what we think it is (ie, it can be shadowed).
+            reject(u"attached object of potentially non-QObject base"_s);
+        }
+
         rejectIfNonQObjectOut(u"non-QObject attached type"_s);
 
         const QString lookup = u"aotContext->loadAttachedLookup("_s + indexString

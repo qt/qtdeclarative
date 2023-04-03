@@ -165,6 +165,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
     static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterFallback(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterFallbackAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue getter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -178,6 +179,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
     static ReturnedValue getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterIndexed(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterQObject(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObjectAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterQObjectMethod(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -192,11 +194,13 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
     static bool setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     Q_NEVER_INLINE static bool setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterFallbackAsVariant(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0MemberData(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterQObject(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterQObjectAsVariant(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool arrayLengthSetter(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
 
     void markObjects(MarkStack *stack) {
@@ -216,7 +220,9 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
                 || getter == QQmlTypeWrapper::lookupSingletonProperty
                 || setter == setterQObject
                 || qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty
-                || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
+                || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty
+                || getter == getterQObjectAsVariant
+                || setter == setterQObjectAsVariant) {
             if (const QQmlPropertyCache *pc = qobjectLookup.propertyCache)
                 pc->release();
         } else if (getter == getterQObjectMethod

@@ -140,6 +140,8 @@ public:
     [[nodiscard]] bool adjustTrackedType(
             const QQmlJSScope::ConstPtr &tracked,
             const QList<QQmlJSScope::ConstPtr> &conversions) const;
+    void adjustOriginalType(
+            const QQmlJSScope::ConstPtr &tracked, const QQmlJSScope::ConstPtr &conversion) const;
     void generalizeType(const QQmlJSScope::ConstPtr &type) const;
 
     void setParentMode(ParentMode mode) { m_parentMode = mode; }
