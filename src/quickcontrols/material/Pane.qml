@@ -15,14 +15,16 @@ T.Pane {
                              contentHeight + topPadding + bottomPadding)
 
     padding: 12
+    Material.roundedScale: control.Material.elevation > 0 ? Material.ExtraSmallScale : Material.NotRounded
 
     background: Rectangle {
         color: control.Material.backgroundColor
-        radius: control.Material.elevation > 0 ? 2 : 0
+        radius: control.Material.roundedScale
 
         layer.enabled: control.enabled && control.Material.elevation > 0
-        layer.effect: ElevationEffect {
+        layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
+            roundedScale: control.background.radius
         }
     }
 }
