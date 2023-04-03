@@ -105,9 +105,5 @@ macro.stylecolor.DocBook = "<db:phrase role=\"color:\1\">\1 \2</db:phrase>"
 macro.nbsp.HTML = "&nbsp;"
 macro.nbsp.DocBook = "&#160;"
 
-# Add output suffix to the html filenames
-outputsuffixes = QML
-outputsuffixes.QML = 2
-
 # Fail the documentation build if there are more warnings than the limit
 warninglimit = 0
