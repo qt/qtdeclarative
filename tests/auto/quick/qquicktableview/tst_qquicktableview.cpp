@@ -218,6 +218,7 @@ private slots:
     void testDeprecatedApi();
     void alternatingRows();
     void boundDelegateComponent();
+    void tableViewInteractive();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -5485,6 +5486,42 @@ void tst_QQuickTableView::boundDelegateComponent()
     QCOMPARE(innerTableView->rows(), 3);
     for (int i = 0; i < 3; ++i)
         QVERIFY(innerTableView->itemAtCell(0, i)->objectName().isEmpty());
+}
+
+void tst_QQuickTableView::tableViewInteractive()
+{
+    LOAD_TABLEVIEW("tableviewinteractive.qml");
+    auto *root = view->rootObject();
+    QVERIFY(root);
+    auto *window = root->window();
+    QVERIFY(window);
+    int eventCount = root->property("eventCount").toInt();
+    QCOMPARE(eventCount, 0);
+    // Event though we make 'interactive' as false, the TableView has
+    // pointerNacigationEnabled set as true by default, which allows it to consume
+    // mouse events and thus, eventCount still be zero
+    tableView->setInteractive(false);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    eventCount = root->property("eventCount").toInt();
+    QCOMPARE(eventCount, 0);
+    // Making both 'interactive' and 'pointerNavigationEnabled' as false, doesn't
+    // allow TableView (and its parent Flickable)  to consume mouse event and it
+    // passes to the below visual item
+    tableView->setInteractive(false);
+    tableView->setPointerNavigationEnabled(false);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    eventCount = root->property("eventCount").toInt();
+    QCOMPARE(eventCount, 1);
+    // Making 'interactive' as true and 'pointerNavigationEnabled' as false,
+    // allows parent of TableView (i.e. Flickable) to consume mouse events
+    tableView->setInteractive(true);
+    tableView->setPointerNavigationEnabled(false);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    eventCount = root->property("eventCount").toInt();
+    QCOMPARE(eventCount, 1);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

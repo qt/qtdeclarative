@@ -29,6 +29,7 @@
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquickselectable_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,6 +60,21 @@ private:
     Q_DISABLE_COPY(QQuickTableSectionSizeProvider)
     Q_DECLARE_PRIVATE(QQuickTableSectionSizeProvider)
 };
+
+/*! \internal
+ *  QQuickTableViewTapHandler used to handle tap events explicitly for table view
+ */
+class QQuickTableViewTapHandler : public QQuickTapHandler
+{
+    Q_OBJECT
+
+public:
+    explicit QQuickTableViewTapHandler(QQuickTableView *view);
+    bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point) override;
+
+    friend class QQuickTableViewPrivate;
+};
+
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
