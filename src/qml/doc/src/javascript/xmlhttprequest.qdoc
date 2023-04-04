@@ -224,6 +224,13 @@
 */
 
 /*!
+    \qmlproperty string XMLHttpRequest::responseURL
+    \readonly
+
+    Returns the url that was used to retrieve the response data, after any redirects have occurred.
+*/
+
+/*!
     \qmlproperty string XMLHttpRequest::responseText
     \readonly
 

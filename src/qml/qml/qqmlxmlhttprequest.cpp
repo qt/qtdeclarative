@@ -998,6 +998,7 @@ public:
     QString responseBody();
     const QByteArray & rawResponseBody() const;
     bool receivedXml() const;
+    QUrl url() const;
 
     const QString & responseType() const;
     void setResponseType(const QString &);
@@ -1162,6 +1163,7 @@ void QQmlXMLHttpRequest::fillHeadersList()
 
 void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
 {
+    m_url = url;
     QNetworkRequest request = m_request;
 
     if (QQmlFile::isLocalFile(url)) {
@@ -1462,6 +1464,11 @@ bool QQmlXMLHttpRequest::receivedXml() const
     return m_gotXml;
 }
 
+QUrl QQmlXMLHttpRequest::url() const
+{
+    return m_url;
+}
+
 const QString & QQmlXMLHttpRequest::responseType() const
 {
     return m_responseType;
@@ -1666,6 +1673,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
     static ReturnedValue method_get_response(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_responseType(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_set_responseType(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_responseURL(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 };
 
 }
@@ -1714,6 +1722,7 @@ void QQmlXMLHttpRequestCtor::setupProto()
     p->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, nullptr);
     p->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, nullptr);
     p->defineAccessorProperty(QStringLiteral("response"),method_get_response, nullptr);
+    p->defineAccessorProperty(QStringLiteral("responseURL"),method_get_responseURL, nullptr);
 
     // Read-write properties
     p->defineAccessorProperty(QStringLiteral("responseType"), method_get_responseType, method_set_responseType);
@@ -2037,6 +2046,24 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_set_responseType(const FunctionObje
     r->setResponseType(argv[0].toQStringNoThrow());
 
     return Encode::undefined();
+}
+
+ReturnedValue QQmlXMLHttpRequestCtor::method_get_responseURL(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<QQmlXMLHttpRequestWrapper> w(scope, thisObject->as<QQmlXMLHttpRequestWrapper>());
+    if (!w)
+        V4THROW_REFERENCE("Not an XMLHttpRequest object");
+    QQmlXMLHttpRequest *r = w->d()->request;
+
+    if (r->readyState() != QQmlXMLHttpRequest::Loading &&
+        r->readyState() != QQmlXMLHttpRequest::Done) {
+        return Encode(scope.engine->newString(QString()));
+    } else {
+        QUrl url = r->url();
+        url.setFragment(QString());
+        return Encode(scope.engine->newString(url.toString()));
+    }
 }
 
 void qt_rem_qmlxmlhttprequest(ExecutionEngine * /* engine */, void *d)

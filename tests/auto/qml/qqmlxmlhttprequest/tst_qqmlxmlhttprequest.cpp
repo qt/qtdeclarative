@@ -75,6 +75,7 @@ private slots:
     void statusText_data();
     void responseText();
     void responseText_data();
+    void responseURL();
     void responseXML_invalid();
     void invalidMethodUsage();
     void redirects();
@@ -1024,6 +1025,64 @@ void tst_qqmlxmlhttprequest::responseText_data()
     QTest::newRow("Bad Request") << testFileUrl("status.400.reply") << testFileUrl("testdocument.html") << "QML Rocks!\n";
     QTest::newRow("Internal server error") << testFileUrl("status.500.reply") << testFileUrl("testdocument.html") << "QML Rocks!\n";
 }
+
+
+void tst_qqmlxmlhttprequest::responseURL()
+{
+    // 200 OK
+    {
+        TestHTTPServer server;
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        QVERIFY(server.wait(testFileUrl("status.expect"),
+                            testFileUrl("status.200.reply"),
+                            testFileUrl("testdocument.html")));
+
+        QQmlComponent component(engine.get(), testFileUrl("responseURL.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+        QVERIFY(!object.isNull());
+        object->setProperty("url", server.urlString("/testdocument.html"));
+        object->setProperty("expectedURL", server.urlString("/testdocument.html"));
+        component.completeCreate();
+
+        QTRY_VERIFY(object->property("dataOK").toBool());
+    }
+
+    // 200 OK with the exclude fragment flag set
+    {
+        TestHTTPServer server;
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        QVERIFY(server.wait(testFileUrl("status.expect"),
+                            testFileUrl("status.200.reply"),
+                            testFileUrl("testdocument.html")));
+
+        QQmlComponent component(engine.get(), testFileUrl("responseURL.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+        QVERIFY(!object.isNull());
+        object->setProperty("url", server.urlString("/testdocument.html#fragment"));
+        object->setProperty("expectedURL", server.urlString("/testdocument.html"));
+        component.completeCreate();
+
+        QTRY_VERIFY(object->property("dataOK").toBool());
+    }
+
+    // 302 Found
+    {
+        TestHTTPServer server;
+        QVERIFY2(server.listen(), qPrintable(server.errorString()));
+        server.addRedirect("redirect.html", server.urlString("/redirecttarget.html"));
+        server.serveDirectory(dataDirectory());
+
+        QQmlComponent component(engine.get(), testFileUrl("responseURL.qml"));
+        QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+        QVERIFY(!object.isNull());
+        object->setProperty("url", server.urlString("/redirect.html"));
+        object->setProperty("expectedURL", server.urlString("/redirecttarget.html"));
+        component.completeCreate();
+
+        QTRY_VERIFY(object->property("dataOK").toBool());
+    }
+}
+
 
 void tst_qqmlxmlhttprequest::nonUtf8()
 {
