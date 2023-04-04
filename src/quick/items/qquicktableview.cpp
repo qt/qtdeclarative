@@ -4713,7 +4713,7 @@ void QQuickTableViewPrivate::init()
     positionYAnimation.setProperty(QStringLiteral("contentY"));
     positionYAnimation.setEasing(QEasingCurve::OutQuart);
 
-    auto tapHandler = new QQuickTapHandler(q->contentItem());
+    auto tapHandler = new QQuickTableViewTapHandler(q);
 
     hoverHandler = new QQuickTableViewHoverHandler(q);
     resizeHandler = new QQuickTableViewResizeHandler(q);
@@ -6638,6 +6638,20 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
 #endif
         break; }
     }
+}
+
+// ----------------------------------------------
+
+QQuickTableViewTapHandler::QQuickTableViewTapHandler(QQuickTableView *view)
+    : QQuickTapHandler(view->contentItem())
+{
+}
+
+bool QQuickTableViewTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
+{
+    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+    return tableViewPrivate->pointerNavigationEnabled && QQuickTapHandler::wantsEventPoint(event, point);
 }
 
 QT_END_NAMESPACE

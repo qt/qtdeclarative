@@ -31,6 +31,7 @@
 #include <QtQuick/private/qquickselectable_p.h>
 #include <QtQuick/private/qquicksinglepointhandler_p.h>
 #include <QtQuick/private/qquickhoverhandler_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -107,6 +108,21 @@ protected:
     void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition,
                        QPointerEvent *ev, QEventPoint &point) override;
 };
+
+/*! \internal
+ *  QQuickTableViewTapHandler used to handle tap events explicitly for table view
+ */
+class QQuickTableViewTapHandler : public QQuickTapHandler
+{
+    Q_OBJECT
+
+public:
+    explicit QQuickTableViewTapHandler(QQuickTableView *view);
+    bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point) override;
+
+    friend class QQuickTableViewPrivate;
+};
+
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
