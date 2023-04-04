@@ -25,7 +25,7 @@ The Qt Quick Compiler consist of two components:
 need to care about their invocation, you are either writing a build system, or
 you are doing something wrong.
 
-\subtitle The QML type compiler
+\section1 The QML type compiler
 
 The \l{QML type compiler}, \e(qmltc) compiles QML types to C++ classes. These C++
 classes are then added to your application and can be instantiated from other
@@ -38,7 +38,7 @@ structure. It will fail if an unsupported language feature is encountered.
 It does not have to understand the JavaScript code in bindings and functions,
 though.
 
-\subtitle The QML script compiler
+\section1 The QML script compiler
 
 The \l{QML script compiler}, (\e qmlsc and \e qmlcachegen) compiles bindings and
 functions to both, an efficient byte code and C++ functions. This process
@@ -89,7 +89,7 @@ Compilation of bindings and functions to C++ is omitted if cache files are
 produced. Neither the CMake nor the qmake build system offered by Qt expose this
 functionality.
 
-\subtitle Summary
+\section1 Summary
 
 The following table summarizes the differences between \l{qmltc},
 \l{qmlcachegen} and \l{qmlsc}:
