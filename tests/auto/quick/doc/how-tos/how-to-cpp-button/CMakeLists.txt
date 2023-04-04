@@ -13,9 +13,10 @@ qt_internal_add_test(tst_how-to-cpp-button
         Qt::QuickTemplates2Private
 )
 
+qt_policy(SET QTP0001 NEW)
+
 qt_add_qml_module(tst_how-to-cpp-button
     URI MyModule
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         Main.qml
     SOURCES
