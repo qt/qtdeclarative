@@ -13,9 +13,10 @@ qt_internal_add_test(tst_how-to-qml
         Qt::QuickTemplates2Private
 )
 
+qt_policy(SET QTP0001 NEW)
+
 qt_add_qml_module(tst_how-to-qml
     URI HowToQml
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         active-focus-debugging/ActiveFocusDebuggingMain.qml
         time-picker/TimeComponentLabel.qml
