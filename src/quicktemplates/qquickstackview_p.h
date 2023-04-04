@@ -94,8 +94,8 @@ public:
     };
     Q_ENUM(LoadBehavior)
 
-    Q_INVOKABLE QQuickItem *get(int index, LoadBehavior behavior = DontLoad);
-    Q_INVOKABLE QQuickItem *find(const QJSValue &callback, LoadBehavior behavior = DontLoad);
+    Q_INVOKABLE QQuickItem *get(int index, QQuickStackView::LoadBehavior behavior = DontLoad);
+    Q_INVOKABLE QQuickItem *find(const QJSValue &callback, QQuickStackView::LoadBehavior behavior = DontLoad);
 
     enum Operation {
         Transition = -1, // ### Deprecated in Qt 6; remove in Qt 7.
