@@ -372,6 +372,7 @@ public:
     QList<QmlObject> annotations;
 };
 
+// TODO: rename? it may contain statements and stuff, not only expressions
 class QMLDOM_EXPORT ScriptExpression final : public OwningItem
 {
     Q_GADGET
@@ -451,6 +452,8 @@ public:
     SourceLocation localOffset() const { return m_localOffset; }
     QStringView preCode() const { return m_preCode; }
     QStringView postCode() const { return m_postCode; }
+    void setScriptElement(const ScriptElementVariant &p);
+    ScriptElementVariant scriptElement() { return m_element; }
 
 protected:
     std::shared_ptr<OwningItem> doCopy(DomItem &) const override
@@ -495,6 +498,7 @@ private:
     mutable AST::Node *m_ast;
     std::shared_ptr<AstComments> m_astComments;
     SourceLocation m_localOffset;
+    ScriptElementVariant m_element;
 };
 
 class BindingValue;
@@ -696,9 +700,9 @@ public:
                 code, ScriptExpression::ExpressionType::FunctionBody, 0,
                                      QLatin1String("function foo(){\n"), QLatin1String("\n}\n"));
     }
-
     MethodInfo() = default;
 
+    // TODO: make private + add getters/setters
     QList<MethodParameter> parameters;
     MethodType methodType = Method;
     std::shared_ptr<ScriptExpression> body;

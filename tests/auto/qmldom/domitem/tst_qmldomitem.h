@@ -9,6 +9,7 @@
 #include <QtQmlDom/private/qqmldommock_p.h>
 #include <QtQmlDom/private/qqmldomcompare_p.h>
 #include <QtQmlDom/private/qqmldomfieldfilter_p.h>
+#include <QtQmlDom/private/qqmldomscriptelements_p.h>
 
 #include <QtTest/QtTest>
 #include <QtCore/QCborValue>
@@ -17,6 +18,7 @@
 #include <QtCore/QFileInfo>
 
 #include <memory>
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
@@ -913,6 +915,297 @@ private slots:
                     [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
                     LoadOption::DefaultLoad);
             env.loadPendingDependencies();
+        }
+    }
+
+    void scriptExpressions()
+    {
+        using namespace Qt::StringLiterals;
+        QString testFile = baseDir + u"/scriptExpressions.qml"_s;
+
+        DomItem env = DomEnvironment::create(
+                QStringList(),
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        DomItem tFile;
+        DomCreationOptions options;
+        options.setFlag(DomCreationOption::WithScriptExpressions);
+
+        env.loadFile(
+                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFile, options),
+                [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        DomItem rootQmlObject = tFile.rootQmlObject(GoTo::MostLikely);
+
+        // check the binding to a and b
+        {
+            DomItem a = rootQmlObject.path(".bindings[\"a\"][0].value.scriptElement.value");
+            QCOMPARE(a.value().toDouble(), 42);
+
+            DomItem b = rootQmlObject.path(".bindings[\"b\"][0].value.scriptElement.identifier");
+            QCOMPARE(b.value().toString(), "a");
+        }
+
+        // check the body of the "f" method
+        {
+            DomItem block = rootQmlObject.path(".methods[\"f\"][0].body.scriptElement");
+            DomItem statements = block.field(Fields::statements);
+            QCOMPARE(statements.indexes(), 2);
+
+            {
+                // let sum = 0, helloWorld = "hello"
+                DomItem variableDeclaration = statements.index(0).field(Fields::declarations);
+                QCOMPARE(variableDeclaration.indexes(), 2);
+                DomItem sumInitialization = variableDeclaration.index(0);
+                QCOMPARE(sumInitialization.field(Fields::identifier).value().toString(), "sum");
+                QCOMPARE(sumInitialization.field(Fields::initializer)
+                                 .field(Fields::value)
+                                 .value()
+                                 .toDouble(),
+                         0);
+
+                DomItem helloWorldInitialization = variableDeclaration.index(1);
+                QCOMPARE(helloWorldInitialization.field(Fields::identifier).value().toString(),
+                         "helloWorld");
+                QCOMPARE(helloWorldInitialization.field(Fields::initializer)
+                                 .field(Fields::value)
+                                 .value()
+                                 .toString(),
+                         "hello");
+            }
+
+            DomItem forLoop = statements.index(1);
+            {
+                // for ( >> let i = 0 << ; i < 100; i = i + 1) {
+                DomItem declarationList =
+                        forLoop.field(Fields::declarations).field(Fields::declarations);
+                QCOMPARE(declarationList.internalKind(), DomType::List);
+
+                QCOMPARE(declarationList.indexes(), 1);
+                DomItem declaration = declarationList.index(0);
+
+                QCOMPARE(declaration.internalKind(), DomType::ScriptVariableDeclarationEntry);
+                QCOMPARE(declaration.field(Fields::initializer).internalKind(),
+                         DomType::ScriptLiteral);
+
+                QCOMPARE(declaration.field(Fields::identifier).value().toString(), "i");
+                QCOMPARE(declaration.field(Fields::initializer)
+                                 .field(Fields::value)
+                                 .value()
+                                 .toDouble(),
+                         0);
+            }
+            {
+                // for ( let i = 0; >> i < 100 <<; i = i + 1) {
+                DomItem condition = forLoop.field(Fields::condition);
+                QCOMPARE(condition.internalKind(), DomType::ScriptBinaryExpression);
+
+                QCOMPARE(condition.field(Fields::left).internalKind(),
+                         DomType::ScriptIdentifierExpression);
+                QCOMPARE(condition.field(Fields::left).field(Fields::identifier).value().toString(),
+                         "i");
+
+                QCOMPARE(condition.field(Fields::right).internalKind(), DomType::ScriptLiteral);
+                QCOMPARE(condition.field(Fields::right).field(Fields::value).value().toDouble(),
+                         100);
+            }
+            {
+                // for ( let i = 0; i < 100; >> i = i + 1 << ) {
+                DomItem expression = forLoop.field(Fields::expression);
+                QCOMPARE(expression.internalKind(), DomType::ScriptBinaryExpression);
+                DomItem left = expression.field(Fields::left);
+                QCOMPARE(left.internalKind(), DomType::ScriptIdentifierExpression);
+                QCOMPARE(left.field(Fields::identifier).value().toString(), "i");
+
+                // for ( let i = 0; i < 100; i = >> i + 1 << ) {
+                DomItem right = expression.field(Fields::right);
+                QCOMPARE(right.internalKind(), DomType::ScriptBinaryExpression);
+                DomItem left2 = right.field(Fields::left);
+                QCOMPARE(left2.internalKind(), DomType::ScriptIdentifierExpression);
+                QCOMPARE(left2.field(Fields::identifier).value().toString(), "i");
+
+                DomItem right2 = right.field(Fields::right);
+                QCOMPARE(right2.internalKind(), DomType::ScriptLiteral);
+                QCOMPARE(right2.field(Fields::value).value().toDouble(), 1);
+            }
+            {
+                // test the body of the for-loop
+                DomItem body = forLoop.field(Fields::body);
+                QCOMPARE(body.internalKind(), DomType::ScriptBlockStatement);
+                DomItem statementList = body.field(Fields::statements);
+                QCOMPARE(statementList.indexes(), 2);
+                {
+                    //  >> sum = sum + 1 <<
+                    DomItem binaryExpression = statementList.index(0);
+                    QCOMPARE(binaryExpression.internalKind(), DomType::ScriptBinaryExpression);
+
+                    DomItem left = binaryExpression.field(Fields::left);
+                    QCOMPARE(left.internalKind(), DomType::ScriptIdentifierExpression);
+                    QCOMPARE(left.field(Fields::identifier).value().toString(), "sum");
+
+                    //  sum = >> sum + 1 <<
+                    DomItem right = binaryExpression.field(Fields::right);
+                    QCOMPARE(right.internalKind(), DomType::ScriptBinaryExpression);
+
+                    DomItem left2 = right.field(Fields::left);
+                    QCOMPARE(left2.internalKind(), DomType::ScriptIdentifierExpression);
+                    QCOMPARE(left2.field(Fields::identifier).value().toString(), "sum");
+
+                    DomItem right2 = right.field(Fields::right);
+                    QCOMPARE(right2.internalKind(), DomType::ScriptLiteral);
+                    QCOMPARE(right2.field(Fields::value).value().toDouble(), 1);
+                }
+
+                {
+                    //  >> for (;;) <<
+                    //         i = 42
+                    DomItem innerForLoop = statementList.index(1);
+                    QCOMPARE(innerForLoop.internalKind(), DomType::ScriptForStatement);
+                    QCOMPARE(innerForLoop.field(Fields::declarations).indexes(), 0);
+                    QVERIFY(!innerForLoop.field(Fields::initializer));
+                    QVERIFY(!innerForLoop.field(Fields::condition));
+                    QVERIFY(!innerForLoop.field(Fields::expression));
+                    QVERIFY(innerForLoop.field(Fields::body));
+
+                    //  for (;;)
+                    //     >> i = 42 <<
+                    DomItem expression = innerForLoop.field(Fields::body);
+                    QCOMPARE(expression.internalKind(), DomType::ScriptBinaryExpression);
+
+                    DomItem left = expression.field(Fields::left);
+                    QCOMPARE(left.internalKind(), DomType::ScriptIdentifierExpression);
+                    QCOMPARE(left.field(Fields::identifier).value().toString(), "i");
+
+                    DomItem right = expression.field(Fields::right);
+                    QCOMPARE(right.internalKind(), DomType::ScriptLiteral);
+                    QCOMPARE(right.field(Fields::value).value().toDouble(), 42);
+                }
+            }
+        }
+        {
+            DomItem block = rootQmlObject.path(".methods[\"conditional\"][0].body.scriptElement");
+            DomItem statements = block.field(Fields::statements);
+            QCOMPARE(statements.indexes(), 5);
+
+            // let i = 5
+            DomItem iDeclaration = statements.index(0);
+            QCOMPARE(iDeclaration.internalKind(), DomType::ScriptVariableDeclaration);
+
+            {
+                // if (i)
+                //     i = 42
+                DomItem conditional = statements.index(1);
+                DomItem condition = conditional.field(Fields::condition);
+                QCOMPARE(condition.internalKind(), DomType::ScriptIdentifierExpression);
+                QCOMPARE(condition.field(Fields::identifier).value().toString(), u"i"_s);
+
+                DomItem consequence = conditional.field(Fields::consequence);
+                QCOMPARE(consequence.internalKind(), DomType::ScriptBinaryExpression);
+                QCOMPARE(consequence.field(Fields::left)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString(),
+                         u"i"_s);
+                QCOMPARE(consequence.field(Fields::right).field(Fields::value).value().toDouble(),
+                         42);
+
+                QCOMPARE(conditional.field(Fields::alternative).internalKind(), DomType::Empty);
+            }
+            {
+                // if (i == 55)
+                //     i = 32
+                // else
+                //     i = i - 1
+                DomItem conditional = statements.index(2);
+                DomItem condition = conditional.field(Fields::condition);
+                QCOMPARE(condition.internalKind(), DomType::ScriptBinaryExpression);
+                QCOMPARE(condition.field(Fields::right).field(Fields::value).value().toDouble(),
+                         55);
+
+                DomItem consequence = conditional.field(Fields::consequence);
+                QCOMPARE(consequence.internalKind(), DomType::ScriptBinaryExpression);
+                QCOMPARE(consequence.field(Fields::left)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString(),
+                         u"i"_s);
+                QCOMPARE(consequence.field(Fields::right).field(Fields::value).value().toDouble(),
+                         32);
+
+                DomItem alternative = conditional.field(Fields::alternative);
+                QCOMPARE(alternative.internalKind(), DomType::ScriptBinaryExpression);
+                QCOMPARE(alternative.field(Fields::left)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString(),
+                         u"i"_s);
+                QCOMPARE(alternative.field(Fields::right).internalKind(),
+                         DomType::ScriptBinaryExpression);
+            }
+            {
+                // if (i == 42) {
+                //     i = 111
+                // }
+                DomItem conditional = statements.index(3);
+                DomItem condition = conditional.field(Fields::condition);
+                QCOMPARE(condition.internalKind(), DomType::ScriptBinaryExpression);
+                QCOMPARE(condition.field(Fields::right).field(Fields::value).value().toDouble(),
+                         42);
+
+                DomItem consequence = conditional.field(Fields::consequence);
+                QCOMPARE(consequence.internalKind(), DomType::ScriptBlockStatement);
+                QCOMPARE(consequence.field(Fields::statements).indexes(), 1);
+                DomItem consequence1 = consequence.field(Fields::statements).index(0);
+                QCOMPARE(consequence1.field(Fields::left)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString(),
+                         u"i"_s);
+                QCOMPARE(consequence1.field(Fields::right).field(Fields::value).value().toDouble(),
+                         111);
+
+                QCOMPARE(conditional.field(Fields::alternative).internalKind(), DomType::Empty);
+            }
+            {
+                // if (i == 746) {
+                //     i = 123
+                // } else {
+                //     i = 456
+                // }
+
+                DomItem conditional = statements.index(4);
+                DomItem condition = conditional.field(Fields::condition);
+                QCOMPARE(condition.internalKind(), DomType::ScriptBinaryExpression);
+                QCOMPARE(condition.field(Fields::right).field(Fields::value).value().toDouble(),
+                         746);
+
+                DomItem consequence = conditional.field(Fields::consequence);
+                QCOMPARE(consequence.internalKind(), DomType::ScriptBlockStatement);
+                QCOMPARE(consequence.field(Fields::statements).indexes(), 1);
+                DomItem consequence1 = consequence.field(Fields::statements).index(0);
+                QCOMPARE(consequence1.field(Fields::left)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString(),
+                         u"i"_s);
+                QCOMPARE(consequence1.field(Fields::right).field(Fields::value).value().toDouble(),
+                         123);
+
+                DomItem alternative = conditional.field(Fields::alternative);
+                QCOMPARE(alternative.internalKind(), DomType::ScriptBlockStatement);
+                QCOMPARE(alternative.field(Fields::statements).indexes(), 1);
+                DomItem alternative1 = alternative.field(Fields::statements).index(0);
+                QCOMPARE(alternative1.field(Fields::left)
+                                 .field(Fields::identifier)
+                                 .value()
+                                 .toString(),
+                         u"i"_s);
+                QCOMPARE(alternative1.field(Fields::right).field(Fields::value).value().toDouble(),
+                         456);
+            }
         }
     }
 

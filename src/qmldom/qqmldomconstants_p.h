@@ -101,13 +101,7 @@ Q_ENUM_NS(VisitPrototypesOption)
 Q_DECLARE_FLAGS(VisitPrototypesOptions, VisitPrototypesOption)
 Q_DECLARE_OPERATORS_FOR_FLAGS(VisitPrototypesOptions)
 
-enum class DomKind {
-    Empty,
-    Object,
-    List,
-    Map,
-    Value
-};
+enum class DomKind { Empty, Object, List, Map, Value, ScriptElement };
 Q_ENUM_NS(DomKind)
 
 enum class DomType {
@@ -191,6 +185,23 @@ enum class DomType {
     DomEnvironment, // a consistent view of modules, types, files, etc.
     DomUniverse, // a cache of what can be found in the DomEnvironment, contains the latest valid
                  // version for every file/type, etc. + latest overall
+
+    // Dom Script elements
+    // TODO
+    ScriptElementWrap, // internal wrapping to give uniform access of script elements (e.g. for
+                       // statement lists)
+    ScriptElementStart, // marker to check if a DomType is a scriptelement or not
+    ScriptBlockStatement = ScriptElementStart,
+    ScriptIdentifierExpression,
+    ScriptLiteral,
+    ScriptForStatement,
+    ScriptIfStatement,
+    ScriptBinaryExpression,
+    ScriptFunctionDeclaration,
+    ScriptVariableDeclaration,
+    ScriptVariableDeclarationEntry,
+
+    ScriptElementStop, // marker to check if a DomType is a scriptelement or not
 };
 Q_ENUM_NS(DomType)
 

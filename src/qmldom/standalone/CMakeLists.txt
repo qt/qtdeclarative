@@ -49,6 +49,7 @@ add_library(qmldomlib
         ../qqmldomcompare.cpp ../qqmldomcompare_p.h
         ../qqmldomconstants_p.h
         ../qqmldomelements.cpp ../qqmldomelements_p.h
+        ../qqmldomscriptelements.cpp ../qqmldomscriptelements_p.h
         ../qqmldomerrormessage.cpp ../qqmldomerrormessage_p.h
         ../qqmldomexternalitems.cpp ../qqmldomexternalitems_p.h
         ../qqmldomfieldfilter.cpp ../qqmldomfieldfilter_p.h

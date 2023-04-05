@@ -1,6 +1,11 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+#include "qqmldom_global.h"
+#include "qqmldomastcreator_p.h"
 #include "qqmldomelements_p.h"
+#include "qqmldomitem_p.h"
+#include "qqmldompath_p.h"
+#include "qqmldomscriptelements_p.h"
 #include "qqmldomtop_p.h"
 #include "qqmldomerrormessage_p.h"
 #include "qqmldomastdumper_p.h"
@@ -20,6 +25,25 @@
 #include <variant>
 
 static Q_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
+
+/*
+   Avoid crashing on files with JS-elements that are not implemented yet.
+   Might be removed (definition + usages) once all script elements are implemented.
+*/
+#define Q_SCRIPTELEMENT_DISABLE()                                                      \
+    do {                                                                               \
+        qDebug() << "Could not construct the JS DOM at" << __FILE__ << ":" << __LINE__ \
+                 << ", skipping JS elements...";                                       \
+        disableScriptElements();                                                       \
+    } while (false)
+
+#define Q_SCRIPTELEMENT_EXIT_IF(check)            \
+    do {                                          \
+        if (m_enableScriptExpressions && check) { \
+            Q_SCRIPTELEMENT_DISABLE();            \
+            return;                               \
+        }                                         \
+    } while (false)
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
@@ -111,9 +135,17 @@ QQmlDomAstCreator::QmlStackElement &QQmlDomAstCreator::currentNodeEl(int i)
     return nodeStack[nodeStack.size() - i - 1];
 }
 
+QQmlDomAstCreator::ScriptStackElement &QQmlDomAstCreator::currentScriptNodeEl(int i)
+{
+    Q_ASSERT_X(i < scriptNodeStack.size() && i >= 0, "currentNode",
+               "Stack does not contain element!");
+    return scriptNodeStack[scriptNodeStack.size() - i - 1];
+}
+
 QQmlDomAstCreator::DomValue &QQmlDomAstCreator::currentNode(int i)
 {
-    Q_ASSERT_X(i < nodeStack.size() && i >= 0, "currentNode", "Stack does not contain element!");
+    Q_ASSERT_X(i < nodeStack.size() && i >= 0, "currentNode",
+               "Stack does not contain element!");
     return nodeStack[nodeStack.size() - i - 1].item;
 }
 
@@ -123,6 +155,33 @@ void QQmlDomAstCreator::removeCurrentNode(std::optional<DomType> expectedType)
     if (expectedType)
         Q_ASSERT(nodeStack.last().item.kind == *expectedType);
     nodeStack.removeLast();
+}
+
+void QQmlDomAstCreator::removeCurrentScriptNode(std::optional<DomType> expectedType)
+{
+    Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+    Q_ASSERT_X(!scriptNodeStack.isEmpty(), className,
+               "popCurrentScriptNode() without any node");
+    if (expectedType)
+        Q_ASSERT(scriptNodeStack.last().kind == *expectedType);
+    scriptNodeStack.removeLast();
+}
+
+/*!
+   \internal
+   Prepares a script element DOM representation such that it can be used inside a QML DOM element.
+ */
+const ScriptElementVariant &
+QQmlDomAstCreator::finalizeScriptExpression(const ScriptElementVariant &element,
+                                            FileLocations::Tree base)
+{
+    auto e = element.base();
+    Q_ASSERT(e);
+    e->updatePathFromOwner(Path().field(Fields::scriptElement));
+    if (!base)
+        base = currentNodeEl().fileLocations;
+    e->createFileLocations(base);
+    return element;
 }
 
 FileLocations::Tree QQmlDomAstCreator::createMap(FileLocations::Tree base, Path p, AST::Node *n)
@@ -208,7 +267,8 @@ bool QQmlDomAstCreator::visit(UiProgram *program)
     QFileInfo fInfo(qmlFile.canonicalFilePath());
     QString componentName = fInfo.baseName();
     QmlComponent *cPtr;
-    Path p = qmlFilePtr->addComponent(QmlComponent(componentName), AddOption::KeepExisting, &cPtr);
+    Path p = qmlFilePtr->addComponent(QmlComponent(componentName), AddOption::KeepExisting,
+                                      &cPtr);
     MutableDomItem newC(qmlFile.item(), p);
     Q_ASSERT_X(newC.item(), className, "could not recover component added with addComponent");
     // QmlFile region == Component region == program span
@@ -315,7 +375,8 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         Path pPathFromOwner =
                 current<QmlObject>().addPropertyDef(p, AddOption::KeepExisting, &pPtr);
         pushEl(pPathFromOwner, *pPtr, el);
-        FileLocations::addRegion(nodeStack.last().fileLocations, u"property", el->propertyToken());
+        FileLocations::addRegion(nodeStack.last().fileLocations, u"property",
+                                 el->propertyToken());
         if (p.name == u"id")
             qmlFile.addError(astParseErrors()
                                      .warning(tr("id is a special attribute, that should not be "
@@ -344,6 +405,9 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
             FileLocations::Tree valueLoc = FileLocations::ensure(bLoc, Path::Field(Fields::value),
                                                                  AttachedInfo::PathType::Relative);
             FileLocations::addRegion(valueLoc, QString(), combineLocations(el->statement));
+            // push it also: its needed in endVisit to add the scriptNode to it
+            // do not use pushEl to avoid recreating the already created "bLoc" Map
+            nodeStack.append({ bPathFromOwner, *bPtr, bLoc });
         }
         break;
     }
@@ -353,6 +417,22 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
 
 void QQmlDomAstCreator::endVisit(AST::UiPublicMember *el)
 {
+    if (auto &lastEl = currentNode(); lastEl.kind == DomType::Binding) {
+        Binding &b = std::get<Binding>(lastEl.value);
+        if (m_enableScriptExpressions && scriptNodeStack.size() != 1)
+            Q_SCRIPTELEMENT_DISABLE();
+        if (m_enableScriptExpressions) {
+            b.scriptExpressionValue()->setScriptElement(
+                    finalizeScriptExpression(currentScriptNodeEl().takeVariant()));
+            removeCurrentScriptNode({});
+        }
+
+        QmlObject &containingObject = current<QmlObject>();
+        Binding *bPtr =
+                valueFromMultimap(containingObject.m_bindings, b.name(), currentIndex());
+        Q_ASSERT(bPtr);
+        removeCurrentNode({});
+    }
     Node::accept(el->parameters, this);
     loadAnnotations(el);
     if ((el->binding || el->statement)
@@ -424,6 +504,11 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
         pushEl(mPathFromOwner, *mPtr,
                fDef); // add at the start and use the normal recursive visit?
         FileLocations::Tree &fLoc = nodeStack.last().fileLocations;
+        if (fDef->body) {
+            auto bodyLoc = FileLocations::ensure(fLoc, Path::Field(Fields::body),
+                                                 AttachedInfo::PathType::Relative);
+            FileLocations::addRegion(bodyLoc, QString(), combineLocations(fDef->body));
+        }
         if (fDef->lparenToken.length != 0)
             FileLocations::addRegion(fLoc, u"leftParen", fDef->lparenToken);
         if (fDef->rparenToken.length != 0)
@@ -444,6 +529,7 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
             }
             if (args->element->initializer) {
                 SourceLocation loc = combineLocations(args->element->initializer);
+                // TODO: fill statements in endVisit for this scriptexpression
                 auto script = std::make_shared<ScriptExpression>(
                         code.mid(loc.offset, loc.length), qmlFilePtr->engine(),
                         args->element->initializer, qmlFilePtr->astComments(),
@@ -458,7 +544,7 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
             FileLocations::addRegion(argLocs, QString(), combineLocations(args));
             args = args->next;
         }
-        return false;
+        return true;
     } else {
         qCWarning(creatorLog) << "unhandled source el:" << static_cast<AST::Node *>(el);
         Q_UNREACHABLE();
@@ -466,9 +552,30 @@ bool QQmlDomAstCreator::visit(AST::UiSourceElement *el)
     return true;
 }
 
-void QQmlDomAstCreator::endVisit(AST::UiSourceElement *)
+void QQmlDomAstCreator::endVisit(AST::UiSourceElement *el)
 {
     MethodInfo &m = std::get<MethodInfo>(currentNode().value);
+    if (FunctionDeclaration *fDef = cast<FunctionDeclaration *>(el->sourceElement);
+        fDef && fDef->body) {
+        FileLocations::Tree bodyLoc =
+                FileLocations::find(currentNodeEl().fileLocations, Path().field(Fields::body));
+        Q_ASSERT(bodyLoc);
+        if (m_enableScriptExpressions && scriptNodeStack.size() != 1)
+            Q_SCRIPTELEMENT_DISABLE();
+        if (m_enableScriptExpressions) {
+            if (currentScriptNodeEl().isList()) {
+                // It is more intuitive to have functions with a block as a body instead of a list.
+                auto body = makeScriptElement<ScriptElements::BlockStatement>(fDef->body);
+                body->setStatements(currentScriptNodeEl().takeList());
+                m.body->setScriptElement(
+                        finalizeScriptExpression(ScriptElementVariant::fromElement(body), bodyLoc));
+            } else {
+                m.body->setScriptElement(
+                        finalizeScriptExpression(currentScriptNodeEl().takeVariant(), bodyLoc));
+            }
+            removeCurrentScriptNode({});
+        }
+    }
     QmlObject &obj = current<QmlObject>();
     MethodInfo *mPtr =
             valueFromMultimap(obj.m_methods, m.name, nodeStack.last().path.last().headIndex());
@@ -662,7 +769,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
     loadAnnotations(el);
     // avoid duplicate colon location for id?
     FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
-    return false;
+    return true;
 }
 
 void QQmlDomAstCreator::endVisit(AST::UiScriptBinding *)
@@ -671,6 +778,15 @@ void QQmlDomAstCreator::endVisit(AST::UiScriptBinding *)
     index_type idx = currentIndex();
     if (lastEl.kind == DomType::Binding) {
         Binding &b = std::get<Binding>(lastEl.value);
+        if (m_enableScriptExpressions
+            && (scriptNodeStack.size() != 1 || currentScriptNodeEl().isList()))
+            Q_SCRIPTELEMENT_DISABLE();
+        if (m_enableScriptExpressions) {
+            b.scriptExpressionValue()->setScriptElement(
+                    finalizeScriptExpression(currentScriptNodeEl().takeVariant()));
+            removeCurrentScriptNode({});
+        }
+
         QmlObject &containingObject = current<QmlObject>();
         Binding *bPtr = valueFromMultimap(containingObject.m_bindings, b.name(), idx);
         Q_ASSERT(bPtr);
@@ -884,6 +1000,260 @@ void QQmlDomAstCreator::throwRecursionDepthError()
             tr("Maximum statement or expression depth exceeded in QmlDomAstCreator")));
 }
 
+bool QQmlDomAstCreator::visit(AST::StatementList *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::StatementList *list)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptList(list);
+
+    for (auto it = list; it; it = it->next) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current.append(scriptNodeStack.takeLast().takeVariant());
+    }
+
+    current.reverse();
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::BinaryExpression *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::BinaryExpression *exp)
+{
+    Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.size() < 2);
+
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::BinaryExpression>(exp);
+    current->setRight(currentScriptNodeEl().takeVariant());
+    removeCurrentScriptNode({});
+    current->setLeft(currentScriptNodeEl().takeVariant());
+    removeCurrentScriptNode({});
+
+    current->setOp(exp->op);
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::Block *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::Block *block)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::BlockStatement>(block);
+
+    if (block->statements) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setStatements(currentScriptNodeEl().takeList());
+        removeCurrentScriptNode(DomType::List);
+    }
+
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::ForStatement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::ForStatement *forStatement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::ForStatement>(forStatement);
+
+    if (forStatement->statement) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setBody(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode(std::nullopt);
+    }
+
+    if (forStatement->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setExpression(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode(std::nullopt);
+    }
+
+    if (forStatement->condition) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setCondition(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode(std::nullopt);
+    }
+
+    if (forStatement->declarations) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setDeclarations(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode(DomType::ScriptVariableDeclaration);
+    }
+
+    if (forStatement->initialiser) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setInitializer(currentScriptNodeEl().takeVariant());
+        removeCurrentScriptNode(std::nullopt);
+    }
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::IdentifierExpression *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeScriptElement<ScriptElements::IdentifierExpression>(expression);
+    current->setName(expression->name);
+    pushScriptElement(current);
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::NumericLiteral *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeScriptElement<ScriptElements::Literal>(expression);
+    current->setLiteralValue(expression->value);
+    pushScriptElement(current);
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::StringLiteral *expression)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    auto current = makeScriptElement<ScriptElements::Literal>(expression);
+    current->setLiteralValue(expression->value.toString());
+    pushScriptElement(current);
+    return true;
+}
+
+bool QQmlDomAstCreator::visit(AST::VariableDeclarationList *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::VariableDeclarationList *list)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto declarationList = makeScriptList(list);
+
+    for (auto it = list; it; it = it->next) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        declarationList.append(scriptNodeStack.takeLast().takeVariant());
+    }
+
+    declarationList.reverse();
+
+    auto current = makeScriptElement<ScriptElements::VariableDeclaration>(list);
+    current->setDeclarations(declarationList);
+    pushScriptElement(current);
+}
+
+bool QQmlDomAstCreator::visit(AST::PatternElement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::PatternElement *pe)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    if (pe->isVariableDeclaration()) {
+        auto variableDeclaration = makeScriptElement<ScriptElements::VariableDeclarationEntry>(pe);
+        ScriptElements::VariableDeclarationEntry::ScopeType scopeType;
+        switch (pe->scope) {
+        case QQmlJS::AST::VariableScope::Const:
+            scopeType = ScriptElements::VariableDeclarationEntry::Const;
+            break;
+        case QQmlJS::AST::VariableScope::Let:
+            scopeType = ScriptElements::VariableDeclarationEntry::Let;
+            break;
+        case QQmlJS::AST::VariableScope::Var:
+            scopeType = ScriptElements::VariableDeclarationEntry::Var;
+            break;
+        default:
+            Q_UNREACHABLE();
+        }
+        variableDeclaration->setScopeType(scopeType);
+        variableDeclaration->setIdentifier(pe->bindingIdentifier.toString());
+        if (pe->initializer) {
+            Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+            variableDeclaration->setInitializer(scriptNodeStack.takeLast().takeVariant());
+        }
+        pushScriptElement(variableDeclaration);
+    }
+}
+
+bool QQmlDomAstCreator::visit(AST::IfStatement *)
+{
+    if (!m_enableScriptExpressions)
+        return false;
+
+    return true;
+}
+
+void QQmlDomAstCreator::endVisit(AST::IfStatement *ifStatement)
+{
+    if (!m_enableScriptExpressions)
+        return;
+
+    auto current = makeScriptElement<ScriptElements::IfStatement>(ifStatement);
+
+    if (ifStatement->ko) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setAlternative(scriptNodeStack.last().takeVariant());
+        scriptNodeStack.removeLast();
+    }
+
+    if (ifStatement->ok) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setConsequence(scriptNodeStack.last().takeVariant());
+        scriptNodeStack.removeLast();
+    }
+    if (ifStatement->expression) {
+        Q_SCRIPTELEMENT_EXIT_IF(scriptNodeStack.isEmpty());
+        current->setCondition(scriptNodeStack.last().takeVariant());
+        scriptNodeStack.removeLast();
+    }
+
+    pushScriptElement(current);
+}
+
 static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
 {
     auto top = qmlFile.top();
@@ -927,14 +1297,14 @@ QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomIte
 }
 
 #define X(name)                                                 \
-bool QQmlDomAstCreatorWithQQmlJSScope::visit(name *node)    \
-{                                                           \
-    return visitT(node);                                    \
-}                                                           \
-void QQmlDomAstCreatorWithQQmlJSScope::endVisit(name *node) \
-{                                                           \
-    endVisitT(node);                                        \
-}
+    bool QQmlDomAstCreatorWithQQmlJSScope::visit(name *node)    \
+    {                                                           \
+        return visitT(node);                                    \
+    }                                                           \
+    void QQmlDomAstCreatorWithQQmlJSScope::endVisit(name *node) \
+    {                                                           \
+        endVisitT(node);                                        \
+    }
 QQmlJSASTClassListToVisit
 #undef X
 
@@ -949,9 +1319,11 @@ void createDom(MutableDomItem qmlFile, DomCreationOptions options)
         std::unique_ptr<BaseVisitor> visitor;
         if (options.testFlag(DomCreationOption::WithSemanticAnalysis)) {
             auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, &logger);
+            v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
             visitor = std::move(v);
         } else {
             auto v = std::make_unique<QQmlDomAstCreator>(qmlFile);
+            v->enableScriptExpressions(options.testFlag(DomCreationOption::WithScriptExpressions));
             visitor = std::move(v);
         }
         AST::Node::accept(qmlFilePtr->ast(), visitor.get());
@@ -963,4 +1335,8 @@ void createDom(MutableDomItem qmlFile, DomCreationOptions options)
 
 } // end namespace Dom
 } // end namespace QQmlJS
+
+#undef Q_SCRIPTELEMENT_DISABLE
+#undef Q_SCRIPTELEMENT_EXIT_IF
+
 QT_END_NAMESPACE

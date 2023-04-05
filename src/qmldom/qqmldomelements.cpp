@@ -5,6 +5,7 @@
 // but in this type of warning, it often isn't.
 //#if defined(Q_CC_GNU) && Q_CC_GNU >= 1100
 //QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
+#include "qqmldompath_p.h"
 #if defined(__GNUC__) && __GNUC__ >= 11
 #  pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
@@ -1579,6 +1580,11 @@ bool ScriptExpression::iterateDirectSubpaths(DomItem &self, DirectVisitor visito
         return astRelocatableDump();
     });
     cont = cont && self.dvValueField(visitor, Fields::expressionType, int(expressionType()));
+    if (m_element) {
+        cont = cont && self.dvItemField(visitor, Fields::scriptElement, [this, &self]() {
+            return self.subScriptElementWrapperItem(m_element);
+        });
+    }
     return cont;
 }
 
@@ -2067,6 +2073,11 @@ QString QmlUri::toString() const
 QmlUri::Kind QmlUri::kind() const
 {
     return m_kind;
+}
+
+void ScriptExpression::setScriptElement(const ScriptElementVariant &p)
+{
+    m_element = p;
 }
 
 } // end namespace Dom

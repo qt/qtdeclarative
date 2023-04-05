@@ -61,6 +61,7 @@ constexpr bool domTypeIsValueWrap(DomType k);
 constexpr bool domTypeIsDomElement(DomType);
 constexpr bool domTypeIsOwningItem(DomType);
 constexpr bool domTypeIsUnattachedOwningItem(DomType);
+constexpr bool domTypeIsScriptElement(DomType);
 QMLDOM_EXPORT bool domTypeIsExternalItem(DomType k);
 QMLDOM_EXPORT bool domTypeIsTopItem(DomType k);
 QMLDOM_EXPORT bool domTypeIsContainer(DomType k);
@@ -73,6 +74,7 @@ constexpr bool domTypeCanBeInline(DomType k)
     case DomType::ListP:
     case DomType::ConstantData:
     case DomType::SimpleObjectWrap:
+    case DomType::ScriptElementWrap:
     case DomType::Reference:
         return true;
     default:
@@ -675,12 +677,146 @@ public:
     Path referredObjectPath;
 };
 
-using ElementT = std::variant<
-        Empty, Map, List, ListP, ConstantData, SimpleObjectWrap, Reference, GlobalComponent *,
-        JsResource *, QmlComponent *, QmltypesComponent *, EnumDecl *, MockObject *, ModuleScope *,
-        AstComments *, AttachedInfo *, DomEnvironment *, DomUniverse *, ExternalItemInfoBase *,
-        ExternalItemPairBase *, GlobalScope *, JsFile *, QmlDirectory *, QmlFile *, QmldirFile *,
-        QmlObject *, QmltypesFile *, LoadInfo *, MockOwner *, ModuleIndex *, ScriptExpression *>;
+template<typename Info>
+class AttachedInfoT;
+class FileLocations;
+
+/*!
+    \internal
+    \brief A common base class for all the script elements.
+
+    This marker class allows to use all the script elements as a ScriptElement*, using virtual
+   dispatch. For now, it does not add any extra functionality, compared to a DomElement, but allows
+   to forbid DomElement* at the places where only script elements are required.
+ */
+// TODO: do we need another marker struct like this one to differentiate expressions from
+// statements? This would allow to avoid mismatchs between script expressions and script statements,
+// using type-safety.
+struct ScriptElement : public DomElement
+{
+    template<typename T>
+    using PointerType = std::shared_ptr<T>;
+
+    using DomElement::DomElement;
+    virtual void createFileLocations(std::shared_ptr<AttachedInfoT<FileLocations>> fileLocationOfOwner) = 0;
+
+    QQmlJSScope::Ptr qQmlJSScope();
+    void setQQmlJSScope(const QQmlJSScope::Ptr &scope);
+
+private:
+    QQmlJSScope::Ptr m_scope;
+};
+
+/*!
+   \internal
+   \brief Use this to contain any script element.
+ */
+class ScriptElementVariant
+{
+private:
+    template<typename... T>
+    using VariantOfPointer = std::variant<ScriptElement::PointerType<T>...>;
+
+    template<typename T, typename Variant>
+    struct TypeIsInVariant;
+
+    template<typename T, typename... Ts>
+    struct TypeIsInVariant<T, std::variant<Ts...>> : public std::disjunction<std::is_same<T, Ts>...>
+    {
+    };
+
+public:
+    using ScriptElementT =
+            VariantOfPointer<ScriptElements::BlockStatement, ScriptElements::IdentifierExpression,
+                             ScriptElements::ForStatement, ScriptElements::BinaryExpression,
+                             ScriptElements::VariableDeclarationEntry, ScriptElements::Literal,
+                             ScriptElements::IfStatement, ScriptElements::VariableDeclaration>;
+
+    template<typename T>
+    static ScriptElementVariant fromElement(T element)
+    {
+        static_assert(TypeIsInVariant<T, ScriptElementT>::value,
+                      "Cannot construct ScriptElementVariant from T, as it is missing from the "
+                      "ScriptElementT.");
+        ScriptElementVariant p;
+        p.m_data = element;
+        return p;
+    }
+
+    /*!
+    \internal
+    \brief Returns a pointer to the virtual base for virtual method calls.
+
+    A helper to call virtual methods without having to call std::visit(...).
+    */
+    ScriptElement::PointerType<ScriptElement> base() const
+    {
+        if (m_data)
+            return std::visit(
+                    [](auto &&e) {
+                        // std::reinterpret_pointer_cast does not exist on qnx it seems...
+                        return std::shared_ptr<ScriptElement>(
+                                e, reinterpret_cast<ScriptElement *>(e.get()));
+                    },
+                    *m_data);
+        return nullptr;
+    }
+
+    operator bool() const { return m_data.has_value(); }
+
+    template<typename F>
+    void visitConst(F &&visitor) const
+    {
+        if (m_data)
+            std::visit(visitor, *m_data);
+    }
+
+    template<typename F>
+    void visit(F &&visitor)
+    {
+        if (m_data)
+            std::visit(visitor, *m_data);
+    }
+    std::optional<ScriptElementT> data() const { return m_data; }
+
+private:
+    std::optional<ScriptElementT> m_data;
+};
+
+/*!
+    \internal
+
+    To avoid cluttering the already unwieldy \l ElementT type below with all the types that the
+   different script elements can have, wrap them in an extra class. It will behave like an internal
+   Dom structure (e.g. like a List or a Map) and contain a pointer the the script element.
+ */
+class ScriptElementDomWrapper
+{
+public:
+    ScriptElementDomWrapper(const ScriptElementVariant &element) : m_element(element) { }
+
+    static constexpr DomType kindValue = DomType::ScriptElementWrap;
+
+    DomBase *operator->() { return m_element.base().get(); }
+    const DomBase *operator->() const { return m_element.base().get(); }
+    DomBase &operator*() { return *m_element.base(); }
+    const DomBase &operator*() const { return *m_element.base(); }
+
+    ScriptElementVariant element() { return m_element; }
+
+private:
+    ScriptElementVariant m_element;
+};
+
+// TODO: create more "groups" to simplify this variant? Maybe into Internal, ScriptExpression, ???
+using ElementT =
+        std::variant<Empty, Map, List, ListP, ConstantData, SimpleObjectWrap, Reference,
+                     ScriptElementDomWrapper, GlobalComponent *, JsResource *, QmlComponent *,
+                     QmltypesComponent *, EnumDecl *, MockObject *, ModuleScope *, AstComments *,
+                     AttachedInfo *, DomEnvironment *, DomUniverse *, ExternalItemInfoBase *,
+                     ExternalItemPairBase *, GlobalScope *, JsFile *, QmlDirectory *, QmlFile *,
+                     QmldirFile *, QmlObject *, QmltypesFile *, LoadInfo *, MockOwner *,
+                     ModuleIndex *, ScriptExpression *>;
 
 using TopT = std::variant<std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
 
@@ -704,6 +840,7 @@ class MutableDomItem;
 enum DomCreationOption : char {
     None = 0,
     WithSemanticAnalysis = 1,
+    WithScriptExpressions = 2,
 };
 
 Q_DECLARE_FLAGS(DomCreationOptions, DomCreationOption);
@@ -1028,6 +1165,13 @@ public:
     {
         return DomItem(m_top, m_owner, m_ownerPath, obj);
     }
+
+    DomItem subScriptElementWrapperItem(const ScriptElementVariant &obj)
+    {
+        Q_ASSERT(obj);
+        return DomItem(m_top, m_owner, m_ownerPath, ScriptElementDomWrapper(obj));
+    }
+
     template<typename Owner>
     DomItem subOwnerItem(const PathEls::PathComponent &c, Owner o)
     {
@@ -1840,6 +1984,11 @@ constexpr bool domTypeIsUnattachedOwningItem(DomType k)
     default:
         return false;
     }
+}
+
+constexpr bool domTypeIsScriptElement(DomType k)
+{
+    return DomType::ScriptElementStart <= k && k <= DomType::ScriptElementStop;
 }
 
 template<typename T>
