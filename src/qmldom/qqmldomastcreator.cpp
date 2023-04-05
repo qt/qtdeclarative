@@ -91,7 +91,7 @@ SourceLocation combineLocations(Node *n)
     return combineLocations(n->firstSourceLocation(), n->lastSourceLocation());
 }
 
-QQmlDomAstCreator::StackEl &QQmlDomAstCreator::currentQmlObjectOrComponentEl(int idx)
+QQmlDomAstCreator::QmlStackElement &QQmlDomAstCreator::currentQmlObjectOrComponentEl(int idx)
 {
     Q_ASSERT_X(idx < nodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
                "Stack does not contain enough elements!");
@@ -105,7 +105,7 @@ QQmlDomAstCreator::StackEl &QQmlDomAstCreator::currentQmlObjectOrComponentEl(int
     return nodeStack.last();
 }
 
-QQmlDomAstCreator::StackEl &QQmlDomAstCreator::currentNodeEl(int i)
+QQmlDomAstCreator::QmlStackElement &QQmlDomAstCreator::currentNodeEl(int i)
 {
     Q_ASSERT_X(i < nodeStack.size() && i >= 0, "currentNode", "Stack does not contain element!");
     return nodeStack[nodeStack.size() - i - 1];
@@ -376,7 +376,7 @@ void QQmlDomAstCreator::endVisit(AST::UiPublicMember *el)
         }
     }
     QmlObject &obj = current<QmlObject>();
-    StackEl &sEl = nodeStack.last();
+    QmlStackElement &sEl = nodeStack.last();
     switch (sEl.item.kind) {
     case DomType::PropertyDefinition: {
         PropertyDefinition pDef = std::get<PropertyDefinition>(sEl.item.value);
@@ -613,7 +613,7 @@ bool QQmlDomAstCreator::visit(AST::UiScriptBinding *el)
         if (ExpressionStatement *eStat = cast<ExpressionStatement *>(script->ast()))
             exp = eStat->expression;
         if (IdentifierExpression *iExp = cast<IdentifierExpression *>(exp)) {
-            StackEl &containingObjectEl = currentEl<QmlObject>();
+            QmlStackElement &containingObjectEl = currentEl<QmlObject>();
             QmlObject &containingObject = std::get<QmlObject>(containingObjectEl.item.value);
             QString idName = iExp->name.toString();
             Id idVal(idName, qmlFile.canonicalPath().path(containingObject.pathFromOwner()));

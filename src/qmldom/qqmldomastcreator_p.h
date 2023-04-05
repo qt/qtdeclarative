@@ -48,7 +48,7 @@ class QQmlDomAstCreator final : public AST::Visitor
                 value;
     };
 
-    class StackEl
+    class QmlStackElement
     {
     public:
         Path path;
@@ -58,12 +58,12 @@ class QQmlDomAstCreator final : public AST::Visitor
 
     MutableDomItem qmlFile;
     std::shared_ptr<QmlFile> qmlFilePtr;
-    QVector<StackEl> nodeStack;
+    QVector<QmlStackElement> nodeStack;
     QVector<int> arrayBindingLevels;
     FileLocations::Tree rootMap;
 
     template<typename T>
-    StackEl &currentEl(int idx = 0)
+    QmlStackElement &currentEl(int idx = 0)
     {
         Q_ASSERT_X(idx < nodeStack.size() && idx >= 0, "currentQmlObjectOrComponentEl",
                    "Stack does not contain enough elements!");
@@ -85,9 +85,9 @@ class QQmlDomAstCreator final : public AST::Visitor
 
     index_type currentIndex() { return currentNodeEl().path.last().headIndex(); }
 
-    StackEl &currentQmlObjectOrComponentEl(int idx = 0);
+    QmlStackElement &currentQmlObjectOrComponentEl(int idx = 0);
 
-    StackEl &currentNodeEl(int i = 0);
+    QmlStackElement &currentNodeEl(int i = 0);
 
     DomValue &currentNode(int i = 0);
 
