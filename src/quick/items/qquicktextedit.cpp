@@ -2707,7 +2707,12 @@ void QQuickTextEdit::updateSize()
     QSizeF size(newWidth, newHeight);
     if (d->contentSize != size) {
         d->contentSize = size;
-        emit contentSizeChanged();
+        // Note: inResize is a bitfield so QScopedValueRollback can't be used here
+        const bool wasInResize = d->inResize;
+        d->inResize = true;
+        if (!wasInResize)
+            emit contentSizeChanged();
+        d->inResize = wasInResize;
         updateTotalLines();
     }
 }

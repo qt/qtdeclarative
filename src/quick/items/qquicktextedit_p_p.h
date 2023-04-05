@@ -95,7 +95,7 @@ public:
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(true), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
-        , hadSelection(false), markdownText(false)
+        , hadSelection(false), markdownText(false), inResize(false)
     {
     }
 
@@ -202,6 +202,7 @@ public:
     bool selectByKeyboardSet:1;
     bool hadSelection : 1;
     bool markdownText : 1;
+    bool inResize : 1;
 
     static const int largeTextSizeThreshold;
 };
