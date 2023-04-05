@@ -23,6 +23,7 @@
 #include <QtGui/qstylehints.h>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/private/qapplication_p.h>
 
 #include <QtQuickWidgets/QQuickWidget>
 
@@ -135,6 +136,7 @@ private slots:
 #if QT_CONFIG(graphicsview)
     void focusOnClickInProxyWidget();
 #endif
+    void focusPreserved();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -938,6 +940,49 @@ void tst_qquickwidget::focusOnClickInProxyWidget()
     QVERIFY(!text2->hasActiveFocus());
 }
 #endif
+
+void tst_qquickwidget::focusPreserved()
+{
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))
+        QSKIP("Window Activation is not supported.");
+    if (QGuiApplication::platformName() == "android")
+        QSKIP("Test doesn't exit cleanly on Android and generates many warnings - QTBUG-112696");
+
+    QScopedPointer<QWidget> widget(new QWidget());
+    QScopedPointer<QQuickWidget> quick(new QQuickWidget());
+    QQuickItem *root = new QQuickItem(); // will be owned by quick after setContent
+    QScopedPointer<QQuickItem> content(new QQuickItem());
+    content->setActiveFocusOnTab(true);
+    content->setFocus(true);
+    quick->setFocusPolicy(Qt::StrongFocus);
+    quick->setContent(QUrl(), nullptr, root);
+    root->setFlag(QQuickItem::ItemHasContents);
+    content->setParentItem(root);
+
+    quick->setGeometry(0, 0, 200, 200);
+    quick->show();
+    quick->setFocus();
+    quick->activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(quick.get()));
+    QTRY_VERIFY(quick->hasFocus());
+    QTRY_VERIFY(content->hasFocus());
+    QTRY_VERIFY(content->hasActiveFocus());
+
+    widget->show();
+    widget->setFocus();
+    widget->activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(widget.get()));
+    QTRY_VERIFY(widget->hasFocus());
+
+    quick->setParent(widget.get());
+
+    quick->show();
+    quick->setFocus();
+    quick->activateWindow();
+    QTRY_VERIFY(quick->hasFocus());
+    QTRY_VERIFY(content->hasFocus());
+    QTRY_VERIFY(content->hasActiveFocus());
+}
 
 QTEST_MAIN(tst_qquickwidget)
 

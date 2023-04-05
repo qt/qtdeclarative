@@ -241,7 +241,7 @@ void QQuickWidgetPrivate::handleWindowChange()
     // must be recreated because its RHI will contain a dangling pointer to
     // the context.
 
-    delete offscreenWindow;
+    QScopedPointer<QQuickWindow> oldOffScreenWindow(offscreenWindow); // Do not delete before reparenting sgItem
     offscreenWindow = nullptr;
     delete renderControl;
 
