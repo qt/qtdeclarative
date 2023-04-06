@@ -16,6 +16,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include "qqmldomitem_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -26,6 +27,14 @@ struct qOverloadedVisitor : Ts...
 };
 template<class... Ts>
 qOverloadedVisitor(Ts...) -> qOverloadedVisitor<Ts...>;
+
+namespace QQmlJS {
+namespace Dom {
+
+void createDom(MutableDomItem qmlFile, DomCreationOptions options = None);
+
+}
+}; // namespace QQmlJS
 
 QT_END_NAMESPACE
 

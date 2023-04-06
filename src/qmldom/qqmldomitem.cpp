@@ -12,6 +12,7 @@
 #include "qqmldomcompare_p.h"
 #include "qqmldomastdumper_p.h"
 #include "qqmldomlinewriter_p.h"
+#include "qqmldom_utils_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>

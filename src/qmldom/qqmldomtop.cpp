@@ -9,6 +9,7 @@
 #include "qqmldomastcreator_p.h"
 #include "qqmldommoduleindex_p.h"
 #include "qqmldomtypesreader_p.h"
+#include "qqmldom_utils_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
