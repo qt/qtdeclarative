@@ -380,9 +380,6 @@ public:
     virtual bool visit(Type *) = 0;
     virtual void endVisit(Type *) = 0;
 
-    virtual bool visit(TypeArgument *) = 0;
-    virtual void endVisit(TypeArgument *) = 0;
-
     virtual bool visit(TypeAnnotation *) = 0;
     virtual void endVisit(TypeAnnotation *) = 0;
 
@@ -725,9 +722,6 @@ public:
 
     bool visit(Type *) override { return true; }
     void endVisit(Type *) override {}
-
-    bool visit(TypeArgument *) override { return true; }
-    void endVisit(TypeArgument *) override {}
 
     bool visit(TypeAnnotation *) override { return true; }
     void endVisit(TypeAnnotation *) override {}

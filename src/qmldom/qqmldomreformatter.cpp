@@ -1066,7 +1066,6 @@ protected:
     bool visit(ESModule *) override { return true; }
     bool visit(DebuggerStatement *) override { return true; }
     bool visit(Type *) override { return true; }
-    bool visit(TypeArgument *) override { return true; }
     bool visit(TypeAnnotation *) override { return true; }
 
     // overridden to use BasicVisitor (and ensure warnings about new added AST)
@@ -1186,7 +1185,6 @@ protected:
     void endVisit(ESModule *) override { }
     void endVisit(DebuggerStatement *) override { }
     void endVisit(Type *) override { }
-    void endVisit(TypeArgument *) override { }
     void endVisit(TypeAnnotation *) override { }
 
     void throwRecursionDepthError() override
