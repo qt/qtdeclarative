@@ -38,7 +38,9 @@ public:
     QAccessibleInterface *childAt(int x, int y) const override;
 
 private:
-    QAccessibleQuickWindow m_accessibleWindow;
+    void repairWindow();
+
+    std::unique_ptr<QAccessibleQuickWindow> m_accessibleWindow;
     Q_DISABLE_COPY(QAccessibleQuickWidget)
 };
 

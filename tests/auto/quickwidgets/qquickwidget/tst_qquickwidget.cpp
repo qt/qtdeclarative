@@ -137,6 +137,7 @@ private slots:
     void focusOnClickInProxyWidget();
 #endif
     void focusPreserved();
+    void accessibilityHandlesViewChange();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -983,6 +984,49 @@ void tst_qquickwidget::focusPreserved()
     QTRY_VERIFY(content->hasFocus());
     QTRY_VERIFY(content->hasActiveFocus());
 }
+
+/*
+    Reparenting the QQuickWidget recreates the offscreen QQuickWindow.
+    Since the accessible interface that is cached for the QQuickWidget dispatches
+    all calls to the offscreen QQuickWindow, it must fix itself when the offscreen
+    view changes. QTBUG-108226
+*/
+void tst_qquickwidget::accessibilityHandlesViewChange()
+{
+    if (QGuiApplication::platformName() == "offscreen")
+        QSKIP("Doesn't test anything on offscreen platform.");
+    if (QGuiApplication::platformName() == "android")
+        QSKIP("Test doesn't exit cleanly on Android and generates many warnings - QTBUG-112696");
+
+    QWidget window;
+
+    QPointer<QQuickWindow> backingScene;
+
+    QQuickWidget *childView = new QQuickWidget(&window);
+    childView->setSource(testFileUrl("rectangle.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    backingScene = childView->quickWindow();
+    QVERIFY(backingScene);
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(childView);
+    QVERIFY(iface);
+    (void)iface->child(0);
+
+    std::unique_ptr<QQuickWidget> quickWidget(childView);
+    childView->setParent(nullptr);
+    childView->show();
+    QVERIFY(QTest::qWaitForWindowExposed(childView));
+    QVERIFY(!backingScene); // the old QQuickWindow should be gone now
+    QVERIFY(childView->quickWindow()); // long live the new QQuickWindow
+
+    iface = QAccessible::queryAccessibleInterface(childView);
+    QVERIFY(iface);
+    // this would crash if QAccessibleQuickWidget hadn't repaired itself to
+    // delegate calls to the new (or at least not the old, destroyed) QQuickWindow.
+    (void)iface->child(0);
+}
+
 
 QTEST_MAIN(tst_qquickwidget)
 

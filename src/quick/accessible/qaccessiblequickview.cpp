@@ -21,7 +21,7 @@ QAccessibleQuickWindow::QAccessibleQuickWindow(QQuickWindow *object)
 
 QList<QQuickItem *> QAccessibleQuickWindow::rootItems() const
 {
-    if (QQuickItem *ci = window()->contentItem())
+    if (QQuickItem *ci = window() ? window()->contentItem() : nullptr)
         return accessibleUnignoredChildren(ci);
     return QList<QQuickItem *>();
 }
@@ -47,7 +47,7 @@ QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
 
 QAccessibleInterface *QAccessibleQuickWindow::focusChild() const
 {
-    QObject *focusObject = window()->focusObject();
+    QObject *focusObject = window() ? window()->focusObject() : nullptr;
     if (focusObject) {
         QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(focusObject);
         if (!iface || iface == this || !iface->focusChild())
@@ -67,18 +67,22 @@ QAccessible::State QAccessibleQuickWindow::state() const
     QAccessible::State st;
     if (window() == QGuiApplication::focusWindow())
         st.active = true;
-    if (!window()->isVisible())
+    if (!window() || !window()->isVisible())
         st.invisible = true;
     return st;
 }
 
 QRect QAccessibleQuickWindow::rect() const
 {
+    if (!window())
+        return {};
     return QRect(window()->x(), window()->y(), window()->width(), window()->height());
 }
 
 QString QAccessibleQuickWindow::text(QAccessible::Text text) const
 {
+    if (!window())
+        return {};
 #ifdef Q_ACCESSIBLE_QUICK_ITEM_ENABLE_DEBUG_DESCRIPTION
     if (text == QAccessible::DebugDescription) {
         return QString::fromLatin1(object()->metaObject()->className()) ;
