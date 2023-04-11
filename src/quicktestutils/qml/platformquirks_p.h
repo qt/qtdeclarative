@@ -36,7 +36,19 @@ struct PlatformQuirks
             CFRelease(pasteboard);
         return status == noErr;
 #else
-        return true;
+        if (QGuiApplication::platformName() != QLatin1StringView("xcb"))
+            return true;
+
+        // On XCB a clipboard may be dysfunctional due to platform restrictions
+        QClipboard *clipBoard = QGuiApplication::clipboard();
+        if (!clipBoard)
+            return false;
+        const QString &oldText = clipBoard->text();
+        QScopeGuard guard([&](){ clipBoard->setText(oldText); });
+        const QLatin1StringView prefix("Something to prefix ");
+        const QString newText = prefix + oldText;
+        clipBoard->setText(newText);
+        return QTest::qWaitFor([&](){ return clipBoard->text() == newText; });
 #endif
     }
 };

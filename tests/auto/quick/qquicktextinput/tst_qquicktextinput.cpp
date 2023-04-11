@@ -2757,15 +2757,18 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
 #if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
 void tst_qquicktextinput::canPasteEmpty()
 {
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine has no clipboard support.");
+
     QGuiApplication::clipboard()->clear();
 
-    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\" }";
+    const QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\" }";
     QQmlComponent textInputComponent(&engine);
     textInputComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != nullptr);
 
-    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().size() != 0;
+    const bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().size() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 }
 #endif
@@ -2773,15 +2776,18 @@ void tst_qquicktextinput::canPasteEmpty()
 #if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
 void tst_qquicktextinput::canPaste()
 {
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine has no clipboard support.");
+
     QGuiApplication::clipboard()->setText("Some text");
 
-    QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\" }";
+    const QString componentStr = "import QtQuick 2.0\nTextInput { text: \"Hello world!\" }";
     QQmlComponent textInputComponent(&engine);
     textInputComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
     QVERIFY(textInput != nullptr);
 
-    bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().size() != 0;
+    const bool cp = !textInput->isReadOnly() && QGuiApplication::clipboard()->text().size() != 0;
     QCOMPARE(textInput->canPaste(), cp);
 }
 #endif
@@ -2790,7 +2796,7 @@ void tst_qquicktextinput::canPaste()
 void tst_qquicktextinput::middleClickPaste()
 {
     if (!PlatformQuirks::isClipboardAvailable())
-        QSKIP("This machine doesn't support the clipboard");
+        QSKIP("This machine has no clipboard support.");
 
     QQuickView window(testFileUrl("mouseselectionmode_default.qml"));
 
@@ -2805,8 +2811,8 @@ void tst_qquicktextinput::middleClickPaste()
 
     textInputObject->setFocus(true);
 
-    QString originalText = textInputObject->text();
-    QString selectedText = "234567";
+    const QString originalText = textInputObject->text();
+    const QString selectedText = "234567";
 
     // press-and-drag-and-release from x1 to x2
     const QPoint p1 = textInputObject->positionToRectangle(2).center().toPoint();
