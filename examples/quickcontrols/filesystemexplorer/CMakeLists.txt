@@ -11,7 +11,7 @@ endif ()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/filesystemexplorer")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
-qt_standard_project_setup()
+qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(filesystemexplorerapp
     main.cpp
@@ -31,8 +31,6 @@ set_source_files_properties(qml/Colors.qml
 qt_add_qml_module(filesystemexplorerapp
     URI FileSystemModule
     VERSION 1.0
-    RESOURCE_PREFIX /
-    NO_RESOURCE_TARGET_PATH
     QML_FILES
         "Main.qml"
         "qml/About.qml"

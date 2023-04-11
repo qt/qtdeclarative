@@ -44,8 +44,8 @@ Rectangle {
                     x: leftMargin + (depth * indentation)
                     anchors.verticalCenter: parent.verticalCenter
                     path: treeDelegate.hasChildren
-                        ? (treeDelegate.expanded ? "qrc:/icons/folder_open.svg" : "qrc:/icons/folder_closed.svg")
-                        : "qrc:/icons/generic_file.svg"
+                        ? (treeDelegate.expanded ? "../icons/folder_open.svg" : "../icons/folder_closed.svg")
+                        : "../icons/generic_file.svg"
                     iconColor: (treeDelegate.expanded && treeDelegate.hasChildren) ? Colors.color2 : Colors.folder
                 }
                 Text {
