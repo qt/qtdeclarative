@@ -108,7 +108,7 @@ void QQuickMaterialPlaceholderText::updateY()
 
 qreal QQuickMaterialPlaceholderText::normalTargetY() const
 {
-    auto *textArea = qobject_cast<QQuickTextArea *>(parentItem());
+    auto *textArea = qobject_cast<QQuickTextArea *>(textControl());
     if (textArea && m_controlHeight >= textArea->implicitHeight()) {
         // TextArea can be multiple lines in height, and we want the
         // placeholder text to sit in the middle of its default-height
@@ -166,7 +166,7 @@ void QQuickMaterialPlaceholderText::setControlImplicitBackgroundHeight(qreal con
     which is necessary for some y position calculations.
 
     We don't really need it for the actual calculations, since we already
-    have access to the parent item, from which the property comes, but
+    have access to the control, from which the property comes, but
     it's simpler just to use it.
 */
 qreal QQuickMaterialPlaceholderText::controlHeight() const

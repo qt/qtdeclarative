@@ -978,15 +978,61 @@ TestCase {
         }
 
         {
-            // The non-floating placeholder text should be near the top of TextArea while it has room, but when it
-            // doesn't have room, it should start behaving like TextField's.
+            // The non-floating placeholder text should be near the top of TextArea while it has room...
             let textArea = createTemporaryObject(textAreaComponent, testCase, { placeholderText: "TextArea" })
             verify(textArea)
             let placeholderTextItem = textArea.children[0]
             verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
             compare(placeholderTextItem.y, (placeholderTextItem.controlImplicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+
+            // ... also when it has a lot of room...
+            textArea.height = 200
+            compare(placeholderTextItem.y, (placeholderTextItem.controlImplicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+
+            // ... but when it doesn't have room, it should start behaving like TextField's.
             textArea.height = 10
             compare(placeholderTextItem.y, (textArea.height - placeholderTextItem.height) / 2)
         }
+    }
+
+    Component {
+        id: flickableTextAreaComponent
+
+        Flickable {
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 20
+            width: 180
+            height: 100
+
+            TextArea.flickable: TextArea {
+                placeholderText: "Type something..."
+                text: "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn"
+            }
+        }
+    }
+
+    function test_placeholderTextInFlickable() {
+        let flickable = createTemporaryObject(flickableTextAreaComponent, testCase)
+        verify(flickable)
+
+        let textArea = flickable.TextArea.flickable
+        verify(textArea)
+        let placeholderTextItem = flickable.children[2]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+
+        // The placeholder text should always float at a fixed position at the top
+        // when text has been set, even when it's in a Flickable.
+        flickable.contentY = -50
+        compare(placeholderTextItem.y, -Math.floor(placeholderTextItem.largestHeight / 2))
+        flickable.contentY = 0
+
+        // When the text is cleared, it shouldn't float.
+        flickable.height = 160
+        textArea.text = ""
+        compare(placeholderTextItem.y, (placeholderTextItem.controlImplicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+        // The background outline gap should be closed.
+        let textContainer = flickable.children[1]
+        verify(textContainer as MaterialImpl.MaterialTextContainer)
+        compare(textContainer.focusAnimationProgress, 0)
     }
 }

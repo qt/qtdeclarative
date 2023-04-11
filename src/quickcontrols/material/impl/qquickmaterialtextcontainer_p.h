@@ -83,6 +83,7 @@ signals:
 private:
     bool shouldAnimateOutline() const;
 
+    QQuickItem *textControl() const;
     void controlGotActiveFocus();
     void controlLostActiveFocus();
     void startFocusAnimation();
