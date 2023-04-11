@@ -89,6 +89,18 @@ Page {
 
             Material.containerStyle: layout.containerStyle
         }
+
+        Flickable {
+            width: 200
+            height: 100
+
+            TextArea.flickable: TextArea {
+                placeholderText: "placeholderText"
+                text: "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn"
+
+                Material.containerStyle: layout.containerStyle
+            }
+        }
     }
 
     ColumnLayout {

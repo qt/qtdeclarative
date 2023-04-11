@@ -272,7 +272,8 @@ void QQuickMaterialTextContainer::paint(QPainter *painter)
 
     painter->setRenderHint(QPainter::Antialiasing, true);
 
-    const bool focused = parentItem() && parentItem()->hasActiveFocus();
+    auto control = textControl();
+    const bool focused = control && control->hasActiveFocus();
     // We still want to draw the stroke when it's filled, otherwise it will be a pixel
     // (the pen width) too narrow on either side.
     QPen pen;
@@ -315,6 +316,16 @@ void QQuickMaterialTextContainer::paint(QPainter *painter)
 bool QQuickMaterialTextContainer::shouldAnimateOutline() const
 {
     return !m_controlHasText && m_placeholderHasText;
+}
+
+/*!
+    \internal
+
+    \sa QQuickPlaceholderText::textControl().
+*/
+QQuickItem *QQuickMaterialTextContainer::textControl() const
+{
+    return qobject_cast<QQuickItem *>(parent());
 }
 
 void QQuickMaterialTextContainer::controlGotActiveFocus()
@@ -367,9 +378,16 @@ void QQuickMaterialTextContainer::startFocusAnimation()
 
 void QQuickMaterialTextContainer::maybeSetFocusAnimationProgress()
 {
-    // Show the interrupted outline when there is text.
-    if (!m_filled && m_controlHasText && m_placeholderHasText)
+    if (m_filled)
+        return;
+
+    if (m_controlHasText && m_placeholderHasText) {
+        // Show the interrupted outline when there is text.
         setFocusAnimationProgress(1);
+    } else if (!m_controlHasText && !m_controlHasActiveFocus) {
+        // If the text was cleared while it didn't have focus, don't animate, just close the gap.
+        setFocusAnimationProgress(0);
+    }
 }
 
 void QQuickMaterialTextContainer::componentComplete()

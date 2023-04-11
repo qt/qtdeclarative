@@ -16,8 +16,23 @@ QQuickPlaceholderText::QQuickPlaceholderText(QQuickItem *parent) : QQuickText(pa
 void QQuickPlaceholderText::componentComplete()
 {
     QQuickText::componentComplete();
-    connect(parentItem(), SIGNAL(effectiveHorizontalAlignmentChanged()), this, SLOT(updateAlignment()));
+
+    auto control = textControl();
+    if (control)
+        connect(control, SIGNAL(effectiveHorizontalAlignmentChanged()), this, SLOT(updateAlignment()));
     updateAlignment();
+}
+
+/*!
+    \internal
+
+     The control that we're representing. This exists because
+     parentItem() is not always the control - it may be a Flickable
+     in the case of TextArea.
+*/
+QQuickItem *QQuickPlaceholderText::textControl() const
+{
+    return qobject_cast<QQuickItem *>(parent());
 }
 
 void QQuickPlaceholderText::updateAlignment()
