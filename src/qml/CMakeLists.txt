@@ -467,6 +467,12 @@ qt_internal_add_resource(Qml "qmlMetaQmldir"
 if(QT_FEATURE_qml_worker_script)
     _qt_internal_add_qml_static_plugin_dependency(qmlplugin workerscriptplugin)
 endif()
+# Same for the QmlMeta qml plugin, otherwise you get
+#  module "QtQuick" version 6.6 cannot be imported because:
+#  module "QtQml" plugin "qmlmetaplugin" not found
+#     import QtQuick
+#     ^
+_qt_internal_add_qml_static_plugin_dependency(qmlplugin QmlMeta)
 
 # special case begin remove the block, handled manually
 # QLALR Grammars:
