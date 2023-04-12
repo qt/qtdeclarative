@@ -382,9 +382,9 @@
 
     The default value is control-specific.
 
-    Available scales:
-    \value Material.Filled Square corners
-    \value Material.Outlined Extra small rounded corners
+    Available styles:
+    \value Material.Filled Use the filled container variant if available
+    \value Material.Outlined Use the outlined container variant if available
 
     This property was added in Qt 6.5.
 
