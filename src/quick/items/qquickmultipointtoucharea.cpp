@@ -748,14 +748,14 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QMouseEvent *e)
 #ifdef Q_OS_OSX
 void QQuickMultiPointTouchArea::hoverEnterEvent(QHoverEvent *event)
 {
-    Q_UNUSED(event);
-    setTouchEventsEnabled(true);
+    setTouchEventsEnabled(isEnabled());
+    QQuickItem::hoverEnterEvent(event);
 }
 
 void QQuickMultiPointTouchArea::hoverLeaveEvent(QHoverEvent *event)
 {
-    Q_UNUSED(event);
     setTouchEventsEnabled(false);
+    QQuickItem::hoverLeaveEvent(event);
 }
 
 void QQuickMultiPointTouchArea::setTouchEventsEnabled(bool enable)
@@ -768,6 +768,13 @@ void QQuickMultiPointTouchArea::setTouchEventsEnabled(bool enable)
         return; // Not necessarily an error, Qt might be using a different platform plugin.
 
     registerTouchWindow(window(), enable);
+}
+
+void QQuickMultiPointTouchArea::itemChange(ItemChange change, const ItemChangeData &data)
+{
+    if (change == ItemEnabledHasChanged)
+        setAcceptHoverEvents(data.boolValue);
+    QQuickItem::itemChange(change, data);
 }
 #endif // Q_OS_OSX
 
