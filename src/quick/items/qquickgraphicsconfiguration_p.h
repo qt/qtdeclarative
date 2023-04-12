@@ -34,7 +34,8 @@ public:
         EnableDebugLayer = 0x02,
         EnableDebugMarkers = 0x04,
         PreferSoftwareDevice = 0x08,
-        AutoPipelineCache = 0x10
+        AutoPipelineCache = 0x10,
+        EnableTimestamps = 0x20
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
