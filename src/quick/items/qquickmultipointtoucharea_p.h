@@ -267,6 +267,7 @@ protected:
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
     void setTouchEventsEnabled(bool enable);
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
 #endif
 
 private:
