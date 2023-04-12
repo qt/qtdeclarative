@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.FigmaStyle
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
 
@@ -11,20 +12,23 @@ T.CheckBox {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    spacing: 6
+    readonly property string backgroundName: "checkbox-background"
+    readonly property bool mirroredIndicator: control.mirrored !== ConfigReader.images[backgroundName].flipped
 
-    topPadding: background ? background.topPadding : 0
-    leftPadding: background ? background.leftPadding : 0
-    rightPadding: background ? background.rightPadding : 0
-    bottomPadding: background ? background.bottomPadding : 0
+    spacing: ConfigReader.images[backgroundName].spacing || 0
 
-    topInset: background ? -background.topInset || 0 : 0
-    leftInset: background ? -background.leftInset || 0 : 0
-    rightInset: background ? -background.rightInset || 0 : 0
-    bottomInset: background ? -background.bottomInset || 0 : 0
+    topPadding: ConfigReader.images[backgroundName].topPadding || 0
+    bottomPadding: ConfigReader.images[backgroundName].bottomPadding || 0
+    leftPadding: ConfigReader.images[backgroundName].leftPadding || 0
+    rightPadding: ConfigReader.images[backgroundName].rightPadding || 0
+
+    topInset: -ConfigReader.images[backgroundName].topInset || 0
+    bottomInset: -ConfigReader.images[backgroundName].bottomInset || 0
+    leftInset: -ConfigReader.images[backgroundName].leftInset || 0
+    rightInset: -ConfigReader.images[backgroundName].rightInset || 0
 
     indicator: Image {
-        x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        x: control.text ? (control.mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
         source: Qt.resolvedUrl("images/checkbox-indicator-background")
@@ -62,8 +66,8 @@ T.CheckBox {
     }
 
     contentItem: Text {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+        leftPadding: control.indicator && !control.mirroredIndicator ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.mirroredIndicator ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
@@ -72,9 +76,15 @@ T.CheckBox {
         verticalAlignment: Text.AlignVCenter
     }
 
-    background: NinePatchImage {
-        source: Qt.resolvedUrl("images/checkbox-background")
-        NinePatchImageSelector on source {
+    background: BorderImage {
+        source: Qt.resolvedUrl("images/" + control.backgroundName)
+
+        border.top: ConfigReader.images[control.backgroundName].topOffset || 0
+        border.bottom: ConfigReader.images[control.backgroundName].bottomOffset || 0
+        border.left: ConfigReader.images[control.backgroundName].leftOffset || 0
+        border.right: ConfigReader.images[control.backgroundName].rightOffset || 0
+
+        ImageSelector on source {
             states: [
                 {"tristate": control.checkState === Qt.PartiallyChecked},
                 {"disabled": !control.enabled},

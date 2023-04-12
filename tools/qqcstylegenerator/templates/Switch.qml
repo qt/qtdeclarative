@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.FigmaStyle
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
 
@@ -11,22 +12,25 @@ T.Switch {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    spacing: 6
+    readonly property string backgroundName: "switch-background"
 
-    topPadding: background ? background.topPadding : 0
+    spacing: ConfigReader.images[backgroundName].spacing
+
+    topPadding: ConfigReader.images[backgroundName].topPadding
     leftPadding: background.width + spacing
     rightPadding: spacing
-    bottomPadding: background ? background.bottomPadding : 0
-    topInset: background ? -background.topInset || 0 : 0
-    leftInset: background ? -background.leftInset || 0 : 0
-    rightInset: background ? (-background.rightInset || 0) + (2 * spacing + implicitContentWidth + rightPadding) : 0
-    bottomInset: background ? -background.bottomInset || 0 : 0
+    bottomPadding: ConfigReader.images[backgroundName].bottomPadding
+
+    topInset: -ConfigReader.images[backgroundName].topInset || 0
+    leftInset: -ConfigReader.images[backgroundName].leftInset || 0
+    rightInset: (-ConfigReader.images[backgroundName].rightInset || 0) + (2 * spacing + implicitContentWidth + rightPadding)
+    bottomInset: -ConfigReader.images[backgroundName].bottomInset || 0
 
     indicator: Item {
         implicitWidth: Math.max(handle.width, background.implicitWidth)
         implicitHeight: Math.max(handle.height, background.implicitHeight)
 
-        property NinePatchImage handle: NinePatchImage {
+        property BorderImage handle: BorderImage {
             parent: control.indicator
             x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
@@ -38,8 +42,15 @@ T.Switch {
                 }
             }
 
-            source: Qt.resolvedUrl("images/switch-handle")
-            NinePatchImageSelector on source {
+            readonly property string name: "switch-handle"
+            source: Qt.resolvedUrl("images/" + name)
+
+            border.top: ConfigReader.images[name].topOffset || 0
+            border.bottom: ConfigReader.images[name].bottomOffset || 0
+            border.left: ConfigReader.images[name].leftOffset || 0
+            border.right: ConfigReader.images[name].rightOffset || 0
+
+            ImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
                     {"pressed": control.down},
@@ -78,9 +89,15 @@ T.Switch {
         verticalAlignment: Text.AlignVCenter
     }
 
-    background: NinePatchImage {
-        source: Qt.resolvedUrl("images/switch-background")
-        NinePatchImageSelector on source {
+    background: BorderImage {
+        source: Qt.resolvedUrl("images/" + control.backgroundName)
+
+        border.top: ConfigReader.images[control.backgroundName].topOffset || 0
+        border.bottom: ConfigReader.images[control.backgroundName].bottomOffset || 0
+        border.left: ConfigReader.images[control.backgroundName].leftOffset || 0
+        border.right: ConfigReader.images[control.backgroundName].rightOffset || 0
+
+        ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
                 {"pressed": control.down},

@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.FigmaStyle
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
 
@@ -10,10 +11,19 @@ T.Button {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    bottomPadding: 4
-    topPadding: 4
-    rightPadding: 4
-    leftPadding: 4
+    readonly property string backgroundName: "button-background"
+
+    spacing: ConfigReader.images[backgroundName].spacing || 0
+
+    topPadding: ConfigReader.images[backgroundName].topPadding || 0
+    bottomPadding: ConfigReader.images[backgroundName].bottomPadding || 0
+    leftPadding: ConfigReader.images[backgroundName].leftPadding || 0
+    rightPadding: ConfigReader.images[backgroundName].rightPadding || 0
+
+    topInset: -ConfigReader.images[backgroundName].topInset || 0
+    bottomInset: -ConfigReader.images[backgroundName].bottomInset || 0
+    leftInset: -ConfigReader.images[backgroundName].leftInset || 0
+    rightInset: -ConfigReader.images[backgroundName].rightInset || 0
 
     icon.width: 17
     icon.height: 17
@@ -34,9 +44,15 @@ T.Button {
                             : control.palette.buttonText
     }
 
-    background: NinePatchImage {
-        source: Qt.resolvedUrl("images/button-background")
-        NinePatchImageSelector on source {
+    background: BorderImage {
+        source: Qt.resolvedUrl("images/" + control.backgroundName)
+
+        border.top: ConfigReader.images[control.backgroundName].topOffset || 0
+        border.bottom: ConfigReader.images[control.backgroundName].bottomOffset || 0
+        border.left: ConfigReader.images[control.backgroundName].leftOffset || 0
+        border.right: ConfigReader.images[control.backgroundName].rightOffset || 0
+
+        ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
                 {"pressed": control.down},
