@@ -4,9 +4,8 @@ SUBDIRS += \
     chattutorial \
     texteditor \
     contactlist \
-    sidepanel \
-    swipetoremove \
     wearable \
+    filesystemexplorer \
     imagine/automotive \
     imagine/musicplayer
 

@@ -10,7 +10,9 @@ QT_BEGIN_NAMESPACE
 QQuickItemViewFxItem::QQuickItemViewFxItem(QQuickItem *item, bool ownItem, QQuickItemChangeListener* changeListener)
     : item(item)
     , changeListener(changeListener)
+#if QT_CONFIG(quick_viewtransitions)
     , transitionableItem(nullptr)
+#endif
     , ownItem(ownItem)
     , releaseAfterTransition(false)
     , trackGeom(false)
@@ -19,8 +21,10 @@ QQuickItemViewFxItem::QQuickItemViewFxItem(QQuickItem *item, bool ownItem, QQuic
 
 QQuickItemViewFxItem::~QQuickItemViewFxItem()
 {
+#if QT_CONFIG(quick_viewtransitions)
     delete transitionableItem;
     transitionableItem = nullptr;
+#endif
 
     if (ownItem && item) {
         trackGeometry(false);
@@ -31,25 +35,42 @@ QQuickItemViewFxItem::~QQuickItemViewFxItem()
 
 qreal QQuickItemViewFxItem::itemX() const
 {
-    return transitionableItem ? transitionableItem->itemX() : (item ? item->x() : 0);
+    return
+#if QT_CONFIG(quick_viewtransitions)
+            transitionableItem ? transitionableItem->itemX() :
+#endif
+            (item ? item->x() : 0);
 }
 
 qreal QQuickItemViewFxItem::itemY() const
 {
-    return transitionableItem ? transitionableItem->itemY() : (item ? item->y() : 0);
+    return
+#if QT_CONFIG(quick_viewtransitions)
+            transitionableItem ? transitionableItem->itemY() :
+#endif
+            (item ? item->y() : 0);
 }
 
 void QQuickItemViewFxItem::moveTo(const QPointF &pos, bool immediate)
 {
+#if QT_CONFIG(quick_viewtransitions)
     if (transitionableItem)
         transitionableItem->moveTo(pos, immediate);
-    else if (item)
+    else
+#else
+    Q_UNUSED(immediate)
+#endif
+    if (item)
         item->setPosition(pos);
 }
 
 void QQuickItemViewFxItem::setVisible(bool visible)
 {
-    if (!visible && transitionableItem && transitionableItem->transitionScheduledOrRunning())
+    if (!visible
+#if QT_CONFIG(quick_viewtransitions)
+            && transitionableItem && transitionableItem->transitionScheduledOrRunning()
+#endif
+        )
         return;
     if (item)
         QQuickItemPrivate::get(item)->setCulled(!visible);
@@ -87,6 +108,7 @@ void QQuickItemViewFxItem::setGeometry(const QRectF &geometry)
     item->setSize(geometry.size());
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 QQuickItemViewTransitioner::TransitionType QQuickItemViewFxItem::scheduledTransitionType() const
 {
     return transitionableItem ? transitionableItem->nextTransitionType : QQuickItemViewTransitioner::NoTransition;
@@ -126,6 +148,7 @@ void QQuickItemViewFxItem::startTransition(QQuickItemViewTransitioner *transitio
     if (transitionableItem)
         transitionableItem->startTransition(transitioner, index);
 }
+#endif
 
 QT_END_NAMESPACE
 

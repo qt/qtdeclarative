@@ -62,6 +62,8 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick.Controls::AbstractButton::clicked()
 
     This signal is emitted when the button is interactively clicked by the user via touch, mouse, or keyboard.
+
+    \sa {Call a C++ function from QML when a Button is clicked}
 */
 
 /*!
@@ -497,8 +499,14 @@ QQuickAbstractButton::~QQuickAbstractButton()
 {
     Q_D(QQuickAbstractButton);
     d->removeImplicitSizeListener(d->indicator);
-    if (d->group)
-        d->group->removeButton(this);
+    if (d->group) {
+        auto *attached = qobject_cast<QQuickButtonGroupAttached *>(
+            qmlAttachedPropertiesObject<QQuickButtonGroup>(this, false));
+        if (attached)
+            attached->setGroup(nullptr);
+        else
+            d->group->removeButton(this);
+    }
 #if QT_CONFIG(shortcut)
     d->ungrabShortcut();
 #endif

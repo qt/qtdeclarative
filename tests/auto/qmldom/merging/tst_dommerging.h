@@ -43,10 +43,10 @@ private slots:
         QString testFile1 = baseDir + QLatin1String("/test1.qml");
 
         env.loadFile(
-                testFile1, QString(),
+                FileToLoad::fromFileSystem(envPtr, testFile1),
                 [this](Path, const DomItem &, const DomItem &newIt) { this->tFile = newIt; },
                 LoadOption::DefaultLoad);
-        env.loadFile(baseDir, QString(), {}, LoadOption::DefaultLoad);
+        env.loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {}, LoadOption::DefaultLoad);
         envPtr->loadPendingDependencies(env);
 
         QVERIFY(tFile);

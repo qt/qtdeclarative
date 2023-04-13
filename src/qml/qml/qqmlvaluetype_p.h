@@ -118,6 +118,8 @@ public:
     qreal y() const;
     void setX(qreal);
     void setY(qreal);
+
+    operator QPointF() const { return v; }
 };
 
 struct Q_QML_PRIVATE_EXPORT QQmlPointValueType
@@ -138,6 +140,8 @@ public:
     int y() const;
     void setX(int);
     void setY(int);
+
+    operator QPoint() const { return v; }
 };
 
 struct Q_QML_PRIVATE_EXPORT QQmlSizeFValueType
@@ -160,6 +164,8 @@ public:
     qreal height() const;
     void setWidth(qreal);
     void setHeight(qreal);
+
+    operator QSizeF() const { return v; }
 };
 
 struct Q_QML_PRIVATE_EXPORT QQmlSizeValueType
@@ -180,6 +186,8 @@ public:
     int height() const;
     void setWidth(int);
     void setHeight(int);
+
+    operator QSize() const { return v; }
 };
 
 struct Q_QML_PRIVATE_EXPORT QQmlRectFValueType
@@ -218,6 +226,8 @@ public:
     qreal right() const;
     qreal top() const;
     qreal bottom() const;
+
+    operator QRectF() const { return v; }
 };
 
 struct Q_QML_PRIVATE_EXPORT QQmlRectValueType
@@ -254,6 +264,8 @@ public:
     int right() const;
     int top() const;
     int bottom() const;
+
+    operator QRect() const { return v; }
 };
 
 #if QT_CONFIG(easingcurve)
@@ -321,6 +333,8 @@ public:
     void setPeriod(qreal);
     void setBezierCurve(const QVariantList &);
     QVariantList bezierCurve() const;
+
+    operator QEasingCurve() const { return v; }
 };
 #endif
 

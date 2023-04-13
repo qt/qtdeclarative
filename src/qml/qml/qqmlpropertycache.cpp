@@ -1186,7 +1186,7 @@ int countMetaObjectFields(const QMetaObject &mo, StringVisitor stringVisitor)
 
 } // anonymous namespace
 
-static_assert(QMetaObjectPrivate::OutputRevision == 11, "Check and adjust determineMetaObjectSizes");
+static_assert(QMetaObjectPrivate::OutputRevision == 12, "Check and adjust determineMetaObjectSizes");
 
 bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount,
                                                  int *stringCount)

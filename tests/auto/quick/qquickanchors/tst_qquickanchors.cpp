@@ -516,6 +516,15 @@ void tst_qquickanchors::centerIn()
     QCOMPARE(rect3->x(), 94.5);
     QCOMPARE(rect3->y(), 94.5);
 
+    //QTBUG-95224 (fractional positions are not center-rounded correctly)
+    // The center anchor lines on the parent will be rounded from 41.2 / 2 == 20.6 to 21
+    // rect4 has anchors.alignWhenCentered: false, so no rounding will be done on that items position.
+    // As a result, the expected position of rect4 will be 21 - 0.9/2 = 20.55
+    QQuickRectangle* rect4 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("centered4"));
+    view->rootObject()->setWidth(41.2);
+    view->rootObject()->setHeight(41.2);
+    QCOMPARE(rect4->x(), 20.55);
+    QCOMPARE(rect4->y(), 20.55);
     delete view;
 }
 

@@ -17,12 +17,30 @@ Rectangle {
             strokeColor: "blue"
             fillColor: "magenta"
             strokeWidth: 2
-            PathMove { x: 90; y: 50 }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI) }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI) }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI) }
-            PathLine { x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI); y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI) }
-            PathLine { x: 90; y: 50 }
+            PathMove {
+                x: 90
+                y: 50
+            }
+            PathLine {
+                x: 50 + 40 * Math.cos(0.8 * 1 * Math.PI)
+                y: 50 + 40 * Math.sin(0.8 * 1 * Math.PI)
+            }
+            PathLine {
+                x: 50 + 40 * Math.cos(0.8 * 2 * Math.PI)
+                y: 50 + 40 * Math.sin(0.8 * 2 * Math.PI)
+            }
+            PathLine {
+                x: 50 + 40 * Math.cos(0.8 * 3 * Math.PI)
+                y: 50 + 40 * Math.sin(0.8 * 3 * Math.PI)
+            }
+            PathLine {
+                x: 50 + 40 * Math.cos(0.8 * 4 * Math.PI)
+                y: 50 + 40 * Math.sin(0.8 * 4 * Math.PI)
+            }
+            PathLine {
+                x: 90
+                y: 50
+            }
         }
         NumberAnimation on rotation {
             from: 0
@@ -39,6 +57,6 @@ Rectangle {
     }
     Text {
         anchors.right: parent.right
-        text: star.fillRule === ShapePath.OddEvenFill ? "OddEvenFill" : "WindingFill"
+        text: star.fillRule === ShapePath.OddEvenFill ? qsTr("OddEvenFill") : qsTr("WindingFill")
     }
 }

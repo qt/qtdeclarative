@@ -26,13 +26,7 @@
     and iOS and should look the same on both platforms, besides minor differences that may occur
     due to differences in available system fonts and font rendering engines.
 
-    \table
-        \row
-            \li \image qtquickcontrols-ios-light.png
-                \caption The iOS style in light theme
-            \li \image qtquickcontrols-ios-dark.png
-                \caption The iOS style in dark theme
-    \endtable
+    \include style-screenshots.qdocinc {file} {iOS} {ios}
 
     To run an application with the iOS style, see
     \l {Using Styles in Qt Quick Controls}.

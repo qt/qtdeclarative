@@ -75,6 +75,7 @@ private:
     QString m_warningMessage;
     QList<QQmlJSExportedScope> *m_objects = nullptr;
     QStringList *m_dependencies = nullptr;
+    int m_currentCtorIndex = 0;
 };
 
 QT_END_NAMESPACE

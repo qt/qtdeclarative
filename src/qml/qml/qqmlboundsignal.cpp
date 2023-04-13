@@ -183,7 +183,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             if (!type.isValid())
                 argCount = 0;
             else if (type.flags().testFlag(QMetaType::IsEnumeration))
-                storage.append(QMetaType::fromType<int>());
+                storage.append(type.underlyingType());
             else
                 storage.append(type);
         }

@@ -48,8 +48,8 @@ public:
 
     enum ExclusiveSignal {
         NotExclusive = 0,
-        SingleTap = 1 << 1,
-        DoubleTap = 1 << 2
+        SingleTap = 1 << 0,
+        DoubleTap = 1 << 1
     };
     Q_DECLARE_FLAGS(ExclusiveSignals, ExclusiveSignal)
     Q_FLAG(ExclusiveSignal)
@@ -98,7 +98,7 @@ private:
 
 private:
     QPointF m_lastTapPos;
-    qreal m_lastTapTimestamp = 0;
+    quint64 m_lastTapTimestamp = 0;
     QElapsedTimer m_holdTimer;
     QBasicTimer m_longPressTimer;
     QBasicTimer m_doubleTapTimer;
@@ -110,7 +110,7 @@ private:
     ExclusiveSignals m_exclusiveSignals = NotExclusive;
     bool m_pressed = false;
 
-    static qreal m_multiTapInterval;
+    static quint64 m_multiTapInterval;
     static int m_mouseMultiClickDistanceSquared;
     static int m_touchMultiTapDistanceSquared;
 };

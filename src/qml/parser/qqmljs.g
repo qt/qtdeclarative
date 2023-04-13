@@ -212,7 +212,6 @@ public:
       AST::ExportClause *ExportClause;
       AST::ExportDeclaration *ExportDeclaration;
       AST::TypeAnnotation *TypeAnnotation;
-      AST::TypeArgument *TypeArgument;
       AST::Type *Type;
 
       AST::UiProgram *UiProgram;

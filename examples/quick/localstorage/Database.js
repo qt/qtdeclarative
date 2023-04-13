@@ -3,7 +3,7 @@
 
 function dbInit()
 {
-    var db = LocalStorage.openDatabaseSync("Activity_Tracker_DB", "", "Track exercise", 1000000)
+    let db = LocalStorage.openDatabaseSync("Activity_Tracker_DB", "", "Track exercise", 1000000)
     try {
         db.transaction(function (tx) {
             tx.executeSql('CREATE TABLE IF NOT EXISTS trip_log (date text,trip_desc text,distance numeric)')
@@ -26,12 +26,12 @@ function dbGetHandle()
 
 function dbInsert(Pdate, Pdesc, Pdistance)
 {
-    var db = dbGetHandle()
-    var rowid = 0;
+    let db = dbGetHandle()
+    let rowid = 0;
     db.transaction(function (tx) {
         tx.executeSql('INSERT INTO trip_log VALUES(?, ?, ?)',
                       [Pdate, Pdesc, Pdistance])
-        var result = tx.executeSql('SELECT last_insert_rowid()')
+        let result = tx.executeSql('SELECT last_insert_rowid()')
         rowid = result.insertId
     })
     return rowid;
@@ -39,11 +39,11 @@ function dbInsert(Pdate, Pdesc, Pdistance)
 
 function dbReadAll()
 {
-    var db = dbGetHandle()
+    let db = dbGetHandle()
     db.transaction(function (tx) {
-        var results = tx.executeSql(
-                    'SELECT rowid,date,trip_desc,distance FROM trip_log order by rowid desc')
-        for (var i = 0; i < results.rows.length; i++) {
+        let results = tx.executeSql(
+                'SELECT rowid,date,trip_desc,distance FROM trip_log order by rowid desc')
+        for (let i = 0; i < results.rows.length; i++) {
             listModel.append({
                                  id: results.rows.item(i).rowid,
                                  checked: " ",
@@ -57,7 +57,7 @@ function dbReadAll()
 
 function dbUpdate(Pdate, Pdesc, Pdistance, Prowid)
 {
-    var db = dbGetHandle()
+    let db = dbGetHandle()
     db.transaction(function (tx) {
         tx.executeSql(
                     'update trip_log set date=?, trip_desc=?, distance=? where rowid = ?', [Pdate, Pdesc, Pdistance, Prowid])
@@ -66,7 +66,7 @@ function dbUpdate(Pdate, Pdesc, Pdistance, Prowid)
 
 function dbDeleteRow(Prowid)
 {
-    var db = dbGetHandle()
+    let db = dbGetHandle()
     db.transaction(function (tx) {
         tx.executeSql('delete from trip_log where rowid = ?', [Prowid])
     })

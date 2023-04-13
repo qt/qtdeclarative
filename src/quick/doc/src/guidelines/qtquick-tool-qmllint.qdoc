@@ -135,6 +135,6 @@ level. Use the special filename '-' to write to stdout instead of a file.
 This can be used to more easily integrate qmllint in your pre-commit hooks or
 CI testing.
 
-\sa {Type Description Files}{qmltypes}
-\sa {QtQuick Tools and Utilities}{qtquick-tools-and-utilities}
+\sa {Type Description Files}
+\sa {Qt Quick Tools and Utilities}
 */

@@ -94,12 +94,12 @@ tst_QQuickRepeater::tst_QQuickRepeater()
 
 void tst_QQuickRepeater::numberModel()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
 
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testData", 5);
-    TestObject *testObject = new TestObject;
-    ctxt->setContextProperty("testObject", testObject);
+    std::unique_ptr<TestObject> testObject = std::make_unique<TestObject>();
+    ctxt->setContextProperty("testObject", testObject.get());
 
     window->setSource(testFileUrl("intmodel.qml"));
     qApp->processEvents();
@@ -121,9 +121,6 @@ void tst_QQuickRepeater::numberModel()
 
     ctxt->setContextProperty("testData", -1234);
     QCOMPARE(repeater->parentItem()->childItems().size(), 1);
-
-    delete testObject;
-    delete window;
 }
 
 void tst_QQuickRepeater::objectList_data()
@@ -149,8 +146,11 @@ public:
 void tst_QQuickRepeater::objectList()
 {
     QFETCH(QUrl, filename);
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
     QObjectList data;
+    auto cleanup = qScopeGuard([&]() {
+        qDeleteAll(data);
+    });
     for (int i=0; i<100; i++)
         data << new MyObject(i);
 
@@ -175,9 +175,6 @@ void tst_QQuickRepeater::objectList()
     ctxt->setContextProperty("testData", QVariant::fromValue(data));
     QCOMPARE(addedSpy.size(), data.size());
     QCOMPARE(removedSpy.size(), data.size());
-
-    qDeleteAll(data);
-    delete window;
 }
 
 /*
@@ -187,7 +184,7 @@ elements to test this.
 */
 void tst_QQuickRepeater::stringList()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
 
     QStringList data;
     data << "One";
@@ -233,16 +230,14 @@ void tst_QQuickRepeater::stringList()
         }
     }
     QVERIFY(saw_repeater);
-
-    delete window;
 }
 
 void tst_QQuickRepeater::dataModel_adding()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
     QQmlContext *ctxt = window->rootContext();
-    TestObject *testObject = new TestObject;
-    ctxt->setContextProperty("testObject", testObject);
+    std::unique_ptr<TestObject> testObject = std::make_unique<TestObject>();
+    ctxt->setContextProperty("testObject", testObject.get());
 
     QaimModel testModel;
     ctxt->setContextProperty("testData", &testModel);
@@ -307,18 +302,17 @@ void tst_QQuickRepeater::dataModel_adding()
     addedSpy.clear();
     countSpy.clear();
 
-    delete testObject;
+    testObject.reset();
     addedSpy.clear();
     countSpy.clear();
-    delete window;
 }
 
 void tst_QQuickRepeater::dataModel_removing()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
     QQmlContext *ctxt = window->rootContext();
-    TestObject *testObject = new TestObject;
-    ctxt->setContextProperty("testObject", testObject);
+    auto testObject = std::make_unique<TestObject>();
+    ctxt->setContextProperty("testObject", testObject.get());
 
     QaimModel testModel;
     testModel.addItem("one", "1");
@@ -376,17 +370,14 @@ void tst_QQuickRepeater::dataModel_removing()
     QCOMPARE(removedSpy.at(0).at(0).toInt(), 1);
     QCOMPARE(removedSpy.at(0).at(1).value<QQuickItem*>(), item);
     removedSpy.clear();
-
-    delete testObject;
-    delete window;
 }
 
 void tst_QQuickRepeater::dataModel_changes()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
     QQmlContext *ctxt = window->rootContext();
-    TestObject *testObject = new TestObject;
-    ctxt->setContextProperty("testObject", testObject);
+    auto testObject = std::make_unique<TestObject>();
+    ctxt->setContextProperty("testObject", testObject.get());
 
     QaimModel testModel;
     testModel.addItem("one", "1");
@@ -416,17 +407,14 @@ void tst_QQuickRepeater::dataModel_changes()
     text = findItem<QQuickText>(window->rootObject(), "myNumber", 1);
     QVERIFY(text);
     QCOMPARE(text->text(), QString("_2"));
-
-    delete testObject;
-    delete window;
 }
 
 void tst_QQuickRepeater::itemModel()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
     QQmlContext *ctxt = window->rootContext();
-    TestObject *testObject = new TestObject;
-    ctxt->setContextProperty("testObject", testObject);
+    auto testObject = std::make_unique<TestObject>();
+    ctxt->setContextProperty("testObject", testObject.get());
 
     window->setSource(testFileUrl("itemlist.qml"));
     qApp->processEvents();
@@ -464,14 +452,11 @@ void tst_QQuickRepeater::itemModel()
 
     testObject->setUseModel(false);
     QCOMPARE(container->childItems().size(), 1);
-
-    delete testObject;
-    delete window;
 }
 
 void tst_QQuickRepeater::resetModel()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window {  createView() };
 
     QStringList dataA;
     for (int i=0; i<10; i++)
@@ -533,8 +518,6 @@ void tst_QQuickRepeater::resetModel()
     countSpy.clear();
     removedSpy.clear();
     addedSpy.clear();
-
-    delete window;
 }
 
 // QTBUG-17156
@@ -543,7 +526,8 @@ void tst_QQuickRepeater::modelChanged()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("modelChanged.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
     QVERIFY(repeater);
@@ -557,8 +541,6 @@ void tst_QQuickRepeater::modelChanged()
     QCOMPARE(repeater->count(), 10);
     QCOMPARE(repeater->property("itemsCount").toInt(), 10);
     QCOMPARE(repeater->property("itemsFound").toList().size(), 10);
-
-    delete rootObject;
 }
 
 void tst_QQuickRepeater::modelReset()
@@ -645,7 +627,8 @@ void tst_QQuickRepeater::modelCleared()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("modelCleared.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
@@ -655,8 +638,6 @@ void tst_QQuickRepeater::modelCleared()
     QQmlTestMessageHandler messageHandler;
     repeater->setModel(0);
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
-
-    delete rootObject;
 }
 
 void tst_QQuickRepeater::properties()
@@ -664,7 +645,8 @@ void tst_QQuickRepeater::properties()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("properties.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
@@ -685,13 +667,11 @@ void tst_QQuickRepeater::properties()
     QCOMPARE(delegateSpy.size(),1);
     repeater->setDelegate(&rectComponent);
     QCOMPARE(delegateSpy.size(),1);
-
-    delete rootObject;
 }
 
 void tst_QQuickRepeater::asynchronous()
 {
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
     window->show();
     QQmlIncubationController controller;
     window->engine()->setIncubationController(&controller);
@@ -742,8 +722,6 @@ void tst_QQuickRepeater::asynchronous()
         QQuickItem *item = findItem<QQuickItem>(container, name);
         QTRY_COMPARE(item->y(), i * 50.0);
     }
-
-    delete window;
 }
 
 void tst_QQuickRepeater::initParent()
@@ -751,7 +729,8 @@ void tst_QQuickRepeater::initParent()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("initparent.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
 
     QCOMPARE(qvariant_cast<QQuickItem*>(rootObject->property("parentItem")), rootObject);
@@ -763,7 +742,8 @@ void tst_QQuickRepeater::dynamicModelCrash()
     QQmlComponent component(&engine, testFileUrl("dynamicmodelcrash.qml"));
 
     // Don't crash
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "rep");
@@ -776,10 +756,9 @@ void tst_QQuickRepeater::visualItemModelCrash()
     // This used to crash because the model would get
     // deleted before the repeater, leading to double-deletion
     // of the items.
-    QQuickView *window = createView();
+    std::unique_ptr<QQuickView> window { createView() };
     window->setSource(testFileUrl("visualitemmodel.qml"));
     qApp->processEvents();
-    delete window;
 }
 
 class BadModel : public QAbstractListModel
@@ -859,7 +838,8 @@ void tst_QQuickRepeater::clearRemovalOrder()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("clearremovalorder.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
@@ -883,8 +863,6 @@ void tst_QQuickRepeater::clearRemovalOrder()
     QCOMPARE(removedSpy.at(0).at(0).toInt(), 2);
     QCOMPARE(removedSpy.at(1).at(0).toInt(), 1);
     QCOMPARE(removedSpy.at(2).at(0).toInt(), 0);
-
-    delete rootObject;
 }
 
 void tst_QQuickRepeater::destroyCount()
@@ -892,7 +870,8 @@ void tst_QQuickRepeater::destroyCount()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("destroycount.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
@@ -927,7 +906,8 @@ void tst_QQuickRepeater::stackingOrder()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("stackingorder.qml"));
 
-    QQuickItem *rootObject = qobject_cast<QQuickItem*>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *rootObject = qobject_cast<QQuickItem*>(root.get());
     QVERIFY(rootObject);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(rootObject, "repeater");
@@ -956,7 +936,8 @@ void tst_QQuickRepeater::objectModel()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectmodel.qml"));
 
-    QQuickItem *positioner = qobject_cast<QQuickItem *>(component.create());
+    std::unique_ptr<QObject> root { component.create() };
+    QQuickItem *positioner = qobject_cast<QQuickItem *>(root.get());
     QVERIFY(positioner);
 
     QQuickRepeater *repeater = findItem<QQuickRepeater>(positioner, "repeater");
@@ -994,8 +975,6 @@ void tst_QQuickRepeater::objectModel()
     model->clear();
     QCOMPARE(model->count(), 0);
     QCOMPARE(repeater->count(), 0);
-
-    delete positioner;
 }
 
 class Ctrl : public QObject
@@ -1012,7 +991,7 @@ public:
 void tst_QQuickRepeater::QTBUG54859_asynchronousMove()
 {
     Ctrl ctrl;
-    QQuickView* view = createView();
+    std::unique_ptr<QQuickView> view { createView() };
     view->rootContext()->setContextProperty("ctrl", &ctrl);
     view->setSource(testFileUrl("asynchronousMove.qml"));
     view->show();

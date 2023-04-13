@@ -48,7 +48,7 @@ RenderTestBase
         y: 10
         fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.GLSL
                         ? "varying highp vec2 qt_TexCoord0; void main() { gl_FragColor = vec4(1, 0, 0, 1); }"
-                        : "file:data/render_bug37422.frag.qsb"
+                        : "qrc:/data/render_bug37422.frag.qsb"
 
         Rectangle {
             width: 5

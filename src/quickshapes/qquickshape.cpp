@@ -15,7 +15,7 @@
 static void initResources()
 {
 #if defined(QT_STATIC)
-    Q_INIT_RESOURCE(qtquickshapes);
+    Q_INIT_RESOURCE(qtquickshapes_shaders);
 #endif
 }
 
@@ -360,10 +360,8 @@ void QQuickShapePath::setCapStyle(CapStyle style)
     This property defines the style of stroking. The default value is
     ShapePath.SolidLine.
 
-    \list
-    \li ShapePath.SolidLine - A plain line.
-    \li ShapePath.DashLine - Dashes separated by a few pixels.
-    \endlist
+    \value ShapePath.SolidLine  A plain line.
+    \value ShapePath.DashLine   Dashes separated by a few pixels.
  */
 
 QQuickShapePath::StrokeStyle QQuickShapePath::strokeStyle() const

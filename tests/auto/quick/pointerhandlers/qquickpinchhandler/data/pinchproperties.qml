@@ -35,7 +35,14 @@ Rectangle {
         }
     }
 
-    Text { color: "magenta"; z: 1; text: "scale: " + blackRect.scale}
+    Text {
+        color: "magenta"
+        z: 1
+        text: "scale: " + blackRect.scale +
+              "\npos: " + blackRect.x.toFixed(2) + ", " + blackRect.y.toFixed(2) +
+              "\ntranslation: active " + pincharea.activeTranslation.x.toFixed(2) + ", " + pincharea.activeTranslation.y.toFixed(2) +
+              "\n  persistent " + pincharea.persistentTranslation.x.toFixed(2) + ", " + pincharea.persistentTranslation.y.toFixed(2)
+    }
 
     Rectangle {
         id: blackRect

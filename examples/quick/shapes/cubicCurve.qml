@@ -23,22 +23,53 @@ Rectangle {
                 strokeColor: "black"
                 fillGradient: ConicalGradient {
                     id: conGrad
-                    centerX: 100; centerY: 75
-                    NumberAnimation on angle { from: 0; to: 360; duration: 10000; loops: Animation.Infinite }
-                    GradientStop { position: 0; color: "#00000000" }
-                    GradientStop { position: 0.10; color: "#ffe0cc73" }
-                    GradientStop { position: 0.17; color: "#ffc6a006" }
-                    GradientStop { position: 0.46; color: "#ff600659" }
-                    GradientStop { position: 0.72; color: "#ff0680ac" }
-                    GradientStop { position: 0.92; color: "#ffb9d9e6" }
-                    GradientStop { position: 1.00; color: "#00000000" }
+                    centerX: 100
+                    centerY: 75
+                    NumberAnimation on angle {
+                        from: 0
+                        to: 360
+                        duration: 10000
+                        loops: Animation.Infinite
+                    }
+                    GradientStop {
+                        position: 0
+                        color: "#00000000"
+                    }
+                    GradientStop {
+                        position: 0.10
+                        color: "#ffe0cc73"
+                    }
+                    GradientStop {
+                        position: 0.17
+                        color: "#ffc6a006"
+                    }
+                    GradientStop {
+                        position: 0.46
+                        color: "#ff600659"
+                    }
+                    GradientStop {
+                        position: 0.72
+                        color: "#ff0680ac"
+                    }
+                    GradientStop {
+                        position: 0.92
+                        color: "#ffb9d9e6"
+                    }
+                    GradientStop {
+                        position: 1.00
+                        color: "#00000000"
+                    }
                 }
 
-                startX: 50; startY: 100
+                startX: 50
+                startY: 100
                 PathCubic {
-                    x: 150; y: 100
-                    control1X: cp1.x; control1Y: cp1.y
-                    control2X: cp2.x; control2Y: cp2.y
+                    x: 150
+                    y: 100
+                    control1X: cp1.x
+                    control1Y: cp1.y
+                    control2X: cp2.x
+                    control2Y: cp2.y
                 }
             }
         }
@@ -46,7 +77,8 @@ Rectangle {
         Rectangle {
             id: cp1
             color: "red"
-            width: 10; height: 10
+            width: 10
+            height: 10
             SequentialAnimation {
                 loops: Animation.Infinite
                 running: true
@@ -84,7 +116,8 @@ Rectangle {
         Rectangle {
             id: cp2
             color: "blue"
-            width: 10; height: 10
+            width: 10
+            height: 10
             x: shape.width - width
             SequentialAnimation {
                 loops: Animation.Infinite
@@ -122,8 +155,10 @@ Rectangle {
     }
 
     Text {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        text: "Conical gradient angle: " + Math.round(conGrad.angle)
+        anchors {
+            right: parent.right
+            top: parent.top
+        }
+        text: qsTr("Conical gradient angle: ") + Math.round(conGrad.angle)
     }
 }

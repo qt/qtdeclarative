@@ -48,7 +48,7 @@ QMetaType QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteAr
         type = _m->method(data.coreIndex()).returnMetaType();
     }
     if (type.flags().testFlag(QMetaType::IsEnumeration))
-        type = QMetaType::fromType<int>();
+        type = type.underlyingType();
     if (type.isValid())
         return type;
     else if (unknownTypeError)
@@ -83,7 +83,7 @@ bool QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *
         QMetaType type = m.parameterMetaType(ii);
         // we treat enumerations as int
         if (type.flags().testFlag(QMetaType::IsEnumeration))
-            type = QMetaType::fromType<int>();
+            type = type.underlyingType();
         if (!type.isValid()) {
             if (unknownTypeError)
                 *unknownTypeError =  m.parameterTypeName(ii);

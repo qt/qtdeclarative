@@ -1020,9 +1020,8 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("NotScopedEnumCpp")
             << QStringLiteral("NotScopedEnumCpp.qml")
             << Result{ { Message{
-                       QStringLiteral(
-                               "Type is an unscoped enum. You cannot access \"V1\" from here."),
-                       5, 57 } } };
+                       QStringLiteral("You cannot access unscoped enum \"V1\" from here."), 5,
+                       57 } } };
 
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
@@ -1044,6 +1043,13 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                                "in nested components."), 0, 0, QtInfoMsg } },
                     Result::AutoFixable
                 };
+    QTest::newRow("IsNotAnEntryOfEnum")
+            << QStringLiteral("IsNotAnEntryOfEnum.qml")
+            << Result{ { Message{ QStringLiteral("\"Hour\" is not an entry of enum \"Mode\"."), 13,
+                                  62, QtInfoMsg } },
+                       {},
+                       { Message{ QStringLiteral("Hours") } },
+                       Result::ExitsNormally };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1218,6 +1224,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml");
     QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml");
     QTest::newRow("VariantMapGetPropertyLookup") << QStringLiteral("variantMapLookup.qml");
+    QTest::newRow("StringToDateTime") << QStringLiteral("stringToDateTime.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -1268,6 +1275,12 @@ void TestQmllint::compilerWarnings_data()
             << Result { { { QStringLiteral(
                        "Cannot resolve property type  for binding on myColor. "
                        "You may want use ID-based grouped properties here.") } } }
+            << true;
+    QTest::newRow("invalidIdLookup")
+            << QStringLiteral("invalidIdLookup.qml")
+            << Result { { {
+                    QStringLiteral("Cannot retrieve a non-object type by ID: stateMachine")
+               } } }
             << true;
 }
 

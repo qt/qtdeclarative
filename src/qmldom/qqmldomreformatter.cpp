@@ -856,12 +856,15 @@ protected:
                 out(ast->identifierToken);
         }
         out(ast->lparenToken);
-        if (ast->isArrowFunction && ast->formals && ast->formals->next)
+        const bool needParentheses = ast->formals &&
+                (ast->formals->next ||
+                 (ast->formals->element && ast->formals->element->bindingTarget));
+        if (ast->isArrowFunction && needParentheses)
             out("(");
         int baseIndent = lw.increaseIndent(1);
         accept(ast->formals);
         lw.decreaseIndent(1, baseIndent);
-        if (ast->isArrowFunction && ast->formals && ast->formals->next)
+        if (ast->isArrowFunction && needParentheses)
             out(")");
         out(ast->rparenToken);
         if (ast->isArrowFunction && !ast->formals)
@@ -952,7 +955,11 @@ protected:
     bool visit(FormalParameterList *ast) override
     {
         for (FormalParameterList *it = ast; it; it = it->next) {
-            out(it->element->bindingIdentifier.toString()); // TODO
+            // compare FormalParameterList::finish
+            if (auto id = it->element->bindingIdentifier.toString(); !id.startsWith(u"arg#"))
+                out(id);
+            if (it->element->bindingTarget)
+                accept(it->element->bindingTarget);
             if (it->next)
                 out(", ");
         }
@@ -1059,7 +1066,6 @@ protected:
     bool visit(ESModule *) override { return true; }
     bool visit(DebuggerStatement *) override { return true; }
     bool visit(Type *) override { return true; }
-    bool visit(TypeArgument *) override { return true; }
     bool visit(TypeAnnotation *) override { return true; }
 
     // overridden to use BasicVisitor (and ensure warnings about new added AST)
@@ -1179,7 +1185,6 @@ protected:
     void endVisit(ESModule *) override { }
     void endVisit(DebuggerStatement *) override { }
     void endVisit(Type *) override { }
-    void endVisit(TypeArgument *) override { }
     void endVisit(TypeAnnotation *) override { }
 
     void throwRecursionDepthError() override

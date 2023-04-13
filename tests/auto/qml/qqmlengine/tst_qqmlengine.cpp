@@ -77,6 +77,7 @@ private slots:
     void qtNamespaceInQtObject();
     void nativeModuleImport();
     void lockedRootObject();
+    void crossReferencingSingletonsDeletion();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1681,6 +1682,18 @@ void tst_qqmlengine::lockedRootObject()
     QCOMPARE(o->property("changeObjectProto2").toBool(), false);
     QCOMPARE(o->property("defineProperty1").toString(), QStringLiteral("not a URIError"));
     QCOMPARE(o->property("defineProperty2").toBool(), false);
+}
+
+void tst_qqmlengine::crossReferencingSingletonsDeletion()
+{
+    QQmlEngine engine;
+    engine.addImportPath(testFileUrl("crossReferencingSingletonsDeletion").url());
+    QQmlComponent c(&engine, testFileUrl("crossReferencingSingletonsDeletion/Module/Main.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    std::unique_ptr<QObject> o{ c.create() };
+    QVERIFY(o);
+    QCOMPARE(o->property("s").toString(), "SingletonA");
 }
 
 QTEST_MAIN(tst_qqmlengine)

@@ -31,8 +31,12 @@ Item {
         anchors.fill: parent
         model: fruitModel
         delegate: Row {
-            Text { text: "Fruit: " + name }
-            Text { text: "Cost: $" + cost }
+            id: delegate
+            required property string name
+            required property real cost
+
+            Text { text: "Fruit: " + delegate.name }
+            Text { text: "Cost: $" + delegate.cost }
         }
     }
     //! [view]

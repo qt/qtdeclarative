@@ -225,8 +225,8 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
             return QRegion();
         } else {
             QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(m_handle.renderNode);
-            QMatrix4x4 m = m_transform;
-            rd->m_matrix = &m;
+            rd->m_localMatrix = m_transform;
+            rd->m_matrix = &rd->m_localMatrix;
             rd->m_opacity = m_opacity;
 
             // all the clip region below is in world coordinates, taking m_transform into account already

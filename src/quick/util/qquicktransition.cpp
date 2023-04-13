@@ -46,6 +46,11 @@ QT_BEGIN_NAMESPACE
     values can be set to restrict the animations to only be applied when changing
     from one particular state to another.
 
+    Top-level animations within a transition are run in parallel. To run them
+    sequentially, define them within a SequentialAnimation:
+
+    \snippet qml/transition-reversible.qml sequential animations
+
     To define multiple Transitions, specify \l Item::transitions as a list:
 
     \snippet qml/transitions-list.qml list of transitions

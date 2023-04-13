@@ -2649,22 +2649,21 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 */
 
 /*!
-    \qmlproperty enumeration QtQuick::PathText::font.weight
+    \qmlproperty int QtQuick::PathText::font.weight
 
     Sets the font's weight.
 
     The weight can be one of:
-    \list
-    \li Font.Thin
-    \li Font.Light
-    \li Font.ExtraLight
-    \li Font.Normal - the default
-    \li Font.Medium
-    \li Font.DemiBold
-    \li Font.Bold
-    \li Font.ExtraBold
-    \li Font.Black
-    \endlist
+
+    \value Font.Thin        100
+    \value Font.ExtraLight  200
+    \value Font.Light       300
+    \value Font.Normal      400 (default)
+    \value Font.Medium      500
+    \value Font.DemiBold    600
+    \value Font.Bold        700
+    \value Font.ExtraBold   800
+    \value Font.Black       900
 
     \qml
     PathText { text: "Hello"; font.weight: Font.DemiBold }
@@ -2728,13 +2727,12 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
     Sets the capitalization for the text.
 
-    \list
-    \li Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
-    \li Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \li Font.AllLowercase - This alters the text to be rendered in all lowercase type.
-    \li Font.SmallCaps - This alters the text to be rendered in small-caps type.
-    \li Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
-    \endlist
+    \value Font.MixedCase       no capitalization change is applied
+    \value Font.AllUppercase    alters the text to be rendered in all uppercase type
+    \value Font.AllLowercase    alters the text to be rendered in all lowercase type
+    \value Font.SmallCaps       alters the text to be rendered in small-caps type
+    \value Font.Capitalize      alters the text to be rendered with the first character of
+                                each word as an uppercase character
 
     \qml
     PathText { text: "Hello"; font.capitalization: Font.AllLowercase }

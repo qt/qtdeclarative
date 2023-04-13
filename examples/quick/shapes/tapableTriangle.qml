@@ -10,7 +10,9 @@ Rectangle {
     color: th.pressed ? "steelBlue" : "lightGray"
     containmentMask: ctr
 
-    TapHandler { id: th }
+    TapHandler {
+        id: th
+    }
 
     Shape {
         id: ctr
@@ -23,15 +25,35 @@ Rectangle {
 
             SequentialAnimation on strokeWidth {
                 loops: Animation.Infinite
-                NumberAnimation { from: 1; to: 30; duration: 5000 }
-                NumberAnimation { from: 30; to: 1; duration: 5000 }
-                PauseAnimation { duration: 2000 }
+                NumberAnimation {
+                    from: 1
+                    to: 30
+                    duration: 5000
+                }
+                NumberAnimation {
+                    from: 30
+                    to: 1
+                    duration: 5000
+                }
+                PauseAnimation {
+                    duration: 2000
+                }
             }
 
-            startX: 30; startY: 30
-            PathLine { x: ctr.width - 30; y: ctr.height - 30 }
-            PathLine { x: 30; y: ctr.height - 30 }
-            PathLine { x: 30; y: 30 }
+            startX: 30
+            startY: 30
+            PathLine {
+                x: ctr.width - 30
+                y: ctr.height - 30
+            }
+            PathLine {
+                x: 30
+                y: ctr.height - 30
+            }
+            PathLine {
+                x: 30
+                y: 30
+            }
         }
 
         // Besides ShapePath, Shape supports visual and non-visual objects too, allowing

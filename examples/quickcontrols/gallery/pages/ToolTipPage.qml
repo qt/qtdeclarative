@@ -15,16 +15,16 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "A tool tip is a short piece of text that informs the user of a control's function."
+            text: qsTr("A tool tip is a short piece of text that informs the user of a control's function.")
         }
 
         Button {
-            text: "Tip"
+            text: qsTr("Tip")
             anchors.horizontalCenter: parent.horizontalCenter
 
             ToolTip.timeout: 5000
             ToolTip.visible: pressed
-            ToolTip.text: "This is a tool tip."
+            ToolTip.text: qsTr("This is a tool tip.")
         }
     }
 }

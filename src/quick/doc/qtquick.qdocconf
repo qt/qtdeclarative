@@ -37,6 +37,7 @@ tagfile = qtquick.tags
 
 depends += \
     qtcore \
+    qtopengl \
     qtqml \
     qtqmlmodels \
     qtqmlxmllistmodel \
@@ -51,6 +52,7 @@ depends += \
     qmake \
     qtsql \
     qtshadertools \
+    qtsvg \
     qmake \
     qtcmake
 
@@ -70,7 +72,8 @@ excludedirs += \
 exampledirs += \
     ../../../examples/quick \
     ../../qmlmodels/doc/snippets \
-    snippets
+    snippets \
+    ../../../tests/auto/quick/doc
 
 imagedirs += images
 

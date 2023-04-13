@@ -39,7 +39,9 @@ public:
 
     ~QQmlJSBasicBlocks() = default;
 
-    InstructionAnnotations run(const Function *function, const InstructionAnnotations &annotations);
+    InstructionAnnotations run(
+            const Function *function, const InstructionAnnotations &annotations,
+            QQmlJS::DiagnosticMessage *error);
 
 private:
     struct RegisterAccess

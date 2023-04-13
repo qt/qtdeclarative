@@ -130,7 +130,8 @@ enum class DomType {
     // types
     EnumDecl, // A in above example
     JsResource, // QML file contains QML object, JSFile contains JsResource
-    QmltypesComponent, // Component inside a qmltypes fles; compared to component it has exported meta-object revisions; singleton flag; can export multiple names
+    QmltypesComponent, // Component inside a qmltypes fles; compared to component it has exported
+                       // meta-object revisions; singleton flag; can export multiple names
     QmlComponent, // "normal" QML file based Component; also can represent inline components
     GlobalComponent, // component of global object ### REVISIT, try to replace with one of the above
 
@@ -150,23 +151,29 @@ enum class DomType {
     ConstantData, // the 2 in  "property int i: 2"; can be any generic data in a QML document
     SimpleObjectWrap, // internal wrapping to give uniform DOMItem access; ### research more
     ScriptExpression, // wraps an AST script expression as a DOMItem
-    Reference, // reference to another DOMItem; e.g. asking for a type of an object returns a Reference
-    PropertyDefinition, // _just_ the property definition; without the binding, even if it's one line
+    Reference, // reference to another DOMItem; e.g. asking for a type of an object returns a
+               // Reference
+    PropertyDefinition, // _just_ the property definition; without the binding, even if it's one
+                        // line
     Binding, // the part after the ":"
     MethodParameter,
     MethodInfo, // container of MethodParameter
     Version, // wrapped
     Comment,
     CommentedElement, // attached to AST if they have pre-/post-comments?
-    RegionComments, // DomItems have attached RegionComments; can attach comments to fine grained "regions" in a DomItem; like the default keyword of a property definition
+    RegionComments, // DomItems have attached RegionComments; can attach comments to fine grained
+                    // "regions" in a DomItem; like the default keyword of a property definition
     AstComments, // hash-table from AST node to commented element
-    FileLocations, // mapping from DomItem to file location ### REVISIT: try to move out of hierarchy?
-    UpdatedScriptExpression, // used in writeOut method when formatting changes ### Revisit: try to move out of DOM hierarchy
+    FileLocations, // mapping from DomItem to file location ### REVISIT: try to move out of
+                   // hierarchy?
+    UpdatedScriptExpression, // used in writeOut method when formatting changes ### Revisit: try to
+                             // move out of DOM hierarchy
 
     // convenience collecting types
     PropertyInfo, // not a DOM Item, just a convenience class
 
-    // Moc objects, mainly for testing ### Try to remove them; replace their usage in tests with "real" instances
+    // Moc objects, mainly for testing ### Try to remove them; replace their usage in tests with
+    // "real" instances
     MockObject,
     MockOwner,
 
@@ -182,7 +189,8 @@ enum class DomType {
 
     // Dom top level
     DomEnvironment, // a consistent view of modules, types, files, etc.
-    DomUniverse // a cache of what can be found in the DomEnvironment, contains the latest valid version for every file/type, etc. + latest overall
+    DomUniverse, // a cache of what can be found in the DomEnvironment, contains the latest valid
+                 // version for every file/type, etc. + latest overall
 };
 Q_ENUM_NS(DomType)
 

@@ -6,7 +6,8 @@ import QtQuick.Shapes
 
 Rectangle {
     color: "lightGray"
-    width: 256; height: 256
+    width: 256
+    height: 256
 
     Shape {
         id: circ1
@@ -36,19 +37,21 @@ Rectangle {
                 }
             }
 
-            property real r: 60
+            readonly property real r: 60
             startX: circ1.width / 2 - r
             startY: circ1.height / 2 - r
             PathArc {
                 x: circ1.width / 2 + p1.r
                 y: circ1.height / 2 + p1.r
-                radiusX: p1.r; radiusY: p1.r
+                radiusX: p1.r
+                radiusY: p1.r
                 useLargeArc: true
             }
             PathArc {
                 x: circ1.width / 2 - p1.r
                 y: circ1.height / 2 - p1.r
-                radiusX: p1.r; radiusY: p1.r
+                radiusX: p1.r
+                radiusY: p1.r
                 useLargeArc: true
             }
         }
@@ -60,8 +63,16 @@ Rectangle {
 
         SequentialAnimation on opacity {
             loops: Animation.Infinite
-            NumberAnimation { from: 1.0; to: 0.0; duration: 5000 }
-            NumberAnimation { from: 0.0; to: 1.0; duration: 5000 }
+            NumberAnimation {
+                from: 1.0
+                to: 0.0
+                duration: 5000
+            }
+            NumberAnimation {
+                from: 0.0
+                to: 1.0
+                duration: 5000
+            }
         }
 
         ShapePath {
@@ -87,19 +98,21 @@ Rectangle {
                 }
             }
 
-            property real r: 40
+            readonly property real r: 40
             startX: circ2.width / 2 - r
             startY: circ2.height / 2 - r
             PathArc {
                 x: circ2.width / 2 + p2.r
                 y: circ2.height / 2 + p2.r
-                radiusX: p2.r; radiusY: p2.r
+                radiusX: p2.r
+                radiusY: p2.r
                 useLargeArc: true
             }
             PathArc {
                 x: circ2.width / 2 - p2.r
                 y: circ2.height / 2 - p2.r
-                radiusX: p2.r; radiusY: p2.r
+                radiusX: p2.r
+                radiusY: p2.r
                 useLargeArc: true
             }
         }

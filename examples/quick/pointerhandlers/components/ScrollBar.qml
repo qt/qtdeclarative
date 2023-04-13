@@ -70,7 +70,7 @@ Rectangle {
                 PropertyChanges {
                     knob {
                         max: root.width - knob.width
-                        scrolledX: Math.min(max, Math.max(0, max * flick.contentX / (flick.width - flick.contentWidth)))
+                        scrolledX: Math.min(knob.max, Math.max(0, knob.max * flick.contentX / (flick.width - flick.contentWidth)))
                         scrolledY: 1
                         scrollDistance: flick.width - flick.contentWidth
                         width: flick.width * (flick.width / flick.contentWidth) - (height - anchors.margins) * 2
@@ -91,7 +91,7 @@ Rectangle {
                     knob {
                         max: root.height - knob.height
                         scrolledX: 1
-                        scrolledY: Math.min(max, Math.max(0, max * flick.contentY / (flick.height - flick.contentHeight)))
+                        scrolledY: Math.min(knob.max, Math.max(0, knob.max * flick.contentY / (flick.height - flick.contentHeight)))
                         scrollDistance: flick.height - flick.contentHeight
                         width: root.width - 2
                         height: root.width - 2

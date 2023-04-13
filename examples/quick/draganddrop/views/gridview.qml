@@ -1,17 +1,23 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 import QtQml
 import QtQuick
 import QtQml.Models
 
 GridView {
     id: root
-    width: 320; height: 480
-    cellWidth: 80; cellHeight: 80
+    width: 320
+    height: 480
+    cellWidth: 80
+    cellHeight: 80
 
     displaced: Transition {
-        NumberAnimation { properties: "x,y"; easing.type: Easing.OutQuad }
+        NumberAnimation {
+            properties: "x,y"
+            easing.type: Easing.OutQuad
+        }
     }
 
 //! [0]
@@ -48,9 +54,10 @@ GridView {
 //! [1]
         delegate: DropArea {
             id: delegateRoot
-            required property color color;
+            required property color color
 
-            width: 80; height: 80
+            width: 80
+            height: 80
 
             onEntered: function(drag) {
                 visualModel.items.move((drag.source as Icon).visualIndex, icon.visualIndex)

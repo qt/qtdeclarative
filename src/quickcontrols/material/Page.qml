@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.Material
+import QtQuick.Controls.Material.impl
 
 T.Page {
     id: control
@@ -19,5 +20,10 @@ T.Page {
 
     background: Rectangle {
         color: control.Material.backgroundColor
+
+        layer.enabled: control.enabled && control.Material.elevation > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
+        }
     }
 }

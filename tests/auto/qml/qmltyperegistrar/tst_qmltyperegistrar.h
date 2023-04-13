@@ -513,6 +513,23 @@ private:
     int m_i;
 };
 
+class AnonymousAndUncreatable : public QObject
+{
+     Q_OBJECT
+     QML_ANONYMOUS
+     QML_UNCREATABLE("Pointless uncreatable message")
+};
+
+class Invisible : public QObject
+{
+};
+
+struct InvisibleForeign
+{
+    Q_GADGET
+    QML_FOREIGN(Invisible)
+    QML_NAMED_ELEMENT(Invisible)
+};
 
 class tst_qmltyperegistrar : public QObject
 {
@@ -563,6 +580,8 @@ private slots:
     void clonedSignal();
     void baseVersionInQmltypes();
     void constructibleValueType();
+    void anonymousAndUncreatable();
+    void omitInvisible();
 
 private:
     QByteArray qmltypesData;

@@ -131,7 +131,7 @@ static ReturnedValue loadProperty(
         return QmlListWrapper::create(v4, object, property.coreIndex(), propMetaType);
 
     // TODO: Check all the builtin types here. See getGadgetProperty() in qqmlvaluetypewrapper.cpp
-    switch (property.isEnum() ? QMetaType::Int : propMetaType.id()) {
+    switch (property.isEnum() ? propMetaType.underlyingType().id() : propMetaType.id()) {
     case QMetaType::Int: {
         int v = 0;
         property.readProperty(object, &v);
@@ -602,7 +602,7 @@ void QObjectWrapper::setProperty(
         scope.engine->throwError(error);
         return;
     } else if (propType == QMetaType::fromType<int>() && value.isNumber()) {
-        PROPERTY_STORE(int, value.asDouble());
+        PROPERTY_STORE(int, value.toInt32());
     } else if (propType == QMetaType::fromType<qreal>() && value.isNumber()) {
         PROPERTY_STORE(qreal, qreal(value.asDouble()));
     } else if (propType == QMetaType::fromType<float>() && value.isNumber()) {

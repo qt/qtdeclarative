@@ -368,7 +368,7 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
                 QMetaObject::ReadProperty, &metaObject, &index);
 
     const int metaTypeId = isEnum
-            ? QMetaType::Int
+            ? metaType.underlyingType().id()
             : (metaType.flags() & QMetaType::PointerToQObject)
               ? QMetaType::QObjectStar
               : metaType.id();

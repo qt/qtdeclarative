@@ -1,15 +1,15 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 // common declarations
-#include "qmldom/qqmldomitem_p.h"
+#include <QtQmlDom/private/qqmldomitem_p.h>
 // comparisons of two DomItems
-#include "qmldom/qqmldomcompare_p.h"
+#include <QtQmlDom/private/qqmldomcompare_p.h>
 // field filters to compare only selected fields (ignore for example location changes)
-#include "qmldom/qqmldomfieldfilter_p.h"
+#include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 // needed to edit and cast to concrete type (PropertyDefinition, ScriptExpression,...)
-#include "qmldom/qqmldomelements_p.h"
+#include <QtQmlDom/private/qqmldomelements_p.h>
 // cast of the top level items (DomEnvironments,...)
-#include "qmldom/qqmldomtop_p.h"
+#include <QtQmlDom/private/qqmldomtop_p.h>
 
 #include <QtTest/QtTest>
 #include <QCborValue>
@@ -43,7 +43,11 @@ int main()
 
     qDebug() << "loading the file" << testFilePath;
     env.loadFile(
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
+#else
             testFilePath, QString(),
+#endif
             [&tFile](Path, const DomItem &, const DomItem &newIt) {
                 tFile = newIt; // callback called when everything is loaded that receives the loaded
                                // external file pair (path, oldValue, newValue)

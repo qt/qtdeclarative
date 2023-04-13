@@ -211,10 +211,12 @@ void QQuickItemView::setModel(const QVariant &m)
             setCurrentIndex(d->model->count() > 0 ? 0 : -1);
             d->updateViewport();
 
+#if QT_CONFIG(quick_viewtransitions)
             if (d->transitioner && d->transitioner->populateTransition) {
                 d->transitioner->setPopulateTransitionEnabled(true);
                 d->forceLayoutPolish();
             }
+#endif
         }
 
         connect(d->model, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
@@ -684,6 +686,7 @@ void QQuickItemView::setReuseItems(bool reuse)
     emit reuseItemsChanged();
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 QQuickTransition *QQuickItemView::populateTransition() const
 {
     Q_D(const QQuickItemView);
@@ -811,6 +814,7 @@ void QQuickItemView::setDisplacedTransition(QQuickTransition *transition)
         emit displacedTransitionChanged();
     }
 }
+#endif
 
 void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
 {
@@ -1148,11 +1152,13 @@ void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometry
         // don't allow item movement transitions to trigger a re-layout and
         // start new transitions
         bool prevInLayout = inLayout;
+#if QT_CONFIG(quick_viewtransitions)
         if (!inLayout) {
             FxViewItem *actualItem = transitioner ? visibleItem(currentIndex) : nullptr;
             if (actualItem && actualItem->transitionRunning())
                 inLayout = true;
         }
+#endif
         updateHighlight();
         inLayout = prevInLayout;
     }
@@ -1165,17 +1171,20 @@ void QQuickItemView::destroyRemoved()
 {
     Q_D(QQuickItemView);
 
+#if QT_CONFIG(quick_viewtransitions)
     bool hasRemoveTransition = false;
     bool hasRemoveTransitionAsTarget = false;
     if (d->transitioner) {
         hasRemoveTransition = d->transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false);
         hasRemoveTransitionAsTarget = d->transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true);
     }
+#endif
 
     for (QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
             it != d->visibleItems.end();) {
         FxViewItem *item = *it;
         if (item->index == -1 && (!item->attached || item->attached->delayRemove() == false)) {
+#if QT_CONFIG(quick_viewtransitions)
             if (hasRemoveTransitionAsTarget) {
                 // don't remove from visibleItems until next layout()
                 d->runDelayedRemoveTransition = true;
@@ -1184,9 +1193,12 @@ void QQuickItemView::destroyRemoved()
             } else {
                 if (hasRemoveTransition)
                     d->runDelayedRemoveTransition = true;
+#endif
                 d->releaseItem(item, d->reusableFlag);
                 it = d->visibleItems.erase(it);
+#if QT_CONFIG(quick_viewtransitions)
             }
+#endif
         } else {
             ++it;
         }
@@ -1201,8 +1213,10 @@ void QQuickItemView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     Q_D(QQuickItemView);
     if (reset) {
         cancelFlick();
+#if QT_CONFIG(quick_viewtransitions)
         if (d->transitioner)
             d->transitioner->setPopulateTransitionEnabled(true);
+#endif
         d->moveReason = QQuickItemViewPrivate::SetIndex;
         d->regenerate();
         if (d->highlight && d->currentItem) {
@@ -1212,8 +1226,10 @@ void QQuickItemView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         }
         d->moveReason = QQuickItemViewPrivate::Other;
         emit countChanged();
+#if QT_CONFIG(quick_viewtransitions)
         if (d->transitioner && d->transitioner->populateTransition)
             d->forceLayoutPolish();
+#endif
     } else {
         if (d->inLayout) {
             d->bufferedChanges.prepare(d->currentIndex, d->itemCount);
@@ -1449,8 +1465,10 @@ void QQuickItemView::componentComplete()
     d->updateFooter();
     d->updateViewport();
     d->setPosition(d->contentStartOffset());
+#if QT_CONFIG(quick_viewtransitions)
     if (d->transitioner)
         d->transitioner->setPopulateTransitionEnabled(true);
+#endif
 
     if (d->isValid()) {
         d->refill();
@@ -1487,7 +1505,9 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , highlightRangeStart(0), highlightRangeEnd(0)
     , highlightMoveDuration(150)
     , headerComponent(nullptr), header(nullptr), footerComponent(nullptr), footer(nullptr)
+#if QT_CONFIG(quick_viewtransitions)
     , transitioner(nullptr)
+#endif
     , minExtent(0), maxExtent(0)
     , ownModel(false), wrap(false)
     , keyNavigationEnabled(true)
@@ -1495,7 +1515,10 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , inLayout(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
     , fillCacheBuffer(false), inRequest(false)
-    , runDelayedRemoveTransition(false), delegateValidated(false), isClearing(false)
+#if QT_CONFIG(quick_viewtransitions)
+    , runDelayedRemoveTransition(false)
+#endif
+    , delegateValidated(false), isClearing(false)
 {
     bufferPause.addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
     bufferPause.setLoopCount(1);
@@ -1504,9 +1527,11 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
 
 QQuickItemViewPrivate::~QQuickItemViewPrivate()
 {
+#if QT_CONFIG(quick_viewtransitions)
     if (transitioner)
         transitioner->setChangeListener(nullptr);
     delete transitioner;
+#endif
 }
 
 bool QQuickItemViewPrivate::isValid() const
@@ -1682,11 +1707,13 @@ void QQuickItemViewPrivate::clear(bool onDestruction)
     releaseVisibleItems(QQmlInstanceModel::NotReusable);
     visibleIndex = 0;
 
+#if QT_CONFIG(quick_viewtransitions)
     for (FxViewItem *item : std::as_const(releasePendingTransition)) {
         item->releaseAfterTransition = false;
         releaseItem(item, QQmlInstanceModel::NotReusable);
     }
     releasePendingTransition.clear();
+#endif
 
     auto oldCurrentItem = currentItem;
     releaseItem(currentItem, QQmlDelegateModel::NotReusable);
@@ -1836,12 +1863,15 @@ void QQuickItemViewPrivate::layout()
         clear();
         setPosition(contentStartOffset());
         updateViewport();
+#if QT_CONFIG(quick_viewtransitions)
         if (transitioner)
             transitioner->setPopulateTransitionEnabled(false);
+#endif
         inLayout = false;
         return;
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     if (runDelayedRemoveTransition && transitioner
             && transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false)) {
         // assume that any items moving now are moving due to the remove - if they schedule
@@ -1849,6 +1879,7 @@ void QQuickItemViewPrivate::layout()
         for (int i=0; i<visibleItems.size(); i++)
             visibleItems[i]->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, false);
     }
+#endif
 
     ChangeResult insertionPosChanges;
     ChangeResult removalPosChanges;
@@ -1862,6 +1893,7 @@ void QQuickItemViewPrivate::layout()
     }
     forceLayout = false;
 
+#if QT_CONFIG(quick_viewtransitions)
     if (transitioner && transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) {
         // Give the view one more chance to refill itself,
         // in case its size is changed such that more delegates become visible after component completed
@@ -1871,12 +1903,15 @@ void QQuickItemViewPrivate::layout()
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::PopulateTransition, true);
         }
     }
+#endif
 
     updateSections();
     layoutVisibleItems();
     storeFirstVisibleItemPosition();
 
+#if QT_CONFIG(quick_viewtransitions)
     int lastIndexInView = findLastIndexInView();
+#endif
     refill();
     markExtentsDirty();
     updateHighlight();
@@ -1891,6 +1926,7 @@ void QQuickItemViewPrivate::layout()
     updateViewport();
     updateUnrequestedPositions();
 
+#if QT_CONFIG(quick_viewtransitions)
     if (transitioner) {
         // items added in the last refill() may need to be transitioned in - e.g. a remove
         // causes items to slide up into view
@@ -1931,11 +1967,14 @@ void QQuickItemViewPrivate::layout()
         transitioner->setPopulateTransitionEnabled(false);
         transitioner->resetTargetLists();
     }
+#endif
 
     if (!currentItem)
         updateCurrent(currentIndex);
 
+#if QT_CONFIG(quick_viewtransitions)
     runDelayedRemoveTransition = false;
+#endif
     inLayout = false;
 }
 
@@ -1991,6 +2030,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
                 removalResult.countChangeBeforeVisible += (correctedFirstVisibleIndex  - r.index);
         }
     }
+#if QT_CONFIG(quick_viewtransitions)
     if (runDelayedRemoveTransition) {
         QQmlChangeSet::Change removal;
         for (QList<FxViewItem*>::Iterator it = visibleItems.begin(); it != visibleItems.end();) {
@@ -2004,6 +2044,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
             }
         }
     }
+#endif
     *totalRemovalResult += removalResult;
     if (!removals.isEmpty()) {
         updateVisibleIndex();
@@ -2042,6 +2083,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
             item->attached->emitAdd();
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     // for each item that was moved directly into the view as a result of a move(),
     // find the index it was moved from in order to set its initial position, so that we
     // can transition it from this "original" position to its new position in the view
@@ -2057,13 +2099,16 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
             }
         }
     }
+#endif
 
     // reposition visibleItems.first() correctly so that the content y doesn't jump
     if (removedCount != prevVisibleItemsCount)
         repositionFirstItem(prevVisibleItemsFirst, prevVisibleItemsFirstPos, prevFirstItemInView, &insertionResult, &removalResult);
 
     // Whatever removed/moved items remain are no longer visible items.
+#if QT_CONFIG(quick_viewtransitions)
     prepareRemoveTransitions(&currentChanges.removedItems);
+#endif
     for (auto it = currentChanges.removedItems.begin();
          it != currentChanges.removedItems.end(); ++it) {
         releaseItem(it.value(), reusableFlag);
@@ -2120,10 +2165,12 @@ bool QQuickItemViewPrivate::applyRemovalChange(const QQmlChangeSet::Change &remo
         } else if (item->index >= removal.index + removal.count) {
             // after removed items
             item->index -= removal.count;
+#if QT_CONFIG(quick_viewtransitions)
             if (removal.isMove())
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, false);
             else
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::RemoveTransition, false);
+#endif
             ++it;
         } else {
             // removed item
@@ -2157,7 +2204,9 @@ void QQuickItemViewPrivate::removeItem(FxViewItem *item, const QQmlChangeSet::Ch
     }
     if (removal.isMove()) {
         currentChanges.removedItems.replace(removal.moveKey(item->index), item);
+#if QT_CONFIG(quick_viewtransitions)
         item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::MoveTransition, true);
+#endif
     } else {
         // track item so it is released later
         currentChanges.removedItems.insert(QQmlChangeSet::MoveKey(), item);
@@ -2211,6 +2260,7 @@ void QQuickItemViewPrivate::repositionFirstItem(FxViewItem *prevVisibleItemsFirs
     }
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 void QQuickItemViewPrivate::createTransitioner()
 {
     if (!transitioner) {
@@ -2286,6 +2336,7 @@ void QQuickItemViewPrivate::viewItemTransitionFinished(QQuickItemViewTransitiona
         }
     }
 }
+#endif
 
 /*
   This may return 0 if the item is being created asynchronously.
@@ -2299,6 +2350,7 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, QQmlIncubator::Inc
     if (requestedIndex == modelIndex && incubationMode == QQmlIncubator::Asynchronous)
         return nullptr;
 
+#if QT_CONFIG(quick_viewtransitions)
     for (int i=0; i<releasePendingTransition.size(); i++) {
         if (releasePendingTransition.at(i)->index == modelIndex
                 && !releasePendingTransition.at(i)->isPendingRemoval()) {
@@ -2306,6 +2358,7 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, QQmlIncubator::Inc
             return releasePendingTransition.takeAt(i);
         }
     }
+#endif
 
     inRequest = true;
 

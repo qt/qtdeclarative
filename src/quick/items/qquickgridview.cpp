@@ -162,7 +162,9 @@ public:
     void setPosition(qreal pos) override;
     void layoutVisibleItems(int fromModelIndex = 0) override;
     bool applyInsertionChange(const QQmlChangeSet::Change &insert, ChangeResult *changeResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView) override;
+#if QT_CONFIG(quick_viewtransitions)
     void translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult) override;
+#endif
     bool needsRefillForAddedOrRemovedIndex(int index) const override;
 
     qreal headerSize() const override;
@@ -503,8 +505,10 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << colPos << rowPos;
         if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, incubationMode))))
             break;
+#if QT_CONFIG(quick_viewtransitions)
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos, true);
+#endif
         QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.append(item);
         if (++colNum >= columns) {
@@ -538,8 +542,10 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, incubationMode))))
             break;
         --visibleIndex;
+#if QT_CONFIG(quick_viewtransitions)
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos, true);
+#endif
         QQuickItemPrivate::get(item->item)->setCulled(doBuffer);
         visibleItems.prepend(item);
         if (--colNum < 0) {
@@ -555,11 +561,14 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
 
 void QQuickGridViewPrivate::removeItem(FxViewItem *item)
 {
+#if QT_CONFIG(quick_viewtransitions)
     if (item->transitionScheduledOrRunning()) {
         qCDebug(lcItemViewDelegateLifecycle) << "\tnot releasing animating item:" << item->index << item->item->objectName();
         item->releaseAfterTransition = true;
         releasePendingTransition.append(item);
-    } else {
+    } else
+#endif
+    {
         releaseItem(item, QQmlDelegateModel::NotReusable);
     }
 }
@@ -883,7 +892,11 @@ void QQuickGridViewPrivate::initializeCurrentItem()
         FxViewItem *actualItem = visibleItem(currentIndex);
 
         // don't reposition the item if it's about to be transitioned to another position
-        if ((!actualItem || !actualItem->transitionScheduledOrRunning()))
+        if ((!actualItem
+#if QT_CONFIG(quick_viewtransitions)
+             || !actualItem->transitionScheduledOrRunning()
+#endif
+             ))
             gridItem->setPosition(colPosAt(currentIndex), rowPosAt(currentIndex));
     }
 }
@@ -1427,36 +1440,32 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
     Valid values for \c highlightRangeMode are:
 
-    \list
-    \li GridView.ApplyRange - the view attempts to maintain the highlight within the range.
+    \value GridView.ApplyRange              the view attempts to maintain the highlight within the range.
        However, the highlight can move outside of the range at the ends of the view or due
        to mouse interaction.
-    \li GridView.StrictlyEnforceRange - the highlight never moves outside of the range.
+    \value GridView.StrictlyEnforceRange    the highlight never moves outside of the range.
        The current item changes if a keyboard or mouse action would cause the highlight to move
        outside of the range.
-    \li GridView.NoHighlightRange - this is the default value.
-    \endlist
+    \value GridView.NoHighlightRange        the default value
 */
 
 
 /*!
-  \qmlproperty enumeration QtQuick::GridView::layoutDirection
-  This property holds the layout direction of the grid.
+    \qmlproperty enumeration QtQuick::GridView::layoutDirection
+    This property holds the layout direction of the grid.
 
     Possible values:
 
-  \list
-  \li Qt.LeftToRight (default) - Items will be laid out starting in the top, left corner. The flow is
-  dependent on the \l GridView::flow property.
-  \li Qt.RightToLeft - Items will be laid out starting in the top, right corner. The flow is dependent
-  on the \l GridView::flow property.
-  \endlist
+    \value Qt.LeftToRight   (default) Items will be laid out starting in the top, left corner. The flow is
+                            dependent on the \l GridView::flow property.
+    \value Qt.RightToLeft   Items will be laid out starting in the top, right corner. The flow is dependent
+                            on the \l GridView::flow property.
 
-  \b Note: If GridView::flow is set to GridView.FlowLeftToRight, this is not to be confused if
-  GridView::layoutDirection is set to Qt.RightToLeft. The GridView.FlowLeftToRight flow value simply
-  indicates that the flow is horizontal.
+    \b Note: If GridView::flow is set to GridView.FlowLeftToRight, this is not to be confused if
+    GridView::layoutDirection is set to Qt.RightToLeft. The GridView.FlowLeftToRight flow value simply
+    indicates that the flow is horizontal.
 
-  \sa GridView::effectiveLayoutDirection, GridView::verticalLayoutDirection
+    \sa GridView::effectiveLayoutDirection, GridView::verticalLayoutDirection
 */
 
 
@@ -1477,10 +1486,8 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
   Possible values:
 
-  \list
-  \li GridView.TopToBottom (default) - Items are laid out from the top of the view down to the bottom of the view.
-  \li GridView.BottomToTop - Items are laid out from the bottom of the view up to the top of the view.
-  \endlist
+  \value GridView.TopToBottom   (default) Items are laid out from the top of the view down to the bottom of the view.
+  \value GridView.BottomToTop   Items are laid out from the bottom of the view up to the top of the view.
 
   \sa GridView::layoutDirection
 */
@@ -1588,10 +1595,8 @@ void QQuickGridView::setHighlightMoveDuration(int duration)
 
     Possible values:
 
-    \list
-    \li GridView.FlowLeftToRight (default) - Items are laid out from left to right, and the view scrolls vertically
-    \li GridView.FlowTopToBottom - Items are laid out from top to bottom, and the view scrolls horizontally
-    \endlist
+    \value GridView.FlowLeftToRight (default) Items are laid out from left to right, and the view scrolls vertically
+    \value GridView.FlowTopToBottom Items are laid out from top to bottom, and the view scrolls horizontally
 */
 QQuickGridView::Flow QQuickGridView::flow() const
 {
@@ -1668,15 +1673,12 @@ void QQuickGridView::setCellHeight(qreal cellHeight)
     This property determines how the view scrolling will settle following a drag or flick.
     The possible values are:
 
-    \list
-    \li GridView.NoSnap (default) - the view stops anywhere within the visible area.
-    \li GridView.SnapToRow - the view settles with a row (or column for \c GridView.FlowTopToBottom flow)
-    aligned with the start of the view.
-    \li GridView.SnapOneRow - the view will settle no more than one row (or column for \c GridView.FlowTopToBottom flow)
-    away from the first visible row at the time the mouse button is released.
-    This mode is particularly useful for moving one page at a time.
-    \endlist
-
+    \value GridView.NoSnap      (default) the view stops anywhere within the visible area.
+    \value GridView.SnapToRow   the view settles with a row (or column for \c GridView.FlowTopToBottom flow)
+                                aligned with the start of the view.
+    \value GridView.SnapOneRow  the view will settle no more than one row (or column for \c GridView.FlowTopToBottom flow)
+                                away from the first visible row at the time the mouse button is released.
+                                This mode is particularly useful for moving one page at a time.
 */
 QQuickGridView::SnapMode QQuickGridView::snapMode() const
 {
@@ -2404,6 +2406,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         }
     }
 
+#if QT_CONFIG(quick_viewtransitions)
     // Update the indexes of the following visible items.
     for (FxViewItem *item : std::as_const(visibleItems)) {
         if (item->index != -1 && item->index >= modelIndex) {
@@ -2414,6 +2417,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, false);
         }
     }
+#endif
 
     int prevVisibleCount = visibleItems.size();
     if (insertResult->visiblePos.isValid() && rowPos < insertResult->visiblePos) {
@@ -2443,9 +2447,11 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                     insertResult->changedFirstItem = true;
                 if (!change.isMove()) {
                     addedItems->append(item);
+#if QT_CONFIG(quick_viewtransitions)
                     if (transitioner)
                         item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                     else
+#endif
                         item->moveTo(QPointF(colPos, rowPos), true);
                 }
                 insertResult->sizeChangesBeforeVisiblePos += rowSize();
@@ -2497,13 +2503,19 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             if (change.isMove()) {
                 // we know this is a move target, since move displaced items that are
                 // shuffled into view due to a move would be added in refill()
-                if (newItem && transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true))
+                if (newItem
+#if QT_CONFIG(quick_viewtransitions)
+                        && transitioner && transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, true)
+#endif
+                        )
                     movingIntoView->append(MovedItem(item, change.moveKey(item->index)));
             } else {
                 addedItems->append(item);
+#if QT_CONFIG(quick_viewtransitions)
                 if (transitioner)
                     item->transitionNextReposition(transitioner, QQuickItemViewTransitioner::AddTransition, true);
                 else
+#endif
                     item->moveTo(QPointF(colPos, rowPos), true);
             }
             insertResult->sizeChangesAfterVisiblePos += rowSize();
@@ -2523,6 +2535,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     return visibleItems.size() > prevVisibleCount;
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex, const ChangeResult &insertionResult, const ChangeResult &removalResult)
 {
     if (!transitioner)
@@ -2562,6 +2575,7 @@ void QQuickGridViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
         }
     }
 }
+#endif
 
 bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) const
 {
@@ -2576,18 +2590,15 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     Positions the view such that the \a index is at the position specified by
     \a mode:
 
-    \list
-    \li GridView.Beginning - position item at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
-    \li GridView.Center - position item in the center of the view.
-    \li GridView.End - position item at bottom (or right for horizontal orientation) of the view.
-    \li GridView.Visible - if any part of the item is visible then take no action, otherwise
-    bring the item into view.
-    \li GridView.Contain - ensure the entire item is visible.  If the item is larger than
-    the view the item is positioned at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
-    \li GridView.SnapPosition - position the item at \l preferredHighlightBegin.  This mode
-    is only valid if \l highlightRangeMode is StrictlyEnforceRange or snapping is enabled
-    via \l snapMode.
-    \endlist
+    \value GridView.Beginning       position item at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
+    \value GridView.Center          position item in the center of the view.
+    \value GridView.End             position item at bottom (or right for horizontal orientation) of the view.
+    \value GridView.Visible         if any part of the item is visible then take no action, otherwise
+                                    bring the item into view.
+    \value GridView.Contain         ensure the entire item is visible. If the item is larger than the view, the item
+                                    is positioned at the top (or left for \c GridView.FlowTopToBottom flow) of the view.
+    \value GridView.SnapPosition    position the item at \l preferredHighlightBegin.  This mode is only valid if
+                                    \l highlightRangeMode is \c StrictlyEnforceRange or snapping is enabled via \l snapMode.
 
     If positioning the view at the index would cause empty space to be displayed at
     the beginning or end of the view, the view will be positioned at the boundary.

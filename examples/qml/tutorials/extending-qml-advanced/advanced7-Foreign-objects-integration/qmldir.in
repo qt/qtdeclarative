@@ -1,0 +1,5 @@
+module People
+typeinfo foreign.qmltypes
+prefer :/qt/qml/People/
+Main 254.0 Main.qml
+depends QtQuick

@@ -33,6 +33,7 @@ tagfile                 = ../../../doc/qtqml/qtqml.tags
 
 depends += \
     qtcore \
+    qtnetwork \
     qtqmlmodels \
     qtqmlworkerscript \
     qtgui \

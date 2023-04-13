@@ -6,89 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 Pane {
-    padding: 0
-
-    property var delegateComponentMap: {
-        "ItemDelegate": itemDelegateComponent,
-        "SwipeDelegate": swipeDelegateComponent,
-        "CheckDelegate": checkDelegateComponent,
-        "RadioDelegate": radioDelegateComponent,
-        "SwitchDelegate": switchDelegateComponent
-    }
-
-    Component {
-        id: itemDelegateComponent
-
-        ItemDelegate {
-            text: labelText
-            width: parent.width
-        }
-    }
-
-    Component {
-        id: swipeDelegateComponent
-
-        SwipeDelegate {
-            id: swipeDelegate
-            text: labelText
-            width: parent.width
-
-            Component {
-                id: removeComponent
-
-                Rectangle {
-                    color: SwipeDelegate.pressed ? "#333" : "#444"
-                    width: parent.width
-                    height: parent.height
-                    clip: true
-
-                    SwipeDelegate.onClicked: view.model.remove(ourIndex)
-
-                    Label {
-                        font.pixelSize: swipeDelegate.font.pixelSize
-                        text: "Remove"
-                        color: "white"
-                        anchors.centerIn: parent
-                    }
-                }
-            }
-
-            swipe.left: removeComponent
-            swipe.right: removeComponent
-        }
-    }
-
-    Component {
-        id: checkDelegateComponent
-
-        CheckDelegate {
-            text: labelText
-        }
-    }
-
-    ButtonGroup {
-        id: radioButtonGroup
-    }
-
-    Component {
-        id: radioDelegateComponent
-
-        RadioDelegate {
-            text: labelText
-            ButtonGroup.group: radioButtonGroup
-        }
-    }
-
-    Component {
-        id: switchDelegateComponent
-
-        SwitchDelegate {
-            text: labelText
-        }
-    }
-
     ColumnLayout {
-        id: column
         spacing: 40
         anchors.fill: parent
         anchors.topMargin: 20
@@ -97,76 +15,186 @@ Pane {
             Layout.fillWidth: true
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: "Delegate controls are used as delegates in views such as ListView."
+            text: qsTr("Delegate controls are used as delegates in views such as ListView.")
         }
 
         ListView {
             id: listView
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             clip: true
-            model: ListModel {
-                ListElement { type: "ItemDelegate"; text: "ItemDelegate" }
-                ListElement { type: "ItemDelegate"; text: "ItemDelegate" }
-                ListElement { type: "ItemDelegate"; text: "ItemDelegate" }
-                ListElement { type: "SwipeDelegate"; text: "SwipeDelegate" }
-                ListElement { type: "SwipeDelegate"; text: "SwipeDelegate" }
-                ListElement { type: "SwipeDelegate"; text: "SwipeDelegate" }
-                ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
-                ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
-                ListElement { type: "CheckDelegate"; text: "CheckDelegate" }
-                ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
-                ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
-                ListElement { type: "RadioDelegate"; text: "RadioDelegate" }
-                ListElement { type: "SwitchDelegate"; text: "SwitchDelegate" }
-                ListElement { type: "SwitchDelegate"; text: "SwitchDelegate" }
-                ListElement { type: "SwitchDelegate"; text: "SwitchDelegate" }
-            }
-
             section.property: "type"
             section.delegate: Pane {
-                width: listView.width
+                id: sectionPane
+                required property string section
+                width: ListView.view.width
                 height: sectionLabel.implicitHeight + 20
-
                 Label {
                     id: sectionLabel
-                    text: section
+                    text: sectionPane.section
                     anchors.centerIn: parent
                 }
             }
 
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            readonly property var delegateComponentMap: {
+                "ItemDelegate": itemDelegateComponent,
+                "SwipeDelegate": swipeDelegateComponent,
+                "CheckDelegate": checkDelegateComponent,
+                "RadioDelegate": radioDelegateComponent,
+                "SwitchDelegate": switchDelegateComponent
+            }
+
+            Component {
+                id: itemDelegateComponent
+
+                ItemDelegate {
+                    // qmllint disable unqualified
+                    text: value
+                    // qmllint enable unqualified
+                    width: parent.width
+                }
+            }
+
+            Component {
+                id: swipeDelegateComponent
+
+                SwipeDelegate {
+                    id: swipeDelegate
+                    // qmllint disable unqualified
+                    text: value
+                    // qmllint enable unqualified
+                    width: parent.width
+
+                    Component {
+                        id: removeComponent
+
+                        Rectangle {
+                            color: SwipeDelegate.pressed ? "#333" : "#444"
+                            width: parent.width
+                            height: parent.height
+                            clip: true
+
+                            SwipeDelegate.onClicked: {
+                                // qmllint disable unqualified
+                                view.model.remove(ourIndex)
+                                // qmllint enable unqualified
+                            }
+
+                            Label {
+                                // qmllint disable unqualified
+                                font.pixelSize: swipeDelegate.font.pixelSize
+                                // qmllint enable unqualified
+                                text: qsTr("Remove")
+                                color: "white"
+                                anchors.centerIn: parent
+                            }
+                        }
+                    }
+
+                    SequentialAnimation {
+                        id: removeAnimation
+
+                        PropertyAction {
+                            // qmllint disable unqualified
+                            target: delegateItem
+                            // qmllint enable unqualified
+                            property: "ListView.delayRemove"
+                            value: true
+                        }
+                        NumberAnimation {
+                            // qmllint disable unqualified
+                            target: delegateItem.item
+                            // qmllint enable unqualified
+                            property: "height"
+                            to: 0
+                            easing.type: Easing.InOutQuad
+                        }
+                        PropertyAction {
+                            // qmllint disable unqualified
+                            target: delegateItem
+                            // qmllint enable unqualified
+                            property: "ListView.delayRemove"
+                            value: false
+                        }
+                    }
+
+                    swipe.left: removeComponent
+                    swipe.right: removeComponent
+                    ListView.onRemove: removeAnimation.start()
+                }
+            }
+
+            Component {
+                id: checkDelegateComponent
+
+                CheckDelegate {
+                    // qmllint disable unqualified
+                    text: value
+                    // qmllint enable unqualified
+                }
+            }
+
+            ButtonGroup {
+                id: radioButtonGroup
+            }
+
+            Component {
+                id: radioDelegateComponent
+
+                RadioDelegate {
+                    // qmllint disable unqualified
+                    text: value
+                    ButtonGroup.group: radioButtonGroup
+                    // qmllint enable unqualified
+                }
+            }
+
+            Component {
+                id: switchDelegateComponent
+
+                SwitchDelegate {
+                    // qmllint disable unqualified
+                    text: value
+                    // qmllint enable unqualified
+                }
+            }
+
+            model: ListModel {
+                ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate1") }
+                ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate2") }
+                ListElement { type: "ItemDelegate"; value: qsTr("ItemDelegate3") }
+                ListElement { type: "SwipeDelegate"; value: qsTr("SwipeDelegate1") }
+                ListElement { type: "SwipeDelegate"; value: qsTr("SwipeDelegate2") }
+                ListElement { type: "SwipeDelegate"; value: qsTr("SwipeDelegate3") }
+                ListElement { type: "CheckDelegate"; value: qsTr("CheckDelegate1") }
+                ListElement { type: "CheckDelegate"; value: qsTr("CheckDelegate2") }
+                ListElement { type: "CheckDelegate"; value: qsTr("CheckDelegate3") }
+                ListElement { type: "RadioDelegate"; value: qsTr("RadioDelegate1") }
+                ListElement { type: "RadioDelegate"; value: qsTr("RadioDelegate2") }
+                ListElement { type: "RadioDelegate"; value: qsTr("RadioDelegate3") }
+                ListElement { type: "SwitchDelegate"; value: qsTr("SwitchDelegate1") }
+                ListElement { type: "SwitchDelegate"; value: qsTr("SwitchDelegate2") }
+                ListElement { type: "SwitchDelegate"; value: qsTr("SwitchDelegate3") }
+            }
+
             delegate: Loader {
                 id: delegateLoader
-                width: listView.width
-                sourceComponent: delegateComponentMap[text]
+                width: ListView.view.width
+                // qmllint disable unqualified
+                sourceComponent: listView.delegateComponentMap[type]
+                // qmllint enable unqualified
 
-                property string labelText: text
+                required property string value
+                required property string type
+                required property var model
+                required property int index
+
+                property Loader delegateItem: delegateLoader
+                // qmllint disable unqualified
                 property ListView view: listView
+                // qmllint enable unqualified
                 property int ourIndex: index
-
-                // Can't find a way to do this in the SwipeDelegate component itself,
-                // so do it here instead.
-                SequentialAnimation {
-                    id: removeAnimation
-
-                    PropertyAction {
-                        target: delegateLoader
-                        property: "ListView.delayRemove"
-                        value: true
-                    }
-                    NumberAnimation {
-                        target: item
-                        property: "height"
-                        to: 0
-                        easing.type: Easing.InOutQuad
-                    }
-                    PropertyAction {
-                        target: delegateLoader
-                        property: "ListView.delayRemove"
-                        value: false
-                    }
-                }
-                ListView.onRemove: removeAnimation.start()
             }
         }
     }

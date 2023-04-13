@@ -55,6 +55,7 @@ public:
         Vulkan = QSGRendererInterface::Vulkan,
         Metal = QSGRendererInterface::Metal,
         Null = QSGRendererInterface::Null,
+        Direct3D12 = QSGRendererInterface::Direct3D12,
 
         OpenGLRhi = QSGRendererInterface::OpenGLRhi,
         Direct3D11Rhi = QSGRendererInterface::Direct3D11Rhi,

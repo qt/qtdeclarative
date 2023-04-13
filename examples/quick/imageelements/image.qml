@@ -1,12 +1,15 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 import QtQuick
 
 Rectangle {
     width: 320
     height: 480
     Grid {
+        id: grid
+
         property int cellWidth: (width - (spacing * (columns - 1))) / columns
         property int cellHeight: (height - (spacing * (rows - 1))) / rows
 
@@ -18,8 +21,8 @@ Rectangle {
         spacing: 30
 
         component SizedImageCell: ImageCell {
-            width: parent.cellWidth
-            height: parent.cellHeight
+            width: grid.cellWidth
+            height: grid.cellHeight
         }
 
         SizedImageCell {

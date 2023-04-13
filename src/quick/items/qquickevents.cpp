@@ -97,16 +97,15 @@ Item {
     This property holds the keyboard modifier flags that existed immediately
     before the event occurred.
 
-    It contains a bitwise combination of:
-    \list
-    \li \l {Qt::NoModifier} {Qt.NoModifier} - No modifier key is pressed.
-    \li \l {Qt::ShiftModifier} {Qt.ShiftModifier} - A Shift key on the keyboard is pressed.
-    \li \l {Qt::ControlModifier} {Qt.ControlModifier} - A Ctrl key on the keyboard is pressed.
-    \li \l {Qt::AltModifier} {Qt.AltModifier} - An Alt key on the keyboard is pressed.
-    \li \l {Qt::MetaModifier} {Qt.MetaModifier} - A Meta key on the keyboard is pressed.
-    \li \l {Qt::KeypadModifier} {Qt.KeypadModifier} - A keypad button is pressed.
-    \li \l {Qt::GroupSwitchModifier} {Qt.GroupSwitchModifier} - X11 only. A Mode_switch key on the keyboard is pressed.
-    \endlist
+    It contains a bitwise combination of numeric values (the same as in Qt::KeyboardModifier):
+
+    \value Qt.NoModifier        No modifier key is pressed.
+    \value Qt.ShiftModifier}    A Shift key on the keyboard is pressed.
+    \value Qt.ControlModifier   A Ctrl key on the keyboard is pressed.
+    \value Qt.AltModifier       An Alt key on the keyboard is pressed.
+    \value Qt.MetaModifier      A Meta key on the keyboard is pressed.
+    \value Qt.KeypadModifier    A keypad button is pressed.
+    \value Qt.GroupSwitchModifier X11 only. A Mode_switch key on the keyboard is pressed.
 
     For example, to react to a Shift key + Enter key combination:
     \qml

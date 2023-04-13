@@ -15,6 +15,10 @@
 // We mean it.
 //
 
+#include <QtQuick/private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_viewtransitions);
+
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
 #include <QtQuick/private/qquickitemviewtransition_p.h>
 

@@ -568,10 +568,10 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
             default: return QString();
             }
         };
-        QVariant result(property->propType());
-        if (!QQmlValueTypeProvider::createValueType(
+        const QVariant result = QQmlValueTypeProvider::createValueType(
                     compilationUnit->bindingValueAsString(binding),
-                    result.metaType(), result.data())) {
+                    property->propType());
+        if (!result.isValid()) {
             return warnOrError(tr("Invalid property assignment: %1 expected")
                                .arg(typeName()));
         }

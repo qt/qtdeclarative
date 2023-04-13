@@ -11,7 +11,6 @@
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypemodule_p.h>
-#include <private/qqmltypenotavailable_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
@@ -755,6 +754,13 @@ QList<QTypeRevision> QQmlPrivate::revisionClassInfos(const QMetaObject *metaObje
     return revisions;
 }
 
+int qmlRegisterTypeNotAvailable(
+        const char *uri, int versionMajor, int versionMinor,
+        const char *qmlName, const QString &message)
+{
+    return qmlRegisterUncreatableType<QQmlTypeNotAvailable>(
+                uri, versionMajor, versionMinor, qmlName, message);
+}
 
 namespace QQmlPrivate {
 template<>
@@ -797,7 +803,6 @@ void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
 
     qmlregister(TypeAndRevisionsRegistration, &type);
 }
-
 
 QQmlEngine *AOTCompiledContext::qmlEngine() const
 {
@@ -1336,6 +1341,14 @@ void AOTCompiledContext::writeToConsole(
     }
 }
 
+QVariant AOTCompiledContext::constructValueType(
+        QMetaType resultMetaType, const QMetaObject *resultMetaObject,
+        int ctorIndex, void *ctorArg) const
+{
+    return QQmlValueTypeProvider::constructValueType(
+                resultMetaType, resultMetaObject, ctorIndex, ctorArg);
+}
+
 bool AOTCompiledContext::callQmlContextPropertyLookup(
         uint index, void **args, const QMetaType *types, int argc) const
 {
@@ -1772,7 +1785,12 @@ void AOTCompiledContext::initGetEnumLookup(
 {
     Q_ASSERT(!engine->hasError());
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    Q_ASSERT(metaObject);
+    if (!metaObject) {
+        engine->handle()->throwTypeError(
+                    QStringLiteral("Cannot read property '%1' of undefined")
+                    .arg(QString::fromUtf8(enumValue)));
+        return;
+    }
     const int enumIndex = metaObject->indexOfEnumerator(enumerator);
     const int value = metaObject->enumerator(enumIndex).keyToValue(enumValue);
     l->qmlEnumValueLookup.encodedEnumValue = value;

@@ -603,7 +603,8 @@ void tst_qquickvisualdatamodel::childChanged()
     QVERIFY(name);
     QCOMPARE(name->text(), QString("Row 2 updated child"));
 
-    model.item(1,0)->appendRow(new QStandardItem(QLatin1String("Row 2 Child Item 2")));
+    QStandardItem item(QLatin1String("Row 2 Child Item 2"));
+    model.item(1,0)->appendRow(&item);
     QCOMPARE(listview->count(), 2);
 
     listview->forceLayout();
@@ -635,10 +636,10 @@ void tst_qquickvisualdatamodel::objectListModel()
     QQuickView view;
 
     QList<QObject*> dataList;
-    dataList.append(new DataObject("Item 1", "red"));
-    dataList.append(new DataObject("Item 2", "green"));
-    dataList.append(new DataObject("Item 3", "blue"));
-    dataList.append(new DataObject("Item 4", "yellow"));
+    dataList.append(new DataObject("Item 1", "red", &view));
+    dataList.append(new DataObject("Item 2", "green", &view));
+    dataList.append(new DataObject("Item 3", "blue", &view));
+    dataList.append(new DataObject("Item 4", "yellow", &view));
 
     QQmlContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
@@ -777,10 +778,10 @@ void tst_qquickvisualdatamodel::modelProperties()
         QQuickView view;
 
         QList<QObject*> dataList;
-        dataList.append(new DataObject("Item 1", "red"));
-        dataList.append(new DataObject("Item 2", "green"));
-        dataList.append(new DataObject("Item 3", "blue"));
-        dataList.append(new DataObject("Item 4", "yellow"));
+        dataList.append(new DataObject("Item 1", "red", &view));
+        dataList.append(new DataObject("Item 2", "green", &view));
+        dataList.append(new DataObject("Item 3", "blue", &view));
+        dataList.append(new DataObject("Item 4", "yellow", &view));
 
         QQmlContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
@@ -846,12 +847,9 @@ void tst_qquickvisualdatamodel::modelProperties()
         QUrl source(testFileUrl("modelproperties2.qml"));
 
         //3 items, 3 i each
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: modelData is not defined");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: modelData is not defined");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: modelData is not defined");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":11: ReferenceError: modelData is not defined");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":11: ReferenceError: modelData is not defined");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":11: ReferenceError: modelData is not defined");
+        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: TypeError: Cannot read property 'display' of undefined");
+        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: TypeError: Cannot read property 'display' of undefined");
+        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: TypeError: Cannot read property 'display' of undefined");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":17: TypeError: Cannot read property 'display' of undefined");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":17: TypeError: Cannot read property 'display' of undefined");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":17: TypeError: Cannot read property 'display' of undefined");
@@ -3998,7 +3996,8 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
+    QScopedPointer<QObject> o(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(o.data());
     QVERIFY(visualModel);
 
     ItemRequester requester;
@@ -4063,7 +4062,8 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
+    QScopedPointer<QObject> o(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(o.data());
     QVERIFY(visualModel);
 
     ItemRequester requester;
@@ -4142,7 +4142,8 @@ void tst_qquickvisualdatamodel::asynchronousMove()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
+    QScopedPointer<QObject> o(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(o.data());
     QVERIFY(visualModel);
 
     ItemRequester requester;
@@ -4190,7 +4191,8 @@ void tst_qquickvisualdatamodel::asynchronousCancel()
 
     engine.rootContext()->setContextProperty("myModel", &model);
 
-    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
+    QScopedPointer<QObject> o(c.create());
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(o.data());
     QVERIFY(visualModel);
 
     QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
@@ -4312,7 +4314,8 @@ void tst_qquickvisualdatamodel::delegateModelChangeDelegate()
     c.setData("import QtQml.Models 2.2\nDelegateModel {}\n", QUrl());
     QCOMPARE(c.status(), QQmlComponent::Ready);
 
-    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create(context.data()));
+    QScopedPointer<QObject> o(c.create(context.data()));
+    QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(o.data());
     QVERIFY(visualModel);
     visualModel->setModel(QVariant(3));
 

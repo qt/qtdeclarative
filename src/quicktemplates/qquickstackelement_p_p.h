@@ -17,7 +17,9 @@
 
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#if QT_CONFIG(quick_viewtransitions)
 #include <QtQuick/private/qquickitemviewtransition_p.h>
+#endif
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4persistent_p.h>
 
@@ -28,7 +30,11 @@ class QQmlComponent;
 struct QQuickStackTransition;
 class RequiredProperties;
 
-class QQuickStackElement : public QQuickItemViewTransitionableItem, public QQuickItemChangeListener
+class QQuickStackElement :
+#if QT_CONFIG(quick_viewtransitions)
+        public QQuickItemViewTransitionableItem,
+#endif
+        public QQuickItemChangeListener
 {
     QQuickStackElement();
 
@@ -47,10 +53,12 @@ public:
     void setStatus(QQuickStackView::Status status);
     void setVisible(bool visible);
 
+#if QT_CONFIG(quick_viewtransitions)
     void transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget);
     bool prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds);
     void startTransition(QQuickItemViewTransitioner *transitioner, QQuickStackView::Status status);
     void completeTransition(QQuickTransition *quickTransition);
+#endif
 
     void itemDestroyed(QQuickItem *item) override;
 
@@ -67,6 +75,9 @@ public:
     QQuickStackView::Status status = QQuickStackView::Inactive;
     QV4::PersistentValue properties;
     QV4::PersistentValue qmlCallingContext;
+#if !QT_CONFIG(quick_viewtransitions)
+    QQuickItem *item;
+#endif
 };
 
 QT_END_NAMESPACE

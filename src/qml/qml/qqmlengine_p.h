@@ -254,19 +254,30 @@ private:
             insert(type, *value);
         }
 
-        void clear() {
+        void clear()
+        {
+            const auto canDelete = [](QObject *instance, const auto &type) -> bool {
+                if (!instance)
+                    return false;
+
+                if (!type.singletonInstanceInfo()->url.isEmpty())
+                    return true;
+
+                const auto *ddata = QQmlData::get(instance, false);
+                return !(ddata && ddata->indestructible && ddata->explicitIndestructibleSet);
+            };
+
+            for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
+                auto *instance = it.value().toQObject();
+                if (canDelete(instance, it.key()))
+                    QQmlData::markAsDeleted(instance);
+            }
+
             for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
                 QObject *instance = it.value().toQObject();
-                if (!instance)
-                    continue;
 
-                if (it.key().singletonInstanceInfo()->url.isEmpty()) {
-                    const QQmlData *ddata = QQmlData::get(instance, false);
-                    if (ddata && ddata->indestructible && ddata->explicitIndestructibleSet)
-                        continue;
-                }
-
-                delete instance;
+                if (canDelete(instance, it.key()))
+                    delete instance;
             }
 
             QHash<QQmlType, QJSValue>::clear();

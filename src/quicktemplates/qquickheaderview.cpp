@@ -11,19 +11,36 @@
     \inherits TableView
     \brief Provides a horizontal header view to accompany a \l TableView.
 
-    A HorizontalHeaderView provides labeling of the columns of a \l TableView.
-    To add a horizontal header to a TableView, bind the
-    \l {HorizontalHeaderView::syncView} {syncView} property to the TableView:
+    A HorizontalHeaderView provides a styled table header.
+    It can either be used as an independent view or header for a \l TableView.
 
-    \snippet qtquickcontrols-headerview-simple.qml horizontal
+    You can add a header for a TableView by assigning a HorizontalHeaderView
+    to the \l {TableView::syncView} property. The header and the table will
+    then be kept in sync while flicking.
 
-    The header displays data from the {syncView}'s model by default, but can
-    also have its own model. If the model is a QAbstractTableModel, then
-    the header will display the model's horizontal headerData(); otherwise,
-    the model's data().
+    By default, HorizontalHeaderView displays
+    \l {QAbstractItemModel::headerData()}{header data}
+    from the \l {TableView::syncView}{sync view's} \l {TableView::model}{model}.
+    If you don't wish to use this model, you can assign a different model to the
+    \l {TableView::model}{model} property. If you assign a model that is a
+    QAbstractItemModel, its header data will be used. Otherwise the data in
+    the model will be used directly (for example, if you assign a model that
+    is simply an array of strings).
+
+    The application is responsible for placing the header at the
+    correct location in the scene. You can add as many headers as you
+    want to a single TableView, which can be useful if you for example want
+    to place headers on all four sides of the table.
+
+    The following snippet shows how you can add a horizontal and vertical header
+    view to a table view:
+
+    \snippet qtquickcontrols-headerview.qml 0
 
     A HorizontalHeaderView will have
-    \l {resizableColumns}{TableView::resizableColumns} set to \c true by default.
+    \l {TableView::resizableColumns}{resizableColumns} set to \c true by default.
+
+    \sa VerticalHeaderView
 */
 
 /*!
@@ -31,21 +48,38 @@
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols-containers
     \inherits TableView
-    \brief Provides a vertical header view to accompany a \l TableView.
+    \brief Offers a vertical header view to accompany a \l TableView.
 
-    A VerticalHeaderView provides labeling of the rows of a \l TableView.
-    To add a vertical header to a TableView, bind the
-    \l {VerticalHeaderView::syncView} {syncView} property to the TableView:
+    A VerticalHeaderView provides a styled table header.
+    It can either be used as an independent view or header for a \l TableView.
 
-    \snippet qtquickcontrols-headerview-simple.qml vertical
+    You can add a header for a TableView by assigning a VerticalHeaderView
+    to the \l {TableView::syncView} property. The header and the table will
+    then be kept in sync while flicking.
 
-    The header displays data from the {syncView}'s model by default, but can
-    also have its own model. If the model is a QAbstractTableModel, then
-    the header will display the model's vertical headerData(); otherwise,
-    the model's data().
+    By default, VerticalHeaderView displays
+    \l {QAbstractItemModel::headerData()}{header data}
+    from the \l {TableView::syncView}{sync view's} \l {TableView::model}{model}.
+    If you don't wish to use this model, you can assign a different model to the
+    \l {TableView::model}{model} property. If you assign a model that is a
+    QAbstractItemModel, its header data will be used. Otherwise the data in
+    the model will be used directly (for example, if you assign a model that
+    is simply an array of strings).
+
+    The application is responsible for placing the header at the
+    correct location in the scene. You can add as many headers as you
+    want to a single TableView, which can be useful if you for example want
+    to place headers on all four sides of the table.
+
+    The following snippet shows how you can add a horizontal and vertical header
+    view to a table view:
+
+    \snippet qtquickcontrols-headerview.qml 0
 
     A VerticalHeaderView will have
-    \l {resizableRows}{TableView::resizableRows} set to \c true by default.
+    \l {TableView::resizableRows}{resizableRows} set to \c true by default.
+
+    \sa HorizontalHeaderView
 */
 
 /*!

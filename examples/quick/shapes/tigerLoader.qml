@@ -14,10 +14,10 @@ Rectangle {
 
         Text {
             anchors.centerIn: parent
-            text: "Loading"
+            text: qsTr("Loading")
             // Phase #1: Loader loads tiger.qml. After this we have our item.
             // Phase #2: With some backends (generic) the item will start async processing. Wait for this too.
-            visible: shapeLoader.status != Loader.Ready || shapeLoader.item.status === Shape.Processing
+            visible: shapeLoader.status != Loader.Ready || (shapeLoader.item as Shape)?.status === Shape.Processing
         }
 
         Loader {

@@ -122,7 +122,7 @@ void QQmlJSTypePropagator::generate_LoadConst(int index)
 
 void QQmlJSTypePropagator::generate_LoadZero()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
 }
 
 void QQmlJSTypePropagator::generate_LoadTrue()
@@ -147,7 +147,7 @@ void QQmlJSTypePropagator::generate_LoadUndefined()
 
 void QQmlJSTypePropagator::generate_LoadInt(int)
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
 }
 
 void QQmlJSTypePropagator::generate_MoveConst(int constIndex, int destTemp)
@@ -460,52 +460,6 @@ void QQmlJSTypePropagator::checkDeprecated(QQmlJSScope::ConstPtr scope, const QS
     m_logger->log(message, qmlDeprecated, getCurrentSourceLocation());
 }
 
-bool QQmlJSTypePropagator::isRestricted(const QString &propertyName) const
-{
-    QString restrictedKind;
-
-    const auto accumulatorIn = m_state.registers.find(Accumulator);
-    if (accumulatorIn == m_state.registers.end())
-        return false;
-
-    if (accumulatorIn.value().content.isList() && propertyName != u"length") {
-        restrictedKind = u"a list"_s;
-    } else if (accumulatorIn.value().content.isEnumeration()) {
-        const auto metaEn = accumulatorIn.value().content.enumeration();
-        if (metaEn.isScoped()) {
-            if (!metaEn.hasKey(propertyName))
-                restrictedKind = u"an enum"_s;
-        } else {
-            restrictedKind = u"an unscoped enum"_s;
-        }
-    } else if (accumulatorIn.value().content.isMethod()) {
-        auto overloadSet = accumulatorIn.value().content.method();
-        auto potentiallyJSMethod = std::any_of(
-                    overloadSet.cbegin(), overloadSet.cend(),
-                    [](const QQmlJSMetaMethod &overload){
-            return overload.isJavaScriptFunction();
-        });
-        if (potentiallyJSMethod) {
-            /* JS global constructors like Number get detected as methods
-               However, they still have properties that can be accessed
-               e.g. Number.EPSILON. This also isn't restricted to constructor
-               functions, so use isJavaScriptFunction as an overapproximation.
-               That catches also QQmlV4Function, but we're purging uses of it
-               anyway.
-             */
-            return false;
-        }
-        restrictedKind = u"a method"_s;
-    }
-
-    if (!restrictedKind.isEmpty())
-        m_logger->log(u"Type is %1. You cannot access \"%2\" from here."_s.arg(restrictedKind,
-                                                                               propertyName),
-                      qmlRestrictedType, getCurrentSourceLocation());
-
-    return !restrictedKind.isEmpty();
-}
-
 // Only to be called once a lookup has already failed
 QQmlJSTypePropagator::PropertyResolution QQmlJSTypePropagator::propertyResolution(
         QQmlJSScope::ConstPtr scope, const QString &propertyName) const
@@ -595,11 +549,26 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     if (!m_state.accumulatorOut().isValid()) {
         setError(u"Cannot access value for name "_s + name);
         handleUnqualifiedAccess(name, false);
-    } else if (m_typeResolver->genericType(m_state.accumulatorOut().storedType()).isNull()) {
+        return;
+    }
+
+    const QQmlJSScope::ConstPtr outStored
+            = m_typeResolver->genericType(m_state.accumulatorOut().storedType());
+
+    if (outStored.isNull()) {
         // It should really be valid.
         // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
         setError(u"Cannot determine generic type for "_s + name);
-    } else if (m_passManager != nullptr) {
+        return;
+    }
+
+    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::ObjectById
+            && !outStored->isReferenceType()) {
+        setError(u"Cannot retrieve a non-object type by ID: "_s + name);
+        return;
+    }
+
+    if (m_passManager != nullptr) {
         m_passManager->analyzeRead(m_function->qmlScope, name, m_function->qmlScope,
                                    getCurrentSourceLocation());
     }
@@ -665,6 +634,27 @@ void QQmlJSTypePropagator::generate_StoreNameStrict(int name)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
+bool QQmlJSTypePropagator::checkForEnumProblems(const QString &propertyName) const
+{
+    if (m_state.accumulatorIn().isEnumeration()) {
+        const auto metaEn = m_state.accumulatorIn().enumeration();
+        if (!metaEn.isScoped()) {
+            m_logger->log(u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName),
+                          qmlRestrictedType, getCurrentSourceLocation());
+            return true;
+        } else if (!metaEn.hasKey(propertyName)) {
+            auto fixSuggestion = QQmlJSUtils::didYouMean(propertyName, metaEn.keys(),
+                                                         getCurrentSourceLocation());
+            m_logger->log(u"\"%1\" is not an entry of enum \"%2\"."_s.arg(propertyName)
+                                  .arg(metaEn.name()),
+                          qmlMissingEnumEntry, getCurrentSourceLocation(), true, true,
+                          fixSuggestion);
+            return true;
+        }
+    }
+    return false;
+}
+
 void QQmlJSTypePropagator::generate_LoadElement(int base)
 {
     const QQmlJSRegisterContent baseRegister = m_state.registers[base].content;
@@ -679,8 +669,11 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
         return;
     }
 
-    if (m_typeResolver->isIntegral(m_state.accumulatorIn()))
-        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    const auto contained = m_typeResolver->containedType(m_state.accumulatorIn());
+    if (m_typeResolver->isSignedInteger(contained))
+        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
+    else if (m_typeResolver->isUnsignedInteger(contained))
+        addReadAccumulator(m_typeResolver->globalType(m_typeResolver->uint32Type()));
     else
         addReadAccumulator(m_typeResolver->globalType(m_typeResolver->realType()));
 
@@ -709,8 +702,11 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
         return;
     }
 
-    if (m_typeResolver->isIntegral(indexRegister))
-        addReadRegister(index, m_typeResolver->globalType(m_typeResolver->intType()));
+    const auto contained = m_typeResolver->containedType(indexRegister);
+    if (m_typeResolver->isSignedInteger(contained))
+        addReadRegister(index, m_typeResolver->globalType(m_typeResolver->int32Type()));
+    else if (m_typeResolver->isUnsignedInteger(contained))
+        addReadRegister(index, m_typeResolver->globalType(m_typeResolver->uint32Type()));
     else
         addReadRegister(index, m_typeResolver->globalType(m_typeResolver->realType()));
 
@@ -757,14 +753,12 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         setAccumulator(QQmlJSRegisterContent());
     }
 
-    const bool isRestrictedProperty = isRestricted(propertyName);
+    if (checkForEnumProblems(propertyName))
+        return;
 
     if (!m_state.accumulatorOut().isValid()) {
         setError(u"Cannot load property %1 from %2."_s
                          .arg(propertyName, m_state.accumulatorIn().descriptiveName()));
-
-        if (isRestrictedProperty)
-            return;
 
         const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn(), true);
 
@@ -1051,7 +1045,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         if (callBase.isType() && isCallingProperty(callBase.type(), propertyName))
             return;
 
-        if (isRestricted(propertyName))
+        if (checkForEnumProblems(propertyName))
             return;
 
         std::optional<QQmlJSFixSuggestion> fixSuggestion;
@@ -1095,10 +1089,11 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
                                                         int argc, int argv, QStringList *errors)
 {
     QQmlJSMetaMethod javascriptFunction;
+    QQmlJSMetaMethod candidate;
     for (const auto &method : methods) {
 
         // If we encounter a JavaScript function, use this as a fallback if no other method matches
-        if (method.isJavaScriptFunction())
+        if (method.isJavaScriptFunction() && !javascriptFunction.isValid())
             javascriptFunction = method;
 
         if (method.returnType().isNull() && !method.returnTypeName().isEmpty()) {
@@ -1115,33 +1110,42 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
             continue;
         }
 
-        bool matches = true;
+        bool fuzzyMatch = true;
+        bool exactMatch = true;
         for (int i = 0; i < argc; ++i) {
             const auto argumentType = arguments[i].type();
             if (argumentType.isNull()) {
                 errors->append(
                         u"type %1 for argument %2 cannot be resolved"_s.arg(arguments[i].typeName())
                                 .arg(i));
-                matches = false;
+                exactMatch = false;
+                fuzzyMatch = false;
                 break;
             }
 
-            if (canConvertFromTo(m_state.registers[argv + i].content,
-                                 m_typeResolver->globalType(argumentType))) {
+            const auto content = m_state.registers[argv + i].content;
+            if (m_typeResolver->registerContains(content, argumentType))
                 continue;
-            }
+
+            exactMatch = false;
+            if (canConvertFromTo(content, m_typeResolver->globalType(argumentType)))
+                continue;
 
             errors->append(
                     u"argument %1 contains %2 but is expected to contain the type %3"_s.arg(i).arg(
                             m_state.registers[argv + i].content.descriptiveName(),
                             arguments[i].typeName()));
-            matches = false;
+            fuzzyMatch = false;
             break;
         }
-        if (matches)
+
+        if (exactMatch)
             return method;
+        else if (fuzzyMatch && !candidate.isValid())
+            candidate = method;
     }
-    return javascriptFunction;
+
+    return candidate.isValid() ? candidate : javascriptFunction;
 }
 
 void QQmlJSTypePropagator::setAccumulator(const QQmlJSRegisterContent &content)
@@ -1263,7 +1267,7 @@ bool QQmlJSTypePropagator::propagateTranslationMethod(
 
     const QQmlJSMetaMethod method = methods.front();
     const QQmlJSRegisterContent intType
-            = m_typeResolver->globalType(m_typeResolver->intType());
+            = m_typeResolver->globalType(m_typeResolver->int32Type());
     const QQmlJSRegisterContent stringType
             = m_typeResolver->globalType(m_typeResolver->stringType());
     const QQmlJSRegisterContent returnType
@@ -1372,17 +1376,25 @@ void QQmlJSTypePropagator::propagateStringArgCall(int argv)
 
     const QQmlJSScope::ConstPtr input = m_typeResolver->containedType(
                 m_state.registers[argv].content);
-    for (QQmlJSScope::ConstPtr targetType : {
-         m_typeResolver->intType(),
-         m_typeResolver->uintType(),
-         m_typeResolver->realType(),
-         m_typeResolver->floatType(),
-         m_typeResolver->boolType(),
-    }) {
-        if (m_typeResolver->equals(input, targetType)) {
-            addReadRegister(argv, m_typeResolver->globalType(targetType));
-            return;
-        }
+
+    if (m_typeResolver->equals(input, m_typeResolver->uint32Type())) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
+        return;
+    }
+
+    if (m_typeResolver->isIntegral(input)) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->int32Type()));
+        return;
+    }
+
+    if (m_typeResolver->isNumeric(input)) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
+        return;
+    }
+
+    if (m_typeResolver->equals(input, m_typeResolver->boolType())) {
+        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->boolType()));
+        return;
     }
 
     addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->stringType()));
@@ -1781,10 +1793,11 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
     };
 
     const auto isIntCompatible = [this](const QQmlJSRegisterContent &content) {
-        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(content);
-        return contained->scopeType() == QQmlJSScope::EnumScope
-                || m_typeResolver->equals(contained, m_typeResolver->intType())
-                || m_typeResolver->equals(contained, m_typeResolver->uintType());
+        auto contained = m_typeResolver->containedType(content);
+        if (contained->scopeType() == QQmlJSScope::EnumScope)
+            contained = contained->baseType();
+        return m_typeResolver->isIntegral(contained)
+                && !m_typeResolver->equals(contained, m_typeResolver->uint32Type());
     };
 
     const auto accumulatorIn = m_state.accumulatorIn();
@@ -1799,7 +1812,7 @@ void QQmlJSTypePropagator::recordEqualsType(int lhs)
             return;
         } else if (isNumericOrEnum(accumulatorIn) && isNumericOrEnum(lhsRegister)) {
             const auto targetType = isIntCompatible(accumulatorIn) && isIntCompatible(lhsRegister)
-                    ? m_typeResolver->globalType(m_typeResolver->intType())
+                    ? m_typeResolver->globalType(m_typeResolver->int32Type())
                     : m_typeResolver->globalType(m_typeResolver->realType());
             addReadRegister(lhs, targetType);
             addReadAccumulator(targetType);
@@ -1860,7 +1873,7 @@ void QQmlJSTypePropagator::generate_CmpEqInt(int lhsConst)
     recordEqualsIntType();
     Q_UNUSED(lhsConst)
     setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
-            QSOperator::Op::Equal, m_typeResolver->globalType(m_typeResolver->intType()),
+            QSOperator::Op::Equal, m_typeResolver->globalType(m_typeResolver->int32Type()),
             m_state.accumulatorIn())));
 }
 
@@ -1869,7 +1882,7 @@ void QQmlJSTypePropagator::generate_CmpNeInt(int lhsConst)
     recordEqualsIntType();
     Q_UNUSED(lhsConst)
     setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
-            QSOperator::Op::NotEqual, m_typeResolver->globalType(m_typeResolver->intType()),
+            QSOperator::Op::NotEqual, m_typeResolver->globalType(m_typeResolver->int32Type()),
             m_state.accumulatorIn())));
 }
 
@@ -1958,16 +1971,25 @@ void QQmlJSTypePropagator::generate_As(int lhs)
         break;
     }
 
-    addReadRegister(lhs, m_typeResolver->globalType(contained));
+    QQmlJSRegisterContent output;
 
-    if (m_typeResolver->containedType(input)->accessSemantics()
-                != QQmlJSScope::AccessSemantics::Reference
-        || contained->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
+    if (contained->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+        // A referece type cast can result in either the type or null.
+        // Reference tpyes can hold null. We don't need to special case that.
+        output = m_typeResolver->globalType(contained);
+    } else if (!m_typeResolver->canAddressValueTypes()) {
         setError(u"invalid cast from %1 to %2. You can only cast object types."_s
-                         .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
+                 .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
+        return;
     } else {
-        setAccumulator(m_typeResolver->globalType(contained));
+        // A value type cast can result in either the type or undefined.
+        output = m_typeResolver->merge(
+                    m_typeResolver->globalType(contained),
+                    m_typeResolver->globalType(m_typeResolver->voidType()));
     }
+
+    addReadRegister(lhs, input);
+    setAccumulator(output);
 }
 
 void QQmlJSTypePropagator::checkConversion(
@@ -2033,7 +2055,7 @@ void QQmlJSTypePropagator::generateBinaryConstArithmeticOperation(QSOperator::Op
 {
     const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
                 op, m_state.accumulatorIn(),
-                m_typeResolver->builtinType(m_typeResolver->intType()));
+                m_typeResolver->builtinType(m_typeResolver->int32Type()));
 
     checkConversion(m_state.accumulatorIn(), type);
     addReadAccumulator(type);

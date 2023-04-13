@@ -6,6 +6,7 @@ set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     druggeljug.h
+    dummyobjekt.h
     dynamicmeta.h
     enumproblems.h
     enumProperty.h
@@ -54,6 +55,7 @@ set(qml_files
     aliasLookup.qml
     ambiguous1/Ambiguous.qml
     ambiguous2/Ambiguous.qml
+    ambiguousAs.qml
     ambiguousSignals.qml
     anchorsFill.qml
     argumentConversion.qml
@@ -63,6 +65,7 @@ set(qml_files
     badSequence.qml
     bindToValueType.qml
     blockComments.qml
+    boolCoercions.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
     callWithSpread.qml
@@ -87,6 +90,7 @@ set(qml_files
     dialogButtonBox.qml
     dynamicscene.qml
     enumConversion.qml
+    enumFromBadSingleton.qml
     enumInvalid.qml
     enumLookup.qml
     enumProblems.qml
@@ -136,11 +140,13 @@ set(qml_files
     listPropertyAsModel.qml
     listlength.qml
     math.qml
+    mathMinMax.qml
     mathOperations.qml
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml
     multiforeign.qml
+    multipleCtors.qml
     namespaceWithEnum.qml
     noBindingLoop.qml
     noQQmlData.qml
@@ -152,6 +158,7 @@ set(qml_files
     nullComparison.qml
     numbersInJsPrimitive.qml
     objectInVar.qml
+    objectLookupOnListElement.qml
     outOfBounds.qml
     overriddenMember.qml
     ownProperty.qml
@@ -196,6 +203,7 @@ set(qml_files
     unusedAttached.qml
     urlString.qml
     usingCxxTypesFromFileImports.qml
+    valueTypeCast.qml
     valueTypeCopy.qml
     valueTypeLists.qml
     valueTypeProperty.qml

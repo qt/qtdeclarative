@@ -1,10 +1,12 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 import QtQuick
 
 Item {
     id: selector
+
     property int curIdx: 0
     property int maxIdx: 3
     property int gridWidth: 240
@@ -12,11 +14,11 @@ Item {
     width: parent.width
     height: 64
     function advance(steps) {
-         var nextIdx = curIdx + steps
+         const nextIdx = curIdx + steps
          if (nextIdx < 0 || nextIdx > maxIdx)
-            return;
-         flickable.contentX += gridWidth * steps;
-         curIdx += steps;
+            return
+         flickable.contentX += gridWidth * steps
+         curIdx += steps
     }
     Image {
         source: "pics/arrow.png"

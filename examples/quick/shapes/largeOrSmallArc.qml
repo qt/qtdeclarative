@@ -11,22 +11,28 @@ Rectangle {
 
     Repeater {
         model: 2
-        Shape {
+        delegate: Shape {
+            id: delegate
+            required property int index
+
+            anchors.centerIn: parent
             width: 200
             height: 200
-            anchors.centerIn: parent
 
             ShapePath {
                 fillColor: "transparent"
-                strokeColor: model.index === 0 ? "red" : "blue"
+                strokeColor: delegate.index === 0 ? "red" : "blue"
                 strokeStyle: ShapePath.DashLine
                 strokeWidth: 4
 
-                startX: 50; startY: 100
+                startX: 50
+                startY: 100
                 PathArc {
-                    x: 100; y: 150
-                    radiusX: 50; radiusY: 50
-                    useLargeArc: model.index === 1
+                    x: 100
+                    y: 150
+                    radiusX: 50
+                    radiusY: 50
+                    useLargeArc: delegate.index === 1
                 }
             }
         }
@@ -35,11 +41,11 @@ Rectangle {
     Column {
         anchors.right: parent.right
         Text {
-            text: "Small"
+            text: qsTr("Small")
             color: "red"
         }
         Text {
-            text: "Large"
+            text: qsTr("Large")
             color: "blue"
         }
     }

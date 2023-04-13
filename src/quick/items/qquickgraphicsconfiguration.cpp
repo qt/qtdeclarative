@@ -190,7 +190,7 @@ QT_BEGIN_NAMESPACE
     metadata to identify the device, driver, and its version that the binaries
     were retrieved from. Persistent caching of program binaries is not new in
     Qt: Qt 5 already had similar functionality in QOpenGLShaderProgram, see
-    \l{QOpenGLShaderProgram::addCacheableShaderFromSourceCode()}{addCacheableShaderFromSourceCode()}
+    \l{QOpenGLShaderProgram::}{addCacheableShaderFromSourceCode()}
     for example. In fact that mechanism is always active in Qt 6 as well when
     using Qt Quick with OpenGL. However, when using the new, graphics API
     independent pipeline cache abstraction provided here, the Qt 5 era program
@@ -212,24 +212,25 @@ QT_BEGIN_NAMESPACE
     HLSL shader. A good example is Qt Quick 3D, where the runtime-generated
     shaders for materials imply having to deal with HLSL source code. Saving
     and reloading the Qt Quick pipeline cache can therefore bring considerable
-    improvements in scenes with one or more \l{QtQuick3D::}View3D items in
+    improvements in scenes with one or more \l{View3D} items in
     them. A counterexample may be Qt Quick itself: as most built-in shaders for
     2D content ship with DirectX bytecode generated at build time, the cache is
     not going to present any significant improvements.
 
     \endlist
 
-    All this is independent from the shader processing performed by the \l
-    QtShaderTools module and its command-line tools such as \c qsb. As an
-    example, take Vulkan. Having the Vulkan-compatible GLSL source code
-    compiled to SPIR-V either at offline or build time (directly via qsb or
-    CMake) is good, because the expensive compilation from source form is
-    avoided at run time. SPIR-V is however a vendor-independent intermediate
-    format. At runtime, when constructing graphics or compute pipelines, there
-    is likely another round of compilation happening, this time from the
-    intermediate format to the vendor-specific instruction set of the GPU (and
-    this may be dependent on certain state in the graphics pipeline and the
-    render targets as well). The pipeline cache helps with this latter phase.
+    All this is independent from the shader processing performed by the
+    \l [QtShaderTools]{Qt Shader Tools} module and its command-line tools such
+    as \c qsb. As an example, take Vulkan. Having the Vulkan-compatible GLSL
+    source code compiled to SPIR-V either at offline or build time (directly
+    via qsb or CMake) is good, because the expensive compilation from source
+    form is avoided at run time. SPIR-V is however a vendor-independent
+    intermediate format. At runtime, when constructing graphics or compute
+    pipelines, there is likely another round of compilation happening, this
+    time from the intermediate format to the vendor-specific instruction set of
+    the GPU (and this may be dependent on certain state in the graphics
+    pipeline and the render targets as well). The pipeline cache helps with
+    this latter phase.
 
     \note Many graphics API implementation employ their own persistent disk
     cache transparently to the applications. Using the pipeline cache feature
@@ -624,7 +625,7 @@ bool QQuickGraphicsConfiguration::prefersSoftwareDevice() const
 
     \since 6.5
 
-    \sa isAutomaticPipelineCacheEnbled()
+    \sa isAutomaticPipelineCacheEnabled()
  */
 void QQuickGraphicsConfiguration::setAutomaticPipelineCache(bool enable)
 {

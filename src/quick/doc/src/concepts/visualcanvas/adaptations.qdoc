@@ -17,7 +17,7 @@ in form of plugins (openvg) or built-in to the Qt Quick library
 
 From Qt 5.14 onwards, the default adaptation gains the option of rendering via
 a graphics abstraction layer, the Qt Rendering Hardware Interface (RHI),
-provided by the \l QtGui module. When enabled, no direct OpenGL calls are made.
+provided by the \l [QtGui]{Qt GUI} module. When enabled, no direct OpenGL calls are made.
 Rather, the scene graph renders by using the APIs provided by the abstraction
 layer, which is then translated into OpenGL, Vulkan, Metal, or Direct 3D calls.
 Shader handling is also unified by writing shader code once, compiling to

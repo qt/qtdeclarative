@@ -467,6 +467,14 @@ ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Va
     return Object::virtualGet(that, id, receiver, hasProperty);
 }
 
+qint64 Sequence::virtualGetLength(const Managed *m)
+{
+    const Sequence *s = static_cast<const Sequence *>(m);
+    if (s->d()->isReference() && !s->loadReference())
+        return 0;
+    return s->size();
+}
+
 bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Value *receiver)
 {
     if (id.isArrayIndex()) {
@@ -714,9 +722,9 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
             } else {
                 const QMetaType originalType = variant.metaType();
                 if (originalType != valueMetaType) {
-                    QVariant converted(valueMetaType);
-                    if (QQmlValueTypeProvider::createValueType(
-                                variant, valueMetaType, converted.data())) {
+                    const QVariant converted = QQmlValueTypeProvider::createValueType(
+                                variant, valueMetaType);
+                    if (converted.isValid()) {
                         variant = converted;
                     } else if (!variant.convert(valueMetaType)) {
                         qWarning().noquote()
@@ -725,7 +733,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
                                    .arg(QString::number(i),
                                         QString::fromUtf8(originalType.name()),
                                         QString::fromUtf8(valueMetaType.name()));
-                        variant = converted;
+                        variant = QVariant(valueMetaType);
                     }
                 }
                 meta->addValueAtEnd(result.data(), variant.constData());

@@ -65,7 +65,7 @@ class Path;
 class Pragma;
 class PropertyDefinition;
 class PropertyInfo;
-class QmlDomAstCreator;
+class QQmlDomAstCreator;
 class QmlComponent;
 class QmlDirectory;
 class QmldirFile;

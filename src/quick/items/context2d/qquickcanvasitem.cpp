@@ -252,7 +252,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     QPainter instead of the more expensive and likely less performing
     JavaScript and Context2D approach.
 
-    \sa Context2D, QQuickPaintedItem
+    \sa Context2D, QQuickPaintedItem, {Pointer Handlers Example}
 */
 
 QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)
@@ -444,9 +444,8 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
     \qmlproperty enumeration QtQuick::Canvas::renderTarget
     Holds the current canvas render target.
 
-    \list
-    \li Canvas.Image  - render to an in memory image buffer.
-    \endlist
+    \value Canvas.Image                 Render to an in-memory image buffer.
+    \value Canvas.FramebufferObject     As of Qt 6.0, this value is ignored.
 
     This hint is supplied along with renderStrategy to the graphics context to
     determine the method of rendering. A renderStrategy, renderTarget or a
@@ -480,11 +479,9 @@ void QQuickCanvasItem::setRenderTarget(QQuickCanvasItem::RenderTarget target)
     \qmlproperty enumeration QtQuick::Canvas::renderStrategy
     Holds the current canvas rendering strategy.
 
-    \list
-    \li Canvas.Immediate - context will perform graphics commands immediately in the main UI thread.
-    \li Canvas.Threaded - context will defer graphics commands to a private rendering thread.
-    \li Canvas.Cooperative - context will defer graphics commands to the applications global render thread.
-    \endlist
+    \value Canvas.Immediate     context will perform graphics commands immediately in the main UI thread.
+    \value Canvas.Threaded      context will defer graphics commands to a private rendering thread.
+    \value Canvas.Cooperative   context will defer graphics commands to the applications global render thread.
 
     This hint is supplied along with renderTarget to the graphics context to
     determine the method of rendering. A renderStrategy, renderTarget or a

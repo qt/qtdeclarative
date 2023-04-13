@@ -8,11 +8,12 @@ Rectangle {
     id: item
     property string display
     property alias dropEnabled: acceptDropCB.checked
-    color: dropArea.containsDrag ? "#CFC" : "#EEE"
+    color: dropArea.containsDrag ? Qt.darker(palette.base) : palette.base
+
     ColorAnimation on color {
         id: rejectAnimation
         from: "#FCC"
-        to: "#EEE"
+        to: palette.base
         duration: 1000
     }
     Label {

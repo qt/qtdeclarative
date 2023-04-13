@@ -36,6 +36,7 @@
 #include <QtCore/QCborValue>
 #include <QtCore/QTimeZone>
 #include <QtQml/private/qqmljssourcelocation_p.h>
+#include <QtQmlCompiler/private/qqmljsscope_p.h>
 
 #include <memory>
 #include <typeinfo>
@@ -192,9 +193,14 @@ union SubclassStorage {
     ~SubclassStorage() { data()->~T(); }
 };
 
-class QMLDOM_EXPORT DomBase{
+class QMLDOM_EXPORT DomBase
+{
 public:
+    using FilterT = function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)>;
+
     virtual ~DomBase() = default;
+
+    DomBase *domBase() { return static_cast<DomBase *>(this); }
 
     // minimal overload set:
     virtual DomType kind() const = 0;
@@ -210,9 +216,7 @@ public:
 
     virtual DomItem containingObject(
             DomItem &self) const; // the DomItem corresponding to the canonicalSource source
-    virtual void
-    dump(DomItem &, Sink sink, int indent,
-         function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter) const;
+    virtual void dump(DomItem &, Sink sink, int indent, FilterT filter) const;
     virtual quintptr id() const;
     QString typeName() const;
 
@@ -284,6 +288,7 @@ public:
     Path canonicalPath(DomItem &self) const override;
     DomItem containingObject(DomItem &self) const override;
     virtual void updatePathFromOwner(Path newPath);
+
 private:
     Path m_pathFromOwner;
 };
@@ -490,6 +495,7 @@ public:
             return m_value.value<T *>();
         }
     }
+
     template <typename T>
     T *mutableAs()
     {
@@ -501,6 +507,7 @@ public:
             return m_value.value<T *>();
         }
     }
+
     SimpleObjectWrapBase() = delete;
     virtual void copyTo(SimpleObjectWrapBase *) const { Q_ASSERT(false); }
     virtual void moveTo(SimpleObjectWrapBase *) const { Q_ASSERT(false); }
@@ -694,6 +701,48 @@ inline bool emptyChildrenVisitor(Path, DomItem &, bool)
 
 class MutableDomItem;
 
+enum DomCreationOption : char {
+    None = 0,
+    WithSemanticAnalysis = 1,
+};
+
+Q_DECLARE_FLAGS(DomCreationOptions, DomCreationOption);
+
+class FileToLoad
+{
+public:
+    struct InMemoryContents
+    {
+        QString data;
+        QDateTime date = QDateTime::currentDateTimeUtc();
+    };
+
+    FileToLoad(const std::weak_ptr<DomEnvironment> &environment, const QString &canonicalPath,
+               const QString &logicalPath, std::optional<InMemoryContents> content,
+               DomCreationOptions options);
+    FileToLoad() = default;
+
+    static FileToLoad fromMemory(const std::weak_ptr<DomEnvironment> &environment,
+                                 const QString &path, const QString &data,
+                                 DomCreationOptions options = None);
+    static FileToLoad fromFileSystem(const std::weak_ptr<DomEnvironment> &environment,
+                                     const QString &canonicalPath,
+                                     DomCreationOptions options = None);
+
+    std::weak_ptr<DomEnvironment> environment() const { return m_environment; }
+    QString canonicalPath() const { return m_canonicalPath; }
+    QString logicalPath() const { return m_logicalPath; }
+    std::optional<InMemoryContents> content() const { return m_content; }
+    DomCreationOptions options() const { return m_options; }
+
+private:
+    std::weak_ptr<DomEnvironment> m_environment;
+    QString m_canonicalPath;
+    QString m_logicalPath;
+    std::optional<InMemoryContents> m_content;
+    DomCreationOptions m_options;
+};
+
 class QMLDOM_EXPORT DomItem {
     Q_DECLARE_TR_FUNCTIONS(DomItem);
 public:
@@ -752,6 +801,7 @@ public:
     DomItem globalScope();
     DomItem component(GoTo option = GoTo::Strict);
     DomItem scope(FilterUpOptions options = FilterUpOptions::ReturnOuter);
+    QQmlJSScope::Ptr nearestSemanticScope();
 
     // convenience getters
     DomItem get(ErrorHandler h = nullptr, QList<Path> *visitedRefs = nullptr);
@@ -843,6 +893,8 @@ public:
                                    VisitPrototypesOptions options = VisitPrototypesOption::Normal,
                                    ErrorHandler h = nullptr, QSet<quintptr> *visited = nullptr,
                                    QList<Path> *visitedRefs = nullptr);
+
+    bool visitUp(function_ref<bool(DomItem &)> visitor);
     bool visitScopeChain(function_ref<bool(DomItem &)> visitor,
                          LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
                          QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr);
@@ -1004,11 +1056,8 @@ public:
     DomItem(std::shared_ptr<DomUniverse>);
 
     static DomItem fromCode(QString code, DomType fileType = DomType::QmlFile);
-    void loadFile(QString filePath, QString logicalPath,
-                  std::function<void(Path, DomItem &, DomItem &)> callback, LoadOptions loadOptions,
-                  std::optional<DomType> fileType = std::optional<DomType>());
-    void loadFile(QString canonicalFilePath, QString logicalPath, QString code, QDateTime codeDate,
-                  std::function<void(Path, DomItem &, DomItem &)> callback, LoadOptions loadOptions,
+    void loadFile(const FileToLoad &file, std::function<void(Path, DomItem &, DomItem &)> callback,
+                  LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
     void loadModuleDependency(QString uri, Version v,
                               std::function<void(Path, DomItem &, DomItem &)> callback = nullptr,
@@ -1100,10 +1149,12 @@ private:
         return nullptr;
     }
     DomBase *mutableBase();
+
     template<typename Env, typename Owner>
     DomItem(Env, Owner, Path, std::nullptr_t) : DomItem()
     {
     }
+
     template<typename Env, typename Owner, typename T,
              typename = std::enable_if_t<IsInlineDom<std::decay_t<T>>::value>>
     DomItem(Env env, Owner owner, Path ownerPath, T el)
@@ -1548,6 +1599,8 @@ public:
     {
         return addPostComment(comment, regionName.toString());
     }
+    QQmlJSScope::Ptr semanticScope();
+    void setSemanticScope(const QQmlJSScope::Ptr &scope);
 
     MutableDomItem() = default;
     MutableDomItem(DomItem owner, Path pathFromOwner):

@@ -50,6 +50,7 @@ T.TextField {
         controlHasActiveFocus: control.activeFocus
         controlHasText: control.length > 0
         controlImplicitBackgroundHeight: control.implicitBackgroundHeight
+        controlHeight: control.height
     }
 
     background: MaterialTextContainer {

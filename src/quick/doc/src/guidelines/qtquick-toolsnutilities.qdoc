@@ -24,6 +24,12 @@ UIs using simple drag-n-drop gestures that most designers are familiar with.
 It offers UI elements from the Qt Quick and Qt Quick Controls modules, as well
 as integration for custom UI elements.
 
+\section1 Qt Quick Effect Maker
+
+\l{Qt Quick Effect Maker} is a tool for creating shader effects for Qt Quick with
+high productivity and performance. You can run Qt Quick Effect Maker as a
+standalone tool but it is also included in Qt Design Studio.
+
 \section1 QML Debugger
 
 The \l{Qt Creator: QML Debugger}{QML Debugger} is a very useful utility that
@@ -98,7 +104,7 @@ all the available options.
 
 The Qt Quick Compiler consist of two components:
 \list
-    \li \l {QML Type Compiler}
-    \li \l {QML Script Compiler}
+    \li \l {QML type compiler}
+    \li \l {QML script compiler}
 \endlist
 */

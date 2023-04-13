@@ -24,6 +24,7 @@ qt_generate_deploy_qml_app_script(
     OUTPUT_SCRIPT <var>
     [NO_UNSUPPORTED_PLATFORM_ERROR]
     [NO_TRANSLATIONS]
+    [NO_COMPILER_RUNTIME]
     [DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM]
     [MACOS_BUNDLE_POST_BUILD]
     [PRE_INCLUDE_REGEXES regexes...]
@@ -68,9 +69,11 @@ is only written at CMake generate-time. It is intended to be used with the
 \l{install(SCRIPT)} command, which should come after the application's target
 has been installed using \l{install(TARGETS)}.
 
-The deployment script will call \l{qt_deploy_qml_imports()} with a suitable set
-of options for the standard install layout. For macOS app bundles and Windows
-targets, it will then also call \l{qt_deploy_runtime_dependencies()}, again
+The deployment script will call
+\l{qt6_deploy_qml_imports}{qt_deploy_qml_imports()} with a suitable set of
+options for the standard install layout. For macOS app bundles and Windows
+targets, it will then also call
+\l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()}, again
 with suitable options for the standard install layout.
 
 Calling \c{qt_generate_deploy_qml_app_script()} for a platform that is not
@@ -94,14 +97,18 @@ other platforms.
 
 On platforms other than macOS, Qt translations are automatically deployed. To
 inhibit this behavior, specify \c{NO_TRANSLATIONS}. Use
-\l{qt6_deploy_translations}{qt_deploy_translations} to deploy translations in a
+\l{qt_deploy_translations}{qt_deploy_translations()} to deploy translations in a
 customized way.
+
+For Windows desktop applications, the required runtime files for the compiler
+are also installed by default. To prevent this, specify \c{NO_COMPILER_RUNTIME}.
 
 The options \c{PRE_INCLUDE_REGEXES}, \c{PRE_EXCLUDE_REGEXES},
 \c{POST_INCLUDE_REGEXES}, \c{POST_EXCLUDE_REGEXES}, \c{POST_INCLUDE_FILES}, and
 \c{POST_EXCLUDE_FILES} can be specified to control the deployment of runtime
 dependencies. These options do not apply to all platforms and are forwarded
-unmodified to \l{qt_deploy_runtime_dependencies()}.
+unmodified to
+\l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()}.
 
 For deploying a non-QML application, use
 \l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}

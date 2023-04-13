@@ -6,81 +6,115 @@ import QtQuick.Controls
 import "../"
 
 Item {
-    id:container
+    id: root
     width: 320
     height: 480
 
     Column {
         spacing: 6
-        anchors.fill: parent
-        anchors.topMargin: 12
+        anchors {
+            fill: parent
+            topMargin: 12
+        }
 
         Label {
-            font.pointSize: 24
-            font.bold: true
-            text: "Rounded rectangle"
             anchors.horizontalCenter: parent.horizontalCenter
-            color: "#777"
+            text: qsTr("Rounded rectangle")
+            color: Qt.lighter(palette.text)
+            font {
+                pointSize: 24
+                bold: true
+            }
         }
         Canvas {
             id: canvas
-            width: 320
-            height: 280
+
+            readonly property alias radius: rCtrl.value
+            readonly property int rectx: 60
+            readonly property int recty: 60
+            readonly property int rectWidth: width - 2 * rectx
+            readonly property int rectHeight: height - 2 * recty
+            readonly property color strokeStyle:  Qt.darker(fillStyle, 1.4)
+            readonly property color fillStyle: "#ae32a0" // purple
+            readonly property alias lineWidth: lineWidthCtrl.value
+            readonly property alias fill: toggleFillCheckBox.checked
+            readonly property alias stroke: toggleStrokeCheckBox.checked
+            readonly property real alpha: 1.0
+
+            width: root.width
+            height: parent.height - controls.height
             antialiasing: true
 
-            property int radius: rCtrl.value
-            property int rectx: 60
-            property int recty: 60
-            property int rectWidth: width - 2*rectx
-            property int rectHeight: height - 2*recty
-            property color strokeStyle:  Qt.darker(fillStyle, 1.4)
-            property color fillStyle: "#ae32a0" // purple
-            property int lineWidth: lineWidthCtrl.value
-            property bool fill: true
-            property bool stroke: true
-            property real alpha: 1.0
+            onLineWidthChanged: requestPaint()
+            onFillChanged: requestPaint()
+            onStrokeChanged: requestPaint()
+            onRadiusChanged: requestPaint()
 
-            onLineWidthChanged:requestPaint();
-            onFillChanged:requestPaint();
-            onStrokeChanged:requestPaint();
-            onRadiusChanged:requestPaint();
-
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.save();
-                ctx.clearRect(0,0,canvas.width, canvas.height);
-                ctx.strokeStyle = canvas.strokeStyle;
+            onPaint: function() {
+                var ctx = getContext("2d")
+                ctx.save()
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                ctx.strokeStyle = canvas.strokeStyle
                 ctx.lineWidth = canvas.lineWidth
                 ctx.fillStyle = canvas.fillStyle
                 ctx.globalAlpha = canvas.alpha
-                ctx.beginPath();
-                ctx.moveTo(rectx+radius,recty);                 // top side
-                ctx.lineTo(rectx+rectWidth-radius,recty);
+                ctx.beginPath()
+                ctx.moveTo(rectx + radius, recty)                 // top side
+                ctx.lineTo(rectx + rectWidth - radius, recty)
                 // draw top right corner
-                ctx.arcTo(rectx+rectWidth,recty,rectx+rectWidth,recty+radius,radius);
-                ctx.lineTo(rectx+rectWidth,recty+rectHeight-radius);    // right side
+                ctx.arcTo(rectx + rectWidth, recty, rectx + rectWidth, recty + radius, radius)
+                ctx.lineTo(rectx + rectWidth, recty + rectHeight - radius)    // right side
                 // draw bottom right corner
-                ctx.arcTo(rectx+rectWidth,recty+rectHeight,rectx+rectWidth-radius,recty+rectHeight,radius);
-                ctx.lineTo(rectx+radius,recty+rectHeight);              // bottom side
+                ctx.arcTo(rectx + rectWidth, recty + rectHeight, rectx + rectWidth - radius, recty + rectHeight, radius)
+                ctx.lineTo(rectx + radius, recty + rectHeight)              // bottom side
                 // draw bottom left corner
-                ctx.arcTo(rectx,recty+rectHeight,rectx,recty+rectHeight-radius,radius);
-                ctx.lineTo(rectx,recty+radius);                 // left side
+                ctx.arcTo(rectx, recty + rectHeight, rectx, recty + rectHeight - radius, radius)
+                ctx.lineTo(rectx, recty + radius)                 // left side
                 // draw top left corner
-                ctx.arcTo(rectx,recty,rectx+radius,recty,radius);
-                ctx.closePath();
+                ctx.arcTo(rectx, recty, rectx + radius, recty, radius)
+                ctx.closePath()
                 if (canvas.fill)
-                    ctx.fill();
+                    ctx.fill()
                 if (canvas.stroke)
-                    ctx.stroke();
-                ctx.restore();
+                    ctx.stroke()
+                ctx.restore()
             }
         }
     }
     Column {
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 12
+        id: controls
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 12
+        }
 
-        LabeledSlider {id: lineWidthCtrl ; min: 1 ; max: 10; init: 2 ; name: "Outline"; width: container.width}
-        LabeledSlider {id: rCtrl ; min: 10 ; max: 80 ; init: 40 ; name: "Radius"; width: container.width}
+        LabeledSlider {
+            id: lineWidthCtrl
+            name: qsTr("Outline")
+            width: root.width
+            min: 1
+            max: 10
+            value: 2
+        }
+        LabeledSlider {
+            id: rCtrl
+            name: qsTr("Radius")
+            width: root.width
+            min: 10
+            max: 80
+            value: 40
+        }
+        Row {
+            CheckBox {
+                id: toggleFillCheckBox
+                checked: true
+                text: qsTr("Toggle fill")
+            }
+            CheckBox {
+                id: toggleStrokeCheckBox
+                checked: true
+                text: qsTr("Toggle stroke")
+            }
+        }
     }
 }

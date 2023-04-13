@@ -77,4 +77,5 @@ target_link_libraries(qmldomlib
   PUBLIC
          Qt::CorePrivate
          Qt::QmlPrivate
+         Qt::QmlCompilerPrivate
 )

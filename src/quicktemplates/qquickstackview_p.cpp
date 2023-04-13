@@ -3,7 +3,9 @@
 
 #include "qquickstackview_p_p.h"
 #include "qquickstackelement_p_p.h"
+#if QT_CONFIG(quick_viewtransitions)
 #include "qquickstacktransition_p_p.h"
+#endif
 
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmllist.h>
@@ -204,6 +206,7 @@ bool QQuickStackViewPrivate::replaceElements(QQuickStackElement *target, const Q
     return pushElements(elems);
 }
 
+#if QT_CONFIG(quick_viewtransitions)
 void QQuickStackViewPrivate::ensureTransitioner()
 {
     if (!transitioner) {
@@ -301,6 +304,7 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
 
     removing.remove(element);
 }
+#endif
 
 void QQuickStackViewPrivate::setBusy(bool b)
 {

@@ -25,7 +25,7 @@ ApplicationWindow {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 20
-        source: "qrc:/icons/qt_logo.svg"
+        source: "../icons/qt_logo.svg"
         sourceSize: Qt.size(80, 80)
         fillMode: Image.PreserveAspectFit
         smooth: true

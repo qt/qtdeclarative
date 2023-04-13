@@ -568,14 +568,12 @@ void QQuickKeyNavigationAttached::setBacktab(QQuickItem *i)
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
 
-    \list
-    \li KeyNavigation.BeforeItem - process the key events before normal
-    item key processing.  If the event is used for key navigation, it will be accepted and will not
-    be passed on to the item.
-    \li KeyNavigation.AfterItem (default) - process the key events after normal item key
-    handling.  If the item accepts the key event it will not be
-    handled by the KeyNavigation attached property handler.
-    \endlist
+    \value KeyNavigation.BeforeItem     process the key events before normal
+        item key processing.  If the event is used for key navigation, it will be accepted and
+        will not be passed on to the item.
+    \value KeyNavigation.AfterItem      (default) process the key events after normal item key
+        handling.  If the item accepts the key event it will not be
+        handled by the KeyNavigation attached property handler.
 */
 QQuickKeyNavigationAttached::Priority QQuickKeyNavigationAttached::priority() const
 {
@@ -868,14 +866,11 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
 
-    \list
-    \li Keys.BeforeItem (default) - process the key events before normal
-    item key processing.  If the event is accepted it will not
-    be passed on to the item.
-    \li Keys.AfterItem - process the key events after normal item key
-    handling.  If the item accepts the key event it will not be
-    handled by the Keys attached property handler.
-    \endlist
+    \value Keys.BeforeItem  (default) process the key events before normal item key processing.
+                            If the event is accepted, it will not be passed on to the item.
+    \value Keys.AfterItem   process the key events after normal item key handling.  If the item
+                            accepts the key event, it will not be handled by the
+                            Keys attached property handler.
 
     \sa {Key Handling Priorities}
 */
@@ -5342,13 +5337,30 @@ bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
     return ret;
 }
 
+/*! \internal
+    Returns the new position (proposed values for the x and y properties)
+    to which this item should be moved to compensate for the given change
+    in scale from \a startScale to \a activeScale and in rotation from
+    \a startRotation to \a activeRotation. \a centroidParentPos is the
+    point that we wish to hold in place (and then apply \a activeTranslation to),
+    in this item's parent's coordinate system. \a startPos is this item's
+    position in its parent's coordinate system when the gesture began.
+    \a activeTranslation is the amount of translation that should be added to
+    the return value, i.e. the displacement by which the centroid is expected
+    to move.
+
+    If \a activeTranslation is \c (0, 0) the centroid is to be held in place.
+    If \a activeScale is \c 1, it means scale is intended to be held constant,
+    the same as \a startScale. If \a activeRotation is \c 0, it means rotation
+    is intended to be held constant, the same as \a startRotation.
+*/
 QPointF QQuickItemPrivate::adjustedPosForTransform(const QPointF &centroidParentPos,
                                                    const QPointF &startPos,
-                                                   const QVector2D &activeTranslation,  //[0,0] means no additional translation from startPos
+                                                   const QVector2D &activeTranslation,
                                                    qreal startScale,
-                                                   qreal activeScale,                   // 1.0 means no additional scale from startScale
+                                                   qreal activeScale,
                                                    qreal startRotation,
-                                                   qreal activeRotation)                // 0.0 means no additional rotation from startRotation
+                                                   qreal activeRotation)
 {
     Q_Q(QQuickItem);
     QVector3D xformOrigin(q->transformOriginPoint());
@@ -6380,9 +6392,9 @@ void QQuickItem::setVisible(bool v)
     Thus, a disabled item can continue to receive hover events, even when this
     property is \c false. This makes it possible to show informational feedback
     (such as \l ToolTip) even when an interactive item is disabled.
-    The same is also true for any \l {HoverHandlers}{QQuickHoverHandler}
+    The same is also true for any \l {HoverHandler}{HoverHandlers}
     added as children of the item. A HoverHandler can, however, be
-    \l{disabled}{QQuickHoverHandler::enabled} explicitly, or for example
+    \l {PointerHandler::enabled}{disabled} explicitly, or for example
     be bound to the \c enabled state of the item.
 
     \sa visible
@@ -8343,7 +8355,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
     Returns \c true if this item contains \a point, which is in local coordinates;
     returns \c false otherwise.  This is the same check that is used for
     hit-testing a QEventPoint during event delivery, and is affected by
-    containmentMask() if it is set.
+    \l containmentMask if it is set.
 */
 /*!
     Returns \c true if this item contains \a point, which is in local coordinates;
@@ -8351,7 +8363,7 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 
     This function can be overridden in order to handle point collisions in items
     with custom shapes. The default implementation checks whether the point is inside
-    containmentMask() if it is set, or inside the bounding box otherwise.
+    \l containmentMask() if it is set, or inside the bounding box otherwise.
 
     \note This method is used for hit-testing each QEventPoint during event
     delivery, so the implementation should be kept as lightweight as possible.
@@ -8381,10 +8393,10 @@ bool QQuickItem::contains(const QPointF &point) const
     \qmlproperty QObject* QtQuick::Item::containmentMask
     \since 5.11
     This property holds an optional mask for the Item to be used in the
-    QtQuick::Item::contains() method. Its main use is currently to determine
+    \l contains() method. Its main use is currently to determine
     whether a \l {QPointerEvent}{pointer event} has landed into the item or not.
 
-    By default the \l contains method will return true for any point
+    By default the \c contains() method will return true for any point
     within the Item's bounding box. \c containmentMask allows for
     more fine-grained control. For example, if a custom C++
     QQuickItem subclass with a specialized contains() method
@@ -8495,7 +8507,7 @@ void QQuickItem::setContainmentMask(QObject *mask)
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a point to the coordinate system of the
+    If \a item is \nullptr, this maps \a point to the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -8553,7 +8565,7 @@ QPointF QQuickItem::mapToGlobal(const QPointF &point) const
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a rect to the coordinate system of the
+    If \a item is \nullptr, this maps \a rect to the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -8589,7 +8601,7 @@ QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a point from the coordinate system of the
+    If \a item is \nullptr, this maps \a point from the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -8656,7 +8668,7 @@ QPointF QQuickItem::mapFromGlobal(const QPointF &point) const
 
     \input item.qdocinc mapping
 
-    If \a item is 0, this maps \a rect from the coordinate system of the
+    If \a item is \nullptr, this maps \a rect from the coordinate system of the
     scene.
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -9368,14 +9380,12 @@ void QQuickItemLayer::setMipmap(bool mipmap)
     Modifying this property makes most sense when the \a layer.effect is also
     specified.
 
-    \list
-    \li ShaderEffectSource.RGBA8
-    \li ShaderEffectSource.RGBA16F
-    \li ShaderEffectSource.RGBA32F
-    \li ShaderEffectSource.Alpha - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \li ShaderEffectSource.RGB - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \li ShaderEffectSource.RGBA - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
-    \endlist
+    \value ShaderEffectSource.RGBA8
+    \value ShaderEffectSource.RGBA16F
+    \value ShaderEffectSource.RGBA32F
+    \value ShaderEffectSource.Alpha     Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
+    \value ShaderEffectSource.RGB       Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
+    \value ShaderEffectSource.RGBA      Starting with Qt 6.0, this value is not in use and has the same effect as \c RGBA8 in practice.
 
     \sa {Item Layers}
  */
@@ -9496,12 +9506,10 @@ void QQuickItemLayer::setSize(const QSize &size)
     Modifying this property makes most sense when the \a layer.effect is
     specified.
 
-    \list
-    \li ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
-    \li ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
-    \li ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
-    \li ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
-    \endlist
+    \value ShaderEffectSource.ClampToEdge       GL_CLAMP_TO_EDGE both horizontally and vertically
+    \value ShaderEffectSource.RepeatHorizontally GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
+    \value ShaderEffectSource.RepeatVertically  GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
+    \value ShaderEffectSource.Repeat            GL_REPEAT both horizontally and vertically
 
     \note Some OpenGL ES 2 implementations do not support the GL_REPEAT
     wrap mode with non-power-of-two textures.
@@ -9531,11 +9539,9 @@ void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
     such as those specified by ShaderEffect. If no effect is specified for the layered
     item, mirroring has no effect on the UI representation of the item.
 
-    \list
-    \li ShaderEffectSource.NoMirroring - No mirroring
-    \li ShaderEffectSource.MirrorHorizontally - The generated texture is flipped along X-axis.
-    \li ShaderEffectSource.MirrorVertically - The generated texture is flipped along Y-axis.
-    \endlist
+    \value ShaderEffectSource.NoMirroring           No mirroring
+    \value ShaderEffectSource.MirrorHorizontally    The generated texture is flipped along X-axis.
+    \value ShaderEffectSource.MirrorVertically      The generated texture is flipped along Y-axis.
  */
 
 void QQuickItemLayer::setTextureMirroring(QQuickShaderEffectSource::TextureMirroring mirroring)

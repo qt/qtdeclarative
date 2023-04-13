@@ -1,4 +1,4 @@
-pragma ValueTypeBehavior: Copy
+pragma ValueTypeBehavior: Copy, Addressable
 import QtQml
 
 QtObject {

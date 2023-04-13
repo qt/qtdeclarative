@@ -6,94 +6,133 @@ import QtQuick.Controls
 import "../"
 
 Item {
-    id:container
-    width:320
-    height:480
+    id: root
+    width: 320
+    height: 480
 
     Column {
-        spacing:5
-        anchors.fill: parent
-        anchors.topMargin: 12
+        spacing: 5
+        anchors {
+            fill: parent
+            topMargin: 12
+        }
 
         Label {
-            font.pointSize: 24
-            font.bold: true
-            text: "Quadratic Curve"
             anchors.horizontalCenter: parent.horizontalCenter
-            color: "#777"
+            text: qsTr("Quadratic Curve")
+            color: Qt.lighter(palette.text)
+            font {
+                pointSize: 24
+                bold: true
+            }
         }
 
         Canvas {
             id: canvas
-            width: 320
-            height: 280
 
-            property color strokeStyle:  Qt.darker(fillStyle, 1.3)
-            property color fillStyle: "#14aaff" // blue
-            property int lineWidth: lineWidthCtrl.value
-            property bool fill: true
-            property bool stroke: true
-            property real alpha: 1.0
-            property real scale : scaleCtrl.value
-            property real rotate : rotateCtrl.value
+            readonly property color strokeStyle: Qt.darker(fillStyle, 1.3)
+            readonly property color fillStyle: "#14aaff" // blue
+            readonly property alias lineWidth: lineWidthCtrl.value
+            readonly property alias fill: toggleFillCheckBox.checked
+            readonly property alias stroke: toggleStrokeCheckBox.checked
+            readonly property alias scale: scaleCtrl.value
+            readonly property alias rotate: rotateCtrl.value
 
+            width: root.width
+            height: parent.height - controls.height
             antialiasing: true
 
-            onLineWidthChanged:requestPaint();
-            onFillChanged:requestPaint();
-            onStrokeChanged:requestPaint();
-            onScaleChanged:requestPaint();
-            onRotateChanged:requestPaint();
+            onLineWidthChanged: requestPaint()
+            onFillChanged: requestPaint()
+            onStrokeChanged: requestPaint()
+            onScaleChanged: requestPaint()
+            onRotateChanged: requestPaint()
 
-            onPaint: {
-                var ctx = canvas.getContext('2d');
-                var originX = 75
-                var originY = 75
+            onPaint: function() {
+                let ctx = canvas.getContext('2d')
+                const originX = 75
+                const originY = 75
 
-                ctx.save();
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.translate(originX, originX);
-                ctx.strokeStyle = canvas.strokeStyle;
-                ctx.fillStyle = canvas.fillStyle;
-                ctx.lineWidth = canvas.lineWidth;
+                ctx.save()
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                ctx.translate(originX, originX)
+                ctx.strokeStyle = canvas.strokeStyle
+                ctx.fillStyle = canvas.fillStyle
+                ctx.lineWidth = canvas.lineWidth
 
                 ctx.translate(originX, originY)
-                ctx.rotate(canvas.rotate);
-                ctx.scale(canvas.scale, canvas.scale);
+                ctx.rotate(canvas.rotate)
+                ctx.scale(canvas.scale, canvas.scale)
                 ctx.translate(-originX, -originY)
 
                 // ![0]
-                ctx.beginPath();
-                ctx.moveTo(75,25);
-                ctx.quadraticCurveTo(25,25,25,62.5);
-                ctx.quadraticCurveTo(25,100,50,100);
-                ctx.quadraticCurveTo(50,120,30,125);
-                ctx.quadraticCurveTo(60,120,65,100);
-                ctx.quadraticCurveTo(125,100,125,62.5);
-                ctx.quadraticCurveTo(125,25,75,25);
-                ctx.closePath();
+                ctx.beginPath()
+                ctx.moveTo(75, 25)
+                ctx.quadraticCurveTo(25, 25, 25, 62.5)
+                ctx.quadraticCurveTo(25, 100, 50, 100)
+                ctx.quadraticCurveTo(50, 120, 30, 125)
+                ctx.quadraticCurveTo(60, 120, 65, 100)
+                ctx.quadraticCurveTo(125, 100, 125, 62.5)
+                ctx.quadraticCurveTo(125, 25, 75, 25)
+                ctx.closePath()
                 // ![0]
 
                 if (canvas.fill)
-                    ctx.fill();
+                    ctx.fill()
                 if (canvas.stroke)
-                    ctx.stroke();
+                    ctx.stroke()
 
                 // ![1]
-                ctx.fillStyle = "white";
-                ctx.font = "bold 17px sans-serif";
-                ctx.fillText("Qt Quick", 40, 70);
+                ctx.fillStyle = "white"
+                ctx.font = "bold 17px sans-serif"
+                ctx.fillText("Qt Quick", 40, 70)
                 // ![1]
-                ctx.restore();
+                ctx.restore()
             }
         }
     }
     Column {
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 12
+        id: controls
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 12
+        }
 
-        LabeledSlider {id:lineWidthCtrl; min:1; max:10; init:2; name: "Outline"; width: container.width}
-        LabeledSlider {id:scaleCtrl; min:0.1; max:10; init:1; name: "Scale"; width: container.width}
-        LabeledSlider {id:rotateCtrl; min:0; max:Math.PI*2; init:0; name: "Rotate"; width: container.width}
+        LabeledSlider {
+            id: lineWidthCtrl
+            name: qsTr("Outline")
+            width: root.width
+            min: 1
+            max: 10
+            value: 2
+        }
+        LabeledSlider {
+            id: scaleCtrl
+            name: qsTr("Scale")
+            width: root.width
+            min: 0.1
+            max: 10
+            value: 1
+        }
+        LabeledSlider {
+            id: rotateCtrl
+            name: qsTr("Rotate")
+            width: root.width
+            min: 0
+            max: Math.PI * 2
+            value: 0
+        }
+        Row {
+            CheckBox {
+                id: toggleFillCheckBox
+                checked: true
+                text: qsTr("Toggle fill")
+            }
+            CheckBox {
+                id: toggleStrokeCheckBox
+                checked: true
+                text: qsTr("Toggle stroke")
+            }
+        }
     }
 }

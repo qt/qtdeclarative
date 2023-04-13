@@ -90,7 +90,7 @@ if(QT_FEATURE_qml_devtools)
     endif()
 endif()
 
-if(QT_FEATURE_thread AND TARGET Qt::LanguageServerPrivate)
+if(QT_FEATURE_thread AND TARGET Qt::LanguageServerPrivate AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS)
     add_subdirectory(qmlls)
 endif()
 

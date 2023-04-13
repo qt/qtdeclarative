@@ -131,8 +131,10 @@ namespace QQuickVisualTestUtils
     };
     Q_DECLARE_FLAGS(FindViewDelegateItemFlags, FindViewDelegateItemFlag)
 
+#if QT_CONFIG(quick_itemview)
     QQuickItem* findViewDelegateItem(QQuickItemView *itemView, int index,
         FindViewDelegateItemFlags flags = FindViewDelegateItemFlag::PositionViewAtIndex);
+#endif
 
     /*!
         \internal
@@ -187,6 +189,10 @@ namespace QQuickVisualTestUtils
         QPointer<QWindow> m_window;
         Qt::KeyboardModifiers m_modifiers;
     };
+
+    QPoint mapCenterToWindow(const QQuickItem *item);
+    QPoint mapToWindow(const QQuickItem *item, qreal relativeX, qreal relativeY);
+    QPoint mapToWindow(const QQuickItem *item, const QPointF &relativePos);
 }
 
 #define QQUICK_VERIFY_POLISH(item) \

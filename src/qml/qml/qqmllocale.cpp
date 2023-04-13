@@ -741,7 +741,9 @@ ReturnedValue QQmlLocaleData::method_get_ ## VARIABLE (const QV4::FunctionObject
 
 LOCALE_STRING_PROPERTY(name)
 LOCALE_STRING_PROPERTY(nativeLanguageName)
+#if QT_DEPRECATED_SINCE(6, 6)
 QT_IGNORE_DEPRECATIONS(LOCALE_STRING_PROPERTY(nativeCountryName))
+#endif
 LOCALE_STRING_PROPERTY(nativeTerritoryName)
 LOCALE_STRING_PROPERTY(decimalPoint)
 LOCALE_STRING_PROPERTY(groupSeparator)
@@ -789,7 +791,9 @@ QV4LocaleDataDeletable::QV4LocaleDataDeletable(QV4::ExecutionEngine *engine)
     o->defineAccessorProperty(QStringLiteral("groupSeparator"), QQmlLocaleData::method_get_groupSeparator, nullptr);
     o->defineAccessorProperty(QStringLiteral("decimalPoint"), QQmlLocaleData::method_get_decimalPoint, nullptr);
     o->defineAccessorProperty(QStringLiteral("nativeLanguageName"), QQmlLocaleData::method_get_nativeLanguageName, nullptr);
+#if QT_DEPRECATED_SINCE(6, 6)
     o->defineAccessorProperty(QStringLiteral("nativeCountryName"), QQmlLocaleData::method_get_nativeCountryName, nullptr);
+#endif
     o->defineAccessorProperty(QStringLiteral("nativeTerritoryName"), QQmlLocaleData::method_get_nativeTerritoryName, nullptr);
     o->defineAccessorProperty(QStringLiteral("zeroDigit"), QQmlLocaleData::method_get_zeroDigit, nullptr);
     o->defineAccessorProperty(QStringLiteral("amText"), QQmlLocaleData::method_get_amText, nullptr);
@@ -862,19 +866,17 @@ V4_DEFINE_EXTENSION(QV4LocaleDataDeletable, localeV4Data);
     can use the following enumeration values to specify the formatting of
     the string representation for a Date object.
 
-    \list
-    \li Locale.LongFormat The long version of day and month names; for
-    example, returning "January" as a month name.
-    \li Locale.ShortFormat The short version of day and month names; for
-    example, returning "Jan" as a month name.
-    \li Locale.NarrowFormat A special version of day and month names for
-    use when space is limited; for example, returning "J" as a month
-    name. Note that the narrow format might contain the same text for
-    different months and days or it can even be an empty string if the
-    locale doesn't support narrow names, so you should avoid using it
-    for date formatting. Also, for the system locale this format is
-    the same as ShortFormat.
-    \endlist
+    \value Locale.LongFormat    The long version of day and month names; for
+        example, returning "January" as a month name.
+    \value Locale.ShortFormat   The short version of day and month names; for
+        example, returning "Jan" as a month name.
+    \value Locale.NarrowFormat  A special version of day and month names for
+        use when space is limited; for example, returning "J" as a month
+        name. Note that the narrow format might contain the same text for
+        different months and days or it can even be an empty string if the
+        locale doesn't support narrow names, so you should avoid using it
+        for date formatting. Also, for the system locale this format is
+        the same as ShortFormat.
 
 
     Additionally the double-to-string and string-to-double conversion functions are
@@ -941,10 +943,10 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
 /*!
     \qmlproperty string QtQml::Locale::name
 
-    Holds the language and country of this locale as a
-    string of the form "language_country", where
+    Holds the language and territory of this locale as a
+    string of the form "language_territory", where
     language is a lowercase, two-letter ISO 639 language code,
-    and country is an uppercase, two- or three-letter ISO 3166 country code.
+    and territory is an uppercase, two- or three-letter ISO 3166 territory code.
 */
 
 /*!
@@ -1096,15 +1098,13 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
 
     Holds the first day of the week according to the current locale.
 
-    \list
-    \li Locale.Sunday = 0
-    \li Locale.Monday = 1
-    \li Locale.Tuesday = 2
-    \li Locale.Wednesday = 3
-    \li Locale.Thursday = 4
-    \li Locale.Friday = 5
-    \li Locale.Saturday = 6
-    \endlist
+    \value Locale.Sunday    0
+    \value Locale.Monday    1
+    \value Locale.Tuesday   2
+    \value Locale.Wednesday 3
+    \value Locale.Thursday  4
+    \value Locale.Friday    5
+    \value Locale.Saturday  6
 
     \note that these values match the JS Date API which is different
     from the Qt C++ API where Qt::Sunday = 7.
@@ -1180,10 +1180,9 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
     \qmlproperty enumeration QtQml::Locale::textDirection
 
     Holds the text direction of the language:
-    \list
-    \li Qt.LeftToRight
-    \li Qt.RightToLeft
-    \endlist
+
+    \value Qt.LeftToRight   Text normally begins at the left side.
+    \value Qt.RightToLeft   Text normally begins at the right side.
 */
 
 /*!
@@ -1202,11 +1201,11 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
     \qmlmethod string QtQml::Locale::currencySymbol(format)
 
     Returns the currency symbol for the specified \a format:
-    \list
-    \li Locale.CurrencyIsoCode a ISO-4217 code of the currency.
-    \li Locale.CurrencySymbol a currency symbol.
-    \li Locale.CurrencyDisplayName a user readable name of the currency.
-    \endlist
+
+    \value Locale.CurrencyIsoCode       a ISO-4217 code of the currency.
+    \value Locale.CurrencySymbol        a currency symbol.
+    \value Locale.CurrencyDisplayName   a user readable name of the currency.
+
     \sa Number::toLocaleCurrencyString()
 */
 
@@ -1216,7 +1215,7 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
     Holds a native name of the language for the locale. For example
     "Schwiizertüütsch" for Swiss-German locale.
 
-    \sa nativeCountryName
+    \sa nativeTerritoryName
 */
 
 /*!
@@ -1243,16 +1242,13 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
 
     This property defines which units are used for measurement.
 
-    \list
-    \li Locale.MetricSystem This value indicates metric units, such as meters,
-        centimeters and millimeters.
-    \li Locale.ImperialUSSystem This value indicates imperial units, such as
-        inches and miles as they are used in the United States.
-    \li Locale.ImperialUKSystem This value indicates imperial units, such as
-        inches and miles as they are used in the United Kingdom.
-    \li Locale.ImperialSystem Provided for compatibility. The same as
-        Locale.ImperialUSSystem.
-    \endlist
+    \value Locale.MetricSystem      This value indicates metric units, such as meters,
+                                    centimeters and millimeters.
+    \value Locale.ImperialUSSystem  This value indicates imperial units, such as
+                                    inches and miles as they are used in the United States.
+    \value Locale.ImperialUKSystem  This value indicates imperial units, such as
+                                    inches and miles as they are used in the United Kingdom.
+    \value Locale.ImperialSystem    Provided for compatibility. The same as Locale.ImperialUSSystem.
 */
 
 QT_END_NAMESPACE

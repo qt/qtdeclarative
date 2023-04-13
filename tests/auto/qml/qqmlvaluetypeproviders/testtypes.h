@@ -331,6 +331,136 @@ private:
     QVariant m_aVariant;
 };
 
+class Padding
+{
+    Q_GADGET
+
+    Q_PROPERTY(int left READ left WRITE setLeft)
+    Q_PROPERTY(int right READ right WRITE setRight)
+
+    QML_VALUE_TYPE(padding)
+    QML_STRUCTURED_VALUE
+
+public:
+    enum LogType {
+        DefaultCtor,
+        CopyCtor,
+        MoveCtor,
+        CopyAssign,
+        MoveAssign,
+        InvokableCtor,
+        CustomCtor,
+        Invalid,
+    };
+
+    Q_ENUM(LogType);
+
+    struct LogEntry {
+        LogType type = Invalid;
+        int left = 0;
+        int right = 0;
+
+        friend QDebug operator<<(QDebug &debug, const LogEntry &self)
+        {
+            return debug << self.type << " " << self.left << " " << self.right;
+        }
+    };
+
+    static QList<LogEntry> log;
+
+    void doLog(LogType type) {
+        log.append({
+            type, m_left, m_right
+        });
+    }
+
+    Padding()
+    {
+        doLog(DefaultCtor);
+    }
+
+    Padding(const Padding &other)
+        : m_left(other.m_left)
+        , m_right(other.m_right)
+    {
+        doLog(CopyCtor);
+    }
+
+    Padding(Padding &&other)
+        : m_left(other.m_left)
+        , m_right(other.m_right)
+    {
+        doLog(MoveCtor);
+    }
+
+    Padding(int left, int right)
+        : m_left( left )
+        , m_right( right )
+    {
+        doLog(CustomCtor);
+    }
+
+    Padding &operator=(const Padding &other) {
+        if (this != &other) {
+            m_left = other.m_left;
+            m_right = other.m_right;
+        }
+        doLog(CopyAssign);
+        return *this;
+    }
+
+    Padding &operator=(Padding &&other) {
+        if (this != &other) {
+            m_left = other.m_left;
+            m_right = other.m_right;
+        }
+        doLog(MoveAssign);
+        return *this;
+    }
+
+    Q_INVOKABLE Padding(int padding )
+        : m_left( padding )
+        , m_right( padding )
+    {
+        doLog(InvokableCtor);
+    }
+
+    void setLeft(int padding) { m_left = padding; }
+    int left() const { return m_left; }
+
+    void setRight(int padding) { m_right = padding; }
+    int right() const { return m_right; }
+
+private:
+    int m_left = 0;
+    int m_right = 0;
+};
+
+class MyItem : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(Padding padding READ padding WRITE setPadding NOTIFY paddingChanged)
+    QML_ELEMENT
+
+public:
+    void setPadding(const Padding &padding)
+    {
+        if (padding.left() == m_padding.left() && padding.right() == m_padding.right())
+            return;
+
+        m_padding = padding;
+        emit paddingChanged();
+    }
+
+    const Padding &padding() const{ return m_padding; }
+
+signals:
+    void paddingChanged();
+
+private:
+    Padding m_padding{ 17, 17 };
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

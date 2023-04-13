@@ -7,6 +7,7 @@ import QtTest
 import QtQuick.Templates as T
 import QtQuick.Controls
 import QtQuick.Controls.Material
+import QtQuick.Controls.Material.impl as MaterialImpl
 
 TestCase {
     id: testCase
@@ -746,7 +747,6 @@ TestCase {
     function test_background_data() {
         return [
             { tag: "button", inherit: false, wait: 400 },
-            { tag: "combobox", inherit: false, wait: 400 },
             { tag: "drawer", inherit: true },
             { tag: "groupbox", inherit: true },
             { tag: "frame", inherit: true },
@@ -952,5 +952,41 @@ TestCase {
         let item = createTemporaryObject(sliderTickMarks, testCase, params)
         verify(item)
         compare(item["__isDiscrete"], data.expectTickmarks)
+    }
+
+    Component {
+        id: textFieldComponent
+        TextField {}
+    }
+
+    Component {
+        id: textAreaComponent
+        TextArea {}
+    }
+
+    function test_placeholderText() {
+        {
+            // The non-floating placeholder text should be in the middle of TextField regardless of its height.
+            let textField = createTemporaryObject(textFieldComponent, testCase, { placeholderText: "TextField" })
+            verify(textField)
+            let placeholderTextItem = textField.children[0]
+            verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+            compare(placeholderTextItem.y, (textField.height - placeholderTextItem.height) / 2)
+            textField.height = 10
+            compare(placeholderTextItem.y, (textField.height - placeholderTextItem.height) / 2)
+            textField.destroy()
+        }
+
+        {
+            // The non-floating placeholder text should be near the top of TextArea while it has room, but when it
+            // doesn't have room, it should start behaving like TextField's.
+            let textArea = createTemporaryObject(textAreaComponent, testCase, { placeholderText: "TextArea" })
+            verify(textArea)
+            let placeholderTextItem = textArea.children[0]
+            verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+            compare(placeholderTextItem.y, (placeholderTextItem.controlImplicitBackgroundHeight - placeholderTextItem.largestHeight) / 2)
+            textArea.height = 10
+            compare(placeholderTextItem.y, (textArea.height - placeholderTextItem.height) / 2)
+        }
     }
 }

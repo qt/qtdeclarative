@@ -1620,14 +1620,16 @@ void QQuickRotationAnimation::setTo(qreal t)
 
     Possible values are:
 
-    \list
-    \li RotationAnimation.Numerical (default) - Rotate by linearly interpolating between the two numbers.
-           A rotation from 10 to 350 will rotate 340 degrees clockwise.
-    \li RotationAnimation.Clockwise - Rotate clockwise between the two values
-    \li RotationAnimation.Counterclockwise - Rotate counterclockwise between the two values
-    \li RotationAnimation.Shortest - Rotate in the direction that produces the shortest animation path.
-           A rotation from 10 to 350 will rotate 20 degrees counterclockwise.
-    \endlist
+    \value RotationAnimation.Numerical
+        (default) Rotate by linearly interpolating between the two numbers.
+        A rotation from \c 10 to \c 350 will rotate 340 degrees clockwise.
+    \value RotationAnimation.Clockwise
+        Rotate clockwise between the two values
+    \value RotationAnimation.Counterclockwise
+        Rotate counterclockwise between the two values
+    \value RotationAnimation.Shortest
+        Rotate in the direction that produces the shortest animation path.
+        A rotation from \c 10 to \c 350 will rotate \c 20 degrees counterclockwise.
 */
 QQuickRotationAnimation::RotationDirection QQuickRotationAnimation::direction() const
 {
@@ -2084,7 +2086,7 @@ void QQuickBulkValueAnimator::debugAnimation(QDebug d) const
     Note that PropertyAnimation inherits the abstract \l Animation type.
     This includes additional properties and methods for controlling the animation.
 
-    \section1 Modifying Properties Duration Animations
+    \section1 Modifying running animations
 
     Since Qt 6.4, it is possible to set the \l from, \l to, \l duration, and
     \l easing properties on a top-level animation while it is running. The

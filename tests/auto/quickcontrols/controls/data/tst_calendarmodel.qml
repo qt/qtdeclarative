@@ -31,23 +31,32 @@ TestCase {
 
     function test_indices_data() {
         return [
+            // "from" and "to" must currently be in the same year.
             { tag: "2013", from: "2013-01-01", to: "2013-12-31", count: 12 },
-            { tag: "2016", from: "2016-01-01", to: "2016-03-31", count: 3 }
+            { tag: "2016", from: "2016-01-01", to: "2016-03-31", count: 3 },
+            { tag: "2016-02-01 to 2016-12-31", from: "2016-02-01", to: "2016-12-31", count: 11 },
+            { tag: "2014-11-30 to 2016-01-01", from: "2014-11-30", to: "2016-01-01", count: 15 }
         ]
     }
 
     function test_indices(data) {
-        var model = calendarModel.createObject(testCase, {from: data.from, to: data.to})
+        let model = calendarModel.createObject(testCase, {from: data.from, to: data.to})
         verify(model)
 
         compare(model.count, data.count)
 
-        var y = parseInt(data.tag)
-        for (var m = 0; m < 12; ++m) {
-            compare(model.yearAt(m), y)
-            compare(model.indexOf(y, m), m)
-            compare(model.indexOf(new Date(y, m, 1)), m)
-            compare(model.monthAt(m), m)
+        const from = new Date(data.from)
+        const to = new Date(data.to)
+        let index = 0
+        for (let date = from; date <= to; date.setMonth(date.getMonth() + 1, 28), ++index) {
+            compare(model.yearAt(index), date.getFullYear(),
+                `yearAt(${index}) returned incorrect value`)
+            compare(model.indexOf(date.getFullYear(), date.getMonth()), index,
+                `indexOf(${date.getFullYear()}, ${date.getMonth()}) returned incorrect value`)
+            compare(model.indexOf(date), index,
+                `indexOf(${date}) returned incorrect value`)
+            compare(model.monthAt(index), date.getMonth(),
+                `monthAt(${index}) returned incorrect value`)
         }
 
         model.destroy()

@@ -205,15 +205,14 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
 
     Set this property to define what happens when the source image has a different size
     than the item.
-    \list
-    \li Image.Stretch - the image is scaled to fit
-    \li Image.PreserveAspectFit - the image is scaled uniformly to fit without cropping
-    \li Image.PreserveAspectCrop - the image is scaled uniformly to fill, cropping if necessary
-    \li Image.Tile - the image is duplicated horizontally and vertically
-    \li Image.TileVertically - the image is stretched horizontally and tiled vertically
-    \li Image.TileHorizontally - the image is stretched vertically and tiled horizontally
-    \li Image.Pad - the image is not transformed
-    \endlist
+
+    \value Image.Stretch            the image is scaled to fit
+    \value Image.PreserveAspectFit  the image is scaled uniformly to fit without cropping
+    \value Image.PreserveAspectCrop the image is scaled uniformly to fill, cropping if necessary
+    \value Image.Tile               the image is duplicated horizontally and vertically
+    \value Image.TileVertically     the image is stretched horizontally and tiled vertically
+    \value Image.TileHorizontally   the image is stretched vertically and tiled horizontally
+    \value Image.Pad                the image is not transformed
 
     \table
 
@@ -348,12 +347,11 @@ qreal QQuickImage::paintedHeight() const
     \readonly
 
     This property holds the status of image loading.  It can be one of:
-    \list
-    \li Image.Null - no image has been set
-    \li Image.Ready - the image has been loaded
-    \li Image.Loading - the image is currently being loaded
-    \li Image.Error - an error occurred while loading the image
-    \endlist
+
+    \value Image.Null       No image has been set
+    \value Image.Ready      The image has been loaded
+    \value Image.Loading    The image is currently being loaded
+    \value Image.Error      An error occurred while loading the image
 
     Use this status to provide an update or respond to the status change in some way.
     For example, you could:
@@ -458,6 +456,8 @@ qreal QQuickImage::paintedHeight() const
 
     \note \e {Changing this property dynamically causes the image source to be reloaded,
     potentially even from the network, if it is not in the disk cache.}
+
+    \sa {Pointer Handlers Example}
 */
 
 /*!

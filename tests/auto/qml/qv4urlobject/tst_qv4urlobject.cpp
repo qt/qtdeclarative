@@ -116,6 +116,14 @@ void tst_urlobject::urlObject_search_data()
             << "var url = new URL(\"http://google.com/search/?a=㉽\");"
                "url.search"
             << "?a=%E3%89%BD";
+    QTest::newRow("backslash")
+            // The JS string in the C++ source ends in 4 backslashes.
+            // The C++ compiler turns that into 2 backslashes.
+            // QV4 receives source code containing a string literal ending in two backslashes.
+            // The resulting JS string ends in a single backslash.
+            << "var url = new URL('http://google.com/search/?q=\\\\');"
+               "url.search"
+            << "?q=\\";
 }
 
 void tst_urlobject::urlObject_href()

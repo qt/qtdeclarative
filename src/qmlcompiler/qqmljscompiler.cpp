@@ -650,7 +650,6 @@ void QQmlJSAotCompiler::setDocument(
     m_logger->setFileName(resourcePathInfo.fileName());
     m_logger->setCode(irDocument->code);
     m_unitGenerator = &irDocument->jsGenerator;
-    m_entireSourceCodeLines = irDocument->code.split(u'\n');
     QQmlJSScope::Ptr target = QQmlJSScope::create();
     QQmlJSImportVisitor visitor(target, m_importer, m_logger,
                                 resourcePathInfo.canonicalPath() + u'/',
@@ -781,7 +780,9 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
         return compileError();
 
     QQmlJSBasicBlocks basicBlocks(m_unitGenerator, &m_typeResolver, m_logger);
-    typePropagationResult = basicBlocks.run(function, typePropagationResult);
+    typePropagationResult = basicBlocks.run(function, typePropagationResult, error);
+    if (error->isValid())
+        return compileError();
 
     QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger);
     shadowCheck.run(&typePropagationResult, function, error);
@@ -796,8 +797,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
         return compileError();
 
     QQmlJSCodeGenerator codegen(
-                context, m_unitGenerator, &m_typeResolver, m_logger,
-                m_entireSourceCodeLines);
+                context, m_unitGenerator, &m_typeResolver, m_logger);
     QQmlJSAotFunction result = codegen.run(function, &typePropagationResult, error);
     return error->isValid() ? compileError() : result;
 }

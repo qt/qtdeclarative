@@ -267,6 +267,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmlboundsignal.cpp qml/qqmlboundsignal_p.h
         qml/qqmlbuiltinfunctions.cpp qml/qqmlbuiltinfunctions_p.h
         qml/qqmlcomponent.cpp qml/qqmlcomponent.h qml/qqmlcomponent_p.h
+        qml/qqmlcomponentandaliasresolver_p.h
         qml/qqmlcomponentattached_p.h
         qml/qqmlcontext.cpp qml/qqmlcontext.h qml/qqmlcontext_p.h
         qml/qqmlcontextdata.cpp qml/qqmlcontextdata_p.h
@@ -340,7 +341,6 @@ qt_internal_add_qml_module(Qml
         qml/qqmltypemodule.cpp qml/qqmltypemodule_p.h
         qml/qqmltypemoduleversion.cpp qml/qqmltypemoduleversion_p.h
         qml/qqmltypenamecache.cpp qml/qqmltypenamecache_p.h
-        qml/qqmltypenotavailable.cpp qml/qqmltypenotavailable_p.h
         qml/qqmltypewrapper.cpp qml/qqmltypewrapper_p.h
         qml/qqmlvaluetype.cpp qml/qqmlvaluetype_p.h
         qml/qqmlvaluetypeproxybinding.cpp qml/qqmlvaluetypeproxybinding_p.h
@@ -467,6 +467,12 @@ qt_internal_add_resource(Qml "qmlMetaQmldir"
 if(QT_FEATURE_qml_worker_script)
     _qt_internal_add_qml_static_plugin_dependency(qmlplugin workerscriptplugin)
 endif()
+# Same for the QmlMeta qml plugin, otherwise you get
+#  module "QtQuick" version 6.6 cannot be imported because:
+#  module "QtQml" plugin "qmlmetaplugin" not found
+#     import QtQuick
+#     ^
+_qt_internal_add_qml_static_plugin_dependency(qmlplugin QmlMeta)
 
 # special case begin remove the block, handled manually
 # QLALR Grammars:
@@ -693,35 +699,6 @@ qt_internal_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-att.c
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
-
-#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
-# ITAB = "$$PWD/disassembler/udis86/optable.xml"
-# QMAKE_EXTRA_COMPILERS = "udis86"
-# QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
-# udis86.CONFIG = "no_link"
-# udis86.commands = "$$QMAKE_PYTHON" "$$PWD/disassembler/udis86/itab.py" "${QMAKE_FILE_IN}"
-# udis86.input = "ITAB"
-# udis86.output = "udis86_itab.h"
-# udis86_tab_cfile.depends = "udis86_itab.h"
-# udis86_tab_cfile.target = "$$OUT_PWD/udis86_itab.c"
-
-#### Keys ignored in scope 74:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
-# GENERATEDDIR = "$$GENERATEDDIR/debug"
-
-#### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
-# GENERATEDDIR = "$$GENERATEDDIR/release"
-
-qt_internal_extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
-    COMPILE_OPTIONS
-        -Wno-c++0x-extensions
-        -Wno-c++11-extensions
-)
-
-qt_internal_extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GCC)) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 4) OR (QT_COMPILER_VERSION_MINOR STRGREATER 5))
-    COMPILE_OPTIONS
-        -Wno-c++0x-compat
-)
-
 
 qt_internal_create_tracepoints(Qml qtqml.tracepoints)
 qt_internal_add_docs(Qml

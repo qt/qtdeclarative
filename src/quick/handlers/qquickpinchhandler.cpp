@@ -56,7 +56,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     but if it's a disallowed number, it does not scale or rotate
     its \l target, and the \l active property remains \c false.
 
-    \sa PinchArea, QPointerEvent::pointCount(), QNativeGestureEvent::fingerCount()
+    \sa PinchArea, QPointerEvent::pointCount(), QNativeGestureEvent::fingerCount(), {Pointer Handlers Example}
 */
 
 QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
@@ -478,12 +478,6 @@ void QQuickPinchHandler::onActiveChanged()
 {
     QQuickMultiPointHandler::onActiveChanged();
     const bool curActive = active();
-    if (const QQuickItem *t = target(); curActive && t) {
-        m_xAxis.m_accumulatedValue = t->position().x();
-        m_yAxis.m_accumulatedValue = t->position().y();
-        m_scaleAxis.m_accumulatedValue = t->scale();
-        m_rotationAxis.m_accumulatedValue = t->rotation();
-    }
     m_xAxis.onActiveChanged(curActive, 0);
     m_yAxis.onActiveChanged(curActive, 0);
     m_scaleAxis.onActiveChanged(curActive, 1);
@@ -492,9 +486,12 @@ void QQuickPinchHandler::onActiveChanged()
     if (curActive) {
         m_startAngles = angles(centroid().sceneGrabPosition());
         m_startDistance = averageTouchPointDistance(centroid().sceneGrabPosition());
+        m_startTargetPos = target() ? target()->position() : QPointF();
         qCDebug(lcPinchHandler) << "activated with starting scale" << m_scaleAxis.m_startValue
-                                << "target scale" << m_scaleAxis.m_startValue << "rotation" << m_rotationAxis.m_startValue;
+                                << "target scale" << m_scaleAxis.m_startValue << "rotation" << m_rotationAxis.m_startValue
+                                << "target pos" << m_startTargetPos;
     } else {
+        m_startTargetPos = QPointF();
         qCDebug(lcPinchHandler) << "deactivated with scale" << m_scaleAxis.m_activeValue << "rotation" << m_rotationAxis.m_activeValue;
     }
 }
@@ -677,17 +674,16 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 
 
     if (target() && target()->parentItem()) {
-        const QPointF centroidParentPos = target()->parentItem()->mapFromScene(centroid().scenePosition());
+        auto *t = target();
+        const QPointF centroidParentPos = t->parentItem()->mapFromScene(centroid().scenePosition());
         // 3. Drag/translate
-        const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(centroid().sceneGrabPosition());
+        const QPointF centroidStartParentPos = t->parentItem()->mapFromScene(centroid().sceneGrabPosition());
         auto activeTranslation = centroidParentPos - centroidStartParentPos;
         // apply rotation + scaling around the centroid - then apply translation.
-        QPointF pos = QQuickItemPrivate::get(target())->adjustedPosForTransform(centroidParentPos,
-                                                                                startPos(), QVector2D(activeTranslation),
-                                                                                m_scaleAxis.m_startValue,
-                                                                                m_scaleAxis.persistentValue() / m_scaleAxis.m_startValue,
-                                                                                m_rotationAxis.m_startValue,
-                                                                                m_rotationAxis.persistentValue() - m_rotationAxis.m_startValue);
+        QPointF pos = QQuickItemPrivate::get(t)->adjustedPosForTransform(centroidParentPos,
+                m_startTargetPos, QVector2D(activeTranslation),
+                t->scale(), m_scaleAxis.persistentValue() / m_scaleAxis.m_startValue,
+                t->rotation(), m_rotationAxis.persistentValue() - m_rotationAxis.m_startValue);
 
         if (xAxis()->enabled())
             pos.setX(qBound(xAxis()->minimum(), pos.x(), xAxis()->maximum()));
@@ -700,12 +696,12 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 
         const QVector2D delta(activeTranslation.x() - m_xAxis.activeValue(),
                               activeTranslation.y() - m_yAxis.activeValue());
-        m_xAxis.updateValue(activeTranslation.x(), pos.x(), delta.x());
-        m_yAxis.updateValue(activeTranslation.y(), pos.y(), delta.y());
+        m_xAxis.updateValue(activeTranslation.x(), m_xAxis.persistentValue() + delta.x(), delta.x());
+        m_yAxis.updateValue(activeTranslation.y(), m_yAxis.persistentValue() + delta.y(), delta.y());
         emit translationChanged(delta);
-        target()->setPosition(QPointF(m_xAxis.persistentValue(), m_yAxis.persistentValue()));
-        target()->setRotation(m_rotationAxis.persistentValue());
-        target()->setScale(m_scaleAxis.persistentValue());
+        t->setPosition(pos);
+        t->setRotation(m_rotationAxis.persistentValue());
+        t->setScale(m_scaleAxis.persistentValue());
     } else {
         auto activeTranslation = centroid().scenePosition() - centroid().scenePressPosition();
         auto accumulated = QPointF(m_xAxis.m_startValue, m_yAxis.m_startValue) + activeTranslation;
@@ -726,10 +722,12 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
     emit updated();
 }
 
-QPointF QQuickPinchHandler::startPos()
-{
-    return {m_xAxis.m_startValue, m_yAxis.m_startValue};
-}
+/*!
+    \internal
+    \qmlproperty flags QtQuick::PinchHandler::acceptedButtons
+
+    This property is not used in PinchHandler.
+*/
 
 /*!
     \readonly

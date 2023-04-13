@@ -46,6 +46,9 @@ private:
 tst_qqmlbinding::tst_qqmlbinding()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+#ifdef QML_DISABLE_INTERNAL_DEFERRED_PROPERTIES
+    qputenv("QML_DISABLE_INTERNAL_DEFERRED_PROPERTIES", "1");
+#endif
 }
 
 void tst_qqmlbinding::binding()

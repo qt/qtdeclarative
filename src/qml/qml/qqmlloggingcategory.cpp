@@ -15,7 +15,7 @@
     \since 5.8
 
     A logging category can be passed to console.log() and friends as the first argument.
-    If supplied to to the logger the LoggingCategory's name will be used as Logging Category
+    If supplied to the logger the LoggingCategory's name will be used as Logging Category
     otherwise the default logging category will be used.
 
     \qml

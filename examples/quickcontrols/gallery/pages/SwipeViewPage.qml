@@ -16,8 +16,8 @@ Pane {
             model: 3
 
             Pane {
-                width: view.width
-                height: view.height
+                width: SwipeView.view.width
+                height: SwipeView.view.height
 
                 Column {
                     spacing: 40
@@ -27,8 +27,8 @@ Pane {
                         width: parent.width
                         wrapMode: Label.Wrap
                         horizontalAlignment: Qt.AlignHCenter
-                        text: "SwipeView provides a navigation model that simplifies horizontal paged scrolling. "
-                        + "The page indicator on the bottom shows which is the presently active page."
+                        text: qsTr("SwipeView provides a navigation model that simplifies horizontal paged scrolling. "
+                        + "The page indicator on the bottom shows which is the presently active page.")
                     }
 
                     Image {

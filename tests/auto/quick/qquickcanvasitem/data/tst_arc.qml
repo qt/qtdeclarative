@@ -6,6 +6,7 @@ CanvasTestCase {
    function init_data() { return testData("2d"); }
        function test_angle_1(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -21,6 +22,7 @@ CanvasTestCase {
         }
        function test_angle_2(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -36,6 +38,7 @@ CanvasTestCase {
         }
        function test_angle_3(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
            ctx.fillStyle = '#0f0';
@@ -53,6 +56,7 @@ CanvasTestCase {
         }
        function test_angle_4(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -71,6 +75,7 @@ CanvasTestCase {
         }
        function test_angle_5(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -90,6 +95,7 @@ CanvasTestCase {
 
        function test_angle_6(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -110,6 +116,7 @@ CanvasTestCase {
 
        function test_empty(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -125,6 +132,7 @@ CanvasTestCase {
         }
        function test_nonempty(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -141,6 +149,7 @@ CanvasTestCase {
         }
        function test_nonfinite(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -199,6 +208,7 @@ CanvasTestCase {
        }
        function test_end(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -216,6 +226,7 @@ CanvasTestCase {
         }
        function test_negative(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -234,6 +245,7 @@ CanvasTestCase {
 
        function test_scale_1(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -270,6 +282,7 @@ CanvasTestCase {
 
        function test_scale_2(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -296,6 +309,7 @@ CanvasTestCase {
 
        function test_selfintersect_1(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -316,6 +330,7 @@ CanvasTestCase {
 
        function test_selfintersect_2(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -340,6 +355,7 @@ CanvasTestCase {
 
        function test_shape_1(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -361,6 +377,7 @@ CanvasTestCase {
 
        function test_shape_2(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -381,6 +398,7 @@ CanvasTestCase {
        }
        function test_shape_3(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -401,6 +419,7 @@ CanvasTestCase {
 
        function test_shape_4(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -421,6 +440,7 @@ CanvasTestCase {
 
        function test_shape_5(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -441,6 +461,7 @@ CanvasTestCase {
 
        function test_twopie(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 
@@ -488,6 +509,7 @@ CanvasTestCase {
 
        function test_zero(row) {
            var canvas = createCanvasObject(row);
+           tryVerify(function() { return canvas.available; });
            var ctx = canvas.getContext('2d');
            ctx.reset();
 

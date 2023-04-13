@@ -22,4 +22,11 @@ Rectangle {
         anchors.centerIn: parent;
         anchors.alignWhenCentered: false
     }
+
+    Rectangle {
+        objectName: "centered4"
+        width: 0.9; height: 0.9; color: "plum"
+        anchors.centerIn: parent;
+        anchors.alignWhenCentered: false
+    }
 }

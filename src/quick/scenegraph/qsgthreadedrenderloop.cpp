@@ -1303,6 +1303,9 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
  */
 void QSGThreadedRenderLoop::handleObscurity(Window *w)
 {
+    if (!w)
+        return;
+
     qCDebug(QSG_LOG_RENDERLOOP) << "handleObscurity()" << w->window;
     if (w->thread->isRunning()) {
         if (!QQuickWindowPrivate::get(w->window)->updatesEnabled) {

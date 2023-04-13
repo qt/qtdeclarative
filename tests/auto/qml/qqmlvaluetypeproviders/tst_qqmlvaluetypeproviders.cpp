@@ -41,6 +41,7 @@ private slots:
     void structured();
     void recursive();
     void date();
+    void constructors();
 };
 
 void tst_qqmlvaluetypeproviders::initTestCase()
@@ -384,6 +385,72 @@ void tst_qqmlvaluetypeproviders::date()
     QCOMPARE(o->property("aDate").value<QDate>().month(), 9);
     QCOMPARE(o->property("aTime").value<QTime>().hour(), 5);
     QCOMPARE(o->property("aVariant").value<QDateTime>().time().minute(), 44);
+}
+
+void tst_qqmlvaluetypeproviders::constructors()
+{
+
+    QQmlEngine e;
+
+    {
+        const auto guard = qScopeGuard([]() { Padding::log.clear(); });
+        QQmlComponent component(&e);
+        component.setData("import Test\nMyItem { padding : 50 }", QUrl());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(!o.isNull());
+        MyItem *item = qobject_cast<MyItem *>(o.data());
+        QVERIFY(item);
+        QCOMPARE(item->padding().left(), 50);
+        QCOMPARE(item->padding().right(), 50);
+
+        QCOMPARE(Padding::log.length(), 3);
+
+        // Created by default ctor of MyItem
+        QCOMPARE(Padding::log[0].type, Padding::CustomCtor);
+        QCOMPARE(Padding::log[0].left, 17);
+        QCOMPARE(Padding::log[0].right, 17);
+
+        // Created by assignment of integer
+        QCOMPARE(Padding::log[1].type, Padding::InvokableCtor);
+        QCOMPARE(Padding::log[1].left, 50);
+        QCOMPARE(Padding::log[1].right, 50);
+
+        // In MyItem::setPadding()
+        QCOMPARE(Padding::log[2].type, Padding::CopyAssign);
+        QCOMPARE(Padding::log[2].left, 50);
+        QCOMPARE(Padding::log[2].right, 50);
+    }
+
+    {
+        const auto guard = qScopeGuard([]() { Padding::log.clear(); });
+        QQmlComponent component(&e);
+        component.setData("import Test\nMyItem { padding: ({ left: 10, right: 20 }) }", QUrl());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(!o.isNull());
+        MyItem *item = qobject_cast<MyItem *>(o.data());
+        QVERIFY(item);
+        QCOMPARE(item->padding().left(), 10);
+        QCOMPARE(item->padding().right(), 20);
+
+        QCOMPARE(Padding::log.length(), 3);
+
+        // Created by default ctor of MyItem
+        QCOMPARE(Padding::log[0].type, Padding::CustomCtor);
+        QCOMPARE(Padding::log[0].left, 17);
+        QCOMPARE(Padding::log[0].right, 17);
+
+        // Preparing for setting properties of structured value
+        QCOMPARE(Padding::log[1].type, Padding::DefaultCtor);
+        QCOMPARE(Padding::log[1].left, 0);
+        QCOMPARE(Padding::log[1].right, 0);
+
+        // In MyItem::setPadding()
+        QCOMPARE(Padding::log[2].type, Padding::CopyAssign);
+        QCOMPARE(Padding::log[2].left, 10);
+        QCOMPARE(Padding::log[2].right, 20);
+    }
 }
 
 QTEST_MAIN(tst_qqmlvaluetypeproviders)

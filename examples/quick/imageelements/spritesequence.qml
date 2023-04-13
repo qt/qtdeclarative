@@ -6,20 +6,36 @@ Item {
     width: 320
     height: 480
     MouseArea {
-        onClicked: anim.start();
+        onClicked: anim.start()
         anchors.fill: parent
     }
 //! [animation]
     SequentialAnimation {
         id: anim
-        ScriptAction { script: image.goalSprite = "falling"; }
-        NumberAnimation { target: image; property: "y"; to: 480; duration: 12000; }
-        ScriptAction { script: {image.goalSprite = ""; image.jumpTo("still");} }
-        PropertyAction { target: image; property: "y"; value: 0 }
+
+        ScriptAction { script: image.goalSprite = "falling" }
+        NumberAnimation {
+            target: image
+            property: "y"
+            to: 480
+            duration: 12000
+        }
+        ScriptAction {
+            script: {
+                image.goalSprite = ""
+                image.jumpTo("still")
+            }
+        }
+        PropertyAction {
+            target: image
+            property: "y"
+            value: 0
+        }
     }
 //! [animation]
     SpriteSequence {
         id: image
+
         width: 256
         height: 256
         anchors.horizontalCenter: parent.horizontalCenter

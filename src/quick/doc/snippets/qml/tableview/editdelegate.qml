@@ -44,8 +44,8 @@ Window {
 
                 TableView.onCommit: {
                     display = text
-                    // display = text is short-hand for:
-                    // let index = TableView.view.modelIndex(column, row)
+                    // 'display = text' is short-hand for:
+                    // let index = TableView.view.index(row, column)
                     // TableView.view.model.setData(index, text, Qt.DisplayRole)
                 }
             }

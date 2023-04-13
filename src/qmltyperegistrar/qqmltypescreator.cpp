@@ -187,6 +187,10 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
 #else
         type = QLatin1String("double");
 #endif
+    } else if (type == QLatin1String("qint16")) {
+        type = QLatin1String("short");
+    } else if (type == QLatin1String("quint16")) {
+        type = QLatin1String("ushort");
     } else if (type == QLatin1String("qint32")) {
         type = QLatin1String("int");
     } else if (type == QLatin1String("quint32")) {

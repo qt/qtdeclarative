@@ -18,9 +18,20 @@ QT_BEGIN_NAMESPACE
     with custom QNetworkAccessManager instances with specialized caching,
     proxy and cookies support.
 
+    \list
+        \li The QNetworkDiskCache can be used as a request cache with \l {QNetworkDiskCache}.
+        \li Using \l {QNetworkProxy}, traffic sent by the QNetworkAccessManager can be tunnelled through a proxy.
+        \li Cookies can be saved for future requests by adding a \l {QNetworkCookieJar}.
+    \endlist
+
     To implement a factory, subclass QQmlNetworkAccessManagerFactory and
     implement the virtual create() method, then assign it to the relevant QML
-    engine using QQmlEngine::setNetworkAccessManagerFactory().
+    engine using QQmlEngine::setNetworkAccessManagerFactory(). For instance, the QNetworkAccessManager
+    objects created by the following snippet will cache requests.
+    \snippet code/src_network_access_qnetworkaccessmanager.cpp 0
+
+    The factory can then be passed to the QML engine so it can instantiate the QNetworkAccessManager with the custom behavior.
+    \snippet code/src_network_access_qnetworkaccessmanager.cpp 1
 
     Note the QML engine may create QNetworkAccessManager instances
     from multiple threads. Because of this, the implementation of the create()
@@ -44,7 +55,7 @@ QT_BEGIN_NAMESPACE
     For more information about signals and threads, see
     \l {Threads and QObjects} and \l {Signals and Slots Across Threads}.
 
-    \sa {C++ Extensions: Network Access Manager Factory Example}{Network Access Manager Factory Example}
+    \sa QNetworkDiskCache
 */
 
 /*!

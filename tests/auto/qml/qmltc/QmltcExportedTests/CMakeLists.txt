@@ -13,9 +13,10 @@ set(common_libraries
 
 target_link_libraries(qmltc_exported_tests_module PUBLIC ${common_libraries})
 
+qt_policy(SET QTP0001 NEW)
+
 qt6_add_qml_module(qmltc_exported_tests_module
     URI QmltcExportedTests
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         HelloExportedWorld.qml
     DEPENDENCIES

@@ -58,7 +58,6 @@ public:
     const QList<ScriptReference> &resolvedScripts() const;
 
     QV4::ExecutableCompilationUnit *compilationUnit() const;
-    QV4::ExecutableCompilationUnit *compilationUnitForInlineComponent(unsigned int icObjectId) const;
 
     // Used by QQmlComponent to get notifications
     struct TypeDataCallback {
@@ -96,8 +95,8 @@ private:
     void compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
                  QV4::ResolvedTypeReferenceMap *resolvedTypeCache,
                  const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
-    void createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                                     const QV4::ResolvedTypeReferenceMap &resolvedTypeCache);
+    QQmlError createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
+                                          const QV4::ResolvedTypeReferenceMap &resolvedTypeCache);
     bool resolveType(const QString &typeName, QTypeRevision &version,
                      TypeReference &ref, int lineNumber = -1, int columnNumber = -1,
                      bool reportErrors = true,
@@ -130,7 +129,6 @@ private:
     QHash<int, InlineComponentData> m_inlineComponentData;
 
     ExecutableCompilationUnitPtr m_compiledData;
-    QHash<int, ExecutableCompilationUnitPtr> m_inlineComponentToCompiledData;
 
     QList<TypeDataCallback *> m_callbacks;
 

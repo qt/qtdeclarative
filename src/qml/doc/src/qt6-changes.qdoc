@@ -68,7 +68,7 @@
 
     Implicit conversions were done for strings that could be parsed as
     \list
-    \li color (use Qt.color instead instead),
+    \li color (use Qt.color instead),
     \li date (use the Date object instead),
     \li rect (use Qt.rect instead) and
     \li size (use Qt.size instead)

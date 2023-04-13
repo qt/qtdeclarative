@@ -26,4 +26,7 @@ Zzz {
     QQ.Rectangle {
         color:"red"
     }
+
+    component IC: Zzz { property SomeBase data }
+    property SomeBase mySomeBase
 }

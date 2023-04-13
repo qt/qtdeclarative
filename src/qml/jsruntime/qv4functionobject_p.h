@@ -74,9 +74,11 @@ struct FunctionPrototype : FunctionObject {
     void init();
 };
 
+// A function object with an additional index into a list.
+// Used by Models to refer to property roles.
 struct IndexedBuiltinFunction : FunctionObject {
-    inline void init(QV4::ExecutionContext *scope, uint index, VTable::Call call);
-    uint index;
+    inline void init(QV4::ExecutionContext *scope, qsizetype index, VTable::Call call);
+    qsizetype index;
 };
 
 struct ArrowFunction : FunctionObject {
@@ -235,7 +237,8 @@ struct Q_QML_PRIVATE_EXPORT IndexedBuiltinFunction : FunctionObject
     V4_OBJECT2(IndexedBuiltinFunction, FunctionObject)
 };
 
-void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index, VTable::Call call)
+void Heap::IndexedBuiltinFunction::init(
+        QV4::ExecutionContext *scope, qsizetype index, VTable::Call call)
 {
     Heap::FunctionObject::init(scope);
     this->jsCall = call;

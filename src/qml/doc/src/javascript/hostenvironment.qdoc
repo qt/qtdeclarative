@@ -103,7 +103,7 @@ QML engine can be found in the \l{List of JavaScript Objects and Functions}.
 Note that QML makes the following modifications to native objects:
 
 \list
-\li An \l {String::arg}{arg()} function is added to the \l String prototype.
+\li An \l {string}{arg()} function is added to the \c String prototype.
 \li Locale-aware conversion functions are added to the \l Date and \l Number prototypes.
 \endlist
 
