@@ -26,7 +26,6 @@
 #include <private/qqmlobjectmodel_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
-#include <QtQuick/private/qquickitemview_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 

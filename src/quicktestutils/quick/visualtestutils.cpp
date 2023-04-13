@@ -6,7 +6,9 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
 #include <QtQuick/QQuickItem>
+#if QT_CONFIG(quick_itemview)
 #include <QtQuick/private/qquickitemview_p.h>
+#endif
 #include <QtQuickTest/QtQuickTest>
 
 QT_BEGIN_NAMESPACE
@@ -111,6 +113,7 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
     return true;
 }
 
+#if QT_CONFIG(quick_itemview)
 /*!
     \internal
 
@@ -139,6 +142,7 @@ QQuickItem *QQuickVisualTestUtils::findViewDelegateItem(QQuickItemView *itemView
 
     return itemView->itemAtIndex(index);
 }
+#endif
 
 QQuickVisualTestUtils::QQuickApplicationHelper::QQuickApplicationHelper(QQmlDataTest *testCase,
     const QString &testFilePath, const QVariantMap &initialProperties, const QStringList &qmlImportPaths)

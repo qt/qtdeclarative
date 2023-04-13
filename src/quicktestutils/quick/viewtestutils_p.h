@@ -19,6 +19,7 @@
 #include <QtQml/QQmlExpression>
 #include <QtQuick/QQuickItem>
 #include <QtCore/private/qglobal_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 QT_FORWARD_DECLARE_CLASS(QQuickView)
 QT_FORWARD_DECLARE_CLASS(QQuickItemViewPrivate)
@@ -167,8 +168,10 @@ namespace QQuickViewTestUtils
         int m_rowCount;
     };
 
+#if QT_CONFIG(quick_itemview)
     [[nodiscard]] bool testVisibleItems(const QQuickItemViewPrivate *priv,
         bool *nonUnique, FxViewItem **failItem, int *expectedIdx);
+#endif
 }
 
 namespace QQuickTouchUtils {

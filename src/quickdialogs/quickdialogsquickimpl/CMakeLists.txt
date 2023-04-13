@@ -77,31 +77,11 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         qquickcolorinputs_p.h
         qquickdialogimplfactory.cpp
         qquickdialogimplfactory_p.h
-        qquickfiledialogdelegate.cpp
-        qquickfiledialogdelegate_p.h
-        qquickfiledialogimpl.cpp
-        qquickfiledialogimpl_p.h
-        qquickfiledialogimpl_p_p.h
-        qquickfolderbreadcrumbbar.cpp
-        qquickfolderbreadcrumbbar_p.h
-        qquickfolderbreadcrumbbar_p_p.h
-        qquickfolderdialogimpl.cpp
-        qquickfolderdialogimpl_p.h
-        qquickfolderdialogimpl_p_p.h
-        qquickfontdialogimpl.cpp
-        qquickfontdialogimpl_p.h
-        qquickfontdialogimpl_p_p.h
         qquickmessagedialogimpl.cpp
         qquickmessagedialogimpl_p.h
         qquickmessagedialogimpl_p_p.h
         qquickplatformcolordialog.cpp
         qquickplatformcolordialog_p.h
-        qquickplatformfiledialog.cpp
-        qquickplatformfiledialog_p.h
-        qquickplatformfolderdialog.cpp
-        qquickplatformfolderdialog_p.h
-        qquickplatformfontdialog.cpp
-        qquickplatformfontdialog_p.h
         qquickplatformmessagedialog.cpp
         qquickplatformmessagedialog_p.h
         qquicksaturationlightnesspicker.cpp
@@ -133,6 +113,30 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::Quick
     GENERATE_CPP_EXPORTS
     GENERATE_PRIVATE_CPP_EXPORTS
+)
+
+qt_internal_extend_target(QuickDialogs2QuickImpl CONDITION QT_FEATURE_quick_listview
+    SOURCES
+        qquickfiledialogdelegate.cpp
+        qquickfiledialogdelegate_p.h
+        qquickfiledialogimpl.cpp
+        qquickfiledialogimpl_p.h
+        qquickfiledialogimpl_p_p.h
+        qquickfolderbreadcrumbbar.cpp
+        qquickfolderbreadcrumbbar_p.h
+        qquickfolderbreadcrumbbar_p_p.h
+        qquickfolderdialogimpl.cpp
+        qquickfolderdialogimpl_p.h
+        qquickfolderdialogimpl_p_p.h
+        qquickfontdialogimpl.cpp
+        qquickfontdialogimpl_p.h
+        qquickfontdialogimpl_p_p.h
+        qquickplatformfiledialog.cpp
+        qquickplatformfiledialog_p.h
+        qquickplatformfolderdialog.cpp
+        qquickplatformfolderdialog_p.h
+        qquickplatformfontdialog.cpp
+        qquickplatformfontdialog_p.h
 )
 
 # Resources:

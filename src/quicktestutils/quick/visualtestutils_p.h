@@ -131,8 +131,10 @@ namespace QQuickVisualTestUtils
     };
     Q_DECLARE_FLAGS(FindViewDelegateItemFlags, FindViewDelegateItemFlag)
 
+#if QT_CONFIG(quick_itemview)
     QQuickItem* findViewDelegateItem(QQuickItemView *itemView, int index,
         FindViewDelegateItemFlags flags = FindViewDelegateItemFlag::PositionViewAtIndex);
+#endif
 
     /*!
         \internal

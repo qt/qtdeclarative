@@ -23,7 +23,9 @@
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquicktextinput_p_p.h>
+#if QT_CONFIG(quick_itemview)
 #include <QtQuick/private/qquickitemview_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -342,14 +344,18 @@ void QQuickComboBoxPrivate::popupVisibleChanged()
     if (isPopupVisible())
         QGuiApplication::inputMethod()->reset();
 
+#if QT_CONFIG(quick_itemview)
     QQuickItemView *itemView = popup->findChild<QQuickItemView *>();
     if (itemView)
         itemView->setHighlightRangeMode(QQuickItemView::NoHighlightRange);
+#endif
 
     updateHighlightedIndex();
 
+#if QT_CONFIG(quick_itemview)
     if (itemView)
         itemView->positionViewAtIndex(highlightedIndex, QQuickItemView::Beginning);
+#endif
 
     if (!hasDown) {
         q->setDown(pressed || isPopupVisible());
@@ -381,8 +387,10 @@ void QQuickComboBoxPrivate::itemHovered()
     if (index != -1) {
         setHighlightedIndex(index, Highlight);
 
+#if QT_CONFIG(quick_itemview)
         if (QQuickItemView *itemView = popup->findChild<QQuickItemView *>())
             itemView->positionViewAtIndex(index, QQuickItemView::Contain);
+#endif
     }
 }
 
@@ -1339,8 +1347,10 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
         QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
 
+#if QT_CONFIG(quick_itemview)
         if (QQuickItemView *itemView = popup->findChild<QQuickItemView *>())
             itemView->setHighlightRangeMode(QQuickItemView::NoHighlightRange);
+#endif
     }
     d->popup = popup;
     if (!d->popup.isExecuting())
